@@ -30,9 +30,8 @@ describe('Canvas Node Workbench W4 hardening contracts', () => {
     expect(GraphNodeCardViewSource).toContain('GraphNodeCardPlayAction');
     expect(GraphNodeCardViewSource).toContain('playAction');
     expect(DbtNodeComponentSource).toContain('buildCanvasNodeModelerActionModel');
-    expect(DbtNodeComponentSource).toContain(
-      "data.onInspectNode?.(id, hasCodeSection ? 'code' : 'general');"
-    );
+    expect(DbtNodeComponentSource).toContain("data.onInspectNode?.(id, 'code');");
+    expect(DbtNodeComponentSource).not.toContain('hasCodeSection');
     expect(CanvasNodeContextMenuModelSource).toContain('buildCanvasNodeModelerActionModel');
     expect(CanvasNodeContextMenuModelSource).not.toContain('inspect-node');
   });

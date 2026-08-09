@@ -218,11 +218,6 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
   const portTone = NODE_ROLE_PORT_TONES[role];
   const canMutateNodeCommands = data.canMutateGraph === true;
   const canAttachSchema = canMutateNodeCommands && typeof data.onAttachSchemaToNode === 'function';
-  const hasCodeSection =
-    data.canOpenNodeCode === true ||
-    (data.canOpenNodeCode !== false &&
-      data.presentationTruth != null &&
-      data.presentationTruth.code.kind !== 'unavailable');
   const contextMenuModel = buildCanvasNodeModelerActionModel({
     target: { kind: 'node', nodeId: id, nodeName: data.name },
     selectedForExecution,
@@ -264,7 +259,7 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
   };
 
   const handleOpenNode = () => {
-    data.onInspectNode?.(id, hasCodeSection ? 'code' : 'general');
+    data.onInspectNode?.(id, 'code');
   };
 
   const handleContextMenuAction = (actionId: CanvasNodeContextMenuActionId) => {
