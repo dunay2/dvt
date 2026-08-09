@@ -289,18 +289,7 @@ export function useDbtProjectFileCanvasController(
 
   const openNodeWorkbench = useCallback(
     (nodeId: string, preferredTabId?: 'general' | 'inputs-outputs' | 'tests' | 'code' | null) => {
-      const node = canonicalNodesById.get(nodeId);
-      if (node == null) {
-        return;
-      }
-
-      if (preferredTabId === 'code') {
-        if (node.path == null) {
-          return;
-        }
-        setInspectorNode(null);
-        hideInspectorPanel();
-        setCodeWorkbenchTarget({ kind: 'node', nodeId: node.id, initialPath: node.path });
+      if (!canonicalNodesById.has(nodeId)) {
         return;
       }
 
@@ -308,7 +297,18 @@ export function useDbtProjectFileCanvasController(
       setInspectorNode(nodeId, preferredTabId ?? 'general');
       showInspectorPanel();
     },
-    [canonicalNodesById, hideInspectorPanel, setInspectorNode, showInspectorPanel]
+    [canonicalNodesById, setInspectorNode, showInspectorPanel]
+  );
+  const openNodeCodeEditor = useCallback(
+    (nodeId: string) => {
+      const node = canonicalNodesById.get(nodeId);
+      if (node?.path == null) {
+        return;
+      }
+
+      setCodeWorkbenchTarget({ kind: 'node', nodeId: node.id, initialPath: node.path });
+    },
+    [canonicalNodesById]
   );
   const nodesWithCommands = useMemo<Node[]>(
     () =>
@@ -321,10 +321,7 @@ export function useDbtProjectFileCanvasController(
           selectedForExecution: selectedNodeIds.includes(node.id),
           onInspectNode: openNodeWorkbench,
           canOpenNodeCode: node.data.path != null,
-          onOpenNodeCode:
-            node.data.path == null
-              ? undefined
-              : (nodeId: string) => openNodeWorkbench(nodeId, 'code'),
+          onOpenNodeCode: node.data.path == null ? undefined : openNodeCodeEditor,
           onToggleNodeSelection:
             execution.canSelectExecution &&
             canOfferDbtExecutionSelectionToggle({
@@ -348,10 +345,10 @@ export function useDbtProjectFileCanvasController(
       executionSelectableNodeIds,
       executionScope.requestedNodeIds,
       graphModel.nodes,
+      openNodeCodeEditor,
       openNodeWorkbench,
       selectedNodeIds,
       store.setExecutionSelectionIntent,
-      visibleNodeIds,
     ]
   );
 
