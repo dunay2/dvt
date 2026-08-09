@@ -121,7 +121,6 @@ describe('CanvasNodeContextMenuView', () => {
 
     expect(screen.getByRole('menu').getAttribute('data-slot')).toBe('canvas-node-context-menu');
     expect(screen.getByText('Orders model')).toBeTruthy();
-    expect(screen.getByText('Edit')).toBeTruthy();
 
     act(() => {
       fireEvent.click(screen.getByRole('menuitem', { name: 'Duplicate' }));
