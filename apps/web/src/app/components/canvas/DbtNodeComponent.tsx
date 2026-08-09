@@ -277,8 +277,6 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
       case 'remove-node':
         data.onRemoveNode?.(id);
         return;
-      case 'inspect-node':
-        return;
     }
   };
 
