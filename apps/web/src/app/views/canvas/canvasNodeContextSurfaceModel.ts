@@ -8,8 +8,7 @@ export type CanvasNodeHealthPopoverModel = Readonly<{
 }>;
 
 export type CanvasNodeContextActiveSurface =
-  | Readonly<{ kind: 'idle' }>
-  | Readonly<{ kind: 'health'; model: CanvasNodeHealthPopoverModel }>;
+  Readonly<{ kind: 'idle' }> | Readonly<{ kind: 'health'; model: CanvasNodeHealthPopoverModel }>;
 
 export type CanvasNodeContextSurfaceState = Readonly<{
   externalSurfaceActive: boolean;

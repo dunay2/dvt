@@ -46,7 +46,7 @@ describe('Canvas Node Workbench W4 hardening contracts', () => {
       'isCanvasNodeEmbeddedControlTarget(event.target)'
     );
     expect(CanvasViewportSurfaceViewSource).toContain(
-      "querySelector<HTMLElement>('[data-slot=\"canvas-node-shell\"]')"
+      'querySelector<HTMLElement>(\'[data-slot="canvas-node-shell"]\')'
     );
     expect(CanvasViewportSurfaceViewSource).toContain("new MouseEventConstructor('dblclick'");
   });

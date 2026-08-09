@@ -91,7 +91,10 @@ function resolveMiniMapNodeColor(node: { data?: unknown }): string {
 }
 
 export function activateFocusedCanvasNodeFromKeyboard(
-  event: Pick<ReactKeyboardEvent<HTMLElement>, 'key' | 'target' | 'preventDefault' | 'stopPropagation'>
+  event: Pick<
+    ReactKeyboardEvent<HTMLElement>,
+    'key' | 'target' | 'preventDefault' | 'stopPropagation'
+  >
 ): boolean {
   if (event.key !== 'Enter' || isCanvasNodeEmbeddedControlTarget(event.target)) {
     return false;
@@ -108,7 +111,8 @@ export function activateFocusedCanvasNodeFromKeyboard(
 
   event.preventDefault();
   event.stopPropagation();
-  const MouseEventConstructor = shell.ownerDocument.defaultView?.MouseEvent ?? globalThis.MouseEvent;
+  const MouseEventConstructor =
+    shell.ownerDocument.defaultView?.MouseEvent ?? globalThis.MouseEvent;
   shell.dispatchEvent(
     new MouseEventConstructor('dblclick', {
       bubbles: true,

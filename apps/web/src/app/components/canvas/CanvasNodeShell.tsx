@@ -16,9 +16,10 @@ import type {
 import { isCanvasNodeEmbeddedControlTarget } from './canvasNodeInteractionBoundary';
 import styles from './CanvasNodeShell.module.css';
 
-type GovernedNodeActionContextMenuEvent = MouseEvent & Readonly<{
-  dvtNodeActionsRequest?: boolean;
-}>;
+type GovernedNodeActionContextMenuEvent = MouseEvent &
+  Readonly<{
+    dvtNodeActionsRequest?: boolean;
+  }>;
 
 type CanvasNodeShellProps = Readonly<{
   children: ReactNode;

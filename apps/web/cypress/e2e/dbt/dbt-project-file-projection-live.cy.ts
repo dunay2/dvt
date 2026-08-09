@@ -279,9 +279,7 @@ describe('dbt project file projection live vertical', () => {
       .and('have.attr', 'aria-selected', 'true');
 
     // File-authoritative editing is reached from inside the Code section, not from another node gesture.
-    cy.get('[data-slot="canvas-node-workbench-open-code-editor"]')
-      .should('be.visible')
-      .click();
+    cy.get('[data-slot="canvas-node-workbench-open-code-editor"]').should('be.visible').click();
     cy.get('[data-slot="canvas-contextual-workbench"]', { timeout: 30_000 }).should('be.visible');
     cy.get(
       `[data-slot="code-workspace-file-entry"][data-workspace-path="${PROJECT_ROOT}/models/orders.sql"]`
@@ -318,8 +316,12 @@ describe('dbt project file projection live vertical', () => {
       .should('be.visible')
       .click();
     cy.get('[data-slot="canvas-context-menu"]', { timeout: 20_000 }).should('be.visible');
-    cy.get('[data-slot="canvas-context-menu"] [data-menu-action="inspect-node"]').should('not.exist');
-    cy.get('[data-slot="canvas-context-menu"] [data-menu-action="open-node-code"]').should('not.exist');
+    cy.get('[data-slot="canvas-context-menu"] [data-menu-action="inspect-node"]').should(
+      'not.exist'
+    );
+    cy.get('[data-slot="canvas-context-menu"] [data-menu-action="open-node-code"]').should(
+      'not.exist'
+    );
     cy.get('body').type('{esc}', { force: true });
 
     cy.get('[data-slot="canvas-node-workbench-close"]').should('be.visible').click();

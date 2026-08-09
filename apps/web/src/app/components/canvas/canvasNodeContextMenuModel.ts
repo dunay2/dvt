@@ -7,10 +7,7 @@ export type CanvasNodeContextMenuTarget = Readonly<{
 }>;
 
 export type CanvasNodeContextMenuActionId =
-  | 'duplicate-node'
-  | 'select-node-for-execution'
-  | 'deselect-node-from-execution'
-  | 'remove-node';
+  'duplicate-node' | 'select-node-for-execution' | 'deselect-node-from-execution' | 'remove-node';
 
 export type CanvasNodeModelerActionId = CanvasNodeContextMenuActionId;
 
