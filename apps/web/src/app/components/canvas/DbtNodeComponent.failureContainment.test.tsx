@@ -148,6 +148,6 @@ describe('DbtNodeComponent plugin failure containment', () => {
 
     expect(onOpenNodeCode).not.toHaveBeenCalled();
     expect(onInspectNode).toHaveBeenCalledOnce();
-    expect(onInspectNode).toHaveBeenCalledWith('model.orders', null);
+    expect(onInspectNode).toHaveBeenCalledWith('model.orders', 'general');
   });
 });

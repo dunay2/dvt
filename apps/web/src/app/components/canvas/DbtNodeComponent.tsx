@@ -220,7 +220,9 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
   const canAttachSchema = canMutateNodeCommands && typeof data.onAttachSchemaToNode === 'function';
   const hasCodeSection =
     data.canOpenNodeCode === true ||
-    (data.presentationTruth != null && data.presentationTruth.code.kind !== 'unavailable');
+    (data.canOpenNodeCode !== false &&
+      data.presentationTruth != null &&
+      data.presentationTruth.code.kind !== 'unavailable');
   const contextMenuModel = buildCanvasNodeModelerActionModel({
     target: { kind: 'node', nodeId: id, nodeName: data.name },
     selectedForExecution,
