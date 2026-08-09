@@ -1,6 +1,6 @@
 /** Owned concern: render graph-node card markup from an already-projected card model. */
 import { type CSSProperties, type MouseEvent as ReactMouseEvent, type ReactElement } from 'react';
-import { MoreHorizontal, Pause, Play } from 'lucide-react';
+import { MoreHorizontal } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 import { canvasNodeEmbeddedControlProps } from '../../components/canvas/canvasNodeInteractionBoundary';
@@ -32,6 +32,7 @@ export type GraphNodeCardViewProps = Readonly<{
   hovered: boolean;
   dimmed: boolean;
   overlayStyle?: CSSProperties;
+  /** Compatibility input while callers converge; execution selection is rendered only in the ellipsis menu. */
   playAction?: GraphNodeCardPlayAction | null;
   onOpenOperationalDetails?: (
     detail: GraphNodeOperationalDetail,
@@ -75,7 +76,6 @@ export function GraphNodeCardView({
   hovered,
   dimmed,
   overlayStyle,
-  playAction,
   onOpenOperationalDetails,
 }: GraphNodeCardViewProps): ReactElement {
   const operationalDetail = cardModel.operationalDetail;
@@ -119,34 +119,6 @@ export function GraphNodeCardView({
           </div>
           <div className={graphNodeCardLayoutClasses.headerActions}>
             <GraphNodeStatusChip status={cardModel.status} />
-            {playAction ? (
-              <button
-                type="button"
-                data-slot="graph-node-card-play"
-                data-state={playAction.visualState}
-                {...canvasNodeEmbeddedControlProps}
-                aria-label={playAction.label}
-                title={playAction.label}
-                disabled={playAction.disabled}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  playAction.onPress();
-                }}
-                className={graphNodeCardLayoutClasses.playButton}
-              >
-                {playAction.visualState === 'deselect' ? (
-                  <Pause
-                    data-slot="graph-node-card-pause-icon"
-                    className={graphNodeCardLayoutClasses.playIcon}
-                  />
-                ) : (
-                  <Play
-                    data-slot="graph-node-card-play-icon"
-                    className={graphNodeCardLayoutClasses.playIcon}
-                  />
-                )}
-              </button>
-            ) : null}
             <button
               type="button"
               data-slot="graph-node-card-actions"
