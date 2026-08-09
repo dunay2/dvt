@@ -219,6 +219,7 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
   const canMutateNodeCommands = data.canMutateGraph === true;
   const canAttachSchema = canMutateNodeCommands && typeof data.onAttachSchemaToNode === 'function';
   const canOpenCodeThroughWorkbench =
+    data.canOpenNodeCode !== false &&
     typeof data.onInspectNode === 'function' &&
     (data.presentationTruth?.code.kind === 'inline' ||
       data.presentationTruth?.code.kind === 'generated');
