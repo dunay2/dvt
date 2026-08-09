@@ -1,5 +1,5 @@
 /** Owned concern: render the React Flow node shell around a precomputed Canvas node body. */
-import { type DragEventHandler, type MouseEvent, type ReactNode } from 'react';
+import { type DragEventHandler, type MouseEvent as ReactMouseEvent, type ReactNode } from 'react';
 
 import { ContextMenu, ContextMenuTrigger } from '../ui/context-menu';
 import { cn } from '../ui/utils';
@@ -16,6 +16,10 @@ import type {
 import { isCanvasNodeEmbeddedControlTarget } from './canvasNodeInteractionBoundary';
 import styles from './CanvasNodeShell.module.css';
 
+type GovernedNodeActionContextMenuEvent = MouseEvent & Readonly<{
+  dvtNodeActionsRequest?: boolean;
+}>;
+
 type CanvasNodeShellProps = Readonly<{
   children: ReactNode;
   contextMenuModel: CanvasNodeContextMenuModel;
@@ -28,25 +32,10 @@ type CanvasNodeShellProps = Readonly<{
   sourcePortCompatibility?: CanvasNodePortCompatibilityView;
   targetPortCompatibility?: CanvasNodePortCompatibilityView;
   onContextMenuAction: (actionId: CanvasNodeContextMenuActionId) => void;
-  onOpenCode?: () => void;
-  onOpenWorkbench?: () => void;
+  onOpenNode?: () => void;
   onDragOver?: DragEventHandler<HTMLDivElement>;
   onDrop?: DragEventHandler<HTMLDivElement>;
 }>;
-
-export function resolveCanvasNodeDoubleClickAction({
-  canOpenCode,
-  canOpenWorkbench,
-}: Readonly<{
-  canOpenCode: boolean;
-  canOpenWorkbench: boolean;
-}>): 'open-code' | 'open-workbench' | null {
-  if (canOpenCode) {
-    return 'open-code';
-  }
-
-  return canOpenWorkbench ? 'open-workbench' : null;
-}
 
 export function CanvasNodeShell({
   children,
@@ -60,27 +49,26 @@ export function CanvasNodeShell({
   sourcePortCompatibility,
   targetPortCompatibility,
   onContextMenuAction,
-  onOpenCode,
-  onOpenWorkbench,
+  onOpenNode,
   onDragOver,
   onDrop,
 }: CanvasNodeShellProps): JSX.Element {
-  const handleDoubleClick = (event: MouseEvent<HTMLDivElement>): void => {
+  const handleDoubleClick = (event: ReactMouseEvent<HTMLDivElement>): void => {
     if (isCanvasNodeEmbeddedControlTarget(event.target)) {
       return;
     }
 
-    const action = resolveCanvasNodeDoubleClickAction({
-      canOpenCode: onOpenCode != null,
-      canOpenWorkbench: onOpenWorkbench != null,
-    });
-    if (action === 'open-code') {
-      onOpenCode?.();
+    onOpenNode?.();
+  };
+
+  const handleContextMenuCapture = (event: ReactMouseEvent<HTMLDivElement>): void => {
+    const nativeEvent = event.nativeEvent as GovernedNodeActionContextMenuEvent;
+    if (nativeEvent.dvtNodeActionsRequest === true) {
       return;
     }
-    if (action === 'open-workbench') {
-      onOpenWorkbench?.();
-    }
+
+    event.preventDefault();
+    event.stopPropagation();
   };
 
   return (
@@ -89,6 +77,7 @@ export function CanvasNodeShell({
         <div
           className={cn(styles.root, 'relative')}
           onDoubleClick={handleDoubleClick}
+          onContextMenuCapture={handleContextMenuCapture}
           onDragOver={onDragOver}
           onDrop={onDrop}
         >
