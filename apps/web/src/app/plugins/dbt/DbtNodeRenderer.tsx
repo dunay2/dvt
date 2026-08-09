@@ -33,7 +33,6 @@ import type { InspectorPanelContribution, InspectorPanelProps } from '../contrac
 import type { NodeRendererProps } from '../contracts/NodeRendering';
 import { inspectorVisualClasses } from '../../components/inspector/inspectorVisualTokens';
 import { graphStatusBadgeClasses, graphStatusRingClasses } from '../graph/graphVisualTokens';
-import { buildGraphNodeCardPlayAction } from '../graph/graphNodeCardActions';
 import { buildGraphNodeCardReadModel } from '../graph/graphNodeCardReadModel';
 import type { GraphNodeOperationalDetail } from '../graph/graphNodeCardStrategyContracts';
 import { GraphNodeCardView } from '../graph/GraphNodeCardView';
@@ -229,7 +228,6 @@ export function DbtNodeRenderer({
         ? data.type
         : (kindMeta?.label ?? node.kind);
   const cardModel = buildGraphNodeCardReadModel(node, data, graphNodeCardStrategies);
-  const playAction = buildGraphNodeCardPlayAction({ nodeId: node.id, data });
   const openOperationalDetails = data.onOpenOperationalDetails;
   const columns = resolveColumns(data, node.metadata);
   const showColumns =
@@ -254,7 +252,6 @@ export function DbtNodeRenderer({
       hovered={hovered}
       dimmed={dimmed}
       overlayStyle={overlayProps.style}
-      playAction={playAction}
       onOpenOperationalDetails={
         typeof openOperationalDetails === 'function'
           ? (detail: GraphNodeOperationalDetail, anchorElement: HTMLElement) => {
