@@ -182,6 +182,7 @@ function CanvasViewportReactFlowSurface({
         onConnect={canEditEdges ? onConnect : undefined}
         onReconnect={canEditEdges ? onReconnect : undefined}
         onPaneClick={handlePaneClick}
+        onNodeDrag={handleNodeDrag}
         onNodeDragStop={handleNodeDragStop}
         nodeTypes={nodeTypes}
         nodesDraggable={canMoveNodes}
@@ -205,7 +206,6 @@ function CanvasViewportReactFlowSurface({
             onViewportChange(nextViewport);
           }
         }}
-        onNodeDrag={handleNodeDrag}
         onDrop={onDrop}
         onDragOver={onDragOver}
         onPaneContextMenu={handlePaneContextMenu}
