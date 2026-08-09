@@ -197,8 +197,11 @@ function CanvasViewportReactFlowSurface({
       tabIndex={0}
       className="h-full w-full outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-inset"
       onContextMenuCapture={contextMenuPresenter.handleViewportContextMenu}
+      onKeyDownCapture={(event) => {
+        activateFocusedCanvasNodeFromKeyboard(event);
+      }}
       onKeyDown={(event) => {
-        if (activateFocusedCanvasNodeFromKeyboard(event)) {
+        if (event.defaultPrevented) {
           return;
         }
         graphSearchController.onViewportKeyDown(event);
