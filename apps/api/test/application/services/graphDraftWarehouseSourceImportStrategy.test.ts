@@ -178,6 +178,73 @@ describe('GraphDraftWarehouseSourceImportStrategy', () => {
     expect(new Set(savedNodes.map((node) => JSON.stringify(savedPositions[node.id]))).size).toBe(2);
   });
 
+  it('keeps graph bindings aligned with collision-resistant YAML identities', async () => {
+    const sourceObjects = ['erp-data', 'erp_data'].map((schema) => ({
+      ...SOURCE_OBJECT,
+      objectId: `relation/analytics/${schema}/orders`,
+      displayName: `orders from ${schema}`,
+      locator: {
+        ...SOURCE_OBJECT.locator,
+        schema,
+      } as Extract<SourceObject['locator'], { kind: 'relation' }>,
+      connectionId: 'warehouse-prod',
+    }));
+    const context: WarehouseSourceImportCommandContext = {
+      ...CONTEXT,
+      sourceObjects,
+    };
+    const draftStore = createDraftStore(createDraft('orders-canvas'));
+    const batchMutation = createBatchMutation();
+    const strategy = createStrategy(draftStore, batchMutation);
+
+    await strategy.execute(context, {
+      schemaVersion: 'canvas-authoring-authority-binding.v1',
+      canvasId: 'orders-canvas',
+      authority: { kind: 'graph-draft' },
+    });
+
+    const appliedMutation = vi.mocked(batchMutation.apply).mock.calls[0]?.[1];
+    const yamlPaths = appliedMutation?.writes.map((write) => write.path).sort() ?? [];
+    const savedNodes = vi.mocked(draftStore.save).mock.calls[0]?.[0].draft.nodes ?? [];
+    const graphPaths = savedNodes.map((node) => node.path).sort();
+    const graphSourceNames = savedNodes.map((node) => node.metadata?.sourceName);
+
+    expect(yamlPaths).toHaveLength(2);
+    expect(new Set(yamlPaths)).toHaveLength(2);
+    expect(graphPaths).toEqual(yamlPaths);
+    expect(new Set(graphSourceNames)).toHaveLength(2);
+  });
+
+  it('fails closed when persisted nodes repeat one connected-source identity', async () => {
+    const draftStore = createDraftStore(
+      createDraftWithSourceNodes('orders-canvas', [
+        {
+          nodeId: 'src_warehouse_prod_analytics_erp_orders',
+          connectionId: 'warehouse-prod',
+          sourceObjectId: SOURCE_OBJECT.objectId,
+        },
+        {
+          nodeId: 'src_warehouse_prod_analytics_erp_orders_clone',
+          connectionId: 'warehouse-prod',
+          sourceObjectId: SOURCE_OBJECT.objectId,
+        },
+      ])
+    );
+    const batchMutation = createBatchMutation();
+    const strategy = createStrategy(draftStore, batchMutation);
+
+    await expect(
+      strategy.execute(CONTEXT, {
+        schemaVersion: 'canvas-authoring-authority-binding.v1',
+        canvasId: 'orders-canvas',
+        authority: { kind: 'graph-draft' },
+      })
+    ).rejects.toBeInstanceOf(WarehouseSourceImportDraftConflictError);
+
+    expect(batchMutation.apply).not.toHaveBeenCalled();
+    expect(draftStore.save).not.toHaveBeenCalled();
+  });
+
   it('fails closed when every canonical node ID is owned by another source identity', async () => {
     const connectionId = 'warehouse-backup';
     const stableNodeId = 'src_warehouse_backup_analytics_erp_orders';
