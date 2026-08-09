@@ -15,7 +15,7 @@ import DbtProjectFileCanvasControllerSource from './useDbtProjectFileCanvasContr
 import CanvasSelectionHandlersSource from './useCanvasSelectionHandlers.ts?raw';
 
 describe('Canvas Node Workbench W4 hardening contracts', () => {
-  it('maps each visible node gesture to one intent and keeps ellipsis operations-only', () => {
+  it('maps node navigation gestures to one intent, preserves Play/Pause, and keeps ellipsis operations-only', () => {
     expect(CanvasNodeShellSource).toContain('data-slot="canvas-node-shell"');
     expect(CanvasNodeShellSource).toContain('onOpenNode?.();');
     expect(CanvasNodeShellSource).toContain('isCanvasNodeEmbeddedControlTarget(event.target)');
@@ -26,9 +26,9 @@ describe('Canvas Node Workbench W4 hardening contracts', () => {
 
     expect(GraphNodeCardViewSource).toContain('data-slot="graph-node-card-actions"');
     expect(GraphNodeCardViewSource).toContain("'dvtNodeActionsRequest'");
-    expect(GraphNodeCardViewSource).not.toContain('data-slot="graph-node-card-play"');
-    expect(GraphNodeCardViewSource).not.toContain('GraphNodeCardPlayAction');
-    expect(GraphNodeCardViewSource).not.toContain('playAction');
+    expect(GraphNodeCardViewSource).toContain('data-slot="graph-node-card-play"');
+    expect(GraphNodeCardViewSource).toContain('GraphNodeCardPlayAction');
+    expect(GraphNodeCardViewSource).toContain('playAction');
     expect(DbtNodeComponentSource).toContain('buildCanvasNodeModelerActionModel');
     expect(DbtNodeComponentSource).toContain(
       "data.onInspectNode?.(id, hasCodeSection ? 'code' : 'general');"
