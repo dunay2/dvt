@@ -130,6 +130,7 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/CanvasNodeFloatingToolbarView.tsx
   - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx
   - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx
+  - apps/web/src/app/views/canvas/CanvasViewport.architecture.test.ts
   - apps/web/src/app/views/canvas/CanvasViewport.keyboardNodeEntry.test.ts
   - apps/web/src/app/views/canvas/CanvasViewport.nodeFloatingToolbar.test.tsx
   - apps/web/src/app/views/canvas/CanvasViewport.tsx
@@ -391,6 +392,7 @@ redGreenCycles:
     patchSurfaces:
       - apps/web/src/app/views/canvas/CanvasNodeFloatingToolbarView.test.tsx
       - apps/web/src/app/views/canvas/CanvasNodeFloatingToolbarView.tsx
+      - apps/web/src/app/views/canvas/CanvasViewport.architecture.test.ts
       - apps/web/src/app/views/canvas/CanvasViewport.nodeFloatingToolbar.test.tsx
       - apps/web/src/app/views/canvas/CanvasViewport.tsx
       - apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx
