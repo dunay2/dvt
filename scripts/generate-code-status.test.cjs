@@ -343,7 +343,7 @@ test('component topology projection uses exact DB identities, registered edges, 
         target_component_id: 'A',
         relation_type: 'calls',
         direction: 'outbound',
-        status: 'implemented',
+        status: 'drift',
       },
     ],
     responsibilities: [
@@ -365,6 +365,12 @@ test('component topology projection uses exact DB identities, registered edges, 
         subject_id: 'A',
         drift_code: 'missing-runtime-evidence',
         severity: 'warning',
+      },
+      {
+        subject_kind: 'relation',
+        subject_id: 'REL-B-A',
+        drift_code: 'relation-status-drift',
+        severity: 'error',
       },
     ],
     documents: [
@@ -407,13 +413,14 @@ test('component topology projection uses exact DB identities, registered edges, 
     'missing-canonical-document',
     'missing-responsibility',
   ]);
+  assert.deepEqual(projection.components[1].drift, ['relation-status-drift']);
   assert.deepEqual(projection.relations, [
     {
       direction: 'outbound',
       relationId: 'REL-B-A',
       relationType: 'calls',
       sourceComponentId: 'B',
-      status: 'implemented',
+      status: 'drift',
       targetComponentId: 'A',
     },
   ]);
