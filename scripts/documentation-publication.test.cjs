@@ -22,6 +22,7 @@ function lifecycleRow(root, documentPath, fields = {}) {
     document_path: documentPath,
     lifecycle_state: 'active',
     canonicality: 'canonical',
+    subject_key: documentPath,
     lifecycle_gap_kind: 'none',
     duplicate_count: 0,
     is_duplicate: false,
@@ -231,6 +232,78 @@ test('fails closed on missing or ambiguous DB lifecycle authority', async () => 
     ).assemble({ runGenerators: false }),
     /Ambiguous Planning DB lifecycle authority for docs\/index\.md.*canonical_duplicate/u
   );
+});
+
+test('reports every owner and source hash for a duplicate publishable canonical subject', async () => {
+  const root = createMinimalFixture();
+  fs.writeFileSync(path.join(root, 'docs', 'second.md'), '# Second\n', 'utf8');
+  const firstPath = 'docs/index.md';
+  const secondPath = 'docs/second.md';
+  const firstHash = sha256(fs.readFileSync(path.join(root, firstPath)));
+  const secondHash = sha256(fs.readFileSync(path.join(root, secondPath)));
+
+  await assert.rejects(
+    new DocumentationPublicationAssembler(
+      fixtureAssemblerOptions(root, {
+        lifecycleRows: [
+          lifecycleRow(root, firstPath, {
+            subject_key: 'shared-current-subject',
+            duplicate_count: 1,
+            is_duplicate: true,
+            canonical_counterpart_count: 2,
+          }),
+          lifecycleRow(root, secondPath, {
+            subject_key: 'shared-current-subject',
+            duplicate_count: 1,
+            is_duplicate: true,
+            canonical_counterpart_count: 2,
+          }),
+        ],
+        readGitSha: () => 'fixture-head',
+      })
+    ).assemble({ runGenerators: false }),
+    (error) => {
+      assert.match(
+        error.message,
+        /duplicate publishable canonical subject shared-current-subject/iu
+      );
+      assert.match(error.message, new RegExp(firstPath, 'u'));
+      assert.match(error.message, new RegExp(secondPath, 'u'));
+      assert.match(error.message, new RegExp(firstHash, 'u'));
+      assert.match(error.message, new RegExp(secondHash, 'u'));
+      return true;
+    }
+  );
+});
+
+test('accepts related proposal and supporting documents without treating them as canonical duplicates', async () => {
+  const root = createMinimalFixture();
+  fs.writeFileSync(path.join(root, 'docs', 'support.md'), '# Support\n', 'utf8');
+  const assembler = new DocumentationPublicationAssembler(
+    fixtureAssemblerOptions(root, {
+      lifecycleRows: [
+        lifecycleRow(root, 'docs/index.md', {
+          canonicality: 'proposal',
+          subject_key: 'shared-related-subject',
+          duplicate_count: 1,
+          is_duplicate: true,
+          canonical_counterpart_count: 1,
+        }),
+        lifecycleRow(root, 'docs/support.md', {
+          canonicality: 'supporting',
+          subject_key: 'shared-related-subject',
+          duplicate_count: 1,
+          is_duplicate: true,
+          canonical_counterpart_count: 1,
+        }),
+      ],
+      readGitSha: () => 'fixture-head',
+    })
+  );
+
+  const receipt = await assembler.assemble({ runGenerators: false });
+
+  assert.equal(receipt.routeCount, 2);
 });
 
 test('ignores untracked Markdown instead of treating filesystem placement as authority', async () => {
@@ -481,18 +554,80 @@ test('rejects duplicate source and generated routes', async () => {
   );
   fs.writeFileSync(path.join(root, 'zensical.yml'), 'site_name: Test\ndocs_dir: docs\n', 'utf8');
 
+  const manualHash = sha256(
+    fs.readFileSync(path.join(root, 'docs', 'concepts', 'repository-map.md'))
+  );
+  const generatedHash = sha256(
+    fs.readFileSync(path.join(root, '.generated-docs', 'concepts', 'repository-map.md'))
+  );
+
   await assert.rejects(
     new DocumentationPublicationAssembler(
       fixtureAssemblerOptions(root, {
         lifecycleRows: [
           lifecycleRow(root, 'docs/index.md'),
-          lifecycleRow(root, 'docs/concepts/repository-map.md'),
+          lifecycleRow(root, 'docs/concepts/repository-map.md', {
+            subject_key: 'repository-map',
+          }),
         ],
         readGitSha: () => 'fixture-head',
       })
     ).assemble({ runGenerators: false }),
-    /Duplicate publication route concepts\/repository-map\.md.*docs\/concepts\/repository-map\.md.*\.generated-docs\/concepts\/repository-map\.md/su
+    (error) => {
+      assert.match(error.message, /Duplicate publication route concepts\/repository-map\.md/u);
+      assert.match(error.message, /docs\/concepts\/repository-map\.md/u);
+      assert.match(error.message, /\.generated-docs\/concepts\/repository-map\.md/u);
+      assert.match(error.message, /artifactClass=repository-map/u);
+      assert.match(error.message, /subject=repository-map/u);
+      assert.match(error.message, new RegExp(manualHash, 'u'));
+      assert.match(error.message, new RegExp(generatedHash, 'u'));
+      return true;
+    }
   );
+});
+
+test('publishes the three DB-first status projections without tracked pointer classes', () => {
+  const repoRoot = path.resolve(__dirname, '..');
+  const policy = JSON.parse(
+    fs.readFileSync(path.join(repoRoot, 'docs', 'generated-docs-policy.json'), 'utf8')
+  );
+  const classes = new Map(
+    policy.artifactClasses.map((artifactClass) => [artifactClass.id, artifactClass])
+  );
+
+  for (const retiredId of [
+    'tracked-docs-status-code-state',
+    'tracked-docs-status-knowledge-intake-literature',
+    'tracked-docs-status-db-surface-inventory',
+  ]) {
+    assert.equal(classes.has(retiredId), false, retiredId);
+  }
+
+  const expectedArtifacts = new Map([
+    ['local-docs-status-code-state', '.generated-docs/planning/status/generated-code-state.md'],
+    [
+      'local-docs-status-knowledge-intake-literature',
+      '.generated-docs/planning/status/generated-knowledge-intake-literature.md',
+    ],
+    [
+      'local-docs-status-db-surface-inventory',
+      '.generated-docs/planning/status/db-surface-inventory.md',
+    ],
+  ]);
+
+  for (const [classId, artifactPath] of expectedArtifacts) {
+    const artifactClass = classes.get(classId);
+    assert.equal(artifactClass.publication?.enabled, true, classId);
+    assert.deepEqual(artifactClass.artifacts, [artifactPath], classId);
+  }
+
+  for (const pointerPath of [
+    'docs/planning/status/generated-code-state.md',
+    'docs/planning/status/generated-knowledge-intake-literature.md',
+    'docs/planning/status/db-surface-inventory.md',
+  ]) {
+    assert.equal(fs.existsSync(path.join(repoRoot, pointerPath)), false, pointerPath);
+  }
 });
 
 test('rejects missing generated sources and paths outside the generated root', async () => {
