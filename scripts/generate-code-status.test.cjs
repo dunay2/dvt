@@ -359,7 +359,14 @@ test('component topology projection uses exact DB identities, registered edges, 
       { component_id: 'B', maturity_score: '62', missing_reasons: [] },
       { component_id: 'A', maturity_score: '91', missing_reasons: [] },
     ],
-    drift: [],
+    drift: [
+      {
+        subject_kind: 'component',
+        subject_id: 'A',
+        drift_code: 'missing-runtime-evidence',
+        severity: 'warning',
+      },
+    ],
     documents: [
       {
         component_id: 'A',
@@ -394,6 +401,7 @@ test('component topology projection uses exact DB identities, registered edges, 
     },
   ]);
   assert.deepEqual(projection.components[0].gaps, []);
+  assert.deepEqual(projection.components[0].drift, ['missing-runtime-evidence']);
   assert.deepEqual(projection.components[1].gaps, [
     'missing-repository-path',
     'missing-canonical-document',
