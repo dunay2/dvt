@@ -14,7 +14,7 @@ const defaultOutputPath = path.join(
   '.generated-docs',
   'planning',
   'status',
-  'generated-db-surface-inventory.md'
+  'db-surface-inventory.md'
 );
 const authorityModeOrder = [
   'database',
@@ -155,7 +155,7 @@ function renderDbSurfaceInventory(rows) {
     '',
     `Source view: \`${sourceView}\`.`,
     '',
-    'The tracked status page is only a stable navigation pointer. This local render is the database reading surface for DB governance surface state.',
+    'This on-demand projection is the published DB-first reading surface for DB governance surface state.',
     '',
     '## Summary',
     '',
