@@ -15,7 +15,12 @@ const codeStateOutputPath = path.join(
   'status',
   'generated-code-state.md'
 );
-const repositoryMapOutputPath = path.join(repoRoot, 'docs', 'concepts', 'repository-map.md');
+const repositoryMapOutputPath = path.join(
+  repoRoot,
+  '.generated-docs',
+  'concepts',
+  'repository-map.md'
+);
 
 const GENERATION_MODES = Object.freeze({
   all: 'all',
@@ -525,26 +530,6 @@ function writeIfChanged(absPath, content) {
   return true;
 }
 
-function assertTrackedRepositoryMapClean(options = {}) {
-  const check = options.check === true || Boolean(process.env.CI);
-  if (!check) return;
-  const run = options.spawnSync || spawnSync;
-  const relativePath = relFromRepo(repositoryMapOutputPath);
-  const result = run('git', ['diff', '--exit-code', '--', relativePath], {
-    cwd: repoRoot,
-    encoding: 'utf8',
-  });
-  if (result.status === 0) return;
-  const generated = fs.readFileSync(repositoryMapOutputPath, 'utf8');
-  console.error(`[docs:status:check] ${relativePath} is stale. Regenerate and commit it.`);
-  if (result.stdout) console.error(result.stdout.trimEnd());
-  if (result.stderr) console.error(result.stderr.trimEnd());
-  console.error('--- BEGIN GENERATED REPOSITORY MAP ---');
-  console.error(generated.trimEnd());
-  console.error('--- END GENERATED REPOSITORY MAP ---');
-  throw new Error(`${relativePath} is stale.`);
-}
-
 function resolveGenerationMode(argv) {
   const knownFlags = new Set(['--code-state-only', '--repository-map-only', '--check']);
   const unknownFlags = argv.filter(
@@ -575,7 +560,7 @@ function generateCodeState(workspaces) {
   );
 }
 
-async function generateRepositoryMap(workspaces, ClientCtor, options = {}) {
+async function generateRepositoryMap(workspaces, ClientCtor) {
   const client = new ClientCtor({ connectionString: databaseUrl() });
   await client.connect();
   try {
@@ -592,7 +577,6 @@ async function generateRepositoryMap(workspaces, ClientCtor, options = {}) {
         ? `[docs:status:generate] Updated ${relFromRepo(repositoryMapOutputPath)}`
         : `[docs:status:generate] ${relFromRepo(repositoryMapOutputPath)} already up to date.`
     );
-    assertTrackedRepositoryMapClean({ check: options.check });
   } finally {
     await client.end();
   }
@@ -600,14 +584,13 @@ async function generateRepositoryMap(workspaces, ClientCtor, options = {}) {
 
 async function main(argv = process.argv.slice(2), dependencies = {}) {
   const mode = resolveGenerationMode(argv);
-  const check = argv.includes('--check');
   const collectWorkspaces =
     dependencies.collectRepositoryWorkspaceStats || collectRepositoryWorkspaceStats;
   const generateCodeStateFn = dependencies.generateCodeState || generateCodeState;
   const ClientCtor = dependencies.ClientCtor || Client;
   const generateRepositoryMapFn =
     dependencies.generateRepositoryMap ||
-    ((workspaces) => generateRepositoryMap(workspaces, ClientCtor, { check }));
+    ((workspaces) => generateRepositoryMap(workspaces, ClientCtor));
   const workspaces = collectWorkspaces(dependencies.workspaceOptions || {});
 
   if (mode !== GENERATION_MODES.repositoryMapOnly) await generateCodeStateFn(workspaces);
@@ -622,7 +605,6 @@ if (require.main === module) {
 }
 
 module.exports = {
-  assertTrackedRepositoryMapClean,
   buildRepositoryMapRows,
   collectRepositoryWorkspaceStats,
   collectWorkspaceStats,

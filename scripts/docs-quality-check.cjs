@@ -2,6 +2,8 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
+const { DocumentationPublicationPolicy } = require('./documentation-publication.cjs');
+
 const repoRoot = path.resolve(__dirname, '..');
 const docsRoot = path.join(repoRoot, 'docs');
 
@@ -62,6 +64,11 @@ function main() {
   const warnings = [];
   const files = walk(docsRoot);
   const markdownFiles = files.filter((p) => p.endsWith('.md'));
+  const publishedCanonicalFiles = new Set(
+    new DocumentationPublicationPolicy({ repoRoot })
+      .declaredRoutes()
+      .map((route) => `docs/${route}`)
+  );
 
   const uppercaseIndexes = files.filter((p) => path.basename(p) === 'INDEX.md').map((p) => rel(p));
   for (const p of uppercaseIndexes) {
@@ -111,6 +118,7 @@ function main() {
   for (const relativePath of requiredCanonicalFiles) {
     const absPath = path.join(repoRoot, ...relativePath.split('/'));
     if (!fs.existsSync(absPath)) {
+      if (publishedCanonicalFiles.has(relativePath)) continue;
       failures.push(`${relativePath} -> required canonical surface is missing.`);
       continue;
     }

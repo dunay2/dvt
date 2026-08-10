@@ -21,6 +21,12 @@ jobs:
       - name: Setup pnpm, cache and dependencies
         uses: ./.github/actions/setup-node-pnpm
 
+      - name: Prepare Planning DB publication authority
+        uses: ./.github/actions/prepare-planning-db
+        env:
+          GIT_BASE: ${{ github.sha }}
+          GIT_HEAD: ${{ github.sha }}
+
       - name: Setup Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
@@ -32,6 +38,9 @@ jobs:
         run:
           python -m pip install --disable-pip-version-check --require-hashes -r
           .github/requirements/zensical.lock
+
+      - name: Generate DB-first publication projection
+        run: pnpm docs:publish
 
       - name: Build site
         run: pnpm docs:build

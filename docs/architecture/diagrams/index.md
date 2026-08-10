@@ -1,11 +1,11 @@
 ---
-title: Architecture Diagrams
+title: Architecture Diagram Catalog
 status: Active
 owner: Architecture / Docs
 last_reviewed: 2026-04-11
 ---
 
-# Architecture Diagrams
+# Architecture Diagram Catalog
 
 Code-grounded visual architecture artifacts. Every diagram traces to shipped
 source files and uses color coding to distinguish implemented (green) from

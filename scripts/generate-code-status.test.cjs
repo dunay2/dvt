@@ -21,7 +21,6 @@ const workflowScopePath = path.join(repoRoot, 'tools', 'ci', 'policy', 'workflow
 const packageJson = require('../package.json');
 
 const {
-  assertTrackedRepositoryMapClean,
   collectRepositoryWorkspaceStats,
   listPnpmWorkspaceDirs,
   main,
@@ -335,59 +334,31 @@ test('generation modes isolate code-state and repository-map work', async () => 
   assert.deepEqual(calls, ['map']);
 });
 
-test('explicit check mode and CI reject generated map drift', () => {
-  const previousCi = process.env.CI;
-  delete process.env.CI;
-  try {
-    assert.doesNotThrow(() =>
-      assertTrackedRepositoryMapClean({
-        check: false,
-        spawnSync: () => ({ status: 1, stdout: 'diff', stderr: '' }),
-      })
-    );
-    assert.throws(
-      () =>
-        assertTrackedRepositoryMapClean({
-          check: true,
-          spawnSync: () => ({ status: 1, stdout: 'diff', stderr: '' }),
-        }),
-      /repository-map\.md is stale/u
-    );
-    process.env.CI = '1';
-    assert.throws(
-      () =>
-        assertTrackedRepositoryMapClean({
-          check: false,
-          spawnSync: () => ({ status: 1, stdout: 'diff', stderr: '' }),
-        }),
-      /repository-map\.md is stale/u
-    );
-  } finally {
-    if (previousCi === undefined) delete process.env.CI;
-    else process.env.CI = previousCi;
-  }
+test('routine docs status checks remain DB-free and do not publish documentation', () => {
+  assert.equal(
+    packageJson.scripts['docs:status:check'],
+    'pnpm docs:status:generate --code-state-only --check'
+  );
 });
 
-test('docs status check passes fail-closed intent through the nested pnpm script', () => {
-  assert.equal(packageJson.scripts['docs:status:check'], 'pnpm docs:status:generate --check');
-});
-
-test('DB-free docs workflows and contributor guidance select code-state explicitly', () => {
+test('DB-free checks stay separate from mandatory DB-first consultation and publication', () => {
   assert.match(packageJson.scripts['docs:ci'], /docs:status:generate --code-state-only/u);
 
-  const guidancePaths = [
+  const publicationGuidancePaths = [
     'AGENTS.md',
     'docs/DOCS_README.md',
-    'docs/planning/status/generated-code-state.md',
     'docs/guides/documentation-maintenance-guide-20260407.md',
-    'docs/runbooks/planning-generated-artifacts-operations-20260403.md',
-    'docs/guides/pr-preflight-and-ci-triage.md',
   ];
-  for (const guidancePath of guidancePaths) {
+  for (const guidancePath of publicationGuidancePaths) {
     const content = fs.readFileSync(path.join(repoRoot, guidancePath), 'utf8');
-    assert.match(content, /docs:status:generate --code-state-only/u, guidancePath);
-    assert.match(content, /docs:status:generate --repository-map-only/u, guidancePath);
-    assert.doesNotMatch(content, /docs:status:generate -- --(?:code-state|repository-map)-only/u);
+    assert.match(content, /planning:db:query architecture-designs/u, guidancePath);
+    assert.match(content, /pnpm docs:publish/u, guidancePath);
+    assert.match(
+      content,
+      /docs:serve[\s\S]{0,160}(?:does not|do not) generate|(?:does not|do not) generate[\s\S]{0,160}docs:serve/iu,
+      guidancePath
+    );
+    assert.doesNotMatch(content, /tracked Repository Map|commit the map/iu, guidancePath);
   }
 });
 
@@ -428,9 +399,14 @@ test('repository map output is byte-stable and preserves governed navigation', (
 
 test('policy names actual inputs and the minimal generator command', () => {
   const policy = JSON.parse(fs.readFileSync(policyPath, 'utf8'));
-  const entry = policy.artifactClasses.find((item) => item.id === 'tracked-docs-repository-map');
+  const entry = policy.artifactClasses.find((item) => item.id === 'local-docs-repository-map');
   assert.ok(entry);
   assert.equal(entry.generatorCommand, 'pnpm docs:status:generate --repository-map-only');
+  assert.deepEqual(entry.artifacts, ['.generated-docs/concepts/repository-map.md']);
+  assert.equal(entry.tracking, 'untracked');
+  assert.equal(entry.manualEditPolicy, 'generator-owned');
+  assert.deepEqual(entry.publication, { enabled: true });
+  assert.equal(fs.existsSync(path.join(repoRoot, 'docs', 'concepts', 'repository-map.md')), false);
   assert.ok(entry.sourcePaths.includes('package.json'));
   assert.ok(entry.sourcePaths.includes('pnpm-workspace.yaml'));
   assert.ok(entry.sourcePaths.includes('scripts/generated-doc-date.cjs'));
@@ -547,6 +523,7 @@ test('Repository Map publication provisions the pinned Zensical runtime first', 
     'python -m pip install --disable-pip-version-check --require-hashes -r .github/requirements/zensical.lock'
   );
   assert.doesNotMatch(installZensical.run, /--upgrade/u);
+  assert.equal(publication.run, 'pnpm docs:publish && pnpm docs:build && pnpm docs:gov:links');
 
   const lockedRequirements = fs.readFileSync(zensicalRequirementsPath, 'utf8');
   const directRequirements = fs
@@ -597,7 +574,7 @@ test(
       assert.match(output, /missing-canonical-doc-binding/u);
       assert.doesNotMatch(output, /documentation_panel_query/u);
 
-      const outputPath = path.join(repoRoot, 'docs', 'concepts', 'repository-map.md');
+      const outputPath = path.join(repoRoot, '.generated-docs', 'concepts', 'repository-map.md');
       await main(['--repository-map-only']);
       const firstGeneration = fs.readFileSync(outputPath);
       const firstModifiedAt = fs.statSync(outputPath, { bigint: true }).mtimeNs;

@@ -26,12 +26,26 @@ and build flows.
 ## Quick start
 
 ```bash
+pnpm docs:publish
 pnpm docs:serve
 ```
 
-Use the repository script instead of calling legacy docs tooling directly. The
-script runs `docs:sync` first and then serves the generated site through
-`zensical`.
+`pnpm docs:publish` is the explicit, DB-backed publication request. It imports
+current Planning DB state, runs only generators declared for publication, and
+assembles the untracked Zensical tree. `docs:serve` does not generate
+documentation; it validates and serves that existing tree. `pnpm docs:build`
+uses the same tree and also fails with the publication command when it is absent.
+
+Before consulting architecture or design, query the authority rather than
+guessing from the filesystem:
+
+```bash
+pnpm planning:db:import --if-stale
+pnpm planning:db:query architecture-designs --limit 100
+```
+
+Follow the returned canonical evidence paths for deeper reading. A rendered page
+is a disposable view, not architecture authority.
 
 For local docs validation and regeneration:
 
@@ -49,11 +63,10 @@ Generate only the ignored local code-state inventory without Planning DB:
 pnpm docs:status:generate --code-state-only
 ```
 
-After preparing and importing Planning DB, generate only the tracked Repository
-Map with:
+To request a DB-backed site projection, including Repository Map, run:
 
 ```bash
-pnpm docs:status:generate --repository-map-only
+pnpm docs:publish
 ```
 
 For strict drift enforcement against `HEAD`:
@@ -72,7 +85,8 @@ repository does not generate a second local workboard.
 
 - Primary docs runtime: `zensical`
 - Canonical docs config file: `zensical.yml`
-- Canonical local commands: `pnpm docs:serve`, `pnpm docs:build`, and `pnpm docs:ci`
+- Canonical local commands: `pnpm docs:publish`, `pnpm docs:serve`,
+  `pnpm docs:build`, and `pnpm docs:ci`
 
 One contract now owns the docs runtime and docs validation surfaces. CI keeps
 its explicit strict drift gates on top of that contract. There is no secondary

@@ -15,7 +15,7 @@
  *   tsx tools/docs/check-links.ts                 # check all docs/
  *   tsx tools/docs/check-links.ts --changed-only  # only git-changed files
  */
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -52,6 +52,7 @@ const KNOWN_RENAMES: Record<string, string> = {
 
 function main(): void {
   const report = new Report();
+  const generatedPublicationRoutes = loadGeneratedPublicationRoutes();
 
   // Exclude historical/informal directories — links in these are not maintained.
   // Keep a segment-based filter as a second guard so changed-only mode and
@@ -97,7 +98,7 @@ function main(): void {
       // Resolve target path (URL-decode encoded spaces etc. in link hrefs)
       const targetPath = resolve(fileDir, decodeURIComponent(rawPath));
 
-      if (!existsSync(targetPath)) {
+      if (!existsSync(targetPath) && !generatedPublicationRoutes.has(targetPath)) {
         report.error(
           `${filePath}:${line}`,
           `Broken link: ${rawPath}`,
@@ -129,6 +130,25 @@ function main(): void {
 
   report.print();
   process.exit(report.exitCode);
+}
+
+export function loadGeneratedPublicationRoutes(): Set<string> {
+  const policyPath = join(DOCS_DIR, 'generated-docs-policy.json');
+  const policy = JSON.parse(readFileSync(policyPath, 'utf8')) as {
+    artifactClasses?: Array<{
+      artifacts?: string[];
+      publication?: { enabled?: boolean };
+    }>;
+  };
+  const routes = new Set<string>();
+  for (const artifactClass of policy.artifactClasses ?? []) {
+    if (artifactClass.publication?.enabled !== true) continue;
+    for (const artifact of artifactClass.artifacts ?? []) {
+      const match = /^\.generated-docs\/(.+\.md)$/u.exec(artifact.replace(/\\/gu, '/'));
+      if (match && !/[*?]/u.test(match[1])) routes.add(resolve(DOCS_DIR, match[1]));
+    }
+  }
+  return routes;
 }
 
 function getChangedMarkdownFiles(): string[] {

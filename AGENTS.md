@@ -67,6 +67,26 @@ The agent MUST NOT create parallel commands, queries, services, route handlers,
 mock semantics, or documentation names for the same product intent. Reuse the
 existing rail when the intent already exists.
 
+## Architecture And Design Consultation Rule
+
+After the mandatory startup and before consulting architecture or design beyond
+the governance inventory, the agent MUST query the Planning DB authority:
+
+```bash
+pnpm planning:db:import --if-stale
+pnpm planning:db:query architecture-designs --limit 100
+```
+
+The agent must use the returned design identities, component relations, and
+canonical evidence paths to select any repository documents it reads next. It
+must not treat a filesystem search or a generated documentation page as the
+architecture authority.
+
+Documentation publication is an explicit operation. Run `pnpm docs:publish`
+only when publication is requested or required by a documentation-publication
+gate. `docs:serve` and `docs:build` do not generate documentation; they consume
+the previously assembled untracked publication tree and fail if it is absent.
+
 ## Operational Playbooks
 
 Use these as procedural complements to this file. They do not override rules in
@@ -324,16 +344,17 @@ DB-free local code-state inventory with:
 pnpm docs:status:generate --code-state-only
 ```
 
-The tracked Repository Map also includes workspace source/test counts. After a
-structural change to `apps/` or `packages/`, prepare and import the Planning DB,
-then refresh and commit the map with:
+Repository Map is an untracked, DB-backed publication artifact. Do not generate
+or commit a tracked copy. When an operator explicitly requests a documentation
+publication, run:
 
 ```bash
-pnpm docs:status:generate --repository-map-only
+pnpm docs:publish
 ```
 
-The first command is deliberately DB-free. The second is deliberately
-DB-backed and fails closed when Planning DB is unavailable.
+The code-state command is deliberately DB-free. The publication command imports
+current Planning DB state, invokes the declared generators, and assembles the
+disposable Zensical input. `docs:serve` and `docs:build` do not generate it.
 
 Whenever any file under `docs/` is added, removed, or renamed, the documentation index files go stale and CI fails. Always run:
 

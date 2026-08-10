@@ -21,7 +21,8 @@ Retained generated surfaces:
 - documentation indexes produced by `pnpm docs:sync`;
 - `docs/.manifest.json`;
 - `docs/planning/status/generated-code-state.md`;
-- `docs/concepts/repository-map.md`;
+- `.generated-docs/concepts/repository-map.md` in an explicitly requested
+  publication;
 - governance indexes and DB exports produced by `pnpm governance:refresh`.
 
 Retired surfaces:
@@ -47,9 +48,9 @@ and discoverability for retained generated surfaces.
 1. Run `pnpm docs:sync` after adding, removing, or renaming files under `docs/`.
 2. Run DB-free `pnpm docs:status:generate --code-state-only` after structural
    source changes under `apps/` or `packages/`.
-3. Prepare and import Planning DB, then run
-   `pnpm docs:status:generate --repository-map-only` to refresh the tracked
-   Repository Map after those changes.
+3. When documentation publication is explicitly requested, run
+   `pnpm docs:publish`; it imports Planning DB and includes Repository Map from
+   its untracked generator-owned source.
 4. Run `pnpm governance:refresh` after changing governance sources,
    generators, scripts, or package commands.
 5. Run `pnpm verify:prepush` before publishing the branch.
@@ -68,7 +69,7 @@ and discoverability for retained generated surfaces.
 
 - `docs:sync:check` validates tracked documentation indexes.
 - DB-free generated code-state checks validate local source inventory.
-- DB-backed Repository Map checks validate exact architecture and documentation
-  bindings against migrated and imported Planning DB state.
+- DB-backed publication checks validate exact architecture and documentation
+  bindings only in docs-relevant CI or an explicit publication request.
 - governance refresh checks validate DB-first architecture projections.
 - no CI path may require retired lane or workboard state.
