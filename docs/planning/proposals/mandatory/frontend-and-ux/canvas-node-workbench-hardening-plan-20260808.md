@@ -166,6 +166,7 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/canvasNodeWorkbenchHardening.architecture.test.ts
   - apps/web/src/app/views/canvas/dbtYamlDescriptionWorkbenchContribution.test.tsx
   - apps/web/src/app/views/canvas/dbtYamlDescriptionWorkbenchContribution.tsx
+  - apps/web/src/app/views/canvas/dbtProjectFileProjection.architecture.test.ts
   - apps/web/src/app/views/canvas/useDbtProjectFileCanvasController.ts
   - docs/concepts/repository-map.md
   - docs/planning/proposals/mandatory/frontend-and-ux/canvas-node-workbench-hardening-plan-20260808.md
@@ -216,6 +217,36 @@ domainObjects:
     type: operation read model
     owner: Canvas node interaction presentation
 symbols:
+  - path: apps/web/cypress/support/canvasExecutionSelection.ts
+    name: openCanvasNodeOperations
+    kind: function
+    exported: true
+    dddOwner: Canvas selected-closure browser interaction
+    cqRails: [SelectCanvasExecutionNode]
+    fowlerSignals: [Duplicate semantics, Test-only confidence]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web typecheck]
+  - path: apps/web/cypress/e2e/dbt/dbt-project-yaml-description-edit-live.cy.ts
+    name: openModelCodeEditor
+    kind: function
+    exported: false
+    dddOwner: File-backed dbt live-product proof
+    cqRails: [InspectCanvasNode]
+    fowlerSignals: [Duplicate semantics, Test-only confidence]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/dbt/dbt-project-yaml-description-edit-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web typecheck]
+  - path: apps/web/src/app/plugins/canvasSurfaceStrategyContracts.ts
+    name: CanvasSurfaceLaunchPoint
+    kind: type
+    exported: true
+    dddOwner: Canvas surface policy
+    cqRails: [InspectCanvasNode]
+    fowlerSignals: [Boundary drift, Duplicate semantics]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas]
   - path: apps/web/src/app/components/canvas/CanvasNodeShell.tsx
     name: GovernedNodeActionContextMenuEvent
     kind: type
