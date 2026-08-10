@@ -12,7 +12,7 @@ import {
 /**
  * Plan-fetch and ref-alignment cases for `StoredPlanExecutabilityValidator`.
  */
-export function describeStoredPlanExecutabilityValidatorFetchAndAlignmentCases(): void {
+function describeStoredPlanExecutabilityValidatorFetchAndAlignmentCases(): void {
   describe('StoredPlanExecutabilityValidator fetch and alignment checks', () => {
     it('rejects when the persisted executable plan metadata no longer matches the ref', async () => {
       const validator = new StoredPlanExecutabilityValidator({
@@ -59,3 +59,5 @@ export function describeStoredPlanExecutabilityValidatorFetchAndAlignmentCases()
     });
   });
 }
+
+describeStoredPlanExecutabilityValidatorFetchAndAlignmentCases();

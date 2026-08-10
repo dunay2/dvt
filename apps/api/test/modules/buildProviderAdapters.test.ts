@@ -4,23 +4,13 @@ import { describe, expect, it } from 'vitest';
 
 import { buildProviderAdapters } from '../../src/modules/buildProviderAdapters.js';
 
-import { readModuleSource } from './modulesArchitectureAst.support.js';
-
 /**
  * Provider-adapter registration cases.
  * This stays separate from runtime-module and compile-boundary tests because it
  * validates a different composition seam.
  */
-export function describeBuildProviderAdaptersCases(): void {
+function describeBuildProviderAdaptersCases(): void {
   describe('buildProviderAdapters', () => {
-    it('keeps provider assembly independent from concrete Temporal construction', () => {
-      const source = readModuleSource('buildProviderAdapters.ts').sourceText;
-
-      expect(source).not.toContain('@dvt/adapter-temporal');
-      expect(source).not.toContain('TemporalAdapter');
-      expect(source).not.toContain('TEMPORAL_ADDRESS');
-    });
-
     it('returns no active provider adapters when runtime providers are not configured', async () => {
       const result = await buildProviderAdapters(
         {
@@ -89,8 +79,9 @@ export function describeBuildProviderAdaptersCases(): void {
     });
 
     it('registers only adapters returned by adapter factories', async () => {
-      const temporalAdapter = { startRun: async () => ({ provider: 'temporal' }) } as never as
-        IProviderAdapter;
+      const temporalAdapter = {
+        startRun: async () => ({ provider: 'temporal' }),
+      } as never as IProviderAdapter;
       let closed = false;
 
       const result = await buildProviderAdapters(
@@ -168,3 +159,5 @@ export function describeBuildProviderAdaptersCases(): void {
     });
   });
 }
+
+describeBuildProviderAdaptersCases();

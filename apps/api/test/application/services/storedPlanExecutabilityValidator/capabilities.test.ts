@@ -14,7 +14,7 @@ import {
 /**
  * Capability-oriented cases for `StoredPlanExecutabilityValidator`.
  */
-export function describeStoredPlanExecutabilityValidatorCapabilitiesCases(): void {
+function describeStoredPlanExecutabilityValidatorCapabilitiesCases(): void {
   describe('StoredPlanExecutabilityValidator capability checks', () => {
     it('rejects object-file loading until the runtime executor capability is registered', async () => {
       const sha256 = 'a'.repeat(64);
@@ -201,3 +201,5 @@ export function describeStoredPlanExecutabilityValidatorCapabilitiesCases(): voi
     });
   });
 }
+
+describeStoredPlanExecutabilityValidatorCapabilitiesCases();
