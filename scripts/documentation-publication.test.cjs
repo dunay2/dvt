@@ -187,6 +187,10 @@ test('package and manual deploy expose one explicit publication command', () => 
     path.join(repoRoot, '.github', 'workflows', 'docs-deploy.yml'),
     'utf8'
   );
+  const prWorkflow = fs.readFileSync(
+    path.join(repoRoot, '.github', 'workflows', 'pr-quality-gate.yml'),
+    'utf8'
+  );
 
   assert.match(pkg.scripts['docs:publish'], /documentation-publication\.cjs --assemble/u);
   assert.match(pkg.scripts['docs:serve'], /documentation-publication\.cjs --check/u);
@@ -194,6 +198,10 @@ test('package and manual deploy expose one explicit publication command', () => 
   assert.doesNotMatch(pkg.scripts['docs:serve'], /docs:sync|docs:publish/u);
   assert.doesNotMatch(pkg.scripts['docs:build'], /docs:sync|docs:publish/u);
   assert.match(workflow, /run: pnpm docs:publish[\s\S]*run: pnpm docs:build/u);
+  assert.match(
+    prWorkflow,
+    /- name: Validate Repository Map publication and links[\s\S]*?run: pnpm docs:publish && pnpm docs:build && pnpm docs:gov:links\n\s+env:\n\s+GIT_BASE: \$\{\{ github\.event\.pull_request\.base\.sha \}\}\n\s+GIT_HEAD: \$\{\{ github\.sha \}\}/u
+  );
 });
 
 test('docs quality accepts canonical routes declared by publication policy', () => {
