@@ -743,6 +743,31 @@ test('published docs expose keyboard table regions and a focus-correct skip link
   assert.match(style, /\.md-nav__link--active[\s\S]*?color:\s*#3f51b5/u);
 });
 
+test('active documentation links reject historical targets excluded from publication', () => {
+  const repositoryRoot = path.resolve(__dirname, '..');
+  const checkerPath = path.join(repositoryRoot, 'tools', 'docs', 'check-links.ts');
+  const evalSource = [
+    `import { isNonPublishedDocumentationTarget } from ${JSON.stringify(checkerPath)};`,
+    `const root = ${JSON.stringify(repositoryRoot)};`,
+    'console.log(JSON.stringify([',
+    "  isNonPublishedDocumentationTarget(root + '/docs/archive/old.md'),",
+    "  isNonPublishedDocumentationTarget(root + '/docs/planning/proposals/superseded/old.md'),",
+    "  isNonPublishedDocumentationTarget(root + '/docs/planning/status/current.md'),",
+    ']));',
+  ].join('\n');
+  const result = spawnSync(process.execPath, [require.resolve('tsx/cli'), '--eval', evalSource], {
+    cwd: repositoryRoot,
+    encoding: 'utf8',
+  });
+
+  assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  assert.equal(result.stdout.trim(), '[true,true,false]');
+
+  const checker = fs.readFileSync(checkerPath, 'utf8');
+  assert.match(checker, /Non-published historical target/u);
+  assert.match(checker, /DocumentationPublicationPolicy\.isHistoricalPath/u);
+});
+
 test('docs quality accepts canonical routes declared by publication policy', () => {
   const repoRoot = path.resolve(__dirname, '..');
   const result = spawnSync(process.execPath, [path.join(__dirname, 'docs-quality-check.cjs')], {
