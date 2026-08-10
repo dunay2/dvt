@@ -144,7 +144,7 @@ function commandFileFromValidation(validationRef) {
 function isRegisteredVerificationCommand(validationRef, commands) {
   const commandSegments = String(validationRef || '')
     .trim()
-    .split(/&&|\|\||[&|;]|\r?\n/u)
+    .split(/&&|\|\||[&|;]|\r\n?|\n/u)
     .map((segment) => segment.trim());
   if (commandSegments.length === 0 || commandSegments.some((segment) => !segment)) return false;
 
