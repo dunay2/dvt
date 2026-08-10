@@ -69,6 +69,12 @@ describe('Canvas Node Workbench W4 hardening contracts', () => {
     expect(DbtProjectFileCanvasControllerSource).toContain(
       "setCodeWorkbenchTarget({ kind: 'node', nodeId: node.id, initialPath: node.path });"
     );
+    expect(DbtProjectFileCanvasControllerSource).toContain(
+      'codeWorkbenchReturnNodeIdRef.current = node.id;'
+    );
+    expect(DbtProjectFileCanvasControllerSource).toContain(
+      "setInspectorNode(returnNodeId, 'code');"
+    );
   });
 
   it('keeps contextual Workbench help and close as compact right-aligned accessible controls', () => {
