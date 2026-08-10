@@ -457,11 +457,10 @@ test('buildPrCloseoutPlan prepares generated code status before commit when need
   assert.ok(indexOf(ids, 'planning-db-ownership') < indexOf(ids, 'planning-db-up'));
   assert.ok(indexOf(ids, 'planning-db-up') < indexOf(ids, 'planning-db-health'));
   assert.ok(indexOf(ids, 'planning-db-health') < indexOf(ids, 'planning-db-import'));
-  assert.ok(indexOf(ids, 'planning-db-import') < indexOf(ids, 'docs-status-repository-map'));
-  assert.ok(indexOf(ids, 'docs-status-repository-map') < indexOf(ids, 'commit'));
-  assert.ok(indexOf(ids, 'docs-status-repository-map') < indexOf(ids, 'assert-no-unstaged'));
+  assert.ok(indexOf(ids, 'planning-db-import') < indexOf(ids, 'assert-no-unstaged'));
   assert.ok(indexOf(ids, 'assert-no-unstaged') < indexOf(ids, 'commit'));
   assert.ok(indexOf(ids, 'verify-prepush') < indexOf(ids, 'planning-db-release'));
+  assert.equal(ids.includes('docs-status-repository-map'), false);
   assert.equal(
     commandLabel(plan.find((step) => step.id === 'docs-status-code-state')),
     'pnpm docs:status:generate --code-state-only'
@@ -469,10 +468,6 @@ test('buildPrCloseoutPlan prepares generated code status before commit when need
   assert.equal(
     commandLabel(plan.find((step) => step.id === 'planning-db-health')),
     'pnpm planning:db:health --wait'
-  );
-  assert.equal(
-    commandLabel(plan.find((step) => step.id === 'docs-status-repository-map')),
-    'pnpm docs:status:generate --repository-map-only'
   );
 });
 
@@ -492,7 +487,7 @@ test('buildPrCloseoutPlan keeps Planning DB through mixed workspace and governan
   assert.equal(ids.includes('docs-status-repository-map'), false);
 });
 
-test('buildPrCloseoutPlan prepares Repository Map for workspace manifest-only changes', () => {
+test('buildPrCloseoutPlan leaves on-demand publication out of manifest-only closeout', () => {
   const plan = buildPrCloseoutPlan({
     changedFiles: ['pnpm-workspace.yaml'],
     stagedFiles: ['pnpm-workspace.yaml'],
@@ -502,11 +497,11 @@ test('buildPrCloseoutPlan prepares Repository Map for workspace manifest-only ch
 
   assert.ok(indexOf(ids, 'docs-status-code-state') < indexOf(ids, 'planning-db-up'));
   assert.ok(indexOf(ids, 'planning-db-health') < indexOf(ids, 'planning-db-import'));
-  assert.ok(indexOf(ids, 'planning-db-import') < indexOf(ids, 'docs-status-repository-map'));
-  assert.ok(indexOf(ids, 'docs-status-repository-map') < indexOf(ids, 'commit'));
+  assert.ok(indexOf(ids, 'planning-db-import') < indexOf(ids, 'commit'));
+  assert.equal(ids.includes('docs-status-repository-map'), false);
 });
 
-test('buildPrCloseoutPlan prepares Repository Map for canonical-binding inputs', () => {
+test('buildPrCloseoutPlan leaves on-demand publication out of documentation closeout', () => {
   const plan = buildPrCloseoutPlan({
     changedFiles: ['docs/contracts/index.md'],
     stagedFiles: ['docs/contracts/index.md'],
@@ -515,9 +510,9 @@ test('buildPrCloseoutPlan prepares Repository Map for canonical-binding inputs',
   const ids = stepIds(plan);
 
   assert.ok(indexOf(ids, 'planning-db-ownership') < indexOf(ids, 'planning-db-up'));
-  assert.ok(indexOf(ids, 'planning-db-import') < indexOf(ids, 'docs-status-repository-map'));
-  assert.ok(indexOf(ids, 'docs-status-repository-map') < indexOf(ids, 'commit'));
+  assert.ok(indexOf(ids, 'planning-db-import') < indexOf(ids, 'commit'));
   assert.ok(indexOf(ids, 'verify-prepush') < indexOf(ids, 'planning-db-release'));
+  assert.equal(ids.includes('docs-status-repository-map'), false);
 });
 
 test('buildPrCloseoutPlan prepares workspace projections for root and non-standard inputs', () => {
@@ -538,7 +533,7 @@ test('buildPrCloseoutPlan prepares workspace projections for root and non-standa
     const ids = stepIds(plan);
 
     assert.ok(ids.includes('docs-status-code-state'), filePath);
-    assert.ok(ids.includes('docs-status-repository-map'), filePath);
+    assert.equal(ids.includes('docs-status-repository-map'), false, filePath);
     assert.ok(indexOf(ids, 'verify-prepush') < indexOf(ids, 'planning-db-release'), filePath);
   }
 });
