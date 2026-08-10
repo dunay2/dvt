@@ -108,6 +108,8 @@ test('parseArgs builds a scoped component revise command with ownership deltas',
     'SYS-API-DOCS',
     '--status',
     'superseded',
+    '--owned-concern',
+    'Retired API-local documentation ownership.',
     '--remove-owns',
     'apps/api/docs/**',
     '--source-ref',
@@ -126,6 +128,7 @@ test('parseArgs builds a scoped component revise command with ownership deltas',
   assert.equal(command.designId, 'R1-1D-API-GOVERNANCE-OWNERSHIP-CLOSEOUT-20260810');
   assert.equal(command.componentId, 'SYS-API-DOCS');
   assert.equal(command.status, 'superseded');
+  assert.equal(command.ownedConcern, 'Retired API-local documentation ownership.');
   assert.deepEqual(command.removeOwns, ['apps/api/docs/**']);
   assert.equal(command.expectedRevision, 0);
 });
@@ -325,6 +328,8 @@ test('component revise planner overlays imported semantics under design scope', 
     'SYS-API-DOCS',
     '--status',
     'superseded',
+    '--owned-concern',
+    'Retired API-local documentation ownership.',
     '--remove-owns',
     'apps/api/docs/**',
     '--source-ref',
@@ -358,7 +363,7 @@ test('component revise planner overlays imported semantics under design scope', 
       children_required: false,
       owns: ['apps/api/docs/**'],
       excludes: [],
-      owned_concern: 'API local documentation.',
+      owned_concern: null,
       responsibilities: [],
       non_goals: [],
       reasons_to_change: [],
@@ -378,6 +383,7 @@ test('component revise planner overlays imported semantics under design scope', 
   });
 
   assert.equal(planned.definition.status, 'superseded');
+  assert.equal(planned.definition.ownedConcern, 'Retired API-local documentation ownership.');
   assert.equal(planned.definition.revision, 1);
   assert.deepEqual(planned.ownershipPatterns, []);
   assert.deepEqual(
