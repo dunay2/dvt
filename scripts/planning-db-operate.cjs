@@ -78,6 +78,15 @@ const allowedArchitectureDesignStatuses = new Set([
   'superseded',
 ]);
 const allowedArchitectureDesignCreateStatuses = new Set(['proposed', 'review']);
+const allowedArchitectureDesignTransitions = new Map([
+  ['proposed', new Set(['review', 'superseded'])],
+  ['review', new Set(['approved', 'superseded'])],
+  ['approved', new Set(['implementing', 'superseded'])],
+  ['implementing', new Set(['implemented', 'drift', 'superseded'])],
+  ['implemented', new Set(['drift', 'superseded'])],
+  ['drift', new Set(['review', 'superseded'])],
+  ['superseded', new Set()],
+]);
 const allowedArchitectureFitnessDesignStatuses = new Set([
   'proposed',
   'review',
@@ -302,11 +311,12 @@ const operationHelp = Object.freeze({
     ],
   },
   'architecture-design': {
-    operations: ['create'],
+    operations: ['create', 'transition'],
     usage:
-      'pnpm planning:db:operate architecture-design create --design <DESIGN-ID> --actor <actor>',
+      'pnpm planning:db:operate architecture-design <create|transition> --design <DESIGN-ID> --actor <actor>',
     details: [
       'CreateArchitectureDesign records database architecture authority before implementation.',
+      'TransitionArchitectureDesign advances or supersedes that authority through an audited compare-and-set lifecycle.',
       'Requires --work-item, --title, --owner, --rationale, --rail-ref, --scope, --source-ref, and --source-content-sha256.',
     ],
   },
@@ -697,6 +707,18 @@ function validateArchitectureDesignCreateStatus(value) {
   }
 
   return status;
+}
+
+function validateArchitectureDesignTransition(fromStatusValue, toStatusValue) {
+  const fromStatus = validateArchitectureDesignStatus(fromStatusValue);
+  const toStatus = validateArchitectureDesignStatus(toStatusValue);
+  if (!allowedArchitectureDesignTransitions.get(fromStatus)?.has(toStatus)) {
+    throw new Error(
+      `ARCH-DESIGN-TRANSITION-INVALID: cannot transition architecture design from ${fromStatus} to ${toStatus}.`
+    );
+  }
+
+  return { fromStatus, toStatus };
 }
 
 function validateArchitectureFowlerSignal(value) {
@@ -1210,6 +1232,17 @@ function operationPayload(command) {
     };
   }
 
+  if (command.kind === 'architecture_design_transition') {
+    return {
+      designId: command.designId,
+      fromStatus: command.fromStatus,
+      toStatus: command.toStatus,
+      reason: command.reason,
+      sourceRef: command.sourceRef,
+      sourceContentSha256: command.sourceContentSha256,
+    };
+  }
+
   if (command.kind === 'architecture_component_record') {
     return {
       designId: command.designId,
@@ -1491,7 +1524,10 @@ function defaultIdempotencyKey(command) {
     ].join(':');
   }
 
-  if (command.kind === 'architecture_design_create') {
+  if (
+    command.kind === 'architecture_design_create' ||
+    command.kind === 'architecture_design_transition'
+  ) {
     return [
       command.kind,
       command.actor || 'anonymous',
@@ -1876,11 +1912,36 @@ function validateArchitectureDesignCreateCommand(command) {
 }
 
 function parseArchitectureDesignCommand(action, args) {
-  if (action !== 'create') {
-    throw new Error(`Unknown architecture-design operation "${action}". Expected create.`);
+  const options = parseFlagOptions(args);
+  if (action === 'transition') {
+    const { fromStatus, toStatus } = validateArchitectureDesignTransition(
+      requireOption(options, 'fromStatus'),
+      requireOption(options, 'toStatus')
+    );
+    const command = {
+      kind: 'architecture_design_transition',
+      designId: validateArchitectureDesignId(requireOption(options, 'design')),
+      fromStatus,
+      toStatus,
+      reason: requireOption(options, 'reason'),
+      sourceRef: requireOption(options, 'sourceRef'),
+      sourceContentSha256: validateSha256(
+        requireOption(options, 'sourceContentSha256'),
+        'source-content-sha256'
+      ),
+      actor: requireOption(options, 'actor'),
+      idempotencyKey: options.idempotencyKey,
+    };
+
+    return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
   }
 
-  const options = parseFlagOptions(args);
+  if (action !== 'create') {
+    throw new Error(
+      `Unknown architecture-design operation "${action}". Expected create or transition.`
+    );
+  }
+
   const fowlerSignalOption = Array.isArray(options.fowlerSignal)
     ? options.fowlerSignal[0]
     : options.fowlerSignal;
@@ -2827,7 +2888,7 @@ function parseArgs(args = process.argv.slice(2)) {
 
   if (resource === 'architecture-design') {
     if (!action) {
-      throw new Error('Missing architecture-design operation. Expected create.');
+      throw new Error('Missing architecture-design operation. Expected create or transition.');
     }
 
     return parseArchitectureDesignCommand(action, rest);
@@ -3018,6 +3079,7 @@ function normalizeArchitectureDesign(row) {
   return {
     designId: row.design_id ?? row.designId,
     status: row.status,
+    approvedAt: row.approved_at ?? row.approvedAt ?? null,
   };
 }
 
@@ -3224,6 +3286,35 @@ function planArchitectureDesignCreateOperation({ command, existingDesign, operat
   };
 
   return { design, scopes, audit };
+}
+
+function planArchitectureDesignTransitionOperation({ command, existingDesign, operationId, now }) {
+  const existing = normalizeArchitectureDesign(existingDesign);
+  if (!existing) {
+    throw new Error(
+      `ARCH-DESIGN-NOT-FOUND: architecture design ${command.designId} does not exist.`
+    );
+  }
+  if (existing.status !== command.fromStatus) {
+    throw new Error(
+      `ARCH-DESIGN-TRANSITION-CONFLICT: expected ${command.designId} in ${command.fromStatus}, found ${existing.status}.`
+    );
+  }
+  validateArchitectureDesignTransition(command.fromStatus, command.toStatus);
+
+  const updatedAt = toIso(now);
+  const transition = {
+    designId: command.designId,
+    fromStatus: command.fromStatus,
+    toStatus: command.toStatus,
+    reason: command.reason,
+    approvedAt:
+      command.toStatus === 'approved' ? existing.approvedAt || updatedAt : existing.approvedAt,
+    updatedAt,
+  };
+  const audit = architectureScopedAudit({ command, operationId, now });
+
+  return { transition, audit };
 }
 
 function architectureScopedAudit({ command, operationId, now, previousRevision = 0 }) {
@@ -5041,6 +5132,35 @@ async function writePlannedArchitectureDesignCreateOperation(client, planned) {
   );
 }
 
+async function writePlannedArchitectureDesignTransitionOperation(client, planned) {
+  const result = await client.query(
+    `update architecture.design
+     set status = $3,
+         approved_at = case
+           when $3 = 'approved' then coalesce(approved_at, $4)
+           else approved_at
+         end,
+         updated_at = $5
+     where design_id = $1
+       and status = $2
+     returning design_id`,
+    [
+      planned.transition.designId,
+      planned.transition.fromStatus,
+      planned.transition.toStatus,
+      planned.transition.approvedAt,
+      planned.transition.updatedAt,
+    ]
+  );
+  if (!result.rows[0]) {
+    throw new Error(
+      `ARCH-DESIGN-TRANSITION-CONFLICT: ${planned.transition.designId} no longer has status ${planned.transition.fromStatus}.`
+    );
+  }
+
+  await writeArchitectureScopedAudit(client, planned.audit);
+}
+
 async function writeArchitectureScopedAudit(client, audit) {
   await client.query(
     `insert into architecture.design_operations
@@ -6076,6 +6196,47 @@ async function applyArchitectureDesignCreateOperation(command, options = {}) {
   }
 }
 
+async function applyArchitectureDesignTransitionOperation(command, options = {}) {
+  const client =
+    options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
+  const ownsClient = !options.client;
+
+  if (ownsClient) {
+    await client.connect();
+  }
+
+  try {
+    await assertPlanningDbCurrentSchemaReady(client);
+    await client.query('begin');
+
+    const existing = await readExistingArchitectureDesignOperation(client, command.idempotencyKey);
+    if (existing) {
+      assertArchitectureDesignIdempotentReplayMatches(existing, command);
+      await client.query('commit');
+      return { idempotent: true, audit: existing };
+    }
+
+    const existingDesign = await readArchitectureDesign(client, command.designId);
+    const planned = planArchitectureDesignTransitionOperation({
+      command,
+      existingDesign,
+      operationId: options.operationId || crypto.randomUUID(),
+      now: options.now || new Date(),
+    });
+
+    await writePlannedArchitectureDesignTransitionOperation(client, planned);
+    await client.query('commit');
+    return { idempotent: false, ...planned };
+  } catch (error) {
+    await client.query('rollback');
+    throw error;
+  } finally {
+    if (ownsClient) {
+      await client.end();
+    }
+  }
+}
+
 async function applyArchitectureComponentRecordOperation(command, options = {}) {
   const client =
     options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
@@ -6809,6 +6970,13 @@ function printOperationResult(result) {
     return;
   }
 
+  if (result.transition) {
+    console.log(
+      `[planning:db:operate] ${result.audit.operationType} ${result.transition.designId} ${result.transition.fromStatus}->${result.transition.toStatus}`
+    );
+    return;
+  }
+
   if (result.component) {
     console.log(
       `[planning:db:operate] ${result.audit.operationType} ${result.component.componentId} status=${result.component.status} responsibilities=${result.responsibilities.length}`
@@ -6938,41 +7106,43 @@ async function main() {
       ? await applyDocsResolutionOperation(command)
       : command.kind === 'architecture_design_create'
         ? await applyArchitectureDesignCreateOperation(command)
-        : command.kind === 'architecture_component_record'
-          ? await applyArchitectureComponentRecordOperation(command)
-          : command.kind === 'architecture_relation_record'
-            ? await applyArchitectureRelationRecordOperation(command)
-            : command.kind === 'architecture_contract_record'
-              ? await applyArchitectureContractRecordOperation(command)
-              : command.kind === 'architecture_port_record'
-                ? await applyArchitecturePortRecordOperation(command)
-                : command.kind === 'architecture_storage_io_record'
-                  ? await applyArchitectureStorageIoRecordOperation(command)
-                  : command.kind === 'architecture_fitness_scan'
-                    ? await applyArchitectureFitnessScanOperation(command)
-                    : command.kind === 'architecture_test_record'
-                      ? await applyArchitectureTestRecordOperation(command)
-                      : command.kind === 'architecture_observability_record'
-                        ? await applyArchitectureObservabilityRecordOperation(command)
-                        : command.kind === 'component_create'
-                          ? await applyComponentCreateOperation(command)
-                          : command.kind === 'component_revise'
-                            ? await applyComponentReviseOperation(command)
-                            : command.kind === 'component_reparent'
-                              ? await applyComponentReparentOperation(command)
-                              : command.kind === 'db_surface_upsert'
-                                ? await applyDbSurfaceUpsertOperation(command)
-                                : command.kind === 'feature_mechanization_rail_record'
-                                  ? await applyFeatureMechanizationRailRecordOperation(command)
-                                  : command.kind === 'governance_refresh_run_record'
-                                    ? await applyGovernanceRefreshRunRecordOperation(command)
-                                    : command.kind.startsWith('fowler_analysis_')
-                                      ? await applyFowlerAnalysisOperation(command)
-                                      : (() => {
-                                          throw new Error(
-                                            `Unsupported planning DB operation "${command.kind}".`
-                                          );
-                                        })();
+        : command.kind === 'architecture_design_transition'
+          ? await applyArchitectureDesignTransitionOperation(command)
+          : command.kind === 'architecture_component_record'
+            ? await applyArchitectureComponentRecordOperation(command)
+            : command.kind === 'architecture_relation_record'
+              ? await applyArchitectureRelationRecordOperation(command)
+              : command.kind === 'architecture_contract_record'
+                ? await applyArchitectureContractRecordOperation(command)
+                : command.kind === 'architecture_port_record'
+                  ? await applyArchitecturePortRecordOperation(command)
+                  : command.kind === 'architecture_storage_io_record'
+                    ? await applyArchitectureStorageIoRecordOperation(command)
+                    : command.kind === 'architecture_fitness_scan'
+                      ? await applyArchitectureFitnessScanOperation(command)
+                      : command.kind === 'architecture_test_record'
+                        ? await applyArchitectureTestRecordOperation(command)
+                        : command.kind === 'architecture_observability_record'
+                          ? await applyArchitectureObservabilityRecordOperation(command)
+                          : command.kind === 'component_create'
+                            ? await applyComponentCreateOperation(command)
+                            : command.kind === 'component_revise'
+                              ? await applyComponentReviseOperation(command)
+                              : command.kind === 'component_reparent'
+                                ? await applyComponentReparentOperation(command)
+                                : command.kind === 'db_surface_upsert'
+                                  ? await applyDbSurfaceUpsertOperation(command)
+                                  : command.kind === 'feature_mechanization_rail_record'
+                                    ? await applyFeatureMechanizationRailRecordOperation(command)
+                                    : command.kind === 'governance_refresh_run_record'
+                                      ? await applyGovernanceRefreshRunRecordOperation(command)
+                                      : command.kind.startsWith('fowler_analysis_')
+                                        ? await applyFowlerAnalysisOperation(command)
+                                        : (() => {
+                                            throw new Error(
+                                              `Unsupported planning DB operation "${command.kind}".`
+                                            );
+                                          })();
   printOperationResult(result);
 }
 
@@ -6987,6 +7157,7 @@ module.exports = {
   applyArchitectureComponentRecordOperation,
   applyArchitectureContractRecordOperation,
   applyArchitectureDesignCreateOperation,
+  applyArchitectureDesignTransitionOperation,
   applyArchitectureFitnessScanOperation,
   applyArchitecturePortRecordOperation,
   applyArchitectureStorageIoRecordOperation,
@@ -7016,6 +7187,7 @@ module.exports = {
   planArchitectureComponentRecordOperation,
   planArchitectureContractRecordOperation,
   planArchitectureDesignCreateOperation,
+  planArchitectureDesignTransitionOperation,
   planArchitectureFitnessScanOperation,
   planArchitecturePortRecordOperation,
   planArchitectureStorageIoRecordOperation,
@@ -7041,6 +7213,7 @@ module.exports = {
   writePlannedComponentReparentOperation,
   writePlannedDbSurfaceUpsertOperation,
   writePlannedArchitectureContractRecordOperation,
+  writePlannedArchitectureDesignTransitionOperation,
   writePlannedArchitectureFitnessScanOperation,
   writePlannedArchitecturePortRecordOperation,
   writePlannedArchitectureStorageIoRecordOperation,
