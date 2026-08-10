@@ -2,6 +2,7 @@
 
 Status: Accepted  
 Date: 2026-02-26
+Owners: Architecture / Engine Domain
 
 ## Context
 
