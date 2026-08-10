@@ -836,19 +836,19 @@
       },
       {
         "component_id": "SYS-API-DOCS",
-        "name": "API local documentation",
+        "name": "API architecture documentation",
         "kind": "module",
         "layer": "infra",
         "owner": "Architecture / API Docs",
-        "repo_path": "apps/api/docs/start-run-application-component.md",
-        "public_contract": "API component-level local documentation sources.",
+        "repo_path": "docs/architecture/components/api/index.md",
+        "public_contract": "DB-authoritative API architecture entry point and on-demand documentation projection contract.",
         "runtime": "none",
         "criticality": "medium",
-        "status": "review",
+        "status": "implemented",
         "maturity_score": null,
         "parent_component_id": "SYS-API-ROOT",
         "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
+        "updated_at": "2026-08-10T20:05:43.849+00:00"
       },
       {
         "component_id": "SYS-API-DOMAIN-AUTH",
@@ -932,19 +932,19 @@
       },
       {
         "component_id": "SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS",
-        "name": "API HTTP entrypoint architecture test harness",
+        "name": "API HTTP entrypoint semantic boundary evidence",
         "kind": "module",
         "layer": "infra",
-        "owner": "ApiHttpArchitectureHarnessEvidence",
-        "repo_path": "apps/api/test/entrypoints/http/httpArchitectureAst.support.ts",
-        "public_contract": "API HTTP architecture test harness evidence boundary.",
+        "owner": "ApiHttpSemanticTestEvidence",
+        "repo_path": "apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts",
+        "public_contract": "API HTTP request-boundary, authorization, validation, and route-composition semantic test evidence.",
         "runtime": "node",
         "criticality": "high",
-        "status": "review",
-        "maturity_score": 74,
+        "status": "implemented",
+        "maturity_score": null,
         "parent_component_id": "SYS-API-HTTP-ENTRYPOINT-TESTS",
         "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
+        "updated_at": "2026-08-10T20:10:10.616+00:00"
       },
       {
         "component_id": "SYS-API-HTTP-ENTRYPOINT-TESTS-AUTHENTICATION",
@@ -1636,19 +1636,19 @@
       },
       {
         "component_id": "SYS-API-TESTS-APPLICATION-SERVICES-ARCHITECTURE-HARNESS",
-        "name": "API application service architecture test harness",
+        "name": "API application service semantic test evidence",
         "kind": "module",
         "layer": "infra",
-        "owner": "ApiApplicationArchitectureHarnessEvidence",
-        "repo_path": "apps/api/test/application/services/applicationArchitectureAst.support.ts",
-        "public_contract": "API application-service architecture harness evidence boundary.",
+        "owner": "ApiApplicationSemanticTestEvidence",
+        "repo_path": "apps/api/test/application/services",
+        "public_contract": "API application-service behavior and policy test evidence boundary.",
         "runtime": "node",
         "criticality": "high",
-        "status": "review",
-        "maturity_score": 74,
+        "status": "implemented",
+        "maturity_score": null,
         "parent_component_id": "SYS-API-TESTS-APPLICATION-SERVICES",
         "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
+        "updated_at": "2026-08-10T20:05:46.248+00:00"
       },
       {
         "component_id": "SYS-API-TESTS-APPLICATION-SERVICES-AUTHORIZATION",
@@ -1684,19 +1684,19 @@
       },
       {
         "component_id": "SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE",
-        "name": "API application PlanStore service tests",
+        "name": "API application PlanStore semantic tests",
         "kind": "module",
         "layer": "infra",
         "owner": "ApiPlanStoreApplicationTestEvidence",
-        "repo_path": "apps/api/test/application/services/StoredPlanExecutabilityValidator.test.ts",
-        "public_contract": "API PlanStore application test evidence boundary.",
+        "repo_path": "apps/api/test/application/services/storedPlanExecutabilityValidator",
+        "public_contract": "API PlanStore resolution and executability semantic test evidence boundary.",
         "runtime": "node",
         "criticality": "critical",
-        "status": "review",
-        "maturity_score": 84,
+        "status": "implemented",
+        "maturity_score": null,
         "parent_component_id": "SYS-API-TESTS-APPLICATION-SERVICES",
         "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
+        "updated_at": "2026-08-10T20:05:47.479+00:00"
       },
       {
         "component_id": "SYS-API-TESTS-APPLICATION-SERVICES-PROJECTS-COST",
@@ -12693,6 +12693,34 @@
         "updated_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "work_item_id": "GH-2167",
+        "title": "API governance DB cleanup",
+        "owner": "API / Architecture / Planning DB",
+        "status": "review",
+        "rationale": "Remap current API documentation and semantic test evidence after retiring compiled catalogs and topology-only harnesses.",
+        "fowler_signal": "hidden_authority",
+        "rail_ref": "RecordArchitectureComponent",
+        "approved_at": null,
+        "supersedes_id": null,
+        "created_at": "2026-08-10T20:05:21.313+00:00",
+        "updated_at": "2026-08-10T20:05:21.313+00:00"
+      },
+      {
+        "design_id": "R1-1D-API-GOVERNANCE-DB-RESIDUAL-20260810",
+        "work_item_id": "GH-2167",
+        "title": "API governance residual evidence cleanup",
+        "owner": "API / Architecture / Planning DB",
+        "status": "review",
+        "rationale": "Repoint residual PlanStore test and validation evidence discovered by the pre-push integrity gate.",
+        "fowler_signal": "hidden_authority",
+        "rail_ref": "RecordArchitectureTestEvidence",
+        "approved_at": null,
+        "supersedes_id": null,
+        "created_at": "2026-08-10T20:11:17.367+00:00",
+        "updated_at": "2026-08-10T20:11:17.367+00:00"
+      },
+      {
         "design_id": "R1-1D-API-GOVERNANCE-HARDCUT-20260810",
         "work_item_id": "GH-2167",
         "title": "API compiled governance retirement",
@@ -13888,12 +13916,12 @@
         "contract_id": "CONTRACT-SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS-EVIDENCE",
         "contract_kind": "type",
         "owner_component_id": "SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS",
-        "contract_ref": "API HTTP architecture test harness evidence boundary.",
+        "contract_ref": "API HTTP semantic boundary test evidence.",
         "compatibility": "internal",
         "status": "implemented",
-        "validation_command": "pnpm --filter dvt-api test -- apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts apps/api/test/entrypoints/http/startRunHttpEntrypointComponent.architecture.test.ts apps/api/test/entrypoints/http/planRouteHardCutSemantic.architecture.test.ts",
+        "validation_command": "pnpm --filter dvt-api test:ci",
         "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
+        "updated_at": "2026-08-10T20:10:11.814+00:00"
       },
       {
         "contract_id": "CONTRACT-SYS-API-HTTP-ENTRYPOINT-TESTS-AUTHENTICATION-EVIDENCE",
@@ -14119,12 +14147,12 @@
         "contract_id": "CONTRACT-SYS-API-TESTS-APPLICATION-SERVICES-ARCHITECTURE-HARNESS-EVIDENCE",
         "contract_kind": "type",
         "owner_component_id": "SYS-API-TESTS-APPLICATION-SERVICES-ARCHITECTURE-HARNESS",
-        "contract_ref": "API application-service architecture harness evidence boundary.",
+        "contract_ref": "API application-service semantic test evidence boundary.",
         "compatibility": "internal",
         "status": "implemented",
-        "validation_command": "pnpm --filter dvt-api test -- apps/api/test/application/services/startRunApplicationComponent.architecture.test.ts apps/api/test/application/services/workspaceGraphDraftApplicationComponent.architecture.test.ts",
+        "validation_command": "pnpm --filter dvt-api test:ci",
         "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
+        "updated_at": "2026-08-10T20:06:49.862+00:00"
       },
       {
         "contract_id": "CONTRACT-SYS-API-TESTS-APPLICATION-SERVICES-AUTHORIZATION-EVIDENCE",
@@ -14163,12 +14191,12 @@
         "contract_id": "CONTRACT-SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE-EVIDENCE",
         "contract_kind": "type",
         "owner_component_id": "SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE",
-        "contract_ref": "API PlanStore application test evidence boundary.",
+        "contract_ref": "API PlanStore semantic test evidence boundary.",
         "compatibility": "internal",
         "status": "implemented",
-        "validation_command": "pnpm --filter dvt-api test -- apps/api/test/application/services/StoredExecutablePlanResolver.test.ts apps/api/test/application/services/StoredPlanExecutabilityValidator.test.ts apps/api/test/application/services/WorkflowEngineFactory.test.ts",
+        "validation_command": "pnpm --filter dvt-api test:ci",
         "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
+        "updated_at": "2026-08-10T20:11:20.986+00:00"
       },
       {
         "contract_id": "CONTRACT-SYS-API-TESTS-APPLICATION-SERVICES-PROJECTS-COST-EVIDENCE",
@@ -17661,7 +17689,7 @@
       {
         "observability_id": "OBS-SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS-API-HTTP-ENTRYPOINT-TEST-EVIDENCE",
         "component_id": "SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS",
-        "signal_name": "API HTTP entrypoint architecture test harness is observable through component-profile, component-quality, and focused dvt-api test output.",
+        "signal_name": "API HTTP semantic boundary evidence is observable through focused dvt-api test output.",
         "signal_kind": "log",
         "required": true,
         "status": "implemented",
@@ -17931,7 +17959,7 @@
       {
         "observability_id": "OBS-SYS-API-TESTS-APPLICATION-SERVICES-ARCHITECTURE-HARNESS-API-APPLICATION-SERVICE-TEST-EVIDENCE",
         "component_id": "SYS-API-TESTS-APPLICATION-SERVICES-ARCHITECTURE-HARNESS",
-        "signal_name": "API application service architecture test harness is observable through component-profile, component-quality, and focused dvt-api test output.",
+        "signal_name": "API application-service semantic evidence is observable through focused dvt-api test output.",
         "signal_kind": "log",
         "required": true,
         "status": "implemented",
@@ -36434,10 +36462,10 @@
       {
         "responsibility_id": "RESP-SYS-API-DOCS",
         "component_id": "SYS-API-DOCS",
-        "responsibility": "Own API local component documentation and keep it linked to API implementation components.",
-        "reason_to_change": "API local documentation, component guide, or docs-to-code mapping changes.",
+        "responsibility": "Own the current API architecture entry point and its DB-first consultation contract.",
+        "reason_to_change": "API architecture authority or publication contract changes.",
         "ddd_owner": "Architecture / API Docs",
-        "status": "implemented",
+        "status": "proposed",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -36488,10 +36516,10 @@
       {
         "responsibility_id": "RESP-SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS",
         "component_id": "SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS",
-        "responsibility": "Keep HTTP architecture-test support explicit so component profiles distinguish harness files from route behavior evidence.",
-        "reason_to_change": "HTTP architecture AST support, architecture harness import, or component-profile evidence changes.",
-        "ddd_owner": "ApiHttpArchitectureHarnessEvidence",
-        "status": "implemented",
+        "responsibility": "Prove HTTP request boundaries through executable semantic tests without source-text topology locks.",
+        "reason_to_change": "HTTP request resolution, authorization, validation, or composition evidence changes.",
+        "ddd_owner": "ApiHttpSemanticTestEvidence",
+        "status": "proposed",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -36749,10 +36777,10 @@
       {
         "responsibility_id": "RESP-SYS-API-TESTS-APPLICATION-SERVICES-ARCHITECTURE-HARNESS",
         "component_id": "SYS-API-TESTS-APPLICATION-SERVICES-ARCHITECTURE-HARNESS",
-        "responsibility": "Keep architecture-test support assets explicit so component profiles can distinguish harness files from product use-case evidence.",
-        "reason_to_change": "Application architecture AST support, artifact helper, or architecture test harness changes.",
-        "ddd_owner": "ApiApplicationArchitectureHarnessEvidence",
-        "status": "implemented",
+        "responsibility": "Prove application-service policy and behavior through executable semantic tests without AST topology coupling.",
+        "reason_to_change": "Application-service behavior, policy, authorization, or orchestration evidence changes.",
+        "ddd_owner": "ApiApplicationSemanticTestEvidence",
+        "status": "proposed",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -36776,10 +36804,10 @@
       {
         "responsibility_id": "RESP-SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE",
         "component_id": "SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE",
-        "responsibility": "Validate stored plan resolution, executability cases, and workflow engine factory wiring while relating the evidence back to PlanStore implementation leaves.",
-        "reason_to_change": "Stored executable plan resolver, stored plan executability, registry/fetch/capability cases, workflow engine factory, or PlanStore API evidence changes.",
+        "responsibility": "Validate stored plan resolution and executability through focused capability, registry, and alignment suites.",
+        "reason_to_change": "Stored plan resolution, capability, registry, fetch, or alignment behavior changes.",
         "ddd_owner": "ApiPlanStoreApplicationTestEvidence",
-        "status": "implemented",
+        "status": "proposed",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -42683,7 +42711,7 @@
       {
         "test_id": "TEST-SYS-API-DOCS-PRIMARY",
         "component_id": "SYS-API-DOCS",
-        "test_path": "apps/api/docs/start-run-application-component.md",
+        "test_path": "docs/architecture/components/api/index.md",
         "test_kind": "architecture",
         "coverage_level": "boundary",
         "required": true,
@@ -42763,31 +42791,31 @@
       {
         "test_id": "TEST-SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS-1",
         "component_id": "SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS",
-        "test_path": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts",
-        "test_kind": "architecture",
+        "test_path": "apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts",
+        "test_kind": "unit",
         "coverage_level": "boundary",
         "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts apps/api/test/entrypoints/http/startRunHttpEntrypointComponent.architecture.test.ts apps/api/test/entrypoints/http/planRouteHardCutSemantic.architecture.test.ts",
+        "validation_command": "pnpm --filter dvt-api test:ci",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
         "test_id": "TEST-SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS-2",
         "component_id": "SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS",
-        "test_path": "apps/api/test/entrypoints/http/startRunHttpEntrypointComponent.architecture.test.ts",
-        "test_kind": "architecture",
+        "test_path": "apps/api/test/entrypoints/http/startRunRoute.authAndSuccess.test.ts",
+        "test_kind": "unit",
         "coverage_level": "boundary",
         "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts apps/api/test/entrypoints/http/startRunHttpEntrypointComponent.architecture.test.ts apps/api/test/entrypoints/http/planRouteHardCutSemantic.architecture.test.ts",
+        "validation_command": "pnpm --filter dvt-api test:ci",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
         "test_id": "TEST-SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS-3",
         "component_id": "SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS",
-        "test_path": "apps/api/test/entrypoints/http/planRouteHardCutSemantic.architecture.test.ts",
-        "test_kind": "architecture",
+        "test_path": "apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts",
+        "test_kind": "unit",
         "coverage_level": "boundary",
         "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts apps/api/test/entrypoints/http/startRunHttpEntrypointComponent.architecture.test.ts apps/api/test/entrypoints/http/planRouteHardCutSemantic.architecture.test.ts",
+        "validation_command": "pnpm --filter dvt-api test:ci",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -44233,11 +44261,11 @@
       {
         "test_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-3",
         "component_id": "SYS-API-TESTS-APPLICATION-SERVICES",
-        "test_path": "apps/api/test/application/services/StoredPlanExecutabilityValidator.test.ts",
+        "test_path": "apps/api/test/application/services/storedPlanExecutabilityValidator/registry.test.ts",
         "test_kind": "unit",
         "coverage_level": "behavior",
         "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- application",
+        "validation_command": "pnpm --filter dvt-api test:ci",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -44263,21 +44291,21 @@
       {
         "test_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-ARCHITECTURE-HARNESS-1",
         "component_id": "SYS-API-TESTS-APPLICATION-SERVICES-ARCHITECTURE-HARNESS",
-        "test_path": "apps/api/test/application/services/startRunApplicationComponent.architecture.test.ts",
-        "test_kind": "architecture",
+        "test_path": "apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts",
+        "test_kind": "unit",
         "coverage_level": "boundary",
         "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- apps/api/test/application/services/startRunApplicationComponent.architecture.test.ts apps/api/test/application/services/workspaceGraphDraftApplicationComponent.architecture.test.ts",
+        "validation_command": "pnpm --filter dvt-api test:ci",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
         "test_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-ARCHITECTURE-HARNESS-2",
         "component_id": "SYS-API-TESTS-APPLICATION-SERVICES-ARCHITECTURE-HARNESS",
-        "test_path": "apps/api/test/application/services/workspaceGraphDraftApplicationComponent.architecture.test.ts",
-        "test_kind": "architecture",
+        "test_path": "apps/api/test/application/services/getWorkspaceGraphDraftUseCase.authority.test.ts",
+        "test_kind": "unit",
         "coverage_level": "boundary",
         "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- apps/api/test/application/services/startRunApplicationComponent.architecture.test.ts apps/api/test/application/services/workspaceGraphDraftApplicationComponent.architecture.test.ts",
+        "validation_command": "pnpm --filter dvt-api test:ci",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -44347,17 +44375,17 @@
         "test_kind": "unit",
         "coverage_level": "behavior",
         "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- apps/api/test/application/services/StoredExecutablePlanResolver.test.ts apps/api/test/application/services/StoredPlanExecutabilityValidator.test.ts apps/api/test/application/services/WorkflowEngineFactory.test.ts",
+        "validation_command": "pnpm --filter dvt-api test:ci",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
         "test_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE-2",
         "component_id": "SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE",
-        "test_path": "apps/api/test/application/services/StoredPlanExecutabilityValidator.test.ts",
+        "test_path": "apps/api/test/application/services/storedPlanExecutabilityValidator/capabilities.test.ts",
         "test_kind": "unit",
         "coverage_level": "behavior",
         "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- apps/api/test/application/services/StoredExecutablePlanResolver.test.ts apps/api/test/application/services/StoredPlanExecutabilityValidator.test.ts apps/api/test/application/services/WorkflowEngineFactory.test.ts",
+        "validation_command": "pnpm --filter dvt-api test:ci",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -44367,8 +44395,28 @@
         "test_kind": "unit",
         "coverage_level": "behavior",
         "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- apps/api/test/application/services/StoredExecutablePlanResolver.test.ts apps/api/test/application/services/StoredPlanExecutabilityValidator.test.ts apps/api/test/application/services/WorkflowEngineFactory.test.ts",
+        "validation_command": "pnpm --filter dvt-api test:ci",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
+      },
+      {
+        "test_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE-4",
+        "component_id": "SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE",
+        "test_path": "apps/api/test/application/services/storedPlanExecutabilityValidator/registry.test.ts",
+        "test_kind": "unit",
+        "coverage_level": "behavior",
+        "required": true,
+        "validation_command": "pnpm --filter dvt-api test:ci",
+        "created_at": "2026-08-10T20:06:24.503+00:00"
+      },
+      {
+        "test_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE-5",
+        "component_id": "SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE",
+        "test_path": "apps/api/test/application/services/storedPlanExecutabilityValidator/fetchAndAlignment.test.ts",
+        "test_kind": "unit",
+        "coverage_level": "behavior",
+        "required": true,
+        "validation_command": "pnpm --filter dvt-api test:ci",
+        "created_at": "2026-08-10T20:06:25.739+00:00"
       },
       {
         "test_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-PROJECTS-COST-1",
@@ -47033,11 +47081,11 @@
       {
         "test_id": "TEST-SYS-PLANSTORE-API-EXECUTABILITY-VALIDATION",
         "component_id": "SYS-PLANSTORE-API-EXECUTABILITY-VALIDATION",
-        "test_path": "apps/api/test/application/services/StoredPlanExecutabilityValidator.test.ts",
+        "test_path": "apps/api/test/application/services/storedPlanExecutabilityValidator/fetchAndAlignment.test.ts",
         "test_kind": "unit",
         "coverage_level": "behavior",
         "required": true,
-        "validation_command": "pnpm --filter @dvt/api test -- application/services/StoredPlanExecutabilityValidator.test.ts",
+        "validation_command": "pnpm --filter dvt-api test:ci",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -81658,6 +81706,238 @@
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-DOCS",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-10T20:05:21.313+00:00"
+      },
+      {
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-DOCS",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T20:05:21.313+00:00"
+      },
+      {
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-10T20:05:21.313+00:00"
+      },
+      {
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T20:05:21.313+00:00"
+      },
+      {
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-TESTS-APPLICATION-SERVICES-ARCHITECTURE-HARNESS",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-10T20:05:21.313+00:00"
+      },
+      {
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-TESTS-APPLICATION-SERVICES-ARCHITECTURE-HARNESS",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T20:05:21.313+00:00"
+      },
+      {
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-10T20:05:21.313+00:00"
+      },
+      {
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T20:05:21.313+00:00"
+      },
+      {
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "subject_kind": "contract",
+        "subject_id": "CONTRACT-SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS-EVIDENCE",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T20:05:21.313+00:00"
+      },
+      {
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "subject_kind": "contract",
+        "subject_id": "CONTRACT-SYS-API-TESTS-APPLICATION-SERVICES-ARCHITECTURE-HARNESS-EVIDENCE",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T20:05:21.313+00:00"
+      },
+      {
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "subject_kind": "evidence",
+        "subject_id": "OBS-SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS-API-HTTP-ENTRYPOINT-TEST-EVIDENCE",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T20:05:21.313+00:00"
+      },
+      {
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "subject_kind": "evidence",
+        "subject_id": "OBS-SYS-API-TESTS-APPLICATION-SERVICES-ARCHITECTURE-HARNESS-API-APPLICATION-SERVICE-TEST-EVIDENCE",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T20:05:21.313+00:00"
+      },
+      {
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-DOCS-PRIMARY",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T20:05:21.313+00:00"
+      },
+      {
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS-1",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T20:05:21.313+00:00"
+      },
+      {
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS-2",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T20:05:21.313+00:00"
+      },
+      {
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS-3",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T20:05:21.313+00:00"
+      },
+      {
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-ARCHITECTURE-HARNESS-1",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T20:05:21.313+00:00"
+      },
+      {
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-ARCHITECTURE-HARNESS-2",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T20:05:21.313+00:00"
+      },
+      {
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE-1",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T20:05:21.313+00:00"
+      },
+      {
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE-2",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T20:05:21.313+00:00"
+      },
+      {
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE-3",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T20:05:21.313+00:00"
+      },
+      {
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE-4",
+        "scope_kind": "may_create",
+        "required": true,
+        "created_at": "2026-08-10T20:05:21.313+00:00"
+      },
+      {
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE-5",
+        "scope_kind": "may_create",
+        "required": true,
+        "created_at": "2026-08-10T20:05:21.313+00:00"
+      },
+      {
+        "design_id": "R1-1D-API-GOVERNANCE-DB-RESIDUAL-20260810",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-10T20:11:17.367+00:00"
+      },
+      {
+        "design_id": "R1-1D-API-GOVERNANCE-DB-RESIDUAL-20260810",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-TESTS-APPLICATION-SERVICES",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-10T20:11:17.367+00:00"
+      },
+      {
+        "design_id": "R1-1D-API-GOVERNANCE-DB-RESIDUAL-20260810",
+        "subject_kind": "component",
+        "subject_id": "SYS-PLANSTORE-API-EXECUTABILITY-VALIDATION",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-10T20:11:17.367+00:00"
+      },
+      {
+        "design_id": "R1-1D-API-GOVERNANCE-DB-RESIDUAL-20260810",
+        "subject_kind": "contract",
+        "subject_id": "CONTRACT-SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE-EVIDENCE",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T20:11:17.367+00:00"
+      },
+      {
+        "design_id": "R1-1D-API-GOVERNANCE-DB-RESIDUAL-20260810",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-3",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T20:11:17.367+00:00"
+      },
+      {
+        "design_id": "R1-1D-API-GOVERNANCE-DB-RESIDUAL-20260810",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-PLANSTORE-API-EXECUTABILITY-VALIDATION",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T20:11:17.367+00:00"
+      },
+      {
         "design_id": "R1-1D-API-GOVERNANCE-HARDCUT-20260810",
         "subject_kind": "command",
         "subject_id": "GeneratePlanningDerivedSurfaces",
@@ -82556,6 +82836,308 @@
     ],
     "design_operations": [
       {
+        "operation_id": "0ae717d4-2bc3-4648-b1bf-4abfbaffa780",
+        "idempotency_key": "architecture_component_record:codex:R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810:SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS:a81aebf64fdfc14b",
+        "operation_type": "architecture_component_record",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "kind": "module",
+          "name": "Retired API HTTP topology harness",
+          "layer": "infra",
+          "owner": "ApiHttpSemanticTestEvidence",
+          "status": "deprecated",
+          "runtime": "node",
+          "designId": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+          "repoPath": "apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "componentId": "SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS",
+          "criticality": "low",
+          "publicContract": "Retired source-text topology harness identity; semantic evidence is owned by focused HTTP test components.",
+          "responsibilities": [
+            {
+              "dddOwner": "ApiHttpSemanticTestEvidence",
+              "reasonToChange": "Retirement evidence or historical identity correction only.",
+              "responsibility": "Record retirement of the source-text topology harness without preserving a parallel test owner.",
+              "responsibilityId": "RESP-SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS"
+            }
+          ],
+          "parentComponentId": "SYS-API-HTTP-ENTRYPOINT-TESTS",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T20:09:37.199+00:00"
+      },
+      {
+        "operation_id": "0f0686a7-0c48-449e-a9e1-461dc28428df",
+        "idempotency_key": "architecture_test_record:codex:R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810:SYS-API-DOCS:54569744abf2d400",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-SYS-API-DOCS-PRIMARY",
+          "designId": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+          "required": true,
+          "testKind": "architecture",
+          "testPath": "docs/architecture/components/api/index.md",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "componentId": "SYS-API-DOCS",
+          "coverageLevel": "boundary",
+          "validationCommand": "pnpm ci:docs",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T20:06:13.726+00:00"
+      },
+      {
+        "operation_id": "0f4a2945-8281-4051-84b4-3641aca26dc3",
+        "idempotency_key": "architecture_observability_record:codex:R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810:SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS:d7cf597146975179",
+        "operation_type": "architecture_observability_record",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "status": "not_applicable",
+          "designId": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+          "required": true,
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "signalKind": "log",
+          "signalName": "Retired topology harness has no independent runtime observability requirement.",
+          "componentId": "SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS",
+          "observabilityId": "OBS-SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS-API-HTTP-ENTRYPOINT-TEST-EVIDENCE",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T20:09:39.613+00:00"
+      },
+      {
+        "operation_id": "115f433c-18cd-4711-8a60-b49216f614fb",
+        "idempotency_key": "architecture_design_create:codex:R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810:6fd2e8782491a966",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "API / Architecture / Planning DB",
+          "title": "API governance DB cleanup",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-API-DOCS",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-API-DOCS",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-API-TESTS-APPLICATION-SERVICES-ARCHITECTURE-HARNESS",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-API-TESTS-APPLICATION-SERVICES-ARCHITECTURE-HARNESS",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-SYS-API-DOCS-PRIMARY",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS-1",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS-2",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS-3",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-ARCHITECTURE-HARNESS-1",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-ARCHITECTURE-HARNESS-2",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE-1",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE-2",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE-3",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_create",
+              "subjectId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE-4",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_create",
+              "subjectId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE-5",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "CONTRACT-SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS-EVIDENCE",
+              "subjectKind": "contract"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "CONTRACT-SYS-API-TESTS-APPLICATION-SERVICES-ARCHITECTURE-HARNESS-EVIDENCE",
+              "subjectKind": "contract"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "OBS-SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS-API-HTTP-ENTRYPOINT-TEST-EVIDENCE",
+              "subjectKind": "evidence"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "OBS-SYS-API-TESTS-APPLICATION-SERVICES-ARCHITECTURE-HARNESS-API-APPLICATION-SERVICE-TEST-EVIDENCE",
+              "subjectKind": "evidence"
+            }
+          ],
+          "status": "review",
+          "railRef": "RecordArchitectureComponent",
+          "designId": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+          "rationale": "Remap current API documentation and semantic test evidence after retiring compiled catalogs and topology-only harnesses.",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "workItemId": "GH-2167",
+          "fowlerSignal": "hidden_authority",
+          "supersedesId": null,
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T20:05:21.313+00:00"
+      },
+      {
+        "operation_id": "14cb8dcf-8a1b-4641-a8f9-f6b8fa73ec9c",
+        "idempotency_key": "architecture_contract_record:codex:R1-1D-API-GOVERNANCE-DB-RESIDUAL-20260810:CONTRACT-SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE-EVIDENCE:20ca57a4e968eccb",
+        "operation_type": "architecture_contract_record",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-DB-RESIDUAL-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "status": "implemented",
+          "designId": "R1-1D-API-GOVERNANCE-DB-RESIDUAL-20260810",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "contractId": "CONTRACT-SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE-EVIDENCE",
+          "contractRef": "API PlanStore semantic test evidence boundary.",
+          "contractKind": "type",
+          "compatibility": "internal",
+          "ownerComponentId": "SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE",
+          "validationCommand": "pnpm --filter dvt-api test:ci",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T20:11:20.986+00:00"
+      },
+      {
+        "operation_id": "193a63db-f02a-47dc-8c31-bb832da55392",
+        "idempotency_key": "architecture_test_record:codex:R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810:SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE:bc4455f830318a93",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE-1",
+          "designId": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+          "required": true,
+          "testKind": "unit",
+          "testPath": "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "componentId": "SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE",
+          "coverageLevel": "behavior",
+          "validationCommand": "pnpm --filter dvt-api test:ci",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T20:06:20.925+00:00"
+      },
+      {
         "operation_id": "2842be6c-ac3c-4810-8bcf-4c0302f5cc30",
         "idempotency_key": "doc1-7-runtime-provider-truth-design",
         "operation_type": "architecture_design_create",
@@ -82668,6 +83250,80 @@
         "created_at": "2026-08-10T17:19:38.904+00:00"
       },
       {
+        "operation_id": "39921801-fff9-4f1c-819e-e67fac74a866",
+        "idempotency_key": "architecture_test_record:codex:R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810:SYS-API-TESTS-APPLICATION-SERVICES-ARCHITECTURE-HARNESS:b119c8e9c74c7e01",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-ARCHITECTURE-HARNESS-2",
+          "designId": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+          "required": true,
+          "testKind": "unit",
+          "testPath": "apps/api/test/application/services/getWorkspaceGraphDraftUseCase.authority.test.ts",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "componentId": "SYS-API-TESTS-APPLICATION-SERVICES-ARCHITECTURE-HARNESS",
+          "coverageLevel": "boundary",
+          "validationCommand": "pnpm --filter dvt-api test:ci",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T20:06:19.745+00:00"
+      },
+      {
+        "operation_id": "4649872d-e089-4854-9f20-d8289447364e",
+        "idempotency_key": "architecture_test_record:codex:R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810:SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE:d6d60eefa4f30c99",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE-2",
+          "designId": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+          "required": true,
+          "testKind": "unit",
+          "testPath": "apps/api/test/application/services/storedPlanExecutabilityValidator/capabilities.test.ts",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "componentId": "SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE",
+          "coverageLevel": "behavior",
+          "validationCommand": "pnpm --filter dvt-api test:ci",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T20:06:22.12+00:00"
+      },
+      {
+        "operation_id": "56e8c5f8-a172-4acf-b782-230dd86042eb",
+        "idempotency_key": "architecture_observability_record:codex:R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810:SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS:b0fb2dfd7f4b4c1a",
+        "operation_type": "architecture_observability_record",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "status": "implemented",
+          "designId": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+          "required": true,
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "signalKind": "log",
+          "signalName": "API HTTP semantic evidence is observable through focused dvt-api test output.",
+          "componentId": "SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS",
+          "observabilityId": "OBS-SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS-API-HTTP-ENTRYPOINT-TEST-EVIDENCE",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T20:07:00.63+00:00"
+      },
+      {
         "operation_id": "65f75259-b486-4f53-b38d-785db1261564",
         "idempotency_key": "architecture_design_create:codex:PLANNING-DB-CURRENT-SCHEMA-HARD-CUT-20260808:24f99b6f81287f13",
         "operation_type": "architecture_design_create",
@@ -82732,6 +83388,219 @@
         "created_at": "2026-08-08T02:12:27.921+00:00"
       },
       {
+        "operation_id": "70a131ff-2be8-4bda-a6b3-b9fad2a04598",
+        "idempotency_key": "architecture_contract_record:codex:R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810:CONTRACT-SYS-API-TESTS-APPLICATION-SERVICES-ARCHITECTURE-HARNESS-EVIDENCE:61c55a15d97d18bd",
+        "operation_type": "architecture_contract_record",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "status": "implemented",
+          "designId": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "contractId": "CONTRACT-SYS-API-TESTS-APPLICATION-SERVICES-ARCHITECTURE-HARNESS-EVIDENCE",
+          "contractRef": "API application-service semantic test evidence boundary.",
+          "contractKind": "type",
+          "compatibility": "internal",
+          "ownerComponentId": "SYS-API-TESTS-APPLICATION-SERVICES-ARCHITECTURE-HARNESS",
+          "validationCommand": "pnpm --filter dvt-api test:ci",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T20:06:49.862+00:00"
+      },
+      {
+        "operation_id": "70bc3441-46d9-4d2d-973c-cc5088d32765",
+        "idempotency_key": "architecture_component_record:codex:R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810:SYS-API-TESTS-APPLICATION-SERVICES-ARCHITECTURE-HARNESS:8072a26a69406e36",
+        "operation_type": "architecture_component_record",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "kind": "module",
+          "name": "API application service semantic test evidence",
+          "layer": "infra",
+          "owner": "ApiApplicationSemanticTestEvidence",
+          "status": "implemented",
+          "runtime": "node",
+          "designId": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+          "repoPath": "apps/api/test/application/services",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "componentId": "SYS-API-TESTS-APPLICATION-SERVICES-ARCHITECTURE-HARNESS",
+          "criticality": "high",
+          "publicContract": "API application-service behavior and policy test evidence boundary.",
+          "responsibilities": [
+            {
+              "dddOwner": "ApiApplicationSemanticTestEvidence",
+              "reasonToChange": "Application-service behavior, policy, authorization, or orchestration evidence changes.",
+              "responsibility": "Prove application-service policy and behavior through executable semantic tests without AST topology coupling.",
+              "responsibilityId": "RESP-SYS-API-TESTS-APPLICATION-SERVICES-ARCHITECTURE-HARNESS"
+            }
+          ],
+          "parentComponentId": "SYS-API-TESTS-APPLICATION-SERVICES",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T20:05:46.248+00:00"
+      },
+      {
+        "operation_id": "747336d2-ad29-452a-bbd6-7f5b0a8ed620",
+        "idempotency_key": "architecture_component_record:codex:R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810:SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE:980d47de09c9930f",
+        "operation_type": "architecture_component_record",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "kind": "module",
+          "name": "API application PlanStore semantic tests",
+          "layer": "infra",
+          "owner": "ApiPlanStoreApplicationTestEvidence",
+          "status": "implemented",
+          "runtime": "node",
+          "designId": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+          "repoPath": "apps/api/test/application/services/storedPlanExecutabilityValidator",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "componentId": "SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE",
+          "criticality": "critical",
+          "publicContract": "API PlanStore resolution and executability semantic test evidence boundary.",
+          "responsibilities": [
+            {
+              "dddOwner": "ApiPlanStoreApplicationTestEvidence",
+              "reasonToChange": "Stored plan resolution, capability, registry, fetch, or alignment behavior changes.",
+              "responsibility": "Validate stored plan resolution and executability through focused capability, registry, and alignment suites.",
+              "responsibilityId": "RESP-SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE"
+            }
+          ],
+          "parentComponentId": "SYS-API-TESTS-APPLICATION-SERVICES",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T20:05:47.479+00:00"
+      },
+      {
+        "operation_id": "75fe6179-a94d-4b9b-afa4-d582cfb7d130",
+        "idempotency_key": "architecture_design_create:codex:R1-1D-API-GOVERNANCE-DB-RESIDUAL-20260810:1e380ff052b6ab05",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-DB-RESIDUAL-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "API / Architecture / Planning DB",
+          "title": "API governance residual evidence cleanup",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-API-TESTS-APPLICATION-SERVICES",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-PLANSTORE-API-EXECUTABILITY-VALIDATION",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-3",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-SYS-PLANSTORE-API-EXECUTABILITY-VALIDATION",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "CONTRACT-SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE-EVIDENCE",
+              "subjectKind": "contract"
+            }
+          ],
+          "status": "review",
+          "railRef": "RecordArchitectureTestEvidence",
+          "designId": "R1-1D-API-GOVERNANCE-DB-RESIDUAL-20260810",
+          "rationale": "Repoint residual PlanStore test and validation evidence discovered by the pre-push integrity gate.",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "workItemId": "GH-2167",
+          "fowlerSignal": "hidden_authority",
+          "supersedesId": null,
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T20:11:17.367+00:00"
+      },
+      {
+        "operation_id": "76a734e2-6f03-4d3c-8199-7d1ccd4802d5",
+        "idempotency_key": "architecture_test_record:codex:R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810:SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE:dc0807c35893b3a4",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE-5",
+          "designId": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+          "required": true,
+          "testKind": "unit",
+          "testPath": "apps/api/test/application/services/storedPlanExecutabilityValidator/fetchAndAlignment.test.ts",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "componentId": "SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE",
+          "coverageLevel": "behavior",
+          "validationCommand": "pnpm --filter dvt-api test:ci",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T20:06:25.739+00:00"
+      },
+      {
+        "operation_id": "7a9d439f-8960-4abc-aeba-3a967234fdc2",
+        "idempotency_key": "architecture_test_record:codex:R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810:SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS:f6bcc7b8aeed60f8",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS-2",
+          "designId": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+          "required": true,
+          "testKind": "unit",
+          "testPath": "apps/api/test/entrypoints/http/startRunRoute.authAndSuccess.test.ts",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "componentId": "SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS",
+          "coverageLevel": "boundary",
+          "validationCommand": "pnpm --filter dvt-api test:ci",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T20:06:16.147+00:00"
+      },
+      {
         "operation_id": "8142f30d-abb5-4d42-87c7-0dc4033e7c67",
         "idempotency_key": "architecture_storage_io_record:codex:DOC1-6-STORAGE-IO-RETIREMENT-20260810:STORAGE-SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-DB-SURFACE-WRITE-1:eb204f62bd3cdd38",
         "operation_type": "architecture_storage_io_record",
@@ -82780,6 +83649,105 @@
           "expectedStorageObject": "docs/planning/status/generated-knowledge-intake-literature.md"
         },
         "created_at": "2026-08-10T15:49:36.365+00:00"
+      },
+      {
+        "operation_id": "87b23430-b4c3-4c02-aae7-8030613e3964",
+        "idempotency_key": "architecture_component_record:codex:R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810:SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS:b3f952c9de468148",
+        "operation_type": "architecture_component_record",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "kind": "module",
+          "name": "API HTTP entrypoint semantic test evidence",
+          "layer": "infra",
+          "owner": "ApiHttpSemanticTestEvidence",
+          "status": "implemented",
+          "runtime": "node",
+          "designId": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+          "repoPath": "apps/api/test/entrypoints/http",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "componentId": "SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS",
+          "criticality": "high",
+          "publicContract": "API HTTP behavior, authorization, validation, and route-composition test evidence boundary.",
+          "responsibilities": [
+            {
+              "dddOwner": "ApiHttpSemanticTestEvidence",
+              "reasonToChange": "HTTP route behavior, authorization, validation, or composition evidence changes.",
+              "responsibility": "Prove HTTP behavior and boundaries through executable semantic tests without source-text topology locks.",
+              "responsibilityId": "RESP-SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS"
+            }
+          ],
+          "parentComponentId": "SYS-API-HTTP-ENTRYPOINT-TESTS",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T20:05:45.057+00:00"
+      },
+      {
+        "operation_id": "8a135042-0939-4243-84d3-64ac21ed4f40",
+        "idempotency_key": "architecture_component_record:codex:R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810:SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS:171ce3a671cd536e",
+        "operation_type": "architecture_component_record",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "kind": "module",
+          "name": "API HTTP entrypoint semantic boundary evidence",
+          "layer": "infra",
+          "owner": "ApiHttpSemanticTestEvidence",
+          "status": "implemented",
+          "runtime": "node",
+          "designId": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+          "repoPath": "apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "componentId": "SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS",
+          "criticality": "high",
+          "publicContract": "API HTTP request-boundary, authorization, validation, and route-composition semantic test evidence.",
+          "responsibilities": [
+            {
+              "dddOwner": "ApiHttpSemanticTestEvidence",
+              "reasonToChange": "HTTP request resolution, authorization, validation, or composition evidence changes.",
+              "responsibility": "Prove HTTP request boundaries through executable semantic tests without source-text topology locks.",
+              "responsibilityId": "RESP-SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS"
+            }
+          ],
+          "parentComponentId": "SYS-API-HTTP-ENTRYPOINT-TESTS",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T20:10:10.616+00:00"
+      },
+      {
+        "operation_id": "93fd4924-7af9-4f17-8116-05ef4b1fff21",
+        "idempotency_key": "architecture_test_record:codex:R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810:SYS-API-TESTS-APPLICATION-SERVICES-ARCHITECTURE-HARNESS:df116ed4b4f9b496",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-ARCHITECTURE-HARNESS-1",
+          "designId": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+          "required": true,
+          "testKind": "unit",
+          "testPath": "apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "componentId": "SYS-API-TESTS-APPLICATION-SERVICES-ARCHITECTURE-HARNESS",
+          "coverageLevel": "boundary",
+          "validationCommand": "pnpm --filter dvt-api test:ci",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T20:06:18.56+00:00"
       },
       {
         "operation_id": "947b4df1-bcf5-4ad2-9e9b-b8a17af9b278",
@@ -82832,6 +83800,55 @@
           "sourceContentSha256": "0bcf3d4a0c9b182c069af3c561794f71e75da300b1a9c3b483229b7e304c3558"
         },
         "created_at": "2026-08-10T15:48:55.221+00:00"
+      },
+      {
+        "operation_id": "a0f7a014-f417-457e-83f6-21642a6028f9",
+        "idempotency_key": "architecture_observability_record:codex:R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810:SYS-API-TESTS-APPLICATION-SERVICES-ARCHITECTURE-HARNESS:09e15fc6f14054d2",
+        "operation_type": "architecture_observability_record",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "status": "implemented",
+          "designId": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+          "required": true,
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "signalKind": "log",
+          "signalName": "API application-service semantic evidence is observable through focused dvt-api test output.",
+          "componentId": "SYS-API-TESTS-APPLICATION-SERVICES-ARCHITECTURE-HARNESS",
+          "observabilityId": "OBS-SYS-API-TESTS-APPLICATION-SERVICES-ARCHITECTURE-HARNESS-API-APPLICATION-SERVICE-TEST-EVIDENCE",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T20:07:01.871+00:00"
+      },
+      {
+        "operation_id": "a104bcbf-c766-45b1-a150-43a955f47b82",
+        "idempotency_key": "architecture_contract_record:codex:R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810:CONTRACT-SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS-EVIDENCE:01d2bc0499607833",
+        "operation_type": "architecture_contract_record",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "status": "deprecated",
+          "designId": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "contractId": "CONTRACT-SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS-EVIDENCE",
+          "contractRef": "Retired API HTTP topology harness evidence boundary.",
+          "contractKind": "type",
+          "compatibility": "internal",
+          "ownerComponentId": "SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS",
+          "validationCommand": "pnpm --filter dvt-api test:ci",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T20:09:38.42+00:00"
       },
       {
         "operation_id": "ad1e5eaf-55a3-4bea-bb5c-73221f9ca0fa",
@@ -82934,6 +83951,31 @@
         "created_at": "2026-08-10T15:48:44.061+00:00"
       },
       {
+        "operation_id": "ad46bc78-0166-486b-a84b-a8f1d24ee887",
+        "idempotency_key": "architecture_test_record:codex:R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810:SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS:4e0362f6a8febd82",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS-1",
+          "designId": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+          "required": true,
+          "testKind": "unit",
+          "testPath": "apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "componentId": "SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS",
+          "coverageLevel": "boundary",
+          "validationCommand": "pnpm --filter dvt-api test:ci",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T20:06:14.944+00:00"
+      },
+      {
         "operation_id": "b2b33e58-8ed4-419a-809b-50b243c95d29",
         "idempotency_key": "architecture_storage_io_record:codex:DOC1-6-STORAGE-IO-RETIREMENT-20260810:STORAGE-SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-STATUS-REPORTS-WRITE-1:c8e96addd485ebc6",
         "operation_type": "architecture_storage_io_record",
@@ -82957,6 +83999,31 @@
           "expectedStorageObject": "docs/planning/status/generated-code-state.md"
         },
         "created_at": "2026-08-10T15:49:38.226+00:00"
+      },
+      {
+        "operation_id": "b5a0b8b7-e4e5-4ee8-8628-526c61779eb0",
+        "idempotency_key": "architecture_test_record:codex:R1-1D-API-GOVERNANCE-DB-RESIDUAL-20260810:SYS-API-TESTS-APPLICATION-SERVICES:4c27b6b9c5a08c94",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-DB-RESIDUAL-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-3",
+          "designId": "R1-1D-API-GOVERNANCE-DB-RESIDUAL-20260810",
+          "required": true,
+          "testKind": "unit",
+          "testPath": "apps/api/test/application/services/storedPlanExecutabilityValidator/registry.test.ts",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "componentId": "SYS-API-TESTS-APPLICATION-SERVICES",
+          "coverageLevel": "behavior",
+          "validationCommand": "pnpm --filter dvt-api test:ci",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T20:11:18.598+00:00"
       },
       {
         "operation_id": "cced5439-0339-471f-b41b-75cf105fbcdb",
@@ -83021,6 +84088,68 @@
           "sourceContentSha256": "0716cec0195201625580137f36fb01347f63fca0ff33f4992ee6db623659f886"
         },
         "created_at": "2026-08-10T11:12:07.149+00:00"
+      },
+      {
+        "operation_id": "d5a10907-d38d-4a00-96a8-5addaa67f44a",
+        "idempotency_key": "architecture_component_record:codex:R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810:SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS:84d9fc1ade82159c",
+        "operation_type": "architecture_component_record",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "kind": "module",
+          "name": "API HTTP entrypoint semantic test evidence",
+          "layer": "infra",
+          "owner": "ApiHttpSemanticTestEvidence",
+          "status": "implemented",
+          "runtime": "node",
+          "designId": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+          "repoPath": "apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "componentId": "SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS",
+          "criticality": "high",
+          "publicContract": "API HTTP behavior, authorization, validation, and route-composition test evidence boundary.",
+          "responsibilities": [
+            {
+              "dddOwner": "ApiHttpSemanticTestEvidence",
+              "reasonToChange": "HTTP route behavior, authorization, validation, or composition evidence changes.",
+              "responsibility": "Prove HTTP behavior and boundaries through executable semantic tests without source-text topology locks.",
+              "responsibilityId": "RESP-SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS"
+            }
+          ],
+          "parentComponentId": "SYS-API-HTTP-ENTRYPOINT-TESTS",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T20:08:53.967+00:00"
+      },
+      {
+        "operation_id": "da780556-2058-468d-a1fe-78339eb48c6a",
+        "idempotency_key": "architecture_contract_record:codex:R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810:CONTRACT-SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS-EVIDENCE:75b97f22b3f3c84c",
+        "operation_type": "architecture_contract_record",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "status": "implemented",
+          "designId": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "contractId": "CONTRACT-SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS-EVIDENCE",
+          "contractRef": "API HTTP semantic test evidence boundary.",
+          "contractKind": "type",
+          "compatibility": "internal",
+          "ownerComponentId": "SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS",
+          "validationCommand": "pnpm --filter dvt-api test:ci",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T20:06:48.609+00:00"
       },
       {
         "operation_id": "dc5177ec-ede3-4b3e-a69c-1d12772e2e12",
@@ -83097,6 +84226,192 @@
           "sourceContentSha256": "c0460c8222de7101fbbd5ac608509c653f75d81ed917066b12607537f1fccfd6"
         },
         "created_at": "2026-08-10T13:44:37.28+00:00"
+      },
+      {
+        "operation_id": "defa2dcb-f17a-44df-8106-8d5e4987496b",
+        "idempotency_key": "architecture_test_record:codex:R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810:SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS:9c9d183f2b3a1b79",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS-3",
+          "designId": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+          "required": true,
+          "testKind": "unit",
+          "testPath": "apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "componentId": "SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS",
+          "coverageLevel": "boundary",
+          "validationCommand": "pnpm --filter dvt-api test:ci",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T20:06:17.343+00:00"
+      },
+      {
+        "operation_id": "e1fbb2de-06d4-4e88-9abb-24f123d7f9f1",
+        "idempotency_key": "architecture_test_record:codex:R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810:SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE:422172213aecb3e4",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE-3",
+          "designId": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+          "required": true,
+          "testKind": "unit",
+          "testPath": "apps/api/test/application/services/WorkflowEngineFactory.test.ts",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "componentId": "SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE",
+          "coverageLevel": "behavior",
+          "validationCommand": "pnpm --filter dvt-api test:ci",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T20:06:23.316+00:00"
+      },
+      {
+        "operation_id": "e9b2d4cc-02eb-4b32-95a8-22aeb0e07264",
+        "idempotency_key": "architecture_test_record:codex:R1-1D-API-GOVERNANCE-DB-RESIDUAL-20260810:SYS-PLANSTORE-API-EXECUTABILITY-VALIDATION:0741462ffc87708f",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-DB-RESIDUAL-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-SYS-PLANSTORE-API-EXECUTABILITY-VALIDATION",
+          "designId": "R1-1D-API-GOVERNANCE-DB-RESIDUAL-20260810",
+          "required": true,
+          "testKind": "unit",
+          "testPath": "apps/api/test/application/services/storedPlanExecutabilityValidator/fetchAndAlignment.test.ts",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "componentId": "SYS-PLANSTORE-API-EXECUTABILITY-VALIDATION",
+          "coverageLevel": "behavior",
+          "validationCommand": "pnpm --filter dvt-api test:ci",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T20:11:19.796+00:00"
+      },
+      {
+        "operation_id": "f06df955-39cd-42dd-ab61-fe06e78724f8",
+        "idempotency_key": "architecture_observability_record:codex:R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810:SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS:7bbc535b10eb5818",
+        "operation_type": "architecture_observability_record",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "status": "implemented",
+          "designId": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+          "required": true,
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "signalKind": "log",
+          "signalName": "API HTTP semantic boundary evidence is observable through focused dvt-api test output.",
+          "componentId": "SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS",
+          "observabilityId": "OBS-SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS-API-HTTP-ENTRYPOINT-TEST-EVIDENCE",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T20:10:12.991+00:00"
+      },
+      {
+        "operation_id": "f1544198-39d9-4419-a2fa-fdde2233b2b2",
+        "idempotency_key": "architecture_contract_record:codex:R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810:CONTRACT-SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS-EVIDENCE:8bafde46ecee14e8",
+        "operation_type": "architecture_contract_record",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "status": "implemented",
+          "designId": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "contractId": "CONTRACT-SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS-EVIDENCE",
+          "contractRef": "API HTTP semantic boundary test evidence.",
+          "contractKind": "type",
+          "compatibility": "internal",
+          "ownerComponentId": "SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS",
+          "validationCommand": "pnpm --filter dvt-api test:ci",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T20:10:11.814+00:00"
+      },
+      {
+        "operation_id": "f707f33d-5c67-46be-aa1e-d0d0fc4b1289",
+        "idempotency_key": "architecture_test_record:codex:R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810:SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE:98ea4e2e3a7c92eb",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE-4",
+          "designId": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+          "required": true,
+          "testKind": "unit",
+          "testPath": "apps/api/test/application/services/storedPlanExecutabilityValidator/registry.test.ts",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "componentId": "SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE",
+          "coverageLevel": "behavior",
+          "validationCommand": "pnpm --filter dvt-api test:ci",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T20:06:24.503+00:00"
+      },
+      {
+        "operation_id": "fcbddf0f-ceae-4226-9f28-4e4c460c07ba",
+        "idempotency_key": "architecture_component_record:codex:R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810:SYS-API-DOCS:5f4e52dce6d778ba",
+        "operation_type": "architecture_component_record",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "kind": "module",
+          "name": "API architecture documentation",
+          "layer": "infra",
+          "owner": "Architecture / API Docs",
+          "status": "implemented",
+          "runtime": "none",
+          "designId": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+          "repoPath": "docs/architecture/components/api/index.md",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "componentId": "SYS-API-DOCS",
+          "criticality": "medium",
+          "publicContract": "DB-authoritative API architecture entry point and on-demand documentation projection contract.",
+          "responsibilities": [
+            {
+              "dddOwner": "Architecture / API Docs",
+              "reasonToChange": "API architecture authority or publication contract changes.",
+              "responsibility": "Own the current API architecture entry point and its DB-first consultation contract.",
+              "responsibilityId": "RESP-SYS-API-DOCS"
+            }
+          ],
+          "parentComponentId": "SYS-API-ROOT",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T20:05:43.849+00:00"
       },
       {
         "operation_id": "fcd01fad-23b7-4e5e-bb3f-fba94763af0a",
@@ -110389,8 +111704,6 @@
       "allowedImplementationSurfaces": [
         "apps/api/src/application/ports/dbtDependencyEdit.ts",
         "apps/api/src/application/ports/dbtProjectCandidateAnalysis.ts",
-        "apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts",
-        "apps/api/src/application/ports/protectedRuntimeWorkspaceCommandQueryRails.ts",
         "apps/api/src/application/services/analyzeSelectedDbtModelQuery.ts",
         "apps/api/src/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.ts",
         "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts",
@@ -112216,7 +113529,8 @@
               "apps/api/src/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.ts",
               "apps/api/src/infrastructure/dbtDependencyEdit/LocalDbtDependencyEditPublicationGateway.ts",
               "apps/api/src/infrastructure/workspaceFiles/LocalWorkspaceFileRepository.ts",
-              "apps/api/src/infrastructure/workspaceFiles/LocalWorkspaceFileBatchMutationGateway.ts"
+              "apps/api/src/infrastructure/workspaceFiles/LocalWorkspaceFileBatchMutationGateway.ts",
+              "apps/api/src/application/ports/dbtDependencyEdit.ts"
             ],
             "expectedFailure": "Split publication could commit a DBT file without its semantic receipt or admit a file-set changed after validation."
           }
@@ -112247,8 +113561,6 @@
         "allowedImplementationSurfaces": [
           "apps/api/src/application/ports/dbtDependencyEdit.ts",
           "apps/api/src/application/ports/dbtProjectCandidateAnalysis.ts",
-          "apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts",
-          "apps/api/src/application/ports/protectedRuntimeWorkspaceCommandQueryRails.ts",
           "apps/api/src/application/services/analyzeSelectedDbtModelQuery.ts",
           "apps/api/src/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.ts",
           "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts",
@@ -112290,9 +113602,21 @@
           "packages/@dvt/contracts/src/contracts/dbt-project/index.ts",
           "packages/@dvt/contracts/test/dbt-dependency-edit.contract.test.ts"
         ],
-        "forbiddenImplementationSurfaces": ["apps/web"]
+        "forbiddenImplementationSurfaces": [
+          "apps/web",
+          "apps/api/src/application/ports/protectedRuntimeCommandQueryRailTypes.ts",
+          "apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimePlanCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts",
+          "apps/api/src/application/ports/protectedRuntimeRunCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimeRunRailVocabulary.ts",
+          "apps/api/src/application/ports/protectedRuntimeWorkspaceCommandQueryRails.ts",
+          "apps/api/src/entrypoints/http/signalRunRouteParser.constants.ts",
+          "apps/api/src/application/ports/protectedRuntime*",
+          "apps/api/docs/**"
+        ]
       },
-      "revision": 5,
+      "revision": 6,
       "createdBy": "codex",
       "createdAt": "2026-08-01T09:56:22.971Z"
     },
@@ -112313,7 +113637,6 @@
         "apps/api/src/application/ports/dbtProjectAnalysis.ts#DbtProjectSemanticRegion",
         "apps/api/src/application/ports/dbtProjectAnalysis.ts#DbtProjectSemanticRegionBase",
         "apps/api/src/application/ports/dbtProjectAnalysis.ts#DbtProjectSourceRange",
-        "apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts#PROTECTED_RUNTIME_RAIL_VOCABULARY",
         "apps/api/src/application/services/analyzeSelectedDbtModelQuery.ts#AnalyzeSelectedDbtModelInput",
         "apps/api/src/application/services/analyzeSelectedDbtModelQuery.ts#AnalyzeSelectedDbtModelQuery",
         "apps/api/src/application/services/analyzeSelectedDbtModelQuery.ts#IAnalyzeSelectedDbtModelQuery",
@@ -112388,7 +113711,6 @@
         "apps/api/src/application/ports/dbtProjectAnalysis.ts#DbtProjectSemanticRegion",
         "apps/api/src/application/ports/dbtProjectAnalysis.ts#DbtProjectSemanticRegionBase",
         "apps/api/src/application/ports/dbtProjectAnalysis.ts#DbtProjectSourceRange",
-        "apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts#PROTECTED_RUNTIME_RAIL_VOCABULARY",
         "apps/api/src/application/services/analyzeSelectedDbtModelQuery.ts#AnalyzeSelectedDbtModelInput",
         "apps/api/src/application/services/analyzeSelectedDbtModelQuery.ts#AnalyzeSelectedDbtModelQuery",
         "apps/api/src/application/services/analyzeSelectedDbtModelQuery.ts#IAnalyzeSelectedDbtModelQuery",
@@ -112483,8 +113805,8 @@
         "pnpm docs:feature-mechanization:implementation",
         "pnpm verify:prepush"
       ],
-      "sourcePath": "apps/api/src/application/ports/protectedRuntimeWorkspaceCommandQueryRails.ts",
-      "sourceContentSha256": "f64d54cab1ffdf35b04adf89e6faeeea666b12cafe1356a74fb1cbb616541ee5",
+      "sourcePath": "apps/api/src/application/services/analyzeSelectedDbtModelQuery.ts",
+      "sourceContentSha256": "468209e50e9d2f5eb1fdc753d2b69a4876bac59f79ef6fc62a0dd1af99f80790",
       "rawRail": {
         "name": "AnalyzeSelectedDbtModel",
         "type": "query",
@@ -112604,24 +113926,6 @@
           {
             "name": "DbtProjectSourceRange",
             "path": "apps/api/src/application/ports/dbtProjectAnalysis.ts",
-            "cqRails": ["AnalyzeSelectedDbtModel"],
-            "dddOwner": "DbtSelectedModelAnalysisReadModel",
-            "unitTests": [
-              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
-              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
-              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
-              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
-              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
-            ],
-            "fowlerSignals": [
-              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
-            ],
-            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
-            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
-          },
-          {
-            "name": "PROTECTED_RUNTIME_RAIL_VOCABULARY",
-            "path": "apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts",
             "cqRails": ["AnalyzeSelectedDbtModel"],
             "dddOwner": "DbtSelectedModelAnalysisReadModel",
             "unitTests": [
@@ -113881,10 +115185,20 @@
         "forbiddenImplementationSurfaces": [
           "apps/web",
           "packages/@dvt/planner",
-          "tools/planning-db/schema.sql"
+          "tools/planning-db/schema.sql",
+          "apps/api/src/application/ports/protectedRuntimeCommandQueryRailTypes.ts",
+          "apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimePlanCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts",
+          "apps/api/src/application/ports/protectedRuntimeRunCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimeRunRailVocabulary.ts",
+          "apps/api/src/application/ports/protectedRuntimeWorkspaceCommandQueryRails.ts",
+          "apps/api/src/entrypoints/http/signalRunRouteParser.constants.ts",
+          "apps/api/src/application/ports/protectedRuntime*",
+          "apps/api/docs/**"
         ]
       },
-      "revision": 2,
+      "revision": 3,
       "createdBy": "codex",
       "createdAt": "2026-08-01T07:23:00.279Z"
     },
@@ -115215,7 +116529,6 @@
         "packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts#CONNECTION_REF_SCHEMA_VERSION",
         "packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts#ConnectionRef",
         "packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts#ConnectionRefSchema",
-        "apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts#ImportWarehouseSources",
         "apps/api/src/application/ports/warehouseSourceImport.ts#ImportWarehouseSources",
         "apps/api/src/application/services/importWarehouseSourcesUseCase.ts#ImportWarehouseSources",
         "apps/api/src/entrypoints/http/warehouseSourceImportRouteGroup.ts#ImportWarehouseSources",
@@ -115544,11 +116857,14 @@
             "name": "createLivePostgresConnection",
             "path": "apps/web/cypress/support/liveWarehouseSourceImport.ts",
             "cqRails": ["ImportWarehouseSources"],
-            "dddOwner": "ConnectedSourceRefLiveProof",
-            "unitTests": ["pnpm --filter @dvt/web test:e2e:source-import:live"],
-            "fowlerSignals": ["Extract Function"],
+            "dddOwner": "Warehouse Source Import",
+            "unitTests": [
+              "pnpm --filter @dvt/web test:e2e:source-import:live",
+              "apps/api/test/application/services/graphDraftWarehouseSourceImportStrategy.test.ts"
+            ],
+            "fowlerSignals": ["Extract Function", "Primitive obsession"],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
-            "architectureGuard": "pnpm docs:feature-mechanization:implementation"
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature PTH1-CONNECTED-SOURCE-TRUTH"
           },
           {
             "name": "CANVAS_FIT_VIEW_OPTIONS",
@@ -115893,8 +117209,8 @@
           },
           {
             "id": "importwarehousesources-record",
-            "redTest": "pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts --maxWorkers=2 --minWorkers=2",
-            "greenTest": "pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx src/app/views/canvas/dbtAuthoringFieldsModel.test.ts src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts",
+            "redTest": "pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts",
+            "greenTest": "pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts",
             "patchSurfaces": [
               "apps/api/src/application/services/graphDraftWarehouseSourceImportStrategy.ts",
               "apps/api/src/application/services/warehouseSourceYamlBindings.ts",
@@ -115902,9 +117218,10 @@
               "apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts",
               "apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts",
               "apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx",
-              "apps/web/src/app/views/canvas/dbtAuthoringFieldsModel.test.ts"
+              "apps/web/src/app/views/canvas/dbtAuthoringFieldsModel.test.ts",
+              "docs/planning/proposals/mandatory/product-truth-connection-hardening-20260808.md"
             ],
-            "expectedFailure": "Positive warehouse-source fixtures omit ConnectedSourceRef and are correctly rejected by fail-closed artifact projection."
+            "expectedFailure": "ConnectionRefSchema and ConnectedSourceRefSchema are not exported."
           }
         ],
         "componentGuides": [
@@ -116018,10 +117335,20 @@
           "packages/@dvt/planner/**",
           "packages/@dvt/adapter-*/**",
           "new API routes, services, providers, registries, or fake adapters",
-          "dbt target binding or runtime connection resolution from issue 2257"
+          "dbt target binding or runtime connection resolution from issue 2257",
+          "apps/api/src/application/ports/protectedRuntimeCommandQueryRailTypes.ts",
+          "apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimePlanCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts",
+          "apps/api/src/application/ports/protectedRuntimeRunCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimeRunRailVocabulary.ts",
+          "apps/api/src/application/ports/protectedRuntimeWorkspaceCommandQueryRails.ts",
+          "apps/api/src/entrypoints/http/signalRunRouteParser.constants.ts",
+          "apps/api/src/application/ports/protectedRuntime*",
+          "apps/api/docs/**"
         ]
       },
-      "revision": 2,
+      "revision": 3,
       "createdBy": "codex",
       "createdAt": "2026-08-09T09:16:34.047Z"
     },
@@ -116053,12 +117380,10 @@
         "docs/architecture/fowler-opportunity-planning-governance.md"
       ],
       "allowedImplementationSurfaces": [
-        "apps/api/src/application/ports/protectedRuntime*",
         "apps/api/src/entrypoints/http/signalRunRoute*",
         "apps/api/test/**",
         "apps/api/vitest.config.ts",
         "apps/api/README.md",
-        "apps/api/docs/**",
         "docs/architecture/components/api/**",
         "docs/architecture/components/web/**",
         "docs/architecture/components/engine/**",
@@ -116081,8 +117406,8 @@
         "pnpm planning:db:export:check",
         "pnpm verify:prepush"
       ],
-      "sourcePath": "https://github.com/dunay2/dvt/issues/2167",
-      "sourceContentSha256": "11d3c6584c1f941b5589e9dfc1ead050af39f74fbfcba502b718820a5374117b",
+      "sourcePath": "scripts/documentation-publication.cjs",
+      "sourceContentSha256": "db5072ae2b773fe2418a91db0528e5fd6541ea37ae6368377639a9d94e8f7311",
       "rawRail": {
         "name": "GeneratePlanningDerivedSurfaces",
         "type": "command",
@@ -116146,10 +117471,9 @@
             "patchSurfaces": [
               "apps/api/vitest.config.ts",
               "apps/api/test/testExecutionManifest.test.ts",
-              "apps/api/src/application/ports/protectedRuntime*",
               "apps/api/test/**",
-              "apps/api/docs/**",
-              "docs/architecture/components/api/index.md"
+              "docs/architecture/components/api/index.md",
+              "apps/api/src/entrypoints/http/signalRunRoute*"
             ],
             "expectedFailure": "The default API test manifest still selects integration suites owned by the integration configuration."
           }
@@ -116179,12 +117503,10 @@
         "mechanizationStatus": "implemented",
         "noHumanDecisionsRemaining": true,
         "allowedImplementationSurfaces": [
-          "apps/api/src/application/ports/protectedRuntime*",
           "apps/api/src/entrypoints/http/signalRunRoute*",
           "apps/api/test/**",
           "apps/api/vitest.config.ts",
           "apps/api/README.md",
-          "apps/api/docs/**",
           "docs/architecture/components/api/**",
           "docs/architecture/components/web/**",
           "docs/architecture/components/engine/**",
@@ -116197,10 +117519,20 @@
           "packages/@dvt/contracts/src/**",
           "packages/@dvt/engine/**",
           "packages/@dvt/adapter-*/**",
-          "docs/archive/**"
+          "docs/archive/**",
+          "apps/api/src/application/ports/protectedRuntimeCommandQueryRailTypes.ts",
+          "apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimePlanCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts",
+          "apps/api/src/application/ports/protectedRuntimeRunCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimeRunRailVocabulary.ts",
+          "apps/api/src/application/ports/protectedRuntimeWorkspaceCommandQueryRails.ts",
+          "apps/api/src/entrypoints/http/signalRunRouteParser.constants.ts",
+          "apps/api/src/application/ports/protectedRuntime*",
+          "apps/api/docs/**"
         ]
       },
-      "revision": 0,
+      "revision": 1,
       "createdBy": "codex",
       "createdAt": "2026-08-10T19:37:49.432Z"
     },
@@ -116232,12 +117564,10 @@
         "docs/architecture/fowler-opportunity-planning-governance.md"
       ],
       "allowedImplementationSurfaces": [
-        "apps/api/src/application/ports/protectedRuntime*",
         "apps/api/src/entrypoints/http/signalRunRoute*",
         "apps/api/test/**",
         "apps/api/vitest.config.ts",
         "apps/api/README.md",
-        "apps/api/docs/**",
         "docs/architecture/components/api/**",
         "docs/architecture/components/web/**",
         "docs/architecture/components/engine/**",
@@ -116260,8 +117590,8 @@
         "pnpm planning:db:export:check",
         "pnpm verify:prepush"
       ],
-      "sourcePath": "https://github.com/dunay2/dvt/issues/2167",
-      "sourceContentSha256": "11d3c6584c1f941b5589e9dfc1ead050af39f74fbfcba502b718820a5374117b",
+      "sourcePath": "apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts",
+      "sourceContentSha256": "09f2fd7c12b3e9d1e0316806badb3a39c7e31041e07c17a6d3c67b077d050eb0",
       "rawRail": {
         "name": "ClassifyProtectedRuntimeRouteRails",
         "type": "query",
@@ -116325,10 +117655,9 @@
             "patchSurfaces": [
               "apps/api/vitest.config.ts",
               "apps/api/test/testExecutionManifest.test.ts",
-              "apps/api/src/application/ports/protectedRuntime*",
               "apps/api/test/**",
-              "apps/api/docs/**",
-              "docs/architecture/components/api/index.md"
+              "docs/architecture/components/api/index.md",
+              "apps/api/src/entrypoints/http/signalRunRoute*"
             ],
             "expectedFailure": "The default API test manifest still selects integration suites owned by the integration configuration."
           }
@@ -116358,12 +117687,10 @@
         "mechanizationStatus": "implemented",
         "noHumanDecisionsRemaining": true,
         "allowedImplementationSurfaces": [
-          "apps/api/src/application/ports/protectedRuntime*",
           "apps/api/src/entrypoints/http/signalRunRoute*",
           "apps/api/test/**",
           "apps/api/vitest.config.ts",
           "apps/api/README.md",
-          "apps/api/docs/**",
           "docs/architecture/components/api/**",
           "docs/architecture/components/web/**",
           "docs/architecture/components/engine/**",
@@ -116376,10 +117703,20 @@
           "packages/@dvt/contracts/src/**",
           "packages/@dvt/engine/**",
           "packages/@dvt/adapter-*/**",
-          "docs/archive/**"
+          "docs/archive/**",
+          "apps/api/src/application/ports/protectedRuntimeCommandQueryRailTypes.ts",
+          "apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimePlanCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts",
+          "apps/api/src/application/ports/protectedRuntimeRunCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimeRunRailVocabulary.ts",
+          "apps/api/src/application/ports/protectedRuntimeWorkspaceCommandQueryRails.ts",
+          "apps/api/src/entrypoints/http/signalRunRouteParser.constants.ts",
+          "apps/api/src/application/ports/protectedRuntime*",
+          "apps/api/docs/**"
         ]
       },
-      "revision": 0,
+      "revision": 1,
       "createdBy": "codex",
       "createdAt": "2026-08-10T19:37:45.721Z"
     },
@@ -116411,12 +117748,10 @@
         "docs/architecture/fowler-opportunity-planning-governance.md"
       ],
       "allowedImplementationSurfaces": [
-        "apps/api/src/application/ports/protectedRuntime*",
         "apps/api/src/entrypoints/http/signalRunRoute*",
         "apps/api/test/**",
         "apps/api/vitest.config.ts",
         "apps/api/README.md",
-        "apps/api/docs/**",
         "docs/architecture/components/api/**",
         "docs/architecture/components/web/**",
         "docs/architecture/components/engine/**",
@@ -116439,8 +117774,8 @@
         "pnpm planning:db:export:check",
         "pnpm verify:prepush"
       ],
-      "sourcePath": "https://github.com/dunay2/dvt/issues/2167",
-      "sourceContentSha256": "11d3c6584c1f941b5589e9dfc1ead050af39f74fbfcba502b718820a5374117b",
+      "sourcePath": "scripts/planning-db/queries/documentation-lifecycle-query.cjs",
+      "sourceContentSha256": "fb20480fc35e70da450fdd6b70044bc1a317eaa89e843c3ed493a49279185307",
       "rawRail": {
         "name": "ListDocumentationLifecycleFacts",
         "type": "query",
@@ -116504,10 +117839,9 @@
             "patchSurfaces": [
               "apps/api/vitest.config.ts",
               "apps/api/test/testExecutionManifest.test.ts",
-              "apps/api/src/application/ports/protectedRuntime*",
               "apps/api/test/**",
-              "apps/api/docs/**",
-              "docs/architecture/components/api/index.md"
+              "docs/architecture/components/api/index.md",
+              "apps/api/src/entrypoints/http/signalRunRoute*"
             ],
             "expectedFailure": "The default API test manifest still selects integration suites owned by the integration configuration."
           }
@@ -116537,12 +117871,10 @@
         "mechanizationStatus": "implemented",
         "noHumanDecisionsRemaining": true,
         "allowedImplementationSurfaces": [
-          "apps/api/src/application/ports/protectedRuntime*",
           "apps/api/src/entrypoints/http/signalRunRoute*",
           "apps/api/test/**",
           "apps/api/vitest.config.ts",
           "apps/api/README.md",
-          "apps/api/docs/**",
           "docs/architecture/components/api/**",
           "docs/architecture/components/web/**",
           "docs/architecture/components/engine/**",
@@ -116555,10 +117887,20 @@
           "packages/@dvt/contracts/src/**",
           "packages/@dvt/engine/**",
           "packages/@dvt/adapter-*/**",
-          "docs/archive/**"
+          "docs/archive/**",
+          "apps/api/src/application/ports/protectedRuntimeCommandQueryRailTypes.ts",
+          "apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimePlanCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts",
+          "apps/api/src/application/ports/protectedRuntimeRunCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimeRunRailVocabulary.ts",
+          "apps/api/src/application/ports/protectedRuntimeWorkspaceCommandQueryRails.ts",
+          "apps/api/src/entrypoints/http/signalRunRouteParser.constants.ts",
+          "apps/api/src/application/ports/protectedRuntime*",
+          "apps/api/docs/**"
         ]
       },
-      "revision": 0,
+      "revision": 1,
       "createdBy": "codex",
       "createdAt": "2026-08-10T19:37:48.209Z"
     },
@@ -116590,12 +117932,10 @@
         "docs/architecture/fowler-opportunity-planning-governance.md"
       ],
       "allowedImplementationSurfaces": [
-        "apps/api/src/application/ports/protectedRuntime*",
         "apps/api/src/entrypoints/http/signalRunRoute*",
         "apps/api/test/**",
         "apps/api/vitest.config.ts",
         "apps/api/README.md",
-        "apps/api/docs/**",
         "docs/architecture/components/api/**",
         "docs/architecture/components/web/**",
         "docs/architecture/components/engine/**",
@@ -116618,8 +117958,8 @@
         "pnpm planning:db:export:check",
         "pnpm verify:prepush"
       ],
-      "sourcePath": "https://github.com/dunay2/dvt/issues/2167",
-      "sourceContentSha256": "11d3c6584c1f941b5589e9dfc1ead050af39f74fbfcba502b718820a5374117b",
+      "sourcePath": "scripts/planning-db-query.cjs",
+      "sourceContentSha256": "1c177769a247b08b6a521681ed99d803500c73e688438dd89a84e3ee53225f0c",
       "rawRail": {
         "name": "ReadArchitectureDesignAuthority",
         "type": "query",
@@ -116683,10 +118023,9 @@
             "patchSurfaces": [
               "apps/api/vitest.config.ts",
               "apps/api/test/testExecutionManifest.test.ts",
-              "apps/api/src/application/ports/protectedRuntime*",
               "apps/api/test/**",
-              "apps/api/docs/**",
-              "docs/architecture/components/api/index.md"
+              "docs/architecture/components/api/index.md",
+              "apps/api/src/entrypoints/http/signalRunRoute*"
             ],
             "expectedFailure": "The default API test manifest still selects integration suites owned by the integration configuration."
           }
@@ -116716,12 +118055,10 @@
         "mechanizationStatus": "implemented",
         "noHumanDecisionsRemaining": true,
         "allowedImplementationSurfaces": [
-          "apps/api/src/application/ports/protectedRuntime*",
           "apps/api/src/entrypoints/http/signalRunRoute*",
           "apps/api/test/**",
           "apps/api/vitest.config.ts",
           "apps/api/README.md",
-          "apps/api/docs/**",
           "docs/architecture/components/api/**",
           "docs/architecture/components/web/**",
           "docs/architecture/components/engine/**",
@@ -116734,10 +118071,20 @@
           "packages/@dvt/contracts/src/**",
           "packages/@dvt/engine/**",
           "packages/@dvt/adapter-*/**",
-          "docs/archive/**"
+          "docs/archive/**",
+          "apps/api/src/application/ports/protectedRuntimeCommandQueryRailTypes.ts",
+          "apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimePlanCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts",
+          "apps/api/src/application/ports/protectedRuntimeRunCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimeRunRailVocabulary.ts",
+          "apps/api/src/application/ports/protectedRuntimeWorkspaceCommandQueryRails.ts",
+          "apps/api/src/entrypoints/http/signalRunRouteParser.constants.ts",
+          "apps/api/src/application/ports/protectedRuntime*",
+          "apps/api/docs/**"
         ]
       },
-      "revision": 0,
+      "revision": 1,
       "createdBy": "codex",
       "createdAt": "2026-08-10T19:37:46.968Z"
     },
@@ -140918,6 +142265,461 @@
         ]
       },
       "createdAt": "2026-08-10T19:37:49.432Z"
+    },
+    {
+      "operationId": "a4d5325e-dbed-40d9-a308-f916fc7b237d",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:MVP-2100-LOSSLESS-DBT-DEPENDENCY-EDIT:command:applyselecteddbtdependencyedit:5:b48822c22f0d369b",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-2100-LOSSLESS-DBT-DEPENDENCY-EDIT#command#applyselecteddbtdependencyedit",
+      "sourcePath": "apps/api/src/infrastructure/dbtDependencyEdit/LocalDbtDependencyEditPublicationGateway.ts",
+      "sourceContentSha256": "9dcd84dd88cf8e327d873facfaa06e8751b776835a4d2901f4bfb898b7f76c3b",
+      "expectedRevision": 5,
+      "previousRevision": 5,
+      "resultingRevision": 6,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api exec vitest run test/application/services/dbtDependencyEdit test/infrastructure/dbtDependencyEdit/LocalDbtDependencyEditPublicationGateway.test.ts",
+        "dddOwner": "DbtProjectAuthoring",
+        "railName": "ApplySelectedDbtDependencyEdit",
+        "railType": "command",
+        "featureId": "MVP-2100-LOSSLESS-DBT-DEPENDENCY-EDIT",
+        "greenTest": "pnpm --filter dvt-api test:ci",
+        "sourceRef": "apps/api/src/infrastructure/dbtDependencyEdit/LocalDbtDependencyEditPublicationGateway.ts",
+        "unitTests": [
+          "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2100"],
+        "cypressFlows": [
+          "N/A - protected API command with no browser surface in this issue"
+        ],
+        "domainObjects": ["DbtDependencyEdit"],
+        "fowlerSignals": [
+          "One command owns one lossless semantic dependency retarget operation."
+        ],
+        "patchSurfaces": [],
+        "completionGate": ["pnpm verify:prepush"],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Split publication could commit a DBT file without its semantic receipt or admit a file-set changed after validation.",
+        "governingSources": [
+          "docs/adr/0060-dbt-project-authoring-authority.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260801-lossless-dbt-dependency-edit.md"
+        ],
+        "architectureGuards": ["pnpm --filter dvt-api typecheck"],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2100",
+        "implementationRefs": [
+          "apps/api/src/application/ports/dbtDependencyEdit.ts#ApplySelectedDbtDependencyEditInput"
+        ],
+        "normalizedRailName": "applyselecteddbtdependencyedit",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "9dcd84dd88cf8e327d873facfaa06e8751b776835a4d2901f4bfb898b7f76c3b",
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/ports/dbtDependencyEdit.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/application/ports/protectedRuntimeCommandQueryRailTypes.ts",
+          "apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimePlanCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts",
+          "apps/api/src/application/ports/protectedRuntimeRunCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimeRunRailVocabulary.ts",
+          "apps/api/src/application/ports/protectedRuntimeWorkspaceCommandQueryRails.ts",
+          "apps/api/src/entrypoints/http/signalRunRouteParser.constants.ts",
+          "apps/api/src/application/ports/protectedRuntime*",
+          "apps/api/docs/**"
+        ]
+      },
+      "createdAt": "2026-08-10T20:08:24.165Z"
+    },
+    {
+      "operationId": "a40b6d2b-094e-429c-aafb-c9528f3ca2cb",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:MVP-2101-SELECTED-DBT-MODEL-ANALYSIS:query:analyzeselecteddbtmodel:2:605c7d014f8c2c9a",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-2101-SELECTED-DBT-MODEL-ANALYSIS#query#analyzeselecteddbtmodel",
+      "sourcePath": "apps/api/src/application/services/analyzeSelectedDbtModelQuery.ts",
+      "sourceContentSha256": "468209e50e9d2f5eb1fdc753d2b69a4876bac59f79ef6fc62a0dd1af99f80790",
+      "expectedRevision": 2,
+      "previousRevision": 2,
+      "resultingRevision": 3,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts",
+        "dddOwner": "DbtSelectedModelAnalysisReadModel",
+        "railName": "AnalyzeSelectedDbtModel",
+        "railType": "query",
+        "featureId": "MVP-2101-SELECTED-DBT-MODEL-ANALYSIS",
+        "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts",
+        "sourceRef": "apps/api/src/application/services/analyzeSelectedDbtModelQuery.ts",
+        "unitTests": [
+          "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2101"],
+        "cypressFlows": [
+          "N/A - server analysis query introduces no browser behavior in GH-2101."
+        ],
+        "domainObjects": ["DbtSelectedModelAnalysisReadModel"],
+        "fowlerSignals": [
+          "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+        ],
+        "patchSurfaces": [],
+        "completionGate": ["pnpm verify:prepush"],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Selected analysis contract, native semantic evidence, conservative code-only regions, authority refusal and protected HTTP query were absent.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts"
+        ],
+        "architectureGuards": [
+          "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2101",
+        "implementationRefs": [
+          "apps/api/src/application/ports/dbtProjectAnalysis.ts#DbtProjectAnalysisFile"
+        ],
+        "normalizedRailName": "analyzeselecteddbtmodel",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "468209e50e9d2f5eb1fdc753d2b69a4876bac59f79ef6fc62a0dd1af99f80790",
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/contracts/src/contracts/dbt-project"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/application/ports/protectedRuntimeCommandQueryRailTypes.ts",
+          "apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimePlanCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts",
+          "apps/api/src/application/ports/protectedRuntimeRunCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimeRunRailVocabulary.ts",
+          "apps/api/src/application/ports/protectedRuntimeWorkspaceCommandQueryRails.ts",
+          "apps/api/src/entrypoints/http/signalRunRouteParser.constants.ts",
+          "apps/api/src/application/ports/protectedRuntime*",
+          "apps/api/docs/**"
+        ]
+      },
+      "createdAt": "2026-08-10T20:08:25.400Z"
+    },
+    {
+      "operationId": "184a341c-cdef-4180-bb18-16154468290d",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:PTH1-CONNECTED-SOURCE-TRUTH:command:importwarehousesources:2:127b3de40eff76c6",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH1-CONNECTED-SOURCE-TRUTH#command#importwarehousesources",
+      "sourcePath": "docs/planning/proposals/mandatory/product-truth-connection-hardening-20260808.md",
+      "sourceContentSha256": "d87eb1cdf62d70336bca5c03d826d3100007c9d9e80375f120a420dfc9de8edf",
+      "expectedRevision": 2,
+      "previousRevision": 2,
+      "resultingRevision": 3,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts",
+        "dddOwner": "Warehouse Source Import",
+        "railName": "ImportWarehouseSources",
+        "railType": "command",
+        "featureId": "PTH1-CONNECTED-SOURCE-TRUTH",
+        "greenTest": "pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts",
+        "sourceRef": "docs/planning/proposals/mandatory/product-truth-connection-hardening-20260808.md",
+        "unitTests": [
+          "apps/api/test/application/services/graphDraftWarehouseSourceImportStrategy.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": [
+          "As a Canvas author I can see which connection qualifies an imported source."
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts"
+        ],
+        "domainObjects": ["ConnectionRef"],
+        "fowlerSignals": ["Primitive obsession"],
+        "patchSurfaces": [],
+        "completionGate": ["pnpm verify:prepush"],
+        "componentGuides": [
+          "docs/architecture/components/web/frontend-component-inventory.md"
+        ],
+        "expectedFailure": "ConnectionRefSchema and ConnectedSourceRefSchema are not exported.",
+        "governingSources": [
+          "docs/planning/status/governance-document-rule-inventory.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260808-pth1-connected-source-truth.md"
+        ],
+        "architectureGuards": [
+          "pnpm docs:feature-mechanization:implementation -- --feature PTH1-CONNECTED-SOURCE-TRUTH"
+        ],
+        "implementationPlan": "docs/planning/proposals/mandatory/product-truth-connection-hardening-20260808.md",
+        "implementationRefs": [
+          "apps/web/cypress/support/liveWarehouseSourceImport.ts#createLivePostgresConnection"
+        ],
+        "normalizedRailName": "importwarehousesources",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "d87eb1cdf62d70336bca5c03d826d3100007c9d9e80375f120a420dfc9de8edf",
+        "allowedImplementationSurfaces": [
+          "docs/planning/proposals/mandatory/product-truth-connection-hardening-20260808.md"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/application/ports/protectedRuntimeCommandQueryRailTypes.ts",
+          "apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimePlanCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts",
+          "apps/api/src/application/ports/protectedRuntimeRunCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimeRunRailVocabulary.ts",
+          "apps/api/src/application/ports/protectedRuntimeWorkspaceCommandQueryRails.ts",
+          "apps/api/src/entrypoints/http/signalRunRouteParser.constants.ts",
+          "apps/api/src/application/ports/protectedRuntime*",
+          "apps/api/docs/**"
+        ]
+      },
+      "createdAt": "2026-08-10T20:08:26.611Z"
+    },
+    {
+      "operationId": "849234de-94ed-4ec4-a556-b73dadf3cb26",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:R1-1D-API-GOVERNANCE-HARDCUT:command:generateplanningderivedsurfaces:0:649242f90ca062d5",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#R1-1D-API-GOVERNANCE-HARDCUT#command#generateplanningderivedsurfaces",
+      "sourcePath": "scripts/documentation-publication.cjs",
+      "sourceContentSha256": "db5072ae2b773fe2418a91db0528e5fd6541ea37ae6368377639a9d94e8f7311",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/testExecutionManifest.test.ts",
+        "dddOwner": "PlanningDocumentationProjection",
+        "railName": "GeneratePlanningDerivedSurfaces",
+        "railType": "command",
+        "featureId": "R1-1D-API-GOVERNANCE-HARDCUT",
+        "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/testExecutionManifest.test.ts",
+        "sourceRef": "scripts/documentation-publication.cjs",
+        "unitTests": ["apps/api/test/testExecutionManifest.test.ts"],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2167"],
+        "cypressFlows": [
+          "N/A - API governance and verification-manifest hard cut"
+        ],
+        "domainObjects": ["ProtectedRuntimeRouteRegistry"],
+        "fowlerSignals": [
+          "Duplicate architecture authority compiled into product code"
+        ],
+        "patchSurfaces": [],
+        "completionGate": ["pnpm verify:prepush"],
+        "componentGuides": ["docs/architecture/components/api/index.md"],
+        "expectedFailure": "The default API test manifest still selects integration suites owned by the integration configuration.",
+        "governingSources": ["AGENTS.md"],
+        "documentationRefs": ["apps/api/README.md"],
+        "architectureGuards": ["pnpm --filter dvt-api test:arch"],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2167",
+        "implementationRefs": [
+          "scripts/documentation-publication.cjs#DocumentationPublicationAssembler"
+        ],
+        "normalizedRailName": "generateplanningderivedsurfaces",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "db5072ae2b773fe2418a91db0528e5fd6541ea37ae6368377639a9d94e8f7311",
+        "allowedImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/signalRunRoute*"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/application/ports/protectedRuntimeCommandQueryRailTypes.ts",
+          "apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimePlanCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts",
+          "apps/api/src/application/ports/protectedRuntimeRunCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimeRunRailVocabulary.ts",
+          "apps/api/src/application/ports/protectedRuntimeWorkspaceCommandQueryRails.ts",
+          "apps/api/src/entrypoints/http/signalRunRouteParser.constants.ts",
+          "apps/api/src/application/ports/protectedRuntime*",
+          "apps/api/docs/**"
+        ]
+      },
+      "createdAt": "2026-08-10T20:08:27.859Z"
+    },
+    {
+      "operationId": "a362beb4-20e0-4b73-b9a0-53204f5f58b4",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:R1-1D-API-GOVERNANCE-HARDCUT:query:classifyprotectedruntimerouterails:0:8dde52b1d3144681",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#R1-1D-API-GOVERNANCE-HARDCUT#query#classifyprotectedruntimerouterails",
+      "sourcePath": "apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts",
+      "sourceContentSha256": "09f2fd7c12b3e9d1e0316806badb3a39c7e31041e07c17a6d3c67b077d050eb0",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/testExecutionManifest.test.ts",
+        "dddOwner": "ProtectedRuntimeRouteRegistry",
+        "railName": "ClassifyProtectedRuntimeRouteRails",
+        "railType": "query",
+        "featureId": "R1-1D-API-GOVERNANCE-HARDCUT",
+        "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/testExecutionManifest.test.ts",
+        "sourceRef": "apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts",
+        "unitTests": ["apps/api/test/testExecutionManifest.test.ts"],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2167"],
+        "cypressFlows": [
+          "N/A - API governance and verification-manifest hard cut"
+        ],
+        "domainObjects": ["ProtectedRuntimeRouteRegistry"],
+        "fowlerSignals": [
+          "Duplicate architecture authority compiled into product code"
+        ],
+        "patchSurfaces": [],
+        "completionGate": ["pnpm verify:prepush"],
+        "componentGuides": ["docs/architecture/components/api/index.md"],
+        "expectedFailure": "The default API test manifest still selects integration suites owned by the integration configuration.",
+        "governingSources": ["AGENTS.md"],
+        "documentationRefs": ["apps/api/README.md"],
+        "architectureGuards": ["pnpm --filter dvt-api test:arch"],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2167",
+        "implementationRefs": [
+          "apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts#registerProtectedRuntimeRoutes"
+        ],
+        "normalizedRailName": "classifyprotectedruntimerouterails",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "09f2fd7c12b3e9d1e0316806badb3a39c7e31041e07c17a6d3c67b077d050eb0",
+        "allowedImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/signalRunRoute*"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/application/ports/protectedRuntimeCommandQueryRailTypes.ts",
+          "apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimePlanCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts",
+          "apps/api/src/application/ports/protectedRuntimeRunCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimeRunRailVocabulary.ts",
+          "apps/api/src/application/ports/protectedRuntimeWorkspaceCommandQueryRails.ts",
+          "apps/api/src/entrypoints/http/signalRunRouteParser.constants.ts",
+          "apps/api/src/application/ports/protectedRuntime*",
+          "apps/api/docs/**"
+        ]
+      },
+      "createdAt": "2026-08-10T20:08:29.039Z"
+    },
+    {
+      "operationId": "f9bcdd03-ed32-4853-9919-f7adc04dfb96",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:R1-1D-API-GOVERNANCE-HARDCUT:query:listdocumentationlifecyclefacts:0:06b1ac6ee5b0e2ff",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#R1-1D-API-GOVERNANCE-HARDCUT#query#listdocumentationlifecyclefacts",
+      "sourcePath": "scripts/planning-db/queries/documentation-lifecycle-query.cjs",
+      "sourceContentSha256": "fb20480fc35e70da450fdd6b70044bc1a317eaa89e843c3ed493a49279185307",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/testExecutionManifest.test.ts",
+        "dddOwner": "DocumentationLifecycleReadModel",
+        "railName": "ListDocumentationLifecycleFacts",
+        "railType": "query",
+        "featureId": "R1-1D-API-GOVERNANCE-HARDCUT",
+        "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/testExecutionManifest.test.ts",
+        "sourceRef": "scripts/planning-db/queries/documentation-lifecycle-query.cjs",
+        "unitTests": ["apps/api/test/testExecutionManifest.test.ts"],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2167"],
+        "cypressFlows": [
+          "N/A - API governance and verification-manifest hard cut"
+        ],
+        "domainObjects": ["ProtectedRuntimeRouteRegistry"],
+        "fowlerSignals": [
+          "Duplicate architecture authority compiled into product code"
+        ],
+        "patchSurfaces": [],
+        "completionGate": ["pnpm verify:prepush"],
+        "componentGuides": ["docs/architecture/components/api/index.md"],
+        "expectedFailure": "The default API test manifest still selects integration suites owned by the integration configuration.",
+        "governingSources": ["AGENTS.md"],
+        "documentationRefs": ["apps/api/README.md"],
+        "architectureGuards": ["pnpm --filter dvt-api test:arch"],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2167",
+        "implementationRefs": [
+          "scripts/planning-db/queries/documentation-lifecycle-query.cjs#documentationLifecycleSelect"
+        ],
+        "normalizedRailName": "listdocumentationlifecyclefacts",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "fb20480fc35e70da450fdd6b70044bc1a317eaa89e843c3ed493a49279185307",
+        "allowedImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/signalRunRoute*"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/application/ports/protectedRuntimeCommandQueryRailTypes.ts",
+          "apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimePlanCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts",
+          "apps/api/src/application/ports/protectedRuntimeRunCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimeRunRailVocabulary.ts",
+          "apps/api/src/application/ports/protectedRuntimeWorkspaceCommandQueryRails.ts",
+          "apps/api/src/entrypoints/http/signalRunRouteParser.constants.ts",
+          "apps/api/src/application/ports/protectedRuntime*",
+          "apps/api/docs/**"
+        ]
+      },
+      "createdAt": "2026-08-10T20:08:30.225Z"
+    },
+    {
+      "operationId": "bb3ca792-1094-4232-ba02-dec4d2dc2408",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:R1-1D-API-GOVERNANCE-HARDCUT:query:readarchitecturedesignauthority:0:faa582e6278880ae",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#R1-1D-API-GOVERNANCE-HARDCUT#query#readarchitecturedesignauthority",
+      "sourcePath": "scripts/planning-db-query.cjs",
+      "sourceContentSha256": "1c177769a247b08b6a521681ed99d803500c73e688438dd89a84e3ee53225f0c",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/testExecutionManifest.test.ts",
+        "dddOwner": "ArchitectureDesignAuthority",
+        "railName": "ReadArchitectureDesignAuthority",
+        "railType": "query",
+        "featureId": "R1-1D-API-GOVERNANCE-HARDCUT",
+        "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/testExecutionManifest.test.ts",
+        "sourceRef": "scripts/planning-db-query.cjs",
+        "unitTests": ["apps/api/test/testExecutionManifest.test.ts"],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2167"],
+        "cypressFlows": [
+          "N/A - API governance and verification-manifest hard cut"
+        ],
+        "domainObjects": ["ProtectedRuntimeRouteRegistry"],
+        "fowlerSignals": [
+          "Duplicate architecture authority compiled into product code"
+        ],
+        "patchSurfaces": [],
+        "completionGate": ["pnpm verify:prepush"],
+        "componentGuides": ["docs/architecture/components/api/index.md"],
+        "expectedFailure": "The default API test manifest still selects integration suites owned by the integration configuration.",
+        "governingSources": ["AGENTS.md"],
+        "documentationRefs": ["apps/api/README.md"],
+        "architectureGuards": ["pnpm --filter dvt-api test:arch"],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2167",
+        "implementationRefs": [
+          "scripts/planning-db-query.cjs#readArchitectureDesignRows"
+        ],
+        "normalizedRailName": "readarchitecturedesignauthority",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "1c177769a247b08b6a521681ed99d803500c73e688438dd89a84e3ee53225f0c",
+        "allowedImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/signalRunRoute*"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/application/ports/protectedRuntimeCommandQueryRailTypes.ts",
+          "apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimePlanCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts",
+          "apps/api/src/application/ports/protectedRuntimeRunCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimeRunRailVocabulary.ts",
+          "apps/api/src/application/ports/protectedRuntimeWorkspaceCommandQueryRails.ts",
+          "apps/api/src/entrypoints/http/signalRunRouteParser.constants.ts",
+          "apps/api/src/application/ports/protectedRuntime*",
+          "apps/api/docs/**"
+        ]
+      },
+      "createdAt": "2026-08-10T20:08:31.391Z"
     }
   ]
 }
