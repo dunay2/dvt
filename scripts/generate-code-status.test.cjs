@@ -194,6 +194,7 @@ test('System Delivery Status projects exact Git, workspace, maturity, rail, and 
   assert.match(first, /`evaluated-sha`/u);
   assert.match(first, /1\.2\.3/u);
   assert.match(first, /Exact Planning DB status only/u);
+  assert.match(first, /Effective command\/query rail rows \| 2/u);
   assert.match(first, /rail:command:WriteB:missing/u);
   assert.doesNotMatch(first, /capability coverage.*truth/iu);
 });

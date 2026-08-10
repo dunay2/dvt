@@ -537,7 +537,7 @@ function renderSystemDeliveryStatus(projection, utcDate) {
     ...markdownTable(
       ['Fact', 'Exact value'],
       [
-        ['Registered command/query rails', String(delivery.railCount)],
+        ['Effective command/query rail rows', String(delivery.railCount)],
         ['Rails with explicit gaps', String(delivery.railGapCount)],
         ['Duplicate rail authorities', String(delivery.duplicateRailCount)],
         ['Registered features', String(delivery.featureCount)],
