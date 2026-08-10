@@ -6,6 +6,13 @@ const { Client } = require('pg');
 
 const { resolveGeneratedDate } = require('./generated-doc-date.cjs');
 const { defaultPgUrl } = require('./planning-db-run.cjs');
+const {
+  readArchitectureComponentRows,
+  readArchitectureDriftRows,
+  readArchitectureMaturityRows,
+  readArchitectureRelationRows,
+  readArchitectureResponsibilityRows,
+} = require('./planning-db-query.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const codeStateOutputPath = path.join(
@@ -21,10 +28,17 @@ const repositoryMapOutputPath = path.join(
   'concepts',
   'repository-map.md'
 );
+const componentMapOutputPath = path.join(
+  repoRoot,
+  '.generated-docs',
+  'architecture',
+  'component-map.md'
+);
 
 const GENERATION_MODES = Object.freeze({
   all: 'all',
   codeStateOnly: 'code-state-only',
+  componentMapOnly: 'component-map-only',
   repositoryMapOnly: 'repository-map-only',
 });
 
@@ -284,20 +298,8 @@ async function readRepositoryArchitectureFacts(client) {
     where coalesce(status, '') not in ('deprecated', 'drift')
     order by repo_path, component_id
   `);
-  const documentResult = await client.query(`
-    select distinct
-      component_document.component_id,
-      component_document.document_path,
-      lifecycle.canonicality,
-      lifecycle.lifecycle_state,
-      lifecycle.status
-    from planning_query_store.component_engineering_document_query component_document
-    inner join planning_query_store.documentation_lifecycle_query lifecycle
-      on lifecycle.document_path = component_document.document_path
-    where component_document.document_kind = 'governing'
-    order by component_document.component_id, component_document.document_path
-  `);
-  return { components: componentResult.rows, documents: documentResult.rows };
+  const documents = await readArchitectureComponentDocumentRows(client);
+  return { components: componentResult.rows, documents };
 }
 
 function isCurrentCanonicalDocument(row) {
@@ -522,6 +524,375 @@ function renderRepositoryMap(workspaces, facts, utcDate) {
   ].join('\n');
 }
 
+async function readArchitectureComponentDocumentRows(client) {
+  const result = await client.query(`
+    select distinct
+      component_document.component_id,
+      component_document.document_path,
+      lifecycle.canonicality,
+      lifecycle.lifecycle_state,
+      lifecycle.status
+    from planning_query_store.component_engineering_document_query component_document
+    inner join planning_query_store.documentation_lifecycle_query lifecycle
+      on lifecycle.document_path = component_document.document_path
+    where component_document.document_kind = 'governing'
+    order by component_document.component_id, component_document.document_path
+  `);
+  return result.rows;
+}
+
+async function readComponentTopologyFacts(client, readers = {}) {
+  const limit = 100000;
+  const componentReader = readers.readArchitectureComponentRows || readArchitectureComponentRows;
+  const relationReader = readers.readArchitectureRelationRows || readArchitectureRelationRows;
+  const responsibilityReader =
+    readers.readArchitectureResponsibilityRows || readArchitectureResponsibilityRows;
+  const maturityReader = readers.readArchitectureMaturityRows || readArchitectureMaturityRows;
+  const driftReader = readers.readArchitectureDriftRows || readArchitectureDriftRows;
+  const documentReader =
+    readers.readArchitectureComponentDocumentRows || readArchitectureComponentDocumentRows;
+  const [components, relations, responsibilities, maturity, drift, documents] = await Promise.all([
+    componentReader(client, { limit }),
+    relationReader(client, { limit }),
+    responsibilityReader(client, { limit }),
+    maturityReader(client, { limit }),
+    driftReader(client, { limit }),
+    documentReader(client),
+  ]);
+  return { components, relations, responsibilities, maturity, drift, documents };
+}
+
+function currentGitSha(options = {}) {
+  if (options.gitSha) return String(options.gitSha).trim();
+  const result = spawnSync('git', ['rev-parse', 'HEAD'], {
+    cwd: options.root || repoRoot,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  if (result.error) throw result.error;
+  if (result.status !== 0) {
+    throw new Error(`Cannot resolve Component Map Git input: ${String(result.stderr).trim()}.`);
+  }
+  return String(result.stdout).trim();
+}
+
+function groupRowsByComponent(rows, knownComponentIds, rowKind) {
+  const grouped = new Map();
+  for (const row of rows || []) {
+    const componentId = String(row.component_id ?? row.componentId ?? '').trim();
+    if (!knownComponentIds.has(componentId)) {
+      throw new Error(`Unknown Planning DB ${rowKind} component ${componentId || '<empty>'}.`);
+    }
+    const group = grouped.get(componentId) || [];
+    group.push(row);
+    grouped.set(componentId, group);
+  }
+  return grouped;
+}
+
+function uniqueRowsByComponent(rows, knownComponentIds, rowKind) {
+  const grouped = groupRowsByComponent(rows, knownComponentIds, rowKind);
+  for (const [componentId, group] of grouped) {
+    if (group.length > 1) {
+      throw new Error(`Duplicate Planning DB ${rowKind} identity ${componentId}.`);
+    }
+  }
+  return new Map([...grouped].map(([componentId, group]) => [componentId, group[0]]));
+}
+
+function componentDocumentLink(documentPath) {
+  return path.posix.relative('docs/architecture', normalizeRepoPath(documentPath));
+}
+
+function buildComponentTopologyProjection(facts, options = {}) {
+  const root = path.resolve(options.root || repoRoot);
+  const pathExists =
+    options.pathExists || ((sourcePath) => fs.existsSync(path.resolve(root, sourcePath)));
+  const pathKind =
+    options.pathKind ||
+    ((sourcePath) =>
+      fs.statSync(path.resolve(root, sourcePath)).isDirectory() ? 'directory' : 'file');
+  const gitSha = currentGitSha({ root, gitSha: options.gitSha });
+  const repositoryUrl = String(options.repositoryUrl || repositoryBrowserUrl()).replace(/\/$/u, '');
+  const componentRows = [...(facts.components || [])];
+  const componentById = new Map();
+  for (const component of componentRows) {
+    const componentId = String(component.component_id ?? component.componentId ?? '').trim();
+    if (!componentId) throw new Error('Planning DB component identity cannot be empty.');
+    if (componentById.has(componentId)) {
+      throw new Error(`Duplicate Planning DB component identity ${componentId}.`);
+    }
+    componentById.set(componentId, component);
+  }
+  const knownComponentIds = new Set(componentById.keys());
+
+  const relations = (facts.relations || [])
+    .map((relation) => {
+      const relationId = String(relation.relation_id ?? relation.relationId ?? '').trim();
+      const sourceComponentId = String(
+        relation.source_component_id ?? relation.sourceComponentId ?? ''
+      ).trim();
+      const targetComponentId = String(
+        relation.target_component_id ?? relation.targetComponentId ?? ''
+      ).trim();
+      for (const endpoint of [sourceComponentId, targetComponentId]) {
+        if (!knownComponentIds.has(endpoint)) {
+          throw new Error(`Unknown Planning DB relation endpoint ${endpoint} in ${relationId}.`);
+        }
+      }
+      return {
+        direction: String(relation.direction || '-'),
+        relationId,
+        relationType: String(relation.relation_type ?? relation.relationType ?? '-'),
+        sourceComponentId,
+        status: String(relation.status || '-'),
+        targetComponentId,
+      };
+    })
+    .sort((left, right) =>
+      [left.sourceComponentId, left.targetComponentId, left.relationType, left.relationId]
+        .join('\0')
+        .localeCompare(
+          [
+            right.sourceComponentId,
+            right.targetComponentId,
+            right.relationType,
+            right.relationId,
+          ].join('\0'),
+          'en'
+        )
+    );
+  const responsibilityByComponent = groupRowsByComponent(
+    facts.responsibilities || [],
+    knownComponentIds,
+    'responsibility'
+  );
+  const maturityByComponent = uniqueRowsByComponent(
+    facts.maturity || [],
+    knownComponentIds,
+    'maturity'
+  );
+  const driftByComponent = groupRowsByComponent(facts.drift || [], knownComponentIds, 'drift');
+  const currentDocuments = (facts.documents || []).filter(isCurrentCanonicalDocument);
+  for (const document of currentDocuments) {
+    const componentId = String(document.component_id ?? document.componentId ?? '').trim();
+    const documentPath = normalizeRepoPath(document.document_path ?? document.documentPath ?? '');
+    const absolutePath = path.resolve(root, documentPath);
+    const relativePath = path.relative(root, absolutePath);
+    if (
+      !documentPath.startsWith('docs/') ||
+      relativePath.startsWith('..') ||
+      path.isAbsolute(relativePath) ||
+      !pathExists(documentPath)
+    ) {
+      throw new Error(
+        `Invalid canonical component document for ${componentId || '<empty>'}: ${documentPath || '<empty>'}.`
+      );
+    }
+  }
+  const orphanDocuments = currentDocuments.filter(
+    (document) =>
+      !knownComponentIds.has(String(document.component_id ?? document.componentId ?? '').trim())
+  );
+  const documentByComponent = groupRowsByComponent(
+    currentDocuments.filter((document) =>
+      knownComponentIds.has(String(document.component_id ?? document.componentId ?? '').trim())
+    ),
+    knownComponentIds,
+    'canonical document'
+  );
+
+  const relationCounts = new Map(
+    [...knownComponentIds].map((componentId) => [componentId, { inbound: 0, outbound: 0 }])
+  );
+  for (const relation of relations) {
+    relationCounts.get(relation.sourceComponentId).outbound += 1;
+    relationCounts.get(relation.targetComponentId).inbound += 1;
+  }
+
+  const components = [...componentById]
+    .sort(([left], [right]) => left.localeCompare(right, 'en'))
+    .map(([componentId, component]) => {
+      const repositoryPath = normalizeRepoPath(component.repo_path ?? component.repoPath ?? '');
+      const repositoryPathExists = Boolean(repositoryPath) && pathExists(repositoryPath);
+      const canonicalDocuments = (documentByComponent.get(componentId) || [])
+        .map((document) => {
+          const documentPath = normalizeRepoPath(
+            document.document_path ?? document.documentPath ?? ''
+          );
+          return { documentPath, link: componentDocumentLink(documentPath) };
+        })
+        .sort((left, right) => left.documentPath.localeCompare(right.documentPath, 'en'));
+      const responsibilities = (responsibilityByComponent.get(componentId) || [])
+        .map((responsibility) => ({
+          dddOwner: String(responsibility.ddd_owner ?? responsibility.dddOwner ?? '-'),
+          responsibility: String(responsibility.responsibility || '-'),
+          responsibilityId: String(
+            responsibility.responsibility_id ?? responsibility.responsibilityId ?? '-'
+          ),
+          status: String(responsibility.status || '-'),
+        }))
+        .sort((left, right) => left.responsibilityId.localeCompare(right.responsibilityId, 'en'));
+      const maturity = maturityByComponent.get(componentId);
+      const drift = (driftByComponent.get(componentId) || [])
+        .map((row) => String(row.drift_code ?? row.driftCode ?? '-'))
+        .sort((left, right) => left.localeCompare(right, 'en'));
+      const gaps = [];
+      if (!repositoryPathExists) gaps.push('missing-repository-path');
+      if (canonicalDocuments.length === 0) gaps.push('missing-canonical-document');
+      if (canonicalDocuments.length > 1) gaps.push('ambiguous-canonical-document');
+      if (responsibilities.length === 0) gaps.push('missing-responsibility');
+      if (!maturity) gaps.push('missing-maturity');
+      return {
+        canonicalDocuments,
+        componentId,
+        criticality: String(component.criticality || '-'),
+        drift,
+        gaps,
+        kind: String(component.kind || '-'),
+        layer: String(component.layer || '-'),
+        maturityScore: maturity
+          ? String(maturity.maturity_score ?? maturity.maturityScore ?? '-')
+          : '-',
+        name: String(component.name || componentId),
+        owner: String(component.owner || '-'),
+        publicContract: String(component.public_contract ?? component.publicContract ?? '-'),
+        relationCounts: relationCounts.get(componentId),
+        repositoryLink: repositoryPathExists
+          ? `${repositoryUrl}/${pathKind(repositoryPath) === 'directory' ? 'tree' : 'blob'}/${gitSha}/${encodeURI(repositoryPath)}`
+          : null,
+        repositoryPath: repositoryPath || '-',
+        responsibilities,
+        runtime: String(component.runtime || '-'),
+        status: String(component.status || '-'),
+      };
+    });
+
+  return {
+    components,
+    gapComponentCount: components.filter((component) => component.gaps.length > 0).length,
+    gitSha,
+    globalGaps: orphanDocuments
+      .map((document) => {
+        const componentId = String(document.component_id ?? document.componentId ?? '').trim();
+        const documentPath = normalizeRepoPath(
+          document.document_path ?? document.documentPath ?? ''
+        );
+        return `orphan-canonical-document-binding:${componentId}:${documentPath}`;
+      })
+      .sort((left, right) => left.localeCompare(right, 'en')),
+    relationCount: relations.length,
+    relations,
+  };
+}
+
+function renderComponentMap(projection, utcDate) {
+  const componentRows = projection.components.map((component) => [
+    `\`${component.componentId}\`<br>${component.name}`,
+    `${component.layer}<br>${component.kind}<br>${component.runtime}`,
+    `${component.status}<br>maturity ${component.maturityScore}<br>${component.criticality}`,
+    [component.owner, ...component.responsibilities.map((item) => item.responsibility)].join(
+      '<br>'
+    ),
+    component.repositoryLink
+      ? `[${component.repositoryPath}](${component.repositoryLink})`
+      : `\`${component.repositoryPath}\``,
+    component.canonicalDocuments.length > 0
+      ? component.canonicalDocuments
+          .map((document) => `[${document.documentPath}](${document.link})`)
+          .join('<br>')
+      : '-',
+    `out ${component.relationCounts.outbound}<br>in ${component.relationCounts.inbound}`,
+    component.drift.length > 0 ? component.drift.join('<br>') : 'none',
+    component.gaps.length > 0 ? component.gaps.join('<br>') : 'none',
+  ]);
+  const relationRows = projection.relations.map((relation) => [
+    `\`${relation.relationId}\``,
+    `${relation.sourceComponentId} → ${relation.targetComponentId}`,
+    relation.relationType,
+    relation.direction,
+    relation.status,
+  ]);
+
+  return [
+    '---',
+    'title: Component Map',
+    'status: Active',
+    'owner: Architecture / Docs',
+    `last_reviewed: ${utcDate}`,
+    '---',
+    '',
+    '# DVT Component Map',
+    '',
+    'This is the current DB-first projection of registered DVT components and their exact directed relations.',
+    'Planning DB owns the structured architecture facts; Git at the evaluated commit owns repository-path existence.',
+    'Authored component pages remain the authority for rationale and invariants. Missing bindings are explicit gaps and are never inferred.',
+    '',
+    '## Current state',
+    '',
+    ...markdownTable(
+      ['Metric', 'Value'],
+      [
+        ['Evaluated Git commit', `\`${projection.gitSha}\``],
+        ['Registered components', String(projection.components.length)],
+        ['Registered directed relations', String(projection.relationCount)],
+        ['Components with explicit gaps', String(projection.gapComponentCount)],
+        ['Projection-wide gaps', String(projection.globalGaps.length)],
+        ['Component authority', '`architecture-components`'],
+        ['Relation authority', '`architecture-relations`'],
+        ['Responsibility authority', '`architecture-responsibilities`'],
+        ['Maturity authority', '`architecture-maturity`'],
+      ]
+    ),
+    '',
+    '## Projection-wide gaps',
+    '',
+    ...(projection.globalGaps.length > 0
+      ? projection.globalGaps.map((gap) => `- \`${gap}\``)
+      : ['- none']),
+    '',
+    '## Component catalog',
+    '',
+    ...markdownTable(
+      [
+        'Component',
+        'Layer / kind / runtime',
+        'Status / maturity / criticality',
+        'Owner / registered responsibility',
+        'Exact repository path',
+        'Current canonical document',
+        'Direct relations',
+        'Drift',
+        'Gap',
+      ],
+      componentRows
+    ),
+    '',
+    '## Directed relation topology',
+    '',
+    'Every row below is one registered Planning DB relation. The arrow is source → target; no edge is inferred from imports, folders, or vocabulary.',
+    '',
+    ...markdownTable(['Relation', 'Source → target', 'Type', 'Direction', 'Status'], relationRows),
+    '',
+    '## Reading rule',
+    '',
+    '- A missing repository path is reported; it is not replaced by a guessed file.',
+    '- Zero or multiple current canonical documents are reported as explicit gaps.',
+    '- Responsibilities, maturity and drift appear only when registered by their owning read models.',
+    '- Duplicate component identity, unknown relation endpoints, and invalid current document paths fail generation.',
+    '',
+    '## Related authored context',
+    '',
+    '- [Architecture Component Surfaces](./components/index.md)',
+    '- [Reference Architecture](./reference-architecture.md)',
+    '- [System Architecture](./system/index.md)',
+    '- [System Delivery Status](./system-delivery-status.md)',
+    '',
+    '> This page is auto-generated by `pnpm docs:status:generate`. Do not edit manually.',
+    '',
+  ].join('\n');
+}
+
 function writeIfChanged(absPath, content) {
   const current = fs.existsSync(absPath) ? fs.readFileSync(absPath, 'utf8') : null;
   if (current === content) return false;
@@ -531,7 +902,12 @@ function writeIfChanged(absPath, content) {
 }
 
 function resolveGenerationMode(argv) {
-  const knownFlags = new Set(['--code-state-only', '--repository-map-only', '--check']);
+  const knownFlags = new Set([
+    '--code-state-only',
+    '--component-map-only',
+    '--repository-map-only',
+    '--check',
+  ]);
   const unknownFlags = argv.filter(
     (argument) => argument.startsWith('--') && !knownFlags.has(argument)
   );
@@ -539,11 +915,15 @@ function resolveGenerationMode(argv) {
     throw new Error(`Unknown generate-code-status option: ${unknownFlags.join(', ')}`);
   }
   const codeStateOnly = argv.includes('--code-state-only');
+  const componentMapOnly = argv.includes('--component-map-only');
   const repositoryMapOnly = argv.includes('--repository-map-only');
-  if (codeStateOnly && repositoryMapOnly) {
-    throw new Error('Choose either --code-state-only or --repository-map-only, not both.');
+  if ([codeStateOnly, componentMapOnly, repositoryMapOnly].filter(Boolean).length > 1) {
+    throw new Error(
+      'Choose either one generation mode: --code-state-only, --component-map-only, or --repository-map-only.'
+    );
   }
   if (codeStateOnly) return GENERATION_MODES.codeStateOnly;
+  if (componentMapOnly) return GENERATION_MODES.componentMapOnly;
   if (repositoryMapOnly) return GENERATION_MODES.repositoryMapOnly;
   return GENERATION_MODES.all;
 }
@@ -582,6 +962,26 @@ async function generateRepositoryMap(workspaces, ClientCtor) {
   }
 }
 
+async function generateComponentMap(ClientCtor) {
+  const client = new ClientCtor({ connectionString: databaseUrl() });
+  await client.connect();
+  try {
+    const facts = await readComponentTopologyFacts(client);
+    const projection = buildComponentTopologyProjection(facts);
+    const date = resolveGeneratedDate(componentMapOutputPath, (value) =>
+      renderComponentMap(projection, value)
+    );
+    const changed = writeIfChanged(componentMapOutputPath, renderComponentMap(projection, date));
+    console.log(
+      changed
+        ? `[docs:status:generate] Updated ${relFromRepo(componentMapOutputPath)}`
+        : `[docs:status:generate] ${relFromRepo(componentMapOutputPath)} already up to date.`
+    );
+  } finally {
+    await client.end();
+  }
+}
+
 async function main(argv = process.argv.slice(2), dependencies = {}) {
   const mode = resolveGenerationMode(argv);
   const collectWorkspaces =
@@ -591,10 +991,22 @@ async function main(argv = process.argv.slice(2), dependencies = {}) {
   const generateRepositoryMapFn =
     dependencies.generateRepositoryMap ||
     ((workspaces) => generateRepositoryMap(workspaces, ClientCtor));
-  const workspaces = collectWorkspaces(dependencies.workspaceOptions || {});
+  const generateComponentMapFn =
+    dependencies.generateComponentMap || (() => generateComponentMap(ClientCtor));
+  const workspaces =
+    mode === GENERATION_MODES.componentMapOnly
+      ? []
+      : collectWorkspaces(dependencies.workspaceOptions || {});
 
-  if (mode !== GENERATION_MODES.repositoryMapOnly) await generateCodeStateFn(workspaces);
-  if (mode !== GENERATION_MODES.codeStateOnly) await generateRepositoryMapFn(workspaces);
+  if (mode === GENERATION_MODES.all || mode === GENERATION_MODES.codeStateOnly) {
+    await generateCodeStateFn(workspaces);
+  }
+  if (mode === GENERATION_MODES.all || mode === GENERATION_MODES.repositoryMapOnly) {
+    await generateRepositoryMapFn(workspaces);
+  }
+  if (mode === GENERATION_MODES.all || mode === GENERATION_MODES.componentMapOnly) {
+    await generateComponentMapFn();
+  }
 }
 
 if (require.main === module) {
@@ -605,6 +1017,7 @@ if (require.main === module) {
 }
 
 module.exports = {
+  buildComponentTopologyProjection,
   buildRepositoryMapRows,
   collectRepositoryWorkspaceStats,
   collectWorkspaceStats,
@@ -614,9 +1027,12 @@ module.exports = {
   markdownCell,
   normalizeRepoPath,
   parsePnpmWorkspaceRows,
+  readArchitectureComponentDocumentRows,
+  readComponentTopologyFacts,
   readRepositoryArchitectureFacts,
   relativeDocLink,
   renderCodeState,
+  renderComponentMap,
   renderRepositoryMap,
   resolveDocumentationProjection,
   resolveGenerationMode,
