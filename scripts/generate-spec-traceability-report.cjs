@@ -95,6 +95,56 @@ function isExecutableValidation(validationRef) {
   return /^(node|npm|npx|pnpm|python|yarn)(?:\s|$)/u.test(validationRef);
 }
 
+function packageScriptFromValidation(validationRef) {
+  const tokens = String(validationRef || '')
+    .trim()
+    .split(/\s+/u);
+  const runner = tokens.shift();
+  if (!['npm', 'pnpm', 'yarn'].includes(runner)) return null;
+  const optionsWithValues = new Set(['--dir', '--filter', '--workspace-concurrency', '-C', '-F']);
+  for (let index = 0; index < tokens.length; index += 1) {
+    const token = tokens[index];
+    if (token === '--') return null;
+    if (optionsWithValues.has(token)) {
+      index += 1;
+      continue;
+    }
+    if (token.startsWith('-')) continue;
+    if (token === 'run') continue;
+    if (['dlx', 'exec'].includes(token)) return null;
+    return token;
+  }
+  return null;
+}
+
+function commandFileFromValidation(validationRef) {
+  const tokens = String(validationRef || '')
+    .trim()
+    .split(/\s+/u);
+  const runner = tokens.shift();
+  if (!['node', 'python'].includes(runner)) return null;
+  const commandPath = tokens.find((token) => !token.startsWith('-'));
+  return commandPath ? toPosix(commandPath).replace(/^\.\//u, '') : null;
+}
+
+function isRegisteredVerificationCommand(validationRef, commands) {
+  const packageScript = packageScriptFromValidation(validationRef);
+  const commandFile = commandFileFromValidation(validationRef);
+  return (commands || []).some((command) => {
+    const commandType = String(field(command, 'command_type', 'commandType') || '').trim();
+    if (packageScript && commandType === 'package_script') {
+      return String(field(command, 'command_name', 'commandName') || '').trim() === packageScript;
+    }
+    if (commandFile && commandType === 'command_file') {
+      return (
+        toPosix(field(command, 'command_path', 'commandPath') || '').replace(/^\.\//u, '') ===
+        commandFile
+      );
+    }
+    return false;
+  });
+}
+
 function isDocumentConflict(row) {
   const gapKind = String(field(row, 'lifecycle_gap_kind', 'lifecycleGapKind') || '').toLowerCase();
   const duplicateCount = Number(field(row, 'duplicate_count', 'duplicateCount') || 0);
@@ -269,11 +319,19 @@ function buildFeatureTraceabilityProjection(facts, options = {}) {
         })
       );
       if (validations.length === 0) gaps.push(`missing-validation:${featureId}`);
-      const verificationCommands = uniqueSorted(
+      const executableValidations = uniqueSorted(
         (validationRows.get(featureId) || [])
           .map((row) => String(field(row, 'validation_ref', 'validationRef') || '').trim())
           .filter(isExecutableValidation)
       );
+      const verificationCommands = [];
+      for (const command of executableValidations) {
+        if (isRegisteredVerificationCommand(command, facts.commands)) {
+          verificationCommands.push(command);
+        } else {
+          gaps.push(`unregistered-verification-command:${featureId}#${command}`);
+        }
+      }
       if (verificationCommands.length === 0) {
         gaps.push(`missing-verification-command:${featureId}`);
       }
@@ -560,6 +618,7 @@ module.exports = {
   buildFeatureTraceabilityProjection,
   isCurrentCanonicalDocument,
   isExecutableValidation,
+  isRegisteredVerificationCommand,
   isTestPath,
   main,
   readFeatureTraceabilityFacts,
