@@ -157,11 +157,10 @@ function isRegisteredVerificationCommand(validationRef, commands) {
 
 function isDocumentConflict(row) {
   const gapKind = String(field(row, 'lifecycle_gap_kind', 'lifecycleGapKind') || '').toLowerCase();
-  const duplicateCount = Number(field(row, 'duplicate_count', 'duplicateCount') || 0);
   const canonicalCounterpartCount = Number(
     field(row, 'canonical_counterpart_count', 'canonicalCounterpartCount') || 0
   );
-  return gapKind === 'canonical_duplicate' || duplicateCount > 0 || canonicalCounterpartCount > 1;
+  return gapKind === 'canonical_duplicate' || canonicalCounterpartCount > 1;
 }
 
 function isCurrentCanonicalDocument(row) {
