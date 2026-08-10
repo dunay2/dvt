@@ -353,6 +353,26 @@ symbols:
     architectureGuard: pnpm --filter @dvt/web test:canvas
     cypressCoverage: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
     unitTests: [pnpm --filter @dvt/web test:canvas]
+  - path: scripts/run-selected-closure-live-proof.cjs
+    name: buildLiveProofCypressDockerInvocation
+    kind: function
+    exported: true
+    dddOwner: Selected-closure live-proof runner
+    cqRails: [InspectCanvasNode]
+    fowlerSignals: [Test-only confidence, Environment coupling]
+    architectureGuard: node --test scripts/run-selected-closure-live-proof.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
+    unitTests: [node --test scripts/run-selected-closure-live-proof.test.cjs]
+  - path: scripts/run-selected-closure-live-proof.cjs
+    name: buildLiveProofCypressJunctionMirror
+    kind: function
+    exported: false
+    dddOwner: Selected-closure live-proof runner
+    cqRails: [InspectCanvasNode]
+    fowlerSignals: [Test-only confidence, Environment coupling]
+    architectureGuard: node --test scripts/run-selected-closure-live-proof.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
+    unitTests: [node --test scripts/run-selected-closure-live-proof.test.cjs]
 fowlerSignals:
   - duplicate node gestures and adjacent action surfaces
   - split Code versus Workbench node-entry semantics
