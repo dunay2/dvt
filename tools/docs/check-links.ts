@@ -16,11 +16,11 @@
  *   tsx tools/docs/check-links.ts --changed-only  # only git-changed files
  */
 import { existsSync, readFileSync } from 'node:fs';
-import { createRequire } from 'node:module';
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
+import publicationModule from '../../scripts/documentation-publication.cjs';
 import { walkMarkdown } from './lib/walkDocs.js';
 import { readIfExists, extractLinks, extractAnchors } from './lib/markdown.js';
 import { Report } from './lib/report.js';
@@ -28,8 +28,7 @@ import { Report } from './lib/report.js';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(__dirname, '..', '..');
 const DOCS_DIR = join(REPO_ROOT, 'docs');
-const require = createRequire(import.meta.url);
-const { DocumentationPublicationPolicy } = require('../../scripts/documentation-publication.cjs') as {
+const { DocumentationPublicationPolicy } = publicationModule as {
   DocumentationPublicationPolicy: {
     isHistoricalPath(sourcePath: string): boolean;
   };
