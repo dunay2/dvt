@@ -70,7 +70,14 @@ reached.
 
 ### Documentation And Zensical
 
+Documentation generation is explicit and on demand. Run publication after
+documentation inputs or Planning DB authority change; serving and building do
+not regenerate the projection implicitly.
+
 ```bash
+# Generate the DB-authorized documentation projection explicitly
+pnpm docs:publish
+
 # Serve the docs locally with zensical
 pnpm docs:serve
 

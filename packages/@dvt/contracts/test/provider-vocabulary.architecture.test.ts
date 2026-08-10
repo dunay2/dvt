@@ -96,6 +96,12 @@ describe('contracts: active provider vocabulary', () => {
     expect(readme).not.toContain('ExecutionSemantics.v2.0.md');
     expect(readme).not.toContain('Agent Lane YAMLs');
     expect(readme).not.toMatch(/\[Conductor\]\([^)]+ConductorAdapter[^)]*\)/u);
+    expect(readme).toContain('Documentation generation is explicit and on demand');
+
+    const publishCommandIndex = readme.indexOf('pnpm docs:publish');
+    expect(publishCommandIndex).toBeGreaterThan(-1);
+    expect(publishCommandIndex).toBeLessThan(readme.indexOf('pnpm docs:serve'));
+    expect(publishCommandIndex).toBeLessThan(readme.indexOf('pnpm docs:build'));
 
     for (const match of readme.matchAll(/\[[^\]]+\]\(([^)]+)\)/gu)) {
       const target = match[1]?.split('#', 1)[0];
