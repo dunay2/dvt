@@ -81,6 +81,15 @@ test('current schema accepts audited architecture storage I/O records', () => {
   );
 });
 
+test('current schema accepts audited governance component revisions', () => {
+  const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
+
+  assert.match(
+    schemaSql,
+    /governance_component_local_operations_operation_type_check[^\r\n]*'component_revise'::text/u
+  );
+});
+
 test('current schema accepts architecture design scopes for ports', () => {
   const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
 
