@@ -1,323 +1,650 @@
 #!/usr/bin/env node
-/* eslint-disable no-console */
+/**
+ * Owned concern: project exact feature traceability from Planning DB and Git.
+ * Command/query rails: `GeneratePlanningDerivedSurfaces` and
+ * `CheckFeatureMechanizationDiffSurface`.
+ */
 const fs = require('node:fs');
 const path = require('node:path');
+const { execFileSync } = require('node:child_process');
+const { Client } = require('pg');
+
 const { resolveGeneratedDate } = require('./generated-doc-date.cjs');
+const {
+  markdownCell,
+  readArchitectureComponentDocumentRows,
+  readGitTreePaths,
+} = require('./generate-code-status.cjs');
+const { defaultPgUrl } = require('./planning-db-run.cjs');
+const {
+  readDocumentationLifecycleRows,
+  readFeatureMechanizationComponentRows,
+  readFeatureMechanizationFeatureRows,
+  readFeatureMechanizationRailRows,
+  readFeatureMechanizationSymbolRows,
+  readFeatureMechanizationValidationRows,
+  readRepositoryCommandRows,
+} = require('./planning-db-query.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
-const docsRoot = path.join(repoRoot, 'docs');
-const outputPath = path.join(
-  repoRoot,
-  'docs',
-  'planning',
-  'status',
-  'generated-spec-traceability.md'
-);
-
-const CANONICAL_SECTIONS = new Set([
-  'adr',
-  'architecture',
-  'contracts',
-  'guides',
-  'runbooks',
-  'planning',
-  'evidence',
-  'risk-register',
-]);
-
-const CODE_ROOT_PREFIXES = ['packages/', 'apps/', 'scripts/', 'tools/'];
+const generatedRoot = path.join(repoRoot, '.generated-docs', 'planning', 'status');
+const matrixOutputPath = path.join(generatedRoot, 'canonical-doc-code-matrix.md');
+const summaryOutputPath = path.join(generatedRoot, 'generated-spec-traceability.md');
+const limit = 100000;
 
 function toPosix(value) {
-  return value.replace(/\\/g, '/');
+  return String(value || '').replaceAll('\\', '/');
 }
 
-function relFromRepo(absPath) {
-  return toPosix(path.relative(repoRoot, absPath));
+function normalizePath(value) {
+  const repositoryPath = toPosix(value).trim();
+  if (!repositoryPath) return '';
+  const segments = repositoryPath.split('/');
+  if (
+    repositoryPath.startsWith('/') ||
+    /^[A-Za-z]:\//u.test(repositoryPath) ||
+    segments.includes('..')
+  ) {
+    throw new Error(`Unsafe repository path ${repositoryPath}.`);
+  }
+  return repositoryPath.replace(/^\.\//u, '').replace(/\/+$/u, '');
 }
 
-function walk(dir, predicate) {
-  const out = [];
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    if (entry.name.startsWith('.')) continue;
-    if (entry.name === 'node_modules' || entry.name === 'dist' || entry.name === 'site') continue;
-    const abs = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      out.push(...walk(abs, predicate));
+function field(row, snakeName, camelName = snakeName) {
+  return row?.[snakeName] ?? row?.[camelName];
+}
+
+function featureIdOf(row) {
+  return String(field(row, 'feature_id', 'featureId') ?? '').trim();
+}
+
+function uniqueSorted(values) {
+  return [...new Set((values || []).map((value) => String(value).trim()).filter(Boolean))].sort(
+    (left, right) => left.localeCompare(right, 'en')
+  );
+}
+
+function uniqueSortedSymbols(symbols) {
+  const symbolsByIdentity = new Map();
+  for (const symbol of symbols || []) {
+    const symbolName = String(symbol?.symbolName || '').trim();
+    const symbolPath = String(symbol?.symbolPath || '').trim();
+    const identity = `${symbolPath}\u0000${symbolName}`;
+    if (!symbolsByIdentity.has(identity)) {
+      symbolsByIdentity.set(identity, { symbolName, symbolPath });
+    }
+  }
+  return [...symbolsByIdentity.values()].sort(
+    (left, right) =>
+      left.symbolPath.localeCompare(right.symbolPath, 'en') ||
+      left.symbolName.localeCompare(right.symbolName, 'en')
+  );
+}
+
+function groupFeatureRelations(rows, featureIds, relationKind) {
+  const grouped = new Map();
+  for (const row of rows || []) {
+    const featureId = featureIdOf(row);
+    if (!featureIds.has(featureId)) {
+      throw new Error(`Unknown Planning DB ${relationKind} feature ${featureId || '<empty>'}.`);
+    }
+    const group = grouped.get(featureId) || [];
+    group.push(row);
+    grouped.set(featureId, group);
+  }
+  return grouped;
+}
+
+function isTestPath(repositoryPath) {
+  return /(^|\/)(test|tests|__tests__|cypress\/(?:e2e|component))(\/|$)|\.(test|spec|cy)\.[^/]+$/u.test(
+    repositoryPath
+  );
+}
+
+function stripLeadingEnvironmentAssignments(validationRef) {
+  return String(validationRef || '')
+    .trim()
+    .replace(/^(?:[A-Za-z_][A-Za-z0-9_]*=[^\s=;&|<>]+\s+)+/u, '');
+}
+
+function isExecutableValidation(validationRef) {
+  return /^(node|npm|npx|pnpm|python|yarn)(?:\s|$)/u.test(
+    stripLeadingEnvironmentAssignments(validationRef)
+  );
+}
+
+function packageScriptFromValidation(validationRef) {
+  const tokens = stripLeadingEnvironmentAssignments(validationRef).split(/\s+/u);
+  const runner = tokens.shift();
+  if (!['npm', 'pnpm', 'yarn'].includes(runner)) return null;
+  const optionsWithValues = new Set(['--dir', '--filter', '--workspace-concurrency', '-C', '-F']);
+  for (let index = 0; index < tokens.length; index += 1) {
+    const token = tokens[index];
+    if (token === '--') return null;
+    if (optionsWithValues.has(token)) {
+      index += 1;
       continue;
     }
-    if (!predicate || predicate(abs, entry.name)) out.push(abs);
+    if (token.startsWith('-')) continue;
+    if (token === 'run') continue;
+    if (['dlx', 'exec'].includes(token)) return null;
+    return token;
   }
-  return out;
+  return null;
+}
+
+function commandFileFromValidation(validationRef) {
+  const tokens = stripLeadingEnvironmentAssignments(validationRef).split(/\s+/u);
+  const runner = tokens.shift();
+  if (!['node', 'python'].includes(runner)) return null;
+  const commandPath = tokens.find((token) => !token.startsWith('-'));
+  return commandPath ? toPosix(commandPath).replace(/^\.\//u, '') : null;
+}
+
+function isRegisteredVerificationCommand(validationRef, commands) {
+  const commandSegments = String(validationRef || '')
+    .trim()
+    .split(/&&|\|\||[&|;]|\r\n?|\n/u)
+    .map((segment) => segment.trim());
+  if (commandSegments.length === 0 || commandSegments.some((segment) => !segment)) return false;
+
+  return commandSegments.every((segment) => {
+    if (!isExecutableValidation(segment)) return false;
+    const packageScript = packageScriptFromValidation(segment);
+    const commandFile = commandFileFromValidation(segment);
+    return (commands || []).some((command) => {
+      const commandType = String(field(command, 'command_type', 'commandType') || '').trim();
+      if (packageScript && commandType === 'package_script') {
+        return String(field(command, 'command_name', 'commandName') || '').trim() === packageScript;
+      }
+      if (commandFile && commandType === 'command_file') {
+        return (
+          toPosix(field(command, 'command_path', 'commandPath') || '').replace(/^\.\//u, '') ===
+          commandFile
+        );
+      }
+      return false;
+    });
+  });
+}
+
+function isDocumentConflict(row) {
+  const gapKind = String(field(row, 'lifecycle_gap_kind', 'lifecycleGapKind') || '').toLowerCase();
+  const canonicalCounterpartCount = Number(
+    field(row, 'canonical_counterpart_count', 'canonicalCounterpartCount') || 0
+  );
+  return gapKind === 'canonical_duplicate' || canonicalCounterpartCount > 1;
+}
+
+function isCurrentCanonicalDocument(row) {
+  const canonicality = String(row?.canonicality || '').toLowerCase();
+  const lifecycle = String(
+    field(row, 'lifecycle_state', 'lifecycleState') || row?.status || ''
+  ).toLowerCase();
+  return (
+    canonicality === 'canonical' &&
+    !isDocumentConflict(row) &&
+    ![
+      'archive',
+      'archived',
+      'deprecated',
+      'discarded',
+      'disposable',
+      'drift',
+      'rejected',
+      'retired',
+      'superseded',
+    ].includes(lifecycle)
+  );
+}
+
+function repositoryBrowserUrl() {
+  const repository = String(process.env.GITHUB_REPOSITORY || '').trim();
+  return repository ? `https://github.com/${repository}` : 'https://github.com/dunay2/dvt';
+}
+
+function resolveFeatureTraceabilityGitInput(options = {}) {
+  const gitSha = String(
+    options.gitSha ||
+      process.env.GIT_HEAD ||
+      process.env.GITHUB_SHA ||
+      execFileSync('git', ['rev-parse', 'HEAD'], {
+        cwd: options.root || repoRoot,
+        encoding: 'utf8',
+      })
+  ).trim();
+  const readTree = options.readGitTreePaths || readGitTreePaths;
+  return { gitSha, gitTreePaths: readTree({ gitSha }) };
+}
+
+function buildFeatureTraceabilityProjection(facts, options = {}) {
+  const gitSha = String(options.gitSha || '').trim();
+  if (!/^[0-9a-f]{40}$/u.test(gitSha)) {
+    throw new Error(
+      `Feature traceability requires an exact 40-character Git SHA, received ${gitSha || '<empty>'}.`
+    );
+  }
+  const gitTreePaths = options.gitTreePaths || readGitTreePaths({ gitSha });
+  const repositoryUrl = String(options.repositoryUrl || repositoryBrowserUrl()).replace(/\/$/u, '');
+  const features = [...(facts.features || [])];
+  const featureById = new Map();
+  for (const feature of features) {
+    const featureId = featureIdOf(feature);
+    if (!featureId) throw new Error('Planning DB feature identity cannot be empty.');
+    if (featureById.has(featureId)) {
+      throw new Error(`Duplicate Planning DB feature identity ${featureId}.`);
+    }
+    featureById.set(featureId, feature);
+  }
+  const featureIds = new Set(featureById.keys());
+  const componentRows = groupFeatureRelations(facts.components, featureIds, 'component');
+  const symbolRows = groupFeatureRelations(facts.symbols, featureIds, 'symbol');
+  const railRows = groupFeatureRelations(facts.rails, featureIds, 'rail');
+  const validationRows = groupFeatureRelations(facts.validations, featureIds, 'validation');
+
+  const lifecycleByPath = new Map();
+  for (const row of facts.documents || []) {
+    const documentPath = normalizePath(field(row, 'document_path', 'documentPath'));
+    if (!documentPath) continue;
+    const group = lifecycleByPath.get(documentPath) || [];
+    group.push(row);
+    lifecycleByPath.set(documentPath, group);
+  }
+  const componentIdsByDocument = new Map();
+  for (const row of facts.componentDocuments || []) {
+    const documentPath = normalizePath(field(row, 'document_path', 'documentPath'));
+    const componentId = String(field(row, 'component_id', 'componentId') || '').trim();
+    if (!documentPath || !componentId) continue;
+    const group = componentIdsByDocument.get(documentPath) || [];
+    group.push(componentId);
+    componentIdsByDocument.set(documentPath, group);
+  }
+
+  const projectedFeatures = [...featureById]
+    .sort(([left], [right]) => left.localeCompare(right, 'en'))
+    .map(([featureId, feature]) => {
+      const gaps = [];
+      const guides = uniqueSorted(
+        (componentRows.get(featureId) || []).map((row) =>
+          normalizePath(field(row, 'component_ref', 'componentRef'))
+        )
+      );
+      const documentPaths = [];
+      const componentIds = [];
+      for (const guidePath of guides) {
+        const lifecycleRows = lifecycleByPath.get(guidePath) || [];
+        if (lifecycleRows.length === 0) {
+          gaps.push(`missing-document-lifecycle:${guidePath}`);
+        } else if (lifecycleRows.some(isDocumentConflict)) {
+          gaps.push(`conflicting-canonical-document:${guidePath}`);
+        } else if (lifecycleRows.some(isCurrentCanonicalDocument)) {
+          if (gitTreePaths.get(guidePath) === 'blob') {
+            documentPaths.push(guidePath);
+          } else {
+            gaps.push(`missing-git-path:${guidePath}`);
+          }
+        } else {
+          gaps.push(`missing-current-canonical-document:${guidePath}`);
+        }
+
+        const exactOwners = uniqueSorted(componentIdsByDocument.get(guidePath) || []);
+        componentIds.push(...exactOwners);
+        if (exactOwners.length > 1) {
+          gaps.push(`conflicting-component-owner:${guidePath}`);
+        }
+      }
+      if (documentPaths.length === 0) gaps.push(`missing-canonical-document:${featureId}`);
+      if (componentIds.length === 0) gaps.push(`missing-component-owner:${featureId}`);
+
+      const sourcePaths = [];
+      const testPaths = [];
+      const sourceSymbols = [];
+      const testSymbols = [];
+      for (const symbol of symbolRows.get(featureId) || []) {
+        const symbolPath = normalizePath(field(symbol, 'symbol_path', 'symbolPath'));
+        const symbolName = String(field(symbol, 'symbol_name', 'symbolName') || '<empty>').trim();
+        if (!symbolPath) {
+          gaps.push(`missing-symbol-path:${featureId}#${symbolName}`);
+          continue;
+        }
+        if (gitTreePaths.get(symbolPath) !== 'blob') {
+          gaps.push(`missing-git-path:${symbolPath}`);
+          continue;
+        }
+        const exactSymbol = { symbolName, symbolPath };
+        if (isTestPath(symbolPath)) {
+          testPaths.push(symbolPath);
+          testSymbols.push(exactSymbol);
+        } else {
+          sourcePaths.push(symbolPath);
+          sourceSymbols.push(exactSymbol);
+        }
+      }
+      if (sourcePaths.length === 0) gaps.push(`missing-source:${featureId}`);
+      if (testPaths.length === 0) gaps.push(`missing-test:${featureId}`);
+
+      const rails = uniqueSorted(
+        (railRows.get(featureId) || []).map((row) => {
+          const railType = String(field(row, 'rail_type', 'railType') || '<missing-type>');
+          const railName = String(field(row, 'rail_name', 'railName') || '<missing-name>');
+          const railStatus = String(field(row, 'rail_status', 'railStatus') || '<missing-status>');
+          return `${railType}:${railName} (${railStatus})`;
+        })
+      );
+      if (rails.length === 0) gaps.push(`missing-rail:${featureId}`);
+
+      const validations = uniqueSorted(
+        (validationRows.get(featureId) || []).map((row) => {
+          const kind = String(field(row, 'validation_kind', 'validationKind') || '<missing-kind>');
+          const ref = String(field(row, 'validation_ref', 'validationRef') || '').trim();
+          return ref ? `${kind}: ${ref}` : '';
+        })
+      );
+      if (validations.length === 0) gaps.push(`missing-validation:${featureId}`);
+      const executableValidations = uniqueSorted(
+        (validationRows.get(featureId) || [])
+          .map((row) => String(field(row, 'validation_ref', 'validationRef') || '').trim())
+          .filter(isExecutableValidation)
+      );
+      const verificationCommands = [];
+      for (const command of executableValidations) {
+        if (isRegisteredVerificationCommand(command, facts.commands)) {
+          verificationCommands.push(command);
+        } else {
+          gaps.push(`unregistered-verification-command:${featureId}#${command}`);
+        }
+      }
+      if (verificationCommands.length === 0) {
+        gaps.push(`missing-verification-command:${featureId}`);
+      }
+
+      return {
+        featureId,
+        mechanizationStatus: String(
+          field(feature, 'mechanization_status', 'mechanizationStatus') || '<missing>'
+        ),
+        componentIds: uniqueSorted(componentIds),
+        documentPaths: uniqueSorted(documentPaths),
+        sourcePaths: uniqueSorted(sourcePaths),
+        testPaths: uniqueSorted(testPaths),
+        sourceSymbols: uniqueSortedSymbols(sourceSymbols),
+        testSymbols: uniqueSortedSymbols(testSymbols),
+        rails,
+        validations,
+        verificationCommands,
+        gaps: uniqueSorted(gaps),
+      };
+    });
+
+  return {
+    gitSha,
+    repositoryUrl,
+    repositoryCommandCount: (facts.commands || []).length,
+    features: projectedFeatures,
+  };
 }
 
 function markdownTable(headers, rows) {
-  const widths = headers.map((header, index) =>
-    Math.max(header.length, ...rows.map((row) => String(row[index]).length))
-  );
-  const renderRow = (cells) =>
-    `| ${cells.map((cell, index) => String(cell).padEnd(widths[index], ' ')).join(' | ')} |`;
-  const separator = `| ${widths.map((width) => '-'.repeat(Math.max(3, width))).join(' | ')} |`;
-  return [renderRow(headers), separator, ...rows.map((row) => renderRow(row))];
+  return [
+    `| ${headers.join(' | ')} |`,
+    `| ${headers.map(() => '---').join(' | ')} |`,
+    ...rows.map((row) => `| ${row.map(markdownCell).join(' | ')} |`),
+  ];
 }
 
-function parseFrontmatter(raw) {
-  const match = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
-  if (!match) return {};
-  const out = {};
-  for (const line of match[1].split(/\r?\n/)) {
-    const kv = line.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
-    if (kv) out[kv[1]] = kv[2].trim();
-  }
-  return out;
+function listCell(values, render = (value) => `\`${value}\``) {
+  return values.length > 0 ? values.map(render).join('<br>') : '—';
 }
 
-function extractFirstHeading(raw) {
-  const match = raw.match(/^#\s+(.+)$/m);
-  return match ? match[1].trim() : null;
+function documentLink(documentPath) {
+  const route = documentPath.replace(/^docs\//u, '');
+  const target = path.posix.relative('planning/status', route);
+  return `[\`${documentPath}\`](${target})`;
 }
 
-function findMarkdownLinks(raw) {
-  const results = [];
-  const regex = /\[[^\]]+\]\(([^)]+)\)/g;
-  let match = regex.exec(raw);
-  while (match) {
-    results.push(match[1]);
-    match = regex.exec(raw);
-  }
-  return results;
+function repositoryLink(repositoryUrl, gitSha, repositoryPath, label = repositoryPath) {
+  return `[\`${label}\`](${repositoryUrl}/blob/${gitSha}/${repositoryPath})`;
 }
 
-function normalizeMarkdownTarget(fromFile, target) {
-  if (!target || target.startsWith('http://') || target.startsWith('https://') || target.startsWith('#')) {
-    return null;
-  }
-  const cleanTarget = target.split('#')[0].split('?')[0];
-  if (cleanTarget.length === 0) return null;
-  const resolved = path.resolve(path.dirname(fromFile), cleanTarget);
-  if (!resolved.startsWith(repoRoot)) return null;
-  if (!fs.existsSync(resolved)) return null;
-  return relFromRepo(resolved);
-}
-
-function sectionOf(relPath) {
-  const parts = relPath.split('/');
-  return parts[1] || 'unknown';
-}
-
-function isCanonicalDoc(relPath) {
-  const parts = relPath.split('/');
-  return parts[0] === 'docs' && CANONICAL_SECTIONS.has(parts[1]);
-}
-
-function percentage(part, total) {
-  if (total === 0) return '0%';
-  return `${Math.round((part / total) * 100)}%`;
-}
-
-function collectDocs() {
-  const files = walk(docsRoot, (abs, name) => name.endsWith('.md'));
-  return files.map((absPath) => {
-    const relPath = relFromRepo(absPath);
-    const raw = fs.readFileSync(absPath, 'utf8');
-    const frontmatter = parseFrontmatter(raw);
-    const links = findMarkdownLinks(raw)
-      .map((link) => normalizeMarkdownTarget(absPath, link))
-      .filter(Boolean);
-
-    const codeLinks = links.filter((link) => CODE_ROOT_PREFIXES.some((prefix) => link.startsWith(prefix)));
-    const adrLinks = links.filter((link) => link.startsWith('docs/adr/'));
-    const title = frontmatter.title || extractFirstHeading(raw) || path.basename(absPath, '.md');
-
-    return {
-      absPath,
-      relPath,
-      section: sectionOf(relPath),
-      canonical: isCanonicalDoc(relPath),
-      title,
-      status: frontmatter.status || '-',
-      owner: frontmatter.owner || '-',
-      codeLinks,
-      adrLinks,
-      hasCodeLinks: codeLinks.length > 0,
-      hasAdrLinks: adrLinks.length > 0,
-    };
-  });
-}
-
-function collectCode() {
-  const roots = ['packages', 'apps'];
-  const files = roots.flatMap((root) =>
-    walk(path.join(repoRoot, root), (abs, name) => /\.(ts|tsx|js|jsx)$/.test(name))
-  );
-
-  return files.map((absPath) => {
-    const relPath = relFromRepo(absPath);
-    const raw = fs.readFileSync(absPath, 'utf8');
-    const hasFileTag = /@file\s+/m.test(raw);
-    const baselineMatches = [...raw.matchAll(/@baseline\s+(ADR-[0-9]{4}[A-Za-z]?)/g)].map((match) =>
-      match[1].toUpperCase()
-    );
-    const docMatches = [...raw.matchAll(/@docs?\s+([^\s*]+)/g)].map((match) => match[1]);
-    return {
-      relPath,
-      workspace: workspaceOf(relPath),
-      hasFileTag,
-      baselineAdrs: baselineMatches,
-      docRefs: docMatches,
-      hasBaseline: baselineMatches.length > 0,
-      hasDocRefs: docMatches.length > 0,
-    };
-  });
-}
-
-function workspaceOf(relPath) {
-  const parts = relPath.split('/');
-  if (parts[0] === 'apps' && parts.length >= 2) {
-    return parts.slice(0, 2).join('/');
-  }
-  if (parts[0] === 'packages' && parts[1] && parts[1].startsWith('@') && parts.length >= 3) {
-    return parts.slice(0, 3).join('/');
-  }
-  if (parts[0] === 'packages' && parts.length >= 2) {
-    return parts.slice(0, 2).join('/');
-  }
-  return parts.slice(0, Math.min(parts.length, 2)).join('/') || relPath;
-}
-
-function renderDoc(docs, code, generatedAt) {
-  const canonicalDocs = docs.filter((doc) => doc.canonical);
-  const docsWithCodeLinks = canonicalDocs.filter((doc) => doc.hasCodeLinks);
-  const docsWithAdrLinks = canonicalDocs.filter((doc) => doc.hasAdrLinks);
-  const codeWithBaseline = code.filter((file) => file.hasBaseline);
-  const codeWithDocRefs = code.filter((file) => file.hasDocRefs);
-
-  const sectionRows = [...new Set(canonicalDocs.map((doc) => doc.section))]
-    .sort((left, right) => left.localeCompare(right))
-    .map((section) => {
-      const sectionDocs = canonicalDocs.filter((doc) => doc.section === section);
-      const withCodeLinks = sectionDocs.filter((doc) => doc.hasCodeLinks).length;
-      const withAdrLinks = sectionDocs.filter((doc) => doc.hasAdrLinks).length;
-      return [
-        section,
-        sectionDocs.length,
-        `${withCodeLinks} (${percentage(withCodeLinks, sectionDocs.length)})`,
-        `${withAdrLinks} (${percentage(withAdrLinks, sectionDocs.length)})`,
-      ];
-    });
-
-  const workspaceRows = [...new Set(code.map((file) => file.workspace))]
-    .sort((left, right) => left.localeCompare(right))
-    .map((workspace) => {
-      const workspaceFiles = code.filter((file) => file.workspace === workspace);
-      const withBaseline = workspaceFiles.filter((file) => file.hasBaseline).length;
-      const withDocRefs = workspaceFiles.filter((file) => file.hasDocRefs).length;
-      return [
-        workspace,
-        workspaceFiles.length,
-        `${withBaseline} (${percentage(withBaseline, workspaceFiles.length)})`,
-        `${withDocRefs} (${percentage(withDocRefs, workspaceFiles.length)})`,
-      ];
-    });
-
-  const missingCodeLinkRows = canonicalDocs
-    .filter((doc) => !doc.hasCodeLinks && doc.status.toLowerCase() !== 'archived')
-    .sort((left, right) => left.relPath.localeCompare(right.relPath))
-    .slice(0, 40)
-    .map((doc) => [doc.section, `[${doc.title}](${path.posix.relative('docs/planning/status', doc.relPath)})`, doc.status]);
-
-  const duplicateLanguageRows = docs
-    .filter((doc) => doc.relPath.endsWith('.en.md'))
-    .map((doc) => {
-      const baseRel = doc.relPath.replace(/\.en\.md$/i, '.md');
-      return {
-        english: doc.relPath,
-        canonicalPairExists: docs.some((candidate) => candidate.relPath === baseRel),
-        pair: baseRel,
-      };
-    })
-    .filter((entry) => entry.canonicalPairExists)
-    .sort((left, right) => left.english.localeCompare(right.english))
-    .map((entry) => [entry.english, entry.pair]);
-
-  const lines = [
+function generatedFrontmatter(title, generatedAt) {
+  return [
     '---',
-    'title: Generated Spec Traceability',
+    `title: ${title}`,
     'status: Active',
-    'owner: docs',
+    'owner: Architecture / Docs',
     `last_reviewed: ${generatedAt}`,
     'planning_type: status',
     '---',
+  ];
+}
+
+function renderCanonicalDocCodeMatrix(projection, generatedAt) {
+  const rows = projection.features.map((feature) => [
+    `\`${feature.featureId}\``,
+    feature.mechanizationStatus,
+    listCell(feature.componentIds),
+    listCell(feature.documentPaths, documentLink),
+    listCell(feature.sourceSymbols, (symbol) =>
+      repositoryLink(
+        projection.repositoryUrl,
+        projection.gitSha,
+        symbol.symbolPath,
+        `${symbol.symbolName} @ ${symbol.symbolPath}`
+      )
+    ),
+    listCell(feature.testSymbols, (symbol) =>
+      repositoryLink(
+        projection.repositoryUrl,
+        projection.gitSha,
+        symbol.symbolPath,
+        `${symbol.symbolName} @ ${symbol.symbolPath}`
+      )
+    ),
+    listCell(feature.rails),
+    listCell(feature.verificationCommands),
+    listCell(feature.validations),
+    listCell(feature.gaps),
+  ]);
+  return `${[
+    ...generatedFrontmatter('Canonical Doc Code Matrix', generatedAt),
+    '',
+    '# Canonical Doc Code Matrix',
+    '',
+    `Exact feature traceability projected from Planning DB and Git commit \`${projection.gitSha}\`.`,
+    '',
+    'This route uses feature-mechanization IDs as subjects. It does not infer ownership, tests, commands, rails, or documentation from vocabulary similarity.',
+    '',
+    ...markdownTable(
+      [
+        'Feature',
+        'State',
+        'Components',
+        'Canonical documents',
+        'Source symbols',
+        'Test symbols',
+        'Rails',
+        'Verification commands',
+        'Validations',
+        'Explicit gaps',
+      ],
+      rows
+    ),
+    '',
+    '[Glossary](../../concepts/glossary.md) · [Domain Language](../../concepts/domain-language.md)',
+    '',
+    '> This page is auto-generated on demand by `node scripts/generate-spec-traceability-report.cjs`. Do not edit manually.',
+    '',
+  ].join('\n')}\n`;
+}
+
+function renderSpecTraceabilitySummary(projection, generatedAt) {
+  const allGaps = projection.features.flatMap((feature) =>
+    feature.gaps.map((gap) => [feature.featureId, gap])
+  );
+  const statuses = uniqueSorted(projection.features.map((feature) => feature.mechanizationStatus));
+  const statusRows = statuses.map((status) => [
+    status,
+    projection.features.filter((feature) => feature.mechanizationStatus === status).length,
+  ]);
+  return `${[
+    ...generatedFrontmatter('Generated Spec Traceability', generatedAt),
     '',
     '# Generated Spec Traceability',
     '',
-    `Generated automatically from repository documentation and source-code signals on ${generatedAt}.`,
+    `DB-first summary for the exact feature projection at Git commit \`${projection.gitSha}\`.`,
     '',
     '## Summary',
     '',
     ...markdownTable(
       ['Metric', 'Value'],
       [
-        ['Canonical docs scanned', canonicalDocs.length],
-        ['Canonical docs with code links', `${docsWithCodeLinks.length} (${percentage(docsWithCodeLinks.length, canonicalDocs.length)})`],
-        ['Canonical docs with ADR links', `${docsWithAdrLinks.length} (${percentage(docsWithAdrLinks.length, canonicalDocs.length)})`],
-        ['Code files scanned', code.length],
-        ['Code files with ADR baseline tags', `${codeWithBaseline.length} (${percentage(codeWithBaseline.length, code.length)})`],
-        ['Code files with explicit doc refs', `${codeWithDocRefs.length} (${percentage(codeWithDocRefs.length, code.length)})`],
+        ['Features projected', projection.features.length],
+        [
+          'Features with explicit gaps',
+          projection.features.filter((feature) => feature.gaps.length > 0).length,
+        ],
+        [
+          'Registered source paths',
+          new Set(projection.features.flatMap((feature) => feature.sourcePaths)).size,
+        ],
+        [
+          'Registered test paths',
+          new Set(projection.features.flatMap((feature) => feature.testPaths)).size,
+        ],
+        ['Registered rails', new Set(projection.features.flatMap((feature) => feature.rails)).size],
+        [
+          'Registered validations',
+          projection.features.reduce((sum, feature) => sum + feature.validations.length, 0),
+        ],
+        ['Repository commands available', projection.repositoryCommandCount],
       ]
     ),
     '',
-    '## Canonical Doc Coverage By Section',
+    '## Mechanization states',
     '',
-    ...markdownTable(['Section', 'Docs', 'Docs With Code Links', 'Docs With ADR Links'], sectionRows),
+    ...markdownTable(['State', 'Features'], statusRows),
     '',
-    '## Source Traceability By Workspace',
+    '## Explicit gaps',
     '',
-    ...markdownTable(['Workspace', 'Files', 'Files With ADR Baselines', 'Files With Doc Refs'], workspaceRows),
+    ...(allGaps.length > 0
+      ? markdownTable(
+          ['Feature', 'Gap'],
+          allGaps.map(([featureId, gap]) => [`\`${featureId}\``, `\`${gap}\``])
+        )
+      : ['No exact traceability gaps detected.']),
     '',
-    '## Canonical Docs Missing Code Links',
+    '[Full Canonical Doc Code Matrix](./canonical-doc-code-matrix.md) · [Glossary](../../concepts/glossary.md) · [Domain Language](../../concepts/domain-language.md)',
     '',
-    ...(missingCodeLinkRows.length > 0
-      ? markdownTable(['Section', 'Document', 'Status'], missingCodeLinkRows)
-      : ['All canonical docs currently link to source files.']),
+    '> This page is auto-generated on demand by `node scripts/generate-spec-traceability-report.cjs`. Do not edit manually.',
     '',
-    '## Duplicate Language Pairs Detected',
-    '',
-    ...(duplicateLanguageRows.length > 0
-      ? markdownTable(['English Variant', 'Base Variant'], duplicateLanguageRows)
-      : ['No `.en.md` / base-language pairs detected.']),
-    '',
-    '## Recommended Convention',
-    '',
-    '- Canonical docs SHOULD declare source-code references through markdown links and frontmatter metadata.',
-    '- Source files SHOULD declare architectural traceability with `@baseline ADR-...` and MAY add `@docs ...` links.',
-    '- Active specification documents SHOULD have at least one code reference or an explicit `reference-only` status model.',
-    '',
-    '> This page is auto-generated by `pnpm docs:traceability:generate`. Do not edit manually.',
-    '',
-  ];
-
-  return `${lines.join('\n')}`;
+  ].join('\n')}\n`;
 }
 
-function writeIfChanged(absPath, content) {
-  const current = fs.existsSync(absPath) ? fs.readFileSync(absPath, 'utf8') : null;
+async function readFeatureTraceabilityFacts(client, readers = {}) {
+  const readFeatures =
+    readers.readFeatureMechanizationFeatureRows || readFeatureMechanizationFeatureRows;
+  const readComponents =
+    readers.readFeatureMechanizationComponentRows || readFeatureMechanizationComponentRows;
+  const readSymbols =
+    readers.readFeatureMechanizationSymbolRows || readFeatureMechanizationSymbolRows;
+  const readRails = readers.readFeatureMechanizationRailRows || readFeatureMechanizationRailRows;
+  const readValidations =
+    readers.readFeatureMechanizationValidationRows || readFeatureMechanizationValidationRows;
+  const readDocuments = readers.readDocumentationLifecycleRows || readDocumentationLifecycleRows;
+  const readComponentDocuments =
+    readers.readArchitectureComponentDocumentRows || readArchitectureComponentDocumentRows;
+  const readCommands = readers.readRepositoryCommandRows || readRepositoryCommandRows;
+  const [
+    features,
+    components,
+    symbols,
+    rails,
+    validations,
+    documents,
+    componentDocuments,
+    commands,
+  ] = await Promise.all([
+    readFeatures(client, { limit }),
+    readComponents(client, { limit }),
+    readSymbols(client, { limit }),
+    readRails(client, { limit }),
+    readValidations(client, { limit }),
+    readDocuments(client, { limit }),
+    readComponentDocuments(client),
+    readCommands(client, { limit }),
+  ]);
+  return {
+    features,
+    components,
+    symbols,
+    rails,
+    validations,
+    documents,
+    componentDocuments,
+    commands,
+  };
+}
+
+function writeIfChanged(outputPath, content) {
+  const current = fs.existsSync(outputPath) ? fs.readFileSync(outputPath, 'utf8') : null;
   if (current === content) return false;
-  fs.mkdirSync(path.dirname(absPath), { recursive: true });
-  fs.writeFileSync(absPath, content, 'utf8');
+  fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+  fs.writeFileSync(outputPath, content, 'utf8');
   return true;
 }
 
-function main() {
-  const docs = collectDocs();
-  const code = collectCode();
-  const generatedAt = resolveGeneratedDate(outputPath, (date) => renderDoc(docs, code, date));
-  const content = renderDoc(docs, code, generatedAt);
-  const changed = writeIfChanged(outputPath, content);
-  if (changed) {
-    console.log('[docs:traceability:generate] Updated docs/planning/status/generated-spec-traceability.md');
-  } else {
-    console.log('[docs:traceability:generate] docs/planning/status/generated-spec-traceability.md already up to date.');
+async function main(dependencies = {}) {
+  const ClientCtor = dependencies.ClientCtor || Client;
+  const client = new ClientCtor({
+    connectionString: process.env.DVT_PLANNING_DB_URL || process.env.DATABASE_URL || defaultPgUrl,
+  });
+  await client.connect();
+  try {
+    const facts = await readFeatureTraceabilityFacts(client, dependencies.readers);
+    const { gitSha, gitTreePaths } = resolveFeatureTraceabilityGitInput({
+      gitSha: dependencies.gitSha,
+      readGitTreePaths: dependencies.readGitTreePaths,
+    });
+    const projection = buildFeatureTraceabilityProjection(facts, {
+      gitSha,
+      gitTreePaths,
+      repositoryUrl: dependencies.repositoryUrl,
+    });
+    const generatedAt = resolveGeneratedDate(matrixOutputPath, (date) =>
+      renderCanonicalDocCodeMatrix(projection, date)
+    );
+    const matrixChanged = writeIfChanged(
+      matrixOutputPath,
+      renderCanonicalDocCodeMatrix(projection, generatedAt)
+    );
+    const summaryChanged = writeIfChanged(
+      summaryOutputPath,
+      renderSpecTraceabilitySummary(projection, generatedAt)
+    );
+    console.log(
+      `[docs:traceability:generate] matrix=${matrixChanged ? 'updated' : 'current'} summary=${summaryChanged ? 'updated' : 'current'}`
+    );
+  } finally {
+    await client.end();
   }
 }
 
-main();
+if (require.main === module) {
+  main().catch((error) => {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exitCode = 1;
+  });
+}
+
+module.exports = {
+  buildFeatureTraceabilityProjection,
+  isCurrentCanonicalDocument,
+  isExecutableValidation,
+  isRegisteredVerificationCommand,
+  isTestPath,
+  main,
+  readFeatureTraceabilityFacts,
+  renderCanonicalDocCodeMatrix,
+  renderSpecTraceabilitySummary,
+  resolveFeatureTraceabilityGitInput,
+};
