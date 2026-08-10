@@ -330,6 +330,71 @@ function readRepositoryReleaseFacts(options = {}) {
   return { version: versions[0] };
 }
 
+function assertGitWorktreeMatchesCommit(expectedGitSha, options = {}) {
+  const root = path.resolve(options.root || repoRoot);
+  const spawn = options.spawnSync || spawnSync;
+  const actualGitSha = currentGitSha({ root, spawnSync: spawn });
+  if (actualGitSha !== expectedGitSha) {
+    throw new Error(
+      `System Delivery Status Git input changed during generation: expected ${expectedGitSha}, found ${actualGitSha}.`
+    );
+  }
+
+  const result = spawn('git', ['status', '--porcelain=v1', '--untracked-files=all'], {
+    cwd: root,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  if (result.error) {
+    throw new Error(`Cannot inspect the evaluated Git worktree: ${result.error.message}.`, {
+      cause: result.error,
+    });
+  }
+  if (result.status !== 0) {
+    throw new Error(
+      `Cannot inspect the evaluated Git worktree: ${String(result.stderr ?? '').trim()}.`
+    );
+  }
+
+  const changedEntries = String(result.stdout || '')
+    .split(/\r?\n/u)
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+  if (changedEntries.length > 0) {
+    const visibleEntries = changedEntries.slice(0, 10).join(', ');
+    const remainder = changedEntries.length > 10 ? `, +${changedEntries.length - 10} more` : '';
+    throw new Error(
+      `System Delivery Status requires a clean Git worktree matching evaluated commit ${expectedGitSha}; found ${visibleEntries}${remainder}.`
+    );
+  }
+}
+
+function assertEvaluatedRepositorySnapshot(snapshot, options = {}) {
+  const gitSha = String(snapshot?.gitSha || '').trim();
+  const expectedVersion = String(snapshot?.release?.version || '').trim();
+  if (!gitSha) throw new Error('Required evaluated Git commit is unavailable.');
+  if (!expectedVersion)
+    throw new Error('Required repository release fact "version" is unavailable.');
+
+  assertGitWorktreeMatchesCommit(gitSha, options);
+  const release = options.release || readRepositoryReleaseFacts(options);
+  if (String(release.version).trim() !== expectedVersion) {
+    throw new Error(
+      `System Delivery Status release input changed during generation: expected ${expectedVersion}, found ${release.version}.`
+    );
+  }
+  return snapshot;
+}
+
+function readEvaluatedRepositorySnapshot(options = {}) {
+  const root = path.resolve(options.root || repoRoot);
+  const snapshot = {
+    gitSha: currentGitSha({ root, spawnSync: options.spawnSync }),
+    release: options.release || readRepositoryReleaseFacts({ root }),
+  };
+  return assertEvaluatedRepositorySnapshot(snapshot, { ...options, root });
+}
+
 async function readSystemDeliveryStatusFacts(client, readers = {}) {
   const limit = 100000;
   const componentReader = readers.readArchitectureComponentRows || readArchitectureComponentRows;
@@ -877,14 +942,15 @@ async function readComponentTopologyFacts(client, readers = {}) {
 
 function currentGitSha(options = {}) {
   if (options.gitSha) return String(options.gitSha).trim();
-  const result = spawnSync('git', ['rev-parse', 'HEAD'], {
+  const spawn = options.spawnSync || spawnSync;
+  const result = spawn('git', ['rev-parse', 'HEAD'], {
     cwd: options.root || repoRoot,
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   if (result.error) throw result.error;
   if (result.status !== 0) {
-    throw new Error(`Cannot resolve Component Map Git input: ${String(result.stderr).trim()}.`);
+    throw new Error(`Cannot resolve evaluated Git input: ${String(result.stderr).trim()}.`);
   }
   return String(result.stdout).trim();
 }
@@ -1366,15 +1432,14 @@ async function generateComponentMap(ClientCtor) {
   }
 }
 
-async function generateSystemDeliveryStatus(workspaces, ClientCtor) {
+async function generateSystemDeliveryStatus(workspaces, ClientCtor, evaluatedRepository) {
+  const repositorySnapshot = evaluatedRepository || readEvaluatedRepositorySnapshot();
   const client = new ClientCtor({ connectionString: databaseUrl() });
   await client.connect();
   try {
     const facts = await readSystemDeliveryStatusFacts(client);
-    const projection = buildSystemDeliveryStatusProjection(workspaces, facts, {
-      gitSha: currentGitSha(),
-      release: readRepositoryReleaseFacts(),
-    });
+    const projection = buildSystemDeliveryStatusProjection(workspaces, facts, repositorySnapshot);
+    assertEvaluatedRepositorySnapshot(repositorySnapshot);
     const date = resolveGeneratedDate(systemDeliveryStatusOutputPath, (value) =>
       renderSystemDeliveryStatus(projection, value)
     );
@@ -1405,7 +1470,15 @@ async function main(argv = process.argv.slice(2), dependencies = {}) {
     dependencies.generateComponentMap || (() => generateComponentMap(ClientCtor));
   const generateSystemDeliveryStatusFn =
     dependencies.generateSystemDeliveryStatus ||
-    ((workspaces) => generateSystemDeliveryStatus(workspaces, ClientCtor));
+    ((workspaces, evaluatedRepository) =>
+      generateSystemDeliveryStatus(workspaces, ClientCtor, evaluatedRepository));
+  const requiresSystemDeliveryStatus =
+    mode === GENERATION_MODES.all || mode === GENERATION_MODES.systemDeliveryStatusOnly;
+  const readRepositorySnapshot =
+    dependencies.readEvaluatedRepositorySnapshot || readEvaluatedRepositorySnapshot;
+  const evaluatedRepository = requiresSystemDeliveryStatus
+    ? readRepositorySnapshot(dependencies.repositoryEvaluationOptions || {})
+    : null;
   const workspaces =
     mode === GENERATION_MODES.componentMapOnly
       ? []
@@ -1421,7 +1494,7 @@ async function main(argv = process.argv.slice(2), dependencies = {}) {
     await generateComponentMapFn();
   }
   if (mode === GENERATION_MODES.all || mode === GENERATION_MODES.systemDeliveryStatusOnly) {
-    await generateSystemDeliveryStatusFn(workspaces);
+    await generateSystemDeliveryStatusFn(workspaces, evaluatedRepository);
   }
 }
 
@@ -1433,6 +1506,7 @@ if (require.main === module) {
 }
 
 module.exports = {
+  assertEvaluatedRepositorySnapshot,
   buildSystemDeliveryStatusProjection,
   buildComponentTopologyProjection,
   buildRepositoryMapRows,
@@ -1447,6 +1521,7 @@ module.exports = {
   readGitTreePaths,
   readArchitectureComponentDocumentRows,
   readComponentTopologyFacts,
+  readEvaluatedRepositorySnapshot,
   readRepositoryArchitectureFacts,
   readRepositoryReleaseFacts,
   readSystemDeliveryStatusFacts,
