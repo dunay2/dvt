@@ -8,12 +8,8 @@ const path = require('node:path');
 
 const { listLocalChangedFiles, parseGitLines, toPosix } = require('./git-local-changes.cjs');
 const { projectName: planningDbProjectName } = require('./planning-db-run.cjs');
-const workflowScopePolicy = require('../tools/ci/policy/workflow-scope.json');
 
 const repoRoot = path.resolve(__dirname, '..');
-const repositoryMapSourcePatterns = Object.freeze([
-  ...workflowScopePolicy.generated_status_relevant,
-]);
 const workspaceSourcePatterns = Object.freeze([
   'package.json',
   'pnpm-workspace.yaml',
@@ -194,10 +190,6 @@ function hasWorkspaceSourceChange(changedFiles) {
   return changedFiles.some((filePath) => matchesAnyPattern(filePath, workspaceSourcePatterns));
 }
 
-function hasRepositoryMapSourceChange(changedFiles) {
-  return changedFiles.some((filePath) => matchesAnyPattern(filePath, repositoryMapSourcePatterns));
-}
-
 function hasGovernanceRefreshChange(changedFiles) {
   return changedFiles.some(
     (filePath) =>
@@ -243,7 +235,6 @@ function buildPrCloseoutPlan(options = {}) {
   const changedFiles = normalizeChangedFiles(options.changedFiles || []);
   const stagedFiles = normalizeChangedFiles(options.stagedFiles || []);
   const workspaceSourceChanged = hasWorkspaceSourceChange(changedFiles);
-  const repositoryMapSourceChanged = hasRepositoryMapSourceChange(changedFiles);
   const governanceRefreshChanged = hasGovernanceRefreshChange(changedFiles);
   const steps = [];
 
@@ -293,14 +284,6 @@ function buildPrCloseoutPlan(options = {}) {
       id: 'planning-db-import',
       command: 'pnpm',
       args: ['planning:db:import'],
-    });
-  }
-
-  if (repositoryMapSourceChanged && !governanceRefreshChanged) {
-    pushStepOnce(steps, {
-      id: 'docs-status-repository-map',
-      command: 'pnpm',
-      args: ['docs:status:generate', '--repository-map-only'],
     });
   }
 
