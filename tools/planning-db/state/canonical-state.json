@@ -87437,7 +87437,7 @@
         "node tools/ci/ci-tool-test-suite.mjs static"
       ],
       "sourcePath": "scripts/generate-spec-traceability-report.cjs",
-      "sourceContentSha256": "16bd043116720830e58b2f3b0c9d4da06703effef6060eb050b36465cf0e542c",
+      "sourceContentSha256": "8c1c9f477a13ab4b967045afa1a35aebc32ad795260847a4804f1720e37fac8e",
       "rawRail": {
         "name": "GeneratePlanningDerivedSurfaces",
         "type": "command",
