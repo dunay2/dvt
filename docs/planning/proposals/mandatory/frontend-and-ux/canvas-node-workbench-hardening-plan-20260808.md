@@ -407,7 +407,7 @@ redGreenCycles:
     greenTest: apps/web/src/app/views/canvas/canvasNodeWorkbenchHardening.architecture.test.ts
   - id: file-backed-properties-code-return
     redTest: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
-    expectedFailure: Double-click bypassed Properties or YAML description authoring removed the Code section and silently fell back to General.
+    expectedFailure: Double-click bypassed Properties, YAML description authoring removed Code, or wide metadata clipped the close command.
     patchSurfaces:
       - apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
       - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx
