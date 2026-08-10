@@ -171,26 +171,95 @@ function markdownTable(headers, rows) {
   return [row(normalizedHeaders), separator, ...normalizedRows.map((cells) => row(cells))];
 }
 
-function collectWorkspaceStats(dir) {
+function isWalkEligibleRepositoryPath(repositoryPath) {
+  return normalizeRepoPath(repositoryPath)
+    .split('/')
+    .filter(Boolean)
+    .every(
+      (segment) =>
+        !segment.startsWith('.') &&
+        segment !== 'node_modules' &&
+        segment !== 'dist' &&
+        segment !== 'site'
+    );
+}
+
+function collectWorkspaceStats(dir, options = {}) {
+  const root = path.resolve(options.root || repoRoot);
+  const workspacePath = toPosix(path.relative(root, path.resolve(dir))) || '.';
+  if (
+    (options.root || options.gitTreePaths) &&
+    (workspacePath === '..' || workspacePath.startsWith('../') || path.isAbsolute(workspacePath))
+  ) {
+    throw new Error(`Workspace ${dir} is outside the evaluated repository.`);
+  }
+  const gitTreePaths = options.gitTreePaths;
+  const repositoryPath = (relativePath) =>
+    workspacePath === '.' ? relativePath : `${workspacePath}/${relativePath}`;
   const pkgPath = path.join(dir, 'package.json');
+  if (gitTreePaths && gitTreePaths.get(repositoryPath('package.json')) !== 'blob') {
+    throw new Error(`Workspace ${workspacePath} is not part of the evaluated Git tree.`);
+  }
   const pkg = safeReadJson(pkgPath) || {};
   const scripts = pkg.scripts || {};
   const srcDir = path.join(dir, 'src');
   const testDir = path.join(dir, 'test');
-  const srcFiles = fs.existsSync(srcDir)
-    ? walk(srcDir, (_, name) => isSourceCodeFile(name) && !isColocatedTestFile(name))
-    : [];
-  const colocatedTestFiles = fs.existsSync(srcDir)
-    ? walk(srcDir, (_, name) => isColocatedTestFile(name))
-    : [];
-  const testFiles = [
-    ...(fs.existsSync(testDir) ? walk(testDir, (_, name) => /\.(ts|tsx|js|jsx)$/u.test(name)) : []),
-    ...colocatedTestFiles,
-  ];
+  const treeFiles = gitTreePaths
+    ? [...gitTreePaths]
+        .filter(([, entryType]) => entryType === 'blob')
+        .map(([entryPath]) => normalizeRepoPath(entryPath))
+        .filter((entryPath) =>
+          workspacePath === '.' ? true : entryPath.startsWith(`${workspacePath}/`)
+        )
+        .map((entryPath) =>
+          workspacePath === '.' ? entryPath : entryPath.slice(workspacePath.length + 1)
+        )
+    : null;
+  const srcFiles = treeFiles
+    ? treeFiles.filter(
+        (filePath) =>
+          filePath.startsWith('src/') &&
+          isWalkEligibleRepositoryPath(filePath.slice('src/'.length)) &&
+          isSourceCodeFile(path.posix.basename(filePath)) &&
+          !isColocatedTestFile(path.posix.basename(filePath))
+      )
+    : fs.existsSync(srcDir)
+      ? walk(srcDir, (_, name) => isSourceCodeFile(name) && !isColocatedTestFile(name))
+      : [];
+  const colocatedTestFiles = treeFiles
+    ? treeFiles.filter(
+        (filePath) =>
+          filePath.startsWith('src/') &&
+          isWalkEligibleRepositoryPath(filePath.slice('src/'.length)) &&
+          isColocatedTestFile(path.posix.basename(filePath))
+      )
+    : fs.existsSync(srcDir)
+      ? walk(srcDir, (_, name) => isColocatedTestFile(name))
+      : [];
+  const testFiles = treeFiles
+    ? [
+        ...treeFiles.filter(
+          (filePath) =>
+            filePath.startsWith('test/') &&
+            isWalkEligibleRepositoryPath(filePath.slice('test/'.length)) &&
+            /\.(ts|tsx|js|jsx)$/u.test(path.posix.basename(filePath))
+        ),
+        ...colocatedTestFiles,
+      ]
+    : [
+        ...(fs.existsSync(testDir)
+          ? walk(testDir, (_, name) => /\.(ts|tsx|js|jsx)$/u.test(name))
+          : []),
+        ...colocatedTestFiles,
+      ];
 
   const exportedSymbols = (() => {
     const indexTs = path.join(dir, 'src', 'index.ts');
-    if (!fs.existsSync(indexTs)) return '-';
+    if (
+      (gitTreePaths && gitTreePaths.get(repositoryPath('src/index.ts')) !== 'blob') ||
+      !fs.existsSync(indexTs)
+    )
+      return '-';
     return String(
       fs
         .readFileSync(indexTs, 'utf8')
@@ -200,8 +269,10 @@ function collectWorkspaceStats(dir) {
     );
   })();
 
-  const workspacePath = relFromRepo(dir) || '.';
   const readmePath = path.join(dir, 'README.md');
+  const hasReadme = gitTreePaths
+    ? gitTreePaths.get(repositoryPath('README.md')) === 'blob'
+    : fs.existsSync(readmePath);
   return {
     workspace: pkg.name || workspacePath,
     path: workspacePath,
@@ -212,7 +283,7 @@ function collectWorkspaceStats(dir) {
     hasTest: scripts.test ? 'yes' : 'no',
     hasTypecheck: scripts.typecheck || scripts['type-check'] ? 'yes' : 'no',
     exports: exportedSymbols,
-    localReadmePath: fs.existsSync(readmePath)
+    localReadmePath: hasReadme
       ? workspacePath === '.'
         ? 'README.md'
         : `${workspacePath}/README.md`
@@ -222,7 +293,7 @@ function collectWorkspaceStats(dir) {
 
 function collectRepositoryWorkspaceStats(options = {}) {
   const workspaceDirs = options.workspaceDirs || listPnpmWorkspaceDirs(options);
-  return workspaceDirs.map(collectWorkspaceStats);
+  return workspaceDirs.map((workspaceDir) => collectWorkspaceStats(workspaceDir, options));
 }
 
 function renderCodeState(workspaces, utcDate) {
@@ -388,8 +459,11 @@ function assertEvaluatedRepositorySnapshot(snapshot, options = {}) {
 
 function readEvaluatedRepositorySnapshot(options = {}) {
   const root = path.resolve(options.root || repoRoot);
+  const gitSha = currentGitSha({ root, spawnSync: options.spawnSync });
   const snapshot = {
-    gitSha: currentGitSha({ root, spawnSync: options.spawnSync }),
+    gitSha,
+    gitTreePaths:
+      options.gitTreePaths || readGitTreePaths({ root, gitSha, spawnSync: options.spawnSync }),
     release: options.release || readRepositoryReleaseFacts({ root }),
   };
   return assertEvaluatedRepositorySnapshot(snapshot, { ...options, root });
@@ -1482,7 +1556,18 @@ async function main(argv = process.argv.slice(2), dependencies = {}) {
   const workspaces =
     mode === GENERATION_MODES.componentMapOnly
       ? []
-      : collectWorkspaces(dependencies.workspaceOptions || {});
+      : collectWorkspaces({
+          ...(dependencies.workspaceOptions || {}),
+          ...(requiresSystemDeliveryStatus
+            ? {
+                gitTreePaths: evaluatedRepository.gitTreePaths,
+                root:
+                  dependencies.workspaceOptions?.root ||
+                  dependencies.repositoryEvaluationOptions?.root ||
+                  repoRoot,
+              }
+            : {}),
+        });
 
   if (mode === GENERATION_MODES.all || mode === GENERATION_MODES.codeStateOnly) {
     await generateCodeStateFn(workspaces);

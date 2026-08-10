@@ -162,6 +162,7 @@ test('System Delivery Status refuses worktree facts outside the evaluated Git co
       readEvaluatedRepositorySnapshot({
         release: { version: '1.2.3' },
         root: 'C:/fixture',
+        gitTreePaths: new Map(),
         spawnSync: (command, args) => {
           calls.push({ command, args });
           if (args[0] === 'rev-parse') {
