@@ -44,7 +44,7 @@ test('generated-doc policy declares single-writer ownership for required artifac
     'planning-local-indexes',
     'tracked-docs-status-code-state',
     'tracked-docs-status-capability-coverage',
-    'tracked-docs-status-spec-traceability',
+    'local-docs-feature-traceability',
     'tracked-docs-manifest',
     'tracked-ar-c2-operational-evidence',
   ];
@@ -62,6 +62,17 @@ test('generated-doc policy declares single-writer ownership for required artifac
     assert.match(entry.tracking, /^(tracked|untracked)$/);
     assert.match(entry.manualEditPolicy, /^(generator-owned|source-owned)$/);
   }
+
+  const featureTraceability = policy.artifactClasses.find(
+    (entry) => entry.id === 'local-docs-feature-traceability'
+  );
+  assert.deepEqual(featureTraceability.artifacts, [
+    '.generated-docs/planning/status/canonical-doc-code-matrix.md',
+    '.generated-docs/planning/status/generated-spec-traceability.md',
+  ]);
+  assert.equal(featureTraceability.tracking, 'untracked');
+  assert.equal(featureTraceability.manualEditPolicy, 'generator-owned');
+  assert.equal(featureTraceability.publication?.enabled, true);
 });
 
 test('generated-doc policy checker accepts the repository policy', () => {
