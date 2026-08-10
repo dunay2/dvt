@@ -62,6 +62,16 @@ function fixtureAssemblerOptions(root, options = {}) {
   };
 }
 
+function runGit(root, args) {
+  const result = spawnSync('git', args, {
+    cwd: root,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  return result.stdout;
+}
+
 afterEach(() => {
   for (const root of temporaryRoots.splice(0)) {
     fs.rmSync(root, { recursive: true, force: true });
@@ -315,6 +325,32 @@ test('rejects a Git-owned supporting source whose worktree content differs from 
     }).assemble({ runGenerators: false }),
     /Git-owned documentation source docs\/assets\/logo\.svg differs from HEAD/u
   );
+});
+
+test('accepts CRLF worktree content when Git normalizes it to the LF blob in HEAD', async () => {
+  const root = createMinimalFixture();
+  fs.writeFileSync(path.join(root, '.gitattributes'), '*.md text eol=crlf\n', 'utf8');
+  runGit(root, ['init']);
+  runGit(root, ['config', 'core.autocrlf', 'true']);
+  runGit(root, ['add', '.gitattributes', 'docs', 'zensical.yml']);
+  runGit(root, [
+    '-c',
+    'user.name=DVT Test',
+    '-c',
+    'user.email=dvt-test@example.invalid',
+    'commit',
+    '-m',
+    'fixture',
+  ]);
+  fs.writeFileSync(path.join(root, 'docs', 'index.md'), '# Home\r\n', 'utf8');
+  runGit(root, ['diff', '--quiet', 'HEAD', '--', 'docs/index.md']);
+
+  const receipt = await new DocumentationPublicationAssembler({
+    repoRoot: root,
+    lifecycleRows: [lifecycleRow(root, 'docs/index.md')],
+  }).assemble({ runGenerators: false });
+
+  assert.equal(receipt.routeCount, 1);
 });
 
 test('publication receipt rejects stale source, DB, config, policy, and Git inputs', async () => {
