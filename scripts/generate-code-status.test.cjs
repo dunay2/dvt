@@ -177,7 +177,7 @@ test('System Delivery Status projects exact Git, workspace, maturity, rail, and 
     componentCount: 2,
     maturityRegisteredCount: 2,
     componentsMissingMaturity: [],
-    maturityBands: { high: 1, medium: 1, low: 0 },
+    maturityScoreCounts: { 60: 1, 90: 1 },
   });
   assert.deepEqual(projection.delivery, {
     railCount: 2,
@@ -951,7 +951,7 @@ test('System Delivery Status policy is DB-first, on-demand, and has no manual sn
       'architecture.component_query',
       'architecture.maturity_query',
       'planning_query_store.command_query_rail_query',
-      'planning_query_store.feature_mechanization_feature_query',
+      'planning_query_store.command_query_rail_manifest_query',
     ]
   );
   for (const group of entry.dbBackedArtifacts) {
