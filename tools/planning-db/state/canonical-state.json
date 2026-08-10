@@ -12819,6 +12819,20 @@
         "updated_at": "2026-08-10T22:58:44.087+00:00"
       },
       {
+        "design_id": "R1-1D-DB-FIRST-PROJECTION-CLOSEOUT-20260810",
+        "work_item_id": "GH-2167",
+        "title": "DB-first governance projection closeout",
+        "owner": "API / Architecture / Planning DB",
+        "status": "review",
+        "rationale": "Publish effective governance ownership and navigation-only architecture guidance from Planning DB only through the existing explicit export command, removing stale local inventory authority.",
+        "fowler_signal": "hidden_authority",
+        "rail_ref": "GeneratePlanningDerivedSurfaces;ReadArchitectureDesignAuthority;component-tree;component-metadata",
+        "approved_at": null,
+        "supersedes_id": "R1-1D-API-GOVERNANCE-LIFECYCLE-CLOSEOUT-20260810",
+        "created_at": "2026-08-10T23:15:58.511+00:00",
+        "updated_at": "2026-08-10T23:15:58.511+00:00"
+      },
+      {
         "design_id": "RELEASE-CANDIDATE-AUTHORITY-CLASSIFICATION-20260719",
         "work_item_id": "C-RELEASE-CANDIDATE-INTEGRITY-1",
         "title": "Classify pull-request authority before check publication",
@@ -83630,6 +83644,78 @@
         "created_at": "2026-08-10T21:06:01.319+00:00"
       },
       {
+        "design_id": "R1-1D-DB-FIRST-PROJECTION-CLOSEOUT-20260810",
+        "subject_kind": "command",
+        "subject_id": "GeneratePlanningDerivedSurfaces",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T23:15:58.511+00:00"
+      },
+      {
+        "design_id": "R1-1D-DB-FIRST-PROJECTION-CLOSEOUT-20260810",
+        "subject_kind": "path",
+        "subject_id": "docs/planning/status/system-governance-planstore-file-ownership-20260501.md",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T23:15:58.511+00:00"
+      },
+      {
+        "design_id": "R1-1D-DB-FIRST-PROJECTION-CLOSEOUT-20260810",
+        "subject_kind": "path",
+        "subject_id": "docs/planning/status/system-governance-unit-index-20260501.md",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T23:15:58.511+00:00"
+      },
+      {
+        "design_id": "R1-1D-DB-FIRST-PROJECTION-CLOSEOUT-20260810",
+        "subject_kind": "path",
+        "subject_id": "docs/planning/status/system-governance-unit-index.units.yaml",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T23:15:58.511+00:00"
+      },
+      {
+        "design_id": "R1-1D-DB-FIRST-PROJECTION-CLOSEOUT-20260810",
+        "subject_kind": "path",
+        "subject_id": "scripts/planning-db-export.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T23:15:58.511+00:00"
+      },
+      {
+        "design_id": "R1-1D-DB-FIRST-PROJECTION-CLOSEOUT-20260810",
+        "subject_kind": "path",
+        "subject_id": "scripts/planning-db-export.test.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T23:15:58.511+00:00"
+      },
+      {
+        "design_id": "R1-1D-DB-FIRST-PROJECTION-CLOSEOUT-20260810",
+        "subject_kind": "query",
+        "subject_id": "component-metadata",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-10T23:15:58.511+00:00"
+      },
+      {
+        "design_id": "R1-1D-DB-FIRST-PROJECTION-CLOSEOUT-20260810",
+        "subject_kind": "query",
+        "subject_id": "component-tree",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-10T23:15:58.511+00:00"
+      },
+      {
+        "design_id": "R1-1D-DB-FIRST-PROJECTION-CLOSEOUT-20260810",
+        "subject_kind": "query",
+        "subject_id": "ReadArchitectureDesignAuthority",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-10T23:15:58.511+00:00"
+      },
+      {
         "design_id": "RELEASE-CANDIDATE-AUTHORITY-CLASSIFICATION-20260719",
         "subject_kind": "component",
         "subject_id": "SYS-CI-GOVERNANCE-TOOLS-CI-RELEASE-CANDIDATE-INTEGRITY-AUTHORITY-CLI-ADAPTER",
@@ -86200,6 +86286,88 @@
           "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
         },
         "created_at": "2026-08-10T21:06:01.319+00:00"
+      },
+      {
+        "operation_id": "52747f74-5fca-4579-8b2a-f965de7aeff4",
+        "idempotency_key": "gh-2167-db-first-projection-authority-20260810",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "R1-1D-DB-FIRST-PROJECTION-CLOSEOUT-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "API / Architecture / Planning DB",
+          "title": "DB-first governance projection closeout",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "GeneratePlanningDerivedSurfaces",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "ReadArchitectureDesignAuthority",
+              "subjectKind": "query"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "component-tree",
+              "subjectKind": "query"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "component-metadata",
+              "subjectKind": "query"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/planning-db-export.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/planning-db-export.test.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "docs/planning/status/system-governance-unit-index.units.yaml",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "docs/planning/status/system-governance-unit-index-20260501.md",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "docs/planning/status/system-governance-planstore-file-ownership-20260501.md",
+              "subjectKind": "path"
+            }
+          ],
+          "status": "review",
+          "railRef": "GeneratePlanningDerivedSurfaces;ReadArchitectureDesignAuthority;component-tree;component-metadata",
+          "designId": "R1-1D-DB-FIRST-PROJECTION-CLOSEOUT-20260810",
+          "rationale": "Publish effective governance ownership and navigation-only architecture guidance from Planning DB only through the existing explicit export command, removing stale local inventory authority.",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "workItemId": "GH-2167",
+          "fowlerSignal": "hidden_authority",
+          "supersedesId": "R1-1D-API-GOVERNANCE-LIFECYCLE-CLOSEOUT-20260810",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T23:15:58.511+00:00"
       },
       {
         "operation_id": "53bdfbc6-2a69-4006-bf94-bcfc5b9ffda1",
