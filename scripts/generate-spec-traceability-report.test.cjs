@@ -5,8 +5,10 @@ const test = require('node:test');
 
 const {
   buildFeatureTraceabilityProjection,
+  readFeatureTraceabilityFacts,
   renderCanonicalDocCodeMatrix,
   renderSpecTraceabilitySummary,
+  resolveFeatureTraceabilityGitInput,
 } = require('./generate-spec-traceability-report.cjs');
 
 const gitSha = '1111111111111111111111111111111111111111';
@@ -244,4 +246,61 @@ test('traceability policy publishes both stable routes only on explicit demand',
     ),
     false
   );
+});
+
+test('traceability facts reuse every existing Planning DB read model', async () => {
+  const calls = [];
+  const reader = (name) => async (_client, filters) => {
+    calls.push([name, filters]);
+    return [name];
+  };
+  const facts = await readFeatureTraceabilityFacts(
+    {},
+    {
+      readFeatureMechanizationFeatureRows: reader('features'),
+      readFeatureMechanizationComponentRows: reader('components'),
+      readFeatureMechanizationSymbolRows: reader('symbols'),
+      readFeatureMechanizationRailRows: reader('rails'),
+      readFeatureMechanizationValidationRows: reader('validations'),
+      readDocumentationLifecycleRows: reader('documents'),
+      readArchitectureComponentDocumentRows: reader('componentDocuments'),
+      readRepositoryCommandRows: reader('commands'),
+    }
+  );
+
+  assert.deepEqual(facts, {
+    features: ['features'],
+    components: ['components'],
+    symbols: ['symbols'],
+    rails: ['rails'],
+    validations: ['validations'],
+    documents: ['documents'],
+    componentDocuments: ['componentDocuments'],
+    commands: ['commands'],
+  });
+  assert.deepEqual(calls, [
+    ['features', { limit: 100000 }],
+    ['components', { limit: 100000 }],
+    ['symbols', { limit: 100000 }],
+    ['rails', { limit: 100000 }],
+    ['validations', { limit: 100000 }],
+    ['documents', { limit: 100000 }],
+    ['componentDocuments', undefined],
+    ['commands', { limit: 100000 }],
+  ]);
+});
+
+test('traceability reads paths from the same evaluated Git commit', () => {
+  const calls = [];
+  const input = resolveFeatureTraceabilityGitInput({
+    gitSha,
+    readGitTreePaths: (options) => {
+      calls.push(options);
+      return new Map([['apps/api/src/app.ts', 'blob']]);
+    },
+  });
+
+  assert.equal(input.gitSha, gitSha);
+  assert.equal(input.gitTreePaths.get('apps/api/src/app.ts'), 'blob');
+  assert.deepEqual(calls, [{ gitSha }]);
 });
