@@ -88890,13 +88890,17 @@
         "scripts/documentation-publication.cjs#DocumentationPublicationPolicy.assertUniqueCanonicalSubjects",
         "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.describeRouteOwner",
         "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.buildLifecycleState",
-        "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.assemble"
+        "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.assemble",
+        "scripts/documentation-publication.cjs#DocumentationPublicationPolicy.isHistoricalPath",
+        "tools/docs/check-links.ts#isNonPublishedDocumentationTarget"
       ],
       "implementationRefs": [
         "scripts/documentation-publication.cjs#DocumentationPublicationPolicy.assertUniqueCanonicalSubjects",
         "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.describeRouteOwner",
         "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.buildLifecycleState",
-        "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.assemble"
+        "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.assemble",
+        "scripts/documentation-publication.cjs#DocumentationPublicationPolicy.isHistoricalPath",
+        "tools/docs/check-links.ts#isNonPublishedDocumentationTarget"
       ],
       "documentationRefs": [
         "docs/planning/status/governance-document-rule-inventory.md"
@@ -88929,7 +88933,8 @@
         "docs/planning/status/governance-document-rule-inventory.md",
         "docs/runbooks/planning-generated-artifacts-operations-20260403.md",
         "docs/stylesheets/docs-accessibility.css",
-        "zensical.yml"
+        "zensical.yml",
+        "tools/docs/check-links.ts"
       ],
       "architectureGuards": [
         "node --test scripts/documentation-publication.test.cjs scripts/check-generated-docs-policy.test.cjs scripts/generate-db-surface-inventory.test.cjs scripts/generate-knowledge-intake-literature.test.cjs"
@@ -88941,7 +88946,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/documentation-publication.cjs",
-      "sourceContentSha256": "72dcda2536ca0569ac0839548ac9ab569f6a8f9e7b66aa6b214c87458cfa4654",
+      "sourceContentSha256": "db5072ae2b773fe2418a91db0528e5fd6541ea37ae6368377639a9d94e8f7311",
       "rawRail": {
         "name": "GeneratePlanningDerivedSurfaces",
         "type": "command",
@@ -89009,6 +89014,36 @@
             "fowlerSignals": ["hidden_authority", "duplicate_semantics"],
             "cypressCoverage": "N/A - Zensical publication, link validation, accessibility automation, and demanding-user browser QA cover this governance projection.",
             "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/check-generated-docs-policy.test.cjs scripts/generate-db-surface-inventory.test.cjs scripts/generate-knowledge-intake-literature.test.cjs"
+          },
+          {
+            "name": "DocumentationPublicationPolicy.isHistoricalPath",
+            "path": "scripts/documentation-publication.cjs",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": [
+              "scripts/documentation-publication.test.cjs",
+              "scripts/check-generated-docs-policy.test.cjs",
+              "scripts/generate-db-surface-inventory.test.cjs",
+              "scripts/generate-knowledge-intake-literature.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "duplicate_semantics"],
+            "cypressCoverage": "N/A - Zensical publication, link validation, accessibility automation, and demanding-user browser QA cover this governance projection.",
+            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/check-generated-docs-policy.test.cjs scripts/generate-db-surface-inventory.test.cjs scripts/generate-knowledge-intake-literature.test.cjs"
+          },
+          {
+            "name": "isNonPublishedDocumentationTarget",
+            "path": "tools/docs/check-links.ts",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": [
+              "scripts/documentation-publication.test.cjs",
+              "scripts/check-generated-docs-policy.test.cjs",
+              "scripts/generate-db-surface-inventory.test.cjs",
+              "scripts/generate-knowledge-intake-literature.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "duplicate_semantics"],
+            "cypressCoverage": "N/A - Zensical publication, link validation, accessibility automation, and demanding-user browser QA cover this governance projection.",
+            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/check-generated-docs-policy.test.cjs scripts/generate-db-surface-inventory.test.cjs scripts/generate-knowledge-intake-literature.test.cjs"
           }
         ],
         "version": 1,
@@ -89039,9 +89074,10 @@
               "docs/generated-docs-policy.json",
               "scripts/generate-db-surface-inventory.cjs",
               "scripts/generate-knowledge-intake-literature.cjs",
-              "docs/stylesheets/docs-accessibility.css"
+              "docs/stylesheets/docs-accessibility.css",
+              "tools/docs/check-links.ts"
             ],
-            "expectedFailure": "Canonical-subject diagnostics omitted owners and hashes; route collisions omitted lifecycle evidence; tracked pointer pages and inaccessible active navigation remained."
+            "expectedFailure": "Canonical-subject diagnostics omitted owners and hashes; route collisions omitted lifecycle evidence; active links resolved unpublished history; tracked pointers and low-contrast navigation remained."
           }
         ],
         "componentGuides": [
@@ -89064,7 +89100,7 @@
         "architectureGuards": [
           "node --test scripts/documentation-publication.test.cjs scripts/check-generated-docs-policy.test.cjs scripts/generate-db-surface-inventory.test.cjs scripts/generate-knowledge-intake-literature.test.cjs"
         ],
-        "implementationPlan": "Issue #2149 joins DB lifecycle and generator ownership at the on-demand publication boundary, retires three tracked pointer copies at stable routes, and validates the published documentation experience.",
+        "implementationPlan": "Issue #2149 joins DB lifecycle and generator ownership at the on-demand publication boundary, retires three tracked pointer copies at stable routes, rejects active links to unpublished historical authority, and validates the published documentation experience.",
         "mechanizationStatus": "implemented",
         "noHumanDecisionsRemaining": true,
         "allowedImplementationSurfaces": [
@@ -89089,7 +89125,8 @@
           "docs/planning/status/governance-document-rule-inventory.md",
           "docs/runbooks/planning-generated-artifacts-operations-20260403.md",
           "docs/stylesheets/docs-accessibility.css",
-          "zensical.yml"
+          "zensical.yml",
+          "tools/docs/check-links.ts"
         ],
         "forbiddenImplementationSurfaces": [
           "tracked documentation pointer copies",
@@ -89097,7 +89134,7 @@
           "parallel route or subject registry"
         ]
       },
-      "revision": 1,
+      "revision": 2,
       "createdBy": "codex",
       "createdAt": "2026-08-10T14:03:50.740Z"
     },
@@ -136169,6 +136206,117 @@
         ]
       },
       "createdAt": "2026-08-10T14:32:14.670Z"
+    },
+    {
+      "operationId": "d645786f-2a13-4afc-a519-221a2995e3e0",
+      "idempotencyKey": "codex-doc1-6-generate-planning-derived-surfaces-v4",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT#command#generateplanningderivedsurfaces",
+      "sourcePath": "scripts/documentation-publication.cjs",
+      "sourceContentSha256": "db5072ae2b773fe2418a91db0528e5fd6541ea37ae6368377639a9d94e8f7311",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "node --test scripts/documentation-publication.test.cjs",
+        "dddOwner": "PlanningDocumentationProjection",
+        "railName": "GeneratePlanningDerivedSurfaces",
+        "railType": "command",
+        "featureId": "DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT",
+        "greenTest": "node --test scripts/documentation-publication.test.cjs scripts/check-generated-docs-policy.test.cjs scripts/generate-db-surface-inventory.test.cjs scripts/generate-knowledge-intake-literature.test.cjs",
+        "sourceRef": "scripts/documentation-publication.cjs",
+        "unitTests": [
+          "scripts/documentation-publication.test.cjs",
+          "scripts/check-generated-docs-policy.test.cjs",
+          "scripts/generate-db-surface-inventory.test.cjs",
+          "scripts/generate-knowledge-intake-literature.test.cjs"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2149"],
+        "cypressFlows": [
+          "N/A - Zensical publication, link validation, accessibility automation, and demanding-user browser QA cover this governance projection."
+        ],
+        "domainObjects": [
+          "DocumentationPublicationPolicy",
+          "PlanningDocumentationProjection"
+        ],
+        "fowlerSignals": ["hidden_authority", "duplicate_semantics"],
+        "patchSurfaces": [
+          "scripts/documentation-publication.cjs",
+          "scripts/documentation-publication.test.cjs",
+          "tools/docs/check-links.ts",
+          "docs/generated-docs-policy.json",
+          "scripts/generate-db-surface-inventory.cjs",
+          "scripts/generate-knowledge-intake-literature.cjs",
+          "docs/stylesheets/docs-accessibility.css"
+        ],
+        "completionGate": [
+          "pnpm docs:publish",
+          "pnpm docs:build",
+          "pnpm docs:gov:links",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Canonical-subject diagnostics omitted owners and hashes; route collisions omitted lifecycle evidence; active links resolved unpublished history; tracked pointers and low-contrast navigation remained.",
+        "governingSources": [
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/generated-docs-policy.json",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/planning/status/governance-document-rule-inventory.md"
+        ],
+        "architectureGuards": [
+          "node --test scripts/documentation-publication.test.cjs scripts/check-generated-docs-policy.test.cjs scripts/generate-db-surface-inventory.test.cjs scripts/generate-knowledge-intake-literature.test.cjs"
+        ],
+        "implementationPlan": "Issue #2149 joins DB lifecycle and generator ownership at the on-demand publication boundary, retires three tracked pointer copies at stable routes, rejects active links to unpublished historical authority, and validates the published documentation experience.",
+        "implementationRefs": [
+          "scripts/documentation-publication.cjs#DocumentationPublicationPolicy.assertUniqueCanonicalSubjects",
+          "scripts/documentation-publication.cjs#DocumentationPublicationPolicy.isHistoricalPath",
+          "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.describeRouteOwner",
+          "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.buildLifecycleState",
+          "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.assemble",
+          "tools/docs/check-links.ts#isNonPublishedDocumentationTarget"
+        ],
+        "normalizedRailName": "generateplanningderivedsurfaces",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "db5072ae2b773fe2418a91db0528e5fd6541ea37ae6368377639a9d94e8f7311",
+        "allowedImplementationSurfaces": [
+          "scripts/documentation-publication.cjs",
+          "scripts/documentation-publication.test.cjs",
+          "docs/generated-docs-policy.json",
+          "scripts/generate-code-status.cjs",
+          "scripts/generate-db-surface-inventory.cjs",
+          "scripts/generate-db-surface-inventory.test.cjs",
+          "scripts/generate-knowledge-intake-literature.cjs",
+          "scripts/generate-knowledge-intake-literature.test.cjs",
+          "scripts/check-generated-docs-policy.test.cjs",
+          "scripts/planning-db-operate-tests/db-surface.test.cjs",
+          "tools/docs/check-links.ts",
+          "tools/ci/repository-change-scope.mjs",
+          "docs/.manifest.json",
+          "docs/architecture/components/ci-governance/knowledge-intake-retirement-component.md",
+          "docs/guides/testing-and-ci-capabilities.md",
+          "docs/planning/status/db-surface-inventory.md",
+          "docs/planning/status/generated-code-state.md",
+          "docs/planning/status/generated-knowledge-intake-literature.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/runbooks/planning-generated-artifacts-operations-20260403.md",
+          "docs/stylesheets/docs-accessibility.css",
+          "zensical.yml",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "tracked documentation pointer copies",
+          "Planning DB schema transition machinery",
+          "parallel route or subject registry"
+        ]
+      },
+      "createdAt": "2026-08-10T14:42:04.493Z"
     }
   ]
 }
