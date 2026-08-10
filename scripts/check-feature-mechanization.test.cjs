@@ -487,13 +487,7 @@ test('validateFeatureImplementationManifests permits deletion of a forbidden sur
     [
       {
         sourcePath: 'plan.md',
-        manifest: {
-          ...validManifest,
-          allowedImplementationSurfaces: [
-            ...validManifest.allowedImplementationSurfaces,
-            'apps/web/src/app/views/canvas/**',
-          ],
-        },
+        manifest: validManifest,
       },
     ],
     {
@@ -503,6 +497,24 @@ test('validateFeatureImplementationManifests permits deletion of a forbidden sur
   );
 
   assert.equal(result.errors.length, 0);
+});
+
+test('validateFeatureImplementationManifests rejects deletion outside allowed and forbidden surfaces', () => {
+  const deletedPath = 'apps/api/src/retiredCatalog.ts';
+  const result = validateFeatureImplementationManifests(
+    [
+      {
+        sourcePath: 'plan.md',
+        manifest: validManifest,
+      },
+    ],
+    {
+      changedFiles: [deletedPath],
+      deletedFiles: [deletedPath],
+    }
+  );
+
+  assert.match(result.errors.join('\n'), /outside allowedImplementationSurfaces/);
 });
 
 test('validateFeatureImplementationManifests applies forbidden surfaces only from the owning feature manifest', () => {
