@@ -185,6 +185,7 @@ test('System Delivery Status projects exact Git, workspace, maturity, rail, and 
     duplicateRailCount: 0,
     featureCount: 3,
     featureStatuses: { closed: 1, implemented: 1, 'mixed:closed,implemented': 1 },
+    railStatuses: { implemented: 1, missing: 1 },
   });
   assert.deepEqual(projection.gaps, ['rail:command:WriteB:missing']);
 
