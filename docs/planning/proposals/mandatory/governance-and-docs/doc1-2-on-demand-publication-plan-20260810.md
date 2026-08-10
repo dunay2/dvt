@@ -264,7 +264,6 @@ forbiddenImplementationSurfaces:
   - packages/@dvt/planner/**
   - apps/**
   - specs/**
-  - tools/planning-db/migrations/**
 commandQueryRails:
   - name: GeneratePlanningDerivedSurfaces
     type: command
