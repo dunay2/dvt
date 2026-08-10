@@ -40,7 +40,7 @@ repository and documentation bindings remain visible gaps.
   a second component home;
 - the component inventory and its relation topology must not be copied into an
   authored list;
-- compatibility aliases belong in archive once active links are migrated.
+- obsolete authored aliases belong in archive after active references are removed.
 
 ## Coverage Boundary
 
