@@ -238,6 +238,7 @@ class DocumentationPublicationAssembler {
     );
     this.lifecycleRows = options.lifecycleRows;
     this.runCommand = options.runCommand;
+    this.readGitBlob = options.readGitBlob;
     this.readGitSha = options.readGitSha;
     this.trackedDocumentationPaths = options.trackedDocumentationPaths;
     this.policy =
@@ -312,28 +313,63 @@ class DocumentationPublicationAssembler {
   }
 
   resolveTrackedDocumentationPaths() {
+    let sourcePaths;
     if (Array.isArray(this.trackedDocumentationPaths)) {
-      return [
+      sourcePaths = [
         ...new Set(this.trackedDocumentationPaths.map(DocumentationPublicationPolicy.toPosix)),
-      ]
-        .filter((sourcePath) => existsSync(resolve(this.repoRoot, sourcePath)))
-        .sort((left, right) => left.localeCompare(right, 'en'));
+      ].filter(Boolean);
+    } else {
+      const result = spawnSync('git', ['ls-files', '--', 'docs/*', 'docs/**/*'], {
+        cwd: this.repoRoot,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+      });
+      if (result.error) throw result.error;
+      if (result.status !== 0) {
+        throw new Error(
+          `Cannot resolve Git-owned documentation inputs: ${String(result.stderr).trim()}.`
+        );
+      }
+      sourcePaths = [...new Set(String(result.stdout).split(/\r?\n/u))]
+        .map((sourcePath) => DocumentationPublicationPolicy.toPosix(sourcePath.trim()))
+        .filter(Boolean);
     }
-    const result = spawnSync('git', ['ls-files', '--', 'docs/*', 'docs/**/*'], {
+
+    sourcePaths.sort((left, right) => left.localeCompare(right, 'en'));
+    for (const sourcePath of sourcePaths) {
+      const absolutePath = resolve(this.repoRoot, sourcePath);
+      DocumentationPublicationPolicy.assertInside(
+        this.docsRoot,
+        absolutePath,
+        `Git-owned documentation source ${sourcePath}`
+      );
+      if (!existsSync(absolutePath) || !statSync(absolutePath).isFile()) {
+        throw new Error(`Missing Git-owned documentation source ${sourcePath}.`);
+      }
+      const gitBlob = this.readTrackedGitBlob(sourcePath);
+      if (!Buffer.from(gitBlob).equals(readFileSync(absolutePath))) {
+        throw new Error(
+          `Git-owned documentation source ${sourcePath} differs from HEAD. Commit it before running \`pnpm docs:publish\`.`
+        );
+      }
+    }
+    return sourcePaths;
+  }
+
+  readTrackedGitBlob(sourcePath) {
+    if (this.readGitBlob) return this.readGitBlob(sourcePath);
+    const result = spawnSync('git', ['show', `HEAD:${sourcePath}`], {
       cwd: this.repoRoot,
-      encoding: 'utf8',
+      encoding: null,
       stdio: ['ignore', 'pipe', 'pipe'],
     });
     if (result.error) throw result.error;
     if (result.status !== 0) {
       throw new Error(
-        `Cannot resolve Git-owned documentation inputs: ${String(result.stderr).trim()}.`
+        `Cannot read Git-owned documentation source ${sourcePath} from HEAD: ${String(result.stderr).trim()}.`
       );
     }
-    return [...new Set(String(result.stdout).split(/\r?\n/u))]
-      .map((sourcePath) => DocumentationPublicationPolicy.toPosix(sourcePath.trim()))
-      .filter((sourcePath) => sourcePath && existsSync(resolve(this.repoRoot, sourcePath)))
-      .sort((left, right) => left.localeCompare(right, 'en'));
+    return result.stdout;
   }
 
   currentGitSha() {

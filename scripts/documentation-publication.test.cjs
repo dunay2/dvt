@@ -45,11 +45,19 @@ function createMinimalFixture() {
 }
 
 function fixtureAssemblerOptions(root, options = {}) {
+  const trackedDocumentationPaths = DocumentationPublicationPolicy.walkFiles(
+    path.join(root, 'docs')
+  ).map((absolutePath) => path.relative(root, absolutePath).split(path.sep).join('/'));
+  const gitBlobs = new Map(
+    trackedDocumentationPaths.map((sourcePath) => [
+      sourcePath,
+      fs.readFileSync(path.join(root, sourcePath)),
+    ])
+  );
   return {
     repoRoot: root,
-    trackedDocumentationPaths: DocumentationPublicationPolicy.walkFiles(
-      path.join(root, 'docs')
-    ).map((absolutePath) => path.relative(root, absolutePath).split(path.sep).join('/')),
+    trackedDocumentationPaths,
+    readGitBlob: (sourcePath) => gitBlobs.get(sourcePath),
     ...options,
   };
 }
@@ -218,11 +226,12 @@ test('fails closed on missing or ambiguous DB lifecycle authority', async () => 
 test('ignores untracked Markdown instead of treating filesystem placement as authority', async () => {
   const root = createMinimalFixture();
   fs.writeFileSync(path.join(root, 'docs', 'ignored-index.md'), '# Ignored\n', 'utf8');
-  const trackedDocumentationPaths = fixtureAssemblerOptions(root).trackedDocumentationPaths.filter(
+  const fixtureOptions = fixtureAssemblerOptions(root);
+  const trackedDocumentationPaths = fixtureOptions.trackedDocumentationPaths.filter(
     (sourcePath) => sourcePath !== 'docs/ignored-index.md'
   );
   const assembler = new DocumentationPublicationAssembler({
-    repoRoot: root,
+    ...fixtureOptions,
     trackedDocumentationPaths,
     lifecycleRows: [lifecycleRow(root, 'docs/index.md')],
     readGitSha: () => 'fixture-head',
@@ -243,6 +252,12 @@ test('fails closed when a Git-owned Markdown source is missing from the worktree
   fs.writeFileSync(path.join(root, missingPath), '# Missing\n', 'utf8');
   const rows = [lifecycleRow(root, 'docs/index.md'), lifecycleRow(root, missingPath)];
   const trackedDocumentationPaths = fixtureAssemblerOptions(root).trackedDocumentationPaths;
+  const gitBlobs = new Map(
+    trackedDocumentationPaths.map((sourcePath) => [
+      sourcePath,
+      fs.readFileSync(path.join(root, sourcePath)),
+    ])
+  );
   fs.rmSync(path.join(root, missingPath));
 
   await assert.rejects(
@@ -250,6 +265,7 @@ test('fails closed when a Git-owned Markdown source is missing from the worktree
       repoRoot: root,
       trackedDocumentationPaths,
       lifecycleRows: rows,
+      readGitBlob: (sourcePath) => gitBlobs.get(sourcePath),
       readGitSha: () => 'fixture-head',
     }).assemble({ runGenerators: false }),
     /Missing Git-owned documentation source docs\/missing\.md/u
