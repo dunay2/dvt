@@ -317,11 +317,11 @@ describe('dbt project file projection live vertical', () => {
       .find('[data-slot="graph-node-card-actions"]')
       .should('be.visible')
       .click();
-    cy.get('[data-slot="canvas-context-menu"]', { timeout: 20_000 }).should('be.visible');
-    cy.get('[data-slot="canvas-context-menu"] [data-menu-action="inspect-node"]').should(
+    cy.get('[data-slot="canvas-node-context-menu"]', { timeout: 20_000 }).should('be.visible');
+    cy.get('[data-slot="canvas-node-context-menu"] [data-menu-action="inspect-node"]').should(
       'not.exist'
     );
-    cy.get('[data-slot="canvas-context-menu"] [data-menu-action="open-node-code"]').should(
+    cy.get('[data-slot="canvas-node-context-menu"] [data-menu-action="open-node-code"]').should(
       'not.exist'
     );
     cy.get('body').type('{esc}', { force: true });
