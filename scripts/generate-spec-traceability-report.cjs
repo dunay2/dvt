@@ -6,6 +6,7 @@
  */
 const fs = require('node:fs');
 const path = require('node:path');
+const { execFileSync } = require('node:child_process');
 const { Client } = require('pg');
 
 const { resolveGeneratedDate } = require('./generated-doc-date.cjs');
@@ -111,6 +112,20 @@ function isCurrentCanonicalDocument(row) {
 function repositoryBrowserUrl() {
   const repository = String(process.env.GITHUB_REPOSITORY || '').trim();
   return repository ? `https://github.com/${repository}` : 'https://github.com/dunay2/dvt';
+}
+
+function resolveFeatureTraceabilityGitInput(options = {}) {
+  const gitSha = String(
+    options.gitSha ||
+      process.env.GIT_HEAD ||
+      process.env.GITHUB_SHA ||
+      execFileSync('git', ['rev-parse', 'HEAD'], {
+        cwd: options.root || repoRoot,
+        encoding: 'utf8',
+      })
+  ).trim();
+  const readTree = options.readGitTreePaths || readGitTreePaths;
+  return { gitSha, gitTreePaths: readTree({ gitSha }) };
 }
 
 function buildFeatureTraceabilityProjection(facts, options = {}) {
@@ -469,18 +484,12 @@ async function main(dependencies = {}) {
   await client.connect();
   try {
     const facts = await readFeatureTraceabilityFacts(client, dependencies.readers);
-    const gitTreePaths = (dependencies.readGitTreePaths || readGitTreePaths)();
-    const gitSha = dependencies.gitSha || process.env.GIT_HEAD || process.env.GITHUB_SHA;
-    const exactGitSha =
-      gitSha ||
-      require('node:child_process')
-        .execFileSync('git', ['rev-parse', 'HEAD'], {
-          cwd: repoRoot,
-          encoding: 'utf8',
-        })
-        .trim();
+    const { gitSha, gitTreePaths } = resolveFeatureTraceabilityGitInput({
+      gitSha: dependencies.gitSha,
+      readGitTreePaths: dependencies.readGitTreePaths,
+    });
     const projection = buildFeatureTraceabilityProjection(facts, {
-      gitSha: exactGitSha,
+      gitSha,
       gitTreePaths,
       repositoryUrl: dependencies.repositoryUrl,
     });
@@ -519,4 +528,5 @@ module.exports = {
   readFeatureTraceabilityFacts,
   renderCanonicalDocCodeMatrix,
   renderSpecTraceabilitySummary,
+  resolveFeatureTraceabilityGitInput,
 };
