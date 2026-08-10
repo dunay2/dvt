@@ -36,7 +36,8 @@ describe('API test execution manifests', () => {
     expect(packageJson.scripts?.['test:integration:ci']).toBe(
       'vitest run --config vitest.integration.config.ts'
     );
-    expect(packageJson.scripts?.test).toBe('pnpm test:unit && pnpm test:integration:ci');
+    expect(packageJson.scripts?.test).toBe('vitest run --config vitest.config.ts');
     expect(packageJson.scripts?.['test:ci']).toBe('pnpm test:unit && pnpm test:integration:ci');
+    expect(packageJson.scripts?.['test:full']).toBe('pnpm test:unit && pnpm test:integration:ci');
   });
 });
