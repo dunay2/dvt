@@ -112,8 +112,11 @@ function addSqlTransformNode(): void {
 }
 
 function removeCanvasNode(nodeId: string): void {
-  cy.get(`.react-flow__node[data-id="${nodeId}"]`).rightclick();
-  cy.contains('[role="menuitem"]', 'Delete').click();
+  cy.get(`.react-flow__node[data-id="${nodeId}"]`)
+    .find('[data-slot="graph-node-card-actions"]')
+    .should('be.visible')
+    .click();
+  cy.contains('[data-slot="canvas-node-context-menu-item"]', 'Delete').click();
 }
 
 describe('Canvas ready node authoring', () => {
@@ -170,7 +173,7 @@ describe('Canvas ready node authoring', () => {
     cy.get('[data-slot="canvas-context-menu"]').should('not.contain.text', 'Explore project');
   });
 
-  it('opens node workbench from node context only, not from plain node selection', () => {
+  it('opens node Properties from double-click while ellipsis remains operations-only', () => {
     stubCanvasDraftRead();
     stubCanvasDraftSave();
 
@@ -184,37 +187,17 @@ describe('Canvas ready node authoring', () => {
       .find('button[aria-label="Select for execution"]')
       .should('be.visible')
       .and('have.css', 'cursor', 'pointer');
-    cy.get('[data-slot="canvas-node-floating-toolbar"]')
-      .should('be.visible')
-      .should(($toolbar) => {
-        expect($toolbar[0].parentElement).to.equal($toolbar[0].ownerDocument.body);
-        const toolbarRect = $toolbar[0].getBoundingClientRect();
-        const viewportRect = $toolbar[0].ownerDocument.documentElement.getBoundingClientRect();
-
-        expect(toolbarRect.width, 'toolbar width').to.be.greaterThan(0);
-        expect(toolbarRect.height, 'toolbar height').to.be.greaterThan(0);
-        expect(toolbarRect.left, 'toolbar is not clipped left').to.be.greaterThan(
-          viewportRect.left
-        );
-        expect(toolbarRect.top, 'toolbar is not clipped top').to.be.greaterThan(viewportRect.top);
-      });
-    cy.get('@ordersNode').then(($node) => {
-      cy.get('[data-slot="canvas-node-floating-toolbar"]').should(($toolbar) => {
-        const nodeRect = $node[0].getBoundingClientRect();
-        const toolbarRect = $toolbar[0].getBoundingClientRect();
-
-        expect(Math.round(toolbarRect.left), 'toolbar aligns to node left').to.equal(
-          Math.round(nodeRect.left)
-        );
-      });
-    });
-    cy.get('[data-slot="canvas-node-floating-toolbar"]')
-      .find('button[aria-label="Seleccionar para ejecución"]')
-      .should('not.exist');
+    cy.get('[data-slot="canvas-node-floating-toolbar"]').should('not.exist');
     cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
 
-    cy.contains('.react-flow__node', 'model_orders').rightclick();
-    cy.contains('[role="menuitem"]', 'Open workbench').click();
+    cy.get('@ordersNode').find('[data-slot="graph-node-card-actions"]').click();
+    cy.get('[data-slot="canvas-node-context-menu"]').should('be.visible');
+    cy.get('[data-slot="canvas-node-context-menu"] [data-menu-action="inspect-node"]').should(
+      'not.exist'
+    );
+    cy.get('body').type('{esc}', { force: true });
+
+    cy.get('@ordersNode').find('[data-slot="canvas-node-shell"]').dblclick();
 
     cy.get('[data-slot="canvas-node-workbench-overlay"]').should('be.visible');
     cy.get('[data-slot="canvas-node-workbench-panel"]').should('contain.text', 'model_orders');
@@ -289,12 +272,18 @@ describe('Canvas ready node authoring', () => {
       cy.get('.react-flow__node[data-id="large-node-00-00"]')
         .should('exist')
         .click({ force: true });
-      cy.get('[data-slot="canvas-node-floating-toolbar"]').should('be.visible');
+      cy.get('.react-flow__node[data-id="large-node-00-00"]')
+        .find('[data-slot="graph-node-card-actions"]')
+        .should('be.visible');
+      cy.get('[data-slot="canvas-node-floating-toolbar"]').should('not.exist');
 
       cy.get('.react-flow__node[data-id="large-node-01-00"]')
         .should('exist')
         .click({ force: true });
-      cy.get('[data-slot="canvas-node-floating-toolbar"]').should('be.visible');
+      cy.get('.react-flow__node[data-id="large-node-01-00"]')
+        .find('[data-slot="graph-node-card-actions"]')
+        .should('be.visible');
+      cy.get('[data-slot="canvas-node-floating-toolbar"]').should('not.exist');
 
       cy.get('.react-flow__viewport')
         .invoke('attr', 'style')
@@ -337,10 +326,9 @@ describe('Canvas ready node authoring', () => {
           });
         });
 
-      cy.get('[data-slot="canvas-node-floating-toolbar"]')
-        .should('have.attr', 'data-node-id', 'large-node-01-00')
-        .find('[data-toolbar-action="code"]')
-        .click();
+      cy.get('.react-flow__node[data-id="large-node-01-00"]')
+        .find('[data-slot="canvas-node-shell"]')
+        .dblclick({ force: true });
       cy.get('[data-slot="canvas-node-workbench-panel"]')
         .should('be.visible')
         .and('contain.text', 'large-node-01-00');

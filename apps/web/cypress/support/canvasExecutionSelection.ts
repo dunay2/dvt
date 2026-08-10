@@ -24,6 +24,14 @@ export function getVisibleCanvasNode(nodeName: string): Cypress.Chainable<JQuery
     .then(($nodes) => cy.wrap(filterVisibleCanvasNodes($nodes, nodeName).first()));
 }
 
+export function openCanvasNodeOperations(nodeName: string): void {
+  getVisibleCanvasNode(nodeName)
+    .find('[data-slot="graph-node-card-actions"]')
+    .should('be.visible')
+    .click();
+  cy.get('[data-slot="canvas-node-context-menu"]').should('be.visible');
+}
+
 function filterVisibleCanvasNodes(
   $nodes: JQuery<HTMLElement>,
   nodeIdentity: string
@@ -127,7 +135,7 @@ export function expectPreviewExecutionPlanUnavailableFromCanvasContextMenu(): vo
 
 export function selectCanvasClosure(nodeNames: string[]): void {
   for (const nodeName of nodeNames) {
-    getVisibleCanvasNode(nodeName).rightclick();
+    openCanvasNodeOperations(nodeName);
     cy.get('[data-slot="canvas-node-context-menu"]').then(($menu) => {
       if ($menu.text().includes('Select for execution')) {
         cy.contains('[data-slot="canvas-node-context-menu-item"]', 'Select for execution').click();
