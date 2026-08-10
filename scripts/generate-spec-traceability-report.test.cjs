@@ -188,6 +188,34 @@ test('feature traceability rejects duplicate subjects and unknown relation subje
   );
 });
 
+test('feature traceability rejects absolute and traversing repository paths', () => {
+  const unsafePaths = [
+    '/packages/@dvt/example/src/execute.ts',
+    'C:\\dvt\\packages\\@dvt\\example\\src\\execute.ts',
+    '../packages/@dvt/example/src/execute.ts',
+    'packages/@dvt/example/../example/src/execute.ts',
+    '\\\\server\\share\\execute.ts',
+  ];
+
+  for (const unsafePath of unsafePaths) {
+    const facts = exactFacts();
+    facts.symbols[0] = { ...facts.symbols[0], symbol_path: unsafePath };
+    assert.throws(
+      () =>
+        buildFeatureTraceabilityProjection(facts, {
+          gitSha,
+          gitTreePaths: new Map([
+            ['docs/architecture/components/example.md', 'blob'],
+            ['packages/@dvt/example/src/execute.ts', 'blob'],
+            ['packages/@dvt/example/test/execute.test.ts', 'blob'],
+          ]),
+        }),
+      /Unsafe repository path/u,
+      unsafePath
+    );
+  }
+});
+
 test('conflicting canonical document authority remains an explicit exact gap', () => {
   const facts = exactFacts();
   facts.documents[0] = {
