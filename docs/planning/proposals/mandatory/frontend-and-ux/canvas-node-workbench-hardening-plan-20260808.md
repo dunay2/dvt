@@ -92,6 +92,9 @@ launch point even though that launch path had been retired.
 This is not compatibility behavior. The browser helpers must enter node operations
 through the card ellipsis, and the surface-policy projection must declare double-click
 as the only node Workbench launch point. Empty-Canvas right-click remains unchanged.
+Browser setup may wait only for required startup probes. `/readyz`, `/version` and
+`/db/ready` are deployment-optional and cannot be prerequisites for these Canvas
+interaction proofs.
 
 GitHub issue #2255 remains the independent live-product/product-owner acceptance gate.
 
@@ -120,6 +123,7 @@ governingSources:
   - docs/architecture/fowler-opportunity-planning-governance.md
 allowedImplementationSurfaces:
   - apps/web/cypress/support/canvasExecutionSelection.ts
+  - apps/web/cypress/support/test/canvasPreviewRunPersisted.ts
   - apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts
   - apps/web/cypress/e2e/canvas/canvas-dbt-selection-recovery-live.cy.ts
   - apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
