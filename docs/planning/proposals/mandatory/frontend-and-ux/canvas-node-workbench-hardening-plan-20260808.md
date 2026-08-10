@@ -111,6 +111,14 @@ node-Code close must also restore inspector visibility. Project-Code close must
 not fabricate a node context. This aligns the generic Canvas shell with the
 file-project controller without adding a second navigation command.
 
+Final Fowler QA found that the operations-only menu contract still accepted
+retired Workbench-navigation labels, plus an unused execution-group label, even
+though the model never consumed them. The copy catalog also retained orphaned
+floating-toolbar label/freeze/unfreeze/More facts. The two Code strings still
+used by Properties must move from `canvasNodeToolbar*` to
+`nodeWorkbenchOpenCode*`; all other retired keys and mapper projections must be
+removed. This is contract and localization cleanup, not a compatibility alias.
+
 GitHub issue #2255 remains the independent live-product/product-owner acceptance gate.
 
 ## Feature Mechanization
@@ -174,6 +182,12 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx
   - apps/web/src/app/views/canvas/CanvasShell.graphSurface.test.tsx
   - apps/web/src/app/views/canvas/CanvasShell.tsx
+  - apps/web/src/app/views/canvas/canvasCopy.types.ts
+  - apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.es.ts
+  - apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.ts
+  - apps/web/src/app/views/canvas/canvasCopyCatalog.toolbar.es.ts
+  - apps/web/src/app/views/canvas/canvasCopyCatalog.toolbar.ts
+  - apps/web/src/app/views/canvas/canvasNodeMapper.ts
   - apps/web/src/app/views/canvas/CanvasViewport.architecture.test.ts
   - apps/web/src/app/views/canvas/CanvasViewport.keyboardNodeEntry.test.ts
   - apps/web/src/app/views/canvas/CanvasViewport.nodeFloatingToolbar.test.tsx
@@ -549,6 +563,20 @@ redGreenCycles:
       - apps/web/src/app/views/canvas/CanvasShell.tsx
       - apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
     greenTest: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+  - id: retire-node-toolbar-and-navigation-copy-facts
+    redTest: apps/web/src/app/views/canvas/canvasNodeWorkbenchHardening.architecture.test.ts
+    expectedFailure: Operations-only menu inputs and localization still named retired Workbench navigation and floating-toolbar responsibilities.
+    patchSurfaces:
+      - apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts
+      - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx
+      - apps/web/src/app/views/canvas/canvasCopy.types.ts
+      - apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.es.ts
+      - apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.ts
+      - apps/web/src/app/views/canvas/canvasCopyCatalog.toolbar.es.ts
+      - apps/web/src/app/views/canvas/canvasCopyCatalog.toolbar.ts
+      - apps/web/src/app/views/canvas/canvasNodeMapper.ts
+      - apps/web/src/app/views/canvas/canvasNodeWorkbenchHardening.architecture.test.ts
+    greenTest: apps/web/src/app/views/canvas/canvasNodeWorkbenchHardening.architecture.test.ts
 ```
 
 ## Completion rule
