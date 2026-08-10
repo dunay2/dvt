@@ -6,6 +6,11 @@ import CanvasNodeContextMenuModelSource from '../../components/canvas/canvasNode
 import GraphNodeCardViewSource from '../../plugins/graph/GraphNodeCardView.tsx?raw';
 import CanvasInspectorAuthoringContractSource from './canvasInspectorAuthoring.types.ts?raw';
 import CanvasNodePresentationCopySource from './canvasNodePresentationCopy.ts?raw';
+import CanvasCopyTypesSource from './canvasCopy.types.ts?raw';
+import CanvasAuthoringCopySource from './canvasCopyCatalog.authoring.ts?raw';
+import CanvasToolbarCopySource from './canvasCopyCatalog.toolbar.ts?raw';
+import CanvasToolbarCopyEsSource from './canvasCopyCatalog.toolbar.es.ts?raw';
+import CanvasNodeMapperSource from './canvasNodeMapper.ts?raw';
 import CanvasNodeWorkbenchPanelSource from './CanvasNodeWorkbenchPanel.tsx?raw';
 import CanvasShellPanelsBuilderSource from './canvasShellPanelsBuilder.ts?raw';
 import CanvasViewportSource from './CanvasViewport.tsx?raw';
@@ -58,6 +63,29 @@ describe('Canvas Node Workbench W4 hardening contracts', () => {
     expect(CanvasViewportSurfaceViewSource).not.toContain('canvas-node-floating-toolbar');
   });
 
+  it('retires floating-toolbar and navigation copy facts from current node contracts', () => {
+    for (const retiredFact of [
+      'canvasNodeToolbar',
+      'openWorkbenchLabel',
+      'workbenchGroupLabel',
+      'executeGroupLabel',
+      'canvasNodeContextOpenWorkbenchLabel',
+      'canvasNodeContextWorkbenchGroupLabel',
+      'canvasNodeContextExecuteGroupLabel',
+    ]) {
+      expect(CanvasNodeContextMenuModelSource).not.toContain(retiredFact);
+      expect(CanvasNodeMapperSource).not.toContain(retiredFact);
+      expect(CanvasCopyTypesSource).not.toContain(retiredFact);
+      expect(CanvasToolbarCopySource).not.toContain(retiredFact);
+      expect(CanvasToolbarCopyEsSource).not.toContain(retiredFact);
+    }
+
+    expect(CanvasAuthoringCopySource).toContain('nodeWorkbenchOpenCodeLabel');
+    expect(CanvasAuthoringCopySource).toContain('nodeWorkbenchOpenCodeDescription');
+    expect(CanvasNodeWorkbenchPanelSource).toContain('copy.nodeWorkbenchOpenCodeLabel');
+    expect(CanvasNodeWorkbenchPanelSource).toContain('copy.nodeWorkbenchOpenCodeDescription');
+  });
+
   it('keeps code inside Properties navigation before any file-authoritative editor opens', () => {
     expect(CanvasNodeWorkbenchPanelSource).toContain('setActiveTab(nextTabId);');
     expect(CanvasNodeWorkbenchPanelSource).toContain(
@@ -68,6 +96,12 @@ describe('Canvas Node Workbench W4 hardening contracts', () => {
     );
     expect(DbtProjectFileCanvasControllerSource).toContain(
       "setCodeWorkbenchTarget({ kind: 'node', nodeId: node.id, initialPath: node.path });"
+    );
+    expect(DbtProjectFileCanvasControllerSource).toContain(
+      'codeWorkbenchReturnNodeIdRef.current = node.id;'
+    );
+    expect(DbtProjectFileCanvasControllerSource).toContain(
+      "setInspectorNode(returnNodeId, 'code');"
     );
   });
 

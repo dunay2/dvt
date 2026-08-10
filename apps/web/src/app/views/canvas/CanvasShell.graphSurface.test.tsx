@@ -79,6 +79,50 @@ describe('CanvasShell graph base surface', () => {
     expect(container.querySelector('[data-testid="sql-context-workbench"]')).toBeNull();
   });
 
+  it('restores the preserved node Properties context after workspace-file Code closes', async () => {
+    const onHideInspector = vi.fn();
+    const onShowInspector = vi.fn();
+    await renderShell({
+      graph: {
+        nodesWithImpact: [
+          {
+            id: 'dbt-model-1',
+            type: 'dbtNode',
+            position: { x: 0, y: 0 },
+            data: {
+              name: 'Model 1',
+              pluginKind: 'dbt:model',
+              status: 'idle',
+              path: 'models/model_1.sql',
+            },
+          },
+        ],
+      },
+      chromeCommands: { onHideInspector, onShowInspector },
+    });
+
+    const forwardedNode = (
+      getCanvasShellState().canvasViewportProps?.nodesWithImpact as
+        Array<{ data: { onOpenNodeCode?: (nodeId: string) => void } }> | undefined
+    )?.[0];
+    await act(async () => {
+      forwardedNode?.data.onOpenNodeCode?.('dbt-model-1');
+    });
+
+    expect(onHideInspector).toHaveBeenCalledOnce();
+    const closeButton = container.querySelector<HTMLButtonElement>(
+      '[data-slot="canvas-contextual-workbench-close"]'
+    );
+    expect(closeButton).not.toBeNull();
+
+    await act(async () => {
+      closeButton?.click();
+      await Promise.resolve();
+    });
+
+    expect(onShowInspector).toHaveBeenCalledOnce();
+  });
+
   it('keeps plain node click out of the application shell command contract', async () => {
     const props = await renderShell();
 

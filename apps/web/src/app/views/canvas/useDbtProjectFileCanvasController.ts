@@ -1,6 +1,6 @@
 /** Owned concern: orchestrate the read-only file-authoritative dbt Canvas read model. */
 import type { Node, NodeTypes } from '@xyflow/react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import DbtNodeComponent, { type DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 import type { DbtProjectFilesAuthorityBinding } from '../../ports/dbtProjectGraph';
@@ -132,6 +132,7 @@ export function useDbtProjectFileCanvasController(
   const [codeWorkbenchTarget, setCodeWorkbenchTarget] = useState<SqlContextWorkbenchTarget | null>(
     null
   );
+  const codeWorkbenchReturnNodeIdRef = useRef<string | null>(null);
   const [importedNodeFocusIds, setImportedNodeFocusIds] = useState<string[]>([]);
   const layoutKey = useMemo(
     () => buildLayoutKey(workspaceLayoutKey, authorityBinding),
@@ -306,10 +307,26 @@ export function useDbtProjectFileCanvasController(
         return;
       }
 
+      codeWorkbenchReturnNodeIdRef.current = node.id;
       setCodeWorkbenchTarget({ kind: 'node', nodeId: node.id, initialPath: node.path });
     },
     [canonicalNodesById]
   );
+  const openProjectCode = useCallback(() => {
+    codeWorkbenchReturnNodeIdRef.current = null;
+    setCodeWorkbenchTarget({ kind: 'project' });
+  }, []);
+  const closeCodeWorkbench = useCallback(() => {
+    const returnNodeId = codeWorkbenchReturnNodeIdRef.current;
+    codeWorkbenchReturnNodeIdRef.current = null;
+    setCodeWorkbenchTarget(null);
+    if (returnNodeId == null || !canonicalNodesById.has(returnNodeId)) {
+      return;
+    }
+
+    setInspectorNode(returnNodeId, 'code');
+    showInspectorPanel();
+  }, [canonicalNodesById, setInspectorNode, showInspectorPanel]);
   const nodesWithCommands = useMemo<Node[]>(
     () =>
       graphModel.nodes.map((node) => ({
@@ -402,8 +419,8 @@ export function useDbtProjectFileCanvasController(
     projectionErrorMessage: query.isError ? buildProjectionErrorMessage(query.error) : null,
     layoutKey,
     codeWorkbenchTarget,
-    openProjectCode: () => setCodeWorkbenchTarget({ kind: 'project' }),
-    closeCodeWorkbench: () => setCodeWorkbenchTarget(null),
+    openProjectCode,
+    closeCodeWorkbench,
     refreshProjectGraphAfterMutation,
     reconcileCodeFilePersistence,
     reloadNodeDescription,

@@ -312,6 +312,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
   it('keeps the accessible movement handle separate from the close command', () => {
     renderMovablePanel(root);
 
+    const panel = container.querySelector<HTMLElement>('[data-slot="canvas-node-workbench-panel"]');
     const dragHandle = container.querySelector<HTMLElement>(
       '[data-slot="canvas-node-workbench-drag-handle"]'
     );
@@ -319,6 +320,8 @@ describe('CanvasNodeWorkbenchPanel', () => {
       '[data-slot="canvas-node-workbench-close"]'
     );
 
+    expect(panel?.className).toContain('min-w-0');
+    expect(panel?.className).toContain('w-full');
     expect(dragHandle?.getAttribute('role')).toBe('button');
     expect(dragHandle?.tabIndex).toBe(0);
     expect(closeButton?.textContent).toBe('Close');

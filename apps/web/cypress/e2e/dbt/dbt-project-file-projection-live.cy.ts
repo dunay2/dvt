@@ -272,7 +272,9 @@ describe('dbt project file projection live vertical', () => {
     });
 
     // Enter the node once: Properties opens with Code as the preferred section.
-    cy.get('.react-flow__node[data-id="model.analytics.orders"]').dblclick();
+    cy.get('.react-flow__node[data-id="model.analytics.orders"]')
+      .find('[data-slot="canvas-node-shell"]')
+      .dblclick();
     cy.get('[data-slot="canvas-node-workbench-overlay"]', { timeout: 20_000 }).should('be.visible');
     cy.get('[data-slot="canvas-node-workbench-tab-code"]')
       .should('be.visible')
@@ -292,7 +294,7 @@ describe('dbt project file projection live vertical', () => {
           /source\(\s*'raw'\s*,\s*'orders'\s*\)/
         );
       });
-    cy.get('[data-slot="canvas-contextual-workbench-header"] button').should('be.visible').click();
+    cy.get('[data-slot="canvas-contextual-workbench-close"]').should('be.visible').click();
     cy.get('[data-slot="canvas-contextual-workbench"]').should('not.exist');
 
     // Closing Code returns to the same node Properties context.
@@ -310,23 +312,24 @@ describe('dbt project file projection live vertical', () => {
       .should('contain.text', 'Value is present')
       .and('contain.text', 'blocks run');
 
+    cy.get('[data-slot="canvas-node-workbench-close"]').should('be.visible').click();
+    cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
+    cy.get('[data-slot="canvas-node-floating-toolbar"]').should('not.exist');
+
     // Ellipsis is operations-only; it must not expose inspect/workbench/code navigation.
     cy.get('.react-flow__node[data-id="model.analytics.orders"]')
       .find('[data-slot="graph-node-card-actions"]')
       .should('be.visible')
       .click();
-    cy.get('[data-slot="canvas-context-menu"]', { timeout: 20_000 }).should('be.visible');
-    cy.get('[data-slot="canvas-context-menu"] [data-menu-action="inspect-node"]').should(
+    cy.get('[data-slot="canvas-node-context-menu"]', { timeout: 20_000 }).should('be.visible');
+    cy.get('[data-slot="canvas-node-context-menu"] [data-menu-action="inspect-node"]').should(
       'not.exist'
     );
-    cy.get('[data-slot="canvas-context-menu"] [data-menu-action="open-node-code"]').should(
+    cy.get('[data-slot="canvas-node-context-menu"] [data-menu-action="open-node-code"]').should(
       'not.exist'
     );
     cy.get('body').type('{esc}', { force: true });
-
-    cy.get('[data-slot="canvas-node-workbench-close"]').should('be.visible').click();
-    cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
-    cy.get('[data-slot="canvas-node-floating-toolbar"]').should('not.exist');
+    cy.get('[data-slot="canvas-node-context-menu"]').should('not.exist');
   });
 
   it('keeps invalid projects file-authoritative and reports the analyzer diagnostic', () => {

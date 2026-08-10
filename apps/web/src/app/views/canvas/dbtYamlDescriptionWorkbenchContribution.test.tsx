@@ -33,8 +33,8 @@ describe('buildDbtYamlDescriptionWorkbenchContributions', () => {
       sectionId: 'general',
       placement: 'after-body',
       supersededRowIds: [NODE_PROPERTY_ROW_ID.description],
-      supersededSectionIds: ['code'],
     });
+    expect(contributions[0]?.supersededSectionIds).toBeUndefined();
   });
 
   it('does not fabricate visual editability when the projection lacks a YAML target', () => {

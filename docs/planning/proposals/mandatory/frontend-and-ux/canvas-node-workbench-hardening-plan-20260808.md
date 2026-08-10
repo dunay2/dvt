@@ -2,7 +2,7 @@
 title: Canvas Node Workbench Hardening Plan
 status: Active
 owner: Frontend / Product / Architecture
-last_reviewed: 2026-08-09
+last_reviewed: 2026-08-10
 planning_type: mandatory
 issue: 2277
 ---
@@ -82,6 +82,43 @@ Play/Pause remains a distinct visible affordance and must not be retired merely 
 - `canvas-dbt-author-code-run-live.cy.ts`
 - `dbt-project-file-projection-live.cy.ts`
 
+### Final QA finding — retired right-click topology
+
+The final Fowler review found that the shared selected-closure Cypress helper and two
+Canvas browser scenarios still drove node operations through native right-click. The
+surface strategies also continued to advertise `node-context-menu` as a Workbench
+launch point even though that launch path had been retired.
+
+This is not compatibility behavior. The browser helpers must enter node operations
+through the card ellipsis, and the surface-policy projection must declare double-click
+as the only node Workbench launch point. Empty-Canvas right-click remains unchanged.
+Browser setup may wait only for required startup probes. `/readyz`, `/version` and
+`/db/ready` are deployment-optional and cannot be prerequisites for these Canvas
+interaction proofs.
+
+The connected-source live proof also exposed an assertion that treated a direct
+`Code` tab as the only valid presentation of the preferred section. The governed
+surface strategy may place Code in the overflow rail when its primary-section
+budget is exhausted. The proof must assert the active Code section and its
+authoring content, whether the active affordance is the direct Code tab or the
+localized `More: Code` overflow trigger; it must not change the product's section
+policy merely to satisfy a selector.
+
+The screen-composition proof then exposed a distinct generic Graph Draft path:
+opening file-backed node Code hid Properties, but closing the contextual editor
+only restored node focus. The selected inspector node remained authoritative, so
+node-Code close must also restore inspector visibility. Project-Code close must
+not fabricate a node context. This aligns the generic Canvas shell with the
+file-project controller without adding a second navigation command.
+
+Final Fowler QA found that the operations-only menu contract still accepted
+retired Workbench-navigation labels, plus an unused execution-group label, even
+though the model never consumed them. The copy catalog also retained orphaned
+floating-toolbar label/freeze/unfreeze/More facts. The two Code strings still
+used by Properties must move from `canvasNodeToolbar*` to
+`nodeWorkbenchOpenCode*`; all other retired keys and mapper projections must be
+removed. This is contract and localization cleanup, not a compatibility alias.
+
 GitHub issue #2255 remains the independent live-product/product-owner acceptance gate.
 
 ## Feature Mechanization
@@ -108,8 +145,16 @@ governingSources:
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
 allowedImplementationSurfaces:
+  - apps/web/cypress/support/canvasExecutionSelection.ts
+  - apps/web/cypress/support/test/canvasPreviewRunPersisted.ts
+  - apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts
+  - apps/web/cypress/e2e/canvas/canvas-dbt-selection-recovery-live.cy.ts
+  - apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
   - apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
+  - apps/web/cypress/e2e/dbt/dbt-project-yaml-description-edit-live.cy.ts
   - apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
+  - apps/web/cypress/e2e/runs/run-controls-live.cy.ts
+  - apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
   - apps/web/src/app/components/canvas/CanvasNodeContextMenuView.test.tsx
   - apps/web/src/app/components/canvas/CanvasNodeShell.doubleClick.test.ts
   - apps/web/src/app/components/canvas/CanvasNodeShell.test.tsx
@@ -120,6 +165,11 @@ allowedImplementationSurfaces:
   - apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts
   - apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts
   - apps/web/src/app/plugins/dbt/DbtNodeRenderer.tsx
+  - apps/web/src/app/plugins/canvasSurfaceStrategyContracts.ts
+  - apps/web/src/app/plugins/dbt/dbtCanvasSurfaceStrategy.ts
+  - apps/web/src/app/plugins/dbt/dbtProjectFileCanvasSurfaceStrategy.ts
+  - apps/web/src/app/plugins/dvt/dvtCanvasSurfaceStrategy.ts
+  - apps/web/src/app/plugins/graphStrategyRegistry.test.ts
   - apps/web/src/app/plugins/graph/GraphNodeCardView.test.tsx
   - apps/web/src/app/plugins/graph/GraphNodeCardView.tsx
   - apps/web/src/app/plugins/graph/GraphNodeRenderer.tsx
@@ -130,6 +180,14 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/CanvasNodeFloatingToolbarView.tsx
   - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx
   - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx
+  - apps/web/src/app/views/canvas/CanvasShell.graphSurface.test.tsx
+  - apps/web/src/app/views/canvas/CanvasShell.tsx
+  - apps/web/src/app/views/canvas/canvasCopy.types.ts
+  - apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.es.ts
+  - apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.ts
+  - apps/web/src/app/views/canvas/canvasCopyCatalog.toolbar.es.ts
+  - apps/web/src/app/views/canvas/canvasCopyCatalog.toolbar.ts
+  - apps/web/src/app/views/canvas/canvasNodeMapper.ts
   - apps/web/src/app/views/canvas/CanvasViewport.architecture.test.ts
   - apps/web/src/app/views/canvas/CanvasViewport.keyboardNodeEntry.test.ts
   - apps/web/src/app/views/canvas/CanvasViewport.nodeFloatingToolbar.test.tsx
@@ -141,9 +199,14 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/canvasNodeFloatingToolbarModel.ts
   - apps/web/src/app/views/canvas/canvasNodeFloatingToolbarTokens.ts
   - apps/web/src/app/views/canvas/canvasNodeWorkbenchHardening.architecture.test.ts
+  - apps/web/src/app/views/canvas/dbtYamlDescriptionWorkbenchContribution.test.tsx
+  - apps/web/src/app/views/canvas/dbtYamlDescriptionWorkbenchContribution.tsx
+  - apps/web/src/app/views/canvas/dbtProjectFileProjection.architecture.test.ts
   - apps/web/src/app/views/canvas/useDbtProjectFileCanvasController.ts
   - docs/concepts/repository-map.md
   - docs/planning/proposals/mandatory/frontend-and-ux/canvas-node-workbench-hardening-plan-20260808.md
+  - scripts/run-selected-closure-live-proof.cjs
+  - scripts/run-selected-closure-live-proof.test.cjs
 forbiddenImplementationSurfaces:
   - packages/@dvt/contracts/**
   - packages/@dvt/engine/**
@@ -189,6 +252,36 @@ domainObjects:
     type: operation read model
     owner: Canvas node interaction presentation
 symbols:
+  - path: apps/web/cypress/support/canvasExecutionSelection.ts
+    name: openCanvasNodeOperations
+    kind: function
+    exported: true
+    dddOwner: Canvas selected-closure browser interaction
+    cqRails: [SelectCanvasExecutionNode]
+    fowlerSignals: [Duplicate semantics, Test-only confidence]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web typecheck]
+  - path: apps/web/cypress/e2e/dbt/dbt-project-yaml-description-edit-live.cy.ts
+    name: openModelCodeEditor
+    kind: function
+    exported: false
+    dddOwner: File-backed dbt live-product proof
+    cqRails: [InspectCanvasNode]
+    fowlerSignals: [Duplicate semantics, Test-only confidence]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/dbt/dbt-project-yaml-description-edit-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web typecheck]
+  - path: apps/web/src/app/plugins/canvasSurfaceStrategyContracts.ts
+    name: CanvasSurfaceLaunchPoint
+    kind: type
+    exported: true
+    dddOwner: Canvas surface policy
+    cqRails: [InspectCanvasNode]
+    fowlerSignals: [Boundary drift, Duplicate semantics]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas]
   - path: apps/web/src/app/components/canvas/CanvasNodeShell.tsx
     name: GovernedNodeActionContextMenuEvent
     kind: type
@@ -349,6 +442,26 @@ symbols:
     architectureGuard: pnpm --filter @dvt/web test:canvas
     cypressCoverage: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
     unitTests: [pnpm --filter @dvt/web test:canvas]
+  - path: scripts/run-selected-closure-live-proof.cjs
+    name: buildLiveProofCypressDockerInvocation
+    kind: function
+    exported: true
+    dddOwner: Selected-closure live-proof runner
+    cqRails: [InspectCanvasNode]
+    fowlerSignals: [Test-only confidence, Environment coupling]
+    architectureGuard: node --test scripts/run-selected-closure-live-proof.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
+    unitTests: [node --test scripts/run-selected-closure-live-proof.test.cjs]
+  - path: scripts/run-selected-closure-live-proof.cjs
+    name: buildLiveProofCypressJunctionMirror
+    kind: function
+    exported: false
+    dddOwner: Selected-closure live-proof runner
+    cqRails: [InspectCanvasNode]
+    fowlerSignals: [Test-only confidence, Environment coupling]
+    architectureGuard: node --test scripts/run-selected-closure-live-proof.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
+    unitTests: [node --test scripts/run-selected-closure-live-proof.test.cjs]
 fowlerSignals:
   - duplicate node gestures and adjacent action surfaces
   - split Code versus Workbench node-entry semantics
@@ -403,13 +516,67 @@ redGreenCycles:
     greenTest: apps/web/src/app/views/canvas/canvasNodeWorkbenchHardening.architecture.test.ts
   - id: file-backed-properties-code-return
     redTest: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
-    expectedFailure: Double-click bypassed Properties and metadata inspection required another gesture.
+    expectedFailure: Double-click bypassed Properties, YAML description authoring removed Code, or wide metadata clipped the close command.
     patchSurfaces:
       - apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
       - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx
       - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx
+      - apps/web/src/app/views/canvas/dbtYamlDescriptionWorkbenchContribution.test.tsx
+      - apps/web/src/app/views/canvas/dbtYamlDescriptionWorkbenchContribution.tsx
       - apps/web/src/app/views/canvas/useDbtProjectFileCanvasController.ts
     greenTest: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
+  - id: windows-docker-cypress-support-resolution
+    redTest: scripts/run-selected-closure-live-proof.test.cjs
+    expectedFailure: A Windows workspace mount exposes pnpm junctions with host-absolute targets that the Linux Cypress container cannot resolve.
+    patchSurfaces:
+      - scripts/run-selected-closure-live-proof.cjs
+      - scripts/run-selected-closure-live-proof.test.cjs
+    greenTest: scripts/run-selected-closure-live-proof.test.cjs
+  - id: retire-node-right-click-test-topology
+    redTest: apps/web/src/app/plugins/graphStrategyRegistry.test.ts
+    expectedFailure: Surface-policy facts and browser helpers still represented native node right-click as a supported Workbench or operations entry.
+    patchSurfaces:
+      - apps/web/src/app/plugins/canvasSurfaceStrategyContracts.ts
+      - apps/web/src/app/plugins/dbt/dbtCanvasSurfaceStrategy.ts
+      - apps/web/src/app/plugins/dbt/dbtProjectFileCanvasSurfaceStrategy.ts
+      - apps/web/src/app/plugins/dvt/dvtCanvasSurfaceStrategy.ts
+      - apps/web/src/app/plugins/graphStrategyRegistry.test.ts
+      - apps/web/cypress/support/canvasExecutionSelection.ts
+      - apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts
+      - apps/web/cypress/e2e/canvas/canvas-dbt-selection-recovery-live.cy.ts
+      - apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
+      - apps/web/cypress/e2e/dbt/dbt-project-yaml-description-edit-live.cy.ts
+      - apps/web/cypress/e2e/runs/run-controls-live.cy.ts
+      - apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    greenTest: apps/web/src/app/plugins/graphStrategyRegistry.test.ts
+  - id: code-default-overflow-presentation
+    redTest: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
+    expectedFailure: The live proof required a direct Code tab even when the governed primary-section budget presents active Code through the overflow trigger.
+    patchSurfaces:
+      - apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
+    greenTest: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
+  - id: graph-draft-node-code-properties-return
+    redTest: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    expectedFailure: Closing generic Graph Draft node Code restored focus but left the preserved Properties context hidden.
+    patchSurfaces:
+      - apps/web/src/app/views/canvas/CanvasShell.graphSurface.test.tsx
+      - apps/web/src/app/views/canvas/CanvasShell.tsx
+      - apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    greenTest: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+  - id: retire-node-toolbar-and-navigation-copy-facts
+    redTest: apps/web/src/app/views/canvas/canvasNodeWorkbenchHardening.architecture.test.ts
+    expectedFailure: Operations-only menu inputs and localization still named retired Workbench navigation and floating-toolbar responsibilities.
+    patchSurfaces:
+      - apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts
+      - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx
+      - apps/web/src/app/views/canvas/canvasCopy.types.ts
+      - apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.es.ts
+      - apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.ts
+      - apps/web/src/app/views/canvas/canvasCopyCatalog.toolbar.es.ts
+      - apps/web/src/app/views/canvas/canvasCopyCatalog.toolbar.ts
+      - apps/web/src/app/views/canvas/canvasNodeMapper.ts
+      - apps/web/src/app/views/canvas/canvasNodeWorkbenchHardening.architecture.test.ts
+    greenTest: apps/web/src/app/views/canvas/canvasNodeWorkbenchHardening.architecture.test.ts
 ```
 
 ## Completion rule

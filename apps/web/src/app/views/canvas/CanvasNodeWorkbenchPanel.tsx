@@ -291,10 +291,10 @@ export function CanvasNodeWorkbenchPanel({
             variant="outline"
             size="sm"
             data-slot="canvas-node-workbench-open-code-editor"
-            aria-label={copy.canvasNodeToolbarCodeDescription}
+            aria-label={copy.nodeWorkbenchOpenCodeDescription}
             onClick={onOpenNodeCode}
           >
-            {copy.canvasNodeToolbarCodeLabel}
+            {copy.nodeWorkbenchOpenCodeLabel}
           </Button>
         </div>
         {sectionBeforeChildren.code}
@@ -335,7 +335,10 @@ export function CanvasNodeWorkbenchPanel({
   }, [activeTab, resolvedActiveTab]);
 
   return (
-    <div data-slot="canvas-node-workbench-panel" className="flex h-full min-h-0 flex-col">
+    <div
+      data-slot="canvas-node-workbench-panel"
+      className="flex h-full min-h-0 min-w-0 w-full flex-col"
+    >
       <div className={inspectorVisualClasses.contextPanelHeaderRow}>
         <div
           {...dragHandleProps}

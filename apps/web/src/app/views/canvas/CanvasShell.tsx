@@ -182,6 +182,9 @@ export default function CanvasShell({
         if (flushed) {
           closeContextualWorkbench();
           setGraphDraftCodeTarget(null);
+          if (isNodeCode) {
+            chromeCommands.onShowInspector();
+          }
         }
         return flushed;
       },
@@ -200,6 +203,7 @@ export default function CanvasShell({
     copy.sqlContextWorkbenchProjectDescription,
     copy.sqlContextWorkbenchNodeTitle,
     copy.sqlContextWorkbenchProjectTitle,
+    chromeCommands,
     closeContextualWorkbench,
   ]);
   const selectedContextualWorkbench = layout.contextualWorkbench ?? internalContextualWorkbench;

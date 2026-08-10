@@ -91,12 +91,11 @@ function readEventTypes(runId: string): Cypress.Chainable<string[]> {
 function authorLongRunningTransform(): void {
   cy.get('.react-flow__node[data-id="dvt-sql-transform-1"]', { timeout: 20_000 })
     .should('be.visible')
-    .click();
-  cy.get('[data-slot="canvas-node-floating-toolbar"][data-node-id="dvt-sql-transform-1"]')
+    .find('[data-slot="canvas-node-shell"]')
+    .dblclick();
+  cy.get('[data-slot="canvas-node-workbench-tab-code"]')
     .should('be.visible')
-    .find('[data-toolbar-action="code"]')
-    .should('be.enabled')
-    .click();
+    .and('have.attr', 'aria-selected', 'true');
   cy.get('textarea[name="dvt-transform-sql"]', { timeout: 20_000 })
     .should('be.enabled')
     .clear()

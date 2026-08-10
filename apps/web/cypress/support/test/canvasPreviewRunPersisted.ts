@@ -90,9 +90,6 @@ export function stubPreviewRunShellBootstrap(): void {
 export function visitCanvasWithSettledBootstrap(): void {
   visitWithE2eWorkspaceSession('/canvas');
   waitForE2eApiCall('/healthz', 'GET');
-  waitForE2eApiCall('/readyz', 'GET');
-  waitForE2eApiCall('/version', 'GET');
-  waitForE2eApiCall('/db/ready', 'GET');
   waitForE2eApiCall('/capabilities', 'GET');
   waitForE2eApiCall('/workspace/graph/draft', 'GET');
   cy.get('body').should(($body) => {

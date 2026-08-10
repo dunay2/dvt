@@ -307,8 +307,30 @@ function resolveLiveProofSpecPath(argv = process.argv.slice(2)) {
   return `/repo/${relativeSpecPath}`;
 }
 
-function buildLiveProofCypressDockerInvocation(args, repoRoot = path.resolve(__dirname, '..')) {
+function buildLiveProofCypressJunctionMirror(repoRoot, deps = {}) {
+  const platform = deps.platform ?? process.platform;
+  if (platform !== 'win32') {
+    return [];
+  }
+
+  const absoluteRepoRoot = path.win32.resolve(repoRoot);
+  const driveMatch = /^([A-Za-z]):\\(.*)$/.exec(absoluteRepoRoot);
+  if (driveMatch == null) {
+    throw new Error('Cypress live proof requires a drive-qualified Windows repository path.');
+  }
+
+  const normalizedRepoRoot = absoluteRepoRoot.replaceAll('\\', '/');
+  const junctionTargetRoot = `/mnt/host/${driveMatch[1].toLowerCase()}/${driveMatch[2].replaceAll('\\', '/')}`;
+  return ['-v', `${normalizedRepoRoot}:${junctionTargetRoot}:ro`];
+}
+
+function buildLiveProofCypressDockerInvocation(
+  args,
+  repoRoot = path.resolve(__dirname, '..'),
+  deps = {}
+) {
   const normalizedRepoRoot = repoRoot.replaceAll('\\', '/');
+  const junctionMirror = buildLiveProofCypressJunctionMirror(repoRoot, deps);
 
   return [
     'run',
@@ -316,6 +338,7 @@ function buildLiveProofCypressDockerInvocation(args, repoRoot = path.resolve(__d
     '-t',
     '-v',
     `${normalizedRepoRoot}:/repo`,
+    ...junctionMirror,
     '-w',
     '/repo/apps/web',
     '-e',

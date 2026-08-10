@@ -122,7 +122,10 @@ describe('Canvas DBT execution-selection recovery live protected runtime', () =>
         cy.get('button[aria-label="Deselect for execution"]').should('be.visible');
       });
 
-    cy.get('.react-flow__node[data-id="dbt-model-1"]').rightclick();
+    cy.get('.react-flow__node[data-id="dbt-model-1"]')
+      .find('[data-slot="graph-node-card-actions"]')
+      .should('be.visible')
+      .click();
     cy.contains('[data-slot="canvas-node-context-menu-item"]', /^(Delete|Eliminar)$/)
       .should('be.visible')
       .click();

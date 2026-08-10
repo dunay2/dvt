@@ -107,18 +107,6 @@ export type CanvasViewCopy = {
   readonly canvasGraphFilterRoleDimensionLabel: string;
   readonly canvasGraphFilterStatusDimensionLabel: string;
   readonly canvasGraphFilterTagDimensionLabel: string;
-  readonly canvasNodeToolbarLabelTemplate: string;
-  readonly canvasNodeToolbarCodeLabel: string;
-  readonly canvasNodeToolbarCodeDescription: string;
-  readonly canvasNodeToolbarFreezeLabel: string;
-  readonly canvasNodeToolbarFreezeDescription: string;
-  readonly canvasNodeToolbarUnfreezeLabel: string;
-  readonly canvasNodeToolbarUnfreezeDescription: string;
-  readonly canvasNodeToolbarMoreLabel: string;
-  readonly canvasNodeToolbarMoreDescription: string;
-  readonly canvasNodeContextOpenWorkbenchLabel: string;
-  readonly canvasNodeContextWorkbenchGroupLabel: string;
-  readonly canvasNodeContextExecuteGroupLabel: string;
   readonly canvasNodeContextEditGroupLabel: string;
   readonly canvasNodeContextDuplicateLabel: string;
   readonly canvasNodeContextSelectForExecutionLabel: string;
@@ -369,6 +357,8 @@ export type CanvasViewCopy = {
   readonly nodeWorkbenchCloseLabel: string;
   readonly nodeWorkbenchMoveLabel: string;
   readonly nodeWorkbenchMoreLabel: string;
+  readonly nodeWorkbenchOpenCodeLabel: string;
+  readonly nodeWorkbenchOpenCodeDescription: string;
   readonly sqlContextWorkbenchNodeTitle: string;
   readonly sqlContextWorkbenchProjectTitle: string;
   readonly sqlContextWorkbenchProjectDescription: string;
