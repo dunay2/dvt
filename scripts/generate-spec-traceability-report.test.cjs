@@ -373,6 +373,49 @@ test('environment-prefixed verification commands still require catalog authority
   );
 });
 
+test('every command in a shell chain requires repository catalog authority', () => {
+  const operators = ['&&', '||', '|', ';'];
+  const facts = exactFacts();
+  for (const operator of operators) {
+    facts.validations.push({
+      feature_id: 'FEATURE-A',
+      validation_kind: 'completion',
+      validation_ref: `pnpm --filter @dvt/example test ${operator} pnpm --filter @dvt/example test:integration`,
+    });
+  }
+  const options = {
+    gitSha,
+    gitTreePaths: new Map([
+      ['docs/architecture/components/example.md', 'blob'],
+      ['packages/@dvt/example/src/execute.ts', 'blob'],
+      ['packages/@dvt/example/test/execute.test.ts', 'blob'],
+    ]),
+  };
+  const projection = buildFeatureTraceabilityProjection(facts, options);
+
+  for (const operator of operators) {
+    const command = `pnpm --filter @dvt/example test ${operator} pnpm --filter @dvt/example test:integration`;
+    assert.ok(!projection.features[0].verificationCommands.includes(command));
+    assert.ok(
+      projection.features[0].gaps.includes(`unregistered-verification-command:FEATURE-A#${command}`)
+    );
+  }
+
+  facts.commands.push({
+    command_id: 'package:test:integration',
+    command_type: 'package_script',
+    command_name: 'test:integration',
+    command_path: null,
+    command_text: 'pnpm -r test:integration',
+  });
+  const fullyRegisteredProjection = buildFeatureTraceabilityProjection(facts, options);
+  assert.ok(
+    fullyRegisteredProjection.features[0].verificationCommands.includes(
+      'pnpm --filter @dvt/example test && pnpm --filter @dvt/example test:integration'
+    )
+  );
+});
+
 test('both stable traceability routes render deterministically from one projection', () => {
   const projection = buildFeatureTraceabilityProjection(exactFacts(), {
     gitSha,
