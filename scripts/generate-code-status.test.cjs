@@ -28,6 +28,7 @@ const {
   main,
   markdownCell,
   parsePnpmWorkspaceRows,
+  readEvaluatedRepositorySnapshot,
   readGitTreePaths,
   readComponentTopologyFacts,
   readRepositoryArchitectureFacts,
@@ -151,6 +152,33 @@ test('repository release identity is exact and fails on contradictory sources', 
         changelog: '# Changelog\n',
       }),
     /Required repository release fact/u
+  );
+});
+
+test('System Delivery Status refuses worktree facts outside the evaluated Git commit', () => {
+  const calls = [];
+  assert.throws(
+    () =>
+      readEvaluatedRepositorySnapshot({
+        release: { version: '1.2.3' },
+        root: 'C:/fixture',
+        spawnSync: (command, args) => {
+          calls.push({ command, args });
+          if (args[0] === 'rev-parse') {
+            return { status: 0, stdout: 'evaluated-sha\n', stderr: '' };
+          }
+          return {
+            status: 0,
+            stdout: ' M package.json\n?? packages/new/src/index.ts\n',
+            stderr: '',
+          };
+        },
+      }),
+    /clean Git worktree.*package\.json.*packages\/new\/src\/index\.ts/su
+  );
+  assert.deepEqual(
+    calls.map(({ args }) => args[0]),
+    ['rev-parse', 'rev-parse', 'status']
   );
 });
 
@@ -767,24 +795,35 @@ test('generation modes isolate each on-demand documentation projection', async (
 
   const workspaces = [workspaceRow()];
   const calls = [];
+  const evaluatedRepository = { gitSha: 'fixture-sha', release: { version: '1.2.3' } };
   const dependencies = {
-    collectRepositoryWorkspaceStats: () => workspaces,
+    collectRepositoryWorkspaceStats: () => {
+      calls.push('collect');
+      return workspaces;
+    },
     generateCodeState: async () => calls.push('code'),
     generateComponentMap: async () => calls.push('component-map'),
     generateRepositoryMap: async () => calls.push('map'),
-    generateSystemDeliveryStatus: async () => calls.push('system-status'),
+    generateSystemDeliveryStatus: async (_workspaces, snapshot) => {
+      assert.equal(snapshot, evaluatedRepository);
+      calls.push('system-status');
+    },
+    readEvaluatedRepositorySnapshot: () => {
+      calls.push('snapshot');
+      return evaluatedRepository;
+    },
   };
   await main(['--code-state-only'], dependencies);
-  assert.deepEqual(calls, ['code']);
+  assert.deepEqual(calls, ['collect', 'code']);
   calls.length = 0;
   await main(['--repository-map-only'], dependencies);
-  assert.deepEqual(calls, ['map']);
+  assert.deepEqual(calls, ['collect', 'map']);
   calls.length = 0;
   await main(['--component-map-only'], dependencies);
   assert.deepEqual(calls, ['component-map']);
   calls.length = 0;
   await main(['--system-delivery-status-only'], dependencies);
-  assert.deepEqual(calls, ['system-status']);
+  assert.deepEqual(calls, ['snapshot', 'collect', 'system-status']);
 });
 
 test('routine docs status checks remain DB-free and do not publish documentation', () => {
