@@ -12721,6 +12721,20 @@
         "updated_at": "2026-08-10T20:11:17.367+00:00"
       },
       {
+        "design_id": "R1-1D-API-GOVERNANCE-FIXTURE-EVIDENCE-20260810",
+        "work_item_id": "GH-2167",
+        "title": "API fixture evidence retirement closeout",
+        "owner": "API / Architecture / Planning DB",
+        "status": "review",
+        "rationale": "Replace the last active topology-test validation command with executable workflow-snapshot and workspace-graph behavior evidence.",
+        "fowler_signal": "hidden_authority",
+        "rail_ref": "CreateArchitectureDesign;RecordArchitectureContract;RecordArchitectureTestEvidence",
+        "approved_at": null,
+        "supersedes_id": "R1-1D-API-GOVERNANCE-VALIDATION-CLOSEOUT-20260810",
+        "created_at": "2026-08-10T22:03:06.458+00:00",
+        "updated_at": "2026-08-10T22:03:06.458+00:00"
+      },
+      {
         "design_id": "R1-1D-API-GOVERNANCE-HARDCUT-20260810",
         "work_item_id": "GH-2167",
         "title": "API compiled governance retirement",
@@ -14332,9 +14346,9 @@
         "contract_ref": "API test fixture support surface.",
         "compatibility": "internal",
         "status": "implemented",
-        "validation_command": "pnpm --filter dvt-api test -- workflowSnapshotFixtureSemantics.architecture.test.ts workspaceGraphDraftRoutes.test.ts",
+        "validation_command": "pnpm --filter dvt-api test -- adminRebuildSnapshotAccessContract.test.ts workspaceGraphDraftRoutes.test.ts",
         "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
+        "updated_at": "2026-08-10T22:05:42.795+00:00"
       },
       {
         "contract_id": "CONTRACT-SYS-API-TESTS-FULL-SUITE",
@@ -44827,21 +44841,21 @@
       {
         "test_id": "TEST-SYS-API-TESTS-FIXTURES-1",
         "component_id": "SYS-API-TESTS-FIXTURES",
-        "test_path": "apps/api/test/fixtures/workflowSnapshotFixture.ts",
+        "test_path": "apps/api/test/contracts/adminRebuildSnapshotAccessContract.test.ts",
         "test_kind": "unit",
         "coverage_level": "behavior",
         "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- workflowSnapshotFixtureSemantics.architecture.test.ts workspaceGraphDraftRoutes.test.ts",
+        "validation_command": "pnpm --filter dvt-api test -- adminRebuildSnapshotAccessContract.test.ts workspaceGraphDraftRoutes.test.ts",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
         "test_id": "TEST-SYS-API-TESTS-FIXTURES-2",
         "component_id": "SYS-API-TESTS-FIXTURES",
-        "test_path": "apps/api/test/fixtures/workspaceGraphDraftFixture.ts",
+        "test_path": "apps/api/test/entrypoints/http/workspaceGraphDraftRoutes.test.ts",
         "test_kind": "unit",
         "coverage_level": "behavior",
         "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- workflowSnapshotFixtureSemantics.architecture.test.ts workspaceGraphDraftRoutes.test.ts",
+        "validation_command": "pnpm --filter dvt-api test -- adminRebuildSnapshotAccessContract.test.ts workspaceGraphDraftRoutes.test.ts",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -82006,6 +82020,38 @@
         "created_at": "2026-08-10T20:11:17.367+00:00"
       },
       {
+        "design_id": "R1-1D-API-GOVERNANCE-FIXTURE-EVIDENCE-20260810",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-TESTS-FIXTURES",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-10T22:03:06.458+00:00"
+      },
+      {
+        "design_id": "R1-1D-API-GOVERNANCE-FIXTURE-EVIDENCE-20260810",
+        "subject_kind": "contract",
+        "subject_id": "CONTRACT-SYS-API-TESTS-FIXTURES-EVIDENCE",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T22:03:06.458+00:00"
+      },
+      {
+        "design_id": "R1-1D-API-GOVERNANCE-FIXTURE-EVIDENCE-20260810",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-TESTS-FIXTURES-1",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T22:03:06.458+00:00"
+      },
+      {
+        "design_id": "R1-1D-API-GOVERNANCE-FIXTURE-EVIDENCE-20260810",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-TESTS-FIXTURES-2",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T22:03:06.458+00:00"
+      },
+      {
         "design_id": "R1-1D-API-GOVERNANCE-HARDCUT-20260810",
         "subject_kind": "command",
         "subject_id": "GeneratePlanningDerivedSurfaces",
@@ -86189,6 +86235,31 @@
         "created_at": "2026-08-10T21:04:34.284+00:00"
       },
       {
+        "operation_id": "6ccd5387-7f6d-433e-8750-47f66e800a1b",
+        "idempotency_key": "gh-2167-fixture-contract-20260810",
+        "operation_type": "architecture_contract_record",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-FIXTURE-EVIDENCE-20260810",
+        "source_ref": "apps/api/test/contracts/adminRebuildSnapshotAccessContract.test.ts",
+        "source_content_sha256": "b077b5b8c2ffb478f82cb06988a069f54226d6a3af0a8caaca44d32a199195f0",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "status": "implemented",
+          "designId": "R1-1D-API-GOVERNANCE-FIXTURE-EVIDENCE-20260810",
+          "sourceRef": "apps/api/test/contracts/adminRebuildSnapshotAccessContract.test.ts",
+          "contractId": "CONTRACT-SYS-API-TESTS-FIXTURES-EVIDENCE",
+          "contractRef": "API test fixture support surface.",
+          "contractKind": "type",
+          "compatibility": "internal",
+          "ownerComponentId": "SYS-API-TESTS-FIXTURES",
+          "validationCommand": "pnpm --filter dvt-api test -- adminRebuildSnapshotAccessContract.test.ts workspaceGraphDraftRoutes.test.ts",
+          "sourceContentSha256": "b077b5b8c2ffb478f82cb06988a069f54226d6a3af0a8caaca44d32a199195f0"
+        },
+        "created_at": "2026-08-10T22:05:42.795+00:00"
+      },
+      {
         "operation_id": "6e2932b1-6702-41d9-bfef-b233f8beb972",
         "idempotency_key": "gh-2167-validation-contract-sys-api-http-authentication-surface-v1",
         "operation_type": "architecture_contract_record",
@@ -86705,6 +86776,83 @@
           "sourceContentSha256": "5a630980b35f3732ff605438d1aa374d3b608dd2ea70af18a7bc101803197cf7"
         },
         "created_at": "2026-08-10T21:04:24.973+00:00"
+      },
+      {
+        "operation_id": "84e8640e-8f4b-4b1b-8603-02eb67b483f1",
+        "idempotency_key": "gh-2167-fixture-evidence-design-v1",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-FIXTURE-EVIDENCE-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "API / Architecture / Planning DB",
+          "title": "API fixture evidence retirement closeout",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "CONTRACT-SYS-API-TESTS-FIXTURES-EVIDENCE",
+              "subjectKind": "contract"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-SYS-API-TESTS-FIXTURES-1",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-SYS-API-TESTS-FIXTURES-2",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-API-TESTS-FIXTURES",
+              "subjectKind": "component"
+            }
+          ],
+          "status": "review",
+          "railRef": "CreateArchitectureDesign;RecordArchitectureContract;RecordArchitectureTestEvidence",
+          "designId": "R1-1D-API-GOVERNANCE-FIXTURE-EVIDENCE-20260810",
+          "rationale": "Replace the last active topology-test validation command with executable workflow-snapshot and workspace-graph behavior evidence.",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "workItemId": "GH-2167",
+          "fowlerSignal": "hidden_authority",
+          "supersedesId": "R1-1D-API-GOVERNANCE-VALIDATION-CLOSEOUT-20260810",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T22:03:06.458+00:00"
+      },
+      {
+        "operation_id": "86a73916-7dad-4efe-8f8b-67a020d6c2ab",
+        "idempotency_key": "gh-2167-fixture-test-1-20260810",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-FIXTURE-EVIDENCE-20260810",
+        "source_ref": "apps/api/test/contracts/adminRebuildSnapshotAccessContract.test.ts",
+        "source_content_sha256": "b077b5b8c2ffb478f82cb06988a069f54226d6a3af0a8caaca44d32a199195f0",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-SYS-API-TESTS-FIXTURES-1",
+          "designId": "R1-1D-API-GOVERNANCE-FIXTURE-EVIDENCE-20260810",
+          "required": true,
+          "testKind": "unit",
+          "testPath": "apps/api/test/contracts/adminRebuildSnapshotAccessContract.test.ts",
+          "sourceRef": "apps/api/test/contracts/adminRebuildSnapshotAccessContract.test.ts",
+          "componentId": "SYS-API-TESTS-FIXTURES",
+          "coverageLevel": "behavior",
+          "validationCommand": "pnpm --filter dvt-api test -- adminRebuildSnapshotAccessContract.test.ts workspaceGraphDraftRoutes.test.ts",
+          "sourceContentSha256": "b077b5b8c2ffb478f82cb06988a069f54226d6a3af0a8caaca44d32a199195f0"
+        },
+        "created_at": "2026-08-10T22:05:45.229+00:00"
       },
       {
         "operation_id": "86b867d6-e881-4eb1-b68a-2bddbe89cdbc",
@@ -89133,6 +89281,31 @@
           "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
         },
         "created_at": "2026-08-10T20:08:53.967+00:00"
+      },
+      {
+        "operation_id": "d6ebc8e2-f566-4878-afc9-0a0b4fbc3c40",
+        "idempotency_key": "gh-2167-fixture-test-2-20260810",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-FIXTURE-EVIDENCE-20260810",
+        "source_ref": "apps/api/test/entrypoints/http/workspaceGraphDraftRoutes.test.ts",
+        "source_content_sha256": "10f220644ffddabc365de816fbf76a93a71c0c2545d5d32b041bb82613965493",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-SYS-API-TESTS-FIXTURES-2",
+          "designId": "R1-1D-API-GOVERNANCE-FIXTURE-EVIDENCE-20260810",
+          "required": true,
+          "testKind": "unit",
+          "testPath": "apps/api/test/entrypoints/http/workspaceGraphDraftRoutes.test.ts",
+          "sourceRef": "apps/api/test/entrypoints/http/workspaceGraphDraftRoutes.test.ts",
+          "componentId": "SYS-API-TESTS-FIXTURES",
+          "coverageLevel": "behavior",
+          "validationCommand": "pnpm --filter dvt-api test -- adminRebuildSnapshotAccessContract.test.ts workspaceGraphDraftRoutes.test.ts",
+          "sourceContentSha256": "10f220644ffddabc365de816fbf76a93a71c0c2545d5d32b041bb82613965493"
+        },
+        "created_at": "2026-08-10T22:05:47.438+00:00"
       },
       {
         "operation_id": "d70e4b6b-1cdd-4526-b7da-a6f2a7b9fc57",
