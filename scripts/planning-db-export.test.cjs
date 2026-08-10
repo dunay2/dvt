@@ -3,11 +3,15 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
+const yaml = require('js-yaml');
 
 const {
   PlanningDbExportRunner,
   canonicalArtifactPaths,
   canonicalStateArtifactPath,
+  governanceUnitManifestPath,
+  governanceUnitNavigationPath,
+  planStoreNavigationPath,
 } = require('./planning-db-export.cjs');
 const { architectureStateTableNames } = require('./planning-db-architecture-state.cjs');
 
@@ -111,9 +115,68 @@ function createCanonicalStateFixture(repoRoot) {
     validation: 'pnpm planning:db:current-schema:check',
     authorityMode: 'database',
   };
+  const effectiveComponentDefinitions = [
+    {
+      componentId: 'SYS-DVT',
+      name: 'DVT system',
+      parentComponentId: null,
+      level: 'system',
+      status: 'review',
+      rawUnit: {
+        id: 'SYS-DVT',
+        name: 'DVT system',
+        level: 'system',
+        status: 'review',
+        owns: [],
+        childrenRequired: true,
+        dddOwner: 'system',
+        cqRails: 'none - root governance unit',
+      },
+    },
+    {
+      componentId: 'SYS-PLANSTORE',
+      name: 'Plan store',
+      parentComponentId: 'SYS-DVT',
+      level: 'domain',
+      status: 'review',
+      rawUnit: {
+        id: 'SYS-PLANSTORE',
+        name: 'Plan store',
+        parent: 'SYS-DVT',
+        level: 'domain',
+        status: 'review',
+        owns: [],
+        childrenRequired: true,
+        dddOwner: 'PORT',
+        cqRails: 'PS-Q03',
+      },
+    },
+    {
+      componentId: 'SYS-API-DOCS',
+      name: 'API local documentation',
+      parentComponentId: 'SYS-DVT',
+      level: 'component',
+      status: 'superseded',
+      rawUnit: {
+        id: 'SYS-API-DOCS',
+        name: 'API local documentation',
+        parent: 'SYS-DVT',
+        level: 'component',
+        status: 'superseded',
+        ownedConcern: 'Retired API-local documentation ownership.',
+        owns: [],
+        childrenRequired: false,
+        dddOwner: 'INFRA',
+        cqRails: 'none - API local documentation',
+      },
+    },
+  ];
   const client = {
     async query(sql) {
       const text = String(sql);
+      if (text.includes('governance_component_definition_query definition')) {
+        return { rows: effectiveComponentDefinitions };
+      }
       if (text.includes('feature_mechanization_local_operations operation')) {
         return { rows: [operation] };
       }
@@ -139,6 +202,7 @@ function createCanonicalStateFixture(repoRoot) {
     componentDefinition,
     componentOperation,
     dbGovernanceSurface,
+    effectiveComponentDefinitions,
     operation,
     rail,
     runner,
@@ -156,6 +220,9 @@ test('planning DB export accepts canonical-state options only', () => {
   assert.deepEqual(canonicalArtifactPaths, [
     canonicalStateArtifactPath,
     'tools/planning-db/state/db-governance-surfaces.json',
+    governanceUnitManifestPath,
+    governanceUnitNavigationPath,
+    planStoreNavigationPath,
   ]);
 });
 
@@ -185,6 +252,7 @@ test('planning DB export reads current architecture state and every current feat
   assert.ok(capturedSql.some((sql) => /governance_component_local_semantic_items/u.test(sql)));
   assert.ok(capturedSql.some((sql) => /governance_component_local_operations/u.test(sql)));
   assert.ok(capturedSql.some((sql) => /db_governance_surfaces/u.test(sql)));
+  assert.ok(capturedSql.some((sql) => /governance_component_definition_query/u.test(sql)));
   assert.equal(architectureReads, 1);
 });
 
@@ -225,6 +293,41 @@ test('planning DB export writes deterministic current architecture state', async
       { schemaVersion: 1, surfaces: [dbGovernanceSurface] }
     );
     assert.deepEqual(result.canonicalArtifactPaths, canonicalArtifactPaths);
+    const manifest = yaml.load(
+      fs.readFileSync(path.join(outputRoot, governanceUnitManifestPath), 'utf8')
+    );
+    assert.equal(manifest.version, 1);
+    assert.equal(manifest.rootUnit, 'SYS-DVT');
+    assert.deepEqual(
+      manifest.units.find((unit) => unit.id === 'SYS-API-DOCS'),
+      {
+        id: 'SYS-API-DOCS',
+        name: 'API local documentation',
+        parent: 'SYS-DVT',
+        level: 'component',
+        status: 'superseded',
+        ownedConcern: 'Retired API-local documentation ownership.',
+        owns: [],
+        childrenRequired: false,
+        dddOwner: 'INFRA',
+        cqRails: 'none - API local documentation',
+      }
+    );
+    const unitNavigation = fs.readFileSync(
+      path.join(outputRoot, governanceUnitNavigationPath),
+      'utf8'
+    );
+    assert.match(unitNavigation, /Generated from Planning DB authority/u);
+    assert.match(unitNavigation, /pnpm planning:db:query component-tree --no-refresh/u);
+    assert.doesNotMatch(unitNavigation, /repository tracked files:\s*\d+/iu);
+    const planStoreNavigation = fs.readFileSync(
+      path.join(outputRoot, planStoreNavigationPath),
+      'utf8'
+    );
+    assert.match(planStoreNavigation, /`SYS-PLANSTORE` — Plan store \(`review`\)/u);
+    assert.match(planStoreNavigation, /pnpm planning:db:query component-metadata/u);
+    assert.doesNotMatch(planStoreNavigation, /StoredPlanExecutabilityValidator/u);
+    assert.doesNotMatch(planStoreNavigation, /Repository tracked files/iu);
     assert.equal(
       fs.existsSync(path.join(outputRoot, 'docs', 'planning', 'state', 'agent-lane-e.yaml')),
       false
