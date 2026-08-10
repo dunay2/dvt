@@ -89532,29 +89532,60 @@
       "railStatus": "implemented",
       "symbolRefs": [
         "scripts/planning-db-operate.cjs#planArchitectureStorageIoRecordOperation",
-        "scripts/planning-db-operate.cjs#writePlannedArchitectureStorageIoRecordOperation"
+        "scripts/planning-db-operate.cjs#writePlannedArchitectureStorageIoRecordOperation",
+        "scripts/planning-db-operate.cjs#allowedArchitectureStorageIoAccessPatterns",
+        "scripts/planning-db-operate.cjs#allowedArchitectureStorageIoDirections",
+        "scripts/planning-db-operate.cjs#applyArchitectureStorageIoRecordOperation",
+        "scripts/planning-db-operate.cjs#normalizeArchitectureStorageIo",
+        "scripts/planning-db-operate.cjs#parseArchitectureStorageIoCommand",
+        "scripts/planning-db-operate.cjs#readArchitectureStorageIo",
+        "scripts/planning-db-operate.cjs#validateArchitectureStorageIoAccessPattern",
+        "scripts/planning-db-operate.cjs#validateArchitectureStorageIoDirection",
+        "scripts/planning-db-operate.cjs#validateArchitectureStorageIoId",
+        "scripts/planning-db-operate.cjs#validateArchitectureStorageIoRecordCommand"
       ],
       "implementationRefs": [
         "scripts/planning-db-operate.cjs#planArchitectureStorageIoRecordOperation",
-        "scripts/planning-db-operate.cjs#writePlannedArchitectureStorageIoRecordOperation"
+        "scripts/planning-db-operate.cjs#writePlannedArchitectureStorageIoRecordOperation",
+        "scripts/planning-db-operate.cjs#allowedArchitectureStorageIoAccessPatterns",
+        "scripts/planning-db-operate.cjs#allowedArchitectureStorageIoDirections",
+        "scripts/planning-db-operate.cjs#applyArchitectureStorageIoRecordOperation",
+        "scripts/planning-db-operate.cjs#normalizeArchitectureStorageIo",
+        "scripts/planning-db-operate.cjs#parseArchitectureStorageIoCommand",
+        "scripts/planning-db-operate.cjs#readArchitectureStorageIo",
+        "scripts/planning-db-operate.cjs#validateArchitectureStorageIoAccessPattern",
+        "scripts/planning-db-operate.cjs#validateArchitectureStorageIoDirection",
+        "scripts/planning-db-operate.cjs#validateArchitectureStorageIoId",
+        "scripts/planning-db-operate.cjs#validateArchitectureStorageIoRecordCommand"
       ],
       "documentationRefs": [
-        "docs/architecture/command-query-rail-governance.md"
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
       ],
       "governingSources": [
         "docs/planning/status/governance-document-rule-inventory.md",
-        "docs/architecture/command-query-rail-governance.md"
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/adr/ADR-0063-planning-db-current-schema-rebuild.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
       ],
       "allowedImplementationSurfaces": [
         "scripts/planning-db-operate.cjs",
         "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
-        "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+        "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+        "scripts/planning-db-architecture-state.test.cjs",
+        "scripts/planning-db-schema.test.cjs",
+        "tools/planning-db/schema.sql",
+        "tools/planning-db/state/canonical-state.json"
       ],
       "architectureGuards": [
         "design scope must authorize the component and replacement storage object path",
         "unknown or stale storage I/O identity, component, direction, access pattern, or contract fails closed"
       ],
-      "completionGate": ["pnpm verify:prepush"],
+      "completionGate": [
+        "pnpm verify:prepush",
+        "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-architecture-state.test.cjs",
+        "pnpm docs:feature-mechanization:implementation"
+      ],
       "sourcePath": "scripts/planning-db-operate.cjs",
       "sourceContentSha256": "4d2d3ca72bfa6cae20bfbe9ebb610d09e02f2f02fe82583b0fb1367c6daec949",
       "rawRail": {
@@ -89590,23 +89621,166 @@
             "fowlerSignals": ["hidden_authority", "service_layer"],
             "cypressCoverage": "not-applicable: audited Planning DB CLI command",
             "architectureGuard": "design scope must authorize the component and replacement storage object path"
+          },
+          {
+            "name": "allowedArchitectureStorageIoAccessPatterns",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordArchitectureStorageIo"],
+            "dddOwner": "ArchitectureCatalogAggregate",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "service_layer"],
+            "cypressCoverage": "not-applicable: audited Planning DB CLI command",
+            "architectureGuard": "design scope must authorize the component and replacement storage object path"
+          },
+          {
+            "name": "allowedArchitectureStorageIoDirections",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordArchitectureStorageIo"],
+            "dddOwner": "ArchitectureCatalogAggregate",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "service_layer"],
+            "cypressCoverage": "not-applicable: audited Planning DB CLI command",
+            "architectureGuard": "design scope must authorize the component and replacement storage object path"
+          },
+          {
+            "name": "applyArchitectureStorageIoRecordOperation",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordArchitectureStorageIo"],
+            "dddOwner": "ArchitectureCatalogAggregate",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "service_layer"],
+            "cypressCoverage": "not-applicable: audited Planning DB CLI command",
+            "architectureGuard": "design scope must authorize the component and replacement storage object path"
+          },
+          {
+            "name": "normalizeArchitectureStorageIo",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordArchitectureStorageIo"],
+            "dddOwner": "ArchitectureCatalogAggregate",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "service_layer"],
+            "cypressCoverage": "not-applicable: audited Planning DB CLI command",
+            "architectureGuard": "design scope must authorize the component and replacement storage object path"
+          },
+          {
+            "name": "parseArchitectureStorageIoCommand",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordArchitectureStorageIo"],
+            "dddOwner": "ArchitectureCatalogAggregate",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "service_layer"],
+            "cypressCoverage": "not-applicable: audited Planning DB CLI command",
+            "architectureGuard": "design scope must authorize the component and replacement storage object path"
+          },
+          {
+            "name": "readArchitectureStorageIo",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordArchitectureStorageIo"],
+            "dddOwner": "ArchitectureCatalogAggregate",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "service_layer"],
+            "cypressCoverage": "not-applicable: audited Planning DB CLI command",
+            "architectureGuard": "design scope must authorize the component and replacement storage object path"
+          },
+          {
+            "name": "validateArchitectureStorageIoAccessPattern",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordArchitectureStorageIo"],
+            "dddOwner": "ArchitectureCatalogAggregate",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "service_layer"],
+            "cypressCoverage": "not-applicable: audited Planning DB CLI command",
+            "architectureGuard": "design scope must authorize the component and replacement storage object path"
+          },
+          {
+            "name": "validateArchitectureStorageIoDirection",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordArchitectureStorageIo"],
+            "dddOwner": "ArchitectureCatalogAggregate",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "service_layer"],
+            "cypressCoverage": "not-applicable: audited Planning DB CLI command",
+            "architectureGuard": "design scope must authorize the component and replacement storage object path"
+          },
+          {
+            "name": "validateArchitectureStorageIoId",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordArchitectureStorageIo"],
+            "dddOwner": "ArchitectureCatalogAggregate",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "service_layer"],
+            "cypressCoverage": "not-applicable: audited Planning DB CLI command",
+            "architectureGuard": "design scope must authorize the component and replacement storage object path"
+          },
+          {
+            "name": "validateArchitectureStorageIoRecordCommand",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordArchitectureStorageIo"],
+            "dddOwner": "ArchitectureCatalogAggregate",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "service_layer"],
+            "cypressCoverage": "not-applicable: audited Planning DB CLI command",
+            "architectureGuard": "design scope must authorize the component and replacement storage object path"
           }
         ],
         "version": 1,
         "featureId": "DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT",
         "userStories": [
-          "As an architecture consumer, I see generator output paths that match the current on-demand publication."
+          "As an architecture consumer, I see generator output paths that match the current on-demand publication.",
+          "https://github.com/dunay2/dvt/issues/2149"
         ],
         "cypressFlows": ["not-applicable: audited Planning DB CLI command"],
         "domainObjects": ["ArchitectureCatalogAggregate", "ComponentStorageIo"],
         "fowlerSignals": ["hidden_authority", "service_layer"],
-        "completionGate": ["pnpm verify:prepush"],
+        "completionGate": [
+          "pnpm verify:prepush",
+          "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-architecture-state.test.cjs",
+          "pnpm docs:feature-mechanization:implementation"
+        ],
         "redGreenCycles": [
           {
             "id": "recordarchitecturestorageio-record",
             "redTest": "architecture storage I/O parse and planner tests fail because no command rail exists",
             "greenTest": "focused planning DB operate tests pass and exact DB query paths match generated policy",
-            "patchSurfaces": ["scripts/planning-db-operate.cjs"],
+            "patchSurfaces": [
+              "scripts/planning-db-operate.cjs",
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+              "scripts/planning-db-architecture-state.test.cjs",
+              "scripts/planning-db-schema.test.cjs",
+              "tools/planning-db/schema.sql",
+              "tools/planning-db/state/canonical-state.json"
+            ],
             "expectedFailure": "unknown architecture-storage-io operation and missing planner"
           }
         ],
@@ -89615,7 +89789,9 @@
         ],
         "governingSources": [
           "docs/planning/status/governance-document-rule-inventory.md",
-          "docs/architecture/command-query-rail-governance.md"
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/adr/ADR-0063-planning-db-current-schema-rebuild.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
         ],
         "commandQueryRails": [
           {
@@ -89629,21 +89805,25 @@
           "design scope must authorize the component and replacement storage object path",
           "unknown or stale storage I/O identity, component, direction, access pattern, or contract fails closed"
         ],
-        "implementationPlan": "Record one existing architecture storage I/O output-path change through design scope, optimistic path matching, current-schema vocabulary, and an audited transaction.",
+        "implementationPlan": "Issue #2149 records current architecture storage I/O paths through design-scoped optimistic updates and an audited current-schema transaction.",
         "mechanizationStatus": "implemented",
         "noHumanDecisionsRemaining": true,
         "allowedImplementationSurfaces": [
           "scripts/planning-db-operate.cjs",
           "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
-          "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+          "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+          "scripts/planning-db-architecture-state.test.cjs",
+          "scripts/planning-db-schema.test.cjs",
+          "tools/planning-db/schema.sql",
+          "tools/planning-db/state/canonical-state.json"
         ],
         "forbiddenImplementationSurfaces": [
-          "tools/planning-db/**",
           "direct canonical-state JSON edits",
-          "ad-hoc SQL outside the command adapter"
+          "ad-hoc SQL outside the command adapter",
+          "Planning DB transition or compatibility machinery"
         ]
       },
-      "revision": 0,
+      "revision": 1,
       "createdBy": "codex",
       "createdAt": "2026-08-10T15:49:13.842Z"
     },
@@ -136894,6 +137074,93 @@
         ]
       },
       "createdAt": "2026-08-10T15:49:13.842Z"
+    },
+    {
+      "operationId": "e4dc7535-9903-4f53-858a-d7218c74ca6e",
+      "idempotencyKey": "codex-doc1-6-record-architecture-storage-io-v2",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT#command#recordarchitecturestorageio",
+      "sourcePath": "scripts/planning-db-operate.cjs",
+      "sourceContentSha256": "4d2d3ca72bfa6cae20bfbe9ebb610d09e02f2f02fe82583b0fb1367c6daec949",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "architecture storage I/O parse and planner tests fail because no command rail exists",
+        "dddOwner": "ArchitectureCatalogAggregate",
+        "railName": "RecordArchitectureStorageIo",
+        "railType": "command",
+        "featureId": "DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT",
+        "greenTest": "focused planning DB operate tests pass and exact DB query paths match generated policy",
+        "sourceRef": "scripts/planning-db-operate.cjs",
+        "unitTests": [
+          "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+          "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2149"],
+        "cypressFlows": ["not-applicable: audited Planning DB CLI command"],
+        "domainObjects": ["ArchitectureCatalogAggregate", "ComponentStorageIo"],
+        "fowlerSignals": ["hidden_authority", "service_layer"],
+        "patchSurfaces": [],
+        "completionGate": [
+          "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-architecture-state.test.cjs",
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "unknown architecture-storage-io operation and missing planner",
+        "governingSources": [
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/adr/ADR-0063-planning-db-current-schema-rebuild.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "architectureGuards": [
+          "design scope must authorize the component and replacement storage object path",
+          "unknown or stale storage I/O identity, component, direction, access pattern, or contract fails closed"
+        ],
+        "implementationPlan": "Issue #2149 records current architecture storage I/O paths through design-scoped optimistic updates and an audited current-schema transaction.",
+        "implementationRefs": [
+          "scripts/planning-db-operate.cjs#allowedArchitectureStorageIoAccessPatterns",
+          "scripts/planning-db-operate.cjs#allowedArchitectureStorageIoDirections",
+          "scripts/planning-db-operate.cjs#applyArchitectureStorageIoRecordOperation",
+          "scripts/planning-db-operate.cjs#normalizeArchitectureStorageIo",
+          "scripts/planning-db-operate.cjs#parseArchitectureStorageIoCommand",
+          "scripts/planning-db-operate.cjs#readArchitectureStorageIo",
+          "scripts/planning-db-operate.cjs#validateArchitectureStorageIoAccessPattern",
+          "scripts/planning-db-operate.cjs#validateArchitectureStorageIoDirection",
+          "scripts/planning-db-operate.cjs#validateArchitectureStorageIoId",
+          "scripts/planning-db-operate.cjs#validateArchitectureStorageIoRecordCommand",
+          "scripts/planning-db-operate.cjs#planArchitectureStorageIoRecordOperation",
+          "scripts/planning-db-operate.cjs#writePlannedArchitectureStorageIoRecordOperation"
+        ],
+        "normalizedRailName": "recordarchitecturestorageio",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "4d2d3ca72bfa6cae20bfbe9ebb610d09e02f2f02fe82583b0fb1367c6daec949",
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-operate.cjs",
+          "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+          "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+          "scripts/planning-db-architecture-state.test.cjs",
+          "scripts/planning-db-schema.test.cjs",
+          "tools/planning-db/schema.sql",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "direct canonical-state JSON edits",
+          "ad-hoc SQL outside the command adapter",
+          "Planning DB transition or compatibility machinery"
+        ]
+      },
+      "createdAt": "2026-08-10T16:11:59.084Z"
     }
   ]
 }
