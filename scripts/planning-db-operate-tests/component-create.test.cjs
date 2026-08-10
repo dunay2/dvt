@@ -649,6 +649,16 @@ test('component revise writer atomically replaces the effective DB override', as
       )
     )
   );
+  assert.deepEqual(
+    queries
+      .filter((query) => query.sql.includes('refresh materialized view'))
+      .map((query) => query.sql.trim()),
+    [
+      'refresh materialized view planning_query_store.component_engineering_component_tree_projection',
+      'refresh materialized view planning_query_store.component_engineering_file_ownership_projection',
+      'refresh materialized view planning_query_store.component_engineering_rule_evaluation_projection',
+    ]
+  );
   assert.ok(queries.some((query) => query.sql.includes('governance_component_local_operations')));
 });
 
