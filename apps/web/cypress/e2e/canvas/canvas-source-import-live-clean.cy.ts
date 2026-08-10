@@ -531,24 +531,7 @@ describe('Canvas source import live clean proof', () => {
     getVisibleCanvasNodeByCardTitle('Model 1')
       .find('[data-slot="graph-node-card"]')
       .click('center');
-    cy.get('[data-slot="canvas-node-floating-toolbar"]')
-      .should('be.visible')
-      .and('have.attr', 'data-node-name', 'Model 1')
-      .and('contain.html', 'svg')
-      .and('have.text', '');
-    cy.get('[data-slot="canvas-node-floating-toolbar"] button[data-toolbar-action="code"]')
-      .should('have.attr', 'aria-label', 'Open node code')
-      .trigger('pointermove', { pointerType: 'mouse' });
-    cy.get('[data-slot="tooltip-content"]:visible', { timeout: 5_000 })
-      .should('have.length', 1)
-      .and('contain.text', 'Open the selected node code in its contextual workbench.');
-    cy.get('[data-slot="canvas-node-floating-toolbar"] button[data-toolbar-action="freeze"]')
-      .should('have.attr', 'aria-pressed', 'false')
-      .click()
-      .should('have.attr', 'aria-pressed', 'true')
-      .and('have.attr', 'data-tone', 'active')
-      .click()
-      .should('have.attr', 'aria-pressed', 'false');
+    cy.get('[data-slot="canvas-node-floating-toolbar"]').should('not.exist');
     cy.get('[data-slot="graph-node-health-popover"]').should('not.exist');
     cy.get('[data-slot="canvas-node-workbench-panel"]').should('not.exist');
 
@@ -579,13 +562,11 @@ describe('Canvas source import live clean proof', () => {
 
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     cy.get('[data-slot="canvas-node-workbench-panel"]').should('not.exist');
-    getVisibleCanvasNodeByCardTitle('Model 1')
-      .find('[data-slot="graph-node-card"]')
-      .click('center');
-    cy.get('[data-slot="canvas-node-floating-toolbar"] button[data-toolbar-action="code"]')
-      .should('have.attr', 'aria-label', 'Open node code')
-      .click();
+    getVisibleCanvasNodeByCardTitle('Model 1').find('[data-slot="canvas-node-shell"]').dblclick();
     cy.get('[data-slot="canvas-node-workbench-panel"]', { timeout: 10_000 }).should('be.visible');
+    cy.get('[data-slot="canvas-node-workbench-tab-code"]')
+      .should('be.visible')
+      .and('have.attr', 'aria-selected', 'true');
     const authoredModelSql = `select order_id, customer, amount\nfrom {{ source('${expectedSourceName}', 'source_1') }}`;
     cy.get('[data-slot="canvas-node-workbench-code-section"]').should(
       'not.contain.text',

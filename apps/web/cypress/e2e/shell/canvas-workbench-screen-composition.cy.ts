@@ -848,8 +848,11 @@ describe('Canvas workbench screen composition', () => {
     assertDirectionalMarkers();
     cy.get('[data-slot="canvas-graph-search-control"] input').type('{esc}');
 
-    cy.get('@modelNode').rightclick();
-    cy.contains('[data-slot="canvas-node-context-menu-item"]', 'Abrir código del nodo').click();
+    cy.get('@modelNode').find('[data-slot="canvas-node-shell"]').dblclick();
+    cy.get('[data-slot="canvas-node-workbench-tab-code"]')
+      .should('be.visible')
+      .and('have.attr', 'aria-selected', 'true');
+    cy.get('[data-slot="canvas-node-workbench-open-code-editor"]').should('be.enabled').click();
     cy.get('[data-slot="canvas-contextual-workbench"]')
       .should('be.visible')
       .and('contain.text', 'Código del nodo');
@@ -876,14 +879,16 @@ describe('Canvas workbench screen composition', () => {
       });
     assertNoSeriousAccessibilityViolations('[data-slot="canvas-contextual-workbench-overlay"]');
     cy.get('[data-slot="canvas-contextual-workbench-close"]').click();
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
     cy.get('.react-flow__node[data-id="model_orders"]').should('be.focused');
 
-    cy.get('.react-flow__node[data-id="orphan_metrics"]').click();
-    cy.get(
-      '[data-slot="canvas-node-floating-toolbar"][data-node-id="orphan_metrics"] [data-toolbar-action="code"]'
-    )
-      .should('have.attr', 'aria-label', 'Abrir código del nodo')
-      .click();
+    cy.get('.react-flow__node[data-id="orphan_metrics"]')
+      .find('[data-slot="canvas-node-shell"]')
+      .dblclick();
+    cy.get('[data-slot="canvas-node-workbench-tab-code"]')
+      .should('be.visible')
+      .and('have.attr', 'aria-selected', 'true');
+    cy.get('[data-slot="canvas-node-workbench-open-code-editor"]').should('be.enabled').click();
     waitForE2eApiCall('/workspace/files/models%2Fanalytics%2Forphan_metrics.sql', 'GET');
     cy.get('[data-testid="monaco-code-editor"], [data-testid="monaco-code-viewer"]')
       .find('.view-line')
@@ -896,11 +901,13 @@ describe('Canvas workbench screen composition', () => {
         expect(renderedLines.join('\n')).not.to.equal(MODEL_SQL);
       });
     cy.get('[data-slot="canvas-contextual-workbench-close"]').click();
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
 
-    cy.get('.react-flow__node[data-id="src_orders"]').click();
-    cy.get(
-      '[data-slot="canvas-node-floating-toolbar"][data-node-id="src_orders"] [data-toolbar-action="code"]'
-    ).should('not.exist');
+    cy.get('.react-flow__node[data-id="src_orders"]')
+      .find('[data-slot="canvas-node-shell"]')
+      .dblclick();
+    cy.get('[data-slot="canvas-node-workbench-open-code-editor"]').should('not.exist');
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
 
     assertNoSeriousAccessibilityViolations('[data-slot="canvas-viewport-context-surface"]');
     emulateAccessibilityMedia();

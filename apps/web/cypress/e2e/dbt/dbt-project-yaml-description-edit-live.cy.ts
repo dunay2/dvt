@@ -114,10 +114,26 @@ function visitProject(observedRequests: ObservedRequest[]): void {
 function openModelWorkbench(): void {
   cy.get(`.react-flow__node[data-id="${MODEL_UNIQUE_ID}"]`, { timeout: 60_000 })
     .should('be.visible')
+    .find('[data-slot="canvas-node-shell"]')
     .dblclick();
   cy.get('[data-slot="canvas-node-workbench-overlay"]', { timeout: 20_000 }).should('be.visible');
   cy.get('[data-slot="canvas-node-floating-toolbar"]').should('not.exist');
+  cy.get('[data-slot="canvas-node-workbench-tab-code"]')
+    .should('be.visible')
+    .and('have.attr', 'aria-selected', 'true');
+  cy.get('[data-slot="canvas-node-workbench-tab-general"]').click();
   cy.get('[data-slot="dbt-yaml-description-editor"]', { timeout: 20_000 }).should('be.visible');
+}
+
+function openModelCodeEditor(): void {
+  cy.get(`.react-flow__node[data-id="${MODEL_UNIQUE_ID}"]`, { timeout: 60_000 })
+    .should('be.visible')
+    .find('[data-slot="canvas-node-shell"]')
+    .dblclick();
+  cy.get('[data-slot="canvas-node-workbench-tab-code"]')
+    .should('be.visible')
+    .and('have.attr', 'aria-selected', 'true');
+  cy.get('[data-slot="canvas-node-workbench-open-code-editor"]').should('be.enabled').click();
 }
 
 function proveModelWorkbenchMovement(): void {
@@ -276,7 +292,7 @@ describe('dbt YAML description edit live vertical', () => {
     openModelWorkbench();
     proveModelWorkbenchMovement();
     cy.get('[data-slot="dbt-yaml-description-input"]').should('have.value', ORIGINAL_DESCRIPTION);
-    cy.get('[data-slot="canvas-node-workbench-code-section"]').should('not.exist');
+    cy.get('[data-slot="canvas-node-workbench-tab-code"]').should('be.visible');
 
     editAndApplyDescription(REVERT_PROOF_DESCRIPTION);
     expectAuthoritativeDescription(REVERT_PROOF_DESCRIPTION);
@@ -296,27 +312,7 @@ describe('dbt YAML description edit live vertical', () => {
     expectAuthoritativeDescription(RUN_DESCRIPTION);
     closeModelWorkbench();
 
-    cy.get(`.react-flow__node[data-id="${MODEL_UNIQUE_ID}"]`).click();
-    cy.get('[data-slot="canvas-node-floating-toolbar"]', { timeout: 20_000 })
-      .find('button[data-toolbar-action="freeze"]')
-      .should('have.attr', 'aria-pressed', 'false')
-      .click();
-    cy.get('[data-slot="canvas-node-floating-toolbar"]')
-      .find('button[data-toolbar-action="freeze"]')
-      .should('have.attr', 'aria-pressed', 'true')
-      .and('have.attr', 'data-tone', 'active')
-      .click();
-    cy.get('[data-slot="canvas-node-floating-toolbar"]')
-      .find('button[data-toolbar-action="freeze"]')
-      .should('have.attr', 'aria-pressed', 'false');
-    cy.get('[data-slot="canvas-node-floating-toolbar"]', { timeout: 20_000 })
-      .should('be.visible')
-      .should(($toolbar) => {
-        expect($toolbar.text().trim()).to.equal('');
-      })
-      .find('button[data-toolbar-action="code"]')
-      .should('be.enabled')
-      .click();
+    openModelCodeEditor();
     cy.get('[data-slot="canvas-contextual-workbench"]', { timeout: 30_000 })
       .should('be.visible')
       .and('contain.text', MODEL_PROJECT_PATH);
@@ -353,6 +349,7 @@ describe('dbt YAML description edit live vertical', () => {
       'synchronized'
     );
     closeContextualWorkbench();
+    closeModelWorkbench();
 
     cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
     cy.get('[data-slot="canvas-workspace-open-project-code-command"]')
@@ -414,14 +411,10 @@ describe('dbt YAML description edit live vertical', () => {
     visitProject(observedRequests);
     openModelWorkbench();
     cy.get('[data-slot="dbt-yaml-description-input"]').should('have.value', RUN_DESCRIPTION);
-    cy.get('[data-slot="canvas-node-workbench-code-section"]').should('not.exist');
+    cy.get('[data-slot="canvas-node-workbench-tab-code"]').should('be.visible');
     expectAuthoritativeDescription(RUN_DESCRIPTION);
     closeModelWorkbench();
-    cy.get(`.react-flow__node[data-id="${MODEL_UNIQUE_ID}"]`).click();
-    cy.get('[data-slot="canvas-node-floating-toolbar"]', { timeout: 20_000 })
-      .find('button[data-toolbar-action="code"]')
-      .should('be.enabled')
-      .click();
+    openModelCodeEditor();
     cy.get('[data-slot="canvas-contextual-workbench"]', { timeout: 30_000 }).should('be.visible');
     cy.get('[data-testid="monaco-code-editor"]', { timeout: 30_000 })
       .find('.view-lines')
@@ -436,6 +429,7 @@ describe('dbt YAML description edit live vertical', () => {
       expect((response.body as { content: string }).content).to.equal(UPDATED_MODEL_SQL);
     });
     closeContextualWorkbench();
+    closeModelWorkbench();
 
     cy.wrap(null).should(() => {
       const successfulPosts = (path: string): ObservedRequest[] =>
