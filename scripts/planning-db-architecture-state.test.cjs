@@ -1,5 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 
 const {
   architectureStateTableNames,
@@ -114,4 +116,38 @@ test('architecture state restore uses the current snapshot without reading prior
   assert.match(queries[1].sql, /insert into architecture\."component"/iu);
   assert.deepEqual(queries[1].params, ['SYS-ROOT', null, 'SYS-CHILD', 'SYS-ROOT']);
   assert.equal(queries.length, 2);
+});
+
+test('canonical generator storage writes use on-demand artifact paths', () => {
+  const canonicalState = JSON.parse(
+    fs.readFileSync(
+      path.join(__dirname, '..', 'tools', 'planning-db', 'state', 'canonical-state.json'),
+      'utf8'
+    )
+  );
+  const storageRows = new Map(
+    canonicalState.architectureState.component_storage_io.map((row) => [row.storage_io_id, row])
+  );
+  const expectedOutputs = new Map([
+    [
+      'STORAGE-SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-DB-SURFACE-WRITE-1',
+      '.generated-docs/planning/status/db-surface-inventory.md',
+    ],
+    [
+      'STORAGE-SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-KNOWLEDGE-INTAKE-WRITE-1',
+      '.generated-docs/planning/status/generated-knowledge-intake-literature.md',
+    ],
+    [
+      'STORAGE-SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-STATUS-REPORTS-WRITE-1',
+      '.generated-docs/planning/status/generated-code-state.md',
+    ],
+  ]);
+
+  for (const [storageIoId, expectedOutput] of expectedOutputs) {
+    const row = storageRows.get(storageIoId);
+    assert.ok(row, `missing canonical storage I/O ${storageIoId}`);
+    assert.equal(row.direction, 'writes');
+    assert.equal(row.access_pattern, 'projection');
+    assert.equal(row.storage_object, expectedOutput);
+  }
 });

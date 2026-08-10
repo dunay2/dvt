@@ -164,11 +164,15 @@ class DocumentationPublicationPolicy {
     return sources.sort((left, right) => left.route.localeCompare(right.route, 'en'));
   }
 
-  isHistoricalPath(sourcePath) {
+  static isHistoricalPath(sourcePath) {
     const segments = DocumentationPublicationPolicy.toPosix(sourcePath).toLowerCase().split('/');
     return segments.some((segment) =>
       ['archive', '_archive', 'superseded', 'disposable'].includes(segment)
     );
+  }
+
+  isHistoricalPath(sourcePath) {
+    return DocumentationPublicationPolicy.isHistoricalPath(sourcePath);
   }
 
   assertLifecycleAuthority(sourcePath, lifecycleRow) {
@@ -195,9 +199,7 @@ class DocumentationPublicationPolicy {
     }
   }
 
-  isPublishable(sourcePath, lifecycleRow) {
-    this.assertLifecycleAuthority(sourcePath, lifecycleRow);
-    if (this.isHistoricalPath(sourcePath)) return false;
+  lifecycleStateIsPublishable(lifecycleRow = {}) {
     const lifecycle = String(
       lifecycleRow.lifecycle_state || lifecycleRow.lifecycleState || lifecycleRow.status || ''
     ).toLowerCase();
@@ -210,6 +212,59 @@ class DocumentationPublicationPolicy {
       'retired',
       'superseded',
     ].includes(lifecycle);
+  }
+
+  assertUniqueCanonicalSubjects(lifecycleRows) {
+    const ownersBySubject = new Map();
+    for (const lifecycleRow of lifecycleRows) {
+      const canonicality = String(lifecycleRow.canonicality || '').toLowerCase();
+      const sourcePath = DocumentationPublicationPolicy.toPosix(
+        String(lifecycleRow.document_path || lifecycleRow.documentPath || '')
+      );
+      const subjectKey = String(lifecycleRow.subject_key || lifecycleRow.subjectKey || '').trim();
+      if (
+        canonicality !== 'canonical' ||
+        !sourcePath ||
+        !subjectKey ||
+        this.isHistoricalPath(sourcePath) ||
+        !this.lifecycleStateIsPublishable(lifecycleRow)
+      ) {
+        continue;
+      }
+      const owners = ownersBySubject.get(subjectKey) || [];
+      owners.push(lifecycleRow);
+      ownersBySubject.set(subjectKey, owners);
+    }
+
+    for (const [subjectKey, owners] of ownersBySubject) {
+      if (owners.length < 2) continue;
+      const evidence = owners
+        .map((owner) => {
+          const sourcePath = DocumentationPublicationPolicy.toPosix(
+            String(owner.document_path || owner.documentPath || '')
+          );
+          const lifecycleState = String(
+            owner.lifecycle_state || owner.lifecycleState || owner.status || ''
+          );
+          const disposition = String(
+            owner.canonical_disposition || owner.canonicalDisposition || '-'
+          );
+          const sourceHash = String(
+            owner.source_content_sha256 || owner.sourceContentSha256 || '-'
+          );
+          return `${sourcePath} (lifecycle=${lifecycleState}, disposition=${disposition || '-'}, sha256=${sourceHash || '-'})`;
+        })
+        .sort((left, right) => left.localeCompare(right, 'en'));
+      throw new Error(
+        `Duplicate publishable canonical subject ${subjectKey}: ${evidence.join(' | ')}.`
+      );
+    }
+  }
+
+  isPublishable(sourcePath, lifecycleRow) {
+    this.assertLifecycleAuthority(sourcePath, lifecycleRow);
+    if (this.isHistoricalPath(sourcePath)) return false;
+    return this.lifecycleStateIsPublishable(lifecycleRow);
   }
 
   isNavigable(sourcePath, lifecycleRow = {}) {
@@ -433,6 +488,7 @@ class DocumentationPublicationAssembler {
       }
       lifecycleByPath.set(sourcePath, row);
     }
+    this.policy.assertUniqueCanonicalSubjects(lifecycleRows);
 
     const normalizedRows = [];
     const publishableSources = [];
@@ -460,6 +516,8 @@ class DocumentationPublicationAssembler {
         isDuplicate: row.is_duplicate === true || row.isDuplicate === true,
         lifecycleGapKind: String(row.lifecycle_gap_kind || row.lifecycleGapKind || 'none'),
         lifecycleState: String(row.lifecycle_state || row.lifecycleState || row.status || ''),
+        canonicalDisposition: String(row.canonical_disposition || row.canonicalDisposition || ''),
+        subjectKey: String(row.subject_key || row.subjectKey || ''),
         sourceContentSha256: expectedSourceDigest,
       });
       if (this.policy.isPublishable(source.sourcePath, row)) publishableSources.push(source);
@@ -482,6 +540,27 @@ class DocumentationPublicationAssembler {
     );
     mkdirSync(dirname(destination), { recursive: true });
     cpSync(source.absolutePath, destination);
+  }
+
+  describeRouteOwner(source, lifecycleByPath) {
+    const lifecycleRow = lifecycleByPath.get(source.sourcePath);
+    const fields = [source.sourcePath];
+    if (source.artifactClassId) {
+      fields.push('owner=generated', `artifactClass=${source.artifactClassId}`);
+    } else {
+      fields.push('owner=authored');
+    }
+    const subjectKey = lifecycleRow?.subject_key || lifecycleRow?.subjectKey;
+    if (subjectKey) fields.push(`subject=${subjectKey}`);
+    const lifecycleState = lifecycleRow?.lifecycle_state || lifecycleRow?.lifecycleState;
+    if (lifecycleState) fields.push(`lifecycle=${lifecycleState}`);
+    const disposition = lifecycleRow?.canonical_disposition || lifecycleRow?.canonicalDisposition;
+    if (disposition) fields.push(`disposition=${disposition}`);
+    const sourceHash = lifecycleRow
+      ? lifecycleRow.source_content_sha256 || lifecycleRow.sourceContentSha256
+      : DocumentationPublicationAssembler.hashValue(readFileSync(source.absolutePath));
+    fields.push(`sha256=${sourceHash || '-'}`);
+    return fields.join(', ');
   }
 
   static hashFiles(root) {
@@ -516,7 +595,7 @@ class DocumentationPublicationAssembler {
       const existing = routeOwners.get(source.route);
       if (existing) {
         throw new Error(
-          `Duplicate publication route ${source.route}: ${existing.sourcePath} and ${source.sourcePath}.`
+          `Duplicate publication route ${source.route}: ${this.describeRouteOwner(existing, lifecycleState.lifecycleByPath)} | ${this.describeRouteOwner(source, lifecycleState.lifecycleByPath)}.`
         );
       }
       routeOwners.set(source.route, source);

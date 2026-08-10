@@ -8,11 +8,13 @@ const {
   planArchitectureComponentRecordOperation,
   planArchitectureContractRecordOperation,
   planArchitecturePortRecordOperation,
+  planArchitectureStorageIoRecordOperation,
   planArchitectureTestRecordOperation,
   planArchitectureObservabilityRecordOperation,
   planArchitectureRelationRecordOperation,
   writePlannedArchitectureContractRecordOperation,
   writePlannedArchitecturePortRecordOperation,
+  writePlannedArchitectureStorageIoRecordOperation,
 } = require('./helpers.cjs');
 
 test('planArchitectureDesignCreateOperation emits design scope and audit rows', () => {
@@ -530,6 +532,171 @@ test('architecture port record writer persists port facts with audit', async () 
   assert.equal(
     queries.find((query) => query.sql.includes('architecture.component_port')).params[0],
     planned.port.portId
+  );
+});
+
+test('architecture storage I/O planner updates one design-scoped current record', () => {
+  const command = parseArgs([
+    'architecture-storage-io',
+    'record',
+    '--design',
+    'DOC1-6-STORAGE-IO-RETIREMENT-20260810',
+    '--storage-io',
+    'STORAGE-SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-DB-SURFACE-WRITE-1',
+    '--component',
+    'SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-DB-SURFACE',
+    '--expected-storage-object',
+    'docs/planning/status/generated-db-surface-inventory.md',
+    '--storage-object',
+    '.generated-docs/planning/status/db-surface-inventory.md',
+    '--direction',
+    'writes',
+    '--access-pattern',
+    'projection',
+    '--contract',
+    'CONTRACT-SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-DB-SURFACE-SURFACE',
+    '--source-ref',
+    'github:pull/2294#discussion_r3750870115',
+    '--source-content-sha256',
+    'e'.repeat(64),
+    '--actor',
+    'codex',
+  ]);
+  const existingStorageIo = {
+    storage_io_id: command.storageIoId,
+    component_id: command.componentId,
+    storage_object: command.expectedStorageObject,
+    direction: 'writes',
+    access_pattern: 'projection',
+    contract_id: command.contractId,
+    created_at: '2026-08-07T00:49:55.642226+00:00',
+  };
+  const options = {
+    command,
+    design: { design_id: command.designId, status: 'review' },
+    designScopes: [
+      {
+        subject_kind: 'component',
+        subject_id: command.componentId,
+        scope_kind: 'may_reference',
+      },
+      {
+        subject_kind: 'path',
+        subject_id: command.storageObject,
+        scope_kind: 'may_update',
+      },
+      {
+        subject_kind: 'contract',
+        subject_id: command.contractId,
+        scope_kind: 'may_reference',
+      },
+    ],
+    component: { component_id: command.componentId },
+    contract: { contract_id: command.contractId },
+    existingStorageIo,
+    operationId: 'op-architecture-storage-io-record',
+    now: new Date('2026-08-10T15:30:00.000Z'),
+  };
+
+  const planned = planArchitectureStorageIoRecordOperation(options);
+
+  assert.equal(planned.storageIo.storageIoId, command.storageIoId);
+  assert.equal(planned.storageIo.storageObject, command.storageObject);
+  assert.equal(planned.storageIo.createdAt, existingStorageIo.created_at);
+  assert.equal(planned.expectedStorageObject, command.expectedStorageObject);
+  assert.equal(planned.audit.operationType, 'architecture_storage_io_record');
+
+  assert.throws(
+    () => planArchitectureStorageIoRecordOperation({ ...options, existingStorageIo: null }),
+    /ARCH-STORAGE-IO-MISSING/
+  );
+  assert.throws(
+    () =>
+      planArchitectureStorageIoRecordOperation({
+        ...options,
+        existingStorageIo: { ...existingStorageIo, storage_object: 'stale-path.md' },
+      }),
+    /ARCH-STORAGE-IO-STALE/
+  );
+  assert.throws(
+    () => planArchitectureStorageIoRecordOperation({ ...options, component: null }),
+    /ARCH-STORAGE-IO-COMPONENT-MISSING/
+  );
+  assert.throws(
+    () => planArchitectureStorageIoRecordOperation({ ...options, contract: null }),
+    /ARCH-STORAGE-IO-CONTRACT-MISSING/
+  );
+  assert.throws(
+    () =>
+      planArchitectureStorageIoRecordOperation({
+        ...options,
+        designScopes: options.designScopes.filter((scope) => scope.subject_kind !== 'path'),
+      }),
+    /ARCH-STORAGE-IO-DESIGN-SCOPE-MISSING/
+  );
+});
+
+test('architecture storage I/O writer writes audit only after optimistic path matching', async () => {
+  const queries = [];
+  const client = {
+    async query(sql, params) {
+      queries.push({ sql, params });
+      return { rows: [], rowCount: sql.includes('architecture.component_storage_io') ? 1 : 0 };
+    },
+  };
+  const planned = {
+    storageIo: {
+      storageIoId: 'STORAGE-SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-DB-SURFACE-WRITE-1',
+      componentId: 'SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-DB-SURFACE',
+      storageObject: '.generated-docs/planning/status/db-surface-inventory.md',
+      direction: 'writes',
+      accessPattern: 'projection',
+      contractId: 'CONTRACT-SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-DB-SURFACE-SURFACE',
+      createdAt: '2026-08-07T00:49:55.642226+00:00',
+    },
+    expectedStorageObject: 'docs/planning/status/generated-db-surface-inventory.md',
+    audit: {
+      operationId: 'op-architecture-storage-io-record',
+      idempotencyKey: 'architecture-storage-io-record',
+      operationType: 'architecture_storage_io_record',
+      actor: 'codex',
+      designId: 'DOC1-6-STORAGE-IO-RETIREMENT-20260810',
+      sourceRef: 'github:pull/2294#discussion_r3750870115',
+      sourceContentSha256: 'e'.repeat(64),
+      expectedRevision: null,
+      previousRevision: 0,
+      resultingRevision: 0,
+      payload: {},
+      createdAt: new Date('2026-08-10T15:30:00.000Z'),
+    },
+  };
+
+  await writePlannedArchitectureStorageIoRecordOperation(client, planned);
+
+  const storageWrite = queries.find((query) =>
+    query.sql.includes('architecture.component_storage_io')
+  );
+  assert.ok(storageWrite.sql.includes('storage_object = $2'));
+  assert.ok(storageWrite.sql.includes('storage_object = $7'));
+  assert.equal(storageWrite.params[1], planned.storageIo.storageObject);
+  assert.equal(storageWrite.params[6], planned.expectedStorageObject);
+  assert.ok(queries.some((query) => query.sql.includes('architecture.design_operations')));
+
+  const concurrentQueries = [];
+  const concurrentClient = {
+    async query(sql, params) {
+      concurrentQueries.push({ sql, params });
+      return { rows: [], rowCount: 0 };
+    },
+  };
+
+  await assert.rejects(
+    () => writePlannedArchitectureStorageIoRecordOperation(concurrentClient, planned),
+    /ARCH-STORAGE-IO-CONCURRENT-UPDATE/
+  );
+  assert.equal(concurrentQueries.length, 1);
+  assert.ok(
+    !concurrentQueries.some((query) => query.sql.includes('architecture.design_operations'))
   );
 });
 

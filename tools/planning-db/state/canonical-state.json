@@ -10901,6 +10901,48 @@
         "updated_at": "2026-08-10T11:12:07.149+00:00"
       },
       {
+        "design_id": "DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT-20260810",
+        "work_item_id": "GH-2149",
+        "title": "DB-owned documentation lifecycle enforcement and pointer retirement",
+        "owner": "Architecture / Documentation",
+        "status": "review",
+        "rationale": "Join existing lifecycle facts and generated artifact ownership at the single publication boundary, preserve three stable routes, and delete tracked derived pointers without semantic document deletion.",
+        "fowler_signal": "hidden_authority",
+        "rail_ref": "GeneratePlanningDerivedSurfaces",
+        "approved_at": null,
+        "supersedes_id": null,
+        "created_at": "2026-08-10T13:44:37.28+00:00",
+        "updated_at": "2026-08-10T13:44:37.28+00:00"
+      },
+      {
+        "design_id": "DOC1-6-STORAGE-IO-AUDIT-TYPE-20260810",
+        "work_item_id": "GH-2149",
+        "title": "Authorize architecture storage I/O audit type",
+        "owner": "Architecture / Documentation / Planning DB",
+        "status": "review",
+        "rationale": "The current declarative schema admits the governed architecture storage I/O operation type so its audited transaction completes after destructive rebuild/import, without migration or compatibility state.",
+        "fowler_signal": "hidden_authority",
+        "rail_ref": "RecordArchitectureStorageIo",
+        "approved_at": null,
+        "supersedes_id": null,
+        "created_at": "2026-08-10T15:48:55.221+00:00",
+        "updated_at": "2026-08-10T15:48:55.221+00:00"
+      },
+      {
+        "design_id": "DOC1-6-STORAGE-IO-RETIREMENT-20260810",
+        "work_item_id": "GH-2149",
+        "title": "Align generator storage I/O with on-demand publication",
+        "owner": "Architecture / Documentation / Planning DB",
+        "status": "review",
+        "rationale": "The current architecture catalog still advertises three retired tracked pointer outputs. Add one audited design-scoped command to update current storage I/O facts, then export canonical state without direct JSON or SQL mutation.",
+        "fowler_signal": "hidden_authority",
+        "rail_ref": "RecordArchitectureStorageIo",
+        "approved_at": null,
+        "supersedes_id": null,
+        "created_at": "2026-08-10T15:48:44.061+00:00",
+        "updated_at": "2026-08-10T15:48:44.061+00:00"
+      },
+      {
         "design_id": "E-SOURCE-OBJECT-CATALOG-CONTRACT-20260710",
         "work_item_id": "E-SOURCE-OBJECT-METRICS-PROD-1",
         "title": "Provider-neutral source object catalog contract hard cut",
@@ -58582,7 +58624,7 @@
       {
         "storage_io_id": "STORAGE-SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-DB-SURFACE-WRITE-1",
         "component_id": "SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-DB-SURFACE",
-        "storage_object": "docs/planning/status/generated-db-surface-inventory.md",
+        "storage_object": ".generated-docs/planning/status/db-surface-inventory.md",
         "direction": "writes",
         "access_pattern": "projection",
         "contract_id": "CONTRACT-SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-DB-SURFACE-SURFACE",
@@ -58645,7 +58687,7 @@
       {
         "storage_io_id": "STORAGE-SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-KNOWLEDGE-INTAKE-WRITE-1",
         "component_id": "SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-KNOWLEDGE-INTAKE",
-        "storage_object": "docs/planning/status/generated-knowledge-intake-literature.md",
+        "storage_object": ".generated-docs/planning/status/generated-knowledge-intake-literature.md",
         "direction": "writes",
         "access_pattern": "projection",
         "contract_id": "CONTRACT-SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-KNOWLEDGE-INTAKE-SURFACE",
@@ -58735,7 +58777,7 @@
       {
         "storage_io_id": "STORAGE-SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-STATUS-REPORTS-WRITE-1",
         "component_id": "SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-STATUS-REPORTS",
-        "storage_object": "docs/planning/status/generated-code-state.md",
+        "storage_object": ".generated-docs/planning/status/generated-code-state.md",
         "direction": "writes",
         "access_pattern": "projection",
         "contract_id": "CONTRACT-SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-STATUS-REPORTS-SURFACE",
@@ -62746,6 +62788,198 @@
         "scope_kind": "must_prove",
         "required": true,
         "created_at": "2026-08-10T11:12:07.149+00:00"
+      },
+      {
+        "design_id": "DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT-20260810",
+        "subject_kind": "command",
+        "subject_id": "GeneratePlanningDerivedSurfaces",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-10T13:44:37.28+00:00"
+      },
+      {
+        "design_id": "DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT-20260810",
+        "subject_kind": "path",
+        "subject_id": "docs/generated-docs-policy.json",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T13:44:37.28+00:00"
+      },
+      {
+        "design_id": "DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT-20260810",
+        "subject_kind": "path",
+        "subject_id": "docs/planning/status/db-surface-inventory.md",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-10T13:44:37.28+00:00"
+      },
+      {
+        "design_id": "DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT-20260810",
+        "subject_kind": "path",
+        "subject_id": "docs/planning/status/generated-code-state.md",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-10T13:44:37.28+00:00"
+      },
+      {
+        "design_id": "DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT-20260810",
+        "subject_kind": "path",
+        "subject_id": "docs/planning/status/generated-knowledge-intake-literature.md",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-10T13:44:37.28+00:00"
+      },
+      {
+        "design_id": "DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT-20260810",
+        "subject_kind": "path",
+        "subject_id": "scripts/documentation-publication.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T13:44:37.28+00:00"
+      },
+      {
+        "design_id": "DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT-20260810",
+        "subject_kind": "query",
+        "subject_id": "ListDocumentationLifecycleFacts",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-10T13:44:37.28+00:00"
+      },
+      {
+        "design_id": "DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT-20260810",
+        "subject_kind": "test",
+        "subject_id": "scripts/documentation-publication.test.cjs",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-10T13:44:37.28+00:00"
+      },
+      {
+        "design_id": "DOC1-6-STORAGE-IO-AUDIT-TYPE-20260810",
+        "subject_kind": "command",
+        "subject_id": "RecordArchitectureStorageIo",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-10T15:48:55.221+00:00"
+      },
+      {
+        "design_id": "DOC1-6-STORAGE-IO-AUDIT-TYPE-20260810",
+        "subject_kind": "path",
+        "subject_id": "scripts/planning-db-schema.test.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T15:48:55.221+00:00"
+      },
+      {
+        "design_id": "DOC1-6-STORAGE-IO-AUDIT-TYPE-20260810",
+        "subject_kind": "path",
+        "subject_id": "tools/planning-db/schema.sql",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T15:48:55.221+00:00"
+      },
+      {
+        "design_id": "DOC1-6-STORAGE-IO-AUDIT-TYPE-20260810",
+        "subject_kind": "path",
+        "subject_id": "tools/planning-db/state/canonical-state.json",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T15:48:55.221+00:00"
+      },
+      {
+        "design_id": "DOC1-6-STORAGE-IO-RETIREMENT-20260810",
+        "subject_kind": "command",
+        "subject_id": "RecordArchitectureStorageIo",
+        "scope_kind": "may_create",
+        "required": true,
+        "created_at": "2026-08-10T15:48:44.061+00:00"
+      },
+      {
+        "design_id": "DOC1-6-STORAGE-IO-RETIREMENT-20260810",
+        "subject_kind": "component",
+        "subject_id": "SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-DB-SURFACE",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-10T15:48:44.061+00:00"
+      },
+      {
+        "design_id": "DOC1-6-STORAGE-IO-RETIREMENT-20260810",
+        "subject_kind": "component",
+        "subject_id": "SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-KNOWLEDGE-INTAKE",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-10T15:48:44.061+00:00"
+      },
+      {
+        "design_id": "DOC1-6-STORAGE-IO-RETIREMENT-20260810",
+        "subject_kind": "component",
+        "subject_id": "SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-STATUS-REPORTS",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-10T15:48:44.061+00:00"
+      },
+      {
+        "design_id": "DOC1-6-STORAGE-IO-RETIREMENT-20260810",
+        "subject_kind": "path",
+        "subject_id": ".generated-docs/planning/status/db-surface-inventory.md",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T15:48:44.061+00:00"
+      },
+      {
+        "design_id": "DOC1-6-STORAGE-IO-RETIREMENT-20260810",
+        "subject_kind": "path",
+        "subject_id": ".generated-docs/planning/status/generated-code-state.md",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T15:48:44.061+00:00"
+      },
+      {
+        "design_id": "DOC1-6-STORAGE-IO-RETIREMENT-20260810",
+        "subject_kind": "path",
+        "subject_id": ".generated-docs/planning/status/generated-knowledge-intake-literature.md",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T15:48:44.061+00:00"
+      },
+      {
+        "design_id": "DOC1-6-STORAGE-IO-RETIREMENT-20260810",
+        "subject_kind": "path",
+        "subject_id": "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T15:48:44.061+00:00"
+      },
+      {
+        "design_id": "DOC1-6-STORAGE-IO-RETIREMENT-20260810",
+        "subject_kind": "path",
+        "subject_id": "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T15:48:44.061+00:00"
+      },
+      {
+        "design_id": "DOC1-6-STORAGE-IO-RETIREMENT-20260810",
+        "subject_kind": "path",
+        "subject_id": "scripts/planning-db-operate.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T15:48:44.061+00:00"
+      },
+      {
+        "design_id": "DOC1-6-STORAGE-IO-RETIREMENT-20260810",
+        "subject_kind": "path",
+        "subject_id": "tools/planning-db/state/canonical-state.json",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T15:48:44.061+00:00"
+      },
+      {
+        "design_id": "DOC1-6-STORAGE-IO-RETIREMENT-20260810",
+        "subject_kind": "query",
+        "subject_id": "ReadArchitectureDesignAuthority",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-10T15:48:44.061+00:00"
       },
       {
         "design_id": "PLANNING-DB-API-APPLICATION-SERVICE-TEST-LEAF-COMPONENTS-20260619",
@@ -82190,6 +82424,233 @@
         "created_at": "2026-08-08T02:12:27.921+00:00"
       },
       {
+        "operation_id": "8142f30d-abb5-4d42-87c7-0dc4033e7c67",
+        "idempotency_key": "architecture_storage_io_record:codex:DOC1-6-STORAGE-IO-RETIREMENT-20260810:STORAGE-SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-DB-SURFACE-WRITE-1:eb204f62bd3cdd38",
+        "operation_type": "architecture_storage_io_record",
+        "actor": "codex",
+        "design_id": "DOC1-6-STORAGE-IO-RETIREMENT-20260810",
+        "source_ref": "scripts/planning-db-operate.cjs",
+        "source_content_sha256": "4d2d3ca72bfa6cae20bfbe9ebb610d09e02f2f02fe82583b0fb1367c6daec949",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "DOC1-6-STORAGE-IO-RETIREMENT-20260810",
+          "direction": "writes",
+          "sourceRef": "scripts/planning-db-operate.cjs",
+          "contractId": null,
+          "componentId": "SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-DB-SURFACE",
+          "storageIoId": "STORAGE-SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-DB-SURFACE-WRITE-1",
+          "accessPattern": "projection",
+          "storageObject": ".generated-docs/planning/status/db-surface-inventory.md",
+          "sourceContentSha256": "4d2d3ca72bfa6cae20bfbe9ebb610d09e02f2f02fe82583b0fb1367c6daec949",
+          "expectedStorageObject": "docs/planning/status/generated-db-surface-inventory.md"
+        },
+        "created_at": "2026-08-10T15:49:23.515+00:00"
+      },
+      {
+        "operation_id": "86b867d6-e881-4eb1-b68a-2bddbe89cdbc",
+        "idempotency_key": "architecture_storage_io_record:codex:DOC1-6-STORAGE-IO-RETIREMENT-20260810:STORAGE-SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-KNOWLEDGE-INTAKE-WRITE-1:82bc8d101214337c",
+        "operation_type": "architecture_storage_io_record",
+        "actor": "codex",
+        "design_id": "DOC1-6-STORAGE-IO-RETIREMENT-20260810",
+        "source_ref": "scripts/planning-db-operate.cjs",
+        "source_content_sha256": "4d2d3ca72bfa6cae20bfbe9ebb610d09e02f2f02fe82583b0fb1367c6daec949",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "DOC1-6-STORAGE-IO-RETIREMENT-20260810",
+          "direction": "writes",
+          "sourceRef": "scripts/planning-db-operate.cjs",
+          "contractId": null,
+          "componentId": "SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-KNOWLEDGE-INTAKE",
+          "storageIoId": "STORAGE-SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-KNOWLEDGE-INTAKE-WRITE-1",
+          "accessPattern": "projection",
+          "storageObject": ".generated-docs/planning/status/generated-knowledge-intake-literature.md",
+          "sourceContentSha256": "4d2d3ca72bfa6cae20bfbe9ebb610d09e02f2f02fe82583b0fb1367c6daec949",
+          "expectedStorageObject": "docs/planning/status/generated-knowledge-intake-literature.md"
+        },
+        "created_at": "2026-08-10T15:49:36.365+00:00"
+      },
+      {
+        "operation_id": "947b4df1-bcf5-4ad2-9e9b-b8a17af9b278",
+        "idempotency_key": "architecture_design_create:codex:DOC1-6-STORAGE-IO-AUDIT-TYPE-20260810:d48aa2a5f97ffeac",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "DOC1-6-STORAGE-IO-AUDIT-TYPE-20260810",
+        "source_ref": "github:pull/2294#discussion_r3750870115",
+        "source_content_sha256": "0bcf3d4a0c9b182c069af3c561794f71e75da300b1a9c3b483229b7e304c3558",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "Architecture / Documentation / Planning DB",
+          "title": "Authorize architecture storage I/O audit type",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "tools/planning-db/schema.sql",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/planning-db-schema.test.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "tools/planning-db/state/canonical-state.json",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "RecordArchitectureStorageIo",
+              "subjectKind": "command"
+            }
+          ],
+          "status": "review",
+          "railRef": "RecordArchitectureStorageIo",
+          "designId": "DOC1-6-STORAGE-IO-AUDIT-TYPE-20260810",
+          "rationale": "The current declarative schema admits the governed architecture storage I/O operation type so its audited transaction completes after destructive rebuild/import, without migration or compatibility state.",
+          "sourceRef": "github:pull/2294#discussion_r3750870115",
+          "workItemId": "GH-2149",
+          "fowlerSignal": "hidden_authority",
+          "supersedesId": null,
+          "sourceContentSha256": "0bcf3d4a0c9b182c069af3c561794f71e75da300b1a9c3b483229b7e304c3558"
+        },
+        "created_at": "2026-08-10T15:48:55.221+00:00"
+      },
+      {
+        "operation_id": "ad1e5eaf-55a3-4bea-bb5c-73221f9ca0fa",
+        "idempotency_key": "architecture_design_create:codex:DOC1-6-STORAGE-IO-RETIREMENT-20260810:b733c3778da57e42",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "DOC1-6-STORAGE-IO-RETIREMENT-20260810",
+        "source_ref": "github:pull/2294#discussion_r3750870115",
+        "source_content_sha256": "0bcf3d4a0c9b182c069af3c561794f71e75da300b1a9c3b483229b7e304c3558",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "Architecture / Documentation / Planning DB",
+          "title": "Align generator storage I/O with on-demand publication",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_create",
+              "subjectId": "RecordArchitectureStorageIo",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "ReadArchitectureDesignAuthority",
+              "subjectKind": "query"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/planning-db-operate.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "tools/planning-db/state/canonical-state.json",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": ".generated-docs/planning/status/db-surface-inventory.md",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": ".generated-docs/planning/status/generated-knowledge-intake-literature.md",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": ".generated-docs/planning/status/generated-code-state.md",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-DB-SURFACE",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-KNOWLEDGE-INTAKE",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-STATUS-REPORTS",
+              "subjectKind": "component"
+            }
+          ],
+          "status": "review",
+          "railRef": "RecordArchitectureStorageIo",
+          "designId": "DOC1-6-STORAGE-IO-RETIREMENT-20260810",
+          "rationale": "The current architecture catalog still advertises three retired tracked pointer outputs. Add one audited design-scoped command to update current storage I/O facts, then export canonical state without direct JSON or SQL mutation.",
+          "sourceRef": "github:pull/2294#discussion_r3750870115",
+          "workItemId": "GH-2149",
+          "fowlerSignal": "hidden_authority",
+          "supersedesId": null,
+          "sourceContentSha256": "0bcf3d4a0c9b182c069af3c561794f71e75da300b1a9c3b483229b7e304c3558"
+        },
+        "created_at": "2026-08-10T15:48:44.061+00:00"
+      },
+      {
+        "operation_id": "b2b33e58-8ed4-419a-809b-50b243c95d29",
+        "idempotency_key": "architecture_storage_io_record:codex:DOC1-6-STORAGE-IO-RETIREMENT-20260810:STORAGE-SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-STATUS-REPORTS-WRITE-1:c8e96addd485ebc6",
+        "operation_type": "architecture_storage_io_record",
+        "actor": "codex",
+        "design_id": "DOC1-6-STORAGE-IO-RETIREMENT-20260810",
+        "source_ref": "scripts/planning-db-operate.cjs",
+        "source_content_sha256": "4d2d3ca72bfa6cae20bfbe9ebb610d09e02f2f02fe82583b0fb1367c6daec949",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "DOC1-6-STORAGE-IO-RETIREMENT-20260810",
+          "direction": "writes",
+          "sourceRef": "scripts/planning-db-operate.cjs",
+          "contractId": null,
+          "componentId": "SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-STATUS-REPORTS",
+          "storageIoId": "STORAGE-SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-STATUS-REPORTS-WRITE-1",
+          "accessPattern": "projection",
+          "storageObject": ".generated-docs/planning/status/generated-code-state.md",
+          "sourceContentSha256": "4d2d3ca72bfa6cae20bfbe9ebb610d09e02f2f02fe82583b0fb1367c6daec949",
+          "expectedStorageObject": "docs/planning/status/generated-code-state.md"
+        },
+        "created_at": "2026-08-10T15:49:38.226+00:00"
+      },
+      {
         "operation_id": "cced5439-0339-471f-b41b-75cf105fbcdb",
         "idempotency_key": "architecture_design_create:codex:DOC1-5-SYSTEM-DELIVERY-STATUS-PROJECTION-20260810:9fb53860a64354dc",
         "operation_type": "architecture_design_create",
@@ -82252,6 +82713,82 @@
           "sourceContentSha256": "0716cec0195201625580137f36fb01347f63fca0ff33f4992ee6db623659f886"
         },
         "created_at": "2026-08-10T11:12:07.149+00:00"
+      },
+      {
+        "operation_id": "dc5177ec-ede3-4b3e-a69c-1d12772e2e12",
+        "idempotency_key": "codex-doc1-6-architecture-design",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT-20260810",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2149",
+        "source_content_sha256": "c0460c8222de7101fbbd5ac608509c653f75d81ed917066b12607537f1fccfd6",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "Architecture / Documentation",
+          "title": "DB-owned documentation lifecycle enforcement and pointer retirement",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "GeneratePlanningDerivedSurfaces",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "ListDocumentationLifecycleFacts",
+              "subjectKind": "query"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/documentation-publication.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "docs/generated-docs-policy.json",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "docs/planning/status/generated-code-state.md",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "docs/planning/status/generated-knowledge-intake-literature.md",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "docs/planning/status/db-surface-inventory.md",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "scripts/documentation-publication.test.cjs",
+              "subjectKind": "test"
+            }
+          ],
+          "status": "review",
+          "railRef": "GeneratePlanningDerivedSurfaces",
+          "designId": "DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT-20260810",
+          "rationale": "Join existing lifecycle facts and generated artifact ownership at the single publication boundary, preserve three stable routes, and delete tracked derived pointers without semantic document deletion.",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2149",
+          "workItemId": "GH-2149",
+          "fowlerSignal": "hidden_authority",
+          "supersedesId": null,
+          "sourceContentSha256": "c0460c8222de7101fbbd5ac608509c653f75d81ed917066b12607537f1fccfd6"
+        },
+        "created_at": "2026-08-10T13:44:37.28+00:00"
       }
     ]
   },
@@ -88722,6 +89259,754 @@
       "revision": 8,
       "createdBy": "codex",
       "createdAt": "2026-08-10T11:21:40.656Z"
+    },
+    {
+      "railId": "local#DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT#command#generateplanningderivedsurfaces",
+      "featureId": "DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT",
+      "mechanizationStatus": "implemented",
+      "railName": "GeneratePlanningDerivedSurfaces",
+      "normalizedRailName": "generateplanningderivedsurfaces",
+      "railType": "command",
+      "dddOwner": "PlanningDocumentationProjection",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "scripts/documentation-publication.cjs#DocumentationPublicationPolicy.assertUniqueCanonicalSubjects",
+        "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.describeRouteOwner",
+        "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.buildLifecycleState",
+        "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.assemble",
+        "scripts/documentation-publication.cjs#DocumentationPublicationPolicy.isHistoricalPath",
+        "tools/docs/check-links.ts#isNonPublishedDocumentationTarget"
+      ],
+      "implementationRefs": [
+        "scripts/documentation-publication.cjs#DocumentationPublicationPolicy.assertUniqueCanonicalSubjects",
+        "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.describeRouteOwner",
+        "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.buildLifecycleState",
+        "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.assemble",
+        "scripts/documentation-publication.cjs#DocumentationPublicationPolicy.isHistoricalPath",
+        "tools/docs/check-links.ts#isNonPublishedDocumentationTarget"
+      ],
+      "documentationRefs": [
+        "docs/planning/status/governance-document-rule-inventory.md"
+      ],
+      "governingSources": [
+        "docs/planning/status/governance-document-rule-inventory.md",
+        "docs/generated-docs-policy.json",
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "scripts/documentation-publication.cjs",
+        "scripts/documentation-publication.test.cjs",
+        "docs/generated-docs-policy.json",
+        "scripts/generate-code-status.cjs",
+        "scripts/generate-db-surface-inventory.cjs",
+        "scripts/generate-knowledge-intake-literature.cjs",
+        "scripts/check-generated-docs-policy.test.cjs",
+        "tools/planning-db/state/canonical-state.json",
+        "scripts/generate-db-surface-inventory.test.cjs",
+        "scripts/generate-knowledge-intake-literature.test.cjs",
+        "scripts/planning-db-operate-tests/db-surface.test.cjs",
+        "tools/ci/repository-change-scope.mjs",
+        "docs/.manifest.json",
+        "docs/architecture/components/ci-governance/knowledge-intake-retirement-component.md",
+        "docs/guides/testing-and-ci-capabilities.md",
+        "docs/planning/status/db-surface-inventory.md",
+        "docs/planning/status/generated-code-state.md",
+        "docs/planning/status/generated-knowledge-intake-literature.md",
+        "docs/planning/status/governance-document-rule-inventory.md",
+        "docs/runbooks/planning-generated-artifacts-operations-20260403.md",
+        "docs/stylesheets/docs-accessibility.css",
+        "zensical.yml",
+        "tools/docs/check-links.ts",
+        "docs/evidence/ED-20260810-on-demand-status-provider-guard.md",
+        "docs/evidence/index.md",
+        "docs/planning/proposals/mandatory/governance-and-docs/doc1-2-on-demand-publication-plan-20260810.md",
+        "docs/risk-register/quality/R-20260810-ON-DEMAND-STATUS-TEST-OWNERSHIP.yaml",
+        "docs/risk-register/quality/index.md",
+        "packages/@dvt/contracts/test/provider-vocabulary.architecture.test.ts",
+        "tools/ci/generated-docs-single-writer-policy.test.mjs"
+      ],
+      "architectureGuards": [
+        "node --test scripts/documentation-publication.test.cjs scripts/check-generated-docs-policy.test.cjs scripts/generate-db-surface-inventory.test.cjs scripts/generate-knowledge-intake-literature.test.cjs"
+      ],
+      "completionGate": [
+        "pnpm docs:publish",
+        "pnpm docs:build",
+        "pnpm docs:gov:links",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "scripts/documentation-publication.cjs",
+      "sourceContentSha256": "db5072ae2b773fe2418a91db0528e5fd6541ea37ae6368377639a9d94e8f7311",
+      "rawRail": {
+        "name": "GeneratePlanningDerivedSurfaces",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "PlanningDocumentationProjection"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "DocumentationPublicationPolicy.assertUniqueCanonicalSubjects",
+            "path": "scripts/documentation-publication.cjs",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": [
+              "scripts/documentation-publication.test.cjs",
+              "scripts/check-generated-docs-policy.test.cjs",
+              "scripts/generate-db-surface-inventory.test.cjs",
+              "scripts/generate-knowledge-intake-literature.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "duplicate_semantics"],
+            "cypressCoverage": "N/A - Zensical publication, link validation, accessibility automation, and demanding-user browser QA cover this governance projection.",
+            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/check-generated-docs-policy.test.cjs scripts/generate-db-surface-inventory.test.cjs scripts/generate-knowledge-intake-literature.test.cjs"
+          },
+          {
+            "name": "DocumentationPublicationAssembler.describeRouteOwner",
+            "path": "scripts/documentation-publication.cjs",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": [
+              "scripts/documentation-publication.test.cjs",
+              "scripts/check-generated-docs-policy.test.cjs",
+              "scripts/generate-db-surface-inventory.test.cjs",
+              "scripts/generate-knowledge-intake-literature.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "duplicate_semantics"],
+            "cypressCoverage": "N/A - Zensical publication, link validation, accessibility automation, and demanding-user browser QA cover this governance projection.",
+            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/check-generated-docs-policy.test.cjs scripts/generate-db-surface-inventory.test.cjs scripts/generate-knowledge-intake-literature.test.cjs"
+          },
+          {
+            "name": "DocumentationPublicationAssembler.buildLifecycleState",
+            "path": "scripts/documentation-publication.cjs",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": [
+              "scripts/documentation-publication.test.cjs",
+              "scripts/check-generated-docs-policy.test.cjs",
+              "scripts/generate-db-surface-inventory.test.cjs",
+              "scripts/generate-knowledge-intake-literature.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "duplicate_semantics"],
+            "cypressCoverage": "N/A - Zensical publication, link validation, accessibility automation, and demanding-user browser QA cover this governance projection.",
+            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/check-generated-docs-policy.test.cjs scripts/generate-db-surface-inventory.test.cjs scripts/generate-knowledge-intake-literature.test.cjs"
+          },
+          {
+            "name": "DocumentationPublicationAssembler.assemble",
+            "path": "scripts/documentation-publication.cjs",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": [
+              "scripts/documentation-publication.test.cjs",
+              "scripts/check-generated-docs-policy.test.cjs",
+              "scripts/generate-db-surface-inventory.test.cjs",
+              "scripts/generate-knowledge-intake-literature.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "duplicate_semantics"],
+            "cypressCoverage": "N/A - Zensical publication, link validation, accessibility automation, and demanding-user browser QA cover this governance projection.",
+            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/check-generated-docs-policy.test.cjs scripts/generate-db-surface-inventory.test.cjs scripts/generate-knowledge-intake-literature.test.cjs"
+          },
+          {
+            "name": "DocumentationPublicationPolicy.isHistoricalPath",
+            "path": "scripts/documentation-publication.cjs",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": [
+              "scripts/documentation-publication.test.cjs",
+              "scripts/check-generated-docs-policy.test.cjs",
+              "scripts/generate-db-surface-inventory.test.cjs",
+              "scripts/generate-knowledge-intake-literature.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "duplicate_semantics"],
+            "cypressCoverage": "N/A - Zensical publication, link validation, accessibility automation, and demanding-user browser QA cover this governance projection.",
+            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/check-generated-docs-policy.test.cjs scripts/generate-db-surface-inventory.test.cjs scripts/generate-knowledge-intake-literature.test.cjs"
+          },
+          {
+            "name": "isNonPublishedDocumentationTarget",
+            "path": "tools/docs/check-links.ts",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": [
+              "scripts/documentation-publication.test.cjs",
+              "scripts/check-generated-docs-policy.test.cjs",
+              "scripts/generate-db-surface-inventory.test.cjs",
+              "scripts/generate-knowledge-intake-literature.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "duplicate_semantics"],
+            "cypressCoverage": "N/A - Zensical publication, link validation, accessibility automation, and demanding-user browser QA cover this governance projection.",
+            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/check-generated-docs-policy.test.cjs scripts/generate-db-surface-inventory.test.cjs scripts/generate-knowledge-intake-literature.test.cjs"
+          }
+        ],
+        "version": 1,
+        "featureId": "DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2149"],
+        "cypressFlows": [
+          "N/A - Zensical publication, link validation, accessibility automation, and demanding-user browser QA cover this governance projection."
+        ],
+        "domainObjects": [
+          "DocumentationPublicationPolicy",
+          "PlanningDocumentationProjection"
+        ],
+        "fowlerSignals": ["hidden_authority", "duplicate_semantics"],
+        "completionGate": [
+          "pnpm docs:publish",
+          "pnpm docs:build",
+          "pnpm docs:gov:links",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "generateplanningderivedsurfaces-record",
+            "redTest": "node --test scripts/documentation-publication.test.cjs",
+            "greenTest": "node --test scripts/documentation-publication.test.cjs scripts/check-generated-docs-policy.test.cjs scripts/generate-db-surface-inventory.test.cjs scripts/generate-knowledge-intake-literature.test.cjs",
+            "patchSurfaces": [
+              "scripts/documentation-publication.cjs",
+              "scripts/documentation-publication.test.cjs",
+              "docs/generated-docs-policy.json",
+              "scripts/generate-db-surface-inventory.cjs",
+              "scripts/generate-knowledge-intake-literature.cjs",
+              "docs/stylesheets/docs-accessibility.css",
+              "tools/docs/check-links.ts",
+              "docs/evidence/ED-20260810-on-demand-status-provider-guard.md",
+              "docs/evidence/index.md",
+              "docs/planning/proposals/mandatory/governance-and-docs/doc1-2-on-demand-publication-plan-20260810.md",
+              "docs/risk-register/quality/R-20260810-ON-DEMAND-STATUS-TEST-OWNERSHIP.yaml",
+              "docs/risk-register/quality/index.md",
+              "packages/@dvt/contracts/test/provider-vocabulary.architecture.test.ts",
+              "tools/ci/generated-docs-single-writer-policy.test.mjs"
+            ],
+            "expectedFailure": "Canonical-subject diagnostics omitted owners and hashes; route collisions omitted lifecycle evidence; active links resolved unpublished history; tracked pointers and low-contrast navigation remained."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "governingSources": [
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/generated-docs-policy.json",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "GeneratePlanningDerivedSurfaces",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "PlanningDocumentationProjection"
+          }
+        ],
+        "architectureGuards": [
+          "node --test scripts/documentation-publication.test.cjs scripts/check-generated-docs-policy.test.cjs scripts/generate-db-surface-inventory.test.cjs scripts/generate-knowledge-intake-literature.test.cjs"
+        ],
+        "implementationPlan": "Issue #2149 joins DB lifecycle and generator ownership at the on-demand publication boundary, retires three tracked pointer copies at stable routes, rejects active links to unpublished historical authority, and validates the published documentation experience.",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "scripts/documentation-publication.cjs",
+          "scripts/documentation-publication.test.cjs",
+          "docs/generated-docs-policy.json",
+          "scripts/generate-code-status.cjs",
+          "scripts/generate-db-surface-inventory.cjs",
+          "scripts/generate-knowledge-intake-literature.cjs",
+          "scripts/check-generated-docs-policy.test.cjs",
+          "tools/planning-db/state/canonical-state.json",
+          "scripts/generate-db-surface-inventory.test.cjs",
+          "scripts/generate-knowledge-intake-literature.test.cjs",
+          "scripts/planning-db-operate-tests/db-surface.test.cjs",
+          "tools/ci/repository-change-scope.mjs",
+          "docs/.manifest.json",
+          "docs/architecture/components/ci-governance/knowledge-intake-retirement-component.md",
+          "docs/guides/testing-and-ci-capabilities.md",
+          "docs/planning/status/db-surface-inventory.md",
+          "docs/planning/status/generated-code-state.md",
+          "docs/planning/status/generated-knowledge-intake-literature.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/runbooks/planning-generated-artifacts-operations-20260403.md",
+          "docs/stylesheets/docs-accessibility.css",
+          "zensical.yml",
+          "tools/docs/check-links.ts",
+          "docs/evidence/ED-20260810-on-demand-status-provider-guard.md",
+          "docs/evidence/index.md",
+          "docs/planning/proposals/mandatory/governance-and-docs/doc1-2-on-demand-publication-plan-20260810.md",
+          "docs/risk-register/quality/R-20260810-ON-DEMAND-STATUS-TEST-OWNERSHIP.yaml",
+          "docs/risk-register/quality/index.md",
+          "packages/@dvt/contracts/test/provider-vocabulary.architecture.test.ts",
+          "tools/ci/generated-docs-single-writer-policy.test.mjs"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "tracked documentation pointer copies",
+          "Planning DB schema transition machinery",
+          "parallel route or subject registry"
+        ]
+      },
+      "revision": 3,
+      "createdBy": "codex",
+      "createdAt": "2026-08-10T14:03:50.740Z"
+    },
+    {
+      "railId": "local#DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT#command#recordarchitecturestorageio",
+      "featureId": "DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT",
+      "mechanizationStatus": "implemented",
+      "railName": "RecordArchitectureStorageIo",
+      "normalizedRailName": "recordarchitecturestorageio",
+      "railType": "command",
+      "dddOwner": "ArchitectureCatalogAggregate",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "scripts/planning-db-operate.cjs#planArchitectureStorageIoRecordOperation",
+        "scripts/planning-db-operate.cjs#writePlannedArchitectureStorageIoRecordOperation",
+        "scripts/planning-db-operate.cjs#allowedArchitectureStorageIoAccessPatterns",
+        "scripts/planning-db-operate.cjs#allowedArchitectureStorageIoDirections",
+        "scripts/planning-db-operate.cjs#applyArchitectureStorageIoRecordOperation",
+        "scripts/planning-db-operate.cjs#normalizeArchitectureStorageIo",
+        "scripts/planning-db-operate.cjs#parseArchitectureStorageIoCommand",
+        "scripts/planning-db-operate.cjs#readArchitectureStorageIo",
+        "scripts/planning-db-operate.cjs#validateArchitectureStorageIoAccessPattern",
+        "scripts/planning-db-operate.cjs#validateArchitectureStorageIoDirection",
+        "scripts/planning-db-operate.cjs#validateArchitectureStorageIoId",
+        "scripts/planning-db-operate.cjs#validateArchitectureStorageIoRecordCommand"
+      ],
+      "implementationRefs": [
+        "scripts/planning-db-operate.cjs#planArchitectureStorageIoRecordOperation",
+        "scripts/planning-db-operate.cjs#writePlannedArchitectureStorageIoRecordOperation",
+        "scripts/planning-db-operate.cjs#allowedArchitectureStorageIoAccessPatterns",
+        "scripts/planning-db-operate.cjs#allowedArchitectureStorageIoDirections",
+        "scripts/planning-db-operate.cjs#applyArchitectureStorageIoRecordOperation",
+        "scripts/planning-db-operate.cjs#normalizeArchitectureStorageIo",
+        "scripts/planning-db-operate.cjs#parseArchitectureStorageIoCommand",
+        "scripts/planning-db-operate.cjs#readArchitectureStorageIo",
+        "scripts/planning-db-operate.cjs#validateArchitectureStorageIoAccessPattern",
+        "scripts/planning-db-operate.cjs#validateArchitectureStorageIoDirection",
+        "scripts/planning-db-operate.cjs#validateArchitectureStorageIoId",
+        "scripts/planning-db-operate.cjs#validateArchitectureStorageIoRecordCommand"
+      ],
+      "documentationRefs": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "governingSources": [
+        "docs/planning/status/governance-document-rule-inventory.md",
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/adr/ADR-0063-planning-db-current-schema-rebuild.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "scripts/planning-db-operate.cjs",
+        "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+        "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+        "scripts/planning-db-architecture-state.test.cjs",
+        "scripts/planning-db-schema.test.cjs",
+        "tools/planning-db/schema.sql",
+        "tools/planning-db/state/canonical-state.json"
+      ],
+      "architectureGuards": [
+        "design scope must authorize the component and replacement storage object path",
+        "unknown or stale storage I/O identity, component, direction, access pattern, or contract fails closed"
+      ],
+      "completionGate": [
+        "pnpm verify:prepush",
+        "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-architecture-state.test.cjs",
+        "pnpm docs:feature-mechanization:implementation"
+      ],
+      "sourcePath": "scripts/planning-db-operate.cjs",
+      "sourceContentSha256": "4d2d3ca72bfa6cae20bfbe9ebb610d09e02f2f02fe82583b0fb1367c6daec949",
+      "rawRail": {
+        "name": "RecordArchitectureStorageIo",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "ArchitectureCatalogAggregate"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "planArchitectureStorageIoRecordOperation",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordArchitectureStorageIo"],
+            "dddOwner": "ArchitectureCatalogAggregate",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "service_layer"],
+            "cypressCoverage": "not-applicable: audited Planning DB CLI command",
+            "architectureGuard": "design scope must authorize the component and replacement storage object path"
+          },
+          {
+            "name": "writePlannedArchitectureStorageIoRecordOperation",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordArchitectureStorageIo"],
+            "dddOwner": "ArchitectureCatalogAggregate",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "service_layer"],
+            "cypressCoverage": "not-applicable: audited Planning DB CLI command",
+            "architectureGuard": "design scope must authorize the component and replacement storage object path"
+          },
+          {
+            "name": "allowedArchitectureStorageIoAccessPatterns",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordArchitectureStorageIo"],
+            "dddOwner": "ArchitectureCatalogAggregate",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "service_layer"],
+            "cypressCoverage": "not-applicable: audited Planning DB CLI command",
+            "architectureGuard": "design scope must authorize the component and replacement storage object path"
+          },
+          {
+            "name": "allowedArchitectureStorageIoDirections",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordArchitectureStorageIo"],
+            "dddOwner": "ArchitectureCatalogAggregate",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "service_layer"],
+            "cypressCoverage": "not-applicable: audited Planning DB CLI command",
+            "architectureGuard": "design scope must authorize the component and replacement storage object path"
+          },
+          {
+            "name": "applyArchitectureStorageIoRecordOperation",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordArchitectureStorageIo"],
+            "dddOwner": "ArchitectureCatalogAggregate",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "service_layer"],
+            "cypressCoverage": "not-applicable: audited Planning DB CLI command",
+            "architectureGuard": "design scope must authorize the component and replacement storage object path"
+          },
+          {
+            "name": "normalizeArchitectureStorageIo",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordArchitectureStorageIo"],
+            "dddOwner": "ArchitectureCatalogAggregate",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "service_layer"],
+            "cypressCoverage": "not-applicable: audited Planning DB CLI command",
+            "architectureGuard": "design scope must authorize the component and replacement storage object path"
+          },
+          {
+            "name": "parseArchitectureStorageIoCommand",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordArchitectureStorageIo"],
+            "dddOwner": "ArchitectureCatalogAggregate",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "service_layer"],
+            "cypressCoverage": "not-applicable: audited Planning DB CLI command",
+            "architectureGuard": "design scope must authorize the component and replacement storage object path"
+          },
+          {
+            "name": "readArchitectureStorageIo",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordArchitectureStorageIo"],
+            "dddOwner": "ArchitectureCatalogAggregate",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "service_layer"],
+            "cypressCoverage": "not-applicable: audited Planning DB CLI command",
+            "architectureGuard": "design scope must authorize the component and replacement storage object path"
+          },
+          {
+            "name": "validateArchitectureStorageIoAccessPattern",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordArchitectureStorageIo"],
+            "dddOwner": "ArchitectureCatalogAggregate",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "service_layer"],
+            "cypressCoverage": "not-applicable: audited Planning DB CLI command",
+            "architectureGuard": "design scope must authorize the component and replacement storage object path"
+          },
+          {
+            "name": "validateArchitectureStorageIoDirection",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordArchitectureStorageIo"],
+            "dddOwner": "ArchitectureCatalogAggregate",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "service_layer"],
+            "cypressCoverage": "not-applicable: audited Planning DB CLI command",
+            "architectureGuard": "design scope must authorize the component and replacement storage object path"
+          },
+          {
+            "name": "validateArchitectureStorageIoId",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordArchitectureStorageIo"],
+            "dddOwner": "ArchitectureCatalogAggregate",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "service_layer"],
+            "cypressCoverage": "not-applicable: audited Planning DB CLI command",
+            "architectureGuard": "design scope must authorize the component and replacement storage object path"
+          },
+          {
+            "name": "validateArchitectureStorageIoRecordCommand",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordArchitectureStorageIo"],
+            "dddOwner": "ArchitectureCatalogAggregate",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "service_layer"],
+            "cypressCoverage": "not-applicable: audited Planning DB CLI command",
+            "architectureGuard": "design scope must authorize the component and replacement storage object path"
+          }
+        ],
+        "version": 1,
+        "featureId": "DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT",
+        "userStories": [
+          "As an architecture consumer, I see generator output paths that match the current on-demand publication.",
+          "https://github.com/dunay2/dvt/issues/2149"
+        ],
+        "cypressFlows": ["not-applicable: audited Planning DB CLI command"],
+        "domainObjects": ["ArchitectureCatalogAggregate", "ComponentStorageIo"],
+        "fowlerSignals": ["hidden_authority", "service_layer"],
+        "completionGate": [
+          "pnpm verify:prepush",
+          "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-architecture-state.test.cjs",
+          "pnpm docs:feature-mechanization:implementation"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "recordarchitecturestorageio-record",
+            "redTest": "architecture storage I/O parse and planner tests fail because no command rail exists",
+            "greenTest": "focused planning DB operate tests pass and exact DB query paths match generated policy",
+            "patchSurfaces": [
+              "scripts/planning-db-operate.cjs",
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+              "scripts/planning-db-architecture-state.test.cjs",
+              "scripts/planning-db-schema.test.cjs",
+              "tools/planning-db/schema.sql",
+              "tools/planning-db/state/canonical-state.json"
+            ],
+            "expectedFailure": "unknown architecture-storage-io operation and missing planner"
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "governingSources": [
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/adr/ADR-0063-planning-db-current-schema-rebuild.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "RecordArchitectureStorageIo",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "ArchitectureCatalogAggregate"
+          }
+        ],
+        "architectureGuards": [
+          "design scope must authorize the component and replacement storage object path",
+          "unknown or stale storage I/O identity, component, direction, access pattern, or contract fails closed"
+        ],
+        "implementationPlan": "Issue #2149 records current architecture storage I/O paths through design-scoped optimistic updates and an audited current-schema transaction.",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-operate.cjs",
+          "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+          "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+          "scripts/planning-db-architecture-state.test.cjs",
+          "scripts/planning-db-schema.test.cjs",
+          "tools/planning-db/schema.sql",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "direct canonical-state JSON edits",
+          "ad-hoc SQL outside the command adapter",
+          "Planning DB transition or compatibility machinery"
+        ]
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-10T15:49:13.842Z"
+    },
+    {
+      "railId": "local#DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT#query#listdocumentationlifecyclefacts",
+      "featureId": "DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT",
+      "mechanizationStatus": "implemented",
+      "railName": "ListDocumentationLifecycleFacts",
+      "normalizedRailName": "listdocumentationlifecyclefacts",
+      "railType": "query",
+      "dddOwner": "DocumentationLifecycleReadModel",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "scripts/planning-db/queries/documentation-lifecycle-query.cjs#readDocumentationLifecycleRows",
+        "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.resolveLifecycleRows",
+        "scripts/documentation-publication.cjs#DocumentationPublicationPolicy.assertUniqueCanonicalSubjects"
+      ],
+      "implementationRefs": [
+        "scripts/planning-db/queries/documentation-lifecycle-query.cjs#readDocumentationLifecycleRows",
+        "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.resolveLifecycleRows",
+        "scripts/documentation-publication.cjs#DocumentationPublicationPolicy.assertUniqueCanonicalSubjects"
+      ],
+      "documentationRefs": [
+        "docs/planning/status/governance-document-rule-inventory.md"
+      ],
+      "governingSources": [
+        "docs/planning/status/governance-document-rule-inventory.md",
+        "docs/generated-docs-policy.json",
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "scripts/planning-db/queries/documentation-lifecycle-query.cjs",
+        "scripts/documentation-publication.cjs",
+        "scripts/documentation-publication.test.cjs",
+        "tools/planning-db/state/canonical-state.json"
+      ],
+      "architectureGuards": [
+        "node --test scripts/documentation-publication.test.cjs scripts/planning-db-query.test.cjs"
+      ],
+      "completionGate": [
+        "pnpm planning:db:query documentation-lifecycle --limit 20 --no-refresh",
+        "pnpm docs:publish",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "scripts/planning-db/queries/documentation-lifecycle-query.cjs",
+      "sourceContentSha256": "fb20480fc35e70da450fdd6b70044bc1a317eaa89e843c3ed493a49279185307",
+      "rawRail": {
+        "name": "ListDocumentationLifecycleFacts",
+        "type": "query",
+        "status": "implemented",
+        "dddOwner": "DocumentationLifecycleReadModel"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "readDocumentationLifecycleRows",
+            "path": "scripts/planning-db/queries/documentation-lifecycle-query.cjs",
+            "cqRails": ["ListDocumentationLifecycleFacts"],
+            "dddOwner": "DocumentationLifecycleReadModel",
+            "unitTests": [
+              "scripts/documentation-publication.test.cjs",
+              "scripts/planning-db-query.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "explicit_lifecycle"],
+            "cypressCoverage": "N/A - DB query fixtures plus Zensical publication, link validation, and demanding-user browser QA cover this read model.",
+            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/planning-db-query.test.cjs"
+          },
+          {
+            "name": "DocumentationPublicationAssembler.resolveLifecycleRows",
+            "path": "scripts/documentation-publication.cjs",
+            "cqRails": ["ListDocumentationLifecycleFacts"],
+            "dddOwner": "DocumentationLifecycleReadModel",
+            "unitTests": [
+              "scripts/documentation-publication.test.cjs",
+              "scripts/planning-db-query.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "explicit_lifecycle"],
+            "cypressCoverage": "N/A - DB query fixtures plus Zensical publication, link validation, and demanding-user browser QA cover this read model.",
+            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/planning-db-query.test.cjs"
+          },
+          {
+            "name": "DocumentationPublicationPolicy.assertUniqueCanonicalSubjects",
+            "path": "scripts/documentation-publication.cjs",
+            "cqRails": ["ListDocumentationLifecycleFacts"],
+            "dddOwner": "DocumentationLifecycleReadModel",
+            "unitTests": [
+              "scripts/documentation-publication.test.cjs",
+              "scripts/planning-db-query.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "explicit_lifecycle"],
+            "cypressCoverage": "N/A - DB query fixtures plus Zensical publication, link validation, and demanding-user browser QA cover this read model.",
+            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/planning-db-query.test.cjs"
+          }
+        ],
+        "version": 1,
+        "featureId": "DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2149"],
+        "cypressFlows": [
+          "N/A - DB query fixtures plus Zensical publication, link validation, and demanding-user browser QA cover this read model."
+        ],
+        "domainObjects": [
+          "DocumentationLifecycleReadModel",
+          "DocumentationPublicationPolicy"
+        ],
+        "fowlerSignals": ["hidden_authority", "explicit_lifecycle"],
+        "completionGate": [
+          "pnpm planning:db:query documentation-lifecycle --limit 20 --no-refresh",
+          "pnpm docs:publish",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "listdocumentationlifecyclefacts-record",
+            "redTest": "node --test scripts/documentation-publication.test.cjs",
+            "greenTest": "node --test scripts/documentation-publication.test.cjs scripts/planning-db-query.test.cjs",
+            "patchSurfaces": [
+              "scripts/documentation-publication.cjs",
+              "scripts/documentation-publication.test.cjs",
+              "tools/planning-db/state/canonical-state.json"
+            ],
+            "expectedFailure": "The publication boundary did not group publishable canonical subjects or report exact lifecycle and hash evidence."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "governingSources": [
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/generated-docs-policy.json",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ListDocumentationLifecycleFacts",
+            "type": "query",
+            "status": "implemented",
+            "dddOwner": "DocumentationLifecycleReadModel"
+          }
+        ],
+        "architectureGuards": [
+          "node --test scripts/documentation-publication.test.cjs scripts/planning-db-query.test.cjs"
+        ],
+        "implementationPlan": "Issue #2149 reads exact DB lifecycle identity, canonical subject, state, disposition and source hashes through the existing query rail before assembling on-demand documentation.",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db/queries/documentation-lifecycle-query.cjs",
+          "scripts/documentation-publication.cjs",
+          "scripts/documentation-publication.test.cjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "tracked documentation pointer copies",
+          "Planning DB schema transition machinery",
+          "parallel route or subject registry"
+        ]
+      },
+      "revision": 0,
+      "createdBy": "codex",
+      "createdAt": "2026-08-10T14:04:14.933Z"
     },
     {
       "railId": "local#DOCS-CANONICAL-FILENAME-GATE-20260731#query#validatechangeddocumentfilenames",
@@ -135350,6 +136635,678 @@
         ]
       },
       "createdAt": "2026-08-10T13:05:56.065Z"
+    },
+    {
+      "operationId": "0fdb3b23-8a77-4e5f-ac12-2eb2e8c1c672",
+      "idempotencyKey": "codex-doc1-6-generate-planning-derived-surfaces-v2",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT#command#generateplanningderivedsurfaces",
+      "sourcePath": "scripts/documentation-publication.cjs",
+      "sourceContentSha256": "72dcda2536ca0569ac0839548ac9ab569f6a8f9e7b66aa6b214c87458cfa4654",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "node --test scripts/documentation-publication.test.cjs",
+        "dddOwner": "PlanningDocumentationProjection",
+        "railName": "GeneratePlanningDerivedSurfaces",
+        "railType": "command",
+        "featureId": "DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT",
+        "greenTest": "node --test scripts/documentation-publication.test.cjs scripts/check-generated-docs-policy.test.cjs scripts/generate-db-surface-inventory.test.cjs scripts/generate-knowledge-intake-literature.test.cjs",
+        "sourceRef": "scripts/documentation-publication.cjs",
+        "unitTests": [
+          "scripts/documentation-publication.test.cjs",
+          "scripts/check-generated-docs-policy.test.cjs",
+          "scripts/generate-db-surface-inventory.test.cjs",
+          "scripts/generate-knowledge-intake-literature.test.cjs"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2149"],
+        "cypressFlows": [
+          "N/A - Zensical publication, link validation, accessibility automation, and demanding-user browser QA cover this governance projection."
+        ],
+        "domainObjects": [
+          "DocumentationPublicationPolicy",
+          "PlanningDocumentationProjection"
+        ],
+        "fowlerSignals": ["hidden_authority", "duplicate_semantics"],
+        "patchSurfaces": [
+          "scripts/documentation-publication.cjs",
+          "scripts/documentation-publication.test.cjs",
+          "docs/generated-docs-policy.json",
+          "scripts/generate-db-surface-inventory.cjs",
+          "scripts/generate-knowledge-intake-literature.cjs"
+        ],
+        "completionGate": [
+          "pnpm docs:publish",
+          "pnpm docs:build",
+          "pnpm docs:gov:links",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Canonical-subject diagnostics omitted all owners and hashes; manual/generated collisions omitted lifecycle evidence; tracked pointer classes and files remained.",
+        "governingSources": [
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/generated-docs-policy.json",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/planning/status/governance-document-rule-inventory.md"
+        ],
+        "architectureGuards": [
+          "node --test scripts/documentation-publication.test.cjs scripts/check-generated-docs-policy.test.cjs scripts/generate-db-surface-inventory.test.cjs scripts/generate-knowledge-intake-literature.test.cjs"
+        ],
+        "implementationPlan": "Issue #2149 joins DB lifecycle and generator ownership at the on-demand publication boundary and retires three tracked pointer copies while preserving stable routes.",
+        "implementationRefs": [
+          "scripts/documentation-publication.cjs#DocumentationPublicationPolicy.assertUniqueCanonicalSubjects",
+          "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.describeRouteOwner",
+          "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.buildLifecycleState",
+          "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.assemble"
+        ],
+        "normalizedRailName": "generateplanningderivedsurfaces",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "72dcda2536ca0569ac0839548ac9ab569f6a8f9e7b66aa6b214c87458cfa4654",
+        "allowedImplementationSurfaces": [
+          "scripts/documentation-publication.cjs",
+          "scripts/documentation-publication.test.cjs",
+          "docs/generated-docs-policy.json",
+          "scripts/generate-code-status.cjs",
+          "scripts/generate-db-surface-inventory.cjs",
+          "scripts/generate-knowledge-intake-literature.cjs",
+          "scripts/check-generated-docs-policy.test.cjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "tracked documentation pointer copies",
+          "Planning DB schema transition machinery",
+          "parallel route or subject registry"
+        ]
+      },
+      "createdAt": "2026-08-10T14:03:50.740Z"
+    },
+    {
+      "operationId": "6d8cbacb-6998-4a33-afca-44bc12fbe875",
+      "idempotencyKey": "codex-doc1-6-list-documentation-lifecycle-facts",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT#query#listdocumentationlifecyclefacts",
+      "sourcePath": "scripts/planning-db/queries/documentation-lifecycle-query.cjs",
+      "sourceContentSha256": "fb20480fc35e70da450fdd6b70044bc1a317eaa89e843c3ed493a49279185307",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "node --test scripts/documentation-publication.test.cjs",
+        "dddOwner": "DocumentationLifecycleReadModel",
+        "railName": "ListDocumentationLifecycleFacts",
+        "railType": "query",
+        "featureId": "DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT",
+        "greenTest": "node --test scripts/documentation-publication.test.cjs scripts/planning-db-query.test.cjs",
+        "sourceRef": "scripts/planning-db/queries/documentation-lifecycle-query.cjs",
+        "unitTests": [
+          "scripts/documentation-publication.test.cjs",
+          "scripts/planning-db-query.test.cjs"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2149"],
+        "cypressFlows": [
+          "N/A - DB query fixtures plus Zensical publication, link validation, and demanding-user browser QA cover this read model."
+        ],
+        "domainObjects": [
+          "DocumentationLifecycleReadModel",
+          "DocumentationPublicationPolicy"
+        ],
+        "fowlerSignals": ["hidden_authority", "explicit_lifecycle"],
+        "patchSurfaces": [
+          "scripts/documentation-publication.cjs",
+          "scripts/documentation-publication.test.cjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "completionGate": [
+          "pnpm planning:db:query documentation-lifecycle --limit 20 --no-refresh",
+          "pnpm docs:publish",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "The publication boundary did not group publishable canonical subjects or report exact lifecycle and hash evidence.",
+        "governingSources": [
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/generated-docs-policy.json",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/planning/status/governance-document-rule-inventory.md"
+        ],
+        "architectureGuards": [
+          "node --test scripts/documentation-publication.test.cjs scripts/planning-db-query.test.cjs"
+        ],
+        "implementationPlan": "Issue #2149 reads exact DB lifecycle identity, canonical subject, state, disposition and source hashes through the existing query rail before assembling on-demand documentation.",
+        "implementationRefs": [
+          "scripts/planning-db/queries/documentation-lifecycle-query.cjs#readDocumentationLifecycleRows",
+          "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.resolveLifecycleRows",
+          "scripts/documentation-publication.cjs#DocumentationPublicationPolicy.assertUniqueCanonicalSubjects"
+        ],
+        "normalizedRailName": "listdocumentationlifecyclefacts",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "fb20480fc35e70da450fdd6b70044bc1a317eaa89e843c3ed493a49279185307",
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db/queries/documentation-lifecycle-query.cjs",
+          "scripts/documentation-publication.cjs",
+          "scripts/documentation-publication.test.cjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "tracked documentation pointer copies",
+          "Planning DB schema transition machinery",
+          "parallel route or subject registry"
+        ]
+      },
+      "createdAt": "2026-08-10T14:04:14.933Z"
+    },
+    {
+      "operationId": "7e8fa64b-155f-4b29-9bd0-d25697fdca36",
+      "idempotencyKey": "codex-doc1-6-generate-planning-derived-surfaces-v3",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT#command#generateplanningderivedsurfaces",
+      "sourcePath": "scripts/documentation-publication.cjs",
+      "sourceContentSha256": "72dcda2536ca0569ac0839548ac9ab569f6a8f9e7b66aa6b214c87458cfa4654",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "node --test scripts/documentation-publication.test.cjs",
+        "dddOwner": "PlanningDocumentationProjection",
+        "railName": "GeneratePlanningDerivedSurfaces",
+        "railType": "command",
+        "featureId": "DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT",
+        "greenTest": "node --test scripts/documentation-publication.test.cjs scripts/check-generated-docs-policy.test.cjs scripts/generate-db-surface-inventory.test.cjs scripts/generate-knowledge-intake-literature.test.cjs",
+        "sourceRef": "scripts/documentation-publication.cjs",
+        "unitTests": [
+          "scripts/documentation-publication.test.cjs",
+          "scripts/check-generated-docs-policy.test.cjs",
+          "scripts/generate-db-surface-inventory.test.cjs",
+          "scripts/generate-knowledge-intake-literature.test.cjs"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2149"],
+        "cypressFlows": [
+          "N/A - Zensical publication, link validation, accessibility automation, and demanding-user browser QA cover this governance projection."
+        ],
+        "domainObjects": [
+          "DocumentationPublicationPolicy",
+          "PlanningDocumentationProjection"
+        ],
+        "fowlerSignals": ["hidden_authority", "duplicate_semantics"],
+        "patchSurfaces": [
+          "scripts/documentation-publication.cjs",
+          "scripts/documentation-publication.test.cjs",
+          "docs/generated-docs-policy.json",
+          "scripts/generate-db-surface-inventory.cjs",
+          "scripts/generate-knowledge-intake-literature.cjs",
+          "docs/stylesheets/docs-accessibility.css"
+        ],
+        "completionGate": [
+          "pnpm docs:publish",
+          "pnpm docs:build",
+          "pnpm docs:gov:links",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Canonical-subject diagnostics omitted owners and hashes; route collisions omitted lifecycle evidence; tracked pointer pages and inaccessible active navigation remained.",
+        "governingSources": [
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/generated-docs-policy.json",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/planning/status/governance-document-rule-inventory.md"
+        ],
+        "architectureGuards": [
+          "node --test scripts/documentation-publication.test.cjs scripts/check-generated-docs-policy.test.cjs scripts/generate-db-surface-inventory.test.cjs scripts/generate-knowledge-intake-literature.test.cjs"
+        ],
+        "implementationPlan": "Issue #2149 joins DB lifecycle and generator ownership at the on-demand publication boundary, retires three tracked pointer copies at stable routes, and validates the published documentation experience.",
+        "implementationRefs": [
+          "scripts/documentation-publication.cjs#DocumentationPublicationPolicy.assertUniqueCanonicalSubjects",
+          "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.describeRouteOwner",
+          "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.buildLifecycleState",
+          "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.assemble"
+        ],
+        "normalizedRailName": "generateplanningderivedsurfaces",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "72dcda2536ca0569ac0839548ac9ab569f6a8f9e7b66aa6b214c87458cfa4654",
+        "allowedImplementationSurfaces": [
+          "scripts/documentation-publication.cjs",
+          "scripts/documentation-publication.test.cjs",
+          "docs/generated-docs-policy.json",
+          "scripts/generate-code-status.cjs",
+          "scripts/generate-db-surface-inventory.cjs",
+          "scripts/generate-db-surface-inventory.test.cjs",
+          "scripts/generate-knowledge-intake-literature.cjs",
+          "scripts/generate-knowledge-intake-literature.test.cjs",
+          "scripts/check-generated-docs-policy.test.cjs",
+          "scripts/planning-db-operate-tests/db-surface.test.cjs",
+          "tools/ci/repository-change-scope.mjs",
+          "docs/.manifest.json",
+          "docs/architecture/components/ci-governance/knowledge-intake-retirement-component.md",
+          "docs/guides/testing-and-ci-capabilities.md",
+          "docs/planning/status/db-surface-inventory.md",
+          "docs/planning/status/generated-code-state.md",
+          "docs/planning/status/generated-knowledge-intake-literature.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/runbooks/planning-generated-artifacts-operations-20260403.md",
+          "docs/stylesheets/docs-accessibility.css",
+          "zensical.yml",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "tracked documentation pointer copies",
+          "Planning DB schema transition machinery",
+          "parallel route or subject registry"
+        ]
+      },
+      "createdAt": "2026-08-10T14:32:14.670Z"
+    },
+    {
+      "operationId": "d645786f-2a13-4afc-a519-221a2995e3e0",
+      "idempotencyKey": "codex-doc1-6-generate-planning-derived-surfaces-v4",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT#command#generateplanningderivedsurfaces",
+      "sourcePath": "scripts/documentation-publication.cjs",
+      "sourceContentSha256": "db5072ae2b773fe2418a91db0528e5fd6541ea37ae6368377639a9d94e8f7311",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "node --test scripts/documentation-publication.test.cjs",
+        "dddOwner": "PlanningDocumentationProjection",
+        "railName": "GeneratePlanningDerivedSurfaces",
+        "railType": "command",
+        "featureId": "DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT",
+        "greenTest": "node --test scripts/documentation-publication.test.cjs scripts/check-generated-docs-policy.test.cjs scripts/generate-db-surface-inventory.test.cjs scripts/generate-knowledge-intake-literature.test.cjs",
+        "sourceRef": "scripts/documentation-publication.cjs",
+        "unitTests": [
+          "scripts/documentation-publication.test.cjs",
+          "scripts/check-generated-docs-policy.test.cjs",
+          "scripts/generate-db-surface-inventory.test.cjs",
+          "scripts/generate-knowledge-intake-literature.test.cjs"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2149"],
+        "cypressFlows": [
+          "N/A - Zensical publication, link validation, accessibility automation, and demanding-user browser QA cover this governance projection."
+        ],
+        "domainObjects": [
+          "DocumentationPublicationPolicy",
+          "PlanningDocumentationProjection"
+        ],
+        "fowlerSignals": ["hidden_authority", "duplicate_semantics"],
+        "patchSurfaces": [
+          "scripts/documentation-publication.cjs",
+          "scripts/documentation-publication.test.cjs",
+          "tools/docs/check-links.ts",
+          "docs/generated-docs-policy.json",
+          "scripts/generate-db-surface-inventory.cjs",
+          "scripts/generate-knowledge-intake-literature.cjs",
+          "docs/stylesheets/docs-accessibility.css"
+        ],
+        "completionGate": [
+          "pnpm docs:publish",
+          "pnpm docs:build",
+          "pnpm docs:gov:links",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Canonical-subject diagnostics omitted owners and hashes; route collisions omitted lifecycle evidence; active links resolved unpublished history; tracked pointers and low-contrast navigation remained.",
+        "governingSources": [
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/generated-docs-policy.json",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/planning/status/governance-document-rule-inventory.md"
+        ],
+        "architectureGuards": [
+          "node --test scripts/documentation-publication.test.cjs scripts/check-generated-docs-policy.test.cjs scripts/generate-db-surface-inventory.test.cjs scripts/generate-knowledge-intake-literature.test.cjs"
+        ],
+        "implementationPlan": "Issue #2149 joins DB lifecycle and generator ownership at the on-demand publication boundary, retires three tracked pointer copies at stable routes, rejects active links to unpublished historical authority, and validates the published documentation experience.",
+        "implementationRefs": [
+          "scripts/documentation-publication.cjs#DocumentationPublicationPolicy.assertUniqueCanonicalSubjects",
+          "scripts/documentation-publication.cjs#DocumentationPublicationPolicy.isHistoricalPath",
+          "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.describeRouteOwner",
+          "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.buildLifecycleState",
+          "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.assemble",
+          "tools/docs/check-links.ts#isNonPublishedDocumentationTarget"
+        ],
+        "normalizedRailName": "generateplanningderivedsurfaces",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "db5072ae2b773fe2418a91db0528e5fd6541ea37ae6368377639a9d94e8f7311",
+        "allowedImplementationSurfaces": [
+          "scripts/documentation-publication.cjs",
+          "scripts/documentation-publication.test.cjs",
+          "docs/generated-docs-policy.json",
+          "scripts/generate-code-status.cjs",
+          "scripts/generate-db-surface-inventory.cjs",
+          "scripts/generate-db-surface-inventory.test.cjs",
+          "scripts/generate-knowledge-intake-literature.cjs",
+          "scripts/generate-knowledge-intake-literature.test.cjs",
+          "scripts/check-generated-docs-policy.test.cjs",
+          "scripts/planning-db-operate-tests/db-surface.test.cjs",
+          "tools/docs/check-links.ts",
+          "tools/ci/repository-change-scope.mjs",
+          "docs/.manifest.json",
+          "docs/architecture/components/ci-governance/knowledge-intake-retirement-component.md",
+          "docs/guides/testing-and-ci-capabilities.md",
+          "docs/planning/status/db-surface-inventory.md",
+          "docs/planning/status/generated-code-state.md",
+          "docs/planning/status/generated-knowledge-intake-literature.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/runbooks/planning-generated-artifacts-operations-20260403.md",
+          "docs/stylesheets/docs-accessibility.css",
+          "zensical.yml",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "tracked documentation pointer copies",
+          "Planning DB schema transition machinery",
+          "parallel route or subject registry"
+        ]
+      },
+      "createdAt": "2026-08-10T14:42:04.493Z"
+    },
+    {
+      "operationId": "7426ac9b-055a-4619-8eb3-1ae0d2a8cca8",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT:command:recordarchitecturestorageio:latest:4dcee713f3159203",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT#command#recordarchitecturestorageio",
+      "sourcePath": "scripts/planning-db-operate.cjs",
+      "sourceContentSha256": "4d2d3ca72bfa6cae20bfbe9ebb610d09e02f2f02fe82583b0fb1367c6daec949",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "architecture storage I/O parse and planner tests fail because no command rail exists",
+        "dddOwner": "ArchitectureCatalogAggregate",
+        "railName": "RecordArchitectureStorageIo",
+        "railType": "command",
+        "featureId": "DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT",
+        "greenTest": "focused planning DB operate tests pass and exact DB query paths match generated policy",
+        "sourceRef": "scripts/planning-db-operate.cjs",
+        "unitTests": [
+          "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+          "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+        ],
+        "railStatus": "implemented",
+        "userStories": [
+          "As an architecture consumer, I see generator output paths that match the current on-demand publication."
+        ],
+        "cypressFlows": ["not-applicable: audited Planning DB CLI command"],
+        "domainObjects": ["ArchitectureCatalogAggregate", "ComponentStorageIo"],
+        "fowlerSignals": ["hidden_authority", "service_layer"],
+        "patchSurfaces": ["scripts/planning-db-operate.cjs"],
+        "completionGate": ["pnpm verify:prepush"],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "unknown architecture-storage-io operation and missing planner",
+        "governingSources": [
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "architectureGuards": [
+          "design scope must authorize the component and replacement storage object path",
+          "unknown or stale storage I/O identity, component, direction, access pattern, or contract fails closed"
+        ],
+        "implementationPlan": "Record one existing architecture storage I/O output-path change through design scope, optimistic path matching, current-schema vocabulary, and an audited transaction.",
+        "implementationRefs": [
+          "scripts/planning-db-operate.cjs#planArchitectureStorageIoRecordOperation",
+          "scripts/planning-db-operate.cjs#writePlannedArchitectureStorageIoRecordOperation"
+        ],
+        "normalizedRailName": "recordarchitecturestorageio",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "4d2d3ca72bfa6cae20bfbe9ebb610d09e02f2f02fe82583b0fb1367c6daec949",
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-operate.cjs",
+          "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+          "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "tools/planning-db/**",
+          "direct canonical-state JSON edits",
+          "ad-hoc SQL outside the command adapter"
+        ]
+      },
+      "createdAt": "2026-08-10T15:49:13.842Z"
+    },
+    {
+      "operationId": "e4dc7535-9903-4f53-858a-d7218c74ca6e",
+      "idempotencyKey": "codex-doc1-6-record-architecture-storage-io-v2",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT#command#recordarchitecturestorageio",
+      "sourcePath": "scripts/planning-db-operate.cjs",
+      "sourceContentSha256": "4d2d3ca72bfa6cae20bfbe9ebb610d09e02f2f02fe82583b0fb1367c6daec949",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "architecture storage I/O parse and planner tests fail because no command rail exists",
+        "dddOwner": "ArchitectureCatalogAggregate",
+        "railName": "RecordArchitectureStorageIo",
+        "railType": "command",
+        "featureId": "DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT",
+        "greenTest": "focused planning DB operate tests pass and exact DB query paths match generated policy",
+        "sourceRef": "scripts/planning-db-operate.cjs",
+        "unitTests": [
+          "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+          "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2149"],
+        "cypressFlows": ["not-applicable: audited Planning DB CLI command"],
+        "domainObjects": ["ArchitectureCatalogAggregate", "ComponentStorageIo"],
+        "fowlerSignals": ["hidden_authority", "service_layer"],
+        "patchSurfaces": [],
+        "completionGate": [
+          "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-architecture-state.test.cjs",
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "unknown architecture-storage-io operation and missing planner",
+        "governingSources": [
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/adr/ADR-0063-planning-db-current-schema-rebuild.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "architectureGuards": [
+          "design scope must authorize the component and replacement storage object path",
+          "unknown or stale storage I/O identity, component, direction, access pattern, or contract fails closed"
+        ],
+        "implementationPlan": "Issue #2149 records current architecture storage I/O paths through design-scoped optimistic updates and an audited current-schema transaction.",
+        "implementationRefs": [
+          "scripts/planning-db-operate.cjs#allowedArchitectureStorageIoAccessPatterns",
+          "scripts/planning-db-operate.cjs#allowedArchitectureStorageIoDirections",
+          "scripts/planning-db-operate.cjs#applyArchitectureStorageIoRecordOperation",
+          "scripts/planning-db-operate.cjs#normalizeArchitectureStorageIo",
+          "scripts/planning-db-operate.cjs#parseArchitectureStorageIoCommand",
+          "scripts/planning-db-operate.cjs#readArchitectureStorageIo",
+          "scripts/planning-db-operate.cjs#validateArchitectureStorageIoAccessPattern",
+          "scripts/planning-db-operate.cjs#validateArchitectureStorageIoDirection",
+          "scripts/planning-db-operate.cjs#validateArchitectureStorageIoId",
+          "scripts/planning-db-operate.cjs#validateArchitectureStorageIoRecordCommand",
+          "scripts/planning-db-operate.cjs#planArchitectureStorageIoRecordOperation",
+          "scripts/planning-db-operate.cjs#writePlannedArchitectureStorageIoRecordOperation"
+        ],
+        "normalizedRailName": "recordarchitecturestorageio",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "4d2d3ca72bfa6cae20bfbe9ebb610d09e02f2f02fe82583b0fb1367c6daec949",
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-operate.cjs",
+          "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+          "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+          "scripts/planning-db-architecture-state.test.cjs",
+          "scripts/planning-db-schema.test.cjs",
+          "tools/planning-db/schema.sql",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "direct canonical-state JSON edits",
+          "ad-hoc SQL outside the command adapter",
+          "Planning DB transition or compatibility machinery"
+        ]
+      },
+      "createdAt": "2026-08-10T16:11:59.084Z"
+    },
+    {
+      "operationId": "f6610c91-cdf1-4cd7-a73f-3b69c4ee4861",
+      "idempotencyKey": "codex-doc1-6-generate-planning-derived-surfaces-v5",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT#command#generateplanningderivedsurfaces",
+      "sourcePath": "scripts/documentation-publication.cjs",
+      "sourceContentSha256": "db5072ae2b773fe2418a91db0528e5fd6541ea37ae6368377639a9d94e8f7311",
+      "expectedRevision": 2,
+      "previousRevision": 2,
+      "resultingRevision": 3,
+      "payload": {
+        "redTest": "node --test scripts/documentation-publication.test.cjs",
+        "dddOwner": "PlanningDocumentationProjection",
+        "railName": "GeneratePlanningDerivedSurfaces",
+        "railType": "command",
+        "featureId": "DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT",
+        "greenTest": "node --test scripts/documentation-publication.test.cjs scripts/check-generated-docs-policy.test.cjs scripts/generate-db-surface-inventory.test.cjs scripts/generate-knowledge-intake-literature.test.cjs",
+        "sourceRef": "scripts/documentation-publication.cjs",
+        "unitTests": [
+          "scripts/documentation-publication.test.cjs",
+          "scripts/check-generated-docs-policy.test.cjs",
+          "scripts/generate-db-surface-inventory.test.cjs",
+          "scripts/generate-knowledge-intake-literature.test.cjs"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2149"],
+        "cypressFlows": [
+          "N/A - Zensical publication, link validation, accessibility automation, and demanding-user browser QA cover this governance projection."
+        ],
+        "domainObjects": [
+          "DocumentationPublicationPolicy",
+          "PlanningDocumentationProjection"
+        ],
+        "fowlerSignals": ["hidden_authority", "duplicate_semantics"],
+        "patchSurfaces": [
+          "scripts/documentation-publication.cjs",
+          "scripts/documentation-publication.test.cjs",
+          "docs/generated-docs-policy.json",
+          "scripts/generate-db-surface-inventory.cjs",
+          "scripts/generate-knowledge-intake-literature.cjs",
+          "docs/stylesheets/docs-accessibility.css",
+          "tools/docs/check-links.ts",
+          "docs/evidence/ED-20260810-on-demand-status-provider-guard.md",
+          "docs/evidence/index.md",
+          "docs/planning/proposals/mandatory/governance-and-docs/doc1-2-on-demand-publication-plan-20260810.md",
+          "docs/risk-register/quality/R-20260810-ON-DEMAND-STATUS-TEST-OWNERSHIP.yaml",
+          "docs/risk-register/quality/index.md",
+          "packages/@dvt/contracts/test/provider-vocabulary.architecture.test.ts",
+          "tools/ci/generated-docs-single-writer-policy.test.mjs"
+        ],
+        "completionGate": [
+          "pnpm docs:publish",
+          "pnpm docs:build",
+          "pnpm docs:gov:links",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Canonical-subject diagnostics omitted owners and hashes; route collisions omitted lifecycle evidence; active links resolved unpublished history; tracked pointers and low-contrast navigation remained.",
+        "governingSources": [
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/generated-docs-policy.json",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/planning/status/governance-document-rule-inventory.md"
+        ],
+        "architectureGuards": [
+          "node --test scripts/documentation-publication.test.cjs scripts/check-generated-docs-policy.test.cjs scripts/generate-db-surface-inventory.test.cjs scripts/generate-knowledge-intake-literature.test.cjs"
+        ],
+        "implementationPlan": "Issue #2149 joins DB lifecycle and generator ownership at the on-demand publication boundary, retires three tracked pointer copies at stable routes, rejects active links to unpublished historical authority, and validates the published documentation experience.",
+        "implementationRefs": [
+          "scripts/documentation-publication.cjs#DocumentationPublicationPolicy.assertUniqueCanonicalSubjects",
+          "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.describeRouteOwner",
+          "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.buildLifecycleState",
+          "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.assemble",
+          "scripts/documentation-publication.cjs#DocumentationPublicationPolicy.isHistoricalPath",
+          "tools/docs/check-links.ts#isNonPublishedDocumentationTarget"
+        ],
+        "normalizedRailName": "generateplanningderivedsurfaces",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "db5072ae2b773fe2418a91db0528e5fd6541ea37ae6368377639a9d94e8f7311",
+        "allowedImplementationSurfaces": [
+          "scripts/documentation-publication.cjs",
+          "scripts/documentation-publication.test.cjs",
+          "docs/generated-docs-policy.json",
+          "scripts/generate-code-status.cjs",
+          "scripts/generate-db-surface-inventory.cjs",
+          "scripts/generate-knowledge-intake-literature.cjs",
+          "scripts/check-generated-docs-policy.test.cjs",
+          "tools/planning-db/state/canonical-state.json",
+          "scripts/generate-db-surface-inventory.test.cjs",
+          "scripts/generate-knowledge-intake-literature.test.cjs",
+          "scripts/planning-db-operate-tests/db-surface.test.cjs",
+          "tools/ci/repository-change-scope.mjs",
+          "docs/.manifest.json",
+          "docs/architecture/components/ci-governance/knowledge-intake-retirement-component.md",
+          "docs/guides/testing-and-ci-capabilities.md",
+          "docs/planning/status/db-surface-inventory.md",
+          "docs/planning/status/generated-code-state.md",
+          "docs/planning/status/generated-knowledge-intake-literature.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/runbooks/planning-generated-artifacts-operations-20260403.md",
+          "docs/stylesheets/docs-accessibility.css",
+          "zensical.yml",
+          "tools/docs/check-links.ts",
+          "docs/evidence/ED-20260810-on-demand-status-provider-guard.md",
+          "docs/evidence/index.md",
+          "docs/planning/proposals/mandatory/governance-and-docs/doc1-2-on-demand-publication-plan-20260810.md",
+          "docs/risk-register/quality/R-20260810-ON-DEMAND-STATUS-TEST-OWNERSHIP.yaml",
+          "docs/risk-register/quality/index.md",
+          "packages/@dvt/contracts/test/provider-vocabulary.architecture.test.ts",
+          "tools/ci/generated-docs-single-writer-policy.test.mjs"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "tracked documentation pointer copies",
+          "Planning DB schema transition machinery",
+          "parallel route or subject registry"
+        ]
+      },
+      "createdAt": "2026-08-10T16:42:10.753Z"
     }
   ]
 }

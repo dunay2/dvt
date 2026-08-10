@@ -71,15 +71,15 @@ pnpm docs:knowledge-intake:generate
 pnpm docs:knowledge-intake:check
 ```
 
-The generated literature render is local and ignored:
+The generated literature source is local and ignored:
 
 ```text
 .generated-docs/planning/status/generated-knowledge-intake-literature.md
 ```
 
-The tracked status page
-`docs/planning/status/generated-knowledge-intake-literature.md` is only a
-stable navigation pointer. It must not duplicate the generated literature.
+An explicit `pnpm docs:publish` request publishes that generator-owned source
+at `planning/status/generated-knowledge-intake-literature.md`. No tracked
+pointer page or copied literature is permitted.
 
 ## Write Retirement Guard
 

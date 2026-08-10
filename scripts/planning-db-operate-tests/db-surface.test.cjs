@@ -68,7 +68,7 @@ test('parseArgs rejects database DB surface commands without a DB command write 
         '--authority-mode',
         'database',
         '--source-ref',
-        'docs/planning/status/db-surface-inventory.md',
+        'docs/generated-docs-policy.json',
         '--source-content-sha256',
         'b'.repeat(64),
         '--actor',

@@ -20,7 +20,12 @@ Retained generated surfaces:
 
 - documentation indexes produced by `pnpm docs:sync`;
 - `docs/.manifest.json`;
-- `docs/planning/status/generated-code-state.md`;
+- `.generated-docs/planning/status/generated-code-state.md` in an explicitly
+  requested publication;
+- `.generated-docs/planning/status/generated-knowledge-intake-literature.md`
+  in an explicitly requested publication;
+- `.generated-docs/planning/status/db-surface-inventory.md` in an explicitly
+  requested publication;
 - `.generated-docs/concepts/repository-map.md` in an explicitly requested
   publication;
 - governance indexes and DB exports produced by `pnpm governance:refresh`.
@@ -49,8 +54,9 @@ and discoverability for retained generated surfaces.
 2. Run DB-free `pnpm docs:status:generate --code-state-only` after structural
    source changes under `apps/` or `packages/`.
 3. When documentation publication is explicitly requested, run
-   `pnpm docs:publish`; it imports Planning DB and includes Repository Map from
-   its untracked generator-owned source.
+   `pnpm docs:publish`; it imports Planning DB and includes Repository Map,
+   Generated Code State, Generated Knowledge Intake Literature, and DB Surface
+   Inventory from their untracked generator-owned sources.
 4. Run `pnpm governance:refresh` after changing governance sources,
    generators, scripts, or package commands.
 5. Run `pnpm verify:prepush` before publishing the branch.

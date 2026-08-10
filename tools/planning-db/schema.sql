@@ -1244,7 +1244,7 @@ CREATE TABLE architecture.design_operations (
     resulting_revision integer NOT NULL,
     payload jsonb DEFAULT '{}'::jsonb NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT architecture_design_operations_type_check CHECK ((operation_type = ANY (ARRAY['architecture_design_create'::text, 'architecture_component_record'::text, 'architecture_relation_record'::text, 'architecture_contract_record'::text, 'architecture_port_record'::text, 'architecture_fitness_scan'::text, 'architecture_test_record'::text, 'architecture_observability_record'::text]))),
+    CONSTRAINT architecture_design_operations_type_check CHECK ((operation_type = ANY (ARRAY['architecture_design_create'::text, 'architecture_component_record'::text, 'architecture_relation_record'::text, 'architecture_contract_record'::text, 'architecture_port_record'::text, 'architecture_storage_io_record'::text, 'architecture_fitness_scan'::text, 'architecture_test_record'::text, 'architecture_observability_record'::text]))),
     CONSTRAINT design_operations_expected_revision_check CHECK (((expected_revision IS NULL) OR (expected_revision >= 0))),
     CONSTRAINT design_operations_previous_revision_check CHECK ((previous_revision >= 0)),
     CONSTRAINT design_operations_resulting_revision_check CHECK ((resulting_revision >= 0)),

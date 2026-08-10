@@ -67,7 +67,7 @@ test('DB surface inventory render is deterministic and timestamp-free', () => {
 
 test('DB surface inventory generator writes and checks the local render', async () => {
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'db-surface-inventory-'));
-  const outputPath = path.join(tempRoot, 'generated-db-surface-inventory.md');
+  const outputPath = path.join(tempRoot, 'db-surface-inventory.md');
   const client = {
     async query(sql) {
       assert.match(sql, /db_governance_surface_query/);

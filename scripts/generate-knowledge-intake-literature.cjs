@@ -183,7 +183,7 @@ function renderKnowledgeIntakeLiterature(rows) {
     '',
     `Source view: \`${sourceView}\`.`,
     '',
-    'The tracked status page is only a stable navigation pointer. This local render is the DB-first reading surface for retiring raw knowledge intake files.',
+    'This on-demand projection is the published DB-first reading surface for retiring raw knowledge intake files.',
     '',
     '## Summary',
     '',

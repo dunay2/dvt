@@ -1,0 +1,22 @@
+---
+id: R-20260810-ON-DEMAND-STATUS-TEST-OWNERSHIP
+title: Contract tests could depend on absent on-demand documentation snapshots
+status: Closed
+date: 2026-08-10
+owners:
+  - packages/@dvt/contracts
+severity: Medium
+probability: Low
+context: >
+  System Delivery Status moved from a tracked Markdown snapshot to an on-demand generated
+  publication, while the provider-vocabulary package test retained the deleted repository path.
+risk: >
+  A clean CI checkout can fail before documentation publication even though contracts and the
+  generated site are valid, coupling package correctness to an intentionally absent derived file.
+mitigations:
+  - The contract guard scans only tracked contract, composition and active authored architecture
+    sources.
+  - System Delivery Status generation and publication remain covered by their owning focused tests.
+  - No generated snapshot, compatibility alias or implicit generation step was restored.
+  - The focused contract guard passes from a clean repository state.
+---
