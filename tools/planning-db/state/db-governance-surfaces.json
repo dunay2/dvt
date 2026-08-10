@@ -24,11 +24,11 @@
     {
       "surfaceName": "Architecture design authority",
       "canonicalSource": "architecture.design and its normalized architecture relations",
-      "writeRail": "pnpm planning:db:operate architecture-design create",
+      "writeRail": "pnpm planning:db:operate architecture-design create|transition",
       "writeRailKind": "db_command",
       "readQueryRail": "pnpm planning:db:query architecture-designs|architecture-components|architecture-relations",
-      "projection": "Current architecture rows and generated architecture evidence reports",
-      "validation": "pnpm test:planning:db:current-schema; pnpm planning:db:current-schema:check",
+      "projection": "Current architecture rows and generated architecture evidence reports on explicit export",
+      "validation": "pnpm test:planning:db:current-schema; pnpm planning:db:current-schema:check; pnpm planning:db:export:check",
       "authorityMode": "database"
     },
     {
