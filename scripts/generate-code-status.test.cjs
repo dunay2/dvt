@@ -879,6 +879,31 @@ test('DB-first documentation publication provisions the pinned Zensical runtime 
   assert.match(lockedRequirements, /--hash=sha256:[0-9a-f]{64}/u);
 });
 
+test('Component Map scopes architecture drift reads to topology subject kinds', async () => {
+  const driftFilters = [];
+  const emptyReader = async () => [];
+  const facts = await readComponentTopologyFacts(
+    {},
+    {
+      readArchitectureComponentRows: emptyReader,
+      readArchitectureRelationRows: emptyReader,
+      readArchitectureResponsibilityRows: emptyReader,
+      readArchitectureMaturityRows: emptyReader,
+      readArchitectureComponentDocumentRows: emptyReader,
+      readArchitectureDriftRows: async (_client, filters) => {
+        driftFilters.push(filters);
+        return [{ subject_kind: filters.subjectKind }];
+      },
+    }
+  );
+
+  assert.deepEqual(driftFilters, [
+    { limit: 100000, subjectKind: 'component' },
+    { limit: 100000, subjectKind: 'relation' },
+  ]);
+  assert.deepEqual(facts.drift, [{ subject_kind: 'component' }, { subject_kind: 'relation' }]);
+});
+
 test(
   'live Planning DB current-state import renders both DB-first maps deterministically',
   { skip: process.env.DVT_REPOSITORY_MAP_INTEGRATION !== '1' },
