@@ -655,6 +655,46 @@ test('policy names actual inputs and the minimal generator command', () => {
   );
 });
 
+test('Component Map policy is DB-first, on-demand, and has no manual catalog', () => {
+  const policy = JSON.parse(fs.readFileSync(policyPath, 'utf8'));
+  const entry = policy.artifactClasses.find((item) => item.id === 'local-docs-component-map');
+  assert.ok(entry);
+  assert.equal(entry.generatorCommand, 'pnpm docs:status:generate --component-map-only');
+  assert.deepEqual(entry.artifacts, ['.generated-docs/architecture/component-map.md']);
+  assert.equal(entry.tracking, 'untracked');
+  assert.equal(entry.manualEditPolicy, 'generator-owned');
+  assert.deepEqual(entry.publication, { enabled: true });
+  assert.ok(entry.sourcePaths.includes('scripts/planning-db-query.cjs'));
+  assert.ok(entry.sourcePaths.includes('tools/planning-db/schema.sql'));
+  assert.deepEqual(
+    entry.dbBackedArtifacts.map((group) => group.queryView),
+    [
+      'architecture.component_query',
+      'architecture.relation_query',
+      'architecture.responsibility_query',
+      'architecture.maturity_query',
+      'architecture.drift_query',
+      'planning_query_store.component_engineering_document_query',
+    ]
+  );
+  for (const group of entry.dbBackedArtifacts) {
+    assert.deepEqual(group.artifacts, ['.generated-docs/architecture/component-map.md']);
+    assert.equal(group.importCommand, 'pnpm planning:db:import');
+    assert.equal(group.checkCommand, 'pnpm docs:status:generate --component-map-only');
+  }
+
+  assert.equal(
+    fs.existsSync(path.join(repoRoot, 'docs', 'architecture', 'component-map.md')),
+    false
+  );
+  const componentIndex = fs.readFileSync(
+    path.join(repoRoot, 'docs', 'architecture', 'components', 'index.md'),
+    'utf8'
+  );
+  assert.doesNotMatch(componentIndex, /## Current Component Entry Points/u);
+  assert.match(componentIndex, /DB-first Component Map/u);
+});
+
 test('generator no longer reads the empty documentation panel binding', () => {
   const source = fs.readFileSync(generatorPath, 'utf8');
   assert.doesNotMatch(source, /documentation_panel_query/u);
