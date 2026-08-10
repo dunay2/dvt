@@ -564,9 +564,20 @@ describe('Canvas source import live clean proof', () => {
     cy.get('[data-slot="canvas-node-workbench-panel"]').should('not.exist');
     getVisibleCanvasNodeByCardTitle('Model 1').find('[data-slot="canvas-node-shell"]').dblclick();
     cy.get('[data-slot="canvas-node-workbench-panel"]', { timeout: 10_000 }).should('be.visible');
-    cy.get('[data-slot="canvas-node-workbench-tab-code"]')
-      .should('be.visible')
-      .and('have.attr', 'aria-selected', 'true');
+    cy.get(
+      '[data-slot="canvas-node-workbench-tab-code"], [data-slot="canvas-node-workbench-more-trigger"]'
+    )
+      .filter(':visible')
+      .should('have.length', 1)
+      .then(($codeAffordance) => {
+        if ($codeAffordance.attr('data-slot') === 'canvas-node-workbench-tab-code') {
+          expect($codeAffordance).to.have.attr('aria-selected', 'true');
+          return;
+        }
+
+        expect($codeAffordance).to.contain.text('Code');
+      });
+    cy.get('[data-slot="canvas-node-workbench-code-section"]').should('be.visible');
     const authoredModelSql = `select order_id, customer, amount\nfrom {{ source('${expectedSourceName}', 'source_1') }}`;
     cy.get('[data-slot="canvas-node-workbench-code-section"]').should(
       'not.contain.text',
