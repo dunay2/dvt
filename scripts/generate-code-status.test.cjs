@@ -21,6 +21,7 @@ const workflowScopePath = path.join(repoRoot, 'tools', 'ci', 'policy', 'workflow
 const packageJson = require('../package.json');
 
 const {
+  buildSystemDeliveryStatusProjection,
   buildComponentTopologyProjection,
   collectRepositoryWorkspaceStats,
   listPnpmWorkspaceDirs,
@@ -30,8 +31,10 @@ const {
   readGitTreePaths,
   readComponentTopologyFacts,
   readRepositoryArchitectureFacts,
+  readRepositoryReleaseFacts,
   renderComponentMap,
   renderRepositoryMap,
+  renderSystemDeliveryStatus,
   resolveDocumentationProjection,
   resolveGenerationMode,
   resolveWorkspaceArchitecture,
@@ -86,6 +89,143 @@ function architectureComponent(componentId, overrides = {}) {
     ...overrides,
   };
 }
+
+function systemDeliveryFacts(overrides = {}) {
+  return {
+    components: [architectureComponent('A'), architectureComponent('B')],
+    maturity: [
+      { component_id: 'A', maturity_score: 90, missing_reasons: [] },
+      { component_id: 'B', maturity_score: 60, missing_reasons: ['missing-test-evidence'] },
+    ],
+    rails: [
+      {
+        rail_id: 'rail-a',
+        rail_name: 'ReadA',
+        rail_type: 'query',
+        rail_status: 'implemented',
+        implementation_ref_count: 1,
+        is_gap: false,
+        is_duplicate: false,
+      },
+      {
+        rail_id: 'rail-b',
+        rail_name: 'WriteB',
+        rail_type: 'command',
+        rail_status: 'missing',
+        implementation_ref_count: 0,
+        is_gap: true,
+        is_duplicate: false,
+      },
+    ],
+    features: [
+      { feature_id: 'FEATURE-A', mechanization_status: 'closed' },
+      { feature_id: 'FEATURE-B', mechanization_status: 'implemented' },
+      { feature_id: 'FEATURE-C', mechanization_status: 'mixed:closed,implemented' },
+    ],
+    ...overrides,
+  };
+}
+
+test('repository release identity is exact and fails on contradictory sources', () => {
+  const release = readRepositoryReleaseFacts({
+    packageJson: { version: '1.2.3' },
+    releaseManifest: { '.': '1.2.3' },
+    changelog: '# Changelog\n\n## 1.2.3 (2026-08-10)\n',
+  });
+  assert.deepEqual(release, { version: '1.2.3' });
+
+  assert.throws(
+    () =>
+      readRepositoryReleaseFacts({
+        packageJson: { version: '1.2.3' },
+        releaseManifest: { '.': '1.2.4' },
+        changelog: '# Changelog\n\n## 1.2.3 (2026-08-10)\n',
+      }),
+    /Contradictory repository release identity.*1\.2\.3.*1\.2\.4/u
+  );
+  assert.throws(
+    () =>
+      readRepositoryReleaseFacts({
+        packageJson: { version: '1.2.3' },
+        releaseManifest: {},
+        changelog: '# Changelog\n',
+      }),
+    /Required repository release fact/u
+  );
+});
+
+test('System Delivery Status projects exact Git, workspace, maturity, rail, and feature facts', () => {
+  const projection = buildSystemDeliveryStatusProjection(
+    [
+      workspaceRow({ workspace: '@dvt/a', src: 3, tests: 2, hasBuild: 'yes', hasTest: 'yes' }),
+      workspaceRow({ workspace: '@dvt/b', src: 4, tests: 1, hasBuild: 'no', hasTest: 'yes' }),
+    ],
+    systemDeliveryFacts(),
+    { gitSha: 'evaluated-sha', release: { version: '1.2.3' } }
+  );
+
+  assert.deepEqual(projection.repository, {
+    gitSha: 'evaluated-sha',
+    version: '1.2.3',
+    workspaceCount: 2,
+    sourceFileCount: 7,
+    testFileCount: 3,
+    buildScriptCount: 1,
+    testScriptCount: 2,
+  });
+  assert.deepEqual(projection.architecture, {
+    componentCount: 2,
+    maturityRegisteredCount: 2,
+    componentsMissingMaturity: [],
+    maturityBands: { high: 1, medium: 1, low: 0 },
+  });
+  assert.deepEqual(projection.delivery, {
+    railCount: 2,
+    railGapCount: 1,
+    duplicateRailCount: 0,
+    featureCount: 3,
+    featureStatuses: { closed: 1, implemented: 1, 'mixed:closed,implemented': 1 },
+  });
+  assert.deepEqual(projection.gaps, ['rail:command:WriteB:missing']);
+
+  const first = renderSystemDeliveryStatus(projection, '2026-08-10');
+  assert.equal(renderSystemDeliveryStatus(projection, '2026-08-10'), first);
+  assert.match(first, /`evaluated-sha`/u);
+  assert.match(first, /1\.2\.3/u);
+  assert.match(first, /Exact Planning DB status only/u);
+  assert.match(first, /rail:command:WriteB:missing/u);
+  assert.doesNotMatch(first, /capability coverage.*truth/iu);
+});
+
+test('System Delivery Status fails closed for unavailable DB facts and duplicate rails', () => {
+  assert.throws(
+    () =>
+      buildSystemDeliveryStatusProjection([], systemDeliveryFacts({ maturity: undefined }), {
+        gitSha: 'evaluated-sha',
+        release: { version: '1.2.3' },
+      }),
+    /Required Planning DB fact.*maturity/u
+  );
+  assert.throws(
+    () =>
+      buildSystemDeliveryStatusProjection(
+        [],
+        systemDeliveryFacts({
+          rails: [
+            {
+              rail_id: 'duplicate',
+              rail_name: 'ReadA',
+              rail_type: 'query',
+              rail_status: 'implemented',
+              is_duplicate: true,
+            },
+          ],
+        }),
+        { gitSha: 'evaluated-sha', release: { version: '1.2.3' } }
+      ),
+    /Duplicate command\/query rail authority.*ReadA/u
+  );
+});
 
 test('pnpm workspace JSON is the sole membership input', () => {
   assert.deepEqual(parsePnpmWorkspaceRows('[{"path":"/repo"}]'), [{ path: '/repo' }]);
@@ -608,11 +748,15 @@ test('component topology reports a current document binding whose component is a
   ]);
 });
 
-test('generation modes isolate code-state and repository-map work', async () => {
+test('generation modes isolate each on-demand documentation projection', async () => {
   assert.equal(resolveGenerationMode([]), 'all');
   assert.equal(resolveGenerationMode(['--code-state-only']), 'code-state-only');
   assert.equal(resolveGenerationMode(['--repository-map-only']), 'repository-map-only');
   assert.equal(resolveGenerationMode(['--component-map-only']), 'component-map-only');
+  assert.equal(
+    resolveGenerationMode(['--system-delivery-status-only']),
+    'system-delivery-status-only'
+  );
   assert.equal(resolveGenerationMode(['--repository-map-only', '--check']), 'repository-map-only');
   assert.throws(
     () => resolveGenerationMode(['--code-state-only', '--repository-map-only']),
@@ -626,6 +770,7 @@ test('generation modes isolate code-state and repository-map work', async () => 
     generateCodeState: async () => calls.push('code'),
     generateComponentMap: async () => calls.push('component-map'),
     generateRepositoryMap: async () => calls.push('map'),
+    generateSystemDeliveryStatus: async () => calls.push('system-status'),
   };
   await main(['--code-state-only'], dependencies);
   assert.deepEqual(calls, ['code']);
@@ -635,6 +780,9 @@ test('generation modes isolate code-state and repository-map work', async () => 
   calls.length = 0;
   await main(['--component-map-only'], dependencies);
   assert.deepEqual(calls, ['component-map']);
+  calls.length = 0;
+  await main(['--system-delivery-status-only'], dependencies);
+  assert.deepEqual(calls, ['system-status']);
 });
 
 test('routine docs status checks remain DB-free and do not publish documentation', () => {
@@ -776,6 +924,41 @@ test('Component Map policy is DB-first, on-demand, and has no manual catalog', (
   );
   assert.doesNotMatch(componentIndex, /## Current Component Entry Points/u);
   assert.match(componentIndex, /DB-first Component Map/u);
+});
+
+test('System Delivery Status policy is DB-first, on-demand, and has no manual snapshot', () => {
+  const policy = JSON.parse(fs.readFileSync(policyPath, 'utf8'));
+  const entry = policy.artifactClasses.find(
+    (item) => item.id === 'local-docs-system-delivery-status'
+  );
+  assert.ok(entry);
+  assert.equal(entry.generatorCommand, 'pnpm docs:status:generate --system-delivery-status-only');
+  assert.deepEqual(entry.artifacts, ['.generated-docs/architecture/system-delivery-status.md']);
+  assert.equal(entry.tracking, 'untracked');
+  assert.equal(entry.manualEditPolicy, 'generator-owned');
+  assert.deepEqual(entry.publication, { enabled: true });
+  assert.equal(
+    fs.existsSync(path.join(repoRoot, 'docs', 'architecture', 'system-delivery-status.md')),
+    false
+  );
+  assert.ok(entry.sourcePaths.includes('package.json'));
+  assert.ok(entry.sourcePaths.includes('.release-please-manifest.json'));
+  assert.ok(entry.sourcePaths.includes('CHANGELOG.md'));
+  assert.ok(entry.sourcePaths.includes('tools/planning-db/state/canonical-state.json'));
+  assert.deepEqual(
+    entry.dbBackedArtifacts.map((group) => group.queryView),
+    [
+      'architecture.component_query',
+      'architecture.maturity_query',
+      'planning_query_store.command_query_rail_query',
+      'planning_query_store.feature_mechanization_feature_query',
+    ]
+  );
+  for (const group of entry.dbBackedArtifacts) {
+    assert.deepEqual(group.artifacts, ['.generated-docs/architecture/system-delivery-status.md']);
+    assert.equal(group.importCommand, 'pnpm planning:db:import');
+    assert.equal(group.checkCommand, 'pnpm docs:status:generate --system-delivery-status-only');
+  }
 });
 
 test('generator no longer reads the empty documentation panel binding', () => {
