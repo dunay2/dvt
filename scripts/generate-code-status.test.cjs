@@ -293,6 +293,50 @@ test('effective membership can include non-standard layouts and exclude existing
   assert.ok(fs.existsSync(ignored.directory));
 });
 
+test('evaluated workspace facts exclude files absent from the Git tree', (t) => {
+  const workspace = createWorkspaceFixture(t, 'apps/alpha', '@fixture/alpha');
+  fs.mkdirSync(path.join(workspace.directory, 'src', 'tmp'), { recursive: true });
+  fs.mkdirSync(path.join(workspace.directory, 'test', 'results'), { recursive: true });
+  fs.writeFileSync(
+    path.join(workspace.directory, 'src', 'tmp', 'ignored.ts'),
+    'export const ignored = true;\n',
+    'utf8'
+  );
+  fs.writeFileSync(
+    path.join(workspace.directory, 'test', 'results', 'ignored.ts'),
+    'export const ignoredTest = true;\n',
+    'utf8'
+  );
+
+  const [facts] = collectRepositoryWorkspaceStats({
+    root: workspace.root,
+    workspaceDirs: [workspace.directory],
+    gitTreePaths: new Map([
+      ['apps/alpha', 'tree'],
+      ['apps/alpha/package.json', 'blob'],
+      ['apps/alpha/src', 'tree'],
+      ['apps/alpha/src/index.ts', 'blob'],
+    ]),
+  });
+
+  assert.equal(facts.src, 1);
+  assert.equal(facts.tests, 0);
+});
+
+test('evaluated workspace membership rejects a package absent from the Git tree', (t) => {
+  const workspace = createWorkspaceFixture(t, 'apps/tmp', '@fixture/ignored');
+
+  assert.throws(
+    () =>
+      collectRepositoryWorkspaceStats({
+        root: workspace.root,
+        workspaceDirs: [workspace.directory],
+        gitTreePaths: new Map(),
+      }),
+    /Workspace apps\/tmp is not part of the evaluated Git tree/u
+  );
+});
+
 test('workspace add, rename, and removal are expressed only by effective membership', (t) => {
   const first = createWorkspaceFixture(t, 'alpha', '@fixture/alpha');
   const second = createWorkspaceFixture(t, 'beta', '@fixture/beta', { root: first.root });
