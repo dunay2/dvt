@@ -5,8 +5,9 @@
 [![Contracts](https://github.com/dunay2/dvt/actions/workflows/contracts.yml/badge.svg)](https://github.com/dunay2/dvt/actions/workflows/contracts.yml)
 [![PR Quality Gate](https://github.com/dunay2/dvt/actions/workflows/pr-quality-gate.yml/badge.svg)](https://github.com/dunay2/dvt/actions/workflows/pr-quality-gate.yml)
 
-Data Value Transform - multi-adapter orchestration engine and surrounding
-planning, execution, observability, and traceability tooling.
+Data Value Transform - provider-neutral orchestration contracts and surrounding
+planning, execution, observability, and traceability tooling. Temporal is the
+only implemented workflow provider.
 
 ---
 
@@ -214,21 +215,25 @@ pnpm --filter @dvt/adapter-temporal test:integration
 Si necesitas saber rapido que sigue y donde esta el trabajo en curso, usa este
 orden:
 
-1. [System Delivery Status](docs/architecture/system-delivery-status.md)
-   (`last_reviewed: 2026-04-02`) para estado real de implementacion.
-2. [Planning Control Tower](docs/planning/state/planning-control-tower.md)
-   (`last_reviewed: 2026-04-02`) para reglas operativas y enrutado de trabajo.
-3. [Agent Lane YAMLs](docs/planning/state/index.md) para tareas activas,
-   ownership, bloqueos y siguiente trabajo por lane.
+1. [Planning Dashboard](docs/planning/state/planning-dashboard.md) para la vista
+   trazable del estado de entrega.
+2. [Planning Control Tower](docs/planning/state/planning-control-tower.md) para
+   reglas operativas y enrutado de trabajo.
+3. [GitHub Issues](https://github.com/dunay2/dvt/issues) para tareas MVP,
+   ownership, prioridad, bloqueos y cierre.
 4. [Roadmap Of Record](docs/planning/roadmap/index.md) para secuencia oficial.
-5. [Review Status Board](docs/planning/reviews/review-status-board.md)
-   (`last_reviewed: 2026-04-04`) para estado de reviews y su linkage a tareas.
+5. [Review Status Board](docs/planning/reviews/review-status-board.md) para
+   estado de reviews y su enlace con las issues.
+6. [Governance Inventory](docs/planning/status/governance-document-rule-inventory.md)
+   para localizar la autoridad aplicable antes de cambiar arquitectura o diseño.
 
 Regla practica:
 
-- `status` responde "que esta cierto hoy en codigo".
-- `state/lane yaml` responde "que se esta ejecutando ahora y que sigue".
+- `planning dashboard` responde "que esta entregado y que evidencia lo prueba".
+- `GitHub Issues` responde "que se esta ejecutando ahora y que sigue".
 - `roadmap` responde "en que orden se entrega".
+- la BBDD de planning responde las consultas obligatorias de arquitectura,
+  diseño, ownership, relaciones y command/query rails.
 
 ### Start Here
 
@@ -241,7 +246,7 @@ Regla practica:
   [Shared Package Architecture](docs/architecture/shared/index.md),
   [Contracts](docs/contracts/index.md)
 - **See current state and active work**:
-  [System Delivery Status](docs/architecture/system-delivery-status.md),
+  [Planning Dashboard](docs/planning/state/planning-dashboard.md),
   [Planning](docs/planning/index.md),
   [Roadmap Of Record](docs/planning/roadmap/index.md),
   [Planning Gaps](docs/planning/gaps/index.md)
@@ -256,35 +261,37 @@ about runtime behavior, adapter semantics, or execution invariants.
 
 ### Engine Deep Dive
 
-The engine remains documented as modular, versioned contracts:
+The engine remains documented as modular, versioned contracts. Temporal is the
+only implemented workflow provider. Future workflow providers require an ADR,
+a real adapter package, capability conformance, production composition, and
+documentation evidence before entering the active vocabulary.
 
 - **Normative contracts**:
-  [IWorkflowEngine](docs/architecture/engine/contracts/engine/IWorkflowEngine.v2.0.md),
-  [ExecutionSemantics](docs/architecture/engine/contracts/engine/ExecutionSemantics.v2.0.md)
+  [IWorkflowEngine](docs/architecture/components/engine/contracts/engine/IWorkflowEngine.v1.md),
+  [ExecutionSemantics](docs/architecture/components/engine/contracts/engine/ExecutionSemantics.v1.md)
 - **Adapter specs**:
-  [Temporal](docs/architecture/engine/adapters/temporal/TemporalAdapter.spec.md),
-  [Conductor](docs/architecture/engine/adapters/conductor/ConductorAdapter.spec.md)
+  [Temporal](docs/architecture/components/engine/adapters/temporal/temporal-adapter-spec.md)
 - **Capability specs**:
-  [capabilities](docs/architecture/engine/contracts/capabilities/)
+  [capabilities](docs/architecture/components/engine/contracts/capabilities/)
 - **Operations**:
-  [observability](docs/architecture/engine/ops/observability.md),
-  [incident runbooks](docs/architecture/engine/ops/runbooks/)
+  [observability](docs/architecture/components/engine/ops/observability.md),
+  [incident runbooks](docs/architecture/components/engine/ops/runbooks/)
 - **Developer**:
-  [determinism tooling](docs/architecture/engine/dev/determinism-tooling.md)
+  [determinism tooling](docs/architecture/components/engine/dev/determinism-tooling.md)
 
 ### Quick Links
 
 - New contributor: [docs/index.md](docs/index.md) ->
   [docs/concepts/index.md](docs/concepts/index.md)
 - SDK implementer:
-  [IWorkflowEngine.v2.0.md](docs/architecture/engine/contracts/engine/IWorkflowEngine.v2.0.md) ->
-  [TemporalAdapter.spec.md](docs/architecture/engine/adapters/temporal/TemporalAdapter.spec.md)
+  [IWorkflowEngine.v1.md](docs/architecture/components/engine/contracts/engine/IWorkflowEngine.v1.md) ->
+  [temporal-adapter-spec.md](docs/architecture/components/engine/adapters/temporal/temporal-adapter-spec.md)
 - Plan author: [docs/concepts/glossary.md](docs/concepts/glossary.md) ->
-  [determinism-tooling.md](docs/architecture/engine/dev/determinism-tooling.md)
+  [determinism-tooling.md](docs/architecture/components/engine/dev/determinism-tooling.md)
 - SRE / On-call: [docs/runbooks/index.md](docs/runbooks/index.md) ->
-  [incident_response.md](docs/architecture/engine/ops/runbooks/incident_response.md)
+  [incident-response.md](docs/architecture/components/engine/ops/runbooks/incident-response.md)
 - Executive / PM: [docs/planning/index.md](docs/planning/index.md) ->
-  [System Delivery Status](docs/architecture/system-delivery-status.md)
+  [Planning Dashboard](docs/planning/state/planning-dashboard.md)
 
 ---
 
@@ -411,12 +418,13 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for:
 
 ## Project Status
 
-Use [docs/planning/roadmap/index.md](docs/planning/roadmap/index.md),
+Use [Planning Dashboard](docs/planning/state/planning-dashboard.md),
+[docs/planning/roadmap/index.md](docs/planning/roadmap/index.md),
 [docs/planning/index.md](docs/planning/index.md), and
-[docs/planning/gaps/index.md](docs/planning/gaps/index.md) as planning entry
-points, and
-[docs/architecture/system-delivery-status.md](docs/architecture/system-delivery-status.md)
-as the current status entry point for implementation truth.
+[docs/planning/gaps/index.md](docs/planning/gaps/index.md) as current status and
+planning entry points. Architecture and design decisions must begin with the
+planning database query rails identified by the
+[governance inventory](docs/planning/status/governance-document-rule-inventory.md).
 
 ## License
 
