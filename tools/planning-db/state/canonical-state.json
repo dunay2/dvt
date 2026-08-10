@@ -10887,6 +10887,20 @@
         "updated_at": "2026-08-07T00:52:38.502668+00:00"
       },
       {
+        "design_id": "DOC1-5-SYSTEM-DELIVERY-STATUS-PROJECTION-20260810",
+        "work_item_id": "GH-2148",
+        "title": "DB-first System Delivery Status projection",
+        "owner": "Architecture / Documentation",
+        "status": "review",
+        "rationale": "Remove hidden manual authority by projecting evaluated Git, release and exact Planning DB facts into the disposable publication tree under the existing command rail.",
+        "fowler_signal": "hidden_authority",
+        "rail_ref": "GeneratePlanningDerivedSurfaces",
+        "approved_at": null,
+        "supersedes_id": null,
+        "created_at": "2026-08-10T11:12:07.149+00:00",
+        "updated_at": "2026-08-10T11:12:07.149+00:00"
+      },
+      {
         "design_id": "E-SOURCE-OBJECT-CATALOG-CONTRACT-20260710",
         "work_item_id": "E-SOURCE-OBJECT-METRICS-PROD-1",
         "title": "Provider-neutral source object catalog contract hard cut",
@@ -62686,6 +62700,54 @@
         "created_at": "2026-08-07T00:52:35.686161+00:00"
       },
       {
+        "design_id": "DOC1-5-SYSTEM-DELIVERY-STATUS-PROJECTION-20260810",
+        "subject_kind": "command",
+        "subject_id": "GeneratePlanningDerivedSurfaces",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-10T11:12:07.149+00:00"
+      },
+      {
+        "design_id": "DOC1-5-SYSTEM-DELIVERY-STATUS-PROJECTION-20260810",
+        "subject_kind": "path",
+        "subject_id": "docs/architecture/system-delivery-status.md",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-10T11:12:07.149+00:00"
+      },
+      {
+        "design_id": "DOC1-5-SYSTEM-DELIVERY-STATUS-PROJECTION-20260810",
+        "subject_kind": "path",
+        "subject_id": "docs/generated-docs-policy.json",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T11:12:07.149+00:00"
+      },
+      {
+        "design_id": "DOC1-5-SYSTEM-DELIVERY-STATUS-PROJECTION-20260810",
+        "subject_kind": "path",
+        "subject_id": "scripts/generate-code-status.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T11:12:07.149+00:00"
+      },
+      {
+        "design_id": "DOC1-5-SYSTEM-DELIVERY-STATUS-PROJECTION-20260810",
+        "subject_kind": "test",
+        "subject_id": "scripts/documentation-publication.test.cjs",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-10T11:12:07.149+00:00"
+      },
+      {
+        "design_id": "DOC1-5-SYSTEM-DELIVERY-STATUS-PROJECTION-20260810",
+        "subject_kind": "test",
+        "subject_id": "scripts/generate-code-status.test.cjs",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-10T11:12:07.149+00:00"
+      },
+      {
         "design_id": "PLANNING-DB-API-APPLICATION-SERVICE-TEST-LEAF-COMPONENTS-20260619",
         "subject_kind": "component",
         "subject_id": "SYS-API-APPLICATION-PORTS",
@@ -82126,6 +82188,70 @@
           "sourceContentSha256": "7f95df844b2ad93f3811a935ffc83b4ec8320de2ad695611bbb4a1ecbbbc7fa2"
         },
         "created_at": "2026-08-08T02:12:27.921+00:00"
+      },
+      {
+        "operation_id": "cced5439-0339-471f-b41b-75cf105fbcdb",
+        "idempotency_key": "architecture_design_create:codex:DOC1-5-SYSTEM-DELIVERY-STATUS-PROJECTION-20260810:9fb53860a64354dc",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "DOC1-5-SYSTEM-DELIVERY-STATUS-PROJECTION-20260810",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2148",
+        "source_content_sha256": "0716cec0195201625580137f36fb01347f63fca0ff33f4992ee6db623659f886",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "Architecture / Documentation",
+          "title": "DB-first System Delivery Status projection",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "GeneratePlanningDerivedSurfaces",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/generate-code-status.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "docs/generated-docs-policy.json",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "docs/architecture/system-delivery-status.md",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "scripts/generate-code-status.test.cjs",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "scripts/documentation-publication.test.cjs",
+              "subjectKind": "test"
+            }
+          ],
+          "status": "review",
+          "railRef": "GeneratePlanningDerivedSurfaces",
+          "designId": "DOC1-5-SYSTEM-DELIVERY-STATUS-PROJECTION-20260810",
+          "rationale": "Remove hidden manual authority by projecting evaluated Git, release and exact Planning DB facts into the disposable publication tree under the existing command rail.",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2148",
+          "workItemId": "GH-2148",
+          "fowlerSignal": "hidden_authority",
+          "supersedesId": null,
+          "sourceContentSha256": "0716cec0195201625580137f36fb01347f63fca0ff33f4992ee6db623659f886"
+        },
+        "created_at": "2026-08-10T11:12:07.149+00:00"
       }
     ]
   },
