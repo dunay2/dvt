@@ -203,9 +203,11 @@ Relevant code and fixtures:
 | Generated capability coverage drift check | `pnpm docs:capability:check`                   | [`package.json`](../../package.json)                                                                           |
 | Local docs regenerate-and-validate flow   | `pnpm docs:ci`                                 | [`package.json`](../../package.json)                                                                           |
 
-Generated documentation sources:
+Published generated documentation routes:
 
-- code-state report: [`docs/planning/status/generated-code-state.md`](../planning/status/generated-code-state.md)
+- code-state report: [`planning/status/generated-code-state.md`](../planning/status/generated-code-state.md), assembled on demand from `.generated-docs/`
+- knowledge-intake literature: [`planning/status/generated-knowledge-intake-literature.md`](../planning/status/generated-knowledge-intake-literature.md), assembled on demand from Planning DB
+- DB surface inventory: [`planning/status/db-surface-inventory.md`](../planning/status/db-surface-inventory.md), assembled on demand from Planning DB
 - capability coverage report: [`docs/planning/status/generated-capability-coverage.md`](../planning/status/generated-capability-coverage.md)
 - compact docs governance manifest: [`docs/.manifest.json`](../../docs/.manifest.json)
 - generated-doc ownership policy: [`docs/generated-docs-policy.json`](../generated-docs-policy.json)

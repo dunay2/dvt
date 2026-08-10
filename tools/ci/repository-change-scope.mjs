@@ -20,7 +20,6 @@ export const ROOT_CI_POLICY_INPUTS = Object.freeze([
 ]);
 
 const PLANNING_DB_DOCUMENTS = new Set([
-  'docs/planning/status/db-surface-inventory.md',
   'docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md',
 ]);
 

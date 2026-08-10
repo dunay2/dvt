@@ -204,14 +204,14 @@ test('DB-backed surface inventory can be declared as an ignored local artifact',
       artifactClasses: [
         {
           id: 'local-db-surface-inventory',
-          artifacts: ['.generated-docs/planning/status/generated-db-surface-inventory.md'],
+          artifacts: ['.generated-docs/planning/status/db-surface-inventory.md'],
           sourcePaths: ['scripts/generate-db-surface-inventory.cjs'],
           generatorCommand: 'pnpm docs:db-surface-inventory:generate',
           tracking: 'untracked',
           manualEditPolicy: 'generator-owned',
           dbBackedArtifacts: [
             {
-              artifacts: ['.generated-docs/planning/status/generated-db-surface-inventory.md'],
+              artifacts: ['.generated-docs/planning/status/db-surface-inventory.md'],
               queryView: 'planning_query_store.db_governance_surface_query',
               importCommand: 'pnpm planning:db:import',
               checkCommand: 'pnpm docs:db-surface-inventory:check',
