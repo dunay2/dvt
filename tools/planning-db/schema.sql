@@ -1284,7 +1284,7 @@ CREATE TABLE architecture.design_scope (
     required boolean DEFAULT true NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT architecture_design_scope_kind_check CHECK ((scope_kind = ANY (ARRAY['may_create'::text, 'may_update'::text, 'may_delete'::text, 'may_reference'::text, 'must_prove'::text]))),
-    CONSTRAINT architecture_design_scope_subject_kind_check CHECK ((subject_kind = ANY (ARRAY['component'::text, 'relation'::text, 'contract'::text, 'flow'::text, 'check'::text, 'path'::text, 'command'::text, 'query'::text, 'decision'::text, 'evidence'::text, 'risk'::text, 'test'::text])))
+    CONSTRAINT architecture_design_scope_subject_kind_check CHECK ((subject_kind = ANY (ARRAY['component'::text, 'relation'::text, 'contract'::text, 'port'::text, 'flow'::text, 'check'::text, 'path'::text, 'command'::text, 'query'::text, 'decision'::text, 'evidence'::text, 'risk'::text, 'test'::text])))
 );
 
 
