@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { cancelRunRoute } from '../../../src/entrypoints/http/cancelRunRoute.js';
-import { SIGNAL_COMMAND_ACTION } from '../../../src/entrypoints/http/signalRunRouteParser.constants.js';
+import { SIGNAL_COMMAND_ACTION } from '../../../src/entrypoints/http/signalRunRouteAuthorization.constants.js';
 import { HTTP_STATUS_CODE } from '../../../src/routes/httpStatus.js';
 
 function createReply(): {
