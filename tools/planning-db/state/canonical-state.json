@@ -12823,14 +12823,14 @@
         "work_item_id": "GH-2167",
         "title": "DB-first governance projection closeout",
         "owner": "API / Architecture / Planning DB",
-        "status": "review",
+        "status": "implementing",
         "rationale": "Publish effective governance ownership and navigation-only architecture guidance from Planning DB only through the existing explicit export command, removing stale local inventory authority.",
         "fowler_signal": "hidden_authority",
         "rail_ref": "GeneratePlanningDerivedSurfaces;ReadArchitectureDesignAuthority;component-tree;component-metadata",
-        "approved_at": null,
+        "approved_at": "2026-08-10T23:26:23.715+00:00",
         "supersedes_id": "R1-1D-API-GOVERNANCE-LIFECYCLE-CLOSEOUT-20260810",
         "created_at": "2026-08-10T23:15:58.511+00:00",
-        "updated_at": "2026-08-10T23:15:58.511+00:00"
+        "updated_at": "2026-08-10T23:26:25.555+00:00"
       },
       {
         "design_id": "RELEASE-CANDIDATE-AUTHORITY-CLASSIFICATION-20260719",
@@ -84772,6 +84772,27 @@
         "created_at": "2026-08-10T20:09:39.613+00:00"
       },
       {
+        "operation_id": "0f83b1e2-0e15-466c-a362-300af8f8bf09",
+        "idempotency_key": "gh-2167-approve-db-first-projection-20260810",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "R1-1D-DB-FIRST-PROJECTION-CLOSEOUT-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The existing rail, DB-first projection boundary, isolated tests, full ownership coverage and explicit-only publication behavior have been reviewed.",
+          "designId": "R1-1D-DB-FIRST-PROJECTION-CLOSEOUT-20260810",
+          "toStatus": "approved",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "fromStatus": "review",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T23:26:23.715+00:00"
+      },
+      {
         "operation_id": "115f433c-18cd-4711-8a60-b49216f614fb",
         "idempotency_key": "architecture_design_create:codex:R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810:6fd2e8782491a966",
         "operation_type": "architecture_design_create",
@@ -90390,6 +90411,27 @@
           "sourceContentSha256": "1c177769a247b08b6a521681ed99d803500c73e688438dd89a84e3ee53225f0c"
         },
         "created_at": "2026-08-10T21:03:54.721+00:00"
+      },
+      {
+        "operation_id": "ebf9646e-1ae0-428e-8579-c7c17fe48749",
+        "idempotency_key": "gh-2167-implement-db-first-projection-20260810",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "R1-1D-DB-FIRST-PROJECTION-CLOSEOUT-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The reviewed DB-first projection is implemented and entering repository-wide validation and independent Fowler QA.",
+          "designId": "R1-1D-DB-FIRST-PROJECTION-CLOSEOUT-20260810",
+          "toStatus": "implementing",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "fromStatus": "approved",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T23:26:25.555+00:00"
       },
       {
         "operation_id": "ede3734a-de09-41e6-90a9-49f64bd706ca",
