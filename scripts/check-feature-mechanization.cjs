@@ -56,6 +56,10 @@ class FeatureImplementationGuard {
     const allowedPatterns = this.collectSurfacePatterns('allowedImplementationSurfaces');
 
     for (const filePath of this.changedFiles) {
+      if (this.isPermittedRetirement(filePath)) {
+        continue;
+      }
+
       if (allowedPatterns.some((pattern) => this.matchesSurface(filePath, pattern))) {
         continue;
       }
@@ -68,7 +72,7 @@ class FeatureImplementationGuard {
 
   validateForbiddenImplementationSurfaces(errors) {
     for (const filePath of this.changedFiles) {
-      if (this.deletedFiles.has(filePath)) {
+      if (this.isPermittedRetirement(filePath)) {
         continue;
       }
 
@@ -87,6 +91,16 @@ class FeatureImplementationGuard {
         `${filePath} matches forbiddenImplementationSurfaces pattern ${matchingPattern.raw}.`
       );
     }
+  }
+
+  isPermittedRetirement(filePath) {
+    if (!this.deletedFiles.has(filePath)) {
+      return false;
+    }
+
+    return this.collectSurfacePatterns('forbiddenImplementationSurfaces').some((pattern) =>
+      this.matchesSurface(filePath, pattern)
+    );
   }
 
   validateDeclaredSymbols(errors) {
