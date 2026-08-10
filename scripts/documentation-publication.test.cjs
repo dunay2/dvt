@@ -584,6 +584,31 @@ test('package and manual deploy expose one explicit publication command', () => 
   );
 });
 
+test('published wide tables expose a labelled keyboard-scroll region', () => {
+  const repositoryRoot = path.resolve(__dirname, '..');
+  const config = fs.readFileSync(path.join(repositoryRoot, 'zensical.yml'), 'utf8');
+  const scriptPath = path.join(
+    repositoryRoot,
+    'docs',
+    'javascripts',
+    'table-scroll-accessibility.js'
+  );
+  const stylePath = path.join(repositoryRoot, 'docs', 'stylesheets', 'docs-accessibility.css');
+  assert.match(config, /javascripts\/table-scroll-accessibility\.js/u);
+  assert.match(config, /stylesheets\/docs-accessibility\.css/u);
+
+  const script = fs.readFileSync(scriptPath, 'utf8');
+  assert.match(script, /\.md-typeset__scrollwrap/u);
+  assert.match(script, /setAttribute\('role', 'region'\)/u);
+  assert.match(script, /setAttribute\('aria-label'/u);
+  assert.match(script, /tabIndex = 0/u);
+  assert.match(script, /ResizeObserver/u);
+
+  const style = fs.readFileSync(stylePath, 'utf8');
+  assert.match(style, /\.md-typeset__scrollwrap:focus-visible/u);
+  assert.match(style, /outline/u);
+});
+
 test('docs quality accepts canonical routes declared by publication policy', () => {
   const repoRoot = path.resolve(__dirname, '..');
   const result = spawnSync(process.execPath, [path.join(__dirname, 'docs-quality-check.cjs')], {
