@@ -98,9 +98,13 @@ class FeatureImplementationGuard {
       return false;
     }
 
-    return this.collectSurfacePatterns('forbiddenImplementationSurfaces').some((pattern) =>
-      this.matchesSurface(filePath, pattern)
+    return this.collectSurfacePatterns('forbiddenImplementationSurfaces').some(
+      (pattern) => this.isExactSurfacePattern(pattern) && this.matchesSurface(filePath, pattern)
     );
+  }
+
+  isExactSurfacePattern(pattern) {
+    return !pattern.normalized.includes('*');
   }
 
   validateDeclaredSymbols(errors) {
