@@ -79,4 +79,67 @@ describe('contracts: active provider vocabulary', () => {
     expect(testingBarrel).not.toContain('ConductorAdapterStub');
     expect(testingBarrel).not.toContain('TemporalAdapterStub');
   });
+
+  it('keeps repository documentation entry points on current, resolvable routes', () => {
+    const readme = readFileSync(join(REPO_ROOT, 'README.md'), 'utf8');
+
+    expect(readme).not.toContain('docs/architecture/engine/');
+    expect(readme).not.toContain('IWorkflowEngine.v2.0.md');
+    expect(readme).not.toContain('ExecutionSemantics.v2.0.md');
+    expect(readme).not.toContain('Agent Lane YAMLs');
+    expect(readme).not.toMatch(/\[Conductor\]\([^)]+ConductorAdapter[^)]*\)/u);
+
+    for (const match of readme.matchAll(/\[[^\]]+\]\(([^)]+)\)/gu)) {
+      const target = match[1]?.split('#', 1)[0];
+      if (!target || /^(?:https?:|mailto:)/u.test(target)) continue;
+
+      expect(existsSync(join(REPO_ROOT, target)), `README link must resolve: ${target}`).toBe(true);
+    }
+  });
+
+  it('distinguishes implemented Temporal support from conditional future providers', () => {
+    const readme = readFileSync(join(REPO_ROOT, 'README.md'), 'utf8');
+    const executionModel = readFileSync(
+      join(REPO_ROOT, 'docs/adr/ADR-0003-execution-model.md'),
+      'utf8'
+    );
+    const adapterEquivalence = readFileSync(
+      join(REPO_ROOT, 'docs/adr/ADR-0019_Adapter_Equivalence_and_Maintenance_Boundary.md'),
+      'utf8'
+    );
+    const workflowManual = readFileSync(
+      join(REPO_ROOT, 'docs/guides/workflow-engine-user-manual.v1.md'),
+      'utf8'
+    );
+    const stepKindGuide = readFileSync(
+      join(REPO_ROOT, 'docs/guides/how-to-add-step-kind-20260406.md'),
+      'utf8'
+    );
+    const compileCatalogManual = readFileSync(
+      join(REPO_ROOT, 'docs/guides/plan-compile-catalog-extension-technical-manual-20260417.md'),
+      'utf8'
+    );
+
+    expect(readme).toContain('Temporal is the only implemented workflow provider');
+    expect(readme).toContain('Future workflow providers require an ADR');
+
+    expect(executionModel).toContain('## Current Applicability');
+    expect(executionModel).toContain('Current production composition supports Temporal only');
+    expect(executionModel).toContain('DVT+ will maintain **execution semantics sovereignty**');
+
+    expect(adapterEquivalence).toContain('## Current Applicability');
+    expect(adapterEquivalence).toContain(
+      'No cross-provider conformance claim is currently delivered'
+    );
+    expect(adapterEquivalence).toContain('**state-equivalent**, no execution-equivalent');
+
+    expect(workflowManual).not.toContain('Temporal/Conductor/runtime backend');
+    expect(stepKindGuide).not.toContain('`temporal`, `conductor`, or another supported');
+    expect(compileCatalogManual).not.toMatch(/`temporal`,\s*`conductor`/u);
+
+    for (const source of [workflowManual, stepKindGuide, compileCatalogManual]) {
+      expect(source).toContain('Temporal is the only implemented workflow provider');
+      expect(source).toContain('future provider');
+    }
+  });
 });
