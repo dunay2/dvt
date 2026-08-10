@@ -1,0 +1,25 @@
+---
+id: R-20260810-ACTIVE-PROVIDER-DOCUMENTATION-DRIFT
+title: Documentation could overstate implemented workflow providers
+status: Closed
+date: 2026-08-10
+owners:
+  - packages/@dvt/contracts
+severity: High
+probability: Low
+context: >
+  Repository entry points and active manuals retained legacy engine paths and examples that could be
+  read as evidence of an implemented Conductor provider despite Temporal being the only production
+  composition.
+risk: >
+  Contributors or users could design against nonexistent contracts, infer unsupported provider
+  portability, or introduce parallel vocabulary outside the governed provider rail.
+mitigations:
+  - Active entry points link only to current tracked contracts, status and Temporal adapter specs.
+  - ADR applicability sections separate current Temporal composition from conditional future
+    provider admission.
+  - A contracts architecture test rejects broken README routes, fake adapters, unsupported active
+    provider names and unqualified manual examples.
+  - Planning DB feature mechanization reuses the canonical documentation disposition and lifecycle
+    query rails.
+---

@@ -2,6 +2,7 @@
 
 Status: Accepted  
 Date: 2026-02-26
+Owners: Architecture / Engine Domain
 
 ## Context
 
@@ -10,6 +11,19 @@ El review 2026-02-25 detecta ambigüedad en 3 puntos de contrato:
 1. **Equivalencia de adapters**: se estaba leyendo como “Temporal y Conductor se comportan igual internamente”, lo cual no es cierto (replay, scheduling y ciclo de vida difieren).
 2. **`logicalAttemptId`**: debe permanecer como autoridad del adapter/runtime (alineado con determinismo en Temporal).
 3. **`detectStuckRuns`**: es mantenimiento operativo batch, no operación core del contrato `IWorkflowEngine`.
+
+## Current Applicability
+
+Temporal is the only implemented workflow provider. No cross-provider
+conformance claim is currently delivered. La equivalencia descrita por esta ADR
+es el invariante objetivo que deberá demostrar cualquier proveedor futuro antes
+de entrar en la composición de producción; no es evidencia de que exista hoy un
+segundo adapter.
+
+A future provider requires an ADR, a real adapter, capability conformance,
+production composition, and documentation evidence before admission. El
+trabajo futuro de conformance permanece en la issue `#2160`; `#69` fue cerrada
+como `not planned` y no constituye implementación.
 
 ## Decision
 

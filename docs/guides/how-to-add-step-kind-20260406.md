@@ -9,6 +9,10 @@ last_reviewed: 2026-04-19
 
 This guide defines the governed protocol for adding a new `StepKind` end to end.
 
+Temporal is the only implemented workflow provider. A future provider cannot be
+named as supported until its ADR, real adapter, capability conformance,
+production composition, and documentation evidence are delivered.
+
 Use this for examples like `PYTHON_SCRIPT`, `SPARK_JOB`, or `API_CALL`.
 
 If the work introduces a new step family, a plugin-backed catalog contribution,
@@ -18,8 +22,8 @@ or a new plan compile profile, also follow
 ## Prerequisites
 
 - A concrete execution owner for the new kind.
-- A target adapter plan (`temporal`, `conductor`, or another supported
-  real provider adapter).
+- A target adapter plan (`temporal` today, or a future provider only after its
+  formal admission).
 - A clear artifact story (what `stepArtifactRef.artifactKind` is emitted, if any).
 
 ## Protocol

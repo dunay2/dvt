@@ -1,8 +1,8 @@
 ---
 title: Plan Compile Catalog Extension Technical Manual
-status: Draft
+status: Active
 owner: Architecture / API / Planner / Runtime
-last_reviewed: 2026-04-19
+last_reviewed: 2026-08-10
 ---
 
 # Plan Compile Catalog Extension Technical Manual
@@ -16,6 +16,10 @@ This guide uses `plan compile` as the active ubiquitous language for the
 compile-only boundary. Older `MW-D1` proposal and review artifacts may still
 say `external compile`; treat that as historical wording, not the active
 ownership model.
+
+Temporal is the only implemented workflow provider. A future provider requires
+an ADR, a real adapter, capability conformance, production composition, and
+documentation evidence before it can become an active `targetAdapter`.
 
 Use this guide when the change affects any of the following:
 
@@ -88,7 +92,7 @@ Multi-workflow design stays coherent only if these decisions remain separate.
 | --------------- | ---------------------------------------- | ------------------------------------- | -------------------------------------------------- | ------------------------- |
 | `stepKind`      | semantic meaning of one node             | graph contract plus canonical catalog | `DBT_MODEL`, `POSTGRES_SQL_TRANSFORM`, `SPARK_JOB` | runtime provider          |
 | `family`        | taxonomy grouping for step kinds         | canonical catalog                     | `dbt`, `sql_transform`, `spark`                    | handler implementation    |
-| `targetAdapter` | runtime provider selected for start-run  | run admission contract                | `temporal`, `conductor`                            | node semantics            |
+| `targetAdapter` | runtime provider selected for start-run  | run admission contract                | `temporal`                                         | node semantics            |
 | `workerRoute`   | deployment or task-queue destination     | runtime routing model                 | `dbt-worker`, `spark-worker`                       | compile policy            |
 | `pluginPack`    | source of contributed families and kinds | approved plugin contribution pack     | `acme-spark-plugin`                                | contract authority        |
 

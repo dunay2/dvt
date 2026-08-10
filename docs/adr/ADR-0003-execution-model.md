@@ -17,11 +17,22 @@ The platform is evolving into:
 - an orchestration abstraction layer,
 - a multi-tenant execution runtime,
 - a domain with explicit execution semantics,
-- a system targeting multiple engines (Temporal, Conductor, future
-  runtimes).
+- a provider-neutral port that can admit future runtimes without changing
+  domain semantics.
 
 Ambiguity repeatedly appeared when semantics were inferred from engine
 behavior instead of being domain-defined first.
+
+## Current Applicability
+
+Current production composition supports Temporal only. The provider-neutral
+ports and domain-owned semantics are delivered, but a second provider and its
+cross-provider conformance evidence are not.
+
+A future workflow provider is conditional until an ADR admits it and the
+repository contains its real adapter package, capability conformance,
+production composition, and documentation evidence. Naming or diagramming a
+runtime does not make it an implemented capability.
 
 ---
 
@@ -77,7 +88,7 @@ graph TD
     subgraph "Domain Layer (DVT+ Sovereignty)"
         A[ADR-0003: Execution Model Sovereignty]
         A --> B[Defines lifecycle states<br/>PENDING, RUNNING, COMPLETED]
-        A --> C[Defines valid transitions<br/>RunQueued â†’ RunStarted â†’ RunCompleted]
+        A --> C[Defines valid transitions<br/>RunQueued to RunStarted to RunCompleted]
         A --> D[Defines execution semantics<br/>Meaning of lifecycle events]
         A --> E[Defines invariants<br/>Retry, ordering, idempotency rules]
     end
@@ -91,16 +102,15 @@ graph TD
 
     subgraph "Adapter Layer (Infrastructure Mapping)"
         J[TemporalAdapter]
-        K[ConductorAdapter]
-        L[FutureAdapter]
+        K[FutureProviderAdapter<br/>conditional]
 
         J --> M[Maps to Temporal primitives<br/>Workflow + Activities]
-        K --> N[Maps to Conductor primitives<br/>Workflow + Tasks]
+        K -. admission criteria .-> N[Maps admitted provider primitives]
     end
 
     subgraph "Execution Runtime (Engine Specific)"
         O[Temporal Runtime]
-        P[Conductor Runtime]
+        P[Future Provider Runtime<br/>conditional]
     end
 
     subgraph "Event Store (Source of Truth)"
@@ -119,11 +129,11 @@ graph TD
 
     A -.-> F
     F --> J
-    F --> K
+    F -. after admission .-> K
     J --> O
-    K --> P
+    K -.-> P
     O --> S
-    P --> S
+    P -.-> S
     S --> W
 ```
 
@@ -148,7 +158,7 @@ graph LR
 ## Code Ownership Example
 
 ```typescript
-// âŒ Anti-pattern: Engine defines behavior by I/O side effects
+// Incorrect: Engine defines behavior by I/O side effects
 class Engine_OLD {
   async startRun(planRef: PlanRef, ctx: RunContext) {
     const bytes = await this.planFetcher.fetch(planRef.uri);
@@ -156,7 +166,7 @@ class Engine_OLD {
   }
 }
 
-// âœ… Correct pattern: Domain defines semantics, adapter handles infrastructure
+// Correct: Domain defines semantics, adapter handles infrastructure
 class Engine {
   async startRun(planRef: PlanRef, ctx: RunContext): Promise<RunRef> {
     this.validateMetadata(planRef); // domain rule
@@ -183,9 +193,10 @@ class TemporalAdapter implements IWorkflowAdapter {
 - The **Planner defines ordering and retry policy** --- not the
   engine.
 - The **State Store is the single source of truth** --- not Temporal
-  nor Conductor.
+  nor any workflow provider.
 - Engine adapters must remain stateless regarding business semantics.
-- Replacing Temporal with Conductor must not alter domain contracts.
+- Replacing Temporal with a future admitted provider must not alter domain
+  contracts.
 
 ---
 
@@ -193,7 +204,6 @@ class TemporalAdapter implements IWorkflowAdapter {
 
 - [`ADR-0004-event-sourcing-strategy.md`](./ADR-0004-event-sourcing-strategy.md)
 - Temporal docs: https://docs.temporal.io/
-- Conductor docs: https://conductor.netflix.com/
 - ADR-0011-run-started-ownership.md
 - ADR-0012-plan-integrity-ownership.md
 - ADR-0010-run-event-envelope-split.md

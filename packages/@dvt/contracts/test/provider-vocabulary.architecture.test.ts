@@ -2,6 +2,7 @@
  * Owned concern: enforce the hard-cut provider vocabulary for active runtime
  * contracts.
  */
+import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -36,6 +37,19 @@ const activeProviderVocabularySources = [
   join(ARCHITECTURE_ROOT, 'diagrams/engine-internal-components.md'),
   join(ARCHITECTURE_ROOT, 'diagrams/implementation-architecture-diagrams.md'),
 ];
+
+const normalizeWhitespace = (source: string): string => source.replace(/\s+/gu, ' ').trim();
+
+const containsUnqualifiedDeliveredProviderClaim = (source: string): boolean => {
+  const normalizedSource = normalizeWhitespace(source);
+  return [
+    /\b(?:DVT\+?|platform|system|repository)\s+(?:currently\s+)?(?:supports?|implements?|ships?)\s+Conductor\b/iu,
+    /\bConductor\s+is\s+(?:currently\s+)?(?:an?\s+)?(?:supported|implemented|delivered|active)\s+(?:workflow\s+)?provider\b/iu,
+    /\bTemporal\s+(?:and|\/)\s+Conductor\s+are\s+(?:both\s+)?(?:supported|implemented|delivered|active)\b/iu,
+    /\bCross-provider conformance (?:is|has been) delivered\b/iu,
+    /\b(?:DVT\+?|platform|system)\s+(?:currently\s+)?delivers?\s+cross-provider conformance\b/iu,
+  ].some((claimPattern) => claimPattern.test(normalizedSource));
+};
 
 describe('contracts: active provider vocabulary', () => {
   it('does not expose mock as a runtime provider in active contracts', () => {
@@ -78,5 +92,131 @@ describe('contracts: active provider vocabulary', () => {
 
     expect(testingBarrel).not.toContain('ConductorAdapterStub');
     expect(testingBarrel).not.toContain('TemporalAdapterStub');
+  });
+
+  it('keeps repository documentation entry points on current, resolvable routes', () => {
+    const readme = readFileSync(join(REPO_ROOT, 'README.md'), 'utf8');
+    const trackedPaths = new Set(
+      execFileSync('git', ['ls-files', '-z'], { cwd: REPO_ROOT, encoding: 'utf8' })
+        .split('\0')
+        .filter(Boolean)
+    );
+
+    expect(readme).not.toContain('docs/architecture/engine/');
+    expect(readme).not.toContain('IWorkflowEngine.v2.0.md');
+    expect(readme).not.toContain('ExecutionSemantics.v2.0.md');
+    expect(readme).not.toContain('Agent Lane YAMLs');
+    expect(readme).not.toMatch(/\[Conductor\]\([^)]+ConductorAdapter[^)]*\)/u);
+    expect(readme).toContain('Documentation generation is explicit and on demand');
+
+    const publishCommandIndex = readme.indexOf('pnpm docs:publish');
+    expect(publishCommandIndex).toBeGreaterThan(-1);
+    expect(publishCommandIndex).toBeLessThan(readme.indexOf('pnpm docs:serve'));
+    expect(publishCommandIndex).toBeLessThan(readme.indexOf('pnpm docs:build'));
+
+    for (const match of readme.matchAll(/\[[^\]]+\]\(([^)]+)\)/gu)) {
+      const target = match[1]?.split('#', 1)[0];
+      if (!target || /^(?:https?:|mailto:)/u.test(target)) continue;
+
+      const normalizedTarget = target.replace(/^\.\//u, '').replaceAll('\\', '/');
+      const isTracked = normalizedTarget.endsWith('/')
+        ? [...trackedPaths].some((trackedPath) => trackedPath.startsWith(normalizedTarget))
+        : trackedPaths.has(normalizedTarget);
+
+      expect(isTracked, `README link must resolve in a clean Git checkout: ${target}`).toBe(true);
+    }
+  });
+
+  it('distinguishes implemented Temporal support from conditional future providers', () => {
+    const readme = readFileSync(join(REPO_ROOT, 'README.md'), 'utf8');
+    const executionModel = readFileSync(
+      join(REPO_ROOT, 'docs/adr/ADR-0003-execution-model.md'),
+      'utf8'
+    );
+    const adapterEquivalence = readFileSync(
+      join(REPO_ROOT, 'docs/adr/ADR-0019_Adapter_Equivalence_and_Maintenance_Boundary.md'),
+      'utf8'
+    );
+    const workflowManual = readFileSync(
+      join(REPO_ROOT, 'docs/guides/workflow-engine-user-manual.v1.md'),
+      'utf8'
+    );
+    const stepKindGuide = readFileSync(
+      join(REPO_ROOT, 'docs/guides/how-to-add-step-kind-20260406.md'),
+      'utf8'
+    );
+    const compileCatalogManual = readFileSync(
+      join(REPO_ROOT, 'docs/guides/plan-compile-catalog-extension-technical-manual-20260417.md'),
+      'utf8'
+    );
+    const governedProviderTruthSources = [
+      readme,
+      executionModel,
+      adapterEquivalence,
+      workflowManual,
+      stepKindGuide,
+      compileCatalogManual,
+    ];
+
+    expect(normalizeWhitespace(readme)).toContain(
+      'Temporal is the only implemented workflow provider'
+    );
+    expect(normalizeWhitespace(readme)).toContain('Future workflow providers require an ADR');
+
+    expect(executionModel).toContain('## Current Applicability');
+    expect(normalizeWhitespace(executionModel)).toContain(
+      'Current production composition supports Temporal only'
+    );
+    expect(executionModel).toContain('DVT+ will maintain **execution semantics sovereignty**');
+
+    expect(adapterEquivalence).toContain('## Current Applicability');
+    expect(normalizeWhitespace(adapterEquivalence)).toContain(
+      'No cross-provider conformance claim is currently delivered'
+    );
+    expect(adapterEquivalence).toContain('**state-equivalent**, no execution-equivalent');
+
+    expect(workflowManual).not.toContain('Temporal/Conductor/runtime backend');
+    expect(stepKindGuide).not.toContain('`temporal`, `conductor`, or another supported');
+    expect(compileCatalogManual).not.toMatch(/`temporal`,\s*`conductor`/u);
+
+    for (const source of [workflowManual, stepKindGuide, compileCatalogManual]) {
+      expect(normalizeWhitespace(source)).toContain(
+        'Temporal is the only implemented workflow provider'
+      );
+      expect(normalizeWhitespace(source)).toContain('future provider');
+    }
+
+    for (const source of governedProviderTruthSources) {
+      const normalizedSource = normalizeWhitespace(source).toLowerCase();
+      for (const admissionRequirement of [
+        'adr',
+        'real adapter',
+        'capability conformance',
+        'production composition',
+        'documentation evidence',
+      ]) {
+        expect(normalizedSource).toContain(admissionRequirement);
+      }
+      expect(containsUnqualifiedDeliveredProviderClaim(source)).toBe(false);
+    }
+
+    for (const contradictoryClaim of [
+      'DVT supports Conductor as a workflow provider.',
+      'Conductor is an implemented workflow provider.',
+      'Temporal and Conductor are both supported.',
+      'Cross-provider conformance is delivered.',
+      'The platform delivers cross-provider conformance.',
+    ]) {
+      expect(containsUnqualifiedDeliveredProviderClaim(contradictoryClaim)).toBe(true);
+    }
+
+    for (const conditionedOrHistoricalClaim of [
+      'A future provider requires admission evidence before implementation.',
+      'Built with practices learned from Temporal and Conductor.',
+      'No cross-provider conformance claim is currently delivered.',
+      'State equivalence is a target for any future provider.',
+    ]) {
+      expect(containsUnqualifiedDeliveredProviderClaim(conditionedOrHistoricalClaim)).toBe(false);
+    }
   });
 });
