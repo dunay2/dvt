@@ -90300,7 +90300,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "packages/@dvt/contracts/test/provider-vocabulary.architecture.test.ts",
-      "sourceContentSha256": "d6d8261cd89ecdd5dc75e4ea9f5a9ad246ad7d5b53eaf9af31ebd03f9508bedb",
+      "sourceContentSha256": "3c5ed62831c530c0ed7d27130cce43cd5828b52060729c1f00965a194b5c7d07",
       "rawRail": {
         "name": "ClassifyArchitectureDocumentationDisposition",
         "type": "query",
@@ -90427,7 +90427,7 @@
           "docs/archive/**"
         ]
       },
-      "revision": 1,
+      "revision": 2,
       "createdBy": "codex",
       "createdAt": "2026-08-10T17:34:19.014Z"
     },
@@ -90495,7 +90495,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "packages/@dvt/contracts/test/provider-vocabulary.architecture.test.ts",
-      "sourceContentSha256": "d6d8261cd89ecdd5dc75e4ea9f5a9ad246ad7d5b53eaf9af31ebd03f9508bedb",
+      "sourceContentSha256": "3c5ed62831c530c0ed7d27130cce43cd5828b52060729c1f00965a194b5c7d07",
       "rawRail": {
         "name": "ClassifyDocumentationEntryPoint",
         "type": "query",
@@ -90623,7 +90623,7 @@
           "docs/archive/**"
         ]
       },
-      "revision": 1,
+      "revision": 2,
       "createdBy": "codex",
       "createdAt": "2026-08-10T17:19:40.826Z"
     },
@@ -90681,7 +90681,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "packages/@dvt/contracts/test/provider-vocabulary.architecture.test.ts",
-      "sourceContentSha256": "d6d8261cd89ecdd5dc75e4ea9f5a9ad246ad7d5b53eaf9af31ebd03f9508bedb",
+      "sourceContentSha256": "3c5ed62831c530c0ed7d27130cce43cd5828b52060729c1f00965a194b5c7d07",
       "rawRail": {
         "name": "ListDocumentationLifecycleFacts",
         "type": "query",
@@ -90808,7 +90808,7 @@
           "docs/archive/**"
         ]
       },
-      "revision": 1,
+      "revision": 2,
       "createdBy": "codex",
       "createdAt": "2026-08-10T17:34:20.390Z"
     },
@@ -138723,6 +138723,303 @@
         ]
       },
       "createdAt": "2026-08-10T17:52:29.702Z"
+    },
+    {
+      "operationId": "92ca4d0b-d274-4010-a090-581bc8111515",
+      "idempotencyKey": "doc1-7-entrypoint-source-v3",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#DOC1-7-RUNTIME-PROVIDER-TRUTH#query#classifydocumentationentrypoint",
+      "sourcePath": "packages/@dvt/contracts/test/provider-vocabulary.architecture.test.ts",
+      "sourceContentSha256": "3c5ed62831c530c0ed7d27130cce43cd5828b52060729c1f00965a194b5c7d07",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/contracts test -- provider-vocabulary.architecture.test.ts",
+        "dddOwner": "DocumentationEntryPointRegistry",
+        "railName": "ClassifyDocumentationEntryPoint",
+        "railType": "query",
+        "featureId": "DOC1-7-RUNTIME-PROVIDER-TRUTH",
+        "greenTest": "pnpm --filter @dvt/contracts test -- provider-vocabulary.architecture.test.ts",
+        "sourceRef": "packages/@dvt/contracts/test/provider-vocabulary.architecture.test.ts",
+        "unitTests": [
+          "packages/@dvt/contracts/test/provider-vocabulary.architecture.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2163"],
+        "cypressFlows": [
+          "N/A - documentation entry points and semantic contract architecture guard"
+        ],
+        "domainObjects": [
+          "DocumentationEntryPointRegistry",
+          "ArchitectureDocumentationDispositionReadModel",
+          "DocumentationLifecycleReadModel",
+          "ContractsProviderAdapterEvidence"
+        ],
+        "fowlerSignals": [
+          "Documentation drift at the repository entry point",
+          "Hidden provider-support authority",
+          "Duplicate provider semantics",
+          "Test-only confidence outside guarded surfaces"
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm --filter @dvt/contracts test -- provider-vocabulary.architecture.test.ts",
+          "pnpm docs:gov:links",
+          "pnpm docs:build",
+          "pnpm planning:db:current-schema:check",
+          "pnpm planning:db:export:check",
+          "pnpm docs:feature-mechanization:implementation --feature DOC1-7-RUNTIME-PROVIDER-TRUTH",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/components/engine/contracts/engine/runtime-provider-vocabulary-component.md"
+        ],
+        "expectedFailure": "Active provider documentation truth is absent or inconsistent.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/adr/ADR-0003-execution-model.md",
+          "docs/adr/ADR-0019_Adapter_Equivalence_and_Maintenance_Boundary.md",
+          "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
+          "docs/adr/ADR-0063-planning-db-current-schema-rebuild.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": ["README.md"],
+        "architectureGuards": [
+          "pnpm --filter @dvt/contracts test -- provider-vocabulary.architecture.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2163",
+        "implementationRefs": [
+          "packages/@dvt/contracts/test/provider-vocabulary.architecture.test.ts#activeProviderVocabularySources"
+        ],
+        "normalizedRailName": "classifydocumentationentrypoint",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "3c5ed62831c530c0ed7d27130cce43cd5828b52060729c1f00965a194b5c7d07",
+        "allowedImplementationSurfaces": [
+          "README.md",
+          "docs/adr/ADR-0003-execution-model.md",
+          "docs/adr/ADR-0019_Adapter_Equivalence_and_Maintenance_Boundary.md",
+          "docs/architecture/components/engine/contracts/engine/runtime-provider-vocabulary-component.md",
+          "docs/architecture/components/engine/adapters/index.md",
+          "docs/guides/workflow-engine-user-manual.v1.md",
+          "docs/guides/how-to-add-step-kind-20260406.md",
+          "docs/guides/plan-compile-catalog-extension-technical-manual-20260417.md",
+          "packages/@dvt/contracts/test/provider-vocabulary.architecture.test.ts",
+          "docs/.manifest.json",
+          "docs/evidence/**",
+          "docs/risk-register/**",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/**",
+          "packages/@dvt/contracts/src/**",
+          "packages/@dvt/engine/**",
+          "packages/@dvt/adapter-*/**",
+          "docs/archive/**"
+        ]
+      },
+      "createdAt": "2026-08-10T17:59:03.766Z"
+    },
+    {
+      "operationId": "339a8c72-2515-467c-bbf0-829dec4d3524",
+      "idempotencyKey": "doc1-7-architecture-source-v3",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#DOC1-7-RUNTIME-PROVIDER-TRUTH#query#classifyarchitecturedocumentationdisposition",
+      "sourcePath": "packages/@dvt/contracts/test/provider-vocabulary.architecture.test.ts",
+      "sourceContentSha256": "3c5ed62831c530c0ed7d27130cce43cd5828b52060729c1f00965a194b5c7d07",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/contracts test -- provider-vocabulary.architecture.test.ts",
+        "dddOwner": "ArchitectureDocumentationDispositionReadModel",
+        "railName": "ClassifyArchitectureDocumentationDisposition",
+        "railType": "query",
+        "featureId": "DOC1-7-RUNTIME-PROVIDER-TRUTH",
+        "greenTest": "pnpm --filter @dvt/contracts test -- provider-vocabulary.architecture.test.ts",
+        "sourceRef": "packages/@dvt/contracts/test/provider-vocabulary.architecture.test.ts",
+        "unitTests": [
+          "packages/@dvt/contracts/test/provider-vocabulary.architecture.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2163"],
+        "cypressFlows": [
+          "N/A - documentation entry points and semantic contract architecture guard"
+        ],
+        "domainObjects": [
+          "DocumentationEntryPointRegistry",
+          "ArchitectureDocumentationDispositionReadModel",
+          "DocumentationLifecycleReadModel",
+          "ContractsProviderAdapterEvidence"
+        ],
+        "fowlerSignals": [
+          "Documentation drift at the repository entry point",
+          "Hidden provider-support authority",
+          "Duplicate provider semantics",
+          "Test-only confidence outside guarded surfaces"
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm --filter @dvt/contracts test -- provider-vocabulary.architecture.test.ts",
+          "pnpm docs:gov:links",
+          "pnpm docs:build",
+          "pnpm planning:db:current-schema:check",
+          "pnpm planning:db:export:check",
+          "pnpm docs:feature-mechanization:implementation --feature DOC1-7-RUNTIME-PROVIDER-TRUTH",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/components/engine/contracts/engine/runtime-provider-vocabulary-component.md"
+        ],
+        "expectedFailure": "Active provider documentation truth is absent or inconsistent.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/adr/ADR-0003-execution-model.md",
+          "docs/adr/ADR-0019_Adapter_Equivalence_and_Maintenance_Boundary.md",
+          "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
+          "docs/adr/ADR-0063-planning-db-current-schema-rebuild.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": ["README.md"],
+        "architectureGuards": [
+          "pnpm --filter @dvt/contracts test -- provider-vocabulary.architecture.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2163",
+        "implementationRefs": [
+          "packages/@dvt/contracts/test/provider-vocabulary.architecture.test.ts#activeProviderVocabularySources"
+        ],
+        "normalizedRailName": "classifyarchitecturedocumentationdisposition",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "3c5ed62831c530c0ed7d27130cce43cd5828b52060729c1f00965a194b5c7d07",
+        "allowedImplementationSurfaces": [
+          "README.md",
+          "docs/adr/ADR-0003-execution-model.md",
+          "docs/adr/ADR-0019_Adapter_Equivalence_and_Maintenance_Boundary.md",
+          "docs/architecture/components/engine/contracts/engine/runtime-provider-vocabulary-component.md",
+          "docs/architecture/components/engine/adapters/index.md",
+          "docs/guides/workflow-engine-user-manual.v1.md",
+          "docs/guides/how-to-add-step-kind-20260406.md",
+          "docs/guides/plan-compile-catalog-extension-technical-manual-20260417.md",
+          "packages/@dvt/contracts/test/provider-vocabulary.architecture.test.ts",
+          "docs/.manifest.json",
+          "docs/evidence/**",
+          "docs/risk-register/**",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/**",
+          "packages/@dvt/contracts/src/**",
+          "packages/@dvt/engine/**",
+          "packages/@dvt/adapter-*/**",
+          "docs/archive/**"
+        ]
+      },
+      "createdAt": "2026-08-10T17:59:05.065Z"
+    },
+    {
+      "operationId": "f7af5014-7afc-4d30-868a-807d909ce605",
+      "idempotencyKey": "doc1-7-lifecycle-source-v3",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#DOC1-7-RUNTIME-PROVIDER-TRUTH#query#listdocumentationlifecyclefacts",
+      "sourcePath": "packages/@dvt/contracts/test/provider-vocabulary.architecture.test.ts",
+      "sourceContentSha256": "3c5ed62831c530c0ed7d27130cce43cd5828b52060729c1f00965a194b5c7d07",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/contracts test -- provider-vocabulary.architecture.test.ts",
+        "dddOwner": "DocumentationLifecycleReadModel",
+        "railName": "ListDocumentationLifecycleFacts",
+        "railType": "query",
+        "featureId": "DOC1-7-RUNTIME-PROVIDER-TRUTH",
+        "greenTest": "pnpm --filter @dvt/contracts test -- provider-vocabulary.architecture.test.ts",
+        "sourceRef": "packages/@dvt/contracts/test/provider-vocabulary.architecture.test.ts",
+        "unitTests": [
+          "packages/@dvt/contracts/test/provider-vocabulary.architecture.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2163"],
+        "cypressFlows": [
+          "N/A - documentation entry points and semantic contract architecture guard"
+        ],
+        "domainObjects": [
+          "DocumentationEntryPointRegistry",
+          "ArchitectureDocumentationDispositionReadModel",
+          "DocumentationLifecycleReadModel",
+          "ContractsProviderAdapterEvidence"
+        ],
+        "fowlerSignals": [
+          "Documentation drift at the repository entry point",
+          "Hidden provider-support authority",
+          "Duplicate provider semantics",
+          "Test-only confidence outside guarded surfaces"
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm --filter @dvt/contracts test -- provider-vocabulary.architecture.test.ts",
+          "pnpm docs:gov:links",
+          "pnpm docs:build",
+          "pnpm planning:db:current-schema:check",
+          "pnpm planning:db:export:check",
+          "pnpm docs:feature-mechanization:implementation --feature DOC1-7-RUNTIME-PROVIDER-TRUTH",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/components/engine/contracts/engine/runtime-provider-vocabulary-component.md"
+        ],
+        "expectedFailure": "Active provider documentation truth is absent or inconsistent.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/adr/ADR-0003-execution-model.md",
+          "docs/adr/ADR-0019_Adapter_Equivalence_and_Maintenance_Boundary.md",
+          "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
+          "docs/adr/ADR-0063-planning-db-current-schema-rebuild.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": ["README.md"],
+        "architectureGuards": [
+          "pnpm --filter @dvt/contracts test -- provider-vocabulary.architecture.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2163",
+        "implementationRefs": [
+          "packages/@dvt/contracts/test/provider-vocabulary.architecture.test.ts#activeProviderVocabularySources"
+        ],
+        "normalizedRailName": "listdocumentationlifecyclefacts",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "3c5ed62831c530c0ed7d27130cce43cd5828b52060729c1f00965a194b5c7d07",
+        "allowedImplementationSurfaces": [
+          "README.md",
+          "docs/adr/ADR-0003-execution-model.md",
+          "docs/adr/ADR-0019_Adapter_Equivalence_and_Maintenance_Boundary.md",
+          "docs/architecture/components/engine/contracts/engine/runtime-provider-vocabulary-component.md",
+          "docs/architecture/components/engine/adapters/index.md",
+          "docs/guides/workflow-engine-user-manual.v1.md",
+          "docs/guides/how-to-add-step-kind-20260406.md",
+          "docs/guides/plan-compile-catalog-extension-technical-manual-20260417.md",
+          "packages/@dvt/contracts/test/provider-vocabulary.architecture.test.ts",
+          "docs/.manifest.json",
+          "docs/evidence/**",
+          "docs/risk-register/**",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/**",
+          "packages/@dvt/contracts/src/**",
+          "packages/@dvt/engine/**",
+          "packages/@dvt/adapter-*/**",
+          "docs/archive/**"
+        ]
+      },
+      "createdAt": "2026-08-10T17:59:06.423Z"
     }
   ]
 }
