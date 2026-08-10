@@ -86886,6 +86886,447 @@
       "createdAt": "2026-08-04T01:29:12.684Z"
     },
     {
+      "railId": "local#DOC1-3-DB-FIRST-COMPONENT-MAP#command#generateplanningderivedsurfaces",
+      "featureId": "DOC1-3-DB-FIRST-COMPONENT-MAP",
+      "mechanizationStatus": "implemented",
+      "railName": "GeneratePlanningDerivedSurfaces",
+      "normalizedRailName": "generateplanningderivedsurfaces",
+      "railType": "command",
+      "dddOwner": "PlanningDocumentationProjection",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "scripts/generate-code-status.cjs#buildComponentTopologyProjection",
+        "scripts/generate-code-status.cjs#componentDocumentLink",
+        "scripts/generate-code-status.cjs#componentMapOutputPath",
+        "scripts/generate-code-status.cjs#currentGitSha",
+        "scripts/generate-code-status.cjs#generateComponentMap",
+        "scripts/generate-code-status.cjs#groupRowsByComponent",
+        "scripts/generate-code-status.cjs#readArchitectureComponentDocumentRows",
+        "scripts/generate-code-status.cjs#readComponentTopologyFacts",
+        "scripts/generate-code-status.cjs#renderComponentMap",
+        "scripts/generate-code-status.cjs#uniqueRowsByComponent",
+        "docs/javascripts/table-scroll-accessibility.js#enhanceScrollableTables",
+        "docs/javascripts/table-scroll-accessibility.js#nearestHeadingLabel",
+        "docs/javascripts/table-scroll-accessibility.js#refreshScrollRegion",
+        "scripts/generate-code-status.cjs#readGitTreePaths"
+      ],
+      "implementationRefs": [
+        "scripts/generate-code-status.cjs#buildComponentTopologyProjection",
+        "scripts/generate-code-status.cjs#componentDocumentLink",
+        "scripts/generate-code-status.cjs#componentMapOutputPath",
+        "scripts/generate-code-status.cjs#currentGitSha",
+        "scripts/generate-code-status.cjs#generateComponentMap",
+        "scripts/generate-code-status.cjs#groupRowsByComponent",
+        "scripts/generate-code-status.cjs#readArchitectureComponentDocumentRows",
+        "scripts/generate-code-status.cjs#readComponentTopologyFacts",
+        "scripts/generate-code-status.cjs#renderComponentMap",
+        "scripts/generate-code-status.cjs#uniqueRowsByComponent",
+        "docs/javascripts/table-scroll-accessibility.js#enhanceScrollableTables",
+        "docs/javascripts/table-scroll-accessibility.js#nearestHeadingLabel",
+        "docs/javascripts/table-scroll-accessibility.js#refreshScrollRegion",
+        "scripts/generate-code-status.cjs#readGitTreePaths"
+      ],
+      "documentationRefs": [
+        "docs/architecture/components/index.md",
+        "https://github.com/dunay2/dvt/issues/2146"
+      ],
+      "governingSources": [
+        "AGENTS.md",
+        "docs/planning/status/governance-document-rule-inventory.md",
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/planning/state/github-mvp-issue-workflow.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "scripts/generate-code-status.cjs",
+        "scripts/generate-code-status.test.cjs",
+        "scripts/documentation-publication.test.cjs",
+        "scripts/check-generated-docs-policy.cjs",
+        "docs/generated-docs-policy.json",
+        "docs/architecture/component-map.md",
+        "docs/architecture/components/index.md",
+        "docs/architecture/index.md",
+        "docs/.manifest.json",
+        "docs/javascripts/table-scroll-accessibility.js",
+        "docs/stylesheets/docs-accessibility.css",
+        "zensical.yml",
+        ".github/workflows/pr-quality-gate.yml",
+        "tools/planning-db/state/canonical-state.json"
+      ],
+      "architectureGuards": [
+        "Component and directed relation identities come only from existing Planning DB read models.",
+        "Documentation generation runs only through explicit publication or an explicit component-map command.",
+        "Only current declarative Planning DB state, exact registered edges, and one generated component catalog are permitted."
+      ],
+      "completionGate": [
+        "node --test scripts/generate-code-status.test.cjs scripts/documentation-publication.test.cjs",
+        "pnpm ci:docs",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "scripts/generate-code-status.cjs",
+      "sourceContentSha256": "80498d453524c280604c07a195232c546d069e09954ae74f014c12f6292f17fa",
+      "rawRail": {
+        "name": "GeneratePlanningDerivedSurfaces",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "PlanningDocumentationProjection"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "buildComponentTopologyProjection",
+            "path": "scripts/generate-code-status.cjs",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": [
+              "scripts/generate-code-status.test.cjs",
+              "scripts/documentation-publication.test.cjs"
+            ],
+            "fowlerSignals": [
+              "published_language",
+              "service_layer",
+              "gateway",
+              "registry",
+              "executable_specification"
+            ],
+            "cypressCoverage": "N/A - published documentation is verified through Zensical build and Playwright accessibility QA.",
+            "architectureGuard": "Component and directed relation identities come only from existing Planning DB read models."
+          },
+          {
+            "name": "componentDocumentLink",
+            "path": "scripts/generate-code-status.cjs",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": [
+              "scripts/generate-code-status.test.cjs",
+              "scripts/documentation-publication.test.cjs"
+            ],
+            "fowlerSignals": [
+              "published_language",
+              "service_layer",
+              "gateway",
+              "registry",
+              "executable_specification"
+            ],
+            "cypressCoverage": "N/A - published documentation is verified through Zensical build and Playwright accessibility QA.",
+            "architectureGuard": "Component and directed relation identities come only from existing Planning DB read models."
+          },
+          {
+            "name": "componentMapOutputPath",
+            "path": "scripts/generate-code-status.cjs",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": [
+              "scripts/generate-code-status.test.cjs",
+              "scripts/documentation-publication.test.cjs"
+            ],
+            "fowlerSignals": [
+              "published_language",
+              "service_layer",
+              "gateway",
+              "registry",
+              "executable_specification"
+            ],
+            "cypressCoverage": "N/A - published documentation is verified through Zensical build and Playwright accessibility QA.",
+            "architectureGuard": "Component and directed relation identities come only from existing Planning DB read models."
+          },
+          {
+            "name": "currentGitSha",
+            "path": "scripts/generate-code-status.cjs",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": [
+              "scripts/generate-code-status.test.cjs",
+              "scripts/documentation-publication.test.cjs"
+            ],
+            "fowlerSignals": [
+              "published_language",
+              "service_layer",
+              "gateway",
+              "registry",
+              "executable_specification"
+            ],
+            "cypressCoverage": "N/A - published documentation is verified through Zensical build and Playwright accessibility QA.",
+            "architectureGuard": "Component and directed relation identities come only from existing Planning DB read models."
+          },
+          {
+            "name": "generateComponentMap",
+            "path": "scripts/generate-code-status.cjs",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": [
+              "scripts/generate-code-status.test.cjs",
+              "scripts/documentation-publication.test.cjs"
+            ],
+            "fowlerSignals": [
+              "published_language",
+              "service_layer",
+              "gateway",
+              "registry",
+              "executable_specification"
+            ],
+            "cypressCoverage": "N/A - published documentation is verified through Zensical build and Playwright accessibility QA.",
+            "architectureGuard": "Component and directed relation identities come only from existing Planning DB read models."
+          },
+          {
+            "name": "groupRowsByComponent",
+            "path": "scripts/generate-code-status.cjs",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": [
+              "scripts/generate-code-status.test.cjs",
+              "scripts/documentation-publication.test.cjs"
+            ],
+            "fowlerSignals": [
+              "published_language",
+              "service_layer",
+              "gateway",
+              "registry",
+              "executable_specification"
+            ],
+            "cypressCoverage": "N/A - published documentation is verified through Zensical build and Playwright accessibility QA.",
+            "architectureGuard": "Component and directed relation identities come only from existing Planning DB read models."
+          },
+          {
+            "name": "readArchitectureComponentDocumentRows",
+            "path": "scripts/generate-code-status.cjs",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": [
+              "scripts/generate-code-status.test.cjs",
+              "scripts/documentation-publication.test.cjs"
+            ],
+            "fowlerSignals": [
+              "published_language",
+              "service_layer",
+              "gateway",
+              "registry",
+              "executable_specification"
+            ],
+            "cypressCoverage": "N/A - published documentation is verified through Zensical build and Playwright accessibility QA.",
+            "architectureGuard": "Component and directed relation identities come only from existing Planning DB read models."
+          },
+          {
+            "name": "readComponentTopologyFacts",
+            "path": "scripts/generate-code-status.cjs",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": [
+              "scripts/generate-code-status.test.cjs",
+              "scripts/documentation-publication.test.cjs"
+            ],
+            "fowlerSignals": [
+              "published_language",
+              "service_layer",
+              "gateway",
+              "registry",
+              "executable_specification"
+            ],
+            "cypressCoverage": "N/A - published documentation is verified through Zensical build and Playwright accessibility QA.",
+            "architectureGuard": "Component and directed relation identities come only from existing Planning DB read models."
+          },
+          {
+            "name": "renderComponentMap",
+            "path": "scripts/generate-code-status.cjs",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": [
+              "scripts/generate-code-status.test.cjs",
+              "scripts/documentation-publication.test.cjs"
+            ],
+            "fowlerSignals": [
+              "published_language",
+              "service_layer",
+              "gateway",
+              "registry",
+              "executable_specification"
+            ],
+            "cypressCoverage": "N/A - published documentation is verified through Zensical build and Playwright accessibility QA.",
+            "architectureGuard": "Component and directed relation identities come only from existing Planning DB read models."
+          },
+          {
+            "name": "uniqueRowsByComponent",
+            "path": "scripts/generate-code-status.cjs",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": [
+              "scripts/generate-code-status.test.cjs",
+              "scripts/documentation-publication.test.cjs"
+            ],
+            "fowlerSignals": [
+              "published_language",
+              "service_layer",
+              "gateway",
+              "registry",
+              "executable_specification"
+            ],
+            "cypressCoverage": "N/A - published documentation is verified through Zensical build and Playwright accessibility QA.",
+            "architectureGuard": "Component and directed relation identities come only from existing Planning DB read models."
+          },
+          {
+            "name": "enhanceScrollableTables",
+            "path": "docs/javascripts/table-scroll-accessibility.js",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": [
+              "scripts/generate-code-status.test.cjs",
+              "scripts/documentation-publication.test.cjs"
+            ],
+            "fowlerSignals": [
+              "published_language",
+              "service_layer",
+              "gateway",
+              "registry",
+              "executable_specification"
+            ],
+            "cypressCoverage": "N/A - published documentation is verified through Zensical build and Playwright accessibility QA.",
+            "architectureGuard": "Component and directed relation identities come only from existing Planning DB read models."
+          },
+          {
+            "name": "nearestHeadingLabel",
+            "path": "docs/javascripts/table-scroll-accessibility.js",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": [
+              "scripts/generate-code-status.test.cjs",
+              "scripts/documentation-publication.test.cjs"
+            ],
+            "fowlerSignals": [
+              "published_language",
+              "service_layer",
+              "gateway",
+              "registry",
+              "executable_specification"
+            ],
+            "cypressCoverage": "N/A - published documentation is verified through Zensical build and Playwright accessibility QA.",
+            "architectureGuard": "Component and directed relation identities come only from existing Planning DB read models."
+          },
+          {
+            "name": "refreshScrollRegion",
+            "path": "docs/javascripts/table-scroll-accessibility.js",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": [
+              "scripts/generate-code-status.test.cjs",
+              "scripts/documentation-publication.test.cjs"
+            ],
+            "fowlerSignals": [
+              "published_language",
+              "service_layer",
+              "gateway",
+              "registry",
+              "executable_specification"
+            ],
+            "cypressCoverage": "N/A - published documentation is verified through Zensical build and Playwright accessibility QA.",
+            "architectureGuard": "Component and directed relation identities come only from existing Planning DB read models."
+          },
+          {
+            "name": "readGitTreePaths",
+            "path": "scripts/generate-code-status.cjs",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": [
+              "scripts/generate-code-status.test.cjs",
+              "scripts/documentation-publication.test.cjs"
+            ],
+            "fowlerSignals": [
+              "published_language",
+              "service_layer",
+              "gateway",
+              "registry",
+              "executable_specification"
+            ],
+            "cypressCoverage": "N/A - published documentation is verified through Zensical build and Playwright accessibility QA.",
+            "architectureGuard": "Component and directed relation identities come only from existing Planning DB read models."
+          }
+        ],
+        "version": 1,
+        "featureId": "DOC1-3-DB-FIRST-COMPONENT-MAP",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2146"],
+        "cypressFlows": [
+          "N/A - published documentation is verified through Zensical build and Playwright accessibility QA."
+        ],
+        "domainObjects": [
+          "ComponentTopologyProjection",
+          "DocumentationPublication",
+          "ScrollableTableRegion"
+        ],
+        "fowlerSignals": [
+          "published_language",
+          "service_layer",
+          "gateway",
+          "registry",
+          "executable_specification"
+        ],
+        "completionGate": [
+          "node --test scripts/generate-code-status.test.cjs scripts/documentation-publication.test.cjs",
+          "pnpm ci:docs",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "generateplanningderivedsurfaces-record",
+            "redTest": "node --test scripts/generate-code-status.test.cjs scripts/documentation-publication.test.cjs",
+            "greenTest": "node --test scripts/generate-code-status.test.cjs scripts/documentation-publication.test.cjs",
+            "patchSurfaces": [
+              "scripts/generate-code-status.cjs",
+              "docs/generated-docs-policy.json",
+              "docs/javascripts/table-scroll-accessibility.js",
+              "docs/stylesheets/docs-accessibility.css",
+              "zensical.yml"
+            ],
+            "expectedFailure": "The Component Map is not projected from exact Planning DB facts, remains manually tracked, or wide tables cannot be operated by keyboard."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/state/github-mvp-issue-workflow.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "GeneratePlanningDerivedSurfaces",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "PlanningDocumentationProjection"
+          }
+        ],
+        "architectureGuards": [
+          "Component and directed relation identities come only from existing Planning DB read models.",
+          "Documentation generation runs only through explicit publication or an explicit component-map command.",
+          "Only current declarative Planning DB state, exact registered edges, and one generated component catalog are permitted."
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2146",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "scripts/generate-code-status.cjs",
+          "scripts/generate-code-status.test.cjs",
+          "scripts/documentation-publication.test.cjs",
+          "scripts/check-generated-docs-policy.cjs",
+          "docs/generated-docs-policy.json",
+          "docs/architecture/component-map.md",
+          "docs/architecture/components/index.md",
+          "docs/architecture/index.md",
+          "docs/.manifest.json",
+          "docs/javascripts/table-scroll-accessibility.js",
+          "docs/stylesheets/docs-accessibility.css",
+          "zensical.yml",
+          ".github/workflows/pr-quality-gate.yml",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": ["packages/@dvt/**", "apps/**"]
+      },
+      "revision": 5,
+      "createdBy": "codex",
+      "createdAt": "2026-08-10T06:45:39.190Z"
+    },
+    {
       "railId": "local#DOCS-CANONICAL-FILENAME-GATE-20260731#query#validatechangeddocumentfilenames",
       "featureId": "DOCS-CANONICAL-FILENAME-GATE-20260731",
       "mechanizationStatus": "implemented",
@@ -131302,6 +131743,700 @@
         ]
       },
       "createdAt": "2026-08-09T12:14:50.392Z"
+    },
+    {
+      "operationId": "87ee4d33-ca10-46c4-a216-7c533d2668e3",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:DOC1-3-DB-FIRST-COMPONENT-MAP:command:generateplanningderivedsurfaces:latest:11e2c2d9587a546d",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#DOC1-3-DB-FIRST-COMPONENT-MAP#command#generateplanningderivedsurfaces",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2146",
+      "sourceContentSha256": "165af1329a196cd705c25aa88442f1a306afee401fc8487b66617957bd7dd75b",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "node --test scripts/generate-code-status.test.cjs scripts/documentation-publication.test.cjs",
+        "dddOwner": "PlanningDocumentationProjection",
+        "railName": "GeneratePlanningDerivedSurfaces",
+        "railType": "command",
+        "featureId": "DOC1-3-DB-FIRST-COMPONENT-MAP",
+        "greenTest": "node --test scripts/generate-code-status.test.cjs scripts/documentation-publication.test.cjs",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2146",
+        "unitTests": [
+          "scripts/generate-code-status.test.cjs",
+          "scripts/documentation-publication.test.cjs"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2146"],
+        "cypressFlows": [
+          "N/A - published documentation is verified through Zensical build and Playwright accessibility QA."
+        ],
+        "domainObjects": [
+          "ComponentTopologyProjection",
+          "DocumentationPublication",
+          "ScrollableTableRegion"
+        ],
+        "fowlerSignals": [
+          "published_language",
+          "service_layer",
+          "gateway",
+          "registry",
+          "executable_specification"
+        ],
+        "patchSurfaces": [
+          "scripts/generate-code-status.cjs",
+          "docs/generated-docs-policy.json",
+          "docs/javascripts/table-scroll-accessibility.js",
+          "docs/stylesheets/docs-accessibility.css",
+          "zensical.yml"
+        ],
+        "completionGate": [
+          "node --test scripts/generate-code-status.test.cjs scripts/documentation-publication.test.cjs",
+          "pnpm ci:docs",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "The Component Map is not projected from exact Planning DB facts, remains manually tracked, or wide tables cannot be operated by keyboard.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/state/github-mvp-issue-workflow.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/components/index.md",
+          "https://github.com/dunay2/dvt/issues/2146"
+        ],
+        "architectureGuards": [
+          "Component and directed relation identities come only from existing Planning DB read models.",
+          "Documentation generation runs only through explicit publication or an explicit component-map command.",
+          "Only current declarative Planning DB state, exact registered edges, and one generated component catalog are permitted."
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2146",
+        "implementationRefs": [
+          "scripts/generate-code-status.cjs#buildComponentTopologyProjection",
+          "scripts/generate-code-status.cjs#componentDocumentLink",
+          "scripts/generate-code-status.cjs#componentMapOutputPath",
+          "scripts/generate-code-status.cjs#currentGitSha",
+          "scripts/generate-code-status.cjs#generateComponentMap",
+          "scripts/generate-code-status.cjs#groupRowsByComponent",
+          "scripts/generate-code-status.cjs#readArchitectureComponentDocumentRows",
+          "scripts/generate-code-status.cjs#readComponentTopologyFacts",
+          "scripts/generate-code-status.cjs#renderComponentMap",
+          "scripts/generate-code-status.cjs#uniqueRowsByComponent",
+          "docs/javascripts/table-scroll-accessibility.js#enhanceScrollableTables",
+          "docs/javascripts/table-scroll-accessibility.js#nearestHeadingLabel",
+          "docs/javascripts/table-scroll-accessibility.js#refreshScrollRegion"
+        ],
+        "normalizedRailName": "generateplanningderivedsurfaces",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "165af1329a196cd705c25aa88442f1a306afee401fc8487b66617957bd7dd75b",
+        "allowedImplementationSurfaces": [
+          "scripts/generate-code-status.cjs",
+          "scripts/generate-code-status.test.cjs",
+          "scripts/documentation-publication.test.cjs",
+          "scripts/check-generated-docs-policy.cjs",
+          "docs/generated-docs-policy.json",
+          "docs/architecture/component-map.md",
+          "docs/architecture/components/index.md",
+          "docs/architecture/index.md",
+          "docs/.manifest.json",
+          "docs/javascripts/table-scroll-accessibility.js",
+          "docs/stylesheets/docs-accessibility.css",
+          "zensical.yml",
+          ".github/workflows/pr-quality-gate.yml",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": ["packages/@dvt/**", "apps/**"]
+      },
+      "createdAt": "2026-08-10T06:45:39.190Z"
+    },
+    {
+      "operationId": "d14a5136-eb10-4d3b-b9bf-76a76d0bbacb",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:DOC1-3-DB-FIRST-COMPONENT-MAP:command:generateplanningderivedsurfaces:0:f22716c0273c88f2",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#DOC1-3-DB-FIRST-COMPONENT-MAP#command#generateplanningderivedsurfaces",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2146",
+      "sourceContentSha256": "165af1329a196cd705c25aa88442f1a306afee401fc8487b66617957bd7dd75b",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "node --test scripts/generate-code-status.test.cjs scripts/documentation-publication.test.cjs",
+        "dddOwner": "PlanningDocumentationProjection",
+        "railName": "GeneratePlanningDerivedSurfaces",
+        "railType": "command",
+        "featureId": "DOC1-3-DB-FIRST-COMPONENT-MAP",
+        "greenTest": "node --test scripts/generate-code-status.test.cjs scripts/documentation-publication.test.cjs",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2146",
+        "unitTests": [
+          "scripts/generate-code-status.test.cjs",
+          "scripts/documentation-publication.test.cjs"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2146"],
+        "cypressFlows": [
+          "N/A - published documentation is verified through Zensical build and Playwright accessibility QA."
+        ],
+        "domainObjects": [
+          "ComponentTopologyProjection",
+          "DocumentationPublication",
+          "ScrollableTableRegion"
+        ],
+        "fowlerSignals": [
+          "published_language",
+          "service_layer",
+          "gateway",
+          "registry",
+          "executable_specification"
+        ],
+        "patchSurfaces": [
+          "scripts/generate-code-status.cjs",
+          "docs/generated-docs-policy.json",
+          "docs/javascripts/table-scroll-accessibility.js",
+          "docs/stylesheets/docs-accessibility.css",
+          "zensical.yml"
+        ],
+        "completionGate": [
+          "node --test scripts/generate-code-status.test.cjs scripts/documentation-publication.test.cjs",
+          "pnpm ci:docs",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "The Component Map is not projected from exact Planning DB facts, remains manually tracked, or wide tables cannot be operated by keyboard.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/state/github-mvp-issue-workflow.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/components/index.md",
+          "https://github.com/dunay2/dvt/issues/2146"
+        ],
+        "architectureGuards": [
+          "Component and directed relation identities come only from existing Planning DB read models.",
+          "Documentation generation runs only through explicit publication or an explicit component-map command.",
+          "Only current declarative Planning DB state, exact registered edges, and one generated component catalog are permitted."
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2146",
+        "implementationRefs": [
+          "scripts/generate-code-status.cjs#buildComponentTopologyProjection",
+          "scripts/generate-code-status.cjs#componentDocumentLink",
+          "scripts/generate-code-status.cjs#componentMapOutputPath",
+          "scripts/generate-code-status.cjs#currentGitSha",
+          "scripts/generate-code-status.cjs#generateComponentMap",
+          "scripts/generate-code-status.cjs#groupRowsByComponent",
+          "scripts/generate-code-status.cjs#readArchitectureComponentDocumentRows",
+          "scripts/generate-code-status.cjs#readComponentTopologyFacts",
+          "scripts/generate-code-status.cjs#renderComponentMap",
+          "scripts/generate-code-status.cjs#uniqueRowsByComponent",
+          "docs/javascripts/table-scroll-accessibility.js#enhanceScrollableTables",
+          "docs/javascripts/table-scroll-accessibility.js#nearestHeadingLabel",
+          "docs/javascripts/table-scroll-accessibility.js#refreshScrollRegion"
+        ],
+        "normalizedRailName": "generateplanningderivedsurfaces",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "165af1329a196cd705c25aa88442f1a306afee401fc8487b66617957bd7dd75b",
+        "allowedImplementationSurfaces": [
+          "scripts/generate-code-status.cjs",
+          "scripts/generate-code-status.test.cjs",
+          "scripts/documentation-publication.test.cjs",
+          "scripts/check-generated-docs-policy.cjs",
+          "docs/generated-docs-policy.json",
+          "docs/architecture/component-map.md",
+          "docs/architecture/components/index.md",
+          "docs/architecture/index.md",
+          "docs/.manifest.json",
+          "docs/javascripts/table-scroll-accessibility.js",
+          "docs/stylesheets/docs-accessibility.css",
+          "zensical.yml",
+          ".github/workflows/pr-quality-gate.yml",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": ["packages/@dvt/**", "apps/**"]
+      },
+      "createdAt": "2026-08-10T06:47:46.134Z"
+    },
+    {
+      "operationId": "332d79ca-fcc7-4de9-81d9-4ca82d471331",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:DOC1-3-DB-FIRST-COMPONENT-MAP:command:generateplanningderivedsurfaces:1:c06a06a26dbd2873",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#DOC1-3-DB-FIRST-COMPONENT-MAP#command#generateplanningderivedsurfaces",
+      "sourcePath": "scripts/generate-code-status.cjs",
+      "sourceContentSha256": "4a591d64b0c96f8e5bcd9d93480ead4db23e23e0defc18674baae536552b15b1",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "node --test scripts/generate-code-status.test.cjs scripts/documentation-publication.test.cjs",
+        "dddOwner": "PlanningDocumentationProjection",
+        "railName": "GeneratePlanningDerivedSurfaces",
+        "railType": "command",
+        "featureId": "DOC1-3-DB-FIRST-COMPONENT-MAP",
+        "greenTest": "node --test scripts/generate-code-status.test.cjs scripts/documentation-publication.test.cjs",
+        "sourceRef": "scripts/generate-code-status.cjs",
+        "unitTests": [
+          "scripts/generate-code-status.test.cjs",
+          "scripts/documentation-publication.test.cjs"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2146"],
+        "cypressFlows": [
+          "N/A - published documentation is verified through Zensical build and Playwright accessibility QA."
+        ],
+        "domainObjects": [
+          "ComponentTopologyProjection",
+          "DocumentationPublication",
+          "ScrollableTableRegion"
+        ],
+        "fowlerSignals": [
+          "published_language",
+          "service_layer",
+          "gateway",
+          "registry",
+          "executable_specification"
+        ],
+        "patchSurfaces": [
+          "scripts/generate-code-status.cjs",
+          "docs/generated-docs-policy.json",
+          "docs/javascripts/table-scroll-accessibility.js",
+          "docs/stylesheets/docs-accessibility.css",
+          "zensical.yml"
+        ],
+        "completionGate": [
+          "node --test scripts/generate-code-status.test.cjs scripts/documentation-publication.test.cjs",
+          "pnpm ci:docs",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "The Component Map is not projected from exact Planning DB facts, remains manually tracked, or wide tables cannot be operated by keyboard.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/state/github-mvp-issue-workflow.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/components/index.md",
+          "https://github.com/dunay2/dvt/issues/2146"
+        ],
+        "architectureGuards": [
+          "Component and directed relation identities come only from existing Planning DB read models.",
+          "Documentation generation runs only through explicit publication or an explicit component-map command.",
+          "Only current declarative Planning DB state, exact registered edges, and one generated component catalog are permitted."
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2146",
+        "implementationRefs": [
+          "scripts/generate-code-status.cjs#buildComponentTopologyProjection",
+          "scripts/generate-code-status.cjs#componentDocumentLink",
+          "scripts/generate-code-status.cjs#componentMapOutputPath",
+          "scripts/generate-code-status.cjs#currentGitSha",
+          "scripts/generate-code-status.cjs#generateComponentMap",
+          "scripts/generate-code-status.cjs#groupRowsByComponent",
+          "scripts/generate-code-status.cjs#readArchitectureComponentDocumentRows",
+          "scripts/generate-code-status.cjs#readComponentTopologyFacts",
+          "scripts/generate-code-status.cjs#renderComponentMap",
+          "scripts/generate-code-status.cjs#uniqueRowsByComponent",
+          "docs/javascripts/table-scroll-accessibility.js#enhanceScrollableTables",
+          "docs/javascripts/table-scroll-accessibility.js#nearestHeadingLabel",
+          "docs/javascripts/table-scroll-accessibility.js#refreshScrollRegion"
+        ],
+        "normalizedRailName": "generateplanningderivedsurfaces",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "4a591d64b0c96f8e5bcd9d93480ead4db23e23e0defc18674baae536552b15b1",
+        "allowedImplementationSurfaces": [
+          "scripts/generate-code-status.cjs",
+          "scripts/generate-code-status.test.cjs",
+          "scripts/documentation-publication.test.cjs",
+          "scripts/check-generated-docs-policy.cjs",
+          "docs/generated-docs-policy.json",
+          "docs/architecture/component-map.md",
+          "docs/architecture/components/index.md",
+          "docs/architecture/index.md",
+          "docs/.manifest.json",
+          "docs/javascripts/table-scroll-accessibility.js",
+          "docs/stylesheets/docs-accessibility.css",
+          "zensical.yml",
+          ".github/workflows/pr-quality-gate.yml",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": ["packages/@dvt/**", "apps/**"]
+      },
+      "createdAt": "2026-08-10T06:51:43.356Z"
+    },
+    {
+      "operationId": "8516ebac-ea9b-4359-9527-4ed9c6477d8a",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:DOC1-3-DB-FIRST-COMPONENT-MAP:command:generateplanningderivedsurfaces:2:412e2fec28956dcb",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#DOC1-3-DB-FIRST-COMPONENT-MAP#command#generateplanningderivedsurfaces",
+      "sourcePath": "scripts/generate-code-status.cjs",
+      "sourceContentSha256": "a2c4a6f35c6f3900ce116bfa186ca98d8369e6e81c86abeeef260e80e3df0493",
+      "expectedRevision": 2,
+      "previousRevision": 2,
+      "resultingRevision": 3,
+      "payload": {
+        "redTest": "node --test scripts/generate-code-status.test.cjs scripts/documentation-publication.test.cjs",
+        "dddOwner": "PlanningDocumentationProjection",
+        "railName": "GeneratePlanningDerivedSurfaces",
+        "railType": "command",
+        "featureId": "DOC1-3-DB-FIRST-COMPONENT-MAP",
+        "greenTest": "node --test scripts/generate-code-status.test.cjs scripts/documentation-publication.test.cjs",
+        "sourceRef": "scripts/generate-code-status.cjs",
+        "unitTests": [
+          "scripts/generate-code-status.test.cjs",
+          "scripts/documentation-publication.test.cjs"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2146"],
+        "cypressFlows": [
+          "N/A - published documentation is verified through Zensical build and Playwright accessibility QA."
+        ],
+        "domainObjects": [
+          "ComponentTopologyProjection",
+          "DocumentationPublication",
+          "ScrollableTableRegion"
+        ],
+        "fowlerSignals": [
+          "published_language",
+          "service_layer",
+          "gateway",
+          "registry",
+          "executable_specification"
+        ],
+        "patchSurfaces": [
+          "scripts/generate-code-status.cjs",
+          "docs/generated-docs-policy.json",
+          "docs/javascripts/table-scroll-accessibility.js",
+          "docs/stylesheets/docs-accessibility.css",
+          "zensical.yml"
+        ],
+        "completionGate": [
+          "node --test scripts/generate-code-status.test.cjs scripts/documentation-publication.test.cjs",
+          "pnpm ci:docs",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "The Component Map is not projected from exact Planning DB facts, remains manually tracked, or wide tables cannot be operated by keyboard.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/state/github-mvp-issue-workflow.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/components/index.md",
+          "https://github.com/dunay2/dvt/issues/2146"
+        ],
+        "architectureGuards": [
+          "Component and directed relation identities come only from existing Planning DB read models.",
+          "Documentation generation runs only through explicit publication or an explicit component-map command.",
+          "Only current declarative Planning DB state, exact registered edges, and one generated component catalog are permitted."
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2146",
+        "implementationRefs": [
+          "scripts/generate-code-status.cjs#buildComponentTopologyProjection",
+          "scripts/generate-code-status.cjs#componentDocumentLink",
+          "scripts/generate-code-status.cjs#componentMapOutputPath",
+          "scripts/generate-code-status.cjs#currentGitSha",
+          "scripts/generate-code-status.cjs#generateComponentMap",
+          "scripts/generate-code-status.cjs#groupRowsByComponent",
+          "scripts/generate-code-status.cjs#readArchitectureComponentDocumentRows",
+          "scripts/generate-code-status.cjs#readComponentTopologyFacts",
+          "scripts/generate-code-status.cjs#renderComponentMap",
+          "scripts/generate-code-status.cjs#uniqueRowsByComponent",
+          "docs/javascripts/table-scroll-accessibility.js#enhanceScrollableTables",
+          "docs/javascripts/table-scroll-accessibility.js#nearestHeadingLabel",
+          "docs/javascripts/table-scroll-accessibility.js#refreshScrollRegion",
+          "scripts/generate-code-status.cjs#readGitTreePaths"
+        ],
+        "normalizedRailName": "generateplanningderivedsurfaces",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "a2c4a6f35c6f3900ce116bfa186ca98d8369e6e81c86abeeef260e80e3df0493",
+        "allowedImplementationSurfaces": [
+          "scripts/generate-code-status.cjs",
+          "scripts/generate-code-status.test.cjs",
+          "scripts/documentation-publication.test.cjs",
+          "scripts/check-generated-docs-policy.cjs",
+          "docs/generated-docs-policy.json",
+          "docs/architecture/component-map.md",
+          "docs/architecture/components/index.md",
+          "docs/architecture/index.md",
+          "docs/.manifest.json",
+          "docs/javascripts/table-scroll-accessibility.js",
+          "docs/stylesheets/docs-accessibility.css",
+          "zensical.yml",
+          ".github/workflows/pr-quality-gate.yml",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": ["packages/@dvt/**", "apps/**"]
+      },
+      "createdAt": "2026-08-10T07:07:11.139Z"
+    },
+    {
+      "operationId": "56806f41-2222-4d58-aaaa-0aedc377f543",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:DOC1-3-DB-FIRST-COMPONENT-MAP:command:generateplanningderivedsurfaces:3:00cc1af0144dbedd",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#DOC1-3-DB-FIRST-COMPONENT-MAP#command#generateplanningderivedsurfaces",
+      "sourcePath": "scripts/generate-code-status.cjs",
+      "sourceContentSha256": "5e641a82848f834f478ca5be8a61b459fcde00800f2fee009d87d56734879360",
+      "expectedRevision": 3,
+      "previousRevision": 3,
+      "resultingRevision": 4,
+      "payload": {
+        "redTest": "node --test scripts/generate-code-status.test.cjs scripts/documentation-publication.test.cjs",
+        "dddOwner": "PlanningDocumentationProjection",
+        "railName": "GeneratePlanningDerivedSurfaces",
+        "railType": "command",
+        "featureId": "DOC1-3-DB-FIRST-COMPONENT-MAP",
+        "greenTest": "node --test scripts/generate-code-status.test.cjs scripts/documentation-publication.test.cjs",
+        "sourceRef": "scripts/generate-code-status.cjs",
+        "unitTests": [
+          "scripts/generate-code-status.test.cjs",
+          "scripts/documentation-publication.test.cjs"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2146"],
+        "cypressFlows": [
+          "N/A - published documentation is verified through Zensical build and Playwright accessibility QA."
+        ],
+        "domainObjects": [
+          "ComponentTopologyProjection",
+          "DocumentationPublication",
+          "ScrollableTableRegion"
+        ],
+        "fowlerSignals": [
+          "published_language",
+          "service_layer",
+          "gateway",
+          "registry",
+          "executable_specification"
+        ],
+        "patchSurfaces": [
+          "scripts/generate-code-status.cjs",
+          "docs/generated-docs-policy.json",
+          "docs/javascripts/table-scroll-accessibility.js",
+          "docs/stylesheets/docs-accessibility.css",
+          "zensical.yml"
+        ],
+        "completionGate": [
+          "node --test scripts/generate-code-status.test.cjs scripts/documentation-publication.test.cjs",
+          "pnpm ci:docs",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "The Component Map is not projected from exact Planning DB facts, remains manually tracked, or wide tables cannot be operated by keyboard.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/state/github-mvp-issue-workflow.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/components/index.md",
+          "https://github.com/dunay2/dvt/issues/2146"
+        ],
+        "architectureGuards": [
+          "Component and directed relation identities come only from existing Planning DB read models.",
+          "Documentation generation runs only through explicit publication or an explicit component-map command.",
+          "Only current declarative Planning DB state, exact registered edges, and one generated component catalog are permitted."
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2146",
+        "implementationRefs": [
+          "scripts/generate-code-status.cjs#buildComponentTopologyProjection",
+          "scripts/generate-code-status.cjs#componentDocumentLink",
+          "scripts/generate-code-status.cjs#componentMapOutputPath",
+          "scripts/generate-code-status.cjs#currentGitSha",
+          "scripts/generate-code-status.cjs#generateComponentMap",
+          "scripts/generate-code-status.cjs#groupRowsByComponent",
+          "scripts/generate-code-status.cjs#readArchitectureComponentDocumentRows",
+          "scripts/generate-code-status.cjs#readComponentTopologyFacts",
+          "scripts/generate-code-status.cjs#renderComponentMap",
+          "scripts/generate-code-status.cjs#uniqueRowsByComponent",
+          "docs/javascripts/table-scroll-accessibility.js#enhanceScrollableTables",
+          "docs/javascripts/table-scroll-accessibility.js#nearestHeadingLabel",
+          "docs/javascripts/table-scroll-accessibility.js#refreshScrollRegion",
+          "scripts/generate-code-status.cjs#readGitTreePaths"
+        ],
+        "normalizedRailName": "generateplanningderivedsurfaces",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "5e641a82848f834f478ca5be8a61b459fcde00800f2fee009d87d56734879360",
+        "allowedImplementationSurfaces": [
+          "scripts/generate-code-status.cjs",
+          "scripts/generate-code-status.test.cjs",
+          "scripts/documentation-publication.test.cjs",
+          "scripts/check-generated-docs-policy.cjs",
+          "docs/generated-docs-policy.json",
+          "docs/architecture/component-map.md",
+          "docs/architecture/components/index.md",
+          "docs/architecture/index.md",
+          "docs/.manifest.json",
+          "docs/javascripts/table-scroll-accessibility.js",
+          "docs/stylesheets/docs-accessibility.css",
+          "zensical.yml",
+          ".github/workflows/pr-quality-gate.yml",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": ["packages/@dvt/**", "apps/**"]
+      },
+      "createdAt": "2026-08-10T07:32:58.367Z"
+    },
+    {
+      "operationId": "eeb20311-c9cc-4d35-bc61-094fb27a080d",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:DOC1-3-DB-FIRST-COMPONENT-MAP:command:generateplanningderivedsurfaces:4:f46317c17e0e6544",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#DOC1-3-DB-FIRST-COMPONENT-MAP#command#generateplanningderivedsurfaces",
+      "sourcePath": "scripts/generate-code-status.cjs",
+      "sourceContentSha256": "80498d453524c280604c07a195232c546d069e09954ae74f014c12f6292f17fa",
+      "expectedRevision": 4,
+      "previousRevision": 4,
+      "resultingRevision": 5,
+      "payload": {
+        "redTest": "node --test scripts/generate-code-status.test.cjs scripts/documentation-publication.test.cjs",
+        "dddOwner": "PlanningDocumentationProjection",
+        "railName": "GeneratePlanningDerivedSurfaces",
+        "railType": "command",
+        "featureId": "DOC1-3-DB-FIRST-COMPONENT-MAP",
+        "greenTest": "node --test scripts/generate-code-status.test.cjs scripts/documentation-publication.test.cjs",
+        "sourceRef": "scripts/generate-code-status.cjs",
+        "unitTests": [
+          "scripts/generate-code-status.test.cjs",
+          "scripts/documentation-publication.test.cjs",
+          "scripts/generate-code-status.test.cjs",
+          "scripts/documentation-publication.test.cjs",
+          "scripts/generate-code-status.test.cjs",
+          "scripts/documentation-publication.test.cjs",
+          "scripts/generate-code-status.test.cjs",
+          "scripts/documentation-publication.test.cjs",
+          "scripts/generate-code-status.test.cjs",
+          "scripts/documentation-publication.test.cjs",
+          "scripts/generate-code-status.test.cjs",
+          "scripts/documentation-publication.test.cjs",
+          "scripts/generate-code-status.test.cjs",
+          "scripts/documentation-publication.test.cjs",
+          "scripts/generate-code-status.test.cjs",
+          "scripts/documentation-publication.test.cjs",
+          "scripts/generate-code-status.test.cjs",
+          "scripts/documentation-publication.test.cjs",
+          "scripts/generate-code-status.test.cjs",
+          "scripts/documentation-publication.test.cjs",
+          "scripts/generate-code-status.test.cjs",
+          "scripts/documentation-publication.test.cjs",
+          "scripts/generate-code-status.test.cjs",
+          "scripts/documentation-publication.test.cjs",
+          "scripts/generate-code-status.test.cjs",
+          "scripts/documentation-publication.test.cjs",
+          "scripts/generate-code-status.test.cjs",
+          "scripts/documentation-publication.test.cjs"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2146"],
+        "cypressFlows": [
+          "N/A - published documentation is verified through Zensical build and Playwright accessibility QA."
+        ],
+        "domainObjects": [
+          "ComponentTopologyProjection",
+          "DocumentationPublication",
+          "ScrollableTableRegion"
+        ],
+        "fowlerSignals": [
+          "published_language",
+          "service_layer",
+          "gateway",
+          "registry",
+          "executable_specification"
+        ],
+        "patchSurfaces": [
+          "scripts/generate-code-status.cjs",
+          "docs/generated-docs-policy.json",
+          "docs/javascripts/table-scroll-accessibility.js",
+          "docs/stylesheets/docs-accessibility.css",
+          "zensical.yml"
+        ],
+        "completionGate": [
+          "node --test scripts/generate-code-status.test.cjs scripts/documentation-publication.test.cjs",
+          "pnpm ci:docs",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "The Component Map is not projected from exact Planning DB facts, remains manually tracked, or wide tables cannot be operated by keyboard.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/state/github-mvp-issue-workflow.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/components/index.md",
+          "https://github.com/dunay2/dvt/issues/2146"
+        ],
+        "architectureGuards": [
+          "Component and directed relation identities come only from existing Planning DB read models.",
+          "Documentation generation runs only through explicit publication or an explicit component-map command.",
+          "Only current declarative Planning DB state, exact registered edges, and one generated component catalog are permitted."
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2146",
+        "implementationRefs": [
+          "scripts/generate-code-status.cjs#buildComponentTopologyProjection",
+          "scripts/generate-code-status.cjs#componentDocumentLink",
+          "scripts/generate-code-status.cjs#componentMapOutputPath",
+          "scripts/generate-code-status.cjs#currentGitSha",
+          "scripts/generate-code-status.cjs#generateComponentMap",
+          "scripts/generate-code-status.cjs#groupRowsByComponent",
+          "scripts/generate-code-status.cjs#readArchitectureComponentDocumentRows",
+          "scripts/generate-code-status.cjs#readComponentTopologyFacts",
+          "scripts/generate-code-status.cjs#renderComponentMap",
+          "scripts/generate-code-status.cjs#uniqueRowsByComponent",
+          "docs/javascripts/table-scroll-accessibility.js#enhanceScrollableTables",
+          "docs/javascripts/table-scroll-accessibility.js#nearestHeadingLabel",
+          "docs/javascripts/table-scroll-accessibility.js#refreshScrollRegion",
+          "scripts/generate-code-status.cjs#readGitTreePaths"
+        ],
+        "normalizedRailName": "generateplanningderivedsurfaces",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "80498d453524c280604c07a195232c546d069e09954ae74f014c12f6292f17fa",
+        "allowedImplementationSurfaces": [
+          "scripts/generate-code-status.cjs",
+          "scripts/generate-code-status.test.cjs",
+          "scripts/documentation-publication.test.cjs",
+          "scripts/check-generated-docs-policy.cjs",
+          "docs/generated-docs-policy.json",
+          "docs/architecture/component-map.md",
+          "docs/architecture/components/index.md",
+          "docs/architecture/index.md",
+          "docs/.manifest.json",
+          "docs/javascripts/table-scroll-accessibility.js",
+          "docs/stylesheets/docs-accessibility.css",
+          "zensical.yml",
+          ".github/workflows/pr-quality-gate.yml",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": ["packages/@dvt/**", "apps/**"]
+      },
+      "createdAt": "2026-08-10T07:44:15.196Z"
     }
   ]
 }

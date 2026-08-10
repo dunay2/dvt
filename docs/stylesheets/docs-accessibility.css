@@ -1,0 +1,5 @@
+.md-typeset__scrollwrap:focus-visible {
+  border-radius: 0.125rem;
+  outline: 0.2rem solid var(--md-accent-fg-color);
+  outline-offset: 0.1rem;
+}

@@ -2,55 +2,45 @@
 title: Architecture Component Surfaces
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-04-09
+last_reviewed: 2026-08-10
 ---
 
 # Architecture Component Surfaces
 
-This subtree is the canonical catalog for real repo components.
+This subtree contains authored rationale and invariants for real repository
+components. The Planning DB architecture read models are the structured
+component and relation authority.
 
 A component page under `docs/architecture/components/` must map to a real app,
 worker, or package in the repository and it must be the single active home for
-that component's public surface.
+that component's authored public-surface explanation.
 
 ## Read This With
 
-1. [System Architecture](../system/index.md)
-2. [Subsystem Architecture](../system/subsystems/index.md)
-3. [Reference Architecture](../reference-architecture.md)
-4. [System Delivery Status](../system-delivery-status.md)
-5. [DVT Domain Map](../domain-map.md)
+1. [DB-first Component Map](../component-map.md)
+2. [System Architecture](../system/index.md)
+3. [Subsystem Architecture](../system/subsystems/index.md)
+4. [Reference Architecture](../reference-architecture.md)
+5. [System Delivery Status](../system-delivery-status.md)
+6. [DVT Domain Map](../domain-map.md)
 
-## Current Component Entry Points
+## Current Inventory
 
-- [@dvt/engine](./engine/index.md): canonical engine component home for public
-  operations, interfaces, and supporting engine subtopics.
-- [@dvt/planner](./planner/index.md): planner package boundary and canonical
-  planner ingress truth.
-- [apps/api](./api/index.md): authenticated HTTP composition root and runtime
-  entry surface.
-- [@dvt/delivery](./delivery/index.md): delivery runtime library and downstream
-  processing surface.
-- [dvt-outbox-worker](./outbox-worker/index.md): outbox delivery host,
-  retention, and purge runtime composition root.
-- [dvt-projector-worker](./projector-worker/index.md): snapshot rebuild and
-  projector host composition root.
-- [dvt-lineage-worker](./lineage-worker/index.md): lineage mapper/sink host and
-  operational surface.
-- [web](./web/index.md): canonical frontend workspace component home for the
-  `apps/web` deployable shell and `@dvt/web` package surface.
-- [ci-governance](./ci-governance/index.md): repository automation component
-  for local changed-file gates, feature mechanization, generated governance
-  checks, and CI readiness scripts.
+Open the [DB-first Component Map](../component-map.md) for the complete,
+deterministically ordered component catalog and exact directed relations. It is
+generated only during explicit documentation publication; missing or ambiguous
+repository and documentation bindings remain visible gaps.
 
 ## Component Rules
 
-- one component, one active home;
+- one component, at most one active authored home;
 - component pages describe current responsibilities, interfaces, code anchors,
   and queued deltas;
 - subsystem and domain pages may link to a component, but they must not become
   a second component home;
-- compatibility aliases belong in archive once active links are migrated.
+- the component inventory and its relation topology must not be copied into an
+  authored list;
+- obsolete authored aliases belong in archive after active references are removed.
 
 ## Coverage Boundary
 
@@ -66,7 +56,7 @@ that component's public surface.
 
 ## Related Pages
 
-- [DVT Component Map](../component-map.md)
+- [DB-first Component Map](../component-map.md)
 - [DVT Domain Map](../domain-map.md)
 - [System Architecture](../system/index.md)
 - [Subsystem Architecture](../system/subsystems/index.md)

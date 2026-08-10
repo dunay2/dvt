@@ -580,8 +580,33 @@ test('package and manual deploy expose one explicit publication command', () => 
   assert.ok(workflowScope.generated_status_relevant.includes('scripts/documentation-*.cjs'));
   assert.match(
     prWorkflow,
-    /- name: Validate Repository Map publication and links[\s\S]*?run: pnpm docs:publish && pnpm docs:build && pnpm docs:gov:links\n\s+env:\n\s+GIT_BASE: \$\{\{ github\.event\.pull_request\.base\.sha \}\}\n\s+GIT_HEAD: \$\{\{ github\.sha \}\}/u
+    /- name: Validate DB-first documentation publication and links[\s\S]*?run: pnpm docs:publish && pnpm docs:build && pnpm docs:gov:links\n\s+env:\n\s+GIT_BASE: \$\{\{ github\.event\.pull_request\.base\.sha \}\}\n\s+GIT_HEAD: \$\{\{ github\.sha \}\}/u
   );
+});
+
+test('published wide tables expose a labelled keyboard-scroll region', () => {
+  const repositoryRoot = path.resolve(__dirname, '..');
+  const config = fs.readFileSync(path.join(repositoryRoot, 'zensical.yml'), 'utf8');
+  const scriptPath = path.join(
+    repositoryRoot,
+    'docs',
+    'javascripts',
+    'table-scroll-accessibility.js'
+  );
+  const stylePath = path.join(repositoryRoot, 'docs', 'stylesheets', 'docs-accessibility.css');
+  assert.match(config, /javascripts\/table-scroll-accessibility\.js/u);
+  assert.match(config, /stylesheets\/docs-accessibility\.css/u);
+
+  const script = fs.readFileSync(scriptPath, 'utf8');
+  assert.match(script, /\.md-typeset__scrollwrap/u);
+  assert.match(script, /setAttribute\('role', 'region'\)/u);
+  assert.match(script, /setAttribute\('aria-label'/u);
+  assert.match(script, /tabIndex = 0/u);
+  assert.match(script, /ResizeObserver/u);
+
+  const style = fs.readFileSync(stylePath, 'utf8');
+  assert.match(style, /\.md-typeset__scrollwrap:focus-visible/u);
+  assert.match(style, /outline/u);
 });
 
 test('docs quality accepts canonical routes declared by publication policy', () => {

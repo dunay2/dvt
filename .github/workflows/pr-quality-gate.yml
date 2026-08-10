@@ -158,13 +158,13 @@ jobs:
         if: github.event_name == 'pull_request' && steps.scope.outputs.docs_changed == 'true'
         run: pnpm docs:gov:frontmatter:changed
 
-      - name: Validate generated Repository Map and code-state output
+      - name: Validate generated code-state output
         if:
           github.event_name == 'pull_request' && steps.scope.outputs.generated_status_relevant ==
           'true'
         run: pnpm docs:status:check
 
-      - name: Prove Repository Map against migrated and imported Planning DB
+      - name: Prove DB-first documentation against rebuilt Planning DB
         if:
           github.event_name == 'pull_request' && steps.scope.outputs.generated_status_relevant ==
           'true'
@@ -173,7 +173,7 @@ jobs:
           GIT_BASE: ${{ github.event.pull_request.base.sha }}
           GIT_HEAD: ${{ github.sha }}
 
-      - name: Setup Python for Repository Map publication
+      - name: Setup Python for DB-first documentation publication
         if:
           github.event_name == 'pull_request' && steps.scope.outputs.generated_status_relevant ==
           'true'
@@ -183,7 +183,7 @@ jobs:
           cache: 'pip'
           cache-dependency-path: .github/requirements/zensical.lock
 
-      - name: Install Zensical for Repository Map publication
+      - name: Install Zensical for DB-first documentation publication
         if:
           github.event_name == 'pull_request' && steps.scope.outputs.generated_status_relevant ==
           'true'
@@ -191,7 +191,7 @@ jobs:
           python -m pip install --disable-pip-version-check --require-hashes -r
           .github/requirements/zensical.lock
 
-      - name: Validate Repository Map publication and links
+      - name: Validate DB-first documentation publication and links
         if:
           github.event_name == 'pull_request' && steps.scope.outputs.generated_status_relevant ==
           'true'
