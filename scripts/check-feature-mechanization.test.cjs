@@ -850,3 +850,30 @@ test('FeatureMechanizationGitDiffReader treats untracked file contents as added 
     fs.rmSync(repoRootPath, { recursive: true, force: true });
   }
 });
+
+test('FeatureMechanizationGitDiffReader reports tracked deletions explicitly', () => {
+  const repoRootPath = fs.mkdtempSync(path.join(os.tmpdir(), 'dvt-feature-mechanization-'));
+  const deletedPath = 'apps/api/src/retiredCatalog.ts';
+
+  try {
+    const reader = new FeatureMechanizationGitDiffReader({
+      baseRef: 'origin/main',
+      repoRootPath,
+    });
+    reader.readGitLines = (args) => {
+      if (args[0] === 'diff' && args.includes('--name-only')) {
+        return [deletedPath];
+      }
+
+      return [];
+    };
+    reader.runGit = () => '';
+
+    const diff = reader.read();
+
+    assert.deepEqual(diff.changedFiles, [deletedPath]);
+    assert.deepEqual(diff.deletedFiles, [deletedPath]);
+  } finally {
+    fs.rmSync(repoRootPath, { recursive: true, force: true });
+  }
+});

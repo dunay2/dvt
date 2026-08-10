@@ -28,6 +28,7 @@ class FeatureImplementationGuard {
       (entry) => entry?.manifest && typeof entry.manifest === 'object'
     );
     this.changedFiles = Array.from(new Set((options.changedFiles || []).map(toPosix))).sort();
+    this.deletedFiles = new Set((options.deletedFiles || []).map(toPosix));
     this.addedLinesByPath = this.normalizePathMap(options.addedLinesByPath || {});
     this.fileContentsByPath = this.normalizePathMap(options.fileContentsByPath || {});
   }
@@ -67,6 +68,10 @@ class FeatureImplementationGuard {
 
   validateForbiddenImplementationSurfaces(errors) {
     for (const filePath of this.changedFiles) {
+      if (this.deletedFiles.has(filePath)) {
+        continue;
+      }
+
       const forbiddenPatterns = this.collectSurfacePatterns(
         'forbiddenImplementationSurfaces',
         this.findMostSpecificManifestEntriesAllowingFile(filePath)
@@ -344,9 +349,20 @@ class FeatureMechanizationGitDiffReader {
 
     return {
       changedFiles,
+      deletedFiles: this.readDeletedFiles(changedFiles),
       addedLinesByPath: this.readAddedLinesByPath(changedFiles),
       fileContentsByPath: this.readFileContentsByPath(changedFiles),
     };
+  }
+
+  readDeletedFiles(changedFiles) {
+    return changedFiles.filter((filePath) => {
+      if (this.lastUntrackedFiles.has(filePath)) {
+        return false;
+      }
+
+      return !fs.existsSync(path.join(this.repoRootPath, filePath));
+    });
   }
 
   readChangedFiles() {
