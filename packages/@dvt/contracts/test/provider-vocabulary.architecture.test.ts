@@ -37,6 +37,8 @@ const activeProviderVocabularySources = [
   join(ARCHITECTURE_ROOT, 'diagrams/implementation-architecture-diagrams.md'),
 ];
 
+const normalizeWhitespace = (source: string): string => source.replace(/\s+/gu, ' ').trim();
+
 describe('contracts: active provider vocabulary', () => {
   it('does not expose mock as a runtime provider in active contracts', () => {
     for (const sourcePath of [
@@ -120,15 +122,19 @@ describe('contracts: active provider vocabulary', () => {
       'utf8'
     );
 
-    expect(readme).toContain('Temporal is the only implemented workflow provider');
-    expect(readme).toContain('Future workflow providers require an ADR');
+    expect(normalizeWhitespace(readme)).toContain(
+      'Temporal is the only implemented workflow provider'
+    );
+    expect(normalizeWhitespace(readme)).toContain('Future workflow providers require an ADR');
 
     expect(executionModel).toContain('## Current Applicability');
-    expect(executionModel).toContain('Current production composition supports Temporal only');
+    expect(normalizeWhitespace(executionModel)).toContain(
+      'Current production composition supports Temporal only'
+    );
     expect(executionModel).toContain('DVT+ will maintain **execution semantics sovereignty**');
 
     expect(adapterEquivalence).toContain('## Current Applicability');
-    expect(adapterEquivalence).toContain(
+    expect(normalizeWhitespace(adapterEquivalence)).toContain(
       'No cross-provider conformance claim is currently delivered'
     );
     expect(adapterEquivalence).toContain('**state-equivalent**, no execution-equivalent');
@@ -138,8 +144,10 @@ describe('contracts: active provider vocabulary', () => {
     expect(compileCatalogManual).not.toMatch(/`temporal`,\s*`conductor`/u);
 
     for (const source of [workflowManual, stepKindGuide, compileCatalogManual]) {
-      expect(source).toContain('Temporal is the only implemented workflow provider');
-      expect(source).toContain('future provider');
+      expect(normalizeWhitespace(source)).toContain(
+        'Temporal is the only implemented workflow provider'
+      );
+      expect(normalizeWhitespace(source)).toContain('future provider');
     }
   });
 });
