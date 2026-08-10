@@ -38,7 +38,6 @@ operations surface.
 - [Infra](infra/index.md)
 - [Atlas](atlas/index.md)
 - [Reference Architecture](reference-architecture.md)
-- [Current Status](system-delivery-status.md)
 - [Components](components/index.md)
 - [Diagrams](diagrams/index.md)
 - [System](system/index.md)
