@@ -61,9 +61,9 @@ factories, or state-store role binding.
 
 ## Scenario Coverage Matrix
 
-| Story            | Implementation surface                                       | Validation                                                                     |
-| ---------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------ |
-| `US-DHM-WS2-001` | `IntentReconcilerRuntimeComposition`                         | `intentReconcilerRuntimeComposition.architecture.test.ts`                      |
-| `US-DHM-WS2-002` | `intentReconcilerRuntime.ts`                                 | `intentReconcilerRuntimeComposition.architecture.test.ts`, `dvt-api` typecheck |
-| `US-DHM-WS2-003` | `createIntentReconcilerRuntime` and existing bootstrap tests | `server.test.ts`, `intentReconcilerRuntimeComposition.architecture.test.ts`    |
-| `US-DHM-WS2-004` | `intentReconcilerRuntime.ts` facade                          | `intentReconcilerRuntimeComposition.architecture.test.ts`                      |
+| Story            | Implementation surface                                       | Validation                                              |
+| ---------------- | ------------------------------------------------------------ | ------------------------------------------------------- |
+| `US-DHM-WS2-001` | `IntentReconcilerRuntimeComposition`                         | Planning DB component profile and `dvt-api` typecheck   |
+| `US-DHM-WS2-002` | `intentReconcilerRuntime.ts`                                 | Planning DB dependency evidence and `dvt-api` typecheck |
+| `US-DHM-WS2-003` | `createIntentReconcilerRuntime` and existing bootstrap tests | `server.test.ts`                                        |
+| `US-DHM-WS2-004` | `intentReconcilerRuntime.ts` facade                          | `server.test.ts` and Planning DB component profile      |

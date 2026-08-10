@@ -11,8 +11,7 @@ planning_type: architecture
 These stories cover the API-side scenarios for platform-owned start-run
 identity. They complement:
 
-- [Start-run HTTP entrypoint component](../../../../apps/api/docs/start-run-http-entrypoint-component.md)
-- [Start-run platform identity component](../../../../apps/api/docs/start-run-platform-identity-component.md)
+- [Canonical API architecture authority](./index.md)
 - [ADR-0050 platform-owned start-run identity](../../../adr/adr-0050-platform-owned-start-run-identity.md)
 - [Start-run client identity boundary](../web/runs/start-run-client-identity-boundary.md)
 
@@ -36,7 +35,7 @@ identity. They complement:
 **Evidence:**
 
 - `apps/api/test/entrypoints/http/startRunRoute.authAndSuccess.test.ts`
-- `apps/api/test/entrypoints/http/startRunIdentity.architecture.test.ts`
+- `apps/api/test/entrypoints/http/startRunIdentity.test.ts`
 
 ## US-API-ID-02: Reject Caller-Provided Run ID
 
@@ -58,7 +57,7 @@ identity.
 **Evidence:**
 
 - `apps/api/test/entrypoints/http/startRunRoute.validation.test.ts`
-- `apps/api/test/entrypoints/http/startRunIdentity.architecture.test.ts`
+- `apps/api/test/entrypoints/http/startRunIdentity.test.ts`
 
 ## US-API-ID-03: Reject Malformed Platform-Generated Run ID
 
@@ -81,7 +80,7 @@ weaken the `run_<UUIDv7>` contract.
 **Evidence:**
 
 - `apps/api/test/entrypoints/http/startRunRoute.validation.test.ts`
-- `apps/api/test/entrypoints/http/startRunIdentity.architecture.test.ts`
+- `apps/api/test/entrypoints/http/startRunIdentity.test.ts`
 
 ## US-API-ID-04: Identity Allocator Is Not Runtime Lifecycle
 
@@ -103,8 +102,8 @@ or lifecycle orchestration.
 
 **Evidence:**
 
-- `apps/api/test/entrypoints/http/startRunIdentity.architecture.test.ts`
-- `apps/api/docs/start-run-platform-identity-component.md`
+- `apps/api/test/entrypoints/http/startRunIdentity.test.ts`
+- `pnpm planning:db:query architecture-designs --limit 100 --no-refresh`
 
 ## Scenario Map
 

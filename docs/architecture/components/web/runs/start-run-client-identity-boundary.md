@@ -22,8 +22,7 @@ execution identity.
 
 Use this guide with:
 
-- [Start-run HTTP entrypoint component](../../../../../apps/api/docs/start-run-http-entrypoint-component.md)
-- [Start-run platform identity component](../../../../../apps/api/docs/start-run-platform-identity-component.md)
+- [Canonical API architecture authority](../../api/index.md)
 - [Canvas execution selection component](../graph/canvas-execution-selection-component.md)
 - [Frontend-facing backend MVP contract](./frontend-backend-mvp-contract.md)
 - [ADR-0050 platform-owned start-run identity](../../../../adr/adr-0050-platform-owned-start-run-identity.md)

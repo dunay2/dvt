@@ -1,179 +1,97 @@
 ---
 title: apps/api
 status: Active
-owner: Architecture / Docs
-last_reviewed: 2026-04-24
+owner: Architecture / API
+last_reviewed: 2026-08-10
 ---
 
 # apps/api
 
-`apps/api` is the authenticated HTTP composition root for DVT.
+`apps/api` is DVT's authenticated HTTP composition root. It translates HTTP
+requests into existing application commands and queries, enforces boundary
+authentication and scope, assembles runtime dependencies, and exposes
+operational probes. Domain lifecycle semantics remain in their owning bounded
+contexts.
 
-It owns route parsing, auth and tenant checks, admission, runtime command and
-query wiring, operational probes, and reconciler bootstrap inside the API
-process.
+## Mandatory authority query
 
-## Current Responsibilities
+Planning DB, not this page or a TypeScript catalog, owns current component
+placement, relations, command/query rails, design decisions, evidence, and
+documentation lifecycle. Before architecture or design consultation, run:
 
-- expose protected runtime routes for session, start, list, get, events,
-  signal, cancel, recover, workspace files, and workspace draft boundaries;
-- expose plan preview, compile, and import routes used by the frontend
-  planning flow;
-- expose optional admin rebuild routes when operationally enabled;
-- compose planner, engine, delivery, and operational dependencies;
-- surface readiness, health, version, and reconciler state;
-- keep auth and admission decisions at the entry boundary.
+```bash
+pnpm planning:db:import --if-stale
+pnpm planning:db:query architecture-designs --limit 100 --no-refresh
+pnpm planning:db:query component-profile --component SYS-API-ROOT --no-refresh
+pnpm planning:db:query command-query-rails --filter API --no-refresh
+pnpm planning:db:query documentation-lifecycle --component SYS-API-ROOT --no-refresh
+```
 
-## Interface Map
+Use the returned identities and evidence paths to select any further source or
+document. Generate repository, component, test, and traceability views only on
+explicit request with `pnpm docs:publish`; they are disposable projections, not
+authority.
+
+## Boundary
 
 ```mermaid
 flowchart LR
-  Clients["apps/web / operators / automation"] --> API["apps/api"]
-  API --> Auth["OIDC / JWKS / principal access"]
-  API --> Planner["@dvt/planner"]
-  API --> Engine["@dvt/engine"]
-  API --> Delivery["@dvt/delivery admission guard"]
-  API --> Postgres["@dvt/adapter-postgres state, intent, and plan stores"]
-  API --> Providers["provider adapter factories"]
-  Providers --> Temporal["Temporal provider adapter"]
-  API --> Observability["@dvt/observability"]
+  Client[Web, operators, automation] --> HTTP[apps/api HTTP adapter]
+  HTTP --> Auth[Authentication and scoped authorization]
+  HTTP --> Application[Application ports and use cases]
+  Application --> Planner[@dvt/planner]
+  Application --> Engine[@dvt/engine]
+  Application --> Stores[State, plan, workspace and evidence ports]
+  Application --> Providers[Provider adapter factories]
+  DB[(Planning DB)] --> Design[Architecture and design queries]
 ```
 
-## Code Anchors
+The API owns:
 
-- [app.ts](../../../../apps/api/src/app.ts)
-- [server.ts](../../../../apps/api/src/server.ts)
-- [buildProtectedRuntimeModule.ts](../../../../apps/api/src/modules/buildProtectedRuntimeModule.ts)
-- [buildProtectedRuntimeStorage.ts](../../../../apps/api/src/modules/protectedRuntime/buildProtectedRuntimeStorage.ts)
-- [buildProtectedAdmissionRuntime.ts](../../../../apps/api/src/modules/protectedRuntime/buildProtectedAdmissionRuntime.ts)
-- [buildProtectedSecurityRuntime.ts](../../../../apps/api/src/modules/protectedRuntime/buildProtectedSecurityRuntime.ts)
-- [buildProtectedExecutionRuntime.ts](../../../../apps/api/src/modules/protectedRuntime/buildProtectedExecutionRuntime.ts)
-- [buildProtectedStartRunRuntime.ts](../../../../apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts)
-- [buildWorkspaceGraphDraftRuntime.ts](../../../../apps/api/src/modules/workspaceGraphDraft/buildWorkspaceGraphDraftRuntime.ts)
-- [buildProviderAdapters.ts](../../../../apps/api/src/modules/buildProviderAdapters.ts)
-- [planCompileBoundary.ts](../../../../apps/api/src/modules/planCompileBoundary.ts)
-- [planRoutePolicyCatalog.ts](../../../../apps/api/src/application/services/planRoutePolicyCatalog.ts)
-- [resolveAuthorizedPlannerInputEnvelope.ts](../../../../apps/api/src/application/services/resolveAuthorizedPlannerInputEnvelope.ts)
-- [executePlanRouteFacade.ts](../../../../apps/api/src/entrypoints/http/executePlanRouteFacade.ts)
-- [startRunRoute.ts](../../../../apps/api/src/entrypoints/http/startRunRoute.ts)
-- [previewPlanRoute.ts](../../../../apps/api/src/entrypoints/http/previewPlanRoute.ts)
-- [importPlanRoute.ts](../../../../apps/api/src/entrypoints/http/importPlanRoute.ts)
-- [compilePlanRoute.ts](../../../../apps/api/src/entrypoints/http/compilePlanRoute.ts)
-- [adminRoutes.ts](../../../../apps/api/src/entrypoints/http/adminRoutes.ts)
-- [getRunRoute.ts](../../../../apps/api/src/entrypoints/http/getRunRoute.ts)
+- HTTP registration, parsing, status/envelope translation, rate limiting, and
+  authenticated tenant/project/environment admission;
+- composition of planner, engine, delivery, storage, provider, and
+  observability dependencies;
+- health, readiness, version, and explicitly enabled administrative surfaces;
+- application coordination needed to invoke an existing product rail.
 
-## Current Posture
+The API does not own:
 
-This component is active product code. The protected plan-route family now
-shares one remote-facade executor, one declarative request-resolution recipe,
-one declarative route-policy catalog, and one canonical authorized
-planner-input assembler for the preview and compile planner-backed flows.
-Preview and planner-backed start-run now also resolve selected closure from the
-protected workspace graph draft through one local executable-subgraph seam
-before planner build, so `apps/api` no longer relies on whole-draft compile
-assumptions for selected execution.
-Preview observability enrichment now binds once at the request boundary used
-by the preview flow, while import keeps canonical ownership checks separate
-from planner ingress. The `plan compile` boundary now converges catalog
-policy, typed profile selection, and planner construction in one root-owned
-boundary module.
+- run lifecycle or provider execution semantics;
+- planner graph semantics or canonical shared contracts;
+- database architecture classification, source/test inventories, or document
+  disposition;
+- browser presentation state or workspace-selection UX.
 
-## Current To Target
+## Invariants
 
-Use the main walkthrough below for the real current system, the target API
-shape, and the governed transition route:
+1. Every externally observable intent reuses a Planning DB command/query rail;
+   route code is an adapter, not a second catalog.
+2. Authentication, authorization, and effective scope fail closed before a
+   command or query reaches its application port.
+3. Caller-authored run identity is rejected; accepted start requests receive a
+   platform-owned UUIDv7 identity.
+4. Preview, compile, import, and start reject legacy or conflicting planner
+   ingress and use canonical shared contracts.
+5. Workspace file, graph, history, diff, dbt, and source-import operations keep
+   authorized scope through their application ports. A UI or route alone is
+   not evidence of a supported capability.
+6. Runtime resources have explicit construction, migration, readiness, and
+   reverse-order close ownership. Optional capabilities remain unavailable
+   unless their real dependencies are ready.
+7. Behavioral, contract, integration, and dependency tests protect product
+   guarantees. Tests do not require Markdown headings, comments, constructor
+   placement, historical filenames, or a compiled architecture registry.
 
-- [API Current To Target Architecture](./api-current-to-target-architecture.md)
-- [Protected Runtime Command/Query Rail Design](./protected-runtime-command-query-rail-design.md)
-- [Protected Runtime And Plan Compile Component](./protected-runtime-and-plan-compile-component.md)
-- [Cost Attribution Summary Component](./cost-attribution-summary-component.md)
-- [Cost Attribution Summary User Stories](./cost-attribution-summary-user-stories.md)
-- [Planner Ingress Hard-Cut Component](./planner-ingress-hard-cut-component.md)
-- [Planner Ingress Hard-Cut User Stories](./planner-ingress-hard-cut-user-stories.md)
-- [Temporal Fowler provider-truth follow-up review](../../../planning/reviews/architecture-and-governance/20260421-temporal-fowler-provider-truth-follow-up-review.md)
-- [API Control-Plane User Manual](../../../guides/api-control-plane-user-manual-20260404.md)
-- [API Control-Plane Technical Manual](../../../guides/api-control-plane-technical-manual-20260404.md)
-- [API Runtime SLA Canonical](../../../runbooks/api-runtime-sla-canonical-20260404.md)
+## Documentation posture
 
-## Local Component Guides
+This is the single authored current API architecture entry. Operational setup
+remains in [`apps/api/README.md`](../../../../apps/api/README.md), accepted
+cross-context decisions remain in ADRs, and historical plans, reviews,
+evidence, and closeouts remain commit-bound history. Git plus Planning DB own
+the current file/component/test map.
 
-- [Protected Runtime Command/Query Rail Design](./protected-runtime-command-query-rail-design.md):
-  canonical architecture/design view for the protected runtime rail source of
-  truth, route family ownership, compatibility posture, and remaining SSOT
-  design gaps.
-- [Protected Runtime And Plan Compile Component](./protected-runtime-and-plan-compile-component.md):
-  public API, invariants, transitions, consumers, focused file map, and
-  semantic test anchors for the protected runtime composition seam.
-- [Planner Ingress Hard-Cut Component](./planner-ingress-hard-cut-component.md):
-  local guide for canonical `graphSource` planner ingress and legacy
-  `manifestRef`/`targetProfile` hard-cut rejection.
-- [Runtime Review Canon Component](./runtime-review-canon-component.md):
-  local guide for canonical runtime/API review disposition, public API,
-  invariants, transitions, consumers, and semantic architecture guard.
-- [Runtime Review Canon User Stories](./runtime-review-canon-user-stories.md):
-  user-facing scenarios for maintainers and planning stewards who route runtime
-  review findings into rails, closeouts, or Planning DB tasks.
-- [Protected runtime route group component](../../../../apps/api/docs/protected-runtime-route-group-component.md):
-  local API maintainer guide for route registration, route-family mapping,
-  invariants, and compatibility posture.
-- [HTTP runtime error translation component](../../../../apps/api/docs/http-runtime-error-translation-component.md):
-  local guide for the HTTP error-envelope boundary with public API,
-  invariants, transitions, consumers, and focused diagrams.
-- [Plan route response translation component](../../../../apps/api/docs/plan-route-response-translation-component.md):
-  local guide for the preview/compile/import response-mapping boundary with
-  public API, invariants, transitions, consumers, and focused diagrams.
-- [Start-run application component](../../../../apps/api/docs/start-run-application-component.md):
-  local guide for the authenticated start-run application component, its
-  facade/use-case boundaries, invariants, transitions, consumers, and
-  canonical shared-contract import rules.
-- [Start-run control boundary component](../../../../apps/api/docs/start-run-control-boundary-component.md):
-  local guide for the grouped API start-run control boundary spanning caller
-  intent parsing, platform-owned identity insertion, authenticated admission,
-  and delegate dispatch.
-- [Start-run runtime composition component](../../../../apps/api/docs/start-run-runtime-composition-component.md):
-  local guide for the protected-runtime subcomponent that assembles the
-  authenticated start-run chain from abstract runtime dependencies.
-- [Executable-subgraph resolution component](../../../../apps/api/docs/executable-subgraph-resolution-component.md):
-  local guide for the API seam that resolves protected selected-closure truth
-  for preview and planner-backed start-run before planner build.
-- [Protected runtime dependency builders component](../../../../apps/api/docs/protected-runtime-dependency-builders-component.md):
-  local guide for the protected-runtime builder cluster that assembles storage,
-  admission, security, and execution dependency slices for the outer root.
-- [Protected security access decision component](../../../../apps/api/docs/protected-security-access-decision-component.md):
-  local guide for the protected auth/authz language and decision component,
-  including public API, invariants, transitions, consumers, and semantic
-  ownership rules.
-- [Start-run execution capacity admission component](../../../../apps/api/docs/start-run-execution-capacity-admission-component.md):
-  local guide for the abstract start-run execution-capacity admission seam,
-  its fail-closed default binding, invariants, transitions, and consumers.
-- [Start-run admission observability component](../../../../apps/api/docs/start-run-admission-observability-component.md):
-  local guide for the canonical start-run admission telemetry cluster,
-  bounded metric-label rules, invariants, transitions, and consumers.
-- [Workspace graph draft runtime composition component](../../../../apps/api/docs/workspace-graph-draft-runtime-composition-component.md):
-  local guide for the protected-runtime subcomponent that assembles the
-  workspace-graph-draft store, capability service, and use-case chain.
-- [Workspace graph draft application component](../../../../apps/api/docs/workspace-graph-draft-application-component.md):
-  local guide for the protected workspace-graph-draft application component,
-  its capability service, read/write use cases, invariants, and semantic
-  ownership rules.
-- [Temporal Fowler provider-truth follow-up review](../../../planning/reviews/architecture-and-governance/20260421-temporal-fowler-provider-truth-follow-up-review.md):
-  Fowler-style architecture analysis for the Temporal branch work, residual
-  drift map, mature-system comparison, and recommended next moves.
-
-## Planned Delta
-
-- keep the frontend-consumable contract explicit under `MVP-E1`;
-- preserve admission and health semantics that the UI health work (`F-03`)
-  relies on.
-- keep planner preview/import and runtime command routes aligned so the API
-  stays the only browser-facing backend entry surface.
-
-## Historical Deep Dives
-
-These notes are older decomposition artifacts. Use them only as supporting
-detail after the current page:
-
-- [DDD Structure](./api-ddd.md)
-- [Functionalities](./api-functional.md)
-- [Constraints and invariants](./api-constraints.md)
-- [Sequence diagrams](./api-sequence.md)
+When a current concern needs a new architectural decision, record it through
+the existing Planning DB architecture-design rail before implementation. Do
+not add a local component guide, route matrix, test-path inventory, or generated
+page under version control.

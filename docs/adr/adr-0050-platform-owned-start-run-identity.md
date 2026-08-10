@@ -199,6 +199,6 @@ The implementation of this ADR must include:
 - `docs/adr/ADR-0004-event-sourcing-strategy.md`
 - `docs/adr/ADR-0031-adapter-tenant-isolation.md`
 - `packages/@dvt/contracts/src/contracts/engine/StartRunBoundary.v1.ts`
-- `apps/api/docs/start-run-platform-identity-component.md`
+- `docs/architecture/components/api/index.md`
 - `apps/api/src/entrypoints/http/startRunRouteCommandBuilder.ts`
 - `apps/web/src/app/views/canvas/canvasRunStartAction.ts`

@@ -211,7 +211,7 @@ flowchart LR
 Use the local component guide for public API, invariants, transitions, and
 consumers:
 
-- [HTTP runtime error translation component](../../../../apps/api/docs/http-runtime-error-translation-component.md)
+- [Canonical API architecture authority](./index.md)
 
 The component seam now also owns feature-level static envelopes for
 `adminRoutes.ts` and `workspaceGraphDraftRoutes.ts`, so those consumers no
@@ -244,14 +244,13 @@ flowchart LR
 Use the local component guide for the public API, invariants, transitions, and
 consumers of this seam:
 
-- [Start-run execution capacity admission component](../../../../apps/api/docs/start-run-execution-capacity-admission-component.md)
-- [Start-run admission observability component](../../../../apps/api/docs/start-run-admission-observability-component.md)
+- [Canonical API architecture authority](./index.md)
 
 The caller-visible result vocabulary for this seam is documented separately in
 the shared contract component guide:
 
 - [Start-run boundary component](../engine/contracts/engine/start-run-boundary-component.md)
-- [Start-run application component](../../../../apps/api/docs/start-run-application-component.md)
+- [Canonical API architecture authority](./index.md)
 
 The abstract seam is now materially in place and the first concrete binding is
 live in composition: `buildProtectedRuntimeModule.ts` resolves a
@@ -287,8 +286,7 @@ flowchart LR
 Use the local component guide for the public API, invariants, transitions, and
 consumers of that entrypoint seam:
 
-- [Start-run HTTP entrypoint component](../../../../apps/api/docs/start-run-http-entrypoint-component.md)
-- [Start-run platform identity component](../../../../apps/api/docs/start-run-platform-identity-component.md)
+- [Canonical API architecture authority](./index.md)
 
 That entrypoint also owns the platform-owned execution identity insertion from
 `ADR-0050`. Caller-provided `runId` is rejected at parse time, and the internal
@@ -336,7 +334,7 @@ flowchart LR
 Use the grouped local component guide for the public API, invariants,
 transitions, and consumers of that end-to-end boundary:
 
-- [Start-run control boundary component](../../../../apps/api/docs/start-run-control-boundary-component.md)
+- [Canonical API architecture authority](./index.md)
 
 Current slice status:
 
@@ -366,7 +364,7 @@ flowchart LR
 Use the local component guide for the public API, invariants, transitions, and
 consumers of this seam:
 
-- [Plan route response translation component](../../../../apps/api/docs/plan-route-response-translation-component.md)
+- [Canonical API architecture authority](./index.md)
 
 This keeps two adjacent but separate entrypoint components explicit:
 

@@ -52,9 +52,8 @@ The global exhaustive projections are
 | `SYS-PLANSTORE-API-COMPOSITION`      | `apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts`                             |
 | `SYS-PLANSTORE-API-COMPOSITION`      | `apps/api/src/infrastructure/startRun/ArtifactStoreDbtProjectBundleBindingPolicy.ts`                            |
 | `SYS-PLANSTORE-API-COMPOSITION`      | `apps/api/test/application/services/StoredExecutablePlanResolver.test.ts`                                       |
-| `SYS-PLANSTORE-API-COMPOSITION`      | `apps/api/test/application/services/StoredPlanExecutabilityValidator.test.ts`                                   |
 | `SYS-PLANSTORE-API-COMPOSITION`      | `apps/api/test/application/services/WorkflowEngineFactory.test.ts`                                              |
-| `SYS-PLANSTORE-API-COMPOSITION`      | `apps/api/test/application/services/storedPlanExecutabilityValidator/capabilities.cases.ts`                     |
+| `SYS-PLANSTORE-API-COMPOSITION`      | `apps/api/test/application/services/storedPlanExecutabilityValidator/capabilities.test.ts`                      |
 | `SYS-PLANSTORE-API-COMPOSITION`      | `apps/api/test/application/services/storedPlanExecutabilityValidator/fetchAndAlignment.cases.ts`                |
 | `SYS-PLANSTORE-API-COMPOSITION`      | `apps/api/test/application/services/storedPlanExecutabilityValidator/harness.ts`                                |
 | `SYS-PLANSTORE-API-COMPOSITION`      | `apps/api/test/application/services/storedPlanExecutabilityValidator/registry.cases.ts`                         |

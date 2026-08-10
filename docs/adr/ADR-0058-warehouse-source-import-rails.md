@@ -121,6 +121,6 @@ provider-neutral contract; their absence is not represented as fake support.
 ## Validation
 
 - `apps/api/test/entrypoints/http/warehouseSourceImportRoutes.test.ts`
-- `apps/api/test/architecture/warehouseSourceImportRails.architecture.test.ts`
+- `apps/api/test/entrypoints/http/warehouseSourceImportRoutes.test.ts`
 - `apps/web/src/app/services/workspace/workspacePorts.api.test.ts`
 - `packages/@dvt/contracts/test/source-import/SourceObjectCatalog.v1.test.ts`

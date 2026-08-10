@@ -132,11 +132,9 @@ are registered through the shell router, plugin routes are contributed through
 the plugin registry, Canvas workbench tabs are mounted under
 `/canvas/:workbenchTab`, and `/login` remains the public bootstrap route.
 
-Runtime run behavior is described through the presentation port in
-`apps/web/src/app/ports/runs.ts`, the API adapter in
-`apps/web/src/app/services/runs/runsService.api.ts`, and the protected runtime
-rail vocabulary in
-`apps/api/src/application/ports/protectedRuntimeRunRailVocabulary.ts`.
+Runtime run behavior is implemented through the presentation port and API
+adapter. Current command/query ownership is read from Planning DB rather than a
+compiled API rail vocabulary.
 
 The current roadmap reference for frontend and UX work is
 `docs/planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md`.

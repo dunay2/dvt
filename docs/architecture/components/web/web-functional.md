@@ -37,5 +37,4 @@ and defined in [`ports/runs.ts`](../../../../apps/web/src/app/ports/runs.ts):
 - `apps/web/src/app/services/runs/runsService.ts`
 - `apps/web/src/app/services/runs/runsService.api.ts`
 - `apps/web/src/app/ports/runs.ts`
-- `apps/api/src/application/ports/protectedRuntimeRunRailVocabulary.ts`
-- `apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts`
+- Planning DB `command-query-rails` query for current runtime ownership

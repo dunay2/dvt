@@ -11,22 +11,10 @@ This page explains one concrete `apps/api` component instead of the whole API:
 the protected runtime composition seam plus the plan-compile boundary that feeds
 it.
 
-Use the narrower local guides when you need subcomponent-level API,
-invariants, transitions, and consumers:
-
-- [Protected runtime command/query rail design](./protected-runtime-command-query-rail-design.md)
-- [Protected runtime route group component](../../../../apps/api/docs/protected-runtime-route-group-component.md)
-- [Protected runtime dependency builders component](../../../../apps/api/docs/protected-runtime-dependency-builders-component.md)
-- [Protected security access decision component](../../../../apps/api/docs/protected-security-access-decision-component.md)
-- [Start-run runtime composition component](../../../../apps/api/docs/start-run-runtime-composition-component.md)
-- [Executable-subgraph resolution component](../../../../apps/api/docs/executable-subgraph-resolution-component.md)
-- [Workspace graph draft application component](../../../../apps/api/docs/workspace-graph-draft-application-component.md)
-- [Workspace graph draft runtime composition component](../../../../apps/api/docs/workspace-graph-draft-runtime-composition-component.md)
-
-The route-level command/query rail source-of-truth design lives in
-[Protected runtime command/query rail design](./protected-runtime-command-query-rail-design.md).
-This component page focuses on protected runtime composition and the
-plan-compile boundary that feeds it.
+Use the [canonical API architecture entry](./index.md) for durable boundaries
+and query Planning DB for current component, rail, relation, and evidence
+details. This page is supporting rationale for protected runtime composition
+and the plan-compile boundary; it is not a source or test inventory.
 
 ## Why This Is A Component
 
@@ -380,10 +368,9 @@ abstraction was a clearer component map and smaller test units.
 
 ## Focused Test Map
 
-| Anchor file                                                                                                                         | Companion files                                                                          | Why this shape exists                                                                                        |
-| ----------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| [modules.test.ts](../../../../apps/api/test/modules.test.ts)                                                                        | `test/modules/*.cases.ts`                                                                | Keeps the historic anchor path stable while splitting test concerns by module                                |
-| [StoredPlanExecutabilityValidator.test.ts](../../../../apps/api/test/application/services/StoredPlanExecutabilityValidator.test.ts) | `test/application/services/storedPlanExecutabilityValidator/*.cases.ts` and `harness.ts` | Keeps the validator anchor path stable while separating capabilities, registry, and fetch/alignment behavior |
+Current tests are discovered directly as `*.test.ts` suites by responsibility.
+Historical documents resolve old anchor filenames at their original commits;
+they do not require wrapper files in the current tree.
 
 ## Component Boundaries To Preserve
 

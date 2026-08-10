@@ -96,5 +96,5 @@ flowchart LR
   source fields and conflicting plan inputs.
 - `startRunRouteCommandBuilder.test.ts`: start-run command construction after
   policy classification.
-- `planRouteHardCutSemantic.architecture.test.ts`: semantic guard across shared
-  policy, local component docs, and user stories.
+- `planRoutePlanSourcePolicy.test.ts`: executable acceptance and rejection
+  behavior for canonical and legacy plan-source inputs.

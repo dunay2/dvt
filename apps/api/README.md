@@ -13,16 +13,23 @@ It owns:
 It does not own run lifecycle semantics. Those remain in `@dvt/engine` and the
 relevant adapters.
 
-## Local component guides
+## Architecture and design
 
-- [Start-run HTTP entrypoint component](./docs/start-run-http-entrypoint-component.md)
-- [Start-run control boundary component](./docs/start-run-control-boundary-component.md)
-- [Start-run platform identity component](./docs/start-run-platform-identity-component.md)
-- [HTTP runtime error translation component](./docs/http-runtime-error-translation-component.md)
-- [Start-run application component](./docs/start-run-application-component.md)
-- [Start-run runtime composition component](./docs/start-run-runtime-composition-component.md)
-- [Start-run execution capacity admission component](./docs/start-run-execution-capacity-admission-component.md)
-- [Workspace graph draft runtime composition component](./docs/workspace-graph-draft-runtime-composition-component.md)
+Architecture, component placement, command/query rails, relations, evidence,
+and document lifecycle are owned by Planning DB. Query that authority before
+using repository documents for design work:
+
+```bash
+pnpm planning:db:import --if-stale
+pnpm planning:db:query architecture-designs --limit 100 --no-refresh
+pnpm planning:db:query component-profile --component SYS-API-ROOT --no-refresh
+pnpm planning:db:query command-query-rails --filter API --no-refresh
+```
+
+The authored architecture entry is
+[`docs/architecture/components/api/index.md`](../../docs/architecture/components/api/index.md).
+Generated file, component, test, and traceability views are disposable outputs
+assembled only by the explicit `pnpm docs:publish` command.
 
 ## Authentication boundary
 
@@ -118,4 +125,5 @@ docker run --rm -p 3000:3000 --env-file apps/api/.env dvt-api
   `pnpm` commands.
 - `apps/api/nixpacks.toml` mirrors the root Nixpacks config for platforms that
   are explicitly pointed at the API service directory.
-- TypeScript is strict and local docs for subcomponents live under `apps/api/docs/`.
+- TypeScript is strict; source and test topology are discovered from Git and
+  Planning DB rather than maintained in local component maps.

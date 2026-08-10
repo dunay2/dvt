@@ -46,4 +46,4 @@ is delegated downstream through the API layer.
 - `apps/web/src/app/services/runs/runsService.api.ts`
 - `apps/web/src/app/ports/runs.ts`
 - `apps/web/src/app/views/RunsView.tsx`
-- `apps/api/src/application/ports/protectedRuntimeRunRailVocabulary.ts`
+- Planning DB `command-query-rails` query for current runtime ownership
