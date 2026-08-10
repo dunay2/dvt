@@ -1374,6 +1374,7 @@ function operationPayload(command) {
       componentId: command.componentId,
       status: command.status,
       childrenRequired: command.childrenRequired,
+      ownedConcern: command.ownedConcern,
       addOwns: command.addOwns || [],
       removeOwns: command.removeOwns || [],
       addExcludes: command.addExcludes || [],
@@ -1972,6 +1973,7 @@ function validateComponentReviseCommand(command) {
   const changes = [
     command.status,
     command.childrenRequired,
+    command.ownedConcern,
     ...(command.addOwns || []),
     ...(command.removeOwns || []),
     ...(command.addExcludes || []),
@@ -2037,6 +2039,7 @@ function parseComponentCommand(action, args) {
         options.childrenRequired === undefined
           ? null
           : parseBooleanOption(options.childrenRequired, 'children-required'),
+      ownedConcern: normalizeOptionalText(options.ownedConcern),
       addOwns: normalizeListOption(options.addOwns),
       removeOwns: normalizeListOption(options.removeOwns),
       addExcludes: normalizeListOption(options.addExcludes),
@@ -4016,6 +4019,7 @@ function planComponentReviseOperation({
     revision: resultingRevision,
     status: command.status ?? component.status,
     childrenRequired: command.childrenRequired ?? component.childrenRequired,
+    ownedConcern: command.ownedConcern ?? component.ownedConcern,
     owns: applyComponentPatternDelta(
       command.componentId,
       'owns',
