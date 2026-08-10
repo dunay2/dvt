@@ -29,6 +29,7 @@ class FeatureImplementationGuard {
     );
     this.changedFiles = Array.from(new Set((options.changedFiles || []).map(toPosix))).sort();
     this.deletedFiles = new Set((options.deletedFiles || []).map(toPosix));
+    this.currentFiles = Array.from(new Set((options.currentFiles || []).map(toPosix))).sort();
     this.addedLinesByPath = this.normalizePathMap(options.addedLinesByPath || {});
     this.fileContentsByPath = this.normalizePathMap(options.fileContentsByPath || {});
   }
@@ -99,12 +100,10 @@ class FeatureImplementationGuard {
     }
 
     return this.collectSurfacePatterns('forbiddenImplementationSurfaces').some(
-      (pattern) => this.isExactSurfacePattern(pattern) && this.matchesSurface(filePath, pattern)
+      (pattern) =>
+        this.matchesSurface(filePath, pattern) &&
+        !this.currentFiles.some((currentFile) => this.matchesSurface(currentFile, pattern))
     );
-  }
-
-  isExactSurfacePattern(pattern) {
-    return !pattern.normalized.includes('*');
   }
 
   validateDeclaredSymbols(errors) {
@@ -367,6 +366,7 @@ class FeatureMechanizationGitDiffReader {
 
     return {
       changedFiles,
+      currentFiles: this.readCurrentFiles(),
       deletedFiles: this.readDeletedFiles(changedFiles),
       addedLinesByPath: this.readAddedLinesByPath(changedFiles),
       fileContentsByPath: this.readFileContentsByPath(changedFiles),
@@ -381,6 +381,12 @@ class FeatureMechanizationGitDiffReader {
 
       return !fs.existsSync(path.join(this.repoRootPath, filePath));
     });
+  }
+
+  readCurrentFiles() {
+    return this.readGitLines(['ls-files', '--cached', '--others', '--exclude-standard'])
+      .filter((filePath) => fs.existsSync(path.join(this.repoRootPath, filePath)))
+      .sort();
   }
 
   readChangedFiles() {
