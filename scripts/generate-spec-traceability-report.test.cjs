@@ -345,6 +345,44 @@ test('exact relation changes deterministically change traceability output', () =
   assert.match(changed, /pnpm verify:prepush/u);
 });
 
+test('an exact symbol identity change on the same Git path changes traceability output', () => {
+  const facts = exactFacts();
+  const options = {
+    gitSha,
+    gitTreePaths: new Map([
+      ['docs/architecture/components/example.md', 'blob'],
+      ['packages/@dvt/example/src/execute.ts', 'blob'],
+      ['packages/@dvt/example/test/execute.test.ts', 'blob'],
+    ]),
+  };
+  const baseline = renderCanonicalDocCodeMatrix(
+    buildFeatureTraceabilityProjection(facts, options),
+    '2026-08-10'
+  );
+  const changed = renderCanonicalDocCodeMatrix(
+    buildFeatureTraceabilityProjection(
+      {
+        ...facts,
+        symbols: [
+          ...facts.symbols,
+          {
+            feature_id: 'FEATURE-A',
+            symbol_name: 'executeAlternate',
+            symbol_path: 'packages/@dvt/example/src/execute.ts',
+            ddd_owner: 'Example',
+            cq_rails: ['ExecuteExample'],
+          },
+        ],
+      },
+      options
+    ),
+    '2026-08-10'
+  );
+
+  assert.notEqual(changed, baseline);
+  assert.match(changed, /executeAlternate/u);
+});
+
 test(
   'live Planning DB renders every exact feature deterministically',
   { skip: process.env.DVT_FEATURE_TRACEABILITY_INTEGRATION !== '1' },
