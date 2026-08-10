@@ -239,6 +239,7 @@ class DocumentationPublicationAssembler {
     this.lifecycleRows = options.lifecycleRows;
     this.runCommand = options.runCommand;
     this.readGitSha = options.readGitSha;
+    this.trackedDocumentationPaths = options.trackedDocumentationPaths;
     this.policy =
       options.policy ||
       new DocumentationPublicationPolicy({
@@ -282,26 +283,57 @@ class DocumentationPublicationAssembler {
   }
 
   authoredMarkdownSources() {
-    return DocumentationPublicationPolicy.walkFiles(this.docsRoot)
-      .filter((absolutePath) => absolutePath.endsWith('.md'))
-      .map((absolutePath) => ({
-        absolutePath,
-        route: DocumentationPublicationPolicy.toPosix(relative(this.docsRoot, absolutePath)),
-        sourcePath: DocumentationPublicationPolicy.toPosix(relative(this.repoRoot, absolutePath)),
-      }))
+    return this.resolveTrackedDocumentationPaths()
+      .filter((sourcePath) => sourcePath.endsWith('.md'))
+      .map((sourcePath) => {
+        const absolutePath = resolve(this.repoRoot, sourcePath);
+        return {
+          absolutePath,
+          route: DocumentationPublicationPolicy.toPosix(relative(this.docsRoot, absolutePath)),
+          sourcePath,
+        };
+      })
       .sort((left, right) => left.route.localeCompare(right.route, 'en'));
   }
 
   authoredSupportingSources() {
-    return DocumentationPublicationPolicy.walkFiles(this.docsRoot)
-      .filter((absolutePath) => !absolutePath.endsWith('.md'))
-      .map((absolutePath) => ({
-        absolutePath,
-        route: DocumentationPublicationPolicy.toPosix(relative(this.docsRoot, absolutePath)),
-        sourcePath: DocumentationPublicationPolicy.toPosix(relative(this.repoRoot, absolutePath)),
-      }))
+    return this.resolveTrackedDocumentationPaths()
+      .filter((sourcePath) => !sourcePath.endsWith('.md'))
+      .map((sourcePath) => {
+        const absolutePath = resolve(this.repoRoot, sourcePath);
+        return {
+          absolutePath,
+          route: DocumentationPublicationPolicy.toPosix(relative(this.docsRoot, absolutePath)),
+          sourcePath,
+        };
+      })
       .filter((source) => !this.policy.isHistoricalPath(source.sourcePath))
       .sort((left, right) => left.route.localeCompare(right.route, 'en'));
+  }
+
+  resolveTrackedDocumentationPaths() {
+    if (Array.isArray(this.trackedDocumentationPaths)) {
+      return [
+        ...new Set(this.trackedDocumentationPaths.map(DocumentationPublicationPolicy.toPosix)),
+      ]
+        .filter((sourcePath) => existsSync(resolve(this.repoRoot, sourcePath)))
+        .sort((left, right) => left.localeCompare(right, 'en'));
+    }
+    const result = spawnSync('git', ['ls-files', '--', 'docs/*', 'docs/**/*'], {
+      cwd: this.repoRoot,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    if (result.error) throw result.error;
+    if (result.status !== 0) {
+      throw new Error(
+        `Cannot resolve Git-owned documentation inputs: ${String(result.stderr).trim()}.`
+      );
+    }
+    return [...new Set(String(result.stdout).split(/\r?\n/u))]
+      .map((sourcePath) => DocumentationPublicationPolicy.toPosix(sourcePath.trim()))
+      .filter((sourcePath) => sourcePath && existsSync(resolve(this.repoRoot, sourcePath)))
+      .sort((left, right) => left.localeCompare(right, 'en'));
   }
 
   currentGitSha() {

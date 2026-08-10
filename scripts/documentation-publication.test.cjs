@@ -44,6 +44,16 @@ function createMinimalFixture() {
   return root;
 }
 
+function fixtureAssemblerOptions(root, options = {}) {
+  return {
+    repoRoot: root,
+    trackedDocumentationPaths: DocumentationPublicationPolicy.walkFiles(
+      path.join(root, 'docs')
+    ).map((absolutePath) => path.relative(root, absolutePath).split(path.sep).join('/')),
+    ...options,
+  };
+}
+
 afterEach(() => {
   for (const root of temporaryRoots.splice(0)) {
     fs.rmSync(root, { recursive: true, force: true });
@@ -96,23 +106,24 @@ test('assembles a deterministic tree and keeps historical pages out of default n
     'utf8'
   );
 
-  const assembler = new DocumentationPublicationAssembler({
-    repoRoot: root,
-    lifecycleRows: [
-      lifecycleRow(root, 'docs/index.md'),
-      lifecycleRow(root, 'docs/concepts/index.md'),
-      lifecycleRow(root, 'docs/concepts/detail.md'),
-      lifecycleRow(root, 'docs/archive/old.md', {
-        lifecycle_state: 'archived',
-        canonicality: 'archive',
-      }),
-      lifecycleRow(root, 'docs/planning/proposals/superseded/old-plan.md', {
-        lifecycle_state: 'superseded',
-        canonicality: 'proposal',
-      }),
-    ],
-    readGitSha: () => 'fixture-head',
-  });
+  const assembler = new DocumentationPublicationAssembler(
+    fixtureAssemblerOptions(root, {
+      lifecycleRows: [
+        lifecycleRow(root, 'docs/index.md'),
+        lifecycleRow(root, 'docs/concepts/index.md'),
+        lifecycleRow(root, 'docs/concepts/detail.md'),
+        lifecycleRow(root, 'docs/archive/old.md', {
+          lifecycle_state: 'archived',
+          canonicality: 'archive',
+        }),
+        lifecycleRow(root, 'docs/planning/proposals/superseded/old-plan.md', {
+          lifecycle_state: 'superseded',
+          canonicality: 'proposal',
+        }),
+      ],
+      readGitSha: () => 'fixture-head',
+    })
+  );
   const first = await assembler.assemble({ runGenerators: false });
   const firstConfig = fs.readFileSync(path.join(root, '.generated-docs', 'zensical.yml'));
   const firstManifest = fs.readFileSync(
@@ -176,29 +187,53 @@ test('assembles a deterministic tree and keeps historical pages out of default n
 test('fails closed on missing or ambiguous DB lifecycle authority', async () => {
   const missingRoot = createMinimalFixture();
   await assert.rejects(
-    new DocumentationPublicationAssembler({
-      repoRoot: missingRoot,
-      lifecycleRows: [],
-      readGitSha: () => 'fixture-head',
-    }).assemble({ runGenerators: false }),
+    new DocumentationPublicationAssembler(
+      fixtureAssemblerOptions(missingRoot, {
+        lifecycleRows: [],
+        readGitSha: () => 'fixture-head',
+      })
+    ).assemble({ runGenerators: false }),
     /Missing Planning DB lifecycle authority for docs\/index\.md/u
   );
 
   const ambiguousRoot = createMinimalFixture();
   await assert.rejects(
-    new DocumentationPublicationAssembler({
-      repoRoot: ambiguousRoot,
-      lifecycleRows: [
-        lifecycleRow(ambiguousRoot, 'docs/index.md', {
-          lifecycle_gap_kind: 'canonical_duplicate',
-          duplicate_count: 1,
-          is_duplicate: true,
-          canonical_counterpart_count: 2,
-        }),
-      ],
-      readGitSha: () => 'fixture-head',
-    }).assemble({ runGenerators: false }),
+    new DocumentationPublicationAssembler(
+      fixtureAssemblerOptions(ambiguousRoot, {
+        lifecycleRows: [
+          lifecycleRow(ambiguousRoot, 'docs/index.md', {
+            lifecycle_gap_kind: 'canonical_duplicate',
+            duplicate_count: 1,
+            is_duplicate: true,
+            canonical_counterpart_count: 2,
+          }),
+        ],
+        readGitSha: () => 'fixture-head',
+      })
+    ).assemble({ runGenerators: false }),
     /Ambiguous Planning DB lifecycle authority for docs\/index\.md.*canonical_duplicate/u
+  );
+});
+
+test('ignores untracked Markdown instead of treating filesystem placement as authority', async () => {
+  const root = createMinimalFixture();
+  fs.writeFileSync(path.join(root, 'docs', 'ignored-index.md'), '# Ignored\n', 'utf8');
+  const trackedDocumentationPaths = fixtureAssemblerOptions(root).trackedDocumentationPaths.filter(
+    (sourcePath) => sourcePath !== 'docs/ignored-index.md'
+  );
+  const assembler = new DocumentationPublicationAssembler({
+    repoRoot: root,
+    trackedDocumentationPaths,
+    lifecycleRows: [lifecycleRow(root, 'docs/index.md')],
+    readGitSha: () => 'fixture-head',
+  });
+
+  const receipt = await assembler.assemble({ runGenerators: false });
+
+  assert.equal(receipt.routeCount, 1);
+  assert.equal(
+    fs.existsSync(path.join(root, '.generated-docs', 'publication', 'ignored-index.md')),
+    false
   );
 });
 
@@ -207,11 +242,12 @@ test('publication receipt rejects stale source, DB, config, policy, and Git inpu
   const rows = [lifecycleRow(root, 'docs/index.md')];
   let gitSha = 'fixture-head-a';
   const createAssembler = () =>
-    new DocumentationPublicationAssembler({
-      repoRoot: root,
-      lifecycleRows: rows,
-      readGitSha: () => gitSha,
-    });
+    new DocumentationPublicationAssembler(
+      fixtureAssemblerOptions(root, {
+        lifecycleRows: rows,
+        readGitSha: () => gitSha,
+      })
+    );
 
   await createAssembler().assemble({ runGenerators: false });
   fs.writeFileSync(path.join(root, 'docs', 'index.md'), '# Changed\n', 'utf8');
@@ -278,14 +314,15 @@ test('rejects duplicate source and generated routes', async () => {
   fs.writeFileSync(path.join(root, 'zensical.yml'), 'site_name: Test\ndocs_dir: docs\n', 'utf8');
 
   await assert.rejects(
-    new DocumentationPublicationAssembler({
-      repoRoot: root,
-      lifecycleRows: [
-        lifecycleRow(root, 'docs/index.md'),
-        lifecycleRow(root, 'docs/concepts/repository-map.md'),
-      ],
-      readGitSha: () => 'fixture-head',
-    }).assemble({ runGenerators: false }),
+    new DocumentationPublicationAssembler(
+      fixtureAssemblerOptions(root, {
+        lifecycleRows: [
+          lifecycleRow(root, 'docs/index.md'),
+          lifecycleRow(root, 'docs/concepts/repository-map.md'),
+        ],
+        readGitSha: () => 'fixture-head',
+      })
+    ).assemble({ runGenerators: false }),
     /Duplicate publication route concepts\/repository-map\.md.*docs\/concepts\/repository-map\.md.*\.generated-docs\/concepts\/repository-map\.md/su
   );
 });
@@ -334,11 +371,12 @@ test('rejects missing generated sources and paths outside the generated root', (
   fs.writeFileSync(path.join(root, 'zensical.yml'), 'site_name: Test\ndocs_dir: docs\n', 'utf8');
 
   assert.rejects(
-    new DocumentationPublicationAssembler({
-      repoRoot: root,
-      lifecycleRows: [lifecycleRow(root, 'docs/index.md')],
-      readGitSha: () => 'fixture-head',
-    }).assemble({ runGenerators: false }),
+    new DocumentationPublicationAssembler(
+      fixtureAssemblerOptions(root, {
+        lifecycleRows: [lifecycleRow(root, 'docs/index.md')],
+        readGitSha: () => 'fixture-head',
+      })
+    ).assemble({ runGenerators: false }),
     /Missing generated publication source.*\.generated-docs\/missing\.md/u
   );
 });
