@@ -67,11 +67,6 @@ function buildRefreshStages() {
         args: ['--if-stale'],
       },
       {
-        id: 'repository-map-final',
-        script: 'docs:status:generate',
-        args: ['--repository-map-only'],
-      },
-      {
         id: 'dbt-roundtrip-capability-status',
         script: 'docs:dbt-roundtrip-capabilities:generate',
       },
@@ -217,24 +212,6 @@ function assertPositiveInteger(value, name) {
   }
 }
 
-function sleepMs(ms) {
-  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
-}
-
-function waitForStableWorktreeFingerprint(readFingerprint, logger = console) {
-  let previous = readFingerprint();
-  for (let attempt = 1; attempt <= 5; attempt += 1) {
-    sleepMs(250);
-    const current = readFingerprint();
-    if (current === previous) {
-      return current;
-    }
-    logger.log('[governance:refresh] generated writes still settling before DB validation');
-    previous = current;
-  }
-  return previous;
-}
-
 function runGovernanceRefresh(options = {}) {
   const stages = options.stages ?? buildRefreshStages();
   const maxPasses = options.maxPasses ?? defaultMaxPasses;
@@ -268,7 +245,7 @@ function runGovernanceRefresh(options = {}) {
     throw new Error(`Governance refresh did not stabilize after ${maxPasses} generation pass(es).`);
   };
 
-  let stableFingerprint = stabilizeGeneration(readFingerprint());
+  stabilizeGeneration(readFingerprint());
 
   logger.log(
     `[governance:refresh] generated surfaces stable after ${generationPasses} generation pass(es)`
@@ -279,45 +256,7 @@ function runGovernanceRefresh(options = {}) {
     runScript(stage.script, stage);
     databaseStagesRun.push(stage.script);
   };
-  const repositoryMapStageIndex = stages.databaseStages.findIndex(
-    (stage) => stage.id === 'repository-map-final'
-  );
-
-  if (repositoryMapStageIndex === -1) {
-    for (const stage of stages.databaseStages) runDatabaseStage(stage);
-  } else {
-    const preparationAndMapStages = stages.databaseStages.slice(0, repositoryMapStageIndex + 1);
-    const validationStages = stages.databaseStages.slice(repositoryMapStageIndex + 1);
-    let databaseProjectionStable = false;
-
-    for (let pass = 1; pass <= maxPasses; pass += 1) {
-      if (readFingerprint === readWorktreeFingerprint) {
-        waitForStableWorktreeFingerprint(readFingerprint, logger);
-      }
-
-      for (const stage of preparationAndMapStages) runDatabaseStage(stage);
-
-      const projectedFingerprint = readFingerprint();
-      if (projectedFingerprint === stableFingerprint) {
-        databaseProjectionStable = true;
-        break;
-      }
-
-      if (pass === maxPasses) break;
-      logger.log(
-        '[governance:refresh] Repository Map changed governed inputs; reconverging before DB validation'
-      );
-      stableFingerprint = stabilizeGeneration(projectedFingerprint);
-    }
-
-    if (!databaseProjectionStable) {
-      throw new Error(
-        `Governance refresh did not stabilize after ${maxPasses} database-backed projection pass(es).`
-      );
-    }
-
-    for (const stage of validationStages) runDatabaseStage(stage);
-  }
+  for (const stage of stages.databaseStages) runDatabaseStage(stage);
 
   return {
     stabilized: true,
