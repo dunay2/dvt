@@ -87365,7 +87365,8 @@
         "scripts/generate-spec-traceability-report.cjs#commandFileFromValidation",
         "scripts/generate-spec-traceability-report.cjs#isRegisteredVerificationCommand",
         "scripts/generate-spec-traceability-report.cjs#packageScriptFromValidation",
-        "scripts/generate-spec-traceability-report.cjs#uniqueSortedSymbols"
+        "scripts/generate-spec-traceability-report.cjs#uniqueSortedSymbols",
+        "scripts/generate-spec-traceability-report.cjs#stripLeadingEnvironmentAssignments"
       ],
       "implementationRefs": [
         "scripts/generate-spec-traceability-report.cjs#buildFeatureTraceabilityProjection",
@@ -87397,7 +87398,8 @@
         "scripts/generate-spec-traceability-report.cjs#commandFileFromValidation",
         "scripts/generate-spec-traceability-report.cjs#isRegisteredVerificationCommand",
         "scripts/generate-spec-traceability-report.cjs#packageScriptFromValidation",
-        "scripts/generate-spec-traceability-report.cjs#uniqueSortedSymbols"
+        "scripts/generate-spec-traceability-report.cjs#uniqueSortedSymbols",
+        "scripts/generate-spec-traceability-report.cjs#stripLeadingEnvironmentAssignments"
       ],
       "documentationRefs": [
         "docs/generated-docs-policy.json",
@@ -87428,7 +87430,8 @@
         "Traceability views are generated only by explicit documentation publication.",
         "Repository paths must be relative, traversal-free, and present in the evaluated Git tree.",
         "Verification commands require both an exact feature validation and an exact repository command catalog match.",
-        "The CI single-writer contract rejects the retired tracked traceability class and requires the DB-first untracked class."
+        "The CI single-writer contract rejects the retired tracked traceability class and requires the DB-first untracked class.",
+        "Environment-prefixed validations remain catalog-authorized and shell-control-free."
       ],
       "completionGate": [
         "node --test scripts/generate-spec-traceability-report.test.cjs scripts/documentation-publication.test.cjs",
@@ -88075,6 +88078,16 @@
             ],
             "cypressCoverage": "N/A - generated documentation is verified through Zensical build and demanding-user browser accessibility QA.",
             "architectureGuard": "Feature identities and relations come only from existing Planning DB feature-mechanization read models."
+          },
+          {
+            "name": "stripLeadingEnvironmentAssignments",
+            "path": "scripts/generate-spec-traceability-report.cjs",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": ["scripts/generate-spec-traceability-report.test.cjs"],
+            "fowlerSignals": ["executable_specification"],
+            "cypressCoverage": "N/A - generated documentation is verified through Zensical build and demanding-user browser accessibility QA.",
+            "architectureGuard": "Environment-prefixed validations remain catalog-authorized and shell-control-free."
           }
         ],
         "version": 1,
@@ -88105,15 +88118,15 @@
         "redGreenCycles": [
           {
             "id": "generateplanningderivedsurfaces-record",
-            "redTest": "node --test scripts/generate-spec-traceability-report.test.cjs scripts/documentation-publication.test.cjs",
-            "greenTest": "node --test scripts/generate-spec-traceability-report.test.cjs scripts/documentation-publication.test.cjs",
+            "redTest": "node --test --test-name-pattern environment-prefixed scripts/generate-spec-traceability-report.test.cjs",
+            "greenTest": "node --test --test-name-pattern environment-prefixed scripts/generate-spec-traceability-report.test.cjs",
             "patchSurfaces": [
               "scripts/generate-spec-traceability-report.cjs",
               "docs/generated-docs-policy.json",
               "scripts/check-generated-docs-policy.cjs",
               "tools/ci/generated-docs-single-writer-policy.test.mjs"
             ],
-            "expectedFailure": "Traceability loses an exact symbol identity, publishes an unregistered command, accepts an unsafe path, keeps a stale tracked-policy CI contract, remains manually tracked, or is generated outside explicit publication."
+            "expectedFailure": "Environment-prefixed verification is omitted or bypasses repository command authority."
           }
         ],
         "componentGuides": [
@@ -88140,7 +88153,8 @@
           "Traceability views are generated only by explicit documentation publication.",
           "Repository paths must be relative, traversal-free, and present in the evaluated Git tree.",
           "Verification commands require both an exact feature validation and an exact repository command catalog match.",
-          "The CI single-writer contract rejects the retired tracked traceability class and requires the DB-first untracked class."
+          "The CI single-writer contract rejects the retired tracked traceability class and requires the DB-first untracked class.",
+          "Environment-prefixed validations remain catalog-authorized and shell-control-free."
         ],
         "implementationPlan": "https://github.com/dunay2/dvt/issues/2147",
         "mechanizationStatus": "implemented",
@@ -88163,7 +88177,7 @@
           "tools/planning-db/schema.sql"
         ]
       },
-      "revision": 3,
+      "revision": 4,
       "createdBy": "codex",
       "createdAt": "2026-08-10T08:24:00.833Z"
     },
@@ -133766,6 +133780,60 @@
         ]
       },
       "createdAt": "2026-08-10T09:23:07.336Z"
+    },
+    {
+      "operationId": "000eb5b2-900f-4ca0-857e-702d95d444f9",
+      "idempotencyKey": "doc1-4-review-hardening-v4",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#DOC1-4-DB-FIRST-TRACEABILITY#command#generateplanningderivedsurfaces",
+      "sourcePath": "scripts/generate-spec-traceability-report.cjs",
+      "sourceContentSha256": "8c1c9f477a13ab4b967045afa1a35aebc32ad795260847a4804f1720e37fac8e",
+      "expectedRevision": 3,
+      "previousRevision": 3,
+      "resultingRevision": 4,
+      "payload": {
+        "redTest": "node --test --test-name-pattern environment-prefixed scripts/generate-spec-traceability-report.test.cjs",
+        "dddOwner": "PlanningDocumentationProjection",
+        "railName": "GeneratePlanningDerivedSurfaces",
+        "railType": "command",
+        "featureId": "DOC1-4-DB-FIRST-TRACEABILITY",
+        "greenTest": "node --test --test-name-pattern environment-prefixed scripts/generate-spec-traceability-report.test.cjs",
+        "sourceRef": "scripts/generate-spec-traceability-report.cjs",
+        "unitTests": ["scripts/generate-spec-traceability-report.test.cjs"],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2147"],
+        "cypressFlows": [
+          "N/A - generated documentation is verified through Zensical build and demanding-user browser accessibility QA."
+        ],
+        "domainObjects": ["FeatureTraceabilityProjection"],
+        "fowlerSignals": ["executable_specification"],
+        "patchSurfaces": ["scripts/generate-spec-traceability-report.cjs"],
+        "completionGate": ["pnpm verify:prepush"],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Environment-prefixed verification is omitted or bypasses repository command authority.",
+        "governingSources": [
+          "docs/planning/status/governance-document-rule-inventory.md"
+        ],
+        "documentationRefs": ["docs/generated-docs-policy.json"],
+        "architectureGuards": [
+          "Environment-prefixed validations remain catalog-authorized and shell-control-free."
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2147",
+        "implementationRefs": [
+          "scripts/generate-spec-traceability-report.cjs#stripLeadingEnvironmentAssignments"
+        ],
+        "normalizedRailName": "generateplanningderivedsurfaces",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "8c1c9f477a13ab4b967045afa1a35aebc32ad795260847a4804f1720e37fac8e",
+        "allowedImplementationSurfaces": [
+          "scripts/generate-spec-traceability-report.cjs"
+        ],
+        "forbiddenImplementationSurfaces": ["apps/**"]
+      },
+      "createdAt": "2026-08-10T10:01:09.258Z"
     }
   ]
 }
