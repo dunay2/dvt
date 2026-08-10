@@ -64,7 +64,6 @@
         "docs/*.md",
         "docs/**/*.md",
         "buzon/*.md",
-        "docs/architecture/system-delivery-status.md",
         "docs/planning/status/governance-document-rule-inventory.md",
         "docs/concepts/glossary.md",
         "docs/concepts/domain-language.md",
