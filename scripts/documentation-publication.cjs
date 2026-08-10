@@ -89,6 +89,26 @@ class DocumentationPublicationPolicy {
     ];
   }
 
+  declaredRoutes() {
+    const routes = [];
+    for (const artifactClass of this.policy.artifactClasses || []) {
+      if (artifactClass.publication?.enabled !== true) continue;
+      for (const artifact of artifactClass.artifacts || []) {
+        const normalizedArtifact = DocumentationPublicationPolicy.toPosix(String(artifact));
+        if (/[*?]/u.test(normalizedArtifact)) continue;
+        const absolutePath = resolve(this.repoRoot, normalizedArtifact);
+        DocumentationPublicationPolicy.assertInside(
+          this.generatedRoot,
+          absolutePath,
+          `Generated artifact ${normalizedArtifact}`
+        );
+        const route = normalizedArtifact.replace(/^\.generated-docs\//u, '');
+        if (route.endsWith('.md')) routes.push(route);
+      }
+    }
+    return [...new Set(routes)].sort((left, right) => left.localeCompare(right, 'en'));
+  }
+
   generatedSources() {
     const sources = [];
     for (const artifactClass of this.policy.artifactClasses || []) {
