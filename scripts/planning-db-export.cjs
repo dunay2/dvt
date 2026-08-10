@@ -23,7 +23,8 @@ const dependencies = (() => {
 })();
 
 const canonicalStateArtifactPath = 'tools/planning-db/state/canonical-state.json';
-const canonicalArtifactPaths = [canonicalStateArtifactPath];
+const dbGovernanceSurfaceCatalogPath = 'tools/planning-db/state/db-governance-surfaces.json';
+const canonicalArtifactPaths = [canonicalStateArtifactPath, dbGovernanceSurfaceCatalogPath];
 
 class PlanningDbExportRunner {
   constructor(deps = dependencies) {
@@ -90,9 +91,17 @@ class PlanningDbExportRunner {
   }
 
   async readCanonicalStateRows(client) {
-    const [featureMechanizationRails, featureMechanizationRailOperations, architectureState] =
-      await Promise.all([
-        client.query(`
+    const [
+      featureMechanizationRails,
+      featureMechanizationRailOperations,
+      governanceComponentDefinitions,
+      governanceComponentOwnershipPatterns,
+      governanceComponentSemanticItems,
+      governanceComponentOperations,
+      dbGovernanceSurfaces,
+      architectureState,
+    ] = await Promise.all([
+      client.query(`
         select
           rail.rail_id as "railId",
           rail.feature_id as "featureId",
@@ -119,7 +128,7 @@ class PlanningDbExportRunner {
         from ${this.deps.schemaName}.feature_mechanization_local_rails rail
         order by rail.rail_id
       `),
-        client.query(`
+      client.query(`
         select
           operation.operation_id as "operationId",
           operation.idempotency_key as "idempotencyKey",
@@ -141,8 +150,79 @@ class PlanningDbExportRunner {
         )
         order by operation.created_at, operation.operation_id
       `),
-        this.deps.readArchitectureState(client),
-      ]);
+      client.query(`
+        select
+          definition.component_id as "componentId",
+          definition.source_path as "sourcePath",
+          definition.source_content_sha256 as "sourceContentSha256",
+          definition.revision,
+          definition.name,
+          definition.level,
+          definition.parent_id as "parentComponentId",
+          definition.root_unit as "rootUnit",
+          definition.domain_unit as "domainUnit",
+          definition.status,
+          definition.children_required as "childrenRequired",
+          definition.owned_concern as "ownedConcern",
+          definition.ddd_owner as "dddOwner",
+          definition.cq_rails as "cqRails",
+          definition.created_by as "createdBy",
+          definition.created_at as "createdAt"
+        from ${this.deps.schemaName}.governance_component_local_definitions definition
+        order by definition.component_id
+      `),
+      client.query(`
+        select
+          pattern.component_id as "componentId",
+          pattern.pattern_kind as "patternKind",
+          pattern.pattern,
+          pattern.pattern_order as "patternOrder",
+          pattern.created_at as "createdAt"
+        from ${this.deps.schemaName}.governance_component_local_ownership_patterns pattern
+        order by pattern.component_id, pattern.pattern_kind, pattern.pattern_order, pattern.pattern
+      `),
+      client.query(`
+        select
+          item.component_id as "componentId",
+          item.item_kind as "itemKind",
+          item.item_value as "itemValue",
+          item.item_order as "itemOrder",
+          item.created_at as "createdAt"
+        from ${this.deps.schemaName}.governance_component_local_semantic_items item
+        order by item.component_id, item.item_kind, item.item_order, item.item_value
+      `),
+      client.query(`
+        select
+          operation.operation_id as "operationId",
+          operation.idempotency_key as "idempotencyKey",
+          operation.operation_type as "operationType",
+          operation.actor,
+          operation.component_id as "componentId",
+          operation.source_path as "sourcePath",
+          operation.source_content_sha256 as "sourceContentSha256",
+          operation.expected_revision as "expectedRevision",
+          operation.previous_revision as "previousRevision",
+          operation.resulting_revision as "resultingRevision",
+          operation.payload,
+          operation.created_at as "createdAt"
+        from ${this.deps.schemaName}.governance_component_local_operations operation
+        order by operation.created_at, operation.operation_id
+      `),
+      client.query(`
+        select
+          surface.surface_name as "surfaceName",
+          surface.canonical_source as "canonicalSource",
+          surface.write_rail as "writeRail",
+          surface.write_rail_kind as "writeRailKind",
+          surface.read_query_rail as "readQueryRail",
+          surface.projection,
+          surface.validation,
+          surface.authority_mode as "authorityMode"
+        from ${this.deps.schemaName}.db_governance_surfaces surface
+        order by surface.surface_name
+      `),
+      this.deps.readArchitectureState(client),
+    ]);
 
     this.deps.assertCurrentStateValue(featureMechanizationRails.rows, 'featureMechanizationRails');
     this.deps.assertCurrentStateValue(
@@ -171,6 +251,11 @@ class PlanningDbExportRunner {
       architectureState,
       featureMechanizationRails: currentRails,
       featureMechanizationRailOperations: featureMechanizationRailOperations.rows,
+      governanceComponentDefinitions: governanceComponentDefinitions.rows,
+      governanceComponentOwnershipPatterns: governanceComponentOwnershipPatterns.rows,
+      governanceComponentSemanticItems: governanceComponentSemanticItems.rows,
+      governanceComponentOperations: governanceComponentOperations.rows,
+      dbGovernanceSurfaces: dbGovernanceSurfaces.rows,
     };
   }
 
@@ -185,6 +270,27 @@ class PlanningDbExportRunner {
           architectureState: snapshotRows.architectureState,
           featureMechanizationRails: snapshotRows.featureMechanizationRails,
           featureMechanizationRailOperations: snapshotRows.featureMechanizationRailOperations,
+          governanceComponentDefinitions: snapshotRows.governanceComponentDefinitions,
+          governanceComponentOwnershipPatterns: snapshotRows.governanceComponentOwnershipPatterns,
+          governanceComponentSemanticItems: snapshotRows.governanceComponentSemanticItems,
+          governanceComponentOperations: snapshotRows.governanceComponentOperations,
+        },
+        null,
+        2
+      )}\n`,
+      'utf8'
+    );
+  }
+
+  writeDbGovernanceSurfaceCatalog(snapshotRows, outputRoot) {
+    const artifactPath = this.deps.path.join(outputRoot, dbGovernanceSurfaceCatalogPath);
+    this.deps.fs.mkdirSync(this.deps.path.dirname(artifactPath), { recursive: true });
+    this.deps.fs.writeFileSync(
+      artifactPath,
+      `${JSON.stringify(
+        {
+          schemaVersion: 1,
+          surfaces: snapshotRows.dbGovernanceSurfaces,
         },
         null,
         2
@@ -219,7 +325,10 @@ class PlanningDbExportRunner {
   }
 
   normalizeArtifactForComparison(artifactPath, content) {
-    if (artifactPath === canonicalStateArtifactPath) {
+    if (
+      artifactPath === canonicalStateArtifactPath ||
+      artifactPath === dbGovernanceSurfaceCatalogPath
+    ) {
       return JSON.stringify(this.canonicalizeStructuredValue(JSON.parse(content)));
     }
 
@@ -301,6 +410,7 @@ class PlanningDbExportRunner {
       }
 
       this.writeCanonicalState(canonicalStateRows, outputRoot);
+      this.writeDbGovernanceSurfaceCatalog(canonicalStateRows, outputRoot);
       const report = options.check
         ? this.compareGeneratedArtifacts({
             expectedRoot: this.deps.repoRoot,
