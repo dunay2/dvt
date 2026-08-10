@@ -22,6 +22,7 @@ const validDbBackedQueryViews = new Set([
   'architecture.maturity_query',
   'architecture.drift_query',
   'planning_query_store.component_engineering_document_query',
+  'planning_query_store.command_query_rail_query',
   'planning_query_store.command_query_rail_manifest_query',
   'planning_query_store.documentation_lifecycle_query',
   'planning_query_store.governance_file_query',
