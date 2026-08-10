@@ -37,9 +37,17 @@ function toPosix(value) {
 }
 
 function normalizePath(value) {
-  return toPosix(value)
-    .replace(/^\.\//u, '')
-    .replace(/^\/+|\/+$/gu, '');
+  const repositoryPath = toPosix(value).trim();
+  if (!repositoryPath) return '';
+  const segments = repositoryPath.split('/');
+  if (
+    repositoryPath.startsWith('/') ||
+    /^[A-Za-z]:\//u.test(repositoryPath) ||
+    segments.includes('..')
+  ) {
+    throw new Error(`Unsafe repository path ${repositoryPath}.`);
+  }
+  return repositoryPath.replace(/^\.\//u, '').replace(/\/+$/u, '');
 }
 
 function field(row, snakeName, camelName = snakeName) {
