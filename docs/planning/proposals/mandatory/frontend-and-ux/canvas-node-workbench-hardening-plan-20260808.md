@@ -122,8 +122,12 @@ allowedImplementationSurfaces:
   - apps/web/cypress/support/canvasExecutionSelection.ts
   - apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts
   - apps/web/cypress/e2e/canvas/canvas-dbt-selection-recovery-live.cy.ts
+  - apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
   - apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
+  - apps/web/cypress/e2e/dbt/dbt-project-yaml-description-edit-live.cy.ts
   - apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
+  - apps/web/cypress/e2e/runs/run-controls-live.cy.ts
+  - apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
   - apps/web/src/app/components/canvas/CanvasNodeContextMenuView.test.tsx
   - apps/web/src/app/components/canvas/CanvasNodeShell.doubleClick.test.ts
   - apps/web/src/app/components/canvas/CanvasNodeShell.test.tsx
@@ -474,6 +478,10 @@ redGreenCycles:
       - apps/web/cypress/support/canvasExecutionSelection.ts
       - apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts
       - apps/web/cypress/e2e/canvas/canvas-dbt-selection-recovery-live.cy.ts
+      - apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
+      - apps/web/cypress/e2e/dbt/dbt-project-yaml-description-edit-live.cy.ts
+      - apps/web/cypress/e2e/runs/run-controls-live.cy.ts
+      - apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
     greenTest: apps/web/src/app/plugins/graphStrategyRegistry.test.ts
 ```
 
