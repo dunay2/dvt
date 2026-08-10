@@ -87419,19 +87419,22 @@
         "docs/planning/status/canonical-doc-code-matrix.md",
         "docs/planning/status/generated-spec-traceability.md",
         "docs/.manifest.json",
-        "tools/planning-db/state/canonical-state.json"
+        "tools/planning-db/state/canonical-state.json",
+        "tools/ci/generated-docs-single-writer-policy.test.mjs"
       ],
       "architectureGuards": [
         "Feature identities and relations come only from existing Planning DB feature-mechanization read models.",
         "Repository path existence comes only from the evaluated Git tree.",
         "Traceability views are generated only by explicit documentation publication.",
         "Repository paths must be relative, traversal-free, and present in the evaluated Git tree.",
-        "Verification commands require both an exact feature validation and an exact repository command catalog match."
+        "Verification commands require both an exact feature validation and an exact repository command catalog match.",
+        "The CI single-writer contract rejects the retired tracked traceability class and requires the DB-first untracked class."
       ],
       "completionGate": [
         "node --test scripts/generate-spec-traceability-report.test.cjs scripts/documentation-publication.test.cjs",
         "pnpm ci:docs",
-        "pnpm verify:prepush"
+        "pnpm verify:prepush",
+        "node tools/ci/ci-tool-test-suite.mjs static"
       ],
       "sourcePath": "scripts/generate-spec-traceability-report.cjs",
       "sourceContentSha256": "16bd043116720830e58b2f3b0c9d4da06703effef6060eb050b36465cf0e542c",
@@ -87450,7 +87453,8 @@
             "dddOwner": "PlanningDocumentationProjection",
             "unitTests": [
               "scripts/generate-spec-traceability-report.test.cjs",
-              "scripts/documentation-publication.test.cjs"
+              "scripts/documentation-publication.test.cjs",
+              "tools/ci/generated-docs-single-writer-policy.test.mjs"
             ],
             "fowlerSignals": [
               "published_language",
@@ -87470,7 +87474,8 @@
             "dddOwner": "PlanningDocumentationProjection",
             "unitTests": [
               "scripts/generate-spec-traceability-report.test.cjs",
-              "scripts/documentation-publication.test.cjs"
+              "scripts/documentation-publication.test.cjs",
+              "tools/ci/generated-docs-single-writer-policy.test.mjs"
             ],
             "fowlerSignals": [
               "published_language",
@@ -87490,7 +87495,8 @@
             "dddOwner": "PlanningDocumentationProjection",
             "unitTests": [
               "scripts/generate-spec-traceability-report.test.cjs",
-              "scripts/documentation-publication.test.cjs"
+              "scripts/documentation-publication.test.cjs",
+              "tools/ci/generated-docs-single-writer-policy.test.mjs"
             ],
             "fowlerSignals": [
               "published_language",
@@ -87510,7 +87516,8 @@
             "dddOwner": "PlanningDocumentationProjection",
             "unitTests": [
               "scripts/generate-spec-traceability-report.test.cjs",
-              "scripts/documentation-publication.test.cjs"
+              "scripts/documentation-publication.test.cjs",
+              "tools/ci/generated-docs-single-writer-policy.test.mjs"
             ],
             "fowlerSignals": [
               "published_language",
@@ -87530,7 +87537,8 @@
             "dddOwner": "PlanningDocumentationProjection",
             "unitTests": [
               "scripts/generate-spec-traceability-report.test.cjs",
-              "scripts/documentation-publication.test.cjs"
+              "scripts/documentation-publication.test.cjs",
+              "tools/ci/generated-docs-single-writer-policy.test.mjs"
             ],
             "fowlerSignals": [
               "published_language",
@@ -87550,7 +87558,8 @@
             "dddOwner": "PlanningDocumentationProjection",
             "unitTests": [
               "scripts/generate-spec-traceability-report.test.cjs",
-              "scripts/documentation-publication.test.cjs"
+              "scripts/documentation-publication.test.cjs",
+              "tools/ci/generated-docs-single-writer-policy.test.mjs"
             ],
             "fowlerSignals": [
               "published_language",
@@ -87570,7 +87579,8 @@
             "dddOwner": "PlanningDocumentationProjection",
             "unitTests": [
               "scripts/generate-spec-traceability-report.test.cjs",
-              "scripts/documentation-publication.test.cjs"
+              "scripts/documentation-publication.test.cjs",
+              "tools/ci/generated-docs-single-writer-policy.test.mjs"
             ],
             "fowlerSignals": [
               "published_language",
@@ -87590,7 +87600,8 @@
             "dddOwner": "PlanningDocumentationProjection",
             "unitTests": [
               "scripts/generate-spec-traceability-report.test.cjs",
-              "scripts/documentation-publication.test.cjs"
+              "scripts/documentation-publication.test.cjs",
+              "tools/ci/generated-docs-single-writer-policy.test.mjs"
             ],
             "fowlerSignals": [
               "published_language",
@@ -87610,7 +87621,8 @@
             "dddOwner": "PlanningDocumentationProjection",
             "unitTests": [
               "scripts/generate-spec-traceability-report.test.cjs",
-              "scripts/documentation-publication.test.cjs"
+              "scripts/documentation-publication.test.cjs",
+              "tools/ci/generated-docs-single-writer-policy.test.mjs"
             ],
             "fowlerSignals": [
               "published_language",
@@ -87630,7 +87642,8 @@
             "dddOwner": "PlanningDocumentationProjection",
             "unitTests": [
               "scripts/generate-spec-traceability-report.test.cjs",
-              "scripts/documentation-publication.test.cjs"
+              "scripts/documentation-publication.test.cjs",
+              "tools/ci/generated-docs-single-writer-policy.test.mjs"
             ],
             "fowlerSignals": [
               "published_language",
@@ -87650,7 +87663,8 @@
             "dddOwner": "PlanningDocumentationProjection",
             "unitTests": [
               "scripts/generate-spec-traceability-report.test.cjs",
-              "scripts/documentation-publication.test.cjs"
+              "scripts/documentation-publication.test.cjs",
+              "tools/ci/generated-docs-single-writer-policy.test.mjs"
             ],
             "fowlerSignals": [
               "published_language",
@@ -87670,7 +87684,8 @@
             "dddOwner": "PlanningDocumentationProjection",
             "unitTests": [
               "scripts/generate-spec-traceability-report.test.cjs",
-              "scripts/documentation-publication.test.cjs"
+              "scripts/documentation-publication.test.cjs",
+              "tools/ci/generated-docs-single-writer-policy.test.mjs"
             ],
             "fowlerSignals": [
               "published_language",
@@ -87690,7 +87705,8 @@
             "dddOwner": "PlanningDocumentationProjection",
             "unitTests": [
               "scripts/generate-spec-traceability-report.test.cjs",
-              "scripts/documentation-publication.test.cjs"
+              "scripts/documentation-publication.test.cjs",
+              "tools/ci/generated-docs-single-writer-policy.test.mjs"
             ],
             "fowlerSignals": [
               "published_language",
@@ -87710,7 +87726,8 @@
             "dddOwner": "PlanningDocumentationProjection",
             "unitTests": [
               "scripts/generate-spec-traceability-report.test.cjs",
-              "scripts/documentation-publication.test.cjs"
+              "scripts/documentation-publication.test.cjs",
+              "tools/ci/generated-docs-single-writer-policy.test.mjs"
             ],
             "fowlerSignals": [
               "published_language",
@@ -87730,7 +87747,8 @@
             "dddOwner": "PlanningDocumentationProjection",
             "unitTests": [
               "scripts/generate-spec-traceability-report.test.cjs",
-              "scripts/documentation-publication.test.cjs"
+              "scripts/documentation-publication.test.cjs",
+              "tools/ci/generated-docs-single-writer-policy.test.mjs"
             ],
             "fowlerSignals": [
               "published_language",
@@ -87750,7 +87768,8 @@
             "dddOwner": "PlanningDocumentationProjection",
             "unitTests": [
               "scripts/generate-spec-traceability-report.test.cjs",
-              "scripts/documentation-publication.test.cjs"
+              "scripts/documentation-publication.test.cjs",
+              "tools/ci/generated-docs-single-writer-policy.test.mjs"
             ],
             "fowlerSignals": [
               "published_language",
@@ -87770,7 +87789,8 @@
             "dddOwner": "PlanningDocumentationProjection",
             "unitTests": [
               "scripts/generate-spec-traceability-report.test.cjs",
-              "scripts/documentation-publication.test.cjs"
+              "scripts/documentation-publication.test.cjs",
+              "tools/ci/generated-docs-single-writer-policy.test.mjs"
             ],
             "fowlerSignals": [
               "published_language",
@@ -87790,7 +87810,8 @@
             "dddOwner": "PlanningDocumentationProjection",
             "unitTests": [
               "scripts/generate-spec-traceability-report.test.cjs",
-              "scripts/documentation-publication.test.cjs"
+              "scripts/documentation-publication.test.cjs",
+              "tools/ci/generated-docs-single-writer-policy.test.mjs"
             ],
             "fowlerSignals": [
               "published_language",
@@ -87810,7 +87831,8 @@
             "dddOwner": "PlanningDocumentationProjection",
             "unitTests": [
               "scripts/generate-spec-traceability-report.test.cjs",
-              "scripts/documentation-publication.test.cjs"
+              "scripts/documentation-publication.test.cjs",
+              "tools/ci/generated-docs-single-writer-policy.test.mjs"
             ],
             "fowlerSignals": [
               "published_language",
@@ -87830,7 +87852,8 @@
             "dddOwner": "PlanningDocumentationProjection",
             "unitTests": [
               "scripts/generate-spec-traceability-report.test.cjs",
-              "scripts/documentation-publication.test.cjs"
+              "scripts/documentation-publication.test.cjs",
+              "tools/ci/generated-docs-single-writer-policy.test.mjs"
             ],
             "fowlerSignals": [
               "published_language",
@@ -87850,7 +87873,8 @@
             "dddOwner": "PlanningDocumentationProjection",
             "unitTests": [
               "scripts/generate-spec-traceability-report.test.cjs",
-              "scripts/documentation-publication.test.cjs"
+              "scripts/documentation-publication.test.cjs",
+              "tools/ci/generated-docs-single-writer-policy.test.mjs"
             ],
             "fowlerSignals": [
               "published_language",
@@ -87870,7 +87894,8 @@
             "dddOwner": "PlanningDocumentationProjection",
             "unitTests": [
               "scripts/generate-spec-traceability-report.test.cjs",
-              "scripts/documentation-publication.test.cjs"
+              "scripts/documentation-publication.test.cjs",
+              "tools/ci/generated-docs-single-writer-policy.test.mjs"
             ],
             "fowlerSignals": [
               "published_language",
@@ -87890,7 +87915,8 @@
             "dddOwner": "PlanningDocumentationProjection",
             "unitTests": [
               "scripts/generate-spec-traceability-report.test.cjs",
-              "scripts/documentation-publication.test.cjs"
+              "scripts/documentation-publication.test.cjs",
+              "tools/ci/generated-docs-single-writer-policy.test.mjs"
             ],
             "fowlerSignals": [
               "published_language",
@@ -87910,7 +87936,8 @@
             "dddOwner": "PlanningDocumentationProjection",
             "unitTests": [
               "scripts/generate-spec-traceability-report.test.cjs",
-              "scripts/documentation-publication.test.cjs"
+              "scripts/documentation-publication.test.cjs",
+              "tools/ci/generated-docs-single-writer-policy.test.mjs"
             ],
             "fowlerSignals": [
               "published_language",
@@ -87930,7 +87957,8 @@
             "dddOwner": "PlanningDocumentationProjection",
             "unitTests": [
               "scripts/generate-spec-traceability-report.test.cjs",
-              "scripts/documentation-publication.test.cjs"
+              "scripts/documentation-publication.test.cjs",
+              "tools/ci/generated-docs-single-writer-policy.test.mjs"
             ],
             "fowlerSignals": [
               "published_language",
@@ -87950,7 +87978,8 @@
             "dddOwner": "PlanningDocumentationProjection",
             "unitTests": [
               "scripts/generate-spec-traceability-report.test.cjs",
-              "scripts/documentation-publication.test.cjs"
+              "scripts/documentation-publication.test.cjs",
+              "tools/ci/generated-docs-single-writer-policy.test.mjs"
             ],
             "fowlerSignals": [
               "published_language",
@@ -87970,7 +87999,8 @@
             "dddOwner": "PlanningDocumentationProjection",
             "unitTests": [
               "scripts/generate-spec-traceability-report.test.cjs",
-              "scripts/documentation-publication.test.cjs"
+              "scripts/documentation-publication.test.cjs",
+              "tools/ci/generated-docs-single-writer-policy.test.mjs"
             ],
             "fowlerSignals": [
               "published_language",
@@ -87990,7 +88020,8 @@
             "dddOwner": "PlanningDocumentationProjection",
             "unitTests": [
               "scripts/generate-spec-traceability-report.test.cjs",
-              "scripts/documentation-publication.test.cjs"
+              "scripts/documentation-publication.test.cjs",
+              "tools/ci/generated-docs-single-writer-policy.test.mjs"
             ],
             "fowlerSignals": [
               "published_language",
@@ -88010,7 +88041,8 @@
             "dddOwner": "PlanningDocumentationProjection",
             "unitTests": [
               "scripts/generate-spec-traceability-report.test.cjs",
-              "scripts/documentation-publication.test.cjs"
+              "scripts/documentation-publication.test.cjs",
+              "tools/ci/generated-docs-single-writer-policy.test.mjs"
             ],
             "fowlerSignals": [
               "published_language",
@@ -88030,7 +88062,8 @@
             "dddOwner": "PlanningDocumentationProjection",
             "unitTests": [
               "scripts/generate-spec-traceability-report.test.cjs",
-              "scripts/documentation-publication.test.cjs"
+              "scripts/documentation-publication.test.cjs",
+              "tools/ci/generated-docs-single-writer-policy.test.mjs"
             ],
             "fowlerSignals": [
               "published_language",
@@ -88066,7 +88099,8 @@
         "completionGate": [
           "node --test scripts/generate-spec-traceability-report.test.cjs scripts/documentation-publication.test.cjs",
           "pnpm ci:docs",
-          "pnpm verify:prepush"
+          "pnpm verify:prepush",
+          "node tools/ci/ci-tool-test-suite.mjs static"
         ],
         "redGreenCycles": [
           {
@@ -88076,9 +88110,10 @@
             "patchSurfaces": [
               "scripts/generate-spec-traceability-report.cjs",
               "docs/generated-docs-policy.json",
-              "scripts/check-generated-docs-policy.cjs"
+              "scripts/check-generated-docs-policy.cjs",
+              "tools/ci/generated-docs-single-writer-policy.test.mjs"
             ],
-            "expectedFailure": "Traceability loses an exact symbol identity, publishes an unregistered command, accepts an unsafe path, remains manually tracked, or is generated outside explicit publication."
+            "expectedFailure": "Traceability loses an exact symbol identity, publishes an unregistered command, accepts an unsafe path, keeps a stale tracked-policy CI contract, remains manually tracked, or is generated outside explicit publication."
           }
         ],
         "componentGuides": [
@@ -88104,7 +88139,8 @@
           "Repository path existence comes only from the evaluated Git tree.",
           "Traceability views are generated only by explicit documentation publication.",
           "Repository paths must be relative, traversal-free, and present in the evaluated Git tree.",
-          "Verification commands require both an exact feature validation and an exact repository command catalog match."
+          "Verification commands require both an exact feature validation and an exact repository command catalog match.",
+          "The CI single-writer contract rejects the retired tracked traceability class and requires the DB-first untracked class."
         ],
         "implementationPlan": "https://github.com/dunay2/dvt/issues/2147",
         "mechanizationStatus": "implemented",
@@ -88118,7 +88154,8 @@
           "docs/planning/status/canonical-doc-code-matrix.md",
           "docs/planning/status/generated-spec-traceability.md",
           "docs/.manifest.json",
-          "tools/planning-db/state/canonical-state.json"
+          "tools/planning-db/state/canonical-state.json",
+          "tools/ci/generated-docs-single-writer-policy.test.mjs"
         ],
         "forbiddenImplementationSurfaces": [
           "apps/**",
@@ -88126,7 +88163,7 @@
           "tools/planning-db/schema.sql"
         ]
       },
-      "revision": 2,
+      "revision": 3,
       "createdBy": "codex",
       "createdAt": "2026-08-10T08:24:00.833Z"
     },
@@ -133596,6 +133633,139 @@
         ]
       },
       "createdAt": "2026-08-10T08:59:36.303Z"
+    },
+    {
+      "operationId": "701c45b2-aca1-456c-be40-50633c770a37",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:DOC1-4-DB-FIRST-TRACEABILITY:command:generateplanningderivedsurfaces:2:16913679191ff84d",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#DOC1-4-DB-FIRST-TRACEABILITY#command#generateplanningderivedsurfaces",
+      "sourcePath": "scripts/generate-spec-traceability-report.cjs",
+      "sourceContentSha256": "16bd043116720830e58b2f3b0c9d4da06703effef6060eb050b36465cf0e542c",
+      "expectedRevision": 2,
+      "previousRevision": 2,
+      "resultingRevision": 3,
+      "payload": {
+        "redTest": "node --test scripts/generate-spec-traceability-report.test.cjs scripts/documentation-publication.test.cjs",
+        "dddOwner": "PlanningDocumentationProjection",
+        "railName": "GeneratePlanningDerivedSurfaces",
+        "railType": "command",
+        "featureId": "DOC1-4-DB-FIRST-TRACEABILITY",
+        "greenTest": "node --test scripts/generate-spec-traceability-report.test.cjs scripts/documentation-publication.test.cjs",
+        "sourceRef": "scripts/generate-spec-traceability-report.cjs",
+        "unitTests": [
+          "scripts/documentation-publication.test.cjs",
+          "scripts/generate-spec-traceability-report.test.cjs",
+          "tools/ci/generated-docs-single-writer-policy.test.mjs"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2147"],
+        "cypressFlows": [
+          "N/A - generated documentation is verified through Zensical build and demanding-user browser accessibility QA."
+        ],
+        "domainObjects": [
+          "FeatureTraceabilityProjection",
+          "FeatureTraceabilityView",
+          "DocumentationPublication"
+        ],
+        "fowlerSignals": [
+          "published_language",
+          "query_object",
+          "gateway",
+          "registry",
+          "service_layer",
+          "executable_specification"
+        ],
+        "patchSurfaces": [
+          "docs/generated-docs-policy.json",
+          "scripts/check-generated-docs-policy.cjs",
+          "scripts/generate-spec-traceability-report.cjs",
+          "tools/ci/generated-docs-single-writer-policy.test.mjs"
+        ],
+        "completionGate": [
+          "node --test scripts/generate-spec-traceability-report.test.cjs scripts/documentation-publication.test.cjs",
+          "node tools/ci/ci-tool-test-suite.mjs static",
+          "pnpm ci:docs",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Traceability loses an exact symbol identity, publishes an unregistered command, accepts an unsafe path, keeps a stale tracked-policy CI contract, remains manually tracked, or is generated outside explicit publication.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/planning/state/github-mvp-issue-workflow.md"
+        ],
+        "documentationRefs": [
+          "docs/generated-docs-policy.json",
+          "https://github.com/dunay2/dvt/issues/2147"
+        ],
+        "architectureGuards": [
+          "Feature identities and relations come only from existing Planning DB feature-mechanization read models.",
+          "Repository path existence comes only from the evaluated Git tree.",
+          "Traceability views are generated only by explicit documentation publication.",
+          "Repository paths must be relative, traversal-free, and present in the evaluated Git tree.",
+          "Verification commands require both an exact feature validation and an exact repository command catalog match.",
+          "The CI single-writer contract rejects the retired tracked traceability class and requires the DB-first untracked class."
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2147",
+        "implementationRefs": [
+          "scripts/generate-spec-traceability-report.cjs#buildFeatureTraceabilityProjection",
+          "scripts/generate-spec-traceability-report.cjs#groupFeatureRelations",
+          "scripts/generate-spec-traceability-report.cjs#isCurrentCanonicalDocument",
+          "scripts/generate-spec-traceability-report.cjs#isDocumentConflict",
+          "scripts/generate-spec-traceability-report.cjs#isExecutableValidation",
+          "scripts/generate-spec-traceability-report.cjs#isTestPath",
+          "scripts/generate-spec-traceability-report.cjs#readFeatureTraceabilityFacts",
+          "scripts/generate-spec-traceability-report.cjs#renderCanonicalDocCodeMatrix",
+          "scripts/generate-spec-traceability-report.cjs#renderSpecTraceabilitySummary",
+          "scripts/generate-spec-traceability-report.cjs#resolveFeatureTraceabilityGitInput",
+          "scripts/generate-spec-traceability-report.cjs#documentLink",
+          "scripts/generate-spec-traceability-report.cjs#featureIdOf",
+          "scripts/generate-spec-traceability-report.cjs#field",
+          "scripts/generate-spec-traceability-report.cjs#generatedFrontmatter",
+          "scripts/generate-spec-traceability-report.cjs#generatedRoot",
+          "scripts/generate-spec-traceability-report.cjs#limit",
+          "scripts/generate-spec-traceability-report.cjs#listCell",
+          "scripts/generate-spec-traceability-report.cjs#main",
+          "scripts/generate-spec-traceability-report.cjs#markdownTable",
+          "scripts/generate-spec-traceability-report.cjs#matrixOutputPath",
+          "scripts/generate-spec-traceability-report.cjs#normalizePath",
+          "scripts/generate-spec-traceability-report.cjs#repositoryBrowserUrl",
+          "scripts/generate-spec-traceability-report.cjs#repositoryLink",
+          "scripts/generate-spec-traceability-report.cjs#summaryOutputPath",
+          "scripts/generate-spec-traceability-report.cjs#uniqueSorted",
+          "scripts/generate-spec-traceability-report.cjs#writeIfChanged",
+          "scripts/generate-spec-traceability-report.cjs#commandFileFromValidation",
+          "scripts/generate-spec-traceability-report.cjs#isRegisteredVerificationCommand",
+          "scripts/generate-spec-traceability-report.cjs#packageScriptFromValidation",
+          "scripts/generate-spec-traceability-report.cjs#uniqueSortedSymbols"
+        ],
+        "normalizedRailName": "generateplanningderivedsurfaces",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "16bd043116720830e58b2f3b0c9d4da06703effef6060eb050b36465cf0e542c",
+        "allowedImplementationSurfaces": [
+          "docs/.manifest.json",
+          "docs/generated-docs-policy.json",
+          "docs/planning/status/canonical-doc-code-matrix.md",
+          "docs/planning/status/generated-spec-traceability.md",
+          "scripts/check-generated-docs-policy.cjs",
+          "scripts/documentation-publication.test.cjs",
+          "scripts/generate-spec-traceability-report.cjs",
+          "scripts/generate-spec-traceability-report.test.cjs",
+          "tools/ci/generated-docs-single-writer-policy.test.mjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/**",
+          "packages/@dvt/**",
+          "tools/planning-db/schema.sql"
+        ]
+      },
+      "createdAt": "2026-08-10T09:23:07.336Z"
     }
   ]
 }
