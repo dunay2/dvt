@@ -116,9 +116,6 @@ export type CanvasViewCopy = {
   readonly canvasNodeToolbarUnfreezeDescription: string;
   readonly canvasNodeToolbarMoreLabel: string;
   readonly canvasNodeToolbarMoreDescription: string;
-  readonly canvasNodeContextOpenWorkbenchLabel: string;
-  readonly canvasNodeContextWorkbenchGroupLabel: string;
-  readonly canvasNodeContextExecuteGroupLabel: string;
   readonly canvasNodeContextEditGroupLabel: string;
   readonly canvasNodeContextDuplicateLabel: string;
   readonly canvasNodeContextSelectForExecutionLabel: string;

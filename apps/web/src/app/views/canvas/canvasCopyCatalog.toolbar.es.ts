@@ -54,9 +54,6 @@ export const canvasViewToolbarCopyEs = {
   canvasNodeToolbarMoreLabel: 'Más acciones del nodo',
   canvasNodeToolbarMoreDescription:
     'Abre las acciones contextuales gobernadas disponibles para este nodo.',
-  canvasNodeContextOpenWorkbenchLabel: 'Abrir banco de trabajo',
-  canvasNodeContextWorkbenchGroupLabel: 'Banco de trabajo',
-  canvasNodeContextExecuteGroupLabel: 'Ejecución',
   canvasNodeContextEditGroupLabel: 'Editar',
   canvasNodeContextDuplicateLabel: 'Duplicar',
   canvasNodeContextSelectForExecutionLabel: 'Seleccionar para ejecución',

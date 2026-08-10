@@ -128,9 +128,6 @@ export function mapCanonicalNodeToCanvasNode({
       },
       portCompatibility: toPortCompatibilityViewModel(portCompatibility, copy),
       contextMenuCopy: {
-        openWorkbenchLabel: copy.canvasNodeContextOpenWorkbenchLabel,
-        workbenchGroupLabel: copy.canvasNodeContextWorkbenchGroupLabel,
-        executeGroupLabel: copy.canvasNodeContextExecuteGroupLabel,
         editGroupLabel: copy.canvasNodeContextEditGroupLabel,
         duplicateLabel: copy.canvasNodeContextDuplicateLabel,
         selectForExecutionLabel: copy.canvasNodeContextSelectForExecutionLabel,
@@ -248,9 +245,6 @@ export function mapDroppedCanonicalNodeToCanvasNode(
         source: copy.canvasNodePortSourceLabel,
       },
       contextMenuCopy: {
-        openWorkbenchLabel: copy.canvasNodeContextOpenWorkbenchLabel,
-        workbenchGroupLabel: copy.canvasNodeContextWorkbenchGroupLabel,
-        executeGroupLabel: copy.canvasNodeContextExecuteGroupLabel,
         editGroupLabel: copy.canvasNodeContextEditGroupLabel,
         duplicateLabel: copy.canvasNodeContextDuplicateLabel,
         selectForExecutionLabel: copy.canvasNodeContextSelectForExecutionLabel,

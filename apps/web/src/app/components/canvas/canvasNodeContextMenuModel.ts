@@ -32,9 +32,6 @@ export type CanvasNodeContextMenuModel = Readonly<{
 }>;
 
 export type CanvasNodeContextMenuCopy = Readonly<{
-  openWorkbenchLabel: string;
-  workbenchGroupLabel: string;
-  executeGroupLabel: string;
   editGroupLabel: string;
   duplicateLabel: string;
   selectForExecutionLabel: string;
@@ -44,9 +41,6 @@ export type CanvasNodeContextMenuCopy = Readonly<{
 }>;
 
 const DEFAULT_COPY: CanvasNodeContextMenuCopy = {
-  openWorkbenchLabel: 'Open workbench',
-  workbenchGroupLabel: 'Workbench',
-  executeGroupLabel: 'Execution',
   editGroupLabel: 'Edit',
   duplicateLabel: 'Duplicate',
   selectForExecutionLabel: 'Select for execution',

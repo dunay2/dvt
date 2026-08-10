@@ -187,18 +187,6 @@ export const canvasViewToolbarCopyByKey = {
     key: 'canvas.nodeToolbar.moreDescription',
     fallback: 'Open the governed contextual actions for this node.',
   },
-  canvasNodeContextOpenWorkbenchLabel: {
-    key: 'canvas.nodeContext.openWorkbenchLabel',
-    fallback: 'Open workbench',
-  },
-  canvasNodeContextWorkbenchGroupLabel: {
-    key: 'canvas.nodeContext.workbenchGroupLabel',
-    fallback: 'Workbench',
-  },
-  canvasNodeContextExecuteGroupLabel: {
-    key: 'canvas.nodeContext.executeGroupLabel',
-    fallback: 'Execution',
-  },
   canvasNodeContextEditGroupLabel: {
     key: 'canvas.nodeContext.editGroupLabel',
     fallback: 'Edit',
