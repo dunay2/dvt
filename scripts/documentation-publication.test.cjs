@@ -134,12 +134,14 @@ test('rejects missing generated sources and paths outside the generated root', (
             {
               id: 'escape',
               artifacts: ['.generated-docs/../outside.md'],
+              tracking: 'untracked',
+              manualEditPolicy: 'generator-owned',
               publication: { enabled: true },
             },
           ],
         },
       }).generatedSources(),
-    /escapes \.generated-docs/u
+    /escapes .*\.generated-docs/u
   );
 
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'dvt-doc-publication-'));
@@ -154,6 +156,8 @@ test('rejects missing generated sources and paths outside the generated root', (
         {
           id: 'missing',
           artifacts: ['.generated-docs/missing.md'],
+          tracking: 'untracked',
+          manualEditPolicy: 'generator-owned',
           publication: { enabled: true },
         },
       ],
