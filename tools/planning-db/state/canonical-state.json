@@ -12763,6 +12763,20 @@
         "updated_at": "2026-08-10T22:11:11.708+00:00"
       },
       {
+        "design_id": "R1-1D-API-GOVERNANCE-PERSISTENCE-CLOSEOUT-20260810",
+        "work_item_id": "GH-2167",
+        "title": "DB-first governance component recovery",
+        "owner": "API / Architecture / Planning DB",
+        "status": "review",
+        "rationale": "Persist audited component overrides and DB surface catalog state through explicit Planning DB export and destructive current-schema rebuild.",
+        "fowler_signal": "hidden_authority",
+        "rail_ref": "pnpm planning:db:export; pnpm planning:db:import",
+        "approved_at": null,
+        "supersedes_id": "R1-1D-API-GOVERNANCE-OWNERSHIP-CLOSEOUT-20260810",
+        "created_at": "2026-08-10T22:29:55.099+00:00",
+        "updated_at": "2026-08-10T22:29:55.099+00:00"
+      },
+      {
         "design_id": "R1-1D-API-GOVERNANCE-QA-CLOSEOUT-20260810",
         "work_item_id": "GH-2167",
         "title": "API governance retirement QA closeout",
@@ -82170,6 +82184,54 @@
         "created_at": "2026-08-10T22:11:11.708+00:00"
       },
       {
+        "design_id": "R1-1D-API-GOVERNANCE-PERSISTENCE-CLOSEOUT-20260810",
+        "subject_kind": "command",
+        "subject_id": "ExportPlanningCanonicalState",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T22:29:55.099+00:00"
+      },
+      {
+        "design_id": "R1-1D-API-GOVERNANCE-PERSISTENCE-CLOSEOUT-20260810",
+        "subject_kind": "command",
+        "subject_id": "ImportPlanningCanonicalState",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T22:29:55.099+00:00"
+      },
+      {
+        "design_id": "R1-1D-API-GOVERNANCE-PERSISTENCE-CLOSEOUT-20260810",
+        "subject_kind": "path",
+        "subject_id": "scripts/planning-db-export.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T22:29:55.099+00:00"
+      },
+      {
+        "design_id": "R1-1D-API-GOVERNANCE-PERSISTENCE-CLOSEOUT-20260810",
+        "subject_kind": "path",
+        "subject_id": "scripts/planning-db-import.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T22:29:55.099+00:00"
+      },
+      {
+        "design_id": "R1-1D-API-GOVERNANCE-PERSISTENCE-CLOSEOUT-20260810",
+        "subject_kind": "path",
+        "subject_id": "tools/planning-db/state/canonical-state.json",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T22:29:55.099+00:00"
+      },
+      {
+        "design_id": "R1-1D-API-GOVERNANCE-PERSISTENCE-CLOSEOUT-20260810",
+        "subject_kind": "path",
+        "subject_id": "tools/planning-db/state/db-governance-surfaces.json",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T22:29:55.099+00:00"
+      },
+      {
         "design_id": "R1-1D-API-GOVERNANCE-QA-CLOSEOUT-20260810",
         "subject_kind": "component",
         "subject_id": "SYS-API-APPLICATION-DBT-PROJECT-GRAPH",
@@ -87213,6 +87275,70 @@
           "sourceContentSha256": "c770f3d34e90d2ad2f546af24f8f2833870c7df91f1fb1c97e45151de29563b6"
         },
         "created_at": "2026-08-10T21:04:06.239+00:00"
+      },
+      {
+        "operation_id": "9227eeb5-c46b-49a3-ae5b-711f029c31f7",
+        "idempotency_key": "gh-2167-component-persistence-design-20260810",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-PERSISTENCE-CLOSEOUT-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "API / Architecture / Planning DB",
+          "title": "DB-first governance component recovery",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "ExportPlanningCanonicalState",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "ImportPlanningCanonicalState",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/planning-db-export.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/planning-db-import.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "tools/planning-db/state/canonical-state.json",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "tools/planning-db/state/db-governance-surfaces.json",
+              "subjectKind": "path"
+            }
+          ],
+          "status": "review",
+          "railRef": "pnpm planning:db:export; pnpm planning:db:import",
+          "designId": "R1-1D-API-GOVERNANCE-PERSISTENCE-CLOSEOUT-20260810",
+          "rationale": "Persist audited component overrides and DB surface catalog state through explicit Planning DB export and destructive current-schema rebuild.",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "workItemId": "GH-2167",
+          "fowlerSignal": "hidden_authority",
+          "supersedesId": "R1-1D-API-GOVERNANCE-OWNERSHIP-CLOSEOUT-20260810",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T22:29:55.099+00:00"
       },
       {
         "operation_id": "92e4232f-f560-4369-a861-d0cedfe85ce7",
@@ -97251,7 +97377,7 @@
         "pnpm docs:feature-mechanization:implementation"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "4d2d3ca72bfa6cae20bfbe9ebb610d09e02f2f02fe82583b0fb1367c6daec949",
+      "sourceContentSha256": "a49910d10473466d67d1603cdbc3ae47ff5a7b3452672295842dab63383001d8",
       "rawRail": {
         "name": "RecordArchitectureStorageIo",
         "type": "command",
