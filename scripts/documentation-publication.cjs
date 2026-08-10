@@ -159,6 +159,15 @@ class DocumentationPublicationPolicy {
     ).toLowerCase();
     return !['archive', 'archived', 'superseded', 'retired'].includes(lifecycle);
   }
+
+  isDefaultNavigationEntry(source, lifecycleRow = {}) {
+    if (!this.isNavigable(source.sourcePath, lifecycleRow)) return false;
+    return (
+      Boolean(source.artifactClassId) ||
+      source.route === 'index.md' ||
+      source.route.endsWith('/index.md')
+    );
+  }
 }
 
 class DocumentationPublicationAssembler {
@@ -284,7 +293,7 @@ class DocumentationPublicationAssembler {
 
     const navigableRoutes = [...routeOwners.values()]
       .filter((source) =>
-        this.policy.isNavigable(source.sourcePath, lifecycleByPath.get(source.sourcePath))
+        this.policy.isDefaultNavigationEntry(source, lifecycleByPath.get(source.sourcePath))
       )
       .map((source) => source.route)
       .sort((left, right) => {
