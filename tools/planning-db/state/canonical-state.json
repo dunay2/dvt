@@ -12753,14 +12753,14 @@
         "work_item_id": "GH-2167",
         "title": "Architecture design lifecycle closeout",
         "owner": "API / Architecture / Planning DB",
-        "status": "implemented",
+        "status": "superseded",
         "rationale": "Add an audited lifecycle command so superseded designs and the final implemented design are unambiguous after review.",
         "fowler_signal": "hidden_authority",
         "rail_ref": "pnpm planning:db:operate architecture-design transition",
         "approved_at": "2026-08-10T22:58:50.304+00:00",
         "supersedes_id": "R1-1D-API-GOVERNANCE-PERSISTENCE-CLOSEOUT-20260810",
         "created_at": "2026-08-10T22:47:37.611+00:00",
-        "updated_at": "2026-08-10T22:58:52.876+00:00"
+        "updated_at": "2026-08-10T23:46:27.975+00:00"
       },
       {
         "design_id": "R1-1D-API-GOVERNANCE-OWNERSHIP-CLOSEOUT-20260810",
@@ -12823,14 +12823,14 @@
         "work_item_id": "GH-2167",
         "title": "DB-first governance projection closeout",
         "owner": "API / Architecture / Planning DB",
-        "status": "implementing",
+        "status": "implemented",
         "rationale": "Publish effective governance ownership and navigation-only architecture guidance from Planning DB only through the existing explicit export command, removing stale local inventory authority.",
         "fowler_signal": "hidden_authority",
         "rail_ref": "GeneratePlanningDerivedSurfaces;ReadArchitectureDesignAuthority;component-tree;component-metadata",
         "approved_at": "2026-08-10T23:26:23.715+00:00",
         "supersedes_id": "R1-1D-API-GOVERNANCE-LIFECYCLE-CLOSEOUT-20260810",
         "created_at": "2026-08-10T23:15:58.511+00:00",
-        "updated_at": "2026-08-10T23:26:25.555+00:00"
+        "updated_at": "2026-08-10T23:46:26.121+00:00"
       },
       {
         "design_id": "RELEASE-CANDIDATE-AUTHORITY-CLASSIFICATION-20260719",
@@ -90084,6 +90084,27 @@
         "created_at": "2026-08-10T21:04:22.532+00:00"
       },
       {
+        "operation_id": "da68e48c-a41d-40fb-adfb-24644e8e8884",
+        "idempotency_key": "architecture_design_transition:codex:R1-1D-DB-FIRST-PROJECTION-CLOSEOUT-20260810:453321b6f15e8dbc",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "R1-1D-DB-FIRST-PROJECTION-CLOSEOUT-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Independent Fowler QA accepted the corrected DB-first projections and executable query navigation.",
+          "designId": "R1-1D-DB-FIRST-PROJECTION-CLOSEOUT-20260810",
+          "toStatus": "implemented",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T23:46:26.121+00:00"
+      },
+      {
         "operation_id": "da780556-2058-468d-a1fe-78339eb48c6a",
         "idempotency_key": "architecture_contract_record:codex:R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810:CONTRACT-SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS-EVIDENCE:75b97f22b3f3c84c",
         "operation_type": "architecture_contract_record",
@@ -90261,6 +90282,27 @@
           "sourceContentSha256": "c770f3d34e90d2ad2f546af24f8f2833870c7df91f1fb1c97e45151de29563b6"
         },
         "created_at": "2026-08-10T21:04:10.935+00:00"
+      },
+      {
+        "operation_id": "e176c39d-83aa-4d46-8027-9cec62e95487",
+        "idempotency_key": "architecture_design_transition:codex:R1-1D-API-GOVERNANCE-LIFECYCLE-CLOSEOUT-20260810:b178dd7d95e45545",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-LIFECYCLE-CLOSEOUT-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The DB-first projection closeout is the single final authority for GH-2167.",
+          "designId": "R1-1D-API-GOVERNANCE-LIFECYCLE-CLOSEOUT-20260810",
+          "toStatus": "superseded",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "fromStatus": "implemented",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T23:46:27.975+00:00"
       },
       {
         "operation_id": "e1fbb2de-06d4-4e88-9abb-24f123d7f9f1",
@@ -122892,7 +122934,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-export.cjs",
-      "sourceContentSha256": "f6937408b68e7fad9826b18ce60667637397efeb5d03a987458b5bfb4f43a7e7",
+      "sourceContentSha256": "41b09415f6aa2304e0992b59219b98708b4b140326bc34da704fd28deb7e98e5",
       "rawRail": {
         "name": "ExportPlanningDbCanonicalArchitectureState",
         "type": "command",
