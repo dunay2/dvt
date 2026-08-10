@@ -334,8 +334,11 @@ test('generation modes isolate code-state and repository-map work', async () => 
   assert.deepEqual(calls, ['map']);
 });
 
-test('docs status check passes fail-closed intent through the nested pnpm script', () => {
-  assert.equal(packageJson.scripts['docs:status:check'], 'pnpm docs:status:generate --check');
+test('routine docs status checks remain DB-free and do not publish documentation', () => {
+  assert.equal(
+    packageJson.scripts['docs:status:check'],
+    'pnpm docs:status:generate --code-state-only --check'
+  );
 });
 
 test('DB-free docs workflows and contributor guidance select code-state explicitly', () => {
@@ -518,6 +521,7 @@ test('Repository Map publication provisions the pinned Zensical runtime first', 
     'python -m pip install --disable-pip-version-check --require-hashes -r .github/requirements/zensical.lock'
   );
   assert.doesNotMatch(installZensical.run, /--upgrade/u);
+  assert.equal(publication.run, 'pnpm docs:publish && pnpm docs:build && pnpm docs:gov:links');
 
   const lockedRequirements = fs.readFileSync(zensicalRequirementsPath, 'utf8');
   const directRequirements = fs
