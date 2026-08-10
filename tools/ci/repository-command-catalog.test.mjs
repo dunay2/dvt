@@ -187,6 +187,10 @@ test('classifies current command file paths without broad script-directory assum
     'docs-governance'
   );
   assert.equal(
+    classifyScriptFilePath('scripts/documentation-publication.cjs').domain,
+    'docs-governance'
+  );
+  assert.equal(
     classifyScriptFilePath('scripts/lib/feature-mechanization-manifest.cjs').domain,
     'docs-governance'
   );

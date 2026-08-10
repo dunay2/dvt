@@ -33,6 +33,9 @@ jobs:
           python -m pip install --disable-pip-version-check --require-hashes -r
           .github/requirements/zensical.lock
 
+      - name: Generate DB-first publication projection
+        run: pnpm docs:publish
+
       - name: Build site
         run: pnpm docs:build
 
