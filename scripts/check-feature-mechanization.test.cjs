@@ -487,7 +487,10 @@ test('validateFeatureImplementationManifests permits deletion of a forbidden sur
     [
       {
         sourcePath: 'plan.md',
-        manifest: validManifest,
+        manifest: {
+          ...validManifest,
+          forbiddenImplementationSurfaces: [deletedPath],
+        },
       },
     ],
     {
@@ -506,6 +509,36 @@ test('validateFeatureImplementationManifests rejects deletion outside allowed an
       {
         sourcePath: 'plan.md',
         manifest: validManifest,
+      },
+    ],
+    {
+      changedFiles: [deletedPath],
+      deletedFiles: [deletedPath],
+    }
+  );
+
+  assert.match(result.errors.join('\n'), /outside allowedImplementationSurfaces/);
+});
+
+test('validateFeatureImplementationManifests rejects deletion authorized only by another feature wildcard', () => {
+  const deletedPath = 'apps/api/src/auth.ts';
+  const result = validateFeatureImplementationManifests(
+    [
+      {
+        sourcePath: 'canvas-plan.md',
+        manifest: {
+          ...validManifest,
+          featureId: 'TF-E2-M-C',
+        },
+      },
+      {
+        sourcePath: 'unrelated-api-plan.md',
+        manifest: {
+          ...validManifest,
+          featureId: 'UNRELATED-API',
+          allowedImplementationSurfaces: ['apps/web/**'],
+          forbiddenImplementationSurfaces: ['apps/api/** backend authorization changes'],
+        },
       },
     ],
     {
