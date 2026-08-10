@@ -551,15 +551,31 @@ async function readComponentTopologyFacts(client, readers = {}) {
   const driftReader = readers.readArchitectureDriftRows || readArchitectureDriftRows;
   const documentReader =
     readers.readArchitectureComponentDocumentRows || readArchitectureComponentDocumentRows;
-  const [components, relations, responsibilities, maturity, drift, documents] = await Promise.all([
+  const [
+    components,
+    relations,
+    responsibilities,
+    maturity,
+    componentDrift,
+    relationDrift,
+    documents,
+  ] = await Promise.all([
     componentReader(client, { limit }),
     relationReader(client, { limit }),
     responsibilityReader(client, { limit }),
     maturityReader(client, { limit }),
-    driftReader(client, { limit }),
+    driftReader(client, { limit, subjectKind: 'component' }),
+    driftReader(client, { limit, subjectKind: 'relation' }),
     documentReader(client),
   ]);
-  return { components, relations, responsibilities, maturity, drift, documents };
+  return {
+    components,
+    relations,
+    responsibilities,
+    maturity,
+    drift: [...componentDrift, ...relationDrift],
+    documents,
+  };
 }
 
 function currentGitSha(options = {}) {
