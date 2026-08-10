@@ -82,6 +82,17 @@ Play/Pause remains a distinct visible affordance and must not be retired merely 
 - `canvas-dbt-author-code-run-live.cy.ts`
 - `dbt-project-file-projection-live.cy.ts`
 
+### Final QA finding — retired right-click topology
+
+The final Fowler review found that the shared selected-closure Cypress helper and two
+Canvas browser scenarios still drove node operations through native right-click. The
+surface strategies also continued to advertise `node-context-menu` as a Workbench
+launch point even though that launch path had been retired.
+
+This is not compatibility behavior. The browser helpers must enter node operations
+through the card ellipsis, and the surface-policy projection must declare double-click
+as the only node Workbench launch point. Empty-Canvas right-click remains unchanged.
+
 GitHub issue #2255 remains the independent live-product/product-owner acceptance gate.
 
 ## Feature Mechanization
@@ -108,6 +119,9 @@ governingSources:
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
 allowedImplementationSurfaces:
+  - apps/web/cypress/support/canvasExecutionSelection.ts
+  - apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts
+  - apps/web/cypress/e2e/canvas/canvas-dbt-selection-recovery-live.cy.ts
   - apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
   - apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
   - apps/web/src/app/components/canvas/CanvasNodeContextMenuView.test.tsx
@@ -120,6 +134,11 @@ allowedImplementationSurfaces:
   - apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts
   - apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts
   - apps/web/src/app/plugins/dbt/DbtNodeRenderer.tsx
+  - apps/web/src/app/plugins/canvasSurfaceStrategyContracts.ts
+  - apps/web/src/app/plugins/dbt/dbtCanvasSurfaceStrategy.ts
+  - apps/web/src/app/plugins/dbt/dbtProjectFileCanvasSurfaceStrategy.ts
+  - apps/web/src/app/plugins/dvt/dvtCanvasSurfaceStrategy.ts
+  - apps/web/src/app/plugins/graphStrategyRegistry.test.ts
   - apps/web/src/app/plugins/graph/GraphNodeCardView.test.tsx
   - apps/web/src/app/plugins/graph/GraphNodeCardView.tsx
   - apps/web/src/app/plugins/graph/GraphNodeRenderer.tsx
@@ -443,6 +462,19 @@ redGreenCycles:
       - scripts/run-selected-closure-live-proof.cjs
       - scripts/run-selected-closure-live-proof.test.cjs
     greenTest: scripts/run-selected-closure-live-proof.test.cjs
+  - id: retire-node-right-click-test-topology
+    redTest: apps/web/src/app/plugins/graphStrategyRegistry.test.ts
+    expectedFailure: Surface-policy facts and browser helpers still represented native node right-click as a supported Workbench or operations entry.
+    patchSurfaces:
+      - apps/web/src/app/plugins/canvasSurfaceStrategyContracts.ts
+      - apps/web/src/app/plugins/dbt/dbtCanvasSurfaceStrategy.ts
+      - apps/web/src/app/plugins/dbt/dbtProjectFileCanvasSurfaceStrategy.ts
+      - apps/web/src/app/plugins/dvt/dvtCanvasSurfaceStrategy.ts
+      - apps/web/src/app/plugins/graphStrategyRegistry.test.ts
+      - apps/web/cypress/support/canvasExecutionSelection.ts
+      - apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts
+      - apps/web/cypress/e2e/canvas/canvas-dbt-selection-recovery-live.cy.ts
+    greenTest: apps/web/src/app/plugins/graphStrategyRegistry.test.ts
 ```
 
 ## Completion rule
