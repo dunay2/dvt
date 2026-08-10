@@ -96,6 +96,14 @@ Browser setup may wait only for required startup probes. `/readyz`, `/version` a
 `/db/ready` are deployment-optional and cannot be prerequisites for these Canvas
 interaction proofs.
 
+The connected-source live proof also exposed an assertion that treated a direct
+`Code` tab as the only valid presentation of the preferred section. The governed
+surface strategy may place Code in the overflow rail when its primary-section
+budget is exhausted. The proof must assert the active Code section and its
+authoring content, whether the active affordance is the direct Code tab or the
+localized `More: Code` overflow trigger; it must not change the product's section
+policy merely to satisfy a selector.
+
 GitHub issue #2255 remains the independent live-product/product-owner acceptance gate.
 
 ## Feature Mechanization
@@ -518,6 +526,12 @@ redGreenCycles:
       - apps/web/cypress/e2e/runs/run-controls-live.cy.ts
       - apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
     greenTest: apps/web/src/app/plugins/graphStrategyRegistry.test.ts
+  - id: code-default-overflow-presentation
+    redTest: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
+    expectedFailure: The live proof required a direct Code tab even when the governed primary-section budget presents active Code through the overflow trigger.
+    patchSurfaces:
+      - apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
+    greenTest: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
 ```
 
 ## Completion rule
