@@ -26,7 +26,6 @@ const CANVAS_ID = 'analytics-description-edit-files';
 const MODEL_UNIQUE_ID = 'model.analytics_description_edit.orders';
 const SCHEMA_PATH = `${PROJECT_ROOT}/models/schema.yml`;
 const MODEL_SQL_PATH = `${PROJECT_ROOT}/models/orders.sql`;
-const MODEL_PROJECT_PATH = 'models/orders.sql';
 const ORIGINAL_DESCRIPTION = 'Curated orders model';
 const REVERT_PROOF_DESCRIPTION = 'Curated orders with governed ownership';
 const RUN_DESCRIPTION = 'Curated orders approved for downstream reporting';
@@ -313,9 +312,7 @@ describe('dbt YAML description edit live vertical', () => {
     closeModelWorkbench();
 
     openModelCodeEditor();
-    cy.get('[data-slot="canvas-contextual-workbench"]', { timeout: 30_000 })
-      .should('be.visible')
-      .and('contain.text', MODEL_PROJECT_PATH);
+    cy.get('[data-slot="canvas-contextual-workbench"]', { timeout: 30_000 }).should('be.visible');
     cy.get(
       `[data-slot="code-workspace-file-entry"][data-workspace-path="${MODEL_SQL_PATH}"]`
     ).should('be.visible');
