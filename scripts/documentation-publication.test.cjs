@@ -25,6 +25,7 @@ test('assembles a deterministic tree and keeps historical pages out of default n
   fs.mkdirSync(path.join(root, '.generated-docs', 'concepts'), { recursive: true });
   fs.writeFileSync(path.join(root, 'docs', 'index.md'), '# Home\n', 'utf8');
   fs.writeFileSync(path.join(root, 'docs', 'concepts', 'index.md'), '# Concepts\n', 'utf8');
+  fs.writeFileSync(path.join(root, 'docs', 'concepts', 'detail.md'), '# Detail\n', 'utf8');
   fs.writeFileSync(path.join(root, 'docs', 'archive', 'old.md'), '# Old\n', 'utf8');
   fs.writeFileSync(
     path.join(root, '.generated-docs', 'concepts', 'repository-map.md'),
@@ -67,7 +68,8 @@ test('assembles a deterministic tree and keeps historical pages out of default n
   const second = await assembler.assemble({ runGenerators: false });
 
   assert.equal(first.treeDigest, second.treeDigest);
-  assert.equal(first.routeCount, 4);
+  assert.equal(first.routeCount, 5);
+  assert.equal(first.navigableRouteCount, 3);
   assert.equal(
     fs.readFileSync(
       path.join(root, '.generated-docs', 'publication', 'concepts', 'repository-map.md'),
@@ -82,7 +84,12 @@ test('assembles a deterministic tree and keeps historical pages out of default n
   );
   assert.match(generatedConfig, /docs_dir: publication/u);
   assert.match(generatedConfig, /concepts\/repository-map\.md/u);
+  assert.doesNotMatch(generatedConfig, /concepts\/detail\.md/u);
   assert.doesNotMatch(generatedConfig, /archive\/old\.md/u);
+  assert.equal(
+    fs.existsSync(path.join(root, '.generated-docs', 'publication', 'concepts', 'detail.md')),
+    true
+  );
   await assembler.check();
 });
 
