@@ -335,7 +335,10 @@ export function CanvasNodeWorkbenchPanel({
   }, [activeTab, resolvedActiveTab]);
 
   return (
-    <div data-slot="canvas-node-workbench-panel" className="flex h-full min-h-0 flex-col">
+    <div
+      data-slot="canvas-node-workbench-panel"
+      className="flex h-full min-h-0 min-w-0 w-full flex-col"
+    >
       <div className={inspectorVisualClasses.contextPanelHeaderRow}>
         <div
           {...dragHandleProps}
