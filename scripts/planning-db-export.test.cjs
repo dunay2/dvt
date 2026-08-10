@@ -350,7 +350,11 @@ test('planning DB export writes deterministic current architecture state', async
     );
     assert.match(unitNavigation, /Generated from Planning DB authority/u);
     assert.match(unitNavigation, /last_reviewed: 2026-08-10/u);
-    assert.match(unitNavigation, /pnpm planning:db:query component-tree --no-refresh/u);
+    assert.match(
+      unitNavigation,
+      /pnpm planning:db:query units --parent-unit SYS-DVT --no-refresh/u
+    );
+    assert.doesNotMatch(unitNavigation, /pnpm planning:db:query component-tree --no-refresh/u);
     assert.doesNotMatch(unitNavigation, /repository tracked files:\s*\d+/iu);
     const planStoreNavigation = fs.readFileSync(
       path.join(outputRoot, planStoreNavigationPath),
@@ -358,7 +362,22 @@ test('planning DB export writes deterministic current architecture state', async
     );
     assert.match(planStoreNavigation, /`SYS-PLANSTORE` — Plan store \(`review`\)/u);
     assert.match(planStoreNavigation, /last_reviewed: 2026-08-10/u);
-    assert.match(planStoreNavigation, /pnpm planning:db:query component-metadata/u);
+    assert.match(
+      planStoreNavigation,
+      /pnpm planning:db:query units --component SYS-PLANSTORE --no-refresh/u
+    );
+    assert.match(
+      planStoreNavigation,
+      /pnpm planning:db:query component-tree --parent-unit SYS-PLANSTORE --no-refresh/u
+    );
+    assert.match(
+      planStoreNavigation,
+      /pnpm planning:db:query files --domain SYS-PLANSTORE --limit 1000 --no-refresh/u
+    );
+    assert.doesNotMatch(
+      planStoreNavigation,
+      /planning:db:query (?:component-tree|component-metadata|files) --component SYS-PLANSTORE/u
+    );
     assert.doesNotMatch(planStoreNavigation, /StoredPlanExecutabilityValidator/u);
     assert.doesNotMatch(planStoreNavigation, /Repository tracked files/iu);
     assert.equal(
