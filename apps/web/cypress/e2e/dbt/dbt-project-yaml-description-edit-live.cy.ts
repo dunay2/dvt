@@ -247,7 +247,7 @@ function waitForCompletedRun(runId: string, attempt = 0): Cypress.Chainable<Live
 }
 
 function closeContextualWorkbench(): void {
-  cy.get('[data-slot="canvas-contextual-workbench-header"]').find('button').click();
+  cy.get('[data-slot="canvas-contextual-workbench-close"]').should('be.visible').click();
   cy.get('[data-slot="canvas-contextual-workbench"]').should('not.exist');
 }
 
