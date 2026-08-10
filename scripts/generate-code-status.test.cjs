@@ -341,22 +341,24 @@ test('routine docs status checks remain DB-free and do not publish documentation
   );
 });
 
-test('DB-free docs workflows and contributor guidance select code-state explicitly', () => {
+test('DB-free checks stay separate from mandatory DB-first consultation and publication', () => {
   assert.match(packageJson.scripts['docs:ci'], /docs:status:generate --code-state-only/u);
 
-  const guidancePaths = [
+  const publicationGuidancePaths = [
     'AGENTS.md',
     'docs/DOCS_README.md',
-    'docs/planning/status/generated-code-state.md',
     'docs/guides/documentation-maintenance-guide-20260407.md',
-    'docs/runbooks/planning-generated-artifacts-operations-20260403.md',
-    'docs/guides/pr-preflight-and-ci-triage.md',
   ];
-  for (const guidancePath of guidancePaths) {
+  for (const guidancePath of publicationGuidancePaths) {
     const content = fs.readFileSync(path.join(repoRoot, guidancePath), 'utf8');
-    assert.match(content, /docs:status:generate --code-state-only/u, guidancePath);
-    assert.match(content, /docs:status:generate --repository-map-only/u, guidancePath);
-    assert.doesNotMatch(content, /docs:status:generate -- --(?:code-state|repository-map)-only/u);
+    assert.match(content, /planning:db:query architecture-designs/u, guidancePath);
+    assert.match(content, /pnpm docs:publish/u, guidancePath);
+    assert.match(
+      content,
+      /docs:serve[\s\S]{0,160}(?:does not|do not) generate|(?:does not|do not) generate[\s\S]{0,160}docs:serve/iu,
+      guidancePath
+    );
+    assert.doesNotMatch(content, /tracked Repository Map|commit the map/iu, guidancePath);
   }
 });
 
