@@ -87090,7 +87090,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/generate-code-status.cjs",
-      "sourceContentSha256": "80498d453524c280604c07a195232c546d069e09954ae74f014c12f6292f17fa",
+      "sourceContentSha256": "502e3e063617cdd9c041622c16a9c3511c5864d7a4b7cad766f5470c6e9fb729",
       "rawRail": {
         "name": "GeneratePlanningDerivedSurfaces",
         "type": "command",
@@ -88310,6 +88310,134 @@
       "revision": 7,
       "createdBy": "codex",
       "createdAt": "2026-08-10T08:24:00.833Z"
+    },
+    {
+      "railId": "local#DOC1-5-DB-FIRST-SYSTEM-DELIVERY-STATUS#command#generateplanningderivedsurfaces",
+      "featureId": "DOC1-5-DB-FIRST-SYSTEM-DELIVERY-STATUS",
+      "mechanizationStatus": "implemented",
+      "railName": "GeneratePlanningDerivedSurfaces",
+      "normalizedRailName": "generateplanningderivedsurfaces",
+      "railType": "command",
+      "dddOwner": "PlanningDocumentationProjection",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "scripts/generate-code-status.cjs#buildSystemDeliveryStatusProjection",
+        "scripts/generate-code-status.cjs#renderSystemDeliveryStatus"
+      ],
+      "implementationRefs": [
+        "scripts/generate-code-status.cjs#buildSystemDeliveryStatusProjection",
+        "scripts/generate-code-status.cjs#renderSystemDeliveryStatus"
+      ],
+      "documentationRefs": ["docs/architecture/system-delivery-status.md"],
+      "governingSources": [
+        "docs/planning/status/governance-document-rule-inventory.md",
+        "docs/generated-docs-policy.json"
+      ],
+      "allowedImplementationSurfaces": [
+        "scripts/generate-code-status.cjs",
+        "scripts/generate-code-status.test.cjs",
+        "docs/generated-docs-policy.json"
+      ],
+      "architectureGuards": [
+        "node --test scripts/generate-code-status.test.cjs scripts/documentation-publication.test.cjs"
+      ],
+      "completionGate": [
+        "pnpm docs:publish",
+        "pnpm docs:build",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "scripts/generate-code-status.cjs",
+      "sourceContentSha256": "502e3e063617cdd9c041622c16a9c3511c5864d7a4b7cad766f5470c6e9fb729",
+      "rawRail": {
+        "name": "GeneratePlanningDerivedSurfaces",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "PlanningDocumentationProjection"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "buildSystemDeliveryStatusProjection",
+            "path": "scripts/generate-code-status.cjs",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": ["scripts/generate-code-status.test.cjs"],
+            "fowlerSignals": ["hidden_authority", "published_language"],
+            "cypressCoverage": "N/A - generated documentation is verified by publication, Zensical, link, accessibility, and demanding-user QA.",
+            "architectureGuard": "node --test scripts/generate-code-status.test.cjs scripts/documentation-publication.test.cjs"
+          },
+          {
+            "name": "renderSystemDeliveryStatus",
+            "path": "scripts/generate-code-status.cjs",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": ["scripts/generate-code-status.test.cjs"],
+            "fowlerSignals": ["hidden_authority", "published_language"],
+            "cypressCoverage": "N/A - generated documentation is verified by publication, Zensical, link, accessibility, and demanding-user QA.",
+            "architectureGuard": "node --test scripts/generate-code-status.test.cjs scripts/documentation-publication.test.cjs"
+          }
+        ],
+        "version": 1,
+        "featureId": "DOC1-5-DB-FIRST-SYSTEM-DELIVERY-STATUS",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2148"],
+        "cypressFlows": [
+          "N/A - generated documentation is verified by publication, Zensical, link, accessibility, and demanding-user QA."
+        ],
+        "domainObjects": ["SystemDeliveryStatusProjection"],
+        "fowlerSignals": ["hidden_authority", "published_language"],
+        "completionGate": [
+          "pnpm docs:publish",
+          "pnpm docs:build",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "generateplanningderivedsurfaces-record",
+            "redTest": "node --test scripts/generate-code-status.test.cjs",
+            "greenTest": "node --test scripts/generate-code-status.test.cjs scripts/documentation-publication.test.cjs",
+            "patchSurfaces": [
+              "scripts/generate-code-status.cjs",
+              "scripts/generate-code-status.test.cjs",
+              "docs/generated-docs-policy.json"
+            ],
+            "expectedFailure": "System Delivery Status release, projection, mode, and policy tests fail before the DB-first generator exists."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "governingSources": [
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/generated-docs-policy.json"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "GeneratePlanningDerivedSurfaces",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "PlanningDocumentationProjection"
+          }
+        ],
+        "architectureGuards": [
+          "node --test scripts/generate-code-status.test.cjs scripts/documentation-publication.test.cjs"
+        ],
+        "implementationPlan": "Project evaluated Git, reconciled release files, workspace statistics, and exact Planning DB architecture, maturity, rail, and feature facts into the disposable System Delivery Status route on explicit request.",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "scripts/generate-code-status.cjs",
+          "scripts/generate-code-status.test.cjs",
+          "docs/generated-docs-policy.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "tracked manual System Delivery Status snapshot",
+          "database migrations or compatibility states",
+          "live GitHub build dependency"
+        ]
+      },
+      "revision": 0,
+      "createdBy": "codex",
+      "createdAt": "2026-08-10T11:21:40.656Z"
     },
     {
       "railId": "local#DOCS-CANONICAL-FILENAME-GATE-20260731#query#validatechangeddocumentfilenames",
@@ -134126,6 +134254,72 @@
         "forbiddenImplementationSurfaces": ["apps/**"]
       },
       "createdAt": "2026-08-10T10:18:24.671Z"
+    },
+    {
+      "operationId": "47853c5e-d78c-43de-a054-a00c37eb8dc6",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:DOC1-5-DB-FIRST-SYSTEM-DELIVERY-STATUS:command:generateplanningderivedsurfaces:latest:7969634795534a97",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#DOC1-5-DB-FIRST-SYSTEM-DELIVERY-STATUS#command#generateplanningderivedsurfaces",
+      "sourcePath": "scripts/generate-code-status.cjs",
+      "sourceContentSha256": "502e3e063617cdd9c041622c16a9c3511c5864d7a4b7cad766f5470c6e9fb729",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "node --test scripts/generate-code-status.test.cjs",
+        "dddOwner": "PlanningDocumentationProjection",
+        "railName": "GeneratePlanningDerivedSurfaces",
+        "railType": "command",
+        "featureId": "DOC1-5-DB-FIRST-SYSTEM-DELIVERY-STATUS",
+        "greenTest": "node --test scripts/generate-code-status.test.cjs scripts/documentation-publication.test.cjs",
+        "sourceRef": "scripts/generate-code-status.cjs",
+        "unitTests": ["scripts/generate-code-status.test.cjs"],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2148"],
+        "cypressFlows": [
+          "N/A - generated documentation is verified by publication, Zensical, link, accessibility, and demanding-user QA."
+        ],
+        "domainObjects": ["SystemDeliveryStatusProjection"],
+        "fowlerSignals": ["hidden_authority", "published_language"],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm docs:publish",
+          "pnpm docs:build",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "System Delivery Status release, projection, mode, and policy tests fail before the DB-first generator exists.",
+        "governingSources": [
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/generated-docs-policy.json"
+        ],
+        "documentationRefs": ["docs/architecture/system-delivery-status.md"],
+        "architectureGuards": [
+          "node --test scripts/generate-code-status.test.cjs scripts/documentation-publication.test.cjs"
+        ],
+        "implementationPlan": "Project evaluated Git, reconciled release files, workspace statistics, and exact Planning DB architecture, maturity, rail, and feature facts into the disposable System Delivery Status route on explicit request.",
+        "implementationRefs": [
+          "scripts/generate-code-status.cjs#buildSystemDeliveryStatusProjection",
+          "scripts/generate-code-status.cjs#renderSystemDeliveryStatus"
+        ],
+        "normalizedRailName": "generateplanningderivedsurfaces",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "502e3e063617cdd9c041622c16a9c3511c5864d7a4b7cad766f5470c6e9fb729",
+        "allowedImplementationSurfaces": [
+          "scripts/generate-code-status.cjs",
+          "scripts/generate-code-status.test.cjs",
+          "docs/generated-docs-policy.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "tracked manual System Delivery Status snapshot",
+          "database migrations or compatibility states",
+          "live GitHub build dependency"
+        ]
+      },
+      "createdAt": "2026-08-10T11:21:40.656Z"
     }
   ]
 }
