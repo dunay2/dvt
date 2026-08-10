@@ -253,6 +253,93 @@ test('parseArgs builds architecture contract and port record commands', () => {
   assert.equal(portCommand.negativeTests.length, 2);
 });
 
+test('parseArgs builds an architecture storage I/O record command', () => {
+  const command = parseArgs([
+    'architecture-storage-io',
+    'record',
+    '--design',
+    'DOC1-6-STORAGE-IO-RETIREMENT-20260810',
+    '--storage-io',
+    'STORAGE-SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-DB-SURFACE-WRITE-1',
+    '--component',
+    'SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-DB-SURFACE',
+    '--expected-storage-object',
+    'docs/planning/status/generated-db-surface-inventory.md',
+    '--storage-object',
+    '.generated-docs/planning/status/db-surface-inventory.md',
+    '--direction',
+    'writes',
+    '--access-pattern',
+    'projection',
+    '--contract',
+    'CONTRACT-SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-DB-SURFACE-SURFACE',
+    '--source-ref',
+    'github:pull/2294#discussion_r3750870115',
+    '--source-content-sha256',
+    'e'.repeat(64),
+    '--actor',
+    'codex',
+  ]);
+
+  assert.equal(command.kind, 'architecture_storage_io_record');
+  assert.equal(
+    command.storageIoId,
+    'STORAGE-SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-DB-SURFACE-WRITE-1'
+  );
+  assert.equal(
+    command.expectedStorageObject,
+    'docs/planning/status/generated-db-surface-inventory.md'
+  );
+  assert.equal(command.storageObject, '.generated-docs/planning/status/db-surface-inventory.md');
+  assert.equal(command.direction, 'writes');
+  assert.equal(command.accessPattern, 'projection');
+});
+
+test('parseArgs rejects invalid architecture storage I/O vocabulary', () => {
+  const baseArgs = [
+    'architecture-storage-io',
+    'record',
+    '--design',
+    'DOC1-6-STORAGE-IO-RETIREMENT-20260810',
+    '--storage-io',
+    'STORAGE-SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-DB-SURFACE-WRITE-1',
+    '--component',
+    'SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-DB-SURFACE',
+    '--expected-storage-object',
+    'docs/planning/status/generated-db-surface-inventory.md',
+    '--storage-object',
+    '.generated-docs/planning/status/db-surface-inventory.md',
+    '--direction',
+    'writes',
+    '--access-pattern',
+    'projection',
+    '--source-ref',
+    'github:pull/2294#discussion_r3750870115',
+    '--source-content-sha256',
+    'e'.repeat(64),
+    '--actor',
+    'codex',
+  ];
+  const replaceOption = (name, value) => {
+    const args = [...baseArgs];
+    args[args.indexOf(name) + 1] = value;
+    return args;
+  };
+
+  assert.throws(
+    () => parseArgs(replaceOption('--storage-io', 'PORT-NOT-STORAGE')),
+    /ARCH-STORAGE-IO-ID-INVALID/
+  );
+  assert.throws(
+    () => parseArgs(replaceOption('--direction', 'publishes')),
+    /ARCH-STORAGE-IO-DIRECTION-INVALID/
+  );
+  assert.throws(
+    () => parseArgs(replaceOption('--access-pattern', 'append_only')),
+    /ARCH-STORAGE-IO-ACCESS-PATTERN-INVALID/
+  );
+});
+
 test('parseArgs rejects architecture ports without contract or negative tests', () => {
   const basePortArgs = [
     'architecture-port',
