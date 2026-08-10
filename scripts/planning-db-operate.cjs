@@ -5476,6 +5476,16 @@ async function writePlannedComponentCreateOperation(client, planned) {
   );
 }
 
+async function refreshComponentEngineeringReadProjections(client) {
+  for (const projection of [
+    'component_engineering_component_tree_projection',
+    'component_engineering_file_ownership_projection',
+    'component_engineering_rule_evaluation_projection',
+  ]) {
+    await client.query(`refresh materialized view ${schemaName}.${projection}`);
+  }
+}
+
 async function writePlannedComponentReviseOperation(client, planned) {
   await client.query(
     `insert into ${schemaName}.governance_component_local_definitions
@@ -5546,6 +5556,8 @@ async function writePlannedComponentReviseOperation(client, planned) {
       [item.componentId, item.itemKind, item.itemValue, item.itemOrder]
     );
   }
+
+  await refreshComponentEngineeringReadProjections(client);
 
   await client.query(
     `insert into ${schemaName}.governance_component_local_operations
