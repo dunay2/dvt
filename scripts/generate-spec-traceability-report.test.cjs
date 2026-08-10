@@ -99,6 +99,15 @@ function exactFacts() {
         document_path: 'docs/architecture/components/example.md',
       },
     ],
+    commands: [
+      {
+        command_id: 'package:test',
+        command_type: 'package_script',
+        command_name: 'test',
+        command_path: null,
+        command_text: 'pnpm -r test',
+      },
+    ],
   };
 }
 
@@ -202,6 +211,45 @@ test('conflicting canonical document authority remains an explicit exact gap', (
       'conflicting-canonical-document:docs/architecture/components/example.md'
     )
   );
+});
+
+test('verification commands must exist in the repository command catalog', () => {
+  const facts = exactFacts();
+  facts.validations.push({
+    feature_id: 'FEATURE-A',
+    validation_kind: 'completion',
+    validation_ref: 'pnpm definitely:not-registered',
+  });
+  const projection = buildFeatureTraceabilityProjection(facts, {
+    gitSha,
+    gitTreePaths: new Map([
+      ['docs/architecture/components/example.md', 'blob'],
+      ['packages/@dvt/example/src/execute.ts', 'blob'],
+      ['packages/@dvt/example/test/execute.test.ts', 'blob'],
+    ]),
+  });
+
+  assert.deepEqual(projection.features[0].verificationCommands, [
+    'pnpm --filter @dvt/example test',
+  ]);
+  assert.ok(
+    projection.features[0].gaps.includes(
+      'unregistered-verification-command:FEATURE-A#pnpm definitely:not-registered'
+    )
+  );
+
+  const emptyCatalogProjection = buildFeatureTraceabilityProjection(
+    { ...facts, commands: [] },
+    {
+      gitSha,
+      gitTreePaths: new Map([
+        ['docs/architecture/components/example.md', 'blob'],
+        ['packages/@dvt/example/src/execute.ts', 'blob'],
+        ['packages/@dvt/example/test/execute.test.ts', 'blob'],
+      ]),
+    }
+  );
+  assert.deepEqual(emptyCatalogProjection.features[0].verificationCommands, []);
 });
 
 test('both stable traceability routes render deterministically from one projection', () => {
