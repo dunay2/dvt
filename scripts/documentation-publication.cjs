@@ -346,30 +346,44 @@ class DocumentationPublicationAssembler {
       if (!existsSync(absolutePath) || !statSync(absolutePath).isFile()) {
         throw new Error(`Missing Git-owned documentation source ${sourcePath}.`);
       }
-      const gitBlob = this.readTrackedGitBlob(sourcePath);
-      if (!Buffer.from(gitBlob).equals(readFileSync(absolutePath))) {
-        throw new Error(
-          `Git-owned documentation source ${sourcePath} differs from HEAD. Commit it before running \`pnpm docs:publish\`.`
-        );
-      }
     }
+    this.assertTrackedSourcesMatchGit(sourcePaths);
     return sourcePaths;
   }
 
-  readTrackedGitBlob(sourcePath) {
-    if (this.readGitBlob) return this.readGitBlob(sourcePath);
-    const result = spawnSync('git', ['show', `HEAD:${sourcePath}`], {
-      cwd: this.repoRoot,
-      encoding: null,
-      stdio: ['ignore', 'pipe', 'pipe'],
-    });
-    if (result.error) throw result.error;
-    if (result.status !== 0) {
+  assertTrackedSourcesMatchGit(sourcePaths) {
+    let dirtySourcePath;
+    if (this.readGitBlob) {
+      dirtySourcePath = sourcePaths.find((sourcePath) => {
+        const absolutePath = resolve(this.repoRoot, sourcePath);
+        return !Buffer.from(this.readGitBlob(sourcePath)).equals(readFileSync(absolutePath));
+      });
+    } else {
+      const result = spawnSync('git', ['diff', '--name-only', '-z', 'HEAD', '--', 'docs'], {
+        cwd: this.repoRoot,
+        encoding: null,
+        stdio: ['ignore', 'pipe', 'pipe'],
+      });
+      if (result.error) throw result.error;
+      if (result.status !== 0) {
+        throw new Error(
+          `Cannot validate Git-owned documentation inputs against HEAD: ${String(result.stderr).trim()}.`
+        );
+      }
+      const dirtyPaths = new Set(
+        String(result.stdout)
+          .split('\0')
+          .map((sourcePath) => DocumentationPublicationPolicy.toPosix(sourcePath.trim()))
+          .filter(Boolean)
+      );
+      dirtySourcePath = sourcePaths.find((sourcePath) => dirtyPaths.has(sourcePath));
+    }
+
+    if (dirtySourcePath) {
       throw new Error(
-        `Cannot read Git-owned documentation source ${sourcePath} from HEAD: ${String(result.stderr).trim()}.`
+        `Git-owned documentation source ${dirtySourcePath} differs from HEAD. Commit it before running \`pnpm docs:publish\`.`
       );
     }
-    return result.stdout;
   }
 
   currentGitSha() {
