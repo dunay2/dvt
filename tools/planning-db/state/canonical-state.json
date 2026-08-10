@@ -117390,11 +117390,14 @@
         "docs/adr/**",
         "docs/planning/status/**",
         "docs/.manifest.json",
-        "tools/planning-db/state/canonical-state.json"
+        "tools/planning-db/state/canonical-state.json",
+        "scripts/check-feature-mechanization.cjs",
+        "scripts/check-feature-mechanization.test.cjs"
       ],
       "architectureGuards": [
         "pnpm --filter dvt-api test:arch",
-        "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/architecture/stateStoreRoleBoundary.architecture.test.ts test/testExecutionManifest.test.ts"
+        "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/architecture/stateStoreRoleBoundary.architecture.test.ts test/testExecutionManifest.test.ts",
+        "node --test scripts/check-feature-mechanization.test.cjs"
       ],
       "completionGate": [
         "pnpm --filter dvt-api test",
@@ -117404,7 +117407,9 @@
         "pnpm docs:gov:links",
         "pnpm planning:db:current-schema:check",
         "pnpm planning:db:export:check",
-        "pnpm verify:prepush"
+        "pnpm verify:prepush",
+        "node --test scripts/check-feature-mechanization.test.cjs",
+        "pnpm docs:feature-mechanization:implementation -- --feature R1-1D-API-GOVERNANCE-HARDCUT"
       ],
       "sourcePath": "scripts/documentation-publication.cjs",
       "sourceContentSha256": "db5072ae2b773fe2418a91db0528e5fd6541ea37ae6368377639a9d94e8f7311",
@@ -117423,23 +117428,26 @@
             "dddOwner": "PlanningDocumentationProjection",
             "unitTests": [
               "apps/api/test/testExecutionManifest.test.ts",
-              "apps/api/test/architecture/stateStoreRoleBoundary.architecture.test.ts"
+              "apps/api/test/architecture/stateStoreRoleBoundary.architecture.test.ts",
+              "scripts/check-feature-mechanization.test.cjs"
             ],
             "fowlerSignals": [
               "Duplicate architecture authority compiled into product code",
               "Topology tests coupled to comments filenames and documents",
               "Duplicate unit and integration execution",
-              "Hand-maintained source and test inventories"
+              "Hand-maintained source and test inventories",
+              "Retirement must remove forbidden duplicate authorities without weakening add or modify checks."
             ],
-            "cypressCoverage": "N/A - API governance and verification-manifest hard cut",
-            "architectureGuard": "pnpm --filter dvt-api test:arch"
+            "cypressCoverage": "N/A - repository governance CLI gate",
+            "architectureGuard": "node --test scripts/check-feature-mechanization.test.cjs"
           }
         ],
         "version": 1,
         "featureId": "R1-1D-API-GOVERNANCE-HARDCUT",
         "userStories": ["https://github.com/dunay2/dvt/issues/2167"],
         "cypressFlows": [
-          "N/A - API governance and verification-manifest hard cut"
+          "N/A - API governance and verification-manifest hard cut",
+          "N/A - repository governance CLI gate"
         ],
         "domainObjects": [
           "ProtectedRuntimeRouteRegistry",
@@ -117451,7 +117459,8 @@
           "Duplicate architecture authority compiled into product code",
           "Topology tests coupled to comments filenames and documents",
           "Duplicate unit and integration execution",
-          "Hand-maintained source and test inventories"
+          "Hand-maintained source and test inventories",
+          "Retirement must remove forbidden duplicate authorities without weakening add or modify checks."
         ],
         "completionGate": [
           "pnpm --filter dvt-api test",
@@ -117461,21 +117470,25 @@
           "pnpm docs:gov:links",
           "pnpm planning:db:current-schema:check",
           "pnpm planning:db:export:check",
-          "pnpm verify:prepush"
+          "pnpm verify:prepush",
+          "node --test scripts/check-feature-mechanization.test.cjs",
+          "pnpm docs:feature-mechanization:implementation -- --feature R1-1D-API-GOVERNANCE-HARDCUT"
         ],
         "redGreenCycles": [
           {
             "id": "generateplanningderivedsurfaces-record",
-            "redTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/testExecutionManifest.test.ts",
-            "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/testExecutionManifest.test.ts",
+            "redTest": "node --test scripts/check-feature-mechanization.test.cjs",
+            "greenTest": "node --test scripts/check-feature-mechanization.test.cjs",
             "patchSurfaces": [
               "apps/api/vitest.config.ts",
               "apps/api/test/testExecutionManifest.test.ts",
               "apps/api/test/**",
               "docs/architecture/components/api/index.md",
-              "apps/api/src/entrypoints/http/signalRunRoute*"
+              "apps/api/src/entrypoints/http/signalRunRoute*",
+              "scripts/check-feature-mechanization.cjs",
+              "scripts/check-feature-mechanization.test.cjs"
             ],
-            "expectedFailure": "The default API test manifest still selects integration suites owned by the integration configuration."
+            "expectedFailure": "A deleted forbidden surface is rejected by allowedImplementationSurfaces."
           }
         ],
         "componentGuides": ["docs/architecture/components/api/index.md"],
@@ -117497,7 +117510,8 @@
         ],
         "architectureGuards": [
           "pnpm --filter dvt-api test:arch",
-          "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/architecture/stateStoreRoleBoundary.architecture.test.ts test/testExecutionManifest.test.ts"
+          "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/architecture/stateStoreRoleBoundary.architecture.test.ts test/testExecutionManifest.test.ts",
+          "node --test scripts/check-feature-mechanization.test.cjs"
         ],
         "implementationPlan": "https://github.com/dunay2/dvt/issues/2167",
         "mechanizationStatus": "implemented",
@@ -117513,7 +117527,9 @@
           "docs/adr/**",
           "docs/planning/status/**",
           "docs/.manifest.json",
-          "tools/planning-db/state/canonical-state.json"
+          "tools/planning-db/state/canonical-state.json",
+          "scripts/check-feature-mechanization.cjs",
+          "scripts/check-feature-mechanization.test.cjs"
         ],
         "forbiddenImplementationSurfaces": [
           "packages/@dvt/contracts/src/**",
@@ -117532,7 +117548,7 @@
           "apps/api/docs/**"
         ]
       },
-      "revision": 1,
+      "revision": 2,
       "createdBy": "codex",
       "createdAt": "2026-08-10T19:37:49.432Z"
     },
@@ -142720,6 +142736,69 @@
         ]
       },
       "createdAt": "2026-08-10T20:08:31.391Z"
+    },
+    {
+      "operationId": "1d7d120d-0acb-4e29-a140-b6eecf576787",
+      "idempotencyKey": "codex-r1-1d-retirement-allowlist-review-20260810",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#R1-1D-API-GOVERNANCE-HARDCUT#command#generateplanningderivedsurfaces",
+      "sourcePath": "scripts/documentation-publication.cjs",
+      "sourceContentSha256": "db5072ae2b773fe2418a91db0528e5fd6541ea37ae6368377639a9d94e8f7311",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "node --test scripts/check-feature-mechanization.test.cjs",
+        "dddOwner": "PlanningDocumentationProjection",
+        "railName": "GeneratePlanningDerivedSurfaces",
+        "railType": "command",
+        "featureId": "R1-1D-API-GOVERNANCE-HARDCUT",
+        "greenTest": "node --test scripts/check-feature-mechanization.test.cjs",
+        "sourceRef": "scripts/documentation-publication.cjs",
+        "unitTests": ["scripts/check-feature-mechanization.test.cjs"],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2167"],
+        "cypressFlows": ["N/A - repository governance CLI gate"],
+        "domainObjects": ["PlanningDocumentationProjection"],
+        "fowlerSignals": [
+          "Retirement must remove forbidden duplicate authorities without weakening add or modify checks."
+        ],
+        "patchSurfaces": [
+          "scripts/check-feature-mechanization.cjs",
+          "scripts/check-feature-mechanization.test.cjs"
+        ],
+        "completionGate": [
+          "node --test scripts/check-feature-mechanization.test.cjs",
+          "pnpm docs:feature-mechanization:implementation -- --feature R1-1D-API-GOVERNANCE-HARDCUT",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": ["docs/architecture/components/api/index.md"],
+        "expectedFailure": "A deleted forbidden surface is rejected by allowedImplementationSurfaces.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": ["apps/api/README.md"],
+        "architectureGuards": [
+          "node --test scripts/check-feature-mechanization.test.cjs"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2167",
+        "implementationRefs": [
+          "scripts/documentation-publication.cjs#DocumentationPublicationAssembler"
+        ],
+        "normalizedRailName": "generateplanningderivedsurfaces",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "db5072ae2b773fe2418a91db0528e5fd6541ea37ae6368377639a9d94e8f7311",
+        "allowedImplementationSurfaces": [
+          "scripts/check-feature-mechanization.cjs",
+          "scripts/check-feature-mechanization.test.cjs"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts"
+        ]
+      },
+      "createdAt": "2026-08-10T20:31:34.528Z"
     }
   ]
 }
