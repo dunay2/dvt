@@ -56,6 +56,23 @@ function uniqueSorted(values) {
   );
 }
 
+function uniqueSortedSymbols(symbols) {
+  const symbolsByIdentity = new Map();
+  for (const symbol of symbols || []) {
+    const symbolName = String(symbol?.symbolName || '').trim();
+    const symbolPath = String(symbol?.symbolPath || '').trim();
+    const identity = `${symbolPath}\u0000${symbolName}`;
+    if (!symbolsByIdentity.has(identity)) {
+      symbolsByIdentity.set(identity, { symbolName, symbolPath });
+    }
+  }
+  return [...symbolsByIdentity.values()].sort(
+    (left, right) =>
+      left.symbolPath.localeCompare(right.symbolPath, 'en') ||
+      left.symbolName.localeCompare(right.symbolName, 'en')
+  );
+}
+
 function groupFeatureRelations(rows, featureIds, relationKind) {
   const grouped = new Map();
   for (const row of rows || []) {
@@ -209,6 +226,8 @@ function buildFeatureTraceabilityProjection(facts, options = {}) {
 
       const sourcePaths = [];
       const testPaths = [];
+      const sourceSymbols = [];
+      const testSymbols = [];
       for (const symbol of symbolRows.get(featureId) || []) {
         const symbolPath = normalizePath(field(symbol, 'symbol_path', 'symbolPath'));
         const symbolName = String(field(symbol, 'symbol_name', 'symbolName') || '<empty>').trim();
@@ -220,8 +239,14 @@ function buildFeatureTraceabilityProjection(facts, options = {}) {
           gaps.push(`missing-git-path:${symbolPath}`);
           continue;
         }
-        if (isTestPath(symbolPath)) testPaths.push(symbolPath);
-        else sourcePaths.push(symbolPath);
+        const exactSymbol = { symbolName, symbolPath };
+        if (isTestPath(symbolPath)) {
+          testPaths.push(symbolPath);
+          testSymbols.push(exactSymbol);
+        } else {
+          sourcePaths.push(symbolPath);
+          sourceSymbols.push(exactSymbol);
+        }
       }
       if (sourcePaths.length === 0) gaps.push(`missing-source:${featureId}`);
       if (testPaths.length === 0) gaps.push(`missing-test:${featureId}`);
@@ -262,6 +287,8 @@ function buildFeatureTraceabilityProjection(facts, options = {}) {
         documentPaths: uniqueSorted(documentPaths),
         sourcePaths: uniqueSorted(sourcePaths),
         testPaths: uniqueSorted(testPaths),
+        sourceSymbols: uniqueSortedSymbols(sourceSymbols),
+        testSymbols: uniqueSortedSymbols(testSymbols),
         rails,
         validations,
         verificationCommands,
@@ -295,8 +322,8 @@ function documentLink(documentPath) {
   return `[\`${documentPath}\`](${target})`;
 }
 
-function repositoryLink(repositoryUrl, gitSha, repositoryPath) {
-  return `[\`${repositoryPath}\`](${repositoryUrl}/blob/${gitSha}/${repositoryPath})`;
+function repositoryLink(repositoryUrl, gitSha, repositoryPath, label = repositoryPath) {
+  return `[\`${label}\`](${repositoryUrl}/blob/${gitSha}/${repositoryPath})`;
 }
 
 function generatedFrontmatter(title, generatedAt) {
@@ -317,11 +344,21 @@ function renderCanonicalDocCodeMatrix(projection, generatedAt) {
     feature.mechanizationStatus,
     listCell(feature.componentIds),
     listCell(feature.documentPaths, documentLink),
-    listCell(feature.sourcePaths, (value) =>
-      repositoryLink(projection.repositoryUrl, projection.gitSha, value)
+    listCell(feature.sourceSymbols, (symbol) =>
+      repositoryLink(
+        projection.repositoryUrl,
+        projection.gitSha,
+        symbol.symbolPath,
+        `${symbol.symbolName} @ ${symbol.symbolPath}`
+      )
     ),
-    listCell(feature.testPaths, (value) =>
-      repositoryLink(projection.repositoryUrl, projection.gitSha, value)
+    listCell(feature.testSymbols, (symbol) =>
+      repositoryLink(
+        projection.repositoryUrl,
+        projection.gitSha,
+        symbol.symbolPath,
+        `${symbol.symbolName} @ ${symbol.symbolPath}`
+      )
     ),
     listCell(feature.rails),
     listCell(feature.verificationCommands),
@@ -343,8 +380,8 @@ function renderCanonicalDocCodeMatrix(projection, generatedAt) {
         'State',
         'Components',
         'Canonical documents',
-        'Source paths',
-        'Test paths',
+        'Source symbols',
+        'Test symbols',
         'Rails',
         'Verification commands',
         'Validations',

@@ -125,6 +125,18 @@ test('feature traceability uses exact DB identities and the evaluated Git tree',
     documentPaths: ['docs/architecture/components/example.md'],
     sourcePaths: ['packages/@dvt/example/src/execute.ts'],
     testPaths: ['packages/@dvt/example/test/execute.test.ts'],
+    sourceSymbols: [
+      {
+        symbolName: 'execute',
+        symbolPath: 'packages/@dvt/example/src/execute.ts',
+      },
+    ],
+    testSymbols: [
+      {
+        symbolName: 'execute test',
+        symbolPath: 'packages/@dvt/example/test/execute.test.ts',
+      },
+    ],
     rails: ['command:ExecuteExample (implemented)'],
     validations: [
       'architecture: Example boundary remains explicit.',
