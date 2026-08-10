@@ -576,6 +576,44 @@ function currentGitSha(options = {}) {
   return String(result.stdout).trim();
 }
 
+function readGitTreePaths(options = {}) {
+  const root = path.resolve(options.root || repoRoot);
+  const gitSha = currentGitSha({ root, gitSha: options.gitSha });
+  const spawn = options.spawnSync || spawnSync;
+  const result = spawn('git', ['ls-tree', '-rz', '-t', '--full-tree', gitSha], {
+    cwd: root,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  if (result.error) {
+    throw new Error(`Cannot read Component Map Git tree: ${result.error.message}.`, {
+      cause: result.error,
+    });
+  }
+  if (result.status !== 0) {
+    throw new Error(
+      `Cannot read Component Map Git tree at ${gitSha}: ${String(result.stderr).trim()}.`
+    );
+  }
+
+  const entries = new Map();
+  for (const record of String(result.stdout || '').split('\0')) {
+    if (!record) continue;
+    const separator = record.indexOf('\t');
+    if (separator < 0) {
+      throw new Error(`Cannot parse Component Map Git tree entry: ${record}.`);
+    }
+    const metadata = record.slice(0, separator).split(' ');
+    const entryType = metadata[1];
+    const repositoryPath = normalizeRepoPath(record.slice(separator + 1));
+    if (!repositoryPath || (entryType !== 'tree' && entryType !== 'blob')) {
+      throw new Error(`Cannot parse Component Map Git tree entry: ${record}.`);
+    }
+    entries.set(repositoryPath, entryType);
+  }
+  return entries;
+}
+
 function groupRowsByComponent(rows, knownComponentIds, rowKind) {
   const grouped = new Map();
   for (const row of rows || []) {
@@ -606,13 +644,22 @@ function componentDocumentLink(documentPath) {
 
 function buildComponentTopologyProjection(facts, options = {}) {
   const root = path.resolve(options.root || repoRoot);
-  const pathExists =
-    options.pathExists || ((sourcePath) => fs.existsSync(path.resolve(root, sourcePath)));
-  const pathKind =
-    options.pathKind ||
-    ((sourcePath) =>
-      fs.statSync(path.resolve(root, sourcePath)).isDirectory() ? 'directory' : 'file');
   const gitSha = currentGitSha({ root, gitSha: options.gitSha });
+  const gitTreePaths =
+    options.gitTreePaths || readGitTreePaths({ root, gitSha, spawnSync: options.spawnSync });
+  const gitTreeEntry = (sourcePath) => {
+    const normalizedPath = normalizeRepoPath(sourcePath);
+    const relativePath = toPosix(path.relative(root, path.resolve(root, normalizedPath)));
+    if (
+      !normalizedPath ||
+      relativePath === '..' ||
+      relativePath.startsWith('../') ||
+      path.isAbsolute(relativePath)
+    ) {
+      return null;
+    }
+    return gitTreePaths.get(normalizedPath) || null;
+  };
   const repositoryUrl = String(options.repositoryUrl || repositoryBrowserUrl()).replace(/\/$/u, '');
   const componentRows = [...(facts.components || [])];
   const componentById = new Map();
@@ -677,14 +724,7 @@ function buildComponentTopologyProjection(facts, options = {}) {
   for (const document of currentDocuments) {
     const componentId = String(document.component_id ?? document.componentId ?? '').trim();
     const documentPath = normalizeRepoPath(document.document_path ?? document.documentPath ?? '');
-    const absolutePath = path.resolve(root, documentPath);
-    const relativePath = path.relative(root, absolutePath);
-    if (
-      !documentPath.startsWith('docs/') ||
-      relativePath.startsWith('..') ||
-      path.isAbsolute(relativePath) ||
-      !pathExists(documentPath)
-    ) {
+    if (!documentPath.startsWith('docs/') || gitTreeEntry(documentPath) !== 'blob') {
       throw new Error(
         `Invalid canonical component document for ${componentId || '<empty>'}: ${documentPath || '<empty>'}.`
       );
@@ -714,7 +754,7 @@ function buildComponentTopologyProjection(facts, options = {}) {
     .sort(([left], [right]) => left.localeCompare(right, 'en'))
     .map(([componentId, component]) => {
       const repositoryPath = normalizeRepoPath(component.repo_path ?? component.repoPath ?? '');
-      const repositoryPathExists = Boolean(repositoryPath) && pathExists(repositoryPath);
+      const repositoryEntryType = gitTreeEntry(repositoryPath);
       const canonicalDocuments = (documentByComponent.get(componentId) || [])
         .map((document) => {
           const documentPath = normalizeRepoPath(
@@ -738,7 +778,7 @@ function buildComponentTopologyProjection(facts, options = {}) {
         .map((row) => String(row.drift_code ?? row.driftCode ?? '-'))
         .sort((left, right) => left.localeCompare(right, 'en'));
       const gaps = [];
-      if (!repositoryPathExists) gaps.push('missing-repository-path');
+      if (!repositoryEntryType) gaps.push('missing-repository-path');
       if (canonicalDocuments.length === 0) gaps.push('missing-canonical-document');
       if (canonicalDocuments.length > 1) gaps.push('ambiguous-canonical-document');
       if (responsibilities.length === 0) gaps.push('missing-responsibility');
@@ -758,8 +798,8 @@ function buildComponentTopologyProjection(facts, options = {}) {
         owner: String(component.owner || '-'),
         publicContract: String(component.public_contract ?? component.publicContract ?? '-'),
         relationCounts: relationCounts.get(componentId),
-        repositoryLink: repositoryPathExists
-          ? `${repositoryUrl}/${pathKind(repositoryPath) === 'directory' ? 'tree' : 'blob'}/${gitSha}/${encodeURI(repositoryPath)}`
+        repositoryLink: repositoryEntryType
+          ? `${repositoryUrl}/${repositoryEntryType === 'tree' ? 'tree' : 'blob'}/${gitSha}/${encodeURI(repositoryPath)}`
           : null,
         repositoryPath: repositoryPath || '-',
         responsibilities,
@@ -1027,6 +1067,7 @@ module.exports = {
   markdownCell,
   normalizeRepoPath,
   parsePnpmWorkspaceRows,
+  readGitTreePaths,
   readArchitectureComponentDocumentRows,
   readComponentTopologyFacts,
   readRepositoryArchitectureFacts,

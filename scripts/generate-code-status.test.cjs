@@ -370,12 +370,13 @@ test('component topology projection uses exact DB identities, registered edges, 
       },
     ],
   };
-  const existingPaths = new Set(['apps/a', 'docs/architecture/components/a/index.md']);
   const projection = buildComponentTopologyProjection(facts, {
     gitSha: 'fixture-sha',
+    gitTreePaths: new Map([
+      ['apps/a', 'tree'],
+      ['docs/architecture/components/a/index.md', 'blob'],
+    ]),
     repositoryUrl: 'https://github.com/example/dvt',
-    pathExists: (sourcePath) => existingPaths.has(sourcePath),
-    pathKind: (sourcePath) => (sourcePath === 'apps/a' ? 'directory' : 'file'),
   });
 
   assert.deepEqual(
@@ -487,9 +488,8 @@ test('Git tree paths are read once from the evaluated commit and fail closed', (
 test('component topology fails closed on duplicate identities and unknown endpoints', () => {
   const options = {
     gitSha: 'fixture-sha',
+    gitTreePaths: new Map([['apps/a', 'blob']]),
     repositoryUrl: 'https://github.com/example/dvt',
-    pathExists: () => true,
-    pathKind: () => 'file',
   };
   assert.throws(
     () =>
@@ -552,9 +552,8 @@ test('component topology rejects an invalid current canonical document binding',
         },
         {
           gitSha: 'fixture-sha',
+          gitTreePaths: new Map([['apps/a', 'tree']]),
           repositoryUrl: 'https://github.com/example/dvt',
-          pathExists: (sourcePath) => sourcePath === 'apps/a',
-          pathKind: () => 'directory',
         }
       ),
     /Invalid canonical component document.*A.*docs\/architecture\/components\/a\/missing\.md/u
@@ -581,10 +580,11 @@ test('component topology reports a current document binding whose component is a
     },
     {
       gitSha: 'fixture-sha',
+      gitTreePaths: new Map([
+        ['apps/a', 'blob'],
+        ['docs/architecture/components/retired.md', 'blob'],
+      ]),
       repositoryUrl: 'https://github.com/example/dvt',
-      pathExists: (sourcePath) =>
-        ['apps/a', 'docs/architecture/components/retired.md'].includes(sourcePath),
-      pathKind: () => 'file',
     }
   );
 
