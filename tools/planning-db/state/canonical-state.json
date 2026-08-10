@@ -12697,126 +12697,126 @@
         "work_item_id": "GH-2167",
         "title": "API governance DB cleanup",
         "owner": "API / Architecture / Planning DB",
-        "status": "review",
+        "status": "superseded",
         "rationale": "Remap current API documentation and semantic test evidence after retiring compiled catalogs and topology-only harnesses.",
         "fowler_signal": "hidden_authority",
         "rail_ref": "RecordArchitectureComponent",
         "approved_at": null,
         "supersedes_id": null,
         "created_at": "2026-08-10T20:05:21.313+00:00",
-        "updated_at": "2026-08-10T20:05:21.313+00:00"
+        "updated_at": "2026-08-10T22:58:47.826+00:00"
       },
       {
         "design_id": "R1-1D-API-GOVERNANCE-DB-RESIDUAL-20260810",
         "work_item_id": "GH-2167",
         "title": "API governance residual evidence cleanup",
         "owner": "API / Architecture / Planning DB",
-        "status": "review",
+        "status": "superseded",
         "rationale": "Repoint residual PlanStore test and validation evidence discovered by the pre-push integrity gate.",
         "fowler_signal": "hidden_authority",
         "rail_ref": "RecordArchitectureTestEvidence",
         "approved_at": null,
         "supersedes_id": null,
         "created_at": "2026-08-10T20:11:17.367+00:00",
-        "updated_at": "2026-08-10T20:11:17.367+00:00"
+        "updated_at": "2026-08-10T22:58:46.58+00:00"
       },
       {
         "design_id": "R1-1D-API-GOVERNANCE-FIXTURE-EVIDENCE-20260810",
         "work_item_id": "GH-2167",
         "title": "API fixture evidence retirement closeout",
         "owner": "API / Architecture / Planning DB",
-        "status": "review",
+        "status": "superseded",
         "rationale": "Replace the last active topology-test validation command with executable workflow-snapshot and workspace-graph behavior evidence.",
         "fowler_signal": "hidden_authority",
         "rail_ref": "CreateArchitectureDesign;RecordArchitectureContract;RecordArchitectureTestEvidence",
         "approved_at": null,
         "supersedes_id": "R1-1D-API-GOVERNANCE-VALIDATION-CLOSEOUT-20260810",
         "created_at": "2026-08-10T22:03:06.458+00:00",
-        "updated_at": "2026-08-10T22:03:06.458+00:00"
+        "updated_at": "2026-08-10T22:58:42.838+00:00"
       },
       {
         "design_id": "R1-1D-API-GOVERNANCE-HARDCUT-20260810",
         "work_item_id": "GH-2167",
         "title": "API compiled governance retirement",
         "owner": "API / Architecture / Planning DB",
-        "status": "proposed",
+        "status": "superseded",
         "rationale": "Retire non-runtime TypeScript rail catalogs, topology locks, duplicate test execution and hand-maintained API maps while keeping behavioral boundaries and DB-first architecture authority.",
         "fowler_signal": "none",
         "rail_ref": "ReadArchitectureDesignAuthority;ListDocumentationLifecycleFacts;GeneratePlanningDerivedSurfaces;ClassifyProtectedRuntimeRouteRails",
         "approved_at": null,
         "supersedes_id": null,
         "created_at": "2026-08-10T19:37:44.468+00:00",
-        "updated_at": "2026-08-10T19:37:44.468+00:00"
+        "updated_at": "2026-08-10T22:58:49.062+00:00"
       },
       {
         "design_id": "R1-1D-API-GOVERNANCE-LIFECYCLE-CLOSEOUT-20260810",
         "work_item_id": "GH-2167",
         "title": "Architecture design lifecycle closeout",
         "owner": "API / Architecture / Planning DB",
-        "status": "review",
+        "status": "implemented",
         "rationale": "Add an audited lifecycle command so superseded designs and the final implemented design are unambiguous after review.",
         "fowler_signal": "hidden_authority",
         "rail_ref": "pnpm planning:db:operate architecture-design transition",
-        "approved_at": null,
+        "approved_at": "2026-08-10T22:58:50.304+00:00",
         "supersedes_id": "R1-1D-API-GOVERNANCE-PERSISTENCE-CLOSEOUT-20260810",
         "created_at": "2026-08-10T22:47:37.611+00:00",
-        "updated_at": "2026-08-10T22:47:37.611+00:00"
+        "updated_at": "2026-08-10T22:58:52.876+00:00"
       },
       {
         "design_id": "R1-1D-API-GOVERNANCE-OWNERSHIP-CLOSEOUT-20260810",
         "work_item_id": "GH-2167",
         "title": "DB-first governance ownership closeout",
         "owner": "API / Architecture / Planning DB",
-        "status": "review",
+        "status": "superseded",
         "rationale": "Replace obsolete imported API ownership with audited database overrides and on-demand projections.",
         "fowler_signal": "boundary_drift",
         "rail_ref": "pnpm planning:db:operate component revise",
         "approved_at": null,
         "supersedes_id": "R1-1D-API-GOVERNANCE-FIXTURE-EVIDENCE-20260810",
         "created_at": "2026-08-10T22:11:11.708+00:00",
-        "updated_at": "2026-08-10T22:11:11.708+00:00"
+        "updated_at": "2026-08-10T22:58:41.531+00:00"
       },
       {
         "design_id": "R1-1D-API-GOVERNANCE-PERSISTENCE-CLOSEOUT-20260810",
         "work_item_id": "GH-2167",
         "title": "DB-first governance component recovery",
         "owner": "API / Architecture / Planning DB",
-        "status": "review",
+        "status": "superseded",
         "rationale": "Persist audited component overrides and DB surface catalog state through explicit Planning DB export and destructive current-schema rebuild.",
         "fowler_signal": "hidden_authority",
         "rail_ref": "pnpm planning:db:export; pnpm planning:db:import",
         "approved_at": null,
         "supersedes_id": "R1-1D-API-GOVERNANCE-OWNERSHIP-CLOSEOUT-20260810",
         "created_at": "2026-08-10T22:29:55.099+00:00",
-        "updated_at": "2026-08-10T22:29:55.099+00:00"
+        "updated_at": "2026-08-10T22:58:40.128+00:00"
       },
       {
         "design_id": "R1-1D-API-GOVERNANCE-QA-CLOSEOUT-20260810",
         "work_item_id": "GH-2167",
         "title": "API governance retirement QA closeout",
         "owner": "API / Architecture / Planning DB",
-        "status": "review",
+        "status": "superseded",
         "rationale": "Replace active references to retired compiled governance surfaces with semantic tests, explicit contracts, and DB-first architecture authority.",
         "fowler_signal": "hidden_authority",
         "rail_ref": "CreateArchitectureDesign;RecordArchitectureContract;RecordArchitectureRelation;RecordArchitectureTestEvidence;RecordArchitecturePort",
         "approved_at": null,
         "supersedes_id": "R1-1D-API-GOVERNANCE-HARDCUT-20260810",
         "created_at": "2026-08-10T21:02:54.46+00:00",
-        "updated_at": "2026-08-10T21:02:54.46+00:00"
+        "updated_at": "2026-08-10T22:58:45.325+00:00"
       },
       {
         "design_id": "R1-1D-API-GOVERNANCE-VALIDATION-CLOSEOUT-20260810",
         "work_item_id": "GH-2167",
         "title": "API governance validation command closeout",
         "owner": "API / Architecture / Planning DB",
-        "status": "review",
+        "status": "superseded",
         "rationale": "Remove obsolete compiled-governance filenames from active validation commands after their semantic test replacements are authoritative.",
         "fowler_signal": "hidden_authority",
         "rail_ref": "CreateArchitectureDesign;RecordArchitectureContract;RecordArchitectureTestEvidence",
         "approved_at": null,
         "supersedes_id": "R1-1D-API-GOVERNANCE-QA-CLOSEOUT-20260810",
         "created_at": "2026-08-10T21:06:01.319+00:00",
-        "updated_at": "2026-08-10T21:06:01.319+00:00"
+        "updated_at": "2026-08-10T22:58:44.087+00:00"
       },
       {
         "design_id": "RELEASE-CANDIDATE-AUTHORITY-CLASSIFICATION-20260719",
@@ -85288,6 +85288,27 @@
         "created_at": "2026-08-10T21:04:47.951+00:00"
       },
       {
+        "operation_id": "25dbb7b3-29bf-4c60-9ea1-4142a97fe9b4",
+        "idempotency_key": "r1-1d-supersede-validation",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-VALIDATION-CLOSEOUT-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Supersede intermediate authority or complete the governed GH-2167 implementation lifecycle.",
+          "designId": "R1-1D-API-GOVERNANCE-VALIDATION-CLOSEOUT-20260810",
+          "toStatus": "superseded",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "fromStatus": "review",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T22:58:44.087+00:00"
+      },
+      {
         "operation_id": "283ed0e9-fb08-4fcc-ade0-c941d5b96333",
         "idempotency_key": "gh-2167-update-test-sys-api-infra-runtime-telemetry-3-v1",
         "operation_type": "architecture_test_record",
@@ -86181,6 +86202,27 @@
         "created_at": "2026-08-10T21:06:01.319+00:00"
       },
       {
+        "operation_id": "53bdfbc6-2a69-4006-bf94-bcfc5b9ffda1",
+        "idempotency_key": "r1-1d-supersede-fixture",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-FIXTURE-EVIDENCE-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Supersede intermediate authority or complete the governed GH-2167 implementation lifecycle.",
+          "designId": "R1-1D-API-GOVERNANCE-FIXTURE-EVIDENCE-20260810",
+          "toStatus": "superseded",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "fromStatus": "review",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T22:58:42.838+00:00"
+      },
+      {
         "operation_id": "56e8c5f8-a172-4acf-b782-230dd86042eb",
         "idempotency_key": "architecture_observability_record:codex:R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810:SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS:b0fb2dfd7f4b4c1a",
         "operation_type": "architecture_observability_record",
@@ -86353,6 +86395,27 @@
           "sourceContentSha256": "6839610b4ba494e67ae584e861750622049e1f90a0af8ceb9e2db5688906fb80"
         },
         "created_at": "2026-08-10T21:04:30.697+00:00"
+      },
+      {
+        "operation_id": "5ed636ac-9c39-414d-99c9-c29b2c6132ba",
+        "idempotency_key": "r1-1d-supersede-qa",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-QA-CLOSEOUT-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Supersede intermediate authority or complete the governed GH-2167 implementation lifecycle.",
+          "designId": "R1-1D-API-GOVERNANCE-QA-CLOSEOUT-20260810",
+          "toStatus": "superseded",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "fromStatus": "review",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T22:58:45.325+00:00"
       },
       {
         "operation_id": "5ed95310-85c0-48fb-b01f-baee57738679",
@@ -86785,6 +86848,27 @@
         "created_at": "2026-08-10T21:04:09.599+00:00"
       },
       {
+        "operation_id": "79cdd56c-1762-4be8-a777-e851cec9f3e7",
+        "idempotency_key": "r1-1d-supersede-db-residual",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-DB-RESIDUAL-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Supersede intermediate authority or complete the governed GH-2167 implementation lifecycle.",
+          "designId": "R1-1D-API-GOVERNANCE-DB-RESIDUAL-20260810",
+          "toStatus": "superseded",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "fromStatus": "review",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T22:58:46.58+00:00"
+      },
+      {
         "operation_id": "7a9d439f-8960-4abc-aeba-3a967234fdc2",
         "idempotency_key": "architecture_test_record:codex:R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810:SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS:f6bcc7b8aeed60f8",
         "operation_type": "architecture_test_record",
@@ -87149,6 +87233,27 @@
           "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
         },
         "created_at": "2026-08-10T20:05:45.057+00:00"
+      },
+      {
+        "operation_id": "87c437a2-9dda-4e6d-8aa2-2ef15a0e09f8",
+        "idempotency_key": "r1-1d-supersede-ownership",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-OWNERSHIP-CLOSEOUT-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Supersede intermediate authority or complete the governed GH-2167 implementation lifecycle.",
+          "designId": "R1-1D-API-GOVERNANCE-OWNERSHIP-CLOSEOUT-20260810",
+          "toStatus": "superseded",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "fromStatus": "review",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T22:58:41.531+00:00"
       },
       {
         "operation_id": "8800e5ce-dfe7-4949-9510-656508d538fb",
@@ -87771,6 +87876,27 @@
         "created_at": "2026-08-10T21:04:48.577+00:00"
       },
       {
+        "operation_id": "9c6e0312-6d57-4531-be18-5b6bab5954d2",
+        "idempotency_key": "r1-1d-implement-lifecycle",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-LIFECYCLE-CLOSEOUT-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Supersede intermediate authority or complete the governed GH-2167 implementation lifecycle.",
+          "designId": "R1-1D-API-GOVERNANCE-LIFECYCLE-CLOSEOUT-20260810",
+          "toStatus": "implementing",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "fromStatus": "approved",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T22:58:51.559+00:00"
+      },
+      {
         "operation_id": "9d748e78-96fa-4e11-950d-c82a6ad679a7",
         "idempotency_key": "gh-2167-validation-test-sys-api-tests-module-composition-1-v1",
         "operation_type": "architecture_test_record",
@@ -87943,6 +88069,27 @@
           "sourceContentSha256": "63d66b23d84d46240f768bc66f3ac9609439dd53ee0768b380807a2b6f62a87a"
         },
         "created_at": "2026-08-10T21:04:52.362+00:00"
+      },
+      {
+        "operation_id": "aa03cbfb-7ce7-4a7a-bf64-df15daf2d8bb",
+        "idempotency_key": "r1-1d-supersede-hardcut",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-HARDCUT-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Supersede intermediate authority or complete the governed GH-2167 implementation lifecycle.",
+          "designId": "R1-1D-API-GOVERNANCE-HARDCUT-20260810",
+          "toStatus": "superseded",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "fromStatus": "proposed",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T22:58:49.062+00:00"
       },
       {
         "operation_id": "aa9242c3-e361-4fd3-9a64-eea154180ee8",
@@ -89155,6 +89302,27 @@
         "created_at": "2026-08-10T21:02:54.46+00:00"
       },
       {
+        "operation_id": "c3165570-64a9-4d2f-8e55-94d1e6f8670e",
+        "idempotency_key": "r1-1d-supersede-db-cleanup",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Supersede intermediate authority or complete the governed GH-2167 implementation lifecycle.",
+          "designId": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
+          "toStatus": "superseded",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "fromStatus": "review",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T22:58:47.826+00:00"
+      },
+      {
         "operation_id": "c468203e-38c6-41d9-87d2-ec0568dd5dc4",
         "idempotency_key": "gh-2167-validation-test-dbt-project-graph-runtime-catalog-v1",
         "operation_type": "architecture_test_record",
@@ -89403,6 +89571,27 @@
           "sourceContentSha256": "ebdc623a68bf4c65fe9bcf5e935db0969a3659ef5d5c46398d31cec3007a4e85"
         },
         "created_at": "2026-08-10T21:04:49.193+00:00"
+      },
+      {
+        "operation_id": "cbb9c57d-0da2-47d4-9918-0eae99b8b489",
+        "idempotency_key": "r1-1d-complete-lifecycle",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-LIFECYCLE-CLOSEOUT-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Supersede intermediate authority or complete the governed GH-2167 implementation lifecycle.",
+          "designId": "R1-1D-API-GOVERNANCE-LIFECYCLE-CLOSEOUT-20260810",
+          "toStatus": "implemented",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T22:58:52.876+00:00"
       },
       {
         "operation_id": "cc48db4e-bf73-4da1-b330-0083e334d0d9",
@@ -90451,6 +90640,27 @@
         "created_at": "2026-08-10T21:04:20.683+00:00"
       },
       {
+        "operation_id": "f8822613-fd37-4a5b-848d-54ab7574503e",
+        "idempotency_key": "r1-1d-approve-lifecycle",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-LIFECYCLE-CLOSEOUT-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Supersede intermediate authority or complete the governed GH-2167 implementation lifecycle.",
+          "designId": "R1-1D-API-GOVERNANCE-LIFECYCLE-CLOSEOUT-20260810",
+          "toStatus": "approved",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "fromStatus": "review",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T22:58:50.304+00:00"
+      },
+      {
         "operation_id": "f9c5c360-769b-4840-b5e6-3d0639425913",
         "idempotency_key": "gh-2167-validation-test-sys-api-http-error-translation-2-v1",
         "operation_type": "architecture_test_record",
@@ -90656,6 +90866,27 @@
           "sourceContentSha256": "99a1557467a0d6c751ffc251fd56eaeb06f748684afb9b44383a8b7f21a6893d"
         },
         "created_at": "2026-08-10T21:03:56.185+00:00"
+      },
+      {
+        "operation_id": "ffe2a990-8e8d-4dba-a552-c51f82e66241",
+        "idempotency_key": "r1-1d-supersede-persistence",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-PERSISTENCE-CLOSEOUT-20260810",
+        "source_ref": "docs/architecture/components/api/index.md",
+        "source_content_sha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Supersede intermediate authority or complete the governed GH-2167 implementation lifecycle.",
+          "designId": "R1-1D-API-GOVERNANCE-PERSISTENCE-CLOSEOUT-20260810",
+          "toStatus": "superseded",
+          "sourceRef": "docs/architecture/components/api/index.md",
+          "fromStatus": "review",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "created_at": "2026-08-10T22:58:40.128+00:00"
       }
     ]
   },
@@ -97475,7 +97706,7 @@
         "pnpm docs:feature-mechanization:implementation"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "a49910d10473466d67d1603cdbc3ae47ff5a7b3452672295842dab63383001d8",
+      "sourceContentSha256": "76d0ae08cda3786a60874211aaf5b50c9feef4ce9551d07748d507c272622523",
       "rawRail": {
         "name": "RecordArchitectureStorageIo",
         "type": "command",
