@@ -47,6 +47,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Connected source identity can collide or cross workspace boundaries](R-20260808-PTH1-CONNECTED-SOURCE-TRUTH.yaml)
 - [Consumers may expect DVT lifecycle statuses (PAUSED, CANCELLING) in ProviderRunStatusView](R-20260409-PROVIDER-STATUS-SEMANTIC-DRIFT.yaml)
 - [Contract mapper boundary type aliases can drift from schema-level non-blank semantics](R-20260410-CONTRACT-MAPPER-BOUNDARY-TYPE-SEMANTICS.yaml)
+- [Contract tests could depend on absent on-demand documentation snapshots](R-20260810-ON-DEMAND-STATUS-TEST-OWNERSHIP.yaml)
 - [Contracts hash-compare scope change lacks PR-runtime E2E validation](R-20260515-CI-CONTRACTS-HASH-SCOPE-E2E.yaml)
 - [dbt import authority or atomic file mutation can diverge under runtime failure](R-20260714-DBT-PROJECT-IMPORT-AUTHORITY.yaml)
 - [dbt manifest or analysis-profile drift can make file projection unavailable](R-20260713-DBT-PROJECT-FILE-PROJECTION.yaml)
