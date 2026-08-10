@@ -10901,6 +10901,20 @@
         "updated_at": "2026-08-10T11:12:07.149+00:00"
       },
       {
+        "design_id": "DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT-20260810",
+        "work_item_id": "GH-2149",
+        "title": "DB-owned documentation lifecycle enforcement and pointer retirement",
+        "owner": "Architecture / Documentation",
+        "status": "review",
+        "rationale": "Join existing lifecycle facts and generated artifact ownership at the single publication boundary, preserve three stable routes, and delete tracked derived pointers without semantic document deletion.",
+        "fowler_signal": "hidden_authority",
+        "rail_ref": "GeneratePlanningDerivedSurfaces",
+        "approved_at": null,
+        "supersedes_id": null,
+        "created_at": "2026-08-10T13:44:37.28+00:00",
+        "updated_at": "2026-08-10T13:44:37.28+00:00"
+      },
+      {
         "design_id": "E-SOURCE-OBJECT-CATALOG-CONTRACT-20260710",
         "work_item_id": "E-SOURCE-OBJECT-METRICS-PROD-1",
         "title": "Provider-neutral source object catalog contract hard cut",
@@ -62748,6 +62762,70 @@
         "created_at": "2026-08-10T11:12:07.149+00:00"
       },
       {
+        "design_id": "DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT-20260810",
+        "subject_kind": "command",
+        "subject_id": "GeneratePlanningDerivedSurfaces",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-10T13:44:37.28+00:00"
+      },
+      {
+        "design_id": "DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT-20260810",
+        "subject_kind": "path",
+        "subject_id": "docs/generated-docs-policy.json",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T13:44:37.28+00:00"
+      },
+      {
+        "design_id": "DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT-20260810",
+        "subject_kind": "path",
+        "subject_id": "docs/planning/status/db-surface-inventory.md",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-10T13:44:37.28+00:00"
+      },
+      {
+        "design_id": "DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT-20260810",
+        "subject_kind": "path",
+        "subject_id": "docs/planning/status/generated-code-state.md",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-10T13:44:37.28+00:00"
+      },
+      {
+        "design_id": "DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT-20260810",
+        "subject_kind": "path",
+        "subject_id": "docs/planning/status/generated-knowledge-intake-literature.md",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-10T13:44:37.28+00:00"
+      },
+      {
+        "design_id": "DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT-20260810",
+        "subject_kind": "path",
+        "subject_id": "scripts/documentation-publication.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T13:44:37.28+00:00"
+      },
+      {
+        "design_id": "DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT-20260810",
+        "subject_kind": "query",
+        "subject_id": "ListDocumentationLifecycleFacts",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-10T13:44:37.28+00:00"
+      },
+      {
+        "design_id": "DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT-20260810",
+        "subject_kind": "test",
+        "subject_id": "scripts/documentation-publication.test.cjs",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-10T13:44:37.28+00:00"
+      },
+      {
         "design_id": "PLANNING-DB-API-APPLICATION-SERVICE-TEST-LEAF-COMPONENTS-20260619",
         "subject_kind": "component",
         "subject_id": "SYS-API-APPLICATION-PORTS",
@@ -82252,6 +82330,82 @@
           "sourceContentSha256": "0716cec0195201625580137f36fb01347f63fca0ff33f4992ee6db623659f886"
         },
         "created_at": "2026-08-10T11:12:07.149+00:00"
+      },
+      {
+        "operation_id": "dc5177ec-ede3-4b3e-a69c-1d12772e2e12",
+        "idempotency_key": "codex-doc1-6-architecture-design",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT-20260810",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2149",
+        "source_content_sha256": "c0460c8222de7101fbbd5ac608509c653f75d81ed917066b12607537f1fccfd6",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "Architecture / Documentation",
+          "title": "DB-owned documentation lifecycle enforcement and pointer retirement",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "GeneratePlanningDerivedSurfaces",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "ListDocumentationLifecycleFacts",
+              "subjectKind": "query"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/documentation-publication.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "docs/generated-docs-policy.json",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "docs/planning/status/generated-code-state.md",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "docs/planning/status/generated-knowledge-intake-literature.md",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "docs/planning/status/db-surface-inventory.md",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "scripts/documentation-publication.test.cjs",
+              "subjectKind": "test"
+            }
+          ],
+          "status": "review",
+          "railRef": "GeneratePlanningDerivedSurfaces",
+          "designId": "DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT-20260810",
+          "rationale": "Join existing lifecycle facts and generated artifact ownership at the single publication boundary, preserve three stable routes, and delete tracked derived pointers without semantic document deletion.",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2149",
+          "workItemId": "GH-2149",
+          "fowlerSignal": "hidden_authority",
+          "supersedesId": null,
+          "sourceContentSha256": "c0460c8222de7101fbbd5ac608509c653f75d81ed917066b12607537f1fccfd6"
+        },
+        "created_at": "2026-08-10T13:44:37.28+00:00"
       }
     ]
   },
