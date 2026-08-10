@@ -72,6 +72,15 @@ test('current Planning DB schema is one declarative artifact without migration s
   assert.doesNotThrow(() => assertCurrentPlanningDbSchema(schemaSql));
 });
 
+test('current schema accepts audited architecture storage I/O records', () => {
+  const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
+
+  assert.match(
+    schemaSql,
+    /architecture_design_operations_type_check[\s\S]*architecture_storage_io_record/u
+  );
+});
+
 test('Planning DB import contains no dormant local task registry compatibility', () => {
   const importSource = fs.readFileSync(path.join(__dirname, 'planning-db-import.cjs'), 'utf8');
 
