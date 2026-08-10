@@ -23,9 +23,13 @@ plugins:
 # Zensical-native navigation mode. The repo no longer keeps a legacy explicit nav.
 nav: []
 
+extra_css:
+  - stylesheets/docs-accessibility.css
+
 extra_javascript:
   - https://unpkg.com/mermaid@10/dist/mermaid.min.js
   - javascripts/mermaid-init.js
+  - javascripts/table-scroll-accessibility.js
 
 extra:
   language: en
