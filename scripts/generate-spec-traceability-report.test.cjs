@@ -374,7 +374,7 @@ test('environment-prefixed verification commands still require catalog authority
 });
 
 test('every command in a shell chain requires repository catalog authority', () => {
-  const operators = ['&&', '||', '|', ';'];
+  const operators = ['&&', '||', '|', ';', '&', '\n', '\r\n'];
   const facts = exactFacts();
   for (const operator of operators) {
     facts.validations.push({
