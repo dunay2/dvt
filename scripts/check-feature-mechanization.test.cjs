@@ -520,6 +520,29 @@ test('validateFeatureImplementationManifests rejects deletion outside allowed an
   assert.match(result.errors.join('\n'), /outside allowedImplementationSurfaces/);
 });
 
+test('validateFeatureImplementationManifests permits deletion of a complete forbidden subtree', () => {
+  const deletedPath = 'apps/api/docs/retired-component.md';
+  const result = validateFeatureImplementationManifests(
+    [
+      {
+        sourcePath: 'api-retirement-plan.md',
+        manifest: {
+          ...validManifest,
+          featureId: 'R1-1D-API-GOVERNANCE-HARDCUT',
+          forbiddenImplementationSurfaces: ['apps/api/docs/**'],
+        },
+      },
+    ],
+    {
+      changedFiles: [deletedPath],
+      deletedFiles: [deletedPath],
+      currentFiles: ['apps/api/src/server.ts'],
+    }
+  );
+
+  assert.deepEqual(result.errors, []);
+});
+
 test('validateFeatureImplementationManifests rejects deletion authorized only by another feature wildcard', () => {
   const deletedPath = 'apps/api/src/auth.ts';
   const result = validateFeatureImplementationManifests(
@@ -544,6 +567,7 @@ test('validateFeatureImplementationManifests rejects deletion authorized only by
     {
       changedFiles: [deletedPath],
       deletedFiles: [deletedPath],
+      currentFiles: ['apps/api/src/server.ts'],
     }
   );
 
