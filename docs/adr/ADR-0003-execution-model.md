@@ -88,7 +88,7 @@ graph TD
     subgraph "Domain Layer (DVT+ Sovereignty)"
         A[ADR-0003: Execution Model Sovereignty]
         A --> B[Defines lifecycle states<br/>PENDING, RUNNING, COMPLETED]
-        A --> C[Defines valid transitions<br/>RunQueued â†’ RunStarted â†’ RunCompleted]
+        A --> C[Defines valid transitions<br/>RunQueued to RunStarted to RunCompleted]
         A --> D[Defines execution semantics<br/>Meaning of lifecycle events]
         A --> E[Defines invariants<br/>Retry, ordering, idempotency rules]
     end
@@ -158,7 +158,7 @@ graph LR
 ## Code Ownership Example
 
 ```typescript
-// âŒ Anti-pattern: Engine defines behavior by I/O side effects
+// Incorrect: Engine defines behavior by I/O side effects
 class Engine_OLD {
   async startRun(planRef: PlanRef, ctx: RunContext) {
     const bytes = await this.planFetcher.fetch(planRef.uri);
@@ -166,7 +166,7 @@ class Engine_OLD {
   }
 }
 
-// âœ… Correct pattern: Domain defines semantics, adapter handles infrastructure
+// Correct: Domain defines semantics, adapter handles infrastructure
 class Engine {
   async startRun(planRef: PlanRef, ctx: RunContext): Promise<RunRef> {
     this.validateMetadata(planRef); // domain rule
