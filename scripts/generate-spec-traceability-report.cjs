@@ -96,7 +96,9 @@ function groupFeatureRelations(rows, featureIds, relationKind) {
 }
 
 function isTestPath(repositoryPath) {
-  return /(^|\/)(test|tests|__tests__)(\/|$)|\.(test|spec)\.[^/]+$/u.test(repositoryPath);
+  return /(^|\/)(test|tests|__tests__|cypress\/(?:e2e|component))(\/|$)|\.(test|spec|cy)\.[^/]+$/u.test(
+    repositoryPath
+  );
 }
 
 function isExecutableValidation(validationRef) {
