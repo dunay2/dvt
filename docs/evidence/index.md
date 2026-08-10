@@ -113,6 +113,7 @@ Evidence documents that justify or validate relevant changes.
 - [ED 20260804 Object File Postgres Runtime](ED-20260804-object-file-postgres-runtime.md)
 - [ED 20260804 Object File Postgres Step Admission](ED-20260804-object-file-postgres-step-admission.md)
 - [ED 20260809 Temporal Cancellation Test Barrier](ED-20260809-temporal-cancellation-test-barrier.md)
+- [ED 20260810 Active Provider Documentation Truth](ED-20260810-active-provider-documentation-truth.md)
 - [ED 20260810 On Demand Status Provider Guard](ED-20260810-on-demand-status-provider-guard.md)
 - [ED-20260402 RC-G1 governance startup and health reconciliation](ED-20260402-rc-g1-governance-startup-reconciliation.md)
 - [ED-20260402 S05 envelope boundary hardening](ED-20260402-s05-envelope-boundary-hardening.md)
