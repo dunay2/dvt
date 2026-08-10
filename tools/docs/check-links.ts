@@ -16,7 +16,8 @@
  *   tsx tools/docs/check-links.ts --changed-only  # only git-changed files
  */
 import { existsSync, readFileSync } from 'node:fs';
-import { basename, dirname, join, resolve } from 'node:path';
+import { createRequire } from 'node:module';
+import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
@@ -27,6 +28,12 @@ import { Report } from './lib/report.js';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(__dirname, '..', '..');
 const DOCS_DIR = join(REPO_ROOT, 'docs');
+const require = createRequire(import.meta.url);
+const { DocumentationPublicationPolicy } = require('../../scripts/documentation-publication.cjs') as {
+  DocumentationPublicationPolicy: {
+    isHistoricalPath(sourcePath: string): boolean;
+  };
+};
 
 const CHANGED_ONLY = process.argv.includes('--changed-only');
 const EXCLUDE_DIRS = ['closeouts', 'plans', 'archive', 'working-notes'];
@@ -97,6 +104,15 @@ function main(): void {
 
       // Resolve target path (URL-decode encoded spaces etc. in link hrefs)
       const targetPath = resolve(fileDir, decodeURIComponent(rawPath));
+
+      if (isNonPublishedDocumentationTarget(targetPath)) {
+        report.error(
+          `${filePath}:${line}`,
+          `Non-published historical target: ${rawPath}`,
+          `Resolved to a route excluded by DocumentationPublicationPolicy: ${targetPath}`
+        );
+        continue;
+      }
 
       if (!existsSync(targetPath) && !generatedPublicationRoutes.has(targetPath)) {
         report.error(
@@ -180,4 +196,18 @@ function isIgnoredDocsSource(filePath: string): boolean {
     .some((segment) => EXCLUDE_PATH_SEGMENTS.has(segment));
 }
 
-main();
+export function isNonPublishedDocumentationTarget(targetPath: string): boolean {
+  const docsRelativePath = relative(DOCS_DIR, targetPath);
+  if (
+    docsRelativePath === '..' ||
+    docsRelativePath.startsWith(`..${sep}`) ||
+    isAbsolute(docsRelativePath)
+  ) {
+    return false;
+  }
+  return DocumentationPublicationPolicy.isHistoricalPath(join('docs', docsRelativePath));
+}
+
+if (resolve(process.argv[1] ?? '') === fileURLToPath(import.meta.url)) {
+  main();
+}

@@ -164,11 +164,15 @@ class DocumentationPublicationPolicy {
     return sources.sort((left, right) => left.route.localeCompare(right.route, 'en'));
   }
 
-  isHistoricalPath(sourcePath) {
+  static isHistoricalPath(sourcePath) {
     const segments = DocumentationPublicationPolicy.toPosix(sourcePath).toLowerCase().split('/');
     return segments.some((segment) =>
       ['archive', '_archive', 'superseded', 'disposable'].includes(segment)
     );
+  }
+
+  isHistoricalPath(sourcePath) {
+    return DocumentationPublicationPolicy.isHistoricalPath(sourcePath);
   }
 
   assertLifecycleAuthority(sourcePath, lifecycleRow) {
