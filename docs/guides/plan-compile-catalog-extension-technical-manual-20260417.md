@@ -1,8 +1,8 @@
 ---
 title: Plan Compile Catalog Extension Technical Manual
-status: Draft
+status: Active
 owner: Architecture / API / Planner / Runtime
-last_reviewed: 2026-04-19
+last_reviewed: 2026-08-10
 ---
 
 # Plan Compile Catalog Extension Technical Manual
