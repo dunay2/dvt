@@ -166,6 +166,29 @@ test('feature traceability uses exact DB identities and the evaluated Git tree',
   ]);
 });
 
+test('Cypress symbols remain test evidence instead of implementation source', () => {
+  const facts = exactFacts();
+  facts.symbols[1] = {
+    ...facts.symbols[1],
+    symbol_name: 'canvas live proof',
+    symbol_path: 'apps/web/cypress/e2e/canvas/canvas-live-proof.cy.ts',
+  };
+  const projection = buildFeatureTraceabilityProjection(facts, {
+    gitSha,
+    gitTreePaths: new Map([
+      ['docs/architecture/components/example.md', 'blob'],
+      ['packages/@dvt/example/src/execute.ts', 'blob'],
+      ['apps/web/cypress/e2e/canvas/canvas-live-proof.cy.ts', 'blob'],
+    ]),
+  });
+
+  assert.deepEqual(projection.features[0].testPaths, [
+    'apps/web/cypress/e2e/canvas/canvas-live-proof.cy.ts',
+  ]);
+  assert.deepEqual(projection.features[0].sourcePaths, ['packages/@dvt/example/src/execute.ts']);
+  assert.ok(!projection.features[0].gaps.includes('missing-test:FEATURE-A'));
+});
+
 test('feature traceability rejects duplicate subjects and unknown relation subjects', () => {
   assert.throws(
     () =>
