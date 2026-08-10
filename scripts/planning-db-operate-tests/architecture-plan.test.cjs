@@ -636,7 +636,7 @@ test('architecture storage I/O planner updates one design-scoped current record'
   );
 });
 
-test('architecture storage I/O writer uses optimistic path matching and writes audit', async () => {
+test('architecture storage I/O writer writes audit only after optimistic path matching', async () => {
   const queries = [];
   const client = {
     async query(sql, params) {
@@ -681,6 +681,23 @@ test('architecture storage I/O writer uses optimistic path matching and writes a
   assert.equal(storageWrite.params[1], planned.storageIo.storageObject);
   assert.equal(storageWrite.params[6], planned.expectedStorageObject);
   assert.ok(queries.some((query) => query.sql.includes('architecture.design_operations')));
+
+  const concurrentQueries = [];
+  const concurrentClient = {
+    async query(sql, params) {
+      concurrentQueries.push({ sql, params });
+      return { rows: [], rowCount: 0 };
+    },
+  };
+
+  await assert.rejects(
+    () => writePlannedArchitectureStorageIoRecordOperation(concurrentClient, planned),
+    /ARCH-STORAGE-IO-CONCURRENT-UPDATE/
+  );
+  assert.equal(concurrentQueries.length, 1);
+  assert.ok(
+    !concurrentQueries.some((query) => query.sql.includes('architecture.design_operations'))
+  );
 });
 
 test('architecture test evidence planner emits component_test and audit rows', () => {
