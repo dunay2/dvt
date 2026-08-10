@@ -227,6 +227,7 @@ governingSources:
   - docs/generated-docs-policy.json
 allowedImplementationSurfaces:
   - .github/workflows/docs-deploy.yml
+  - .github/workflows/pr-quality-gate.yml
   - .gitignore
   - AGENTS.md
   - docs/.manifest.json
@@ -235,14 +236,24 @@ allowedImplementationSurfaces:
   - docs/concepts/repository-map.md
   - docs/generated-docs-policy.json
   - docs/guides/documentation-maintenance-guide-20260407.md
+  - docs/guides/pr-preflight-and-ci-triage.md
+  - docs/guides/testing-and-ci-capabilities.md
   - docs/planning/proposals/mandatory/governance-and-docs/doc1-2-on-demand-publication-plan-20260810.md
+  - docs/planning/status/generated-code-state.md
+  - docs/runbooks/planning-generated-artifacts-operations-20260403.md
   - package.json
+  - scripts/docs-quality-check.cjs
   - scripts/documentation-publication.cjs
   - scripts/documentation-publication.test.cjs
   - scripts/generate-code-status.cjs
   - scripts/generate-code-status.test.cjs
+  - scripts/governance-refresh.cjs
+  - scripts/governance-refresh.test.cjs
+  - scripts/pr-closeout.cjs
+  - scripts/pr-closeout.test.cjs
   - tools/ci/repository-command-catalog.mjs
   - tools/ci/repository-command-catalog.test.mjs
+  - tools/ci/policy/workflow-scope.json
   - tools/ci/workflow-pattern-parity.test.mjs
   - tools/docs/check-links.ts
   - zensical.yml
@@ -331,6 +342,17 @@ redGreenCycles:
       - .github/workflows/docs-deploy.yml
       - tools/ci/workflow-pattern-parity.test.mjs
     greenTest: node --test scripts/documentation-publication.test.cjs tools/ci/workflow-pattern-parity.test.mjs
+  - id: DB-owned-input-receipt
+    redTest: node --test scripts/documentation-publication.test.cjs scripts/pr-closeout.test.cjs
+    expectedFailure: Filesystem-only pages, stale sources or lifecycle facts, and implicit closeout generation can bypass explicit DB-first publication.
+    patchSurfaces:
+      - scripts/documentation-publication.cjs
+      - scripts/documentation-publication.test.cjs
+      - scripts/pr-closeout.cjs
+      - scripts/pr-closeout.test.cjs
+      - .github/workflows/docs-deploy.yml
+      - tools/ci/policy/workflow-scope.json
+    greenTest: node --test scripts/documentation-publication.test.cjs scripts/pr-closeout.test.cjs tools/ci/workflow-pattern-parity.test.mjs
 symbols:
   - &publicationPolicySymbol
     name: DocumentationPublicationPolicy
@@ -356,6 +378,18 @@ symbols:
     name: loadGeneratedPublicationRoutes
     path: tools/docs/check-links.ts
     dddOwner: DocumentationConsultationReadModel
+  - <<: *publicationPolicySymbol
+    name: generateRepositoryMap
+    path: scripts/generate-code-status.cjs
+    dddOwner: PlanningGeneratedArtifact
+  - <<: *publicationPolicySymbol
+    name: repositoryMapOutputPath
+    path: scripts/generate-code-status.cjs
+    dddOwner: PlanningGeneratedArtifact
+  - <<: *publicationPolicySymbol
+    name: buildPrCloseoutPlan
+    path: scripts/pr-closeout.cjs
+    dddOwner: PlanningGeneratedArtifact
 ```
 
 ## No-Debt Boundary
