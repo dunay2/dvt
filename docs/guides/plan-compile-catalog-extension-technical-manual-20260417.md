@@ -17,6 +17,10 @@ compile-only boundary. Older `MW-D1` proposal and review artifacts may still
 say `external compile`; treat that as historical wording, not the active
 ownership model.
 
+Temporal is the only implemented workflow provider. A future provider is a
+conditional extension point, not an active `targetAdapter`, until its admission
+evidence is complete.
+
 Use this guide when the change affects any of the following:
 
 - the canonical family taxonomy
@@ -88,7 +92,7 @@ Multi-workflow design stays coherent only if these decisions remain separate.
 | --------------- | ---------------------------------------- | ------------------------------------- | -------------------------------------------------- | ------------------------- |
 | `stepKind`      | semantic meaning of one node             | graph contract plus canonical catalog | `DBT_MODEL`, `POSTGRES_SQL_TRANSFORM`, `SPARK_JOB` | runtime provider          |
 | `family`        | taxonomy grouping for step kinds         | canonical catalog                     | `dbt`, `sql_transform`, `spark`                    | handler implementation    |
-| `targetAdapter` | runtime provider selected for start-run  | run admission contract                | `temporal`, `conductor`                            | node semantics            |
+| `targetAdapter` | runtime provider selected for start-run  | run admission contract                | `temporal`                                         | node semantics            |
 | `workerRoute`   | deployment or task-queue destination     | runtime routing model                 | `dbt-worker`, `spark-worker`                       | compile policy            |
 | `pluginPack`    | source of contributed families and kinds | approved plugin contribution pack     | `acme-spark-plugin`                                | contract authority        |
 

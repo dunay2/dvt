@@ -12,6 +12,10 @@ last_reviewed: 2026-04-03
 This guide is for operators, integrators, and API consumers who need to run
 workflows through the engine boundary without reading engine internals.
 
+Temporal is the only implemented workflow provider. A future provider remains
+conditional until its ADR, real adapter, capability conformance, production
+composition, and documentation evidence are delivered.
+
 ## What the engine does vs what adapters do
 
 Engine responsibilities:
@@ -85,7 +89,8 @@ through `IProviderAdapter`, so runtime coupling remains behind adapter ports.
 flowchart LR
   Caller["API/consumer"] --> Engine["WorkflowEngine boundary"]
   Engine --> Adapter["IProviderAdapter"]
-  Adapter --> Runtime["Temporal/Conductor/runtime backend"]
+  Adapter --> Runtime["Temporal runtime"]
+  Adapter -. after admission .-> FutureRuntime["Future provider runtime"]
 ```
 
 ## Why a run can be valid but still rejected
