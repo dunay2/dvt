@@ -56,9 +56,9 @@ bootstrap are all implemented. The main remaining limitation is not the
 existence of the surface, but the narrowness of the publicly consumable product
 contract around it.
 
-## Current To Target Walkthrough
+## Current Architecture
 
-- [API Current To Target Architecture](./components/api/api-current-to-target-architecture.md)
+- [API architecture](./components/api/index.md)
 
 ## Queued Delta
 
@@ -79,7 +79,6 @@ contract around it.
 ## Related Pages
 
 - [apps/api](./components/api/index.md)
-- [API Current To Target Architecture](./components/api/api-current-to-target-architecture.md)
 - [Frontend Fowler Implementation Pattern](./components/web/frontend-fowler-implementation-pattern.md)
 - [Frontend Runtime Contract Technical Manual](./components/web/runs/frontend-runtime-contract-technical-manual.md)
 - [DVT Component Map](./component-map.md)
