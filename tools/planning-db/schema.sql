@@ -7340,7 +7340,7 @@ CREATE TABLE planning_query_store.governance_component_local_operations (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT governance_component_local_operatio_source_content_sha256_check CHECK ((source_content_sha256 ~ '^[a-f0-9]{64}$'::text)),
     CONSTRAINT governance_component_local_operations_expected_revision_check CHECK (((expected_revision IS NULL) OR (expected_revision >= 0))),
-    CONSTRAINT governance_component_local_operations_operation_type_check CHECK ((operation_type = ANY (ARRAY['component_create'::text, 'component_reparent'::text]))),
+    CONSTRAINT governance_component_local_operations_operation_type_check CHECK ((operation_type = ANY (ARRAY['component_create'::text, 'component_revise'::text, 'component_reparent'::text]))),
     CONSTRAINT governance_component_local_operations_previous_revision_check CHECK ((previous_revision >= 0)),
     CONSTRAINT governance_component_local_operations_resulting_revision_check CHECK ((resulting_revision >= 0))
 );
