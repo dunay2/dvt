@@ -2445,10 +2445,14 @@ function readCanonicalStateSnapshot(snapshotPath = canonicalStatePath) {
   if (
     !snapshot.architectureState ||
     !Array.isArray(snapshot.featureMechanizationRails) ||
-    !Array.isArray(snapshot.featureMechanizationRailOperations)
+    !Array.isArray(snapshot.featureMechanizationRailOperations) ||
+    !Array.isArray(snapshot.governanceComponentDefinitions) ||
+    !Array.isArray(snapshot.governanceComponentOwnershipPatterns) ||
+    !Array.isArray(snapshot.governanceComponentSemanticItems) ||
+    !Array.isArray(snapshot.governanceComponentOperations)
   ) {
     throw new Error(
-      'Planning DB canonical state must contain architectureState, featureMechanizationRails, and featureMechanizationRailOperations.'
+      'Planning DB canonical state must contain architecture, feature mechanization, and governance component recovery state.'
     );
   }
 
@@ -2774,6 +2778,118 @@ async function restoreLocalFeatureMechanizationOperations(client, operations) {
     {
       suffix: 'on conflict (operation_id) do nothing',
     }
+  );
+}
+
+async function restoreLocalGovernanceComponentState(client, snapshot) {
+  await insertRows(
+    client,
+    'governance_component_local_definitions',
+    [
+      'component_id',
+      'source_path',
+      'source_content_sha256',
+      'revision',
+      'name',
+      'level',
+      'parent_id',
+      'root_unit',
+      'domain_unit',
+      'status',
+      'children_required',
+      'owned_concern',
+      'ddd_owner',
+      'cq_rails',
+      'created_by',
+      { name: 'created_at', cast: 'timestamptz' },
+    ],
+    snapshot.governanceComponentDefinitions,
+    (definition) => [
+      definition.componentId,
+      definition.sourcePath,
+      definition.sourceContentSha256,
+      definition.revision,
+      definition.name,
+      definition.level,
+      definition.parentComponentId,
+      definition.rootUnit,
+      definition.domainUnit,
+      definition.status,
+      definition.childrenRequired,
+      definition.ownedConcern,
+      definition.dddOwner,
+      definition.cqRails,
+      definition.createdBy,
+      definition.createdAt,
+    ]
+  );
+
+  await insertRows(
+    client,
+    'governance_component_local_ownership_patterns',
+    [
+      'component_id',
+      'pattern_kind',
+      'pattern',
+      'pattern_order',
+      { name: 'created_at', cast: 'timestamptz' },
+    ],
+    snapshot.governanceComponentOwnershipPatterns,
+    (pattern) => [
+      pattern.componentId,
+      pattern.patternKind,
+      pattern.pattern,
+      pattern.patternOrder,
+      pattern.createdAt,
+    ]
+  );
+
+  await insertRows(
+    client,
+    'governance_component_local_semantic_items',
+    [
+      'component_id',
+      'item_kind',
+      'item_value',
+      'item_order',
+      { name: 'created_at', cast: 'timestamptz' },
+    ],
+    snapshot.governanceComponentSemanticItems,
+    (item) => [item.componentId, item.itemKind, item.itemValue, item.itemOrder, item.createdAt]
+  );
+
+  await insertRows(
+    client,
+    'governance_component_local_operations',
+    [
+      'operation_id',
+      'idempotency_key',
+      'operation_type',
+      'actor',
+      'component_id',
+      'source_path',
+      'source_content_sha256',
+      'expected_revision',
+      'previous_revision',
+      'resulting_revision',
+      { name: 'payload', cast: 'jsonb' },
+      { name: 'created_at', cast: 'timestamptz' },
+    ],
+    snapshot.governanceComponentOperations,
+    (operation) => [
+      operation.operationId,
+      operation.idempotencyKey,
+      operation.operationType,
+      operation.actor,
+      operation.componentId,
+      operation.sourcePath,
+      operation.sourceContentSha256,
+      operation.expectedRevision,
+      operation.previousRevision,
+      operation.resultingRevision,
+      toJson(operation.payload),
+      operation.createdAt,
+    ]
   );
 }
 
@@ -3289,6 +3405,7 @@ async function importContent(options = {}) {
       documents: knowledgeDocuments,
     });
     await insertGovernanceSnapshot(client, governanceSnapshot);
+    await restoreLocalGovernanceComponentState(client, canonicalStateSnapshot);
     await refreshComponentTreeMaterializedProjection(client);
     await refreshComponentFileOwnershipMaterializedProjection(client);
     await refreshComponentRuleEvaluationMaterializedProjection(client);
@@ -4465,6 +4582,7 @@ module.exports = {
   refreshLocalFeatureMechanizationRailSourceHashes,
   restoreLocalFeatureMechanizationOperations,
   restoreLocalFeatureMechanizationRails,
+  restoreLocalGovernanceComponentState,
   restoreDbGovernanceSurfaceCatalog,
   restoreDbtProjectRoundtripCapabilityCatalog,
   runPlanningImport,
