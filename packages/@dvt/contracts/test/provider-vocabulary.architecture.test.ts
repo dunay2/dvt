@@ -35,7 +35,6 @@ const activeProviderVocabularySources = [
   join(DOCS_ROOT, 'roadmap/engine-phases.md'),
   join(ARCHITECTURE_ROOT, 'diagrams/engine-internal-components.md'),
   join(ARCHITECTURE_ROOT, 'diagrams/implementation-architecture-diagrams.md'),
-  join(ARCHITECTURE_ROOT, 'system-delivery-status.md'),
 ];
 
 describe('contracts: active provider vocabulary', () => {
