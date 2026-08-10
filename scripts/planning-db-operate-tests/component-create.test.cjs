@@ -4,9 +4,11 @@ const {
   parseArgs,
   planComponentCreateOperation,
   planComponentReparentOperation,
+  planComponentReviseOperation,
   validateComponentStatus,
   writePlannedComponentCreateOperation,
   writePlannedComponentReparentOperation,
+  writePlannedComponentReviseOperation,
 } = require('./helpers.cjs');
 
 test('parseArgs builds a component create command with semantic metadata', () => {
@@ -94,6 +96,38 @@ test('parseArgs builds a component reparent command with audit source', () => {
   assert.equal(command.componentId, 'SYS-WEB-CANVAS-SURFACE-STRATEGY');
   assert.equal(command.parentComponentId, 'SYS-WEB-APP-PLUGINS');
   assert.equal(command.expectedRevision, 1);
+});
+
+test('parseArgs builds a scoped component revise command with ownership deltas', () => {
+  const command = parseArgs([
+    'component',
+    'revise',
+    '--design',
+    'R1-1D-API-GOVERNANCE-OWNERSHIP-CLOSEOUT-20260810',
+    '--component',
+    'SYS-API-DOCS',
+    '--status',
+    'superseded',
+    '--remove-owns',
+    'apps/api/docs/**',
+    '--source-ref',
+    'docs/architecture/components/api/index.md',
+    '--source-content-sha256',
+    'a'.repeat(64),
+    '--actor',
+    'codex',
+    '--expected-revision',
+    '0',
+    '--idempotency-key',
+    'codex-component-revise-api-docs',
+  ]);
+
+  assert.equal(command.kind, 'component_revise');
+  assert.equal(command.designId, 'R1-1D-API-GOVERNANCE-OWNERSHIP-CLOSEOUT-20260810');
+  assert.equal(command.componentId, 'SYS-API-DOCS');
+  assert.equal(command.status, 'superseded');
+  assert.deepEqual(command.removeOwns, ['apps/api/docs/**']);
+  assert.equal(command.expectedRevision, 0);
 });
 
 test('component create planner emits a DB definition and audit row', () => {
@@ -281,6 +315,87 @@ test('component reparent planner rejects descendant parent cycles', () => {
   );
 });
 
+test('component revise planner overlays imported semantics under design scope', () => {
+  const command = parseArgs([
+    'component',
+    'revise',
+    '--design',
+    'R1-1D-API-GOVERNANCE-OWNERSHIP-CLOSEOUT-20260810',
+    '--component',
+    'SYS-API-DOCS',
+    '--status',
+    'superseded',
+    '--remove-owns',
+    'apps/api/docs/**',
+    '--source-ref',
+    'docs/architecture/components/api/index.md',
+    '--source-content-sha256',
+    'a'.repeat(64),
+    '--actor',
+    'codex',
+    '--expected-revision',
+    '0',
+  ]);
+
+  const planned = planComponentReviseOperation({
+    command,
+    design: { design_id: command.designId, status: 'review' },
+    designScopes: [
+      {
+        subject_kind: 'component',
+        subject_id: 'SYS-API-DOCS',
+        scope_kind: 'may_update',
+      },
+    ],
+    existingComponent: {
+      component_id: 'SYS-API-DOCS',
+      name: 'API local documentation',
+      level: 'component',
+      parent_id: 'SYS-API-ROOT',
+      root_unit: 'SYS-DVT',
+      domain_unit: 'SYS-API',
+      status: 'coverage-required',
+      children_required: false,
+      owns: ['apps/api/docs/**'],
+      excludes: [],
+      owned_concern: 'API local documentation.',
+      responsibilities: [],
+      non_goals: [],
+      reasons_to_change: [],
+      ddd_owner: 'INFRA',
+      cq_rails: 'none - API local documentation',
+      public_api: [],
+      invariants: [],
+      transitions: [],
+      consumers: [],
+      governance_refs: ['docs/DOCS_README.md'],
+      fowler_signals: ['coverage refinement'],
+      revision: 0,
+    },
+    latestOperation: null,
+    operationId: 'op-component-revise',
+    now: new Date('2026-08-10T20:00:00.000Z'),
+  });
+
+  assert.equal(planned.definition.status, 'superseded');
+  assert.equal(planned.definition.revision, 1);
+  assert.deepEqual(planned.ownershipPatterns, []);
+  assert.deepEqual(
+    planned.semanticItems.filter((item) => item.itemKind === 'governance_ref'),
+    [
+      {
+        componentId: 'SYS-API-DOCS',
+        itemKind: 'governance_ref',
+        itemValue: 'docs/DOCS_README.md',
+        itemOrder: 0,
+      },
+    ]
+  );
+  assert.equal(planned.audit.operationType, 'component_revise');
+  assert.equal(planned.audit.previousRevision, 0);
+  assert.equal(planned.audit.resultingRevision, 1);
+});
+
 test('component create writer stores component lists in relational tables', async () => {
   const now = new Date('2026-05-14T09:00:00.000Z');
   const command = parseArgs([
@@ -458,6 +573,77 @@ test('component reparent writer updates local definitions when the component is 
   assert.equal(update.params[2], 'SYS-DVT');
   assert.equal(update.params[3], 'SYS-WEB');
   assert.equal(update.params[6], 5);
+});
+
+test('component revise writer atomically replaces the effective DB override', async () => {
+  const planned = {
+    definition: {
+      componentId: 'SYS-API-DOCS',
+      sourcePath: 'docs/architecture/components/api/index.md',
+      sourceContentSha256: 'a'.repeat(64),
+      revision: 1,
+      name: 'API local documentation',
+      level: 'component',
+      parentComponentId: 'SYS-API-ROOT',
+      rootUnit: 'SYS-DVT',
+      domainUnit: 'SYS-API',
+      status: 'superseded',
+      childrenRequired: false,
+      ownedConcern: 'API local documentation.',
+      dddOwner: 'INFRA',
+      cqRails: 'none - API local documentation',
+      createdBy: 'codex',
+      createdAt: '2026-08-10T20:00:00.000Z',
+    },
+    ownershipPatterns: [],
+    semanticItems: [],
+    audit: {
+      operationId: 'op-component-revise',
+      idempotencyKey: 'codex-component-revise-api-docs',
+      operationType: 'component_revise',
+      actor: 'codex',
+      componentId: 'SYS-API-DOCS',
+      sourcePath: 'docs/architecture/components/api/index.md',
+      sourceContentSha256: 'a'.repeat(64),
+      expectedRevision: 0,
+      previousRevision: 0,
+      resultingRevision: 1,
+      payload: {},
+      createdAt: '2026-08-10T20:00:00.000Z',
+    },
+  };
+  const queries = [];
+  const client = {
+    async query(sql, params) {
+      queries.push({ sql, params });
+      return { rows: [] };
+    },
+  };
+
+  await writePlannedComponentReviseOperation(client, planned);
+
+  assert.ok(
+    queries.some(
+      (query) =>
+        query.sql.includes('governance_component_local_definitions') &&
+        query.sql.includes('on conflict (component_id) do update')
+    )
+  );
+  assert.ok(
+    queries.some((query) =>
+      query.sql.includes(
+        'delete from planning_query_store.governance_component_local_ownership_patterns'
+      )
+    )
+  );
+  assert.ok(
+    queries.some((query) =>
+      query.sql.includes(
+        'delete from planning_query_store.governance_component_local_semantic_items'
+      )
+    )
+  );
+  assert.ok(queries.some((query) => query.sql.includes('governance_component_local_operations')));
 });
 
 test('component create planner rejects duplicate, missing parent, and weak semantics', () => {
