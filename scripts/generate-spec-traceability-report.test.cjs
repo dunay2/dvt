@@ -1,7 +1,13 @@
 const assert = require('node:assert/strict');
+const { execFileSync } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
+const { Client } = require('pg');
+
+const { importContent } = require('./planning-db-import.cjs');
+const { defaultPgUrl } = require('./planning-db-run.cjs');
+const { readGitTreePaths } = require('./generate-code-status.cjs');
 
 const {
   buildFeatureTraceabilityProjection,
@@ -304,3 +310,72 @@ test('traceability reads paths from the same evaluated Git commit', () => {
   assert.equal(input.gitTreePaths.get('apps/api/src/app.ts'), 'blob');
   assert.deepEqual(calls, [{ gitSha }]);
 });
+
+test('exact relation changes deterministically change traceability output', () => {
+  const facts = exactFacts();
+  const options = {
+    gitSha,
+    gitTreePaths: new Map([
+      ['docs/architecture/components/example.md', 'blob'],
+      ['packages/@dvt/example/src/execute.ts', 'blob'],
+      ['packages/@dvt/example/test/execute.test.ts', 'blob'],
+    ]),
+  };
+  const baseline = renderCanonicalDocCodeMatrix(
+    buildFeatureTraceabilityProjection(facts, options),
+    '2026-08-10'
+  );
+  const changedFacts = {
+    ...facts,
+    validations: [
+      ...facts.validations,
+      {
+        feature_id: 'FEATURE-A',
+        validation_kind: 'completion',
+        validation_ref: 'pnpm verify:prepush',
+      },
+    ],
+  };
+  const changed = renderCanonicalDocCodeMatrix(
+    buildFeatureTraceabilityProjection(changedFacts, options),
+    '2026-08-10'
+  );
+
+  assert.notEqual(changed, baseline);
+  assert.match(changed, /pnpm verify:prepush/u);
+});
+
+test(
+  'live Planning DB renders every exact feature deterministically',
+  { skip: process.env.DVT_FEATURE_TRACEABILITY_INTEGRATION !== '1' },
+  async () => {
+    const connectionString =
+      process.env.DVT_PLANNING_DB_URL || process.env.DATABASE_URL || defaultPgUrl;
+    await importContent({ databaseUrl: connectionString, silent: true });
+    const client = new Client({ connectionString });
+    await client.connect();
+    try {
+      const facts = await readFeatureTraceabilityFacts(client);
+      const exactGitSha = execFileSync('git', ['rev-parse', 'HEAD'], {
+        cwd: repoRoot,
+        encoding: 'utf8',
+      }).trim();
+      const projection = buildFeatureTraceabilityProjection(facts, {
+        gitSha: exactGitSha,
+        gitTreePaths: readGitTreePaths({ gitSha: exactGitSha }),
+      });
+      const first = renderCanonicalDocCodeMatrix(projection, '2026-08-10');
+      const second = renderCanonicalDocCodeMatrix(projection, '2026-08-10');
+
+      assert.equal(projection.features.length, facts.features.length);
+      assert.equal(
+        new Set(projection.features.map((feature) => feature.featureId)).size,
+        projection.features.length
+      );
+      assert.equal(first, second);
+      assert.match(first, /DOC1-4-DB-FIRST-TRACEABILITY/u);
+    } finally {
+      await client.end();
+    }
+  }
+);
