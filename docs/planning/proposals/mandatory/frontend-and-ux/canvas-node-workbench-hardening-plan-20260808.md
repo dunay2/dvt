@@ -104,6 +104,13 @@ authoring content, whether the active affordance is the direct Code tab or the
 localized `More: Code` overflow trigger; it must not change the product's section
 policy merely to satisfy a selector.
 
+The screen-composition proof then exposed a distinct generic Graph Draft path:
+opening file-backed node Code hid Properties, but closing the contextual editor
+only restored node focus. The selected inspector node remained authoritative, so
+node-Code close must also restore inspector visibility. Project-Code close must
+not fabricate a node context. This aligns the generic Canvas shell with the
+file-project controller without adding a second navigation command.
+
 GitHub issue #2255 remains the independent live-product/product-owner acceptance gate.
 
 ## Feature Mechanization
@@ -165,6 +172,8 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/CanvasNodeFloatingToolbarView.tsx
   - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx
   - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx
+  - apps/web/src/app/views/canvas/CanvasShell.graphSurface.test.tsx
+  - apps/web/src/app/views/canvas/CanvasShell.tsx
   - apps/web/src/app/views/canvas/CanvasViewport.architecture.test.ts
   - apps/web/src/app/views/canvas/CanvasViewport.keyboardNodeEntry.test.ts
   - apps/web/src/app/views/canvas/CanvasViewport.nodeFloatingToolbar.test.tsx
@@ -532,6 +541,14 @@ redGreenCycles:
     patchSurfaces:
       - apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
     greenTest: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
+  - id: graph-draft-node-code-properties-return
+    redTest: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    expectedFailure: Closing generic Graph Draft node Code restored focus but left the preserved Properties context hidden.
+    patchSurfaces:
+      - apps/web/src/app/views/canvas/CanvasShell.graphSurface.test.tsx
+      - apps/web/src/app/views/canvas/CanvasShell.tsx
+      - apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    greenTest: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
 ```
 
 ## Completion rule
