@@ -142,20 +142,29 @@ function commandFileFromValidation(validationRef) {
 }
 
 function isRegisteredVerificationCommand(validationRef, commands) {
-  const packageScript = packageScriptFromValidation(validationRef);
-  const commandFile = commandFileFromValidation(validationRef);
-  return (commands || []).some((command) => {
-    const commandType = String(field(command, 'command_type', 'commandType') || '').trim();
-    if (packageScript && commandType === 'package_script') {
-      return String(field(command, 'command_name', 'commandName') || '').trim() === packageScript;
-    }
-    if (commandFile && commandType === 'command_file') {
-      return (
-        toPosix(field(command, 'command_path', 'commandPath') || '').replace(/^\.\//u, '') ===
-        commandFile
-      );
-    }
-    return false;
+  const commandSegments = String(validationRef || '')
+    .trim()
+    .split(/&&|\|\||[&|;]|\r?\n/u)
+    .map((segment) => segment.trim());
+  if (commandSegments.length === 0 || commandSegments.some((segment) => !segment)) return false;
+
+  return commandSegments.every((segment) => {
+    if (!isExecutableValidation(segment)) return false;
+    const packageScript = packageScriptFromValidation(segment);
+    const commandFile = commandFileFromValidation(segment);
+    return (commands || []).some((command) => {
+      const commandType = String(field(command, 'command_type', 'commandType') || '').trim();
+      if (packageScript && commandType === 'package_script') {
+        return String(field(command, 'command_name', 'commandName') || '').trim() === packageScript;
+      }
+      if (commandFile && commandType === 'command_file') {
+        return (
+          toPosix(field(command, 'command_path', 'commandPath') || '').replace(/^\.\//u, '') ===
+          commandFile
+        );
+      }
+      return false;
+    });
   });
 }
 
