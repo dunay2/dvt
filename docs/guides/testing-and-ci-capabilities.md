@@ -223,7 +223,10 @@ Command semantics:
 
 - `pnpm docs:ci` is the local-friendly docs validation flow. It regenerates derived docs surfaces first and then validates the resulting worktree.
 - `pnpm docs:sync:check` is the strict drift gate for tracked generated docs.
-- `pnpm docs:status:check` and `pnpm docs:capability:check` remain strict drift gates for their tracked generated outputs.
+- `pnpm docs:status:check` proves the DB-free local code-state generator;
+  `pnpm docs:capability:check` remains the tracked capability drift gate.
+- `pnpm docs:publish` is the explicit DB-backed publication operation;
+  `docs:serve` and `docs:build` validate and consume its untracked output.
 - `pnpm docs:gov:manifest` regenerates the tracked compact docs inventory at `docs/.manifest.json`; use `pnpm exec tsx tools/docs/generate-docs-manifest.ts --full --stdout` for the exhaustive audit catalog.
 - `pnpm docs:gov:manifest:check` is the strict drift gate for that tracked docs governance manifest.
 - `pnpm docs:gov:generated-policy` validates the generated-doc single-writer registry, including source paths, generator commands, tracked versus untracked posture, and required generated markers.

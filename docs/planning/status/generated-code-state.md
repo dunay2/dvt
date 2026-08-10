@@ -17,9 +17,9 @@ Run:
 pnpm docs:status:generate --code-state-only
 ```
 
-This mode is deliberately DB-free. The tracked Repository Map is a separate,
-DB-backed projection; after preparing and importing Planning DB, refresh it
-with `pnpm docs:status:generate --repository-map-only`.
+This mode is deliberately DB-free. Repository Map is a separate, untracked,
+DB-backed projection assembled only by an explicit `pnpm docs:publish`
+request.
 
 The local render is written to:
 

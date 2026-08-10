@@ -51,8 +51,8 @@ If the slice touches planning/docs structure or workspace structure, run require
 - `pnpm docs:sync`
 - `pnpm docs:status:generate --code-state-only` (DB-free local inventory when
   workspace source sets changed)
-- `pnpm docs:status:generate --repository-map-only` (tracked map after
-  preparing and importing Planning DB)
+- `pnpm docs:publish` only when the PR requires explicit DB-backed publication
+  acceptance; never commit the generated publication tree
 
 Then run `pnpm verify:prepush` again.
 
