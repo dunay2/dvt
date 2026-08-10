@@ -2,6 +2,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
+const { spawnSync } = require('node:child_process');
 const { afterEach, test } = require('node:test');
 
 const {
@@ -193,4 +194,15 @@ test('package and manual deploy expose one explicit publication command', () => 
   assert.doesNotMatch(pkg.scripts['docs:serve'], /docs:sync|docs:publish/u);
   assert.doesNotMatch(pkg.scripts['docs:build'], /docs:sync|docs:publish/u);
   assert.match(workflow, /run: pnpm docs:publish[\s\S]*run: pnpm docs:build/u);
+});
+
+test('docs quality accepts canonical routes declared by publication policy', () => {
+  const repoRoot = path.resolve(__dirname, '..');
+  const result = spawnSync(process.execPath, [path.join(__dirname, 'docs-quality-check.cjs')], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+  });
+
+  assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  assert.doesNotMatch(result.stderr, /repository-map\.md.*required canonical surface is missing/su);
 });
