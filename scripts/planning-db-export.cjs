@@ -561,6 +561,10 @@ ${componentLines.join('\n')}
       return JSON.stringify(this.canonicalizeStructuredValue(JSON.parse(content)));
     }
 
+    if (artifactPath === governanceUnitManifestPath) {
+      return JSON.stringify(this.canonicalizeStructuredValue(this.deps.yaml.load(content)));
+    }
+
     return content;
   }
 
