@@ -614,10 +614,15 @@ function readGitTreePaths(options = {}) {
   return entries;
 }
 
-function groupRowsByComponent(rows, knownComponentIds, rowKind) {
+function groupRowsByComponent(
+  rows,
+  knownComponentIds,
+  rowKind,
+  componentIdentity = (row) => row.component_id ?? row.componentId
+) {
   const grouped = new Map();
   for (const row of rows || []) {
-    const componentId = String(row.component_id ?? row.componentId ?? '').trim();
+    const componentId = String(componentIdentity(row) ?? '').trim();
     if (!knownComponentIds.has(componentId)) {
       throw new Error(`Unknown Planning DB ${rowKind} component ${componentId || '<empty>'}.`);
     }
@@ -719,7 +724,12 @@ function buildComponentTopologyProjection(facts, options = {}) {
     knownComponentIds,
     'maturity'
   );
-  const driftByComponent = groupRowsByComponent(facts.drift || [], knownComponentIds, 'drift');
+  const driftByComponent = groupRowsByComponent(
+    facts.drift || [],
+    knownComponentIds,
+    'drift',
+    (row) => row.subject_id ?? row.subjectId
+  );
   const currentDocuments = (facts.documents || []).filter(isCurrentCanonicalDocument);
   for (const document of currentDocuments) {
     const componentId = String(document.component_id ?? document.componentId ?? '').trim();
