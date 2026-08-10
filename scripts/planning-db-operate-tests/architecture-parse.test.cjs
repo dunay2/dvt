@@ -63,6 +63,65 @@ test('parseArgs builds an architecture design create command with scoped authori
   ]);
 });
 
+test('parseArgs builds an audited architecture design transition command', () => {
+  const command = parseArgs([
+    'architecture-design',
+    'transition',
+    '--design',
+    'R1-1D-API-GOVERNANCE-LIFECYCLE-CLOSEOUT-20260810',
+    '--from-status',
+    'review',
+    '--to-status',
+    'approved',
+    '--reason',
+    'The governed implementation and validation evidence are complete.',
+    '--source-ref',
+    'docs/architecture/components/api/index.md',
+    '--source-content-sha256',
+    'e'.repeat(64),
+    '--actor',
+    'codex',
+    '--idempotency-key',
+    'approve-r1-1d-api-governance-closeout',
+  ]);
+
+  assert.equal(command.kind, 'architecture_design_transition');
+  assert.equal(command.designId, 'R1-1D-API-GOVERNANCE-LIFECYCLE-CLOSEOUT-20260810');
+  assert.equal(command.fromStatus, 'review');
+  assert.equal(command.toStatus, 'approved');
+  assert.equal(command.sourceContentSha256, 'e'.repeat(64));
+});
+
+test('parseArgs rejects skipped and terminal architecture design transitions', () => {
+  const transitionArgs = (fromStatus, toStatus) => [
+    'architecture-design',
+    'transition',
+    '--design',
+    'R1-1D-API-GOVERNANCE-LIFECYCLE-CLOSEOUT-20260810',
+    '--from-status',
+    fromStatus,
+    '--to-status',
+    toStatus,
+    '--reason',
+    'Exercise the explicit architecture design lifecycle.',
+    '--source-ref',
+    'docs/architecture/components/api/index.md',
+    '--source-content-sha256',
+    'e'.repeat(64),
+    '--actor',
+    'codex',
+  ];
+
+  assert.throws(
+    () => parseArgs(transitionArgs('review', 'implemented')),
+    /ARCH-DESIGN-TRANSITION-INVALID/
+  );
+  assert.throws(
+    () => parseArgs(transitionArgs('superseded', 'review')),
+    /ARCH-DESIGN-TRANSITION-INVALID/
+  );
+});
+
 test('parseArgs builds architecture component and relation record commands', () => {
   const componentCommand = parseArgs([
     'architecture-component',
