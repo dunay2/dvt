@@ -101,14 +101,20 @@ function isTestPath(repositoryPath) {
   );
 }
 
+function stripLeadingEnvironmentAssignments(validationRef) {
+  return String(validationRef || '')
+    .trim()
+    .replace(/^(?:[A-Za-z_][A-Za-z0-9_]*=[^\s=;&|<>]+\s+)+/u, '');
+}
+
 function isExecutableValidation(validationRef) {
-  return /^(node|npm|npx|pnpm|python|yarn)(?:\s|$)/u.test(validationRef);
+  return /^(node|npm|npx|pnpm|python|yarn)(?:\s|$)/u.test(
+    stripLeadingEnvironmentAssignments(validationRef)
+  );
 }
 
 function packageScriptFromValidation(validationRef) {
-  const tokens = String(validationRef || '')
-    .trim()
-    .split(/\s+/u);
+  const tokens = stripLeadingEnvironmentAssignments(validationRef).split(/\s+/u);
   const runner = tokens.shift();
   if (!['npm', 'pnpm', 'yarn'].includes(runner)) return null;
   const optionsWithValues = new Set(['--dir', '--filter', '--workspace-concurrency', '-C', '-F']);
@@ -128,9 +134,7 @@ function packageScriptFromValidation(validationRef) {
 }
 
 function commandFileFromValidation(validationRef) {
-  const tokens = String(validationRef || '')
-    .trim()
-    .split(/\s+/u);
+  const tokens = stripLeadingEnvironmentAssignments(validationRef).split(/\s+/u);
   const runner = tokens.shift();
   if (!['node', 'python'].includes(runner)) return null;
   const commandPath = tokens.find((token) => !token.startsWith('-'));
