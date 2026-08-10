@@ -164,29 +164,62 @@ class DocumentationPublicationPolicy {
     return sources.sort((left, right) => left.route.localeCompare(right.route, 'en'));
   }
 
-  isNavigable(sourcePath, lifecycleRow = {}) {
-    const normalized = DocumentationPublicationPolicy.toPosix(sourcePath).toLowerCase();
-    if (
-      normalized.startsWith('docs/archive/') ||
-      normalized.startsWith('docs/planning/archive/') ||
-      normalized.includes('/_archive/') ||
-      normalized.includes('/disposable/')
-    ) {
-      return false;
+  isHistoricalPath(sourcePath) {
+    const segments = DocumentationPublicationPolicy.toPosix(sourcePath).toLowerCase().split('/');
+    return segments.some((segment) =>
+      ['archive', '_archive', 'superseded', 'disposable'].includes(segment)
+    );
+  }
+
+  assertLifecycleAuthority(sourcePath, lifecycleRow) {
+    if (!lifecycleRow) {
+      throw new Error(`Missing Planning DB lifecycle authority for ${sourcePath}.`);
     }
+    const gapKind = String(
+      lifecycleRow.lifecycle_gap_kind || lifecycleRow.lifecycleGapKind || 'none'
+    ).toLowerCase();
+    const canonicality = String(lifecycleRow.canonicality || '').toLowerCase();
+    const duplicateCount = Number(lifecycleRow.duplicate_count ?? lifecycleRow.duplicateCount ?? 0);
+    const canonicalCounterpartCount = Number(
+      lifecycleRow.canonical_counterpart_count ?? lifecycleRow.canonicalCounterpartCount ?? 0
+    );
+    const isDuplicate =
+      lifecycleRow.is_duplicate === true || lifecycleRow.isDuplicate === true || duplicateCount > 0;
+    if (
+      gapKind === 'canonical_duplicate' ||
+      (canonicality === 'canonical' && isDuplicate && canonicalCounterpartCount > 1)
+    ) {
+      throw new Error(
+        `Ambiguous Planning DB lifecycle authority for ${sourcePath}: ${gapKind}, canonicality=${canonicality}, duplicateCount=${duplicateCount}.`
+      );
+    }
+  }
+
+  isPublishable(sourcePath, lifecycleRow) {
+    this.assertLifecycleAuthority(sourcePath, lifecycleRow);
+    if (this.isHistoricalPath(sourcePath)) return false;
     const lifecycle = String(
       lifecycleRow.lifecycle_state || lifecycleRow.lifecycleState || lifecycleRow.status || ''
     ).toLowerCase();
-    return !['archive', 'archived', 'superseded', 'retired'].includes(lifecycle);
+    return ![
+      'archive',
+      'archived',
+      'discarded',
+      'disposable',
+      'rejected',
+      'retired',
+      'superseded',
+    ].includes(lifecycle);
+  }
+
+  isNavigable(sourcePath, lifecycleRow = {}) {
+    return this.isPublishable(sourcePath, lifecycleRow);
   }
 
   isDefaultNavigationEntry(source, lifecycleRow = {}) {
+    if (source.artifactClassId) return true;
     if (!this.isNavigable(source.sourcePath, lifecycleRow)) return false;
-    return (
-      Boolean(source.artifactClassId) ||
-      source.route === 'index.md' ||
-      source.route.endsWith('/index.md')
-    );
+    return source.route === 'index.md' || source.route.endsWith('/index.md');
   }
 }
 
@@ -205,6 +238,7 @@ class DocumentationPublicationAssembler {
     );
     this.lifecycleRows = options.lifecycleRows;
     this.runCommand = options.runCommand;
+    this.readGitSha = options.readGitSha;
     this.policy =
       options.policy ||
       new DocumentationPublicationPolicy({
@@ -258,6 +292,112 @@ class DocumentationPublicationAssembler {
       .sort((left, right) => left.route.localeCompare(right.route, 'en'));
   }
 
+  authoredSupportingSources() {
+    return DocumentationPublicationPolicy.walkFiles(this.docsRoot)
+      .filter((absolutePath) => !absolutePath.endsWith('.md'))
+      .map((absolutePath) => ({
+        absolutePath,
+        route: DocumentationPublicationPolicy.toPosix(relative(this.docsRoot, absolutePath)),
+        sourcePath: DocumentationPublicationPolicy.toPosix(relative(this.repoRoot, absolutePath)),
+      }))
+      .filter((source) => !this.policy.isHistoricalPath(source.sourcePath))
+      .sort((left, right) => left.route.localeCompare(right.route, 'en'));
+  }
+
+  currentGitSha() {
+    if (this.readGitSha) return String(this.readGitSha()).trim();
+    const result = spawnSync('git', ['rev-parse', 'HEAD'], {
+      cwd: this.repoRoot,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    if (result.error) throw result.error;
+    if (result.status !== 0) {
+      throw new Error(`Cannot resolve publication Git input: ${String(result.stderr).trim()}.`);
+    }
+    return String(result.stdout).trim();
+  }
+
+  static hashValue(value) {
+    return createHash('sha256').update(value).digest('hex');
+  }
+
+  static hashSources(sources) {
+    const hash = createHash('sha256');
+    for (const source of [...sources].sort((left, right) =>
+      left.sourcePath.localeCompare(right.sourcePath, 'en')
+    )) {
+      hash.update(source.sourcePath);
+      hash.update('\0');
+      hash.update(readFileSync(source.absolutePath));
+      hash.update('\0');
+    }
+    return hash.digest('hex');
+  }
+
+  buildLifecycleState(lifecycleRows, authoredSources, options = {}) {
+    const lifecycleByPath = new Map();
+    for (const row of lifecycleRows) {
+      const sourcePath = DocumentationPublicationPolicy.toPosix(
+        String(row.document_path || row.documentPath || '')
+      );
+      if (!sourcePath) continue;
+      if (lifecycleByPath.has(sourcePath)) {
+        throw new Error(`Duplicate Planning DB lifecycle authority for ${sourcePath}.`);
+      }
+      lifecycleByPath.set(sourcePath, row);
+    }
+
+    const normalizedRows = [];
+    const publishableSources = [];
+    for (const source of authoredSources) {
+      const row = lifecycleByPath.get(source.sourcePath);
+      this.policy.assertLifecycleAuthority(source.sourcePath, row);
+      const expectedSourceDigest = String(
+        row.source_content_sha256 || row.sourceContentSha256 || ''
+      ).toLowerCase();
+      const actualSourceDigest = DocumentationPublicationAssembler.hashValue(
+        readFileSync(source.absolutePath)
+      );
+      if (options.validateSourceHashes !== false && expectedSourceDigest !== actualSourceDigest) {
+        throw new Error(
+          `Documentation source input ${source.sourcePath} no longer matches Planning DB authority. Run \`pnpm docs:publish\` after refreshing the current DB state.`
+        );
+      }
+      normalizedRows.push({
+        canonicality: String(row.canonicality || ''),
+        canonicalCounterpartCount: Number(
+          row.canonical_counterpart_count ?? row.canonicalCounterpartCount ?? 0
+        ),
+        documentPath: source.sourcePath,
+        duplicateCount: Number(row.duplicate_count ?? row.duplicateCount ?? 0),
+        isDuplicate: row.is_duplicate === true || row.isDuplicate === true,
+        lifecycleGapKind: String(row.lifecycle_gap_kind || row.lifecycleGapKind || 'none'),
+        lifecycleState: String(row.lifecycle_state || row.lifecycleState || row.status || ''),
+        sourceContentSha256: expectedSourceDigest,
+      });
+      if (this.policy.isPublishable(source.sourcePath, row)) publishableSources.push(source);
+    }
+
+    normalizedRows.sort((left, right) => left.documentPath.localeCompare(right.documentPath, 'en'));
+    return {
+      lifecycleByPath,
+      lifecycleDigest: DocumentationPublicationAssembler.hashValue(JSON.stringify(normalizedRows)),
+      publishableSources,
+    };
+  }
+
+  copySource(source) {
+    const destination = resolve(this.outputRoot, source.route);
+    DocumentationPublicationPolicy.assertInside(
+      this.outputRoot,
+      destination,
+      `Publication route ${source.route}`
+    );
+    mkdirSync(dirname(destination), { recursive: true });
+    cpSync(source.absolutePath, destination);
+  }
+
   static hashFiles(root) {
     const hash = createHash('sha256');
     const files = DocumentationPublicationPolicy.walkFiles(root).sort((left, right) =>
@@ -280,14 +420,13 @@ class DocumentationPublicationAssembler {
       }
     }
 
-    const lifecycleRows = await this.resolveLifecycleRows();
-    const lifecycleByPath = new Map(
-      lifecycleRows.map((row) => [row.document_path || row.documentPath, row])
-    );
     const authoredSources = this.authoredMarkdownSources();
+    const supportingSources = this.authoredSupportingSources();
     const generatedSources = this.policy.generatedSources();
+    const lifecycleRows = await this.resolveLifecycleRows();
+    const lifecycleState = this.buildLifecycleState(lifecycleRows, authoredSources);
     const routeOwners = new Map();
-    for (const source of [...authoredSources, ...generatedSources]) {
+    for (const source of [...lifecycleState.publishableSources, ...generatedSources]) {
       const existing = routeOwners.get(source.route);
       if (existing) {
         throw new Error(
@@ -299,21 +438,20 @@ class DocumentationPublicationAssembler {
 
     rmSync(this.outputRoot, { recursive: true, force: true });
     mkdirSync(this.outputRoot, { recursive: true });
-    cpSync(this.docsRoot, this.outputRoot, { recursive: true });
-    for (const source of generatedSources) {
-      const destination = resolve(this.outputRoot, source.route);
-      DocumentationPublicationPolicy.assertInside(
-        this.outputRoot,
-        destination,
-        `Publication route ${source.route}`
-      );
-      mkdirSync(dirname(destination), { recursive: true });
-      cpSync(source.absolutePath, destination);
+    for (const source of [
+      ...lifecycleState.publishableSources,
+      ...supportingSources,
+      ...generatedSources,
+    ]) {
+      this.copySource(source);
     }
 
     const navigableRoutes = [...routeOwners.values()]
       .filter((source) =>
-        this.policy.isDefaultNavigationEntry(source, lifecycleByPath.get(source.sourcePath))
+        this.policy.isDefaultNavigationEntry(
+          source,
+          lifecycleState.lifecycleByPath.get(source.sourcePath)
+        )
       )
       .map((source) => source.route)
       .sort((left, right) => {
@@ -335,12 +473,29 @@ class DocumentationPublicationAssembler {
     );
 
     const treeDigest = DocumentationPublicationAssembler.hashFiles(this.outputRoot);
+    const sourceDigest = DocumentationPublicationAssembler.hashSources([
+      ...lifecycleState.publishableSources,
+      ...supportingSources,
+      ...generatedSources,
+    ]);
     const receipt = {
-      version: 1,
+      version: 2,
       commandRail: 'GeneratePlanningDerivedSurfaces',
       architectureQuery: 'ReadArchitectureDesignAuthority',
       consultationQuery: 'QueryDocumentationConsultationPath',
       lifecycleQuery: 'ListDocumentationLifecycleFacts',
+      gitSha: this.currentGitSha(),
+      sourceDigest,
+      lifecycleDigest: lifecycleState.lifecycleDigest,
+      policyInputDigest: DocumentationPublicationAssembler.hashValue(
+        readFileSync(this.policy.policyPath)
+      ),
+      configurationInputDigest: DocumentationPublicationAssembler.hashValue(
+        readFileSync(this.canonicalConfigPath)
+      ),
+      generatedConfigurationDigest: DocumentationPublicationAssembler.hashValue(
+        readFileSync(this.configPath)
+      ),
       routeCount: routeOwners.size,
       navigableRouteCount: navigableRoutes.length,
       treeDigest,
@@ -365,6 +520,11 @@ class DocumentationPublicationAssembler {
       );
     }
     const receipt = JSON.parse(readFileSync(this.manifestPath, 'utf8'));
+    if (receipt.version !== 2) {
+      throw new Error(
+        'Documentation publication receipt version is obsolete. Run `pnpm docs:publish` explicitly.'
+      );
+    }
     const actualDigest = DocumentationPublicationAssembler.hashFiles(this.outputRoot);
     if (receipt.treeDigest !== actualDigest) {
       throw new Error(
@@ -374,10 +534,64 @@ class DocumentationPublicationAssembler {
     if (statSync(this.outputRoot).isDirectory() !== true) {
       throw new Error('Documentation publication root is not a directory.');
     }
+    const policyInputDigest = DocumentationPublicationAssembler.hashValue(
+      readFileSync(this.policy.policyPath)
+    );
+    if (receipt.policyInputDigest !== policyInputDigest) {
+      throw new Error(
+        'Documentation publication policy input changed. Run `pnpm docs:publish` explicitly.'
+      );
+    }
+    const configurationInputDigest = DocumentationPublicationAssembler.hashValue(
+      readFileSync(this.canonicalConfigPath)
+    );
+    if (receipt.configurationInputDigest !== configurationInputDigest) {
+      throw new Error(
+        'Documentation publication configuration input changed. Run `pnpm docs:publish` explicitly.'
+      );
+    }
+    const gitSha = this.currentGitSha();
+    if (receipt.gitSha !== gitSha) {
+      throw new Error(
+        'Documentation publication Git input changed. Run `pnpm docs:publish` explicitly.'
+      );
+    }
     const config = loadYaml(readFileSync(this.configPath, 'utf8')) || {};
     if (config.docs_dir !== 'publication') {
       throw new Error('Generated Zensical config must consume the disposable publication tree.');
     }
+    const generatedConfigurationDigest = DocumentationPublicationAssembler.hashValue(
+      readFileSync(this.configPath)
+    );
+    if (receipt.generatedConfigurationDigest !== generatedConfigurationDigest) {
+      throw new Error(
+        'Generated documentation configuration no longer matches its receipt. Run `pnpm docs:publish` explicitly.'
+      );
+    }
+
+    const authoredSources = this.authoredMarkdownSources();
+    const supportingSources = this.authoredSupportingSources();
+    const generatedSources = this.policy.generatedSources();
+    const lifecycleRows = await this.resolveLifecycleRows();
+    const lifecycleState = this.buildLifecycleState(lifecycleRows, authoredSources, {
+      validateSourceHashes: false,
+    });
+    if (receipt.lifecycleDigest !== lifecycleState.lifecycleDigest) {
+      throw new Error(
+        'Documentation publication lifecycle input changed. Run `pnpm docs:publish` explicitly.'
+      );
+    }
+    const sourceDigest = DocumentationPublicationAssembler.hashSources([
+      ...lifecycleState.publishableSources,
+      ...supportingSources,
+      ...generatedSources,
+    ]);
+    if (receipt.sourceDigest !== sourceDigest) {
+      throw new Error(
+        'Documentation publication source input changed. Run `pnpm docs:publish` explicitly.'
+      );
+    }
+    this.buildLifecycleState(lifecycleRows, authoredSources);
     return receipt;
   }
 }
