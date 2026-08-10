@@ -331,6 +331,48 @@ test('verification commands must exist in the repository command catalog', () =>
   assert.deepEqual(emptyCatalogProjection.features[0].verificationCommands, []);
 });
 
+test('environment-prefixed verification commands still require catalog authority', () => {
+  const facts = exactFacts();
+  facts.validations.push(
+    {
+      feature_id: 'FEATURE-A',
+      validation_kind: 'architecture',
+      validation_ref: 'GIT_BASE=origin/main GIT_HEAD=HEAD node tools/ci/arc-check.mjs',
+    },
+    {
+      feature_id: 'FEATURE-A',
+      validation_kind: 'completion',
+      validation_ref: 'DVT_MODE=strict node tools/ci/not-registered.mjs',
+    }
+  );
+  facts.commands.push({
+    command_id: 'file:tools/ci/arc-check.mjs',
+    command_type: 'command_file',
+    command_name: 'arc-check.mjs',
+    command_path: 'tools/ci/arc-check.mjs',
+    command_text: 'node tools/ci/arc-check.mjs',
+  });
+  const projection = buildFeatureTraceabilityProjection(facts, {
+    gitSha,
+    gitTreePaths: new Map([
+      ['docs/architecture/components/example.md', 'blob'],
+      ['packages/@dvt/example/src/execute.ts', 'blob'],
+      ['packages/@dvt/example/test/execute.test.ts', 'blob'],
+    ]),
+  });
+
+  assert.ok(
+    projection.features[0].verificationCommands.includes(
+      'GIT_BASE=origin/main GIT_HEAD=HEAD node tools/ci/arc-check.mjs'
+    )
+  );
+  assert.ok(
+    projection.features[0].gaps.includes(
+      'unregistered-verification-command:FEATURE-A#DVT_MODE=strict node tools/ci/not-registered.mjs'
+    )
+  );
+});
+
 test('both stable traceability routes render deterministically from one projection', () => {
   const projection = buildFeatureTraceabilityProjection(exactFacts(), {
     gitSha,
