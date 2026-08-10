@@ -511,7 +511,7 @@ function renderRepositoryMap(workspaces, facts, utcDate) {
     '',
     '## Related authored context',
     '',
-    '- [Component Map](../architecture/component-map.md) for authored component responsibilities and relations.',
+    '- [Component Map](../architecture/component-map.md) for the DB-first component catalog and exact directed relations.',
     '- [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md) for topic-level code, test, command, and evidence navigation.',
     '- [System Delivery Status](../architecture/system-delivery-status.md) for current delivery and maturity interpretation.',
     '- [Glossary](./glossary.md) and [Domain Language](./domain-language.md) for repository terminology.',
