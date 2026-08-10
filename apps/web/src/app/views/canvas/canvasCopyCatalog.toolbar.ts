@@ -151,42 +151,6 @@ export const canvasViewToolbarCopyByKey = {
     key: 'canvas.graphFilter.tagDimensionLabel',
     fallback: 'Tag',
   },
-  canvasNodeToolbarLabelTemplate: {
-    key: 'canvas.nodeToolbar.labelTemplate',
-    fallback: 'Node actions: {nodeName}',
-  },
-  canvasNodeToolbarCodeLabel: {
-    key: 'canvas.nodeToolbar.codeLabel',
-    fallback: 'Open node code',
-  },
-  canvasNodeToolbarCodeDescription: {
-    key: 'canvas.nodeToolbar.codeDescription',
-    fallback: 'Open the selected node code in its contextual workbench.',
-  },
-  canvasNodeToolbarFreezeLabel: {
-    key: 'canvas.nodeToolbar.freezeLabel',
-    fallback: 'Freeze node',
-  },
-  canvasNodeToolbarFreezeDescription: {
-    key: 'canvas.nodeToolbar.freezeDescription',
-    fallback: 'Keep this node fixed in its current canvas position.',
-  },
-  canvasNodeToolbarUnfreezeLabel: {
-    key: 'canvas.nodeToolbar.unfreezeLabel',
-    fallback: 'Unfreeze node',
-  },
-  canvasNodeToolbarUnfreezeDescription: {
-    key: 'canvas.nodeToolbar.unfreezeDescription',
-    fallback: 'Allow this node to move on the canvas again.',
-  },
-  canvasNodeToolbarMoreLabel: {
-    key: 'canvas.nodeToolbar.moreLabel',
-    fallback: 'More node actions',
-  },
-  canvasNodeToolbarMoreDescription: {
-    key: 'canvas.nodeToolbar.moreDescription',
-    fallback: 'Open the governed contextual actions for this node.',
-  },
   canvasNodeContextEditGroupLabel: {
     key: 'canvas.nodeContext.editGroupLabel',
     fallback: 'Edit',

@@ -291,10 +291,10 @@ export function CanvasNodeWorkbenchPanel({
             variant="outline"
             size="sm"
             data-slot="canvas-node-workbench-open-code-editor"
-            aria-label={copy.canvasNodeToolbarCodeDescription}
+            aria-label={copy.nodeWorkbenchOpenCodeDescription}
             onClick={onOpenNodeCode}
           >
-            {copy.canvasNodeToolbarCodeLabel}
+            {copy.nodeWorkbenchOpenCodeLabel}
           </Button>
         </div>
         {sectionBeforeChildren.code}

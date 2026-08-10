@@ -262,6 +262,14 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.nodeWorkbench.moreLabel',
     fallback: 'More',
   },
+  nodeWorkbenchOpenCodeLabel: {
+    key: 'canvas.nodeWorkbench.openCodeLabel',
+    fallback: 'Open node code',
+  },
+  nodeWorkbenchOpenCodeDescription: {
+    key: 'canvas.nodeWorkbench.openCodeDescription',
+    fallback: 'Open this node code in the contextual editor.',
+  },
   sqlContextWorkbenchNodeTitle: {
     key: 'canvas.sqlContextWorkbench.nodeTitle',
     fallback: 'Node code',

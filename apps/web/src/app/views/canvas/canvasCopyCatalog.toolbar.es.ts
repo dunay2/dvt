@@ -43,17 +43,6 @@ export const canvasViewToolbarCopyEs = {
   canvasGraphFilterRoleDimensionLabel: 'Rol',
   canvasGraphFilterStatusDimensionLabel: 'Estado',
   canvasGraphFilterTagDimensionLabel: 'Etiqueta',
-  canvasNodeToolbarLabelTemplate: 'Acciones del nodo: {nodeName}',
-  canvasNodeToolbarCodeLabel: 'Abrir código del nodo',
-  canvasNodeToolbarCodeDescription:
-    'Abre el código del nodo seleccionado en su banco de trabajo contextual.',
-  canvasNodeToolbarFreezeLabel: 'Congelar nodo',
-  canvasNodeToolbarFreezeDescription: 'Mantiene este nodo fijo en su posición actual del canvas.',
-  canvasNodeToolbarUnfreezeLabel: 'Descongelar nodo',
-  canvasNodeToolbarUnfreezeDescription: 'Permite volver a mover este nodo por el canvas.',
-  canvasNodeToolbarMoreLabel: 'Más acciones del nodo',
-  canvasNodeToolbarMoreDescription:
-    'Abre las acciones contextuales gobernadas disponibles para este nodo.',
   canvasNodeContextEditGroupLabel: 'Editar',
   canvasNodeContextDuplicateLabel: 'Duplicar',
   canvasNodeContextSelectForExecutionLabel: 'Seleccionar para ejecución',
