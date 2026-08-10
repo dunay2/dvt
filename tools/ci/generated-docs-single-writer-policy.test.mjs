@@ -42,7 +42,9 @@ test('generated-doc policy declares single-writer ownership for required artifac
   const requiredIds = [
     'tracked-docs-sync-indexes',
     'planning-local-indexes',
-    'tracked-docs-status-code-state',
+    'local-docs-status-code-state',
+    'local-docs-status-knowledge-intake-literature',
+    'local-docs-status-db-surface-inventory',
     'tracked-docs-status-capability-coverage',
     'local-docs-feature-traceability',
     'tracked-docs-manifest',
