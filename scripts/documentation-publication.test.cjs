@@ -740,6 +740,7 @@ test('published docs expose keyboard table regions and a focus-correct skip link
   const style = fs.readFileSync(stylePath, 'utf8');
   assert.match(style, /\.md-typeset__scrollwrap:focus-visible/u);
   assert.match(style, /outline/u);
+  assert.match(style, /\.md-nav__link--active[\s\S]*?color:\s*#3f51b5/u);
 });
 
 test('docs quality accepts canonical routes declared by publication policy', () => {
