@@ -81,6 +81,12 @@ test('current schema accepts audited architecture storage I/O records', () => {
   );
 });
 
+test('current schema accepts architecture design scopes for ports', () => {
+  const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
+
+  assert.match(schemaSql, /architecture_design_scope_subject_kind_check[^\r\n]*'port'::text/u);
+});
+
 test('Planning DB import contains no dormant local task registry compatibility', () => {
   const importSource = fs.readFileSync(path.join(__dirname, 'planning-db-import.cjs'), 'utf8');
 
