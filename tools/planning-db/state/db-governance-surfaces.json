@@ -2,13 +2,23 @@
   "schemaVersion": 1,
   "surfaces": [
     {
-      "surfaceName": "Governance file inventory",
-      "canonicalSource": "Git-tracked documentation and source files indexed into Planning DB governance tables",
-      "writeRail": "Edit the owning Git source, then run pnpm governance:refresh or pnpm governance:db:import",
-      "writeRailKind": "import",
-      "readQueryRail": "pnpm governance:db:query files|components|drift",
-      "projection": "docs/.manifest.json and generated governance indexes",
-      "validation": "pnpm governance:db:check; pnpm governance:db:export:check",
+      "surfaceName": "ADR and contract decisions",
+      "canonicalSource": "docs/adr and specs/contracts source documents",
+      "writeRail": "Git edit through ADR or contract review",
+      "writeRailKind": "git_edit",
+      "readQueryRail": "pnpm governance:db:query files --prefix docs/adr",
+      "projection": "Documentation indexes and the governance file inventory",
+      "validation": "pnpm docs:sync:check; pnpm contracts:index:check; pnpm docs:arc:evidence:check",
+      "authorityMode": "git-indexed"
+    },
+    {
+      "surfaceName": "AI project context",
+      "canonicalSource": "Aggregate read model over current Planning DB projections for rails, components, work, debt, and readiness",
+      "writeRail": "No write rail; the aggregate is read-only",
+      "writeRailKind": "none",
+      "readQueryRail": "pnpm planning:db:query ai-project-context --format json|markdown",
+      "projection": "In-memory aggregate from Planning DB query projections",
+      "validation": "node --test scripts/planning-db-query.test.cjs; pnpm planning:db:inventory:check",
       "authorityMode": "hybrid-indexed"
     },
     {
@@ -22,56 +32,6 @@
       "authorityMode": "database"
     },
     {
-      "surfaceName": "Governance component definition",
-      "canonicalSource": "DB-authored component definitions plus the imported governance component projection",
-      "writeRail": "pnpm planning:db:operate component create",
-      "writeRailKind": "db_command",
-      "readQueryRail": "pnpm planning:db:query component-tree|component-metadata",
-      "projection": "Effective scalar component definitions and file ownership rows",
-      "validation": "pnpm test:planning:db:current-schema; pnpm planning:db:current-schema:check",
-      "authorityMode": "database"
-    },
-    {
-      "surfaceName": "Governance remediation queue",
-      "canonicalSource": "Governance DB coverage and fingerprint reports after refresh",
-      "writeRail": "Fix the owning docs, config, code, or scripts, then run pnpm governance:refresh",
-      "writeRailKind": "generated",
-      "readQueryRail": "pnpm governance:db:query remediation|coverage",
-      "projection": "Generated governance coverage and remediation reports",
-      "validation": "pnpm docs:governance:coverage-report:check; pnpm docs:governance:remediation-queue:check",
-      "authorityMode": "generated"
-    },
-    {
-      "surfaceName": "ADR and contract decisions",
-      "canonicalSource": "docs/adr and specs/contracts source documents",
-      "writeRail": "Git edit through ADR or contract review",
-      "writeRailKind": "git_edit",
-      "readQueryRail": "pnpm governance:db:query files --prefix docs/adr",
-      "projection": "Documentation indexes and the governance file inventory",
-      "validation": "pnpm docs:sync:check; pnpm contracts:index:check; pnpm docs:arc:evidence:check",
-      "authorityMode": "git-indexed"
-    },
-    {
-      "surfaceName": "Risk and evidence records",
-      "canonicalSource": "docs/evidence and docs/risk-register source documents",
-      "writeRail": "Git edit through ARC evidence and risk-register rules",
-      "writeRailKind": "git_edit",
-      "readQueryRail": "pnpm governance:db:query files --prefix docs/evidence",
-      "projection": "docs/evidence/index.md and docs/risk-register/index.md",
-      "validation": "pnpm docs:sync:check; pnpm docs:arc:evidence:check",
-      "authorityMode": "git-indexed"
-    },
-    {
-      "surfaceName": "Repository command catalog",
-      "canonicalSource": "tools/ci/repository-command-catalog.mjs indexed into Planning DB command rows",
-      "writeRail": "Git edit to the command catalog or its owning workflow source",
-      "writeRailKind": "git_edit",
-      "readQueryRail": "pnpm planning:db:query commands; pnpm planning:db:query pr-readiness",
-      "projection": "Repository command and PR-readiness query output",
-      "validation": "pnpm test:ci-tools; pnpm docs:feature-mechanization:implementation",
-      "authorityMode": "hybrid-indexed"
-    },
-    {
       "surfaceName": "Command/query rail catalog",
       "canonicalSource": "Feature manifests, explicit rail documentation, and current canonical rail decisions",
       "writeRail": "Use the owning bounded-context rail, then export the current Planning DB state",
@@ -82,34 +42,14 @@
       "authorityMode": "hybrid-indexed"
     },
     {
-      "surfaceName": "Knowledge intake literature",
-      "canonicalSource": "Knowledge documents, links, actions, and component ownership projections",
-      "writeRail": "pnpm governance:refresh or pnpm docs:knowledge-intake:generate after DB import",
-      "writeRailKind": "import",
-      "readQueryRail": "pnpm planning:db:query knowledge-intake",
-      "projection": ".generated-docs/planning/status/generated-knowledge-intake-literature.md",
-      "validation": "pnpm docs:knowledge-intake:check; pnpm governance:refresh",
-      "authorityMode": "hybrid-indexed"
-    },
-    {
-      "surfaceName": "Documentation lifecycle catalog",
-      "canonicalSource": "Knowledge documents, links, actions, repository back-references, and lifecycle projections",
-      "writeRail": "Edit the owning Git source, then run pnpm governance:refresh or pnpm governance:db:import",
-      "writeRailKind": "import",
-      "readQueryRail": "pnpm planning:db:query documentation-lifecycle",
-      "projection": "planning_query_store.documentation_lifecycle_query",
-      "validation": "pnpm test:planning:db:current-schema; node --test scripts/planning-db-query.test.cjs",
-      "authorityMode": "hybrid-indexed"
-    },
-    {
-      "surfaceName": "AI project context",
-      "canonicalSource": "Aggregate read model over current Planning DB projections for rails, components, work, debt, and readiness",
-      "writeRail": "No write rail; the aggregate is read-only",
-      "writeRailKind": "none",
-      "readQueryRail": "pnpm planning:db:query ai-project-context --format json|markdown",
-      "projection": "In-memory aggregate from Planning DB query projections",
-      "validation": "node --test scripts/planning-db-query.test.cjs; pnpm planning:db:inventory:check",
-      "authorityMode": "hybrid-indexed"
+      "surfaceName": "Docs resolution overlays",
+      "canonicalSource": "planning_query_store.doc_resolution_overlays keyed to current source hashes",
+      "writeRail": "pnpm planning:db:operate docs-disposition resolve",
+      "writeRailKind": "db_command",
+      "readQueryRail": "pnpm planning:db:query docs-disposition --resolution <state>",
+      "projection": "doc_disposition_action_query rows",
+      "validation": "pnpm test:planning:db; pnpm planning:db:query docs-disposition --resolution all",
+      "authorityMode": "database"
     },
     {
       "surfaceName": "Docs task disposition inventory",
@@ -122,14 +62,74 @@
       "authorityMode": "git-indexed"
     },
     {
-      "surfaceName": "Docs resolution overlays",
-      "canonicalSource": "planning_query_store.doc_resolution_overlays keyed to current source hashes",
-      "writeRail": "pnpm planning:db:operate docs-disposition resolve",
+      "surfaceName": "Documentation lifecycle catalog",
+      "canonicalSource": "Knowledge documents, links, actions, repository back-references, and lifecycle projections",
+      "writeRail": "Edit the owning Git source, then run pnpm governance:refresh or pnpm governance:db:import",
+      "writeRailKind": "import",
+      "readQueryRail": "pnpm planning:db:query documentation-lifecycle",
+      "projection": "planning_query_store.documentation_lifecycle_query",
+      "validation": "pnpm test:planning:db:current-schema; node --test scripts/planning-db-query.test.cjs",
+      "authorityMode": "hybrid-indexed"
+    },
+    {
+      "surfaceName": "Governance component definition",
+      "canonicalSource": "DB-authored component definitions and DB-authored overrides over the imported governance component projection",
+      "writeRail": "pnpm planning:db:operate component create|revise|reparent",
       "writeRailKind": "db_command",
-      "readQueryRail": "pnpm planning:db:query docs-disposition --resolution <state>",
-      "projection": "doc_disposition_action_query rows",
-      "validation": "pnpm test:planning:db; pnpm planning:db:query docs-disposition --resolution all",
+      "readQueryRail": "pnpm planning:db:query component-tree|component-metadata",
+      "projection": "Effective definitions, ownership and canonical recovery state generated only by explicit refresh or export",
+      "validation": "pnpm test:planning:db:current-schema; pnpm planning:db:current-schema:check; pnpm planning:db:export:check",
       "authorityMode": "database"
+    },
+    {
+      "surfaceName": "Governance file inventory",
+      "canonicalSource": "Git-tracked documentation and source files indexed into Planning DB governance tables",
+      "writeRail": "Edit the owning Git source, then run pnpm governance:refresh or pnpm governance:db:import",
+      "writeRailKind": "import",
+      "readQueryRail": "pnpm governance:db:query files|components|drift",
+      "projection": "docs/.manifest.json and generated governance indexes",
+      "validation": "pnpm governance:db:check; pnpm governance:db:export:check",
+      "authorityMode": "hybrid-indexed"
+    },
+    {
+      "surfaceName": "Governance remediation queue",
+      "canonicalSource": "Governance DB coverage and fingerprint reports after refresh",
+      "writeRail": "Fix the owning docs, config, code, or scripts, then run pnpm governance:refresh",
+      "writeRailKind": "generated",
+      "readQueryRail": "pnpm governance:db:query remediation|coverage",
+      "projection": "Generated governance coverage and remediation reports",
+      "validation": "pnpm docs:governance:coverage-report:check; pnpm docs:governance:remediation-queue:check",
+      "authorityMode": "generated"
+    },
+    {
+      "surfaceName": "Knowledge intake literature",
+      "canonicalSource": "Knowledge documents, links, actions, and component ownership projections",
+      "writeRail": "pnpm governance:refresh or pnpm docs:knowledge-intake:generate after DB import",
+      "writeRailKind": "import",
+      "readQueryRail": "pnpm planning:db:query knowledge-intake",
+      "projection": ".generated-docs/planning/status/generated-knowledge-intake-literature.md",
+      "validation": "pnpm docs:knowledge-intake:check; pnpm governance:refresh",
+      "authorityMode": "hybrid-indexed"
+    },
+    {
+      "surfaceName": "Repository command catalog",
+      "canonicalSource": "tools/ci/repository-command-catalog.mjs indexed into Planning DB command rows",
+      "writeRail": "Git edit to the command catalog or its owning workflow source",
+      "writeRailKind": "git_edit",
+      "readQueryRail": "pnpm planning:db:query commands; pnpm planning:db:query pr-readiness",
+      "projection": "Repository command and PR-readiness query output",
+      "validation": "pnpm test:ci-tools; pnpm docs:feature-mechanization:implementation",
+      "authorityMode": "hybrid-indexed"
+    },
+    {
+      "surfaceName": "Risk and evidence records",
+      "canonicalSource": "docs/evidence and docs/risk-register source documents",
+      "writeRail": "Git edit through ARC evidence and risk-register rules",
+      "writeRailKind": "git_edit",
+      "readQueryRail": "pnpm governance:db:query files --prefix docs/evidence",
+      "projection": "docs/evidence/index.md and docs/risk-register/index.md",
+      "validation": "pnpm docs:sync:check; pnpm docs:arc:evidence:check",
+      "authorityMode": "git-indexed"
     }
   ]
 }

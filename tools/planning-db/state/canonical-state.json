@@ -122353,7 +122353,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-export.cjs",
-      "sourceContentSha256": "8a2f755d1fcf79c06596ceea1fafdb26c0e4f96c2e54e738967128535cf0cb9b",
+      "sourceContentSha256": "506510f9395af1d3e6d8c17383dd67bd2809665530ed4d24ed9d7900cf7438fc",
       "rawRail": {
         "name": "ExportPlanningDbCanonicalArchitectureState",
         "type": "command",
@@ -122484,7 +122484,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-import.cjs",
-      "sourceContentSha256": "d11d0feb26277bdd535e2285c65c702091a7e7fed8aace3199bebdd7a686589f",
+      "sourceContentSha256": "eaa5f72e7d5ae345c68a748905105b862f6e7458c06f536cce0e67b654950639",
       "rawRail": {
         "name": "RestorePlanningDbCanonicalArchitectureState",
         "type": "command",
@@ -149049,6 +149049,533 @@
         ]
       },
       "createdAt": "2026-08-10T21:08:56.592Z"
+    }
+  ],
+  "governanceComponentDefinitions": [
+    {
+      "componentId": "SYS-API-DOCS",
+      "sourcePath": "docs/architecture/components/api/index.md",
+      "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+      "revision": 1,
+      "name": "API local documentation",
+      "level": "component",
+      "parentComponentId": "SYS-API-ROOT",
+      "rootUnit": "SYS-DVT",
+      "domainUnit": "SYS-DVT",
+      "status": "superseded",
+      "childrenRequired": false,
+      "ownedConcern": "Retired API-local documentation ownership; canonical API architecture is queried from Planning DB.",
+      "dddOwner": "INFRA",
+      "cqRails": "none - API local documentation",
+      "createdBy": "codex",
+      "createdAt": "2026-08-10T22:24:17.161Z"
+    },
+    {
+      "componentId": "SYS-API-TESTS",
+      "sourcePath": "docs/architecture/components/api/index.md",
+      "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+      "revision": 1,
+      "name": "API app, integration, module, infrastructure, and fixture tests",
+      "level": "component",
+      "parentComponentId": "SYS-API-ROOT",
+      "rootUnit": "SYS-DVT",
+      "domainUnit": "SYS-DVT",
+      "status": "coverage-required",
+      "childrenRequired": false,
+      "ownedConcern": "Owns API unit tests not delegated to narrower test components.",
+      "dddOwner": "INFRA",
+      "cqRails": "API validation suites",
+      "createdBy": "codex",
+      "createdAt": "2026-08-10T22:24:19.649Z"
+    },
+    {
+      "componentId": "SYS-PLANSTORE-API-COMPOSITION",
+      "sourcePath": "docs/architecture/components/api/index.md",
+      "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+      "revision": 1,
+      "name": "API plan-store composition and resolvers",
+      "level": "component",
+      "parentComponentId": "SYS-PLANSTORE",
+      "rootUnit": "SYS-DVT",
+      "domainUnit": "SYS-PLANSTORE",
+      "status": "review",
+      "childrenRequired": true,
+      "ownedConcern": "API stored-plan composition, planRef parsing, and artifact resolver ownership.",
+      "dddOwner": "AS",
+      "cqRails": "PS-Q03, PS-C02",
+      "createdBy": "codex",
+      "createdAt": "2026-08-10T22:22:35.911Z"
+    }
+  ],
+  "governanceComponentOwnershipPatterns": [
+    {
+      "componentId": "SYS-API-TESTS",
+      "patternKind": "excludes",
+      "pattern": "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts",
+      "patternOrder": 0,
+      "createdAt": "2026-08-10T22:24:19.593Z"
+    },
+    {
+      "componentId": "SYS-API-TESTS",
+      "patternKind": "excludes",
+      "pattern": "apps/api/test/application/services/WorkflowEngineFactory.test.ts",
+      "patternOrder": 1,
+      "createdAt": "2026-08-10T22:24:19.593Z"
+    },
+    {
+      "componentId": "SYS-API-TESTS",
+      "patternKind": "excludes",
+      "pattern": "apps/api/test/application/services/storedPlanExecutabilityValidator/**",
+      "patternOrder": 2,
+      "createdAt": "2026-08-10T22:24:19.593Z"
+    },
+    {
+      "componentId": "SYS-API-TESTS",
+      "patternKind": "excludes",
+      "pattern": "apps/api/test/entrypoints/http/**",
+      "patternOrder": 3,
+      "createdAt": "2026-08-10T22:24:19.593Z"
+    },
+    {
+      "componentId": "SYS-API-TESTS",
+      "patternKind": "excludes",
+      "pattern": "apps/api/test/infrastructure/planner/ManifestArtifactResolver.test.ts",
+      "patternOrder": 4,
+      "createdAt": "2026-08-10T22:24:19.593Z"
+    },
+    {
+      "componentId": "SYS-API-TESTS",
+      "patternKind": "excludes",
+      "pattern": "apps/api/test/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.test.ts",
+      "patternOrder": 5,
+      "createdAt": "2026-08-10T22:24:19.593Z"
+    },
+    {
+      "componentId": "SYS-API-TESTS",
+      "patternKind": "owns",
+      "pattern": "apps/api/test/**",
+      "patternOrder": 0,
+      "createdAt": "2026-08-10T22:24:19.593Z"
+    },
+    {
+      "componentId": "SYS-PLANSTORE-API-COMPOSITION",
+      "patternKind": "owns",
+      "pattern": "apps/api/src/application/errors/ManifestArtifactResolutionError.ts",
+      "patternOrder": 0,
+      "createdAt": "2026-08-10T22:22:35.861Z"
+    },
+    {
+      "componentId": "SYS-PLANSTORE-API-COMPOSITION",
+      "patternKind": "owns",
+      "pattern": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+      "patternOrder": 1,
+      "createdAt": "2026-08-10T22:22:35.861Z"
+    },
+    {
+      "componentId": "SYS-PLANSTORE-API-COMPOSITION",
+      "patternKind": "owns",
+      "pattern": "apps/api/src/application/services/StoredPlanExecutabilityValidator.ts",
+      "patternOrder": 2,
+      "createdAt": "2026-08-10T22:22:35.861Z"
+    },
+    {
+      "componentId": "SYS-PLANSTORE-API-COMPOSITION",
+      "patternKind": "owns",
+      "pattern": "apps/api/src/application/services/WorkflowEngineFactory.ts",
+      "patternOrder": 3,
+      "createdAt": "2026-08-10T22:22:35.861Z"
+    },
+    {
+      "componentId": "SYS-PLANSTORE-API-COMPOSITION",
+      "patternKind": "owns",
+      "pattern": "apps/api/src/entrypoints/http/planRefHttpMapper.ts",
+      "patternOrder": 4,
+      "createdAt": "2026-08-10T22:22:35.861Z"
+    },
+    {
+      "componentId": "SYS-PLANSTORE-API-COMPOSITION",
+      "patternKind": "owns",
+      "pattern": "apps/api/src/entrypoints/http/planRoutePlanRefParser.ts",
+      "patternOrder": 5,
+      "createdAt": "2026-08-10T22:22:35.861Z"
+    },
+    {
+      "componentId": "SYS-PLANSTORE-API-COMPOSITION",
+      "patternKind": "owns",
+      "pattern": "apps/api/src/infrastructure/planner/ManifestArtifactResolver.ts",
+      "patternOrder": 6,
+      "createdAt": "2026-08-10T22:22:35.861Z"
+    },
+    {
+      "componentId": "SYS-PLANSTORE-API-COMPOSITION",
+      "patternKind": "owns",
+      "pattern": "apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts",
+      "patternOrder": 7,
+      "createdAt": "2026-08-10T22:22:35.861Z"
+    },
+    {
+      "componentId": "SYS-PLANSTORE-API-COMPOSITION",
+      "patternKind": "owns",
+      "pattern": "apps/api/src/infrastructure/startRun/ArtifactStoreDbtProjectBundleBindingPolicy.ts",
+      "patternOrder": 8,
+      "createdAt": "2026-08-10T22:22:35.861Z"
+    },
+    {
+      "componentId": "SYS-PLANSTORE-API-COMPOSITION",
+      "patternKind": "owns",
+      "pattern": "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts",
+      "patternOrder": 9,
+      "createdAt": "2026-08-10T22:22:35.861Z"
+    },
+    {
+      "componentId": "SYS-PLANSTORE-API-COMPOSITION",
+      "patternKind": "owns",
+      "pattern": "apps/api/test/application/services/WorkflowEngineFactory.test.ts",
+      "patternOrder": 10,
+      "createdAt": "2026-08-10T22:22:35.861Z"
+    },
+    {
+      "componentId": "SYS-PLANSTORE-API-COMPOSITION",
+      "patternKind": "owns",
+      "pattern": "apps/api/test/application/services/storedPlanExecutabilityValidator/**",
+      "patternOrder": 11,
+      "createdAt": "2026-08-10T22:22:35.861Z"
+    },
+    {
+      "componentId": "SYS-PLANSTORE-API-COMPOSITION",
+      "patternKind": "owns",
+      "pattern": "apps/api/test/entrypoints/http/planRoutePlanSourcePolicy.test.ts",
+      "patternOrder": 12,
+      "createdAt": "2026-08-10T22:22:35.861Z"
+    },
+    {
+      "componentId": "SYS-PLANSTORE-API-COMPOSITION",
+      "patternKind": "owns",
+      "pattern": "apps/api/test/infrastructure/planner/ManifestArtifactResolver.test.ts",
+      "patternOrder": 13,
+      "createdAt": "2026-08-10T22:22:35.861Z"
+    },
+    {
+      "componentId": "SYS-PLANSTORE-API-COMPOSITION",
+      "patternKind": "owns",
+      "pattern": "apps/api/test/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.test.ts",
+      "patternOrder": 14,
+      "createdAt": "2026-08-10T22:22:35.861Z"
+    }
+  ],
+  "governanceComponentSemanticItems": [
+    {
+      "componentId": "SYS-API-DOCS",
+      "itemKind": "fowler_signal",
+      "itemValue": "coverage refinement",
+      "itemOrder": 0,
+      "createdAt": "2026-08-10T22:24:17.109Z"
+    },
+    {
+      "componentId": "SYS-API-DOCS",
+      "itemKind": "governance_ref",
+      "itemValue": "docs/DOCS_README.md",
+      "itemOrder": 0,
+      "createdAt": "2026-08-10T22:24:17.109Z"
+    },
+    {
+      "componentId": "SYS-API-DOCS",
+      "itemKind": "governance_ref",
+      "itemValue": "docs/planning/status/system-operations-inventory-20260501.md",
+      "itemOrder": 1,
+      "createdAt": "2026-08-10T22:24:17.109Z"
+    },
+    {
+      "componentId": "SYS-API-TESTS",
+      "itemKind": "fowler_signal",
+      "itemValue": "coverage refinement",
+      "itemOrder": 0,
+      "createdAt": "2026-08-10T22:24:19.593Z"
+    },
+    {
+      "componentId": "SYS-API-TESTS",
+      "itemKind": "governance_ref",
+      "itemValue": "docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md",
+      "itemOrder": 0,
+      "createdAt": "2026-08-10T22:24:19.593Z"
+    },
+    {
+      "componentId": "SYS-API-TESTS",
+      "itemKind": "governance_ref",
+      "itemValue": "docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md",
+      "itemOrder": 1,
+      "createdAt": "2026-08-10T22:24:19.593Z"
+    },
+    {
+      "componentId": "SYS-API-TESTS",
+      "itemKind": "governance_ref",
+      "itemValue": "docs/guides/testing-and-ci-capabilities.md",
+      "itemOrder": 2,
+      "createdAt": "2026-08-10T22:24:19.593Z"
+    },
+    {
+      "componentId": "SYS-API-TESTS",
+      "itemKind": "governance_ref",
+      "itemValue": "docs/planning/status/system-operations-inventory-20260501.md",
+      "itemOrder": 3,
+      "createdAt": "2026-08-10T22:24:19.593Z"
+    },
+    {
+      "componentId": "SYS-PLANSTORE-API-COMPOSITION",
+      "itemKind": "fowler_signal",
+      "itemValue": "hidden authority",
+      "itemOrder": 0,
+      "createdAt": "2026-08-10T22:22:35.861Z"
+    },
+    {
+      "componentId": "SYS-PLANSTORE-API-COMPOSITION",
+      "itemKind": "fowler_signal",
+      "itemValue": "boundary drift",
+      "itemOrder": 1,
+      "createdAt": "2026-08-10T22:22:35.861Z"
+    },
+    {
+      "componentId": "SYS-PLANSTORE-API-COMPOSITION",
+      "itemKind": "governance_ref",
+      "itemValue": "docs/planning/status/system-operations-inventory-20260501.md",
+      "itemOrder": 0,
+      "createdAt": "2026-08-10T22:22:35.861Z"
+    },
+    {
+      "componentId": "SYS-PLANSTORE-API-COMPOSITION",
+      "itemKind": "governance_ref",
+      "itemValue": "docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md",
+      "itemOrder": 1,
+      "createdAt": "2026-08-10T22:22:35.861Z"
+    },
+    {
+      "componentId": "SYS-PLANSTORE-API-COMPOSITION",
+      "itemKind": "public_api",
+      "itemValue": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+      "itemOrder": 0,
+      "createdAt": "2026-08-10T22:22:35.861Z"
+    },
+    {
+      "componentId": "SYS-PLANSTORE-API-COMPOSITION",
+      "itemKind": "public_api",
+      "itemValue": "apps/api/src/application/services/StoredPlanExecutabilityValidator.ts",
+      "itemOrder": 1,
+      "createdAt": "2026-08-10T22:22:35.861Z"
+    },
+    {
+      "componentId": "SYS-PLANSTORE-API-COMPOSITION",
+      "itemKind": "public_api",
+      "itemValue": "apps/api/src/entrypoints/http/planRoutePlanRefParser.ts",
+      "itemOrder": 2,
+      "createdAt": "2026-08-10T22:22:35.861Z"
+    }
+  ],
+  "governanceComponentOperations": [
+    {
+      "operationId": "53f226c7-3377-4624-9783-4d501fce9d6c",
+      "idempotencyKey": "gh-2167-revise-planstore-api-20260810",
+      "operationType": "component_revise",
+      "actor": "codex",
+      "componentId": "SYS-PLANSTORE-API-COMPOSITION",
+      "sourcePath": "docs/architecture/components/api/index.md",
+      "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "status": null,
+        "addOwns": [],
+        "designId": "R1-1D-API-GOVERNANCE-OWNERSHIP-CLOSEOUT-20260810",
+        "sourceRef": "docs/architecture/components/api/index.md",
+        "removeOwns": [
+          "apps/api/test/application/services/StoredPlanExecutabilityValidator.test.ts"
+        ],
+        "addExcludes": [],
+        "componentId": "SYS-PLANSTORE-API-COMPOSITION",
+        "removeExcludes": [],
+        "childrenRequired": null,
+        "resultingDefinition": {
+          "name": "API plan-store composition and resolvers",
+          "owns": [
+            "apps/api/src/application/errors/ManifestArtifactResolutionError.ts",
+            "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+            "apps/api/src/application/services/StoredPlanExecutabilityValidator.ts",
+            "apps/api/src/application/services/WorkflowEngineFactory.ts",
+            "apps/api/src/entrypoints/http/planRefHttpMapper.ts",
+            "apps/api/src/entrypoints/http/planRoutePlanRefParser.ts",
+            "apps/api/src/infrastructure/planner/ManifestArtifactResolver.ts",
+            "apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts",
+            "apps/api/src/infrastructure/startRun/ArtifactStoreDbtProjectBundleBindingPolicy.ts",
+            "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts",
+            "apps/api/test/application/services/WorkflowEngineFactory.test.ts",
+            "apps/api/test/application/services/storedPlanExecutabilityValidator/**",
+            "apps/api/test/entrypoints/http/planRoutePlanSourcePolicy.test.ts",
+            "apps/api/test/infrastructure/planner/ManifestArtifactResolver.test.ts",
+            "apps/api/test/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.test.ts"
+          ],
+          "level": "component",
+          "status": "review",
+          "cqRails": "PS-Q03, PS-C02",
+          "dddOwner": "AS",
+          "excludes": [],
+          "nonGoals": [],
+          "revision": 1,
+          "rootUnit": "SYS-DVT",
+          "consumers": [],
+          "createdAt": "2026-08-10T22:22:35.911Z",
+          "createdBy": "codex",
+          "publicApi": [
+            "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+            "apps/api/src/application/services/StoredPlanExecutabilityValidator.ts",
+            "apps/api/src/entrypoints/http/planRoutePlanRefParser.ts"
+          ],
+          "domainUnit": "SYS-PLANSTORE",
+          "governance": [
+            "docs/planning/status/system-operations-inventory-20260501.md",
+            "docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md"
+          ],
+          "invariants": [],
+          "sourcePath": "docs/architecture/components/api/index.md",
+          "componentId": "SYS-PLANSTORE-API-COMPOSITION",
+          "transitions": [],
+          "ownedConcern": "API stored-plan composition, planRef parsing, and artifact resolver ownership.",
+          "fowlerSignals": ["hidden authority", "boundary drift"],
+          "reasonsToChange": [],
+          "childrenRequired": true,
+          "responsibilities": [],
+          "parentComponentId": "SYS-PLANSTORE",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+      },
+      "createdAt": "2026-08-10T22:22:35.911Z"
+    },
+    {
+      "operationId": "cc93104f-de1d-46fa-a497-02654470a96a",
+      "idempotencyKey": "gh-2167-revise-api-docs-semantics-20260810",
+      "operationType": "component_revise",
+      "actor": "codex",
+      "componentId": "SYS-API-DOCS",
+      "sourcePath": "docs/architecture/components/api/index.md",
+      "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "status": "superseded",
+        "addOwns": [],
+        "designId": "R1-1D-API-GOVERNANCE-OWNERSHIP-CLOSEOUT-20260810",
+        "sourceRef": "docs/architecture/components/api/index.md",
+        "removeOwns": ["apps/api/docs/**"],
+        "addExcludes": [],
+        "componentId": "SYS-API-DOCS",
+        "ownedConcern": "Retired API-local documentation ownership; canonical API architecture is queried from Planning DB.",
+        "removeExcludes": [],
+        "childrenRequired": null,
+        "resultingDefinition": {
+          "name": "API local documentation",
+          "owns": [],
+          "level": "component",
+          "status": "superseded",
+          "cqRails": "none - API local documentation",
+          "dddOwner": "INFRA",
+          "excludes": [],
+          "nonGoals": [],
+          "revision": 1,
+          "rootUnit": "SYS-DVT",
+          "consumers": [],
+          "createdAt": "2026-08-10T22:24:17.161Z",
+          "createdBy": "codex",
+          "publicApi": [],
+          "domainUnit": "SYS-DVT",
+          "governance": [
+            "docs/DOCS_README.md",
+            "docs/planning/status/system-operations-inventory-20260501.md"
+          ],
+          "invariants": [],
+          "sourcePath": "docs/architecture/components/api/index.md",
+          "componentId": "SYS-API-DOCS",
+          "transitions": [],
+          "ownedConcern": "Retired API-local documentation ownership; canonical API architecture is queried from Planning DB.",
+          "fowlerSignals": ["coverage refinement"],
+          "reasonsToChange": [],
+          "childrenRequired": false,
+          "responsibilities": [],
+          "parentComponentId": "SYS-API-ROOT",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+      },
+      "createdAt": "2026-08-10T22:24:17.161Z"
+    },
+    {
+      "operationId": "a5ea3669-b937-48b6-bfcb-2a70ddc6a612",
+      "idempotencyKey": "gh-2167-revise-api-tests-semantics-20260810",
+      "operationType": "component_revise",
+      "actor": "codex",
+      "componentId": "SYS-API-TESTS",
+      "sourcePath": "docs/architecture/components/api/index.md",
+      "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "status": null,
+        "addOwns": [],
+        "designId": "R1-1D-API-GOVERNANCE-OWNERSHIP-CLOSEOUT-20260810",
+        "sourceRef": "docs/architecture/components/api/index.md",
+        "removeOwns": [],
+        "addExcludes": [],
+        "componentId": "SYS-API-TESTS",
+        "ownedConcern": "Owns API unit tests not delegated to narrower test components.",
+        "removeExcludes": [
+          "apps/api/test/application/services/StoredPlanExecutabilityValidator.test.ts"
+        ],
+        "childrenRequired": null,
+        "resultingDefinition": {
+          "name": "API app, integration, module, infrastructure, and fixture tests",
+          "owns": ["apps/api/test/**"],
+          "level": "component",
+          "status": "coverage-required",
+          "cqRails": "API validation suites",
+          "dddOwner": "INFRA",
+          "excludes": [
+            "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts",
+            "apps/api/test/application/services/WorkflowEngineFactory.test.ts",
+            "apps/api/test/application/services/storedPlanExecutabilityValidator/**",
+            "apps/api/test/entrypoints/http/**",
+            "apps/api/test/infrastructure/planner/ManifestArtifactResolver.test.ts",
+            "apps/api/test/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.test.ts"
+          ],
+          "nonGoals": [],
+          "revision": 1,
+          "rootUnit": "SYS-DVT",
+          "consumers": [],
+          "createdAt": "2026-08-10T22:24:19.649Z",
+          "createdBy": "codex",
+          "publicApi": [],
+          "domainUnit": "SYS-DVT",
+          "governance": [
+            "docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md",
+            "docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md",
+            "docs/guides/testing-and-ci-capabilities.md",
+            "docs/planning/status/system-operations-inventory-20260501.md"
+          ],
+          "invariants": [],
+          "sourcePath": "docs/architecture/components/api/index.md",
+          "componentId": "SYS-API-TESTS",
+          "transitions": [],
+          "ownedConcern": "Owns API unit tests not delegated to narrower test components.",
+          "fowlerSignals": ["coverage refinement"],
+          "reasonsToChange": [],
+          "childrenRequired": false,
+          "responsibilities": [],
+          "parentComponentId": "SYS-API-ROOT",
+          "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+        },
+        "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
+      },
+      "createdAt": "2026-08-10T22:24:19.649Z"
     }
   ]
 }
