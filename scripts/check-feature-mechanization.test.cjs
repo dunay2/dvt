@@ -481,6 +481,30 @@ test('validateFeatureImplementationManifests rejects changed files on forbidden 
   assert.match(result.errors.join('\n'), /matches forbiddenImplementationSurfaces/);
 });
 
+test('validateFeatureImplementationManifests permits deletion of a forbidden surface', () => {
+  const deletedPath = 'apps/web/src/app/views/canvas/tokenRefreshShortcut.ts';
+  const result = validateFeatureImplementationManifests(
+    [
+      {
+        sourcePath: 'plan.md',
+        manifest: {
+          ...validManifest,
+          allowedImplementationSurfaces: [
+            ...validManifest.allowedImplementationSurfaces,
+            'apps/web/src/app/views/canvas/**',
+          ],
+        },
+      },
+    ],
+    {
+      changedFiles: [deletedPath],
+      deletedFiles: [deletedPath],
+    }
+  );
+
+  assert.equal(result.errors.length, 0);
+});
+
 test('validateFeatureImplementationManifests applies forbidden surfaces only from the owning feature manifest', () => {
   const canvasFeatureManifest = {
     ...validManifest,
