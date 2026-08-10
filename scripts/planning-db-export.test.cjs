@@ -239,6 +239,17 @@ test('planning DB export accepts canonical-state options only', () => {
   ]);
 });
 
+test('planning DB export compares governance YAML by structured meaning', () => {
+  const runner = new PlanningDbExportRunner();
+  const compact = `---\nversion: 1\nrootUnit: SYS-DVT\nunits:\n  - id: SYS-DVT\n    name: DVT system\n    level: system\n    status: review\n`;
+  const formatted = `---\nversion: 1\nrootUnit: SYS-DVT\nunits:\n  - id: SYS-DVT\n    name: DVT system\n    level: system\n    status: review\n\n`;
+
+  assert.equal(
+    runner.normalizeArtifactForComparison(governanceUnitManifestPath, compact),
+    runner.normalizeArtifactForComparison(governanceUnitManifestPath, formatted)
+  );
+});
+
 test('planning DB export reads current architecture state and every current feature rail', async () => {
   const capturedSql = [];
   let architectureReads = 0;
