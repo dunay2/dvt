@@ -1,4 +1,6 @@
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 const test = require('node:test');
 
 const {
@@ -8,6 +10,7 @@ const {
 } = require('./generate-spec-traceability-report.cjs');
 
 const gitSha = '1111111111111111111111111111111111111111';
+const repoRoot = path.resolve(__dirname, '..');
 
 function feature(featureId, overrides = {}) {
   return {
@@ -203,4 +206,42 @@ test('both stable traceability routes render deterministically from one projecti
   assert.match(summary, /missing-git-path:packages\/@dvt\/example\/src\/missing\.ts/u);
   assert.equal(renderCanonicalDocCodeMatrix(projection, '2026-08-10'), matrix);
   assert.equal(renderSpecTraceabilitySummary(projection, '2026-08-10'), summary);
+});
+
+test('traceability policy publishes both stable routes only on explicit demand', () => {
+  const policy = JSON.parse(
+    fs.readFileSync(path.join(repoRoot, 'docs', 'generated-docs-policy.json'), 'utf8')
+  );
+  const artifactClass = policy.artifactClasses.find(
+    (entry) => entry.id === 'local-docs-feature-traceability'
+  );
+  const pkg = JSON.parse(fs.readFileSync(path.join(repoRoot, 'package.json'), 'utf8'));
+
+  assert.ok(artifactClass);
+  assert.deepEqual(artifactClass.artifacts, [
+    '.generated-docs/planning/status/canonical-doc-code-matrix.md',
+    '.generated-docs/planning/status/generated-spec-traceability.md',
+  ]);
+  assert.equal(artifactClass.tracking, 'untracked');
+  assert.equal(artifactClass.manualEditPolicy, 'generator-owned');
+  assert.equal(artifactClass.publication.enabled, true);
+  assert.equal(
+    artifactClass.generatorCommand,
+    'node scripts/generate-spec-traceability-report.cjs'
+  );
+  assert.match(pkg.scripts['docs:publish'], /documentation-publication\.cjs --assemble/u);
+  assert.doesNotMatch(pkg.scripts['docs:serve'], /generate-spec-traceability-report/u);
+  assert.doesNotMatch(pkg.scripts['docs:build'], /generate-spec-traceability-report/u);
+  assert.equal(
+    fs.existsSync(
+      path.join(repoRoot, 'docs', 'planning', 'status', 'canonical-doc-code-matrix.md')
+    ),
+    false
+  );
+  assert.equal(
+    fs.existsSync(
+      path.join(repoRoot, 'docs', 'planning', 'status', 'generated-spec-traceability.md')
+    ),
+    false
+  );
 });
