@@ -10,6 +10,7 @@ const dependencies = (() => {
     crypto: require('node:crypto'),
     os: require('node:os'),
     path,
+    yaml: require('js-yaml'),
     Client: require('pg').Client,
     defaultPgUrl: require('./planning-db-run.cjs').defaultPgUrl,
     schemaName: require('./planning-db-schema.cjs').schemaName,
@@ -24,7 +25,18 @@ const dependencies = (() => {
 
 const canonicalStateArtifactPath = 'tools/planning-db/state/canonical-state.json';
 const dbGovernanceSurfaceCatalogPath = 'tools/planning-db/state/db-governance-surfaces.json';
-const canonicalArtifactPaths = [canonicalStateArtifactPath, dbGovernanceSurfaceCatalogPath];
+const governanceUnitManifestPath = 'docs/planning/status/system-governance-unit-index.units.yaml';
+const governanceUnitNavigationPath =
+  'docs/planning/status/system-governance-unit-index-20260501.md';
+const planStoreNavigationPath =
+  'docs/planning/status/system-governance-planstore-file-ownership-20260501.md';
+const canonicalArtifactPaths = [
+  canonicalStateArtifactPath,
+  dbGovernanceSurfaceCatalogPath,
+  governanceUnitManifestPath,
+  governanceUnitNavigationPath,
+  planStoreNavigationPath,
+];
 
 class PlanningDbExportRunner {
   constructor(deps = dependencies) {
@@ -94,6 +106,7 @@ class PlanningDbExportRunner {
     const [
       featureMechanizationRails,
       featureMechanizationRailOperations,
+      governanceComponentEffectiveDefinitions,
       governanceComponentDefinitions,
       governanceComponentOwnershipPatterns,
       governanceComponentSemanticItems,
@@ -149,6 +162,34 @@ class PlanningDbExportRunner {
           where rail.rail_id = operation.rail_id
         )
         order by operation.created_at, operation.operation_id
+      `),
+      client.query(`
+        select
+          definition.unit_id as "componentId",
+          definition.name,
+          definition.parent_id as "parentComponentId",
+          definition.level,
+          coalesce(component.status, definition.status) as status,
+          coalesce(component.children_required, definition.children_required) as "childrenRequired",
+          component.owns,
+          component.excludes,
+          component.owned_concern as "ownedConcern",
+          component.responsibilities,
+          component.non_goals as "nonGoals",
+          component.reasons_to_change as "reasonsToChange",
+          coalesce(component.ddd_owner, definition.ddd_owner) as "dddOwner",
+          coalesce(component.cq_rails, definition.cq_rails) as "cqRails",
+          component.public_api as "publicApi",
+          component.invariants,
+          component.transitions,
+          component.consumers,
+          component.governance_refs as "governanceRefs",
+          component.fowler_signals as "fowlerSignals",
+          definition.raw_units -> 0 as "rawUnit"
+        from ${this.deps.schemaName}.governance_unit_query definition
+        left join ${this.deps.schemaName}.governance_component_definition_query component
+          on component.component_id = definition.unit_id
+        order by definition.unit_id
       `),
       client.query(`
         select
@@ -255,8 +296,196 @@ class PlanningDbExportRunner {
       governanceComponentOwnershipPatterns: governanceComponentOwnershipPatterns.rows,
       governanceComponentSemanticItems: governanceComponentSemanticItems.rows,
       governanceComponentOperations: governanceComponentOperations.rows,
+      governanceComponentEffectiveDefinitions: governanceComponentEffectiveDefinitions.rows,
       dbGovernanceSurfaces: dbGovernanceSurfaces.rows,
     };
+  }
+
+  nonEmptyList(value) {
+    return Array.isArray(value) && value.length > 0 ? value : undefined;
+  }
+
+  governanceUnitFromDefinition(definition) {
+    const rawUnit = definition.rawUnit || {};
+    const list = (value, fallback) =>
+      Array.isArray(value) ? value : Array.isArray(fallback) ? fallback : [];
+    const responsibilities = list(definition.responsibilities, rawUnit.responsibilities);
+    const nonGoals = list(definition.nonGoals, rawUnit.nonGoals);
+    const reasonsToChange = list(definition.reasonsToChange, rawUnit.reasonsToChange);
+    const publicApi = list(definition.publicApi, rawUnit.publicApi);
+    const owns = list(definition.owns, rawUnit.owns);
+    const excludes = list(definition.excludes, rawUnit.excludes);
+    const invariants = list(definition.invariants, rawUnit.invariants);
+    const transitions = list(definition.transitions, rawUnit.transitions);
+    const consumers = list(definition.consumers, rawUnit.consumers);
+    const governanceRefs = list(definition.governanceRefs, rawUnit.governance);
+    const fowlerSignals = list(definition.fowlerSignals, rawUnit.fowlerSignals);
+    const unit = {
+      id: definition.componentId,
+      name: definition.name,
+      ...(definition.parentComponentId ? { parent: definition.parentComponentId } : {}),
+      level: definition.level,
+      status: definition.status,
+      ...(definition.ownedConcern || rawUnit.ownedConcern
+        ? { ownedConcern: definition.ownedConcern || rawUnit.ownedConcern }
+        : {}),
+      ...(this.nonEmptyList(responsibilities) ? { responsibilities } : {}),
+      ...(this.nonEmptyList(nonGoals) ? { nonGoals } : {}),
+      ...(this.nonEmptyList(reasonsToChange) ? { reasonsToChange } : {}),
+      ...(this.nonEmptyList(publicApi) ? { publicApi } : {}),
+      owns,
+      ...(this.nonEmptyList(excludes) ? { excludes } : {}),
+      childrenRequired: definition.childrenRequired,
+      dddOwner: definition.dddOwner || rawUnit.dddOwner,
+      cqRails: definition.cqRails || rawUnit.cqRails,
+      ...(this.nonEmptyList(invariants) ? { invariants } : {}),
+      ...(this.nonEmptyList(transitions) ? { transitions } : {}),
+      ...(this.nonEmptyList(consumers) ? { consumers } : {}),
+      ...(this.nonEmptyList(governanceRefs) ? { governance: governanceRefs } : {}),
+      ...(this.nonEmptyList(fowlerSignals) ? { fowlerSignals } : {}),
+    };
+
+    return Object.fromEntries(Object.entries(unit).filter(([, value]) => value !== undefined));
+  }
+
+  renderGovernanceUnitManifest(definitions) {
+    const units = definitions.map((definition) => this.governanceUnitFromDefinition(definition));
+    const root = units.find((unit) => !unit.parent && unit.level === 'system');
+    if (!root) {
+      throw new Error('Cannot publish governance units without a root system component.');
+    }
+
+    return `---\n${this.deps.yaml.dump(
+      {
+        version: 1,
+        rootUnit: root.id,
+        units,
+      },
+      { lineWidth: 100, noRefs: true, sortKeys: false }
+    )}`;
+  }
+
+  renderGovernanceUnitNavigation(definitions) {
+    const root = definitions.find(
+      (definition) => !definition.parentComponentId && definition.level === 'system'
+    );
+    if (!root) {
+      throw new Error('Cannot publish governance navigation without a root system component.');
+    }
+    const domains = definitions
+      .filter((definition) => definition.parentComponentId === root.componentId)
+      .sort((left, right) => left.componentId.localeCompare(right.componentId));
+    const domainLines = domains.map(
+      (definition) =>
+        `- \`${definition.componentId}\` — ${definition.name} (\`${definition.status}\`)`
+    );
+
+    return `---
+title: System Governance Unit Index
+status: Review
+owner: Architecture / Docs / Delivery
+planning_type: status
+source_authority: Planning DB
+---
+
+# System Governance Unit Index
+
+> Generated from Planning DB authority. Do not edit this projection by hand.
+
+This page is navigation only. Current architecture ownership, hierarchy, status,
+relations and design scope must be consulted in the Planning DB before making an
+architecture or design decision.
+
+## Mandatory Queries
+
+\`\`\`bash
+pnpm planning:db:query component-tree --no-refresh
+pnpm planning:db:query component-metadata --component <COMPONENT-ID> --no-refresh
+pnpm planning:db:query architecture-designs
+pnpm planning:db:query architecture-scopes
+pnpm planning:db:query filesystem-coverage --no-refresh
+\`\`\`
+
+Publish tracked recovery projections only when explicitly requested:
+
+\`\`\`bash
+pnpm planning:db:export --output-root .
+\`\`\`
+
+Ordinary documentation build and serve commands consume the last explicit
+publication and do not regenerate it.
+
+## Root Navigation
+
+${domainLines.join('\n')}
+`;
+  }
+
+  renderPlanStoreNavigation(definitions) {
+    const planStoreDefinitions = definitions
+      .filter((definition) => /^SYS-PLANSTORE(?:-|$)/u.test(definition.componentId))
+      .sort((left, right) => left.componentId.localeCompare(right.componentId));
+    if (planStoreDefinitions.length === 0) {
+      throw new Error('Cannot publish PlanStore navigation without SYS-PLANSTORE authority.');
+    }
+    const componentLines = planStoreDefinitions.map(
+      (definition) =>
+        `- \`${definition.componentId}\` — ${definition.name} (\`${definition.status}\`)`
+    );
+
+    return `---
+title: System Governance Plan-Store Navigation
+status: Review
+owner: Architecture / Docs / Delivery
+planning_type: status
+source_authority: Planning DB
+---
+
+# System Governance Plan-Store Navigation
+
+> Generated from Planning DB authority. Do not edit this projection by hand.
+
+This page intentionally contains no file inventory or copied totals. Query the
+current DB read models and generated Git ownership projection instead.
+
+## Mandatory Queries
+
+\`\`\`bash
+pnpm planning:db:query component-tree --component SYS-PLANSTORE --no-refresh
+pnpm planning:db:query component-metadata --component SYS-PLANSTORE --no-refresh
+pnpm planning:db:query files --component SYS-PLANSTORE --no-refresh
+pnpm planning:db:query filesystem-coverage --no-refresh
+\`\`\`
+
+## Component Navigation
+
+${componentLines.join('\n')}
+`;
+  }
+
+  writeTextArtifact(outputRoot, artifactPath, content) {
+    const outputPath = this.deps.path.join(outputRoot, artifactPath);
+    this.deps.fs.mkdirSync(this.deps.path.dirname(outputPath), { recursive: true });
+    this.deps.fs.writeFileSync(outputPath, content, 'utf8');
+  }
+
+  writeGovernanceProjections(snapshotRows, outputRoot) {
+    const definitions = snapshotRows.governanceComponentEffectiveDefinitions;
+    this.writeTextArtifact(
+      outputRoot,
+      governanceUnitManifestPath,
+      this.renderGovernanceUnitManifest(definitions)
+    );
+    this.writeTextArtifact(
+      outputRoot,
+      governanceUnitNavigationPath,
+      this.renderGovernanceUnitNavigation(definitions)
+    );
+    this.writeTextArtifact(
+      outputRoot,
+      planStoreNavigationPath,
+      this.renderPlanStoreNavigation(definitions)
+    );
   }
 
   writeCanonicalState(snapshotRows, outputRoot) {
@@ -411,6 +640,7 @@ class PlanningDbExportRunner {
 
       this.writeCanonicalState(canonicalStateRows, outputRoot);
       this.writeDbGovernanceSurfaceCatalog(canonicalStateRows, outputRoot);
+      this.writeGovernanceProjections(canonicalStateRows, outputRoot);
       const report = options.check
         ? this.compareGeneratedArtifacts({
             expectedRoot: this.deps.repoRoot,
@@ -472,4 +702,7 @@ module.exports = {
   PlanningDbExportRunner,
   canonicalArtifactPaths,
   canonicalStateArtifactPath,
+  governanceUnitManifestPath,
+  governanceUnitNavigationPath,
+  planStoreNavigationPath,
 };

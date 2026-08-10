@@ -122,6 +122,10 @@ function createCanonicalStateFixture(repoRoot) {
       parentComponentId: null,
       level: 'system',
       status: 'review',
+      owns: [],
+      childrenRequired: true,
+      dddOwner: 'system',
+      cqRails: 'none - root governance unit',
       rawUnit: {
         id: 'SYS-DVT',
         name: 'DVT system',
@@ -139,6 +143,10 @@ function createCanonicalStateFixture(repoRoot) {
       parentComponentId: 'SYS-DVT',
       level: 'domain',
       status: 'review',
+      owns: [],
+      childrenRequired: true,
+      dddOwner: 'PORT',
+      cqRails: 'PS-Q03',
       rawUnit: {
         id: 'SYS-PLANSTORE',
         name: 'Plan store',
@@ -157,6 +165,11 @@ function createCanonicalStateFixture(repoRoot) {
       parentComponentId: 'SYS-DVT',
       level: 'component',
       status: 'superseded',
+      ownedConcern: 'Retired API-local documentation ownership.',
+      owns: [],
+      childrenRequired: false,
+      dddOwner: 'INFRA',
+      cqRails: 'none - API local documentation',
       rawUnit: {
         id: 'SYS-API-DOCS',
         name: 'API local documentation',
@@ -174,7 +187,7 @@ function createCanonicalStateFixture(repoRoot) {
   const client = {
     async query(sql) {
       const text = String(sql);
-      if (text.includes('governance_component_definition_query definition')) {
+      if (text.includes('governance_unit_query definition')) {
         return { rows: effectiveComponentDefinitions };
       }
       if (text.includes('feature_mechanization_local_operations operation')) {
@@ -252,7 +265,7 @@ test('planning DB export reads current architecture state and every current feat
   assert.ok(capturedSql.some((sql) => /governance_component_local_semantic_items/u.test(sql)));
   assert.ok(capturedSql.some((sql) => /governance_component_local_operations/u.test(sql)));
   assert.ok(capturedSql.some((sql) => /db_governance_surfaces/u.test(sql)));
-  assert.ok(capturedSql.some((sql) => /governance_component_definition_query/u.test(sql)));
+  assert.ok(capturedSql.some((sql) => /governance_unit_query/u.test(sql)));
   assert.equal(architectureReads, 1);
 });
 
