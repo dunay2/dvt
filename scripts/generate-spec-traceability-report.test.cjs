@@ -264,6 +264,34 @@ test('conflicting canonical document authority remains an explicit exact gap', (
   );
 });
 
+test('a canonical document remains authoritative alongside noncanonical peers', () => {
+  const facts = exactFacts();
+  facts.documents[0] = {
+    ...facts.documents[0],
+    lifecycle_gap_kind: 'none',
+    duplicate_count: 3,
+    canonical_counterpart_count: 1,
+  };
+  const projection = buildFeatureTraceabilityProjection(facts, {
+    gitSha,
+    gitTreePaths: new Map([
+      ['docs/architecture/components/example.md', 'blob'],
+      ['packages/@dvt/example/src/execute.ts', 'blob'],
+      ['packages/@dvt/example/test/execute.test.ts', 'blob'],
+    ]),
+  });
+
+  assert.deepEqual(projection.features[0].documentPaths, [
+    'docs/architecture/components/example.md',
+  ]);
+  assert.ok(
+    !projection.features[0].gaps.includes(
+      'conflicting-canonical-document:docs/architecture/components/example.md'
+    )
+  );
+  assert.ok(!projection.features[0].gaps.includes('missing-canonical-document:FEATURE-A'));
+});
+
 test('verification commands must exist in the repository command catalog', () => {
   const facts = exactFacts();
   facts.validations.push({
