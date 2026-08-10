@@ -16,9 +16,9 @@ current DB read models and generated Git ownership projection instead.
 ## Mandatory Queries
 
 ```bash
-pnpm planning:db:query component-tree --component SYS-PLANSTORE --no-refresh
-pnpm planning:db:query component-metadata --component SYS-PLANSTORE --no-refresh
-pnpm planning:db:query files --component SYS-PLANSTORE --no-refresh
+pnpm planning:db:query units --component SYS-PLANSTORE --no-refresh
+pnpm planning:db:query component-tree --parent-unit SYS-PLANSTORE --no-refresh
+pnpm planning:db:query files --domain SYS-PLANSTORE --limit 1000 --no-refresh
 pnpm planning:db:query filesystem-coverage --no-refresh
 ```
 

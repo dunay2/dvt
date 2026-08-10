@@ -17,7 +17,7 @@ architecture or design decision.
 ## Mandatory Queries
 
 ```bash
-pnpm planning:db:query component-tree --no-refresh
+pnpm planning:db:query units --parent-unit SYS-DVT --no-refresh
 pnpm planning:db:query component-metadata --component <COMPONENT-ID> --no-refresh
 pnpm planning:db:query architecture-designs
 pnpm planning:db:query architecture-scopes
