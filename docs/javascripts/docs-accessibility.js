@@ -1,6 +1,7 @@
 (() => {
   const scrollWrapperSelector = '.md-typeset__scrollwrap';
   const observedWrappers = new WeakSet();
+  const observedSkipLinks = new WeakSet();
   const resizeObserver = new ResizeObserver((entries) => {
     for (const entry of entries) refreshScrollRegion(entry.target);
   });
@@ -45,10 +46,36 @@
     }
   }
 
+  function skipTarget(link) {
+    try {
+      return document.getElementById(decodeURIComponent(link.hash.slice(1)));
+    } catch {
+      return null;
+    }
+  }
+
+  function enhanceSkipLinks(root = document) {
+    for (const link of root.querySelectorAll('.md-skip[href^="#"]')) {
+      if (observedSkipLinks.has(link)) continue;
+      observedSkipLinks.add(link);
+      link.addEventListener('click', () => {
+        const target = skipTarget(link);
+        if (!target) return;
+        target.tabIndex = -1;
+        requestAnimationFrame(() => target.focus({ preventScroll: true }));
+      });
+    }
+  }
+
+  function enhanceAccessibility(root = document) {
+    enhanceScrollableTables(root);
+    enhanceSkipLinks(root);
+  }
+
   function start() {
-    enhanceScrollableTables();
+    enhanceAccessibility();
     new MutationObserver((records) => {
-      if (records.some((record) => record.addedNodes.length > 0)) enhanceScrollableTables();
+      if (records.some((record) => record.addedNodes.length > 0)) enhanceAccessibility();
     }).observe(document.body, { childList: true, subtree: true });
   }
 

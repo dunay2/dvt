@@ -96,6 +96,8 @@ function validate(policy, artifactRelPath) {
         'node scripts/generate-governance-file-component-index.cjs',
       'governance:db:import': 'node scripts/governance-db-import.cjs',
       'governance:db:check': 'node scripts/governance-db-check.cjs',
+      'planning:db:import': 'node scripts/planning-db-import.cjs',
+      'docs:status:generate': 'node scripts/generate-code-status.cjs',
     }
   );
 }
@@ -120,6 +122,29 @@ test('DB-backed governance file shards are exempt from maxBytes when projection 
             queryView: 'planning_query_store.governance_file_query',
             importCommand: 'pnpm governance:db:import',
             checkCommand: 'pnpm governance:db:check',
+          },
+        ],
+      }),
+      artifactRelPath
+    );
+
+    assert.deepEqual(failures, []);
+  } finally {
+    fs.rmSync(artifactRoot, { recursive: true, force: true });
+  }
+});
+
+test('DB-backed status projections may declare the effective command/query rail read model', () => {
+  const { artifactRoot, artifactRelPath } = makeOversizedArtifact();
+  try {
+    const failures = validate(
+      basePolicyForArtifact(artifactRelPath, {
+        dbBackedArtifacts: [
+          {
+            artifacts: [artifactRelPath],
+            queryView: 'planning_query_store.command_query_rail_query',
+            importCommand: 'pnpm planning:db:import',
+            checkCommand: 'pnpm docs:status:generate --system-delivery-status-only',
           },
         ],
       }),

@@ -12,6 +12,8 @@ const {
   readArchitectureMaturityRows,
   readArchitectureRelationRows,
   readArchitectureResponsibilityRows,
+  readCommandQueryRailRows,
+  readFeatureMechanizationFeatureRows,
 } = require('./planning-db-query.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
@@ -34,12 +36,19 @@ const componentMapOutputPath = path.join(
   'architecture',
   'component-map.md'
 );
+const systemDeliveryStatusOutputPath = path.join(
+  repoRoot,
+  '.generated-docs',
+  'architecture',
+  'system-delivery-status.md'
+);
 
 const GENERATION_MODES = Object.freeze({
   all: 'all',
   codeStateOnly: 'code-state-only',
   componentMapOnly: 'component-map-only',
   repositoryMapOnly: 'repository-map-only',
+  systemDeliveryStatusOnly: 'system-delivery-status-only',
 });
 
 function toPosix(value) {
@@ -162,26 +171,95 @@ function markdownTable(headers, rows) {
   return [row(normalizedHeaders), separator, ...normalizedRows.map((cells) => row(cells))];
 }
 
-function collectWorkspaceStats(dir) {
+function isWalkEligibleRepositoryPath(repositoryPath) {
+  return normalizeRepoPath(repositoryPath)
+    .split('/')
+    .filter(Boolean)
+    .every(
+      (segment) =>
+        !segment.startsWith('.') &&
+        segment !== 'node_modules' &&
+        segment !== 'dist' &&
+        segment !== 'site'
+    );
+}
+
+function collectWorkspaceStats(dir, options = {}) {
+  const root = path.resolve(options.root || repoRoot);
+  const workspacePath = toPosix(path.relative(root, path.resolve(dir))) || '.';
+  if (
+    (options.root || options.gitTreePaths) &&
+    (workspacePath === '..' || workspacePath.startsWith('../') || path.isAbsolute(workspacePath))
+  ) {
+    throw new Error(`Workspace ${dir} is outside the evaluated repository.`);
+  }
+  const gitTreePaths = options.gitTreePaths;
+  const repositoryPath = (relativePath) =>
+    workspacePath === '.' ? relativePath : `${workspacePath}/${relativePath}`;
   const pkgPath = path.join(dir, 'package.json');
+  if (gitTreePaths && gitTreePaths.get(repositoryPath('package.json')) !== 'blob') {
+    throw new Error(`Workspace ${workspacePath} is not part of the evaluated Git tree.`);
+  }
   const pkg = safeReadJson(pkgPath) || {};
   const scripts = pkg.scripts || {};
   const srcDir = path.join(dir, 'src');
   const testDir = path.join(dir, 'test');
-  const srcFiles = fs.existsSync(srcDir)
-    ? walk(srcDir, (_, name) => isSourceCodeFile(name) && !isColocatedTestFile(name))
-    : [];
-  const colocatedTestFiles = fs.existsSync(srcDir)
-    ? walk(srcDir, (_, name) => isColocatedTestFile(name))
-    : [];
-  const testFiles = [
-    ...(fs.existsSync(testDir) ? walk(testDir, (_, name) => /\.(ts|tsx|js|jsx)$/u.test(name)) : []),
-    ...colocatedTestFiles,
-  ];
+  const treeFiles = gitTreePaths
+    ? [...gitTreePaths]
+        .filter(([, entryType]) => entryType === 'blob')
+        .map(([entryPath]) => normalizeRepoPath(entryPath))
+        .filter((entryPath) =>
+          workspacePath === '.' ? true : entryPath.startsWith(`${workspacePath}/`)
+        )
+        .map((entryPath) =>
+          workspacePath === '.' ? entryPath : entryPath.slice(workspacePath.length + 1)
+        )
+    : null;
+  const srcFiles = treeFiles
+    ? treeFiles.filter(
+        (filePath) =>
+          filePath.startsWith('src/') &&
+          isWalkEligibleRepositoryPath(filePath.slice('src/'.length)) &&
+          isSourceCodeFile(path.posix.basename(filePath)) &&
+          !isColocatedTestFile(path.posix.basename(filePath))
+      )
+    : fs.existsSync(srcDir)
+      ? walk(srcDir, (_, name) => isSourceCodeFile(name) && !isColocatedTestFile(name))
+      : [];
+  const colocatedTestFiles = treeFiles
+    ? treeFiles.filter(
+        (filePath) =>
+          filePath.startsWith('src/') &&
+          isWalkEligibleRepositoryPath(filePath.slice('src/'.length)) &&
+          isColocatedTestFile(path.posix.basename(filePath))
+      )
+    : fs.existsSync(srcDir)
+      ? walk(srcDir, (_, name) => isColocatedTestFile(name))
+      : [];
+  const testFiles = treeFiles
+    ? [
+        ...treeFiles.filter(
+          (filePath) =>
+            filePath.startsWith('test/') &&
+            isWalkEligibleRepositoryPath(filePath.slice('test/'.length)) &&
+            /\.(ts|tsx|js|jsx)$/u.test(path.posix.basename(filePath))
+        ),
+        ...colocatedTestFiles,
+      ]
+    : [
+        ...(fs.existsSync(testDir)
+          ? walk(testDir, (_, name) => /\.(ts|tsx|js|jsx)$/u.test(name))
+          : []),
+        ...colocatedTestFiles,
+      ];
 
   const exportedSymbols = (() => {
     const indexTs = path.join(dir, 'src', 'index.ts');
-    if (!fs.existsSync(indexTs)) return '-';
+    if (
+      (gitTreePaths && gitTreePaths.get(repositoryPath('src/index.ts')) !== 'blob') ||
+      !fs.existsSync(indexTs)
+    )
+      return '-';
     return String(
       fs
         .readFileSync(indexTs, 'utf8')
@@ -191,8 +269,10 @@ function collectWorkspaceStats(dir) {
     );
   })();
 
-  const workspacePath = relFromRepo(dir) || '.';
   const readmePath = path.join(dir, 'README.md');
+  const hasReadme = gitTreePaths
+    ? gitTreePaths.get(repositoryPath('README.md')) === 'blob'
+    : fs.existsSync(readmePath);
   return {
     workspace: pkg.name || workspacePath,
     path: workspacePath,
@@ -203,7 +283,7 @@ function collectWorkspaceStats(dir) {
     hasTest: scripts.test ? 'yes' : 'no',
     hasTypecheck: scripts.typecheck || scripts['type-check'] ? 'yes' : 'no',
     exports: exportedSymbols,
-    localReadmePath: fs.existsSync(readmePath)
+    localReadmePath: hasReadme
       ? workspacePath === '.'
         ? 'README.md'
         : `${workspacePath}/README.md`
@@ -213,7 +293,7 @@ function collectWorkspaceStats(dir) {
 
 function collectRepositoryWorkspaceStats(options = {}) {
   const workspaceDirs = options.workspaceDirs || listPnpmWorkspaceDirs(options);
-  return workspaceDirs.map(collectWorkspaceStats);
+  return workspaceDirs.map((workspaceDir) => collectWorkspaceStats(workspaceDir, options));
 }
 
 function renderCodeState(workspaces, utcDate) {
@@ -274,6 +354,362 @@ function renderCodeState(workspaces, utcDate) {
       ],
       workspaceRows
     ),
+    '',
+    '> This page is auto-generated by `pnpm docs:status:generate`. Do not edit manually.',
+    '',
+  ].join('\n');
+}
+
+function readRepositoryReleaseFacts(options = {}) {
+  const root = path.resolve(options.root || repoRoot);
+  const packageJson = Object.prototype.hasOwnProperty.call(options, 'packageJson')
+    ? options.packageJson
+    : safeReadJson(path.join(root, 'package.json'));
+  const releaseManifest = Object.prototype.hasOwnProperty.call(options, 'releaseManifest')
+    ? options.releaseManifest
+    : safeReadJson(path.join(root, '.release-please-manifest.json'));
+  const changelog = Object.prototype.hasOwnProperty.call(options, 'changelog')
+    ? options.changelog
+    : fs.existsSync(path.join(root, 'CHANGELOG.md'))
+      ? fs.readFileSync(path.join(root, 'CHANGELOG.md'), 'utf8')
+      : null;
+  const packageVersion = String(packageJson?.version || '').trim();
+  const manifestVersion = String(releaseManifest?.['.'] || '').trim();
+  const changelogVersion =
+    String(changelog || '')
+      .match(/^##\s+v?([^\s(]+)/mu)?.[1]
+      ?.trim() || '';
+  const sources = [
+    ['package.json', packageVersion],
+    ['.release-please-manifest.json', manifestVersion],
+    ['CHANGELOG.md', changelogVersion],
+  ];
+  const missingSources = sources.filter(([, version]) => !version).map(([source]) => source);
+  if (missingSources.length > 0) {
+    throw new Error(
+      `Required repository release fact is missing from ${missingSources.join(', ')}.`
+    );
+  }
+  const versions = [...new Set(sources.map(([, version]) => version))];
+  if (versions.length !== 1) {
+    throw new Error(
+      `Contradictory repository release identity: ${sources
+        .map(([source, version]) => `${source}=${version}`)
+        .join(', ')}.`
+    );
+  }
+  return { version: versions[0] };
+}
+
+function assertGitWorktreeMatchesCommit(expectedGitSha, options = {}) {
+  const root = path.resolve(options.root || repoRoot);
+  const spawn = options.spawnSync || spawnSync;
+  const actualGitSha = currentGitSha({ root, spawnSync: spawn });
+  if (actualGitSha !== expectedGitSha) {
+    throw new Error(
+      `System Delivery Status Git input changed during generation: expected ${expectedGitSha}, found ${actualGitSha}.`
+    );
+  }
+
+  const result = spawn('git', ['status', '--porcelain=v1', '--untracked-files=all'], {
+    cwd: root,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  if (result.error) {
+    throw new Error(`Cannot inspect the evaluated Git worktree: ${result.error.message}.`, {
+      cause: result.error,
+    });
+  }
+  if (result.status !== 0) {
+    throw new Error(
+      `Cannot inspect the evaluated Git worktree: ${String(result.stderr ?? '').trim()}.`
+    );
+  }
+
+  const changedEntries = String(result.stdout || '')
+    .split(/\r?\n/u)
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+  if (changedEntries.length > 0) {
+    const visibleEntries = changedEntries.slice(0, 10).join(', ');
+    const remainder = changedEntries.length > 10 ? `, +${changedEntries.length - 10} more` : '';
+    throw new Error(
+      `System Delivery Status requires a clean Git worktree matching evaluated commit ${expectedGitSha}; found ${visibleEntries}${remainder}.`
+    );
+  }
+}
+
+function assertEvaluatedRepositorySnapshot(snapshot, options = {}) {
+  const gitSha = String(snapshot?.gitSha || '').trim();
+  const expectedVersion = String(snapshot?.release?.version || '').trim();
+  if (!gitSha) throw new Error('Required evaluated Git commit is unavailable.');
+  if (!expectedVersion)
+    throw new Error('Required repository release fact "version" is unavailable.');
+
+  assertGitWorktreeMatchesCommit(gitSha, options);
+  const release = options.release || readRepositoryReleaseFacts(options);
+  if (String(release.version).trim() !== expectedVersion) {
+    throw new Error(
+      `System Delivery Status release input changed during generation: expected ${expectedVersion}, found ${release.version}.`
+    );
+  }
+  return snapshot;
+}
+
+function readEvaluatedRepositorySnapshot(options = {}) {
+  const root = path.resolve(options.root || repoRoot);
+  const gitSha = currentGitSha({ root, spawnSync: options.spawnSync });
+  const snapshot = {
+    gitSha,
+    gitTreePaths:
+      options.gitTreePaths || readGitTreePaths({ root, gitSha, spawnSync: options.spawnSync }),
+    release: options.release || readRepositoryReleaseFacts({ root }),
+  };
+  return assertEvaluatedRepositorySnapshot(snapshot, { ...options, root });
+}
+
+async function readSystemDeliveryStatusFacts(client, readers = {}) {
+  const limit = 100000;
+  const componentReader = readers.readArchitectureComponentRows || readArchitectureComponentRows;
+  const maturityReader = readers.readArchitectureMaturityRows || readArchitectureMaturityRows;
+  const railReader = readers.readCommandQueryRailRows || readCommandQueryRailRows;
+  const featureReader =
+    readers.readFeatureMechanizationFeatureRows || readFeatureMechanizationFeatureRows;
+  return {
+    components: await componentReader(client, { limit }),
+    maturity: await maturityReader(client, { limit }),
+    rails: await railReader(client, { limit }),
+    features: await featureReader(client, { limit }),
+  };
+}
+
+function requiredFactRows(facts, key) {
+  const rows = facts?.[key];
+  if (!Array.isArray(rows) || rows.length === 0) {
+    throw new Error(`Required Planning DB fact set "${key}" is unavailable or empty.`);
+  }
+  return rows;
+}
+
+function exactValueCounts(values) {
+  return Object.fromEntries(
+    [...values]
+      .sort((left, right) => String(left).localeCompare(String(right), 'en', { numeric: true }))
+      .reduce((counts, value) => {
+        const key = String(value);
+        counts.set(key, (counts.get(key) || 0) + 1);
+        return counts;
+      }, new Map())
+  );
+}
+
+function requiredRowText(row, snakeKey, camelKey, factKind) {
+  const value = String(row?.[snakeKey] ?? row?.[camelKey] ?? '').trim();
+  if (!value) throw new Error(`Required Planning DB ${factKind} fact "${snakeKey}" is missing.`);
+  return value;
+}
+
+function buildSystemDeliveryStatusProjection(workspaces, facts, options = {}) {
+  const gitSha = String(options.gitSha || currentGitSha(options)).trim();
+  const version = String(options.release?.version || '').trim();
+  if (!gitSha) throw new Error('Required evaluated Git commit is unavailable.');
+  if (!version) throw new Error('Required repository release fact "version" is unavailable.');
+
+  const components = requiredFactRows(facts, 'components');
+  const maturityRows = requiredFactRows(facts, 'maturity');
+  const rails = requiredFactRows(facts, 'rails');
+  const features = requiredFactRows(facts, 'features');
+  const componentIds = new Set();
+  for (const component of components) {
+    const componentId = requiredRowText(component, 'component_id', 'componentId', 'component');
+    if (componentIds.has(componentId)) {
+      throw new Error(`Duplicate Planning DB component identity ${componentId}.`);
+    }
+    componentIds.add(componentId);
+  }
+
+  const maturityByComponent = new Map();
+  for (const maturity of maturityRows) {
+    const componentId = requiredRowText(maturity, 'component_id', 'componentId', 'maturity');
+    if (!componentIds.has(componentId)) {
+      throw new Error(`Planning DB maturity references unknown component ${componentId}.`);
+    }
+    if (maturityByComponent.has(componentId)) {
+      throw new Error(`Duplicate Planning DB maturity identity ${componentId}.`);
+    }
+    const score = maturity.maturity_score ?? maturity.maturityScore;
+    if (score === null || score === undefined || String(score).trim() === '') {
+      throw new Error(`Required Planning DB maturity score is missing for ${componentId}.`);
+    }
+    maturityByComponent.set(componentId, String(score));
+  }
+  const componentsMissingMaturity = [...componentIds]
+    .filter((componentId) => !maturityByComponent.has(componentId))
+    .sort((left, right) => left.localeCompare(right, 'en'));
+
+  const railStatuses = [];
+  const railGaps = [];
+  for (const rail of rails) {
+    const railName = requiredRowText(rail, 'rail_name', 'railName', 'rail');
+    const railType = requiredRowText(rail, 'rail_type', 'railType', 'rail');
+    const railStatus = requiredRowText(rail, 'rail_status', 'railStatus', 'rail');
+    if (rail.is_duplicate ?? rail.isDuplicate) {
+      throw new Error(`Duplicate command/query rail authority detected for ${railName}.`);
+    }
+    railStatuses.push(railStatus);
+    if (rail.is_gap ?? rail.isGap) railGaps.push(`rail:${railType}:${railName}:${railStatus}`);
+  }
+
+  const featureIds = new Set();
+  const featureStatuses = [];
+  for (const feature of features) {
+    const featureId = requiredRowText(feature, 'feature_id', 'featureId', 'feature');
+    const status = requiredRowText(
+      feature,
+      'mechanization_status',
+      'mechanizationStatus',
+      'feature'
+    );
+    if (featureIds.has(featureId)) {
+      throw new Error(`Duplicate Planning DB feature identity ${featureId}.`);
+    }
+    featureIds.add(featureId);
+    featureStatuses.push(status);
+  }
+
+  const gaps = [
+    ...componentsMissingMaturity.map((componentId) => `component:${componentId}:missing-maturity`),
+    ...railGaps,
+  ].sort((left, right) => left.localeCompare(right, 'en'));
+  return {
+    repository: {
+      gitSha,
+      version,
+      workspaceCount: workspaces.length,
+      sourceFileCount: workspaces.reduce((total, workspace) => total + workspace.src, 0),
+      testFileCount: workspaces.reduce((total, workspace) => total + workspace.tests, 0),
+      buildScriptCount: workspaces.filter((workspace) => workspace.hasBuild === 'yes').length,
+      testScriptCount: workspaces.filter((workspace) => workspace.hasTest === 'yes').length,
+    },
+    architecture: {
+      componentCount: componentIds.size,
+      maturityRegisteredCount: maturityByComponent.size,
+      componentsMissingMaturity,
+      maturityScoreCounts: exactValueCounts(maturityByComponent.values()),
+    },
+    delivery: {
+      railCount: rails.length,
+      railGapCount: railGaps.length,
+      duplicateRailCount: 0,
+      featureCount: featureIds.size,
+      featureStatuses: exactValueCounts(featureStatuses),
+      railStatuses: exactValueCounts(railStatuses),
+    },
+    gaps,
+  };
+}
+
+function renderCountRows(counts) {
+  return Object.entries(counts).map(([value, count]) => [value, String(count)]);
+}
+
+function renderSystemDeliveryStatus(projection, utcDate) {
+  const { repository, architecture, delivery, gaps } = projection;
+  return [
+    '---',
+    'title: System Delivery Status',
+    'status: Active',
+    'owner: Architecture / Docs',
+    `last_reviewed: ${utcDate}`,
+    '---',
+    '',
+    '# System Delivery Status',
+    '',
+    'This page is the mandatory current-state consultation surface for architecture and design work.',
+    'It is an on-demand projection: Git and repository release files own repository facts; Planning DB owns structured architecture, maturity, rail, and feature facts.',
+    'Exact Planning DB status only is shown. File presence, test presence, GitHub issue state, and capability heuristics are not semantic delivery truth.',
+    '',
+    '## Evaluated repository',
+    '',
+    ...markdownTable(
+      ['Fact', 'Exact value', 'Authority'],
+      [
+        ['Evaluated Git commit', `\`${repository.gitSha}\``, 'Git'],
+        ['Repository release', repository.version, 'repository release files'],
+        ['Effective workspaces', String(repository.workspaceCount), '`pnpm list`'],
+        ['Conventional source files', String(repository.sourceFileCount), 'workspace scan'],
+        ['Conventional test files', String(repository.testFileCount), 'workspace scan'],
+        [
+          'Workspaces with build script',
+          `${repository.buildScriptCount}/${repository.workspaceCount}`,
+          'workspace package manifests',
+        ],
+        [
+          'Workspaces with test script',
+          `${repository.testScriptCount}/${repository.workspaceCount}`,
+          'workspace package manifests',
+        ],
+      ]
+    ),
+    '',
+    '## Architecture registration and maturity',
+    '',
+    ...markdownTable(
+      ['Fact', 'Exact value'],
+      [
+        ['Registered components', String(architecture.componentCount)],
+        ['Registered maturity rows', String(architecture.maturityRegisteredCount)],
+        ['Components missing maturity', String(architecture.componentsMissingMaturity.length)],
+      ]
+    ),
+    '',
+    '### Exact maturity score distribution',
+    '',
+    ...markdownTable(
+      ['Maturity score', 'Components'],
+      renderCountRows(architecture.maturityScoreCounts)
+    ),
+    '',
+    '## Command/query rails and feature mechanization',
+    '',
+    ...markdownTable(
+      ['Fact', 'Exact value'],
+      [
+        ['Effective command/query rail rows', String(delivery.railCount)],
+        ['Rails with explicit gaps', String(delivery.railGapCount)],
+        ['Duplicate rail authorities', String(delivery.duplicateRailCount)],
+        ['Registered features', String(delivery.featureCount)],
+      ]
+    ),
+    '',
+    '### Exact rail-status distribution',
+    '',
+    ...markdownTable(['Rail status', 'Rails'], renderCountRows(delivery.railStatuses)),
+    '',
+    '### Exact feature-status distribution',
+    '',
+    ...markdownTable(['Feature status', 'Features'], renderCountRows(delivery.featureStatuses)),
+    '',
+    '## Explicit gaps',
+    '',
+    `Total explicit gaps: **${gaps.length}**.`,
+    '',
+    ...(gaps.length > 0 ? gaps.map((gap) => `- \`${gap}\``) : ['- none']),
+    '',
+    '## Reading and decision rule',
+    '',
+    '- Consult this projection before architecture or design changes, then follow the linked authored ADRs and component pages for rationale and invariants.',
+    '- Missing or contradictory required repository/DB facts fail generation rather than being guessed.',
+    '- GitHub Issues own MVP task lifecycle and are not queried or copied into this projection.',
+    '- Generate explicitly with `pnpm docs:status:generate --system-delivery-status-only` or as part of `pnpm docs:publish`; ordinary `docs:build` consumes the existing publication tree.',
+    '',
+    '## Related detail',
+    '',
+    '- [Component Map](./component-map.md)',
+    '- [Repository Map](../concepts/repository-map.md)',
+    '- [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)',
+    '- [Command and Query Rail Governance](./command-query-rail-governance.md)',
     '',
     '> This page is auto-generated by `pnpm docs:status:generate`. Do not edit manually.',
     '',
@@ -580,14 +1016,15 @@ async function readComponentTopologyFacts(client, readers = {}) {
 
 function currentGitSha(options = {}) {
   if (options.gitSha) return String(options.gitSha).trim();
-  const result = spawnSync('git', ['rev-parse', 'HEAD'], {
+  const spawn = options.spawnSync || spawnSync;
+  const result = spawn('git', ['rev-parse', 'HEAD'], {
     cwd: options.root || repoRoot,
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   if (result.error) throw result.error;
   if (result.status !== 0) {
-    throw new Error(`Cannot resolve Component Map Git input: ${String(result.stderr).trim()}.`);
+    throw new Error(`Cannot resolve evaluated Git input: ${String(result.stderr).trim()}.`);
   }
   return String(result.stdout).trim();
 }
@@ -987,6 +1424,7 @@ function resolveGenerationMode(argv) {
     '--code-state-only',
     '--component-map-only',
     '--repository-map-only',
+    '--system-delivery-status-only',
     '--check',
   ]);
   const unknownFlags = argv.filter(
@@ -998,14 +1436,19 @@ function resolveGenerationMode(argv) {
   const codeStateOnly = argv.includes('--code-state-only');
   const componentMapOnly = argv.includes('--component-map-only');
   const repositoryMapOnly = argv.includes('--repository-map-only');
-  if ([codeStateOnly, componentMapOnly, repositoryMapOnly].filter(Boolean).length > 1) {
+  const systemDeliveryStatusOnly = argv.includes('--system-delivery-status-only');
+  if (
+    [codeStateOnly, componentMapOnly, repositoryMapOnly, systemDeliveryStatusOnly].filter(Boolean)
+      .length > 1
+  ) {
     throw new Error(
-      'Choose either one generation mode: --code-state-only, --component-map-only, or --repository-map-only.'
+      'Choose either one generation mode: --code-state-only, --component-map-only, --repository-map-only, or --system-delivery-status-only.'
     );
   }
   if (codeStateOnly) return GENERATION_MODES.codeStateOnly;
   if (componentMapOnly) return GENERATION_MODES.componentMapOnly;
   if (repositoryMapOnly) return GENERATION_MODES.repositoryMapOnly;
+  if (systemDeliveryStatusOnly) return GENERATION_MODES.systemDeliveryStatusOnly;
   return GENERATION_MODES.all;
 }
 
@@ -1063,6 +1506,31 @@ async function generateComponentMap(ClientCtor) {
   }
 }
 
+async function generateSystemDeliveryStatus(workspaces, ClientCtor, evaluatedRepository) {
+  const repositorySnapshot = evaluatedRepository || readEvaluatedRepositorySnapshot();
+  const client = new ClientCtor({ connectionString: databaseUrl() });
+  await client.connect();
+  try {
+    const facts = await readSystemDeliveryStatusFacts(client);
+    const projection = buildSystemDeliveryStatusProjection(workspaces, facts, repositorySnapshot);
+    assertEvaluatedRepositorySnapshot(repositorySnapshot);
+    const date = resolveGeneratedDate(systemDeliveryStatusOutputPath, (value) =>
+      renderSystemDeliveryStatus(projection, value)
+    );
+    const changed = writeIfChanged(
+      systemDeliveryStatusOutputPath,
+      renderSystemDeliveryStatus(projection, date)
+    );
+    console.log(
+      changed
+        ? `[docs:status:generate] Updated ${relFromRepo(systemDeliveryStatusOutputPath)}`
+        : `[docs:status:generate] ${relFromRepo(systemDeliveryStatusOutputPath)} already up to date.`
+    );
+  } finally {
+    await client.end();
+  }
+}
+
 async function main(argv = process.argv.slice(2), dependencies = {}) {
   const mode = resolveGenerationMode(argv);
   const collectWorkspaces =
@@ -1074,10 +1542,32 @@ async function main(argv = process.argv.slice(2), dependencies = {}) {
     ((workspaces) => generateRepositoryMap(workspaces, ClientCtor));
   const generateComponentMapFn =
     dependencies.generateComponentMap || (() => generateComponentMap(ClientCtor));
+  const generateSystemDeliveryStatusFn =
+    dependencies.generateSystemDeliveryStatus ||
+    ((workspaces, evaluatedRepository) =>
+      generateSystemDeliveryStatus(workspaces, ClientCtor, evaluatedRepository));
+  const requiresSystemDeliveryStatus =
+    mode === GENERATION_MODES.all || mode === GENERATION_MODES.systemDeliveryStatusOnly;
+  const readRepositorySnapshot =
+    dependencies.readEvaluatedRepositorySnapshot || readEvaluatedRepositorySnapshot;
+  const evaluatedRepository = requiresSystemDeliveryStatus
+    ? readRepositorySnapshot(dependencies.repositoryEvaluationOptions || {})
+    : null;
   const workspaces =
     mode === GENERATION_MODES.componentMapOnly
       ? []
-      : collectWorkspaces(dependencies.workspaceOptions || {});
+      : collectWorkspaces({
+          ...(dependencies.workspaceOptions || {}),
+          ...(requiresSystemDeliveryStatus
+            ? {
+                gitTreePaths: evaluatedRepository.gitTreePaths,
+                root:
+                  dependencies.workspaceOptions?.root ||
+                  dependencies.repositoryEvaluationOptions?.root ||
+                  repoRoot,
+              }
+            : {}),
+        });
 
   if (mode === GENERATION_MODES.all || mode === GENERATION_MODES.codeStateOnly) {
     await generateCodeStateFn(workspaces);
@@ -1087,6 +1577,9 @@ async function main(argv = process.argv.slice(2), dependencies = {}) {
   }
   if (mode === GENERATION_MODES.all || mode === GENERATION_MODES.componentMapOnly) {
     await generateComponentMapFn();
+  }
+  if (mode === GENERATION_MODES.all || mode === GENERATION_MODES.systemDeliveryStatusOnly) {
+    await generateSystemDeliveryStatusFn(workspaces, evaluatedRepository);
   }
 }
 
@@ -1098,6 +1591,8 @@ if (require.main === module) {
 }
 
 module.exports = {
+  assertEvaluatedRepositorySnapshot,
+  buildSystemDeliveryStatusProjection,
   buildComponentTopologyProjection,
   buildRepositoryMapRows,
   collectRepositoryWorkspaceStats,
@@ -1111,11 +1606,15 @@ module.exports = {
   readGitTreePaths,
   readArchitectureComponentDocumentRows,
   readComponentTopologyFacts,
+  readEvaluatedRepositorySnapshot,
   readRepositoryArchitectureFacts,
+  readRepositoryReleaseFacts,
+  readSystemDeliveryStatusFacts,
   relativeDocLink,
   renderCodeState,
   renderComponentMap,
   renderRepositoryMap,
+  renderSystemDeliveryStatus,
   resolveDocumentationProjection,
   resolveGenerationMode,
   resolveWorkspaceArchitecture,

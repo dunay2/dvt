@@ -29,7 +29,7 @@ extra_css:
 extra_javascript:
   - https://unpkg.com/mermaid@10/dist/mermaid.min.js
   - javascripts/mermaid-init.js
-  - javascripts/table-scroll-accessibility.js
+  - javascripts/docs-accessibility.js
 
 extra:
   language: en
