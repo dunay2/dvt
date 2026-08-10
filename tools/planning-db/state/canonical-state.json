@@ -87431,7 +87431,8 @@
         "Repository paths must be relative, traversal-free, and present in the evaluated Git tree.",
         "Verification commands require both an exact feature validation and an exact repository command catalog match.",
         "The CI single-writer contract rejects the retired tracked traceability class and requires the DB-first untracked class.",
-        "Environment-prefixed validations remain catalog-authorized and shell-control-free."
+        "Environment-prefixed validations remain catalog-authorized and shell-control-free.",
+        "Every executable segment in a shell chain must independently resolve in repository_command_query."
       ],
       "completionGate": [
         "node --test scripts/generate-spec-traceability-report.test.cjs scripts/documentation-publication.test.cjs",
@@ -87440,7 +87441,7 @@
         "node tools/ci/ci-tool-test-suite.mjs static"
       ],
       "sourcePath": "scripts/generate-spec-traceability-report.cjs",
-      "sourceContentSha256": "8c1c9f477a13ab4b967045afa1a35aebc32ad795260847a4804f1720e37fac8e",
+      "sourceContentSha256": "bd7c27493e4f3750192429b253c959463a745926a055e7711dd477fe4dadb82c",
       "rawRail": {
         "name": "GeneratePlanningDerivedSurfaces",
         "type": "command",
@@ -88035,7 +88036,7 @@
               "executable_specification"
             ],
             "cypressCoverage": "N/A - generated documentation is verified through Zensical build and demanding-user browser accessibility QA.",
-            "architectureGuard": "Feature identities and relations come only from existing Planning DB feature-mechanization read models."
+            "architectureGuard": "Every executable segment in a shell chain must independently resolve in repository_command_query."
           },
           {
             "name": "packageScriptFromValidation",
@@ -88118,15 +88119,15 @@
         "redGreenCycles": [
           {
             "id": "generateplanningderivedsurfaces-record",
-            "redTest": "node --test --test-name-pattern environment-prefixed scripts/generate-spec-traceability-report.test.cjs",
-            "greenTest": "node --test --test-name-pattern environment-prefixed scripts/generate-spec-traceability-report.test.cjs",
+            "redTest": "node --test --test-name-pattern \"shell chain\" scripts/generate-spec-traceability-report.test.cjs",
+            "greenTest": "node --test --test-name-pattern \"shell chain\" scripts/generate-spec-traceability-report.test.cjs",
             "patchSurfaces": [
               "scripts/generate-spec-traceability-report.cjs",
               "docs/generated-docs-policy.json",
               "scripts/check-generated-docs-policy.cjs",
               "tools/ci/generated-docs-single-writer-policy.test.mjs"
             ],
-            "expectedFailure": "Environment-prefixed verification is omitted or bypasses repository command authority."
+            "expectedFailure": "A shell chain is published when only its first executable is registered."
           }
         ],
         "componentGuides": [
@@ -88154,7 +88155,8 @@
           "Repository paths must be relative, traversal-free, and present in the evaluated Git tree.",
           "Verification commands require both an exact feature validation and an exact repository command catalog match.",
           "The CI single-writer contract rejects the retired tracked traceability class and requires the DB-first untracked class.",
-          "Environment-prefixed validations remain catalog-authorized and shell-control-free."
+          "Environment-prefixed validations remain catalog-authorized and shell-control-free.",
+          "Every executable segment in a shell chain must independently resolve in repository_command_query."
         ],
         "implementationPlan": "https://github.com/dunay2/dvt/issues/2147",
         "mechanizationStatus": "implemented",
@@ -88177,7 +88179,7 @@
           "tools/planning-db/schema.sql"
         ]
       },
-      "revision": 4,
+      "revision": 6,
       "createdBy": "codex",
       "createdAt": "2026-08-10T08:24:00.833Z"
     },
@@ -133834,6 +133836,114 @@
         "forbiddenImplementationSurfaces": ["apps/**"]
       },
       "createdAt": "2026-08-10T10:01:09.258Z"
+    },
+    {
+      "operationId": "e9072952-5843-4d32-ab67-b756fa37686c",
+      "idempotencyKey": "doc1-4-shell-chain-authority-v5",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#DOC1-4-DB-FIRST-TRACEABILITY#command#generateplanningderivedsurfaces",
+      "sourcePath": "scripts/generate-spec-traceability-report.cjs",
+      "sourceContentSha256": "bd7c27493e4f3750192429b253c959463a745926a055e7711dd477fe4dadb82c",
+      "expectedRevision": 4,
+      "previousRevision": 4,
+      "resultingRevision": 5,
+      "payload": {
+        "redTest": "node --test --test-name-pattern shell-chain scripts/generate-spec-traceability-report.test.cjs",
+        "dddOwner": "PlanningDocumentationProjection",
+        "railName": "GeneratePlanningDerivedSurfaces",
+        "railType": "command",
+        "featureId": "DOC1-4-DB-FIRST-TRACEABILITY",
+        "greenTest": "node --test --test-name-pattern shell-chain scripts/generate-spec-traceability-report.test.cjs",
+        "sourceRef": "scripts/generate-spec-traceability-report.cjs",
+        "unitTests": ["scripts/generate-spec-traceability-report.test.cjs"],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2147"],
+        "cypressFlows": [
+          "N/A - generated documentation is verified through Zensical build and demanding-user browser accessibility QA."
+        ],
+        "domainObjects": ["FeatureTraceabilityProjection"],
+        "fowlerSignals": ["executable_specification"],
+        "patchSurfaces": ["scripts/generate-spec-traceability-report.cjs"],
+        "completionGate": ["pnpm verify:prepush"],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "A shell chain is published when only its first executable is registered.",
+        "governingSources": [
+          "docs/planning/status/governance-document-rule-inventory.md"
+        ],
+        "documentationRefs": ["docs/generated-docs-policy.json"],
+        "architectureGuards": [
+          "Every executable segment in a shell chain must independently resolve in repository_command_query."
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2147",
+        "implementationRefs": [
+          "scripts/generate-spec-traceability-report.cjs#isRegisteredVerificationCommand"
+        ],
+        "normalizedRailName": "generateplanningderivedsurfaces",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "bd7c27493e4f3750192429b253c959463a745926a055e7711dd477fe4dadb82c",
+        "allowedImplementationSurfaces": [
+          "scripts/generate-spec-traceability-report.cjs"
+        ],
+        "forbiddenImplementationSurfaces": ["apps/**"]
+      },
+      "createdAt": "2026-08-10T10:04:47.741Z"
+    },
+    {
+      "operationId": "584fd953-51b1-4db1-b526-3486cc490a43",
+      "idempotencyKey": "doc1-4-shell-chain-authority-command-v6",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#DOC1-4-DB-FIRST-TRACEABILITY#command#generateplanningderivedsurfaces",
+      "sourcePath": "scripts/generate-spec-traceability-report.cjs",
+      "sourceContentSha256": "bd7c27493e4f3750192429b253c959463a745926a055e7711dd477fe4dadb82c",
+      "expectedRevision": 5,
+      "previousRevision": 5,
+      "resultingRevision": 6,
+      "payload": {
+        "redTest": "node --test --test-name-pattern \"shell chain\" scripts/generate-spec-traceability-report.test.cjs",
+        "dddOwner": "PlanningDocumentationProjection",
+        "railName": "GeneratePlanningDerivedSurfaces",
+        "railType": "command",
+        "featureId": "DOC1-4-DB-FIRST-TRACEABILITY",
+        "greenTest": "node --test --test-name-pattern \"shell chain\" scripts/generate-spec-traceability-report.test.cjs",
+        "sourceRef": "scripts/generate-spec-traceability-report.cjs",
+        "unitTests": ["scripts/generate-spec-traceability-report.test.cjs"],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2147"],
+        "cypressFlows": [
+          "N/A - generated documentation is verified through Zensical build and demanding-user browser accessibility QA."
+        ],
+        "domainObjects": ["FeatureTraceabilityProjection"],
+        "fowlerSignals": ["executable_specification"],
+        "patchSurfaces": ["scripts/generate-spec-traceability-report.cjs"],
+        "completionGate": ["pnpm verify:prepush"],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "A shell chain is published when only its first executable is registered.",
+        "governingSources": [
+          "docs/planning/status/governance-document-rule-inventory.md"
+        ],
+        "documentationRefs": ["docs/generated-docs-policy.json"],
+        "architectureGuards": [
+          "Every executable segment in a shell chain must independently resolve in repository_command_query."
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2147",
+        "implementationRefs": [
+          "scripts/generate-spec-traceability-report.cjs#isRegisteredVerificationCommand"
+        ],
+        "normalizedRailName": "generateplanningderivedsurfaces",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "bd7c27493e4f3750192429b253c959463a745926a055e7711dd477fe4dadb82c",
+        "allowedImplementationSurfaces": [
+          "scripts/generate-spec-traceability-report.cjs"
+        ],
+        "forbiddenImplementationSurfaces": ["apps/**"]
+      },
+      "createdAt": "2026-08-10T10:05:10.307Z"
     }
   ]
 }
