@@ -584,17 +584,12 @@ test('package and manual deploy expose one explicit publication command', () => 
   );
 });
 
-test('published wide tables expose a labelled keyboard-scroll region', () => {
+test('published docs expose keyboard table regions and a focus-correct skip link', () => {
   const repositoryRoot = path.resolve(__dirname, '..');
   const config = fs.readFileSync(path.join(repositoryRoot, 'zensical.yml'), 'utf8');
-  const scriptPath = path.join(
-    repositoryRoot,
-    'docs',
-    'javascripts',
-    'table-scroll-accessibility.js'
-  );
+  const scriptPath = path.join(repositoryRoot, 'docs', 'javascripts', 'docs-accessibility.js');
   const stylePath = path.join(repositoryRoot, 'docs', 'stylesheets', 'docs-accessibility.css');
-  assert.match(config, /javascripts\/table-scroll-accessibility\.js/u);
+  assert.match(config, /javascripts\/docs-accessibility\.js/u);
   assert.match(config, /stylesheets\/docs-accessibility\.css/u);
 
   const script = fs.readFileSync(scriptPath, 'utf8');
@@ -603,6 +598,9 @@ test('published wide tables expose a labelled keyboard-scroll region', () => {
   assert.match(script, /setAttribute\('aria-label'/u);
   assert.match(script, /tabIndex = 0/u);
   assert.match(script, /ResizeObserver/u);
+  assert.match(script, /\.md-skip\[href\^=['"]#['"]\]/u);
+  assert.match(script, /target\.tabIndex = -1/u);
+  assert.match(script, /target\.focus\(\{ preventScroll: true \}\)/u);
 
   const style = fs.readFileSync(stylePath, 'utf8');
   assert.match(style, /\.md-typeset__scrollwrap:focus-visible/u);
