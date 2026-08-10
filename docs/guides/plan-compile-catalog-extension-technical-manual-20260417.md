@@ -17,9 +17,9 @@ compile-only boundary. Older `MW-D1` proposal and review artifacts may still
 say `external compile`; treat that as historical wording, not the active
 ownership model.
 
-Temporal is the only implemented workflow provider. A future provider is a
-conditional extension point, not an active `targetAdapter`, until its admission
-evidence is complete.
+Temporal is the only implemented workflow provider. A future provider requires
+an ADR, a real adapter, capability conformance, production composition, and
+documentation evidence before it can become an active `targetAdapter`.
 
 Use this guide when the change affects any of the following:
 

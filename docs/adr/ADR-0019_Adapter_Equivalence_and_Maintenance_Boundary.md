@@ -20,10 +20,10 @@ es el invariante objetivo que deberá demostrar cualquier proveedor futuro antes
 de entrar en la composición de producción; no es evidencia de que exista hoy un
 segundo adapter.
 
-La admisión requiere una ADR, un adapter real, conformance de capacidades,
-composición de producción y evidencia documental. La issue #2160 conserva el
-trabajo futuro de conformance; #69 fue cerrada como `not planned` y no constituye
-implementación.
+A future provider requires an ADR, a real adapter, capability conformance,
+production composition, and documentation evidence before admission. La issue
+#2160 conserva el trabajo futuro de conformance; #69 fue cerrada como
+`not planned` y no constituye implementación.
 
 ## Decision
 

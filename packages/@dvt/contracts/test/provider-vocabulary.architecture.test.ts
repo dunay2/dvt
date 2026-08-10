@@ -40,6 +40,17 @@ const activeProviderVocabularySources = [
 
 const normalizeWhitespace = (source: string): string => source.replace(/\s+/gu, ' ').trim();
 
+const containsUnqualifiedDeliveredProviderClaim = (source: string): boolean => {
+  const normalizedSource = normalizeWhitespace(source);
+  return [
+    /\b(?:DVT\+?|platform|system|repository)\s+(?:currently\s+)?(?:supports?|implements?|ships?)\s+Conductor\b/iu,
+    /\bConductor\s+is\s+(?:currently\s+)?(?:an?\s+)?(?:supported|implemented|delivered|active)\s+(?:workflow\s+)?provider\b/iu,
+    /\bTemporal\s+(?:and|\/)\s+Conductor\s+are\s+(?:both\s+)?(?:supported|implemented|delivered|active)\b/iu,
+    /\bCross-provider conformance (?:is|has been) delivered\b/iu,
+    /\b(?:DVT\+?|platform|system)\s+(?:currently\s+)?delivers?\s+cross-provider conformance\b/iu,
+  ].some((claimPattern) => claimPattern.test(normalizedSource));
+};
+
 describe('contracts: active provider vocabulary', () => {
   it('does not expose mock as a runtime provider in active contracts', () => {
     for (const sourcePath of [
@@ -138,6 +149,14 @@ describe('contracts: active provider vocabulary', () => {
       join(REPO_ROOT, 'docs/guides/plan-compile-catalog-extension-technical-manual-20260417.md'),
       'utf8'
     );
+    const governedProviderTruthSources = [
+      readme,
+      executionModel,
+      adapterEquivalence,
+      workflowManual,
+      stepKindGuide,
+      compileCatalogManual,
+    ];
 
     expect(normalizeWhitespace(readme)).toContain(
       'Temporal is the only implemented workflow provider'
@@ -165,6 +184,39 @@ describe('contracts: active provider vocabulary', () => {
         'Temporal is the only implemented workflow provider'
       );
       expect(normalizeWhitespace(source)).toContain('future provider');
+    }
+
+    for (const source of governedProviderTruthSources) {
+      const normalizedSource = normalizeWhitespace(source).toLowerCase();
+      for (const admissionRequirement of [
+        'adr',
+        'real adapter',
+        'capability conformance',
+        'production composition',
+        'documentation evidence',
+      ]) {
+        expect(normalizedSource).toContain(admissionRequirement);
+      }
+      expect(containsUnqualifiedDeliveredProviderClaim(source)).toBe(false);
+    }
+
+    for (const contradictoryClaim of [
+      'DVT supports Conductor as a workflow provider.',
+      'Conductor is an implemented workflow provider.',
+      'Temporal and Conductor are both supported.',
+      'Cross-provider conformance is delivered.',
+      'The platform delivers cross-provider conformance.',
+    ]) {
+      expect(containsUnqualifiedDeliveredProviderClaim(contradictoryClaim)).toBe(true);
+    }
+
+    for (const conditionedOrHistoricalClaim of [
+      'A future provider requires admission evidence before implementation.',
+      'Built with practices learned from Temporal and Conductor.',
+      'No cross-provider conformance claim is currently delivered.',
+      'State equivalence is a target for any future provider.',
+    ]) {
+      expect(containsUnqualifiedDeliveredProviderClaim(conditionedOrHistoricalClaim)).toBe(false);
     }
   });
 });
