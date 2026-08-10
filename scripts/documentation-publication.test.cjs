@@ -580,7 +580,7 @@ test('package and manual deploy expose one explicit publication command', () => 
   assert.ok(workflowScope.generated_status_relevant.includes('scripts/documentation-*.cjs'));
   assert.match(
     prWorkflow,
-    /- name: Validate Repository Map publication and links[\s\S]*?run: pnpm docs:publish && pnpm docs:build && pnpm docs:gov:links\n\s+env:\n\s+GIT_BASE: \$\{\{ github\.event\.pull_request\.base\.sha \}\}\n\s+GIT_HEAD: \$\{\{ github\.sha \}\}/u
+    /- name: Validate DB-first documentation publication and links[\s\S]*?run: pnpm docs:publish && pnpm docs:build && pnpm docs:gov:links\n\s+env:\n\s+GIT_BASE: \$\{\{ github\.event\.pull_request\.base\.sha \}\}\n\s+GIT_HEAD: \$\{\{ github\.sha \}\}/u
   );
 });
 

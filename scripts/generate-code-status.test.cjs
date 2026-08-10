@@ -27,6 +27,7 @@ const {
   main,
   markdownCell,
   parsePnpmWorkspaceRows,
+  readComponentTopologyFacts,
   readRepositoryArchitectureFacts,
   renderComponentMap,
   renderRepositoryMap,
@@ -707,7 +708,7 @@ test('live Planning DB workflow provides explicit Git refs to the importer', () 
   const workflow = fs.readFileSync(prQualityWorkflowPath, 'utf8');
   const workflowScope = JSON.parse(fs.readFileSync(workflowScopePath, 'utf8'));
   const liveStep = workflow.match(
-    /- name: Prove Repository Map against migrated and imported Planning DB[\s\S]*?(?=\n\s+- name:)/u
+    /- name: Prove DB-first documentation against rebuilt Planning DB[\s\S]*?(?=\n\s+- name:)/u
   )?.[0];
 
   assert.ok(liveStep, 'expected the live Repository Map workflow step');
@@ -739,24 +740,24 @@ test('live Planning DB workflow provides explicit Git refs to the importer', () 
   }
 });
 
-test('Repository Map publication provisions the pinned Zensical runtime first', () => {
+test('DB-first documentation publication provisions the pinned Zensical runtime first', () => {
   const workflow = yaml.load(fs.readFileSync(prQualityWorkflowPath, 'utf8'));
   const deployWorkflow = yaml.load(fs.readFileSync(docsDeployWorkflowPath, 'utf8'));
   const steps = workflow.jobs['pr-checks'].steps;
   const deploySteps = deployWorkflow.jobs['build-deploy'].steps;
   const setupPythonIndex = steps.findIndex(
-    (step) => step.name === 'Setup Python for Repository Map publication'
+    (step) => step.name === 'Setup Python for DB-first documentation publication'
   );
   const installZensicalIndex = steps.findIndex(
-    (step) => step.name === 'Install Zensical for Repository Map publication'
+    (step) => step.name === 'Install Zensical for DB-first documentation publication'
   );
   const publicationIndex = steps.findIndex(
-    (step) => step.name === 'Validate Repository Map publication and links'
+    (step) => step.name === 'Validate DB-first documentation publication and links'
   );
   const canonicalSetup = deploySteps.find((step) => step.name === 'Setup Python');
   const canonicalInstall = deploySteps.find((step) => step.name === 'Install Zensical');
 
-  assert.ok(setupPythonIndex >= 0, 'expected a Repository Map Python setup step');
+  assert.ok(setupPythonIndex >= 0, 'expected a DB-first documentation Python setup step');
   assert.ok(installZensicalIndex > setupPythonIndex, 'expected Zensical installation after Python');
   assert.ok(publicationIndex > installZensicalIndex, 'expected publication after Zensical setup');
 
@@ -797,7 +798,7 @@ test('Repository Map publication provisions the pinned Zensical runtime first', 
 });
 
 test(
-  'live Planning DB current-state import renders workspaces without false document bindings',
+  'live Planning DB current-state import renders both DB-first maps deterministically',
   { skip: process.env.DVT_REPOSITORY_MAP_INTEGRATION !== '1' },
   async () => {
     await importContent({ databaseUrl: dbUrl(), silent: true });
@@ -805,6 +806,8 @@ test(
     await client.connect();
     try {
       const facts = await readRepositoryArchitectureFacts(client);
+      const topologyFacts = await readComponentTopologyFacts(client);
+      const topology = buildComponentTopologyProjection(topologyFacts);
       const workspaces = collectRepositoryWorkspaceStats();
       const independentPnpmResult = spawnSync(
         process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm',
@@ -833,6 +836,16 @@ test(
       assert.match(output, /ambiguous-canonical-doc-binding/u);
       assert.match(output, /missing-canonical-doc-binding/u);
       assert.doesNotMatch(output, /documentation_panel_query/u);
+      assert.equal(
+        new Set(topology.components.map((component) => component.componentId)).size,
+        topology.components.length
+      );
+      assert.equal(topology.relationCount, topologyFacts.relations.length);
+      assert.ok(topology.components.length > 0);
+      assert.ok(topology.relationCount > 0);
+      assert.ok(
+        topology.globalGaps.every((gap) => gap.startsWith('orphan-canonical-document-binding:'))
+      );
 
       const outputPath = path.join(repoRoot, '.generated-docs', 'concepts', 'repository-map.md');
       await main(['--repository-map-only']);
@@ -848,6 +861,29 @@ test(
       }
       assert.deepEqual(fs.readFileSync(outputPath), firstGeneration);
       assert.equal(fs.statSync(outputPath, { bigint: true }).mtimeNs, firstModifiedAt);
+      assert.ok(messages.some((message) => message.includes('already up to date')));
+
+      const componentOutputPath = path.join(
+        repoRoot,
+        '.generated-docs',
+        'architecture',
+        'component-map.md'
+      );
+      await main(['--component-map-only']);
+      const firstComponentGeneration = fs.readFileSync(componentOutputPath);
+      const firstComponentModifiedAt = fs.statSync(componentOutputPath, { bigint: true }).mtimeNs;
+      messages.length = 0;
+      console.log = (...values) => messages.push(values.join(' '));
+      try {
+        await main(['--component-map-only']);
+      } finally {
+        console.log = originalLog;
+      }
+      assert.deepEqual(fs.readFileSync(componentOutputPath), firstComponentGeneration);
+      assert.equal(
+        fs.statSync(componentOutputPath, { bigint: true }).mtimeNs,
+        firstComponentModifiedAt
+      );
       assert.ok(messages.some((message) => message.includes('already up to date')));
     } finally {
       await client.end();
