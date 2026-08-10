@@ -237,6 +237,70 @@ test('ignores untracked Markdown instead of treating filesystem placement as aut
   );
 });
 
+test('fails closed when a Git-owned Markdown source is missing from the worktree', async () => {
+  const root = createMinimalFixture();
+  const missingPath = 'docs/missing.md';
+  fs.writeFileSync(path.join(root, missingPath), '# Missing\n', 'utf8');
+  const rows = [lifecycleRow(root, 'docs/index.md'), lifecycleRow(root, missingPath)];
+  const trackedDocumentationPaths = fixtureAssemblerOptions(root).trackedDocumentationPaths;
+  fs.rmSync(path.join(root, missingPath));
+
+  await assert.rejects(
+    new DocumentationPublicationAssembler({
+      repoRoot: root,
+      trackedDocumentationPaths,
+      lifecycleRows: rows,
+      readGitSha: () => 'fixture-head',
+    }).assemble({ runGenerators: false }),
+    /Missing Git-owned documentation source docs\/missing\.md/u
+  );
+});
+
+test('fails closed when a Git-owned supporting source is missing from the worktree', async () => {
+  const root = createMinimalFixture();
+  const missingPath = 'docs/assets/missing.svg';
+  fs.mkdirSync(path.dirname(path.join(root, missingPath)), { recursive: true });
+  fs.writeFileSync(path.join(root, missingPath), '<svg/>\n', 'utf8');
+  const trackedDocumentationPaths = fixtureAssemblerOptions(root).trackedDocumentationPaths;
+  fs.rmSync(path.join(root, missingPath));
+
+  await assert.rejects(
+    new DocumentationPublicationAssembler({
+      repoRoot: root,
+      trackedDocumentationPaths,
+      lifecycleRows: [lifecycleRow(root, 'docs/index.md')],
+      readGitSha: () => 'fixture-head',
+    }).assemble({ runGenerators: false }),
+    /Missing Git-owned documentation source docs\/assets\/missing\.svg/u
+  );
+});
+
+test('rejects a Git-owned supporting source whose worktree content differs from HEAD', async () => {
+  const root = createMinimalFixture();
+  const supportPath = 'docs/assets/logo.svg';
+  fs.mkdirSync(path.dirname(path.join(root, supportPath)), { recursive: true });
+  fs.writeFileSync(path.join(root, supportPath), '<svg>HEAD</svg>\n', 'utf8');
+  const trackedDocumentationPaths = fixtureAssemblerOptions(root).trackedDocumentationPaths;
+  const gitBlobs = new Map(
+    trackedDocumentationPaths.map((sourcePath) => [
+      sourcePath,
+      fs.readFileSync(path.join(root, sourcePath)),
+    ])
+  );
+  fs.writeFileSync(path.join(root, supportPath), '<svg>dirty</svg>\n', 'utf8');
+
+  await assert.rejects(
+    new DocumentationPublicationAssembler({
+      repoRoot: root,
+      trackedDocumentationPaths,
+      lifecycleRows: [lifecycleRow(root, 'docs/index.md')],
+      readGitBlob: (sourcePath) => gitBlobs.get(sourcePath),
+      readGitSha: () => 'fixture-head',
+    }).assemble({ runGenerators: false }),
+    /Git-owned documentation source docs\/assets\/logo\.svg differs from HEAD/u
+  );
+});
+
 test('publication receipt rejects stale source, DB, config, policy, and Git inputs', async () => {
   const root = createMinimalFixture();
   const rows = [lifecycleRow(root, 'docs/index.md')];
