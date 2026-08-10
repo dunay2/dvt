@@ -199,6 +199,14 @@ const allowedArchitecturePortKinds = new Set([
 ]);
 const allowedArchitecturePortDirections = new Set(['inbound', 'outbound']);
 const allowedArchitecturePortStatuses = new Set(['proposed', 'approved', 'implemented']);
+const allowedArchitectureStorageIoDirections = new Set(['reads', 'writes']);
+const allowedArchitectureStorageIoAccessPatterns = new Set([
+  'transactional',
+  'projection',
+  'bulk',
+  'migration',
+  'read_only',
+]);
 const allowedArchitectureTestKinds = new Set([
   'unit',
   'contract',
@@ -337,6 +345,15 @@ const operationHelp = Object.freeze({
       'Requires --name, --kind, --direction, at least one --input-contract or --output-contract, at least one --negative-test, --source-ref, and --source-content-sha256.',
     ],
   },
+  'architecture-storage-io': {
+    operations: ['record'],
+    usage:
+      'pnpm planning:db:operate architecture-storage-io record --design <DESIGN-ID> --storage-io <STORAGE-ID> --component <SYS-ID> --actor <actor>',
+    details: [
+      'RecordArchitectureStorageIo updates one existing storage I/O fact under explicit design, component, output-path, and optional contract scope.',
+      'Requires --expected-storage-object, --storage-object, --direction, --access-pattern, --source-ref, and --source-content-sha256.',
+    ],
+  },
   'architecture-fitness': {
     operations: ['scan'],
     usage:
@@ -409,7 +426,7 @@ function isHelpFlag(value) {
 }
 
 function unknownOperationMessage() {
-  return 'Unknown planning DB operation. Expected "component", "db-surface", "architecture-design", "architecture-component", "architecture-relation", "architecture-contract", "architecture-port", "architecture-fitness", "architecture-evidence", "docs-disposition", "feature-mechanization", "fowler-analysis", or "governance-refresh".';
+  return 'Unknown planning DB operation. Expected "component", "db-surface", "architecture-design", "architecture-component", "architecture-relation", "architecture-contract", "architecture-port", "architecture-storage-io", "architecture-fitness", "architecture-evidence", "docs-disposition", "feature-mechanization", "fowler-analysis", or "governance-refresh".';
 }
 
 function buildPlanningDbOperateHelpText(resource, action) {
@@ -784,6 +801,17 @@ function validateArchitecturePortId(value) {
   return normalized;
 }
 
+function validateArchitectureStorageIoId(value) {
+  const normalized = String(value || '').trim();
+  if (!/^STORAGE-[A-Z0-9]+(?:-[A-Z0-9]+)*$/.test(normalized)) {
+    throw new Error(
+      `ARCH-STORAGE-IO-ID-INVALID: invalid --storage-io "${value}". Expected an uppercase STORAGE-* architecture storage I/O id.`
+    );
+  }
+
+  return normalized;
+}
+
 function validateArchitectureFitnessScanId(value) {
   const normalized = String(value || '').trim();
   if (!/^[A-Za-z0-9]+(?:[-_][A-Za-z0-9]+)*$/.test(normalized)) {
@@ -1000,6 +1028,30 @@ function validateArchitecturePortStatus(value) {
     throw new Error(
       `ARCH-COMPONENT-TAXONOMY-INVALID: RecordArchitecturePort stores statuses accepted by architecture.component_port: ${[
         ...allowedArchitecturePortStatuses,
+      ].join(', ')}.`
+    );
+  }
+
+  return value;
+}
+
+function validateArchitectureStorageIoDirection(value) {
+  if (!allowedArchitectureStorageIoDirections.has(value)) {
+    throw new Error(
+      `ARCH-STORAGE-IO-DIRECTION-INVALID: invalid direction "${value}". Expected: ${[
+        ...allowedArchitectureStorageIoDirections,
+      ].join(', ')}.`
+    );
+  }
+
+  return value;
+}
+
+function validateArchitectureStorageIoAccessPattern(value) {
+  if (!allowedArchitectureStorageIoAccessPatterns.has(value)) {
+    throw new Error(
+      `ARCH-STORAGE-IO-ACCESS-PATTERN-INVALID: invalid access pattern "${value}". Expected: ${[
+        ...allowedArchitectureStorageIoAccessPatterns,
       ].join(', ')}.`
     );
   }
@@ -1227,6 +1279,21 @@ function operationPayload(command) {
     };
   }
 
+  if (command.kind === 'architecture_storage_io_record') {
+    return {
+      designId: command.designId,
+      storageIoId: command.storageIoId,
+      componentId: command.componentId,
+      expectedStorageObject: command.expectedStorageObject,
+      storageObject: command.storageObject,
+      direction: command.direction,
+      accessPattern: command.accessPattern,
+      contractId: normalizeOptionalText(command.contractId),
+      sourceRef: command.sourceRef,
+      sourceContentSha256: command.sourceContentSha256,
+    };
+  }
+
   if (command.kind === 'architecture_fitness_scan') {
     return {
       designId: command.designId,
@@ -1421,6 +1488,7 @@ function defaultIdempotencyKey(command) {
     command.kind === 'architecture_relation_record' ||
     command.kind === 'architecture_contract_record' ||
     command.kind === 'architecture_port_record' ||
+    command.kind === 'architecture_storage_io_record' ||
     command.kind === 'architecture_fitness_scan' ||
     command.kind === 'architecture_test_record' ||
     command.kind === 'architecture_observability_record'
@@ -1429,7 +1497,8 @@ function defaultIdempotencyKey(command) {
       command.kind,
       command.actor || 'anonymous',
       command.designId || 'no-design',
-      command.contractId ||
+      command.storageIoId ||
+        command.contractId ||
         command.portId ||
         command.componentId ||
         command.relationId ||
@@ -2191,6 +2260,58 @@ function parseArchitecturePortCommand(action, args) {
   return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
 }
 
+function validateArchitectureStorageIoRecordCommand(command) {
+  const requiredTextFields = [
+    ['expected-storage-object', command.expectedStorageObject],
+    ['storage-object', command.storageObject],
+    ['source-ref', command.sourceRef],
+  ];
+  for (const [field, value] of requiredTextFields) {
+    if (!normalizeOptionalText(value)) {
+      throw new Error(`ARCH-STORAGE-IO-SEMANTICS-MISSING: missing required --${field}.`);
+    }
+  }
+
+  if (command.expectedStorageObject === command.storageObject) {
+    throw new Error(
+      'ARCH-STORAGE-IO-NOOP: expected and replacement storage objects are identical.'
+    );
+  }
+
+  return command;
+}
+
+function parseArchitectureStorageIoCommand(action, args) {
+  if (action !== 'record') {
+    throw new Error(`Unknown architecture-storage-io operation "${action}". Expected record.`);
+  }
+
+  const options = parseFlagOptions(args);
+  const command = {
+    kind: 'architecture_storage_io_record',
+    designId: validateArchitectureDesignId(requireOption(options, 'design')),
+    storageIoId: validateArchitectureStorageIoId(requireOption(options, 'storageIo')),
+    componentId: validateArchitectureComponentId(requireOption(options, 'component'), 'component'),
+    expectedStorageObject: requireOption(options, 'expectedStorageObject'),
+    storageObject: requireOption(options, 'storageObject'),
+    direction: validateArchitectureStorageIoDirection(requireOption(options, 'direction')),
+    accessPattern: validateArchitectureStorageIoAccessPattern(
+      requireOption(options, 'accessPattern')
+    ),
+    contractId: options.contract ? validateArchitectureContractId(options.contract) : null,
+    sourceRef: requireOption(options, 'sourceRef'),
+    sourceContentSha256: validateSha256(
+      requireOption(options, 'sourceContentSha256'),
+      'source-content-sha256'
+    ),
+    actor: requireOption(options, 'actor'),
+    idempotencyKey: options.idempotencyKey,
+  };
+
+  validateArchitectureStorageIoRecordCommand(command);
+  return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
+}
+
 function parseArchitectureFitnessCommand(action, args) {
   if (action !== 'scan') {
     throw new Error(`Unknown architecture-fitness operation "${action}". Expected scan.`);
@@ -2660,6 +2781,14 @@ function parseArgs(args = process.argv.slice(2)) {
     return parseArchitecturePortCommand(action, rest);
   }
 
+  if (resource === 'architecture-storage-io') {
+    if (!action) {
+      throw new Error('Missing architecture-storage-io operation. Expected record.');
+    }
+
+    return parseArchitectureStorageIoCommand(action, rest);
+  }
+
   if (resource === 'architecture-fitness') {
     if (!action) {
       throw new Error('Missing architecture-fitness operation. Expected scan.');
@@ -2798,6 +2927,22 @@ function normalizeArchitecturePort(row) {
 
   return {
     portId: row.port_id ?? row.portId,
+  };
+}
+
+function normalizeArchitectureStorageIo(row) {
+  if (!row) {
+    return null;
+  }
+
+  return {
+    storageIoId: row.storage_io_id ?? row.storageIoId,
+    componentId: row.component_id ?? row.componentId,
+    storageObject: row.storage_object ?? row.storageObject,
+    direction: row.direction,
+    accessPattern: row.access_pattern ?? row.accessPattern,
+    contractId: row.contract_id ?? row.contractId ?? null,
+    createdAt: row.created_at ?? row.createdAt,
   };
 }
 
@@ -3212,6 +3357,82 @@ function planArchitecturePortRecordOperation({
   const audit = architectureScopedAudit({ command, operationId, now });
 
   return { port, audit };
+}
+
+function planArchitectureStorageIoRecordOperation({
+  command,
+  design,
+  designScopes,
+  component,
+  contract,
+  existingStorageIo,
+  operationId,
+  now,
+}) {
+  assertArchitectureDesignMayRecord(design, command);
+  assertArchitectureDesignScope(
+    designScopes,
+    'component',
+    command.componentId,
+    ['may_reference', 'may_update'],
+    'ARCH-STORAGE-IO-DESIGN-SCOPE-MISSING'
+  );
+  assertArchitectureDesignScope(
+    designScopes,
+    'path',
+    command.storageObject,
+    ['may_update'],
+    'ARCH-STORAGE-IO-DESIGN-SCOPE-MISSING'
+  );
+
+  const existing = normalizeArchitectureStorageIo(existingStorageIo);
+  if (!existing || existing.storageIoId !== command.storageIoId) {
+    throw new Error(`ARCH-STORAGE-IO-MISSING: ${command.storageIoId}`);
+  }
+  if (!normalizeArchitectureComponent(component)) {
+    throw new Error(`ARCH-STORAGE-IO-COMPONENT-MISSING: ${command.componentId}`);
+  }
+  if (existing.componentId !== command.componentId) {
+    throw new Error(
+      `ARCH-STORAGE-IO-COMPONENT-MISMATCH: ${command.storageIoId} belongs to ${existing.componentId}, not ${command.componentId}.`
+    );
+  }
+  if (existing.storageObject !== command.expectedStorageObject) {
+    throw new Error(
+      `ARCH-STORAGE-IO-STALE: ${command.storageIoId} expected ${command.expectedStorageObject}, found ${existing.storageObject}.`
+    );
+  }
+  if (
+    existing.direction !== command.direction ||
+    existing.accessPattern !== command.accessPattern
+  ) {
+    throw new Error(
+      `ARCH-STORAGE-IO-SEMANTICS-MISMATCH: ${command.storageIoId} direction/access pattern must remain ${existing.direction}/${existing.accessPattern}.`
+    );
+  }
+  if (command.contractId && !normalizeArchitectureContract(contract)) {
+    throw new Error(`ARCH-STORAGE-IO-CONTRACT-MISSING: ${command.contractId}`);
+  }
+  if (command.contractId && command.contractId !== existing.contractId) {
+    throw new Error(
+      `ARCH-STORAGE-IO-CONTRACT-MISMATCH: ${command.storageIoId} contract must remain ${existing.contractId || 'none'}.`
+    );
+  }
+
+  validateArchitectureStorageIoRecordCommand(command);
+
+  const storageIo = {
+    storageIoId: command.storageIoId,
+    componentId: command.componentId,
+    storageObject: command.storageObject,
+    direction: command.direction,
+    accessPattern: command.accessPattern,
+    contractId: existing.contractId,
+    createdAt: existing.createdAt,
+  };
+  const audit = architectureScopedAudit({ command, operationId, now });
+
+  return { storageIo, expectedStorageObject: command.expectedStorageObject, audit };
 }
 
 function planArchitectureFitnessScanOperation({ command, design, scanResult, operationId, now }) {
@@ -4316,6 +4537,17 @@ async function readArchitecturePort(client, portId) {
   return result.rows[0] || null;
 }
 
+async function readArchitectureStorageIo(client, storageIoId) {
+  const result = await client.query(
+    `select *
+     from architecture.component_storage_io
+     where storage_io_id = $1`,
+    [storageIoId]
+  );
+
+  return result.rows[0] || null;
+}
+
 async function readArchitectureTest(client, testId) {
   const result = await client.query(
     `select *
@@ -4714,6 +4946,36 @@ async function writePlannedArchitecturePortRecordOperation(client, planned) {
       planned.port.createdAt,
     ]
   );
+
+  await writeArchitectureScopedAudit(client, planned.audit);
+}
+
+async function writePlannedArchitectureStorageIoRecordOperation(client, planned) {
+  const result = await client.query(
+    `update architecture.component_storage_io
+     set storage_object = $2,
+         direction = $3,
+         access_pattern = $4,
+         contract_id = $5
+     where storage_io_id = $1
+       and component_id = $6
+       and storage_object = $7`,
+    [
+      planned.storageIo.storageIoId,
+      planned.storageIo.storageObject,
+      planned.storageIo.direction,
+      planned.storageIo.accessPattern,
+      planned.storageIo.contractId,
+      planned.storageIo.componentId,
+      planned.expectedStorageObject,
+    ]
+  );
+
+  if (result.rowCount !== 1) {
+    throw new Error(
+      `ARCH-STORAGE-IO-CONCURRENT-UPDATE: ${planned.storageIo.storageIoId} no longer writes ${planned.expectedStorageObject}.`
+    );
+  }
 
   await writeArchitectureScopedAudit(client, planned.audit);
 }
@@ -5627,6 +5889,57 @@ async function applyArchitecturePortRecordOperation(command, options = {}) {
   }
 }
 
+async function applyArchitectureStorageIoRecordOperation(command, options = {}) {
+  const client =
+    options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
+  const ownsClient = !options.client;
+
+  if (ownsClient) {
+    await client.connect();
+  }
+
+  try {
+    await assertPlanningDbCurrentSchemaReady(client);
+    await client.query('begin');
+
+    const replay = await readExistingArchitectureDesignOperation(client, command.idempotencyKey);
+    if (replay) {
+      assertArchitectureScopedOperationIdempotentReplayMatches(replay, command);
+      await client.query('commit');
+      return { idempotent: true, audit: replay };
+    }
+
+    const design = await readArchitectureDesign(client, command.designId);
+    const designScopes = await readArchitectureDesignScopes(client, command.designId);
+    const component = await readArchitectureComponent(client, command.componentId);
+    const contract = command.contractId
+      ? await readArchitectureContract(client, command.contractId)
+      : null;
+    const existingStorageIo = await readArchitectureStorageIo(client, command.storageIoId);
+    const planned = planArchitectureStorageIoRecordOperation({
+      command,
+      design,
+      designScopes,
+      component,
+      contract,
+      existingStorageIo,
+      operationId: options.operationId || crypto.randomUUID(),
+      now: options.now || new Date(),
+    });
+
+    await writePlannedArchitectureStorageIoRecordOperation(client, planned);
+    await client.query('commit');
+    return { idempotent: false, ...planned };
+  } catch (error) {
+    await client.query('rollback');
+    throw error;
+  } finally {
+    if (ownsClient) {
+      await client.end();
+    }
+  }
+}
+
 async function applyArchitectureFitnessScanOperation(command, options = {}) {
   const client =
     options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
@@ -6089,6 +6402,13 @@ function printOperationResult(result) {
     return;
   }
 
+  if (result.storageIo) {
+    console.log(
+      `[planning:db:operate] ${result.audit.operationType} ${result.storageIo.storageIoId} object=${result.storageIo.storageObject}`
+    );
+    return;
+  }
+
   if (result.scan) {
     console.log(
       `[planning:db:operate] ${result.audit.operationType} ${result.scan.scanId} observations=${result.observations.length} evaluations=${result.evaluations.length}`
@@ -6191,29 +6511,31 @@ async function main() {
               ? await applyArchitectureContractRecordOperation(command)
               : command.kind === 'architecture_port_record'
                 ? await applyArchitecturePortRecordOperation(command)
-                : command.kind === 'architecture_fitness_scan'
-                  ? await applyArchitectureFitnessScanOperation(command)
-                  : command.kind === 'architecture_test_record'
-                    ? await applyArchitectureTestRecordOperation(command)
-                    : command.kind === 'architecture_observability_record'
-                      ? await applyArchitectureObservabilityRecordOperation(command)
-                      : command.kind === 'component_create'
-                        ? await applyComponentCreateOperation(command)
-                        : command.kind === 'component_reparent'
-                          ? await applyComponentReparentOperation(command)
-                          : command.kind === 'db_surface_upsert'
-                            ? await applyDbSurfaceUpsertOperation(command)
-                            : command.kind === 'feature_mechanization_rail_record'
-                              ? await applyFeatureMechanizationRailRecordOperation(command)
-                              : command.kind === 'governance_refresh_run_record'
-                                ? await applyGovernanceRefreshRunRecordOperation(command)
-                                : command.kind.startsWith('fowler_analysis_')
-                                  ? await applyFowlerAnalysisOperation(command)
-                                  : (() => {
-                                      throw new Error(
-                                        `Unsupported planning DB operation "${command.kind}".`
-                                      );
-                                    })();
+                : command.kind === 'architecture_storage_io_record'
+                  ? await applyArchitectureStorageIoRecordOperation(command)
+                  : command.kind === 'architecture_fitness_scan'
+                    ? await applyArchitectureFitnessScanOperation(command)
+                    : command.kind === 'architecture_test_record'
+                      ? await applyArchitectureTestRecordOperation(command)
+                      : command.kind === 'architecture_observability_record'
+                        ? await applyArchitectureObservabilityRecordOperation(command)
+                        : command.kind === 'component_create'
+                          ? await applyComponentCreateOperation(command)
+                          : command.kind === 'component_reparent'
+                            ? await applyComponentReparentOperation(command)
+                            : command.kind === 'db_surface_upsert'
+                              ? await applyDbSurfaceUpsertOperation(command)
+                              : command.kind === 'feature_mechanization_rail_record'
+                                ? await applyFeatureMechanizationRailRecordOperation(command)
+                                : command.kind === 'governance_refresh_run_record'
+                                  ? await applyGovernanceRefreshRunRecordOperation(command)
+                                  : command.kind.startsWith('fowler_analysis_')
+                                    ? await applyFowlerAnalysisOperation(command)
+                                    : (() => {
+                                        throw new Error(
+                                          `Unsupported planning DB operation "${command.kind}".`
+                                        );
+                                      })();
   printOperationResult(result);
 }
 
@@ -6230,6 +6552,7 @@ module.exports = {
   applyArchitectureDesignCreateOperation,
   applyArchitectureFitnessScanOperation,
   applyArchitecturePortRecordOperation,
+  applyArchitectureStorageIoRecordOperation,
   applyArchitectureTestRecordOperation,
   applyArchitectureObservabilityRecordOperation,
   applyArchitectureRelationRecordOperation,
@@ -6257,6 +6580,7 @@ module.exports = {
   planArchitectureDesignCreateOperation,
   planArchitectureFitnessScanOperation,
   planArchitecturePortRecordOperation,
+  planArchitectureStorageIoRecordOperation,
   planArchitectureTestRecordOperation,
   planArchitectureObservabilityRecordOperation,
   planArchitectureRelationRecordOperation,
@@ -6279,6 +6603,7 @@ module.exports = {
   writePlannedArchitectureContractRecordOperation,
   writePlannedArchitectureFitnessScanOperation,
   writePlannedArchitecturePortRecordOperation,
+  writePlannedArchitectureStorageIoRecordOperation,
   writePlannedArchitectureTestRecordOperation,
   writePlannedArchitectureObservabilityRecordOperation,
   writePlannedFeatureMechanizationRailRecordOperation,
