@@ -719,6 +719,7 @@ function buildComponentTopologyProjection(facts, options = {}) {
     knownComponentIds,
     'responsibility'
   );
+  const relationById = new Map(relations.map((relation) => [relation.relationId, relation]));
   const maturityByComponent = uniqueRowsByComponent(
     facts.maturity || [],
     knownComponentIds,
@@ -728,7 +729,21 @@ function buildComponentTopologyProjection(facts, options = {}) {
     facts.drift || [],
     knownComponentIds,
     'drift',
-    (row) => row.subject_id ?? row.subjectId
+    (row) => {
+      const subjectKind = String(row.subject_kind ?? row.subjectKind ?? '').trim();
+      const subjectId = String(row.subject_id ?? row.subjectId ?? '').trim();
+      if (subjectKind === 'component') return subjectId;
+      if (subjectKind === 'relation') {
+        const relation = relationById.get(subjectId);
+        if (!relation) {
+          throw new Error(`Unknown Planning DB drift relation ${subjectId || '<empty>'}.`);
+        }
+        return relation.sourceComponentId;
+      }
+      throw new Error(
+        `Unsupported Planning DB drift subject kind ${subjectKind || '<empty>'} for ${subjectId || '<empty>'}.`
+      );
+    }
   );
   const currentDocuments = (facts.documents || []).filter(isCurrentCanonicalDocument);
   for (const document of currentDocuments) {
