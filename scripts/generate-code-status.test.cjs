@@ -493,6 +493,38 @@ test('component topology rejects an invalid current canonical document binding',
   );
 });
 
+test('component topology reports a current document binding whose component is absent', () => {
+  const projection = buildComponentTopologyProjection(
+    {
+      components: [architectureComponent('A')],
+      relations: [],
+      responsibilities: [],
+      maturity: [],
+      drift: [],
+      documents: [
+        {
+          component_id: 'RETIRED',
+          document_path: 'docs/architecture/components/retired.md',
+          canonicality: 'canonical',
+          lifecycle_state: 'active',
+          status: 'Active',
+        },
+      ],
+    },
+    {
+      gitSha: 'fixture-sha',
+      repositoryUrl: 'https://github.com/example/dvt',
+      pathExists: (sourcePath) =>
+        ['apps/a', 'docs/architecture/components/retired.md'].includes(sourcePath),
+      pathKind: () => 'file',
+    }
+  );
+
+  assert.deepEqual(projection.globalGaps, [
+    'orphan-canonical-document-binding:RETIRED:docs/architecture/components/retired.md',
+  ]);
+});
+
 test('generation modes isolate code-state and repository-map work', async () => {
   assert.equal(resolveGenerationMode([]), 'all');
   assert.equal(resolveGenerationMode(['--code-state-only']), 'code-state-only');
