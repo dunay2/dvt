@@ -123043,7 +123043,17 @@
         "docs/.manifest.json",
         "tools/planning-db/state/canonical-state.json",
         "scripts/check-feature-mechanization.cjs",
-        "scripts/check-feature-mechanization.test.cjs"
+        "scripts/check-feature-mechanization.test.cjs",
+        "apps/api/package.json",
+        "docs/architecture/domain-api.md",
+        "docs/architecture/domain-map.md",
+        "docs/architecture/index.md",
+        "docs/architecture/infra/index.md",
+        "docs/architecture/system/subsystems/read/index.md",
+        "docs/guides/plan-compile-target-architecture-technical-manual-20260417.md",
+        "scripts/planning-db-schema.test.cjs",
+        "tools/ci/emit-test-matrix.test.mjs",
+        "tools/planning-db/schema.sql"
       ],
       "architectureGuards": [
         "pnpm --filter dvt-api test:arch",
@@ -123089,8 +123099,8 @@
               "Hand-maintained source and test inventories",
               "Retirement must remove forbidden duplicate authorities without weakening add or modify checks."
             ],
-            "cypressCoverage": "N/A - repository governance CLI gate",
-            "architectureGuard": "node --test scripts/check-feature-mechanization.test.cjs"
+            "cypressCoverage": "N/A - API governance and verification-manifest hard cut",
+            "architectureGuard": "pnpm --filter dvt-api test:arch"
           }
         ],
         "version": 1,
@@ -123137,7 +123147,17 @@
               "docs/architecture/components/api/index.md",
               "apps/api/src/entrypoints/http/signalRunRoute*",
               "scripts/check-feature-mechanization.cjs",
-              "scripts/check-feature-mechanization.test.cjs"
+              "scripts/check-feature-mechanization.test.cjs",
+              "apps/api/package.json",
+              "docs/architecture/domain-api.md",
+              "docs/architecture/domain-map.md",
+              "docs/architecture/index.md",
+              "docs/architecture/infra/index.md",
+              "docs/architecture/system/subsystems/read/index.md",
+              "docs/guides/plan-compile-target-architecture-technical-manual-20260417.md",
+              "scripts/planning-db-schema.test.cjs",
+              "tools/ci/emit-test-matrix.test.mjs",
+              "tools/planning-db/schema.sql"
             ],
             "expectedFailure": "A deleted forbidden surface is rejected by allowedImplementationSurfaces."
           }
@@ -123180,7 +123200,17 @@
           "docs/.manifest.json",
           "tools/planning-db/state/canonical-state.json",
           "scripts/check-feature-mechanization.cjs",
-          "scripts/check-feature-mechanization.test.cjs"
+          "scripts/check-feature-mechanization.test.cjs",
+          "apps/api/package.json",
+          "docs/architecture/domain-api.md",
+          "docs/architecture/domain-map.md",
+          "docs/architecture/index.md",
+          "docs/architecture/infra/index.md",
+          "docs/architecture/system/subsystems/read/index.md",
+          "docs/guides/plan-compile-target-architecture-technical-manual-20260417.md",
+          "scripts/planning-db-schema.test.cjs",
+          "tools/ci/emit-test-matrix.test.mjs",
+          "tools/planning-db/schema.sql"
         ],
         "forbiddenImplementationSurfaces": [
           "packages/@dvt/contracts/src/**",
@@ -123199,7 +123229,7 @@
           "apps/api/docs/**"
         ]
       },
-      "revision": 2,
+      "revision": 3,
       "createdBy": "codex",
       "createdAt": "2026-08-10T19:37:49.432Z"
     },
@@ -148450,6 +148480,150 @@
         ]
       },
       "createdAt": "2026-08-10T20:31:34.528Z"
+    },
+    {
+      "operationId": "a4507275-7c41-4449-874c-702eb903b2cb",
+      "idempotencyKey": "gh-2167-r1-1d-allowed-surfaces-v3",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#R1-1D-API-GOVERNANCE-HARDCUT#command#generateplanningderivedsurfaces",
+      "sourcePath": "scripts/documentation-publication.cjs",
+      "sourceContentSha256": "db5072ae2b773fe2418a91db0528e5fd6541ea37ae6368377639a9d94e8f7311",
+      "expectedRevision": 2,
+      "previousRevision": 2,
+      "resultingRevision": 3,
+      "payload": {
+        "redTest": "node --test scripts/check-feature-mechanization.test.cjs",
+        "dddOwner": "PlanningDocumentationProjection",
+        "railName": "GeneratePlanningDerivedSurfaces",
+        "railType": "command",
+        "featureId": "R1-1D-API-GOVERNANCE-HARDCUT",
+        "greenTest": "node --test scripts/check-feature-mechanization.test.cjs",
+        "sourceRef": "scripts/documentation-publication.cjs",
+        "unitTests": [
+          "apps/api/test/testExecutionManifest.test.ts",
+          "apps/api/test/architecture/stateStoreRoleBoundary.architecture.test.ts",
+          "scripts/check-feature-mechanization.test.cjs"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2167"],
+        "cypressFlows": [
+          "N/A - API governance and verification-manifest hard cut",
+          "N/A - repository governance CLI gate"
+        ],
+        "domainObjects": [
+          "ProtectedRuntimeRouteRegistry",
+          "ArchitectureDesignAuthority",
+          "DocumentationLifecycleReadModel",
+          "PlanningDocumentationProjection"
+        ],
+        "fowlerSignals": [
+          "Duplicate architecture authority compiled into product code",
+          "Topology tests coupled to comments filenames and documents",
+          "Duplicate unit and integration execution",
+          "Hand-maintained source and test inventories",
+          "Retirement must remove forbidden duplicate authorities without weakening add or modify checks."
+        ],
+        "patchSurfaces": [
+          "apps/api/vitest.config.ts",
+          "apps/api/test/testExecutionManifest.test.ts",
+          "apps/api/test/**",
+          "docs/architecture/components/api/index.md",
+          "apps/api/src/entrypoints/http/signalRunRoute*",
+          "scripts/check-feature-mechanization.cjs",
+          "scripts/check-feature-mechanization.test.cjs",
+          "apps/api/package.json",
+          "docs/architecture/domain-api.md",
+          "docs/architecture/domain-map.md",
+          "docs/architecture/index.md",
+          "docs/architecture/infra/index.md",
+          "docs/architecture/system/subsystems/read/index.md",
+          "docs/guides/plan-compile-target-architecture-technical-manual-20260417.md",
+          "scripts/planning-db-schema.test.cjs",
+          "tools/ci/emit-test-matrix.test.mjs",
+          "tools/planning-db/schema.sql"
+        ],
+        "completionGate": [
+          "pnpm --filter dvt-api test",
+          "pnpm --filter dvt-api test:integration",
+          "pnpm --filter dvt-api lint",
+          "pnpm --filter dvt-api typecheck",
+          "pnpm docs:gov:links",
+          "pnpm planning:db:current-schema:check",
+          "pnpm planning:db:export:check",
+          "pnpm verify:prepush",
+          "node --test scripts/check-feature-mechanization.test.cjs",
+          "pnpm docs:feature-mechanization:implementation -- --feature R1-1D-API-GOVERNANCE-HARDCUT"
+        ],
+        "componentGuides": ["docs/architecture/components/api/index.md"],
+        "expectedFailure": "A deleted forbidden surface is rejected by allowedImplementationSurfaces.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
+          "docs/adr/ADR-0063-planning-db-current-schema-rebuild.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "apps/api/README.md",
+          "docs/architecture/components/api/index.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter dvt-api test:arch",
+          "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/architecture/stateStoreRoleBoundary.architecture.test.ts test/testExecutionManifest.test.ts",
+          "node --test scripts/check-feature-mechanization.test.cjs"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2167",
+        "implementationRefs": [
+          "scripts/documentation-publication.cjs#DocumentationPublicationAssembler"
+        ],
+        "normalizedRailName": "generateplanningderivedsurfaces",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "db5072ae2b773fe2418a91db0528e5fd6541ea37ae6368377639a9d94e8f7311",
+        "allowedImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/signalRunRoute*",
+          "apps/api/test/**",
+          "apps/api/vitest.config.ts",
+          "apps/api/README.md",
+          "docs/architecture/components/api/**",
+          "docs/architecture/components/web/**",
+          "docs/architecture/components/engine/**",
+          "docs/adr/**",
+          "docs/planning/status/**",
+          "docs/.manifest.json",
+          "tools/planning-db/state/canonical-state.json",
+          "scripts/check-feature-mechanization.cjs",
+          "scripts/check-feature-mechanization.test.cjs",
+          "apps/api/package.json",
+          "docs/architecture/domain-api.md",
+          "docs/architecture/domain-map.md",
+          "docs/architecture/index.md",
+          "docs/architecture/infra/index.md",
+          "docs/architecture/system/subsystems/read/index.md",
+          "docs/guides/plan-compile-target-architecture-technical-manual-20260417.md",
+          "scripts/planning-db-schema.test.cjs",
+          "tools/ci/emit-test-matrix.test.mjs",
+          "tools/planning-db/schema.sql"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "packages/@dvt/contracts/src/**",
+          "packages/@dvt/engine/**",
+          "packages/@dvt/adapter-*/**",
+          "docs/archive/**",
+          "apps/api/src/application/ports/protectedRuntimeCommandQueryRailTypes.ts",
+          "apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimePlanCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts",
+          "apps/api/src/application/ports/protectedRuntimeRunCommandQueryRails.ts",
+          "apps/api/src/application/ports/protectedRuntimeRunRailVocabulary.ts",
+          "apps/api/src/application/ports/protectedRuntimeWorkspaceCommandQueryRails.ts",
+          "apps/api/src/entrypoints/http/signalRunRouteParser.constants.ts",
+          "apps/api/src/application/ports/protectedRuntime*",
+          "apps/api/docs/**"
+        ]
+      },
+      "createdAt": "2026-08-10T21:08:56.592Z"
     }
   ]
 }
