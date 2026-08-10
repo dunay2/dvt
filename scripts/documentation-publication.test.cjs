@@ -327,7 +327,7 @@ test('rejects duplicate source and generated routes', async () => {
   );
 });
 
-test('rejects missing generated sources and paths outside the generated root', () => {
+test('rejects missing generated sources and paths outside the generated root', async () => {
   assert.throws(
     () =>
       new DocumentationPublicationPolicy({
@@ -370,7 +370,7 @@ test('rejects missing generated sources and paths outside the generated root', (
   );
   fs.writeFileSync(path.join(root, 'zensical.yml'), 'site_name: Test\ndocs_dir: docs\n', 'utf8');
 
-  assert.rejects(
+  await assert.rejects(
     new DocumentationPublicationAssembler(
       fixtureAssemblerOptions(root, {
         lifecycleRows: [lifecycleRow(root, 'docs/index.md')],
