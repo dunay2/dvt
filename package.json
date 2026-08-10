@@ -145,7 +145,7 @@
     "docs:pr:create": "node scripts/docs-pr-create.cjs",
     "docs:canonical:fix": "node scripts/docs-canonical-fix.cjs",
     "docs:status:generate": "node scripts/generate-code-status.cjs",
-    "docs:status:check": "pnpm docs:status:generate --check",
+    "docs:status:check": "pnpm docs:status:generate --code-state-only --check",
     "docs:knowledge-intake:generate": "node scripts/generate-knowledge-intake-literature.cjs",
     "docs:knowledge-intake:check": "node scripts/generate-knowledge-intake-literature.cjs --check",
     "docs:dbt-roundtrip-capabilities:generate": "node scripts/generate-dbt-project-roundtrip-capability-status.cjs",

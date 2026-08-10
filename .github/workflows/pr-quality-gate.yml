@@ -195,7 +195,7 @@ jobs:
         if:
           github.event_name == 'pull_request' && steps.scope.outputs.generated_status_relevant ==
           'true'
-        run: pnpm docs:build && pnpm docs:gov:links
+        run: pnpm docs:publish && pnpm docs:build && pnpm docs:gov:links
 
       - name: Validate generated capability coverage doc
         if:
