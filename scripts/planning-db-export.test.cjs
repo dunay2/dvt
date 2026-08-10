@@ -67,6 +67,13 @@ function createCanonicalStateFixture(repoRoot) {
     createdAt: '2026-07-31T10:00:00.000Z',
   };
   const architectureState = emptyArchitectureState();
+  architectureState.design = [
+    {
+      design_id: 'TEST-GOVERNANCE-PROJECTION',
+      created_at: '2026-08-09T08:00:00.000Z',
+      updated_at: '2026-08-10T12:00:00.000Z',
+    },
+  ];
   architectureState.component = [
     {
       component_id: 'SYS-WEB-EXAMPLE',
@@ -342,6 +349,7 @@ test('planning DB export writes deterministic current architecture state', async
       'utf8'
     );
     assert.match(unitNavigation, /Generated from Planning DB authority/u);
+    assert.match(unitNavigation, /last_reviewed: 2026-08-10/u);
     assert.match(unitNavigation, /pnpm planning:db:query component-tree --no-refresh/u);
     assert.doesNotMatch(unitNavigation, /repository tracked files:\s*\d+/iu);
     const planStoreNavigation = fs.readFileSync(
@@ -349,6 +357,7 @@ test('planning DB export writes deterministic current architecture state', async
       'utf8'
     );
     assert.match(planStoreNavigation, /`SYS-PLANSTORE` — Plan store \(`review`\)/u);
+    assert.match(planStoreNavigation, /last_reviewed: 2026-08-10/u);
     assert.match(planStoreNavigation, /pnpm planning:db:query component-metadata/u);
     assert.doesNotMatch(planStoreNavigation, /StoredPlanExecutabilityValidator/u);
     assert.doesNotMatch(planStoreNavigation, /Repository tracked files/iu);

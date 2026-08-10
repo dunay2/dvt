@@ -2,8 +2,8 @@
 title: System Governance Unit Index
 status: Review
 owner: Architecture / Docs / Delivery
+last_reviewed: 2026-08-10
 planning_type: status
-source_authority: Planning DB
 ---
 
 # System Governance Unit Index

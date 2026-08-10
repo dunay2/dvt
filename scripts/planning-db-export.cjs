@@ -365,7 +365,19 @@ class PlanningDbExportRunner {
     )}`;
   }
 
-  renderGovernanceUnitNavigation(definitions) {
+  latestArchitectureReviewDate(architectureState) {
+    const reviewDates = (architectureState.design || [])
+      .map((design) => String(design.updated_at || design.created_at || '').slice(0, 10))
+      .filter((date) => /^\d{4}-\d{2}-\d{2}$/u.test(date))
+      .sort();
+    const latest = reviewDates.at(-1);
+    if (!latest) {
+      throw new Error('Cannot publish governance navigation without architecture review state.');
+    }
+    return latest;
+  }
+
+  renderGovernanceUnitNavigation(definitions, lastReviewed) {
     const root = definitions.find(
       (definition) => !definition.parentComponentId && definition.level === 'system'
     );
@@ -384,8 +396,8 @@ class PlanningDbExportRunner {
 title: System Governance Unit Index
 status: Review
 owner: Architecture / Docs / Delivery
+last_reviewed: ${lastReviewed}
 planning_type: status
-source_authority: Planning DB
 ---
 
 # System Governance Unit Index
@@ -421,7 +433,7 @@ ${domainLines.join('\n')}
 `;
   }
 
-  renderPlanStoreNavigation(definitions) {
+  renderPlanStoreNavigation(definitions, lastReviewed) {
     const planStoreDefinitions = definitions
       .filter((definition) => /^SYS-PLANSTORE(?:-|$)/u.test(definition.componentId))
       .sort((left, right) => left.componentId.localeCompare(right.componentId));
@@ -437,8 +449,8 @@ ${domainLines.join('\n')}
 title: System Governance Plan-Store Navigation
 status: Review
 owner: Architecture / Docs / Delivery
+last_reviewed: ${lastReviewed}
 planning_type: status
-source_authority: Planning DB
 ---
 
 # System Governance Plan-Store Navigation
@@ -471,6 +483,7 @@ ${componentLines.join('\n')}
 
   writeGovernanceProjections(snapshotRows, outputRoot) {
     const definitions = snapshotRows.governanceComponentEffectiveDefinitions;
+    const lastReviewed = this.latestArchitectureReviewDate(snapshotRows.architectureState);
     this.writeTextArtifact(
       outputRoot,
       governanceUnitManifestPath,
@@ -479,12 +492,12 @@ ${componentLines.join('\n')}
     this.writeTextArtifact(
       outputRoot,
       governanceUnitNavigationPath,
-      this.renderGovernanceUnitNavigation(definitions)
+      this.renderGovernanceUnitNavigation(definitions, lastReviewed)
     );
     this.writeTextArtifact(
       outputRoot,
       planStoreNavigationPath,
-      this.renderPlanStoreNavigation(definitions)
+      this.renderPlanStoreNavigation(definitions, lastReviewed)
     );
   }
 
