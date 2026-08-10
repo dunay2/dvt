@@ -1,7 +1,6 @@
 /** Owned concern: define canvas runtime surface policy without graph mapping logic. */
 
-export type CanvasSurfaceLaunchPoint =
-  'canvas-context-menu' | 'command-palette' | 'node-context-menu' | 'double-click';
+export type CanvasSurfaceLaunchPoint = 'canvas-context-menu' | 'command-palette' | 'double-click';
 
 export type CanvasSurfacePlacement = 'contextual-modal' | 'contextual-overlay' | 'bottom-drawer';
 
@@ -36,7 +35,7 @@ export type CanvasSourceImportSurfacePolicy = {
 
 export type CanvasNodeWorkbenchSurfacePolicy = {
   placement: 'contextual-overlay';
-  openedFrom: readonly Extract<CanvasSurfaceLaunchPoint, 'node-context-menu' | 'double-click'>[];
+  openedFrom: readonly Extract<CanvasSurfaceLaunchPoint, 'double-click'>[];
   sections: readonly CanvasNodeWorkbenchSectionPolicyId[];
 };
 

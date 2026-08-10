@@ -45,6 +45,8 @@ describe('dbt project file Canvas architecture', () => {
     const execution = readAppSource('useDbtProjectFileExecution.ts');
 
     expect(strategy).toContain("id: 'dbt-project-files-read-only-canvas'");
+    expect(strategy).toContain("openedFrom: ['double-click']");
+    expect(strategy).not.toContain("'node-context-menu'");
     expect(strategy).toContain('operationalDrawer');
     expect(strategy).toContain("openedFrom: ['canvas-context-menu']");
     expect(controller).toContain('useDbtProjectFileExecution');
