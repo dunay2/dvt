@@ -87361,7 +87361,11 @@
         "scripts/generate-spec-traceability-report.cjs#repositoryLink",
         "scripts/generate-spec-traceability-report.cjs#summaryOutputPath",
         "scripts/generate-spec-traceability-report.cjs#uniqueSorted",
-        "scripts/generate-spec-traceability-report.cjs#writeIfChanged"
+        "scripts/generate-spec-traceability-report.cjs#writeIfChanged",
+        "scripts/generate-spec-traceability-report.cjs#commandFileFromValidation",
+        "scripts/generate-spec-traceability-report.cjs#isRegisteredVerificationCommand",
+        "scripts/generate-spec-traceability-report.cjs#packageScriptFromValidation",
+        "scripts/generate-spec-traceability-report.cjs#uniqueSortedSymbols"
       ],
       "implementationRefs": [
         "scripts/generate-spec-traceability-report.cjs#buildFeatureTraceabilityProjection",
@@ -87389,7 +87393,11 @@
         "scripts/generate-spec-traceability-report.cjs#repositoryLink",
         "scripts/generate-spec-traceability-report.cjs#summaryOutputPath",
         "scripts/generate-spec-traceability-report.cjs#uniqueSorted",
-        "scripts/generate-spec-traceability-report.cjs#writeIfChanged"
+        "scripts/generate-spec-traceability-report.cjs#writeIfChanged",
+        "scripts/generate-spec-traceability-report.cjs#commandFileFromValidation",
+        "scripts/generate-spec-traceability-report.cjs#isRegisteredVerificationCommand",
+        "scripts/generate-spec-traceability-report.cjs#packageScriptFromValidation",
+        "scripts/generate-spec-traceability-report.cjs#uniqueSortedSymbols"
       ],
       "documentationRefs": [
         "docs/generated-docs-policy.json",
@@ -87416,7 +87424,9 @@
       "architectureGuards": [
         "Feature identities and relations come only from existing Planning DB feature-mechanization read models.",
         "Repository path existence comes only from the evaluated Git tree.",
-        "Traceability views are generated only by explicit documentation publication."
+        "Traceability views are generated only by explicit documentation publication.",
+        "Repository paths must be relative, traversal-free, and present in the evaluated Git tree.",
+        "Verification commands require both an exact feature validation and an exact repository command catalog match."
       ],
       "completionGate": [
         "node --test scripts/generate-spec-traceability-report.test.cjs scripts/documentation-publication.test.cjs",
@@ -87424,7 +87434,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/generate-spec-traceability-report.cjs",
-      "sourceContentSha256": "f3906be01a05316adafb85c88fa0b717f50793130c922c248d4b6016c5bec432",
+      "sourceContentSha256": "16bd043116720830e58b2f3b0c9d4da06703effef6060eb050b36465cf0e542c",
       "rawRail": {
         "name": "GeneratePlanningDerivedSurfaces",
         "type": "command",
@@ -87952,6 +87962,86 @@
             ],
             "cypressCoverage": "N/A - generated documentation is verified through Zensical build and demanding-user browser accessibility QA.",
             "architectureGuard": "Feature identities and relations come only from existing Planning DB feature-mechanization read models."
+          },
+          {
+            "name": "commandFileFromValidation",
+            "path": "scripts/generate-spec-traceability-report.cjs",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": [
+              "scripts/generate-spec-traceability-report.test.cjs",
+              "scripts/documentation-publication.test.cjs"
+            ],
+            "fowlerSignals": [
+              "published_language",
+              "query_object",
+              "gateway",
+              "registry",
+              "service_layer",
+              "executable_specification"
+            ],
+            "cypressCoverage": "N/A - generated documentation is verified through Zensical build and demanding-user browser accessibility QA.",
+            "architectureGuard": "Feature identities and relations come only from existing Planning DB feature-mechanization read models."
+          },
+          {
+            "name": "isRegisteredVerificationCommand",
+            "path": "scripts/generate-spec-traceability-report.cjs",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": [
+              "scripts/generate-spec-traceability-report.test.cjs",
+              "scripts/documentation-publication.test.cjs"
+            ],
+            "fowlerSignals": [
+              "published_language",
+              "query_object",
+              "gateway",
+              "registry",
+              "service_layer",
+              "executable_specification"
+            ],
+            "cypressCoverage": "N/A - generated documentation is verified through Zensical build and demanding-user browser accessibility QA.",
+            "architectureGuard": "Feature identities and relations come only from existing Planning DB feature-mechanization read models."
+          },
+          {
+            "name": "packageScriptFromValidation",
+            "path": "scripts/generate-spec-traceability-report.cjs",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": [
+              "scripts/generate-spec-traceability-report.test.cjs",
+              "scripts/documentation-publication.test.cjs"
+            ],
+            "fowlerSignals": [
+              "published_language",
+              "query_object",
+              "gateway",
+              "registry",
+              "service_layer",
+              "executable_specification"
+            ],
+            "cypressCoverage": "N/A - generated documentation is verified through Zensical build and demanding-user browser accessibility QA.",
+            "architectureGuard": "Feature identities and relations come only from existing Planning DB feature-mechanization read models."
+          },
+          {
+            "name": "uniqueSortedSymbols",
+            "path": "scripts/generate-spec-traceability-report.cjs",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": [
+              "scripts/generate-spec-traceability-report.test.cjs",
+              "scripts/documentation-publication.test.cjs"
+            ],
+            "fowlerSignals": [
+              "published_language",
+              "query_object",
+              "gateway",
+              "registry",
+              "service_layer",
+              "executable_specification"
+            ],
+            "cypressCoverage": "N/A - generated documentation is verified through Zensical build and demanding-user browser accessibility QA.",
+            "architectureGuard": "Feature identities and relations come only from existing Planning DB feature-mechanization read models."
           }
         ],
         "version": 1,
@@ -87988,7 +88078,7 @@
               "docs/generated-docs-policy.json",
               "scripts/check-generated-docs-policy.cjs"
             ],
-            "expectedFailure": "Traceability remains manually tracked, inferred from names, disconnected from exact Planning DB feature relations, or generated outside explicit publication."
+            "expectedFailure": "Traceability loses an exact symbol identity, publishes an unregistered command, accepts an unsafe path, remains manually tracked, or is generated outside explicit publication."
           }
         ],
         "componentGuides": [
@@ -88012,7 +88102,9 @@
         "architectureGuards": [
           "Feature identities and relations come only from existing Planning DB feature-mechanization read models.",
           "Repository path existence comes only from the evaluated Git tree.",
-          "Traceability views are generated only by explicit documentation publication."
+          "Traceability views are generated only by explicit documentation publication.",
+          "Repository paths must be relative, traversal-free, and present in the evaluated Git tree.",
+          "Verification commands require both an exact feature validation and an exact repository command catalog match."
         ],
         "implementationPlan": "https://github.com/dunay2/dvt/issues/2147",
         "mechanizationStatus": "implemented",
@@ -88034,7 +88126,7 @@
           "tools/planning-db/schema.sql"
         ]
       },
-      "revision": 1,
+      "revision": 2,
       "createdBy": "codex",
       "createdAt": "2026-08-10T08:24:00.833Z"
     },
@@ -133377,6 +133469,133 @@
         ]
       },
       "createdAt": "2026-08-10T08:24:50.715Z"
+    },
+    {
+      "operationId": "4a359c11-45da-493b-8f0d-7a8b7f6c7946",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:DOC1-4-DB-FIRST-TRACEABILITY:command:generateplanningderivedsurfaces:1:3090bb9c1c19a4f0",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#DOC1-4-DB-FIRST-TRACEABILITY#command#generateplanningderivedsurfaces",
+      "sourcePath": "scripts/generate-spec-traceability-report.cjs",
+      "sourceContentSha256": "16bd043116720830e58b2f3b0c9d4da06703effef6060eb050b36465cf0e542c",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "node --test scripts/generate-spec-traceability-report.test.cjs scripts/documentation-publication.test.cjs",
+        "dddOwner": "PlanningDocumentationProjection",
+        "railName": "GeneratePlanningDerivedSurfaces",
+        "railType": "command",
+        "featureId": "DOC1-4-DB-FIRST-TRACEABILITY",
+        "greenTest": "node --test scripts/generate-spec-traceability-report.test.cjs scripts/documentation-publication.test.cjs",
+        "sourceRef": "scripts/generate-spec-traceability-report.cjs",
+        "unitTests": [
+          "scripts/generate-spec-traceability-report.test.cjs",
+          "scripts/documentation-publication.test.cjs"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2147"],
+        "cypressFlows": [
+          "N/A - generated documentation is verified through Zensical build and demanding-user browser accessibility QA."
+        ],
+        "domainObjects": [
+          "FeatureTraceabilityProjection",
+          "FeatureTraceabilityView",
+          "DocumentationPublication"
+        ],
+        "fowlerSignals": [
+          "published_language",
+          "query_object",
+          "gateway",
+          "registry",
+          "service_layer",
+          "executable_specification"
+        ],
+        "patchSurfaces": [
+          "scripts/generate-spec-traceability-report.cjs",
+          "docs/generated-docs-policy.json",
+          "scripts/check-generated-docs-policy.cjs"
+        ],
+        "completionGate": [
+          "node --test scripts/generate-spec-traceability-report.test.cjs scripts/documentation-publication.test.cjs",
+          "pnpm ci:docs",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Traceability loses an exact symbol identity, publishes an unregistered command, accepts an unsafe path, remains manually tracked, or is generated outside explicit publication.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/planning/state/github-mvp-issue-workflow.md"
+        ],
+        "documentationRefs": [
+          "docs/generated-docs-policy.json",
+          "https://github.com/dunay2/dvt/issues/2147"
+        ],
+        "architectureGuards": [
+          "Feature identities and relations come only from existing Planning DB feature-mechanization read models.",
+          "Repository paths must be relative, traversal-free, and present in the evaluated Git tree.",
+          "Verification commands require both an exact feature validation and an exact repository command catalog match.",
+          "Traceability views are generated only by explicit documentation publication."
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2147",
+        "implementationRefs": [
+          "scripts/generate-spec-traceability-report.cjs#buildFeatureTraceabilityProjection",
+          "scripts/generate-spec-traceability-report.cjs#commandFileFromValidation",
+          "scripts/generate-spec-traceability-report.cjs#documentLink",
+          "scripts/generate-spec-traceability-report.cjs#featureIdOf",
+          "scripts/generate-spec-traceability-report.cjs#field",
+          "scripts/generate-spec-traceability-report.cjs#generatedFrontmatter",
+          "scripts/generate-spec-traceability-report.cjs#generatedRoot",
+          "scripts/generate-spec-traceability-report.cjs#groupFeatureRelations",
+          "scripts/generate-spec-traceability-report.cjs#isCurrentCanonicalDocument",
+          "scripts/generate-spec-traceability-report.cjs#isDocumentConflict",
+          "scripts/generate-spec-traceability-report.cjs#isExecutableValidation",
+          "scripts/generate-spec-traceability-report.cjs#isRegisteredVerificationCommand",
+          "scripts/generate-spec-traceability-report.cjs#isTestPath",
+          "scripts/generate-spec-traceability-report.cjs#limit",
+          "scripts/generate-spec-traceability-report.cjs#listCell",
+          "scripts/generate-spec-traceability-report.cjs#main",
+          "scripts/generate-spec-traceability-report.cjs#markdownTable",
+          "scripts/generate-spec-traceability-report.cjs#matrixOutputPath",
+          "scripts/generate-spec-traceability-report.cjs#normalizePath",
+          "scripts/generate-spec-traceability-report.cjs#packageScriptFromValidation",
+          "scripts/generate-spec-traceability-report.cjs#readFeatureTraceabilityFacts",
+          "scripts/generate-spec-traceability-report.cjs#renderCanonicalDocCodeMatrix",
+          "scripts/generate-spec-traceability-report.cjs#renderSpecTraceabilitySummary",
+          "scripts/generate-spec-traceability-report.cjs#repositoryBrowserUrl",
+          "scripts/generate-spec-traceability-report.cjs#repositoryLink",
+          "scripts/generate-spec-traceability-report.cjs#resolveFeatureTraceabilityGitInput",
+          "scripts/generate-spec-traceability-report.cjs#summaryOutputPath",
+          "scripts/generate-spec-traceability-report.cjs#uniqueSorted",
+          "scripts/generate-spec-traceability-report.cjs#uniqueSortedSymbols",
+          "scripts/generate-spec-traceability-report.cjs#writeIfChanged"
+        ],
+        "normalizedRailName": "generateplanningderivedsurfaces",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "16bd043116720830e58b2f3b0c9d4da06703effef6060eb050b36465cf0e542c",
+        "allowedImplementationSurfaces": [
+          "scripts/generate-spec-traceability-report.cjs",
+          "scripts/generate-spec-traceability-report.test.cjs",
+          "scripts/documentation-publication.test.cjs",
+          "scripts/check-generated-docs-policy.cjs",
+          "docs/generated-docs-policy.json",
+          "docs/planning/status/canonical-doc-code-matrix.md",
+          "docs/planning/status/generated-spec-traceability.md",
+          "docs/.manifest.json",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/**",
+          "packages/@dvt/**",
+          "tools/planning-db/schema.sql"
+        ]
+      },
+      "createdAt": "2026-08-10T08:59:36.303Z"
     }
   ]
 }
