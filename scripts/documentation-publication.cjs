@@ -319,18 +319,22 @@ class DocumentationPublicationAssembler {
         ...new Set(this.trackedDocumentationPaths.map(DocumentationPublicationPolicy.toPosix)),
       ].filter(Boolean);
     } else {
-      const result = spawnSync('git', ['ls-files', '--', 'docs/*', 'docs/**/*'], {
-        cwd: this.repoRoot,
-        encoding: 'utf8',
-        stdio: ['ignore', 'pipe', 'pipe'],
-      });
+      const result = spawnSync(
+        'git',
+        ['ls-tree', '-r', '--name-only', '-z', 'HEAD', '--', 'docs'],
+        {
+          cwd: this.repoRoot,
+          encoding: null,
+          stdio: ['ignore', 'pipe', 'pipe'],
+        }
+      );
       if (result.error) throw result.error;
       if (result.status !== 0) {
         throw new Error(
           `Cannot resolve Git-owned documentation inputs: ${String(result.stderr).trim()}.`
         );
       }
-      sourcePaths = [...new Set(String(result.stdout).split(/\r?\n/u))]
+      sourcePaths = [...new Set(String(result.stdout).split('\0'))]
         .map((sourcePath) => DocumentationPublicationPolicy.toPosix(sourcePath.trim()))
         .filter(Boolean);
     }
@@ -376,7 +380,7 @@ class DocumentationPublicationAssembler {
           .map((sourcePath) => DocumentationPublicationPolicy.toPosix(sourcePath.trim()))
           .filter(Boolean)
       );
-      dirtySourcePath = sourcePaths.find((sourcePath) => dirtyPaths.has(sourcePath));
+      dirtySourcePath = [...dirtyPaths].sort((left, right) => left.localeCompare(right, 'en'))[0];
     }
 
     if (dirtySourcePath) {
