@@ -12693,6 +12693,20 @@
         "updated_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
+        "design_id": "R1-1D-API-GOVERNANCE-HARDCUT-20260810",
+        "work_item_id": "GH-2167",
+        "title": "API compiled governance retirement",
+        "owner": "API / Architecture / Planning DB",
+        "status": "proposed",
+        "rationale": "Retire non-runtime TypeScript rail catalogs, topology locks, duplicate test execution and hand-maintained API maps while keeping behavioral boundaries and DB-first architecture authority.",
+        "fowler_signal": "none",
+        "rail_ref": "ReadArchitectureDesignAuthority;ListDocumentationLifecycleFacts;GeneratePlanningDerivedSurfaces;ClassifyProtectedRuntimeRouteRails",
+        "approved_at": null,
+        "supersedes_id": null,
+        "created_at": "2026-08-10T19:37:44.468+00:00",
+        "updated_at": "2026-08-10T19:37:44.468+00:00"
+      },
+      {
         "design_id": "RELEASE-CANDIDATE-AUTHORITY-CLASSIFICATION-20260719",
         "work_item_id": "C-RELEASE-CANDIDATE-INTEGRITY-1",
         "title": "Classify pull-request authority before check publication",
@@ -81644,6 +81658,62 @@
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
+        "design_id": "R1-1D-API-GOVERNANCE-HARDCUT-20260810",
+        "subject_kind": "command",
+        "subject_id": "GeneratePlanningDerivedSurfaces",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-10T19:37:44.468+00:00"
+      },
+      {
+        "design_id": "R1-1D-API-GOVERNANCE-HARDCUT-20260810",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-APPLICATION-PORTS",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T19:37:44.468+00:00"
+      },
+      {
+        "design_id": "R1-1D-API-GOVERNANCE-HARDCUT-20260810",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-DOCS",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T19:37:44.468+00:00"
+      },
+      {
+        "design_id": "R1-1D-API-GOVERNANCE-HARDCUT-20260810",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-TESTS",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T19:37:44.468+00:00"
+      },
+      {
+        "design_id": "R1-1D-API-GOVERNANCE-HARDCUT-20260810",
+        "subject_kind": "path",
+        "subject_id": "apps/api/vitest.config.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-10T19:37:44.468+00:00"
+      },
+      {
+        "design_id": "R1-1D-API-GOVERNANCE-HARDCUT-20260810",
+        "subject_kind": "query",
+        "subject_id": "ReadArchitectureDesignAuthority",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-10T19:37:44.468+00:00"
+      },
+      {
+        "design_id": "R1-1D-API-GOVERNANCE-HARDCUT-20260810",
+        "subject_kind": "test",
+        "subject_id": "apps/api/test/testExecutionManifest.test.ts",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-10T19:37:44.468+00:00"
+      },
+      {
         "design_id": "RELEASE-CANDIDATE-AUTHORITY-CLASSIFICATION-20260719",
         "subject_kind": "component",
         "subject_id": "SYS-CI-GOVERNANCE-TOOLS-CI-RELEASE-CANDIDATE-INTEGRITY-AUTHORITY-CLI-ADAPTER",
@@ -83027,6 +83097,76 @@
           "sourceContentSha256": "c0460c8222de7101fbbd5ac608509c653f75d81ed917066b12607537f1fccfd6"
         },
         "created_at": "2026-08-10T13:44:37.28+00:00"
+      },
+      {
+        "operation_id": "fcd01fad-23b7-4e5e-bb3f-fba94763af0a",
+        "idempotency_key": "codex-r1-1d-architecture-design",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "R1-1D-API-GOVERNANCE-HARDCUT-20260810",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2167",
+        "source_content_sha256": "11d3c6584c1f941b5589e9dfc1ead050af39f74fbfcba502b718820a5374117b",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "API / Architecture / Planning DB",
+          "title": "API compiled governance retirement",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-API-APPLICATION-PORTS",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-API-TESTS",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-API-DOCS",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/vitest.config.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "GeneratePlanningDerivedSurfaces",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "ReadArchitectureDesignAuthority",
+              "subjectKind": "query"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "apps/api/test/testExecutionManifest.test.ts",
+              "subjectKind": "test"
+            }
+          ],
+          "status": "proposed",
+          "railRef": "ReadArchitectureDesignAuthority;ListDocumentationLifecycleFacts;GeneratePlanningDerivedSurfaces;ClassifyProtectedRuntimeRouteRails",
+          "designId": "R1-1D-API-GOVERNANCE-HARDCUT-20260810",
+          "rationale": "Retire non-runtime TypeScript rail catalogs, topology locks, duplicate test execution and hand-maintained API maps while keeping behavioral boundaries and DB-first architecture authority.",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2167",
+          "workItemId": "GH-2167",
+          "fowlerSignal": "none",
+          "supersedesId": null,
+          "sourceContentSha256": "11d3c6584c1f941b5589e9dfc1ead050af39f74fbfcba502b718820a5374117b"
+        },
+        "created_at": "2026-08-10T19:37:44.468+00:00"
       }
     ]
   },
@@ -83528,7 +83668,7 @@
         "pnpm --filter @dvt/contracts test -- workspace-graph-authoring-draft.contract.test.ts workspace-graph-authoring-draft.architecture.test.ts"
       ],
       "sourcePath": "docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md",
-      "sourceContentSha256": "3745cfadcf827d821e0cb686cb8db8fef165862355c0c00c664120c19502a201",
+      "sourceContentSha256": "88a2fc6952bd73585685c5eb07bed292ecbe91ea50409c4365cf208bc459a9da",
       "rawRail": {
         "name": "ApplyWorkspaceGraphAuthoringCommand",
         "type": "command",
@@ -115886,6 +116026,722 @@
       "createdAt": "2026-08-09T09:16:34.047Z"
     },
     {
+      "railId": "local#R1-1D-API-GOVERNANCE-HARDCUT#command#generateplanningderivedsurfaces",
+      "featureId": "R1-1D-API-GOVERNANCE-HARDCUT",
+      "mechanizationStatus": "implemented",
+      "railName": "GeneratePlanningDerivedSurfaces",
+      "normalizedRailName": "generateplanningderivedsurfaces",
+      "railType": "command",
+      "dddOwner": "PlanningDocumentationProjection",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "scripts/documentation-publication.cjs#DocumentationPublicationAssembler"
+      ],
+      "implementationRefs": [
+        "scripts/documentation-publication.cjs#DocumentationPublicationAssembler"
+      ],
+      "documentationRefs": [
+        "apps/api/README.md",
+        "docs/architecture/components/api/index.md"
+      ],
+      "governingSources": [
+        "AGENTS.md",
+        "docs/planning/status/governance-document-rule-inventory.md",
+        "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
+        "docs/adr/ADR-0063-planning-db-current-schema-rebuild.md",
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "apps/api/src/application/ports/protectedRuntime*",
+        "apps/api/src/entrypoints/http/signalRunRoute*",
+        "apps/api/test/**",
+        "apps/api/vitest.config.ts",
+        "apps/api/README.md",
+        "apps/api/docs/**",
+        "docs/architecture/components/api/**",
+        "docs/architecture/components/web/**",
+        "docs/architecture/components/engine/**",
+        "docs/adr/**",
+        "docs/planning/status/**",
+        "docs/.manifest.json",
+        "tools/planning-db/state/canonical-state.json"
+      ],
+      "architectureGuards": [
+        "pnpm --filter dvt-api test:arch",
+        "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/architecture/stateStoreRoleBoundary.architecture.test.ts test/testExecutionManifest.test.ts"
+      ],
+      "completionGate": [
+        "pnpm --filter dvt-api test",
+        "pnpm --filter dvt-api test:integration",
+        "pnpm --filter dvt-api lint",
+        "pnpm --filter dvt-api typecheck",
+        "pnpm docs:gov:links",
+        "pnpm planning:db:current-schema:check",
+        "pnpm planning:db:export:check",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2167",
+      "sourceContentSha256": "11d3c6584c1f941b5589e9dfc1ead050af39f74fbfcba502b718820a5374117b",
+      "rawRail": {
+        "name": "GeneratePlanningDerivedSurfaces",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "PlanningDocumentationProjection"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "DocumentationPublicationAssembler",
+            "path": "scripts/documentation-publication.cjs",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": [
+              "apps/api/test/testExecutionManifest.test.ts",
+              "apps/api/test/architecture/stateStoreRoleBoundary.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "Duplicate architecture authority compiled into product code",
+              "Topology tests coupled to comments filenames and documents",
+              "Duplicate unit and integration execution",
+              "Hand-maintained source and test inventories"
+            ],
+            "cypressCoverage": "N/A - API governance and verification-manifest hard cut",
+            "architectureGuard": "pnpm --filter dvt-api test:arch"
+          }
+        ],
+        "version": 1,
+        "featureId": "R1-1D-API-GOVERNANCE-HARDCUT",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2167"],
+        "cypressFlows": [
+          "N/A - API governance and verification-manifest hard cut"
+        ],
+        "domainObjects": [
+          "ProtectedRuntimeRouteRegistry",
+          "ArchitectureDesignAuthority",
+          "DocumentationLifecycleReadModel",
+          "PlanningDocumentationProjection"
+        ],
+        "fowlerSignals": [
+          "Duplicate architecture authority compiled into product code",
+          "Topology tests coupled to comments filenames and documents",
+          "Duplicate unit and integration execution",
+          "Hand-maintained source and test inventories"
+        ],
+        "completionGate": [
+          "pnpm --filter dvt-api test",
+          "pnpm --filter dvt-api test:integration",
+          "pnpm --filter dvt-api lint",
+          "pnpm --filter dvt-api typecheck",
+          "pnpm docs:gov:links",
+          "pnpm planning:db:current-schema:check",
+          "pnpm planning:db:export:check",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "generateplanningderivedsurfaces-record",
+            "redTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/testExecutionManifest.test.ts",
+            "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/testExecutionManifest.test.ts",
+            "patchSurfaces": [
+              "apps/api/vitest.config.ts",
+              "apps/api/test/testExecutionManifest.test.ts",
+              "apps/api/src/application/ports/protectedRuntime*",
+              "apps/api/test/**",
+              "apps/api/docs/**",
+              "docs/architecture/components/api/index.md"
+            ],
+            "expectedFailure": "The default API test manifest still selects integration suites owned by the integration configuration."
+          }
+        ],
+        "componentGuides": ["docs/architecture/components/api/index.md"],
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
+          "docs/adr/ADR-0063-planning-db-current-schema-rebuild.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "GeneratePlanningDerivedSurfaces",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "PlanningDocumentationProjection"
+          }
+        ],
+        "architectureGuards": [
+          "pnpm --filter dvt-api test:arch",
+          "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/architecture/stateStoreRoleBoundary.architecture.test.ts test/testExecutionManifest.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2167",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/ports/protectedRuntime*",
+          "apps/api/src/entrypoints/http/signalRunRoute*",
+          "apps/api/test/**",
+          "apps/api/vitest.config.ts",
+          "apps/api/README.md",
+          "apps/api/docs/**",
+          "docs/architecture/components/api/**",
+          "docs/architecture/components/web/**",
+          "docs/architecture/components/engine/**",
+          "docs/adr/**",
+          "docs/planning/status/**",
+          "docs/.manifest.json",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "packages/@dvt/contracts/src/**",
+          "packages/@dvt/engine/**",
+          "packages/@dvt/adapter-*/**",
+          "docs/archive/**"
+        ]
+      },
+      "revision": 0,
+      "createdBy": "codex",
+      "createdAt": "2026-08-10T19:37:49.432Z"
+    },
+    {
+      "railId": "local#R1-1D-API-GOVERNANCE-HARDCUT#query#classifyprotectedruntimerouterails",
+      "featureId": "R1-1D-API-GOVERNANCE-HARDCUT",
+      "mechanizationStatus": "implemented",
+      "railName": "ClassifyProtectedRuntimeRouteRails",
+      "normalizedRailName": "classifyprotectedruntimerouterails",
+      "railType": "query",
+      "dddOwner": "ProtectedRuntimeRouteRegistry",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts#registerProtectedRuntimeRoutes"
+      ],
+      "implementationRefs": [
+        "apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts#registerProtectedRuntimeRoutes"
+      ],
+      "documentationRefs": [
+        "apps/api/README.md",
+        "docs/architecture/components/api/index.md"
+      ],
+      "governingSources": [
+        "AGENTS.md",
+        "docs/planning/status/governance-document-rule-inventory.md",
+        "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
+        "docs/adr/ADR-0063-planning-db-current-schema-rebuild.md",
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "apps/api/src/application/ports/protectedRuntime*",
+        "apps/api/src/entrypoints/http/signalRunRoute*",
+        "apps/api/test/**",
+        "apps/api/vitest.config.ts",
+        "apps/api/README.md",
+        "apps/api/docs/**",
+        "docs/architecture/components/api/**",
+        "docs/architecture/components/web/**",
+        "docs/architecture/components/engine/**",
+        "docs/adr/**",
+        "docs/planning/status/**",
+        "docs/.manifest.json",
+        "tools/planning-db/state/canonical-state.json"
+      ],
+      "architectureGuards": [
+        "pnpm --filter dvt-api test:arch",
+        "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/architecture/stateStoreRoleBoundary.architecture.test.ts test/testExecutionManifest.test.ts"
+      ],
+      "completionGate": [
+        "pnpm --filter dvt-api test",
+        "pnpm --filter dvt-api test:integration",
+        "pnpm --filter dvt-api lint",
+        "pnpm --filter dvt-api typecheck",
+        "pnpm docs:gov:links",
+        "pnpm planning:db:current-schema:check",
+        "pnpm planning:db:export:check",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2167",
+      "sourceContentSha256": "11d3c6584c1f941b5589e9dfc1ead050af39f74fbfcba502b718820a5374117b",
+      "rawRail": {
+        "name": "ClassifyProtectedRuntimeRouteRails",
+        "type": "query",
+        "status": "implemented",
+        "dddOwner": "ProtectedRuntimeRouteRegistry"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "registerProtectedRuntimeRoutes",
+            "path": "apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts",
+            "cqRails": ["ClassifyProtectedRuntimeRouteRails"],
+            "dddOwner": "ProtectedRuntimeRouteRegistry",
+            "unitTests": [
+              "apps/api/test/testExecutionManifest.test.ts",
+              "apps/api/test/architecture/stateStoreRoleBoundary.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "Duplicate architecture authority compiled into product code",
+              "Topology tests coupled to comments filenames and documents",
+              "Duplicate unit and integration execution",
+              "Hand-maintained source and test inventories"
+            ],
+            "cypressCoverage": "N/A - API governance and verification-manifest hard cut",
+            "architectureGuard": "pnpm --filter dvt-api test:arch"
+          }
+        ],
+        "version": 1,
+        "featureId": "R1-1D-API-GOVERNANCE-HARDCUT",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2167"],
+        "cypressFlows": [
+          "N/A - API governance and verification-manifest hard cut"
+        ],
+        "domainObjects": [
+          "ProtectedRuntimeRouteRegistry",
+          "ArchitectureDesignAuthority",
+          "DocumentationLifecycleReadModel",
+          "PlanningDocumentationProjection"
+        ],
+        "fowlerSignals": [
+          "Duplicate architecture authority compiled into product code",
+          "Topology tests coupled to comments filenames and documents",
+          "Duplicate unit and integration execution",
+          "Hand-maintained source and test inventories"
+        ],
+        "completionGate": [
+          "pnpm --filter dvt-api test",
+          "pnpm --filter dvt-api test:integration",
+          "pnpm --filter dvt-api lint",
+          "pnpm --filter dvt-api typecheck",
+          "pnpm docs:gov:links",
+          "pnpm planning:db:current-schema:check",
+          "pnpm planning:db:export:check",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "classifyprotectedruntimerouterails-record",
+            "redTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/testExecutionManifest.test.ts",
+            "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/testExecutionManifest.test.ts",
+            "patchSurfaces": [
+              "apps/api/vitest.config.ts",
+              "apps/api/test/testExecutionManifest.test.ts",
+              "apps/api/src/application/ports/protectedRuntime*",
+              "apps/api/test/**",
+              "apps/api/docs/**",
+              "docs/architecture/components/api/index.md"
+            ],
+            "expectedFailure": "The default API test manifest still selects integration suites owned by the integration configuration."
+          }
+        ],
+        "componentGuides": ["docs/architecture/components/api/index.md"],
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
+          "docs/adr/ADR-0063-planning-db-current-schema-rebuild.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ClassifyProtectedRuntimeRouteRails",
+            "type": "query",
+            "status": "implemented",
+            "dddOwner": "ProtectedRuntimeRouteRegistry"
+          }
+        ],
+        "architectureGuards": [
+          "pnpm --filter dvt-api test:arch",
+          "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/architecture/stateStoreRoleBoundary.architecture.test.ts test/testExecutionManifest.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2167",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/ports/protectedRuntime*",
+          "apps/api/src/entrypoints/http/signalRunRoute*",
+          "apps/api/test/**",
+          "apps/api/vitest.config.ts",
+          "apps/api/README.md",
+          "apps/api/docs/**",
+          "docs/architecture/components/api/**",
+          "docs/architecture/components/web/**",
+          "docs/architecture/components/engine/**",
+          "docs/adr/**",
+          "docs/planning/status/**",
+          "docs/.manifest.json",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "packages/@dvt/contracts/src/**",
+          "packages/@dvt/engine/**",
+          "packages/@dvt/adapter-*/**",
+          "docs/archive/**"
+        ]
+      },
+      "revision": 0,
+      "createdBy": "codex",
+      "createdAt": "2026-08-10T19:37:45.721Z"
+    },
+    {
+      "railId": "local#R1-1D-API-GOVERNANCE-HARDCUT#query#listdocumentationlifecyclefacts",
+      "featureId": "R1-1D-API-GOVERNANCE-HARDCUT",
+      "mechanizationStatus": "implemented",
+      "railName": "ListDocumentationLifecycleFacts",
+      "normalizedRailName": "listdocumentationlifecyclefacts",
+      "railType": "query",
+      "dddOwner": "DocumentationLifecycleReadModel",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "scripts/planning-db/queries/documentation-lifecycle-query.cjs#documentationLifecycleSelect"
+      ],
+      "implementationRefs": [
+        "scripts/planning-db/queries/documentation-lifecycle-query.cjs#documentationLifecycleSelect"
+      ],
+      "documentationRefs": [
+        "apps/api/README.md",
+        "docs/architecture/components/api/index.md"
+      ],
+      "governingSources": [
+        "AGENTS.md",
+        "docs/planning/status/governance-document-rule-inventory.md",
+        "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
+        "docs/adr/ADR-0063-planning-db-current-schema-rebuild.md",
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "apps/api/src/application/ports/protectedRuntime*",
+        "apps/api/src/entrypoints/http/signalRunRoute*",
+        "apps/api/test/**",
+        "apps/api/vitest.config.ts",
+        "apps/api/README.md",
+        "apps/api/docs/**",
+        "docs/architecture/components/api/**",
+        "docs/architecture/components/web/**",
+        "docs/architecture/components/engine/**",
+        "docs/adr/**",
+        "docs/planning/status/**",
+        "docs/.manifest.json",
+        "tools/planning-db/state/canonical-state.json"
+      ],
+      "architectureGuards": [
+        "pnpm --filter dvt-api test:arch",
+        "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/architecture/stateStoreRoleBoundary.architecture.test.ts test/testExecutionManifest.test.ts"
+      ],
+      "completionGate": [
+        "pnpm --filter dvt-api test",
+        "pnpm --filter dvt-api test:integration",
+        "pnpm --filter dvt-api lint",
+        "pnpm --filter dvt-api typecheck",
+        "pnpm docs:gov:links",
+        "pnpm planning:db:current-schema:check",
+        "pnpm planning:db:export:check",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2167",
+      "sourceContentSha256": "11d3c6584c1f941b5589e9dfc1ead050af39f74fbfcba502b718820a5374117b",
+      "rawRail": {
+        "name": "ListDocumentationLifecycleFacts",
+        "type": "query",
+        "status": "implemented",
+        "dddOwner": "DocumentationLifecycleReadModel"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "documentationLifecycleSelect",
+            "path": "scripts/planning-db/queries/documentation-lifecycle-query.cjs",
+            "cqRails": ["ListDocumentationLifecycleFacts"],
+            "dddOwner": "DocumentationLifecycleReadModel",
+            "unitTests": [
+              "apps/api/test/testExecutionManifest.test.ts",
+              "apps/api/test/architecture/stateStoreRoleBoundary.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "Duplicate architecture authority compiled into product code",
+              "Topology tests coupled to comments filenames and documents",
+              "Duplicate unit and integration execution",
+              "Hand-maintained source and test inventories"
+            ],
+            "cypressCoverage": "N/A - API governance and verification-manifest hard cut",
+            "architectureGuard": "pnpm --filter dvt-api test:arch"
+          }
+        ],
+        "version": 1,
+        "featureId": "R1-1D-API-GOVERNANCE-HARDCUT",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2167"],
+        "cypressFlows": [
+          "N/A - API governance and verification-manifest hard cut"
+        ],
+        "domainObjects": [
+          "ProtectedRuntimeRouteRegistry",
+          "ArchitectureDesignAuthority",
+          "DocumentationLifecycleReadModel",
+          "PlanningDocumentationProjection"
+        ],
+        "fowlerSignals": [
+          "Duplicate architecture authority compiled into product code",
+          "Topology tests coupled to comments filenames and documents",
+          "Duplicate unit and integration execution",
+          "Hand-maintained source and test inventories"
+        ],
+        "completionGate": [
+          "pnpm --filter dvt-api test",
+          "pnpm --filter dvt-api test:integration",
+          "pnpm --filter dvt-api lint",
+          "pnpm --filter dvt-api typecheck",
+          "pnpm docs:gov:links",
+          "pnpm planning:db:current-schema:check",
+          "pnpm planning:db:export:check",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "listdocumentationlifecyclefacts-record",
+            "redTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/testExecutionManifest.test.ts",
+            "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/testExecutionManifest.test.ts",
+            "patchSurfaces": [
+              "apps/api/vitest.config.ts",
+              "apps/api/test/testExecutionManifest.test.ts",
+              "apps/api/src/application/ports/protectedRuntime*",
+              "apps/api/test/**",
+              "apps/api/docs/**",
+              "docs/architecture/components/api/index.md"
+            ],
+            "expectedFailure": "The default API test manifest still selects integration suites owned by the integration configuration."
+          }
+        ],
+        "componentGuides": ["docs/architecture/components/api/index.md"],
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
+          "docs/adr/ADR-0063-planning-db-current-schema-rebuild.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ListDocumentationLifecycleFacts",
+            "type": "query",
+            "status": "implemented",
+            "dddOwner": "DocumentationLifecycleReadModel"
+          }
+        ],
+        "architectureGuards": [
+          "pnpm --filter dvt-api test:arch",
+          "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/architecture/stateStoreRoleBoundary.architecture.test.ts test/testExecutionManifest.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2167",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/ports/protectedRuntime*",
+          "apps/api/src/entrypoints/http/signalRunRoute*",
+          "apps/api/test/**",
+          "apps/api/vitest.config.ts",
+          "apps/api/README.md",
+          "apps/api/docs/**",
+          "docs/architecture/components/api/**",
+          "docs/architecture/components/web/**",
+          "docs/architecture/components/engine/**",
+          "docs/adr/**",
+          "docs/planning/status/**",
+          "docs/.manifest.json",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "packages/@dvt/contracts/src/**",
+          "packages/@dvt/engine/**",
+          "packages/@dvt/adapter-*/**",
+          "docs/archive/**"
+        ]
+      },
+      "revision": 0,
+      "createdBy": "codex",
+      "createdAt": "2026-08-10T19:37:48.209Z"
+    },
+    {
+      "railId": "local#R1-1D-API-GOVERNANCE-HARDCUT#query#readarchitecturedesignauthority",
+      "featureId": "R1-1D-API-GOVERNANCE-HARDCUT",
+      "mechanizationStatus": "implemented",
+      "railName": "ReadArchitectureDesignAuthority",
+      "normalizedRailName": "readarchitecturedesignauthority",
+      "railType": "query",
+      "dddOwner": "ArchitectureDesignAuthority",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "scripts/planning-db-query.cjs#readArchitectureDesignRows"
+      ],
+      "implementationRefs": [
+        "scripts/planning-db-query.cjs#readArchitectureDesignRows"
+      ],
+      "documentationRefs": [
+        "apps/api/README.md",
+        "docs/architecture/components/api/index.md"
+      ],
+      "governingSources": [
+        "AGENTS.md",
+        "docs/planning/status/governance-document-rule-inventory.md",
+        "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
+        "docs/adr/ADR-0063-planning-db-current-schema-rebuild.md",
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "apps/api/src/application/ports/protectedRuntime*",
+        "apps/api/src/entrypoints/http/signalRunRoute*",
+        "apps/api/test/**",
+        "apps/api/vitest.config.ts",
+        "apps/api/README.md",
+        "apps/api/docs/**",
+        "docs/architecture/components/api/**",
+        "docs/architecture/components/web/**",
+        "docs/architecture/components/engine/**",
+        "docs/adr/**",
+        "docs/planning/status/**",
+        "docs/.manifest.json",
+        "tools/planning-db/state/canonical-state.json"
+      ],
+      "architectureGuards": [
+        "pnpm --filter dvt-api test:arch",
+        "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/architecture/stateStoreRoleBoundary.architecture.test.ts test/testExecutionManifest.test.ts"
+      ],
+      "completionGate": [
+        "pnpm --filter dvt-api test",
+        "pnpm --filter dvt-api test:integration",
+        "pnpm --filter dvt-api lint",
+        "pnpm --filter dvt-api typecheck",
+        "pnpm docs:gov:links",
+        "pnpm planning:db:current-schema:check",
+        "pnpm planning:db:export:check",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2167",
+      "sourceContentSha256": "11d3c6584c1f941b5589e9dfc1ead050af39f74fbfcba502b718820a5374117b",
+      "rawRail": {
+        "name": "ReadArchitectureDesignAuthority",
+        "type": "query",
+        "status": "implemented",
+        "dddOwner": "ArchitectureDesignAuthority"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "readArchitectureDesignRows",
+            "path": "scripts/planning-db-query.cjs",
+            "cqRails": ["ReadArchitectureDesignAuthority"],
+            "dddOwner": "ArchitectureDesignAuthority",
+            "unitTests": [
+              "apps/api/test/testExecutionManifest.test.ts",
+              "apps/api/test/architecture/stateStoreRoleBoundary.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "Duplicate architecture authority compiled into product code",
+              "Topology tests coupled to comments filenames and documents",
+              "Duplicate unit and integration execution",
+              "Hand-maintained source and test inventories"
+            ],
+            "cypressCoverage": "N/A - API governance and verification-manifest hard cut",
+            "architectureGuard": "pnpm --filter dvt-api test:arch"
+          }
+        ],
+        "version": 1,
+        "featureId": "R1-1D-API-GOVERNANCE-HARDCUT",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2167"],
+        "cypressFlows": [
+          "N/A - API governance and verification-manifest hard cut"
+        ],
+        "domainObjects": [
+          "ProtectedRuntimeRouteRegistry",
+          "ArchitectureDesignAuthority",
+          "DocumentationLifecycleReadModel",
+          "PlanningDocumentationProjection"
+        ],
+        "fowlerSignals": [
+          "Duplicate architecture authority compiled into product code",
+          "Topology tests coupled to comments filenames and documents",
+          "Duplicate unit and integration execution",
+          "Hand-maintained source and test inventories"
+        ],
+        "completionGate": [
+          "pnpm --filter dvt-api test",
+          "pnpm --filter dvt-api test:integration",
+          "pnpm --filter dvt-api lint",
+          "pnpm --filter dvt-api typecheck",
+          "pnpm docs:gov:links",
+          "pnpm planning:db:current-schema:check",
+          "pnpm planning:db:export:check",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "readarchitecturedesignauthority-record",
+            "redTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/testExecutionManifest.test.ts",
+            "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/testExecutionManifest.test.ts",
+            "patchSurfaces": [
+              "apps/api/vitest.config.ts",
+              "apps/api/test/testExecutionManifest.test.ts",
+              "apps/api/src/application/ports/protectedRuntime*",
+              "apps/api/test/**",
+              "apps/api/docs/**",
+              "docs/architecture/components/api/index.md"
+            ],
+            "expectedFailure": "The default API test manifest still selects integration suites owned by the integration configuration."
+          }
+        ],
+        "componentGuides": ["docs/architecture/components/api/index.md"],
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
+          "docs/adr/ADR-0063-planning-db-current-schema-rebuild.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ReadArchitectureDesignAuthority",
+            "type": "query",
+            "status": "implemented",
+            "dddOwner": "ArchitectureDesignAuthority"
+          }
+        ],
+        "architectureGuards": [
+          "pnpm --filter dvt-api test:arch",
+          "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/architecture/stateStoreRoleBoundary.architecture.test.ts test/testExecutionManifest.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2167",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/ports/protectedRuntime*",
+          "apps/api/src/entrypoints/http/signalRunRoute*",
+          "apps/api/test/**",
+          "apps/api/vitest.config.ts",
+          "apps/api/README.md",
+          "apps/api/docs/**",
+          "docs/architecture/components/api/**",
+          "docs/architecture/components/web/**",
+          "docs/architecture/components/engine/**",
+          "docs/adr/**",
+          "docs/planning/status/**",
+          "docs/.manifest.json",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "packages/@dvt/contracts/src/**",
+          "packages/@dvt/engine/**",
+          "packages/@dvt/adapter-*/**",
+          "docs/archive/**"
+        ]
+      },
+      "revision": 0,
+      "createdBy": "codex",
+      "createdAt": "2026-08-10T19:37:46.968Z"
+    },
+    {
       "railId": "local#TASK-HET1-2#command#workflowengine.startrun",
       "featureId": "TASK-HET1-2",
       "mechanizationStatus": "implemented",
@@ -139634,6 +140490,434 @@
         ]
       },
       "createdAt": "2026-08-10T18:05:46.990Z"
+    },
+    {
+      "operationId": "fcb59791-a6c7-489d-aed4-2f3d2849dabc",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:R1-1D-API-GOVERNANCE-HARDCUT:query:classifyprotectedruntimerouterails:latest:e8ba78fb9655118e",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#R1-1D-API-GOVERNANCE-HARDCUT#query#classifyprotectedruntimerouterails",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2167",
+      "sourceContentSha256": "11d3c6584c1f941b5589e9dfc1ead050af39f74fbfcba502b718820a5374117b",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/testExecutionManifest.test.ts",
+        "dddOwner": "ProtectedRuntimeRouteRegistry",
+        "railName": "ClassifyProtectedRuntimeRouteRails",
+        "railType": "query",
+        "featureId": "R1-1D-API-GOVERNANCE-HARDCUT",
+        "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/testExecutionManifest.test.ts",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2167",
+        "unitTests": [
+          "apps/api/test/testExecutionManifest.test.ts",
+          "apps/api/test/architecture/stateStoreRoleBoundary.architecture.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2167"],
+        "cypressFlows": [
+          "N/A - API governance and verification-manifest hard cut"
+        ],
+        "domainObjects": [
+          "ProtectedRuntimeRouteRegistry",
+          "ArchitectureDesignAuthority",
+          "DocumentationLifecycleReadModel",
+          "PlanningDocumentationProjection"
+        ],
+        "fowlerSignals": [
+          "Duplicate architecture authority compiled into product code",
+          "Topology tests coupled to comments filenames and documents",
+          "Duplicate unit and integration execution",
+          "Hand-maintained source and test inventories"
+        ],
+        "patchSurfaces": [
+          "apps/api/vitest.config.ts",
+          "apps/api/test/testExecutionManifest.test.ts",
+          "apps/api/src/application/ports/protectedRuntime*",
+          "apps/api/test/**",
+          "apps/api/docs/**",
+          "docs/architecture/components/api/index.md"
+        ],
+        "completionGate": [
+          "pnpm --filter dvt-api test",
+          "pnpm --filter dvt-api test:integration",
+          "pnpm --filter dvt-api lint",
+          "pnpm --filter dvt-api typecheck",
+          "pnpm docs:gov:links",
+          "pnpm planning:db:current-schema:check",
+          "pnpm planning:db:export:check",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": ["docs/architecture/components/api/index.md"],
+        "expectedFailure": "The default API test manifest still selects integration suites owned by the integration configuration.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
+          "docs/adr/ADR-0063-planning-db-current-schema-rebuild.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "apps/api/README.md",
+          "docs/architecture/components/api/index.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter dvt-api test:arch",
+          "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/architecture/stateStoreRoleBoundary.architecture.test.ts test/testExecutionManifest.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2167",
+        "implementationRefs": [
+          "apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts#registerProtectedRuntimeRoutes"
+        ],
+        "normalizedRailName": "classifyprotectedruntimerouterails",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "11d3c6584c1f941b5589e9dfc1ead050af39f74fbfcba502b718820a5374117b",
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/ports/protectedRuntime*",
+          "apps/api/src/entrypoints/http/signalRunRoute*",
+          "apps/api/test/**",
+          "apps/api/vitest.config.ts",
+          "apps/api/README.md",
+          "apps/api/docs/**",
+          "docs/architecture/components/api/**",
+          "docs/architecture/components/web/**",
+          "docs/architecture/components/engine/**",
+          "docs/adr/**",
+          "docs/planning/status/**",
+          "docs/.manifest.json",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "packages/@dvt/contracts/src/**",
+          "packages/@dvt/engine/**",
+          "packages/@dvt/adapter-*/**",
+          "docs/archive/**"
+        ]
+      },
+      "createdAt": "2026-08-10T19:37:45.721Z"
+    },
+    {
+      "operationId": "541375ea-e768-43a4-be86-5a5ed7d0bdf8",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:R1-1D-API-GOVERNANCE-HARDCUT:query:readarchitecturedesignauthority:latest:0b2ba25c496aca66",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#R1-1D-API-GOVERNANCE-HARDCUT#query#readarchitecturedesignauthority",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2167",
+      "sourceContentSha256": "11d3c6584c1f941b5589e9dfc1ead050af39f74fbfcba502b718820a5374117b",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/testExecutionManifest.test.ts",
+        "dddOwner": "ArchitectureDesignAuthority",
+        "railName": "ReadArchitectureDesignAuthority",
+        "railType": "query",
+        "featureId": "R1-1D-API-GOVERNANCE-HARDCUT",
+        "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/testExecutionManifest.test.ts",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2167",
+        "unitTests": [
+          "apps/api/test/testExecutionManifest.test.ts",
+          "apps/api/test/architecture/stateStoreRoleBoundary.architecture.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2167"],
+        "cypressFlows": [
+          "N/A - API governance and verification-manifest hard cut"
+        ],
+        "domainObjects": [
+          "ProtectedRuntimeRouteRegistry",
+          "ArchitectureDesignAuthority",
+          "DocumentationLifecycleReadModel",
+          "PlanningDocumentationProjection"
+        ],
+        "fowlerSignals": [
+          "Duplicate architecture authority compiled into product code",
+          "Topology tests coupled to comments filenames and documents",
+          "Duplicate unit and integration execution",
+          "Hand-maintained source and test inventories"
+        ],
+        "patchSurfaces": [
+          "apps/api/vitest.config.ts",
+          "apps/api/test/testExecutionManifest.test.ts",
+          "apps/api/src/application/ports/protectedRuntime*",
+          "apps/api/test/**",
+          "apps/api/docs/**",
+          "docs/architecture/components/api/index.md"
+        ],
+        "completionGate": [
+          "pnpm --filter dvt-api test",
+          "pnpm --filter dvt-api test:integration",
+          "pnpm --filter dvt-api lint",
+          "pnpm --filter dvt-api typecheck",
+          "pnpm docs:gov:links",
+          "pnpm planning:db:current-schema:check",
+          "pnpm planning:db:export:check",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": ["docs/architecture/components/api/index.md"],
+        "expectedFailure": "The default API test manifest still selects integration suites owned by the integration configuration.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
+          "docs/adr/ADR-0063-planning-db-current-schema-rebuild.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "apps/api/README.md",
+          "docs/architecture/components/api/index.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter dvt-api test:arch",
+          "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/architecture/stateStoreRoleBoundary.architecture.test.ts test/testExecutionManifest.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2167",
+        "implementationRefs": [
+          "scripts/planning-db-query.cjs#readArchitectureDesignRows"
+        ],
+        "normalizedRailName": "readarchitecturedesignauthority",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "11d3c6584c1f941b5589e9dfc1ead050af39f74fbfcba502b718820a5374117b",
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/ports/protectedRuntime*",
+          "apps/api/src/entrypoints/http/signalRunRoute*",
+          "apps/api/test/**",
+          "apps/api/vitest.config.ts",
+          "apps/api/README.md",
+          "apps/api/docs/**",
+          "docs/architecture/components/api/**",
+          "docs/architecture/components/web/**",
+          "docs/architecture/components/engine/**",
+          "docs/adr/**",
+          "docs/planning/status/**",
+          "docs/.manifest.json",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "packages/@dvt/contracts/src/**",
+          "packages/@dvt/engine/**",
+          "packages/@dvt/adapter-*/**",
+          "docs/archive/**"
+        ]
+      },
+      "createdAt": "2026-08-10T19:37:46.968Z"
+    },
+    {
+      "operationId": "19173619-69f7-477a-8370-69818dd75894",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:R1-1D-API-GOVERNANCE-HARDCUT:query:listdocumentationlifecyclefacts:latest:20b255dcc8e1901d",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#R1-1D-API-GOVERNANCE-HARDCUT#query#listdocumentationlifecyclefacts",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2167",
+      "sourceContentSha256": "11d3c6584c1f941b5589e9dfc1ead050af39f74fbfcba502b718820a5374117b",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/testExecutionManifest.test.ts",
+        "dddOwner": "DocumentationLifecycleReadModel",
+        "railName": "ListDocumentationLifecycleFacts",
+        "railType": "query",
+        "featureId": "R1-1D-API-GOVERNANCE-HARDCUT",
+        "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/testExecutionManifest.test.ts",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2167",
+        "unitTests": [
+          "apps/api/test/testExecutionManifest.test.ts",
+          "apps/api/test/architecture/stateStoreRoleBoundary.architecture.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2167"],
+        "cypressFlows": [
+          "N/A - API governance and verification-manifest hard cut"
+        ],
+        "domainObjects": [
+          "ProtectedRuntimeRouteRegistry",
+          "ArchitectureDesignAuthority",
+          "DocumentationLifecycleReadModel",
+          "PlanningDocumentationProjection"
+        ],
+        "fowlerSignals": [
+          "Duplicate architecture authority compiled into product code",
+          "Topology tests coupled to comments filenames and documents",
+          "Duplicate unit and integration execution",
+          "Hand-maintained source and test inventories"
+        ],
+        "patchSurfaces": [
+          "apps/api/vitest.config.ts",
+          "apps/api/test/testExecutionManifest.test.ts",
+          "apps/api/src/application/ports/protectedRuntime*",
+          "apps/api/test/**",
+          "apps/api/docs/**",
+          "docs/architecture/components/api/index.md"
+        ],
+        "completionGate": [
+          "pnpm --filter dvt-api test",
+          "pnpm --filter dvt-api test:integration",
+          "pnpm --filter dvt-api lint",
+          "pnpm --filter dvt-api typecheck",
+          "pnpm docs:gov:links",
+          "pnpm planning:db:current-schema:check",
+          "pnpm planning:db:export:check",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": ["docs/architecture/components/api/index.md"],
+        "expectedFailure": "The default API test manifest still selects integration suites owned by the integration configuration.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
+          "docs/adr/ADR-0063-planning-db-current-schema-rebuild.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "apps/api/README.md",
+          "docs/architecture/components/api/index.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter dvt-api test:arch",
+          "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/architecture/stateStoreRoleBoundary.architecture.test.ts test/testExecutionManifest.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2167",
+        "implementationRefs": [
+          "scripts/planning-db/queries/documentation-lifecycle-query.cjs#documentationLifecycleSelect"
+        ],
+        "normalizedRailName": "listdocumentationlifecyclefacts",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "11d3c6584c1f941b5589e9dfc1ead050af39f74fbfcba502b718820a5374117b",
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/ports/protectedRuntime*",
+          "apps/api/src/entrypoints/http/signalRunRoute*",
+          "apps/api/test/**",
+          "apps/api/vitest.config.ts",
+          "apps/api/README.md",
+          "apps/api/docs/**",
+          "docs/architecture/components/api/**",
+          "docs/architecture/components/web/**",
+          "docs/architecture/components/engine/**",
+          "docs/adr/**",
+          "docs/planning/status/**",
+          "docs/.manifest.json",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "packages/@dvt/contracts/src/**",
+          "packages/@dvt/engine/**",
+          "packages/@dvt/adapter-*/**",
+          "docs/archive/**"
+        ]
+      },
+      "createdAt": "2026-08-10T19:37:48.209Z"
+    },
+    {
+      "operationId": "3f4b7110-456b-4146-a5e9-bf4e17ee5a26",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:R1-1D-API-GOVERNANCE-HARDCUT:command:generateplanningderivedsurfaces:latest:e0ab14a79e966c3a",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#R1-1D-API-GOVERNANCE-HARDCUT#command#generateplanningderivedsurfaces",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2167",
+      "sourceContentSha256": "11d3c6584c1f941b5589e9dfc1ead050af39f74fbfcba502b718820a5374117b",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/testExecutionManifest.test.ts",
+        "dddOwner": "PlanningDocumentationProjection",
+        "railName": "GeneratePlanningDerivedSurfaces",
+        "railType": "command",
+        "featureId": "R1-1D-API-GOVERNANCE-HARDCUT",
+        "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/testExecutionManifest.test.ts",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2167",
+        "unitTests": [
+          "apps/api/test/testExecutionManifest.test.ts",
+          "apps/api/test/architecture/stateStoreRoleBoundary.architecture.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2167"],
+        "cypressFlows": [
+          "N/A - API governance and verification-manifest hard cut"
+        ],
+        "domainObjects": [
+          "ProtectedRuntimeRouteRegistry",
+          "ArchitectureDesignAuthority",
+          "DocumentationLifecycleReadModel",
+          "PlanningDocumentationProjection"
+        ],
+        "fowlerSignals": [
+          "Duplicate architecture authority compiled into product code",
+          "Topology tests coupled to comments filenames and documents",
+          "Duplicate unit and integration execution",
+          "Hand-maintained source and test inventories"
+        ],
+        "patchSurfaces": [
+          "apps/api/vitest.config.ts",
+          "apps/api/test/testExecutionManifest.test.ts",
+          "apps/api/src/application/ports/protectedRuntime*",
+          "apps/api/test/**",
+          "apps/api/docs/**",
+          "docs/architecture/components/api/index.md"
+        ],
+        "completionGate": [
+          "pnpm --filter dvt-api test",
+          "pnpm --filter dvt-api test:integration",
+          "pnpm --filter dvt-api lint",
+          "pnpm --filter dvt-api typecheck",
+          "pnpm docs:gov:links",
+          "pnpm planning:db:current-schema:check",
+          "pnpm planning:db:export:check",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": ["docs/architecture/components/api/index.md"],
+        "expectedFailure": "The default API test manifest still selects integration suites owned by the integration configuration.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
+          "docs/adr/ADR-0063-planning-db-current-schema-rebuild.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "apps/api/README.md",
+          "docs/architecture/components/api/index.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter dvt-api test:arch",
+          "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/architecture/stateStoreRoleBoundary.architecture.test.ts test/testExecutionManifest.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2167",
+        "implementationRefs": [
+          "scripts/documentation-publication.cjs#DocumentationPublicationAssembler"
+        ],
+        "normalizedRailName": "generateplanningderivedsurfaces",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "11d3c6584c1f941b5589e9dfc1ead050af39f74fbfcba502b718820a5374117b",
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/ports/protectedRuntime*",
+          "apps/api/src/entrypoints/http/signalRunRoute*",
+          "apps/api/test/**",
+          "apps/api/vitest.config.ts",
+          "apps/api/README.md",
+          "apps/api/docs/**",
+          "docs/architecture/components/api/**",
+          "docs/architecture/components/web/**",
+          "docs/architecture/components/engine/**",
+          "docs/adr/**",
+          "docs/planning/status/**",
+          "docs/.manifest.json",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "packages/@dvt/contracts/src/**",
+          "packages/@dvt/engine/**",
+          "packages/@dvt/adapter-*/**",
+          "docs/archive/**"
+        ]
+      },
+      "createdAt": "2026-08-10T19:37:49.432Z"
     }
   ]
 }
