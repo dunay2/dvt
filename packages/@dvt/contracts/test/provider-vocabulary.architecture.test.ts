@@ -2,6 +2,7 @@
  * Owned concern: enforce the hard-cut provider vocabulary for active runtime
  * contracts.
  */
+import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -84,6 +85,11 @@ describe('contracts: active provider vocabulary', () => {
 
   it('keeps repository documentation entry points on current, resolvable routes', () => {
     const readme = readFileSync(join(REPO_ROOT, 'README.md'), 'utf8');
+    const trackedPaths = new Set(
+      execFileSync('git', ['ls-files', '-z'], { cwd: REPO_ROOT, encoding: 'utf8' })
+        .split('\0')
+        .filter(Boolean)
+    );
 
     expect(readme).not.toContain('docs/architecture/engine/');
     expect(readme).not.toContain('IWorkflowEngine.v2.0.md');
@@ -95,7 +101,12 @@ describe('contracts: active provider vocabulary', () => {
       const target = match[1]?.split('#', 1)[0];
       if (!target || /^(?:https?:|mailto:)/u.test(target)) continue;
 
-      expect(existsSync(join(REPO_ROOT, target)), `README link must resolve: ${target}`).toBe(true);
+      const normalizedTarget = target.replace(/^\.\//u, '').replaceAll('\\', '/');
+      const isTracked = normalizedTarget.endsWith('/')
+        ? [...trackedPaths].some((trackedPath) => trackedPath.startsWith(normalizedTarget))
+        : trackedPaths.has(normalizedTarget);
+
+      expect(isTracked, `README link must resolve in a clean Git checkout: ${target}`).toBe(true);
     }
   });
 

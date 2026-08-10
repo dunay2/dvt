@@ -247,7 +247,7 @@ Regla practica:
   [Contracts](docs/contracts/index.md)
 - **See current state and active work**:
   [Planning Dashboard](docs/planning/state/planning-dashboard.md),
-  [Planning](docs/planning/index.md),
+  [Planning Control Tower](docs/planning/state/planning-control-tower.md),
   [Roadmap Of Record](docs/planning/roadmap/index.md),
   [Planning Gaps](docs/planning/gaps/index.md)
 - **Operate and review risk**:
@@ -290,8 +290,9 @@ documentation evidence before entering the active vocabulary.
   [determinism-tooling.md](docs/architecture/components/engine/dev/determinism-tooling.md)
 - SRE / On-call: [docs/runbooks/index.md](docs/runbooks/index.md) ->
   [incident-response.md](docs/architecture/components/engine/ops/runbooks/incident-response.md)
-- Executive / PM: [docs/planning/index.md](docs/planning/index.md) ->
-  [Planning Dashboard](docs/planning/state/planning-dashboard.md)
+- Executive / PM:
+  [planning-dashboard.md](docs/planning/state/planning-dashboard.md) ->
+  [Roadmap Of Record](docs/planning/roadmap/index.md)
 
 ---
 
@@ -420,7 +421,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for:
 
 Use [Planning Dashboard](docs/planning/state/planning-dashboard.md),
 [docs/planning/roadmap/index.md](docs/planning/roadmap/index.md),
-[docs/planning/index.md](docs/planning/index.md), and
 [docs/planning/gaps/index.md](docs/planning/gaps/index.md) as current status and
 planning entry points. Architecture and design decisions must begin with the
 planning database query rails identified by the
