@@ -353,6 +353,58 @@ test('accepts CRLF worktree content when Git normalizes it to the LF blob in HEA
   assert.equal(receipt.routeCount, 1);
 });
 
+test('fails closed when a Git-owned source is deleted from the index', async () => {
+  const root = createMinimalFixture();
+  const deletedPath = 'docs/deleted.md';
+  fs.writeFileSync(path.join(root, deletedPath), '# Deleted\n', 'utf8');
+  runGit(root, ['init']);
+  runGit(root, ['add', 'docs', 'zensical.yml']);
+  runGit(root, [
+    '-c',
+    'user.name=DVT Test',
+    '-c',
+    'user.email=dvt-test@example.invalid',
+    'commit',
+    '-m',
+    'fixture',
+  ]);
+  runGit(root, ['rm', deletedPath]);
+
+  await assert.rejects(
+    new DocumentationPublicationAssembler({
+      repoRoot: root,
+      lifecycleRows: [lifecycleRow(root, 'docs/index.md')],
+    }).assemble({ runGenerators: false }),
+    /Missing Git-owned documentation source docs\/deleted\.md/u
+  );
+});
+
+test('fails closed when a documentation source is staged but absent from HEAD', async () => {
+  const root = createMinimalFixture();
+  const addedPath = 'docs/added.md';
+  runGit(root, ['init']);
+  runGit(root, ['add', 'docs', 'zensical.yml']);
+  runGit(root, [
+    '-c',
+    'user.name=DVT Test',
+    '-c',
+    'user.email=dvt-test@example.invalid',
+    'commit',
+    '-m',
+    'fixture',
+  ]);
+  fs.writeFileSync(path.join(root, addedPath), '# Added\n', 'utf8');
+  runGit(root, ['add', addedPath]);
+
+  await assert.rejects(
+    new DocumentationPublicationAssembler({
+      repoRoot: root,
+      lifecycleRows: [lifecycleRow(root, 'docs/index.md')],
+    }).assemble({ runGenerators: false }),
+    /Git-owned documentation source docs\/added\.md differs from HEAD/u
+  );
+});
+
 test('publication receipt rejects stale source, DB, config, policy, and Git inputs', async () => {
   const root = createMinimalFixture();
   const rows = [lifecycleRow(root, 'docs/index.md')];
