@@ -21,9 +21,9 @@ de entrar en la composición de producción; no es evidencia de que exista hoy u
 segundo adapter.
 
 A future provider requires an ADR, a real adapter, capability conformance,
-production composition, and documentation evidence before admission. La issue
-#2160 conserva el trabajo futuro de conformance; #69 fue cerrada como
-`not planned` y no constituye implementación.
+production composition, and documentation evidence before admission. El
+trabajo futuro de conformance permanece en la issue `#2160`; `#69` fue cerrada
+como `not planned` y no constituye implementación.
 
 ## Decision
 
