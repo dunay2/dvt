@@ -141,6 +141,8 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/canvasNodeFloatingToolbarModel.ts
   - apps/web/src/app/views/canvas/canvasNodeFloatingToolbarTokens.ts
   - apps/web/src/app/views/canvas/canvasNodeWorkbenchHardening.architecture.test.ts
+  - apps/web/src/app/views/canvas/dbtYamlDescriptionWorkbenchContribution.test.tsx
+  - apps/web/src/app/views/canvas/dbtYamlDescriptionWorkbenchContribution.tsx
   - apps/web/src/app/views/canvas/useDbtProjectFileCanvasController.ts
   - docs/concepts/repository-map.md
   - docs/planning/proposals/mandatory/frontend-and-ux/canvas-node-workbench-hardening-plan-20260808.md
@@ -405,11 +407,13 @@ redGreenCycles:
     greenTest: apps/web/src/app/views/canvas/canvasNodeWorkbenchHardening.architecture.test.ts
   - id: file-backed-properties-code-return
     redTest: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
-    expectedFailure: Double-click bypassed Properties and metadata inspection required another gesture.
+    expectedFailure: Double-click bypassed Properties or YAML description authoring removed the Code section and silently fell back to General.
     patchSurfaces:
       - apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
       - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx
       - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx
+      - apps/web/src/app/views/canvas/dbtYamlDescriptionWorkbenchContribution.test.tsx
+      - apps/web/src/app/views/canvas/dbtYamlDescriptionWorkbenchContribution.tsx
       - apps/web/src/app/views/canvas/useDbtProjectFileCanvasController.ts
     greenTest: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
   - id: windows-docker-cypress-support-resolution
