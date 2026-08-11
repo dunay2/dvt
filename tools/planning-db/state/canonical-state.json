@@ -10579,6 +10579,34 @@
         "updated_at": "2026-08-11T10:53:25.662+00:00"
       },
       {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V4-20260811",
+        "work_item_id": "GH-2274",
+        "title": "Retire stale API component test authority after independent QA",
+        "owner": "Architecture / Docs / Planning",
+        "status": "superseded",
+        "rationale": "Independent Fowler QA proved that three retired API test files remained required architecture.component_test facts after ownership reconciliation; retire them through an explicit audited DB command and guard their absence.",
+        "fowler_signal": "hidden_authority",
+        "rail_ref": "RetireArchitectureTestEvidence;ReadArchitectureComponentProfile",
+        "approved_at": null,
+        "supersedes_id": null,
+        "created_at": "2026-08-11T11:26:10.959+00:00",
+        "updated_at": "2026-08-11T11:39:15.166+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "work_item_id": "GH-2274",
+        "title": "Close DB-first product truth and evidence gaps after independent Fowler QA",
+        "owner": "Architecture / Docs / Planning",
+        "status": "review",
+        "rationale": "Close all seven independent-QA P1 findings through exact-hash authority, audited retirement, design/source-bound latest evidence, DB-owned observability truth, and on-demand generated navigation without rewriting history.",
+        "fowler_signal": "hidden_authority",
+        "rail_ref": "RetireArchitectureTestEvidence;RetireArchitectureEvidenceExecution;RetireFeatureMechanizationRail;RecordArchitectureEvidenceExecution;ReadArchitectureEvidence;TransitionArchitectureDesign;ClassifyArchitectureDocumentationDisposition;ReadArchitectureComponentProfile;RecordArchitectureComponent;RecordArchitectureObservabilityEvidence;GeneratePlanningDerivedSurfaces;RestorePlanningDbCanonicalArchitectureState",
+        "approved_at": null,
+        "supersedes_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V4-20260811",
+        "created_at": "2026-08-11T11:39:17.204+00:00",
+        "updated_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
         "design_id": "CANVAS-BACKLOG-INTEGRITY-READINESS-20260626",
         "work_item_id": "E-CANVAS-UXDB-COMPONENT-SLICES-1",
         "title": "Canvas backlog component integrity readiness projection",
@@ -62126,6 +62154,510 @@
         "created_at": "2026-08-11T10:13:39.234+00:00"
       },
       {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V4-20260811",
+        "subject_kind": "command",
+        "subject_id": "RetireArchitectureTestEvidence",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T11:26:10.959+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V4-20260811",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-11T11:26:10.959+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V4-20260811",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-TESTS-INFRASTRUCTURE",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-11T11:26:10.959+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V4-20260811",
+        "subject_kind": "path",
+        "subject_id": "scripts/planning-db-export.test.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T11:26:10.959+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V4-20260811",
+        "subject_kind": "path",
+        "subject_id": "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T11:26:10.959+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V4-20260811",
+        "subject_kind": "path",
+        "subject_id": "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T11:26:10.959+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V4-20260811",
+        "subject_kind": "path",
+        "subject_id": "scripts/planning-db-operate-tests/component-create.test.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T11:26:10.959+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V4-20260811",
+        "subject_kind": "path",
+        "subject_id": "scripts/planning-db-operate.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T11:26:10.959+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V4-20260811",
+        "subject_kind": "path",
+        "subject_id": "tools/planning-db/state/canonical-state.json",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T11:26:10.959+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V4-20260811",
+        "subject_kind": "query",
+        "subject_id": "ReadArchitectureComponentProfile",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T11:26:10.959+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V4-20260811",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-10",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-11T11:26:10.959+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V4-20260811",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-11",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-11T11:26:10.959+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V4-20260811",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-TESTS-INFRASTRUCTURE-3",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-11T11:26:10.959+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "command",
+        "subject_id": "GeneratePlanningDerivedSurfaces",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "command",
+        "subject_id": "RecordArchitectureComponent",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "command",
+        "subject_id": "RecordArchitectureEvidenceExecution",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "command",
+        "subject_id": "RecordArchitectureObservabilityEvidence",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "command",
+        "subject_id": "RestorePlanningDbCanonicalArchitectureState",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "command",
+        "subject_id": "RetireArchitectureEvidenceExecution",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "command",
+        "subject_id": "RetireArchitectureTestEvidence",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "command",
+        "subject_id": "RetireFeatureMechanizationRail",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "command",
+        "subject_id": "TransitionArchitectureDesign",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-INFRASTRUCTURE",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-TESTS-INFRASTRUCTURE",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "component",
+        "subject_id": "SYS-OBSERVABILITY-CONTRACTS-NOOP",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "component",
+        "subject_id": "SYS-OBSERVABILITY-OTEL-ADAPTER",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "decision",
+        "subject_id": "local#API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE#command#importplanninggovernancequerystore",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "decision",
+        "subject_id": "local#API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE#command#recordarchitecturetestevidence",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "evidence",
+        "subject_id": "EVIDENCE-API-H2-4-BOUNDARY-COMMAND-LOCAL",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "evidence",
+        "subject_id": "EVIDENCE-API-H2-4-DESIGN-QUERY-LOCAL",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "evidence",
+        "subject_id": "EVIDENCE-API-H2-4-DISPOSITION-QUERY-LOCAL",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "evidence",
+        "subject_id": "EVIDENCE-API-H2-4-LIFECYCLE-LOCAL",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "evidence",
+        "subject_id": "EVIDENCE-API-H2-4-LIFECYCLE-QUERY-LOCAL",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "evidence",
+        "subject_id": "EVIDENCE-API-H2-4-PROVENANCE-LOCAL",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "evidence",
+        "subject_id": "EVIDENCE-API-H2-4-PUBLICATION-COMMAND-LOCAL",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "evidence",
+        "subject_id": "OBS-API-H2-4-NOOP-DISABLED-MODE",
+        "scope_kind": "may_create",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "evidence",
+        "subject_id": "OBS-API-H2-4-OTEL-METRICS",
+        "scope_kind": "may_create",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "evidence",
+        "subject_id": "OBS-API-H2-4-START-RUN-TRACING",
+        "scope_kind": "may_create",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "path",
+        "subject_id": "docs/architecture/components/engine/architecture/index.md",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "path",
+        "subject_id": "docs/architecture/components/planner/index.md",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "path",
+        "subject_id": "docs/guides/index.md",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "path",
+        "subject_id": "docs/planning/domains/planner-and-contracts.md",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "path",
+        "subject_id": "docs/planning/index.md",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "path",
+        "subject_id": "scripts/documentation-publication.test.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "path",
+        "subject_id": "scripts/generate-code-status.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "path",
+        "subject_id": "scripts/generate-code-status.test.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "path",
+        "subject_id": "scripts/planning-db-export.test.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "path",
+        "subject_id": "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "path",
+        "subject_id": "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "path",
+        "subject_id": "scripts/planning-db-operate-tests/component-create.test.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "path",
+        "subject_id": "scripts/planning-db-operate.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "path",
+        "subject_id": "scripts/planning-db-query.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "path",
+        "subject_id": "scripts/planning-db-query.test.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "path",
+        "subject_id": "scripts/planning-db-schema.test.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "path",
+        "subject_id": "tools/planning-db/schema.sql",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "path",
+        "subject_id": "tools/planning-db/state/canonical-state.json",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "query",
+        "subject_id": "ClassifyArchitectureDocumentationDisposition",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "query",
+        "subject_id": "ReadArchitectureComponentProfile",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "query",
+        "subject_id": "ReadArchitectureEvidence",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-10",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-11",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-TESTS-INFRASTRUCTURE-3",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-11T11:39:17.204+00:00"
+      },
+      {
         "design_id": "CANVAS-BOTTOM-DRAWER-ACTIONABLE-READ-MODEL-20260626",
         "subject_kind": "component",
         "subject_id": "web.component.shell.BottomOperationalDrawer",
@@ -90682,6 +91214,27 @@
         "created_at": "2026-08-11T04:57:01.544+00:00"
       },
       {
+        "operation_id": "6ee84e5d-1228-410f-8477-2444cabab54d",
+        "idempotency_key": "supersede-api-h2-4-v4-for-consolidated-v5",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V4-20260811",
+        "source_ref": "docs/architecture/command-query-rail-governance.md",
+        "source_content_sha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Independent Fowler QA consolidated seven P1 gaps; V5 expands authority before implementation instead of silently widening V4.",
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V4-20260811",
+          "toStatus": "superseded",
+          "sourceRef": "docs/architecture/command-query-rail-governance.md",
+          "fromStatus": "review",
+          "sourceContentSha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc"
+        },
+        "created_at": "2026-08-11T11:39:15.166+00:00"
+      },
+      {
         "operation_id": "6f2e1838-4973-4324-a540-7f92c01fe4c0",
         "idempotency_key": "codex-api-h2-2-push-base-v13-approve",
         "operation_type": "architecture_design_transition",
@@ -92770,6 +93323,112 @@
         "created_at": "2026-08-10T21:06:35.382+00:00"
       },
       {
+        "operation_id": "9dcfeed7-ddd7-4279-8888-42a6f7b2b97e",
+        "idempotency_key": "create-api-h2-4-v4-retired-test-authority",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V4-20260811",
+        "source_ref": "docs/architecture/command-query-rail-governance.md",
+        "source_content_sha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "Architecture / Docs / Planning",
+          "title": "Retire stale API component test authority after independent QA",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-10",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-11",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "TEST-SYS-API-TESTS-INFRASTRUCTURE-3",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-API-TESTS-INFRASTRUCTURE",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "RetireArchitectureTestEvidence",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "ReadArchitectureComponentProfile",
+              "subjectKind": "query"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/planning-db-operate.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/planning-db-operate-tests/component-create.test.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/planning-db-export.test.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "tools/planning-db/state/canonical-state.json",
+              "subjectKind": "path"
+            }
+          ],
+          "status": "review",
+          "railRef": "RetireArchitectureTestEvidence;ReadArchitectureComponentProfile",
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V4-20260811",
+          "rationale": "Independent Fowler QA proved that three retired API test files remained required architecture.component_test facts after ownership reconciliation; retire them through an explicit audited DB command and guard their absence.",
+          "sourceRef": "docs/architecture/command-query-rail-governance.md",
+          "workItemId": "GH-2274",
+          "fowlerSignal": "hidden_authority",
+          "supersedesId": null,
+          "sourceContentSha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc"
+        },
+        "created_at": "2026-08-11T11:26:10.959+00:00"
+      },
+      {
         "operation_id": "9e1dc12e-3734-4c82-847e-613409db0b8d",
         "idempotency_key": "gh-2167-update-test-sys-api-infra-workspace-local-adapters-3-v1",
         "operation_type": "architecture_test_record",
@@ -92934,6 +93593,334 @@
           "sourceContentSha256": "d8b56d37bf5fafc57caaf2aa8e52c699f4697963ad5a000c3cc5af3b1bd18866"
         },
         "created_at": "2026-08-10T21:04:26.234+00:00"
+      },
+      {
+        "operation_id": "a9359dbb-e5e9-4bdc-909d-4df82520390d",
+        "idempotency_key": "create-api-h2-4-consolidated-v5",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "docs/architecture/command-query-rail-governance.md",
+        "source_content_sha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "Architecture / Docs / Planning",
+          "title": "Close DB-first product truth and evidence gaps after independent Fowler QA",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-10",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-11",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "TEST-SYS-API-TESTS-INFRASTRUCTURE-3",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-API-TESTS-INFRASTRUCTURE",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-OBSERVABILITY-CONTRACTS-NOOP",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-OBSERVABILITY-OTEL-ADAPTER",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-API-INFRASTRUCTURE",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "EVIDENCE-API-H2-4-BOUNDARY-COMMAND-LOCAL",
+              "subjectKind": "evidence"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "EVIDENCE-API-H2-4-PUBLICATION-COMMAND-LOCAL",
+              "subjectKind": "evidence"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "EVIDENCE-API-H2-4-DISPOSITION-QUERY-LOCAL",
+              "subjectKind": "evidence"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "EVIDENCE-API-H2-4-LIFECYCLE-QUERY-LOCAL",
+              "subjectKind": "evidence"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "EVIDENCE-API-H2-4-DESIGN-QUERY-LOCAL",
+              "subjectKind": "evidence"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "EVIDENCE-API-H2-4-PROVENANCE-LOCAL",
+              "subjectKind": "evidence"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "EVIDENCE-API-H2-4-LIFECYCLE-LOCAL",
+              "subjectKind": "evidence"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "local#API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE#command#importplanninggovernancequerystore",
+              "subjectKind": "decision"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "local#API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE#command#recordarchitecturetestevidence",
+              "subjectKind": "decision"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_create",
+              "subjectId": "OBS-API-H2-4-NOOP-DISABLED-MODE",
+              "subjectKind": "evidence"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_create",
+              "subjectId": "OBS-API-H2-4-START-RUN-TRACING",
+              "subjectKind": "evidence"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_create",
+              "subjectId": "OBS-API-H2-4-OTEL-METRICS",
+              "subjectKind": "evidence"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "RetireArchitectureTestEvidence",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "RetireArchitectureEvidenceExecution",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "RetireFeatureMechanizationRail",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "RecordArchitectureEvidenceExecution",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "TransitionArchitectureDesign",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "GeneratePlanningDerivedSurfaces",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "RecordArchitectureComponent",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "RecordArchitectureObservabilityEvidence",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "RestorePlanningDbCanonicalArchitectureState",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "ReadArchitectureEvidence",
+              "subjectKind": "query"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "ClassifyArchitectureDocumentationDisposition",
+              "subjectKind": "query"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "ReadArchitectureComponentProfile",
+              "subjectKind": "query"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "tools/planning-db/schema.sql",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "tools/planning-db/state/canonical-state.json",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/planning-db-operate.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/planning-db-query.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/generate-code-status.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/planning-db-operate-tests/component-create.test.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/planning-db-schema.test.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/planning-db-query.test.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/planning-db-export.test.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/generate-code-status.test.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/documentation-publication.test.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "docs/architecture/components/engine/architecture/index.md",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "docs/guides/index.md",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "docs/architecture/components/planner/index.md",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "docs/planning/index.md",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "docs/planning/domains/planner-and-contracts.md",
+              "subjectKind": "path"
+            }
+          ],
+          "status": "review",
+          "railRef": "RetireArchitectureTestEvidence;RetireArchitectureEvidenceExecution;RetireFeatureMechanizationRail;RecordArchitectureEvidenceExecution;ReadArchitectureEvidence;TransitionArchitectureDesign;ClassifyArchitectureDocumentationDisposition;ReadArchitectureComponentProfile;RecordArchitectureComponent;RecordArchitectureObservabilityEvidence;GeneratePlanningDerivedSurfaces;RestorePlanningDbCanonicalArchitectureState",
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+          "rationale": "Close all seven independent-QA P1 findings through exact-hash authority, audited retirement, design/source-bound latest evidence, DB-owned observability truth, and on-demand generated navigation without rewriting history.",
+          "sourceRef": "docs/architecture/command-query-rail-governance.md",
+          "workItemId": "GH-2274",
+          "fowlerSignal": "hidden_authority",
+          "supersedesId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V4-20260811",
+          "sourceContentSha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc"
+        },
+        "created_at": "2026-08-11T11:39:17.204+00:00"
       },
       {
         "operation_id": "aa02385a-a34b-42ce-b2eb-56f4f5206086",
