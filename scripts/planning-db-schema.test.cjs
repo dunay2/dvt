@@ -145,6 +145,17 @@ test('documentation lifecycle accepts only hash-matched DB authority disposition
 
 test('Fowler read models invalidate accepted decisions when analyzed source bytes change', () => {
   const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
+  const coverageView = schemaSql.slice(
+    schemaSql.indexOf(
+      'CREATE VIEW planning_query_store.fowler_analysis_canonical_coverage_query AS'
+    ),
+    schemaSql.indexOf(
+      '-- Name: fowler_analysis_improvement_query',
+      schemaSql.indexOf(
+        'CREATE VIEW planning_query_store.fowler_analysis_canonical_coverage_query AS'
+      )
+    )
+  );
   const referenceView = schemaSql.slice(
     schemaSql.indexOf('CREATE VIEW planning_query_store.fowler_analysis_reference_query AS'),
     schemaSql.indexOf(
@@ -159,7 +170,15 @@ test('Fowler read models invalidate accepted decisions when analyzed source byte
       schemaSql.indexOf('CREATE VIEW planning_query_store.fowler_analysis_retirement_query AS')
     )
   );
+  const intendedWorkView = schemaSql.slice(
+    schemaSql.indexOf('CREATE VIEW planning_query_store.fowler_analysis_intended_work_query AS'),
+    schemaSql.indexOf(
+      '-- Name: fowler_analysis_duplicate_intent_query',
+      schemaSql.indexOf('CREATE VIEW planning_query_store.fowler_analysis_intended_work_query AS')
+    )
+  );
 
+  assert.match(coverageView, /target\.source_content_sha256 = document\.source_content_sha256/u);
   assert.match(referenceView, /document\.source_content_sha256 AS document_source_content_sha256/u);
   assert.match(
     referenceView,
@@ -172,6 +191,10 @@ test('Fowler read models invalidate accepted decisions when analyzed source byte
   assert.match(
     retirementView,
     /accepted_targets\.source_content_sha256 = document\.source_content_sha256/u
+  );
+  assert.match(
+    intendedWorkView,
+    /target\.source_content_sha256 = document\.source_content_sha256/u
   );
 });
 
