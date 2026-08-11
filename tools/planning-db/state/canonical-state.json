@@ -101979,6 +101979,168 @@
       "createdAt": "2026-08-08T00:00:00.000Z"
     },
     {
+      "railId": "local#API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE#command#recordarchitectureevidenceexecution",
+      "featureId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE",
+      "mechanizationStatus": "implemented",
+      "railName": "RecordArchitectureEvidenceExecution",
+      "normalizedRailName": "recordarchitectureevidenceexecution",
+      "railType": "command",
+      "dddOwner": "ArchitectureEvidenceLedger",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "scripts/planning-db-operate.cjs#parseArchitectureEvidenceCommand",
+        "scripts/planning-db-operate.cjs#planArchitectureEvidenceRecordOperation",
+        "scripts/planning-db-operate.cjs#writePlannedArchitectureEvidenceRecordOperation"
+      ],
+      "implementationRefs": [
+        "scripts/planning-db-operate.cjs#parseArchitectureEvidenceCommand",
+        "scripts/planning-db-operate.cjs#planArchitectureEvidenceRecordOperation",
+        "scripts/planning-db-operate.cjs#writePlannedArchitectureEvidenceRecordOperation"
+      ],
+      "documentationRefs": [
+        "docs/architecture/command-query-rail-governance.md"
+      ],
+      "governingSources": [
+        "AGENTS.md",
+        "docs/planning/status/governance-document-rule-inventory.md",
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "scripts/planning-db-operate.cjs",
+        "scripts/planning-db-operate-tests/**",
+        "tools/planning-db/schema.sql",
+        "tools/planning-db/state/canonical-state.json"
+      ],
+      "architectureGuards": [
+        "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
+      ],
+      "completionGate": [
+        "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs",
+        "pnpm planning:db:export --check",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "scripts/planning-db-operate.cjs",
+      "sourceContentSha256": "8999192e82b2e0674a45ef966e1ad2a42051776cb678141408d90fd6af75f37e",
+      "rawRail": {
+        "name": "RecordArchitectureEvidenceExecution",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "ArchitectureEvidenceLedger"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "parseArchitectureEvidenceCommand",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordArchitectureEvidenceExecution"],
+            "dddOwner": "ArchitectureEvidenceLedger",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            ],
+            "fowlerSignals": [
+              "DB evidence ledger replaces asserted proof with exact executed proof."
+            ],
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
+          },
+          {
+            "name": "planArchitectureEvidenceRecordOperation",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordArchitectureEvidenceExecution"],
+            "dddOwner": "ArchitectureEvidenceLedger",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            ],
+            "fowlerSignals": [
+              "DB evidence ledger replaces asserted proof with exact executed proof."
+            ],
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
+          },
+          {
+            "name": "writePlannedArchitectureEvidenceRecordOperation",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordArchitectureEvidenceExecution"],
+            "dddOwner": "ArchitectureEvidenceLedger",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            ],
+            "fowlerSignals": [
+              "DB evidence ledger replaces asserted proof with exact executed proof."
+            ],
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
+          }
+        ],
+        "version": 1,
+        "featureId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2274"],
+        "cypressFlows": ["N/A - repository governance CLI"],
+        "domainObjects": ["ArchitectureEvidenceExecution"],
+        "fowlerSignals": [
+          "DB evidence ledger replaces asserted proof with exact executed proof."
+        ],
+        "completionGate": [
+          "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs",
+          "pnpm planning:db:export --check",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "recordarchitectureevidenceexecution-record",
+            "redTest": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs",
+            "greenTest": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs",
+            "patchSurfaces": [
+              "scripts/planning-db-operate.cjs",
+              "scripts/planning-db-operate-tests/**",
+              "tools/planning-db/schema.sql",
+              "tools/planning-db/state/canonical-state.json"
+            ],
+            "expectedFailure": "Architecture evidence can be asserted without exact design, source, freshness, latest-result, or execution provenance."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "RecordArchitectureEvidenceExecution",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "ArchitectureEvidenceLedger"
+          }
+        ],
+        "architectureGuards": [
+          "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2274",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-operate.cjs",
+          "scripts/planning-db-operate-tests/**",
+          "tools/planning-db/schema.sql",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "docs/planning/proposals/mandatory/**"
+        ]
+      },
+      "revision": 0,
+      "createdBy": "codex",
+      "createdAt": "2026-08-11T12:22:58.150Z"
+    },
+    {
       "railId": "local#ARCH-DEPS-GUARD#command#applyarchitecturedependencyboundarygate",
       "featureId": "ARCH-DEPS-GUARD",
       "mechanizationStatus": "implemented",
@@ -132504,11 +132666,13 @@
       "railStatus": "implemented",
       "symbolRefs": [
         "scripts/planning-db-import.cjs#readCanonicalStateSnapshot",
-        "scripts/planning-db-architecture-state.cjs#restoreArchitectureState"
+        "scripts/planning-db-architecture-state.cjs#restoreArchitectureState",
+        "scripts/planning-db-import.cjs#restoreFowlerAnalysisState"
       ],
       "implementationRefs": [
         "scripts/planning-db-import.cjs#readCanonicalStateSnapshot",
-        "scripts/planning-db-architecture-state.cjs#restoreArchitectureState"
+        "scripts/planning-db-architecture-state.cjs#restoreArchitectureState",
+        "scripts/planning-db-import.cjs#restoreFowlerAnalysisState"
       ],
       "documentationRefs": [
         "docs/architecture/command-query-rail-governance.md",
@@ -132523,13 +132687,19 @@
       "allowedImplementationSurfaces": [
         "scripts/planning-db-import.cjs",
         "scripts/planning-db-import.test.cjs",
-        "tools/planning-db/state/canonical-state.json"
+        "tools/planning-db/state/canonical-state.json",
+        "scripts/planning-db-architecture-state.cjs"
       ],
-      "architectureGuards": ["node --test scripts/planning-db-import.test.cjs"],
+      "architectureGuards": [
+        "node --test scripts/planning-db-import.test.cjs",
+        "node --test scripts/planning-db-import.test.cjs scripts/planning-db-architecture-state.test.cjs"
+      ],
       "completionGate": [
         "node --test scripts/planning-db-import.test.cjs",
         "pnpm planning:db:export:check",
-        "pnpm verify:prepush"
+        "pnpm verify:prepush",
+        "node --test scripts/planning-db-import.test.cjs scripts/planning-db-architecture-state.test.cjs",
+        "pnpm planning:db:export --check"
       ],
       "sourcePath": "scripts/planning-db-import.cjs",
       "sourceContentSha256": "e851cf730d34bc3aa1c1125ae5646094b498b595989ad190b4997de4bf4edbe1",
@@ -132546,10 +132716,13 @@
             "path": "scripts/planning-db-import.cjs",
             "cqRails": ["RestorePlanningDbCanonicalArchitectureState"],
             "dddOwner": "PlanningDbCanonicalStateImport",
-            "unitTests": ["scripts/planning-db-import.test.cjs"],
+            "unitTests": [
+              "scripts/planning-db-import.test.cjs",
+              "scripts/planning-db-architecture-state.test.cjs"
+            ],
             "fowlerSignals": ["gateway", "data_mapper"],
-            "cypressCoverage": "not applicable: repository governance CLI",
-            "architectureGuard": "node --test scripts/planning-db-import.test.cjs"
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-import.test.cjs scripts/planning-db-architecture-state.test.cjs"
           },
           {
             "name": "restoreArchitectureState",
@@ -132561,32 +132734,51 @@
               "scripts/planning-db-import.test.cjs"
             ],
             "fowlerSignals": ["gateway", "data_mapper"],
-            "cypressCoverage": "not applicable: repository governance CLI",
-            "architectureGuard": "node --test scripts/planning-db-architecture-state.test.cjs scripts/planning-db-import.test.cjs"
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-import.test.cjs scripts/planning-db-architecture-state.test.cjs"
+          },
+          {
+            "name": "restoreFowlerAnalysisState",
+            "path": "scripts/planning-db-import.cjs",
+            "cqRails": ["RestorePlanningDbCanonicalArchitectureState"],
+            "dddOwner": "PlanningDbCanonicalStateImport",
+            "unitTests": [
+              "scripts/planning-db-import.test.cjs",
+              "scripts/planning-db-architecture-state.test.cjs"
+            ],
+            "fowlerSignals": ["gateway", "data_mapper"],
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-import.test.cjs scripts/planning-db-architecture-state.test.cjs"
           }
         ],
         "version": 1,
         "featureId": "PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730",
         "userStories": ["https://github.com/dunay2/dvt/issues/2104"],
-        "cypressFlows": ["not applicable: repository governance CLI"],
+        "cypressFlows": [
+          "not applicable: repository governance CLI",
+          "N/A - repository governance CLI"
+        ],
         "domainObjects": ["PlanningDbCanonicalArchitectureState"],
         "fowlerSignals": ["gateway", "data_mapper"],
         "completionGate": [
           "node --test scripts/planning-db-import.test.cjs",
           "pnpm planning:db:export:check",
-          "pnpm verify:prepush"
+          "pnpm verify:prepush",
+          "node --test scripts/planning-db-import.test.cjs scripts/planning-db-architecture-state.test.cjs",
+          "pnpm planning:db:export --check"
         ],
         "redGreenCycles": [
           {
             "id": "restoreplanningdbcanonicalarchitecturestate-record",
-            "redTest": "node --test scripts/planning-db-import.test.cjs",
-            "greenTest": "node --test scripts/planning-db-import.test.cjs",
+            "redTest": "node --test scripts/planning-db-import.test.cjs scripts/planning-db-architecture-state.test.cjs",
+            "greenTest": "node --test scripts/planning-db-import.test.cjs scripts/planning-db-architecture-state.test.cjs",
             "patchSurfaces": [
               "scripts/planning-db-import.cjs",
               "scripts/planning-db-import.test.cjs",
-              "tools/planning-db/state/canonical-state.json"
+              "tools/planning-db/state/canonical-state.json",
+              "scripts/planning-db-architecture-state.cjs"
             ],
-            "expectedFailure": "A rebuilt Planning DB loses DB-authored component retirement state."
+            "expectedFailure": "A rebuilt Planning DB omits DB-authored Fowler analysis or architecture authority."
           }
         ],
         "componentGuides": [
@@ -132607,7 +132799,8 @@
           }
         ],
         "architectureGuards": [
-          "node --test scripts/planning-db-import.test.cjs"
+          "node --test scripts/planning-db-import.test.cjs",
+          "node --test scripts/planning-db-import.test.cjs scripts/planning-db-architecture-state.test.cjs"
         ],
         "implementationPlan": "Restore versioned current architecture state after the schema is available.",
         "mechanizationStatus": "implemented",
@@ -132615,11 +132808,15 @@
         "allowedImplementationSurfaces": [
           "scripts/planning-db-import.cjs",
           "scripts/planning-db-import.test.cjs",
-          "tools/planning-db/state/canonical-state.json"
+          "tools/planning-db/state/canonical-state.json",
+          "scripts/planning-db-architecture-state.cjs"
         ],
-        "forbiddenImplementationSurfaces": ["tools/planning-db/schema.sql"]
+        "forbiddenImplementationSurfaces": [
+          "tools/planning-db/schema.sql",
+          "infra/db/migrations/**"
+        ]
       },
-      "revision": 0,
+      "revision": 1,
       "createdBy": "codex",
       "createdAt": "2026-07-31T19:13:06.127Z"
     },
@@ -160329,6 +160526,149 @@
       "resultingRevision": 2,
       "payload": {},
       "createdAt": "2026-08-11T11:55:53.535Z"
+    },
+    {
+      "operationId": "3c4c7b5c-84cb-42da-b734-7d47c2db6734",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730:command:restoreplanningdbcanonicalarchitecturestate:0:008c312165052ca6",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730#command#restoreplanningdbcanonicalarchitecturestate",
+      "sourcePath": "scripts/planning-db-import.cjs",
+      "sourceContentSha256": "e851cf730d34bc3aa1c1125ae5646094b498b595989ad190b4997de4bf4edbe1",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "node --test scripts/planning-db-import.test.cjs scripts/planning-db-architecture-state.test.cjs",
+        "dddOwner": "PlanningDbCanonicalStateImport",
+        "railName": "RestorePlanningDbCanonicalArchitectureState",
+        "railType": "command",
+        "featureId": "PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730",
+        "greenTest": "node --test scripts/planning-db-import.test.cjs scripts/planning-db-architecture-state.test.cjs",
+        "sourceRef": "scripts/planning-db-import.cjs",
+        "unitTests": [
+          "scripts/planning-db-import.test.cjs",
+          "scripts/planning-db-architecture-state.test.cjs"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2104"],
+        "cypressFlows": ["N/A - repository governance CLI"],
+        "domainObjects": ["PlanningDbCanonicalArchitectureState"],
+        "fowlerSignals": ["gateway", "data_mapper"],
+        "patchSurfaces": [],
+        "completionGate": [
+          "node --test scripts/planning-db-import.test.cjs scripts/planning-db-architecture-state.test.cjs",
+          "pnpm planning:db:export --check",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "A rebuilt Planning DB omits DB-authored Fowler analysis or architecture authority.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/proposals/mandatory/governance-and-docs/planning-db-current-schema-hard-cut-plan-20260808.md"
+        ],
+        "architectureGuards": [
+          "node --test scripts/planning-db-import.test.cjs scripts/planning-db-architecture-state.test.cjs"
+        ],
+        "implementationPlan": "Restore versioned current architecture state after the schema is available.",
+        "implementationRefs": [
+          "scripts/planning-db-import.cjs#readCanonicalStateSnapshot",
+          "scripts/planning-db-architecture-state.cjs#restoreArchitectureState",
+          "scripts/planning-db-import.cjs#restoreFowlerAnalysisState"
+        ],
+        "normalizedRailName": "restoreplanningdbcanonicalarchitecturestate",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "e851cf730d34bc3aa1c1125ae5646094b498b595989ad190b4997de4bf4edbe1",
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-import.cjs",
+          "scripts/planning-db-import.test.cjs",
+          "scripts/planning-db-architecture-state.cjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": ["infra/db/migrations/**"]
+      },
+      "createdAt": "2026-08-11T12:22:40.063Z"
+    },
+    {
+      "operationId": "753ac268-c3e3-466e-a1d7-49ab0f18712f",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE:command:recordarchitectureevidenceexecution:latest:43cfb32e624a23b3",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE#command#recordarchitectureevidenceexecution",
+      "sourcePath": "scripts/planning-db-operate.cjs",
+      "sourceContentSha256": "8999192e82b2e0674a45ef966e1ad2a42051776cb678141408d90fd6af75f37e",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs",
+        "dddOwner": "ArchitectureEvidenceLedger",
+        "railName": "RecordArchitectureEvidenceExecution",
+        "railType": "command",
+        "featureId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE",
+        "greenTest": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs",
+        "sourceRef": "scripts/planning-db-operate.cjs",
+        "unitTests": [
+          "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+          "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2274"],
+        "cypressFlows": ["N/A - repository governance CLI"],
+        "domainObjects": ["ArchitectureEvidenceExecution"],
+        "fowlerSignals": [
+          "DB evidence ledger replaces asserted proof with exact executed proof."
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs",
+          "pnpm planning:db:export --check",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Architecture evidence can be asserted without exact design, source, freshness, latest-result, or execution provenance.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "architectureGuards": [
+          "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2274",
+        "implementationRefs": [
+          "scripts/planning-db-operate.cjs#parseArchitectureEvidenceCommand",
+          "scripts/planning-db-operate.cjs#planArchitectureEvidenceRecordOperation",
+          "scripts/planning-db-operate.cjs#writePlannedArchitectureEvidenceRecordOperation"
+        ],
+        "normalizedRailName": "recordarchitectureevidenceexecution",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "8999192e82b2e0674a45ef966e1ad2a42051776cb678141408d90fd6af75f37e",
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-operate.cjs",
+          "scripts/planning-db-operate-tests/**",
+          "tools/planning-db/schema.sql",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "docs/planning/proposals/mandatory/**"
+        ]
+      },
+      "createdAt": "2026-08-11T12:22:58.150Z"
     }
   ],
   "governanceComponentDefinitions": [
