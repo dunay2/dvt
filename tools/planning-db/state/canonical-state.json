@@ -10303,14 +10303,28 @@
         "work_item_id": "GH-2273",
         "title": "Consolidate API production reachability architecture guard",
         "owner": "ArchitectureBoundaryGuard",
-        "status": "implemented",
+        "status": "superseded",
         "rationale": "Extend the existing ApplyArchitectureDependencyBoundaryGate rail to classify every API source from production and test roots, model supported runtime profiles semantically, reject new test-only or fake reachability, and retire the drifting package-local guard without a filename allowlist.",
         "fowler_signal": "evolutionary_architecture",
         "rail_ref": "ApplyArchitectureDependencyBoundaryGate",
         "approved_at": "2026-08-11T03:06:52.328+00:00",
         "supersedes_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-20260811",
         "created_at": "2026-08-11T03:06:49.896+00:00",
-        "updated_at": "2026-08-11T03:06:54.705+00:00"
+        "updated_at": "2026-08-11T03:26:01.338+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V3-20260811",
+        "work_item_id": "GH-2273",
+        "title": "Harden API production reachability semantics after Fowler QA",
+        "owner": "ArchitectureBoundaryGuard",
+        "status": "implemented",
+        "rationale": "Separate runtime and type reachability, derive supported profile evidence from AST branch semantics, attribute conditional and Null Object profiles to concrete modules, reject type-only and unused-value fake reachability, and preserve transitive test-support export evidence in the existing ApplyArchitectureDependencyBoundaryGate rail.",
+        "fowler_signal": "evolutionary_architecture",
+        "rail_ref": "ApplyArchitectureDependencyBoundaryGate",
+        "approved_at": "2026-08-11T03:26:03.761+00:00",
+        "supersedes_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V2-20260811",
+        "created_at": "2026-08-11T03:26:02.567+00:00",
+        "updated_at": "2026-08-11T03:37:15.41+00:00"
       },
       {
         "design_id": "CANVAS-BACKLOG-INTEGRITY-READINESS-20260626",
@@ -60320,6 +60334,54 @@
         "created_at": "2026-08-11T03:06:49.896+00:00"
       },
       {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V3-20260811",
+        "subject_kind": "command",
+        "subject_id": "ApplyArchitectureDependencyBoundaryGate",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T03:26:02.567+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V3-20260811",
+        "subject_kind": "component",
+        "subject_id": "SYS-CI-GOVERNANCE-TOOLS-CI-ARCHITECTURE-BOUNDARIES",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-11T03:26:02.567+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V3-20260811",
+        "subject_kind": "component",
+        "subject_id": "SYS-CI-GOVERNANCE-TOOLS-CI-ARCHITECTURE-BOUNDARIES",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T03:26:02.567+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V3-20260811",
+        "subject_kind": "path",
+        "subject_id": "tools/ci/architecture-dependency-guard.test.mjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T03:26:02.567+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V3-20260811",
+        "subject_kind": "path",
+        "subject_id": "tools/ci/check-architecture-dependencies.mjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T03:26:02.567+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V3-20260811",
+        "subject_kind": "test",
+        "subject_id": "TEST-CI-API-PRODUCTION-REACHABILITY",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T03:26:02.567+00:00"
+      },
+      {
         "design_id": "CANVAS-BOTTOM-DRAWER-ACTIONABLE-READ-MODEL-20260626",
         "subject_kind": "component",
         "subject_id": "web.component.shell.BottomOperationalDrawer",
@@ -84852,6 +84914,27 @@
         "created_at": "2026-08-10T21:04:05.48+00:00"
       },
       {
+        "operation_id": "0927aa2d-ff35-4855-8990-ba8b2f2d26b4",
+        "idempotency_key": "codex-api-h2-2-reachability-v3-evidence-review",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V3-20260811",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2273",
+        "source_content_sha256": "445d0a77a2208b4198a706920223128ba7051884116b3ec95250a2c30232d691",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Review the implemented QA remediation against the new negative fixtures before accepting updated evidence.",
+          "designId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V3-20260811",
+          "toStatus": "review",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2273",
+          "fromStatus": "drift",
+          "sourceContentSha256": "445d0a77a2208b4198a706920223128ba7051884116b3ec95250a2c30232d691"
+        },
+        "created_at": "2026-08-11T03:35:49.965+00:00"
+      },
+      {
         "operation_id": "09c61628-7c57-4f04-bccc-9447ee467f03",
         "idempotency_key": "gh-2167-update-rel-sys-api-tests-application-services-planstore-guards-planstore-api-executability-validation-v1",
         "operation_type": "architecture_relation_record",
@@ -85356,6 +85439,27 @@
         "created_at": "2026-08-10T21:06:29.064+00:00"
       },
       {
+        "operation_id": "15a2dd0c-cd87-44a6-b955-da992d97c8f4",
+        "idempotency_key": "codex-api-h2-2-reachability-supersede-v2",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V2-20260811",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2273",
+        "source_content_sha256": "445d0a77a2208b4198a706920223128ba7051884116b3ec95250a2c30232d691",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Independent Fowler QA reproduced runtime type-edge, textual profile-evidence, and missing per-module profile-attribution bypasses; replace V2 before remediation.",
+          "designId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V2-20260811",
+          "toStatus": "superseded",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2273",
+          "fromStatus": "implemented",
+          "sourceContentSha256": "445d0a77a2208b4198a706920223128ba7051884116b3ec95250a2c30232d691"
+        },
+        "created_at": "2026-08-11T03:26:01.338+00:00"
+      },
+      {
         "operation_id": "16f29cb7-2cc6-49a9-91d8-a75188a94c79",
         "idempotency_key": "gh-2167-update-test-sys-api-infra-workspace-local-adapters-1-v1",
         "operation_type": "architecture_test_record",
@@ -85429,6 +85533,27 @@
           "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
         },
         "created_at": "2026-08-10T20:06:20.925+00:00"
+      },
+      {
+        "operation_id": "198a2a53-aced-4f73-83f0-7f2c31fae450",
+        "idempotency_key": "codex-api-h2-2-reachability-implemented-v3",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V3-20260811",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2273",
+        "source_content_sha256": "445d0a77a2208b4198a706920223128ba7051884116b3ec95250a2c30232d691",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Fowler QA remediations pass 16 architecture tests, the root architecture guard with attributed profiles, and all 275 CI tool tests without source drift.",
+          "designId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V3-20260811",
+          "toStatus": "implemented",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2273",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "445d0a77a2208b4198a706920223128ba7051884116b3ec95250a2c30232d691"
+        },
+        "created_at": "2026-08-11T03:37:15.41+00:00"
       },
       {
         "operation_id": "19c46165-95f1-4e6c-a2d4-488dfeb4aa7a",
@@ -85866,6 +85991,27 @@
           "sourceContentSha256": "f36efe64b0eb4dc707745d78e22df0c17a462d926c2492c55844875c47318d8b"
         },
         "created_at": "2026-08-10T21:04:36.673+00:00"
+      },
+      {
+        "operation_id": "2a78bdda-6905-4c02-8832-7df6cd5e37e2",
+        "idempotency_key": "codex-api-h2-2-reachability-approve-v3",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V3-20260811",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2273",
+        "source_content_sha256": "445d0a77a2208b4198a706920223128ba7051884116b3ec95250a2c30232d691",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Fowler QA provides executable negative cases and the V3 scope is limited to the existing command, implementation, and architecture test evidence.",
+          "designId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V3-20260811",
+          "toStatus": "approved",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2273",
+          "fromStatus": "review",
+          "sourceContentSha256": "445d0a77a2208b4198a706920223128ba7051884116b3ec95250a2c30232d691"
+        },
+        "created_at": "2026-08-11T03:26:03.761+00:00"
       },
       {
         "operation_id": "2cc40cb8-7c52-429c-b672-8759750f0d52",
@@ -87531,6 +87677,27 @@
         "created_at": "2026-08-10T21:03:55.429+00:00"
       },
       {
+        "operation_id": "7cdb9bbb-e1f7-4e91-95a1-42cf4c58eb3b",
+        "idempotency_key": "codex-api-h2-2-reachability-implementing-v3",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V3-20260811",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2273",
+        "source_content_sha256": "445d0a77a2208b4198a706920223128ba7051884116b3ec95250a2c30232d691",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Begin red-green remediation of the independently reproduced QA bypasses.",
+          "designId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V3-20260811",
+          "toStatus": "implementing",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2273",
+          "fromStatus": "approved",
+          "sourceContentSha256": "445d0a77a2208b4198a706920223128ba7051884116b3ec95250a2c30232d691"
+        },
+        "created_at": "2026-08-11T03:26:04.938+00:00"
+      },
+      {
         "operation_id": "7dac553a-03ee-4cc3-bd51-da28bc3cdef7",
         "idempotency_key": "gh-2167-create-contract-sys-api-application-services-primary-v1",
         "operation_type": "architecture_contract_record",
@@ -88727,6 +88894,27 @@
         "created_at": "2026-08-10T20:09:38.42+00:00"
       },
       {
+        "operation_id": "a3aa677f-0b69-4d48-b346-3650ec98dd9c",
+        "idempotency_key": "codex-api-h2-2-reachability-v3-evidence-drift",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V3-20260811",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2273",
+        "source_content_sha256": "445d0a77a2208b4198a706920223128ba7051884116b3ec95250a2c30232d691",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The evidence command only accepts review-state designs; return through drift to renew executable evidence before closure.",
+          "designId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V3-20260811",
+          "toStatus": "drift",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2273",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "445d0a77a2208b4198a706920223128ba7051884116b3ec95250a2c30232d691"
+        },
+        "created_at": "2026-08-11T03:35:48.145+00:00"
+      },
+      {
         "operation_id": "a503537d-8347-4411-a6ee-a4bd4538ebe8",
         "idempotency_key": "gh-2167-update-test-sys-api-http-entrypoint-tests-plan-commands-6-v1",
         "operation_type": "architecture_test_record",
@@ -89127,6 +89315,27 @@
           "sourceContentSha256": "c770f3d34e90d2ad2f546af24f8f2833870c7df91f1fb1c97e45151de29563b6"
         },
         "created_at": "2026-08-10T21:04:15.538+00:00"
+      },
+      {
+        "operation_id": "b25d54d8-91c2-44b7-ac61-4873f0be4906",
+        "idempotency_key": "codex-api-h2-2-reachability-implementing-v3-final",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V3-20260811",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2273",
+        "source_content_sha256": "445d0a77a2208b4198a706920223128ba7051884116b3ec95250a2c30232d691",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Proceed to final repository validation and independent Fowler re-review.",
+          "designId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V3-20260811",
+          "toStatus": "implementing",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2273",
+          "fromStatus": "approved",
+          "sourceContentSha256": "445d0a77a2208b4198a706920223128ba7051884116b3ec95250a2c30232d691"
+        },
+        "created_at": "2026-08-11T03:35:56.181+00:00"
       },
       {
         "operation_id": "b2b33e58-8ed4-419a-809b-50b243c95d29",
@@ -91020,6 +91229,52 @@
         "created_at": "2026-08-10T21:06:33.458+00:00"
       },
       {
+        "operation_id": "e5a02c93-5be2-4efe-82bc-14a2a391376d",
+        "idempotency_key": "codex-api-h2-2-reachability-approve-v3-evidence",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V3-20260811",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2273",
+        "source_content_sha256": "445d0a77a2208b4198a706920223128ba7051884116b3ec95250a2c30232d691",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The refreshed architecture evidence covers runtime type edges, unused value imports, AST profile branches, module attribution, and transitive test-support exports.",
+          "designId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V3-20260811",
+          "toStatus": "approved",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2273",
+          "fromStatus": "review",
+          "sourceContentSha256": "445d0a77a2208b4198a706920223128ba7051884116b3ec95250a2c30232d691"
+        },
+        "created_at": "2026-08-11T03:35:54.387+00:00"
+      },
+      {
+        "operation_id": "e6323a64-63bd-49a5-ab9b-258fa7828b99",
+        "idempotency_key": "codex-api-h2-2-reachability-test-evidence-v3",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V3-20260811",
+        "source_ref": "tools/ci/architecture-dependency-guard.test.mjs",
+        "source_content_sha256": "1cb8a3f1c3ff454195e792bf7038211ded617bb5bcee12ea8a502053e84607e7",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-CI-API-PRODUCTION-REACHABILITY",
+          "designId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V3-20260811",
+          "required": true,
+          "testKind": "architecture",
+          "testPath": "tools/ci/architecture-dependency-guard.test.mjs",
+          "sourceRef": "tools/ci/architecture-dependency-guard.test.mjs",
+          "componentId": "SYS-CI-GOVERNANCE-TOOLS-CI-ARCHITECTURE-BOUNDARIES",
+          "coverageLevel": "boundary",
+          "validationCommand": "node --test tools/ci/architecture-dependency-guard.test.mjs",
+          "sourceContentSha256": "1cb8a3f1c3ff454195e792bf7038211ded617bb5bcee12ea8a502053e84607e7"
+        },
+        "created_at": "2026-08-11T03:35:51.781+00:00"
+      },
+      {
         "operation_id": "e78d05ba-7cf4-44da-8360-efd80fe69be5",
         "idempotency_key": "gh-2167-update-test-sys-api-http-entrypoint-tests-error-translation-1-v1",
         "operation_type": "architecture_test_record",
@@ -91160,6 +91415,70 @@
           "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
         },
         "created_at": "2026-08-10T23:26:25.555+00:00"
+      },
+      {
+        "operation_id": "ed3c112e-a0dc-4063-b135-93b64291c998",
+        "idempotency_key": "codex-api-h2-2-reachability-design-v3",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V3-20260811",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2273",
+        "source_content_sha256": "445d0a77a2208b4198a706920223128ba7051884116b3ec95250a2c30232d691",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "ArchitectureBoundaryGuard",
+          "title": "Harden API production reachability semantics after Fowler QA",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-CI-GOVERNANCE-TOOLS-CI-ARCHITECTURE-BOUNDARIES",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-CI-GOVERNANCE-TOOLS-CI-ARCHITECTURE-BOUNDARIES",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "ApplyArchitectureDependencyBoundaryGate",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "tools/ci/check-architecture-dependencies.mjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "tools/ci/architecture-dependency-guard.test.mjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-CI-API-PRODUCTION-REACHABILITY",
+              "subjectKind": "test"
+            }
+          ],
+          "status": "review",
+          "railRef": "ApplyArchitectureDependencyBoundaryGate",
+          "designId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V3-20260811",
+          "rationale": "Separate runtime and type reachability, derive supported profile evidence from AST branch semantics, attribute conditional and Null Object profiles to concrete modules, reject type-only and unused-value fake reachability, and preserve transitive test-support export evidence in the existing ApplyArchitectureDependencyBoundaryGate rail.",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2273",
+          "workItemId": "GH-2273",
+          "fowlerSignal": "evolutionary_architecture",
+          "supersedesId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V2-20260811",
+          "sourceContentSha256": "445d0a77a2208b4198a706920223128ba7051884116b3ec95250a2c30232d691"
+        },
+        "created_at": "2026-08-11T03:26:02.567+00:00"
       },
       {
         "operation_id": "ede3734a-de09-41e6-90a9-49f64bd706ca",
@@ -94765,7 +95084,18 @@
         "tools/ci/check-architecture-dependencies.mjs#formatCruiseViolations",
         "tools/ci/check-architecture-dependencies.mjs#formatAdapterCanonicalContractFindings",
         "tools/ci/check-architecture-dependencies.mjs#runArchitectureDependencyGuard",
-        "tools/ci/check-architecture-dependencies.mjs#main"
+        "tools/ci/check-architecture-dependencies.mjs#main",
+        "tools/ci/check-architecture-dependencies.mjs#analyzeLocalImportSemantics",
+        "tools/ci/check-architecture-dependencies.mjs#applyDeploymentProfileClassifications",
+        "tools/ci/check-architecture-dependencies.mjs#collectDescendants",
+        "tools/ci/check-architecture-dependencies.mjs#collectUnusedLocalValueImports",
+        "tools/ci/check-architecture-dependencies.mjs#containsCall",
+        "tools/ci/check-architecture-dependencies.mjs#containsIdentifier",
+        "tools/ci/check-architecture-dependencies.mjs#containsNewExpression",
+        "tools/ci/check-architecture-dependencies.mjs#containsNullReturn",
+        "tools/ci/check-architecture-dependencies.mjs#importBindingNames",
+        "tools/ci/check-architecture-dependencies.mjs#importedSymbolTarget",
+        "tools/ci/check-architecture-dependencies.mjs#isRuntimeDependency"
       ],
       "implementationRefs": [
         ".github/workflows/pr-quality-gate.yml#Validate architecture dependency boundaries",
@@ -94818,7 +95148,18 @@
         "tools/ci/check-architecture-dependencies.mjs#formatCruiseViolations",
         "tools/ci/check-architecture-dependencies.mjs#formatAdapterCanonicalContractFindings",
         "tools/ci/check-architecture-dependencies.mjs#runArchitectureDependencyGuard",
-        "tools/ci/check-architecture-dependencies.mjs#main"
+        "tools/ci/check-architecture-dependencies.mjs#main",
+        "tools/ci/check-architecture-dependencies.mjs#analyzeLocalImportSemantics",
+        "tools/ci/check-architecture-dependencies.mjs#applyDeploymentProfileClassifications",
+        "tools/ci/check-architecture-dependencies.mjs#collectDescendants",
+        "tools/ci/check-architecture-dependencies.mjs#collectUnusedLocalValueImports",
+        "tools/ci/check-architecture-dependencies.mjs#containsCall",
+        "tools/ci/check-architecture-dependencies.mjs#containsIdentifier",
+        "tools/ci/check-architecture-dependencies.mjs#containsNewExpression",
+        "tools/ci/check-architecture-dependencies.mjs#containsNullReturn",
+        "tools/ci/check-architecture-dependencies.mjs#importBindingNames",
+        "tools/ci/check-architecture-dependencies.mjs#importedSymbolTarget",
+        "tools/ci/check-architecture-dependencies.mjs#isRuntimeDependency"
       ],
       "documentationRefs": [
         "docs/planning/proposals/mandatory/governance-and-docs/architecture-dependency-boundary-guard-implementation-plan-20260502.md",
@@ -94848,7 +95189,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "tools/ci/check-architecture-dependencies.mjs",
-      "sourceContentSha256": "595515fed8b66cf39a5cf29dd37a24c5c1a49040a9a6e52bfaaca8cf867b7245",
+      "sourceContentSha256": "d98c4189e95b519fac69f876f1d5fd9939206d5ba206e62ca730760cd3bddf04",
       "rawRail": {
         "name": "ApplyArchitectureDependencyBoundaryGate",
         "type": "command",
@@ -95444,6 +95785,138 @@
             ],
             "cypressCoverage": "N/A - repository architecture governance command",
             "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "analyzeLocalImportSemantics",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "AST-bound profile evidence and runtime-only dependency traversal prevent textual and type-only bypasses."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "applyDeploymentProfileClassifications",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "AST-bound profile evidence and runtime-only dependency traversal prevent textual and type-only bypasses."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "collectDescendants",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "AST-bound profile evidence and runtime-only dependency traversal prevent textual and type-only bypasses."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "collectUnusedLocalValueImports",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "AST-bound profile evidence and runtime-only dependency traversal prevent textual and type-only bypasses."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "containsCall",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "AST-bound profile evidence and runtime-only dependency traversal prevent textual and type-only bypasses."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "containsIdentifier",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "AST-bound profile evidence and runtime-only dependency traversal prevent textual and type-only bypasses."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "containsNewExpression",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "AST-bound profile evidence and runtime-only dependency traversal prevent textual and type-only bypasses."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "containsNullReturn",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "AST-bound profile evidence and runtime-only dependency traversal prevent textual and type-only bypasses."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "importBindingNames",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "AST-bound profile evidence and runtime-only dependency traversal prevent textual and type-only bypasses."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "importedSymbolTarget",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "AST-bound profile evidence and runtime-only dependency traversal prevent textual and type-only bypasses."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "isRuntimeDependency",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "AST-bound profile evidence and runtime-only dependency traversal prevent textual and type-only bypasses."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
           }
         ],
         "version": 1,
@@ -95455,7 +95928,8 @@
           "ApiProductionReachabilityReport"
         ],
         "fowlerSignals": [
-          "One typed repository graph replaces drifting package-local guards and filename exception lists."
+          "One typed repository graph replaces drifting package-local guards and filename exception lists.",
+          "AST-bound profile evidence and runtime-only dependency traversal prevent textual and type-only bypasses."
         ],
         "completionGate": [
           "node --test tools/ci/architecture-dependency-guard.test.mjs",
@@ -95474,7 +95948,7 @@
               "apps/api/package.json",
               ".github/workflows/pr-quality-gate.yml"
             ],
-            "expectedFailure": "New test-only, orphan, production-to-test, fake-reachability, unproven profile, or unconsolidated API dependency behavior is accepted."
+            "expectedFailure": "Type-only, unused-value, comment-only, disconnected-branch, unclassified profile, or transitive test-support bypass is accepted."
           }
         ],
         "componentGuides": [
@@ -95506,7 +95980,7 @@
         ],
         "forbiddenImplementationSurfaces": ["apps/api/.dependency-cruiser.cjs"]
       },
-      "revision": 1,
+      "revision": 2,
       "createdBy": "codex",
       "createdAt": "2026-08-08T00:00:00.000Z"
     },
@@ -151297,6 +151771,70 @@
         "forbiddenImplementationSurfaces": ["apps/api/.dependency-cruiser.cjs"]
       },
       "createdAt": "2026-08-11T03:11:34.892Z"
+    },
+    {
+      "operationId": "515f1b48-2063-4c41-98ea-da3a335e0647",
+      "idempotencyKey": "codex-api-h2-2-arch-deps-semantic-hardening-2",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#ARCH-DEPS-GUARD#command#applyarchitecturedependencyboundarygate",
+      "sourcePath": "tools/ci/check-architecture-dependencies.mjs",
+      "sourceContentSha256": "d98c4189e95b519fac69f876f1d5fd9939206d5ba206e62ca730760cd3bddf04",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "node --test tools/ci/architecture-dependency-guard.test.mjs",
+        "dddOwner": "Repository CI governance baseline",
+        "railName": "ApplyArchitectureDependencyBoundaryGate",
+        "railType": "command",
+        "featureId": "ARCH-DEPS-GUARD",
+        "greenTest": "node --test tools/ci/architecture-dependency-guard.test.mjs && pnpm arch:deps",
+        "sourceRef": "tools/ci/check-architecture-dependencies.mjs",
+        "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2273"],
+        "cypressFlows": ["N/A - repository architecture governance command"],
+        "domainObjects": ["RepositoryDependencyGraph"],
+        "fowlerSignals": [
+          "AST-bound profile evidence and runtime-only dependency traversal prevent textual and type-only bypasses."
+        ],
+        "patchSurfaces": ["tools/ci/check-architecture-dependencies.mjs"],
+        "completionGate": ["pnpm verify:prepush"],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Type-only, unused-value, comment-only, disconnected-branch, unclassified profile, or transitive test-support bypass is accepted.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "architectureGuards": ["pnpm arch:deps"],
+        "implementationPlan": "docs/planning/proposals/mandatory/governance-and-docs/architecture-dependency-boundary-guard-implementation-plan-20260502.md",
+        "implementationRefs": [
+          "tools/ci/check-architecture-dependencies.mjs#analyzeLocalImportSemantics",
+          "tools/ci/check-architecture-dependencies.mjs#applyDeploymentProfileClassifications",
+          "tools/ci/check-architecture-dependencies.mjs#collectDescendants",
+          "tools/ci/check-architecture-dependencies.mjs#collectUnusedLocalValueImports",
+          "tools/ci/check-architecture-dependencies.mjs#containsCall",
+          "tools/ci/check-architecture-dependencies.mjs#containsIdentifier",
+          "tools/ci/check-architecture-dependencies.mjs#containsNewExpression",
+          "tools/ci/check-architecture-dependencies.mjs#containsNullReturn",
+          "tools/ci/check-architecture-dependencies.mjs#importBindingNames",
+          "tools/ci/check-architecture-dependencies.mjs#importedSymbolTarget",
+          "tools/ci/check-architecture-dependencies.mjs#isRuntimeDependency"
+        ],
+        "normalizedRailName": "applyarchitecturedependencyboundarygate",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "d98c4189e95b519fac69f876f1d5fd9939206d5ba206e62ca730760cd3bddf04",
+        "allowedImplementationSurfaces": [
+          "tools/ci/check-architecture-dependencies.mjs"
+        ],
+        "forbiddenImplementationSurfaces": ["apps/api/.dependency-cruiser.cjs"]
+      },
+      "createdAt": "2026-08-11T03:35:57.877Z"
     }
   ],
   "governanceComponentDefinitions": [
