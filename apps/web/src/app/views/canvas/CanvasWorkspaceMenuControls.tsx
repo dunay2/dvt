@@ -90,7 +90,13 @@ export function CanvasWorkspaceMenuContributionRegistrar(
   return null;
 }
 
-export function CanvasWorkspaceMenuControls(): JSX.Element | null {
+type CanvasWorkspaceMenuControlsProps = Readonly<{
+  onProjectCodeSelected?: () => void;
+}>;
+
+export function CanvasWorkspaceMenuControls({
+  onProjectCodeSelected,
+}: CanvasWorkspaceMenuControlsProps = {}): JSX.Element | null {
   const contribution = useCanvasWorkspaceMenuContributionStore((state) => state.contribution);
   useApplicationLanguageStore((state) => state.language);
   const importInputRef = useRef<HTMLInputElement>(null);
@@ -124,7 +130,10 @@ export function CanvasWorkspaceMenuControls(): JSX.Element | null {
       <DropdownMenuItem
         data-slot="canvas-workspace-open-project-code-command"
         disabled={!contribution.canOpenProjectCode || contribution.onOpenProjectCode == null}
-        onClick={contribution.onOpenProjectCode}
+        onClick={() => {
+          onProjectCodeSelected?.();
+          contribution.onOpenProjectCode?.();
+        }}
       >
         <Code2 className="mr-2 size-4" />
         {canvasViewCopy.workspaceOpenProjectCodeLabel}

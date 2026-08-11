@@ -167,7 +167,7 @@ export function ShellMenu({
                 </div>
               </>
             ) : null}
-            <CanvasWorkspaceMenuControls />
+            <CanvasWorkspaceMenuControls onProjectCodeSelected={() => setOpen(false)} />
           </>
         ) : (
           <>
