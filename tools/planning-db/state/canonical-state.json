@@ -10443,28 +10443,28 @@
         "work_item_id": "GH-2273",
         "title": "Guarantee push comparison base availability",
         "owner": "ArchitectureBoundaryGuard",
-        "status": "approved",
+        "status": "implemented",
         "rationale": "Fetch github.event.before explicitly for push-triggered architecture checks so a shallow checkout can compare multi-commit deliveries; retain PR and workflow-dispatch baselines and the existing no-merge-base direct-tree fallback.",
         "fowler_signal": "evolutionary_architecture",
         "rail_ref": "ApplyArchitectureDependencyBoundaryGate",
         "approved_at": "2026-08-11T07:37:49.273+00:00",
         "supersedes_id": "API-H2-2-PUSH-DIFF-BASELINE-V12-20260811",
         "created_at": "2026-08-11T07:37:45.821+00:00",
-        "updated_at": "2026-08-11T07:37:49.273+00:00"
+        "updated_at": "2026-08-11T07:40:00.966+00:00"
       },
       {
         "design_id": "API-H2-2-PUSH-DIFF-BASELINE-V12-20260811",
         "work_item_id": "GH-2273",
         "title": "Bind push reachability diff to pre-push SHA",
         "owner": "ArchitectureBoundaryGuard",
-        "status": "implemented",
+        "status": "superseded",
         "rationale": "Use the pull-request base SHA for PRs and github.event.before for pushes so changed-only orphan and test-support enforcement evaluates the actual delivered delta on every mandatory workflow trigger.",
         "fowler_signal": "evolutionary_architecture",
         "rail_ref": "ApplyArchitectureDependencyBoundaryGate",
         "approved_at": "2026-08-11T07:05:29.659+00:00",
         "supersedes_id": null,
         "created_at": "2026-08-11T07:05:26.237+00:00",
-        "updated_at": "2026-08-11T07:12:10.655+00:00"
+        "updated_at": "2026-08-11T07:40:03.269+00:00"
       },
       {
         "design_id": "CANVAS-BACKLOG-INTEGRITY-READINESS-20260626",
@@ -88288,6 +88288,27 @@
         "created_at": "2026-08-10T21:04:39.766+00:00"
       },
       {
+        "operation_id": "5ac425b1-bdf9-426e-8604-5470b4afe78f",
+        "idempotency_key": "codex-api-h2-2-push-diff-v12-superseded-by-v13",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-2-PUSH-DIFF-BASELINE-V12-20260811",
+        "source_ref": ".github/workflows/pr-quality-gate.yml",
+        "source_content_sha256": "76dc7134d826169f42fc824f2aac69dd158a23a28d4e719ca1ff9f8c90755e8a",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "V13 supersedes V12 because selecting event.before without guaranteeing that commit in the shallow checkout can fail on multi-commit direct pushes.",
+          "designId": "API-H2-2-PUSH-DIFF-BASELINE-V12-20260811",
+          "toStatus": "superseded",
+          "sourceRef": ".github/workflows/pr-quality-gate.yml",
+          "fromStatus": "implemented",
+          "sourceContentSha256": "76dc7134d826169f42fc824f2aac69dd158a23a28d4e719ca1ff9f8c90755e8a"
+        },
+        "created_at": "2026-08-11T07:40:03.269+00:00"
+      },
+      {
         "operation_id": "5c65ebb6-1f3d-44ae-8647-ca8ed3303f0b",
         "idempotency_key": "gh-2167-update-test-sys-api-http-entrypoint-tests-error-translation-3-v1",
         "operation_type": "architecture_test_record",
@@ -89341,6 +89362,27 @@
           "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
         },
         "created_at": "2026-08-10T20:06:16.147+00:00"
+      },
+      {
+        "operation_id": "7ab0b71e-94ff-4e1f-954d-23bff08840f7",
+        "idempotency_key": "codex-api-h2-2-push-base-v13-implemented",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-2-PUSH-BASE-AVAILABILITY-V13-20260811",
+        "source_ref": ".github/workflows/pr-quality-gate.yml",
+        "source_content_sha256": "76dc7134d826169f42fc824f2aac69dd158a23a28d4e719ca1ff9f8c90755e8a",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Push workflows now fetch an absent event.before commit explicitly; existing shallow no-merge-base logic falls back to direct tree diff and PR/dispatch baselines remain unchanged.",
+          "designId": "API-H2-2-PUSH-BASE-AVAILABILITY-V13-20260811",
+          "toStatus": "implemented",
+          "sourceRef": ".github/workflows/pr-quality-gate.yml",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "76dc7134d826169f42fc824f2aac69dd158a23a28d4e719ca1ff9f8c90755e8a"
+        },
+        "created_at": "2026-08-11T07:40:00.966+00:00"
       },
       {
         "operation_id": "7b66bd9d-146f-4082-badd-1a723b4f8cfc",
@@ -91167,6 +91209,27 @@
           "sourceContentSha256": "c52f490729a67b6e750b00b54ba40e4805633a1832b185bfff50c25582187804"
         },
         "created_at": "2026-08-11T02:28:40.313+00:00"
+      },
+      {
+        "operation_id": "aef347bc-c1aa-4398-8ef8-9fad2ffabb6c",
+        "idempotency_key": "codex-api-h2-2-push-base-v13-implementing",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-2-PUSH-BASE-AVAILABILITY-V13-20260811",
+        "source_ref": ".github/workflows/pr-quality-gate.yml",
+        "source_content_sha256": "76dc7134d826169f42fc824f2aac69dd158a23a28d4e719ca1ff9f8c90755e8a",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Begin the V13 RED-GREEN after the workflow contract proved the push-base fetch step absent.",
+          "designId": "API-H2-2-PUSH-BASE-AVAILABILITY-V13-20260811",
+          "toStatus": "implementing",
+          "sourceRef": ".github/workflows/pr-quality-gate.yml",
+          "fromStatus": "approved",
+          "sourceContentSha256": "76dc7134d826169f42fc824f2aac69dd158a23a28d4e719ca1ff9f8c90755e8a"
+        },
+        "created_at": "2026-08-11T07:39:58.505+00:00"
       },
       {
         "operation_id": "af45b596-9e90-44be-9f8b-65d024d80155",
