@@ -244,6 +244,23 @@ test('workflow scope policy stays wired into ci and pr quality workflows', () =>
   });
 });
 
+test('PR docs sync runs only after Planning DB preparation', () => {
+  const prQualityGate = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
+  const prepareIndex = prQualityGate.indexOf(
+    '- name: Prepare planning DB for DB-backed validation'
+  );
+  const syncIndex = prQualityGate.indexOf(
+    '- name: Validate docs sync outputs (ADR/index coherence)'
+  );
+
+  assert.ok(prepareIndex >= 0);
+  assert.ok(syncIndex >= 0);
+  assert.ok(prepareIndex < syncIndex, 'Planning DB preparation must precede DB-first docs sync');
+
+  const prepareBlock = prQualityGate.slice(prepareIndex, syncIndex);
+  assert.match(prepareBlock, /steps\.scope\.outputs\.docs_structure_changed == 'true'/u);
+});
+
 test('contracts and test workflows consume semantic scope outputs instead of inline filters', () => {
   const contractsWorkflow = readFileSync('.github/workflows/contracts.yml', 'utf8');
   const testWorkflow = readFileSync('.github/workflows/test.yml', 'utf8');
