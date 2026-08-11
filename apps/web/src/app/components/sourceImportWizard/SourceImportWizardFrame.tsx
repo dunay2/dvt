@@ -42,7 +42,7 @@ export function SourceImportWizardFooter({
   }
 
   return (
-    <div className="flex w-full justify-end gap-2">
+    <div className="flex w-full flex-wrap justify-end gap-2">
       <Button variant="outline" onClick={onClose}>
         {copy.footer.cancelAction}
       </Button>
@@ -103,7 +103,7 @@ export function SourceImportWizardFrame({
     >
       <DialogContent
         closeLabel={copy.closeAction}
-        className="flex h-[calc(100vh-2rem)] max-h-[760px] w-[calc(100vw-2rem)] max-w-5xl flex-col overflow-hidden"
+        className="flex h-[calc(100vh-2rem)] max-h-[760px] w-[calc(100vw-2rem)] min-w-0 max-w-5xl flex-col overflow-hidden sm:max-w-5xl"
         onCloseAutoFocus={(event) => {
           if (onRestoreFocus) {
             event.preventDefault();
@@ -123,9 +123,9 @@ export function SourceImportWizardFrame({
           type="always"
           data-slot="source-import-wizard-content-scroll"
           data-overflow-affordance="always"
-          className="-mx-6 min-h-0 flex-1 px-6"
+          className="-mx-6 min-h-0 min-w-0 flex-1 px-6"
         >
-          <div className="pb-4">{children}</div>
+          <div className="min-w-0 pb-4">{children}</div>
         </ScrollArea>
 
         <DialogFooter className="mt-4 shrink-0">

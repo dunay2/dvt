@@ -724,6 +724,64 @@ describe('Canvas source import live clean proof', () => {
       projectPrefix: 'Proyecto',
     });
 
+    cy.viewport(640, 800);
+    openCanvasContextMenuAt(320, 300);
+    clickCanvasContextMenuAction('open-add-node-catalog');
+    clickCanvasAddCatalogAction('open-source-import', 'dbt:source');
+    cy.contains('[role="dialog"]', 'Añadir origen', { timeout: 20_000 })
+      .should('be.visible')
+      .and('contain.text', 'Elegir conexión a base de datos')
+      .and('contain.text', 'Nueva conexión')
+      .and('contain.text', 'Probar conexión')
+      .and('not.contain.text', 'Choose database connection')
+      .should(($dialog) => {
+        const dialog = $dialog.get(0);
+        const bounds = dialog.getBoundingClientRect();
+        expect(bounds.left).to.be.at.least(0);
+        expect(bounds.right).to.be.at.most(640);
+        expect(dialog.scrollWidth, 'dialog horizontal overflow').to.be.at.most(dialog.clientWidth);
+      });
+    cy.get('[data-slot="source-import-connection-actions"]')
+      .should('be.visible')
+      .and(($actions) => {
+        const dialogBounds = Cypress.$('[role="dialog"]').get(0).getBoundingClientRect();
+        const actionBounds = $actions.get(0).getBoundingClientRect();
+        expect(actionBounds.left).to.be.at.least(dialogBounds.left);
+        expect(actionBounds.right).to.be.at.most(dialogBounds.right);
+      });
+    cy.contains('[role="dialog"] button', 'Nueva conexión').click();
+    cy.get('[data-slot="source-import-create-connection-name"]')
+      .scrollIntoView()
+      .should('be.visible');
+    cy.get('[data-slot="source-import-create-connection-type"]')
+      .scrollIntoView()
+      .should('be.visible');
+    cy.get('[data-slot="source-import-create-connection-database"]')
+      .scrollIntoView()
+      .should('be.visible');
+    cy.get('[data-slot="source-import-create-connection-credential-ref"]')
+      .scrollIntoView()
+      .should('be.visible');
+    cy.get('[data-slot="source-import-create-connection-actions"]')
+      .scrollIntoView()
+      .should('be.visible')
+      .within(() => {
+        cy.contains('button', 'Cancelar').should('be.visible').and('be.enabled');
+        cy.contains('button', 'Crear conexión').should('be.visible').and('be.enabled');
+      });
+    cy.get('[data-slot="dialog-footer"]')
+      .should('be.visible')
+      .within(() => {
+        cy.contains('button', 'Cancelar').should('be.visible').and('be.enabled');
+      });
+    assertNoSeriousAccessibilityViolations('[role="dialog"][data-state="open"]');
+    cy.get('[data-slot="source-import-create-connection-actions"]')
+      .contains('button', 'Cancelar')
+      .click();
+    cy.get('[data-slot="dialog-footer"]').contains('button', 'Cancelar').click();
+    cy.contains('[role="dialog"]', 'Añadir origen').should('not.exist');
+    cy.viewport(1000, 660);
+
     cy.get('[data-slot="graph-node-card-title"]', { timeout: 20_000 })
       .filter((_, element) => (element.textContent ?? '').includes('Postgres'))
       .should('have.length', 2);

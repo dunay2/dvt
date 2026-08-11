@@ -127,12 +127,18 @@ export function ConnectionStep({
         ) : (
           <>
             <div className="rounded-lg border border-slate-700 bg-slate-950/40 p-3">
-              <div className="mb-2 flex items-center justify-between gap-3 text-xs text-slate-300">
+              <div
+                data-slot="source-import-connection-summary"
+                className="mb-2 flex flex-wrap items-start justify-between gap-3 text-xs text-slate-300"
+              >
                 <div className="min-w-0">
                   <div>{formatConnectionCatalogSummary(connections.length, copy.connection)}</div>
                   <div className="truncate text-slate-400">{copy.connection.catalogSource}</div>
                 </div>
-                <div className="flex shrink-0 gap-2">
+                <div
+                  data-slot="source-import-connection-actions"
+                  className="flex min-w-0 flex-wrap gap-2"
+                >
                   <Button
                     type="button"
                     variant="outline"
@@ -221,7 +227,7 @@ export function ConnectionStep({
                     ref={isSelected ? selectedConnectionOptionRef : undefined}
                     data-slot="source-import-connection-option"
                     aria-pressed={isSelected}
-                    className={`flex w-full flex-col gap-6 rounded-xl border bg-card p-4 text-left text-card-foreground transition-all ${
+                    className={`flex w-full min-w-0 flex-col gap-6 overflow-hidden rounded-xl border bg-card p-4 text-left text-card-foreground transition-all ${
                       isSelected
                         ? 'border-blue-500 bg-blue-900/20'
                         : 'border-slate-600 hover:border-gray-600'

@@ -127,7 +127,10 @@ export function WarehouseConnectionCreateForm({
           />
         </label>
 
-        <div className="flex justify-end gap-2">
+        <div
+          data-slot="source-import-create-connection-actions"
+          className="flex flex-wrap justify-end gap-2"
+        >
           <Button type="button" variant="ghost" size="sm" disabled={isCreating} onClick={onCancel}>
             {copy.connection.createCancelAction}
           </Button>

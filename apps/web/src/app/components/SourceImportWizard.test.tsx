@@ -110,6 +110,34 @@ describe('SourceImportWizard', () => {
     expect(document.body.textContent).not.toContain('Sources imported');
   });
 
+  it('declares a wide responsive dialog and wrapping connection and form actions', async () => {
+    await harness.renderWizard();
+
+    const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]');
+    const connectionSummary = document.body.querySelector<HTMLElement>(
+      '[data-slot="source-import-connection-summary"]'
+    );
+    const connectionActions = document.body.querySelector<HTMLElement>(
+      '[data-slot="source-import-connection-actions"]'
+    );
+
+    expect(dialog?.className).toContain('sm:max-w-5xl');
+    expect(connectionSummary?.className).toContain('flex-wrap');
+    expect(connectionActions?.className).toContain('flex-wrap');
+
+    await harness.clickButtonContaining('New connection');
+
+    const formActions = document.body.querySelector<HTMLElement>(
+      '[data-slot="source-import-create-connection-actions"]'
+    );
+    expect(formActions?.className).toContain('flex-wrap');
+    expect(
+      document.body.querySelector('[data-slot="source-import-wizard-content-scroll"]')
+    ).not.toBeNull();
+    expect(document.body.textContent).toContain('Cancel');
+    expect(document.body.textContent).toContain('Create connection');
+  });
+
   it('opens on governed database connections without unavailable source-type placeholders', async () => {
     const onClose = vi.fn();
 
