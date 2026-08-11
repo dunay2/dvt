@@ -445,7 +445,7 @@ test('the canonical docs sync rail provisions and imports Planning DB for every 
 
   assert.match(
     packageScripts['docs:sync'],
-    /^pnpm planning:db:up && pnpm planning:db:import && node scripts\/sync-docs\.cjs$/u
+    /^pnpm planning:db:up && pnpm planning:db:health --wait && pnpm planning:db:import && node scripts\/sync-docs\.cjs$/u
   );
   assert.match(packageScripts['docs:sync:check'], /^pnpm docs:sync &&/u);
   assert.match(packageScripts['docs:ci'], /^pnpm docs:sync &&/u);
