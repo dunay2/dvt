@@ -135,6 +135,7 @@
     "docs/evidence/**",
     "scripts/check-generated-docs-policy.cjs",
     "scripts/check-markdown-locations.cjs",
+    "scripts/sync-docs.cjs",
     "tools/docs/**",
     "tools/ci/architecture-dependency-guard.test.mjs",
     "tools/ci/check-architecture-dependencies.mjs",
