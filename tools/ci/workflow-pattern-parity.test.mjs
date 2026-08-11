@@ -259,6 +259,13 @@ test('PR docs sync runs only after Planning DB preparation', () => {
 
   const prepareBlock = prQualityGate.slice(prepareIndex, syncIndex);
   assert.match(prepareBlock, /steps\.scope\.outputs\.docs_structure_changed == 'true'/u);
+
+  const syncBlock = namedWorkflowStep(
+    prQualityGate,
+    'Validate docs sync outputs (ADR/index coherence)'
+  );
+  assertWorkflowContains(syncBlock, 'GIT_BASE: ${{ github.event.pull_request.base.sha }}');
+  assertWorkflowContains(syncBlock, 'GIT_HEAD: ${{ github.sha }}');
 });
 
 test('contracts and test workflows consume semantic scope outputs instead of inline filters', () => {
