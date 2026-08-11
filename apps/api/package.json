@@ -20,8 +20,7 @@
     "pretest:integration": "pnpm --filter \"dvt-api^...\" build && pnpm build",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:integration:ci": "vitest run --config vitest.integration.config.ts",
-    "proof:start-run-otel": "vitest run --config vitest.integration.config.ts test/integration/startRunOpenTelemetry.integration.test.ts",
-    "test:arch": "depcruise src --config .dependency-cruiser.cjs"
+    "proof:start-run-otel": "vitest run --config vitest.integration.config.ts test/integration/startRunOpenTelemetry.integration.test.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.940.0",
@@ -53,7 +52,6 @@
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^26.1.1",
     "@types/pg": "^8.11.10",
-    "dependency-cruiser": "^17.3.9",
     "tsx": "^4.0.0",
     "typescript": "^5.0.0",
     "vitest": "3.2.4"

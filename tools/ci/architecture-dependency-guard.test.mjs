@@ -1,12 +1,23 @@
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import test from 'node:test';
 
-import { collectAdapterCanonicalContractFindings } from './check-architecture-dependencies.mjs';
+import {
+  API_REACHABILITY_CLASSIFICATIONS,
+  REQUIRED_API_DEPLOYMENT_PROFILES,
+  classifyApiSourceReachability,
+  collectAdapterCanonicalContractFindings,
+  collectApiDeploymentProfileEvidence,
+  collectApiExportReachabilityEvidence,
+  collectApiReachabilityFindings,
+  collectApiProductionReachability,
+  formatApiReachabilityReport,
+  listFilesRecursive,
+} from './check-architecture-dependencies.mjs';
 import verifyPrepush from '../../scripts/verify-prepush.cjs';
 
 const DEPCRUISE_CONFIG = resolve('.dependency-cruiser.cjs');
@@ -21,6 +32,11 @@ const REQUIRED_ARCH_DEPENDENCY_RULES = [
   'no-dvt-package-cycles',
   'no-cross-package-deep-imports',
   'no-runtime-packages-to-scripts-or-tools',
+  'no-api-domain-to-application',
+  'no-api-application-to-fastify-or-jwt',
+  'no-api-application-to-oidc-libs',
+  'no-api-ports-to-http-types',
+  'no-api-production-to-test-support',
 ];
 const REQUIRED_SEMANTIC_ARCHITECTURE_RULES = ['no-adapters-own-canonical-contracts'];
 const REQUIRED_ARCH_DEPENDENCY_COMMANDS = ['pnpm arch:deps'];
@@ -111,6 +127,42 @@ const DEPENDENCY_RULE_FIXTURES = [
       'packages/@dvt/engine/src/index.ts':
         "import tool from '../../../../tools/runtime-helper.js'; export default tool;\n",
       'tools/runtime-helper.js': 'export default 1;\n',
+    },
+  },
+  {
+    ruleName: 'no-api-domain-to-application',
+    files: {
+      'apps/api/src/domain/value.ts':
+        "import service from '../application/service.js'; export default service;\n",
+      'apps/api/src/application/service.ts': 'export default 1;\n',
+    },
+  },
+  {
+    ruleName: 'no-api-application-to-fastify-or-jwt',
+    files: {
+      'apps/api/src/application/service.ts': "import token from 'jose'; export default token;\n",
+    },
+  },
+  {
+    ruleName: 'no-api-application-to-oidc-libs',
+    files: {
+      'apps/api/src/application/service.ts':
+        "import client from 'openid-client'; export default client;\n",
+    },
+  },
+  {
+    ruleName: 'no-api-ports-to-http-types',
+    files: {
+      'apps/api/src/application/ports/port.ts':
+        "import request from 'node:http'; export default request;\n",
+    },
+  },
+  {
+    ruleName: 'no-api-production-to-test-support',
+    files: {
+      'apps/api/src/index.ts':
+        "import support from '../test/support.js'; export default support;\n",
+      'apps/api/test/support.ts': 'export default 1;\n',
     },
   },
 ];
@@ -216,6 +268,236 @@ test('root dependency-cruiser config declares the initial Fowler boundary rules'
   for (const ruleName of REQUIRED_ARCH_DEPENDENCY_RULES) {
     assert.ok(ruleNames.has(ruleName), `missing architecture dependency rule: ${ruleName}`);
   }
+});
+
+test('root guard owns retained API rules and retires the stale package-local guard', () => {
+  const rootRuleNames = extractForbiddenRuleNames(readCruiserConfig());
+  const apiPackage = readJson('apps/api/package.json');
+
+  for (const ruleName of REQUIRED_ARCH_DEPENDENCY_RULES) {
+    assert.ok(rootRuleNames.has(ruleName), `missing root architecture rule: ${ruleName}`);
+  }
+  assert.equal(rootRuleNames.has('no-routes-direct-policy'), false);
+  assert.equal(apiPackage.scripts?.['test:arch'], undefined);
+  assert.equal(apiPackage.devDependencies?.['dependency-cruiser'], undefined);
+  assert.equal(existsSync('apps/api/.dependency-cruiser.cjs'), false);
+});
+
+test('reachability classifies production, dynamic, test-support and orphan modules once', () => {
+  const modules = [
+    {
+      source: 'apps/api/src/app.ts',
+      dependencies: [
+        { resolved: 'apps/api/src/production.ts', dynamic: false },
+        { resolved: 'apps/api/src/conditional.ts', dynamic: true },
+      ],
+    },
+    { source: 'apps/api/src/server.ts', dependencies: [] },
+    { source: 'apps/api/src/production.ts', dependencies: [] },
+    { source: 'apps/api/src/conditional.ts', dependencies: [] },
+    { source: 'apps/api/src/testSupport.ts', dependencies: [] },
+    { source: 'apps/api/src/orphan.ts', dependencies: [] },
+    {
+      source: 'apps/api/test/testSupport.test.ts',
+      dependencies: [{ resolved: 'apps/api/src/testSupport.ts', dynamic: false }],
+    },
+  ];
+
+  const result = classifyApiSourceReachability({
+    modules,
+    sourceFiles: [
+      'apps/api/src/app.ts',
+      'apps/api/src/server.ts',
+      'apps/api/src/production.ts',
+      'apps/api/src/conditional.ts',
+      'apps/api/src/testSupport.ts',
+      'apps/api/src/orphan.ts',
+    ],
+    productionRoots: ['apps/api/src/app.ts', 'apps/api/src/server.ts'],
+    testRoots: ['apps/api/test/testSupport.test.ts'],
+  });
+
+  assert.deepEqual(
+    result.classifications.map(({ source, classification }) => [source, classification]),
+    [
+      ['apps/api/src/app.ts', API_REACHABILITY_CLASSIFICATIONS.production],
+      ['apps/api/src/conditional.ts', API_REACHABILITY_CLASSIFICATIONS.conditionalProduction],
+      ['apps/api/src/orphan.ts', API_REACHABILITY_CLASSIFICATIONS.orphan],
+      ['apps/api/src/production.ts', API_REACHABILITY_CLASSIFICATIONS.production],
+      ['apps/api/src/server.ts', API_REACHABILITY_CLASSIFICATIONS.production],
+      ['apps/api/src/testSupport.ts', API_REACHABILITY_CLASSIFICATIONS.testSupport],
+    ]
+  );
+});
+
+test('reachability rejects new test-only, orphan, production-to-test and fake import paths', () => {
+  const classificationResult = classifyApiSourceReachability({
+    modules: [
+      {
+        source: 'apps/api/src/app.ts',
+        dependencies: [
+          { module: './fake.js', resolved: 'apps/api/src/fake.ts', dynamic: false },
+          { module: '../test/support.js', resolved: 'apps/api/test/support.ts', dynamic: false },
+        ],
+      },
+      { source: 'apps/api/src/server.ts', dependencies: [] },
+      { source: 'apps/api/src/fake.ts', dependencies: [] },
+      { source: 'apps/api/src/testOnly.ts', dependencies: [] },
+      { source: 'apps/api/src/orphan.ts', dependencies: [] },
+      { source: 'apps/api/test/support.ts', dependencies: [] },
+      {
+        source: 'apps/api/test/testOnly.test.ts',
+        dependencies: [{ resolved: 'apps/api/src/testOnly.ts', dynamic: false }],
+      },
+    ],
+    sourceFiles: [
+      'apps/api/src/app.ts',
+      'apps/api/src/server.ts',
+      'apps/api/src/fake.ts',
+      'apps/api/src/testOnly.ts',
+      'apps/api/src/orphan.ts',
+    ],
+    productionRoots: ['apps/api/src/app.ts', 'apps/api/src/server.ts'],
+    testRoots: ['apps/api/test/testOnly.test.ts', 'apps/api/test/support.ts'],
+  });
+  const findings = collectApiReachabilityFindings({
+    ...classificationResult,
+    modules: classificationResult.modules,
+    changedSourceFiles: [
+      'apps/api/src/fake.ts',
+      'apps/api/src/testOnly.ts',
+      'apps/api/src/orphan.ts',
+    ],
+    sourceContents: new Map([
+      [
+        'apps/api/src/app.ts',
+        "import './fake.js';\nimport value from '../test/support.js';\nvoid value;\n",
+      ],
+    ]),
+    profileEvidence: REQUIRED_API_DEPLOYMENT_PROFILES.map((profile) => ({ profile })),
+  });
+
+  assert.deepEqual(
+    new Set(findings.map(({ ruleName }) => ruleName)),
+    new Set([
+      'no-new-api-test-support-source',
+      'no-new-api-orphan-source',
+      'no-api-production-to-test-support',
+      'no-api-fake-reachability-import',
+    ])
+  );
+});
+
+test('supported API profiles are proven from composition semantics and dynamic edges', () => {
+  const profileEvidence = collectApiDeploymentProfileEvidence({
+    modules: [
+      {
+        source: 'apps/api/src/composition.ts',
+        dependencies: [
+          { module: '@dvt/adapter-postgres', dynamic: true },
+          { module: '@dvt/engine/runtime', dynamic: true },
+          { module: '@dvt/adapter-temporal', dynamic: true },
+        ],
+      },
+    ],
+    productionSources: new Set(['apps/api/src/composition.ts']),
+    sourceContents: new Map([
+      [
+        'apps/api/src/composition.ts',
+        [
+          'if (env.OIDC_JWKS_URI && env.OIDC_ISSUER && env.OIDC_AUDIENCE) { await buildProtectedRuntimeModule(); } else { publicOnly(); }',
+          'if (!env.DVT_INTENT_RECONCILER_ENABLED) return null; createIntentReconcilerRuntimeComposition();',
+          'if (!env.OBS_ENABLED) return createNoopObservability(); return new OtelObservability({});',
+          'if (!context.env.TEMPORAL_ADDRESS) return null;',
+        ].join('\n'),
+      ],
+    ]),
+  });
+
+  assert.deepEqual(
+    profileEvidence.map(({ profile, classification }) => [profile, classification]),
+    [
+      ['observability-noop', API_REACHABILITY_CLASSIFICATIONS.validNullObject],
+      ['observability-otel', API_REACHABILITY_CLASSIFICATIONS.conditionalProduction],
+      ['oidc-protected-runtime', API_REACHABILITY_CLASSIFICATIONS.conditionalProduction],
+      ['oidc-public-only', API_REACHABILITY_CLASSIFICATIONS.conditionalProduction],
+      ['postgres-protected-storage', API_REACHABILITY_CLASSIFICATIONS.conditionalProduction],
+      ['reconciler-disabled', API_REACHABILITY_CLASSIFICATIONS.conditionalProduction],
+      ['reconciler-enabled', API_REACHABILITY_CLASSIFICATIONS.conditionalProduction],
+      ['temporal-provider', API_REACHABILITY_CLASSIFICATIONS.conditionalProduction],
+    ]
+  );
+});
+
+test('export reachability identifies a production module export used only by tests', () => {
+  const evidence = collectApiExportReachabilityEvidence({
+    modules: [
+      {
+        source: 'apps/api/src/runtime.ts',
+        dependencies: [{ module: './factory.js', resolved: 'apps/api/src/factory.ts' }],
+      },
+      { source: 'apps/api/src/factory.ts', dependencies: [] },
+      {
+        source: 'apps/api/test/factory.test.ts',
+        dependencies: [{ module: '../src/factory.js', resolved: 'apps/api/src/factory.ts' }],
+      },
+    ],
+    productionSources: new Set(['apps/api/src/runtime.ts', 'apps/api/src/factory.ts']),
+    sourceContents: new Map([
+      [
+        'apps/api/src/runtime.ts',
+        "import { createRuntime } from './factory.js';\nexport const runtime = createRuntime();\n",
+      ],
+      [
+        'apps/api/src/factory.ts',
+        'export function createRuntime() { return {}; }\nexport function createWorkflowEngine() { return {}; }\n',
+      ],
+      [
+        'apps/api/test/factory.test.ts',
+        "import { createWorkflowEngine } from '../src/factory.js';\nvoid createWorkflowEngine;\n",
+      ],
+    ]),
+  });
+
+  assert.deepEqual(
+    evidence.find(({ symbol }) => symbol === 'createWorkflowEngine'),
+    {
+      source: 'apps/api/src/factory.ts',
+      symbol: 'createWorkflowEngine',
+      classification: 'test-support-export',
+      consumers: ['apps/api/test/factory.test.ts'],
+    }
+  );
+});
+
+test('current API report classifies every source and exposes cleanup candidates deterministically', async () => {
+  const first = await collectApiProductionReachability(process.cwd(), { changedSourceFiles: [] });
+  const second = await collectApiProductionReachability(process.cwd(), { changedSourceFiles: [] });
+  const bySource = new Map(
+    first.classifications.map(({ source, classification }) => [source, classification])
+  );
+
+  const currentSourceCount = listFilesRecursive(resolve('apps/api/src')).filter((source) =>
+    /\.(?:cjs|cts|js|jsx|mjs|mts|ts|tsx)$/u.test(source)
+  ).length;
+  assert.equal(first.classifications.length, currentSourceCount);
+  assert.equal(
+    bySource.get('apps/api/src/application/services/NoopAdmissionTelemetry.ts'),
+    API_REACHABILITY_CLASSIFICATIONS.testSupport
+  );
+  assert.equal(
+    bySource.get('apps/api/src/application/services/NoopDuplicateRunProbe.ts'),
+    API_REACHABILITY_CLASSIFICATIONS.testSupport
+  );
+  assert.equal(
+    bySource.get('apps/api/src/application/services/plannerExecutionPlanBridge.ts'),
+    API_REACHABILITY_CLASSIFICATIONS.orphan
+  );
+  assert.equal(
+    first.exportEvidence.find(({ symbol }) => symbol === 'createWorkflowEngine')?.classification,
+    'test-support-export'
+  );
+  assert.equal(formatApiReachabilityReport(first), formatApiReachabilityReport(second));
 });
 
 test('dependency-cruiser boundary rules fail for representative negative imports', () => {
