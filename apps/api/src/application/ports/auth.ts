@@ -6,8 +6,6 @@ import type { AuthenticatedPrincipal, PrincipalRef } from '../../domain/auth/typ
 
 import type { AuthAuditEventType, AuthenticationFailureCode } from './authContract.js';
 
-export type { DeniedReason } from './accessDecision.js';
-
 export type AuthenticationResult =
   | { readonly ok: true; readonly principal: AuthenticatedPrincipal }
   | { readonly ok: false; readonly code: AuthenticationFailureCode };

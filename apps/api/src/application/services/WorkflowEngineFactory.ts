@@ -1,13 +1,9 @@
 /**
- * @ownedConcern Compose API WorkflowEngine runtime composition through a production factory and test seam.
  * @file apps/api/src/application/services/WorkflowEngineFactory.ts
- * @ownedConcern Compose the production workflow engine runtime from API infrastructure.
+ * @ownedConcern API WorkflowEngine runtime composition through its production factory.
  * @baseline ADR-0003: Execution Model Sovereignty
- * @decision Provide two construction paths:
- *   - buildWorkflowEngine: production path - accepts subsystem-grouped config,
- *     validates adapters.size > 0 at construction time, hides internal dep wiring.
- *   - createWorkflowEngine: test-seam path - accepts a flat WorkflowEngineDeps
- *     and an optional builder override, allowing unit tests to inject fakes.
+ * @decision Replace the production factory and test seam split with one production
+ *   builder, validate adapters at construction time, and hide internal wiring.
  */
 import type { IStoredPlanArtifactReader } from '@dvt/artifacts';
 import {
@@ -44,8 +40,6 @@ import {
   RunEnrichmentService,
   SnapshotProjector,
   StartRunAdmissionGuard,
-  type WorkflowEngineBuilder,
-  type WorkflowEngineDeps,
 } from '@dvt/engine/runtime';
 import type { IObservability } from '@dvt/observability';
 
@@ -238,19 +232,4 @@ function optionalConfig<TKey extends string, TValue>(
   value: TValue | undefined
 ): Partial<Record<TKey, TValue>> {
   return value === undefined ? {} : ({ [key]: value } as Record<TKey, TValue>);
-}
-
-// Test seam -----------------------------------------------------------------
-
-export type WorkflowEngineConstructor = WorkflowEngineBuilder;
-
-/**
- * Test seam: allows unit tests to inject a fake engine builder while keeping
- * the same dep shape. Do not use in production code - use buildWorkflowEngine.
- */
-export function createWorkflowEngine(
-  deps: WorkflowEngineDeps,
-  buildEngine: WorkflowEngineConstructor = buildWorkflowEngineFacade
-): IWorkflowEngine {
-  return buildEngine(deps);
 }

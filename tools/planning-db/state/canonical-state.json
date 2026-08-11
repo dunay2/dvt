@@ -5300,19 +5300,19 @@
       },
       {
         "component_id": "SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS",
-        "name": "API manifest and run-context artifact resolution adapters",
+        "name": "API run-context artifact resolution adapters",
         "kind": "adapter",
         "layer": "adapter",
         "owner": "PlanStoreArtifactResolvers",
-        "repo_path": "apps/api/src/infrastructure/planner/ManifestArtifactResolver.ts",
-        "public_contract": "API artifact resolver adapter boundary",
+        "repo_path": "apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts",
+        "public_contract": "API adapter for the engine run-execution-context resolver port",
         "runtime": "node",
         "criticality": "high",
-        "status": "review",
+        "status": "implemented",
         "maturity_score": null,
         "parent_component_id": "SYS-PLANSTORE-API-COMPOSITION",
         "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
+        "updated_at": "2026-08-11T08:59:26.064+00:00"
       },
       {
         "component_id": "SYS-PLANSTORE-API-COMPOSITION",
@@ -10467,6 +10467,76 @@
         "updated_at": "2026-08-11T07:40:03.269+00:00"
       },
       {
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V3-20260811",
+        "work_item_id": "GH-2272",
+        "title": "Remap API artifact resolution authority",
+        "owner": "API architecture boundaries",
+        "status": "superseded",
+        "rationale": "The manifest resolver was retired because planner owns manifest derivation; retain the real run-context artifact adapter and align every current architecture fact to its surviving implementation and tests.",
+        "fowler_signal": "boundary_drift",
+        "rail_ref": "ApplyArchitectureDependencyBoundaryGate",
+        "approved_at": null,
+        "supersedes_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811",
+        "created_at": "2026-08-11T08:56:29.146+00:00",
+        "updated_at": "2026-08-11T08:57:01.234+00:00"
+      },
+      {
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V4-20260811",
+        "work_item_id": "GH-2272",
+        "title": "Remap API run-context artifact authority",
+        "owner": "API architecture boundaries",
+        "status": "superseded",
+        "rationale": "The planner-owned manifest derivation replaced the deleted API manifest resolver; remap the surviving component, relation, contract, port, evidence, and test facts to the run-context artifact adapter without compatibility aliases.",
+        "fowler_signal": "boundary_drift",
+        "rail_ref": "ApplyArchitectureDependencyBoundaryGate",
+        "approved_at": null,
+        "supersedes_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V3-20260811",
+        "created_at": "2026-08-11T08:57:30.773+00:00",
+        "updated_at": "2026-08-11T08:59:01.089+00:00"
+      },
+      {
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811",
+        "work_item_id": "GH-2272",
+        "title": "Align canonical run-context artifact authority",
+        "owner": "API architecture boundaries",
+        "status": "implemented",
+        "rationale": "Planner owns manifest graph derivation; the API retains only the engine-owned run-context resolver port adapter. Align component, relation, contract, port, evidence, and test authority to that surviving boundary.",
+        "fowler_signal": "boundary_drift",
+        "rail_ref": "ApplyArchitectureDependencyBoundaryGate",
+        "approved_at": "2026-08-11T09:00:43.17+00:00",
+        "supersedes_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V4-20260811",
+        "created_at": "2026-08-11T08:59:16.186+00:00",
+        "updated_at": "2026-08-11T09:01:12.513+00:00"
+      },
+      {
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-20260811",
+        "work_item_id": "GH-2272",
+        "title": "Disposition inert API implementations and test seams",
+        "owner": "API StartRun composition",
+        "status": "superseded",
+        "rationale": "Preserve the explicit disabled-observability Null Object, require the already-composed StartRun telemetry ports, and retire only reachability-proved duplicate adapters, orphan bridges, and production-only test seams without changing HTTP or Run semantics.",
+        "fowler_signal": "hidden_authority",
+        "rail_ref": "StartRun",
+        "approved_at": "2026-08-11T08:16:57.954+00:00",
+        "supersedes_id": null,
+        "created_at": "2026-08-11T08:16:56.69+00:00",
+        "updated_at": "2026-08-11T08:35:53.657+00:00"
+      },
+      {
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811",
+        "work_item_id": "GH-2272",
+        "title": "Close residual API test-only exports",
+        "owner": "API architecture boundaries",
+        "status": "implemented",
+        "rationale": "Complete the generated export disposition by removing redundant test-only re-exports and a test-only compatibility constant while retaining their production-owned types, policies, and reconciler behavior through existing modules.",
+        "fowler_signal": "boundary_drift",
+        "rail_ref": "ApplyArchitectureDependencyBoundaryGate",
+        "approved_at": "2026-08-11T08:35:54.917+00:00",
+        "supersedes_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-20260811",
+        "created_at": "2026-08-11T08:35:52.373+00:00",
+        "updated_at": "2026-08-11T08:50:07.905+00:00"
+      },
+      {
         "design_id": "CANVAS-BACKLOG-INTEGRITY-READINESS-20260626",
         "work_item_id": "E-CANVAS-UXDB-COMPONENT-SLICES-1",
         "title": "Canvas backlog component integrity readiness projection",
@@ -13976,6 +14046,17 @@
         "updated_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
+        "contract_id": "CONTRACT-RUN-EXECUTION-CONTEXT-RESOLVER",
+        "contract_kind": "port",
+        "owner_component_id": "SYS-RUNTIME-ENGINE-DOMAIN-PORTS",
+        "contract_ref": "packages/@dvt/engine/src/ports/IRunExecutionContextResolver.ts#IRunExecutionContextResolver",
+        "compatibility": "internal",
+        "status": "implemented",
+        "validation_command": "pnpm --filter @dvt/engine exec vitest run test/services/RunExecutionContextAdmissionPolicy.acceptance.test.ts",
+        "created_at": "2026-08-11T08:59:40.939+00:00",
+        "updated_at": "2026-08-11T08:59:40.939+00:00"
+      },
+      {
         "contract_id": "CONTRACT-RUN-OPERATIONAL-TRUTH",
         "contract_kind": "type",
         "owner_component_id": "SYS-API-APPLICATION-RUN-OPERATIONAL-READ-MODEL",
@@ -17471,10 +17552,10 @@
       {
         "observability_id": "OBS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS-ERRORS",
         "component_id": "SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS",
-        "signal_name": "Artifact resolution failures surface through API resolver errors and are validated by ManifestArtifactResolver tests.",
+        "signal_name": "Resolver has no independent telemetry; typed artifact read rejection behavior is covered by adapter tests.",
         "signal_kind": "log",
         "required": true,
-        "status": "implemented",
+        "status": "not_applicable",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -28150,16 +28231,12 @@
         "direction": "outbound",
         "sync_async": "build_time",
         "contract_id": null,
-        "failure_mode": "Component profile becomes incomplete if this leaf is remapped without a governed Planning DB component update.",
+        "failure_mode": "Component profile becomes incomplete if the run-context artifact adapter is remapped without Planning DB authority.",
         "authorization_scope": "repo-local component governance",
-        "source_refs": [
-          "docs/architecture/command-query-rail-governance.md",
-          "docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md",
-          "apps/api/src/infrastructure/planner/ManifestArtifactResolver.ts"
-        ],
+        "source_refs": ["git:commit:1d27978b2"],
         "status": "implemented",
         "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
+        "updated_at": "2026-08-11T09:00:23.87+00:00"
       },
       {
         "relation_id": "REL-PLANSTORE-API-COMPOSITION-CONTAINS-SYS-PLANSTORE-API-EXECUTABILITY-VALIDATION",
@@ -39026,10 +39103,10 @@
       {
         "responsibility_id": "RESP-SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS",
         "component_id": "SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS",
-        "responsibility": "Resolve stored artifacts for planner and start-run flows without embedding storage details in API services.",
-        "reason_to_change": "Manifest artifact resolver, run context resolver, binding policy, resolution error, or adapter tests change.",
+        "responsibility": "Adapt run-execution-context artifact reads to the engine-owned resolver port without embedding storage details in API services.",
+        "reason_to_change": "Run-context artifact reader, resolver, binding policy, rejection mapping, or adapter tests change.",
         "ddd_owner": "PlanStoreArtifactResolvers",
-        "status": "implemented",
+        "status": "proposed",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -47403,11 +47480,11 @@
       {
         "test_id": "TEST-SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS",
         "component_id": "SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS",
-        "test_path": "apps/api/test/infrastructure/planner/ManifestArtifactResolver.test.ts",
+        "test_path": "apps/api/test/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.test.ts",
         "test_kind": "unit",
         "coverage_level": "behavior",
         "required": true,
-        "validation_command": "pnpm --filter @dvt/api test -- infrastructure/planner/ManifestArtifactResolver.test.ts infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.test.ts",
+        "validation_command": "pnpm --filter dvt-api exec vitest run test/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.test.ts",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -56489,13 +56566,12 @@
       {
         "port_id": "PORT-SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS-QUERY",
         "component_id": "SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS",
-        "port_name": "ResolveManifestArtifact",
+        "port_name": "ResolveRunExecutionContextArtifact",
         "port_kind": "query",
         "direction": "outbound",
         "input_contract_id": null,
-        "output_contract_id": null,
+        "output_contract_id": "CONTRACT-RUN-EXECUTION-CONTEXT-RESOLVER",
         "negative_tests": [
-          "apps/api/test/infrastructure/planner/ManifestArtifactResolver.test.ts",
           "apps/api/test/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.test.ts"
         ],
         "status": "implemented",
@@ -61000,6 +61076,414 @@
         "scope_kind": "may_update",
         "required": true,
         "created_at": "2026-08-11T07:05:26.237+00:00"
+      },
+      {
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V3-20260811",
+        "subject_kind": "command",
+        "subject_id": "ApplyArchitectureDependencyBoundaryGate",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T08:56:29.146+00:00"
+      },
+      {
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V3-20260811",
+        "subject_kind": "component",
+        "subject_id": "SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T08:56:29.146+00:00"
+      },
+      {
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V3-20260811",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T08:56:29.146+00:00"
+      },
+      {
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V3-20260811",
+        "subject_kind": "path",
+        "subject_id": "apps/api/test/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.test.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T08:56:29.146+00:00"
+      },
+      {
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V3-20260811",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T08:56:29.146+00:00"
+      },
+      {
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V4-20260811",
+        "subject_kind": "command",
+        "subject_id": "ApplyArchitectureDependencyBoundaryGate",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T08:57:30.773+00:00"
+      },
+      {
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V4-20260811",
+        "subject_kind": "component",
+        "subject_id": "SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T08:57:30.773+00:00"
+      },
+      {
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V4-20260811",
+        "subject_kind": "contract",
+        "subject_id": "CONTRACT-API-RUN-EXECUTION-CONTEXT-RESOLVER",
+        "scope_kind": "may_create",
+        "required": true,
+        "created_at": "2026-08-11T08:57:30.773+00:00"
+      },
+      {
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V4-20260811",
+        "subject_kind": "evidence",
+        "subject_id": "OBS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS-ERRORS",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T08:57:30.773+00:00"
+      },
+      {
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V4-20260811",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T08:57:30.773+00:00"
+      },
+      {
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V4-20260811",
+        "subject_kind": "path",
+        "subject_id": "apps/api/test/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.test.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T08:57:30.773+00:00"
+      },
+      {
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V4-20260811",
+        "subject_kind": "port",
+        "subject_id": "PORT-SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS-QUERY",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T08:57:30.773+00:00"
+      },
+      {
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V4-20260811",
+        "subject_kind": "relation",
+        "subject_id": "REL-PLANSTORE-API-COMPOSITION-CONTAINS-SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T08:57:30.773+00:00"
+      },
+      {
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V4-20260811",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T08:57:30.773+00:00"
+      },
+      {
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811",
+        "subject_kind": "command",
+        "subject_id": "ApplyArchitectureDependencyBoundaryGate",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T08:59:16.186+00:00"
+      },
+      {
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811",
+        "subject_kind": "component",
+        "subject_id": "SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-11T08:59:16.186+00:00"
+      },
+      {
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811",
+        "subject_kind": "component",
+        "subject_id": "SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T08:59:16.186+00:00"
+      },
+      {
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811",
+        "subject_kind": "component",
+        "subject_id": "SYS-PLANSTORE-API-COMPOSITION",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-11T08:59:16.186+00:00"
+      },
+      {
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811",
+        "subject_kind": "component",
+        "subject_id": "SYS-RUNTIME-ENGINE-DOMAIN-PORTS",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-11T08:59:16.186+00:00"
+      },
+      {
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811",
+        "subject_kind": "contract",
+        "subject_id": "CONTRACT-RUN-EXECUTION-CONTEXT-RESOLVER",
+        "scope_kind": "may_create",
+        "required": true,
+        "created_at": "2026-08-11T08:59:16.186+00:00"
+      },
+      {
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811",
+        "subject_kind": "evidence",
+        "subject_id": "OBS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS-ERRORS",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T08:59:16.186+00:00"
+      },
+      {
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T08:59:16.186+00:00"
+      },
+      {
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811",
+        "subject_kind": "path",
+        "subject_id": "apps/api/test/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.test.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T08:59:16.186+00:00"
+      },
+      {
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811",
+        "subject_kind": "path",
+        "subject_id": "packages/@dvt/engine/src/ports/IRunExecutionContextResolver.ts",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-11T08:59:16.186+00:00"
+      },
+      {
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811",
+        "subject_kind": "port",
+        "subject_id": "PORT-SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS-QUERY",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T08:59:16.186+00:00"
+      },
+      {
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811",
+        "subject_kind": "relation",
+        "subject_id": "REL-PLANSTORE-API-COMPOSITION-CONTAINS-SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T08:59:16.186+00:00"
+      },
+      {
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T08:59:16.186+00:00"
+      },
+      {
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-20260811",
+        "subject_kind": "command",
+        "subject_id": "ApplyArchitectureDependencyBoundaryGate",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T08:16:56.69+00:00"
+      },
+      {
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-20260811",
+        "subject_kind": "command",
+        "subject_id": "StartRun",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T08:16:56.69+00:00"
+      },
+      {
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-20260811",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-ROOT",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T08:16:56.69+00:00"
+      },
+      {
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-20260811",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/application/errors/ManifestArtifactResolutionError.ts",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-11T08:16:56.69+00:00"
+      },
+      {
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-20260811",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/application/services/NoopAdmissionTelemetry.ts",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-11T08:16:56.69+00:00"
+      },
+      {
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-20260811",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/application/services/NoopDuplicateRunProbe.ts",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-11T08:16:56.69+00:00"
+      },
+      {
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-20260811",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/application/services/PlannerBackedStartRunUseCase.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T08:16:56.69+00:00"
+      },
+      {
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-20260811",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/application/services/plannerExecutionPlanBridge.ts",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-11T08:16:56.69+00:00"
+      },
+      {
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-20260811",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/application/services/startRunAuthorizedFacade.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T08:16:56.69+00:00"
+      },
+      {
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-20260811",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/application/services/WorkflowEngineFactory.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T08:16:56.69+00:00"
+      },
+      {
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-20260811",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/infrastructure/planner/ManifestArtifactResolver.ts",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-11T08:16:56.69+00:00"
+      },
+      {
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-20260811",
+        "subject_kind": "test",
+        "subject_id": "TEST-API-H2-3-INERT-DISPOSITION",
+        "scope_kind": "may_create",
+        "required": true,
+        "created_at": "2026-08-11T08:16:56.69+00:00"
+      },
+      {
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-20260811",
+        "subject_kind": "test",
+        "subject_id": "TEST-API-START-RUN-OTEL",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T08:16:56.69+00:00"
+      },
+      {
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811",
+        "subject_kind": "command",
+        "subject_id": "ApplyArchitectureDependencyBoundaryGate",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T08:35:52.373+00:00"
+      },
+      {
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811",
+        "subject_kind": "command",
+        "subject_id": "StartRun",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T08:35:52.373+00:00"
+      },
+      {
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-ROOT",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T08:35:52.373+00:00"
+      },
+      {
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/application/ports/auth.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T08:35:52.373+00:00"
+      },
+      {
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/entrypoints/http/signalRunRouteAuthorization.constants.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T08:35:52.373+00:00"
+      },
+      {
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/entrypoints/http/signalRunRouteParser.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T08:35:52.373+00:00"
+      },
+      {
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/entrypoints/http/signalRunRouteValidation.constants.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T08:35:52.373+00:00"
+      },
+      {
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/runtime/reconcilerRuntimeBootstrap.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T08:35:52.373+00:00"
+      },
+      {
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811",
+        "subject_kind": "path",
+        "subject_id": "apps/api/test/server.test.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T08:35:52.373+00:00"
+      },
+      {
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811",
+        "subject_kind": "test",
+        "subject_id": "TEST-API-H2-3-EXPORT-DISPOSITION",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T08:35:52.373+00:00"
+      },
+      {
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811",
+        "subject_kind": "test",
+        "subject_id": "TEST-API-H2-3-INERT-DISPOSITION",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T08:35:52.373+00:00"
       },
       {
         "design_id": "CANVAS-BOTTOM-DRAWER-ACTIONABLE-READ-MODEL-20260626",
@@ -85530,6 +86014,30 @@
         "created_at": "2026-08-11T05:08:22.332+00:00"
       },
       {
+        "operation_id": "041d0639-d727-4db1-88bc-f0d644141c4d",
+        "idempotency_key": "architecture_observability_record:codex:API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811:SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS:d38ec9ceefd13ebd",
+        "operation_type": "architecture_observability_record",
+        "actor": "codex",
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811",
+        "source_ref": "git:commit:1d27978b2",
+        "source_content_sha256": "40394bf597d05b78bd90cb96948d691d711afa9f1aa38c721f54a830ce8b0ca0",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "status": "not_applicable",
+          "designId": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811",
+          "required": true,
+          "sourceRef": "git:commit:1d27978b2",
+          "signalKind": "log",
+          "signalName": "Resolver has no independent telemetry; typed artifact read rejection behavior is covered by adapter tests.",
+          "componentId": "SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS",
+          "observabilityId": "OBS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS-ERRORS",
+          "sourceContentSha256": "40394bf597d05b78bd90cb96948d691d711afa9f1aa38c721f54a830ce8b0ca0"
+        },
+        "created_at": "2026-08-11T09:00:12.608+00:00"
+      },
+      {
         "operation_id": "0681355a-1013-4ec2-bd31-f1274e4705ad",
         "idempotency_key": "gh-2167-update-contract-sys-api-tests-application-services-workspace-evidence-v1",
         "operation_type": "architecture_contract_record",
@@ -86033,6 +86541,27 @@
         "created_at": "2026-08-10T20:05:21.313+00:00"
       },
       {
+        "operation_id": "129e8dd6-838c-4022-bbdf-53da714b0ccc",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-20260811:b27f171e8e1e53b1",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-20260811",
+        "source_ref": "github://dunay2/dvt/issues/2272@83a82bc5d7bc3303b0f6e7cfd84d55a58173a89f",
+        "source_content_sha256": "d991a64882ed4504214a639d7c4d8b309ee21dfd49650ea70ecdac55f7a23290",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "DoR evidence proves exact consumers and supported modes; existing StartRun and architecture rails own the behavior.",
+          "designId": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-20260811",
+          "toStatus": "approved",
+          "sourceRef": "github://dunay2/dvt/issues/2272@83a82bc5d7bc3303b0f6e7cfd84d55a58173a89f",
+          "fromStatus": "review",
+          "sourceContentSha256": "d991a64882ed4504214a639d7c4d8b309ee21dfd49650ea70ecdac55f7a23290"
+        },
+        "created_at": "2026-08-11T08:16:57.954+00:00"
+      },
+      {
         "operation_id": "12ec84b1-8005-4730-9a76-bf471536ee89",
         "idempotency_key": "gh-2167-update-contract-sys-api-infra-runtime-telemetry-api-infrastructure-v1",
         "operation_type": "architecture_contract_record",
@@ -86173,6 +86702,27 @@
           "sourceContentSha256": "a1b1c865ff403d57d786adaf61f98d6296967c4923a712414c2135b8cd4392c7"
         },
         "created_at": "2026-08-11T05:07:32.754+00:00"
+      },
+      {
+        "operation_id": "14f8585e-e6c0-41ed-a757-f0b280b3c88c",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811:cff4cbc54965e09e",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811",
+        "source_ref": "github://dunay2/dvt/issues/2272@83a82bc5d7bc3303b0f6e7cfd84d55a58173a89f",
+        "source_content_sha256": "d2af8c40d8798fd4f95f67afc6cebf3c35e31cd619d7c115ff392c8c1c106dd3",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Begin the residual export RED/GREEN microcycle.",
+          "designId": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811",
+          "toStatus": "implementing",
+          "sourceRef": "github://dunay2/dvt/issues/2272@83a82bc5d7bc3303b0f6e7cfd84d55a58173a89f",
+          "fromStatus": "approved",
+          "sourceContentSha256": "d2af8c40d8798fd4f95f67afc6cebf3c35e31cd619d7c115ff392c8c1c106dd3"
+        },
+        "created_at": "2026-08-11T08:35:56.168+00:00"
       },
       {
         "operation_id": "14feb541-ca1c-484e-b1b7-e5baa4d0ed09",
@@ -86987,6 +87537,27 @@
         "created_at": "2026-08-10T21:04:47.338+00:00"
       },
       {
+        "operation_id": "329f410d-ee66-492e-a603-69970f82502e",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811:99deeb6c6564dd79",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811",
+        "source_ref": "git:commit:d395227ea",
+        "source_content_sha256": "5fcbfc912ca973123fae1530ac0f48969efde5c0e7b3646f5aade934681d57ba",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Validated inert implementation disposition with zero cleanup or test-support export candidates",
+          "designId": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811",
+          "toStatus": "implemented",
+          "sourceRef": "git:commit:d395227ea",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "5fcbfc912ca973123fae1530ac0f48969efde5c0e7b3646f5aade934681d57ba"
+        },
+        "created_at": "2026-08-11T08:50:07.905+00:00"
+      },
+      {
         "operation_id": "3328a0c6-4345-44bc-8a45-516fab84e241",
         "idempotency_key": "gh-2167-update-test-sys-api-http-entrypoint-tests-runtime-route-registry-2-v1",
         "operation_type": "architecture_test_record",
@@ -87012,6 +87583,64 @@
         "created_at": "2026-08-10T21:04:28.707+00:00"
       },
       {
+        "operation_id": "340951a5-1618-4586-938d-8e7ee3991cbd",
+        "idempotency_key": "architecture_component_record:codex:API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V4-20260811:SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS:28401ee2396d3cc1",
+        "operation_type": "architecture_component_record",
+        "actor": "codex",
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V4-20260811",
+        "source_ref": "git:commit:1d27978b2",
+        "source_content_sha256": "40394bf597d05b78bd90cb96948d691d711afa9f1aa38c721f54a830ce8b0ca0",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "kind": "adapter",
+          "name": "API run-context artifact resolution adapters",
+          "layer": "adapter",
+          "owner": "PlanStoreArtifactResolvers",
+          "status": "implemented",
+          "runtime": "node",
+          "designId": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V4-20260811",
+          "repoPath": "apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts",
+          "sourceRef": "git:commit:1d27978b2",
+          "componentId": "SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS",
+          "criticality": "high",
+          "publicContract": "API run-context artifact resolver adapter boundary",
+          "responsibilities": [
+            {
+              "dddOwner": "PlanStoreArtifactResolvers",
+              "reasonToChange": "Run-context artifact reader, resolver, binding policy, rejection mapping, or adapter tests change.",
+              "responsibility": "Resolve run-execution-context artifacts without embedding storage details in API services.",
+              "responsibilityId": "RESP-SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS"
+            }
+          ],
+          "parentComponentId": "SYS-PLANSTORE-API-COMPOSITION",
+          "sourceContentSha256": "40394bf597d05b78bd90cb96948d691d711afa9f1aa38c721f54a830ce8b0ca0"
+        },
+        "created_at": "2026-08-11T08:57:39.952+00:00"
+      },
+      {
+        "operation_id": "3453ba02-816d-496b-a09e-d0a190d73590",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811:e22b1645e75d731c",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811",
+        "source_ref": "git:commit:1d27978b2",
+        "source_content_sha256": "40394bf597d05b78bd90cb96948d691d711afa9f1aa38c721f54a830ce8b0ca0",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The surviving adapter now references the engine-owned resolver contract with current component, relation, port, test, and observability facts",
+          "designId": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811",
+          "toStatus": "approved",
+          "sourceRef": "git:commit:1d27978b2",
+          "fromStatus": "review",
+          "sourceContentSha256": "40394bf597d05b78bd90cb96948d691d711afa9f1aa38c721f54a830ce8b0ca0"
+        },
+        "created_at": "2026-08-11T09:00:43.17+00:00"
+      },
+      {
         "operation_id": "361dbaf8-64c8-434e-ba79-7288cce5a920",
         "idempotency_key": "gh-2167-validation-contract-sys-api-http-error-translation-surface-v1",
         "operation_type": "architecture_contract_record",
@@ -87035,6 +87664,27 @@
           "sourceContentSha256": "479e32e472d9e62d580bccbe89a4b961f32146853c7825879a7383c53fc438e6"
         },
         "created_at": "2026-08-10T21:06:21.469+00:00"
+      },
+      {
+        "operation_id": "364aa6ac-8b09-4645-b895-a8a6d51745f3",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V4-20260811:9cb1dc943fdcd5a9",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V4-20260811",
+        "source_ref": "git:commit:1d27978b2",
+        "source_content_sha256": "40394bf597d05b78bd90cb96948d691d711afa9f1aa38c721f54a830ce8b0ca0",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Complete the design scope with canonical engine contract ownership and explicit relation endpoints before recording all affected facts",
+          "designId": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V4-20260811",
+          "toStatus": "superseded",
+          "sourceRef": "git:commit:1d27978b2",
+          "fromStatus": "review",
+          "sourceContentSha256": "40394bf597d05b78bd90cb96948d691d711afa9f1aa38c721f54a830ce8b0ca0"
+        },
+        "created_at": "2026-08-11T08:59:01.089+00:00"
       },
       {
         "operation_id": "368cfc8d-5d3f-47c8-8b6e-1882e77535bc",
@@ -87263,6 +87913,112 @@
         "created_at": "2026-08-10T21:04:20.062+00:00"
       },
       {
+        "operation_id": "3fa0e6bb-0c9b-4e47-a82c-b335598e49e8",
+        "idempotency_key": "architecture_design_create:codex:API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-20260811:1a2603c24a1c7b72",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-20260811",
+        "source_ref": "github://dunay2/dvt/issues/2272@83a82bc5d7bc3303b0f6e7cfd84d55a58173a89f",
+        "source_content_sha256": "d991a64882ed4504214a639d7c4d8b309ee21dfd49650ea70ecdac55f7a23290",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "API StartRun composition",
+          "title": "Disposition inert API implementations and test seams",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-API-ROOT",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "StartRun",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "ApplyArchitectureDependencyBoundaryGate",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "apps/api/src/application/services/NoopDuplicateRunProbe.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "apps/api/src/application/services/NoopAdmissionTelemetry.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "apps/api/src/application/services/plannerExecutionPlanBridge.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "apps/api/src/application/errors/ManifestArtifactResolutionError.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "apps/api/src/infrastructure/planner/ManifestArtifactResolver.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/src/application/services/WorkflowEngineFactory.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/src/application/services/startRunAuthorizedFacade.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/src/application/services/PlannerBackedStartRunUseCase.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_create",
+              "subjectId": "TEST-API-H2-3-INERT-DISPOSITION",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "TEST-API-START-RUN-OTEL",
+              "subjectKind": "test"
+            }
+          ],
+          "status": "review",
+          "railRef": "StartRun",
+          "designId": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-20260811",
+          "rationale": "Preserve the explicit disabled-observability Null Object, require the already-composed StartRun telemetry ports, and retire only reachability-proved duplicate adapters, orphan bridges, and production-only test seams without changing HTTP or Run semantics.",
+          "sourceRef": "github://dunay2/dvt/issues/2272@83a82bc5d7bc3303b0f6e7cfd84d55a58173a89f",
+          "workItemId": "GH-2272",
+          "fowlerSignal": "hidden_authority",
+          "supersedesId": null,
+          "sourceContentSha256": "d991a64882ed4504214a639d7c4d8b309ee21dfd49650ea70ecdac55f7a23290"
+        },
+        "created_at": "2026-08-11T08:16:56.69+00:00"
+      },
+      {
         "operation_id": "3fbd712c-bf70-430e-8424-670afd939acd",
         "idempotency_key": "gh-2167-update-test-sys-api-application-services-workspace-v1",
         "operation_type": "architecture_test_record",
@@ -87470,6 +88226,35 @@
           "sourceContentSha256": "c319921befc49127ae2f7b507b54ff1c7f1ab7e2deb7bf3da35853dde8ac9340"
         },
         "created_at": "2026-08-10T21:03:59.902+00:00"
+      },
+      {
+        "operation_id": "49f84505-e50d-4ad0-9e90-caef6ad779ed",
+        "idempotency_key": "architecture_port_record:codex:API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811:PORT-SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS-QUERY:b0a941d2970a483d",
+        "operation_type": "architecture_port_record",
+        "actor": "codex",
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811",
+        "source_ref": "git:commit:1d27978b2",
+        "source_content_sha256": "40394bf597d05b78bd90cb96948d691d711afa9f1aa38c721f54a830ce8b0ca0",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "portId": "PORT-SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS-QUERY",
+          "status": "implemented",
+          "designId": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811",
+          "portKind": "query",
+          "portName": "ResolveRunExecutionContextArtifact",
+          "direction": "outbound",
+          "sourceRef": "git:commit:1d27978b2",
+          "componentId": "SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS",
+          "negativeTests": [
+            "apps/api/test/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.test.ts"
+          ],
+          "inputContractId": null,
+          "outputContractId": "CONTRACT-RUN-EXECUTION-CONTEXT-RESOLVER",
+          "sourceContentSha256": "40394bf597d05b78bd90cb96948d691d711afa9f1aa38c721f54a830ce8b0ca0"
+        },
+        "created_at": "2026-08-11T08:59:52.81+00:00"
       },
       {
         "operation_id": "4aaac748-b7c4-4d02-904b-d3d2f8d3a2f0",
@@ -88016,6 +88801,112 @@
         "created_at": "2026-08-10T23:15:58.511+00:00"
       },
       {
+        "operation_id": "52948174-a893-400d-839e-a576f67d2680",
+        "idempotency_key": "architecture_design_create:codex:API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811:d5d372cb905088cd",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811",
+        "source_ref": "git:commit:1d27978b2",
+        "source_content_sha256": "40394bf597d05b78bd90cb96948d691d711afa9f1aa38c721f54a830ce8b0ca0",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "API architecture boundaries",
+          "title": "Align canonical run-context artifact authority",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-PLANSTORE-API-COMPOSITION",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-RUNTIME-ENGINE-DOMAIN-PORTS",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "ApplyArchitectureDependencyBoundaryGate",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "REL-PLANSTORE-API-COMPOSITION-CONTAINS-SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS",
+              "subjectKind": "relation"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_create",
+              "subjectId": "CONTRACT-RUN-EXECUTION-CONTEXT-RESOLVER",
+              "subjectKind": "contract"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "PORT-SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS-QUERY",
+              "subjectKind": "port"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "OBS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS-ERRORS",
+              "subjectKind": "evidence"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "packages/@dvt/engine/src/ports/IRunExecutionContextResolver.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/test/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.test.ts",
+              "subjectKind": "path"
+            }
+          ],
+          "status": "review",
+          "railRef": "ApplyArchitectureDependencyBoundaryGate",
+          "designId": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811",
+          "rationale": "Planner owns manifest graph derivation; the API retains only the engine-owned run-context resolver port adapter. Align component, relation, contract, port, evidence, and test authority to that surviving boundary.",
+          "sourceRef": "git:commit:1d27978b2",
+          "workItemId": "GH-2272",
+          "fowlerSignal": "boundary_drift",
+          "supersedesId": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V4-20260811",
+          "sourceContentSha256": "40394bf597d05b78bd90cb96948d691d711afa9f1aa38c721f54a830ce8b0ca0"
+        },
+        "created_at": "2026-08-11T08:59:16.186+00:00"
+      },
+      {
         "operation_id": "53bdfbc6-2a69-4006-bf94-bcfc5b9ffda1",
         "idempotency_key": "r1-1d-supersede-fixture",
         "operation_type": "architecture_design_transition",
@@ -88536,6 +89427,27 @@
         "created_at": "2026-08-11T07:37:45.821+00:00"
       },
       {
+        "operation_id": "6371e660-ed34-437d-924b-105fd3c4ee52",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-20260811:971feda656429d44",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-20260811",
+        "source_ref": "github://dunay2/dvt/issues/2272@83a82bc5d7bc3303b0f6e7cfd84d55a58173a89f",
+        "source_content_sha256": "d991a64882ed4504214a639d7c4d8b309ee21dfd49650ea70ecdac55f7a23290",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Begin Fowler microcycles only after DB-first design approval.",
+          "designId": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-20260811",
+          "toStatus": "implementing",
+          "sourceRef": "github://dunay2/dvt/issues/2272@83a82bc5d7bc3303b0f6e7cfd84d55a58173a89f",
+          "fromStatus": "approved",
+          "sourceContentSha256": "d991a64882ed4504214a639d7c4d8b309ee21dfd49650ea70ecdac55f7a23290"
+        },
+        "created_at": "2026-08-11T08:16:59.213+00:00"
+      },
+      {
         "operation_id": "65f75259-b486-4f53-b38d-785db1261564",
         "idempotency_key": "architecture_design_create:codex:PLANNING-DB-CURRENT-SCHEMA-HARD-CUT-20260808:24f99b6f81287f13",
         "operation_type": "architecture_design_create",
@@ -88952,6 +89864,27 @@
         "created_at": "2026-08-10T20:05:46.248+00:00"
       },
       {
+        "operation_id": "70c44151-2d1e-4944-9e32-d08dddf46411",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-20260811:19dab60bdf8963ee",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-20260811",
+        "source_ref": "github://dunay2/dvt/issues/2272@83a82bc5d7bc3303b0f6e7cfd84d55a58173a89f",
+        "source_content_sha256": "d2af8c40d8798fd4f95f67afc6cebf3c35e31cd619d7c115ff392c8c1c106dd3",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "V2 expands the final generated report disposition before modifying residual test-only exports.",
+          "designId": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-20260811",
+          "toStatus": "superseded",
+          "sourceRef": "github://dunay2/dvt/issues/2272@83a82bc5d7bc3303b0f6e7cfd84d55a58173a89f",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "d2af8c40d8798fd4f95f67afc6cebf3c35e31cd619d7c115ff392c8c1c106dd3"
+        },
+        "created_at": "2026-08-11T08:35:53.657+00:00"
+      },
+      {
         "operation_id": "721d3cc9-af8d-4430-a71c-3cde34a46214",
         "idempotency_key": "codex-api-h2-2-reachability-implementing-v2",
         "operation_type": "architecture_design_transition",
@@ -89339,6 +90272,27 @@
         "created_at": "2026-08-10T22:58:46.58+00:00"
       },
       {
+        "operation_id": "7a9594ff-1603-4f0b-bc94-a4bc16177b78",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811:f63295b89025faa8",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811",
+        "source_ref": "git:commit:1d27978b2",
+        "source_content_sha256": "40394bf597d05b78bd90cb96948d691d711afa9f1aa38c721f54a830ce8b0ca0",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Execute the database authority correction proven by the current resolver implementation",
+          "designId": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811",
+          "toStatus": "implementing",
+          "sourceRef": "git:commit:1d27978b2",
+          "fromStatus": "approved",
+          "sourceContentSha256": "40394bf597d05b78bd90cb96948d691d711afa9f1aa38c721f54a830ce8b0ca0"
+        },
+        "created_at": "2026-08-11T09:00:50.425+00:00"
+      },
+      {
         "operation_id": "7a9d439f-8960-4abc-aeba-3a967234fdc2",
         "idempotency_key": "architecture_test_record:codex:R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810:SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS:f6bcc7b8aeed60f8",
         "operation_type": "architecture_test_record",
@@ -89531,6 +90485,31 @@
           "sourceContentSha256": "753edb16f56b6a048f351042f40b9760b1e07205f7bf28b7e18b54071e50ac04"
         },
         "created_at": "2026-08-10T21:06:22.153+00:00"
+      },
+      {
+        "operation_id": "80adf107-1a71-4209-a74e-cf1b7d4fe0f3",
+        "idempotency_key": "architecture_test_record:codex:API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811:SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS:70cdab1c5657d54b",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811",
+        "source_ref": "git:commit:1d27978b2",
+        "source_content_sha256": "40394bf597d05b78bd90cb96948d691d711afa9f1aa38c721f54a830ce8b0ca0",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS",
+          "designId": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811",
+          "required": true,
+          "testKind": "unit",
+          "testPath": "apps/api/test/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.test.ts",
+          "sourceRef": "git:commit:1d27978b2",
+          "componentId": "SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS",
+          "coverageLevel": "behavior",
+          "validationCommand": "pnpm --filter dvt-api exec vitest run test/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.test.ts",
+          "sourceContentSha256": "40394bf597d05b78bd90cb96948d691d711afa9f1aa38c721f54a830ce8b0ca0"
+        },
+        "created_at": "2026-08-11T09:00:00.887+00:00"
       },
       {
         "operation_id": "8142f30d-abb5-4d42-87c7-0dc4033e7c67",
@@ -90323,6 +91302,88 @@
           "sourceContentSha256": "21703c9d45ade37be5be8316f16371c022813ddc26d03c6f7e2fc00bc6a210d6"
         },
         "created_at": "2026-08-10T21:04:46.684+00:00"
+      },
+      {
+        "operation_id": "94dc552e-f18d-4ac9-96c0-2f6b77a7d3d6",
+        "idempotency_key": "architecture_design_create:codex:API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V4-20260811:7236d06d92a8691b",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V4-20260811",
+        "source_ref": "git:commit:1d27978b2",
+        "source_content_sha256": "40394bf597d05b78bd90cb96948d691d711afa9f1aa38c721f54a830ce8b0ca0",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "API architecture boundaries",
+          "title": "Remap API run-context artifact authority",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "ApplyArchitectureDependencyBoundaryGate",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "REL-PLANSTORE-API-COMPOSITION-CONTAINS-SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS",
+              "subjectKind": "relation"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_create",
+              "subjectId": "CONTRACT-API-RUN-EXECUTION-CONTEXT-RESOLVER",
+              "subjectKind": "contract"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "PORT-SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS-QUERY",
+              "subjectKind": "port"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "OBS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS-ERRORS",
+              "subjectKind": "evidence"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/test/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.test.ts",
+              "subjectKind": "path"
+            }
+          ],
+          "status": "review",
+          "railRef": "ApplyArchitectureDependencyBoundaryGate",
+          "designId": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V4-20260811",
+          "rationale": "The planner-owned manifest derivation replaced the deleted API manifest resolver; remap the surviving component, relation, contract, port, evidence, and test facts to the run-context artifact adapter without compatibility aliases.",
+          "sourceRef": "git:commit:1d27978b2",
+          "workItemId": "GH-2272",
+          "fowlerSignal": "boundary_drift",
+          "supersedesId": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V3-20260811",
+          "sourceContentSha256": "40394bf597d05b78bd90cb96948d691d711afa9f1aa38c721f54a830ce8b0ca0"
+        },
+        "created_at": "2026-08-11T08:57:30.773+00:00"
       },
       {
         "operation_id": "968fbcb7-3b4d-411e-b8a5-4510bc001d7f",
@@ -91484,6 +92545,43 @@
         "created_at": "2026-08-10T20:11:18.598+00:00"
       },
       {
+        "operation_id": "b5cd4eb3-a3f8-41fc-a599-f3135836891c",
+        "idempotency_key": "architecture_component_record:codex:API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V3-20260811:SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS:3431066663c13eca",
+        "operation_type": "architecture_component_record",
+        "actor": "codex",
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V3-20260811",
+        "source_ref": "git:commit:1d27978b2",
+        "source_content_sha256": "40394bf597d05b78bd90cb96948d691d711afa9f1aa38c721f54a830ce8b0ca0",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "kind": "adapter",
+          "name": "API run-context artifact resolution adapters",
+          "layer": "adapter",
+          "owner": "PlanStoreArtifactResolvers",
+          "status": "implemented",
+          "runtime": "node",
+          "designId": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V3-20260811",
+          "repoPath": "apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts",
+          "sourceRef": "git:commit:1d27978b2",
+          "componentId": "SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS",
+          "criticality": "high",
+          "publicContract": "API run-context artifact resolver adapter boundary",
+          "responsibilities": [
+            {
+              "dddOwner": "PlanStoreArtifactResolvers",
+              "reasonToChange": "Run-context artifact reader, resolver, binding policy, rejection mapping, or adapter tests change.",
+              "responsibility": "Resolve run-execution-context artifacts without embedding storage details in API services.",
+              "responsibilityId": "RESP-SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS"
+            }
+          ],
+          "parentComponentId": "SYS-PLANSTORE-API-COMPOSITION",
+          "sourceContentSha256": "40394bf597d05b78bd90cb96948d691d711afa9f1aa38c721f54a830ce8b0ca0"
+        },
+        "created_at": "2026-08-11T08:56:40.792+00:00"
+      },
+      {
         "operation_id": "b5d34317-f56b-4fa2-bc85-85ade09b3e5d",
         "idempotency_key": "gh-2167-update-rel-sys-api-http-entrypoint-tests-architecture-harness-guards-api-http-run-lifecycle-v1",
         "operation_type": "architecture_relation_record",
@@ -91531,6 +92629,27 @@
           "sourceContentSha256": "4dbcb55f49bf5f498484f71e70efaab1380b0290b33e8007dac59d8ce8fb5e69"
         },
         "created_at": "2026-08-11T06:34:05.909+00:00"
+      },
+      {
+        "operation_id": "b848b332-127a-445b-80b5-228b894063a5",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811:1bd0ed2d3dbdf9a2",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811",
+        "source_ref": "git:commit:1d27978b2",
+        "source_content_sha256": "40394bf597d05b78bd90cb96948d691d711afa9f1aa38c721f54a830ce8b0ca0",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Planning DB integrity passes and the surviving artifact-backed run-context resolver test passes 6 of 6",
+          "designId": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811",
+          "toStatus": "implemented",
+          "sourceRef": "git:commit:1d27978b2",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "40394bf597d05b78bd90cb96948d691d711afa9f1aa38c721f54a830ce8b0ca0"
+        },
+        "created_at": "2026-08-11T09:01:12.513+00:00"
       },
       {
         "operation_id": "b84ae291-21d9-4f1f-a92c-99d792ef77f2",
@@ -91595,6 +92714,43 @@
           "sourceContentSha256": "c8c8e3b444e75a9b8169c9c01b5043316bc7d51d95cb4a9c20e60e00633ad06b"
         },
         "created_at": "2026-08-11T04:16:11.036+00:00"
+      },
+      {
+        "operation_id": "b8c86acb-7044-46ef-9615-0d6d8561692f",
+        "idempotency_key": "architecture_component_record:codex:API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811:SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS:b11ec9cabc2e73cf",
+        "operation_type": "architecture_component_record",
+        "actor": "codex",
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811",
+        "source_ref": "git:commit:1d27978b2",
+        "source_content_sha256": "40394bf597d05b78bd90cb96948d691d711afa9f1aa38c721f54a830ce8b0ca0",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "kind": "adapter",
+          "name": "API run-context artifact resolution adapters",
+          "layer": "adapter",
+          "owner": "PlanStoreArtifactResolvers",
+          "status": "implemented",
+          "runtime": "node",
+          "designId": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811",
+          "repoPath": "apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts",
+          "sourceRef": "git:commit:1d27978b2",
+          "componentId": "SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS",
+          "criticality": "high",
+          "publicContract": "API adapter for the engine run-execution-context resolver port",
+          "responsibilities": [
+            {
+              "dddOwner": "PlanStoreArtifactResolvers",
+              "reasonToChange": "Run-context artifact reader, resolver, binding policy, rejection mapping, or adapter tests change.",
+              "responsibility": "Adapt run-execution-context artifact reads to the engine-owned resolver port without embedding storage details in API services.",
+              "responsibilityId": "RESP-SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS"
+            }
+          ],
+          "parentComponentId": "SYS-PLANSTORE-API-COMPOSITION",
+          "sourceContentSha256": "40394bf597d05b78bd90cb96948d691d711afa9f1aa38c721f54a830ce8b0ca0"
+        },
+        "created_at": "2026-08-11T08:59:26.064+00:00"
       },
       {
         "operation_id": "ba2b0df6-1a6d-4486-baed-b9d4e92851cf",
@@ -93523,6 +94679,48 @@
         "created_at": "2026-08-10T20:06:48.609+00:00"
       },
       {
+        "operation_id": "db0eaec2-19df-461f-a1cb-9aea9aeb7fab",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811:d20f42350ce34957",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811",
+        "source_ref": "github://dunay2/dvt/issues/2272@83a82bc5d7bc3303b0f6e7cfd84d55a58173a89f",
+        "source_content_sha256": "d2af8c40d8798fd4f95f67afc6cebf3c35e31cd619d7c115ff392c8c1c106dd3",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The remaining four export candidates have explicit production owners and can lose only their redundant test-facing export surfaces.",
+          "designId": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811",
+          "toStatus": "approved",
+          "sourceRef": "github://dunay2/dvt/issues/2272@83a82bc5d7bc3303b0f6e7cfd84d55a58173a89f",
+          "fromStatus": "review",
+          "sourceContentSha256": "d2af8c40d8798fd4f95f67afc6cebf3c35e31cd619d7c115ff392c8c1c106dd3"
+        },
+        "created_at": "2026-08-11T08:35:54.917+00:00"
+      },
+      {
+        "operation_id": "db843f42-659c-4be0-b247-a0431ef8ad51",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V3-20260811:856fde4a4db4dded",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V3-20260811",
+        "source_ref": "git:commit:1d27978b2",
+        "source_content_sha256": "40394bf597d05b78bd90cb96948d691d711afa9f1aa38c721f54a830ce8b0ca0",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Correct test evidence scope from must_prove to may_update before recording canonical evidence",
+          "designId": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V3-20260811",
+          "toStatus": "superseded",
+          "sourceRef": "git:commit:1d27978b2",
+          "fromStatus": "review",
+          "sourceContentSha256": "40394bf597d05b78bd90cb96948d691d711afa9f1aa38c721f54a830ce8b0ca0"
+        },
+        "created_at": "2026-08-11T08:57:01.234+00:00"
+      },
+      {
         "operation_id": "dc5177ec-ede3-4b3e-a69c-1d12772e2e12",
         "idempotency_key": "codex-doc1-6-architecture-design",
         "operation_type": "architecture_design_create",
@@ -93599,6 +94797,34 @@
         "created_at": "2026-08-10T13:44:37.28+00:00"
       },
       {
+        "operation_id": "dca2964c-8d02-4c13-9e89-4d204d6fdee3",
+        "idempotency_key": "architecture_relation_record:codex:API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811:REL-PLANSTORE-API-COMPOSITION-CONTAINS-SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS:a8909a669d1fc0bb",
+        "operation_type": "architecture_relation_record",
+        "actor": "codex",
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811",
+        "source_ref": "git:commit:1d27978b2",
+        "source_content_sha256": "40394bf597d05b78bd90cb96948d691d711afa9f1aa38c721f54a830ce8b0ca0",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "status": "implemented",
+          "designId": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811",
+          "direction": "outbound",
+          "sourceRef": "git:commit:1d27978b2",
+          "syncAsync": "build_time",
+          "contractId": null,
+          "relationId": "REL-PLANSTORE-API-COMPOSITION-CONTAINS-SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS",
+          "failureMode": "Component profile becomes incomplete if the run-context artifact adapter is remapped without Planning DB authority.",
+          "relationType": "contains",
+          "sourceComponentId": "SYS-PLANSTORE-API-COMPOSITION",
+          "targetComponentId": "SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS",
+          "authorizationScope": "repo-local component governance",
+          "sourceContentSha256": "40394bf597d05b78bd90cb96948d691d711afa9f1aa38c721f54a830ce8b0ca0"
+        },
+        "created_at": "2026-08-11T09:00:23.87+00:00"
+      },
+      {
         "operation_id": "dd9ac076-9309-4725-8231-e59cf0db085a",
         "idempotency_key": "gh-2167-validation-test-sys-api-http-authentication-2-v1",
         "operation_type": "architecture_test_record",
@@ -93622,6 +94848,100 @@
           "sourceContentSha256": "89d19f7206c5ae8e990fb82afd59aafe1f3771131b381b827fe37c5b3738dcd3"
         },
         "created_at": "2026-08-10T21:06:26.348+00:00"
+      },
+      {
+        "operation_id": "de278682-561d-44b2-8076-aaf505ed3b43",
+        "idempotency_key": "architecture_design_create:codex:API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811:6d77efd88a204949",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811",
+        "source_ref": "github://dunay2/dvt/issues/2272@83a82bc5d7bc3303b0f6e7cfd84d55a58173a89f",
+        "source_content_sha256": "d2af8c40d8798fd4f95f67afc6cebf3c35e31cd619d7c115ff392c8c1c106dd3",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "API architecture boundaries",
+          "title": "Close residual API test-only exports",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-API-ROOT",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "StartRun",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "ApplyArchitectureDependencyBoundaryGate",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/src/application/ports/auth.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/src/entrypoints/http/signalRunRouteParser.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/src/entrypoints/http/signalRunRouteAuthorization.constants.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/src/entrypoints/http/signalRunRouteValidation.constants.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/src/runtime/reconcilerRuntimeBootstrap.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/test/server.test.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-API-H2-3-INERT-DISPOSITION",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "TEST-API-H2-3-EXPORT-DISPOSITION",
+              "subjectKind": "test"
+            }
+          ],
+          "status": "review",
+          "railRef": "ApplyArchitectureDependencyBoundaryGate",
+          "designId": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811",
+          "rationale": "Complete the generated export disposition by removing redundant test-only re-exports and a test-only compatibility constant while retaining their production-owned types, policies, and reconciler behavior through existing modules.",
+          "sourceRef": "github://dunay2/dvt/issues/2272@83a82bc5d7bc3303b0f6e7cfd84d55a58173a89f",
+          "workItemId": "GH-2272",
+          "fowlerSignal": "boundary_drift",
+          "supersedesId": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-20260811",
+          "sourceContentSha256": "d2af8c40d8798fd4f95f67afc6cebf3c35e31cd619d7c115ff392c8c1c106dd3"
+        },
+        "created_at": "2026-08-11T08:35:52.373+00:00"
       },
       {
         "operation_id": "defa2dcb-f17a-44df-8106-8d5e4987496b",
@@ -93859,6 +95179,31 @@
           "sourceContentSha256": "485d599b16dda3ff5e147104020fbad480f1fe51c69acbaa111000ca98c17cf5"
         },
         "created_at": "2026-08-11T01:45:42.68+00:00"
+      },
+      {
+        "operation_id": "e8a1e95a-5c63-4a4e-8fcc-0176cee2f4e0",
+        "idempotency_key": "architecture_contract_record:codex:API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811:CONTRACT-RUN-EXECUTION-CONTEXT-RESOLVER:5936763e0c39f905",
+        "operation_type": "architecture_contract_record",
+        "actor": "codex",
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811",
+        "source_ref": "git:commit:1d27978b2",
+        "source_content_sha256": "40394bf597d05b78bd90cb96948d691d711afa9f1aa38c721f54a830ce8b0ca0",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "status": "implemented",
+          "designId": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811",
+          "sourceRef": "git:commit:1d27978b2",
+          "contractId": "CONTRACT-RUN-EXECUTION-CONTEXT-RESOLVER",
+          "contractRef": "packages/@dvt/engine/src/ports/IRunExecutionContextResolver.ts#IRunExecutionContextResolver",
+          "contractKind": "port",
+          "compatibility": "internal",
+          "ownerComponentId": "SYS-RUNTIME-ENGINE-DOMAIN-PORTS",
+          "validationCommand": "pnpm --filter @dvt/engine exec vitest run test/services/RunExecutionContextAdmissionPolicy.acceptance.test.ts",
+          "sourceContentSha256": "40394bf597d05b78bd90cb96948d691d711afa9f1aa38c721f54a830ce8b0ca0"
+        },
+        "created_at": "2026-08-11T08:59:40.939+00:00"
       },
       {
         "operation_id": "e8c249e9-3ae3-4b03-a100-17bbed9f692b",
@@ -94561,6 +95906,64 @@
           "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
         },
         "created_at": "2026-08-10T22:58:50.304+00:00"
+      },
+      {
+        "operation_id": "f9380fb7-55a8-4fa3-a57a-bfc52e7481d7",
+        "idempotency_key": "architecture_design_create:codex:API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V3-20260811:22a734304916aba8",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V3-20260811",
+        "source_ref": "git:commit:1d27978b2",
+        "source_content_sha256": "40394bf597d05b78bd90cb96948d691d711afa9f1aa38c721f54a830ce8b0ca0",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "API architecture boundaries",
+          "title": "Remap API artifact resolution authority",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "ApplyArchitectureDependencyBoundaryGate",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/test/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.test.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "TEST-SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS",
+              "subjectKind": "test"
+            }
+          ],
+          "status": "review",
+          "railRef": "ApplyArchitectureDependencyBoundaryGate",
+          "designId": "API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V3-20260811",
+          "rationale": "The manifest resolver was retired because planner owns manifest derivation; retain the real run-context artifact adapter and align every current architecture fact to its surviving implementation and tests.",
+          "sourceRef": "git:commit:1d27978b2",
+          "workItemId": "GH-2272",
+          "fowlerSignal": "boundary_drift",
+          "supersedesId": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811",
+          "sourceContentSha256": "40394bf597d05b78bd90cb96948d691d711afa9f1aa38c721f54a830ce8b0ca0"
+        },
+        "created_at": "2026-08-11T08:56:29.146+00:00"
       },
       {
         "operation_id": "f9440aa7-2d85-4015-ad6f-d3f4d155ddb1",

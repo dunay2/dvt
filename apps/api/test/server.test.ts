@@ -17,9 +17,9 @@ import {
 import { startReconcilerHealthWatchdog } from '../src/runtime/reconcilerHealthWatchdog.js';
 import {
   bootstrapIntentReconciler,
-  buildReconcilerHealthHooks,
   withWatchdogSweepSignalHooks,
 } from '../src/runtime/reconcilerRuntimeBootstrap.js';
+import { buildReconcilerHealthHooks } from '../src/runtime/reconcilerRuntimeHealthHooks.js';
 import { RECONCILER_RUNTIME_METRICS } from '../src/runtime/reconcilerRuntimeTelemetry.js';
 
 function createHarness(): {

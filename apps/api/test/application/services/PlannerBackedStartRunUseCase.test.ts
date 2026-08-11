@@ -56,6 +56,10 @@ const EXECUTABLE_SUBGRAPH_RESOLVER = {
   })),
 };
 
+const TEST_PLAN_COMPILE_TELEMETRY = {
+  recordPlanCompileLatency() {},
+};
+
 const STORED_PLAN_REF = parsePlanRef({
   uri: 'dvt-plan://postgres/plan-1',
   sha256: 'abc123',
@@ -86,6 +90,7 @@ describe('PlannerBackedStartRunUseCase', () => {
     const useCase = new PlannerBackedStartRunUseCase({
       planner: new PlannerFacade() as never,
       planStore: planStore as never,
+      compileTelemetry: TEST_PLAN_COMPILE_TELEMETRY,
       validator: {
         validatePlan: vi.fn(async () => ({
           status: 'OK' as const,
@@ -160,6 +165,7 @@ describe('PlannerBackedStartRunUseCase', () => {
     const useCase = new PlannerBackedStartRunUseCase({
       planner: new PlannerFacade() as never,
       planStore: planStore as never,
+      compileTelemetry: TEST_PLAN_COMPILE_TELEMETRY,
       validator: {
         validatePlan: vi.fn(async () => ({
           status: 'OK' as const,
@@ -314,6 +320,7 @@ describe('PlannerBackedStartRunUseCase', () => {
         buildPlan: vi.fn(async () => makeBuildResult('plan-1')),
       } as never,
       planStore: planStore as never,
+      compileTelemetry: TEST_PLAN_COMPILE_TELEMETRY,
       validator: {
         validatePlan: vi.fn(async () => rejection),
       } as never,
@@ -423,6 +430,7 @@ describe('PlannerBackedStartRunUseCase', () => {
         buildPlan: vi.fn(async () => makeBuildResult('plan-1')),
       } as never,
       planStore: planStore as never,
+      compileTelemetry: TEST_PLAN_COMPILE_TELEMETRY,
       validator: {
         validatePlan: vi.fn(async () => rejection),
       } as never,
@@ -531,3 +539,15 @@ function makeBuildResult(planId: string): PlannerBuildResultV1 {
     }),
   };
 }
+
+const assertPlanCompileTelemetryIsRequired = (): void => {
+  // @ts-expect-error Plan compile telemetry is a mandatory composition dependency.
+  new PlannerBackedStartRunUseCase({
+    planner: {} as never,
+    planStore: {} as never,
+    validator: {} as never,
+    delegate: {} as never,
+    executableSubgraphResolver: {} as never,
+  });
+};
+void assertPlanCompileTelemetryIsRequired;

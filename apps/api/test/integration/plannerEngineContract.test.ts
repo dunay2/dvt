@@ -46,10 +46,8 @@ import {
   InMemoryTxStore,
 } from '@dvt/engine/testing';
 import { createNoopObservability } from '@dvt/observability';
-import { PlannerFacade } from '@dvt/planner';
+import { PlannerFacade, derivePlannerGraphSourceFromManifest } from '@dvt/planner';
 import { describe, it, expect } from 'vitest';
-
-import { ManifestArtifactResolver } from '../../src/infrastructure/planner/ManifestArtifactResolver.js';
 
 const PLANNER_MANIFEST_FIXTURE_URL = new URL(
   '../fixtures/planner/basic-manifest.json',
@@ -353,14 +351,13 @@ function makeStepEvent(
 }
 
 describe('planner -> engine contract', () => {
-  it('manifest artifact utility translates a manifest into graphSource before PlannerFacade runs', async () => {
+  it('canonical planner translation converts a manifest before PlannerFacade runs', async () => {
     const planner = new PlannerFacade();
-    const resolver = new ManifestArtifactResolver({ nodeEnv: 'test' });
-    const bytes = readFileSync(PLANNER_MANIFEST_FIXTURE_URL);
-    const graphSource = await resolver.resolveManifestRef({
-      uri: PLANNER_MANIFEST_FIXTURE_URL.href,
-      sha256: sha256Hex(bytes),
-    });
+    const manifest = JSON.parse(readFileSync(PLANNER_MANIFEST_FIXTURE_URL, 'utf8')) as Record<
+      string,
+      unknown
+    >;
+    const graphSource = derivePlannerGraphSourceFromManifest(manifest);
 
     const { plan } = await planner.buildPlan({
       graphSource,

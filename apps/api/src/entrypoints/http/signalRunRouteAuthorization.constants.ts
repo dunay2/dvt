@@ -8,11 +8,9 @@ import { RUN_COMMAND_ACTION, type RunCommandActionName } from './runCommandRoute
 
 export type SignalCommandActionName = RunCommandActionName;
 
-export const SIGNAL_COMMAND_ACTION = RUN_COMMAND_ACTION;
-
 export const SIGNAL_ACTION_BY_TYPE: Readonly<Record<SupportedSignalType, SignalCommandActionName>> =
   {
-    PAUSE: SIGNAL_COMMAND_ACTION.SIGNAL,
-    RESUME: SIGNAL_COMMAND_ACTION.SIGNAL,
-    CANCEL: SIGNAL_COMMAND_ACTION.CANCEL,
+    PAUSE: RUN_COMMAND_ACTION.SIGNAL,
+    RESUME: RUN_COMMAND_ACTION.SIGNAL,
+    CANCEL: RUN_COMMAND_ACTION.CANCEL,
   };

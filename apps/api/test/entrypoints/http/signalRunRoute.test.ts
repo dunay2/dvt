@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { HTTP_ERROR_REASON } from '../../../src/entrypoints/http/httpErrorReasonCatalog.js';
+import { RUN_COMMAND_ACTION } from '../../../src/entrypoints/http/runCommandRoute.constants.js';
 import { signalRunRoute } from '../../../src/entrypoints/http/signalRunRoute.js';
-import { SIGNAL_COMMAND_ACTION } from '../../../src/entrypoints/http/signalRunRouteParser.js';
 import { HTTP_STATUS_CODE } from '../../../src/routes/httpStatus.js';
 
 function createReply(): {
@@ -61,7 +61,7 @@ function createDeps(): {
         context: {
           principal: {},
           scope: { tenantId: { value: 'tenant-a' } },
-          action: { kind: 'command', name: SIGNAL_COMMAND_ACTION.SIGNAL },
+          action: { kind: 'command', name: RUN_COMMAND_ACTION.SIGNAL },
           requestId: 'req-1',
           authorizedAt: new Date('2026-03-19T00:00:00Z'),
         },
@@ -109,7 +109,7 @@ describe('signalRunRoute', () => {
     expect(deps.authorizer.authorize).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({
-        action: { kind: 'command', name: SIGNAL_COMMAND_ACTION.CANCEL },
+        action: { kind: 'command', name: RUN_COMMAND_ACTION.CANCEL },
       }),
       'req-1'
     );
@@ -165,7 +165,7 @@ describe('signalRunRoute', () => {
     expect(deps.authorizer.authorize).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({
-        action: { kind: 'command', name: SIGNAL_COMMAND_ACTION.SIGNAL },
+        action: { kind: 'command', name: RUN_COMMAND_ACTION.SIGNAL },
       }),
       'req-1b'
     );
@@ -194,7 +194,7 @@ describe('signalRunRoute', () => {
     expect(deps.authorizer.authorize).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({
-        action: { kind: 'command', name: SIGNAL_COMMAND_ACTION.CANCEL },
+        action: { kind: 'command', name: RUN_COMMAND_ACTION.CANCEL },
       }),
       'req-1c'
     );
@@ -225,7 +225,7 @@ describe('signalRunRoute', () => {
     expect(deps.authorizer.authorize).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({
-        action: { kind: 'command', name: SIGNAL_COMMAND_ACTION.SIGNAL },
+        action: { kind: 'command', name: RUN_COMMAND_ACTION.SIGNAL },
       }),
       'req-1d'
     );

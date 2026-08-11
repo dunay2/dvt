@@ -56,17 +56,13 @@ type StoredPlannerArtifactResult =
     };
 
 export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
-  private static readonly NOOP_TELEMETRY: IPlanCompileLatencyTelemetry = {
-    recordPlanCompileLatency() {},
-  };
-
   public constructor(
     private readonly deps: {
       readonly planner: IPlanner;
       readonly planStore: IStoredPlanArtifactWriter;
       readonly validator: IPlanExecutabilityValidator;
       readonly delegate: IStartRunUseCase;
-      readonly compileTelemetry?: IPlanCompileLatencyTelemetry;
+      readonly compileTelemetry: IPlanCompileLatencyTelemetry;
       readonly executableSubgraphResolver: ResolveAuthorizedExecutableSubgraphService;
     }
   ) {}
@@ -154,9 +150,10 @@ export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
         buildResult,
       };
     } finally {
-      (
-        this.deps.compileTelemetry ?? PlannerBackedStartRunUseCase.NOOP_TELEMETRY
-      ).recordPlanCompileLatency(elapsedSlaSecondsSince(compileStartMs), compileOutcome);
+      this.deps.compileTelemetry.recordPlanCompileLatency(
+        elapsedSlaSecondsSince(compileStartMs),
+        compileOutcome
+      );
     }
   }
 

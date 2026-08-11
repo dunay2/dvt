@@ -2,6 +2,7 @@ import { parseExecutionSelection, parsePlanRef } from '@dvt/contracts';
 
 import type {
   AuthorizationAction,
+  DeniedReason,
   RequestedScope,
 } from '../../../src/application/ports/accessDecision.js';
 import {
@@ -11,7 +12,6 @@ import {
 import type {
   AuthorizedCommandExecutionContext,
   AuthorizedExecutionContext,
-  DeniedReason,
   IAuthenticator,
 } from '../../../src/application/ports/auth.js';
 import type { IStartRunLatencyTelemetry } from '../../../src/application/ports/StartRunSlaTelemetry.js';
@@ -82,6 +82,10 @@ type FacadeOverrides = {
   readonly telemetry?: IStartRunLatencyTelemetry;
 };
 
+const TEST_START_RUN_LATENCY_TELEMETRY: IStartRunLatencyTelemetry = {
+  recordStartRunLatency() {},
+};
+
 export function buildStartRunAuthorizedFacade(
   overrides: FacadeOverrides = {}
 ): StartRunAuthorizedFacade {
@@ -124,6 +128,12 @@ export function buildStartRunAuthorizedFacade(
     authenticator,
     authorizer as AuthorizeCommandScopeService,
     useCase,
-    overrides.telemetry
+    overrides.telemetry ?? TEST_START_RUN_LATENCY_TELEMETRY
   );
 }
+
+const assertStartRunTelemetryIsRequired = (): void => {
+  // @ts-expect-error StartRun latency telemetry is a mandatory composition dependency.
+  new StartRunAuthorizedFacade({} as never, {} as never, {} as never);
+};
+void assertStartRunTelemetryIsRequired;

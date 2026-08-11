@@ -1,11 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import { HTTP_ERROR_REASON } from '../../../src/entrypoints/http/httpErrorReasonCatalog.js';
-import { SIGNAL_COMMAND_ACTION } from '../../../src/entrypoints/http/signalRunRouteAuthorization.constants.js';
-import {
-  parseSignalRunRequest,
-  SIGNAL_ROUTE_COMPATIBILITY_POLICY,
-} from '../../../src/entrypoints/http/signalRunRouteParser.js';
+import { RUN_COMMAND_ACTION } from '../../../src/entrypoints/http/runCommandRoute.constants.js';
+import { parseSignalRunRequest } from '../../../src/entrypoints/http/signalRunRouteParser.js';
+
+const ALLOW_CANCEL_SIGNAL_POLICY = { allowCancelSignalType: true } as const;
 
 describe('parseSignalRunRequest', () => {
   it('rejects CANCEL signal when compatibility policy disables it', () => {
@@ -29,7 +28,7 @@ describe('parseSignalRunRequest', () => {
     const parsed = parseSignalRunRequest({
       runId: ' run-1 ',
       body: { tenantId: ' tenant-a ', signalType: ' cancel ' },
-      compatibilityPolicy: SIGNAL_ROUTE_COMPATIBILITY_POLICY,
+      compatibilityPolicy: ALLOW_CANCEL_SIGNAL_POLICY,
     });
 
     expect(parsed).toEqual({
@@ -41,7 +40,7 @@ describe('parseSignalRunRequest', () => {
         },
         authorization: {
           tenantId: { value: 'tenant-a' },
-          actionName: SIGNAL_COMMAND_ACTION.CANCEL,
+          actionName: RUN_COMMAND_ACTION.CANCEL,
         },
       },
     });
@@ -51,7 +50,7 @@ describe('parseSignalRunRequest', () => {
     const parsed = parseSignalRunRequest({
       runId: 'run-1',
       body: { tenantId: 'tenant-a', signalType: 'CANCEL', reason: 'operator' },
-      compatibilityPolicy: SIGNAL_ROUTE_COMPATIBILITY_POLICY,
+      compatibilityPolicy: ALLOW_CANCEL_SIGNAL_POLICY,
     });
 
     expect(parsed).toEqual({
@@ -68,7 +67,7 @@ describe('parseSignalRunRequest', () => {
     const parsed = parseSignalRunRequest({
       runId: 'run-1',
       body: { tenantId: 'tenant-a', signalType: 'PAUSE' },
-      compatibilityPolicy: SIGNAL_ROUTE_COMPATIBILITY_POLICY,
+      compatibilityPolicy: ALLOW_CANCEL_SIGNAL_POLICY,
     });
 
     expect(parsed).toEqual({
@@ -80,7 +79,7 @@ describe('parseSignalRunRequest', () => {
         },
         authorization: {
           tenantId: { value: 'tenant-a' },
-          actionName: SIGNAL_COMMAND_ACTION.SIGNAL,
+          actionName: RUN_COMMAND_ACTION.SIGNAL,
         },
       },
     });
@@ -90,7 +89,7 @@ describe('parseSignalRunRequest', () => {
     const parsed = parseSignalRunRequest({
       runId: 'run-1',
       body: { signalType: 'CANCEL' },
-      compatibilityPolicy: SIGNAL_ROUTE_COMPATIBILITY_POLICY,
+      compatibilityPolicy: ALLOW_CANCEL_SIGNAL_POLICY,
     });
 
     expect(parsed).toEqual({
@@ -107,7 +106,7 @@ describe('parseSignalRunRequest', () => {
     const parsed = parseSignalRunRequest({
       runId: 'run-1',
       body: { tenantId: '   ', signalType: 'CANCEL' },
-      compatibilityPolicy: SIGNAL_ROUTE_COMPATIBILITY_POLICY,
+      compatibilityPolicy: ALLOW_CANCEL_SIGNAL_POLICY,
     });
 
     expect(parsed).toEqual({
@@ -124,7 +123,7 @@ describe('parseSignalRunRequest', () => {
     const parsed = parseSignalRunRequest({
       runId: 'run-1',
       body: { tenantId: 123, signalType: 'CANCEL' },
-      compatibilityPolicy: SIGNAL_ROUTE_COMPATIBILITY_POLICY,
+      compatibilityPolicy: ALLOW_CANCEL_SIGNAL_POLICY,
     });
 
     expect(parsed).toEqual({
@@ -141,7 +140,7 @@ describe('parseSignalRunRequest', () => {
     const parsed = parseSignalRunRequest({
       runId: '   ',
       body: { tenantId: 'tenant-a', signalType: 'CANCEL' },
-      compatibilityPolicy: SIGNAL_ROUTE_COMPATIBILITY_POLICY,
+      compatibilityPolicy: ALLOW_CANCEL_SIGNAL_POLICY,
     });
 
     expect(parsed).toEqual({
@@ -158,7 +157,7 @@ describe('parseSignalRunRequest', () => {
     const parsed = parseSignalRunRequest({
       runId: 'run-1',
       body: 'retry',
-      compatibilityPolicy: SIGNAL_ROUTE_COMPATIBILITY_POLICY,
+      compatibilityPolicy: ALLOW_CANCEL_SIGNAL_POLICY,
     });
 
     expect(parsed).toEqual({
@@ -174,7 +173,7 @@ describe('parseSignalRunRequest', () => {
     const parsed = parseSignalRunRequest({
       runId: 'run-1',
       body: { tenantId: 'tenant-a', signalType: 'FAST_FORWARD' },
-      compatibilityPolicy: SIGNAL_ROUTE_COMPATIBILITY_POLICY,
+      compatibilityPolicy: ALLOW_CANCEL_SIGNAL_POLICY,
     });
 
     expect(parsed).toEqual({
