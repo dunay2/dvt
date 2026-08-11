@@ -1,10 +1,9 @@
 /**
- * @ownedConcern Compose the API WorkflowEngine runtime through its production factory.
  * @file apps/api/src/application/services/WorkflowEngineFactory.ts
- * @ownedConcern Compose the production workflow engine runtime from API infrastructure.
+ * @ownedConcern API WorkflowEngine runtime composition through its production factory.
  * @baseline ADR-0003: Execution Model Sovereignty
- * @decision Build from subsystem-grouped configuration, validate adapters at
- *   construction time, and hide internal dependency wiring.
+ * @decision Replace the production factory and test seam split with one production
+ *   builder, validate adapters at construction time, and hide internal wiring.
  */
 import type { IStoredPlanArtifactReader } from '@dvt/artifacts';
 import {
