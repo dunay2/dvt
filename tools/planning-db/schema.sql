@@ -3356,11 +3356,35 @@ CREATE TABLE planning_query_store.knowledge_intake_repository_references (
 
 
 --
+-- Name: fowler_analysis_dispositions; Type: TABLE; Schema: planning_query_store; Owner: -
+--
+
+CREATE TABLE planning_query_store.fowler_analysis_dispositions (
+    document_path text NOT NULL,
+    disposition_status text NOT NULL,
+    disposition_kind text NOT NULL,
+    canonical_target_path text,
+    reason text NOT NULL,
+    source_content_sha256 text NOT NULL,
+    recorded_by text NOT NULL,
+    recorded_at timestamp with time zone DEFAULT now() NOT NULL,
+    raw_disposition jsonb DEFAULT '{}'::jsonb NOT NULL,
+    CONSTRAINT fowler_analysis_dispositions_status_check CHECK ((disposition_status = ANY (ARRAY['proposed'::text, 'accepted'::text, 'rejected'::text, 'superseded'::text])))
+);
+
+
+--
 -- Name: documentation_lifecycle_query; Type: VIEW; Schema: planning_query_store; Owner: -
 --
 
 CREATE VIEW planning_query_store.documentation_lifecycle_query AS
- WITH action_counts AS (
+ WITH accepted_db_authority_dispositions AS (
+         SELECT disposition.document_path,
+            disposition.disposition_kind,
+            disposition.source_content_sha256
+           FROM planning_query_store.fowler_analysis_dispositions disposition
+          WHERE ((disposition.disposition_status = 'accepted'::text) AND (disposition.disposition_kind = 'db_authority_historical'::text))
+        ), action_counts AS (
          SELECT action.source_document_id AS document_id,
             (count(*))::integer AS action_count,
             (count(*) FILTER (WHERE (lower(COALESCE(action.status, ''::text)) <> ALL (ARRAY['deferred'::text, 'done'::text, 'rejected'::text, 'resolved'::text, 'superseded'::text]))))::integer AS open_action_count
@@ -3387,7 +3411,8 @@ CREATE VIEW planning_query_store.documentation_lifecycle_query AS
             document.planning_type,
             document.owner,
             document.mandatory,
-            NULLIF(COALESCE((document.raw_frontmatter ->> 'canonical_disposition'::text), (document.raw_frontmatter ->> 'canonicalDisposition'::text)), ''::text) AS canonical_disposition,
+            COALESCE(disposition.disposition_kind, NULLIF(COALESCE((document.raw_frontmatter ->> 'canonical_disposition'::text), (document.raw_frontmatter ->> 'canonicalDisposition'::text)), ''::text)) AS canonical_disposition,
+            disposition.disposition_kind AS db_disposition_kind,
             planning_query_store.documentation_subject_key(document.title) AS subject_key,
                 CASE
                     WHEN (document.document_path ~~ 'buzon/%'::text) THEN 'intake'::text
@@ -3403,10 +3428,11 @@ CREATE VIEW planning_query_store.documentation_lifecycle_query AS
             COALESCE(reference_counts.inbound_knowledge_reference_count, 0) AS inbound_knowledge_reference_count,
             COALESCE(repository_counts.inbound_repository_reference_count, 0) AS inbound_repository_reference_count,
             document.source_content_sha256
-           FROM (((planning_query_store.knowledge_documents document
+           FROM ((((planning_query_store.knowledge_documents document
              LEFT JOIN action_counts ON ((action_counts.document_id = document.document_id)))
              LEFT JOIN knowledge_reference_counts reference_counts ON ((reference_counts.document_id = document.document_id)))
              LEFT JOIN repository_reference_counts repository_counts ON ((repository_counts.document_id = document.document_id)))
+             LEFT JOIN accepted_db_authority_dispositions disposition ON (((disposition.document_path = document.document_path) AND (disposition.source_content_sha256 = document.source_content_sha256))))
         ), stateful AS (
          SELECT classified.document_id,
             classified.document_path,
@@ -3417,6 +3443,7 @@ CREATE VIEW planning_query_store.documentation_lifecycle_query AS
             classified.owner,
             classified.mandatory,
             classified.canonical_disposition,
+            classified.db_disposition_kind,
             classified.subject_key,
             classified.canonicality,
             classified.action_count,
@@ -3425,6 +3452,7 @@ CREATE VIEW planning_query_store.documentation_lifecycle_query AS
             classified.inbound_repository_reference_count,
             classified.source_content_sha256,
                 CASE
+                    WHEN (classified.db_disposition_kind = 'db_authority_historical'::text) THEN 'superseded'::text
                     WHEN ((lower(COALESCE(classified.status, ''::text)) = ANY (ARRAY['rejected'::text, 'discarded'::text, 'disposable'::text])) OR (classified.document_path ~~ 'docs/planning/proposals/disposable/%'::text)) THEN 'discarded'::text
                     WHEN ((lower(COALESCE(classified.status, ''::text)) = 'superseded'::text) OR (classified.document_path ~~ 'docs/planning/proposals/superseded/%'::text)) THEN 'superseded'::text
                     WHEN (classified.document_path ~~ 'docs/archive/%'::text) THEN 'archived'::text
@@ -6210,24 +6238,6 @@ CREATE VIEW planning_query_store.fowler_analysis_canonical_coverage_query AS
    FROM ((planning_query_store.fowler_analysis_document_query document
      LEFT JOIN accepted_targets target ON ((target.document_path = document.document_path)))
      LEFT JOIN planning_query_store.knowledge_documents target_document ON ((target_document.document_path = target.target_path)));
-
-
---
--- Name: fowler_analysis_dispositions; Type: TABLE; Schema: planning_query_store; Owner: -
---
-
-CREATE TABLE planning_query_store.fowler_analysis_dispositions (
-    document_path text NOT NULL,
-    disposition_status text NOT NULL,
-    disposition_kind text NOT NULL,
-    canonical_target_path text,
-    reason text NOT NULL,
-    source_content_sha256 text NOT NULL,
-    recorded_by text NOT NULL,
-    recorded_at timestamp with time zone DEFAULT now() NOT NULL,
-    raw_disposition jsonb DEFAULT '{}'::jsonb NOT NULL,
-    CONSTRAINT fowler_analysis_dispositions_status_check CHECK ((disposition_status = ANY (ARRAY['proposed'::text, 'accepted'::text, 'rejected'::text, 'superseded'::text])))
-);
 
 
 --
