@@ -1312,49 +1312,22 @@ CREATE VIEW architecture.design_scope_query AS
 
 CREATE TABLE architecture.evidence (
     evidence_id text NOT NULL,
+    design_id text,
     subject_kind text NOT NULL,
     subject_id text NOT NULL,
     evidence_kind text NOT NULL,
     evidence_origin text NOT NULL,
     source_ref text NOT NULL,
+    source_path text,
     result_state text NOT NULL,
     recorded_at timestamp with time zone DEFAULT now() NOT NULL,
     source_content_sha256 text,
+    CONSTRAINT architecture_evidence_execution_provenance_check CHECK ((((evidence_origin = ANY (ARRAY['declared'::text, 'imported_assertion'::text])) AND (design_id IS NULL) AND (source_path IS NULL)) OR ((evidence_origin = ANY (ARRAY['local_execution'::text, 'ci_execution'::text])) AND (design_id IS NOT NULL) AND (source_path IS NOT NULL) AND (source_content_sha256 ~ '^[a-f0-9]{64}$'::text)))),
     CONSTRAINT architecture_evidence_kind_check CHECK ((evidence_kind = ANY (ARRAY['test'::text, 'query'::text, 'doc'::text, 'risk'::text, 'screenshot'::text, 'ci'::text]))),
     CONSTRAINT architecture_evidence_origin_check CHECK ((evidence_origin = ANY (ARRAY['declared'::text, 'imported_assertion'::text, 'local_execution'::text, 'ci_execution'::text]))),
     CONSTRAINT architecture_evidence_result_state_check CHECK ((result_state = ANY (ARRAY['pass'::text, 'fail'::text, 'missing'::text, 'stale'::text]))),
     CONSTRAINT architecture_evidence_subject_kind_check CHECK ((subject_kind = ANY (ARRAY['component'::text, 'command'::text, 'relation'::text, 'contract'::text, 'port'::text, 'flow'::text, 'check'::text, 'path'::text, 'query'::text, 'decision'::text, 'evidence'::text, 'risk'::text, 'test'::text])))
 );
-
-
---
--- Name: evidence_query; Type: VIEW; Schema: architecture; Owner: -
---
-
-CREATE VIEW architecture.evidence_query AS
- SELECT evidence_id,
-    subject_kind,
-    subject_id,
-    evidence_kind,
-    evidence_origin,
-    source_ref,
-    result_state,
-    recorded_at,
-    source_content_sha256,
-        CASE
-            WHEN (evidence_origin = ANY (ARRAY['declared'::text, 'imported_assertion'::text])) THEN 'assertion_only'::text
-            WHEN (result_state = 'stale'::text) THEN 'stale'::text
-            WHEN (recorded_at < (now() - '30 days'::interval)) THEN 'stale'::text
-            ELSE 'fresh'::text
-        END AS freshness_state,
-        CASE
-            WHEN (evidence_origin = ANY (ARRAY['declared'::text, 'imported_assertion'::text])) THEN 'assertion_only'::text
-            WHEN ((result_state = 'stale'::text) OR (recorded_at < (now() - '30 days'::interval))) THEN 'stale'::text
-            WHEN (result_state = 'pass'::text) THEN 'verified'::text
-            WHEN (result_state = 'fail'::text) THEN 'failed'::text
-            ELSE 'missing'::text
-        END AS verification_state
-   FROM architecture.evidence evidence;
 
 
 --
@@ -1374,35 +1347,6 @@ CREATE VIEW architecture.implementation_authorization_query AS
    FROM (architecture.design_scope scope
      JOIN architecture.design design ON ((design.design_id = scope.design_id)))
   WHERE (design.status = ANY (ARRAY['approved'::text, 'implementing'::text, 'implemented'::text]));
-
-
---
--- Name: implementation_violation_query; Type: VIEW; Schema: architecture; Owner: -
---
-
-CREATE VIEW architecture.implementation_violation_query AS
- SELECT health_check.check_id AS violation_id,
-    NULL::text AS design_id,
-    health_check.subject_kind,
-    health_check.subject_id,
-    'health_check_failed'::text AS violation_kind,
-    health_check.severity,
-    jsonb_build_object('checkKind', health_check.check_kind, 'predicate', health_check.predicate, 'queryRef', health_check.query_ref, 'status', health_check.status) AS evidence
-   FROM architecture.component_health_check health_check
-  WHERE ((health_check.status = ANY (ARRAY['fail'::text, 'not_indexed'::text])) AND (health_check.severity = ANY (ARRAY['error'::text, 'blocker'::text])))
-UNION ALL
- SELECT ((((scope.design_id || ':'::text) || scope.subject_kind) || ':'::text) || scope.subject_id) AS violation_id,
-    scope.design_id,
-    scope.subject_kind,
-    scope.subject_id,
-    'required_evidence_missing'::text AS violation_kind,
-    'blocker'::text AS severity,
-    jsonb_build_object('scopeKind', scope.scope_kind, 'required', scope.required, 'designStatus', design.status) AS evidence
-   FROM (architecture.design_scope scope
-     JOIN architecture.design design ON ((design.design_id = scope.design_id)))
-  WHERE (scope.required AND (scope.scope_kind = 'must_prove'::text) AND (design.status = ANY (ARRAY['approved'::text, 'implementing'::text, 'implemented'::text])) AND (NOT (EXISTS ( SELECT 1
-           FROM architecture.evidence evidence
-          WHERE ((evidence.subject_kind = scope.subject_kind) AND (evidence.subject_id = scope.subject_id) AND (evidence.evidence_origin = ANY (ARRAY['local_execution'::text, 'ci_execution'::text])) AND (evidence.result_state = 'pass'::text) AND (evidence.recorded_at >= (now() - '30 days'::interval)))))));
 
 
 --
@@ -3364,6 +3308,92 @@ CREATE TABLE planning_query_store.knowledge_intake_repository_references (
     source_content_sha256 text NOT NULL,
     raw_reference jsonb DEFAULT '{}'::jsonb NOT NULL
 );
+
+
+--
+-- Name: evidence_query; Type: VIEW; Schema: architecture; Owner: -
+--
+
+CREATE VIEW architecture.evidence_query AS
+ SELECT evidence.evidence_id,
+    evidence.design_id,
+    evidence.subject_kind,
+    evidence.subject_id,
+    evidence.evidence_kind,
+    evidence.evidence_origin,
+    evidence.source_ref,
+    evidence.source_path,
+    evidence.result_state,
+    evidence.recorded_at,
+    evidence.source_content_sha256,
+    source.content_hash AS current_source_content_sha256,
+        CASE
+            WHEN (evidence.evidence_origin = ANY (ARRAY['declared'::text, 'imported_assertion'::text])) THEN 'assertion_only'::text
+            WHEN (source.path IS NULL) THEN 'missing_source'::text
+            WHEN (evidence.source_content_sha256 IS DISTINCT FROM source.content_hash) THEN 'source_changed'::text
+            WHEN (evidence.result_state = 'stale'::text) THEN 'stale'::text
+            WHEN (evidence.recorded_at < (now() - '30 days'::interval)) THEN 'stale'::text
+            ELSE 'fresh'::text
+        END AS freshness_state,
+        CASE
+            WHEN (evidence.evidence_origin = ANY (ARRAY['declared'::text, 'imported_assertion'::text])) THEN 'assertion_only'::text
+            WHEN ((source.path IS NULL) OR (evidence.source_content_sha256 IS DISTINCT FROM source.content_hash) OR (evidence.result_state = 'stale'::text) OR (evidence.recorded_at < (now() - '30 days'::interval))) THEN 'stale'::text
+            WHEN (evidence.result_state = 'pass'::text) THEN 'verified'::text
+            WHEN (evidence.result_state = 'fail'::text) THEN 'failed'::text
+            ELSE 'missing'::text
+        END AS verification_state,
+        CASE
+            WHEN (evidence.evidence_origin = ANY (ARRAY['declared'::text, 'imported_assertion'::text])) THEN 'assertion_only'::text
+            WHEN (source.path IS NULL) THEN 'missing'::text
+            WHEN (evidence.source_content_sha256 IS DISTINCT FROM source.content_hash) THEN 'changed'::text
+            ELSE 'verified'::text
+        END AS source_verification_state
+   FROM (architecture.evidence evidence
+     LEFT JOIN planning_query_store.governance_files source ON ((source.path = evidence.source_path)));
+
+
+--
+-- Name: implementation_violation_query; Type: VIEW; Schema: architecture; Owner: -
+--
+
+CREATE VIEW architecture.implementation_violation_query AS
+ WITH ranked_execution AS (
+         SELECT evidence.evidence_id,
+            evidence.design_id,
+            evidence.subject_kind,
+            evidence.subject_id,
+            evidence.evidence_origin,
+            evidence.result_state,
+            evidence.recorded_at,
+            evidence.source_path,
+            evidence.source_content_sha256,
+            source.content_hash AS current_source_content_sha256,
+            row_number() OVER (PARTITION BY evidence.design_id, evidence.subject_kind, evidence.subject_id ORDER BY evidence.recorded_at DESC, evidence.evidence_id DESC) AS execution_rank
+           FROM (architecture.evidence evidence
+             LEFT JOIN planning_query_store.governance_files source ON ((source.path = evidence.source_path)))
+          WHERE (evidence.evidence_origin = ANY (ARRAY['local_execution'::text, 'ci_execution'::text]))
+        )
+ SELECT health_check.check_id AS violation_id,
+    NULL::text AS design_id,
+    health_check.subject_kind,
+    health_check.subject_id,
+    'health_check_failed'::text AS violation_kind,
+    health_check.severity,
+    jsonb_build_object('checkKind', health_check.check_kind, 'predicate', health_check.predicate, 'queryRef', health_check.query_ref, 'status', health_check.status) AS evidence
+   FROM architecture.component_health_check health_check
+  WHERE ((health_check.status = ANY (ARRAY['fail'::text, 'not_indexed'::text])) AND (health_check.severity = ANY (ARRAY['error'::text, 'blocker'::text])))
+UNION ALL
+ SELECT ((((scope.design_id || ':'::text) || scope.subject_kind) || ':'::text) || scope.subject_id) AS violation_id,
+    scope.design_id,
+    scope.subject_kind,
+    scope.subject_id,
+    'required_evidence_missing'::text AS violation_kind,
+    'blocker'::text AS severity,
+    jsonb_build_object('scopeKind', scope.scope_kind, 'required', scope.required, 'designStatus', design.status, 'latestEvidenceId', evidence.evidence_id, 'latestResult', evidence.result_state, 'sourcePath', evidence.source_path, 'sourceHash', evidence.source_content_sha256, 'currentSourceHash', evidence.current_source_content_sha256) AS evidence
+   FROM ((architecture.design_scope scope
+     JOIN architecture.design design ON ((design.design_id = scope.design_id)))
+     LEFT JOIN ranked_execution evidence ON (((evidence.design_id = scope.design_id) AND (evidence.subject_kind = scope.subject_kind) AND (evidence.subject_id = scope.subject_id) AND (evidence.execution_rank = 1))))
+  WHERE (scope.required AND (scope.scope_kind = 'must_prove'::text) AND (design.status = ANY (ARRAY['approved'::text, 'implementing'::text, 'implemented'::text])) AND ((evidence.evidence_id IS NULL) OR (evidence.result_state <> 'pass'::text) OR (evidence.recorded_at < (now() - '30 days'::interval)) OR (evidence.current_source_content_sha256 IS NULL) OR (evidence.source_content_sha256 IS DISTINCT FROM evidence.current_source_content_sha256)));
 
 
 --
@@ -6402,7 +6432,8 @@ CREATE VIEW planning_query_store.fowler_analysis_retirement_query AS
         ), accepted_dispositions AS (
          SELECT disposition.document_path,
             disposition.disposition_status,
-            disposition.disposition_kind
+            disposition.disposition_kind,
+            disposition.source_content_sha256
            FROM planning_query_store.fowler_analysis_dispositions disposition
           WHERE (disposition.disposition_status = 'accepted'::text)
         ), retirement_decisions AS (
@@ -6440,7 +6471,7 @@ CREATE VIEW planning_query_store.fowler_analysis_retirement_query AS
              LEFT JOIN improvement_counts ON ((improvement_counts.document_path = document.document_path)))
              LEFT JOIN reference_counts ON ((reference_counts.document_path = document.document_path)))
              LEFT JOIN accepted_targets ON ((accepted_targets.document_path = document.document_path)))
-             LEFT JOIN accepted_dispositions ON ((accepted_dispositions.document_path = document.document_path)))
+             LEFT JOIN accepted_dispositions ON (((accepted_dispositions.document_path = document.document_path) AND (accepted_dispositions.source_content_sha256 = document.source_content_sha256))))
              LEFT JOIN retirement_decisions ON ((retirement_decisions.document_path = document.document_path)))
         )
  SELECT document_id,
@@ -10197,6 +10228,14 @@ ALTER TABLE ONLY architecture.design_operations
 
 ALTER TABLE ONLY architecture.design_scope
     ADD CONSTRAINT design_scope_design_id_fkey FOREIGN KEY (design_id) REFERENCES architecture.design(design_id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: evidence evidence_design_id_fkey; Type: FK CONSTRAINT; Schema: architecture; Owner: -
+--
+
+ALTER TABLE ONLY architecture.evidence
+    ADD CONSTRAINT evidence_design_id_fkey FOREIGN KEY (design_id) REFERENCES architecture.design(design_id) ON DELETE RESTRICT DEFERRABLE INITIALLY DEFERRED;
 
 
 --
