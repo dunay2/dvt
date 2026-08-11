@@ -161,11 +161,6 @@ class PlanningDbExportRunner {
           operation.payload,
           operation.created_at as "createdAt"
         from ${this.deps.schemaName}.feature_mechanization_local_operations operation
-        where exists (
-          select 1
-          from ${this.deps.schemaName}.feature_mechanization_local_rails rail
-          where rail.rail_id = operation.rail_id
-        )
         order by operation.created_at, operation.operation_id
       `),
       client.query(`
