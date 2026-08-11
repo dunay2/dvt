@@ -104097,7 +104097,10 @@
         "scripts/planning-db-operate.cjs#validateArchitectureEvidenceOrigin",
         "scripts/planning-db-operate.cjs#validateArchitectureEvidenceRecordCommand",
         "scripts/planning-db-operate.cjs#validateArchitectureEvidenceResultState",
-        "scripts/planning-db-operate.cjs#validateArchitectureEvidenceSubjectKind"
+        "scripts/planning-db-operate.cjs#validateArchitectureEvidenceSubjectKind",
+        "scripts/planning-db-operate.cjs#normalizeGitHubRepositorySlug",
+        "scripts/planning-db-operate.cjs#readGitValue",
+        "scripts/planning-db-operate.cjs#readGitHubActionsEvidence"
       ],
       "implementationRefs": [
         "scripts/planning-db-operate.cjs#parseArchitectureEvidenceCommand",
@@ -104115,7 +104118,10 @@
         "scripts/planning-db-operate.cjs#validateArchitectureEvidenceOrigin",
         "scripts/planning-db-operate.cjs#validateArchitectureEvidenceRecordCommand",
         "scripts/planning-db-operate.cjs#validateArchitectureEvidenceResultState",
-        "scripts/planning-db-operate.cjs#validateArchitectureEvidenceSubjectKind"
+        "scripts/planning-db-operate.cjs#validateArchitectureEvidenceSubjectKind",
+        "scripts/planning-db-operate.cjs#normalizeGitHubRepositorySlug",
+        "scripts/planning-db-operate.cjs#readGitValue",
+        "scripts/planning-db-operate.cjs#readGitHubActionsEvidence"
       ],
       "documentationRefs": [
         "docs/architecture/command-query-rail-governance.md"
@@ -104133,12 +104139,14 @@
         "tools/planning-db/state/canonical-state.json"
       ],
       "architectureGuards": [
-        "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
+        "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs",
+        "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, and current HEAD."
       ],
       "completionGate": [
         "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs",
         "pnpm planning:db:export --check",
-        "pnpm verify:prepush"
+        "pnpm verify:prepush",
+        "node --test scripts/planning-db-operate-tests/architecture-plan.test.cjs scripts/planning-db-operate-tests/architecture-parse.test.cjs"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
       "sourceContentSha256": "ecec13d4beabd32b342753da833b76f0a4b5c2c9618e9d004364a5a60df90aca",
@@ -104389,34 +104397,80 @@
             ],
             "cypressCoverage": "N/A - repository governance CLI",
             "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
+          },
+          {
+            "name": "normalizeGitHubRepositorySlug",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordArchitectureEvidenceExecution"],
+            "dddOwner": "ArchitectureEvidenceLedger",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "service_layer"],
+            "cypressCoverage": "N/A - mocked GitHub API contract tests cover the repository governance CLI.",
+            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, and current HEAD."
+          },
+          {
+            "name": "readGitValue",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordArchitectureEvidenceExecution"],
+            "dddOwner": "ArchitectureEvidenceLedger",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "service_layer"],
+            "cypressCoverage": "N/A - mocked GitHub API contract tests cover the repository governance CLI.",
+            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, and current HEAD."
+          },
+          {
+            "name": "readGitHubActionsEvidence",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordArchitectureEvidenceExecution"],
+            "dddOwner": "ArchitectureEvidenceLedger",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "service_layer"],
+            "cypressCoverage": "N/A - mocked GitHub API contract tests cover the repository governance CLI.",
+            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, and current HEAD."
           }
         ],
         "version": 1,
         "featureId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE",
         "userStories": ["https://github.com/dunay2/dvt/issues/2274"],
-        "cypressFlows": ["N/A - repository governance CLI"],
+        "cypressFlows": [
+          "N/A - repository governance CLI",
+          "N/A - mocked GitHub API contract tests cover the repository governance CLI."
+        ],
         "domainObjects": ["ArchitectureEvidenceExecution"],
         "fowlerSignals": [
           "DB evidence ledger replaces asserted proof with exact executed proof.",
-          "DB evidence must be current, exact-hash matched, audited, and fail closed."
+          "DB evidence must be current, exact-hash matched, audited, and fail closed.",
+          "hidden_authority",
+          "service_layer"
         ],
         "completionGate": [
           "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs",
           "pnpm planning:db:export --check",
-          "pnpm verify:prepush"
+          "pnpm verify:prepush",
+          "node --test scripts/planning-db-operate-tests/architecture-plan.test.cjs scripts/planning-db-operate-tests/architecture-parse.test.cjs"
         ],
         "redGreenCycles": [
           {
             "id": "recordarchitectureevidenceexecution-record",
-            "redTest": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs",
-            "greenTest": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs",
+            "redTest": "node --test --test-name-pattern \"architecture evidence rejects forged\" scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+            "greenTest": "node --test scripts/planning-db-operate-tests/architecture-plan.test.cjs scripts/planning-db-operate-tests/architecture-parse.test.cjs",
             "patchSurfaces": [
               "scripts/planning-db-operate.cjs",
               "scripts/planning-db-operate-tests/**",
               "tools/planning-db/schema.sql",
-              "tools/planning-db/state/canonical-state.json"
+              "tools/planning-db/state/canonical-state.json",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
             ],
-            "expectedFailure": "Execution evidence was not bound to exact design, source, origin, result, and current hash."
+            "expectedFailure": "A synthetic GitHub Actions-looking URL and forgeable environment flag were accepted as CI execution evidence."
           }
         ],
         "componentGuides": [
@@ -104437,9 +104491,10 @@
           }
         ],
         "architectureGuards": [
-          "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
+          "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs",
+          "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, and current HEAD."
         ],
-        "implementationPlan": "https://github.com/dunay2/dvt/issues/2274",
+        "implementationPlan": "Issue #2274 verifies ci_execution against the GitHub Actions API for one concrete completed job, canonical repository, and current commit before any DB transaction.",
         "mechanizationStatus": "implemented",
         "noHumanDecisionsRemaining": true,
         "allowedImplementationSurfaces": [
@@ -104449,10 +104504,11 @@
           "tools/planning-db/state/canonical-state.json"
         ],
         "forbiddenImplementationSurfaces": [
-          "docs/planning/proposals/mandatory/**"
+          "docs/planning/proposals/mandatory/**",
+          "environment-only CI authenticity"
         ]
       },
-      "revision": 1,
+      "revision": 2,
       "createdBy": "codex",
       "createdAt": "2026-08-11T12:22:58.150Z"
     },
@@ -110448,7 +110504,12 @@
         "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.buildLifecycleState",
         "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.assemble",
         "scripts/documentation-publication.cjs#DocumentationPublicationPolicy.isHistoricalPath",
-        "tools/docs/check-links.ts#isNonPublishedDocumentationTarget"
+        "tools/docs/check-links.ts#isNonPublishedDocumentationTarget",
+        "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.currentRepositoryWebUrl",
+        "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.normalizeGitHubRepositoryWebUrl",
+        "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.resolveLinkedDocumentationPath",
+        "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.rewriteRetiredDocumentationLinks",
+        "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.copySource"
       ],
       "implementationRefs": [
         "scripts/documentation-publication.cjs#DocumentationPublicationPolicy.assertUniqueCanonicalSubjects",
@@ -110456,7 +110517,12 @@
         "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.buildLifecycleState",
         "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.assemble",
         "scripts/documentation-publication.cjs#DocumentationPublicationPolicy.isHistoricalPath",
-        "tools/docs/check-links.ts#isNonPublishedDocumentationTarget"
+        "tools/docs/check-links.ts#isNonPublishedDocumentationTarget",
+        "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.currentRepositoryWebUrl",
+        "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.normalizeGitHubRepositoryWebUrl",
+        "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.resolveLinkedDocumentationPath",
+        "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.rewriteRetiredDocumentationLinks",
+        "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.copySource"
       ],
       "documentationRefs": [
         "docs/planning/status/governance-document-rule-inventory.md"
@@ -110465,7 +110531,8 @@
         "docs/planning/status/governance-document-rule-inventory.md",
         "docs/generated-docs-policy.json",
         "docs/architecture/command-query-rail-governance.md",
-        "docs/architecture/fowler-opportunity-planning-governance.md"
+        "docs/architecture/fowler-opportunity-planning-governance.md",
+        "AGENTS.md"
       ],
       "allowedImplementationSurfaces": [
         "scripts/documentation-publication.cjs",
@@ -110500,13 +110567,15 @@
         "tools/ci/generated-docs-single-writer-policy.test.mjs"
       ],
       "architectureGuards": [
-        "node --test scripts/documentation-publication.test.cjs scripts/check-generated-docs-policy.test.cjs scripts/generate-db-surface-inventory.test.cjs scripts/generate-knowledge-intake-literature.test.cjs"
+        "node --test scripts/documentation-publication.test.cjs scripts/check-generated-docs-policy.test.cjs scripts/generate-db-surface-inventory.test.cjs scripts/generate-knowledge-intake-literature.test.cjs",
+        "DB-retired targets resolve only to commit-pinned GitHub blob URLs in the disposable projection."
       ],
       "completionGate": [
         "pnpm docs:publish",
         "pnpm docs:build",
         "pnpm docs:gov:links",
-        "pnpm verify:prepush"
+        "pnpm verify:prepush",
+        "node --test scripts/documentation-publication.test.cjs"
       ],
       "sourcePath": "scripts/documentation-publication.cjs",
       "sourceContentSha256": "3e103b92310327c50ad13de9702c492abd3dbcbe1c696c98965a33ce244accec",
@@ -110607,30 +110676,89 @@
             "fowlerSignals": ["hidden_authority", "duplicate_semantics"],
             "cypressCoverage": "N/A - Zensical publication, link validation, accessibility automation, and demanding-user browser QA cover this governance projection.",
             "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/check-generated-docs-policy.test.cjs scripts/generate-db-surface-inventory.test.cjs scripts/generate-knowledge-intake-literature.test.cjs"
+          },
+          {
+            "name": "DocumentationPublicationAssembler.currentRepositoryWebUrl",
+            "path": "scripts/documentation-publication.cjs",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": ["scripts/documentation-publication.test.cjs"],
+            "fowlerSignals": ["hidden_authority", "published_language"],
+            "cypressCoverage": "N/A - deterministic publication assembly and link validation cover this projection.",
+            "architectureGuard": "DB-retired targets resolve only to commit-pinned GitHub blob URLs in the disposable projection."
+          },
+          {
+            "name": "DocumentationPublicationAssembler.normalizeGitHubRepositoryWebUrl",
+            "path": "scripts/documentation-publication.cjs",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": ["scripts/documentation-publication.test.cjs"],
+            "fowlerSignals": ["hidden_authority", "published_language"],
+            "cypressCoverage": "N/A - deterministic publication assembly and link validation cover this projection.",
+            "architectureGuard": "DB-retired targets resolve only to commit-pinned GitHub blob URLs in the disposable projection."
+          },
+          {
+            "name": "DocumentationPublicationAssembler.resolveLinkedDocumentationPath",
+            "path": "scripts/documentation-publication.cjs",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": ["scripts/documentation-publication.test.cjs"],
+            "fowlerSignals": ["hidden_authority", "published_language"],
+            "cypressCoverage": "N/A - deterministic publication assembly and link validation cover this projection.",
+            "architectureGuard": "DB-retired targets resolve only to commit-pinned GitHub blob URLs in the disposable projection."
+          },
+          {
+            "name": "DocumentationPublicationAssembler.rewriteRetiredDocumentationLinks",
+            "path": "scripts/documentation-publication.cjs",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": ["scripts/documentation-publication.test.cjs"],
+            "fowlerSignals": ["hidden_authority", "published_language"],
+            "cypressCoverage": "N/A - deterministic publication assembly and link validation cover this projection.",
+            "architectureGuard": "DB-retired targets resolve only to commit-pinned GitHub blob URLs in the disposable projection."
+          },
+          {
+            "name": "DocumentationPublicationAssembler.copySource",
+            "path": "scripts/documentation-publication.cjs",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": ["scripts/documentation-publication.test.cjs"],
+            "fowlerSignals": ["hidden_authority", "published_language"],
+            "cypressCoverage": "N/A - deterministic publication assembly and link validation cover this projection.",
+            "architectureGuard": "DB-retired targets resolve only to commit-pinned GitHub blob URLs in the disposable projection."
           }
         ],
         "version": 1,
         "featureId": "DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT",
-        "userStories": ["https://github.com/dunay2/dvt/issues/2149"],
+        "userStories": [
+          "https://github.com/dunay2/dvt/issues/2149",
+          "https://github.com/dunay2/dvt/issues/2274"
+        ],
         "cypressFlows": [
-          "N/A - Zensical publication, link validation, accessibility automation, and demanding-user browser QA cover this governance projection."
+          "N/A - Zensical publication, link validation, accessibility automation, and demanding-user browser QA cover this governance projection.",
+          "N/A - deterministic publication assembly and link validation cover this projection."
         ],
         "domainObjects": [
           "DocumentationPublicationPolicy",
           "PlanningDocumentationProjection"
         ],
-        "fowlerSignals": ["hidden_authority", "duplicate_semantics"],
+        "fowlerSignals": [
+          "hidden_authority",
+          "duplicate_semantics",
+          "published_language"
+        ],
         "completionGate": [
           "pnpm docs:publish",
           "pnpm docs:build",
           "pnpm docs:gov:links",
-          "pnpm verify:prepush"
+          "pnpm verify:prepush",
+          "node --test scripts/documentation-publication.test.cjs"
         ],
         "redGreenCycles": [
           {
             "id": "generateplanningderivedsurfaces-record",
-            "redTest": "node --test scripts/documentation-publication.test.cjs",
-            "greenTest": "node --test scripts/documentation-publication.test.cjs scripts/check-generated-docs-policy.test.cjs scripts/generate-db-surface-inventory.test.cjs scripts/generate-knowledge-intake-literature.test.cjs",
+            "redTest": "node --test --test-name-pattern \"rewrites active links\" scripts/documentation-publication.test.cjs",
+            "greenTest": "node --test scripts/documentation-publication.test.cjs",
             "patchSurfaces": [
               "scripts/documentation-publication.cjs",
               "scripts/documentation-publication.test.cjs",
@@ -110645,9 +110773,10 @@
               "docs/risk-register/quality/R-20260810-ON-DEMAND-STATUS-TEST-OWNERSHIP.yaml",
               "docs/risk-register/quality/index.md",
               "packages/@dvt/contracts/test/provider-vocabulary.architecture.test.ts",
-              "tools/ci/generated-docs-single-writer-policy.test.mjs"
+              "tools/ci/generated-docs-single-writer-policy.test.mjs",
+              "tools/planning-db/state/canonical-state.json"
             ],
-            "expectedFailure": "Canonical-subject diagnostics omitted owners and hashes; route collisions omitted lifecycle evidence; active links resolved unpublished history; tracked pointers and low-contrast navigation remained."
+            "expectedFailure": "The active publication retained relative links to DB-retired documents that were excluded from the publication tree."
           }
         ],
         "componentGuides": [
@@ -110657,7 +110786,8 @@
           "docs/planning/status/governance-document-rule-inventory.md",
           "docs/generated-docs-policy.json",
           "docs/architecture/command-query-rail-governance.md",
-          "docs/architecture/fowler-opportunity-planning-governance.md"
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "AGENTS.md"
         ],
         "commandQueryRails": [
           {
@@ -110668,9 +110798,10 @@
           }
         ],
         "architectureGuards": [
-          "node --test scripts/documentation-publication.test.cjs scripts/check-generated-docs-policy.test.cjs scripts/generate-db-surface-inventory.test.cjs scripts/generate-knowledge-intake-literature.test.cjs"
+          "node --test scripts/documentation-publication.test.cjs scripts/check-generated-docs-policy.test.cjs scripts/generate-db-surface-inventory.test.cjs scripts/generate-knowledge-intake-literature.test.cjs",
+          "DB-retired targets resolve only to commit-pinned GitHub blob URLs in the disposable projection."
         ],
-        "implementationPlan": "Issue #2149 joins DB lifecycle and generator ownership at the on-demand publication boundary, retires three tracked pointer copies at stable routes, rejects active links to unpublished historical authority, and validates the published documentation experience.",
+        "implementationPlan": "Issue #2274 preserves source bytes and rewrites active references to DB-retired documents only in the disposable publication as commit-pinned Git evidence.",
         "mechanizationStatus": "implemented",
         "noHumanDecisionsRemaining": true,
         "allowedImplementationSurfaces": [
@@ -110708,10 +110839,11 @@
         "forbiddenImplementationSurfaces": [
           "tracked documentation pointer copies",
           "Planning DB schema transition machinery",
-          "parallel route or subject registry"
+          "parallel route or subject registry",
+          "tracked historical source rewrites"
         ]
       },
-      "revision": 3,
+      "revision": 4,
       "createdBy": "codex",
       "createdAt": "2026-08-10T14:03:50.740Z"
     },
@@ -164511,6 +164643,159 @@
         ]
       },
       "createdAt": "2026-08-11T13:29:06.235Z"
+    },
+    {
+      "operationId": "0679e88b-4907-4b1c-98c1-bdef448f281c",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT:command:generateplanningderivedsurfaces:3:57a33710fca66f3c",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT#command#generateplanningderivedsurfaces",
+      "sourcePath": "scripts/documentation-publication.cjs",
+      "sourceContentSha256": "3e103b92310327c50ad13de9702c492abd3dbcbe1c696c98965a33ce244accec",
+      "expectedRevision": 3,
+      "previousRevision": 3,
+      "resultingRevision": 4,
+      "payload": {
+        "redTest": "node --test --test-name-pattern \"rewrites active links\" scripts/documentation-publication.test.cjs",
+        "dddOwner": "PlanningDocumentationProjection",
+        "railName": "GeneratePlanningDerivedSurfaces",
+        "railType": "command",
+        "featureId": "DOC1-6-DB-LIFECYCLE-POINTER-RETIREMENT",
+        "greenTest": "node --test scripts/documentation-publication.test.cjs",
+        "sourceRef": "scripts/documentation-publication.cjs",
+        "unitTests": ["scripts/documentation-publication.test.cjs"],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2274"],
+        "cypressFlows": [
+          "N/A - deterministic publication assembly and link validation cover this projection."
+        ],
+        "domainObjects": [
+          "DocumentationPublicationPolicy",
+          "PlanningDocumentationProjection"
+        ],
+        "fowlerSignals": ["hidden_authority", "published_language"],
+        "patchSurfaces": [
+          "scripts/documentation-publication.cjs",
+          "scripts/documentation-publication.test.cjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "completionGate": [
+          "node --test scripts/documentation-publication.test.cjs",
+          "pnpm docs:publish",
+          "pnpm docs:build",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "The active publication retained relative links to DB-retired documents that were excluded from the publication tree.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/planning/status/governance-document-rule-inventory.md"
+        ],
+        "architectureGuards": [
+          "DB-retired targets resolve only to commit-pinned GitHub blob URLs in the disposable projection."
+        ],
+        "implementationPlan": "Issue #2274 preserves source bytes and rewrites active references to DB-retired documents only in the disposable publication as commit-pinned Git evidence.",
+        "implementationRefs": [
+          "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.currentRepositoryWebUrl",
+          "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.normalizeGitHubRepositoryWebUrl",
+          "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.resolveLinkedDocumentationPath",
+          "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.rewriteRetiredDocumentationLinks",
+          "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.copySource"
+        ],
+        "normalizedRailName": "generateplanningderivedsurfaces",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "3e103b92310327c50ad13de9702c492abd3dbcbe1c696c98965a33ce244accec",
+        "allowedImplementationSurfaces": [
+          "scripts/documentation-publication.cjs",
+          "scripts/documentation-publication.test.cjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "tracked historical source rewrites"
+        ]
+      },
+      "createdAt": "2026-08-11T14:27:00.802Z"
+    },
+    {
+      "operationId": "afab322d-a2e5-4cdb-a6c3-d79471e1a394",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE:command:recordarchitectureevidenceexecution:1:650073d3f2d080dc",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE#command#recordarchitectureevidenceexecution",
+      "sourcePath": "scripts/planning-db-operate.cjs",
+      "sourceContentSha256": "ecec13d4beabd32b342753da833b76f0a4b5c2c9618e9d004364a5a60df90aca",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "node --test --test-name-pattern \"architecture evidence rejects forged\" scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+        "dddOwner": "ArchitectureEvidenceLedger",
+        "railName": "RecordArchitectureEvidenceExecution",
+        "railType": "command",
+        "featureId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE",
+        "greenTest": "node --test scripts/planning-db-operate-tests/architecture-plan.test.cjs scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+        "sourceRef": "scripts/planning-db-operate.cjs",
+        "unitTests": [
+          "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+          "scripts/planning-db-operate-tests/architecture-parse.test.cjs"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2274"],
+        "cypressFlows": [
+          "N/A - mocked GitHub API contract tests cover the repository governance CLI."
+        ],
+        "domainObjects": ["ArchitectureEvidenceExecution"],
+        "fowlerSignals": ["hidden_authority", "service_layer"],
+        "patchSurfaces": [
+          "scripts/planning-db-operate.cjs",
+          "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "completionGate": [
+          "node --test scripts/planning-db-operate-tests/architecture-plan.test.cjs scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+          "pnpm planning:db:export --check",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "A synthetic GitHub Actions-looking URL and forgeable environment flag were accepted as CI execution evidence.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "architectureGuards": [
+          "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, and current HEAD."
+        ],
+        "implementationPlan": "Issue #2274 verifies ci_execution against the GitHub Actions API for one concrete completed job, canonical repository, and current commit before any DB transaction.",
+        "implementationRefs": [
+          "scripts/planning-db-operate.cjs#normalizeGitHubRepositorySlug",
+          "scripts/planning-db-operate.cjs#readGitValue",
+          "scripts/planning-db-operate.cjs#readGitHubActionsEvidence"
+        ],
+        "normalizedRailName": "recordarchitectureevidenceexecution",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "ecec13d4beabd32b342753da833b76f0a4b5c2c9618e9d004364a5a60df90aca",
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-operate.cjs",
+          "scripts/planning-db-operate-tests/**",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": ["environment-only CI authenticity"]
+      },
+      "createdAt": "2026-08-11T14:27:02.863Z"
     }
   ],
   "governanceComponentDefinitions": [
