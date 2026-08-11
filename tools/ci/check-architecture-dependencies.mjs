@@ -140,7 +140,7 @@ function normalizeCruiseModules(modules) {
     .sort((left, right) => left.source.localeCompare(right.source));
 }
 
-function importBindingNames(importClause) {
+function importBindingNames(importClause, { includeTypeOnly = true } = {}) {
   if (!importClause) return [];
   const bindings = [];
   if (importClause.name) bindings.push(importClause.name.text);
@@ -149,7 +149,7 @@ function importBindingNames(importClause) {
   }
   if (importClause.namedBindings && ts.isNamedImports(importClause.namedBindings)) {
     for (const element of importClause.namedBindings.elements) {
-      if (!element.isTypeOnly) bindings.push(element.name.text);
+      if (includeTypeOnly || !element.isTypeOnly) bindings.push(element.name.text);
     }
   }
   return bindings;
@@ -174,16 +174,21 @@ function analyzeLocalImportSemantics(module, contents) {
     const current = analysis.get(specifier) ?? {
       target,
       hasRuntimeUse: false,
+      hasTypeUse: false,
       hasSideEffectOnly: false,
       hasUnusedValue: false,
     };
     if (!statement.importClause) {
       current.hasSideEffectOnly = true;
-    } else if (!statement.importClause.isTypeOnly) {
-      const bindingNames = importBindingNames(statement.importClause);
-      const hasRuntimeUse = bindingNames.some((name) => countIdentifier(parsed, name) > 1);
+    } else {
+      const allBindingNames = importBindingNames(statement.importClause);
+      const runtimeBindingNames = statement.importClause.isTypeOnly
+        ? []
+        : importBindingNames(statement.importClause, { includeTypeOnly: false });
+      const hasRuntimeUse = runtimeBindingNames.some((name) => countIdentifier(parsed, name) > 1);
       current.hasRuntimeUse ||= hasRuntimeUse;
-      current.hasUnusedValue ||= bindingNames.length > 0 && !hasRuntimeUse;
+      current.hasTypeUse ||= allBindingNames.some((name) => countIdentifier(parsed, name) > 1);
+      current.hasUnusedValue ||= runtimeBindingNames.length > 0 && !hasRuntimeUse;
     }
     analysis.set(specifier, current);
   }
@@ -191,29 +196,46 @@ function analyzeLocalImportSemantics(module, contents) {
   return analysis;
 }
 
+function isTypeOnlyDependency(dependency) {
+  return (dependency.dependencyTypes ?? []).some(
+    (dependencyType) => dependencyType === 'type-only' || dependencyType === 'type-import'
+  );
+}
+
 function isRuntimeDependency(dependency, importAnalysis) {
+  if (isTypeOnlyDependency(dependency)) return false;
   if (dependency.dynamic === true) return true;
   const localImport = importAnalysis.get(dependency.module);
   if (localImport) return localImport.hasRuntimeUse;
-  return !(dependency.dependencyTypes ?? []).some(
-    (dependencyType) => dependencyType === 'type-only' || dependencyType === 'type-import'
-  );
+  return true;
+}
+
+function isMeaningfulTypeDependency(dependency, importAnalysis) {
+  if (!isTypeOnlyDependency(dependency)) return false;
+  const localImport = importAnalysis.get(dependency.module);
+  return localImport ? localImport.hasTypeUse : true;
 }
 
 function traverseReachability(moduleMap, roots, sourceContents) {
   const staticReachable = new Set();
   const conditionalReachable = new Set();
+  const typeReachable = new Set();
   const visitedStates = new Set();
   const importAnalysisBySource = new Map();
-  const queue = roots.map((source) => ({ source: normalizePath(source), conditional: false }));
+  const queue = roots.map((source) => ({
+    source: normalizePath(source),
+    conditional: false,
+    mode: 'runtime',
+  }));
 
   while (queue.length > 0) {
     const current = queue.shift();
-    const stateKey = `${current.source}\0${current.conditional ? 'conditional' : 'static'}`;
+    const stateKey = `${current.source}\0${current.mode}\0${current.conditional ? 'conditional' : 'static'}`;
     if (visitedStates.has(stateKey)) continue;
     visitedStates.add(stateKey);
 
-    if (current.conditional) conditionalReachable.add(current.source);
+    if (current.mode === 'type') typeReachable.add(current.source);
+    else if (current.conditional) conditionalReachable.add(current.source);
     else staticReachable.add(current.source);
 
     const module = moduleMap.get(current.source);
@@ -225,17 +247,24 @@ function traverseReachability(moduleMap, roots, sourceContents) {
 
     for (const dependency of module.dependencies ?? []) {
       const target = dependency.resolved;
-      if (!target?.startsWith('apps/api/') || !isRuntimeDependency(dependency, importAnalysis)) {
-        continue;
+      if (!target?.startsWith('apps/api/')) continue;
+      if (
+        isMeaningfulTypeDependency(dependency, importAnalysis) &&
+        !staticReachable.has(target) &&
+        !conditionalReachable.has(target)
+      ) {
+        queue.push({ source: target, conditional: current.conditional, mode: 'type' });
       }
+      if (current.mode === 'type' || !isRuntimeDependency(dependency, importAnalysis)) continue;
       queue.push({
         source: target,
         conditional: current.conditional || dependency.dynamic === true,
+        mode: 'runtime',
       });
     }
   }
 
-  return { staticReachable, conditionalReachable };
+  return { staticReachable, conditionalReachable, typeReachable };
 }
 
 export function classifyApiSourceReachability({
@@ -265,18 +294,34 @@ export function classifyApiSourceReachability({
 
   const classifications = normalizedSourceFiles.map((source) => {
     let classification = API_REACHABILITY_CLASSIFICATIONS.orphan;
+    let runtimeReachability = 'none';
+    let retentionReason = 'unretained';
     if (productionReachability.staticReachable.has(source)) {
       classification = API_REACHABILITY_CLASSIFICATIONS.production;
+      runtimeReachability = 'static';
+      retentionReason = 'production-runtime';
     } else if (productionReachability.conditionalReachable.has(source)) {
       classification = API_REACHABILITY_CLASSIFICATIONS.conditionalProduction;
+      runtimeReachability = 'conditional';
+      retentionReason = 'production-runtime';
+    } else if (productionReachability.typeReachable.has(source)) {
+      classification = API_REACHABILITY_CLASSIFICATIONS.production;
+      retentionReason = 'production-type-support';
     } else if (
       testReachability.staticReachable.has(source) ||
-      testReachability.conditionalReachable.has(source)
+      testReachability.conditionalReachable.has(source) ||
+      testReachability.typeReachable.has(source)
     ) {
       classification = API_REACHABILITY_CLASSIFICATIONS.testSupport;
+      runtimeReachability =
+        testReachability.staticReachable.has(source) ||
+        testReachability.conditionalReachable.has(source)
+          ? 'test'
+          : 'none';
+      retentionReason = 'test-support';
     }
 
-    return { source, classification };
+    return { source, classification, runtimeReachability, retentionReason };
   });
 
   return {
@@ -286,9 +331,11 @@ export function classifyApiSourceReachability({
       ...productionReachability.staticReachable,
       ...productionReachability.conditionalReachable,
     ]),
+    productionTypeSources: productionReachability.typeReachable,
     testSources: new Set([
       ...testReachability.staticReachable,
       ...testReachability.conditionalReachable,
+      ...testReachability.typeReachable,
     ]),
   };
 }
@@ -338,13 +385,6 @@ export function collectApiDeploymentProfileEvidence({
   productionSources,
   sourceContents,
 }) {
-  const dynamicImports = dynamicPackageImports(modules, productionSources, sourceContents);
-  const dynamicTargetsBySource = new Map();
-  for (const { source, target } of dynamicImports) {
-    const targets = dynamicTargetsBySource.get(source) ?? new Set();
-    targets.add(target);
-    dynamicTargetsBySource.set(source, targets);
-  }
   const moduleMap = new Map(
     normalizeCruiseModules(modules).map((module) => [module.source, module])
   );
@@ -370,13 +410,14 @@ export function collectApiDeploymentProfileEvidence({
         containsIdentifier(statement.expression, 'OBS_ENABLED') &&
         containsCall(statement.thenStatement, 'createNoopObservability')
       ) {
+        const executableScope = enclosingExecutableScope(statement, parsed);
         add(
           'observability-noop',
           API_REACHABILITY_CLASSIFICATIONS.validNullObject,
           'OBS_ENABLED=false branch returns createNoopObservability()',
           [source]
         );
-        if (containsNewExpression(parsed, 'OtelObservability')) {
+        if (containsNewExpression(executableScope, 'OtelObservability')) {
           add(
             'observability-otel',
             API_REACHABILITY_CLASSIFICATIONS.conditionalProduction,
@@ -407,7 +448,14 @@ export function collectApiDeploymentProfileEvidence({
             [source]
           );
         }
-        if (dynamicTargetsBySource.get(protectedSource)?.has('@dvt/adapter-postgres')) {
+        const protectedContents = sourceContents.get(protectedSource);
+        const protectedParsed = protectedContents
+          ? sourceFileFor(protectedSource, protectedContents)
+          : null;
+        const protectedScope = protectedParsed
+          ? findNamedExecutableScope(protectedParsed, 'buildProtectedRuntimeModule')
+          : null;
+        if (protectedScope && containsDynamicImport(protectedScope, '@dvt/adapter-postgres')) {
           add(
             'postgres-protected-storage',
             API_REACHABILITY_CLASSIFICATIONS.conditionalProduction,
@@ -421,6 +469,7 @@ export function collectApiDeploymentProfileEvidence({
         containsIdentifier(statement.expression, 'DVT_INTENT_RECONCILER_ENABLED') &&
         containsNullReturn(statement.thenStatement)
       ) {
+        const executableScope = enclosingClassOrExecutableScope(statement, parsed);
         add(
           'reconciler-disabled',
           API_REACHABILITY_CLASSIFICATIONS.conditionalProduction,
@@ -428,8 +477,8 @@ export function collectApiDeploymentProfileEvidence({
           [source]
         );
         if (
-          containsCall(parsed, 'createIntentReconcilerRuntimeComposition') ||
-          containsNewExpression(parsed, 'IntentReconcilerWorker')
+          containsCall(executableScope, 'createIntentReconcilerRuntimeComposition') ||
+          containsNewExpression(executableScope, 'IntentReconcilerWorker')
         ) {
           add(
             'reconciler-enabled',
@@ -443,7 +492,7 @@ export function collectApiDeploymentProfileEvidence({
       if (
         containsIdentifier(statement.expression, 'TEMPORAL_ADDRESS') &&
         containsNullReturn(statement.thenStatement) &&
-        dynamicTargetsBySource.get(source)?.has('@dvt/adapter-temporal')
+        containsDynamicImport(enclosingExecutableScope(statement, parsed), '@dvt/adapter-temporal')
       ) {
         add(
           'temporal-provider',
@@ -472,6 +521,49 @@ function collectDescendants(root, predicate) {
   return matches;
 }
 
+function isExecutableScope(node) {
+  return (
+    ts.isFunctionDeclaration(node) ||
+    ts.isFunctionExpression(node) ||
+    ts.isArrowFunction(node) ||
+    ts.isMethodDeclaration(node) ||
+    ts.isConstructorDeclaration(node) ||
+    ts.isGetAccessorDeclaration(node) ||
+    ts.isSetAccessorDeclaration(node)
+  );
+}
+
+function enclosingExecutableScope(node, sourceFile) {
+  for (let current = node.parent; current; current = current.parent) {
+    if (isExecutableScope(current)) return current;
+  }
+  return sourceFile;
+}
+
+function enclosingClassOrExecutableScope(node, sourceFile) {
+  let executableScope = null;
+  for (let current = node.parent; current; current = current.parent) {
+    if (!executableScope && isExecutableScope(current)) executableScope = current;
+    if (ts.isClassDeclaration(current) || ts.isClassExpression(current)) return current;
+  }
+  return executableScope ?? sourceFile;
+}
+
+function collectScopedDescendants(root, predicate) {
+  const matches = [];
+  const rootIsClass = ts.isClassDeclaration(root) || ts.isClassExpression(root);
+  const visit = (node) => {
+    if (node !== root) {
+      if (rootIsClass && isExecutableScope(node) && node.parent !== root) return;
+      if (!rootIsClass && (isExecutableScope(node) || ts.isClassDeclaration(node))) return;
+    }
+    if (predicate(node)) matches.push(node);
+    ts.forEachChild(node, visit);
+  };
+  visit(root);
+  return matches;
+}
+
 function containsIdentifier(root, identifier) {
   return (
     collectDescendants(root, (node) => ts.isIdentifier(node) && node.text === identifier).length > 0
@@ -480,7 +572,7 @@ function containsIdentifier(root, identifier) {
 
 function containsCall(root, callee) {
   return (
-    collectDescendants(
+    collectScopedDescendants(
       root,
       (node) =>
         ts.isCallExpression(node) &&
@@ -492,7 +584,7 @@ function containsCall(root, callee) {
 
 function containsNewExpression(root, constructorName) {
   return (
-    collectDescendants(
+    collectScopedDescendants(
       root,
       (node) =>
         ts.isNewExpression(node) &&
@@ -504,10 +596,37 @@ function containsNewExpression(root, constructorName) {
 
 function containsNullReturn(root) {
   return (
-    collectDescendants(
+    collectScopedDescendants(
       root,
       (node) => ts.isReturnStatement(node) && node.expression?.kind === ts.SyntaxKind.NullKeyword
     ).length > 0
+  );
+}
+
+function containsDynamicImport(root, target) {
+  return (
+    collectScopedDescendants(
+      root,
+      (node) =>
+        ts.isCallExpression(node) &&
+        node.expression.kind === ts.SyntaxKind.ImportKeyword &&
+        node.arguments.length === 1 &&
+        ts.isStringLiteral(node.arguments[0]) &&
+        node.arguments[0].text === target
+    ).length > 0
+  );
+}
+
+function findNamedExecutableScope(sourceFile, name) {
+  return (
+    collectDescendants(
+      sourceFile,
+      (node) =>
+        isExecutableScope(node) &&
+        node.name !== undefined &&
+        ts.isIdentifier(node.name) &&
+        node.name.text === name
+    )[0] ?? null
   );
 }
 
@@ -619,6 +738,7 @@ function importedNamesByTarget(module, sourceFile) {
 export function collectApiExportReachabilityEvidence({
   modules,
   productionSources,
+  productionTypeSources = new Set(),
   testSources = new Set(),
   sourceContents,
 }) {
@@ -649,9 +769,12 @@ export function collectApiExportReachabilityEvidence({
       const directConsumers = consumersByExport.get(`${source}\0${symbol}`) ?? new Set();
       const namespaceConsumers = consumersByExport.get(`${source}\0*`) ?? new Set();
       const consumers = [...new Set([...directConsumers, ...namespaceConsumers])].sort();
-      const hasProductionConsumer = consumers.some((consumer) => productionSources.has(consumer));
+      const hasProductionConsumer = consumers.some(
+        (consumer) => productionSources.has(consumer) || productionTypeSources.has(consumer)
+      );
       const hasInternalProductionUse =
-        productionSources.has(source) && countIdentifier(parsed, symbol) > 1;
+        (productionSources.has(source) || productionTypeSources.has(source)) &&
+        countIdentifier(parsed, symbol) > 1;
       const classification =
         hasProductionConsumer || hasInternalProductionUse || API_PRODUCTION_ROOTS.includes(source)
           ? 'production-export'
@@ -794,10 +917,19 @@ function applyDeploymentProfileClassifications(classifications, profileEvidence)
       return item;
     }
     if (validNullObjectSources.has(item.source)) {
-      return { ...item, classification: API_REACHABILITY_CLASSIFICATIONS.validNullObject };
+      return {
+        ...item,
+        classification: API_REACHABILITY_CLASSIFICATIONS.validNullObject,
+        retentionReason: 'production-null-object',
+      };
     }
     if (conditionalSources.has(item.source)) {
-      return { ...item, classification: API_REACHABILITY_CLASSIFICATIONS.conditionalProduction };
+      return {
+        ...item,
+        classification: API_REACHABILITY_CLASSIFICATIONS.conditionalProduction,
+        runtimeReachability: 'conditional',
+        retentionReason: 'production-profile',
+      };
     }
     return item;
   });
@@ -860,6 +992,7 @@ export async function collectApiProductionReachability(baseDir = process.cwd(), 
   const exportEvidence = collectApiExportReachabilityEvidence({
     modules: classified.modules,
     productionSources: classified.productionSources,
+    productionTypeSources: classified.productionTypeSources,
     testSources: classified.testSources,
     sourceContents,
   });
@@ -909,6 +1042,13 @@ export function formatApiReachabilityReport(result) {
     '[api-production-reachability] dynamic imports:',
     ...result.dynamicImports.map(({ source, target }) => `- ${target}: ${source}`),
   ];
+  const productionTypeSupport = result.classifications.filter(
+    ({ retentionReason }) => retentionReason === 'production-type-support'
+  );
+  lines.push(
+    '[api-production-reachability] production type support:',
+    ...productionTypeSupport.map(({ source }) => `- production-type-support: ${source}`)
+  );
   const candidates = result.classifications.filter(({ classification }) =>
     [
       API_REACHABILITY_CLASSIFICATIONS.testSupport,
