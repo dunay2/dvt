@@ -1,4 +1,5 @@
 const test = require('node:test');
+const crypto = require('node:crypto');
 const {
   assert,
   assertArchitectureDesignIdempotentReplayMatches,
@@ -1253,6 +1254,11 @@ test('architecture execution evidence writer persists proof before its audit row
 });
 
 test('architecture evidence rejects forged CI origin and source hash drift', async () => {
+  const committedSourceBytes = Buffer.from('committed architecture evidence source\n', 'utf8');
+  const committedSourceSha256 = crypto
+    .createHash('sha256')
+    .update(committedSourceBytes)
+    .digest('hex');
   const command = parseArgs([
     'architecture-evidence',
     'record-execution',
@@ -1275,7 +1281,7 @@ test('architecture evidence rejects forged CI origin and source hash drift', asy
     '--source-path',
     'scripts/planning-db-operate.cjs',
     '--source-content-sha256',
-    'e'.repeat(64),
+    committedSourceSha256,
     '--actor',
     'codex',
   ]);
@@ -1322,8 +1328,23 @@ test('architecture evidence rejects forged CI origin and source hash drift', asy
       json: async () => githubResponses.get(url) || {},
     }),
     repositorySlug: 'dunay2/dvt',
+    readGitFileAtCommit: () => committedSourceBytes,
   });
   assert.equal(verified, command);
+
+  await assert.rejects(
+    assertArchitectureEvidenceOriginAuthenticity(command, {
+      currentGitSha: 'a'.repeat(40),
+      fetch: async (url) => ({
+        ok: true,
+        status: 200,
+        json: async () => githubResponses.get(url),
+      }),
+      repositorySlug: 'dunay2/dvt',
+      readGitFileAtCommit: () => Buffer.from('different committed bytes\n', 'utf8'),
+    }),
+    /ARCH-EVIDENCE-CI-ORIGIN-UNVERIFIED.*source bytes at the proven commit/u
+  );
 
   const failedJobResponses = new Map(githubResponses);
   failedJobResponses.set('https://api.github.com/repos/dunay2/dvt/actions/jobs/5678', {
