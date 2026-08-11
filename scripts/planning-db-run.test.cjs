@@ -36,7 +36,7 @@ test('planning DB defaults to a Docker-compatible workspace directory on Linux',
 
   assert.equal(
     resolveDefaultDataDir('linux', linuxRepoRoot),
-    path.join(linuxRepoRoot, 'planning-db', 'postgres-data')
+    path.posix.join(linuxRepoRoot, 'planning-db', 'postgres-data')
   );
 });
 
