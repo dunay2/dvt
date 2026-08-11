@@ -10,7 +10,9 @@ const {
   planArchitectureContractRecordOperation,
   planArchitecturePortRecordOperation,
   planArchitectureStorageIoRecordOperation,
+  planArchitectureTestRetireOperation,
   planArchitectureTestRecordOperation,
+  planArchitectureEvidenceRetireOperation,
   planArchitectureEvidenceRecordOperation,
   planArchitectureObservabilityRecordOperation,
   planArchitectureRelationRecordOperation,
@@ -18,7 +20,11 @@ const {
   writePlannedArchitecturePortRecordOperation,
   writePlannedArchitectureStorageIoRecordOperation,
   writePlannedArchitectureEvidenceRecordOperation,
+  writePlannedArchitectureEvidenceRetireOperation,
+  writePlannedArchitectureTestRetireOperation,
   writePlannedArchitectureDesignTransitionOperation,
+  planFeatureMechanizationRailRetireOperation,
+  writePlannedFeatureMechanizationRailRetireOperation,
 } = require('./helpers.cjs');
 
 test('planArchitectureDesignCreateOperation emits design scope and audit rows', () => {
@@ -853,6 +859,203 @@ test('architecture test evidence planner emits component_test and audit rows', (
   assert.equal(planned.testEvidence.required, true);
   assert.equal(planned.audit.operationType, 'architecture_test_record');
   assert.equal(planned.audit.designId, command.designId);
+});
+
+test('architecture test and execution retirement require exact may-delete scope', () => {
+  const now = new Date('2026-08-11T13:00:00.000Z');
+  const shared = [
+    '--design',
+    'API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811',
+    '--reason',
+    'Independent QA proved the fact is stale current authority.',
+    '--source-ref',
+    'scripts/planning-db-operate.cjs',
+    '--source-content-sha256',
+    'e'.repeat(64),
+    '--actor',
+    'codex',
+  ];
+  const testCommand = parseArgs([
+    'architecture-evidence',
+    'retire-test',
+    '--test',
+    'TEST-SYS-API-TESTS-INFRASTRUCTURE-3',
+    '--component',
+    'SYS-API-TESTS-INFRASTRUCTURE',
+    ...shared,
+  ]);
+  const testPlan = planArchitectureTestRetireOperation({
+    command: testCommand,
+    design: { design_id: testCommand.designId, status: 'review' },
+    designScopes: [
+      {
+        subject_kind: 'test',
+        subject_id: testCommand.testId,
+        scope_kind: 'may_delete',
+      },
+      {
+        subject_kind: 'component',
+        subject_id: testCommand.componentId,
+        scope_kind: 'may_reference',
+      },
+    ],
+    existingTest: {
+      test_id: testCommand.testId,
+      component_id: testCommand.componentId,
+      test_path: 'apps/api/test/infrastructure/planner/ManifestArtifactResolver.test.ts',
+    },
+    operationId: 'op-architecture-test-retire',
+    now,
+  });
+  assert.equal(testPlan.retirement.testId, testCommand.testId);
+  assert.equal(testPlan.audit.operationType, 'architecture_test_retire');
+
+  const executionCommand = parseArgs([
+    'architecture-evidence',
+    'retire-execution',
+    '--evidence',
+    'EVIDENCE-API-H2-4-LIFECYCLE-LOCAL',
+    ...shared,
+  ]);
+  const executionPlan = planArchitectureEvidenceRetireOperation({
+    command: executionCommand,
+    design: { design_id: executionCommand.designId, status: 'review' },
+    designScopes: [
+      {
+        subject_kind: 'evidence',
+        subject_id: executionCommand.evidenceId,
+        scope_kind: 'may_delete',
+      },
+    ],
+    existingEvidence: { evidence_id: executionCommand.evidenceId },
+    operationId: 'op-architecture-evidence-retire',
+    now,
+  });
+  assert.equal(executionPlan.retirement.evidenceId, executionCommand.evidenceId);
+  assert.equal(executionPlan.audit.operationType, 'architecture_evidence_retire');
+
+  assert.throws(
+    () =>
+      planArchitectureEvidenceRetireOperation({
+        command: executionCommand,
+        design: { design_id: executionCommand.designId, status: 'review' },
+        designScopes: [],
+        existingEvidence: { evidence_id: executionCommand.evidenceId },
+        operationId: 'op-missing-scope',
+        now,
+      }),
+    /ARCH-EVIDENCE-RETIRE-DESIGN-SCOPE-MISSING/
+  );
+});
+
+test('retirement writers delete exact rows before recording architecture audit', async () => {
+  const queries = [];
+  const client = {
+    async query(sql, params) {
+      queries.push({ sql, params });
+      return { rows: [], rowCount: 1 };
+    },
+  };
+  const audit = {
+    operationId: 'op-retire',
+    idempotencyKey: 'retire-idempotency',
+    operationType: 'architecture_test_retire',
+    actor: 'codex',
+    designId: 'API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811',
+    sourceRef: 'scripts/planning-db-operate.cjs',
+    sourceContentSha256: 'e'.repeat(64),
+    expectedRevision: null,
+    previousRevision: 0,
+    resultingRevision: 0,
+    payload: {},
+    createdAt: '2026-08-11T13:00:00.000Z',
+  };
+  await writePlannedArchitectureTestRetireOperation(client, {
+    retirement: { testId: 'TEST-SYS-API-TESTS-INFRASTRUCTURE-3' },
+    audit,
+  });
+  await writePlannedArchitectureEvidenceRetireOperation(client, {
+    retirement: { evidenceId: 'EVIDENCE-API-H2-4-LIFECYCLE-LOCAL' },
+    audit: { ...audit, operationType: 'architecture_evidence_retire' },
+  });
+
+  assert.ok(
+    queries.some(
+      ({ sql, params }) =>
+        sql.includes('delete from architecture.component_test') &&
+        params[0] === 'TEST-SYS-API-TESTS-INFRASTRUCTURE-3'
+    )
+  );
+  assert.ok(
+    queries.some(
+      ({ sql, params }) =>
+        sql.includes('delete from architecture.evidence') &&
+        params[0] === 'EVIDENCE-API-H2-4-LIFECYCLE-LOCAL'
+    )
+  );
+  assert.equal(
+    queries.filter(({ sql }) => sql.includes('architecture.design_operations')).length,
+    2
+  );
+});
+
+test('feature mechanization retirement uses design scope, CAS, and audited deletion', async () => {
+  const command = parseArgs([
+    'feature-mechanization',
+    'retire',
+    '--design',
+    'API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811',
+    '--feature',
+    'API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE',
+    '--rail',
+    'ImportPlanningGovernanceQueryStore',
+    '--type',
+    'command',
+    '--expected-revision',
+    '1',
+    '--reason',
+    'Reuse RestorePlanningDbCanonicalArchitectureState.',
+    '--source-ref',
+    'scripts/planning-db-import.cjs',
+    '--source-content-sha256',
+    'e'.repeat(64),
+    '--actor',
+    'codex',
+  ]);
+  const planned = planFeatureMechanizationRailRetireOperation({
+    command,
+    design: { design_id: command.designId, status: 'review' },
+    designScopes: [
+      {
+        subject_kind: 'decision',
+        subject_id: command.railId,
+        scope_kind: 'may_delete',
+      },
+    ],
+    existingRail: { rail_id: command.railId, revision: 1 },
+    operationId: 'op-feature-rail-retire',
+    now: new Date('2026-08-11T13:00:00.000Z'),
+  });
+  const queries = [];
+  await writePlannedFeatureMechanizationRailRetireOperation(
+    {
+      async query(sql, params) {
+        queries.push({ sql, params });
+        return { rows: [], rowCount: 1 };
+      },
+    },
+    planned
+  );
+
+  assert.equal(planned.retirement.railId, command.railId);
+  assert.ok(
+    queries.some(
+      ({ sql, params }) =>
+        sql.includes('delete from planning_query_store.feature_mechanization_local_rails') &&
+        params[0] === command.railId
+    )
+  );
+  assert.ok(queries.some(({ sql }) => sql.includes('feature_mechanization_local_operations')));
 });
 
 test('architecture observability evidence planner emits component_observability and audit rows', () => {

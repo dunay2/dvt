@@ -507,6 +507,76 @@ test('parseArgs builds an architecture test evidence record command', () => {
   assert.equal(command.required, true);
 });
 
+test('parseArgs builds scoped retirement commands for stale architecture evidence', () => {
+  const shared = [
+    '--design',
+    'API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811',
+    '--reason',
+    'Independent QA proved the current authority points to a retired source.',
+    '--source-ref',
+    'scripts/planning-db-operate.cjs',
+    '--source-content-sha256',
+    'e'.repeat(64),
+    '--actor',
+    'codex',
+  ];
+  const testCommand = parseArgs([
+    'architecture-evidence',
+    'retire-test',
+    '--test',
+    'TEST-SYS-API-TESTS-INFRASTRUCTURE-3',
+    '--component',
+    'SYS-API-TESTS-INFRASTRUCTURE',
+    ...shared,
+  ]);
+  const executionCommand = parseArgs([
+    'architecture-evidence',
+    'retire-execution',
+    '--evidence',
+    'EVIDENCE-API-H2-4-LIFECYCLE-LOCAL',
+    ...shared,
+  ]);
+
+  assert.equal(testCommand.kind, 'architecture_test_retire');
+  assert.equal(testCommand.testId, 'TEST-SYS-API-TESTS-INFRASTRUCTURE-3');
+  assert.equal(testCommand.componentId, 'SYS-API-TESTS-INFRASTRUCTURE');
+  assert.equal(executionCommand.kind, 'architecture_evidence_retire');
+  assert.equal(executionCommand.evidenceId, 'EVIDENCE-API-H2-4-LIFECYCLE-LOCAL');
+  assert.match(executionCommand.reason, /Independent QA/);
+});
+
+test('parseArgs builds an audited feature rail retirement command', () => {
+  const command = parseArgs([
+    'feature-mechanization',
+    'retire',
+    '--design',
+    'API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811',
+    '--feature',
+    'API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE',
+    '--rail',
+    'ImportPlanningGovernanceQueryStore',
+    '--type',
+    'command',
+    '--expected-revision',
+    '1',
+    '--reason',
+    'ADR-0063 owns the same intent under RestorePlanningDbCanonicalArchitectureState.',
+    '--source-ref',
+    'scripts/planning-db-import.cjs',
+    '--source-content-sha256',
+    'e'.repeat(64),
+    '--actor',
+    'codex',
+  ]);
+
+  assert.equal(command.kind, 'feature_mechanization_rail_retire');
+  assert.equal(
+    command.railId,
+    'local#API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE#command#importplanninggovernancequerystore'
+  );
+  assert.equal(command.expectedRevision, 1);
+});
+
 test('parseArgs builds an architecture observability evidence record command', () => {
   const command = parseArgs([
     'architecture-evidence',
