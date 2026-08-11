@@ -742,6 +742,14 @@ function switchClauseIsStaticallyReachable(clause, containingStatement) {
 }
 
 function isStaticallyReachable(node, boundary) {
+  let followsSwitchPath = false;
+  for (let ancestor = node.parent; ancestor && ancestor !== boundary; ancestor = ancestor.parent) {
+    if (ts.isCaseClause(ancestor) || ts.isDefaultClause(ancestor)) {
+      followsSwitchPath = true;
+      break;
+    }
+  }
+
   for (let current = node; current && current !== boundary; current = current.parent) {
     const parent = current.parent;
     if (!parent) break;
@@ -783,7 +791,11 @@ function isStaticallyReachable(node, boundary) {
         if (
           parent.statements
             .slice(0, statementIndex)
-            .some((statement) => statementAlwaysTerminates(statement))
+            .some((statement) =>
+              followsSwitchPath
+                ? statementAlwaysExitsSwitchPath(statement)
+                : statementAlwaysTerminates(statement)
+            )
         ) {
           return false;
         }
