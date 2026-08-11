@@ -389,9 +389,15 @@ const operationHelp = Object.freeze({
     ],
   },
   'architecture-evidence': {
-    operations: ['record-test', 'record-observability', 'record-execution'],
+    operations: [
+      'record-test',
+      'retire-test',
+      'record-observability',
+      'record-execution',
+      'retire-execution',
+    ],
     usage:
-      'pnpm planning:db:operate architecture-evidence <record-test|record-observability|record-execution> --design <DESIGN-ID> --actor <actor>',
+      'pnpm planning:db:operate architecture-evidence <record-test|retire-test|record-observability|record-execution|retire-execution> --design <DESIGN-ID> --actor <actor>',
     details: [
       'RecordArchitectureTestEvidence attaches required test evidence to a scoped architecture component.',
       'Requires --test-path, --test-kind, --coverage-level, --validation-command, --source-ref, and --source-content-sha256.',
@@ -399,6 +405,7 @@ const operationHelp = Object.freeze({
       'Requires --observability, --signal-name, --signal-kind, --status, --source-ref, and --source-content-sha256.',
       'RecordArchitectureEvidenceExecution records a local or CI execution against an exact must-prove subject.',
       'Requires --evidence, --subject-kind, --subject, --evidence-kind, --origin, --result, --source-ref, and --source-content-sha256.',
+      'RetireArchitectureTestEvidence and RetireArchitectureEvidenceExecution remove stale current authority under exact may-delete design scope and preserve an audited operation.',
     ],
   },
   'docs-disposition': {
@@ -411,12 +418,13 @@ const operationHelp = Object.freeze({
     ],
   },
   'feature-mechanization': {
-    operations: ['record'],
+    operations: ['record', 'retire'],
     usage:
-      'pnpm planning:db:operate feature-mechanization record --feature <FEATURE-ID> --rail <RailName> --type <command|query> --actor <actor>',
+      'pnpm planning:db:operate feature-mechanization <record|retire> --feature <FEATURE-ID> --rail <RailName> --type <command|query> --actor <actor>',
     details: [
       'RecordFeatureMechanizationRail stores a database command/query rail declaration and a valid feature-mechanization manifest projection without editing Markdown manifests.',
       'Requires --ddd-owner, --implementation-plan, --source-ref, --source-content-sha256, governance/doc/surface/validation fields, and at least one --implementation-ref in path#symbol form.',
+      'RetireFeatureMechanizationRail deletes one stale local rail under exact may-delete design scope, expected revision, and audited provenance.',
     ],
   },
   'fowler-analysis': {
@@ -1578,8 +1586,10 @@ function defaultIdempotencyKey(command) {
     command.kind === 'architecture_storage_io_record' ||
     command.kind === 'architecture_fitness_scan' ||
     command.kind === 'architecture_test_record' ||
+    command.kind === 'architecture_test_retire' ||
     command.kind === 'architecture_observability_record' ||
-    command.kind === 'architecture_evidence_record'
+    command.kind === 'architecture_evidence_record' ||
+    command.kind === 'architecture_evidence_retire'
   ) {
     return [
       command.kind,
@@ -1616,7 +1626,10 @@ function defaultIdempotencyKey(command) {
     ].join(':');
   }
 
-  if (command.kind === 'feature_mechanization_rail_record') {
+  if (
+    command.kind === 'feature_mechanization_rail_record' ||
+    command.kind === 'feature_mechanization_rail_retire'
+  ) {
     return [
       command.kind,
       command.actor || 'anonymous',
@@ -2642,6 +2655,44 @@ function validateArchitectureEvidenceResultState(value) {
 function parseArchitectureEvidenceCommand(action, args) {
   const options = parseFlagOptions(args);
 
+  if (action === 'retire-test') {
+    const command = {
+      kind: 'architecture_test_retire',
+      designId: validateArchitectureDesignId(requireOption(options, 'design')),
+      testId: validateArchitectureTestId(requireOption(options, 'test')),
+      componentId: validateArchitectureComponentId(
+        requireOption(options, 'component'),
+        'component'
+      ),
+      reason: requireOption(options, 'reason'),
+      sourceRef: requireOption(options, 'sourceRef'),
+      sourceContentSha256: validateSha256(
+        requireOption(options, 'sourceContentSha256'),
+        'source-content-sha256'
+      ),
+      actor: requireOption(options, 'actor'),
+      idempotencyKey: options.idempotencyKey,
+    };
+    return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
+  }
+
+  if (action === 'retire-execution') {
+    const command = {
+      kind: 'architecture_evidence_retire',
+      designId: validateArchitectureDesignId(requireOption(options, 'design')),
+      evidenceId: validateArchitectureEvidenceId(requireOption(options, 'evidence')),
+      reason: requireOption(options, 'reason'),
+      sourceRef: requireOption(options, 'sourceRef'),
+      sourceContentSha256: validateSha256(
+        requireOption(options, 'sourceContentSha256'),
+        'source-content-sha256'
+      ),
+      actor: requireOption(options, 'actor'),
+      idempotencyKey: options.idempotencyKey,
+    };
+    return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
+  }
+
   if (action === 'record-execution') {
     const command = {
       kind: 'architecture_evidence_record',
@@ -2693,7 +2744,7 @@ function parseArchitectureEvidenceCommand(action, args) {
 
   if (action !== 'record-test') {
     throw new Error(
-      `Unknown architecture-evidence operation "${action}". Expected record-test, record-observability, or record-execution.`
+      `Unknown architecture-evidence operation "${action}". Expected record-test, retire-test, record-observability, record-execution, or retire-execution.`
     );
   }
 
@@ -2837,15 +2888,43 @@ function validateFeatureMechanizationRecordCommand(command) {
 }
 
 function parseFeatureMechanizationCommand(action, args) {
-  if (action !== 'record') {
-    throw new Error(`Unknown feature-mechanization operation "${action}". Expected record.`);
-  }
-
   const options = parseFlagOptions(args);
   const featureId = validateFeatureMechanizationFeatureId(requireOption(options, 'feature'));
   const railName = requireOption(options, 'rail');
   const railType = validateFeatureMechanizationRailType(requireOption(options, 'type'));
   const normalizedRailName = normalizeFeatureMechanizationRailName(railName);
+
+  if (action === 'retire') {
+    const command = {
+      kind: 'feature_mechanization_rail_retire',
+      designId: validateArchitectureDesignId(requireOption(options, 'design')),
+      featureId,
+      railName,
+      normalizedRailName,
+      railId: featureMechanizationRailId({ featureId, railType, normalizedRailName }),
+      railType,
+      expectedRevision: parseIntegerOption(
+        requireOption(options, 'expectedRevision'),
+        'expected-revision'
+      ),
+      reason: requireOption(options, 'reason'),
+      sourceRef: requireOption(options, 'sourceRef'),
+      sourceContentSha256: validateSha256(
+        requireOption(options, 'sourceContentSha256'),
+        'source-content-sha256'
+      ),
+      actor: requireOption(options, 'actor'),
+      idempotencyKey: options.idempotencyKey,
+    };
+    return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
+  }
+
+  if (action !== 'record') {
+    throw new Error(
+      `Unknown feature-mechanization operation "${action}". Expected record or retire.`
+    );
+  }
+
   const command = {
     kind: 'feature_mechanization_rail_record',
     featureId,
@@ -3068,7 +3147,7 @@ function parseArgs(args = process.argv.slice(2)) {
   if (resource === 'architecture-evidence') {
     if (!action) {
       throw new Error(
-        'Missing architecture-evidence operation. Expected record-test, record-observability, or record-execution.'
+        'Missing architecture-evidence operation. Expected record-test, retire-test, record-observability, record-execution, or retire-execution.'
       );
     }
 
@@ -3884,6 +3963,45 @@ function planArchitectureTestRecordOperation({
   return { testEvidence, audit };
 }
 
+function planArchitectureTestRetireOperation({
+  command,
+  design,
+  designScopes,
+  existingTest,
+  operationId,
+  now,
+}) {
+  assertArchitectureDesignMayRecord(design, command);
+  assertArchitectureDesignScope(
+    designScopes,
+    'test',
+    command.testId,
+    ['may_delete'],
+    'ARCH-TEST-EVIDENCE-RETIRE-DESIGN-SCOPE-MISSING'
+  );
+  assertArchitectureDesignScope(
+    designScopes,
+    'component',
+    command.componentId,
+    ['may_reference'],
+    'ARCH-TEST-EVIDENCE-RETIRE-COMPONENT-SCOPE-MISSING'
+  );
+  if (!existingTest) {
+    throw new Error(`ARCH-TEST-EVIDENCE-RETIRE-NOT-FOUND: ${command.testId}`);
+  }
+  const existingComponentId = existingTest.component_id ?? existingTest.componentId;
+  if (existingComponentId !== command.componentId) {
+    throw new Error(
+      `ARCH-TEST-EVIDENCE-RETIRE-COMPONENT-MISMATCH: ${command.testId} belongs to ${existingComponentId}.`
+    );
+  }
+
+  return {
+    retirement: { testId: command.testId },
+    audit: architectureScopedAudit({ command, operationId, now }),
+  };
+}
+
 function planArchitectureObservabilityRecordOperation({
   command,
   design,
@@ -3964,6 +4082,32 @@ function planArchitectureEvidenceRecordOperation({
   const audit = architectureScopedAudit({ command, operationId, now });
 
   return { evidence, audit };
+}
+
+function planArchitectureEvidenceRetireOperation({
+  command,
+  design,
+  designScopes,
+  existingEvidence,
+  operationId,
+  now,
+}) {
+  assertArchitectureDesignMayRecord(design, command);
+  assertArchitectureDesignScope(
+    designScopes,
+    'evidence',
+    command.evidenceId,
+    ['may_delete'],
+    'ARCH-EVIDENCE-RETIRE-DESIGN-SCOPE-MISSING'
+  );
+  if (!existingEvidence) {
+    throw new Error(`ARCH-EVIDENCE-RETIRE-NOT-FOUND: ${command.evidenceId}`);
+  }
+
+  return {
+    retirement: { evidenceId: command.evidenceId },
+    audit: architectureScopedAudit({ command, operationId, now }),
+  };
 }
 
 function planComponentCreateOperation({
@@ -4715,6 +4859,52 @@ function planFeatureMechanizationRailRecordOperation({ command, existingRail, op
   return { rail, audit };
 }
 
+function planFeatureMechanizationRailRetireOperation({
+  command,
+  design,
+  designScopes,
+  existingRail,
+  operationId,
+  now,
+}) {
+  assertArchitectureDesignMayRecord(design, command);
+  assertArchitectureDesignScope(
+    designScopes,
+    'decision',
+    command.railId,
+    ['may_delete'],
+    'FEATURE-MECHANIZATION-RETIRE-DESIGN-SCOPE-MISSING'
+  );
+  const previous = normalizeFeatureMechanizationRail(existingRail);
+  if (!previous || previous.railId !== command.railId) {
+    throw new Error(`FEATURE-MECHANIZATION-RETIRE-NOT-FOUND: ${command.railId}`);
+  }
+  if (previous.revision !== command.expectedRevision) {
+    throw new Error(
+      `FEATURE-MECHANIZATION-RETIRE-REVISION-CONFLICT: expected ${command.expectedRevision}, found ${previous.revision}.`
+    );
+  }
+
+  const createdAt = toIso(now);
+  return {
+    retirement: { railId: command.railId, expectedRevision: command.expectedRevision },
+    audit: {
+      operationId,
+      idempotencyKey: command.idempotencyKey,
+      operationType: command.kind,
+      actor: command.actor,
+      railId: command.railId,
+      sourcePath: command.sourceRef,
+      sourceContentSha256: command.sourceContentSha256,
+      expectedRevision: command.expectedRevision,
+      previousRevision: previous.revision,
+      resultingRevision: previous.revision + 1,
+      payload: operationPayload(command),
+      createdAt,
+    },
+  };
+}
+
 function fowlerAnalysisAudit({ command, operationId, now }) {
   return {
     operationId,
@@ -5097,6 +5287,17 @@ async function readArchitectureTest(client, testId) {
      from architecture.component_test
      where test_id = $1`,
     [testId]
+  );
+
+  return result.rows[0] || null;
+}
+
+async function readArchitectureEvidence(client, evidenceId) {
+  const result = await client.query(
+    `select *
+     from architecture.evidence
+     where evidence_id = $1`,
+    [evidenceId]
   );
 
   return result.rows[0] || null;
@@ -5670,6 +5871,20 @@ async function writePlannedArchitectureTestRecordOperation(client, planned) {
   await writeArchitectureScopedAudit(client, planned.audit);
 }
 
+async function writePlannedArchitectureTestRetireOperation(client, planned) {
+  const result = await client.query(
+    `delete from architecture.component_test
+     where test_id = $1`,
+    [planned.retirement.testId]
+  );
+  if (result.rowCount !== 1) {
+    throw new Error(
+      `ARCH-TEST-EVIDENCE-RETIRE-CONFLICT: ${planned.retirement.testId} was not deleted.`
+    );
+  }
+  await writeArchitectureScopedAudit(client, planned.audit);
+}
+
 async function writePlannedArchitectureObservabilityRecordOperation(client, planned) {
   await client.query(
     `insert into architecture.component_observability
@@ -5714,6 +5929,20 @@ async function writePlannedArchitectureEvidenceRecordOperation(client, planned) 
     ]
   );
 
+  await writeArchitectureScopedAudit(client, planned.audit);
+}
+
+async function writePlannedArchitectureEvidenceRetireOperation(client, planned) {
+  const result = await client.query(
+    `delete from architecture.evidence
+     where evidence_id = $1`,
+    [planned.retirement.evidenceId]
+  );
+  if (result.rowCount !== 1) {
+    throw new Error(
+      `ARCH-EVIDENCE-RETIRE-CONFLICT: ${planned.retirement.evidenceId} was not deleted.`
+    );
+  }
   await writeArchitectureScopedAudit(client, planned.audit);
 }
 
@@ -6091,6 +6320,42 @@ async function writePlannedFeatureMechanizationRailRecordOperation(client, plann
       planned.rail.updatedAt,
     ]
   );
+
+  await client.query(
+    `insert into ${schemaName}.feature_mechanization_local_operations
+      (operation_id, idempotency_key, operation_type, actor, rail_id, source_path,
+       source_content_sha256, expected_revision, previous_revision, resulting_revision,
+       payload, created_at)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb, $12)`,
+    [
+      planned.audit.operationId,
+      planned.audit.idempotencyKey,
+      planned.audit.operationType,
+      planned.audit.actor,
+      planned.audit.railId,
+      planned.audit.sourcePath,
+      planned.audit.sourceContentSha256,
+      planned.audit.expectedRevision,
+      planned.audit.previousRevision,
+      planned.audit.resultingRevision,
+      toJson(planned.audit.payload),
+      planned.audit.createdAt,
+    ]
+  );
+}
+
+async function writePlannedFeatureMechanizationRailRetireOperation(client, planned) {
+  const result = await client.query(
+    `delete from ${schemaName}.feature_mechanization_local_rails
+     where rail_id = $1
+       and revision = $2`,
+    [planned.retirement.railId, planned.retirement.expectedRevision]
+  );
+  if (result.rowCount !== 1) {
+    throw new Error(
+      `FEATURE-MECHANIZATION-RETIRE-CONFLICT: ${planned.retirement.railId} no longer has revision ${planned.retirement.expectedRevision}.`
+    );
+  }
 
   await client.query(
     `insert into ${schemaName}.feature_mechanization_local_operations
@@ -6780,6 +7045,45 @@ async function applyArchitectureTestRecordOperation(command, options = {}) {
   }
 }
 
+async function applyArchitectureTestRetireOperation(command, options = {}) {
+  const client =
+    options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
+  const ownsClient = !options.client;
+  if (ownsClient) await client.connect();
+
+  try {
+    await assertPlanningDbCurrentSchemaReady(client);
+    await client.query('begin');
+    const existing = await readExistingArchitectureDesignOperation(client, command.idempotencyKey);
+    if (existing) {
+      assertArchitectureScopedOperationIdempotentReplayMatches(existing, command);
+      await client.query('commit');
+      return { idempotent: true, audit: existing };
+    }
+    const [design, designScopes, existingTest] = await Promise.all([
+      readArchitectureDesign(client, command.designId),
+      readArchitectureDesignScopes(client, command.designId),
+      readArchitectureTest(client, command.testId),
+    ]);
+    const planned = planArchitectureTestRetireOperation({
+      command,
+      design,
+      designScopes,
+      existingTest,
+      operationId: options.operationId || crypto.randomUUID(),
+      now: options.now || new Date(),
+    });
+    await writePlannedArchitectureTestRetireOperation(client, planned);
+    await client.query('commit');
+    return { idempotent: false, ...planned };
+  } catch (error) {
+    await client.query('rollback');
+    throw error;
+  } finally {
+    if (ownsClient) await client.end();
+  }
+}
+
 async function applyArchitectureObservabilityRecordOperation(command, options = {}) {
   const client =
     options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
@@ -6870,6 +7174,45 @@ async function applyArchitectureEvidenceRecordOperation(command, options = {}) {
     if (ownsClient) {
       await client.end();
     }
+  }
+}
+
+async function applyArchitectureEvidenceRetireOperation(command, options = {}) {
+  const client =
+    options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
+  const ownsClient = !options.client;
+  if (ownsClient) await client.connect();
+
+  try {
+    await assertPlanningDbCurrentSchemaReady(client);
+    await client.query('begin');
+    const existing = await readExistingArchitectureDesignOperation(client, command.idempotencyKey);
+    if (existing) {
+      assertArchitectureScopedOperationIdempotentReplayMatches(existing, command);
+      await client.query('commit');
+      return { idempotent: true, audit: existing };
+    }
+    const [design, designScopes, existingEvidence] = await Promise.all([
+      readArchitectureDesign(client, command.designId),
+      readArchitectureDesignScopes(client, command.designId),
+      readArchitectureEvidence(client, command.evidenceId),
+    ]);
+    const planned = planArchitectureEvidenceRetireOperation({
+      command,
+      design,
+      designScopes,
+      existingEvidence,
+      operationId: options.operationId || crypto.randomUUID(),
+      now: options.now || new Date(),
+    });
+    await writePlannedArchitectureEvidenceRetireOperation(client, planned);
+    await client.query('commit');
+    return { idempotent: false, ...planned };
+  } catch (error) {
+    await client.query('rollback');
+    throw error;
+  } finally {
+    if (ownsClient) await client.end();
   }
 }
 
@@ -7103,6 +7446,48 @@ async function applyFeatureMechanizationRailRecordOperation(command, options = {
   }
 }
 
+async function applyFeatureMechanizationRailRetireOperation(command, options = {}) {
+  const client =
+    options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
+  const ownsClient = !options.client;
+  if (ownsClient) await client.connect();
+
+  try {
+    await assertPlanningDbCurrentSchemaReady(client);
+    await client.query('begin');
+    const existing = await readExistingFeatureMechanizationOperation(
+      client,
+      command.idempotencyKey
+    );
+    if (existing) {
+      assertFeatureMechanizationRailIdempotentReplayMatches(existing, command);
+      await client.query('commit');
+      return { idempotent: true, audit: existing };
+    }
+    const [design, designScopes, existingRail] = await Promise.all([
+      readArchitectureDesign(client, command.designId),
+      readArchitectureDesignScopes(client, command.designId),
+      readLocalFeatureMechanizationRail(client, command.railId, true),
+    ]);
+    const planned = planFeatureMechanizationRailRetireOperation({
+      command,
+      design,
+      designScopes,
+      existingRail,
+      operationId: options.operationId || crypto.randomUUID(),
+      now: options.now || new Date(),
+    });
+    await writePlannedFeatureMechanizationRailRetireOperation(client, planned);
+    await client.query('commit');
+    return { idempotent: false, ...planned };
+  } catch (error) {
+    await client.query('rollback');
+    throw error;
+  } finally {
+    if (ownsClient) await client.end();
+  }
+}
+
 async function applyFowlerAnalysisOperation(command, options = {}) {
   const client =
     options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
@@ -7276,6 +7661,13 @@ function printOperationResult(result) {
     return;
   }
 
+  if (result.retirement) {
+    console.log(
+      `[planning:db:operate] ${result.audit.operationType} retired=${result.retirement.testId || result.retirement.evidenceId || result.retirement.railId}`
+    );
+    return;
+  }
+
   if (result.definition) {
     console.log(
       `[planning:db:operate] ${result.audit.operationType} ${result.definition.componentId} revision=${result.audit.resultingRevision}`
@@ -7365,29 +7757,41 @@ async function main() {
                       ? await applyArchitectureFitnessScanOperation(command)
                       : command.kind === 'architecture_test_record'
                         ? await applyArchitectureTestRecordOperation(command)
-                        : command.kind === 'architecture_observability_record'
-                          ? await applyArchitectureObservabilityRecordOperation(command)
-                          : command.kind === 'architecture_evidence_record'
-                            ? await applyArchitectureEvidenceRecordOperation(command)
-                            : command.kind === 'component_create'
-                              ? await applyComponentCreateOperation(command)
-                              : command.kind === 'component_revise'
-                                ? await applyComponentReviseOperation(command)
-                                : command.kind === 'component_reparent'
-                                  ? await applyComponentReparentOperation(command)
-                                  : command.kind === 'db_surface_upsert'
-                                    ? await applyDbSurfaceUpsertOperation(command)
-                                    : command.kind === 'feature_mechanization_rail_record'
-                                      ? await applyFeatureMechanizationRailRecordOperation(command)
-                                      : command.kind === 'governance_refresh_run_record'
-                                        ? await applyGovernanceRefreshRunRecordOperation(command)
-                                        : command.kind.startsWith('fowler_analysis_')
-                                          ? await applyFowlerAnalysisOperation(command)
-                                          : (() => {
-                                              throw new Error(
-                                                `Unsupported planning DB operation "${command.kind}".`
-                                              );
-                                            })();
+                        : command.kind === 'architecture_test_retire'
+                          ? await applyArchitectureTestRetireOperation(command)
+                          : command.kind === 'architecture_observability_record'
+                            ? await applyArchitectureObservabilityRecordOperation(command)
+                            : command.kind === 'architecture_evidence_record'
+                              ? await applyArchitectureEvidenceRecordOperation(command)
+                              : command.kind === 'architecture_evidence_retire'
+                                ? await applyArchitectureEvidenceRetireOperation(command)
+                                : command.kind === 'component_create'
+                                  ? await applyComponentCreateOperation(command)
+                                  : command.kind === 'component_revise'
+                                    ? await applyComponentReviseOperation(command)
+                                    : command.kind === 'component_reparent'
+                                      ? await applyComponentReparentOperation(command)
+                                      : command.kind === 'db_surface_upsert'
+                                        ? await applyDbSurfaceUpsertOperation(command)
+                                        : command.kind === 'feature_mechanization_rail_record'
+                                          ? await applyFeatureMechanizationRailRecordOperation(
+                                              command
+                                            )
+                                          : command.kind === 'feature_mechanization_rail_retire'
+                                            ? await applyFeatureMechanizationRailRetireOperation(
+                                                command
+                                              )
+                                            : command.kind === 'governance_refresh_run_record'
+                                              ? await applyGovernanceRefreshRunRecordOperation(
+                                                  command
+                                                )
+                                              : command.kind.startsWith('fowler_analysis_')
+                                                ? await applyFowlerAnalysisOperation(command)
+                                                : (() => {
+                                                    throw new Error(
+                                                      `Unsupported planning DB operation "${command.kind}".`
+                                                    );
+                                                  })();
   printOperationResult(result);
 }
 
@@ -7407,8 +7811,10 @@ module.exports = {
   applyArchitecturePortRecordOperation,
   applyArchitectureStorageIoRecordOperation,
   applyArchitectureTestRecordOperation,
+  applyArchitectureTestRetireOperation,
   applyArchitectureObservabilityRecordOperation,
   applyArchitectureEvidenceRecordOperation,
+  applyArchitectureEvidenceRetireOperation,
   applyArchitectureRelationRecordOperation,
   applyComponentCreateOperation,
   applyComponentReviseOperation,
@@ -7417,6 +7823,7 @@ module.exports = {
   applyDocsResolutionOperation,
   applyFowlerAnalysisOperation,
   applyFeatureMechanizationRailRecordOperation,
+  applyFeatureMechanizationRailRetireOperation,
   applyGovernanceRefreshRunRecordOperation,
   assertArchitectureDesignIdempotentReplayMatches,
   assertArchitectureScopedOperationIdempotentReplayMatches,
@@ -7438,14 +7845,17 @@ module.exports = {
   planArchitecturePortRecordOperation,
   planArchitectureStorageIoRecordOperation,
   planArchitectureTestRecordOperation,
+  planArchitectureTestRetireOperation,
   planArchitectureObservabilityRecordOperation,
   planArchitectureEvidenceRecordOperation,
+  planArchitectureEvidenceRetireOperation,
   planArchitectureRelationRecordOperation,
   planComponentCreateOperation,
   planComponentReviseOperation,
   planComponentReparentOperation,
   planDbSurfaceUpsertOperation,
   planFeatureMechanizationRailRecordOperation,
+  planFeatureMechanizationRailRetireOperation,
   planFowlerAnalysisOperation,
   planGovernanceRefreshRunRecordOperation,
   planDocsResolutionOperation,
@@ -7465,9 +7875,12 @@ module.exports = {
   writePlannedArchitecturePortRecordOperation,
   writePlannedArchitectureStorageIoRecordOperation,
   writePlannedArchitectureTestRecordOperation,
+  writePlannedArchitectureTestRetireOperation,
   writePlannedArchitectureObservabilityRecordOperation,
   writePlannedArchitectureEvidenceRecordOperation,
+  writePlannedArchitectureEvidenceRetireOperation,
   writePlannedFeatureMechanizationRailRecordOperation,
+  writePlannedFeatureMechanizationRailRetireOperation,
   writePlannedFowlerAnalysisOperation,
   writePlannedGovernanceRefreshRunRecordOperation,
 };
