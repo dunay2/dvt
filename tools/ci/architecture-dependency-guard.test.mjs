@@ -1446,37 +1446,31 @@ test('export reachability identifies a production module export used only by tes
 test('current API report classifies every source and exposes cleanup candidates deterministically', async () => {
   const first = await collectApiProductionReachability(process.cwd(), { changedSourceFiles: [] });
   const second = await collectApiProductionReachability(process.cwd(), { changedSourceFiles: [] });
-  const bySource = new Map(
-    first.classifications.map(({ source, classification }) => [source, classification])
-  );
 
   const currentSourceCount = listFilesRecursive(resolve('apps/api/src')).filter((source) =>
     /\.(?:cjs|cts|js|jsx|mjs|mts|ts|tsx)$/u.test(source)
   ).length;
   assert.equal(first.classifications.length, currentSourceCount);
-  assert.equal(
-    bySource.get('apps/api/src/application/services/NoopAdmissionTelemetry.ts'),
-    API_REACHABILITY_CLASSIFICATIONS.testSupport
+  assert.deepEqual(
+    first.classifications.filter(({ classification }) =>
+      [
+        API_REACHABILITY_CLASSIFICATIONS.testSupport,
+        API_REACHABILITY_CLASSIFICATIONS.orphan,
+      ].includes(classification)
+    ),
+    []
   );
   assert.equal(
-    bySource.get('apps/api/src/application/services/NoopDuplicateRunProbe.ts'),
-    API_REACHABILITY_CLASSIFICATIONS.testSupport
-  );
-  assert.equal(
-    bySource.get('apps/api/src/application/services/plannerExecutionPlanBridge.ts'),
-    API_REACHABILITY_CLASSIFICATIONS.orphan
-  );
-  assert.equal(
-    first.exportEvidence.find(({ symbol }) => symbol === 'createWorkflowEngine')?.classification,
-    'test-support-export'
+    first.exportEvidence.find(({ symbol }) => symbol === 'createWorkflowEngine'),
+    undefined
   );
   assert.equal(
     first.exportEvidence.find(
-      ({ source, symbol }) =>
-        source === 'apps/api/src/application/errors/ManifestArtifactResolutionError.ts' &&
-        symbol === 'ManifestArtifactResolutionError'
-    )?.classification,
-    'test-support-export'
+      ({ source }) =>
+        source.includes('ManifestArtifactResolutionError') ||
+        source.includes('ManifestArtifactResolver')
+    ),
+    undefined
   );
   assert.equal(
     first.exportEvidence.find(

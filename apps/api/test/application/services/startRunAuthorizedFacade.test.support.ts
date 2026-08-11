@@ -127,3 +127,9 @@ export function buildStartRunAuthorizedFacade(
     overrides.telemetry
   );
 }
+
+const assertStartRunTelemetryIsRequired = (): void => {
+  // @ts-expect-error StartRun latency telemetry is a mandatory composition dependency.
+  new StartRunAuthorizedFacade({} as never, {} as never, {} as never);
+};
+void assertStartRunTelemetryIsRequired;

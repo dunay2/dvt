@@ -531,3 +531,15 @@ function makeBuildResult(planId: string): PlannerBuildResultV1 {
     }),
   };
 }
+
+const assertPlanCompileTelemetryIsRequired = (): void => {
+  // @ts-expect-error Plan compile telemetry is a mandatory composition dependency.
+  new PlannerBackedStartRunUseCase({
+    planner: {} as never,
+    planStore: {} as never,
+    validator: {} as never,
+    delegate: {} as never,
+    executableSubgraphResolver: {} as never,
+  });
+};
+void assertPlanCompileTelemetryIsRequired;
