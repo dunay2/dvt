@@ -8,6 +8,7 @@
  * @version 1.2.0
  */
 const crypto = require('node:crypto');
+const { spawnSync } = require('node:child_process');
 const { Client } = require('pg');
 
 const { defaultPgUrl } = require('./planning-db-run.cjs');
@@ -405,6 +406,7 @@ const operationHelp = Object.freeze({
       'Requires --observability, --signal-name, --signal-kind, --status, --source-ref, and --source-content-sha256.',
       'RecordArchitectureEvidenceExecution records a local or CI execution against an exact must-prove subject.',
       'Requires --evidence, --subject-kind, --subject, --evidence-kind, --origin, --result, --source-ref, --source-path, and --source-content-sha256.',
+      'ci_execution is post-completion evidence: --source-ref must identify a concrete GitHub Actions job for the canonical repository and current commit, verified through the GitHub API.',
       'RetireArchitectureTestEvidence and RetireArchitectureEvidenceExecution remove stale current authority under exact may-delete design scope and preserve an audited operation.',
     ],
   },
@@ -2619,21 +2621,148 @@ function validateArchitectureEvidenceRecordCommand(command) {
   return command;
 }
 
-function assertArchitectureEvidenceOriginAuthenticity(command, environment = process.env) {
+function normalizeGitHubRepositorySlug(value) {
+  const normalized = String(value || '')
+    .trim()
+    .replace(/\.git$/u, '')
+    .replace(/\/$/u, '');
+  const match =
+    normalized.match(/^([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)$/u) ||
+    normalized.match(/^https:\/\/github\.com\/([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)$/u) ||
+    normalized.match(/^git@github\.com:([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)$/u) ||
+    normalized.match(/^ssh:\/\/git@github\.com\/([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)$/u);
+  if (!match) {
+    throw new Error(`cannot resolve canonical GitHub repository from ${normalized || 'empty'}`);
+  }
+  return match[1];
+}
+
+function readGitValue(args, options = {}) {
+  const result = spawnSync('git', args, {
+    cwd: options.repoRoot || __dirname,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  if (result.error) throw result.error;
+  if (result.status !== 0) {
+    throw new Error(
+      String(result.stderr || result.stdout).trim() || `git ${args.join(' ')} failed`
+    );
+  }
+  return String(result.stdout).trim();
+}
+
+async function readGitHubActionsEvidence(url, options = {}) {
+  const fetchImplementation = options.fetch || globalThis.fetch;
+  if (typeof fetchImplementation !== 'function') {
+    throw new Error('GitHub API fetch is unavailable');
+  }
+  const environment = options.environment || process.env;
+  const token = options.githubToken || environment.GITHUB_TOKEN || environment.GH_TOKEN;
+  const headers = {
+    Accept: 'application/vnd.github+json',
+    'User-Agent': 'dvt-planning-db-evidence-verifier',
+    'X-GitHub-Api-Version': '2022-11-28',
+  };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const response = await fetchImplementation(url, { headers });
+  if (!response?.ok) {
+    throw new Error(`GitHub API ${url} returned HTTP ${response?.status ?? 'unknown'}`);
+  }
+  return response.json();
+}
+
+async function assertArchitectureEvidenceOriginAuthenticity(command, options = {}) {
   if (command.evidenceOrigin !== 'ci_execution') {
     return command;
   }
-  if (
-    environment.GITHUB_ACTIONS !== 'true' ||
-    !/^https:\/\/github\.com\/[^/]+\/[^/]+\/actions\/runs\/\d+(?:\/job\/\d+)?$/u.test(
-      command.sourceRef
+  try {
+    const sourceMatch = command.sourceRef.match(
+      /^https:\/\/github\.com\/([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)\/actions\/runs\/([1-9]\d*)\/job\/([1-9]\d*)$/u
+    );
+    if (!sourceMatch) {
+      throw new Error('source-ref must identify one concrete GitHub Actions job');
+    }
+    if (command.evidenceKind !== 'ci') {
+      throw new Error('ci_execution requires evidence-kind=ci');
+    }
+
+    const sourceRepositorySlug = `${sourceMatch[1]}/${sourceMatch[2]}`;
+    const canonicalRepositorySlug = normalizeGitHubRepositorySlug(
+      options.repositorySlug || readGitValue(['remote', 'get-url', 'origin'], options)
+    );
+    if (sourceRepositorySlug.toLowerCase() !== canonicalRepositorySlug.toLowerCase()) {
+      throw new Error(
+        `source repository ${sourceRepositorySlug} is not canonical repository ${canonicalRepositorySlug}`
+      );
+    }
+
+    const currentGitSha = String(
+      options.currentGitSha || readGitValue(['rev-parse', 'HEAD'], options)
     )
-  ) {
+      .trim()
+      .toLowerCase();
+    if (!/^[a-f0-9]{40}$/u.test(currentGitSha)) {
+      throw new Error(`current commit ${currentGitSha || 'empty'} is not a full Git SHA`);
+    }
+
+    const runId = Number(sourceMatch[3]);
+    const jobId = Number(sourceMatch[4]);
+    const apiRepositorySlug = canonicalRepositorySlug
+      .split('/')
+      .map((segment) => encodeURIComponent(segment))
+      .join('/');
+    const [run, job] = await Promise.all([
+      readGitHubActionsEvidence(
+        `https://api.github.com/repos/${apiRepositorySlug}/actions/runs/${runId}`,
+        options
+      ),
+      readGitHubActionsEvidence(
+        `https://api.github.com/repos/${apiRepositorySlug}/actions/jobs/${jobId}`,
+        options
+      ),
+    ]);
+    if (
+      Number(run.id) !== runId ||
+      String(run.repository?.full_name || '').toLowerCase() !==
+        canonicalRepositorySlug.toLowerCase() ||
+      run.html_url !== `https://github.com/${sourceRepositorySlug}/actions/runs/${runId}`
+    ) {
+      throw new Error('GitHub API run identity does not match source-ref and repository');
+    }
+    if (
+      Number(job.id) !== jobId ||
+      Number(job.run_id) !== runId ||
+      job.html_url !== command.sourceRef ||
+      !normalizeOptionalText(job.name)
+    ) {
+      throw new Error('GitHub API job identity does not match source-ref and run');
+    }
+    if (run.status !== 'completed' || job.status !== 'completed') {
+      throw new Error('GitHub Actions run and job must both be completed');
+    }
+    if (
+      command.resultState === 'pass' &&
+      (run.conclusion !== 'success' || job.conclusion !== 'success')
+    ) {
+      throw new Error('pass evidence requires a successful completed job and run');
+    }
+    if (command.resultState === 'fail' && job.conclusion === 'success') {
+      throw new Error('fail evidence requires a non-successful completed job');
+    }
+    if (
+      String(run.head_sha || '').toLowerCase() !== currentGitSha ||
+      String(job.head_sha || '').toLowerCase() !== currentGitSha
+    ) {
+      throw new Error('GitHub Actions evidence does not prove the current commit');
+    }
+    return command;
+  } catch (error) {
     throw new Error(
-      'ARCH-EVIDENCE-CI-ORIGIN-UNVERIFIED: ci_execution requires a live GitHub Actions environment and run URL.'
+      `ARCH-EVIDENCE-CI-ORIGIN-UNVERIFIED: ${error instanceof Error ? error.message : String(error)}`,
+      { cause: error }
     );
   }
-  return command;
 }
 
 function validateArchitectureTestId(value) {
@@ -7258,12 +7387,19 @@ async function applyArchitectureEvidenceRecordOperation(command, options = {}) {
     options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
   const ownsClient = !options.client;
 
+  await assertArchitectureEvidenceOriginAuthenticity(command, {
+    currentGitSha: options.currentGitSha,
+    environment: options.environment || process.env,
+    fetch: options.fetch,
+    githubToken: options.githubToken,
+    repoRoot: options.repoRoot,
+    repositorySlug: options.repositorySlug,
+  });
   if (ownsClient) {
     await client.connect();
   }
 
   try {
-    assertArchitectureEvidenceOriginAuthenticity(command, options.environment || process.env);
     await assertPlanningDbCurrentSchemaReady(client);
     await client.query('begin');
 
