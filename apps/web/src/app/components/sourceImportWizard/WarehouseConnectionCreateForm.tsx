@@ -134,7 +134,12 @@ export function WarehouseConnectionCreateForm({
           <Button type="button" variant="ghost" size="sm" disabled={isCreating} onClick={onCancel}>
             {copy.connection.createCancelAction}
           </Button>
-          <Button type="submit" size="sm" disabled={isCreating}>
+          <Button
+            type="submit"
+            size="sm"
+            disabled={isCreating}
+            className="bg-blue-700 text-white hover:bg-blue-600 disabled:bg-slate-800 disabled:text-slate-300 disabled:opacity-100"
+          >
             {isCreating ? copy.connection.creatingAction : copy.connection.createSubmitAction}
           </Button>
         </div>

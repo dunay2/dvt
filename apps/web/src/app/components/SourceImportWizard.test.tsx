@@ -125,12 +125,19 @@ describe('SourceImportWizard', () => {
     expect(connectionSummary?.className).toContain('flex-wrap');
     expect(connectionActions?.className).toContain('flex-wrap');
 
+    const attachAction = harness.findButtonContaining('Attach sources to canvas');
+    expect(attachAction?.className).toContain('disabled:opacity-100');
+    expect(attachAction?.className).toContain('disabled:text-slate-300');
+
     await harness.clickButtonContaining('New connection');
 
     const formActions = document.body.querySelector<HTMLElement>(
       '[data-slot="source-import-create-connection-actions"]'
     );
     expect(formActions?.className).toContain('flex-wrap');
+    const createAction = document.body.querySelector<HTMLButtonElement>('button[type="submit"]');
+    expect(createAction?.className).toContain('bg-blue-700');
+    expect(createAction?.className).toContain('text-white');
     expect(
       document.body.querySelector('[data-slot="source-import-wizard-content-scroll"]')
     ).not.toBeNull();

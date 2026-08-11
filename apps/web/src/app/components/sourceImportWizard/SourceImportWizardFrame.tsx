@@ -35,7 +35,10 @@ export function SourceImportWizardFooter({
 
   if (isResultStep) {
     return (
-      <Button onClick={onDone} className="w-full">
+      <Button
+        onClick={onDone}
+        className="w-full bg-blue-700 text-white hover:bg-blue-600 disabled:bg-slate-800 disabled:text-slate-300 disabled:opacity-100"
+      >
         {copy.footer.doneAction}
       </Button>
     );
@@ -46,7 +49,11 @@ export function SourceImportWizardFooter({
       <Button variant="outline" onClick={onClose}>
         {copy.footer.cancelAction}
       </Button>
-      <Button onClick={onImport} disabled={!canImport}>
+      <Button
+        onClick={onImport}
+        disabled={!canImport}
+        className="bg-blue-700 text-white hover:bg-blue-600 disabled:bg-slate-800 disabled:text-slate-300 disabled:opacity-100"
+      >
         {isProcessing ? (
           <>
             <Loader2 className="mr-2 size-4 animate-spin" />
