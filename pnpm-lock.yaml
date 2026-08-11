@@ -203,9 +203,6 @@ importers:
       '@types/pg':
         specifier: ^8.11.10
         version: 8.16.0
-      dependency-cruiser:
-        specifier: ^17.3.9
-        version: 17.3.9
       tsx:
         specifier: ^4.0.0
         version: 4.21.0

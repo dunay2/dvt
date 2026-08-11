@@ -61,7 +61,11 @@ module.exports = {
       from: { path: '^packages/@dvt/[^/]+/src/' },
       to: {
         circular: true,
-        viaOnly: { path: '^packages/@dvt/[^/]+/src/' },
+        dependencyTypesNot: ['type-only'],
+        viaOnly: {
+          path: '^packages/@dvt/[^/]+/src/',
+          dependencyTypesNot: ['type-only'],
+        },
       },
     },
     {
@@ -91,6 +95,36 @@ module.exports = {
       from: { path: '^packages/@dvt/[^/]+/src/' },
       to: { path: '^(scripts|tools)/' },
     },
+    {
+      name: 'no-api-domain-to-application',
+      severity: 'error',
+      from: { path: '^apps/api/src/domain/' },
+      to: { path: '^apps/api/src/(?:application|entrypoints|infrastructure)/' },
+    },
+    {
+      name: 'no-api-application-to-fastify-or-jwt',
+      severity: 'error',
+      from: { path: '^apps/api/src/application/' },
+      to: { path: '^(?:fastify|@fastify|jose)(?:/|$)' },
+    },
+    {
+      name: 'no-api-application-to-oidc-libs',
+      severity: 'error',
+      from: { path: '^apps/api/src/application/' },
+      to: { path: '^(?:openid-client|oidc-provider)(?:/|$)' },
+    },
+    {
+      name: 'no-api-ports-to-http-types',
+      severity: 'error',
+      from: { path: '^apps/api/src/application/ports/' },
+      to: { path: '^(?:fastify|@fastify|http|node:http)(?:/|$)' },
+    },
+    {
+      name: 'no-api-production-to-test-support',
+      severity: 'error',
+      from: { path: '^apps/api/src/' },
+      to: { path: '^apps/api/test/' },
+    },
   ],
 
   options: {
@@ -103,6 +137,7 @@ module.exports = {
     tsConfig: {
       fileName: 'tsconfig.json',
     },
+    tsPreCompilationDeps: true,
     reporterOptions: {
       text: {
         highlightFocused: true,

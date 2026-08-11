@@ -331,12 +331,25 @@ jobs:
           && github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm qa:artifact:check
 
+      - name: Fetch architecture push comparison base
+        if: github.event_name == 'push'
+        run: |
+          git cat-file -e "$GIT_BASE^{commit}" 2>/dev/null ||
+            git fetch --no-tags --depth=1 origin "$GIT_BASE"
+        env:
+          GIT_BASE: ${{ github.event.before }}
+
       - name: Validate architecture dependency boundaries
         if:
           github.event_name == 'push' || (github.event_name == 'pull_request' &&
           steps.scope.outputs.code_validation_relevant == 'true') || (github.event_name ==
           'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm arch:deps
+        env:
+          GIT_BASE:
+            ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha ||
+            github.event_name == 'push' && github.event.before || 'origin/main' }}
+          GIT_HEAD: ${{ github.sha }}
 
       - name: Check PR title follows Conventional Commits
         if: github.event_name == 'pull_request'
