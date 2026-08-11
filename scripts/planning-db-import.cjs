@@ -2449,10 +2449,15 @@ function readCanonicalStateSnapshot(snapshotPath = canonicalStatePath) {
     !Array.isArray(snapshot.governanceComponentDefinitions) ||
     !Array.isArray(snapshot.governanceComponentOwnershipPatterns) ||
     !Array.isArray(snapshot.governanceComponentSemanticItems) ||
-    !Array.isArray(snapshot.governanceComponentOperations)
+    !Array.isArray(snapshot.governanceComponentOperations) ||
+    !Array.isArray(snapshot.fowlerAnalysisDispositions) ||
+    !Array.isArray(snapshot.fowlerAnalysisCanonicalTargets) ||
+    !Array.isArray(snapshot.fowlerAnalysisReferenceResolutions) ||
+    !Array.isArray(snapshot.fowlerAnalysisRetirementDecisions) ||
+    !Array.isArray(snapshot.fowlerAnalysisOperations)
   ) {
     throw new Error(
-      'Planning DB canonical state must contain architecture, feature mechanization, and governance component recovery state.'
+      'Planning DB canonical state must contain architecture, feature mechanization, governance component, and Fowler analysis recovery state.'
     );
   }
 
@@ -2887,6 +2892,146 @@ async function restoreLocalGovernanceComponentState(client, snapshot) {
       operation.expectedRevision,
       operation.previousRevision,
       operation.resultingRevision,
+      toJson(operation.payload),
+      operation.createdAt,
+    ]
+  );
+}
+
+async function restoreFowlerAnalysisState(client, snapshot) {
+  await insertRows(
+    client,
+    'fowler_analysis_dispositions',
+    [
+      'document_path',
+      'disposition_status',
+      'disposition_kind',
+      'canonical_target_path',
+      'reason',
+      'source_content_sha256',
+      'recorded_by',
+      { name: 'recorded_at', cast: 'timestamptz' },
+      { name: 'raw_disposition', cast: 'jsonb' },
+    ],
+    snapshot.fowlerAnalysisDispositions,
+    (disposition) => [
+      disposition.documentPath,
+      disposition.dispositionStatus,
+      disposition.dispositionKind,
+      disposition.canonicalTargetPath,
+      disposition.reason,
+      disposition.sourceContentSha256,
+      disposition.recordedBy,
+      disposition.recordedAt,
+      toJson(disposition.rawDisposition),
+    ]
+  );
+  await insertRows(
+    client,
+    'fowler_analysis_canonical_targets',
+    [
+      'document_path',
+      'target_path',
+      'target_kind',
+      'target_status',
+      'reason',
+      'source_content_sha256',
+      'linked_by',
+      { name: 'linked_at', cast: 'timestamptz' },
+      { name: 'raw_target', cast: 'jsonb' },
+    ],
+    snapshot.fowlerAnalysisCanonicalTargets,
+    (target) => [
+      target.documentPath,
+      target.targetPath,
+      target.targetKind,
+      target.targetStatus,
+      target.reason,
+      target.sourceContentSha256,
+      target.linkedBy,
+      target.linkedAt,
+      toJson(target.rawTarget),
+    ]
+  );
+  await insertRows(
+    client,
+    'fowler_analysis_reference_resolutions',
+    [
+      'document_path',
+      'reference_path',
+      'relation_type',
+      'resolution_status',
+      'canonical_target_path',
+      'reason',
+      'source_content_sha256',
+      'resolved_by',
+      { name: 'resolved_at', cast: 'timestamptz' },
+      { name: 'raw_resolution', cast: 'jsonb' },
+    ],
+    snapshot.fowlerAnalysisReferenceResolutions,
+    (resolution) => [
+      resolution.documentPath,
+      resolution.referencePath,
+      resolution.relationType,
+      resolution.resolutionStatus,
+      resolution.canonicalTargetPath,
+      resolution.reason,
+      resolution.sourceContentSha256,
+      resolution.resolvedBy,
+      resolution.resolvedAt,
+      toJson(resolution.rawResolution),
+    ]
+  );
+  await insertRows(
+    client,
+    'fowler_analysis_retirement_decisions',
+    [
+      'document_path',
+      'decision_status',
+      'reason',
+      'source_content_sha256',
+      'decided_by',
+      { name: 'decided_at', cast: 'timestamptz' },
+      { name: 'raw_decision', cast: 'jsonb' },
+    ],
+    snapshot.fowlerAnalysisRetirementDecisions,
+    (decision) => [
+      decision.documentPath,
+      decision.decisionStatus,
+      decision.reason,
+      decision.sourceContentSha256,
+      decision.decidedBy,
+      decision.decidedAt,
+      toJson(decision.rawDecision),
+    ]
+  );
+  await insertRows(
+    client,
+    'fowler_analysis_operations',
+    [
+      'operation_id',
+      'idempotency_key',
+      'operation_type',
+      'actor',
+      'document_path',
+      'target_path',
+      'reference_path',
+      'relation_type',
+      'source_content_sha256',
+      { name: 'payload', cast: 'jsonb' },
+      { name: 'created_at', cast: 'timestamptz' },
+    ],
+    snapshot.fowlerAnalysisOperations,
+    (operation) => [
+      operation.operationId,
+      operation.idempotencyKey,
+      operation.operationType,
+      operation.actor,
+      operation.documentPath,
+      operation.targetPath,
+      operation.referencePath,
+      operation.relationType,
+      operation.sourceContentSha256,
       toJson(operation.payload),
       operation.createdAt,
     ]
@@ -3406,6 +3551,7 @@ async function importContent(options = {}) {
     });
     await insertGovernanceSnapshot(client, governanceSnapshot);
     await restoreLocalGovernanceComponentState(client, canonicalStateSnapshot);
+    await restoreFowlerAnalysisState(client, canonicalStateSnapshot);
     await refreshComponentTreeMaterializedProjection(client);
     await refreshComponentFileOwnershipMaterializedProjection(client);
     await refreshComponentRuleEvaluationMaterializedProjection(client);
@@ -4583,6 +4729,7 @@ module.exports = {
   restoreLocalFeatureMechanizationOperations,
   restoreLocalFeatureMechanizationRails,
   restoreLocalGovernanceComponentState,
+  restoreFowlerAnalysisState,
   restoreDbGovernanceSurfaceCatalog,
   restoreDbtProjectRoundtripCapabilityCatalog,
   runPlanningImport,

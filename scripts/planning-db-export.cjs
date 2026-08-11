@@ -112,6 +112,11 @@ class PlanningDbExportRunner {
       governanceComponentSemanticItems,
       governanceComponentOperations,
       dbGovernanceSurfaces,
+      fowlerAnalysisDispositions,
+      fowlerAnalysisCanonicalTargets,
+      fowlerAnalysisReferenceResolutions,
+      fowlerAnalysisRetirementDecisions,
+      fowlerAnalysisOperations,
       architectureState,
     ] = await Promise.all([
       client.query(`
@@ -262,6 +267,77 @@ class PlanningDbExportRunner {
         from ${this.deps.schemaName}.db_governance_surfaces surface
         order by surface.surface_name
       `),
+      client.query(`
+        select
+          disposition.document_path as "documentPath",
+          disposition.disposition_status as "dispositionStatus",
+          disposition.disposition_kind as "dispositionKind",
+          disposition.canonical_target_path as "canonicalTargetPath",
+          disposition.reason,
+          disposition.source_content_sha256 as "sourceContentSha256",
+          disposition.recorded_by as "recordedBy",
+          disposition.recorded_at as "recordedAt",
+          disposition.raw_disposition as "rawDisposition"
+        from ${this.deps.schemaName}.fowler_analysis_dispositions disposition
+        order by disposition.document_path
+      `),
+      client.query(`
+        select
+          target.document_path as "documentPath",
+          target.target_path as "targetPath",
+          target.target_kind as "targetKind",
+          target.target_status as "targetStatus",
+          target.reason,
+          target.source_content_sha256 as "sourceContentSha256",
+          target.linked_by as "linkedBy",
+          target.linked_at as "linkedAt",
+          target.raw_target as "rawTarget"
+        from ${this.deps.schemaName}.fowler_analysis_canonical_targets target
+        order by target.document_path, target.target_path
+      `),
+      client.query(`
+        select
+          resolution.document_path as "documentPath",
+          resolution.reference_path as "referencePath",
+          resolution.relation_type as "relationType",
+          resolution.resolution_status as "resolutionStatus",
+          resolution.canonical_target_path as "canonicalTargetPath",
+          resolution.reason,
+          resolution.source_content_sha256 as "sourceContentSha256",
+          resolution.resolved_by as "resolvedBy",
+          resolution.resolved_at as "resolvedAt",
+          resolution.raw_resolution as "rawResolution"
+        from ${this.deps.schemaName}.fowler_analysis_reference_resolutions resolution
+        order by resolution.document_path, resolution.reference_path, resolution.relation_type
+      `),
+      client.query(`
+        select
+          decision.document_path as "documentPath",
+          decision.decision_status as "decisionStatus",
+          decision.reason,
+          decision.source_content_sha256 as "sourceContentSha256",
+          decision.decided_by as "decidedBy",
+          decision.decided_at as "decidedAt",
+          decision.raw_decision as "rawDecision"
+        from ${this.deps.schemaName}.fowler_analysis_retirement_decisions decision
+        order by decision.document_path
+      `),
+      client.query(`
+        select
+          operation.operation_id as "operationId",
+          operation.idempotency_key as "idempotencyKey",
+          operation.operation_type as "operationType",
+          operation.actor,
+          operation.document_path as "documentPath",
+          operation.target_path as "targetPath",
+          operation.reference_path as "referencePath",
+          operation.relation_type as "relationType",
+          operation.source_content_sha256 as "sourceContentSha256",
+          operation.payload,
+          operation.created_at as "createdAt"
+        from ${this.deps.schemaName}.fowler_analysis_operations operation
+        order by operation.created_at, operation.operation_id
+      `),
       this.deps.readArchitectureState(client),
     ]);
 
@@ -274,6 +350,15 @@ class PlanningDbExportRunner {
       featureMechanizationRails.rows,
       featureMechanizationRailOperations.rows
     );
+    for (const [stateName, rows] of [
+      ['fowlerAnalysisDispositions', fowlerAnalysisDispositions.rows],
+      ['fowlerAnalysisCanonicalTargets', fowlerAnalysisCanonicalTargets.rows],
+      ['fowlerAnalysisReferenceResolutions', fowlerAnalysisReferenceResolutions.rows],
+      ['fowlerAnalysisRetirementDecisions', fowlerAnalysisRetirementDecisions.rows],
+      ['fowlerAnalysisOperations', fowlerAnalysisOperations.rows],
+    ]) {
+      this.deps.assertCurrentStateValue(rows, stateName);
+    }
     const currentRails = featureMechanizationRails.rows.map((rail) => {
       const sourcePath = this.deps.path.resolve(this.deps.repoRoot, rail.sourcePath);
       if (!this.deps.fs.existsSync(sourcePath)) {
@@ -298,6 +383,11 @@ class PlanningDbExportRunner {
       governanceComponentOperations: governanceComponentOperations.rows,
       governanceComponentEffectiveDefinitions: governanceComponentEffectiveDefinitions.rows,
       dbGovernanceSurfaces: dbGovernanceSurfaces.rows,
+      fowlerAnalysisDispositions: fowlerAnalysisDispositions.rows,
+      fowlerAnalysisCanonicalTargets: fowlerAnalysisCanonicalTargets.rows,
+      fowlerAnalysisReferenceResolutions: fowlerAnalysisReferenceResolutions.rows,
+      fowlerAnalysisRetirementDecisions: fowlerAnalysisRetirementDecisions.rows,
+      fowlerAnalysisOperations: fowlerAnalysisOperations.rows,
     };
   }
 
@@ -516,6 +606,11 @@ ${componentLines.join('\n')}
           governanceComponentOwnershipPatterns: snapshotRows.governanceComponentOwnershipPatterns,
           governanceComponentSemanticItems: snapshotRows.governanceComponentSemanticItems,
           governanceComponentOperations: snapshotRows.governanceComponentOperations,
+          fowlerAnalysisDispositions: snapshotRows.fowlerAnalysisDispositions,
+          fowlerAnalysisCanonicalTargets: snapshotRows.fowlerAnalysisCanonicalTargets,
+          fowlerAnalysisReferenceResolutions: snapshotRows.fowlerAnalysisReferenceResolutions,
+          fowlerAnalysisRetirementDecisions: snapshotRows.fowlerAnalysisRetirementDecisions,
+          fowlerAnalysisOperations: snapshotRows.fowlerAnalysisOperations,
         },
         null,
         2
