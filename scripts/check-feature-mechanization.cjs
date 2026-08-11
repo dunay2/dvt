@@ -28,8 +28,11 @@ class FeatureImplementationGuard {
       (entry) => entry?.manifest && typeof entry.manifest === 'object'
     );
     this.changedFiles = Array.from(new Set((options.changedFiles || []).map(toPosix))).sort();
+    this.deletedFiles = new Set((options.deletedFiles || []).map(toPosix));
+    this.currentFiles = Array.from(new Set((options.currentFiles || []).map(toPosix))).sort();
     this.addedLinesByPath = this.normalizePathMap(options.addedLinesByPath || {});
     this.fileContentsByPath = this.normalizePathMap(options.fileContentsByPath || {});
+    this.retirementOwnerManifestEntries = null;
   }
 
   validate() {
@@ -55,6 +58,10 @@ class FeatureImplementationGuard {
     const allowedPatterns = this.collectSurfacePatterns('allowedImplementationSurfaces');
 
     for (const filePath of this.changedFiles) {
+      if (this.isPermittedRetirement(filePath)) {
+        continue;
+      }
+
       if (allowedPatterns.some((pattern) => this.matchesSurface(filePath, pattern))) {
         continue;
       }
@@ -67,6 +74,10 @@ class FeatureImplementationGuard {
 
   validateForbiddenImplementationSurfaces(errors) {
     for (const filePath of this.changedFiles) {
+      if (this.isPermittedRetirement(filePath)) {
+        continue;
+      }
+
       const forbiddenPatterns = this.collectSurfacePatterns(
         'forbiddenImplementationSurfaces',
         this.findMostSpecificManifestEntriesAllowingFile(filePath)
@@ -82,6 +93,48 @@ class FeatureImplementationGuard {
         `${filePath} matches forbiddenImplementationSurfaces pattern ${matchingPattern.raw}.`
       );
     }
+  }
+
+  isPermittedRetirement(filePath) {
+    if (!this.deletedFiles.has(filePath)) {
+      return false;
+    }
+
+    const owningManifestEntries = this.findRetirementOwnerManifestEntries();
+    if (owningManifestEntries.length === 0) {
+      return false;
+    }
+
+    return this.collectSurfacePatterns(
+      'forbiddenImplementationSurfaces',
+      owningManifestEntries
+    ).some(
+      (pattern) =>
+        this.matchesSurface(filePath, pattern) &&
+        !this.currentFiles.some((currentFile) => this.matchesSurface(currentFile, pattern))
+    );
+  }
+
+  findRetirementOwnerManifestEntries() {
+    if (this.retirementOwnerManifestEntries) {
+      return this.retirementOwnerManifestEntries;
+    }
+
+    const owningFeatureIds = new Set();
+    for (const changedFile of this.changedFiles) {
+      if (this.deletedFiles.has(changedFile)) {
+        continue;
+      }
+
+      for (const entry of this.findMostSpecificManifestEntriesAllowingFile(changedFile)) {
+        owningFeatureIds.add(entry.manifest.featureId);
+      }
+    }
+
+    this.retirementOwnerManifestEntries = this.manifestEntries.filter((entry) =>
+      owningFeatureIds.has(entry.manifest.featureId)
+    );
+    return this.retirementOwnerManifestEntries;
   }
 
   validateDeclaredSymbols(errors) {
@@ -344,9 +397,27 @@ class FeatureMechanizationGitDiffReader {
 
     return {
       changedFiles,
+      currentFiles: this.readCurrentFiles(),
+      deletedFiles: this.readDeletedFiles(changedFiles),
       addedLinesByPath: this.readAddedLinesByPath(changedFiles),
       fileContentsByPath: this.readFileContentsByPath(changedFiles),
     };
+  }
+
+  readDeletedFiles(changedFiles) {
+    return changedFiles.filter((filePath) => {
+      if (this.lastUntrackedFiles.has(filePath)) {
+        return false;
+      }
+
+      return !fs.existsSync(path.join(this.repoRootPath, filePath));
+    });
+  }
+
+  readCurrentFiles() {
+    return this.readGitLines(['ls-files', '--cached', '--others', '--exclude-standard'])
+      .filter((filePath) => fs.existsSync(path.join(this.repoRootPath, filePath)))
+      .sort();
   }
 
   readChangedFiles() {

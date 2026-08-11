@@ -9,10 +9,9 @@ last_reviewed: 2026-08-06
 
 ## Purpose
 
-This document is the formal frontend command/query inventory for `apps/web`.
-It consolidates the route-facing rails that are currently split across Canvas
-component catalogs, runtime protected-rail vocabulary, web ports, query hooks,
-and older integration plans.
+This document is a human-readable frontend rail overview for `apps/web`.
+Planning DB is the formal command/query inventory; this page cannot add,
+rename, or reclassify a rail.
 
 The inventory does not create new behavior. It names what the frontend already
 consumes, where rails are repeated, where documentation drift exists, and which
@@ -26,8 +25,7 @@ commands or queries are still needed for a mature end-to-end workflow.
 - `docs/architecture/components/web/index.md`
 - `docs/architecture/components/web/frontend-query-boundary-component.md`
 - `docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`
-- `apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts`
-- `apps/api/src/application/ports/protectedRuntimeRunRailVocabulary.ts`
+- `pnpm planning:db:query command-query-rails --filter Web --no-refresh`
 
 ## Status Vocabulary
 

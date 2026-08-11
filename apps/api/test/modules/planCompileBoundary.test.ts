@@ -15,7 +15,7 @@ import {
  * This suite asserts that `apps/api` exposes one coherent compile profile
  * instead of spreading planner policy across unrelated module tests.
  */
-export function describePlanCompileBoundaryCases(): void {
+function describePlanCompileBoundaryCases(): void {
   describe('planCompileBoundary', () => {
     it('reuses canonical execution profiles for every exposed step kind', () => {
       for (const definition of PLAN_COMPILE_BOUNDARY.catalog.stepKinds) {
@@ -213,3 +213,5 @@ export function describePlanCompileBoundaryCases(): void {
     });
   });
 }
+
+describePlanCompileBoundaryCases();

@@ -38,7 +38,7 @@ For roadmap sequencing and backlog execution, use
 - `docs/adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md`
 - `docs/adr/ADR-0035-planner-public-contract-evolution-protocol.md`
 - `docs/architecture/components/planner/planner-ddd.md`
-- `docs/architecture/components/api/api-current-to-target-architecture.md`
+- `docs/architecture/components/api/index.md`
 - `docs/planning/proposals/mandatory/runtime-and-contracts/mw-d1-external-plan-definition-sdk-api-plan-20260417.md`
 - `docs/guides/plan-compile-catalog-extension-technical-manual-20260417.md`
 

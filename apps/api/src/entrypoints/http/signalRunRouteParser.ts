@@ -11,17 +11,21 @@ import {
 } from './runCommandFieldParsers.js';
 import {
   SIGNAL_ACTION_BY_TYPE,
-  SUPPORTED_SIGNAL_TYPES,
   type SignalCommandActionName,
+} from './signalRunRouteAuthorization.constants.js';
+import {
+  SUPPORTED_SIGNAL_TYPES,
   type SignalRouteCompatibilityPolicy,
-} from './signalRunRouteParser.constants.js';
+} from './signalRunRouteValidation.constants.js';
 
 export {
-  SIGNAL_ROUTE_COMPATIBILITY_POLICY,
   SIGNAL_COMMAND_ACTION,
   type SignalCommandActionName,
+} from './signalRunRouteAuthorization.constants.js';
+export {
+  SIGNAL_ROUTE_COMPATIBILITY_POLICY,
   type SignalRouteCompatibilityPolicy,
-} from './signalRunRouteParser.constants.js';
+} from './signalRunRouteValidation.constants.js';
 
 export interface ParsedSignalRunRequest {
   readonly command: {

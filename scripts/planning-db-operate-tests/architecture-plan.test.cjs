@@ -5,6 +5,7 @@ const {
   assertArchitectureScopedOperationIdempotentReplayMatches,
   parseArgs,
   planArchitectureDesignCreateOperation,
+  planArchitectureDesignTransitionOperation,
   planArchitectureComponentRecordOperation,
   planArchitectureContractRecordOperation,
   planArchitecturePortRecordOperation,
@@ -15,6 +16,7 @@ const {
   writePlannedArchitectureContractRecordOperation,
   writePlannedArchitecturePortRecordOperation,
   writePlannedArchitectureStorageIoRecordOperation,
+  writePlannedArchitectureDesignTransitionOperation,
 } = require('./helpers.cjs');
 
 test('planArchitectureDesignCreateOperation emits design scope and audit rows', () => {
@@ -62,6 +64,103 @@ test('planArchitectureDesignCreateOperation emits design scope and audit rows', 
   assert.equal(planned.audit.designId, 'ENGINE-ARCHITECTURE-AUTHORITY-PILOT');
   assert.equal(planned.audit.sourceContentSha256, 'e'.repeat(64));
   assert.deepEqual(planned.audit.payload.scopes, command.scopes);
+});
+
+test('architecture design transition planner enforces current state and approval timestamp', () => {
+  const now = new Date('2026-08-10T12:00:00.000Z');
+  const command = parseArgs([
+    'architecture-design',
+    'transition',
+    '--design',
+    'R1-1D-API-GOVERNANCE-LIFECYCLE-CLOSEOUT-20260810',
+    '--from-status',
+    'review',
+    '--to-status',
+    'approved',
+    '--reason',
+    'The governed implementation and validation evidence are complete.',
+    '--source-ref',
+    'docs/architecture/components/api/index.md',
+    '--source-content-sha256',
+    'e'.repeat(64),
+    '--actor',
+    'codex',
+  ]);
+
+  const planned = planArchitectureDesignTransitionOperation({
+    command,
+    existingDesign: {
+      design_id: command.designId,
+      status: 'review',
+      approved_at: null,
+    },
+    operationId: 'op-architecture-design-transition',
+    now,
+  });
+
+  assert.deepEqual(planned.transition, {
+    designId: command.designId,
+    fromStatus: 'review',
+    toStatus: 'approved',
+    reason: command.reason,
+    approvedAt: now.toISOString(),
+    updatedAt: now.toISOString(),
+  });
+  assert.equal(planned.audit.operationType, 'architecture_design_transition');
+  assert.equal(planned.audit.payload.fromStatus, 'review');
+  assert.equal(planned.audit.payload.toStatus, 'approved');
+
+  assert.throws(
+    () =>
+      planArchitectureDesignTransitionOperation({
+        command,
+        existingDesign: { design_id: command.designId, status: 'proposed' },
+        operationId: 'op-stale-architecture-design-transition',
+        now,
+      }),
+    /ARCH-DESIGN-TRANSITION-CONFLICT/
+  );
+});
+
+test('architecture design transition writer persists the CAS update and audit', async () => {
+  const queries = [];
+  const client = {
+    async query(sql, params) {
+      queries.push({ sql, params });
+      return sql.includes('update architecture.design')
+        ? { rows: [{ design_id: params[0] }], rowCount: 1 }
+        : { rows: [], rowCount: 1 };
+    },
+  };
+  const planned = {
+    transition: {
+      designId: 'R1-1D-API-GOVERNANCE-LIFECYCLE-CLOSEOUT-20260810',
+      fromStatus: 'review',
+      toStatus: 'approved',
+      reason: 'The governed implementation and validation evidence are complete.',
+      approvedAt: '2026-08-10T12:00:00.000Z',
+      updatedAt: '2026-08-10T12:00:00.000Z',
+    },
+    audit: {
+      operationId: 'op-architecture-design-transition',
+      idempotencyKey: 'approve-r1-1d-api-governance-closeout',
+      operationType: 'architecture_design_transition',
+      actor: 'codex',
+      designId: 'R1-1D-API-GOVERNANCE-LIFECYCLE-CLOSEOUT-20260810',
+      sourceRef: 'docs/architecture/components/api/index.md',
+      sourceContentSha256: 'e'.repeat(64),
+      expectedRevision: null,
+      previousRevision: 0,
+      resultingRevision: 0,
+      payload: { fromStatus: 'review', toStatus: 'approved' },
+      createdAt: '2026-08-10T12:00:00.000Z',
+    },
+  };
+
+  await writePlannedArchitectureDesignTransitionOperation(client, planned);
+
+  assert.ok(queries.some((query) => query.sql.includes('update architecture.design')));
+  assert.ok(queries.some((query) => query.sql.includes('architecture.design_operations')));
 });
 
 test('architecture component record planner emits component, responsibility, and audit rows', () => {

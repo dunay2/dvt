@@ -95,7 +95,7 @@ test('test matrix routes API package tests through the CI lifecycle bypass', () 
     'node ../../scripts/skip-pretest-if-ci.cjs || pnpm --filter "dvt-api^..." build'
   );
   assert.equal(apiPackage?.scripts?.test, 'vitest run --config vitest.config.ts');
-  assert.equal(apiPackage?.scripts?.['test:ci'], 'vitest run --config vitest.config.ts');
+  assert.equal(apiPackage?.scripts?.['test:ci'], 'pnpm test:unit && pnpm test:integration:ci');
   assert.deepEqual(matrix.include, [
     {
       key: 'api',

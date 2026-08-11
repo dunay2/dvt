@@ -37,6 +37,7 @@ const {
   refreshComponentRuleEvaluationMaterializedProjection,
   restoreLocalFeatureMechanizationOperations,
   restoreLocalFeatureMechanizationRails,
+  restoreLocalGovernanceComponentState,
   restoreDbGovernanceSurfaceCatalog,
   restoreDbtProjectRoundtripCapabilityCatalog,
   runPlanningImport,
@@ -1462,6 +1463,81 @@ test('planning DB import restores canonical feature mechanization rails', async 
   assert.doesNotMatch(insertQuery.sql, /truncate\s+/i);
 });
 
+test('planning DB import restores audited governance component overrides', async () => {
+  const queries = [];
+  const componentId = 'SYS-API-DOCS';
+  const snapshot = {
+    governanceComponentDefinitions: [
+      {
+        componentId,
+        sourcePath: 'docs/architecture/components/api/index.md',
+        sourceContentSha256: 'a'.repeat(64),
+        revision: 1,
+        name: 'API local documentation',
+        level: 'component',
+        parentComponentId: 'SYS-API-ROOT',
+        rootUnit: 'SYS-DVT',
+        domainUnit: 'SYS-API',
+        status: 'superseded',
+        childrenRequired: false,
+        ownedConcern: 'Retired API-local documentation ownership.',
+        dddOwner: 'INFRA',
+        cqRails: 'none - API local documentation',
+        createdBy: 'codex',
+        createdAt: '2026-08-10T20:00:00.000Z',
+      },
+    ],
+    governanceComponentOwnershipPatterns: [],
+    governanceComponentSemanticItems: [
+      {
+        componentId,
+        itemKind: 'governance_ref',
+        itemValue: 'docs/DOCS_README.md',
+        itemOrder: 0,
+        createdAt: '2026-08-10T20:00:00.000Z',
+      },
+    ],
+    governanceComponentOperations: [
+      {
+        operationId: 'component-revise:test-operation',
+        idempotencyKey: 'component-revise-test-operation',
+        operationType: 'component_revise',
+        actor: 'codex',
+        componentId,
+        sourcePath: 'docs/architecture/components/api/index.md',
+        sourceContentSha256: 'a'.repeat(64),
+        expectedRevision: 0,
+        previousRevision: 0,
+        resultingRevision: 1,
+        payload: { status: 'superseded' },
+        createdAt: '2026-08-10T20:00:00.000Z',
+      },
+    ],
+  };
+
+  await restoreLocalGovernanceComponentState(
+    {
+      query: async (sql, params = []) => {
+        queries.push({ sql: String(sql), params });
+        return { rows: [] };
+      },
+    },
+    snapshot
+  );
+
+  for (const table of [
+    'governance_component_local_definitions',
+    'governance_component_local_semantic_items',
+    'governance_component_local_operations',
+  ]) {
+    assert.ok(queries.some((query) => query.sql.includes(`insert into ${schemaName}.${table}`)));
+  }
+  assert.ok(
+    !queries.some((query) => /delete\s+from|truncate\s+/iu.test(query.sql)),
+    'current-schema restore must insert the canonical snapshot without compatibility cleanup'
+  );
+});
+
 test('planning DB import reads and validates the canonical DB-authored state snapshot', () => {
   const fs = require('node:fs');
   const os = require('node:os');
@@ -1482,6 +1558,10 @@ test('planning DB import reads and validates the canonical DB-authored state sna
         architectureState: emptyArchitectureState(),
         featureMechanizationRails: [rail],
         featureMechanizationRailOperations: [],
+        governanceComponentDefinitions: [],
+        governanceComponentOwnershipPatterns: [],
+        governanceComponentSemanticItems: [],
+        governanceComponentOperations: [],
       }),
       'utf8'
     );

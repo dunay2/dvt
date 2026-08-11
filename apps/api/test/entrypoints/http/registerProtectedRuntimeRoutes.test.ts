@@ -4,6 +4,7 @@ import Fastify from 'fastify';
 import { describe, expect, it } from 'vitest';
 
 import { registerProtectedRuntimeRoutes } from '../../../src/entrypoints/http/registerProtectedRuntimeRoutes.js';
+import { PROTECTED_RUNTIME_ROUTE_SUMMARY } from '../../../src/entrypoints/http/runtimeRoutes.constants.js';
 import type { ProtectedRuntimeModule } from '../../../src/modules/types.js';
 import { loadEnv } from '../../../src/plugins/env.js';
 import { ADMIN_ROUTES_ENABLED_ENV, BASE_APP_ENV, mergeEnv } from '../../app/appEnvTestSupport.js';
@@ -94,38 +95,20 @@ describe('registerProtectedRuntimeRoutes', () => {
     });
     await app.ready();
 
-    expect(app.hasRoute({ method: 'POST', url: '/runs/start' })).toBe(true);
-    expect(app.hasRoute({ method: 'POST', url: '/plans/compile' })).toBe(true);
-    expect(app.hasRoute({ method: 'POST', url: '/plans/preview' })).toBe(true);
-    expect(app.hasRoute({ method: 'POST', url: '/plans/import' })).toBe(true);
-    expect(app.hasRoute({ method: 'GET', url: '/workspace/context' })).toBe(true);
-    expect(app.hasRoute({ method: 'GET', url: '/workspace/plugins' })).toBe(true);
-    expect(app.hasRoute({ method: 'GET', url: '/projects' })).toBe(true);
-    expect(app.hasRoute({ method: 'POST', url: '/projects' })).toBe(true);
-    expect(app.hasRoute({ method: 'GET', url: '/workspace/graph/draft' })).toBe(true);
-    expect(app.hasRoute({ method: 'GET', url: '/workspace/dbt/analysis/selected-model' })).toBe(
-      true
+    const registeredRoutes = PROTECTED_RUNTIME_ROUTE_SUMMARY.split(', ').map((entry) => {
+      const separator = entry.indexOf(' ');
+      return {
+        method: entry.slice(0, separator),
+        url: entry.slice(separator + 1),
+      };
+    });
+
+    expect(new Set(registeredRoutes.map(({ method, url }) => `${method} ${url}`)).size).toBe(
+      registeredRoutes.length
     );
-    expect(
-      app.hasRoute({ method: 'POST', url: '/workspace/dbt/dependency-edits/applications' })
-    ).toBe(true);
-    expect(
-      app.hasRoute({ method: 'POST', url: '/workspace/dbt/description-edits/proposals' })
-    ).toBe(true);
-    expect(
-      app.hasRoute({ method: 'POST', url: '/workspace/dbt/description-edits/applications' })
-    ).toBe(true);
-    expect(app.hasRoute({ method: 'POST', url: '/workspace/dbt/description-edits/reverts' })).toBe(
-      true
-    );
-    expect(app.hasRoute({ method: 'GET', url: '/workspace/diff/changes' })).toBe(true);
-    expect(app.hasRoute({ method: 'GET', url: '/workspace/files' })).toBe(true);
-    expect(app.hasRoute({ method: 'GET', url: '/workspace/file-history/:path' })).toBe(true);
-    expect(app.hasRoute({ method: 'GET', url: '/workspace/files/:path' })).toBe(true);
-    expect(app.hasRoute({ method: 'GET', url: '/runs/:runId/events' })).toBe(true);
-    expect(app.hasRoute({ method: 'POST', url: '/runs/:runId/signal' })).toBe(true);
-    expect(app.hasRoute({ method: 'POST', url: '/runs/:runId/cancel' })).toBe(true);
-    expect(app.hasRoute({ method: 'POST', url: '/runs/:runId/recover' })).toBe(true);
+    for (const route of registeredRoutes) {
+      expect(app.hasRoute(route), `${route.method} ${route.url} must be registered`).toBe(true);
+    }
     expect(app.hasRoute({ method: 'POST', url: '/admin/runs/:runId/rebuild-snapshot' })).toBe(
       false
     );

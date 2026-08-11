@@ -111,7 +111,7 @@ flowchart LR
    [planRoutePlanSourcePolicy.ts](../../../apps/api/src/entrypoints/http/planRoutePlanSourcePolicy.ts)
    Primary evidence:
    [PlannerBackedStartRunUseCase.test.ts](../../../apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts),
-   [StoredPlanExecutabilityValidator.test.ts](../../../apps/api/test/application/services/StoredPlanExecutabilityValidator.test.ts),
+   [capabilities.test.ts](../../../apps/api/test/application/services/storedPlanExecutabilityValidator/capabilities.test.ts),
    [plannerEngineContract.test.ts](../../../apps/api/test/integration/plannerEngineContract.test.ts),
    [planRoutePlanSourcePolicy.test.ts](../../../apps/api/test/entrypoints/http/planRoutePlanSourcePolicy.test.ts)
 

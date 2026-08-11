@@ -124,4 +124,4 @@ Acceptance criteria:
 | `US-DHM-WS6-003` | `RunCommandService`, `RunSignalService`, `WorkflowEngineCoreService` | `workflowEngineRuntimePathDecomposition.architecture.test.ts`, `workflowEngineSemanticClosure.architecture.test.ts` |
 | `US-DHM-WS6-004` | semantic closure component guide                                     | `workflowEngineSemanticClosure.architecture.test.ts`, docs governance gates                                         |
 | `US-DHM-WS6-005` | semantic closure architecture guard                                  | `workflowEngineSemanticClosure.architecture.test.ts`                                                                |
-| `US-DHM-WS6-006` | reconciler runtime facade and composition split                      | `workflowEngineSemanticClosure.architecture.test.ts`, `intentReconcilerRuntimeComposition.architecture.test.ts`     |
+| `US-DHM-WS6-006` | reconciler runtime facade and composition split                      | `workflowEngineSemanticClosure.architecture.test.ts`, API `server.test.ts`, Planning DB component profile           |

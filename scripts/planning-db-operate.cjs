@@ -78,6 +78,15 @@ const allowedArchitectureDesignStatuses = new Set([
   'superseded',
 ]);
 const allowedArchitectureDesignCreateStatuses = new Set(['proposed', 'review']);
+const allowedArchitectureDesignTransitions = new Map([
+  ['proposed', new Set(['review', 'superseded'])],
+  ['review', new Set(['approved', 'superseded'])],
+  ['approved', new Set(['implementing', 'superseded'])],
+  ['implementing', new Set(['implemented', 'drift', 'superseded'])],
+  ['implemented', new Set(['drift', 'superseded'])],
+  ['drift', new Set(['review', 'superseded'])],
+  ['superseded', new Set()],
+]);
 const allowedArchitectureFitnessDesignStatuses = new Set([
   'proposed',
   'review',
@@ -282,11 +291,12 @@ const featureMechanizationListOptionKeys = new Set([
 const architectureListOptionKeys = new Set(['negative-test']);
 const operationHelp = Object.freeze({
   component: {
-    operations: ['create', 'reparent'],
+    operations: ['create', 'revise', 'reparent'],
     usage:
-      'pnpm planning:db:operate component <create|reparent> --component <SYS-ID> --parent <SYS-ID> --actor <actor>',
+      'pnpm planning:db:operate component <create|revise|reparent> --component <SYS-ID> --actor <actor>',
     details: [
       'CreateGovernanceComponent records DB-authored governance component ownership.',
+      'ReviseGovernanceComponent overlays imported ownership and status through a scoped, audited DB command.',
       'ReparentGovernanceComponent updates the imported governance component tree through an audited DB command rail.',
       'Required semantic fields include --name, --owned-concern, --owns or --children-required true, --ddd-owner, and --cq-rails.',
     ],
@@ -301,11 +311,12 @@ const operationHelp = Object.freeze({
     ],
   },
   'architecture-design': {
-    operations: ['create'],
+    operations: ['create', 'transition'],
     usage:
-      'pnpm planning:db:operate architecture-design create --design <DESIGN-ID> --actor <actor>',
+      'pnpm planning:db:operate architecture-design <create|transition> --design <DESIGN-ID> --actor <actor>',
     details: [
       'CreateArchitectureDesign records database architecture authority before implementation.',
+      'TransitionArchitectureDesign advances or supersedes that authority through an audited compare-and-set lifecycle.',
       'Requires --work-item, --title, --owner, --rationale, --rail-ref, --scope, --source-ref, and --source-content-sha256.',
     ],
   },
@@ -696,6 +707,18 @@ function validateArchitectureDesignCreateStatus(value) {
   }
 
   return status;
+}
+
+function validateArchitectureDesignTransition(fromStatusValue, toStatusValue) {
+  const fromStatus = validateArchitectureDesignStatus(fromStatusValue);
+  const toStatus = validateArchitectureDesignStatus(toStatusValue);
+  if (!allowedArchitectureDesignTransitions.get(fromStatus)?.has(toStatus)) {
+    throw new Error(
+      `ARCH-DESIGN-TRANSITION-INVALID: cannot transition architecture design from ${fromStatus} to ${toStatus}.`
+    );
+  }
+
+  return { fromStatus, toStatus };
 }
 
 function validateArchitectureFowlerSignal(value) {
@@ -1209,6 +1232,17 @@ function operationPayload(command) {
     };
   }
 
+  if (command.kind === 'architecture_design_transition') {
+    return {
+      designId: command.designId,
+      fromStatus: command.fromStatus,
+      toStatus: command.toStatus,
+      reason: command.reason,
+      sourceRef: command.sourceRef,
+      sourceContentSha256: command.sourceContentSha256,
+    };
+  }
+
   if (command.kind === 'architecture_component_record') {
     return {
       designId: command.designId,
@@ -1367,6 +1401,22 @@ function operationPayload(command) {
     };
   }
 
+  if (command.kind === 'component_revise') {
+    return {
+      designId: command.designId,
+      componentId: command.componentId,
+      status: command.status,
+      childrenRequired: command.childrenRequired,
+      ownedConcern: command.ownedConcern,
+      addOwns: command.addOwns || [],
+      removeOwns: command.removeOwns || [],
+      addExcludes: command.addExcludes || [],
+      removeExcludes: command.removeExcludes || [],
+      sourceRef: command.sourceRef,
+      sourceContentSha256: command.sourceContentSha256,
+    };
+  }
+
   if (command.kind === 'db_surface_upsert') {
     return {
       surfaceName: command.surfaceName,
@@ -1456,7 +1506,11 @@ function defaultIdempotencyKey(command) {
     ].join(':');
   }
 
-  if (command.kind === 'component_create') {
+  if (
+    command.kind === 'component_create' ||
+    command.kind === 'component_revise' ||
+    command.kind === 'component_reparent'
+  ) {
     return [
       command.kind,
       command.actor || 'anonymous',
@@ -1470,7 +1524,10 @@ function defaultIdempotencyKey(command) {
     ].join(':');
   }
 
-  if (command.kind === 'architecture_design_create') {
+  if (
+    command.kind === 'architecture_design_create' ||
+    command.kind === 'architecture_design_transition'
+  ) {
     return [
       command.kind,
       command.actor || 'anonymous',
@@ -1855,11 +1912,36 @@ function validateArchitectureDesignCreateCommand(command) {
 }
 
 function parseArchitectureDesignCommand(action, args) {
-  if (action !== 'create') {
-    throw new Error(`Unknown architecture-design operation "${action}". Expected create.`);
+  const options = parseFlagOptions(args);
+  if (action === 'transition') {
+    const { fromStatus, toStatus } = validateArchitectureDesignTransition(
+      requireOption(options, 'fromStatus'),
+      requireOption(options, 'toStatus')
+    );
+    const command = {
+      kind: 'architecture_design_transition',
+      designId: validateArchitectureDesignId(requireOption(options, 'design')),
+      fromStatus,
+      toStatus,
+      reason: requireOption(options, 'reason'),
+      sourceRef: requireOption(options, 'sourceRef'),
+      sourceContentSha256: validateSha256(
+        requireOption(options, 'sourceContentSha256'),
+        'source-content-sha256'
+      ),
+      actor: requireOption(options, 'actor'),
+      idempotencyKey: options.idempotencyKey,
+    };
+
+    return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
   }
 
-  const options = parseFlagOptions(args);
+  if (action !== 'create') {
+    throw new Error(
+      `Unknown architecture-design operation "${action}". Expected create or transition.`
+    );
+  }
+
   const fowlerSignalOption = Array.isArray(options.fowlerSignal)
     ? options.fowlerSignal[0]
     : options.fowlerSignal;
@@ -1948,9 +2030,43 @@ function validateComponentReparentCommand(command) {
   return command;
 }
 
+function validateComponentReviseCommand(command) {
+  const changes = [
+    command.status,
+    command.childrenRequired,
+    command.ownedConcern,
+    ...(command.addOwns || []),
+    ...(command.removeOwns || []),
+    ...(command.addExcludes || []),
+    ...(command.removeExcludes || []),
+  ].filter((value) => value !== null && value !== undefined);
+  if (changes.length === 0) {
+    throw new Error(
+      `Governance component ${command.componentId} revise requires a status, children-required, or ownership delta.`
+    );
+  }
+
+  for (const [label, additions, removals] of [
+    ['owns', command.addOwns, command.removeOwns],
+    ['excludes', command.addExcludes, command.removeExcludes],
+  ]) {
+    const removalSet = new Set(removals || []);
+    const conflict = (additions || []).find((value) => removalSet.has(value));
+    if (conflict) {
+      throw new Error(
+        `Governance component ${command.componentId} cannot add and remove the same ${label} pattern "${conflict}".`
+      );
+    }
+  }
+
+  return command;
+}
+
 function parseComponentCommand(action, args) {
-  if (action !== 'create' && action !== 'reparent') {
-    throw new Error(`Unknown component operation "${action}". Expected create or reparent.`);
+  if (action !== 'create' && action !== 'revise' && action !== 'reparent') {
+    throw new Error(
+      `Unknown component operation "${action}". Expected create, revise, or reparent.`
+    );
   }
 
   const options = parseFlagOptions(args);
@@ -1971,6 +2087,35 @@ function parseComponentCommand(action, args) {
     };
 
     validateComponentReparentCommand(command);
+    return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
+  }
+
+  if (action === 'revise') {
+    const command = {
+      kind: 'component_revise',
+      designId: validateArchitectureDesignId(requireOption(options, 'design')),
+      componentId: validateComponentId(requireOption(options, 'component'), 'component'),
+      status: options.status ? validateComponentStatus(options.status) : null,
+      childrenRequired:
+        options.childrenRequired === undefined
+          ? null
+          : parseBooleanOption(options.childrenRequired, 'children-required'),
+      ownedConcern: normalizeOptionalText(options.ownedConcern),
+      addOwns: normalizeListOption(options.addOwns),
+      removeOwns: normalizeListOption(options.removeOwns),
+      addExcludes: normalizeListOption(options.addExcludes),
+      removeExcludes: normalizeListOption(options.removeExcludes),
+      sourceRef: requireOption(options, 'sourceRef'),
+      sourceContentSha256: validateSha256(
+        requireOption(options, 'sourceContentSha256'),
+        'source-content-sha256'
+      ),
+      actor,
+      expectedRevision: parseIntegerOption(options.expectedRevision, 'expected-revision'),
+      idempotencyKey: options.idempotencyKey,
+    };
+
+    validateComponentReviseCommand(command);
     return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
   }
 
@@ -2743,7 +2888,7 @@ function parseArgs(args = process.argv.slice(2)) {
 
   if (resource === 'architecture-design') {
     if (!action) {
-      throw new Error('Missing architecture-design operation. Expected create.');
+      throw new Error('Missing architecture-design operation. Expected create or transition.');
     }
 
     return parseArchitectureDesignCommand(action, rest);
@@ -2879,6 +3024,53 @@ function normalizeComponentDefinition(row) {
   };
 }
 
+function normalizeComponentList(value) {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item));
+  }
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed.map((item) => String(item)) : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
+function normalizeEffectiveComponentDefinition(row) {
+  if (!row) {
+    return null;
+  }
+
+  return {
+    componentId: row.component_id ?? row.componentId,
+    name: row.name,
+    level: row.level,
+    parentComponentId: row.parent_id ?? row.parentComponentId,
+    rootUnit: row.root_unit ?? row.rootUnit,
+    domainUnit: row.domain_unit ?? row.domainUnit,
+    status: row.status,
+    childrenRequired: row.children_required ?? row.childrenRequired ?? false,
+    ownedConcern: row.owned_concern ?? row.ownedConcern,
+    owns: normalizeComponentList(row.owns),
+    excludes: normalizeComponentList(row.excludes),
+    responsibilities: normalizeComponentList(row.responsibilities),
+    nonGoals: normalizeComponentList(row.non_goals ?? row.nonGoals),
+    reasonsToChange: normalizeComponentList(row.reasons_to_change ?? row.reasonsToChange),
+    dddOwner: row.ddd_owner ?? row.dddOwner,
+    cqRails: row.cq_rails ?? row.cqRails,
+    publicApi: normalizeComponentList(row.public_api ?? row.publicApi),
+    invariants: normalizeComponentList(row.invariants),
+    transitions: normalizeComponentList(row.transitions),
+    consumers: normalizeComponentList(row.consumers),
+    governance: normalizeComponentList(row.governance_refs ?? row.governance),
+    fowlerSignals: normalizeComponentList(row.fowler_signals ?? row.fowlerSignals),
+    revision: Number(row.revision ?? 0),
+  };
+}
+
 function normalizeArchitectureDesign(row) {
   if (!row) {
     return null;
@@ -2887,6 +3079,7 @@ function normalizeArchitectureDesign(row) {
   return {
     designId: row.design_id ?? row.designId,
     status: row.status,
+    approvedAt: row.approved_at ?? row.approvedAt ?? null,
   };
 }
 
@@ -3093,6 +3286,35 @@ function planArchitectureDesignCreateOperation({ command, existingDesign, operat
   };
 
   return { design, scopes, audit };
+}
+
+function planArchitectureDesignTransitionOperation({ command, existingDesign, operationId, now }) {
+  const existing = normalizeArchitectureDesign(existingDesign);
+  if (!existing) {
+    throw new Error(
+      `ARCH-DESIGN-NOT-FOUND: architecture design ${command.designId} does not exist.`
+    );
+  }
+  if (existing.status !== command.fromStatus) {
+    throw new Error(
+      `ARCH-DESIGN-TRANSITION-CONFLICT: expected ${command.designId} in ${command.fromStatus}, found ${existing.status}.`
+    );
+  }
+  validateArchitectureDesignTransition(command.fromStatus, command.toStatus);
+
+  const updatedAt = toIso(now);
+  const transition = {
+    designId: command.designId,
+    fromStatus: command.fromStatus,
+    toStatus: command.toStatus,
+    reason: command.reason,
+    approvedAt:
+      command.toStatus === 'approved' ? existing.approvedAt || updatedAt : existing.approvedAt,
+    updatedAt,
+  };
+  const audit = architectureScopedAudit({ command, operationId, now });
+
+  return { transition, audit };
 }
 
 function architectureScopedAudit({ command, operationId, now, previousRevision = 0 }) {
@@ -3779,6 +4001,156 @@ function planComponentReparentOperation({
   };
 
   return { definition, audit };
+}
+
+function applyComponentPatternDelta(componentId, label, currentValues, additions, removals) {
+  const values = new Set(currentValues || []);
+  for (const removal of removals || []) {
+    if (!values.has(removal)) {
+      throw new Error(
+        `Governance component ${componentId} cannot remove unknown ${label} pattern "${removal}".`
+      );
+    }
+    values.delete(removal);
+  }
+  for (const addition of additions || []) {
+    values.add(addition);
+  }
+  return [...values];
+}
+
+function validateRevisedComponentDefinition(definition) {
+  if (definition.status !== 'superseded') {
+    if (definition.owns.length === 0 && definition.childrenRequired !== true) {
+      throw new Error(
+        `Governance component ${definition.componentId} must retain owns or children-required true.`
+      );
+    }
+    if (definition.excludes.length > 0 && definition.owns.length === 0) {
+      throw new Error(
+        `Governance component ${definition.componentId} cannot retain excludes without owns.`
+      );
+    }
+  }
+
+  for (const [field, value] of [
+    ['name', definition.name],
+    ['parent', definition.parentComponentId],
+    ['owned-concern', definition.ownedConcern],
+    ['ddd-owner', definition.dddOwner],
+    ['cq-rails', definition.cqRails],
+  ]) {
+    if (!normalizeOptionalText(value)) {
+      throw new Error(
+        `Governance component ${definition.componentId} is missing effective ${field} semantics.`
+      );
+    }
+  }
+
+  if (definition.status === 'canonical') {
+    for (const [field, values] of [
+      ['public-api', definition.publicApi],
+      ['invariant', definition.invariants],
+      ['transition', definition.transitions],
+      ['consumer', definition.consumers],
+    ]) {
+      if (values.length === 0) {
+        throw new Error(`Canonical component ${definition.componentId} is missing --${field}.`);
+      }
+    }
+  }
+}
+
+function planComponentReviseOperation({
+  command,
+  design,
+  designScopes,
+  existingComponent,
+  latestOperation,
+  operationId,
+  now,
+}) {
+  assertArchitectureDesignMayRecord(design, command);
+  assertArchitectureDesignScope(
+    designScopes,
+    'component',
+    command.componentId,
+    ['may_update'],
+    'GOVERNANCE-COMPONENT-DESIGN-SCOPE-MISSING'
+  );
+  validateComponentReviseCommand(command);
+
+  const component = normalizeEffectiveComponentDefinition(existingComponent);
+  if (!component) {
+    throw new Error(
+      `Governance component ${command.componentId} is not present in the planning DB.`
+    );
+  }
+
+  const previousRevision = Math.max(
+    component.revision,
+    normalizeOperationRevision(latestOperation)
+  );
+  if (
+    command.expectedRevision !== null &&
+    command.expectedRevision !== undefined &&
+    previousRevision !== command.expectedRevision
+  ) {
+    throw new Error(
+      `Governance component ${command.componentId} expected revision ${command.expectedRevision}, but current revision is ${previousRevision}.`
+    );
+  }
+
+  const resultingRevision = previousRevision + 1;
+  const createdAt = toIso(now);
+  const definition = {
+    ...component,
+    sourcePath: command.sourceRef,
+    sourceContentSha256: command.sourceContentSha256,
+    revision: resultingRevision,
+    status: command.status ?? component.status,
+    childrenRequired: command.childrenRequired ?? component.childrenRequired,
+    ownedConcern: command.ownedConcern ?? component.ownedConcern,
+    owns: applyComponentPatternDelta(
+      command.componentId,
+      'owns',
+      component.owns,
+      command.addOwns,
+      command.removeOwns
+    ),
+    excludes: applyComponentPatternDelta(
+      command.componentId,
+      'excludes',
+      component.excludes,
+      command.addExcludes,
+      command.removeExcludes
+    ),
+    createdBy: command.actor,
+    createdAt,
+  };
+  validateRevisedComponentDefinition(definition);
+
+  const ownershipPatterns = buildComponentOwnershipPatterns(definition);
+  const semanticItems = buildComponentSemanticItems(definition);
+  const audit = {
+    operationId,
+    idempotencyKey: command.idempotencyKey,
+    operationType: command.kind,
+    actor: command.actor,
+    componentId: command.componentId,
+    sourcePath: command.sourceRef,
+    sourceContentSha256: command.sourceContentSha256,
+    expectedRevision: command.expectedRevision ?? null,
+    previousRevision,
+    resultingRevision,
+    payload: {
+      ...operationPayload(command),
+      resultingDefinition: definition,
+    },
+    createdAt,
+  };
+
+  return { definition, ownershipPatterns, semanticItems, audit };
 }
 
 function normalizeDbSurface(row) {
@@ -4760,6 +5132,35 @@ async function writePlannedArchitectureDesignCreateOperation(client, planned) {
   );
 }
 
+async function writePlannedArchitectureDesignTransitionOperation(client, planned) {
+  const result = await client.query(
+    `update architecture.design
+     set status = $3,
+         approved_at = case
+           when $3 = 'approved' then coalesce(approved_at, $4)
+           else approved_at
+         end,
+         updated_at = $5
+     where design_id = $1
+       and status = $2
+     returning design_id`,
+    [
+      planned.transition.designId,
+      planned.transition.fromStatus,
+      planned.transition.toStatus,
+      planned.transition.approvedAt,
+      planned.transition.updatedAt,
+    ]
+  );
+  if (!result.rows[0]) {
+    throw new Error(
+      `ARCH-DESIGN-TRANSITION-CONFLICT: ${planned.transition.designId} no longer has status ${planned.transition.fromStatus}.`
+    );
+  }
+
+  await writeArchitectureScopedAudit(client, planned.audit);
+}
+
 async function writeArchitectureScopedAudit(client, audit) {
   await client.query(
     `insert into architecture.design_operations
@@ -5171,6 +5572,112 @@ async function writePlannedComponentCreateOperation(client, planned) {
       [item.componentId, item.itemKind, item.itemValue, item.itemOrder]
     );
   }
+
+  await client.query(
+    `insert into ${schemaName}.governance_component_local_operations
+      (operation_id, idempotency_key, operation_type, actor, component_id, source_path,
+       source_content_sha256, expected_revision, previous_revision, resulting_revision,
+       payload, created_at)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb, $12)`,
+    [
+      planned.audit.operationId,
+      planned.audit.idempotencyKey,
+      planned.audit.operationType,
+      planned.audit.actor,
+      planned.audit.componentId,
+      planned.audit.sourcePath,
+      planned.audit.sourceContentSha256,
+      planned.audit.expectedRevision,
+      planned.audit.previousRevision,
+      planned.audit.resultingRevision,
+      toJson(planned.audit.payload),
+      planned.audit.createdAt,
+    ]
+  );
+}
+
+async function refreshComponentEngineeringReadProjections(client) {
+  for (const projection of [
+    'component_engineering_component_tree_projection',
+    'component_engineering_file_ownership_projection',
+    'component_engineering_rule_evaluation_projection',
+  ]) {
+    await client.query(`refresh materialized view ${schemaName}.${projection}`);
+  }
+}
+
+async function writePlannedComponentReviseOperation(client, planned) {
+  await client.query(
+    `insert into ${schemaName}.governance_component_local_definitions
+      (component_id, source_path, source_content_sha256, revision, name, level, parent_id,
+       root_unit, domain_unit, status, children_required, owned_concern, ddd_owner,
+       cq_rails, created_by, created_at)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+     on conflict (component_id) do update set
+       source_path = excluded.source_path,
+       source_content_sha256 = excluded.source_content_sha256,
+       revision = excluded.revision,
+       name = excluded.name,
+       level = excluded.level,
+       parent_id = excluded.parent_id,
+       root_unit = excluded.root_unit,
+       domain_unit = excluded.domain_unit,
+       status = excluded.status,
+       children_required = excluded.children_required,
+       owned_concern = excluded.owned_concern,
+       ddd_owner = excluded.ddd_owner,
+       cq_rails = excluded.cq_rails,
+       created_by = excluded.created_by`,
+    [
+      planned.definition.componentId,
+      planned.definition.sourcePath,
+      planned.definition.sourceContentSha256,
+      planned.definition.revision,
+      planned.definition.name,
+      planned.definition.level,
+      planned.definition.parentComponentId,
+      planned.definition.rootUnit,
+      planned.definition.domainUnit,
+      planned.definition.status,
+      planned.definition.childrenRequired,
+      planned.definition.ownedConcern,
+      planned.definition.dddOwner,
+      planned.definition.cqRails,
+      planned.definition.createdBy,
+      planned.definition.createdAt,
+    ]
+  );
+
+  await client.query(
+    `delete from ${schemaName}.governance_component_local_ownership_patterns
+     where component_id = $1`,
+    [planned.definition.componentId]
+  );
+  await client.query(
+    `delete from ${schemaName}.governance_component_local_semantic_items
+     where component_id = $1`,
+    [planned.definition.componentId]
+  );
+
+  for (const pattern of planned.ownershipPatterns) {
+    await client.query(
+      `insert into ${schemaName}.governance_component_local_ownership_patterns
+        (component_id, pattern_kind, pattern, pattern_order)
+       values ($1, $2, $3, $4)`,
+      [pattern.componentId, pattern.patternKind, pattern.pattern, pattern.patternOrder]
+    );
+  }
+
+  for (const item of planned.semanticItems) {
+    await client.query(
+      `insert into ${schemaName}.governance_component_local_semantic_items
+        (component_id, item_kind, item_value, item_order)
+       values ($1, $2, $3, $4)`,
+      [item.componentId, item.itemKind, item.itemValue, item.itemOrder]
+    );
+  }
+
+  await refreshComponentEngineeringReadProjections(client);
 
   await client.query(
     `insert into ${schemaName}.governance_component_local_operations
@@ -5689,6 +6196,47 @@ async function applyArchitectureDesignCreateOperation(command, options = {}) {
   }
 }
 
+async function applyArchitectureDesignTransitionOperation(command, options = {}) {
+  const client =
+    options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
+  const ownsClient = !options.client;
+
+  if (ownsClient) {
+    await client.connect();
+  }
+
+  try {
+    await assertPlanningDbCurrentSchemaReady(client);
+    await client.query('begin');
+
+    const existing = await readExistingArchitectureDesignOperation(client, command.idempotencyKey);
+    if (existing) {
+      assertArchitectureDesignIdempotentReplayMatches(existing, command);
+      await client.query('commit');
+      return { idempotent: true, audit: existing };
+    }
+
+    const existingDesign = await readArchitectureDesign(client, command.designId);
+    const planned = planArchitectureDesignTransitionOperation({
+      command,
+      existingDesign,
+      operationId: options.operationId || crypto.randomUUID(),
+      now: options.now || new Date(),
+    });
+
+    await writePlannedArchitectureDesignTransitionOperation(client, planned);
+    await client.query('commit');
+    return { idempotent: false, ...planned };
+  } catch (error) {
+    await client.query('rollback');
+    throw error;
+  } finally {
+    if (ownsClient) {
+      await client.end();
+    }
+  }
+}
+
 async function applyArchitectureComponentRecordOperation(command, options = {}) {
   const client =
     options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
@@ -6132,6 +6680,54 @@ async function applyComponentCreateOperation(command, options = {}) {
   }
 }
 
+async function applyComponentReviseOperation(command, options = {}) {
+  const client =
+    options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
+  const ownsClient = !options.client;
+
+  if (ownsClient) {
+    await client.connect();
+  }
+
+  try {
+    await assertPlanningDbCurrentSchemaReady(client);
+    await client.query('begin');
+
+    const existing = await readExistingComponentOperation(client, command.idempotencyKey);
+    if (existing) {
+      assertComponentIdempotentReplayMatches(existing, command);
+      await client.query('commit');
+      return { idempotent: true, audit: existing };
+    }
+
+    await client.query('select pg_advisory_xact_lock(hashtext($1))', [command.componentId]);
+    const design = await readArchitectureDesign(client, command.designId);
+    const designScopes = await readArchitectureDesignScopes(client, command.designId);
+    const existingComponent = await readEffectiveComponentDefinition(client, command.componentId);
+    const latestOperation = await readLatestComponentOperation(client, command.componentId);
+    const planned = planComponentReviseOperation({
+      command,
+      design,
+      designScopes,
+      existingComponent,
+      latestOperation,
+      operationId: options.operationId || crypto.randomUUID(),
+      now: options.now || new Date(),
+    });
+
+    await writePlannedComponentReviseOperation(client, planned);
+    await client.query('commit');
+    return { idempotent: false, ...planned };
+  } catch (error) {
+    await client.query('rollback');
+    throw error;
+  } finally {
+    if (ownsClient) {
+      await client.end();
+    }
+  }
+}
+
 async function applyComponentReparentOperation(command, options = {}) {
   const client =
     options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
@@ -6374,6 +6970,13 @@ function printOperationResult(result) {
     return;
   }
 
+  if (result.transition) {
+    console.log(
+      `[planning:db:operate] ${result.audit.operationType} ${result.transition.designId} ${result.transition.fromStatus}->${result.transition.toStatus}`
+    );
+    return;
+  }
+
   if (result.component) {
     console.log(
       `[planning:db:operate] ${result.audit.operationType} ${result.component.componentId} status=${result.component.status} responsibilities=${result.responsibilities.length}`
@@ -6503,39 +7106,43 @@ async function main() {
       ? await applyDocsResolutionOperation(command)
       : command.kind === 'architecture_design_create'
         ? await applyArchitectureDesignCreateOperation(command)
-        : command.kind === 'architecture_component_record'
-          ? await applyArchitectureComponentRecordOperation(command)
-          : command.kind === 'architecture_relation_record'
-            ? await applyArchitectureRelationRecordOperation(command)
-            : command.kind === 'architecture_contract_record'
-              ? await applyArchitectureContractRecordOperation(command)
-              : command.kind === 'architecture_port_record'
-                ? await applyArchitecturePortRecordOperation(command)
-                : command.kind === 'architecture_storage_io_record'
-                  ? await applyArchitectureStorageIoRecordOperation(command)
-                  : command.kind === 'architecture_fitness_scan'
-                    ? await applyArchitectureFitnessScanOperation(command)
-                    : command.kind === 'architecture_test_record'
-                      ? await applyArchitectureTestRecordOperation(command)
-                      : command.kind === 'architecture_observability_record'
-                        ? await applyArchitectureObservabilityRecordOperation(command)
-                        : command.kind === 'component_create'
-                          ? await applyComponentCreateOperation(command)
-                          : command.kind === 'component_reparent'
-                            ? await applyComponentReparentOperation(command)
-                            : command.kind === 'db_surface_upsert'
-                              ? await applyDbSurfaceUpsertOperation(command)
-                              : command.kind === 'feature_mechanization_rail_record'
-                                ? await applyFeatureMechanizationRailRecordOperation(command)
-                                : command.kind === 'governance_refresh_run_record'
-                                  ? await applyGovernanceRefreshRunRecordOperation(command)
-                                  : command.kind.startsWith('fowler_analysis_')
-                                    ? await applyFowlerAnalysisOperation(command)
-                                    : (() => {
-                                        throw new Error(
-                                          `Unsupported planning DB operation "${command.kind}".`
-                                        );
-                                      })();
+        : command.kind === 'architecture_design_transition'
+          ? await applyArchitectureDesignTransitionOperation(command)
+          : command.kind === 'architecture_component_record'
+            ? await applyArchitectureComponentRecordOperation(command)
+            : command.kind === 'architecture_relation_record'
+              ? await applyArchitectureRelationRecordOperation(command)
+              : command.kind === 'architecture_contract_record'
+                ? await applyArchitectureContractRecordOperation(command)
+                : command.kind === 'architecture_port_record'
+                  ? await applyArchitecturePortRecordOperation(command)
+                  : command.kind === 'architecture_storage_io_record'
+                    ? await applyArchitectureStorageIoRecordOperation(command)
+                    : command.kind === 'architecture_fitness_scan'
+                      ? await applyArchitectureFitnessScanOperation(command)
+                      : command.kind === 'architecture_test_record'
+                        ? await applyArchitectureTestRecordOperation(command)
+                        : command.kind === 'architecture_observability_record'
+                          ? await applyArchitectureObservabilityRecordOperation(command)
+                          : command.kind === 'component_create'
+                            ? await applyComponentCreateOperation(command)
+                            : command.kind === 'component_revise'
+                              ? await applyComponentReviseOperation(command)
+                              : command.kind === 'component_reparent'
+                                ? await applyComponentReparentOperation(command)
+                                : command.kind === 'db_surface_upsert'
+                                  ? await applyDbSurfaceUpsertOperation(command)
+                                  : command.kind === 'feature_mechanization_rail_record'
+                                    ? await applyFeatureMechanizationRailRecordOperation(command)
+                                    : command.kind === 'governance_refresh_run_record'
+                                      ? await applyGovernanceRefreshRunRecordOperation(command)
+                                      : command.kind.startsWith('fowler_analysis_')
+                                        ? await applyFowlerAnalysisOperation(command)
+                                        : (() => {
+                                            throw new Error(
+                                              `Unsupported planning DB operation "${command.kind}".`
+                                            );
+                                          })();
   printOperationResult(result);
 }
 
@@ -6550,6 +7157,7 @@ module.exports = {
   applyArchitectureComponentRecordOperation,
   applyArchitectureContractRecordOperation,
   applyArchitectureDesignCreateOperation,
+  applyArchitectureDesignTransitionOperation,
   applyArchitectureFitnessScanOperation,
   applyArchitecturePortRecordOperation,
   applyArchitectureStorageIoRecordOperation,
@@ -6557,6 +7165,7 @@ module.exports = {
   applyArchitectureObservabilityRecordOperation,
   applyArchitectureRelationRecordOperation,
   applyComponentCreateOperation,
+  applyComponentReviseOperation,
   applyComponentReparentOperation,
   applyDbSurfaceUpsertOperation,
   applyDocsResolutionOperation,
@@ -6578,6 +7187,7 @@ module.exports = {
   planArchitectureComponentRecordOperation,
   planArchitectureContractRecordOperation,
   planArchitectureDesignCreateOperation,
+  planArchitectureDesignTransitionOperation,
   planArchitectureFitnessScanOperation,
   planArchitecturePortRecordOperation,
   planArchitectureStorageIoRecordOperation,
@@ -6585,6 +7195,7 @@ module.exports = {
   planArchitectureObservabilityRecordOperation,
   planArchitectureRelationRecordOperation,
   planComponentCreateOperation,
+  planComponentReviseOperation,
   planComponentReparentOperation,
   planDbSurfaceUpsertOperation,
   planFeatureMechanizationRailRecordOperation,
@@ -6598,9 +7209,11 @@ module.exports = {
   validateGovernanceRefreshRunState,
   resolveOperateHelpRequest,
   writePlannedComponentCreateOperation,
+  writePlannedComponentReviseOperation,
   writePlannedComponentReparentOperation,
   writePlannedDbSurfaceUpsertOperation,
   writePlannedArchitectureContractRecordOperation,
+  writePlannedArchitectureDesignTransitionOperation,
   writePlannedArchitectureFitnessScanOperation,
   writePlannedArchitecturePortRecordOperation,
   writePlannedArchitectureStorageIoRecordOperation,

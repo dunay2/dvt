@@ -34,4 +34,4 @@ behind `apps/api` rails and backend ports.
 - `apps/web/src/app/services/runs/runsService.api.ts`
 - `apps/web/src/app/ports/runs.ts`
 - `apps/web/src/app/services/runs/runsApiPayloads.ts`
-- `apps/api/src/application/ports/protectedRuntimeRunRailVocabulary.ts`
+- Planning DB `command-query-rails` query for current runtime ownership

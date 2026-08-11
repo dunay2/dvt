@@ -481,6 +481,136 @@ test('validateFeatureImplementationManifests rejects changed files on forbidden 
   assert.match(result.errors.join('\n'), /matches forbiddenImplementationSurfaces/);
 });
 
+test('validateFeatureImplementationManifests permits deletion of a forbidden surface', () => {
+  const deletedPath = 'apps/web/src/app/views/canvas/tokenRefreshShortcut.ts';
+  const ownedPath = validManifest.allowedImplementationSurfaces[0];
+  const result = validateFeatureImplementationManifests(
+    [
+      {
+        sourcePath: 'plan.md',
+        manifest: {
+          ...validManifest,
+          forbiddenImplementationSurfaces: [deletedPath],
+        },
+      },
+    ],
+    {
+      changedFiles: [ownedPath, deletedPath],
+      deletedFiles: [deletedPath],
+      currentFiles: [ownedPath],
+    }
+  );
+
+  assert.equal(result.errors.length, 0);
+});
+
+test('validateFeatureImplementationManifests rejects deletion outside allowed and forbidden surfaces', () => {
+  const deletedPath = 'apps/api/src/retiredCatalog.ts';
+  const result = validateFeatureImplementationManifests(
+    [
+      {
+        sourcePath: 'plan.md',
+        manifest: validManifest,
+      },
+    ],
+    {
+      changedFiles: [deletedPath],
+      deletedFiles: [deletedPath],
+    }
+  );
+
+  assert.match(result.errors.join('\n'), /outside allowedImplementationSurfaces/);
+});
+
+test('validateFeatureImplementationManifests permits deletion of a complete forbidden subtree', () => {
+  const deletedPath = 'apps/api/docs/retired-component.md';
+  const ownedPath = validManifest.allowedImplementationSurfaces[0];
+  const result = validateFeatureImplementationManifests(
+    [
+      {
+        sourcePath: 'api-retirement-plan.md',
+        manifest: {
+          ...validManifest,
+          featureId: 'R1-1D-API-GOVERNANCE-HARDCUT',
+          forbiddenImplementationSurfaces: ['apps/api/docs/**'],
+        },
+      },
+    ],
+    {
+      changedFiles: [ownedPath, deletedPath],
+      deletedFiles: [deletedPath],
+      currentFiles: [ownedPath, 'apps/api/src/server.ts'],
+    }
+  );
+
+  assert.deepEqual(result.errors, []);
+});
+
+test('validateFeatureImplementationManifests rejects deletion authorized only by another feature wildcard', () => {
+  const deletedPath = 'apps/api/src/auth.ts';
+  const ownedPath = validManifest.allowedImplementationSurfaces[0];
+  const result = validateFeatureImplementationManifests(
+    [
+      {
+        sourcePath: 'canvas-plan.md',
+        manifest: {
+          ...validManifest,
+          featureId: 'TF-E2-M-C',
+        },
+      },
+      {
+        sourcePath: 'unrelated-api-plan.md',
+        manifest: {
+          ...validManifest,
+          featureId: 'UNRELATED-API',
+          allowedImplementationSurfaces: ['apps/worker/**'],
+          forbiddenImplementationSurfaces: ['apps/api/** backend authorization changes'],
+        },
+      },
+    ],
+    {
+      changedFiles: [ownedPath, deletedPath],
+      deletedFiles: [deletedPath],
+      currentFiles: [ownedPath],
+    }
+  );
+
+  assert.match(result.errors.join('\n'), /outside allowedImplementationSurfaces/);
+});
+
+test('validateFeatureImplementationManifests rejects deletion authorized only by another feature exact path', () => {
+  const deletedPath = 'apps/api/src/auth.ts';
+  const ownedPath = validManifest.allowedImplementationSurfaces[0];
+  const result = validateFeatureImplementationManifests(
+    [
+      {
+        sourcePath: 'canvas-plan.md',
+        manifest: {
+          ...validManifest,
+          featureId: 'TF-E2-M-C',
+          allowedImplementationSurfaces: [ownedPath],
+        },
+      },
+      {
+        sourcePath: 'unrelated-api-plan.md',
+        manifest: {
+          ...validManifest,
+          featureId: 'UNRELATED-API',
+          allowedImplementationSurfaces: ['apps/worker/**'],
+          forbiddenImplementationSurfaces: [deletedPath],
+        },
+      },
+    ],
+    {
+      changedFiles: [ownedPath, deletedPath],
+      deletedFiles: [deletedPath],
+      currentFiles: [ownedPath],
+    }
+  );
+
+  assert.match(result.errors.join('\n'), /outside allowedImplementationSurfaces/);
+});
+
 test('validateFeatureImplementationManifests applies forbidden surfaces only from the owning feature manifest', () => {
   const canvasFeatureManifest = {
     ...validManifest,
@@ -822,6 +952,41 @@ test('FeatureMechanizationGitDiffReader treats untracked file contents as added 
     assert.ok(
       diff.addedLinesByPath[relativePath].includes('export function createNewCanvasRail() {')
     );
+  } finally {
+    fs.rmSync(repoRootPath, { recursive: true, force: true });
+  }
+});
+
+test('FeatureMechanizationGitDiffReader reports tracked deletions explicitly', () => {
+  const repoRootPath = fs.mkdtempSync(path.join(os.tmpdir(), 'dvt-feature-mechanization-'));
+  const deletedPath = 'apps/api/src/retiredCatalog.ts';
+  const retainedPath = 'apps/api/src/server.ts';
+
+  try {
+    fs.mkdirSync(path.join(repoRootPath, 'apps/api/src'), { recursive: true });
+    fs.writeFileSync(path.join(repoRootPath, retainedPath), 'export {};\n');
+    const reader = new FeatureMechanizationGitDiffReader({
+      baseRef: 'origin/main',
+      repoRootPath,
+    });
+    reader.readGitLines = (args) => {
+      if (args[0] === 'diff' && args.includes('--name-only')) {
+        return [deletedPath];
+      }
+
+      if (args[0] === 'ls-files' && args.includes('--cached')) {
+        return [deletedPath, retainedPath];
+      }
+
+      return [];
+    };
+    reader.runGit = () => '';
+
+    const diff = reader.read();
+
+    assert.deepEqual(diff.changedFiles, [deletedPath]);
+    assert.deepEqual(diff.currentFiles, [retainedPath]);
+    assert.deepEqual(diff.deletedFiles, [deletedPath]);
   } finally {
     fs.rmSync(repoRootPath, { recursive: true, force: true });
   }

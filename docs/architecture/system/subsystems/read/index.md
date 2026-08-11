@@ -117,4 +117,4 @@ responsibilities.
 - [Subsystem Architecture](../index.md)
 - [DVT Component Map](../../../component-map.md)
 - [UI / Visualization Domain](../../../domain-ui.md)
-- [API / Entry Domain](../../../domain-api.md)
+- [API / Entry Domain](../../../components/api/index.md)

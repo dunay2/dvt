@@ -13,7 +13,7 @@ import {
 /**
  * Step-registry-oriented cases for `StoredPlanExecutabilityValidator`.
  */
-export function describeStoredPlanExecutabilityValidatorRegistryCases(): void {
+function describeStoredPlanExecutabilityValidatorRegistryCases(): void {
   describe('StoredPlanExecutabilityValidator step-registry checks', () => {
     it('accepts custom step kinds when an explicit stepTypeRegistry is injected', async () => {
       const validator = new StoredPlanExecutabilityValidator({
@@ -113,3 +113,5 @@ export function describeStoredPlanExecutabilityValidatorRegistryCases(): void {
     });
   });
 }
+
+describeStoredPlanExecutabilityValidatorRegistryCases();

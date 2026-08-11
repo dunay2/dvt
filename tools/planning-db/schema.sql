@@ -1244,7 +1244,7 @@ CREATE TABLE architecture.design_operations (
     resulting_revision integer NOT NULL,
     payload jsonb DEFAULT '{}'::jsonb NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT architecture_design_operations_type_check CHECK ((operation_type = ANY (ARRAY['architecture_design_create'::text, 'architecture_component_record'::text, 'architecture_relation_record'::text, 'architecture_contract_record'::text, 'architecture_port_record'::text, 'architecture_storage_io_record'::text, 'architecture_fitness_scan'::text, 'architecture_test_record'::text, 'architecture_observability_record'::text]))),
+    CONSTRAINT architecture_design_operations_type_check CHECK ((operation_type = ANY (ARRAY['architecture_design_create'::text, 'architecture_design_transition'::text, 'architecture_component_record'::text, 'architecture_relation_record'::text, 'architecture_contract_record'::text, 'architecture_port_record'::text, 'architecture_storage_io_record'::text, 'architecture_fitness_scan'::text, 'architecture_test_record'::text, 'architecture_observability_record'::text]))),
     CONSTRAINT design_operations_expected_revision_check CHECK (((expected_revision IS NULL) OR (expected_revision >= 0))),
     CONSTRAINT design_operations_previous_revision_check CHECK ((previous_revision >= 0)),
     CONSTRAINT design_operations_resulting_revision_check CHECK ((resulting_revision >= 0)),
@@ -1284,7 +1284,7 @@ CREATE TABLE architecture.design_scope (
     required boolean DEFAULT true NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT architecture_design_scope_kind_check CHECK ((scope_kind = ANY (ARRAY['may_create'::text, 'may_update'::text, 'may_delete'::text, 'may_reference'::text, 'must_prove'::text]))),
-    CONSTRAINT architecture_design_scope_subject_kind_check CHECK ((subject_kind = ANY (ARRAY['component'::text, 'relation'::text, 'contract'::text, 'flow'::text, 'check'::text, 'path'::text, 'command'::text, 'query'::text, 'decision'::text, 'evidence'::text, 'risk'::text, 'test'::text])))
+    CONSTRAINT architecture_design_scope_subject_kind_check CHECK ((subject_kind = ANY (ARRAY['component'::text, 'relation'::text, 'contract'::text, 'port'::text, 'flow'::text, 'check'::text, 'path'::text, 'command'::text, 'query'::text, 'decision'::text, 'evidence'::text, 'risk'::text, 'test'::text])))
 );
 
 
@@ -7340,7 +7340,7 @@ CREATE TABLE planning_query_store.governance_component_local_operations (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT governance_component_local_operatio_source_content_sha256_check CHECK ((source_content_sha256 ~ '^[a-f0-9]{64}$'::text)),
     CONSTRAINT governance_component_local_operations_expected_revision_check CHECK (((expected_revision IS NULL) OR (expected_revision >= 0))),
-    CONSTRAINT governance_component_local_operations_operation_type_check CHECK ((operation_type = ANY (ARRAY['component_create'::text, 'component_reparent'::text]))),
+    CONSTRAINT governance_component_local_operations_operation_type_check CHECK ((operation_type = ANY (ARRAY['component_create'::text, 'component_revise'::text, 'component_reparent'::text]))),
     CONSTRAINT governance_component_local_operations_previous_revision_check CHECK ((previous_revision >= 0)),
     CONSTRAINT governance_component_local_operations_resulting_revision_check CHECK ((resulting_revision >= 0))
 );
