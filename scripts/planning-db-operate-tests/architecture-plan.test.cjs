@@ -1252,7 +1252,7 @@ test('architecture execution evidence writer persists proof before its audit row
   assert.match(queries[1].sql, /insert into architecture\.design_operations/u);
 });
 
-test('architecture evidence rejects forged CI origin and source hash drift', () => {
+test('architecture evidence rejects forged CI origin and source hash drift', async () => {
   const command = parseArgs([
     'architecture-evidence',
     'record-execution',
@@ -1271,7 +1271,7 @@ test('architecture evidence rejects forged CI origin and source hash drift', () 
     '--result',
     'pass',
     '--source-ref',
-    'https://github.com/dunay2/dvt/actions/runs/1234',
+    'https://github.com/dunay2/dvt/actions/runs/1234/job/5678',
     '--source-path',
     'scripts/planning-db-operate.cjs',
     '--source-content-sha256',
@@ -1280,9 +1280,80 @@ test('architecture evidence rejects forged CI origin and source hash drift', () 
     'codex',
   ]);
 
-  assert.throws(
-    () => assertArchitectureEvidenceOriginAuthenticity(command, {}),
+  await assert.rejects(
+    assertArchitectureEvidenceOriginAuthenticity(command, {
+      currentGitSha: 'a'.repeat(40),
+      fetch: async () => ({ ok: false, status: 404, json: async () => ({}) }),
+      repositorySlug: 'dunay2/dvt',
+    }),
     /ARCH-EVIDENCE-CI-ORIGIN-UNVERIFIED/
+  );
+
+  const githubResponses = new Map([
+    [
+      'https://api.github.com/repos/dunay2/dvt/actions/runs/1234',
+      {
+        id: 1234,
+        head_sha: 'a'.repeat(40),
+        status: 'completed',
+        conclusion: 'success',
+        html_url: 'https://github.com/dunay2/dvt/actions/runs/1234',
+        repository: { full_name: 'dunay2/dvt' },
+      },
+    ],
+    [
+      'https://api.github.com/repos/dunay2/dvt/actions/jobs/5678',
+      {
+        id: 5678,
+        run_id: 1234,
+        head_sha: 'a'.repeat(40),
+        status: 'completed',
+        conclusion: 'success',
+        html_url: command.sourceRef,
+        name: 'PR Quality Checks',
+      },
+    ],
+  ]);
+  const verified = await assertArchitectureEvidenceOriginAuthenticity(command, {
+    currentGitSha: 'a'.repeat(40),
+    fetch: async (url) => ({
+      ok: githubResponses.has(url),
+      status: githubResponses.has(url) ? 200 : 404,
+      json: async () => githubResponses.get(url) || {},
+    }),
+    repositorySlug: 'dunay2/dvt',
+  });
+  assert.equal(verified, command);
+
+  const failedJobResponses = new Map(githubResponses);
+  failedJobResponses.set('https://api.github.com/repos/dunay2/dvt/actions/jobs/5678', {
+    ...githubResponses.get('https://api.github.com/repos/dunay2/dvt/actions/jobs/5678'),
+    conclusion: 'failure',
+  });
+  await assert.rejects(
+    assertArchitectureEvidenceOriginAuthenticity(command, {
+      currentGitSha: 'a'.repeat(40),
+      fetch: async (url) => ({
+        ok: true,
+        status: 200,
+        json: async () => failedJobResponses.get(url),
+      }),
+      repositorySlug: 'dunay2/dvt',
+    }),
+    /ARCH-EVIDENCE-CI-ORIGIN-UNVERIFIED.*successful completed job/u
+  );
+
+  await assert.rejects(
+    assertArchitectureEvidenceOriginAuthenticity(command, {
+      currentGitSha: 'b'.repeat(40),
+      fetch: async (url) => ({
+        ok: true,
+        status: 200,
+        json: async () => githubResponses.get(url),
+      }),
+      repositorySlug: 'dunay2/dvt',
+    }),
+    /ARCH-EVIDENCE-CI-ORIGIN-UNVERIFIED.*current commit/u
   );
   assert.throws(
     () =>
