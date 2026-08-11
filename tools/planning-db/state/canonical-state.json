@@ -10443,14 +10443,14 @@
         "work_item_id": "GH-2273",
         "title": "Bind push reachability diff to pre-push SHA",
         "owner": "ArchitectureBoundaryGuard",
-        "status": "approved",
+        "status": "implemented",
         "rationale": "Use the pull-request base SHA for PRs and github.event.before for pushes so changed-only orphan and test-support enforcement evaluates the actual delivered delta on every mandatory workflow trigger.",
         "fowler_signal": "evolutionary_architecture",
         "rail_ref": "ApplyArchitectureDependencyBoundaryGate",
         "approved_at": "2026-08-11T07:05:29.659+00:00",
         "supersedes_id": null,
         "created_at": "2026-08-11T07:05:26.237+00:00",
-        "updated_at": "2026-08-11T07:05:29.659+00:00"
+        "updated_at": "2026-08-11T07:12:10.655+00:00"
       },
       {
         "design_id": "CANVAS-BACKLOG-INTEGRITY-READINESS-20260626",
@@ -89108,6 +89108,27 @@
         "created_at": "2026-08-11T02:26:48.234+00:00"
       },
       {
+        "operation_id": "789250f7-774a-4f7a-8bd8-6aeaaba89c20",
+        "idempotency_key": "codex-api-h2-2-push-diff-v12-implemented",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-2-PUSH-DIFF-BASELINE-V12-20260811",
+        "source_ref": ".github/workflows/pr-quality-gate.yml",
+        "source_content_sha256": "bdf20dae616bfda993737a4ffe143a28189db1cbb51ca4654faa3247328756e3",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The architecture workflow contract is green and direct pushes now compare github.event.before to github.sha while PR behavior remains unchanged.",
+          "designId": "API-H2-2-PUSH-DIFF-BASELINE-V12-20260811",
+          "toStatus": "implemented",
+          "sourceRef": ".github/workflows/pr-quality-gate.yml",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "bdf20dae616bfda993737a4ffe143a28189db1cbb51ca4654faa3247328756e3"
+        },
+        "created_at": "2026-08-11T07:12:10.655+00:00"
+      },
+      {
         "operation_id": "79cdd56c-1762-4be8-a777-e851cec9f3e7",
         "idempotency_key": "r1-1d-supersede-db-residual",
         "operation_type": "architecture_design_transition",
@@ -91414,6 +91435,27 @@
           "sourceContentSha256": "463b543f974ee2a26cdd31a2e9473f8152745612f8bc462a3bc357b0e35d43e4"
         },
         "created_at": "2026-08-11T05:57:15.735+00:00"
+      },
+      {
+        "operation_id": "bba509e9-4f9e-43cd-a264-281716fd1236",
+        "idempotency_key": "codex-api-h2-2-push-diff-v12-implementing",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-2-PUSH-DIFF-BASELINE-V12-20260811",
+        "source_ref": ".github/workflows/pr-quality-gate.yml",
+        "source_content_sha256": "bdf20dae616bfda993737a4ffe143a28189db1cbb51ca4654faa3247328756e3",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Begin the reviewed RED-GREEN correction after the workflow contract test reproduced the direct-push false negative.",
+          "designId": "API-H2-2-PUSH-DIFF-BASELINE-V12-20260811",
+          "toStatus": "implementing",
+          "sourceRef": ".github/workflows/pr-quality-gate.yml",
+          "fromStatus": "approved",
+          "sourceContentSha256": "bdf20dae616bfda993737a4ffe143a28189db1cbb51ca4654faa3247328756e3"
+        },
+        "created_at": "2026-08-11T07:12:08.822+00:00"
       },
       {
         "operation_id": "bc1b2418-188b-4319-8358-c2939d22aec0",
