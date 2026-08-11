@@ -2,6 +2,12 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+const { Client } = require('pg');
+
+const { defaultPgUrl } = require('./planning-db-run.cjs');
+const {
+  readDocumentationLifecycleRows,
+} = require('./planning-db/queries/documentation-lifecycle-query.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const docsRoot = path.join(repoRoot, 'docs');
@@ -236,7 +242,7 @@ function riskRegisterEntryPrecedence(entryName) {
   }
 }
 
-function generateAdrLanding() {
+function generateAdrLanding(lifecycleAuthority) {
   if (!fs.existsSync(adrDir)) {
     throw new Error('Missing docs/adr directory.');
   }
@@ -246,7 +252,8 @@ function generateAdrLanding() {
     .filter((entry) => entry.isFile())
     .map((entry) => entry.name)
     .filter((name) => /^ADR-.*\.md$/i.test(name))
-    .filter((name) => !isExcludedAdrIndexFile(name));
+    .filter((name) => !isExcludedAdrIndexFile(name))
+    .filter((name) => shouldIncludeDocumentationPath(`docs/adr/${name}`, lifecycleAuthority));
 
   const adrRows = entries
     .map((name) => {
@@ -342,6 +349,74 @@ function shouldIncludePlanningDoc(status) {
   return normalized !== 'superseded' && normalized !== 'archived';
 }
 
+function lifecycleStateIsPublishable(lifecycleRow = {}) {
+  const lifecycleState = String(
+    lifecycleRow.lifecycle_state || lifecycleRow.lifecycleState || lifecycleRow.status || ''
+  )
+    .trim()
+    .toLowerCase();
+  return ![
+    'archive',
+    'archived',
+    'discarded',
+    'disposable',
+    'rejected',
+    'retired',
+    'superseded',
+  ].includes(lifecycleState);
+}
+
+function lifecycleAuthorityParts(authority) {
+  if (authority instanceof Map) return { rowsByPath: authority, strict: false };
+  return {
+    rowsByPath: authority?.rowsByPath,
+    strict: authority?.strict === true,
+  };
+}
+
+function shouldIncludeDocumentationPath(documentPath, authority) {
+  const normalizedPath = String(documentPath || '').replace(/\\/gu, '/');
+  const { rowsByPath, strict } = lifecycleAuthorityParts(authority);
+  if (!(rowsByPath instanceof Map)) return true;
+  const lifecycleRow = rowsByPath.get(normalizedPath);
+  if (!lifecycleRow) {
+    if (strict && /\.md$/iu.test(normalizedPath)) {
+      throw new Error(`Missing Planning DB lifecycle authority for ${normalizedPath}.`);
+    }
+    return true;
+  }
+  return lifecycleStateIsPublishable(lifecycleRow);
+}
+
+async function readDocumentationLifecycleAuthority(options = {}) {
+  const client =
+    options.client ||
+    new Client({
+      connectionString:
+        options.databaseUrl ||
+        process.env.DVT_PLANNING_DB_URL ||
+        process.env.DATABASE_URL ||
+        defaultPgUrl,
+    });
+  const ownsClient = !options.client;
+  if (ownsClient) await client.connect();
+  try {
+    const rows = await readDocumentationLifecycleRows(client, { limit: 100000 });
+    const rowsByPath = new Map();
+    for (const row of rows) {
+      const documentPath = String(row.document_path ?? row.documentPath ?? '').replace(/\\/gu, '/');
+      if (!documentPath) throw new Error('Planning DB lifecycle row has no document path.');
+      if (rowsByPath.has(documentPath)) {
+        throw new Error(`Ambiguous Planning DB lifecycle authority for ${documentPath}.`);
+      }
+      rowsByPath.set(documentPath, row);
+    }
+    return { rowsByPath, strict: true };
+  } finally {
+    if (ownsClient) await client.end();
+  }
+}
+
 function shouldSkipPlanningDocName(name) {
   return (
     /^index\.md$/i.test(name) ||
@@ -350,7 +425,7 @@ function shouldSkipPlanningDocName(name) {
   );
 }
 
-function normalizePlanningDocs() {
+function normalizePlanningDocs(lifecycleAuthority) {
   if (!fs.existsSync(planningDir)) {
     return;
   }
@@ -374,6 +449,8 @@ function normalizePlanningDocs() {
 
     for (const name of entries) {
       const fullPath = path.join(dirPath, name);
+      const documentPath = path.relative(repoRoot, fullPath).replace(/\\/g, '/');
+      if (!shouldIncludeDocumentationPath(documentPath, lifecycleAuthority)) continue;
       const original = fs.readFileSync(fullPath, 'utf8');
       const parts = splitFrontmatter(original);
       const heading = extractFirstHeading(parts.body);
@@ -427,7 +504,7 @@ function scanFilesRecursive(dirAbs, predicate) {
   return rows;
 }
 
-function collectPlanningDocs() {
+function collectPlanningDocs(lifecycleAuthority) {
   const rows = [];
   const roots = [
     { dir: planningDir, prefix: 'planning' },
@@ -451,6 +528,8 @@ function collectPlanningDocs() {
 
     for (const name of files) {
       const abs = path.join(root.dir, name);
+      const documentPath = path.relative(repoRoot, abs).replace(/\\/g, '/');
+      if (!shouldIncludeDocumentationPath(documentPath, lifecycleAuthority)) continue;
       const content = fs.readFileSync(abs, 'utf8');
       const parsed = splitFrontmatter(content);
       if (!shouldIncludePlanningDoc(parsed.frontmatter.status)) {
@@ -474,7 +553,7 @@ function collectPlanningDocs() {
   return rows;
 }
 
-function collectPlanningReferenceDirs() {
+function collectPlanningReferenceDirs(lifecycleAuthority) {
   if (!fs.existsSync(planningDir)) return [];
   const skip = new Set(['proposals', 'reviews', 'status']);
   return fs
@@ -488,6 +567,9 @@ function collectPlanningReferenceDirs() {
         fs.existsSync(path.join(dirAbs, 'index.md')) || fs.existsSync(path.join(dirAbs, 'INDEX.md'))
       );
     })
+    .filter((entry) =>
+      shouldIncludeDocumentationPath(`docs/planning/${entry.name}/index.md`, lifecycleAuthority)
+    )
     .map((entry) => ({
       label: humanizeName(entry.name),
       link: `${entry.name}/`,
@@ -503,9 +585,9 @@ function bulletsFor(rows, fromDir) {
   });
 }
 
-function generatePlanningIndexes() {
-  const docs = collectPlanningDocs();
-  const refDirs = collectPlanningReferenceDirs();
+function generatePlanningIndexes(lifecycleAuthority) {
+  const docs = collectPlanningDocs(lifecycleAuthority);
+  const refDirs = collectPlanningReferenceDirs(lifecycleAuthority);
   const proposals = docs.filter((d) => d.type === 'proposal');
   const reviews = docs.filter((d) => d.type === 'review');
   const status = docs.filter((d) => d.type === 'status');
@@ -707,18 +789,24 @@ function renderContractSourceList(absFiles) {
   });
 }
 
-function renderContractDocsList(absFiles, fromDirAbs) {
-  if (absFiles.length === 0) {
+function renderContractDocsList(absFiles, fromDirAbs, lifecycleAuthority) {
+  const publishableFiles = absFiles.filter((abs) =>
+    shouldIncludeDocumentationPath(
+      path.relative(repoRoot, abs).replace(/\\/g, '/'),
+      lifecycleAuthority
+    )
+  );
+  if (publishableFiles.length === 0) {
     return ['- No documentation references detected yet.'];
   }
-  return absFiles.map((abs) => {
+  return publishableFiles.map((abs) => {
     const relFromDocs = path.relative(fromDirAbs, abs).replace(/\\/g, '/');
     const label = path.basename(abs);
     return `- [${label}](${encodeURI(relFromDocs)})`;
   });
 }
 
-function generateContractSubIndexes() {
+function generateContractSubIndexes(lifecycleAuthority) {
   const contractsPkgSrc = path.join(repoRoot, 'packages', '@dvt', 'contracts', 'src');
   const engineOwnedSources = [
     path.join(repoRoot, 'packages', '@dvt', 'engine', 'src', 'ports', 'IWorkflowEngine.ts'),
@@ -778,7 +866,11 @@ function generateContractSubIndexes() {
     '',
     '## Reference Documentation',
     '',
-    ...renderContractDocsList(engineDocs, path.dirname(contractsEngineIndexPath)),
+    ...renderContractDocsList(
+      engineDocs,
+      path.dirname(contractsEngineIndexPath),
+      lifecycleAuthority
+    ),
     '',
     '> This page is auto-generated by `pnpm docs:sync`. Do not edit manually.',
     '',
@@ -793,7 +885,7 @@ function generateContractSubIndexes() {
     status: 'Active',
     owner: 'docs',
   });
-  const plannerDocRows = scanSectionEntries('contracts/planner');
+  const plannerDocRows = scanSectionEntries('contracts/planner', lifecycleAuthority);
   const plannerDocLines = renderBulletList(plannerDocRows);
   const plannerLines = [
     renderFrontmatter(plannerMeta),
@@ -826,7 +918,7 @@ function generateContractSubIndexes() {
     status: 'Active',
     owner: 'docs',
   });
-  const sharedDocRows = scanSectionEntries('contracts/shared');
+  const sharedDocRows = scanSectionEntries('contracts/shared', lifecycleAuthority);
   const sharedDocLines = renderBulletList(sharedDocRows);
   const sharedLines = [
     renderFrontmatter(sharedMeta),
@@ -854,7 +946,7 @@ function generateContractSubIndexes() {
   }
 }
 
-function scanSectionEntries(sectionRelativePath) {
+function scanSectionEntries(sectionRelativePath, lifecycleAuthority) {
   const dirAbs = path.join(docsRoot, sectionRelativePath);
   if (!fs.existsSync(dirAbs)) {
     return [];
@@ -871,8 +963,12 @@ function scanSectionEntries(sectionRelativePath) {
       const lowerIndex = path.join(absPath, 'index.md');
       const upperIndex = path.join(absPath, 'INDEX.md');
       if (fs.existsSync(lowerIndex)) {
+        const documentPath = path.relative(repoRoot, lowerIndex).replace(/\\/g, '/');
+        if (!shouldIncludeDocumentationPath(documentPath, lifecycleAuthority)) continue;
         rows.push({ type: 'dir', label: humanizeName(entry.name), link: `${entry.name}/index.md` });
       } else if (fs.existsSync(upperIndex)) {
+        const documentPath = path.relative(repoRoot, upperIndex).replace(/\\/g, '/');
+        if (!shouldIncludeDocumentationPath(documentPath, lifecycleAuthority)) continue;
         rows.push({ type: 'dir', label: humanizeName(entry.name), link: `${entry.name}/INDEX.md` });
       }
       continue;
@@ -883,6 +979,8 @@ function scanSectionEntries(sectionRelativePath) {
       continue;
     }
     if (/^index\.md$/i.test(entry.name)) continue;
+    const documentPath = path.relative(repoRoot, absPath).replace(/\\/g, '/');
+    if (!shouldIncludeDocumentationPath(documentPath, lifecycleAuthority)) continue;
     const fileContent = readIfExists(absPath) || '';
     const heading = ext === '.md' ? extractFirstHeading(fileContent) : null;
     const label = allowYaml
@@ -1158,12 +1256,17 @@ const sectionConfigs = [
   },
 ];
 
-function generateSectionIndexes() {
+function generateSectionIndexes(lifecycleAuthority) {
   for (const section of sectionConfigs) {
     const indexPath = path.join(docsRoot, section.relPath, 'index.md');
     const current = readIfExists(indexPath);
     const meta = frontmatterWithDefaults(current, section.defaults);
-    const rows = scanSectionEntries(section.relPath);
+    const preservesHistoricalNavigation =
+      section.relPath === 'archive' || section.relPath.endsWith('/_archive');
+    const rows = scanSectionEntries(
+      section.relPath,
+      preservesHistoricalNavigation ? undefined : lifecycleAuthority
+    );
     const rowLines = renderBulletList(rows);
     const lines =
       typeof section.renderIndex === 'function'
@@ -1189,19 +1292,24 @@ function generateSectionIndexes() {
   }
 }
 
-function main() {
+async function main(options = {}) {
+  const lifecycleAuthority =
+    options.lifecycleAuthority || (await readDocumentationLifecycleAuthority(options));
   ensureCanonicalDocsHome();
-  normalizePlanningDocs();
-  generateAdrLanding();
-  generatePlanningIndexes();
-  generateContractSubIndexes();
-  generateSectionIndexes();
+  normalizePlanningDocs(lifecycleAuthority);
+  generateAdrLanding(lifecycleAuthority);
+  generatePlanningIndexes(lifecycleAuthority);
+  generateContractSubIndexes(lifecycleAuthority);
+  generateSectionIndexes(lifecycleAuthority);
   console.log('[docs:sync] Completed.');
 }
 
 if (require.main === module) {
   try {
-    main();
+    void main().catch((error) => {
+      console.error(`[docs:sync] ERROR: ${error.message}`);
+      process.exitCode = 1;
+    });
   } catch (error) {
     console.error(`[docs:sync] ERROR: ${error.message}`);
     process.exit(1);
@@ -1212,8 +1320,11 @@ module.exports = {
   collectPlanningDocs,
   generatePlanningIndexes,
   inferPlanningType,
+  lifecycleStateIsPublishable,
   main,
+  readDocumentationLifecycleAuthority,
   scanSectionEntries,
+  shouldIncludeDocumentationPath,
   shouldIncludePlanningDoc,
   splitFrontmatter,
 };

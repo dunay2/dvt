@@ -66,3 +66,19 @@ test('section index generation sorts equal labels by link for cross-platform sta
     'Expected evidence docs to contain equal-label rows that exercise the tie-breaker'
   );
 });
+
+test('section index generation excludes lifecycle-superseded documents from Planning DB', () => {
+  const lifecycleByPath = new Map([
+    [
+      'docs/guides/generic-graph-source-technical-manual-20260404.md',
+      { lifecycle_state: 'superseded' },
+    ],
+  ]);
+
+  const entries = scanSectionEntries('guides', lifecycleByPath);
+
+  assert.equal(
+    entries.some((entry) => entry.link === 'generic-graph-source-technical-manual-20260404.md'),
+    false
+  );
+});
