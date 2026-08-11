@@ -10621,6 +10621,34 @@
         "updated_at": "2026-08-11T11:39:17.204+00:00"
       },
       {
+        "design_id": "API-H2-4-DB-FIRST-INDEX-GENERATION-20260811",
+        "work_item_id": "GH-2274",
+        "title": "Make documentation index generation lifecycle DB-first",
+        "owner": "Architecture / Docs / Planning",
+        "status": "superseded",
+        "rationale": "Explicit docs:sync currently reintroduces lifecycle-superseded documents by enumerating the filesystem; generated navigation must filter through Planning DB without adding a registry or implicit generation.",
+        "fowler_signal": "hidden_authority",
+        "rail_ref": "GeneratePlanningDerivedSurfaces;ListDocumentationLifecycleFacts;ClassifyArchitectureDocumentationDisposition",
+        "approved_at": null,
+        "supersedes_id": null,
+        "created_at": "2026-08-11T12:49:59.113+00:00",
+        "updated_at": "2026-08-11T12:53:30.885+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811",
+        "work_item_id": "GH-2274",
+        "title": "Make documentation index generation lifecycle DB-first",
+        "owner": "Architecture / Docs / Planning",
+        "status": "review",
+        "rationale": "Explicit docs:sync must filter current Markdown navigation through Planning DB, exclude superseded pages and ADRs, preserve archive navigation, and never add a local registry or implicit generation.",
+        "fowler_signal": "hidden_authority",
+        "rail_ref": "GeneratePlanningDerivedSurfaces;ListDocumentationLifecycleFacts;ClassifyArchitectureDocumentationDisposition",
+        "approved_at": null,
+        "supersedes_id": "API-H2-4-DB-FIRST-INDEX-GENERATION-20260811",
+        "created_at": "2026-08-11T12:53:29.414+00:00",
+        "updated_at": "2026-08-11T12:53:29.414+00:00"
+      },
+      {
         "design_id": "CANVAS-BACKLOG-INTEGRITY-READINESS-20260626",
         "work_item_id": "E-CANVAS-UXDB-COMPONENT-SLICES-1",
         "title": "Canvas backlog component integrity readiness projection",
@@ -62762,6 +62790,110 @@
         "created_at": "2026-08-11T11:39:17.204+00:00"
       },
       {
+        "design_id": "API-H2-4-DB-FIRST-INDEX-GENERATION-20260811",
+        "subject_kind": "command",
+        "subject_id": "GeneratePlanningDerivedSurfaces",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T12:49:59.113+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-INDEX-GENERATION-20260811",
+        "subject_kind": "path",
+        "subject_id": "docs/guides/index.md",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T12:49:59.113+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-INDEX-GENERATION-20260811",
+        "subject_kind": "path",
+        "subject_id": "scripts/sync-docs.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T12:49:59.113+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-INDEX-GENERATION-20260811",
+        "subject_kind": "path",
+        "subject_id": "tools/ci/sync-docs-status-policy.test.mjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T12:49:59.113+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-INDEX-GENERATION-20260811",
+        "subject_kind": "query",
+        "subject_id": "ClassifyArchitectureDocumentationDisposition",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T12:49:59.113+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-INDEX-GENERATION-20260811",
+        "subject_kind": "query",
+        "subject_id": "ListDocumentationLifecycleFacts",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T12:49:59.113+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811",
+        "subject_kind": "command",
+        "subject_id": "GeneratePlanningDerivedSurfaces",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T12:53:29.414+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811",
+        "subject_kind": "path",
+        "subject_id": "docs/adr/index.md",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T12:53:29.414+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811",
+        "subject_kind": "path",
+        "subject_id": "docs/guides/index.md",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T12:53:29.414+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811",
+        "subject_kind": "path",
+        "subject_id": "scripts/sync-docs.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T12:53:29.414+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811",
+        "subject_kind": "path",
+        "subject_id": "tools/ci/sync-docs-status-policy.test.mjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T12:53:29.414+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811",
+        "subject_kind": "query",
+        "subject_id": "ClassifyArchitectureDocumentationDisposition",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T12:53:29.414+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811",
+        "subject_kind": "query",
+        "subject_id": "ListDocumentationLifecycleFacts",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T12:53:29.414+00:00"
+      },
+      {
         "design_id": "CANVAS-BOTTOM-DRAWER-ACTIONABLE-READ-MODEL-20260626",
         "subject_kind": "component",
         "subject_id": "web.component.shell.BottomOperationalDrawer",
@@ -90868,6 +91000,76 @@
         "created_at": "2026-08-10T21:04:23.135+00:00"
       },
       {
+        "operation_id": "5c73782e-1d08-4917-9ec5-1925e14d481c",
+        "idempotency_key": "architecture_design_create:codex:API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811:5427ce478643898b",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811",
+        "source_ref": "docs/architecture/command-query-rail-governance.md",
+        "source_content_sha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "Architecture / Docs / Planning",
+          "title": "Make documentation index generation lifecycle DB-first",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/sync-docs.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "tools/ci/sync-docs-status-policy.test.mjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "docs/guides/index.md",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "docs/adr/index.md",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "GeneratePlanningDerivedSurfaces",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "ListDocumentationLifecycleFacts",
+              "subjectKind": "query"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "ClassifyArchitectureDocumentationDisposition",
+              "subjectKind": "query"
+            }
+          ],
+          "status": "review",
+          "railRef": "GeneratePlanningDerivedSurfaces;ListDocumentationLifecycleFacts;ClassifyArchitectureDocumentationDisposition",
+          "designId": "API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811",
+          "rationale": "Explicit docs:sync must filter current Markdown navigation through Planning DB, exclude superseded pages and ADRs, preserve archive navigation, and never add a local registry or implicit generation.",
+          "sourceRef": "docs/architecture/command-query-rail-governance.md",
+          "workItemId": "GH-2274",
+          "fowlerSignal": "hidden_authority",
+          "supersedesId": "API-H2-4-DB-FIRST-INDEX-GENERATION-20260811",
+          "sourceContentSha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc"
+        },
+        "created_at": "2026-08-11T12:53:29.414+00:00"
+      },
+      {
         "operation_id": "5e446b5a-e3c1-4348-a0c4-3dee78cc5289",
         "idempotency_key": "gh-2167-update-test-sys-api-http-entrypoints-primary-v1",
         "operation_type": "architecture_test_record",
@@ -92617,6 +92819,27 @@
           "sourceContentSha256": "0513e6e3200466e1e9765b284281cf53cdbc2f2497681d003259c1738fb68fee"
         },
         "created_at": "2026-08-10T21:04:26.852+00:00"
+      },
+      {
+        "operation_id": "880c3e20-6608-4d19-9125-eabdae2c74c1",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-4-DB-FIRST-INDEX-GENERATION-20260811:d388ef5134211f35",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-INDEX-GENERATION-20260811",
+        "source_ref": "docs/architecture/command-query-rail-governance.md",
+        "source_content_sha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "V2 adds the exact generated ADR index surface revealed by the DB-first sync RED test.",
+          "designId": "API-H2-4-DB-FIRST-INDEX-GENERATION-20260811",
+          "toStatus": "superseded",
+          "sourceRef": "docs/architecture/command-query-rail-governance.md",
+          "fromStatus": "review",
+          "sourceContentSha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc"
+        },
+        "created_at": "2026-08-11T12:53:30.885+00:00"
       },
       {
         "operation_id": "88ec101a-4fac-41c9-826c-f67d382cb697",
@@ -97655,6 +97878,70 @@
           "sourceContentSha256": "89d19f7206c5ae8e990fb82afd59aafe1f3771131b381b827fe37c5b3738dcd3"
         },
         "created_at": "2026-08-10T21:06:26.348+00:00"
+      },
+      {
+        "operation_id": "dd9e6492-56a6-488e-bc14-269362129274",
+        "idempotency_key": "architecture_design_create:codex:API-H2-4-DB-FIRST-INDEX-GENERATION-20260811:4faa08cf27381d72",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-INDEX-GENERATION-20260811",
+        "source_ref": "docs/architecture/command-query-rail-governance.md",
+        "source_content_sha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "Architecture / Docs / Planning",
+          "title": "Make documentation index generation lifecycle DB-first",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/sync-docs.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "tools/ci/sync-docs-status-policy.test.mjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "docs/guides/index.md",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "GeneratePlanningDerivedSurfaces",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "ListDocumentationLifecycleFacts",
+              "subjectKind": "query"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "ClassifyArchitectureDocumentationDisposition",
+              "subjectKind": "query"
+            }
+          ],
+          "status": "review",
+          "railRef": "GeneratePlanningDerivedSurfaces;ListDocumentationLifecycleFacts;ClassifyArchitectureDocumentationDisposition",
+          "designId": "API-H2-4-DB-FIRST-INDEX-GENERATION-20260811",
+          "rationale": "Explicit docs:sync currently reintroduces lifecycle-superseded documents by enumerating the filesystem; generated navigation must filter through Planning DB without adding a registry or implicit generation.",
+          "sourceRef": "docs/architecture/command-query-rail-governance.md",
+          "workItemId": "GH-2274",
+          "fowlerSignal": "hidden_authority",
+          "supersedesId": null,
+          "sourceContentSha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc"
+        },
+        "created_at": "2026-08-11T12:49:59.113+00:00"
       },
       {
         "operation_id": "de278682-561d-44b2-8076-aaf505ed3b43",
