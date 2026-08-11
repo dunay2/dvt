@@ -408,7 +408,7 @@ export function collectApiDeploymentProfileEvidence({
     for (const statement of ifStatements) {
       if (
         containsIdentifier(statement.expression, 'OBS_ENABLED') &&
-        containsCall(statement.thenStatement, 'createNoopObservability')
+        containsReachableReturnCall(statement.thenStatement, 'createNoopObservability')
       ) {
         const executableScope = enclosingExecutableScope(statement, parsed);
         add(
@@ -417,7 +417,16 @@ export function collectApiDeploymentProfileEvidence({
           'OBS_ENABLED=false branch returns createNoopObservability()',
           [source]
         );
-        if (containsNewExpression(executableScope, 'OtelObservability')) {
+        if (
+          hasReachableEnabledTarget(
+            executableScope,
+            statement,
+            (node) =>
+              ts.isNewExpression(node) &&
+              ts.isIdentifier(node.expression) &&
+              node.expression.text === 'OtelObservability'
+          )
+        ) {
           add(
             'observability-otel',
             API_REACHABILITY_CLASSIFICATIONS.conditionalProduction,
@@ -430,7 +439,10 @@ export function collectApiDeploymentProfileEvidence({
       const oidcCondition = ['OIDC_JWKS_URI', 'OIDC_ISSUER', 'OIDC_AUDIENCE'].every((identifier) =>
         containsIdentifier(statement.expression, identifier)
       );
-      if (oidcCondition && containsCall(statement.thenStatement, 'buildProtectedRuntimeModule')) {
+      if (
+        oidcCondition &&
+        containsReachableCall(statement.thenStatement, 'buildProtectedRuntimeModule')
+      ) {
         const protectedSource =
           importedSymbolTarget(moduleMap.get(source), parsed, 'buildProtectedRuntimeModule') ??
           source;
@@ -455,7 +467,10 @@ export function collectApiDeploymentProfileEvidence({
         const protectedScope = protectedParsed
           ? findNamedExecutableScope(protectedParsed, 'buildProtectedRuntimeModule')
           : null;
-        if (protectedScope && containsDynamicImport(protectedScope, '@dvt/adapter-postgres')) {
+        if (
+          protectedScope &&
+          containsReachableDynamicImport(protectedScope, '@dvt/adapter-postgres')
+        ) {
           add(
             'postgres-protected-storage',
             API_REACHABILITY_CLASSIFICATIONS.conditionalProduction,
@@ -467,7 +482,7 @@ export function collectApiDeploymentProfileEvidence({
 
       if (
         containsIdentifier(statement.expression, 'DVT_INTENT_RECONCILER_ENABLED') &&
-        containsNullReturn(statement.thenStatement)
+        containsReachableNullReturn(statement.thenStatement)
       ) {
         const executableScope = enclosingClassOrExecutableScope(statement, parsed);
         add(
@@ -476,10 +491,7 @@ export function collectApiDeploymentProfileEvidence({
           'disabled reconciler branch returns no runtime handle',
           [source]
         );
-        if (
-          containsCall(executableScope, 'createIntentReconcilerRuntimeComposition') ||
-          containsNewExpression(executableScope, 'IntentReconcilerWorker')
-        ) {
+        if (hasReachableReconcilerEnabledPath(executableScope, statement)) {
           add(
             'reconciler-enabled',
             API_REACHABILITY_CLASSIFICATIONS.conditionalProduction,
@@ -491,8 +503,10 @@ export function collectApiDeploymentProfileEvidence({
 
       if (
         containsIdentifier(statement.expression, 'TEMPORAL_ADDRESS') &&
-        containsNullReturn(statement.thenStatement) &&
-        containsDynamicImport(enclosingExecutableScope(statement, parsed), '@dvt/adapter-temporal')
+        containsReachableNullReturn(statement.thenStatement) &&
+        hasReachableEnabledTarget(enclosingExecutableScope(statement, parsed), statement, (node) =>
+          isDynamicImportOf(node, '@dvt/adapter-temporal')
+        )
       ) {
         add(
           'temporal-provider',
@@ -564,15 +578,92 @@ function collectScopedDescendants(root, predicate) {
   return matches;
 }
 
+function staticBooleanValue(expression) {
+  let current = expression;
+  while (ts.isParenthesizedExpression(current)) current = current.expression;
+  if (current.kind === ts.SyntaxKind.TrueKeyword) return true;
+  if (current.kind === ts.SyntaxKind.FalseKeyword) return false;
+  return null;
+}
+
+function nodeIsWithin(node, root) {
+  return node.pos >= root.pos && node.end <= root.end;
+}
+
+function statementAlwaysTerminates(statement) {
+  if (ts.isReturnStatement(statement) || ts.isThrowStatement(statement)) return true;
+  if (ts.isBlock(statement)) {
+    const last = statement.statements.at(-1);
+    return last ? statementAlwaysTerminates(last) : false;
+  }
+  if (!ts.isIfStatement(statement)) return false;
+
+  const condition = staticBooleanValue(statement.expression);
+  if (condition === true) return statementAlwaysTerminates(statement.thenStatement);
+  if (condition === false) {
+    return statement.elseStatement ? statementAlwaysTerminates(statement.elseStatement) : false;
+  }
+  return (
+    statement.elseStatement !== undefined &&
+    statementAlwaysTerminates(statement.thenStatement) &&
+    statementAlwaysTerminates(statement.elseStatement)
+  );
+}
+
+function isStaticallyReachable(node, boundary) {
+  for (let current = node; current && current !== boundary; current = current.parent) {
+    const parent = current.parent;
+    if (!parent) break;
+
+    if (ts.isIfStatement(parent)) {
+      const condition = staticBooleanValue(parent.expression);
+      if (condition === false && nodeIsWithin(node, parent.thenStatement)) return false;
+      if (condition === true && parent.elseStatement && nodeIsWithin(node, parent.elseStatement)) {
+        return false;
+      }
+    }
+    if (ts.isConditionalExpression(parent)) {
+      const condition = staticBooleanValue(parent.condition);
+      if (condition === false && nodeIsWithin(node, parent.whenTrue)) return false;
+      if (condition === true && nodeIsWithin(node, parent.whenFalse)) return false;
+    }
+    if (ts.isWhileStatement(parent) && staticBooleanValue(parent.expression) === false) {
+      return false;
+    }
+    if (ts.isBlock(parent)) {
+      const containingStatement = parent.statements.find((statement) =>
+        nodeIsWithin(node, statement)
+      );
+      if (containingStatement) {
+        const statementIndex = parent.statements.indexOf(containingStatement);
+        if (
+          parent.statements
+            .slice(0, statementIndex)
+            .some((statement) => statementAlwaysTerminates(statement))
+        ) {
+          return false;
+        }
+      }
+    }
+  }
+  return true;
+}
+
+function collectReachableScopedDescendants(root, predicate) {
+  return collectScopedDescendants(root, predicate).filter((node) =>
+    isStaticallyReachable(node, root)
+  );
+}
+
 function containsIdentifier(root, identifier) {
   return (
     collectDescendants(root, (node) => ts.isIdentifier(node) && node.text === identifier).length > 0
   );
 }
 
-function containsCall(root, callee) {
+function containsReachableCall(root, callee) {
   return (
-    collectScopedDescendants(
+    collectReachableScopedDescendants(
       root,
       (node) =>
         ts.isCallExpression(node) &&
@@ -582,39 +673,121 @@ function containsCall(root, callee) {
   );
 }
 
-function containsNewExpression(root, constructorName) {
+function containsReachableReturnCall(root, callee) {
   return (
-    collectScopedDescendants(
+    collectReachableScopedDescendants(
       root,
       (node) =>
-        ts.isNewExpression(node) &&
-        ts.isIdentifier(node.expression) &&
-        node.expression.text === constructorName
+        ts.isReturnStatement(node) &&
+        node.expression !== undefined &&
+        ts.isCallExpression(node.expression) &&
+        ts.isIdentifier(node.expression.expression) &&
+        node.expression.expression.text === callee
     ).length > 0
   );
 }
 
-function containsNullReturn(root) {
+function containsReachableNullReturn(root) {
   return (
-    collectScopedDescendants(
+    collectReachableScopedDescendants(
       root,
       (node) => ts.isReturnStatement(node) && node.expression?.kind === ts.SyntaxKind.NullKeyword
     ).length > 0
   );
 }
 
-function containsDynamicImport(root, target) {
+function isDynamicImportOf(node, target) {
   return (
-    collectScopedDescendants(
-      root,
-      (node) =>
-        ts.isCallExpression(node) &&
-        node.expression.kind === ts.SyntaxKind.ImportKeyword &&
-        node.arguments.length === 1 &&
-        ts.isStringLiteral(node.arguments[0]) &&
-        node.arguments[0].text === target
-    ).length > 0
+    ts.isCallExpression(node) &&
+    node.expression.kind === ts.SyntaxKind.ImportKeyword &&
+    node.arguments.length === 1 &&
+    ts.isStringLiteral(node.arguments[0]) &&
+    node.arguments[0].text === target
   );
+}
+
+function containsReachableDynamicImport(root, target) {
+  return (
+    collectReachableScopedDescendants(root, (node) => isDynamicImportOf(node, target)).length > 0
+  );
+}
+
+function hasReachableEnabledTarget(executableScope, guardStatement, predicate) {
+  return collectReachableScopedDescendants(executableScope, predicate).some(
+    (target) =>
+      target.pos >= guardStatement.end ||
+      (guardStatement.elseStatement && nodeIsWithin(target, guardStatement.elseStatement))
+  );
+}
+
+function executableScopeName(scope) {
+  return scope.name && ts.isIdentifier(scope.name) ? scope.name.text : null;
+}
+
+function reachableThisMethodCalls(scope) {
+  return collectReachableScopedDescendants(
+    scope,
+    (node) =>
+      ts.isCallExpression(node) &&
+      ts.isPropertyAccessExpression(node.expression) &&
+      node.expression.expression.kind === ts.SyntaxKind.ThisKeyword
+  ).map((call) => ({ call, method: call.expression.name.text }));
+}
+
+function hasReachableReconcilerEnabledPath(scope, guardStatement) {
+  const targetPredicate = (node) =>
+    (ts.isCallExpression(node) &&
+      ts.isIdentifier(node.expression) &&
+      node.expression.text === 'createIntentReconcilerRuntimeComposition') ||
+    (ts.isNewExpression(node) &&
+      ts.isIdentifier(node.expression) &&
+      node.expression.text === 'IntentReconcilerWorker');
+
+  if (!ts.isClassDeclaration(scope) && !ts.isClassExpression(scope)) {
+    return hasReachableEnabledTarget(scope, guardStatement, targetPredicate);
+  }
+
+  const guardMethod = enclosingExecutableScope(guardStatement, scope);
+  const guardMethodName = executableScopeName(guardMethod);
+  if (!guardMethodName) return false;
+  if (hasReachableEnabledTarget(guardMethod, guardStatement, targetPredicate)) return true;
+
+  const methods = new Map(
+    scope.members
+      .filter(isExecutableScope)
+      .map((method) => [executableScopeName(method), method])
+      .filter(([name]) => name !== null)
+  );
+  const callsByMethod = new Map(
+    [...methods].map(([name, method]) => [name, reachableThisMethodCalls(method)])
+  );
+  const methodsReachingTarget = new Set(
+    [...methods]
+      .filter(([, method]) => collectReachableScopedDescendants(method, targetPredicate).length > 0)
+      .map(([name]) => name)
+  );
+
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const [methodName, calls] of callsByMethod) {
+      if (
+        !methodsReachingTarget.has(methodName) &&
+        calls.some(({ method }) => methodsReachingTarget.has(method))
+      ) {
+        methodsReachingTarget.add(methodName);
+        changed = true;
+      }
+    }
+  }
+
+  return [...callsByMethod.values()].some((calls) => {
+    const guardCalls = calls.filter(({ method }) => method === guardMethodName);
+    const targetCalls = calls.filter(({ method }) => methodsReachingTarget.has(method));
+    return guardCalls.some(({ call: guardCall }) =>
+      targetCalls.some(({ call: targetCall }) => targetCall.pos > guardCall.end)
+    );
+  });
 }
 
 function findNamedExecutableScope(sourceFile, name) {
