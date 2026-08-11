@@ -6327,12 +6327,14 @@ CREATE TABLE planning_query_store.fowler_analysis_reference_resolutions (
 CREATE VIEW planning_query_store.fowler_analysis_reference_query AS
  WITH accepted_targets AS MATERIALIZED (
          SELECT target.document_path,
+            target.source_content_sha256,
             min(target.target_path) AS canonical_target_path
            FROM planning_query_store.fowler_analysis_canonical_targets target
           WHERE (target.target_status = 'accepted'::text)
-          GROUP BY target.document_path
+          GROUP BY target.document_path, target.source_content_sha256
         ), imported_references AS MATERIALIZED (
          SELECT document.document_path,
+            document.source_content_sha256 AS document_source_content_sha256,
             'repository_path_reference'::text AS reference_kind,
             reference.relation_type,
             reference.source_path AS reference_path,
@@ -6346,6 +6348,7 @@ CREATE VIEW planning_query_store.fowler_analysis_reference_query AS
           WHERE (reference.source_path !~~ 'buzon/%'::text)
         UNION ALL
          SELECT document.document_path,
+            document.source_content_sha256 AS document_source_content_sha256,
             'knowledge_document_link'::text AS reference_kind,
             link.relation_type,
             source_document.document_path AS reference_path,
@@ -6372,10 +6375,10 @@ CREATE VIEW planning_query_store.fowler_analysis_reference_query AS
             reference.reference_component_id,
             reference.reference_file_role,
             reference.sample_text,
-            reference.source_content_sha256
+           reference.source_content_sha256
            FROM ((imported_references reference
-             LEFT JOIN accepted_targets target ON ((target.document_path = reference.document_path)))
-             LEFT JOIN planning_query_store.fowler_analysis_reference_resolutions resolution ON (((resolution.document_path = reference.document_path) AND (resolution.reference_path = reference.reference_path) AND (resolution.relation_type = reference.relation_type))))
+             LEFT JOIN accepted_targets target ON (((target.document_path = reference.document_path) AND (target.source_content_sha256 = reference.document_source_content_sha256))))
+             LEFT JOIN planning_query_store.fowler_analysis_reference_resolutions resolution ON (((resolution.document_path = reference.document_path) AND (resolution.reference_path = reference.reference_path) AND (resolution.relation_type = reference.relation_type) AND (resolution.source_content_sha256 = reference.document_source_content_sha256))))
         )
  SELECT document_path,
     reference_kind,
@@ -6423,12 +6426,13 @@ CREATE VIEW planning_query_store.fowler_analysis_retirement_query AS
            FROM planning_query_store.fowler_analysis_reference_query reference
           GROUP BY reference.document_path
         ), accepted_targets AS (
-         SELECT DISTINCT ON (target.document_path) target.document_path,
+         SELECT DISTINCT ON (target.document_path, target.source_content_sha256) target.document_path,
             target.target_path AS canonical_target_path,
-            target.target_status AS canonical_target_status
+            target.target_status AS canonical_target_status,
+            target.source_content_sha256
            FROM planning_query_store.fowler_analysis_canonical_targets target
           WHERE (target.target_status = 'accepted'::text)
-          ORDER BY target.document_path, target.linked_at DESC, target.target_path
+          ORDER BY target.document_path, target.source_content_sha256, target.linked_at DESC, target.target_path
         ), accepted_dispositions AS (
          SELECT disposition.document_path,
             disposition.disposition_status,
@@ -6471,7 +6475,7 @@ CREATE VIEW planning_query_store.fowler_analysis_retirement_query AS
            FROM (((((planning_query_store.fowler_analysis_document_query document
              LEFT JOIN improvement_counts ON ((improvement_counts.document_path = document.document_path)))
              LEFT JOIN reference_counts ON ((reference_counts.document_path = document.document_path)))
-             LEFT JOIN accepted_targets ON ((accepted_targets.document_path = document.document_path)))
+             LEFT JOIN accepted_targets ON (((accepted_targets.document_path = document.document_path) AND (accepted_targets.source_content_sha256 = document.source_content_sha256))))
              LEFT JOIN accepted_dispositions ON (((accepted_dispositions.document_path = document.document_path) AND (accepted_dispositions.source_content_sha256 = document.source_content_sha256))))
              LEFT JOIN retirement_decisions ON (((retirement_decisions.document_path = document.document_path) AND (retirement_decisions.source_content_sha256 = document.source_content_sha256))))
         )
