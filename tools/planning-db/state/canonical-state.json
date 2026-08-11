@@ -10303,14 +10303,28 @@
         "work_item_id": "GH-2273",
         "title": "Propagate nested switch-path exits",
         "owner": "ArchitectureBoundaryGuard",
-        "status": "implemented",
+        "status": "superseded",
         "rationale": "Reuse switch-path abrupt-completion semantics for predecessors inside nested blocks so break and continue make later profile evidence unreachable without broadening the guard into a general control-flow graph.",
         "fowler_signal": "evolutionary_architecture",
         "rail_ref": "ApplyArchitectureDependencyBoundaryGate",
         "approved_at": "2026-08-11T06:10:57.407+00:00",
         "supersedes_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V9-20260811",
         "created_at": "2026-08-11T06:10:39.408+00:00",
-        "updated_at": "2026-08-11T06:15:46.295+00:00"
+        "updated_at": "2026-08-11T06:41:55.135+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V11-20260811",
+        "work_item_id": "GH-2273",
+        "title": "Track directed abrupt switch completion",
+        "owner": "ArchitectureBoundaryGuard",
+        "status": "implemented",
+        "rationale": "Model normal and directed abrupt completion for statically selected switch paths so an unlabeled break completes its own switch while labeled breaks and continues propagate to their actual enclosing target; unknown selection remains conservative.",
+        "fowler_signal": "evolutionary_architecture",
+        "rail_ref": "ApplyArchitectureDependencyBoundaryGate",
+        "approved_at": "2026-08-11T06:34:16.643+00:00",
+        "supersedes_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V10-20260811",
+        "created_at": "2026-08-11T06:33:55.114+00:00",
+        "updated_at": "2026-08-11T06:41:43.978+00:00"
       },
       {
         "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V2-20260811",
@@ -60392,6 +60406,54 @@
         "created_at": "2026-08-11T06:10:39.408+00:00"
       },
       {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V11-20260811",
+        "subject_kind": "command",
+        "subject_id": "ApplyArchitectureDependencyBoundaryGate",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T06:33:55.114+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V11-20260811",
+        "subject_kind": "component",
+        "subject_id": "SYS-CI-GOVERNANCE-TOOLS-CI-ARCHITECTURE-BOUNDARIES",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-11T06:33:55.114+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V11-20260811",
+        "subject_kind": "component",
+        "subject_id": "SYS-CI-GOVERNANCE-TOOLS-CI-ARCHITECTURE-BOUNDARIES",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T06:33:55.114+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V11-20260811",
+        "subject_kind": "path",
+        "subject_id": "tools/ci/architecture-dependency-guard.test.mjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T06:33:55.114+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V11-20260811",
+        "subject_kind": "path",
+        "subject_id": "tools/ci/check-architecture-dependencies.mjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T06:33:55.114+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V11-20260811",
+        "subject_kind": "test",
+        "subject_id": "TEST-CI-API-PRODUCTION-REACHABILITY",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T06:33:55.114+00:00"
+      },
+      {
         "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V2-20260811",
         "subject_kind": "command",
         "subject_id": "ApplyArchitectureDependencyBoundaryGate",
@@ -85503,6 +85565,27 @@
         "created_at": "2026-08-10T21:04:13.545+00:00"
       },
       {
+        "operation_id": "0a527bd3-de36-45e6-a1ab-6caa2cca4734",
+        "idempotency_key": "codex-api-h2-2-reachability-v10-superseded-by-v11",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V10-20260811",
+        "source_ref": "tools/ci/check-architecture-dependencies.mjs",
+        "source_content_sha256": "4f02c340d242cb834a03990064924683692fae7c4dee8c19f29eeb47f3a75ce3",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "V11 supersedes V10 after the ninth independent Fowler QA proved that switch-local and outward abrupt completion targets were conflated for following code.",
+          "designId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V10-20260811",
+          "toStatus": "superseded",
+          "sourceRef": "tools/ci/check-architecture-dependencies.mjs",
+          "fromStatus": "implemented",
+          "sourceContentSha256": "4f02c340d242cb834a03990064924683692fae7c4dee8c19f29eeb47f3a75ce3"
+        },
+        "created_at": "2026-08-11T06:41:55.135+00:00"
+      },
+      {
         "operation_id": "0ae717d4-2bc3-4648-b1bf-4abfbaffa780",
         "idempotency_key": "architecture_component_record:codex:R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810:SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS:a81aebf64fdfc14b",
         "operation_type": "architecture_component_record",
@@ -87081,6 +87164,27 @@
         "created_at": "2026-08-11T05:21:52.867+00:00"
       },
       {
+        "operation_id": "409a896e-7c17-42dd-b97f-31b6aaf69eaf",
+        "idempotency_key": "codex-api-h2-2-reachability-v11-implementing",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V11-20260811",
+        "source_ref": "tools/ci/check-architecture-dependencies.mjs",
+        "source_content_sha256": "4dbcb55f49bf5f498484f71e70efaab1380b0290b33e8007dac59d8ce8fb5e69",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Begin V11 RED-GREEN after database design approval.",
+          "designId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V11-20260811",
+          "toStatus": "implementing",
+          "sourceRef": "tools/ci/check-architecture-dependencies.mjs",
+          "fromStatus": "approved",
+          "sourceContentSha256": "4dbcb55f49bf5f498484f71e70efaab1380b0290b33e8007dac59d8ce8fb5e69"
+        },
+        "created_at": "2026-08-11T06:34:25.422+00:00"
+      },
+      {
         "operation_id": "44b94844-4dc8-48f7-9e01-d966ad292ae0",
         "idempotency_key": "gh-2167-update-test-sys-api-infra-workspace-local-adapters-8-v1",
         "operation_type": "architecture_test_record",
@@ -87229,6 +87333,70 @@
           "sourceContentSha256": "21703c9d45ade37be5be8316f16371c022813ddc26d03c6f7e2fc00bc6a210d6"
         },
         "created_at": "2026-08-10T21:04:53.018+00:00"
+      },
+      {
+        "operation_id": "4b58ffa0-2109-4d69-9309-8c0bbcc4c7e7",
+        "idempotency_key": "codex-api-h2-2-reachability-v11-create",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V11-20260811",
+        "source_ref": "tools/ci/check-architecture-dependencies.mjs",
+        "source_content_sha256": "4dbcb55f49bf5f498484f71e70efaab1380b0290b33e8007dac59d8ce8fb5e69",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "ArchitectureBoundaryGuard",
+          "title": "Track directed abrupt switch completion",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "ApplyArchitectureDependencyBoundaryGate",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-CI-GOVERNANCE-TOOLS-CI-ARCHITECTURE-BOUNDARIES",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-CI-GOVERNANCE-TOOLS-CI-ARCHITECTURE-BOUNDARIES",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "tools/ci/architecture-dependency-guard.test.mjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "tools/ci/check-architecture-dependencies.mjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-CI-API-PRODUCTION-REACHABILITY",
+              "subjectKind": "test"
+            }
+          ],
+          "status": "proposed",
+          "railRef": "ApplyArchitectureDependencyBoundaryGate",
+          "designId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V11-20260811",
+          "rationale": "Model normal and directed abrupt completion for statically selected switch paths so an unlabeled break completes its own switch while labeled breaks and continues propagate to their actual enclosing target; unknown selection remains conservative.",
+          "sourceRef": "tools/ci/check-architecture-dependencies.mjs",
+          "workItemId": "GH-2273",
+          "fowlerSignal": "evolutionary_architecture",
+          "supersedesId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V10-20260811",
+          "sourceContentSha256": "4dbcb55f49bf5f498484f71e70efaab1380b0290b33e8007dac59d8ce8fb5e69"
+        },
+        "created_at": "2026-08-11T06:33:55.114+00:00"
       },
       {
         "operation_id": "4d1e17c4-3fee-470d-a70b-0a828895c7e9",
@@ -87917,6 +88085,27 @@
           "sourceContentSha256": "6839610b4ba494e67ae584e861750622049e1f90a0af8ceb9e2db5688906fb80"
         },
         "created_at": "2026-08-10T21:04:30.697+00:00"
+      },
+      {
+        "operation_id": "5e937320-f4e5-48bf-b4d0-64a4ffc994f8",
+        "idempotency_key": "codex-api-h2-2-reachability-v11-approve",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V11-20260811",
+        "source_ref": "tools/ci/check-architecture-dependencies.mjs",
+        "source_content_sha256": "4dbcb55f49bf5f498484f71e70efaab1380b0290b33e8007dac59d8ce8fb5e69",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Approve a local completion-outcome analysis for blocks, static if, try/finally, labels, and statically selected switches; loops remain conservative and function bodies remain separate execution boundaries.",
+          "designId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V11-20260811",
+          "toStatus": "approved",
+          "sourceRef": "tools/ci/check-architecture-dependencies.mjs",
+          "fromStatus": "review",
+          "sourceContentSha256": "4dbcb55f49bf5f498484f71e70efaab1380b0290b33e8007dac59d8ce8fb5e69"
+        },
+        "created_at": "2026-08-11T06:34:16.643+00:00"
       },
       {
         "operation_id": "5ed636ac-9c39-414d-99c9-c29b2c6132ba",
@@ -90903,6 +91092,27 @@
         "created_at": "2026-08-10T21:04:10.294+00:00"
       },
       {
+        "operation_id": "b7c0144f-f391-43fc-ad6d-25e357c6a63a",
+        "idempotency_key": "codex-api-h2-2-reachability-v11-review",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V11-20260811",
+        "source_ref": "tools/ci/check-architecture-dependencies.mjs",
+        "source_content_sha256": "4dbcb55f49bf5f498484f71e70efaab1380b0290b33e8007dac59d8ce8fb5e69",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Review RED cases for labeled break, unlabeled continue, labeled continue, and the positive switch-local break, plus inner loop/switch/function boundaries.",
+          "designId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V11-20260811",
+          "toStatus": "review",
+          "sourceRef": "tools/ci/check-architecture-dependencies.mjs",
+          "fromStatus": "proposed",
+          "sourceContentSha256": "4dbcb55f49bf5f498484f71e70efaab1380b0290b33e8007dac59d8ce8fb5e69"
+        },
+        "created_at": "2026-08-11T06:34:05.909+00:00"
+      },
+      {
         "operation_id": "b84ae291-21d9-4f1f-a92c-99d792ef77f2",
         "idempotency_key": "codex-api-h2-2-reachability-v5-create",
         "operation_type": "architecture_design_create",
@@ -92557,6 +92767,27 @@
           "sourceContentSha256": "2c962581d19fb54854d0b49b53e37720a8172a1a3aa4399e5302a0fc4b588523"
         },
         "created_at": "2026-08-10T21:04:49.817+00:00"
+      },
+      {
+        "operation_id": "cf3f9ab3-39b4-4a26-8ad5-7a15ffb65765",
+        "idempotency_key": "codex-api-h2-2-reachability-v11-implemented",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V11-20260811",
+        "source_ref": "tools/ci/check-architecture-dependencies.mjs",
+        "source_content_sha256": "4f02c340d242cb834a03990064924683692fae7c4dee8c19f29eeb47f3a75ce3",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "V11 passes the directed completion RED matrix, all 23 architecture tests, all 282 CI-tool tests, and the unchanged real reachability report without debt or stubs.",
+          "designId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V11-20260811",
+          "toStatus": "implemented",
+          "sourceRef": "tools/ci/check-architecture-dependencies.mjs",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "4f02c340d242cb834a03990064924683692fae7c4dee8c19f29eeb47f3a75ce3"
+        },
+        "created_at": "2026-08-11T06:41:43.978+00:00"
       },
       {
         "operation_id": "d0b3be37-9967-4bcf-9e00-cb6286c0c83f",
@@ -97267,7 +97498,10 @@
         "tools/ci/check-architecture-dependencies.mjs#staticPrimitiveValue",
         "tools/ci/check-architecture-dependencies.mjs#staticallySelectedSwitchClauseIndex",
         "tools/ci/check-architecture-dependencies.mjs#statementAlwaysExitsSwitchPath",
-        "tools/ci/check-architecture-dependencies.mjs#switchClauseIsStaticallyReachable"
+        "tools/ci/check-architecture-dependencies.mjs#switchClauseIsStaticallyReachable",
+        "tools/ci/check-architecture-dependencies.mjs#resolveAbruptCompletionTarget",
+        "tools/ci/check-architecture-dependencies.mjs#sequenceCompletionOutcomes",
+        "tools/ci/check-architecture-dependencies.mjs#statementCompletionOutcomes"
       ],
       "implementationRefs": [
         ".github/workflows/pr-quality-gate.yml#Validate architecture dependency boundaries",
@@ -97362,7 +97596,10 @@
         "tools/ci/check-architecture-dependencies.mjs#staticPrimitiveValue",
         "tools/ci/check-architecture-dependencies.mjs#staticallySelectedSwitchClauseIndex",
         "tools/ci/check-architecture-dependencies.mjs#statementAlwaysExitsSwitchPath",
-        "tools/ci/check-architecture-dependencies.mjs#switchClauseIsStaticallyReachable"
+        "tools/ci/check-architecture-dependencies.mjs#switchClauseIsStaticallyReachable",
+        "tools/ci/check-architecture-dependencies.mjs#resolveAbruptCompletionTarget",
+        "tools/ci/check-architecture-dependencies.mjs#sequenceCompletionOutcomes",
+        "tools/ci/check-architecture-dependencies.mjs#statementCompletionOutcomes"
       ],
       "documentationRefs": [
         "docs/planning/proposals/mandatory/governance-and-docs/architecture-dependency-boundary-guard-implementation-plan-20260502.md",
@@ -97395,7 +97632,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "tools/ci/check-architecture-dependencies.mjs",
-      "sourceContentSha256": "4dbcb55f49bf5f498484f71e70efaab1380b0290b33e8007dac59d8ce8fb5e69",
+      "sourceContentSha256": "4f02c340d242cb834a03990064924683692fae7c4dee8c19f29eeb47f3a75ce3",
       "rawRail": {
         "name": "ApplyArchitectureDependencyBoundaryGate",
         "type": "command",
@@ -97752,7 +97989,8 @@
               "Live composition roots and executable control flow govern deployment-profile evidence.",
               "Invoked parameters and consumed factory products replace inferred executable edges.",
               "Statically selected switch clauses, fallthrough, and abrupt completion govern deployment-profile evidence.",
-              "Nested switch-path exits cannot retain later profile evidence inside the same block."
+              "Nested switch-path exits cannot retain later profile evidence inside the same block.",
+              "Directed completion lets each switch, loop, or label consume only its own abrupt exits."
             ],
             "cypressCoverage": "N/A - repository architecture governance command",
             "architectureGuard": "pnpm arch:deps"
@@ -98321,7 +98559,8 @@
               "Live composition roots and executable control flow govern deployment-profile evidence.",
               "Invoked parameters and consumed factory products replace inferred executable edges.",
               "Statically selected switch clauses, fallthrough, and abrupt completion govern deployment-profile evidence.",
-              "Nested switch-path exits cannot retain later profile evidence inside the same block."
+              "Nested switch-path exits cannot retain later profile evidence inside the same block.",
+              "Directed completion lets each switch, loop, or label consume only its own abrupt exits."
             ],
             "cypressCoverage": "N/A - repository architecture governance command",
             "architectureGuard": "pnpm arch:deps"
@@ -98350,7 +98589,8 @@
               "Live composition roots and executable control flow govern deployment-profile evidence.",
               "Invoked parameters and consumed factory products replace inferred executable edges.",
               "Statically selected switch clauses, fallthrough, and abrupt completion govern deployment-profile evidence.",
-              "Nested switch-path exits cannot retain later profile evidence inside the same block."
+              "Nested switch-path exits cannot retain later profile evidence inside the same block.",
+              "Directed completion lets each switch, loop, or label consume only its own abrupt exits."
             ],
             "cypressCoverage": "N/A - repository architecture governance command",
             "architectureGuard": "pnpm arch:deps"
@@ -98391,7 +98631,8 @@
               "Live composition roots and executable control flow govern deployment-profile evidence.",
               "Invoked parameters and consumed factory products replace inferred executable edges.",
               "Statically selected switch clauses, fallthrough, and abrupt completion govern deployment-profile evidence.",
-              "Nested switch-path exits cannot retain later profile evidence inside the same block."
+              "Nested switch-path exits cannot retain later profile evidence inside the same block.",
+              "Directed completion lets each switch, loop, or label consume only its own abrupt exits."
             ],
             "cypressCoverage": "N/A - repository architecture governance command",
             "architectureGuard": "pnpm arch:deps"
@@ -98407,7 +98648,8 @@
               "Reachable guards and the concrete composition factory/create entrypoint govern supported profile evidence.",
               "Invoked parameters and consumed factory products replace inferred executable edges.",
               "Statically selected switch clauses, fallthrough, and abrupt completion govern deployment-profile evidence.",
-              "Nested switch-path exits cannot retain later profile evidence inside the same block."
+              "Nested switch-path exits cannot retain later profile evidence inside the same block.",
+              "Directed completion lets each switch, loop, or label consume only its own abrupt exits."
             ],
             "cypressCoverage": "N/A - repository architecture governance command",
             "architectureGuard": "pnpm arch:deps"
@@ -98422,7 +98664,8 @@
               "Live composition roots and executable control flow govern deployment-profile evidence.",
               "Invoked parameters and consumed factory products replace inferred executable edges.",
               "Statically selected switch clauses, fallthrough, and abrupt completion govern deployment-profile evidence.",
-              "Nested switch-path exits cannot retain later profile evidence inside the same block."
+              "Nested switch-path exits cannot retain later profile evidence inside the same block.",
+              "Directed completion lets each switch, loop, or label consume only its own abrupt exits."
             ],
             "cypressCoverage": "N/A - repository architecture governance command",
             "architectureGuard": "pnpm arch:deps"
@@ -98437,7 +98680,8 @@
               "Live composition roots and executable control flow govern deployment-profile evidence.",
               "Invoked parameters and consumed factory products replace inferred executable edges.",
               "Statically selected switch clauses, fallthrough, and abrupt completion govern deployment-profile evidence.",
-              "Nested switch-path exits cannot retain later profile evidence inside the same block."
+              "Nested switch-path exits cannot retain later profile evidence inside the same block.",
+              "Directed completion lets each switch, loop, or label consume only its own abrupt exits."
             ],
             "cypressCoverage": "N/A - repository architecture governance command",
             "architectureGuard": "pnpm arch:deps"
@@ -98452,7 +98696,8 @@
               "Live composition roots and executable control flow govern deployment-profile evidence.",
               "Invoked parameters and consumed factory products replace inferred executable edges.",
               "Statically selected switch clauses, fallthrough, and abrupt completion govern deployment-profile evidence.",
-              "Nested switch-path exits cannot retain later profile evidence inside the same block."
+              "Nested switch-path exits cannot retain later profile evidence inside the same block.",
+              "Directed completion lets each switch, loop, or label consume only its own abrupt exits."
             ],
             "cypressCoverage": "N/A - repository architecture governance command",
             "architectureGuard": "pnpm arch:deps"
@@ -98467,7 +98712,8 @@
               "Live composition roots and executable control flow govern deployment-profile evidence.",
               "Invoked parameters and consumed factory products replace inferred executable edges.",
               "Statically selected switch clauses, fallthrough, and abrupt completion govern deployment-profile evidence.",
-              "Nested switch-path exits cannot retain later profile evidence inside the same block."
+              "Nested switch-path exits cannot retain later profile evidence inside the same block.",
+              "Directed completion lets each switch, loop, or label consume only its own abrupt exits."
             ],
             "cypressCoverage": "N/A - repository architecture governance command",
             "architectureGuard": "pnpm arch:deps"
@@ -98482,7 +98728,8 @@
               "Live composition roots and executable control flow govern deployment-profile evidence.",
               "Invoked parameters and consumed factory products replace inferred executable edges.",
               "Statically selected switch clauses, fallthrough, and abrupt completion govern deployment-profile evidence.",
-              "Nested switch-path exits cannot retain later profile evidence inside the same block."
+              "Nested switch-path exits cannot retain later profile evidence inside the same block.",
+              "Directed completion lets each switch, loop, or label consume only its own abrupt exits."
             ],
             "cypressCoverage": "N/A - repository architecture governance command",
             "architectureGuard": "pnpm arch:deps"
@@ -98496,7 +98743,8 @@
             "fowlerSignals": [
               "Invoked parameters and consumed factory products replace inferred executable edges.",
               "Statically selected switch clauses, fallthrough, and abrupt completion govern deployment-profile evidence.",
-              "Nested switch-path exits cannot retain later profile evidence inside the same block."
+              "Nested switch-path exits cannot retain later profile evidence inside the same block.",
+              "Directed completion lets each switch, loop, or label consume only its own abrupt exits."
             ],
             "cypressCoverage": "N/A - repository architecture governance command",
             "architectureGuard": "pnpm arch:deps"
@@ -98509,7 +98757,8 @@
             "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
             "fowlerSignals": [
               "Statically selected switch clauses, fallthrough, and abrupt completion govern deployment-profile evidence.",
-              "Nested switch-path exits cannot retain later profile evidence inside the same block."
+              "Nested switch-path exits cannot retain later profile evidence inside the same block.",
+              "Directed completion lets each switch, loop, or label consume only its own abrupt exits."
             ],
             "cypressCoverage": "N/A - repository architecture governance command",
             "architectureGuard": "pnpm arch:deps"
@@ -98522,7 +98771,8 @@
             "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
             "fowlerSignals": [
               "Statically selected switch clauses, fallthrough, and abrupt completion govern deployment-profile evidence.",
-              "Nested switch-path exits cannot retain later profile evidence inside the same block."
+              "Nested switch-path exits cannot retain later profile evidence inside the same block.",
+              "Directed completion lets each switch, loop, or label consume only its own abrupt exits."
             ],
             "cypressCoverage": "N/A - repository architecture governance command",
             "architectureGuard": "pnpm arch:deps"
@@ -98535,7 +98785,44 @@
             "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
             "fowlerSignals": [
               "Statically selected switch clauses, fallthrough, and abrupt completion govern deployment-profile evidence.",
-              "Nested switch-path exits cannot retain later profile evidence inside the same block."
+              "Nested switch-path exits cannot retain later profile evidence inside the same block.",
+              "Directed completion lets each switch, loop, or label consume only its own abrupt exits."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "resolveAbruptCompletionTarget",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "Directed completion lets each switch, loop, or label consume only its own abrupt exits."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "sequenceCompletionOutcomes",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "Directed completion lets each switch, loop, or label consume only its own abrupt exits."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "statementCompletionOutcomes",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "Directed completion lets each switch, loop, or label consume only its own abrupt exits."
             ],
             "cypressCoverage": "N/A - repository architecture governance command",
             "architectureGuard": "pnpm arch:deps"
@@ -98558,7 +98845,8 @@
           "Live composition roots and executable control flow govern deployment-profile evidence.",
           "Invoked parameters and consumed factory products replace inferred executable edges.",
           "Statically selected switch clauses, fallthrough, and abrupt completion govern deployment-profile evidence.",
-          "Nested switch-path exits cannot retain later profile evidence inside the same block."
+          "Nested switch-path exits cannot retain later profile evidence inside the same block.",
+          "Directed completion lets each switch, loop, or label consume only its own abrupt exits."
         ],
         "completionGate": [
           "node --test tools/ci/architecture-dependency-guard.test.mjs",
@@ -98568,7 +98856,7 @@
         "redGreenCycles": [
           {
             "id": "applyarchitecturedependencyboundarygate-record",
-            "redTest": "node --test --test-name-pattern unselected-switch-clauses tools/ci/architecture-dependency-guard.test.mjs",
+            "redTest": "node --test --test-name-pattern directed-completion-after-switches tools/ci/architecture-dependency-guard.test.mjs",
             "greenTest": "node --test tools/ci/architecture-dependency-guard.test.mjs and pnpm arch:deps",
             "patchSurfaces": [
               "tools/ci/check-architecture-dependencies.mjs",
@@ -98577,7 +98865,7 @@
               "apps/api/package.json",
               ".github/workflows/pr-quality-gate.yml"
             ],
-            "expectedFailure": "A break or continue inside a switch-clause block leaves later deployment-profile evidence reachable."
+            "expectedFailure": "A labeled break or continue from a selected switch leaves later deployment-profile evidence reachable."
           }
         ],
         "componentGuides": [
@@ -98612,7 +98900,7 @@
         ],
         "forbiddenImplementationSurfaces": ["apps/api/.dependency-cruiser.cjs"]
       },
-      "revision": 10,
+      "revision": 11,
       "createdBy": "codex",
       "createdAt": "2026-08-08T00:00:00.000Z"
     },
@@ -155049,6 +155337,90 @@
         "forbiddenImplementationSurfaces": ["apps/api/.dependency-cruiser.cjs"]
       },
       "createdAt": "2026-08-11T06:16:17.583Z"
+    },
+    {
+      "operationId": "da31436c-24b8-4614-bc88-4ce9a36ee77a",
+      "idempotencyKey": "codex-api-h2-2-arch-deps-directed-completion-11",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#ARCH-DEPS-GUARD#command#applyarchitecturedependencyboundarygate",
+      "sourcePath": "tools/ci/check-architecture-dependencies.mjs",
+      "sourceContentSha256": "4f02c340d242cb834a03990064924683692fae7c4dee8c19f29eeb47f3a75ce3",
+      "expectedRevision": 10,
+      "previousRevision": 10,
+      "resultingRevision": 11,
+      "payload": {
+        "redTest": "node --test --test-name-pattern directed-completion-after-switches tools/ci/architecture-dependency-guard.test.mjs",
+        "dddOwner": "Repository CI governance baseline",
+        "railName": "ApplyArchitectureDependencyBoundaryGate",
+        "railType": "command",
+        "featureId": "ARCH-DEPS-GUARD",
+        "greenTest": "node --test tools/ci/architecture-dependency-guard.test.mjs and pnpm arch:deps",
+        "sourceRef": "tools/ci/check-architecture-dependencies.mjs",
+        "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2273"],
+        "cypressFlows": ["N/A - repository architecture governance command"],
+        "domainObjects": ["ApiProductionReachabilityReport"],
+        "fowlerSignals": [
+          "Directed completion lets each switch, loop, or label consume only its own abrupt exits."
+        ],
+        "patchSurfaces": [
+          "tools/ci/check-architecture-dependencies.mjs",
+          "tools/ci/architecture-dependency-guard.test.mjs"
+        ],
+        "completionGate": [
+          "node --test tools/ci/architecture-dependency-guard.test.mjs",
+          "pnpm arch:deps",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "A labeled break or continue from a selected switch leaves later deployment-profile evidence reachable.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "architectureGuards": ["pnpm arch:deps"],
+        "implementationPlan": "docs/planning/proposals/mandatory/governance-and-docs/architecture-dependency-boundary-guard-implementation-plan-20260502.md",
+        "implementationRefs": [
+          "tools/ci/check-architecture-dependencies.mjs#collectApiDeploymentProfileEvidence",
+          "tools/ci/check-architecture-dependencies.mjs#collectProductionExecutableScopes",
+          "tools/ci/check-architecture-dependencies.mjs#staticPrimitiveValue",
+          "tools/ci/check-architecture-dependencies.mjs#staticBooleanValue",
+          "tools/ci/check-architecture-dependencies.mjs#staticallySelectedSwitchClauseIndex",
+          "tools/ci/check-architecture-dependencies.mjs#resolveAbruptCompletionTarget",
+          "tools/ci/check-architecture-dependencies.mjs#sequenceCompletionOutcomes",
+          "tools/ci/check-architecture-dependencies.mjs#statementCompletionOutcomes",
+          "tools/ci/check-architecture-dependencies.mjs#statementAlwaysTerminates",
+          "tools/ci/check-architecture-dependencies.mjs#statementAlwaysExitsSwitchPath",
+          "tools/ci/check-architecture-dependencies.mjs#switchClauseIsStaticallyReachable",
+          "tools/ci/check-architecture-dependencies.mjs#isStaticallyReachable",
+          "tools/ci/check-architecture-dependencies.mjs#hasReachableReconcilerEnabledPath",
+          "tools/ci/check-architecture-dependencies.mjs#enclosingClassScope",
+          "tools/ci/check-architecture-dependencies.mjs#executableScopeKey",
+          "tools/ci/check-architecture-dependencies.mjs#topLevelNamedExecutableScope",
+          "tools/ci/check-architecture-dependencies.mjs#unwrapExpression"
+        ],
+        "normalizedRailName": "applyarchitecturedependencyboundarygate",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "4f02c340d242cb834a03990064924683692fae7c4dee8c19f29eeb47f3a75ce3",
+        "allowedImplementationSurfaces": [
+          "tools/ci/check-architecture-dependencies.mjs",
+          "tools/ci/architecture-dependency-guard.test.mjs",
+          ".dependency-cruiser.cjs",
+          ".github/workflows/pr-quality-gate.yml",
+          "apps/api/package.json",
+          "pnpm-lock.yaml",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": ["apps/api/.dependency-cruiser.cjs"]
+      },
+      "createdAt": "2026-08-11T06:42:21.784Z"
     }
   ],
   "governanceComponentDefinitions": [
