@@ -1472,6 +1472,10 @@ test('current API report classifies every source and exposes cleanup candidates 
     ),
     undefined
   );
+  assert.deepEqual(
+    first.exportEvidence.filter(({ classification }) => classification === 'test-support-export'),
+    []
+  );
   assert.equal(
     first.exportEvidence.find(
       ({ source, symbol }) =>
