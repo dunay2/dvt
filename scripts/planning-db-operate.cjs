@@ -1377,6 +1377,17 @@ function operationPayload(command) {
     };
   }
 
+  if (command.kind === 'architecture_test_retire') {
+    return {
+      designId: command.designId,
+      testId: command.testId,
+      componentId: command.componentId,
+      reason: command.reason,
+      sourceRef: command.sourceRef,
+      sourceContentSha256: command.sourceContentSha256,
+    };
+  }
+
   if (command.kind === 'architecture_observability_record') {
     return {
       designId: command.designId,
@@ -1400,6 +1411,16 @@ function operationPayload(command) {
       evidenceKind: command.evidenceKind,
       evidenceOrigin: command.evidenceOrigin,
       resultState: command.resultState,
+      sourceRef: command.sourceRef,
+      sourceContentSha256: command.sourceContentSha256,
+    };
+  }
+
+  if (command.kind === 'architecture_evidence_retire') {
+    return {
+      designId: command.designId,
+      evidenceId: command.evidenceId,
+      reason: command.reason,
       sourceRef: command.sourceRef,
       sourceContentSha256: command.sourceContentSha256,
     };
@@ -1497,6 +1518,21 @@ function operationPayload(command) {
       expectedFailure: command.expectedFailure,
       patchSurfaces: command.patchSurfaces || [],
       greenTest: command.greenTest,
+      sourceRef: command.sourceRef,
+      sourceContentSha256: command.sourceContentSha256,
+    };
+  }
+
+  if (command.kind === 'feature_mechanization_rail_retire') {
+    return {
+      designId: command.designId,
+      featureId: command.featureId,
+      railId: command.railId,
+      railName: command.railName,
+      normalizedRailName: command.normalizedRailName,
+      railType: command.railType,
+      expectedRevision: command.expectedRevision,
+      reason: command.reason,
       sourceRef: command.sourceRef,
       sourceContentSha256: command.sourceContentSha256,
     };
