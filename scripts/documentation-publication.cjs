@@ -295,6 +295,8 @@ class DocumentationPublicationAssembler {
     this.runCommand = options.runCommand;
     this.readGitBlob = options.readGitBlob;
     this.readGitSha = options.readGitSha;
+    this.repositoryWebUrl = options.repositoryWebUrl;
+    this.resolvedRepositoryWebUrl = null;
     this.trackedDocumentationPaths = options.trackedDocumentationPaths;
     this.policy =
       options.policy ||
@@ -459,6 +461,44 @@ class DocumentationPublicationAssembler {
     return String(result.stdout).trim();
   }
 
+  currentRepositoryWebUrl() {
+    if (this.resolvedRepositoryWebUrl) return this.resolvedRepositoryWebUrl;
+    if (this.repositoryWebUrl) {
+      this.resolvedRepositoryWebUrl = this.normalizeGitHubRepositoryWebUrl(this.repositoryWebUrl);
+      return this.resolvedRepositoryWebUrl;
+    }
+    const result = spawnSync('git', ['remote', 'get-url', 'origin'], {
+      cwd: this.repoRoot,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    if (result.error) throw result.error;
+    if (result.status !== 0) {
+      throw new Error(
+        `Cannot resolve the canonical Git repository for historical documentation links: ${String(result.stderr).trim()}.`
+      );
+    }
+    this.resolvedRepositoryWebUrl = this.normalizeGitHubRepositoryWebUrl(result.stdout);
+    return this.resolvedRepositoryWebUrl;
+  }
+
+  normalizeGitHubRepositoryWebUrl(value) {
+    const normalized = String(value || '')
+      .trim()
+      .replace(/\.git$/u, '')
+      .replace(/\/$/u, '');
+    const sshMatch = normalized.match(/^git@github\.com:([^/]+\/[^/]+)$/u);
+    const sshUrlMatch = normalized.match(/^ssh:\/\/git@github\.com\/([^/]+\/[^/]+)$/u);
+    const httpsMatch = normalized.match(/^https:\/\/github\.com\/([^/]+\/[^/]+)$/u);
+    const repositorySlug = sshMatch?.[1] || sshUrlMatch?.[1] || httpsMatch?.[1];
+    if (!repositorySlug) {
+      throw new Error(
+        `Historical documentation links require a canonical GitHub repository URL; received ${normalized || 'empty'}.`
+      );
+    }
+    return `https://github.com/${repositorySlug}`;
+  }
+
   static hashValue(value) {
     return createHash('sha256').update(value).digest('hex');
   }
@@ -531,7 +571,49 @@ class DocumentationPublicationAssembler {
     };
   }
 
-  copySource(source) {
+  resolveLinkedDocumentationPath(sourcePath, linkTarget) {
+    const pathOnly = linkTarget.split(/[?#]/u, 1)[0];
+    if (!pathOnly || /^[a-z][a-z0-9+.-]*:/iu.test(pathOnly) || pathOnly.startsWith('//')) {
+      return null;
+    }
+    const decodedPath = decodeURI(pathOnly);
+    const absolutePath = decodedPath.startsWith('/')
+      ? resolve(this.docsRoot, decodedPath.slice(1))
+      : resolve(this.repoRoot, dirname(sourcePath), decodedPath);
+    const relativeToDocs = relative(this.docsRoot, absolutePath);
+    if (
+      relativeToDocs === '..' ||
+      relativeToDocs.startsWith(`..${sep}`) ||
+      isAbsolute(relativeToDocs)
+    ) {
+      return null;
+    }
+    return DocumentationPublicationPolicy.toPosix(relative(this.repoRoot, absolutePath));
+  }
+
+  rewriteRetiredDocumentationLinks(content, source, lifecycleByPath, gitSha) {
+    let rewriteCount = 0;
+    const rewritten = content.replace(
+      /(\[[^\]]*\]\()(<)?([^\s)>]+)(>)?((?:\s+["'][^)]*["'])?\))/gu,
+      (match, prefix, openingAngle, linkTarget, closingAngle, suffix) => {
+        const targetSourcePath = this.resolveLinkedDocumentationPath(source.sourcePath, linkTarget);
+        if (!targetSourcePath) return match;
+        const lifecycleRow = lifecycleByPath.get(targetSourcePath);
+        if (!lifecycleRow || this.policy.lifecycleStateIsPublishable(lifecycleRow)) return match;
+        const targetSuffix = linkTarget.slice(linkTarget.split(/[?#]/u, 1)[0].length);
+        const encodedPath = targetSourcePath
+          .split('/')
+          .map((segment) => encodeURIComponent(segment))
+          .join('/');
+        const historicalUrl = `${this.currentRepositoryWebUrl()}/blob/${gitSha}/${encodedPath}${targetSuffix}`;
+        rewriteCount += 1;
+        return `${prefix}${openingAngle || ''}${historicalUrl}${closingAngle || ''}${suffix}`;
+      }
+    );
+    return { content: rewritten, rewriteCount };
+  }
+
+  copySource(source, options = {}) {
     const destination = resolve(this.outputRoot, source.route);
     DocumentationPublicationPolicy.assertInside(
       this.outputRoot,
@@ -539,7 +621,18 @@ class DocumentationPublicationAssembler {
       `Publication route ${source.route}`
     );
     mkdirSync(dirname(destination), { recursive: true });
+    if (source.sourcePath.endsWith('.md') && options.lifecycleByPath?.has(source.sourcePath)) {
+      const rewritten = this.rewriteRetiredDocumentationLinks(
+        readFileSync(source.absolutePath, 'utf8'),
+        source,
+        options.lifecycleByPath,
+        options.gitSha
+      );
+      writeFileSync(destination, rewritten.content, 'utf8');
+      return rewritten.rewriteCount;
+    }
     cpSync(source.absolutePath, destination);
+    return 0;
   }
 
   describeRouteOwner(source, lifecycleByPath) {
@@ -590,6 +683,7 @@ class DocumentationPublicationAssembler {
     const generatedSources = this.policy.generatedSources();
     const lifecycleRows = await this.resolveLifecycleRows();
     const lifecycleState = this.buildLifecycleState(lifecycleRows, authoredSources);
+    const gitSha = this.currentGitSha();
     const routeOwners = new Map();
     for (const source of [...lifecycleState.publishableSources, ...generatedSources]) {
       const existing = routeOwners.get(source.route);
@@ -603,12 +697,16 @@ class DocumentationPublicationAssembler {
 
     rmSync(this.outputRoot, { recursive: true, force: true });
     mkdirSync(this.outputRoot, { recursive: true });
+    let historicalLinkRewriteCount = 0;
     for (const source of [
       ...lifecycleState.publishableSources,
       ...supportingSources,
       ...generatedSources,
     ]) {
-      this.copySource(source);
+      historicalLinkRewriteCount += this.copySource(source, {
+        lifecycleByPath: lifecycleState.lifecycleByPath,
+        gitSha,
+      });
     }
 
     const navigableRoutes = [...routeOwners.values()]
@@ -644,12 +742,12 @@ class DocumentationPublicationAssembler {
       ...generatedSources,
     ]);
     const receipt = {
-      version: 2,
+      version: 3,
       commandRail: 'GeneratePlanningDerivedSurfaces',
       architectureQuery: 'ReadArchitectureDesignAuthority',
       consultationQuery: 'QueryDocumentationConsultationPath',
       lifecycleQuery: 'ListDocumentationLifecycleFacts',
-      gitSha: this.currentGitSha(),
+      gitSha,
       sourceDigest,
       lifecycleDigest: lifecycleState.lifecycleDigest,
       policyInputDigest: DocumentationPublicationAssembler.hashValue(
@@ -663,6 +761,7 @@ class DocumentationPublicationAssembler {
       ),
       routeCount: routeOwners.size,
       navigableRouteCount: navigableRoutes.length,
+      historicalLinkRewriteCount,
       treeDigest,
       publicationRoot: DocumentationPublicationPolicy.toPosix(
         relative(this.repoRoot, this.outputRoot)
@@ -685,7 +784,7 @@ class DocumentationPublicationAssembler {
       );
     }
     const receipt = JSON.parse(readFileSync(this.manifestPath, 'utf8'));
-    if (receipt.version !== 2) {
+    if (receipt.version !== 3) {
       throw new Error(
         'Documentation publication receipt version is obsolete. Run `pnpm docs:publish` explicitly.'
       );
