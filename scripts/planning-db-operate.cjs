@@ -2652,6 +2652,25 @@ function readGitValue(args, options = {}) {
   return String(result.stdout).trim();
 }
 
+function readGitFileAtCommit(commitSha, filePath, options = {}) {
+  if (typeof options.readGitFileAtCommit === 'function') {
+    const content = options.readGitFileAtCommit(commitSha, filePath);
+    return Buffer.isBuffer(content) ? content : Buffer.from(content);
+  }
+  const result = spawnSync('git', ['show', `${commitSha}:${filePath}`], {
+    cwd: options.repoRoot || __dirname,
+    encoding: null,
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  if (result.error) throw result.error;
+  if (result.status !== 0) {
+    throw new Error(
+      String(result.stderr || result.stdout).trim() || `git show ${commitSha}:${filePath} failed`
+    );
+  }
+  return Buffer.isBuffer(result.stdout) ? result.stdout : Buffer.from(result.stdout || '');
+}
+
 async function readGitHubActionsEvidence(url, options = {}) {
   const fetchImplementation = options.fetch || globalThis.fetch;
   if (typeof fetchImplementation !== 'function') {
@@ -2755,6 +2774,15 @@ async function assertArchitectureEvidenceOriginAuthenticity(command, options = {
       String(job.head_sha || '').toLowerCase() !== currentGitSha
     ) {
       throw new Error('GitHub Actions evidence does not prove the current commit');
+    }
+    const committedSourceSha256 = crypto
+      .createHash('sha256')
+      .update(readGitFileAtCommit(currentGitSha, command.sourcePath, options))
+      .digest('hex');
+    if (committedSourceSha256 !== command.sourceContentSha256) {
+      throw new Error(
+        `source bytes at the proven commit hash to ${committedSourceSha256}, not ${command.sourceContentSha256}`
+      );
     }
     return command;
   } catch (error) {
