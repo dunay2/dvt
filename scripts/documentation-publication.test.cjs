@@ -328,6 +328,37 @@ test('excludes a DB-replaced canonical source without rewriting its tracked byte
   assert.deepEqual(fs.readFileSync(path.join(root, sourcePath)), originalBytes);
 });
 
+test('rewrites active links to DB-retired documents as commit-pinned Git evidence', async () => {
+  const root = createMinimalFixture();
+  const activePath = 'docs/current.md';
+  const retiredPath = 'docs/retired.md';
+  const activeContent = '# Current\n\n[Historical decision](./retired.md#decision)\n';
+  fs.writeFileSync(path.join(root, activePath), activeContent, 'utf8');
+  fs.writeFileSync(path.join(root, retiredPath), '# Retired\n\n## Decision\n', 'utf8');
+  const assembler = new DocumentationPublicationAssembler(
+    fixtureAssemblerOptions(root, {
+      lifecycleRows: [
+        lifecycleRow(root, 'docs/index.md'),
+        lifecycleRow(root, activePath),
+        lifecycleRow(root, retiredPath, {
+          lifecycle_state: 'superseded',
+          canonical_disposition: 'db_authority_historical',
+        }),
+      ],
+      readGitSha: () => 'a'.repeat(40),
+      repositoryWebUrl: 'https://github.com/dunay2/dvt',
+    })
+  );
+
+  await assembler.assemble({ runGenerators: false });
+
+  assert.equal(fs.readFileSync(path.join(root, activePath), 'utf8'), activeContent);
+  assert.equal(
+    fs.readFileSync(path.join(root, '.generated-docs', 'publication', 'current.md'), 'utf8'),
+    `# Current\n\n[Historical decision](https://github.com/dunay2/dvt/blob/${'a'.repeat(40)}/docs/retired.md#decision)\n`
+  );
+});
+
 test('ignores untracked Markdown instead of treating filesystem placement as authority', async () => {
   const root = createMinimalFixture();
   fs.writeFileSync(path.join(root, 'docs', 'ignored-index.md'), '# Ignored\n', 'utf8');
