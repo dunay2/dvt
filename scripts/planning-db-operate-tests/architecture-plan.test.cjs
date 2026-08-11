@@ -17,6 +17,7 @@ const {
   writePlannedArchitectureContractRecordOperation,
   writePlannedArchitecturePortRecordOperation,
   writePlannedArchitectureStorageIoRecordOperation,
+  writePlannedArchitectureEvidenceRecordOperation,
   writePlannedArchitectureDesignTransitionOperation,
 } = require('./helpers.cjs');
 
@@ -953,6 +954,49 @@ test('architecture execution evidence planner requires must-prove scope and reco
   assert.equal(planned.evidence.evidenceOrigin, 'local_execution');
   assert.equal(planned.evidence.resultState, 'pass');
   assert.equal(planned.audit.operationType, 'architecture_evidence_record');
+});
+
+test('architecture execution evidence writer persists proof before its audit row', async () => {
+  const queries = [];
+  const client = {
+    async query(sql, params) {
+      queries.push({ sql, params });
+      return { rows: [], rowCount: 1 };
+    },
+  };
+  const planned = {
+    evidence: {
+      evidenceId: 'EVIDENCE-API-H2-4-LIFECYCLE-LOCAL',
+      subjectKind: 'test',
+      subjectId: 'TEST-API-H2-4-DOCUMENT-LIFECYCLE-DISPOSITION',
+      evidenceKind: 'test',
+      evidenceOrigin: 'local_execution',
+      sourceRef: 'node --test scripts/planning-db-schema.test.cjs',
+      resultState: 'pass',
+      recordedAt: '2026-08-11T12:00:00.000Z',
+      sourceContentSha256: 'e'.repeat(64),
+    },
+    audit: {
+      operationId: 'op-architecture-evidence-record',
+      idempotencyKey: 'evidence-idempotency-key',
+      operationType: 'architecture_evidence_record',
+      actor: 'codex',
+      designId: 'API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-20260811',
+      sourceRef: 'node --test scripts/planning-db-schema.test.cjs',
+      sourceContentSha256: 'e'.repeat(64),
+      expectedRevision: null,
+      previousRevision: 0,
+      resultingRevision: 0,
+      payload: {},
+      createdAt: '2026-08-11T12:00:00.000Z',
+    },
+  };
+
+  await writePlannedArchitectureEvidenceRecordOperation(client, planned);
+
+  assert.match(queries[0].sql, /insert into architecture\.evidence/u);
+  assert.equal(queries[0].params[4], 'local_execution');
+  assert.match(queries[1].sql, /insert into architecture\.design_operations/u);
 });
 
 test('architecture scoped operation idempotency rejects stale source-hash replays', () => {
