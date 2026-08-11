@@ -10471,14 +10471,28 @@
         "work_item_id": "GH-2272",
         "title": "Disposition inert API implementations and test seams",
         "owner": "API StartRun composition",
-        "status": "implementing",
+        "status": "superseded",
         "rationale": "Preserve the explicit disabled-observability Null Object, require the already-composed StartRun telemetry ports, and retire only reachability-proved duplicate adapters, orphan bridges, and production-only test seams without changing HTTP or Run semantics.",
         "fowler_signal": "hidden_authority",
         "rail_ref": "StartRun",
         "approved_at": "2026-08-11T08:16:57.954+00:00",
         "supersedes_id": null,
         "created_at": "2026-08-11T08:16:56.69+00:00",
-        "updated_at": "2026-08-11T08:16:59.213+00:00"
+        "updated_at": "2026-08-11T08:35:53.657+00:00"
+      },
+      {
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811",
+        "work_item_id": "GH-2272",
+        "title": "Close residual API test-only exports",
+        "owner": "API architecture boundaries",
+        "status": "implementing",
+        "rationale": "Complete the generated export disposition by removing redundant test-only re-exports and a test-only compatibility constant while retaining their production-owned types, policies, and reconciler behavior through existing modules.",
+        "fowler_signal": "boundary_drift",
+        "rail_ref": "ApplyArchitectureDependencyBoundaryGate",
+        "approved_at": "2026-08-11T08:35:54.917+00:00",
+        "supersedes_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-20260811",
+        "created_at": "2026-08-11T08:35:52.373+00:00",
+        "updated_at": "2026-08-11T08:35:56.168+00:00"
       },
       {
         "design_id": "CANVAS-BACKLOG-INTEGRITY-READINESS-20260626",
@@ -61120,6 +61134,94 @@
         "created_at": "2026-08-11T08:16:56.69+00:00"
       },
       {
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811",
+        "subject_kind": "command",
+        "subject_id": "ApplyArchitectureDependencyBoundaryGate",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T08:35:52.373+00:00"
+      },
+      {
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811",
+        "subject_kind": "command",
+        "subject_id": "StartRun",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T08:35:52.373+00:00"
+      },
+      {
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-ROOT",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T08:35:52.373+00:00"
+      },
+      {
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/application/ports/auth.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T08:35:52.373+00:00"
+      },
+      {
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/entrypoints/http/signalRunRouteAuthorization.constants.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T08:35:52.373+00:00"
+      },
+      {
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/entrypoints/http/signalRunRouteParser.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T08:35:52.373+00:00"
+      },
+      {
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/entrypoints/http/signalRunRouteValidation.constants.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T08:35:52.373+00:00"
+      },
+      {
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/runtime/reconcilerRuntimeBootstrap.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T08:35:52.373+00:00"
+      },
+      {
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811",
+        "subject_kind": "path",
+        "subject_id": "apps/api/test/server.test.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T08:35:52.373+00:00"
+      },
+      {
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811",
+        "subject_kind": "test",
+        "subject_id": "TEST-API-H2-3-EXPORT-DISPOSITION",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T08:35:52.373+00:00"
+      },
+      {
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811",
+        "subject_kind": "test",
+        "subject_id": "TEST-API-H2-3-INERT-DISPOSITION",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T08:35:52.373+00:00"
+      },
+      {
         "design_id": "CANVAS-BOTTOM-DRAWER-ACTIONABLE-READ-MODEL-20260626",
         "subject_kind": "component",
         "subject_id": "web.component.shell.BottomOperationalDrawer",
@@ -86314,6 +86416,27 @@
         "created_at": "2026-08-11T05:07:32.754+00:00"
       },
       {
+        "operation_id": "14f8585e-e6c0-41ed-a757-f0b280b3c88c",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811:cff4cbc54965e09e",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811",
+        "source_ref": "github://dunay2/dvt/issues/2272@83a82bc5d7bc3303b0f6e7cfd84d55a58173a89f",
+        "source_content_sha256": "d2af8c40d8798fd4f95f67afc6cebf3c35e31cd619d7c115ff392c8c1c106dd3",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Begin the residual export RED/GREEN microcycle.",
+          "designId": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811",
+          "toStatus": "implementing",
+          "sourceRef": "github://dunay2/dvt/issues/2272@83a82bc5d7bc3303b0f6e7cfd84d55a58173a89f",
+          "fromStatus": "approved",
+          "sourceContentSha256": "d2af8c40d8798fd4f95f67afc6cebf3c35e31cd619d7c115ff392c8c1c106dd3"
+        },
+        "created_at": "2026-08-11T08:35:56.168+00:00"
+      },
+      {
         "operation_id": "14feb541-ca1c-484e-b1b7-e5baa4d0ed09",
         "idempotency_key": "gh-2167-update-rel-sys-api-http-entrypoint-tests-architecture-harness-guards-api-http-entrypoints-v1",
         "operation_type": "architecture_relation_record",
@@ -89216,6 +89339,27 @@
           "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
         },
         "created_at": "2026-08-10T20:05:46.248+00:00"
+      },
+      {
+        "operation_id": "70c44151-2d1e-4944-9e32-d08dddf46411",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-20260811:19dab60bdf8963ee",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-20260811",
+        "source_ref": "github://dunay2/dvt/issues/2272@83a82bc5d7bc3303b0f6e7cfd84d55a58173a89f",
+        "source_content_sha256": "d2af8c40d8798fd4f95f67afc6cebf3c35e31cd619d7c115ff392c8c1c106dd3",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "V2 expands the final generated report disposition before modifying residual test-only exports.",
+          "designId": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-20260811",
+          "toStatus": "superseded",
+          "sourceRef": "github://dunay2/dvt/issues/2272@83a82bc5d7bc3303b0f6e7cfd84d55a58173a89f",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "d2af8c40d8798fd4f95f67afc6cebf3c35e31cd619d7c115ff392c8c1c106dd3"
+        },
+        "created_at": "2026-08-11T08:35:53.657+00:00"
       },
       {
         "operation_id": "721d3cc9-af8d-4430-a71c-3cde34a46214",
@@ -93789,6 +93933,27 @@
         "created_at": "2026-08-10T20:06:48.609+00:00"
       },
       {
+        "operation_id": "db0eaec2-19df-461f-a1cb-9aea9aeb7fab",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811:d20f42350ce34957",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811",
+        "source_ref": "github://dunay2/dvt/issues/2272@83a82bc5d7bc3303b0f6e7cfd84d55a58173a89f",
+        "source_content_sha256": "d2af8c40d8798fd4f95f67afc6cebf3c35e31cd619d7c115ff392c8c1c106dd3",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The remaining four export candidates have explicit production owners and can lose only their redundant test-facing export surfaces.",
+          "designId": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811",
+          "toStatus": "approved",
+          "sourceRef": "github://dunay2/dvt/issues/2272@83a82bc5d7bc3303b0f6e7cfd84d55a58173a89f",
+          "fromStatus": "review",
+          "sourceContentSha256": "d2af8c40d8798fd4f95f67afc6cebf3c35e31cd619d7c115ff392c8c1c106dd3"
+        },
+        "created_at": "2026-08-11T08:35:54.917+00:00"
+      },
+      {
         "operation_id": "dc5177ec-ede3-4b3e-a69c-1d12772e2e12",
         "idempotency_key": "codex-doc1-6-architecture-design",
         "operation_type": "architecture_design_create",
@@ -93888,6 +94053,100 @@
           "sourceContentSha256": "89d19f7206c5ae8e990fb82afd59aafe1f3771131b381b827fe37c5b3738dcd3"
         },
         "created_at": "2026-08-10T21:06:26.348+00:00"
+      },
+      {
+        "operation_id": "de278682-561d-44b2-8076-aaf505ed3b43",
+        "idempotency_key": "architecture_design_create:codex:API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811:6d77efd88a204949",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811",
+        "source_ref": "github://dunay2/dvt/issues/2272@83a82bc5d7bc3303b0f6e7cfd84d55a58173a89f",
+        "source_content_sha256": "d2af8c40d8798fd4f95f67afc6cebf3c35e31cd619d7c115ff392c8c1c106dd3",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "API architecture boundaries",
+          "title": "Close residual API test-only exports",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-API-ROOT",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "StartRun",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "ApplyArchitectureDependencyBoundaryGate",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/src/application/ports/auth.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/src/entrypoints/http/signalRunRouteParser.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/src/entrypoints/http/signalRunRouteAuthorization.constants.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/src/entrypoints/http/signalRunRouteValidation.constants.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/src/runtime/reconcilerRuntimeBootstrap.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/test/server.test.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-API-H2-3-INERT-DISPOSITION",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "TEST-API-H2-3-EXPORT-DISPOSITION",
+              "subjectKind": "test"
+            }
+          ],
+          "status": "review",
+          "railRef": "ApplyArchitectureDependencyBoundaryGate",
+          "designId": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811",
+          "rationale": "Complete the generated export disposition by removing redundant test-only re-exports and a test-only compatibility constant while retaining their production-owned types, policies, and reconciler behavior through existing modules.",
+          "sourceRef": "github://dunay2/dvt/issues/2272@83a82bc5d7bc3303b0f6e7cfd84d55a58173a89f",
+          "workItemId": "GH-2272",
+          "fowlerSignal": "boundary_drift",
+          "supersedesId": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-20260811",
+          "sourceContentSha256": "d2af8c40d8798fd4f95f67afc6cebf3c35e31cd619d7c115ff392c8c1c106dd3"
+        },
+        "created_at": "2026-08-11T08:35:52.373+00:00"
       },
       {
         "operation_id": "defa2dcb-f17a-44df-8106-8d5e4987496b",
