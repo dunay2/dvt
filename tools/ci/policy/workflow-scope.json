@@ -142,7 +142,8 @@
     "tools/ci/ci-tool-test-suite.test.mjs",
     "tools/ci/docs-changed-governance-policy.test.mjs",
     "tools/ci/docs-frontmatter-bom.test.mjs",
-    "tools/ci/docs-manifest-contract.test.mjs"
+    "tools/ci/docs-manifest-contract.test.mjs",
+    "tools/ci/sync-docs-status-policy.test.mjs"
   ],
   "workspace_global": [
     ".github/actions/setup-node-pnpm/**",
