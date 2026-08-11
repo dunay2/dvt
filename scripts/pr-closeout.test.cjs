@@ -556,6 +556,20 @@ test('buildPrCloseoutPlan prepares Planning DB for every full prepush invocation
   assert.equal(ids.includes('docs-status-repository-map'), false);
 });
 
+test('buildPrCloseoutPlan prepares Planning DB before DB-first docs sync', () => {
+  const plan = buildPrCloseoutPlan({
+    changedFiles: ['docs/guides/testing-and-ci-capabilities.md'],
+    stagedFiles: ['docs/guides/testing-and-ci-capabilities.md'],
+    commit,
+  });
+  const ids = stepIds(plan);
+
+  assert.ok(indexOf(ids, 'planning-db-ownership') < indexOf(ids, 'planning-db-up'));
+  assert.ok(indexOf(ids, 'planning-db-up') < indexOf(ids, 'planning-db-health'));
+  assert.ok(indexOf(ids, 'planning-db-health') < indexOf(ids, 'governance-refresh'));
+  assert.ok(indexOf(ids, 'governance-refresh') < indexOf(ids, 'docs-sync'));
+});
+
 test('buildPrCloseoutPlan refreshes governance for mandatory planning proposals', () => {
   const plan = buildPrCloseoutPlan({
     changedFiles: [
@@ -599,7 +613,11 @@ test('executePrCloseoutPlan fails staged-file mode if prep leaves unstaged files
     /UNSTAGED_CHANGES_AFTER_PREP[\s\S]*docs\/index\.md/u
   );
 
-  assert.equal(calls[0].endsWith(' docs:sync'), true);
+  const refreshIndex = calls.findIndex((call) => call.endsWith(' governance:refresh'));
+  const docsSyncIndex = calls.findIndex((call) => call.endsWith(' docs:sync'));
+  assert.ok(refreshIndex >= 0);
+  assert.ok(docsSyncIndex >= 0);
+  assert.ok(refreshIndex < docsSyncIndex);
   assert.equal(
     calls.some((call) => call.includes(' commit ')),
     false
