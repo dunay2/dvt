@@ -1096,7 +1096,7 @@ test('feature mechanization retirement uses design scope, CAS, and audited delet
   assert.ok(queries.some(({ sql }) => sql.includes('feature_mechanization_local_operations')));
 });
 
-test('architecture observability evidence planner emits component_observability and audit rows', () => {
+test('architecture observability evidence planner accepts component update authority', () => {
   const now = new Date('2026-06-12T14:00:00.000Z');
   const command = parseArgs([
     'architecture-evidence',
@@ -1135,7 +1135,7 @@ test('architecture observability evidence planner emits component_observability 
       {
         subject_kind: 'component',
         subject_id: 'SYS-API-OPS-ROUTES',
-        scope_kind: 'may_reference',
+        scope_kind: 'may_update',
       },
     ],
     component: { component_id: 'SYS-API-OPS-ROUTES' },

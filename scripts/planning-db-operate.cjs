@@ -4104,7 +4104,7 @@ function planArchitectureObservabilityRecordOperation({
     designScopes,
     'component',
     command.componentId,
-    ['may_reference'],
+    ['may_reference', 'may_update', 'may_create'],
     'ARCH-OBSERVABILITY-EVIDENCE-COMPONENT-SCOPE-MISSING'
   );
 
