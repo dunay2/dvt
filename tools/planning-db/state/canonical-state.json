@@ -107725,11 +107725,15 @@
       "railStatus": "implemented",
       "symbolRefs": [
         "scripts/planning-db-run.cjs#defaultDataDir",
-        "scripts/planning-db-run.cjs#resolveDefaultDataDir"
+        "scripts/planning-db-run.cjs#resolveDefaultDataDir",
+        "scripts/planning-db-run.cjs#runPlanningDbHealth",
+        "scripts/planning-db-run.cjs#waitForPlanningDbReady"
       ],
       "implementationRefs": [
         "scripts/planning-db-run.cjs#defaultDataDir",
-        "scripts/planning-db-run.cjs#resolveDefaultDataDir"
+        "scripts/planning-db-run.cjs#resolveDefaultDataDir",
+        "scripts/planning-db-run.cjs#runPlanningDbHealth",
+        "scripts/planning-db-run.cjs#waitForPlanningDbReady"
       ],
       "documentationRefs": ["https://github.com/dunay2/dvt/issues/2274"],
       "governingSources": [
@@ -107743,15 +107747,18 @@
         "scripts/planning-db-run.cjs",
         "scripts/planning-db-run.test.cjs",
         "package.json",
-        "tools/planning-db/state/canonical-state.json"
+        "tools/planning-db/state/canonical-state.json",
+        "tools/ci/sync-docs-status-policy.test.mjs"
       ],
       "architectureGuards": [
-        "Planning DB bind storage resolves to a Docker-compatible absolute path on the active host."
+        "Planning DB bind storage resolves to a Docker-compatible absolute path on the active host.",
+        "Planning DB readiness is proven by a bounded health wait before every docs-sync import."
       ],
       "completionGate": [
         "node --test scripts/planning-db-run.test.cjs",
         "pnpm docs:sync:check",
-        "pnpm verify:prepush"
+        "pnpm verify:prepush",
+        "node --test scripts/planning-db-run.test.cjs tools/ci/sync-docs-status-policy.test.mjs"
       ],
       "sourcePath": "scripts/planning-db-run.cjs",
       "sourceContentSha256": "9469e3033556eb5173b795657c9608a3647597975790d966644544b5ad2a3b8d",
@@ -107768,45 +107775,90 @@
             "path": "scripts/planning-db-run.cjs",
             "cqRails": ["PreparePlanningDbRuntime"],
             "dddOwner": "PlanningDbRuntime",
-            "unitTests": ["scripts/planning-db-run.test.cjs"],
-            "fowlerSignals": ["hidden_platform_assumption"],
-            "cypressCoverage": "N/A - operating-system path behavior is covered by deterministic Node tests and CI startup.",
-            "architectureGuard": "Planning DB bind storage resolves to a Docker-compatible absolute path on the active host."
+            "unitTests": [
+              "scripts/planning-db-run.test.cjs",
+              "tools/ci/sync-docs-status-policy.test.mjs"
+            ],
+            "fowlerSignals": [
+              "hidden_platform_assumption",
+              "cold-start-readiness-race"
+            ],
+            "cypressCoverage": "N/A - bounded database readiness is covered by deterministic Node tests and the real docs-sync rail.",
+            "architectureGuard": "Planning DB readiness is proven by a bounded health wait before every docs-sync import."
           },
           {
             "name": "resolveDefaultDataDir",
             "path": "scripts/planning-db-run.cjs",
             "cqRails": ["PreparePlanningDbRuntime"],
             "dddOwner": "PlanningDbRuntime",
-            "unitTests": ["scripts/planning-db-run.test.cjs"],
-            "fowlerSignals": ["hidden_platform_assumption"],
-            "cypressCoverage": "N/A - operating-system path behavior is covered by deterministic Node tests and CI startup.",
-            "architectureGuard": "Planning DB bind storage resolves to a Docker-compatible absolute path on the active host."
+            "unitTests": [
+              "scripts/planning-db-run.test.cjs",
+              "tools/ci/sync-docs-status-policy.test.mjs"
+            ],
+            "fowlerSignals": [
+              "hidden_platform_assumption",
+              "cold-start-readiness-race"
+            ],
+            "cypressCoverage": "N/A - bounded database readiness is covered by deterministic Node tests and the real docs-sync rail.",
+            "architectureGuard": "Planning DB readiness is proven by a bounded health wait before every docs-sync import."
+          },
+          {
+            "name": "runPlanningDbHealth",
+            "path": "scripts/planning-db-run.cjs",
+            "cqRails": ["PreparePlanningDbRuntime"],
+            "dddOwner": "PlanningDbRuntime",
+            "unitTests": [
+              "scripts/planning-db-run.test.cjs",
+              "tools/ci/sync-docs-status-policy.test.mjs"
+            ],
+            "fowlerSignals": ["cold-start-readiness-race"],
+            "cypressCoverage": "N/A - bounded database readiness is covered by deterministic Node tests and the real docs-sync rail.",
+            "architectureGuard": "Planning DB readiness is proven by a bounded health wait before every docs-sync import."
+          },
+          {
+            "name": "waitForPlanningDbReady",
+            "path": "scripts/planning-db-run.cjs",
+            "cqRails": ["PreparePlanningDbRuntime"],
+            "dddOwner": "PlanningDbRuntime",
+            "unitTests": [
+              "scripts/planning-db-run.test.cjs",
+              "tools/ci/sync-docs-status-policy.test.mjs"
+            ],
+            "fowlerSignals": ["cold-start-readiness-race"],
+            "cypressCoverage": "N/A - bounded database readiness is covered by deterministic Node tests and the real docs-sync rail.",
+            "architectureGuard": "Planning DB readiness is proven by a bounded health wait before every docs-sync import."
           }
         ],
         "version": 1,
         "featureId": "API-H2-4-PLANNING-DB-RUNTIME-BOOT",
         "userStories": ["https://github.com/dunay2/dvt/issues/2274"],
         "cypressFlows": [
-          "N/A - operating-system path behavior is covered by deterministic Node tests and CI startup."
+          "N/A - operating-system path behavior is covered by deterministic Node tests and CI startup.",
+          "N/A - bounded database readiness is covered by deterministic Node tests and the real docs-sync rail."
         ],
         "domainObjects": ["PlanningDbRuntime"],
-        "fowlerSignals": ["hidden_platform_assumption"],
+        "fowlerSignals": [
+          "hidden_platform_assumption",
+          "cold-start-readiness-race"
+        ],
         "completionGate": [
           "node --test scripts/planning-db-run.test.cjs",
           "pnpm docs:sync:check",
-          "pnpm verify:prepush"
+          "pnpm verify:prepush",
+          "node --test scripts/planning-db-run.test.cjs tools/ci/sync-docs-status-policy.test.mjs"
         ],
         "redGreenCycles": [
           {
             "id": "prepareplanningdbruntime-record",
-            "redTest": "node --test scripts/planning-db-run.test.cjs",
-            "greenTest": "node --test scripts/planning-db-run.test.cjs",
+            "redTest": "node --test tools/ci/sync-docs-status-policy.test.mjs",
+            "greenTest": "node --test tools/ci/sync-docs-status-policy.test.mjs && pnpm docs:sync:check",
             "patchSurfaces": [
               "scripts/planning-db-run.cjs",
-              "scripts/planning-db-run.test.cjs"
+              "scripts/planning-db-run.test.cjs",
+              "package.json",
+              "tools/ci/sync-docs-status-policy.test.mjs"
             ],
-            "expectedFailure": "Linux callers inherit the Windows bind mount and Docker rejects Planning DB startup."
+            "expectedFailure": "docs:sync imports immediately after container startup without a bounded readiness proof."
           }
         ],
         "componentGuides": [
@@ -107828,7 +107880,8 @@
           }
         ],
         "architectureGuards": [
-          "Planning DB bind storage resolves to a Docker-compatible absolute path on the active host."
+          "Planning DB bind storage resolves to a Docker-compatible absolute path on the active host.",
+          "Planning DB readiness is proven by a bounded health wait before every docs-sync import."
         ],
         "implementationPlan": "https://github.com/dunay2/dvt/issues/2274",
         "mechanizationStatus": "implemented",
@@ -107837,14 +107890,15 @@
           "scripts/planning-db-run.cjs",
           "scripts/planning-db-run.test.cjs",
           "package.json",
-          "tools/planning-db/state/canonical-state.json"
+          "tools/planning-db/state/canonical-state.json",
+          "tools/ci/sync-docs-status-policy.test.mjs"
         ],
         "forbiddenImplementationSurfaces": [
           "infra/db/migrations/**",
           "packages/**"
         ]
       },
-      "revision": 0,
+      "revision": 1,
       "createdBy": "codex",
       "createdAt": "2026-08-11T19:47:04.735Z"
     },
@@ -168624,6 +168678,84 @@
         ]
       },
       "createdAt": "2026-08-11T19:47:04.735Z"
+    },
+    {
+      "operationId": "a159e2a3-cf4e-43eb-b3f2-04d5cebb2b11",
+      "idempotencyKey": "issue-2274-planning-db-readiness",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#API-H2-4-PLANNING-DB-RUNTIME-BOOT#command#prepareplanningdbruntime",
+      "sourcePath": "scripts/planning-db-run.cjs",
+      "sourceContentSha256": "9469e3033556eb5173b795657c9608a3647597975790d966644544b5ad2a3b8d",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "node --test tools/ci/sync-docs-status-policy.test.mjs",
+        "dddOwner": "PlanningDbRuntime",
+        "railName": "PreparePlanningDbRuntime",
+        "railType": "command",
+        "featureId": "API-H2-4-PLANNING-DB-RUNTIME-BOOT",
+        "greenTest": "node --test tools/ci/sync-docs-status-policy.test.mjs && pnpm docs:sync:check",
+        "sourceRef": "scripts/planning-db-run.cjs",
+        "unitTests": [
+          "scripts/planning-db-run.test.cjs",
+          "tools/ci/sync-docs-status-policy.test.mjs"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2274"],
+        "cypressFlows": [
+          "N/A - bounded database readiness is covered by deterministic Node tests and the real docs-sync rail."
+        ],
+        "domainObjects": ["PlanningDbRuntime"],
+        "fowlerSignals": ["cold-start-readiness-race"],
+        "patchSurfaces": [
+          "package.json",
+          "tools/ci/sync-docs-status-policy.test.mjs"
+        ],
+        "completionGate": [
+          "node --test scripts/planning-db-run.test.cjs tools/ci/sync-docs-status-policy.test.mjs",
+          "pnpm docs:sync:check",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "docs:sync imports immediately after container startup without a bounded readiness proof.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/adr/ADR-0063-planning-db-current-schema-rebuild.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": ["https://github.com/dunay2/dvt/issues/2274"],
+        "architectureGuards": [
+          "Planning DB readiness is proven by a bounded health wait before every docs-sync import."
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2274",
+        "implementationRefs": [
+          "scripts/planning-db-run.cjs#defaultDataDir",
+          "scripts/planning-db-run.cjs#resolveDefaultDataDir",
+          "scripts/planning-db-run.cjs#runPlanningDbHealth",
+          "scripts/planning-db-run.cjs#waitForPlanningDbReady"
+        ],
+        "normalizedRailName": "prepareplanningdbruntime",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "9469e3033556eb5173b795657c9608a3647597975790d966644544b5ad2a3b8d",
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-run.cjs",
+          "scripts/planning-db-run.test.cjs",
+          "package.json",
+          "tools/ci/sync-docs-status-policy.test.mjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "infra/db/migrations/**",
+          "packages/**"
+        ]
+      },
+      "createdAt": "2026-08-11T20:54:42.869Z"
     }
   ],
   "governanceComponentDefinitions": [
