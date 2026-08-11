@@ -107727,13 +107727,15 @@
         "scripts/planning-db-run.cjs#defaultDataDir",
         "scripts/planning-db-run.cjs#resolveDefaultDataDir",
         "scripts/planning-db-run.cjs#runPlanningDbHealth",
-        "scripts/planning-db-run.cjs#waitForPlanningDbReady"
+        "scripts/planning-db-run.cjs#waitForPlanningDbReady",
+        "package.json#docs:sync"
       ],
       "implementationRefs": [
         "scripts/planning-db-run.cjs#defaultDataDir",
         "scripts/planning-db-run.cjs#resolveDefaultDataDir",
         "scripts/planning-db-run.cjs#runPlanningDbHealth",
-        "scripts/planning-db-run.cjs#waitForPlanningDbReady"
+        "scripts/planning-db-run.cjs#waitForPlanningDbReady",
+        "package.json#docs:sync"
       ],
       "documentationRefs": ["https://github.com/dunay2/dvt/issues/2274"],
       "governingSources": [
@@ -107760,8 +107762,8 @@
         "pnpm verify:prepush",
         "node --test scripts/planning-db-run.test.cjs tools/ci/sync-docs-status-policy.test.mjs"
       ],
-      "sourcePath": "scripts/planning-db-run.cjs",
-      "sourceContentSha256": "9469e3033556eb5173b795657c9608a3647597975790d966644544b5ad2a3b8d",
+      "sourcePath": "package.json",
+      "sourceContentSha256": "023d8018d53680331543c3671950f587a17ef250c4c790760767fcac7f197c3a",
       "rawRail": {
         "name": "PreparePlanningDbRuntime",
         "type": "command",
@@ -107781,7 +107783,8 @@
             ],
             "fowlerSignals": [
               "hidden_platform_assumption",
-              "cold-start-readiness-race"
+              "cold-start-readiness-race",
+              "evidence-input-binding"
             ],
             "cypressCoverage": "N/A - bounded database readiness is covered by deterministic Node tests and the real docs-sync rail.",
             "architectureGuard": "Planning DB readiness is proven by a bounded health wait before every docs-sync import."
@@ -107797,7 +107800,8 @@
             ],
             "fowlerSignals": [
               "hidden_platform_assumption",
-              "cold-start-readiness-race"
+              "cold-start-readiness-race",
+              "evidence-input-binding"
             ],
             "cypressCoverage": "N/A - bounded database readiness is covered by deterministic Node tests and the real docs-sync rail.",
             "architectureGuard": "Planning DB readiness is proven by a bounded health wait before every docs-sync import."
@@ -107811,7 +107815,10 @@
               "scripts/planning-db-run.test.cjs",
               "tools/ci/sync-docs-status-policy.test.mjs"
             ],
-            "fowlerSignals": ["cold-start-readiness-race"],
+            "fowlerSignals": [
+              "cold-start-readiness-race",
+              "evidence-input-binding"
+            ],
             "cypressCoverage": "N/A - bounded database readiness is covered by deterministic Node tests and the real docs-sync rail.",
             "architectureGuard": "Planning DB readiness is proven by a bounded health wait before every docs-sync import."
           },
@@ -107824,7 +107831,23 @@
               "scripts/planning-db-run.test.cjs",
               "tools/ci/sync-docs-status-policy.test.mjs"
             ],
-            "fowlerSignals": ["cold-start-readiness-race"],
+            "fowlerSignals": [
+              "cold-start-readiness-race",
+              "evidence-input-binding"
+            ],
+            "cypressCoverage": "N/A - bounded database readiness is covered by deterministic Node tests and the real docs-sync rail.",
+            "architectureGuard": "Planning DB readiness is proven by a bounded health wait before every docs-sync import."
+          },
+          {
+            "name": "docs:sync",
+            "path": "package.json",
+            "cqRails": ["PreparePlanningDbRuntime"],
+            "dddOwner": "PlanningDbRuntime",
+            "unitTests": [
+              "scripts/planning-db-run.test.cjs",
+              "tools/ci/sync-docs-status-policy.test.mjs"
+            ],
+            "fowlerSignals": ["evidence-input-binding"],
             "cypressCoverage": "N/A - bounded database readiness is covered by deterministic Node tests and the real docs-sync rail.",
             "architectureGuard": "Planning DB readiness is proven by a bounded health wait before every docs-sync import."
           }
@@ -107839,7 +107862,8 @@
         "domainObjects": ["PlanningDbRuntime"],
         "fowlerSignals": [
           "hidden_platform_assumption",
-          "cold-start-readiness-race"
+          "cold-start-readiness-race",
+          "evidence-input-binding"
         ],
         "completionGate": [
           "node --test scripts/planning-db-run.test.cjs",
@@ -107851,14 +107875,15 @@
           {
             "id": "prepareplanningdbruntime-record",
             "redTest": "node --test tools/ci/sync-docs-status-policy.test.mjs",
-            "greenTest": "node --test tools/ci/sync-docs-status-policy.test.mjs && pnpm docs:sync:check",
+            "greenTest": "node --test tools/ci/sync-docs-status-policy.test.mjs && pnpm planning:db:export:check",
             "patchSurfaces": [
               "scripts/planning-db-run.cjs",
               "scripts/planning-db-run.test.cjs",
               "package.json",
-              "tools/ci/sync-docs-status-policy.test.mjs"
+              "tools/ci/sync-docs-status-policy.test.mjs",
+              "tools/planning-db/state/canonical-state.json"
             ],
-            "expectedFailure": "docs:sync imports immediately after container startup without a bounded readiness proof."
+            "expectedFailure": "The runtime rail evidence omits the productive docs:sync composition and remains fresh after an ordering regression."
           }
         ],
         "componentGuides": [
@@ -107898,7 +107923,7 @@
           "packages/**"
         ]
       },
-      "revision": 1,
+      "revision": 2,
       "createdBy": "codex",
       "createdAt": "2026-08-11T19:47:04.735Z"
     },
@@ -168756,6 +168781,82 @@
         ]
       },
       "createdAt": "2026-08-11T20:54:42.869Z"
+    },
+    {
+      "operationId": "73f8ae7b-2c9e-482c-9823-cafefdfde64f",
+      "idempotencyKey": "issue-2274-bind-docs-sync-input",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#API-H2-4-PLANNING-DB-RUNTIME-BOOT#command#prepareplanningdbruntime",
+      "sourcePath": "package.json",
+      "sourceContentSha256": "023d8018d53680331543c3671950f587a17ef250c4c790760767fcac7f197c3a",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "node --test tools/ci/sync-docs-status-policy.test.mjs",
+        "dddOwner": "PlanningDbRuntime",
+        "railName": "PreparePlanningDbRuntime",
+        "railType": "command",
+        "featureId": "API-H2-4-PLANNING-DB-RUNTIME-BOOT",
+        "greenTest": "node --test tools/ci/sync-docs-status-policy.test.mjs && pnpm planning:db:export:check",
+        "sourceRef": "package.json",
+        "unitTests": [
+          "scripts/planning-db-run.test.cjs",
+          "tools/ci/sync-docs-status-policy.test.mjs"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2274"],
+        "cypressFlows": [
+          "N/A - bounded database readiness is covered by deterministic Node tests and the real docs-sync rail."
+        ],
+        "domainObjects": ["PlanningDbRuntime"],
+        "fowlerSignals": ["evidence-input-binding"],
+        "patchSurfaces": ["tools/planning-db/state/canonical-state.json"],
+        "completionGate": [
+          "node --test scripts/planning-db-run.test.cjs tools/ci/sync-docs-status-policy.test.mjs",
+          "pnpm docs:sync:check",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "The runtime rail evidence omits the productive docs:sync composition and remains fresh after an ordering regression.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/adr/ADR-0063-planning-db-current-schema-rebuild.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": ["https://github.com/dunay2/dvt/issues/2274"],
+        "architectureGuards": [
+          "Planning DB readiness is proven by a bounded health wait before every docs-sync import."
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2274",
+        "implementationRefs": [
+          "package.json#docs:sync",
+          "scripts/planning-db-run.cjs#defaultDataDir",
+          "scripts/planning-db-run.cjs#resolveDefaultDataDir",
+          "scripts/planning-db-run.cjs#runPlanningDbHealth",
+          "scripts/planning-db-run.cjs#waitForPlanningDbReady"
+        ],
+        "normalizedRailName": "prepareplanningdbruntime",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "023d8018d53680331543c3671950f587a17ef250c4c790760767fcac7f197c3a",
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-run.cjs",
+          "scripts/planning-db-run.test.cjs",
+          "package.json",
+          "tools/ci/sync-docs-status-policy.test.mjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "infra/db/migrations/**",
+          "packages/**"
+        ]
+      },
+      "createdAt": "2026-08-11T21:15:25.097Z"
     }
   ],
   "governanceComponentDefinitions": [
