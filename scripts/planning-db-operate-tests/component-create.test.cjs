@@ -112,6 +112,12 @@ test('parseArgs builds a scoped component revise command with ownership deltas',
     'Retired API-local documentation ownership.',
     '--remove-owns',
     'apps/api/docs/**',
+    '--remove-owns',
+    'apps/api/docs/legacy/**',
+    '--remove-excludes',
+    'apps/api/docs/generated/**',
+    '--remove-excludes',
+    'apps/api/docs/archive/**',
     '--source-ref',
     'docs/architecture/components/api/index.md',
     '--source-content-sha256',
@@ -129,7 +135,11 @@ test('parseArgs builds a scoped component revise command with ownership deltas',
   assert.equal(command.componentId, 'SYS-API-DOCS');
   assert.equal(command.status, 'superseded');
   assert.equal(command.ownedConcern, 'Retired API-local documentation ownership.');
-  assert.deepEqual(command.removeOwns, ['apps/api/docs/**']);
+  assert.deepEqual(command.removeOwns, ['apps/api/docs/**', 'apps/api/docs/legacy/**']);
+  assert.deepEqual(command.removeExcludes, [
+    'apps/api/docs/generated/**',
+    'apps/api/docs/archive/**',
+  ]);
   assert.equal(command.expectedRevision, 0);
 });
 
