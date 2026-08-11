@@ -10485,14 +10485,14 @@
         "work_item_id": "GH-2272",
         "title": "Close residual API test-only exports",
         "owner": "API architecture boundaries",
-        "status": "implementing",
+        "status": "implemented",
         "rationale": "Complete the generated export disposition by removing redundant test-only re-exports and a test-only compatibility constant while retaining their production-owned types, policies, and reconciler behavior through existing modules.",
         "fowler_signal": "boundary_drift",
         "rail_ref": "ApplyArchitectureDependencyBoundaryGate",
         "approved_at": "2026-08-11T08:35:54.917+00:00",
         "supersedes_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-20260811",
         "created_at": "2026-08-11T08:35:52.373+00:00",
-        "updated_at": "2026-08-11T08:35:56.168+00:00"
+        "updated_at": "2026-08-11T08:50:07.905+00:00"
       },
       {
         "design_id": "CANVAS-BACKLOG-INTEGRITY-READINESS-20260626",
@@ -87247,6 +87247,27 @@
           "sourceContentSha256": "1f88b3d23b9ef0a47837a188b7051ee92037204cd9a087cbe53a559243558cef"
         },
         "created_at": "2026-08-10T21:04:47.338+00:00"
+      },
+      {
+        "operation_id": "329f410d-ee66-492e-a603-69970f82502e",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811:99deeb6c6564dd79",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811",
+        "source_ref": "git:commit:d395227ea",
+        "source_content_sha256": "5fcbfc912ca973123fae1530ac0f48969efde5c0e7b3646f5aade934681d57ba",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Validated inert implementation disposition with zero cleanup or test-support export candidates",
+          "designId": "API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811",
+          "toStatus": "implemented",
+          "sourceRef": "git:commit:d395227ea",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "5fcbfc912ca973123fae1530ac0f48969efde5c0e7b3646f5aade934681d57ba"
+        },
+        "created_at": "2026-08-11T08:50:07.905+00:00"
       },
       {
         "operation_id": "3328a0c6-4345-44bc-8a45-516fab84e241",
