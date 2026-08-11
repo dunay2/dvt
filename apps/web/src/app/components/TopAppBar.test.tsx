@@ -409,6 +409,9 @@ describe('ShellTopBar workspace context', () => {
     expect(container.querySelector('[data-slot="shell-menu-trigger"]')?.textContent).toContain(
       'Vista'
     );
+    await waitFor(() => {
+      expect(document.body.querySelector('[data-slot="shell-language-menu"]')).toBeNull();
+    });
   });
 
   it('opens an About dialog from the Raven application menu with compiled version metadata', async () => {

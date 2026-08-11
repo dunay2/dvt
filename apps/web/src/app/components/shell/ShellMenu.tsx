@@ -266,6 +266,7 @@ export function ShellMenu({
               onValueChange={(language) => {
                 if (language === 'en' || language === 'es') {
                   configureApplicationLanguage(language);
+                  setOpen(false);
                 }
               }}
             >
