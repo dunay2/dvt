@@ -90,6 +90,19 @@ test('current schema accepts audited architecture design transitions', () => {
   );
 });
 
+test('current schema accepts audited architecture authority retirements', () => {
+  const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
+
+  assert.match(
+    schemaSql,
+    /architecture_design_operations_type_check[^\r\n]*'architecture_test_retire'::text/u
+  );
+  assert.match(
+    schemaSql,
+    /architecture_design_operations_type_check[^\r\n]*'architecture_evidence_retire'::text/u
+  );
+});
+
 test('architecture proof distinguishes assertions from fresh executions', () => {
   const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
 
