@@ -9,7 +9,7 @@ import type {
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
-import { type SourceImportWizardCopy, useSourceImportWizardLocalization } from './copy';
+import { type SourceImportWizardCopy, useSourceImportLocalization } from './copy';
 import { WarehouseConnectionCreateForm } from './WarehouseConnectionCreateForm';
 
 interface ConnectionStepProps {
@@ -83,7 +83,7 @@ export function ConnectionStep({
   onCreateConnection,
   onTestConnection,
 }: ConnectionStepProps) {
-  const { copy } = useSourceImportWizardLocalization();
+  const { copy } = useSourceImportLocalization();
   const [searchValue, setSearchValue] = useState('');
   const selectedConnectionOptionRef = useRef<HTMLButtonElement | null>(null);
   const visibleConnections = useMemo(

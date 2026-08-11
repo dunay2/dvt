@@ -408,7 +408,7 @@ export function resolveSourceImportCatalogNumberFormatter(
   return NUMBER_FORMATTER_BY_LANGUAGE[language];
 }
 
-export function useSourceImportWizardLocalization(): Readonly<{
+export function useSourceImportLocalization(): Readonly<{
   copy: SourceImportWizardCopy;
   language: ApplicationLanguage;
   numberFormatter: Intl.NumberFormat;

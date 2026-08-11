@@ -12,7 +12,7 @@ import {
   DialogTitle,
 } from '../ui/dialog';
 import { ScrollArea } from '../ui/scroll-area';
-import { useSourceImportWizardLocalization } from './copy';
+import { useSourceImportLocalization } from './copy';
 
 type SourceImportWizardFooterProps = Readonly<{
   isResultStep: boolean;
@@ -31,7 +31,7 @@ export function SourceImportWizardFooter({
   onDone,
   onImport,
 }: SourceImportWizardFooterProps): JSX.Element {
-  const { copy } = useSourceImportWizardLocalization();
+  const { copy } = useSourceImportLocalization();
 
   if (isResultStep) {
     return (
@@ -97,7 +97,7 @@ export function SourceImportWizardFrame({
   onDone,
   onImport,
 }: SourceImportWizardFrameProps): JSX.Element {
-  const { copy } = useSourceImportWizardLocalization();
+  const { copy } = useSourceImportLocalization();
 
   return (
     <Dialog

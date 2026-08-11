@@ -1,7 +1,7 @@
 import { isRelationalSourceObject } from '@dvt/contracts';
 
 import type { SourceImportOptionContribution, SourceImportOptionId } from '../../plugins/registry';
-import { useSourceImportWizardLocalization } from './copy';
+import { useSourceImportLocalization } from './copy';
 import type { SourceImportGroupingStrategy, SelectableSourceObject } from './types';
 import { GroupingStep } from './GroupingStep';
 import { OptionsStep } from './OptionsStep';
@@ -32,7 +32,7 @@ export function SourceImportMetadataPanel({
   onGroupingChange,
   onSourceImportOptionChange,
 }: SourceImportMetadataPanelProps) {
-  const { copy } = useSourceImportWizardLocalization();
+  const { copy } = useSourceImportLocalization();
   const supportsRelationalImport =
     activeSourceObject != null && isRelationalSourceObject(activeSourceObject);
 

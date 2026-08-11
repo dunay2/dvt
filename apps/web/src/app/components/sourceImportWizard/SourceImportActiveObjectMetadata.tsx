@@ -3,7 +3,7 @@ import { Badge } from '../ui/badge';
 import { Card } from '../ui/card';
 import { ScrollArea } from '../ui/scroll-area';
 import { MetricEvidenceHotspot } from '../metrics/MetricEvidenceHotspot';
-import { useSourceImportWizardLocalization } from './copy';
+import { useSourceImportLocalization } from './copy';
 import { buildSourceImportObjectViewModel } from './sourceImportCatalogModel';
 import type { SelectableSourceObject } from './types';
 
@@ -34,7 +34,7 @@ export const sourceImportActiveMetadataClassNames = {
 export function SourceImportActiveObjectMetadata({
   activeSourceObject,
 }: SourceImportActiveObjectMetadataProps): JSX.Element {
-  const { copy, numberFormatter } = useSourceImportWizardLocalization();
+  const { copy, numberFormatter } = useSourceImportLocalization();
   const activeObjectViewModel = activeSourceObject
     ? buildSourceImportObjectViewModel(activeSourceObject, 0, copy.catalog, numberFormatter)
     : null;

@@ -9,7 +9,7 @@ import type {
   WarehouseConnection,
 } from '../../ports/workspace';
 import type { SourceImportOptionContribution, SourceImportOptionId } from '../../plugins/registry';
-import { useSourceImportWizardLocalization } from './copy';
+import { useSourceImportLocalization } from './copy';
 import {
   buildSourceImportCommand,
   resolveSourceImportCommandIdentity,
@@ -117,7 +117,7 @@ export function useSourceImportWizard({
   onClose,
   initialSelection,
 }: UseSourceImportWizardParams) {
-  const { copy } = useSourceImportWizardLocalization();
+  const { copy } = useSourceImportLocalization();
   const initialWizardState = useMemo(
     () => applySourceImportOptionDefaults(initialState, sourceImportOptions),
     [sourceImportOptions]

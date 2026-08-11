@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
 import { SOURCE_IMPORT_SECTIONS } from './sourceImportWizardModel';
-import { useSourceImportWizardLocalization } from './copy';
+import { useSourceImportLocalization } from './copy';
 import type { SourceImportSection } from './types';
 
 const sourceImportSectionTabClassNames = {
@@ -24,7 +24,7 @@ type SourceImportSectionTabListProps = Readonly<{
 }>;
 
 function SourceImportSectionTabList({ children }: SourceImportSectionTabListProps): JSX.Element {
-  const { copy } = useSourceImportWizardLocalization();
+  const { copy } = useSourceImportLocalization();
 
   return (
     <div
@@ -78,7 +78,7 @@ export function SourceImportSectionTabs({
   canEnterSection,
   onSectionChange,
 }: SourceImportSectionTabsProps) {
-  const { copy } = useSourceImportWizardLocalization();
+  const { copy } = useSourceImportLocalization();
 
   return (
     <SourceImportSectionTabList>

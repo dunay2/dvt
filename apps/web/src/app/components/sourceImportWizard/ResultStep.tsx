@@ -3,14 +3,14 @@ import { AlertCircle, CheckCircle2 } from 'lucide-react';
 import type { ImportSourcesResult } from '../../ports/workspace';
 import { Card } from '../ui/card';
 import { ScrollArea } from '../ui/scroll-area';
-import { useSourceImportWizardLocalization } from './copy';
+import { useSourceImportLocalization } from './copy';
 
 type ResultStepProps = Readonly<{
   result: ImportSourcesResult;
 }>;
 
 export function ResultStep({ result }: ResultStepProps) {
-  const { copy } = useSourceImportWizardLocalization();
+  const { copy } = useSourceImportLocalization();
   const warning =
     result.outcome.kind === 'graph-draft'
       ? copy.result.graphDraftWarning

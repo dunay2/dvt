@@ -3,7 +3,7 @@ import { Card } from '../ui/card';
 import { Checkbox } from '../ui/checkbox';
 import type { SourceImportOptionContribution, SourceImportOptionId } from '../../plugins/registry';
 import { resolveString } from '../../plugins/contracts/PluginManifest';
-import { useSourceImportWizardLocalization } from './copy';
+import { useSourceImportLocalization } from './copy';
 
 interface OptionsStepProps {
   sourceImportOptions: readonly SourceImportOptionContribution[];
@@ -16,7 +16,7 @@ export function OptionsStep({
   sourceImportOptionValues,
   onSourceImportOptionChange,
 }: OptionsStepProps) {
-  const { copy, language } = useSourceImportWizardLocalization();
+  const { copy, language } = useSourceImportLocalization();
 
   return (
     <div className="space-y-4">

@@ -2,7 +2,7 @@ import { Badge } from '../ui/badge';
 import { Card } from '../ui/card';
 import { Label } from '../ui/label';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
-import { useSourceImportWizardLocalization } from './copy';
+import { useSourceImportLocalization } from './copy';
 import { SOURCE_IMPORT_GROUPING_STRATEGIES, type SourceImportGroupingStrategy } from './types';
 
 interface GroupingStepProps {
@@ -18,7 +18,7 @@ type GroupingOption = Readonly<{
 }>;
 
 export function GroupingStep({ groupingStrategy, onGroupingChange }: GroupingStepProps) {
-  const { copy } = useSourceImportWizardLocalization();
+  const { copy } = useSourceImportLocalization();
   const groupingOptions: readonly GroupingOption[] = SOURCE_IMPORT_GROUPING_STRATEGIES.map(
     (strategy) => ({ id: strategy, ...copy.grouping.options[strategy] })
   );

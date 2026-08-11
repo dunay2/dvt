@@ -5,7 +5,7 @@ import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
 import type { SourceImportOptionContribution, SourceImportOptionId } from '../../plugins/registry';
 import { resolveString } from '../../plugins/contracts/PluginManifest';
-import { useSourceImportWizardLocalization } from './copy';
+import { useSourceImportLocalization } from './copy';
 import { SourceImportSelectionBasket } from './SourceImportSelectionBasket';
 import type { SourceImportObjectViewModel } from './sourceImportCatalogModel';
 import type { SourceImportReviewPreviewGroupViewModel } from './sourceImportReviewModel';
@@ -58,7 +58,7 @@ export function SourceImportReviewView({
   sourceImportOptionValues,
   onRemoveSourceObject,
 }: SourceImportReviewViewProps): JSX.Element {
-  const { copy } = useSourceImportWizardLocalization();
+  const { copy } = useSourceImportLocalization();
 
   return (
     <div className={sourceImportReviewViewClassNames.root}>
@@ -106,7 +106,7 @@ export function SourceImportReviewSummaryCard({
   sourceImportOptions,
   sourceImportOptionValues,
 }: SourceImportReviewSummaryCardProps): JSX.Element {
-  const { copy, language } = useSourceImportWizardLocalization();
+  const { copy, language } = useSourceImportLocalization();
 
   return (
     <Card className={sourceImportReviewViewClassNames.card}>
@@ -174,7 +174,7 @@ export function SourceImportAttachmentPreview({
   selectedSourceObjects,
   previewGroups,
 }: SourceImportAttachmentPreviewProps): JSX.Element {
-  const { copy } = useSourceImportWizardLocalization();
+  const { copy } = useSourceImportLocalization();
 
   return (
     <Card className={sourceImportReviewViewClassNames.card}>

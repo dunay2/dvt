@@ -1,5 +1,5 @@
 import type { SourceImportOptionContribution, SourceImportOptionId } from '../../plugins/registry';
-import { useSourceImportWizardLocalization } from './copy';
+import { useSourceImportLocalization } from './copy';
 import { SourceImportReviewView } from './SourceImportReviewView';
 import { buildSourceImportCatalogViewModel } from './sourceImportCatalogModel';
 import { buildSourceImportReviewPreviewGroups } from './sourceImportReviewModel';
@@ -24,7 +24,7 @@ export function ReviewStep({
   sourceImportOptionValues,
   onRemoveSourceObject,
 }: ReviewStepProps) {
-  const { copy, numberFormatter } = useSourceImportWizardLocalization();
+  const { copy, numberFormatter } = useSourceImportLocalization();
   const catalogViewModel = buildSourceImportCatalogViewModel({
     sourceObjects,
     activeSourceObjectKey: null,

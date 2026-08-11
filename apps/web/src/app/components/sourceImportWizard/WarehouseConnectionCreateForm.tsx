@@ -4,7 +4,7 @@ import {
 } from '../../ports/workspace';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
-import { useSourceImportWizardLocalization } from './copy';
+import { useSourceImportLocalization } from './copy';
 
 interface WarehouseConnectionCreateFormProps {
   form: CreateWarehouseConnectionInput;
@@ -26,7 +26,7 @@ export function WarehouseConnectionCreateForm({
   onCancel,
   onSubmit,
 }: WarehouseConnectionCreateFormProps) {
-  const { copy } = useSourceImportWizardLocalization();
+  const { copy } = useSourceImportLocalization();
 
   return (
     <Card className="border-slate-700 bg-slate-950/50 p-4">
