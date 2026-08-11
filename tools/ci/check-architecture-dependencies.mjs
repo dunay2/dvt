@@ -628,6 +628,25 @@ function nodeIsWithin(node, root) {
   return node.pos >= root.pos && node.end <= root.end;
 }
 
+function staticallySelectedSwitchClauseIndex(statement) {
+  const switchValue = staticPrimitiveValue(statement.expression);
+  if (!switchValue.known) return null;
+
+  let defaultIndex = -1;
+  for (const [index, clause] of statement.caseBlock.clauses.entries()) {
+    if (ts.isDefaultClause(clause)) {
+      defaultIndex = index;
+      continue;
+    }
+
+    const caseValue = staticPrimitiveValue(clause.expression);
+    if (!caseValue.known) return null;
+    if (caseValue.value === switchValue.value) return index;
+  }
+
+  return defaultIndex;
+}
+
 function statementAlwaysTerminates(statement) {
   if (ts.isReturnStatement(statement) || ts.isThrowStatement(statement)) return true;
   if (ts.isBlock(statement)) {
@@ -641,17 +660,9 @@ function statementAlwaysTerminates(statement) {
     return !statement.catchClause || statementAlwaysTerminates(statement.catchClause.block);
   }
   if (ts.isSwitchStatement(statement)) {
-    const switchValue = staticPrimitiveValue(statement.expression);
-    if (!switchValue.known) return false;
+    const selectedIndex = staticallySelectedSwitchClauseIndex(statement);
+    if (selectedIndex === null || selectedIndex < 0) return false;
     const clauses = statement.caseBlock.clauses;
-    let selectedIndex = clauses.findIndex(
-      (clause) =>
-        ts.isCaseClause(clause) &&
-        staticPrimitiveValue(clause.expression).known &&
-        staticPrimitiveValue(clause.expression).value === switchValue.value
-    );
-    if (selectedIndex < 0) selectedIndex = clauses.findIndex(ts.isDefaultClause);
-    if (selectedIndex < 0) return false;
     for (const clause of clauses.slice(selectedIndex)) {
       for (const clauseStatement of clause.statements) {
         if (ts.isBreakStatement(clauseStatement)) return false;
@@ -672,6 +683,62 @@ function statementAlwaysTerminates(statement) {
     statementAlwaysTerminates(statement.thenStatement) &&
     statementAlwaysTerminates(statement.elseStatement)
   );
+}
+
+function statementAlwaysExitsSwitchPath(statement) {
+  if (ts.isBreakStatement(statement) || ts.isContinueStatement(statement)) return true;
+  if (ts.isBlock(statement)) {
+    return statement.statements.some((nestedStatement) =>
+      statementAlwaysExitsSwitchPath(nestedStatement)
+    );
+  }
+  if (ts.isTryStatement(statement)) {
+    if (statement.finallyBlock && statementAlwaysExitsSwitchPath(statement.finallyBlock)) {
+      return true;
+    }
+    if (!statementAlwaysExitsSwitchPath(statement.tryBlock)) return false;
+    return !statement.catchClause || statementAlwaysExitsSwitchPath(statement.catchClause.block);
+  }
+  if (ts.isIfStatement(statement)) {
+    const condition = staticBooleanValue(statement.expression);
+    if (condition === true) return statementAlwaysExitsSwitchPath(statement.thenStatement);
+    if (condition === false) {
+      return statement.elseStatement
+        ? statementAlwaysExitsSwitchPath(statement.elseStatement)
+        : false;
+    }
+    return (
+      statement.elseStatement !== undefined &&
+      statementAlwaysExitsSwitchPath(statement.thenStatement) &&
+      statementAlwaysExitsSwitchPath(statement.elseStatement)
+    );
+  }
+  return statementAlwaysTerminates(statement);
+}
+
+function switchClauseIsStaticallyReachable(clause, containingStatement) {
+  const caseBlock = clause.parent;
+  const switchStatement = caseBlock?.parent;
+  if (!switchStatement || !ts.isSwitchStatement(switchStatement)) return true;
+
+  const selectedIndex = staticallySelectedSwitchClauseIndex(switchStatement);
+  if (selectedIndex === null) return true;
+  if (selectedIndex < 0) return false;
+
+  const clauses = switchStatement.caseBlock.clauses;
+  const targetIndex = clauses.indexOf(clause);
+  if (targetIndex < selectedIndex) return false;
+
+  for (let clauseIndex = selectedIndex; clauseIndex <= targetIndex; clauseIndex += 1) {
+    const statements = clauses[clauseIndex].statements;
+    const statementsBeforeTarget =
+      clauseIndex === targetIndex
+        ? statements.slice(0, statements.indexOf(containingStatement))
+        : statements;
+    if (statementsBeforeTarget.some(statementAlwaysExitsSwitchPath)) return false;
+  }
+
+  return true;
 }
 
 function isStaticallyReachable(node, boundary) {
@@ -699,6 +766,12 @@ function isStaticallyReachable(node, boundary) {
       if (parent.operatorToken.kind === ts.SyntaxKind.BarBarToken && left === true) return false;
     }
     if (ts.isWhileStatement(parent) && staticBooleanValue(parent.expression) === false) {
+      return false;
+    }
+    if (
+      (ts.isCaseClause(parent) || ts.isDefaultClause(parent)) &&
+      !switchClauseIsStaticallyReachable(parent, current)
+    ) {
       return false;
     }
     if (ts.isBlock(parent)) {
