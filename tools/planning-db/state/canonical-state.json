@@ -10555,14 +10555,28 @@
         "work_item_id": "GH-2274",
         "title": "DB-first document evidence and recovery reconciliation",
         "owner": "Architecture / Docs / Planning",
-        "status": "implementing",
+        "status": "superseded",
         "rationale": "Replace current local architecture assertions through hash-matched DB dispositions, preserve those DB facts across clean CI recovery, correct generated ownership, require executable evidence provenance, and retain explicit on-demand publication without migration or compatibility state.",
         "fowler_signal": "evolutionary_architecture",
         "rail_ref": "GeneratePlanningDerivedSurfaces;ClassifyArchitectureDocumentationDisposition;ListDocumentationLifecycleFacts;RecordArchitectureTestEvidence;ReadArchitectureDesignAuthority;ApplyArchitectureDependencyBoundaryGate",
         "approved_at": "2026-08-11T10:05:26.359+00:00",
         "supersedes_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-20260811",
         "created_at": "2026-08-11T10:05:25.05+00:00",
-        "updated_at": "2026-08-11T10:05:27.634+00:00"
+        "updated_at": "2026-08-11T10:13:34.16+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "work_item_id": "GH-2274",
+        "title": "DB-first current document and ownership reconciliation",
+        "owner": "Architecture / Docs / Planning",
+        "status": "implementing",
+        "rationale": "Complete the approved DB-first lifecycle and evidence model by correcting the four exact generated ownership components, recording executable proof, and preserving explicit publication semantics without migration or compatibility state.",
+        "fowler_signal": "boundary_drift",
+        "rail_ref": "GeneratePlanningDerivedSurfaces;ClassifyArchitectureDocumentationDisposition;ListDocumentationLifecycleFacts;RecordArchitectureTestEvidence;ReadArchitectureDesignAuthority;ApplyArchitectureDependencyBoundaryGate",
+        "approved_at": "2026-08-11T10:13:43.802+00:00",
+        "supersedes_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V2-20260811",
+        "created_at": "2026-08-11T10:13:39.234+00:00",
+        "updated_at": "2026-08-11T10:23:39.735+00:00"
       },
       {
         "design_id": "CANVAS-BACKLOG-INTEGRITY-READINESS-20260626",
@@ -61867,6 +61881,174 @@
         "created_at": "2026-08-11T10:05:25.05+00:00"
       },
       {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "subject_kind": "command",
+        "subject_id": "ApplyArchitectureDependencyBoundaryGate",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T10:13:39.234+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "subject_kind": "command",
+        "subject_id": "GeneratePlanningDerivedSurfaces",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T10:13:39.234+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-APPLICATION-ERRORS",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T10:13:39.234+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-INFRASTRUCTURE",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T10:13:39.234+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-TESTS",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T10:13:39.234+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "subject_kind": "component",
+        "subject_id": "SYS-PLANSTORE-API-COMPOSITION",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T10:13:39.234+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "subject_kind": "path",
+        "subject_id": "docs/planning/status/system-governance-unit-index.units.yaml",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T10:13:39.234+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "subject_kind": "path",
+        "subject_id": "scripts/**.test.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T10:13:39.234+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "subject_kind": "path",
+        "subject_id": "scripts/documentation-publication.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T10:13:39.234+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "subject_kind": "path",
+        "subject_id": "scripts/planning-db-export.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T10:13:39.234+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "subject_kind": "path",
+        "subject_id": "scripts/planning-db-import.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T10:13:39.234+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "subject_kind": "path",
+        "subject_id": "scripts/planning-db-operate.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T10:13:39.234+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "subject_kind": "path",
+        "subject_id": "scripts/planning-db-query.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T10:13:39.234+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "subject_kind": "path",
+        "subject_id": "scripts/planning-db/queries/documentation-lifecycle-query.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T10:13:39.234+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "subject_kind": "path",
+        "subject_id": "tools/planning-db/schema.sql",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T10:13:39.234+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "subject_kind": "path",
+        "subject_id": "tools/planning-db/state/canonical-state.json",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T10:13:39.234+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "subject_kind": "query",
+        "subject_id": "ClassifyArchitectureDocumentationDisposition",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T10:13:39.234+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "subject_kind": "query",
+        "subject_id": "ListDocumentationLifecycleFacts",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T10:13:39.234+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "subject_kind": "query",
+        "subject_id": "ReadArchitectureDesignAuthority",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T10:13:39.234+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "subject_kind": "test",
+        "subject_id": "TEST-API-H2-4-DOCUMENT-LIFECYCLE-DISPOSITION",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T10:13:39.234+00:00"
+      },
+      {
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "subject_kind": "test",
+        "subject_id": "TEST-API-H2-4-EVIDENCE-PROVENANCE",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T10:13:39.234+00:00"
+      },
+      {
         "design_id": "CANVAS-BOTTOM-DRAWER-ACTIONABLE-READ-MODEL-20260626",
         "subject_kind": "component",
         "subject_id": "web.component.shell.BottomOperationalDrawer",
@@ -87347,6 +87529,27 @@
         "created_at": "2026-08-11T03:58:09.967+00:00"
       },
       {
+        "operation_id": "1a9ea882-3f10-4c27-864e-0acc8b6fc631",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811:b10fb5d24862385d",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2274",
+        "source_content_sha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Component command rail requires exact ownership revisions while the design is under review.",
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+          "toStatus": "drift",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2274",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a"
+        },
+        "created_at": "2026-08-11T10:14:45.961+00:00"
+      },
+      {
         "operation_id": "1c064d69-f9bf-4d5d-bcd1-d61802c4d0e0",
         "idempotency_key": "gh-2167-validation-test-sys-api-http-error-translation-3-v1",
         "operation_type": "architecture_test_record",
@@ -87822,6 +88025,27 @@
         "created_at": "2026-08-11T03:26:03.761+00:00"
       },
       {
+        "operation_id": "2b5c0382-b2ee-49e4-828c-0c86059dba5c",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811:3f960f0202301914",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2274",
+        "source_content_sha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Apply the now-tested complete ownership delta under review posture.",
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+          "toStatus": "review",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2274",
+          "fromStatus": "drift",
+          "sourceContentSha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a"
+        },
+        "created_at": "2026-08-11T10:22:48.662+00:00"
+      },
+      {
         "operation_id": "2c165532-3039-4778-8509-6a7c04f70ae2",
         "idempotency_key": "codex-api-h2-2-reachability-v4-evidence-review",
         "operation_type": "architecture_design_transition",
@@ -87912,6 +88136,27 @@
           "sourceContentSha256": "c8c8e3b444e75a9b8169c9c01b5043316bc7d51d95cb4a9c20e60e00633ad06b"
         },
         "created_at": "2026-08-11T04:16:14.6+00:00"
+      },
+      {
+        "operation_id": "309cfb43-6294-4340-b3db-8fcb12312069",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811:59c7dd6ef067237e",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2274",
+        "source_content_sha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Return the exact four-component ownership delta to its required write posture.",
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+          "toStatus": "review",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2274",
+          "fromStatus": "drift",
+          "sourceContentSha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a"
+        },
+        "created_at": "2026-08-11T10:14:47.975+00:00"
       },
       {
         "operation_id": "313fe080-2972-4fe8-a258-3767a2ff857f",
@@ -88709,6 +88954,27 @@
         "created_at": "2026-08-10T21:04:53.018+00:00"
       },
       {
+        "operation_id": "4b19495b-f976-4a4a-a3ac-5bb3b884063e",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811:99f0ed4328b80cb5",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2274",
+        "source_content_sha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Ownership and lifecycle state are ready for executable verification.",
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+          "toStatus": "implementing",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2274",
+          "fromStatus": "approved",
+          "sourceContentSha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a"
+        },
+        "created_at": "2026-08-11T10:18:34.959+00:00"
+      },
+      {
         "operation_id": "4b58ffa0-2109-4d69-9309-8c0bbcc4c7e7",
         "idempotency_key": "codex-api-h2-2-reachability-v11-create",
         "operation_type": "architecture_design_create",
@@ -89370,6 +89636,27 @@
           "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
         },
         "created_at": "2026-08-10T22:58:42.838+00:00"
+      },
+      {
+        "operation_id": "5477abc9-1805-4f74-8bb8-0074b5d1b95b",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811:a2f90dad2e765bfc",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2274",
+        "source_content_sha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "DB lifecycle and recovery are GREEN; exact ownership reconciliation remains.",
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+          "toStatus": "implementing",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2274",
+          "fromStatus": "approved",
+          "sourceContentSha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a"
+        },
+        "created_at": "2026-08-11T10:13:48.254+00:00"
       },
       {
         "operation_id": "56cb4906-f1b0-4953-bb32-2ae4c57c34e8",
@@ -90061,6 +90348,27 @@
         "created_at": "2026-08-11T03:50:51.409+00:00"
       },
       {
+        "operation_id": "6970587e-e9c8-4338-a4fc-41712109fa47",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811:7b2dae2e5ecb2c62",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2274",
+        "source_content_sha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "All four exact ownership revisions passed component metadata integrity.",
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+          "toStatus": "approved",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2274",
+          "fromStatus": "review",
+          "sourceContentSha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a"
+        },
+        "created_at": "2026-08-11T10:18:33.569+00:00"
+      },
+      {
         "operation_id": "69831e8c-395e-4dc0-bf07-1fb44451933e",
         "idempotency_key": "gh-2167-update-test-sys-api-infra-runtime-telemetry-2-v1",
         "operation_type": "architecture_test_record",
@@ -90244,6 +90552,27 @@
           "sourceContentSha256": "bdf20dae616bfda993737a4ffe143a28189db1cbb51ca4654faa3247328756e3"
         },
         "created_at": "2026-08-11T07:37:49.273+00:00"
+      },
+      {
+        "operation_id": "6fd03408-1e55-4b03-90fd-c59f86b8a54c",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811:6816e4fdbec0b43b",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2274",
+        "source_content_sha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "All four ownership components now match the repository implementation.",
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+          "toStatus": "implementing",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2274",
+          "fromStatus": "approved",
+          "sourceContentSha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a"
+        },
+        "created_at": "2026-08-11T10:23:39.735+00:00"
       },
       {
         "operation_id": "70a131ff-2be8-4bda-a6b3-b9fad2a04598",
@@ -91152,6 +91481,27 @@
           "expectedStorageObject": "docs/planning/status/generated-knowledge-intake-literature.md"
         },
         "created_at": "2026-08-10T15:49:36.365+00:00"
+      },
+      {
+        "operation_id": "8766f3f9-3871-458f-85ea-779819d0fef1",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811:6bf1363652f4b4d2",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2274",
+        "source_content_sha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "V3 preserves the approved Fowler matrix and binds each ownership delta to its exact component.",
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+          "toStatus": "approved",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2274",
+          "fromStatus": "review",
+          "sourceContentSha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a"
+        },
+        "created_at": "2026-08-11T10:13:43.802+00:00"
       },
       {
         "operation_id": "87b23430-b4c3-4c02-aae7-8030613e3964",
@@ -94646,6 +94996,27 @@
         "created_at": "2026-08-10T22:58:52.876+00:00"
       },
       {
+        "operation_id": "cc26db1a-ed7e-421b-8e01-01074740c557",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811:4e982edf3b8827f4",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2274",
+        "source_content_sha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Complete repeated ownership delta now passes the component command rail.",
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+          "toStatus": "approved",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2274",
+          "fromStatus": "review",
+          "sourceContentSha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a"
+        },
+        "created_at": "2026-08-11T10:23:38.046+00:00"
+      },
+      {
         "operation_id": "cc48db4e-bf73-4da1-b330-0083e334d0d9",
         "idempotency_key": "gh-2167-update-contract-sys-api-http-entrypoint-tests-error-translation-evidence-v1",
         "operation_type": "architecture_contract_record",
@@ -94980,6 +95351,160 @@
           "sourceContentSha256": "4f02c340d242cb834a03990064924683692fae7c4dee8c19f29eeb47f3a75ce3"
         },
         "created_at": "2026-08-11T06:41:43.978+00:00"
+      },
+      {
+        "operation_id": "cfb335de-2f0f-4b90-a1fb-e475ea28adaf",
+        "idempotency_key": "architecture_design_create:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811:866a030f925ecae4",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2274",
+        "source_content_sha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "Architecture / Docs / Planning",
+          "title": "DB-first current document and ownership reconciliation",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-API-APPLICATION-ERRORS",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-API-INFRASTRUCTURE",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-API-TESTS",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-PLANSTORE-API-COMPOSITION",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "ReadArchitectureDesignAuthority",
+              "subjectKind": "query"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "ListDocumentationLifecycleFacts",
+              "subjectKind": "query"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "ClassifyArchitectureDocumentationDisposition",
+              "subjectKind": "query"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "GeneratePlanningDerivedSurfaces",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "ApplyArchitectureDependencyBoundaryGate",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "tools/planning-db/schema.sql",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/planning-db-query.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/planning-db-operate.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/planning-db-import.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/planning-db-export.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/planning-db/queries/documentation-lifecycle-query.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/documentation-publication.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/**.test.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "tools/planning-db/state/canonical-state.json",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "docs/planning/status/system-governance-unit-index.units.yaml",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "TEST-API-H2-4-DOCUMENT-LIFECYCLE-DISPOSITION",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "TEST-API-H2-4-EVIDENCE-PROVENANCE",
+              "subjectKind": "test"
+            }
+          ],
+          "status": "review",
+          "railRef": "GeneratePlanningDerivedSurfaces;ClassifyArchitectureDocumentationDisposition;ListDocumentationLifecycleFacts;RecordArchitectureTestEvidence;ReadArchitectureDesignAuthority;ApplyArchitectureDependencyBoundaryGate",
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+          "rationale": "Complete the approved DB-first lifecycle and evidence model by correcting the four exact generated ownership components, recording executable proof, and preserving explicit publication semantics without migration or compatibility state.",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2274",
+          "workItemId": "GH-2274",
+          "fowlerSignal": "boundary_drift",
+          "supersedesId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V2-20260811",
+          "sourceContentSha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a"
+        },
+        "created_at": "2026-08-11T10:13:39.234+00:00"
       },
       {
         "operation_id": "d0b3be37-9967-4bcf-9e00-cb6286c0c83f",
@@ -96303,6 +96828,27 @@
         "created_at": "2026-08-10T20:10:11.814+00:00"
       },
       {
+        "operation_id": "f1d17841-61a1-43ae-884d-18d64fbb5fd6",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V2-20260811:f3c9735346796aca",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V2-20260811",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2274",
+        "source_content_sha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Current ownership query confirmed four exact component rows require correction; V3 narrows command authorization to those owners.",
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V2-20260811",
+          "toStatus": "superseded",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2274",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a"
+        },
+        "created_at": "2026-08-11T10:13:34.16+00:00"
+      },
+      {
         "operation_id": "f1de1427-a3a5-44d4-ad7a-34ce217fba7d",
         "idempotency_key": "codex-api-h2-2-reachability-v8-evidence-drift",
         "operation_type": "architecture_design_transition",
@@ -96322,6 +96868,27 @@
           "sourceContentSha256": "995ad5790791389c3241e330d1234373d6f4b7ec130b2502896fd55acdbedd10"
         },
         "created_at": "2026-08-11T05:27:12.887+00:00"
+      },
+      {
+        "operation_id": "f21c9644-d151-4a0b-b968-5926d706a269",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811:a3e6a569f905dc22",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2274",
+        "source_content_sha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "RED regression proved repeated ownership deltas retained only the last value.",
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+          "toStatus": "drift",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2274",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a"
+        },
+        "created_at": "2026-08-11T10:22:44.835+00:00"
       },
       {
         "operation_id": "f32a6337-479c-4a56-a186-f0cb80a28b32",
@@ -105451,7 +106018,7 @@
         "pnpm docs:feature-mechanization:implementation"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "c802711d62c75d706bb64b1cd18c8cc7503d6af8abda7f1da16de072ce26711e",
+      "sourceContentSha256": "9ea6002bce50a36b35513d00ad8164f9a542bd898aa8101e4294f0b68e17566a",
       "rawRail": {
         "name": "RecordArchitectureStorageIo",
         "type": "command",
@@ -158033,6 +158600,24 @@
   ],
   "governanceComponentDefinitions": [
     {
+      "componentId": "SYS-API-APPLICATION-ERRORS",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2274",
+      "sourceContentSha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a",
+      "revision": 1,
+      "name": "API application errors",
+      "level": "component",
+      "parentComponentId": "SYS-API-ROOT",
+      "rootUnit": "SYS-DVT",
+      "domainUnit": "SYS-DVT",
+      "status": "coverage-required",
+      "childrenRequired": false,
+      "ownedConcern": "Owns application-layer error types and failure semantics not delegated to narrower components.",
+      "dddOwner": "AS",
+      "cqRails": "API application command and query failure semantics",
+      "createdBy": "codex",
+      "createdAt": "2026-08-11T10:16:53.026Z"
+    },
+    {
       "componentId": "SYS-API-DOCS",
       "sourcePath": "docs/architecture/components/api/index.md",
       "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
@@ -158051,10 +158636,28 @@
       "createdAt": "2026-08-10T22:24:17.161Z"
     },
     {
-      "componentId": "SYS-API-TESTS",
-      "sourcePath": "docs/architecture/components/api/index.md",
-      "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
+      "componentId": "SYS-API-INFRASTRUCTURE",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2274",
+      "sourceContentSha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a",
       "revision": 1,
+      "name": "API infrastructure adapters",
+      "level": "component",
+      "parentComponentId": "SYS-API-ROOT",
+      "rootUnit": "SYS-DVT",
+      "domainUnit": "SYS-DVT",
+      "status": "coverage-required",
+      "childrenRequired": false,
+      "ownedConcern": "Owns API infrastructure adapters and plugin composition not delegated to narrower components.",
+      "dddOwner": "ADP",
+      "cqRails": "API adapter-backed command/query support",
+      "createdBy": "codex",
+      "createdAt": "2026-08-11T10:17:34.733Z"
+    },
+    {
+      "componentId": "SYS-API-TESTS",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2274",
+      "sourceContentSha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a",
+      "revision": 2,
       "name": "API app, integration, module, infrastructure, and fixture tests",
       "level": "component",
       "parentComponentId": "SYS-API-ROOT",
@@ -158070,16 +158673,16 @@
     },
     {
       "componentId": "SYS-PLANSTORE-API-COMPOSITION",
-      "sourcePath": "docs/architecture/components/api/index.md",
-      "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67",
-      "revision": 1,
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2274",
+      "sourceContentSha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a",
+      "revision": 3,
       "name": "API plan-store composition and resolvers",
       "level": "component",
       "parentComponentId": "SYS-PLANSTORE",
       "rootUnit": "SYS-DVT",
       "domainUnit": "SYS-PLANSTORE",
       "status": "review",
-      "childrenRequired": true,
+      "childrenRequired": false,
       "ownedConcern": "API stored-plan composition, planRef parsing, and artifact resolver ownership.",
       "dddOwner": "AS",
       "cqRails": "PS-Q03, PS-C02",
@@ -158089,161 +158692,203 @@
   ],
   "governanceComponentOwnershipPatterns": [
     {
+      "componentId": "SYS-API-APPLICATION-ERRORS",
+      "patternKind": "owns",
+      "pattern": "apps/api/src/application/errors/**",
+      "patternOrder": 0,
+      "createdAt": "2026-08-11T10:16:52.987Z"
+    },
+    {
+      "componentId": "SYS-API-INFRASTRUCTURE",
+      "patternKind": "excludes",
+      "pattern": "apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts",
+      "patternOrder": 0,
+      "createdAt": "2026-08-11T10:17:34.682Z"
+    },
+    {
+      "componentId": "SYS-API-INFRASTRUCTURE",
+      "patternKind": "excludes",
+      "pattern": "apps/api/src/infrastructure/startRun/ArtifactStoreDbtProjectBundleBindingPolicy.ts",
+      "patternOrder": 1,
+      "createdAt": "2026-08-11T10:17:34.682Z"
+    },
+    {
+      "componentId": "SYS-API-INFRASTRUCTURE",
+      "patternKind": "owns",
+      "pattern": "apps/api/src/db/**",
+      "patternOrder": 0,
+      "createdAt": "2026-08-11T10:17:34.682Z"
+    },
+    {
+      "componentId": "SYS-API-INFRASTRUCTURE",
+      "patternKind": "owns",
+      "pattern": "apps/api/src/infrastructure/**",
+      "patternOrder": 1,
+      "createdAt": "2026-08-11T10:17:34.682Z"
+    },
+    {
+      "componentId": "SYS-API-INFRASTRUCTURE",
+      "patternKind": "owns",
+      "pattern": "apps/api/src/plugins/**",
+      "patternOrder": 2,
+      "createdAt": "2026-08-11T10:17:34.682Z"
+    },
+    {
       "componentId": "SYS-API-TESTS",
       "patternKind": "excludes",
       "pattern": "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts",
       "patternOrder": 0,
-      "createdAt": "2026-08-10T22:24:19.593Z"
+      "createdAt": "2026-08-11T10:14:55.567Z"
     },
     {
       "componentId": "SYS-API-TESTS",
       "patternKind": "excludes",
       "pattern": "apps/api/test/application/services/WorkflowEngineFactory.test.ts",
       "patternOrder": 1,
-      "createdAt": "2026-08-10T22:24:19.593Z"
+      "createdAt": "2026-08-11T10:14:55.567Z"
     },
     {
       "componentId": "SYS-API-TESTS",
       "patternKind": "excludes",
       "pattern": "apps/api/test/application/services/storedPlanExecutabilityValidator/**",
       "patternOrder": 2,
-      "createdAt": "2026-08-10T22:24:19.593Z"
+      "createdAt": "2026-08-11T10:14:55.567Z"
     },
     {
       "componentId": "SYS-API-TESTS",
       "patternKind": "excludes",
       "pattern": "apps/api/test/entrypoints/http/**",
       "patternOrder": 3,
-      "createdAt": "2026-08-10T22:24:19.593Z"
-    },
-    {
-      "componentId": "SYS-API-TESTS",
-      "patternKind": "excludes",
-      "pattern": "apps/api/test/infrastructure/planner/ManifestArtifactResolver.test.ts",
-      "patternOrder": 4,
-      "createdAt": "2026-08-10T22:24:19.593Z"
+      "createdAt": "2026-08-11T10:14:55.567Z"
     },
     {
       "componentId": "SYS-API-TESTS",
       "patternKind": "excludes",
       "pattern": "apps/api/test/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.test.ts",
-      "patternOrder": 5,
-      "createdAt": "2026-08-10T22:24:19.593Z"
+      "patternOrder": 4,
+      "createdAt": "2026-08-11T10:14:55.567Z"
     },
     {
       "componentId": "SYS-API-TESTS",
       "patternKind": "owns",
       "pattern": "apps/api/test/**",
       "patternOrder": 0,
-      "createdAt": "2026-08-10T22:24:19.593Z"
-    },
-    {
-      "componentId": "SYS-PLANSTORE-API-COMPOSITION",
-      "patternKind": "owns",
-      "pattern": "apps/api/src/application/errors/ManifestArtifactResolutionError.ts",
-      "patternOrder": 0,
-      "createdAt": "2026-08-10T22:22:35.861Z"
+      "createdAt": "2026-08-11T10:14:55.567Z"
     },
     {
       "componentId": "SYS-PLANSTORE-API-COMPOSITION",
       "patternKind": "owns",
       "pattern": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
-      "patternOrder": 1,
-      "createdAt": "2026-08-10T22:22:35.861Z"
+      "patternOrder": 0,
+      "createdAt": "2026-08-11T10:22:50.892Z"
     },
     {
       "componentId": "SYS-PLANSTORE-API-COMPOSITION",
       "patternKind": "owns",
       "pattern": "apps/api/src/application/services/StoredPlanExecutabilityValidator.ts",
-      "patternOrder": 2,
-      "createdAt": "2026-08-10T22:22:35.861Z"
+      "patternOrder": 1,
+      "createdAt": "2026-08-11T10:22:50.892Z"
     },
     {
       "componentId": "SYS-PLANSTORE-API-COMPOSITION",
       "patternKind": "owns",
       "pattern": "apps/api/src/application/services/WorkflowEngineFactory.ts",
-      "patternOrder": 3,
-      "createdAt": "2026-08-10T22:22:35.861Z"
+      "patternOrder": 2,
+      "createdAt": "2026-08-11T10:22:50.892Z"
     },
     {
       "componentId": "SYS-PLANSTORE-API-COMPOSITION",
       "patternKind": "owns",
       "pattern": "apps/api/src/entrypoints/http/planRefHttpMapper.ts",
-      "patternOrder": 4,
-      "createdAt": "2026-08-10T22:22:35.861Z"
+      "patternOrder": 3,
+      "createdAt": "2026-08-11T10:22:50.892Z"
     },
     {
       "componentId": "SYS-PLANSTORE-API-COMPOSITION",
       "patternKind": "owns",
       "pattern": "apps/api/src/entrypoints/http/planRoutePlanRefParser.ts",
-      "patternOrder": 5,
-      "createdAt": "2026-08-10T22:22:35.861Z"
-    },
-    {
-      "componentId": "SYS-PLANSTORE-API-COMPOSITION",
-      "patternKind": "owns",
-      "pattern": "apps/api/src/infrastructure/planner/ManifestArtifactResolver.ts",
-      "patternOrder": 6,
-      "createdAt": "2026-08-10T22:22:35.861Z"
+      "patternOrder": 4,
+      "createdAt": "2026-08-11T10:22:50.892Z"
     },
     {
       "componentId": "SYS-PLANSTORE-API-COMPOSITION",
       "patternKind": "owns",
       "pattern": "apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts",
-      "patternOrder": 7,
-      "createdAt": "2026-08-10T22:22:35.861Z"
+      "patternOrder": 5,
+      "createdAt": "2026-08-11T10:22:50.892Z"
     },
     {
       "componentId": "SYS-PLANSTORE-API-COMPOSITION",
       "patternKind": "owns",
       "pattern": "apps/api/src/infrastructure/startRun/ArtifactStoreDbtProjectBundleBindingPolicy.ts",
-      "patternOrder": 8,
-      "createdAt": "2026-08-10T22:22:35.861Z"
+      "patternOrder": 6,
+      "createdAt": "2026-08-11T10:22:50.892Z"
     },
     {
       "componentId": "SYS-PLANSTORE-API-COMPOSITION",
       "patternKind": "owns",
       "pattern": "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts",
-      "patternOrder": 9,
-      "createdAt": "2026-08-10T22:22:35.861Z"
+      "patternOrder": 7,
+      "createdAt": "2026-08-11T10:22:50.892Z"
     },
     {
       "componentId": "SYS-PLANSTORE-API-COMPOSITION",
       "patternKind": "owns",
       "pattern": "apps/api/test/application/services/WorkflowEngineFactory.test.ts",
-      "patternOrder": 10,
-      "createdAt": "2026-08-10T22:22:35.861Z"
+      "patternOrder": 8,
+      "createdAt": "2026-08-11T10:22:50.892Z"
     },
     {
       "componentId": "SYS-PLANSTORE-API-COMPOSITION",
       "patternKind": "owns",
       "pattern": "apps/api/test/application/services/storedPlanExecutabilityValidator/**",
-      "patternOrder": 11,
-      "createdAt": "2026-08-10T22:22:35.861Z"
+      "patternOrder": 9,
+      "createdAt": "2026-08-11T10:22:50.892Z"
     },
     {
       "componentId": "SYS-PLANSTORE-API-COMPOSITION",
       "patternKind": "owns",
       "pattern": "apps/api/test/entrypoints/http/planRoutePlanSourcePolicy.test.ts",
-      "patternOrder": 12,
-      "createdAt": "2026-08-10T22:22:35.861Z"
-    },
-    {
-      "componentId": "SYS-PLANSTORE-API-COMPOSITION",
-      "patternKind": "owns",
-      "pattern": "apps/api/test/infrastructure/planner/ManifestArtifactResolver.test.ts",
-      "patternOrder": 13,
-      "createdAt": "2026-08-10T22:22:35.861Z"
+      "patternOrder": 10,
+      "createdAt": "2026-08-11T10:22:50.892Z"
     },
     {
       "componentId": "SYS-PLANSTORE-API-COMPOSITION",
       "patternKind": "owns",
       "pattern": "apps/api/test/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.test.ts",
-      "patternOrder": 14,
-      "createdAt": "2026-08-10T22:22:35.861Z"
+      "patternOrder": 11,
+      "createdAt": "2026-08-11T10:22:50.892Z"
     }
   ],
   "governanceComponentSemanticItems": [
+    {
+      "componentId": "SYS-API-APPLICATION-ERRORS",
+      "itemKind": "fowler_signal",
+      "itemValue": "coverage refinement",
+      "itemOrder": 0,
+      "createdAt": "2026-08-11T10:16:52.987Z"
+    },
+    {
+      "componentId": "SYS-API-APPLICATION-ERRORS",
+      "itemKind": "governance_ref",
+      "itemValue": "docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md",
+      "itemOrder": 0,
+      "createdAt": "2026-08-11T10:16:52.987Z"
+    },
+    {
+      "componentId": "SYS-API-APPLICATION-ERRORS",
+      "itemKind": "governance_ref",
+      "itemValue": "docs/architecture/command-query-rail-governance.md",
+      "itemOrder": 1,
+      "createdAt": "2026-08-11T10:16:52.987Z"
+    },
+    {
+      "componentId": "SYS-API-APPLICATION-ERRORS",
+      "itemKind": "governance_ref",
+      "itemValue": "docs/planning/status/system-operations-inventory-20260501.md",
+      "itemOrder": 2,
+      "createdAt": "2026-08-11T10:16:52.987Z"
+    },
     {
       "componentId": "SYS-API-DOCS",
       "itemKind": "fowler_signal",
@@ -158266,88 +158911,116 @@
       "createdAt": "2026-08-10T22:24:17.109Z"
     },
     {
+      "componentId": "SYS-API-INFRASTRUCTURE",
+      "itemKind": "fowler_signal",
+      "itemValue": "coverage refinement",
+      "itemOrder": 0,
+      "createdAt": "2026-08-11T10:17:34.682Z"
+    },
+    {
+      "componentId": "SYS-API-INFRASTRUCTURE",
+      "itemKind": "governance_ref",
+      "itemValue": "docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md",
+      "itemOrder": 0,
+      "createdAt": "2026-08-11T10:17:34.682Z"
+    },
+    {
+      "componentId": "SYS-API-INFRASTRUCTURE",
+      "itemKind": "governance_ref",
+      "itemValue": "docs/architecture/reference-architecture.md",
+      "itemOrder": 1,
+      "createdAt": "2026-08-11T10:17:34.682Z"
+    },
+    {
+      "componentId": "SYS-API-INFRASTRUCTURE",
+      "itemKind": "governance_ref",
+      "itemValue": "docs/planning/status/system-operations-inventory-20260501.md",
+      "itemOrder": 2,
+      "createdAt": "2026-08-11T10:17:34.682Z"
+    },
+    {
       "componentId": "SYS-API-TESTS",
       "itemKind": "fowler_signal",
       "itemValue": "coverage refinement",
       "itemOrder": 0,
-      "createdAt": "2026-08-10T22:24:19.593Z"
+      "createdAt": "2026-08-11T10:14:55.567Z"
     },
     {
       "componentId": "SYS-API-TESTS",
       "itemKind": "governance_ref",
       "itemValue": "docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md",
       "itemOrder": 0,
-      "createdAt": "2026-08-10T22:24:19.593Z"
+      "createdAt": "2026-08-11T10:14:55.567Z"
     },
     {
       "componentId": "SYS-API-TESTS",
       "itemKind": "governance_ref",
       "itemValue": "docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md",
       "itemOrder": 1,
-      "createdAt": "2026-08-10T22:24:19.593Z"
+      "createdAt": "2026-08-11T10:14:55.567Z"
     },
     {
       "componentId": "SYS-API-TESTS",
       "itemKind": "governance_ref",
       "itemValue": "docs/guides/testing-and-ci-capabilities.md",
       "itemOrder": 2,
-      "createdAt": "2026-08-10T22:24:19.593Z"
+      "createdAt": "2026-08-11T10:14:55.567Z"
     },
     {
       "componentId": "SYS-API-TESTS",
       "itemKind": "governance_ref",
       "itemValue": "docs/planning/status/system-operations-inventory-20260501.md",
       "itemOrder": 3,
-      "createdAt": "2026-08-10T22:24:19.593Z"
+      "createdAt": "2026-08-11T10:14:55.567Z"
     },
     {
       "componentId": "SYS-PLANSTORE-API-COMPOSITION",
       "itemKind": "fowler_signal",
       "itemValue": "hidden authority",
       "itemOrder": 0,
-      "createdAt": "2026-08-10T22:22:35.861Z"
+      "createdAt": "2026-08-11T10:22:50.892Z"
     },
     {
       "componentId": "SYS-PLANSTORE-API-COMPOSITION",
       "itemKind": "fowler_signal",
       "itemValue": "boundary drift",
       "itemOrder": 1,
-      "createdAt": "2026-08-10T22:22:35.861Z"
+      "createdAt": "2026-08-11T10:22:50.892Z"
     },
     {
       "componentId": "SYS-PLANSTORE-API-COMPOSITION",
       "itemKind": "governance_ref",
       "itemValue": "docs/planning/status/system-operations-inventory-20260501.md",
       "itemOrder": 0,
-      "createdAt": "2026-08-10T22:22:35.861Z"
+      "createdAt": "2026-08-11T10:22:50.892Z"
     },
     {
       "componentId": "SYS-PLANSTORE-API-COMPOSITION",
       "itemKind": "governance_ref",
       "itemValue": "docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md",
       "itemOrder": 1,
-      "createdAt": "2026-08-10T22:22:35.861Z"
+      "createdAt": "2026-08-11T10:22:50.892Z"
     },
     {
       "componentId": "SYS-PLANSTORE-API-COMPOSITION",
       "itemKind": "public_api",
       "itemValue": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
       "itemOrder": 0,
-      "createdAt": "2026-08-10T22:22:35.861Z"
+      "createdAt": "2026-08-11T10:22:50.892Z"
     },
     {
       "componentId": "SYS-PLANSTORE-API-COMPOSITION",
       "itemKind": "public_api",
       "itemValue": "apps/api/src/application/services/StoredPlanExecutabilityValidator.ts",
       "itemOrder": 1,
-      "createdAt": "2026-08-10T22:22:35.861Z"
+      "createdAt": "2026-08-11T10:22:50.892Z"
     },
     {
       "componentId": "SYS-PLANSTORE-API-COMPOSITION",
       "itemKind": "public_api",
       "itemValue": "apps/api/src/entrypoints/http/planRoutePlanRefParser.ts",
       "itemOrder": 2,
-      "createdAt": "2026-08-10T22:22:35.861Z"
+      "createdAt": "2026-08-11T10:22:50.892Z"
     }
   ],
   "governanceComponentOperations": [
@@ -158556,6 +159229,360 @@
         "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
       },
       "createdAt": "2026-08-10T22:24:19.649Z"
+    },
+    {
+      "operationId": "4e87f2e2-b46c-4178-a95c-a3b9cfa772e5",
+      "idempotencyKey": "component_revise:codex:SYS-API-TESTS:latest:e6053a067ccf31ff",
+      "operationType": "component_revise",
+      "actor": "codex",
+      "componentId": "SYS-API-TESTS",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2274",
+      "sourceContentSha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a",
+      "expectedRevision": null,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "status": null,
+        "addOwns": [],
+        "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2274",
+        "removeOwns": [],
+        "addExcludes": [],
+        "componentId": "SYS-API-TESTS",
+        "ownedConcern": null,
+        "removeExcludes": [
+          "apps/api/test/infrastructure/planner/ManifestArtifactResolver.test.ts"
+        ],
+        "childrenRequired": null,
+        "resultingDefinition": {
+          "name": "API app, integration, module, infrastructure, and fixture tests",
+          "owns": ["apps/api/test/**"],
+          "level": "component",
+          "status": "coverage-required",
+          "cqRails": "API validation suites",
+          "dddOwner": "INFRA",
+          "excludes": [
+            "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts",
+            "apps/api/test/application/services/WorkflowEngineFactory.test.ts",
+            "apps/api/test/application/services/storedPlanExecutabilityValidator/**",
+            "apps/api/test/entrypoints/http/**",
+            "apps/api/test/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.test.ts"
+          ],
+          "nonGoals": [],
+          "revision": 2,
+          "rootUnit": "SYS-DVT",
+          "consumers": [],
+          "createdAt": "2026-08-11T10:14:55.621Z",
+          "createdBy": "codex",
+          "publicApi": [],
+          "domainUnit": "SYS-DVT",
+          "governance": [
+            "docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md",
+            "docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md",
+            "docs/guides/testing-and-ci-capabilities.md",
+            "docs/planning/status/system-operations-inventory-20260501.md"
+          ],
+          "invariants": [],
+          "sourcePath": "https://github.com/dunay2/dvt/issues/2274",
+          "componentId": "SYS-API-TESTS",
+          "transitions": [],
+          "ownedConcern": "Owns API unit tests not delegated to narrower test components.",
+          "fowlerSignals": ["coverage refinement"],
+          "reasonsToChange": [],
+          "childrenRequired": false,
+          "responsibilities": [],
+          "parentComponentId": "SYS-API-ROOT",
+          "sourceContentSha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a"
+        },
+        "sourceContentSha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a"
+      },
+      "createdAt": "2026-08-11T10:14:55.621Z"
+    },
+    {
+      "operationId": "efab813c-b42f-4879-9f64-84a61c4faf46",
+      "idempotencyKey": "component_revise:codex:SYS-PLANSTORE-API-COMPOSITION:latest:252c22153937c845",
+      "operationType": "component_revise",
+      "actor": "codex",
+      "componentId": "SYS-PLANSTORE-API-COMPOSITION",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2274",
+      "sourceContentSha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a",
+      "expectedRevision": null,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "status": null,
+        "addOwns": [],
+        "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2274",
+        "removeOwns": [
+          "apps/api/test/infrastructure/planner/ManifestArtifactResolver.test.ts"
+        ],
+        "addExcludes": [],
+        "componentId": "SYS-PLANSTORE-API-COMPOSITION",
+        "ownedConcern": null,
+        "removeExcludes": [],
+        "childrenRequired": false,
+        "resultingDefinition": {
+          "name": "API plan-store composition and resolvers",
+          "owns": [
+            "apps/api/src/application/errors/ManifestArtifactResolutionError.ts",
+            "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+            "apps/api/src/application/services/StoredPlanExecutabilityValidator.ts",
+            "apps/api/src/application/services/WorkflowEngineFactory.ts",
+            "apps/api/src/entrypoints/http/planRefHttpMapper.ts",
+            "apps/api/src/entrypoints/http/planRoutePlanRefParser.ts",
+            "apps/api/src/infrastructure/planner/ManifestArtifactResolver.ts",
+            "apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts",
+            "apps/api/src/infrastructure/startRun/ArtifactStoreDbtProjectBundleBindingPolicy.ts",
+            "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts",
+            "apps/api/test/application/services/WorkflowEngineFactory.test.ts",
+            "apps/api/test/application/services/storedPlanExecutabilityValidator/**",
+            "apps/api/test/entrypoints/http/planRoutePlanSourcePolicy.test.ts",
+            "apps/api/test/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.test.ts"
+          ],
+          "level": "component",
+          "status": "review",
+          "cqRails": "PS-Q03, PS-C02",
+          "dddOwner": "AS",
+          "excludes": [],
+          "nonGoals": [],
+          "revision": 2,
+          "rootUnit": "SYS-DVT",
+          "consumers": [],
+          "createdAt": "2026-08-11T10:15:39.504Z",
+          "createdBy": "codex",
+          "publicApi": [
+            "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+            "apps/api/src/application/services/StoredPlanExecutabilityValidator.ts",
+            "apps/api/src/entrypoints/http/planRoutePlanRefParser.ts"
+          ],
+          "domainUnit": "SYS-PLANSTORE",
+          "governance": [
+            "docs/planning/status/system-operations-inventory-20260501.md",
+            "docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md"
+          ],
+          "invariants": [],
+          "sourcePath": "https://github.com/dunay2/dvt/issues/2274",
+          "componentId": "SYS-PLANSTORE-API-COMPOSITION",
+          "transitions": [],
+          "ownedConcern": "API stored-plan composition, planRef parsing, and artifact resolver ownership.",
+          "fowlerSignals": ["hidden authority", "boundary drift"],
+          "reasonsToChange": [],
+          "childrenRequired": false,
+          "responsibilities": [],
+          "parentComponentId": "SYS-PLANSTORE",
+          "sourceContentSha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a"
+        },
+        "sourceContentSha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a"
+      },
+      "createdAt": "2026-08-11T10:15:39.504Z"
+    },
+    {
+      "operationId": "7ac992d6-1727-4b58-a446-ab74541d8ffd",
+      "idempotencyKey": "component_revise:codex:SYS-API-APPLICATION-ERRORS:latest:d7f455e7ab4d63f1",
+      "operationType": "component_revise",
+      "actor": "codex",
+      "componentId": "SYS-API-APPLICATION-ERRORS",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2274",
+      "sourceContentSha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a",
+      "expectedRevision": null,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "status": null,
+        "addOwns": [],
+        "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2274",
+        "removeOwns": [],
+        "addExcludes": [],
+        "componentId": "SYS-API-APPLICATION-ERRORS",
+        "ownedConcern": "Owns application-layer error types and failure semantics not delegated to narrower components.",
+        "removeExcludes": [
+          "apps/api/src/application/errors/ManifestArtifactResolutionError.ts"
+        ],
+        "childrenRequired": null,
+        "resultingDefinition": {
+          "name": "API application errors",
+          "owns": ["apps/api/src/application/errors/**"],
+          "level": "component",
+          "status": "coverage-required",
+          "cqRails": "API application command and query failure semantics",
+          "dddOwner": "AS",
+          "excludes": [],
+          "nonGoals": [],
+          "revision": 1,
+          "rootUnit": "SYS-DVT",
+          "consumers": [],
+          "createdAt": "2026-08-11T10:16:53.026Z",
+          "createdBy": "codex",
+          "publicApi": [],
+          "domainUnit": "SYS-DVT",
+          "governance": [
+            "docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md",
+            "docs/architecture/command-query-rail-governance.md",
+            "docs/planning/status/system-operations-inventory-20260501.md"
+          ],
+          "invariants": [],
+          "sourcePath": "https://github.com/dunay2/dvt/issues/2274",
+          "componentId": "SYS-API-APPLICATION-ERRORS",
+          "transitions": [],
+          "ownedConcern": "Owns application-layer error types and failure semantics not delegated to narrower components.",
+          "fowlerSignals": ["coverage refinement"],
+          "reasonsToChange": [],
+          "childrenRequired": false,
+          "responsibilities": [],
+          "parentComponentId": "SYS-API-ROOT",
+          "sourceContentSha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a"
+        },
+        "sourceContentSha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a"
+      },
+      "createdAt": "2026-08-11T10:16:53.026Z"
+    },
+    {
+      "operationId": "75b734b8-5a02-4183-a4fe-583c64973263",
+      "idempotencyKey": "component_revise:codex:SYS-API-INFRASTRUCTURE:latest:6a8cb255a169f75a",
+      "operationType": "component_revise",
+      "actor": "codex",
+      "componentId": "SYS-API-INFRASTRUCTURE",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2274",
+      "sourceContentSha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a",
+      "expectedRevision": null,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "status": null,
+        "addOwns": [],
+        "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2274",
+        "removeOwns": [],
+        "addExcludes": [],
+        "componentId": "SYS-API-INFRASTRUCTURE",
+        "ownedConcern": "Owns API infrastructure adapters and plugin composition not delegated to narrower components.",
+        "removeExcludes": [
+          "apps/api/src/infrastructure/planner/ManifestArtifactResolver.ts"
+        ],
+        "childrenRequired": null,
+        "resultingDefinition": {
+          "name": "API infrastructure adapters",
+          "owns": [
+            "apps/api/src/db/**",
+            "apps/api/src/infrastructure/**",
+            "apps/api/src/plugins/**"
+          ],
+          "level": "component",
+          "status": "coverage-required",
+          "cqRails": "API adapter-backed command/query support",
+          "dddOwner": "ADP",
+          "excludes": [
+            "apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts",
+            "apps/api/src/infrastructure/startRun/ArtifactStoreDbtProjectBundleBindingPolicy.ts"
+          ],
+          "nonGoals": [],
+          "revision": 1,
+          "rootUnit": "SYS-DVT",
+          "consumers": [],
+          "createdAt": "2026-08-11T10:17:34.733Z",
+          "createdBy": "codex",
+          "publicApi": [],
+          "domainUnit": "SYS-DVT",
+          "governance": [
+            "docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md",
+            "docs/architecture/reference-architecture.md",
+            "docs/planning/status/system-operations-inventory-20260501.md"
+          ],
+          "invariants": [],
+          "sourcePath": "https://github.com/dunay2/dvt/issues/2274",
+          "componentId": "SYS-API-INFRASTRUCTURE",
+          "transitions": [],
+          "ownedConcern": "Owns API infrastructure adapters and plugin composition not delegated to narrower components.",
+          "fowlerSignals": ["coverage refinement"],
+          "reasonsToChange": [],
+          "childrenRequired": false,
+          "responsibilities": [],
+          "parentComponentId": "SYS-API-ROOT",
+          "sourceContentSha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a"
+        },
+        "sourceContentSha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a"
+      },
+      "createdAt": "2026-08-11T10:17:34.733Z"
+    },
+    {
+      "operationId": "1e286bd9-1e87-4497-84ce-482c2847b347",
+      "idempotencyKey": "component_revise:codex:SYS-PLANSTORE-API-COMPOSITION:2:03d669e54bef39b8",
+      "operationType": "component_revise",
+      "actor": "codex",
+      "componentId": "SYS-PLANSTORE-API-COMPOSITION",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2274",
+      "sourceContentSha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a",
+      "expectedRevision": 2,
+      "previousRevision": 2,
+      "resultingRevision": 3,
+      "payload": {
+        "status": null,
+        "addOwns": [],
+        "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2274",
+        "removeOwns": [
+          "apps/api/src/application/errors/ManifestArtifactResolutionError.ts",
+          "apps/api/src/infrastructure/planner/ManifestArtifactResolver.ts"
+        ],
+        "addExcludes": [],
+        "componentId": "SYS-PLANSTORE-API-COMPOSITION",
+        "ownedConcern": null,
+        "removeExcludes": [],
+        "childrenRequired": null,
+        "resultingDefinition": {
+          "name": "API plan-store composition and resolvers",
+          "owns": [
+            "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+            "apps/api/src/application/services/StoredPlanExecutabilityValidator.ts",
+            "apps/api/src/application/services/WorkflowEngineFactory.ts",
+            "apps/api/src/entrypoints/http/planRefHttpMapper.ts",
+            "apps/api/src/entrypoints/http/planRoutePlanRefParser.ts",
+            "apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts",
+            "apps/api/src/infrastructure/startRun/ArtifactStoreDbtProjectBundleBindingPolicy.ts",
+            "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts",
+            "apps/api/test/application/services/WorkflowEngineFactory.test.ts",
+            "apps/api/test/application/services/storedPlanExecutabilityValidator/**",
+            "apps/api/test/entrypoints/http/planRoutePlanSourcePolicy.test.ts",
+            "apps/api/test/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.test.ts"
+          ],
+          "level": "component",
+          "status": "review",
+          "cqRails": "PS-Q03, PS-C02",
+          "dddOwner": "AS",
+          "excludes": [],
+          "nonGoals": [],
+          "revision": 3,
+          "rootUnit": "SYS-DVT",
+          "consumers": [],
+          "createdAt": "2026-08-11T10:22:50.987Z",
+          "createdBy": "codex",
+          "publicApi": [
+            "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+            "apps/api/src/application/services/StoredPlanExecutabilityValidator.ts",
+            "apps/api/src/entrypoints/http/planRoutePlanRefParser.ts"
+          ],
+          "domainUnit": "SYS-PLANSTORE",
+          "governance": [
+            "docs/planning/status/system-operations-inventory-20260501.md",
+            "docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md"
+          ],
+          "invariants": [],
+          "sourcePath": "https://github.com/dunay2/dvt/issues/2274",
+          "componentId": "SYS-PLANSTORE-API-COMPOSITION",
+          "transitions": [],
+          "ownedConcern": "API stored-plan composition, planRef parsing, and artifact resolver ownership.",
+          "fowlerSignals": ["hidden authority", "boundary drift"],
+          "reasonsToChange": [],
+          "childrenRequired": false,
+          "responsibilities": [],
+          "parentComponentId": "SYS-PLANSTORE",
+          "sourceContentSha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a"
+        },
+        "sourceContentSha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a"
+      },
+      "createdAt": "2026-08-11T10:22:50.987Z"
     }
   ],
   "fowlerAnalysisDispositions": [
