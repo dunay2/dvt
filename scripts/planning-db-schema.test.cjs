@@ -143,6 +143,38 @@ test('documentation lifecycle accepts only hash-matched DB authority disposition
   );
 });
 
+test('Fowler read models invalidate accepted decisions when analyzed source bytes change', () => {
+  const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
+  const referenceView = schemaSql.slice(
+    schemaSql.indexOf('CREATE VIEW planning_query_store.fowler_analysis_reference_query AS'),
+    schemaSql.indexOf(
+      '-- Name: fowler_analysis_retirement_decisions',
+      schemaSql.indexOf('CREATE VIEW planning_query_store.fowler_analysis_reference_query AS')
+    )
+  );
+  const retirementView = schemaSql.slice(
+    schemaSql.indexOf('CREATE VIEW planning_query_store.fowler_analysis_retirement_query AS'),
+    schemaSql.indexOf(
+      '-- Name: fowler_analysis_work_query',
+      schemaSql.indexOf('CREATE VIEW planning_query_store.fowler_analysis_retirement_query AS')
+    )
+  );
+
+  assert.match(referenceView, /document\.source_content_sha256 AS document_source_content_sha256/u);
+  assert.match(
+    referenceView,
+    /target\.source_content_sha256 = reference\.document_source_content_sha256/u
+  );
+  assert.match(
+    referenceView,
+    /resolution\.source_content_sha256 = reference\.document_source_content_sha256/u
+  );
+  assert.match(
+    retirementView,
+    /accepted_targets\.source_content_sha256 = document\.source_content_sha256/u
+  );
+});
+
 test('current schema accepts audited governance component revisions', () => {
   const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
 
