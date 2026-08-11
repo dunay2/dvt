@@ -964,13 +964,38 @@ test('architecture test and execution retirement require exact may-delete scope'
         scope_kind: 'may_delete',
       },
     ],
-    existingEvidence: { evidence_id: executionCommand.evidenceId },
+    existingEvidence: {
+      evidence_id: executionCommand.evidenceId,
+      design_id: executionCommand.designId,
+    },
     operationId: 'op-architecture-evidence-retire',
     now,
   });
   assert.equal(executionPlan.retirement.evidenceId, executionCommand.evidenceId);
   assert.equal(executionPlan.audit.operationType, 'architecture_evidence_retire');
   assert.equal(executionPlan.audit.payload.evidenceId, executionCommand.evidenceId);
+
+  assert.throws(
+    () =>
+      planArchitectureEvidenceRetireOperation({
+        command: executionCommand,
+        design: { design_id: executionCommand.designId, status: 'review' },
+        designScopes: [
+          {
+            subject_kind: 'evidence',
+            subject_id: executionCommand.evidenceId,
+            scope_kind: 'may_delete',
+          },
+        ],
+        existingEvidence: {
+          evidence_id: executionCommand.evidenceId,
+          design_id: 'OTHER-DESIGN',
+        },
+        operationId: 'op-owner-mismatch',
+        now,
+      }),
+    /ARCH-EVIDENCE-RETIRE-DESIGN-MISMATCH/
+  );
 
   assert.throws(
     () =>
