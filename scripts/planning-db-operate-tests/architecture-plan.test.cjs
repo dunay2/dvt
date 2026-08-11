@@ -14,6 +14,7 @@ const {
   planArchitectureTestRecordOperation,
   planArchitectureEvidenceRetireOperation,
   planArchitectureEvidenceRecordOperation,
+  assertArchitectureEvidenceOriginAuthenticity,
   planArchitectureObservabilityRecordOperation,
   planArchitectureRelationRecordOperation,
   writePlannedArchitectureContractRecordOperation,
@@ -127,6 +128,40 @@ test('architecture design transition planner enforces current state and approval
         now,
       }),
     /ARCH-DESIGN-TRANSITION-CONFLICT/
+  );
+});
+
+test('architecture design transition rejects implementation with must-prove violations', () => {
+  assert.throws(
+    () =>
+      planArchitectureDesignTransitionOperation({
+        command: {
+          kind: 'architecture_design_transition',
+          designId: 'DESIGN-FAIL-CLOSED',
+          fromStatus: 'implementing',
+          toStatus: 'implemented',
+          reason: 'Implementation complete.',
+          sourceRef: 'scripts/planning-db-operate.cjs',
+          sourceContentSha256: 'e'.repeat(64),
+          actor: 'codex',
+          idempotencyKey: 'transition-fail-closed',
+        },
+        existingDesign: {
+          design_id: 'DESIGN-FAIL-CLOSED',
+          status: 'implementing',
+        },
+        implementationViolations: [
+          {
+            violation_kind: 'required_evidence_missing',
+            subject_kind: 'command',
+            subject_id: 'RecordArchitectureEvidenceExecution',
+            severity: 'blocker',
+          },
+        ],
+        operationId: 'op-transition-fail-closed',
+        now: new Date('2026-08-11T13:30:00.000Z'),
+      }),
+    /ARCH-DESIGN-IMPLEMENTATION-EVIDENCE-MISSING/
   );
 });
 
@@ -1137,6 +1172,8 @@ test('architecture execution evidence planner requires must-prove scope and reco
     'pass',
     '--source-ref',
     'node --test scripts/planning-db-schema.test.cjs',
+    '--source-path',
+    'scripts/planning-db-schema.test.cjs',
     '--source-content-sha256',
     'e'.repeat(64),
     '--actor',
@@ -1153,12 +1190,18 @@ test('architecture execution evidence planner requires must-prove scope and reco
         scope_kind: 'must_prove',
       },
     ],
+    sourceFile: {
+      path: 'scripts/planning-db-schema.test.cjs',
+      content_hash: 'e'.repeat(64),
+    },
     operationId: 'op-architecture-evidence-record',
     now,
   });
 
   assert.equal(planned.evidence.evidenceOrigin, 'local_execution');
   assert.equal(planned.evidence.resultState, 'pass');
+  assert.equal(planned.evidence.designId, command.designId);
+  assert.equal(planned.evidence.sourcePath, command.sourcePath);
   assert.equal(planned.audit.operationType, 'architecture_evidence_record');
 });
 
@@ -1173,11 +1216,13 @@ test('architecture execution evidence writer persists proof before its audit row
   const planned = {
     evidence: {
       evidenceId: 'EVIDENCE-API-H2-4-LIFECYCLE-LOCAL',
+      designId: 'API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-20260811',
       subjectKind: 'test',
       subjectId: 'TEST-API-H2-4-DOCUMENT-LIFECYCLE-DISPOSITION',
       evidenceKind: 'test',
       evidenceOrigin: 'local_execution',
       sourceRef: 'node --test scripts/planning-db-schema.test.cjs',
+      sourcePath: 'scripts/planning-db-schema.test.cjs',
       resultState: 'pass',
       recordedAt: '2026-08-11T12:00:00.000Z',
       sourceContentSha256: 'e'.repeat(64),
@@ -1201,8 +1246,65 @@ test('architecture execution evidence writer persists proof before its audit row
   await writePlannedArchitectureEvidenceRecordOperation(client, planned);
 
   assert.match(queries[0].sql, /insert into architecture\.evidence/u);
+  assert.match(queries[0].sql, /design_id/u);
+  assert.match(queries[0].sql, /source_path/u);
   assert.equal(queries[0].params[4], 'local_execution');
   assert.match(queries[1].sql, /insert into architecture\.design_operations/u);
+});
+
+test('architecture evidence rejects forged CI origin and source hash drift', () => {
+  const command = parseArgs([
+    'architecture-evidence',
+    'record-execution',
+    '--design',
+    'API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-20260811',
+    '--evidence',
+    'EVIDENCE-API-H2-4-CI',
+    '--subject-kind',
+    'command',
+    '--subject',
+    'RecordArchitectureEvidenceExecution',
+    '--evidence-kind',
+    'ci',
+    '--origin',
+    'ci_execution',
+    '--result',
+    'pass',
+    '--source-ref',
+    'https://github.com/dunay2/dvt/actions/runs/1234',
+    '--source-path',
+    'scripts/planning-db-operate.cjs',
+    '--source-content-sha256',
+    'e'.repeat(64),
+    '--actor',
+    'codex',
+  ]);
+
+  assert.throws(
+    () => assertArchitectureEvidenceOriginAuthenticity(command, {}),
+    /ARCH-EVIDENCE-CI-ORIGIN-UNVERIFIED/
+  );
+  assert.throws(
+    () =>
+      planArchitectureEvidenceRecordOperation({
+        command: { ...command, evidenceOrigin: 'local_execution' },
+        design: { design_id: command.designId, status: 'implementing' },
+        designScopes: [
+          {
+            subject_kind: command.subjectKind,
+            subject_id: command.subjectId,
+            scope_kind: 'must_prove',
+          },
+        ],
+        sourceFile: {
+          path: command.sourcePath,
+          content_hash: 'f'.repeat(64),
+        },
+        operationId: 'op-source-drift',
+        now: new Date('2026-08-11T13:30:00.000Z'),
+      }),
+    /ARCH-EVIDENCE-SOURCE-HASH-MISMATCH/
+  );
 });
 
 test('architecture scoped operation idempotency rejects stale source-hash replays', () => {

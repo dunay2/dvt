@@ -108,16 +108,17 @@ test('architecture proof distinguishes assertions from fresh executions', () => 
 
   assert.match(
     schemaSql,
-    /architecture\.evidence[\s\S]*evidence_origin text NOT NULL[\s\S]*imported_assertion[\s\S]*local_execution[\s\S]*ci_execution/u
+    /architecture\.evidence[\s\S]*design_id text[\s\S]*source_path text[\s\S]*evidence_origin text NOT NULL[\s\S]*imported_assertion[\s\S]*local_execution[\s\S]*ci_execution/u
   );
   assert.match(
     schemaSql,
-    /CREATE VIEW architecture\.evidence_query[\s\S]*assertion_only[\s\S]*verified/u
+    /CREATE VIEW architecture\.evidence_query[\s\S]*governance_files[\s\S]*source_changed[\s\S]*assertion_only[\s\S]*verified/u
   );
   assert.match(
     schemaSql,
-    /implementation_violation_query[\s\S]*evidence_origin[\s\S]*local_execution[\s\S]*ci_execution[\s\S]*30 days/u
+    /implementation_violation_query[\s\S]*row_number\(\)[\s\S]*PARTITION BY evidence\.design_id[\s\S]*evidence\.recorded_at DESC[\s\S]*evidence\.design_id = scope\.design_id[\s\S]*source_content_sha256[\s\S]*content_hash[\s\S]*30 days/u
   );
+  assert.match(schemaSql, /evidence_design_id_fkey[\s\S]*REFERENCES architecture\.design/u);
 });
 
 test('documentation lifecycle accepts only hash-matched DB authority dispositions', () => {
@@ -128,6 +129,10 @@ test('documentation lifecycle accepts only hash-matched DB authority disposition
     /documentation_lifecycle_query[\s\S]*fowler_analysis_dispositions[\s\S]*db_authority_historical/u
   );
   assert.match(schemaSql, /disposition\.source_content_sha256 = document\.source_content_sha256/u);
+  assert.match(
+    schemaSql,
+    /fowler_analysis_retirement_query[\s\S]*accepted_dispositions[\s\S]*disposition\.source_content_sha256 = document\.source_content_sha256/u
+  );
 });
 
 test('current schema accepts audited governance component revisions', () => {

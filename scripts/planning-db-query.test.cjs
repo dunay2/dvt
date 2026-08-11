@@ -3102,6 +3102,7 @@ test('architecture evidence query exposes provenance and proof state', async () 
         rows: [
           {
             evidence_id: 'EVIDENCE-LOCAL-TEST',
+            design_id: 'DESIGN-LOCAL-TEST',
             subject_kind: 'test',
             subject_id: 'TEST-DB-FIRST',
             evidence_kind: 'test',
@@ -3110,6 +3111,8 @@ test('architecture evidence query exposes provenance and proof state', async () 
             verification_state: 'verified',
             freshness_state: 'fresh',
             source_ref: 'pnpm test',
+            source_path: 'scripts/example.test.cjs',
+            source_verification_state: 'verified',
           },
         ],
       };
@@ -3126,6 +3129,7 @@ test('architecture evidence query exposes provenance and proof state', async () 
   assert.deepEqual(rows, [
     [
       'EVIDENCE-LOCAL-TEST',
+      'DESIGN-LOCAL-TEST',
       'test',
       'TEST-DB-FIRST',
       'test',
@@ -3133,6 +3137,8 @@ test('architecture evidence query exposes provenance and proof state', async () 
       'pass',
       'verified',
       'fresh',
+      'verified',
+      'scripts/example.test.cjs',
       'pnpm test',
     ],
   ]);

@@ -651,6 +651,8 @@ test('parseArgs builds a fresh architecture execution evidence command', () => {
     'pass',
     '--source-ref',
     'node --test scripts/planning-db-schema.test.cjs',
+    '--source-path',
+    'scripts/planning-db-schema.test.cjs',
     '--source-content-sha256',
     'e'.repeat(64),
     '--actor',
@@ -662,6 +664,7 @@ test('parseArgs builds a fresh architecture execution evidence command', () => {
   assert.equal(command.subjectKind, 'test');
   assert.equal(command.evidenceOrigin, 'local_execution');
   assert.equal(command.resultState, 'pass');
+  assert.equal(command.sourcePath, 'scripts/planning-db-schema.test.cjs');
 });
 
 test('parseArgs rejects relation record statuses that the relation table cannot store', () => {
