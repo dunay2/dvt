@@ -104100,7 +104100,8 @@
         "scripts/planning-db-operate.cjs#validateArchitectureEvidenceSubjectKind",
         "scripts/planning-db-operate.cjs#normalizeGitHubRepositorySlug",
         "scripts/planning-db-operate.cjs#readGitValue",
-        "scripts/planning-db-operate.cjs#readGitHubActionsEvidence"
+        "scripts/planning-db-operate.cjs#readGitHubActionsEvidence",
+        "scripts/planning-db-operate.cjs#readGitFileAtCommit"
       ],
       "implementationRefs": [
         "scripts/planning-db-operate.cjs#parseArchitectureEvidenceCommand",
@@ -104121,7 +104122,8 @@
         "scripts/planning-db-operate.cjs#validateArchitectureEvidenceSubjectKind",
         "scripts/planning-db-operate.cjs#normalizeGitHubRepositorySlug",
         "scripts/planning-db-operate.cjs#readGitValue",
-        "scripts/planning-db-operate.cjs#readGitHubActionsEvidence"
+        "scripts/planning-db-operate.cjs#readGitHubActionsEvidence",
+        "scripts/planning-db-operate.cjs#readGitFileAtCommit"
       ],
       "documentationRefs": [
         "docs/architecture/command-query-rail-governance.md"
@@ -104140,7 +104142,8 @@
       ],
       "architectureGuards": [
         "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs",
-        "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, and current HEAD."
+        "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, and current HEAD.",
+        "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
       ],
       "completionGate": [
         "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs",
@@ -104149,7 +104152,7 @@
         "node --test scripts/planning-db-operate-tests/architecture-plan.test.cjs scripts/planning-db-operate-tests/architecture-parse.test.cjs"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "ecec13d4beabd32b342753da833b76f0a4b5c2c9618e9d004364a5a60df90aca",
+      "sourceContentSha256": "493767688ea8a1894f30166de14e29694d3d9a151c01e0bcbbc24b684ef23c60",
       "rawRail": {
         "name": "RecordArchitectureEvidenceExecution",
         "type": "command",
@@ -104168,10 +104171,12 @@
               "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
             ],
             "fowlerSignals": [
-              "DB evidence ledger replaces asserted proof with exact executed proof."
+              "DB evidence ledger replaces asserted proof with exact executed proof.",
+              "hidden_authority",
+              "service_layer"
             ],
-            "cypressCoverage": "N/A - repository governance CLI",
-            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
+            "cypressCoverage": "N/A - mocked GitHub API contract tests cover the repository governance CLI.",
+            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
           },
           {
             "name": "planArchitectureEvidenceRecordOperation",
@@ -104183,10 +104188,12 @@
               "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
             ],
             "fowlerSignals": [
-              "DB evidence ledger replaces asserted proof with exact executed proof."
+              "DB evidence ledger replaces asserted proof with exact executed proof.",
+              "hidden_authority",
+              "service_layer"
             ],
-            "cypressCoverage": "N/A - repository governance CLI",
-            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
+            "cypressCoverage": "N/A - mocked GitHub API contract tests cover the repository governance CLI.",
+            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
           },
           {
             "name": "writePlannedArchitectureEvidenceRecordOperation",
@@ -104198,10 +104205,12 @@
               "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
             ],
             "fowlerSignals": [
-              "DB evidence ledger replaces asserted proof with exact executed proof."
+              "DB evidence ledger replaces asserted proof with exact executed proof.",
+              "hidden_authority",
+              "service_layer"
             ],
-            "cypressCoverage": "N/A - repository governance CLI",
-            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
+            "cypressCoverage": "N/A - mocked GitHub API contract tests cover the repository governance CLI.",
+            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
           },
           {
             "name": "allowedArchitectureEvidenceKinds",
@@ -104213,10 +104222,12 @@
               "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
             ],
             "fowlerSignals": [
-              "DB evidence must be current, exact-hash matched, audited, and fail closed."
+              "DB evidence must be current, exact-hash matched, audited, and fail closed.",
+              "hidden_authority",
+              "service_layer"
             ],
-            "cypressCoverage": "N/A - repository governance CLI",
-            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
+            "cypressCoverage": "N/A - mocked GitHub API contract tests cover the repository governance CLI.",
+            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
           },
           {
             "name": "allowedArchitectureEvidenceOrigins",
@@ -104228,10 +104239,12 @@
               "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
             ],
             "fowlerSignals": [
-              "DB evidence must be current, exact-hash matched, audited, and fail closed."
+              "DB evidence must be current, exact-hash matched, audited, and fail closed.",
+              "hidden_authority",
+              "service_layer"
             ],
-            "cypressCoverage": "N/A - repository governance CLI",
-            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
+            "cypressCoverage": "N/A - mocked GitHub API contract tests cover the repository governance CLI.",
+            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
           },
           {
             "name": "allowedArchitectureEvidenceResultStates",
@@ -104243,10 +104256,12 @@
               "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
             ],
             "fowlerSignals": [
-              "DB evidence must be current, exact-hash matched, audited, and fail closed."
+              "DB evidence must be current, exact-hash matched, audited, and fail closed.",
+              "hidden_authority",
+              "service_layer"
             ],
-            "cypressCoverage": "N/A - repository governance CLI",
-            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
+            "cypressCoverage": "N/A - mocked GitHub API contract tests cover the repository governance CLI.",
+            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
           },
           {
             "name": "applyArchitectureEvidenceRecordOperation",
@@ -104258,10 +104273,12 @@
               "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
             ],
             "fowlerSignals": [
-              "DB evidence must be current, exact-hash matched, audited, and fail closed."
+              "DB evidence must be current, exact-hash matched, audited, and fail closed.",
+              "hidden_authority",
+              "service_layer"
             ],
-            "cypressCoverage": "N/A - repository governance CLI",
-            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
+            "cypressCoverage": "N/A - mocked GitHub API contract tests cover the repository governance CLI.",
+            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
           },
           {
             "name": "assertArchitectureEvidenceOriginAuthenticity",
@@ -104273,10 +104290,12 @@
               "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
             ],
             "fowlerSignals": [
-              "DB evidence must be current, exact-hash matched, audited, and fail closed."
+              "DB evidence must be current, exact-hash matched, audited, and fail closed.",
+              "hidden_authority",
+              "service_layer"
             ],
-            "cypressCoverage": "N/A - repository governance CLI",
-            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
+            "cypressCoverage": "N/A - mocked GitHub API contract tests cover the repository governance CLI.",
+            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
           },
           {
             "name": "readArchitectureEvidence",
@@ -104288,10 +104307,12 @@
               "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
             ],
             "fowlerSignals": [
-              "DB evidence must be current, exact-hash matched, audited, and fail closed."
+              "DB evidence must be current, exact-hash matched, audited, and fail closed.",
+              "hidden_authority",
+              "service_layer"
             ],
-            "cypressCoverage": "N/A - repository governance CLI",
-            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
+            "cypressCoverage": "N/A - mocked GitHub API contract tests cover the repository governance CLI.",
+            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
           },
           {
             "name": "readArchitectureEvidenceSourceFile",
@@ -104303,10 +104324,12 @@
               "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
             ],
             "fowlerSignals": [
-              "DB evidence must be current, exact-hash matched, audited, and fail closed."
+              "DB evidence must be current, exact-hash matched, audited, and fail closed.",
+              "hidden_authority",
+              "service_layer"
             ],
-            "cypressCoverage": "N/A - repository governance CLI",
-            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
+            "cypressCoverage": "N/A - mocked GitHub API contract tests cover the repository governance CLI.",
+            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
           },
           {
             "name": "validateArchitectureEvidenceId",
@@ -104318,10 +104341,12 @@
               "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
             ],
             "fowlerSignals": [
-              "DB evidence must be current, exact-hash matched, audited, and fail closed."
+              "DB evidence must be current, exact-hash matched, audited, and fail closed.",
+              "hidden_authority",
+              "service_layer"
             ],
-            "cypressCoverage": "N/A - repository governance CLI",
-            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
+            "cypressCoverage": "N/A - mocked GitHub API contract tests cover the repository governance CLI.",
+            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
           },
           {
             "name": "validateArchitectureEvidenceKind",
@@ -104333,10 +104358,12 @@
               "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
             ],
             "fowlerSignals": [
-              "DB evidence must be current, exact-hash matched, audited, and fail closed."
+              "DB evidence must be current, exact-hash matched, audited, and fail closed.",
+              "hidden_authority",
+              "service_layer"
             ],
-            "cypressCoverage": "N/A - repository governance CLI",
-            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
+            "cypressCoverage": "N/A - mocked GitHub API contract tests cover the repository governance CLI.",
+            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
           },
           {
             "name": "validateArchitectureEvidenceOrigin",
@@ -104348,10 +104375,12 @@
               "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
             ],
             "fowlerSignals": [
-              "DB evidence must be current, exact-hash matched, audited, and fail closed."
+              "DB evidence must be current, exact-hash matched, audited, and fail closed.",
+              "hidden_authority",
+              "service_layer"
             ],
-            "cypressCoverage": "N/A - repository governance CLI",
-            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
+            "cypressCoverage": "N/A - mocked GitHub API contract tests cover the repository governance CLI.",
+            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
           },
           {
             "name": "validateArchitectureEvidenceRecordCommand",
@@ -104363,10 +104392,12 @@
               "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
             ],
             "fowlerSignals": [
-              "DB evidence must be current, exact-hash matched, audited, and fail closed."
+              "DB evidence must be current, exact-hash matched, audited, and fail closed.",
+              "hidden_authority",
+              "service_layer"
             ],
-            "cypressCoverage": "N/A - repository governance CLI",
-            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
+            "cypressCoverage": "N/A - mocked GitHub API contract tests cover the repository governance CLI.",
+            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
           },
           {
             "name": "validateArchitectureEvidenceResultState",
@@ -104378,10 +104409,12 @@
               "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
             ],
             "fowlerSignals": [
-              "DB evidence must be current, exact-hash matched, audited, and fail closed."
+              "DB evidence must be current, exact-hash matched, audited, and fail closed.",
+              "hidden_authority",
+              "service_layer"
             ],
-            "cypressCoverage": "N/A - repository governance CLI",
-            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
+            "cypressCoverage": "N/A - mocked GitHub API contract tests cover the repository governance CLI.",
+            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
           },
           {
             "name": "validateArchitectureEvidenceSubjectKind",
@@ -104393,10 +104426,12 @@
               "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
             ],
             "fowlerSignals": [
-              "DB evidence must be current, exact-hash matched, audited, and fail closed."
+              "DB evidence must be current, exact-hash matched, audited, and fail closed.",
+              "hidden_authority",
+              "service_layer"
             ],
-            "cypressCoverage": "N/A - repository governance CLI",
-            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
+            "cypressCoverage": "N/A - mocked GitHub API contract tests cover the repository governance CLI.",
+            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
           },
           {
             "name": "normalizeGitHubRepositorySlug",
@@ -104409,7 +104444,7 @@
             ],
             "fowlerSignals": ["hidden_authority", "service_layer"],
             "cypressCoverage": "N/A - mocked GitHub API contract tests cover the repository governance CLI.",
-            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, and current HEAD."
+            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
           },
           {
             "name": "readGitValue",
@@ -104422,7 +104457,7 @@
             ],
             "fowlerSignals": ["hidden_authority", "service_layer"],
             "cypressCoverage": "N/A - mocked GitHub API contract tests cover the repository governance CLI.",
-            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, and current HEAD."
+            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
           },
           {
             "name": "readGitHubActionsEvidence",
@@ -104435,7 +104470,20 @@
             ],
             "fowlerSignals": ["hidden_authority", "service_layer"],
             "cypressCoverage": "N/A - mocked GitHub API contract tests cover the repository governance CLI.",
-            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, and current HEAD."
+            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
+          },
+          {
+            "name": "readGitFileAtCommit",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordArchitectureEvidenceExecution"],
+            "dddOwner": "ArchitectureEvidenceLedger",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "service_layer"],
+            "cypressCoverage": "N/A - mocked GitHub API contract tests cover the repository governance CLI.",
+            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
           }
         ],
         "version": 1,
@@ -104470,7 +104518,7 @@
               "tools/planning-db/state/canonical-state.json",
               "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
             ],
-            "expectedFailure": "A synthetic GitHub Actions-looking URL and forgeable environment flag were accepted as CI execution evidence."
+            "expectedFailure": "CI execution evidence accepted working-tree bytes instead of the exact source bytes at the proven commit."
           }
         ],
         "componentGuides": [
@@ -104492,9 +104540,10 @@
         ],
         "architectureGuards": [
           "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs",
-          "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, and current HEAD."
+          "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, and current HEAD.",
+          "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
         ],
-        "implementationPlan": "Issue #2274 verifies ci_execution against the GitHub Actions API for one concrete completed job, canonical repository, and current commit before any DB transaction.",
+        "implementationPlan": "Issue #2274 proves CI evidence against one completed GitHub Actions job and hashes the source bytes from that proven commit before any DB transaction.",
         "mechanizationStatus": "implemented",
         "noHumanDecisionsRemaining": true,
         "allowedImplementationSurfaces": [
@@ -104508,9 +104557,252 @@
           "environment-only CI authenticity"
         ]
       },
-      "revision": 2,
+      "revision": 3,
       "createdBy": "codex",
       "createdAt": "2026-08-11T12:22:58.150Z"
+    },
+    {
+      "railId": "local#API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE#command#recordarchitectureobservabilityevidence",
+      "featureId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE",
+      "mechanizationStatus": "implemented",
+      "railName": "RecordArchitectureObservabilityEvidence",
+      "normalizedRailName": "recordarchitectureobservabilityevidence",
+      "railType": "command",
+      "dddOwner": "ArchitectureObservabilityEvidenceLedger",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "scripts/planning-db-operate.cjs#parseArchitectureEvidenceCommand",
+        "scripts/planning-db-operate.cjs#validateArchitectureObservabilityRecordCommand",
+        "scripts/planning-db-operate.cjs#validateArchitectureObservabilityId",
+        "scripts/planning-db-operate.cjs#validateArchitectureObservabilitySignalKind",
+        "scripts/planning-db-operate.cjs#validateArchitectureObservabilityStatus",
+        "scripts/planning-db-operate.cjs#planArchitectureObservabilityRecordOperation",
+        "scripts/planning-db-operate.cjs#readArchitectureObservability",
+        "scripts/planning-db-operate.cjs#writePlannedArchitectureObservabilityRecordOperation",
+        "scripts/planning-db-operate.cjs#applyArchitectureObservabilityRecordOperation"
+      ],
+      "implementationRefs": [
+        "scripts/planning-db-operate.cjs#parseArchitectureEvidenceCommand",
+        "scripts/planning-db-operate.cjs#validateArchitectureObservabilityRecordCommand",
+        "scripts/planning-db-operate.cjs#validateArchitectureObservabilityId",
+        "scripts/planning-db-operate.cjs#validateArchitectureObservabilitySignalKind",
+        "scripts/planning-db-operate.cjs#validateArchitectureObservabilityStatus",
+        "scripts/planning-db-operate.cjs#planArchitectureObservabilityRecordOperation",
+        "scripts/planning-db-operate.cjs#readArchitectureObservability",
+        "scripts/planning-db-operate.cjs#writePlannedArchitectureObservabilityRecordOperation",
+        "scripts/planning-db-operate.cjs#applyArchitectureObservabilityRecordOperation"
+      ],
+      "documentationRefs": [
+        "docs/architecture/command-query-rail-governance.md"
+      ],
+      "governingSources": [
+        "AGENTS.md",
+        "docs/planning/status/governance-document-rule-inventory.md",
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "scripts/planning-db-operate.cjs",
+        "scripts/planning-db-operate-tests/**",
+        "tools/planning-db/schema.sql",
+        "tools/planning-db/state/canonical-state.json"
+      ],
+      "architectureGuards": [
+        "RecordArchitectureObservabilityEvidence requires exact design scope, an existing component, validation, audit, and optimistic revision semantics."
+      ],
+      "completionGate": [
+        "node --test scripts/planning-db-operate-tests/architecture-plan.test.cjs scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+        "pnpm planning:db:export --check",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "scripts/planning-db-operate.cjs",
+      "sourceContentSha256": "493767688ea8a1894f30166de14e29694d3d9a151c01e0bcbbc24b684ef23c60",
+      "rawRail": {
+        "name": "RecordArchitectureObservabilityEvidence",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "ArchitectureObservabilityEvidenceLedger"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "parseArchitectureEvidenceCommand",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordArchitectureObservabilityEvidence"],
+            "dddOwner": "ArchitectureObservabilityEvidenceLedger",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "service_layer"],
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "RecordArchitectureObservabilityEvidence requires exact design scope, an existing component, validation, audit, and optimistic revision semantics."
+          },
+          {
+            "name": "validateArchitectureObservabilityRecordCommand",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordArchitectureObservabilityEvidence"],
+            "dddOwner": "ArchitectureObservabilityEvidenceLedger",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "service_layer"],
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "RecordArchitectureObservabilityEvidence requires exact design scope, an existing component, validation, audit, and optimistic revision semantics."
+          },
+          {
+            "name": "validateArchitectureObservabilityId",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordArchitectureObservabilityEvidence"],
+            "dddOwner": "ArchitectureObservabilityEvidenceLedger",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "service_layer"],
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "RecordArchitectureObservabilityEvidence requires exact design scope, an existing component, validation, audit, and optimistic revision semantics."
+          },
+          {
+            "name": "validateArchitectureObservabilitySignalKind",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordArchitectureObservabilityEvidence"],
+            "dddOwner": "ArchitectureObservabilityEvidenceLedger",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "service_layer"],
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "RecordArchitectureObservabilityEvidence requires exact design scope, an existing component, validation, audit, and optimistic revision semantics."
+          },
+          {
+            "name": "validateArchitectureObservabilityStatus",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordArchitectureObservabilityEvidence"],
+            "dddOwner": "ArchitectureObservabilityEvidenceLedger",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "service_layer"],
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "RecordArchitectureObservabilityEvidence requires exact design scope, an existing component, validation, audit, and optimistic revision semantics."
+          },
+          {
+            "name": "planArchitectureObservabilityRecordOperation",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordArchitectureObservabilityEvidence"],
+            "dddOwner": "ArchitectureObservabilityEvidenceLedger",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "service_layer"],
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "RecordArchitectureObservabilityEvidence requires exact design scope, an existing component, validation, audit, and optimistic revision semantics."
+          },
+          {
+            "name": "readArchitectureObservability",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordArchitectureObservabilityEvidence"],
+            "dddOwner": "ArchitectureObservabilityEvidenceLedger",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "service_layer"],
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "RecordArchitectureObservabilityEvidence requires exact design scope, an existing component, validation, audit, and optimistic revision semantics."
+          },
+          {
+            "name": "writePlannedArchitectureObservabilityRecordOperation",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordArchitectureObservabilityEvidence"],
+            "dddOwner": "ArchitectureObservabilityEvidenceLedger",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "service_layer"],
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "RecordArchitectureObservabilityEvidence requires exact design scope, an existing component, validation, audit, and optimistic revision semantics."
+          },
+          {
+            "name": "applyArchitectureObservabilityRecordOperation",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordArchitectureObservabilityEvidence"],
+            "dddOwner": "ArchitectureObservabilityEvidenceLedger",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority", "service_layer"],
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "RecordArchitectureObservabilityEvidence requires exact design scope, an existing component, validation, audit, and optimistic revision semantics."
+          }
+        ],
+        "version": 1,
+        "featureId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2274"],
+        "cypressFlows": ["N/A - repository governance CLI"],
+        "domainObjects": ["ArchitectureObservabilityEvidence"],
+        "fowlerSignals": ["hidden_authority", "service_layer"],
+        "completionGate": [
+          "node --test scripts/planning-db-operate-tests/architecture-plan.test.cjs scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+          "pnpm planning:db:export --check",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "recordarchitectureobservabilityevidence-record",
+            "redTest": "node --test --test-name-pattern \"architecture observability evidence planner\" scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+            "greenTest": "node --test scripts/planning-db-operate-tests/architecture-plan.test.cjs scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+            "patchSurfaces": [
+              "scripts/planning-db-operate.cjs",
+              "scripts/planning-db-operate-tests/**",
+              "tools/planning-db/state/canonical-state.json"
+            ],
+            "expectedFailure": "DB-owned observability evidence could be created without a declared feature-mechanization rail."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "RecordArchitectureObservabilityEvidence",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "ArchitectureObservabilityEvidenceLedger"
+          }
+        ],
+        "architectureGuards": [
+          "RecordArchitectureObservabilityEvidence requires exact design scope, an existing component, validation, audit, and optimistic revision semantics."
+        ],
+        "implementationPlan": "Issue #2274 records component observability truth through one design-scoped, audited Planning DB command.",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-operate.cjs",
+          "scripts/planning-db-operate-tests/**",
+          "tools/planning-db/schema.sql",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "Markdown-authored observability authority"
+        ]
+      },
+      "revision": 0,
+      "createdBy": "codex",
+      "createdAt": "2026-08-11T16:07:10.811Z"
     },
     {
       "railId": "local#API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE#command#retirearchitectureevidenceexecution",
@@ -104555,7 +104847,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "ecec13d4beabd32b342753da833b76f0a4b5c2c9618e9d004364a5a60df90aca",
+      "sourceContentSha256": "493767688ea8a1894f30166de14e29694d3d9a151c01e0bcbbc24b684ef23c60",
       "rawRail": {
         "name": "RetireArchitectureEvidenceExecution",
         "type": "command",
@@ -104717,7 +105009,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "ecec13d4beabd32b342753da833b76f0a4b5c2c9618e9d004364a5a60df90aca",
+      "sourceContentSha256": "493767688ea8a1894f30166de14e29694d3d9a151c01e0bcbbc24b684ef23c60",
       "rawRail": {
         "name": "RetireArchitectureTestEvidence",
         "type": "command",
@@ -104879,7 +105171,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "ecec13d4beabd32b342753da833b76f0a4b5c2c9618e9d004364a5a60df90aca",
+      "sourceContentSha256": "493767688ea8a1894f30166de14e29694d3d9a151c01e0bcbbc24b684ef23c60",
       "rawRail": {
         "name": "RetireFeatureMechanizationRail",
         "type": "command",
@@ -105041,7 +105333,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "ecec13d4beabd32b342753da833b76f0a4b5c2c9618e9d004364a5a60df90aca",
+      "sourceContentSha256": "493767688ea8a1894f30166de14e29694d3d9a151c01e0bcbbc24b684ef23c60",
       "rawRail": {
         "name": "TransitionArchitectureDesign",
         "type": "command",
@@ -110913,7 +111205,7 @@
         "pnpm docs:feature-mechanization:implementation"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "ecec13d4beabd32b342753da833b76f0a4b5c2c9618e9d004364a5a60df90aca",
+      "sourceContentSha256": "493767688ea8a1894f30166de14e29694d3d9a151c01e0bcbbc24b684ef23c60",
       "rawRail": {
         "name": "RecordArchitectureStorageIo",
         "type": "command",
@@ -164796,6 +165088,179 @@
         "forbiddenImplementationSurfaces": ["environment-only CI authenticity"]
       },
       "createdAt": "2026-08-11T14:27:02.863Z"
+    },
+    {
+      "operationId": "e1636b58-24c8-4316-bedf-fe3cb50308e5",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE:command:recordarchitectureevidenceexecution:2:4679d2514162ac8f",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE#command#recordarchitectureevidenceexecution",
+      "sourcePath": "scripts/planning-db-operate.cjs",
+      "sourceContentSha256": "493767688ea8a1894f30166de14e29694d3d9a151c01e0bcbbc24b684ef23c60",
+      "expectedRevision": 2,
+      "previousRevision": 2,
+      "resultingRevision": 3,
+      "payload": {
+        "redTest": "node --test --test-name-pattern \"architecture evidence rejects forged\" scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+        "dddOwner": "ArchitectureEvidenceLedger",
+        "railName": "RecordArchitectureEvidenceExecution",
+        "railType": "command",
+        "featureId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE",
+        "greenTest": "node --test scripts/planning-db-operate-tests/architecture-plan.test.cjs scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+        "sourceRef": "scripts/planning-db-operate.cjs",
+        "unitTests": [
+          "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+          "scripts/planning-db-operate-tests/architecture-parse.test.cjs"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2274"],
+        "cypressFlows": [
+          "N/A - mocked GitHub API contract tests cover the repository governance CLI."
+        ],
+        "domainObjects": ["ArchitectureEvidenceExecution"],
+        "fowlerSignals": ["hidden_authority", "service_layer"],
+        "patchSurfaces": [
+          "scripts/planning-db-operate.cjs",
+          "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "completionGate": [
+          "node --test scripts/planning-db-operate-tests/architecture-plan.test.cjs scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+          "pnpm planning:db:export --check",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "CI execution evidence accepted working-tree bytes instead of the exact source bytes at the proven commit.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "architectureGuards": [
+          "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
+        ],
+        "implementationPlan": "Issue #2274 proves CI evidence against one completed GitHub Actions job and hashes the source bytes from that proven commit before any DB transaction.",
+        "implementationRefs": [
+          "scripts/planning-db-operate.cjs#parseArchitectureEvidenceCommand",
+          "scripts/planning-db-operate.cjs#planArchitectureEvidenceRecordOperation",
+          "scripts/planning-db-operate.cjs#writePlannedArchitectureEvidenceRecordOperation",
+          "scripts/planning-db-operate.cjs#allowedArchitectureEvidenceKinds",
+          "scripts/planning-db-operate.cjs#allowedArchitectureEvidenceOrigins",
+          "scripts/planning-db-operate.cjs#allowedArchitectureEvidenceResultStates",
+          "scripts/planning-db-operate.cjs#applyArchitectureEvidenceRecordOperation",
+          "scripts/planning-db-operate.cjs#assertArchitectureEvidenceOriginAuthenticity",
+          "scripts/planning-db-operate.cjs#readArchitectureEvidence",
+          "scripts/planning-db-operate.cjs#readArchitectureEvidenceSourceFile",
+          "scripts/planning-db-operate.cjs#validateArchitectureEvidenceId",
+          "scripts/planning-db-operate.cjs#validateArchitectureEvidenceKind",
+          "scripts/planning-db-operate.cjs#validateArchitectureEvidenceOrigin",
+          "scripts/planning-db-operate.cjs#validateArchitectureEvidenceRecordCommand",
+          "scripts/planning-db-operate.cjs#validateArchitectureEvidenceResultState",
+          "scripts/planning-db-operate.cjs#validateArchitectureEvidenceSubjectKind",
+          "scripts/planning-db-operate.cjs#normalizeGitHubRepositorySlug",
+          "scripts/planning-db-operate.cjs#readGitValue",
+          "scripts/planning-db-operate.cjs#readGitFileAtCommit",
+          "scripts/planning-db-operate.cjs#readGitHubActionsEvidence"
+        ],
+        "normalizedRailName": "recordarchitectureevidenceexecution",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "493767688ea8a1894f30166de14e29694d3d9a151c01e0bcbbc24b684ef23c60",
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-operate.cjs",
+          "scripts/planning-db-operate-tests/**",
+          "tools/planning-db/schema.sql",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": ["environment-only CI authenticity"]
+      },
+      "createdAt": "2026-08-11T16:06:41.419Z"
+    },
+    {
+      "operationId": "0daf1973-e330-4c7e-85a5-d0823ca70558",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE:command:recordarchitectureobservabilityevidence:latest:2dc47534543ed3f6",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE#command#recordarchitectureobservabilityevidence",
+      "sourcePath": "scripts/planning-db-operate.cjs",
+      "sourceContentSha256": "493767688ea8a1894f30166de14e29694d3d9a151c01e0bcbbc24b684ef23c60",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "node --test --test-name-pattern \"architecture observability evidence planner\" scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+        "dddOwner": "ArchitectureObservabilityEvidenceLedger",
+        "railName": "RecordArchitectureObservabilityEvidence",
+        "railType": "command",
+        "featureId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE",
+        "greenTest": "node --test scripts/planning-db-operate-tests/architecture-plan.test.cjs scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+        "sourceRef": "scripts/planning-db-operate.cjs",
+        "unitTests": [
+          "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+          "scripts/planning-db-operate-tests/architecture-parse.test.cjs"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2274"],
+        "cypressFlows": ["N/A - repository governance CLI"],
+        "domainObjects": ["ArchitectureObservabilityEvidence"],
+        "fowlerSignals": ["hidden_authority", "service_layer"],
+        "patchSurfaces": [
+          "scripts/planning-db-operate.cjs",
+          "scripts/planning-db-operate-tests/**",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "completionGate": [
+          "node --test scripts/planning-db-operate-tests/architecture-plan.test.cjs scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+          "pnpm planning:db:export --check",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "DB-owned observability evidence could be created without a declared feature-mechanization rail.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "architectureGuards": [
+          "RecordArchitectureObservabilityEvidence requires exact design scope, an existing component, validation, audit, and optimistic revision semantics."
+        ],
+        "implementationPlan": "Issue #2274 records component observability truth through one design-scoped, audited Planning DB command.",
+        "implementationRefs": [
+          "scripts/planning-db-operate.cjs#parseArchitectureEvidenceCommand",
+          "scripts/planning-db-operate.cjs#validateArchitectureObservabilityRecordCommand",
+          "scripts/planning-db-operate.cjs#validateArchitectureObservabilityId",
+          "scripts/planning-db-operate.cjs#validateArchitectureObservabilitySignalKind",
+          "scripts/planning-db-operate.cjs#validateArchitectureObservabilityStatus",
+          "scripts/planning-db-operate.cjs#planArchitectureObservabilityRecordOperation",
+          "scripts/planning-db-operate.cjs#readArchitectureObservability",
+          "scripts/planning-db-operate.cjs#writePlannedArchitectureObservabilityRecordOperation",
+          "scripts/planning-db-operate.cjs#applyArchitectureObservabilityRecordOperation"
+        ],
+        "normalizedRailName": "recordarchitectureobservabilityevidence",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "493767688ea8a1894f30166de14e29694d3d9a151c01e0bcbbc24b684ef23c60",
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-operate.cjs",
+          "scripts/planning-db-operate-tests/**",
+          "tools/planning-db/schema.sql",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "Markdown-authored observability authority"
+        ]
+      },
+      "createdAt": "2026-08-11T16:07:10.811Z"
     }
   ],
   "governanceComponentDefinitions": [
