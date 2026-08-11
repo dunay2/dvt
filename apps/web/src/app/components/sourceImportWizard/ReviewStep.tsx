@@ -1,5 +1,5 @@
 import type { SourceImportOptionContribution, SourceImportOptionId } from '../../plugins/registry';
-import { sourceImportCatalogNumberFormatter, sourceImportWizardCopy as copy } from './copy';
+import { useSourceImportWizardLocalization } from './copy';
 import { SourceImportReviewView } from './SourceImportReviewView';
 import { buildSourceImportCatalogViewModel } from './sourceImportCatalogModel';
 import { buildSourceImportReviewPreviewGroups } from './sourceImportReviewModel';
@@ -24,17 +24,18 @@ export function ReviewStep({
   sourceImportOptionValues,
   onRemoveSourceObject,
 }: ReviewStepProps) {
+  const { copy, numberFormatter } = useSourceImportWizardLocalization();
   const catalogViewModel = buildSourceImportCatalogViewModel({
     sourceObjects,
     activeSourceObjectKey: null,
     copy: copy.catalog,
-    numberFormatter: sourceImportCatalogNumberFormatter,
+    numberFormatter,
   });
   const previewGroups = buildSourceImportReviewPreviewGroups({
     sourceObjects,
     groupingStrategy,
     copy: copy.catalog,
-    numberFormatter: sourceImportCatalogNumberFormatter,
+    numberFormatter,
   });
 
   return (

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 
 import { SOURCE_IMPORT_SECTIONS } from './sourceImportWizardModel';
+import { useSourceImportWizardLocalization } from './copy';
 import type { SourceImportSection } from './types';
 
 const sourceImportSectionTabClassNames = {
@@ -23,10 +24,12 @@ type SourceImportSectionTabListProps = Readonly<{
 }>;
 
 function SourceImportSectionTabList({ children }: SourceImportSectionTabListProps): JSX.Element {
+  const { copy } = useSourceImportWizardLocalization();
+
   return (
     <div
       role="tablist"
-      aria-label="Add source sections"
+      aria-label={copy.sections.ariaLabel}
       className={sourceImportSectionTabClassNames.list}
     >
       {children}
@@ -75,6 +78,8 @@ export function SourceImportSectionTabs({
   canEnterSection,
   onSectionChange,
 }: SourceImportSectionTabsProps) {
+  const { copy } = useSourceImportWizardLocalization();
+
   return (
     <SourceImportSectionTabList>
       {SOURCE_IMPORT_SECTIONS.map((section) => {
@@ -85,7 +90,7 @@ export function SourceImportSectionTabs({
           <SourceImportSectionTab
             key={section.id}
             id={section.id}
-            label={section.label}
+            label={copy.sections[section.id]}
             isActive={isActive}
             disabled={disabled}
             onSelect={onSectionChange}

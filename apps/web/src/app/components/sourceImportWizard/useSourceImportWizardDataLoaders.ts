@@ -4,7 +4,7 @@ import { useEffect, type Dispatch, type SetStateAction } from 'react';
 import { isRelationalSourceObject } from '@dvt/contracts';
 
 import type { IWarehouseSourceImportPort, SourceObject } from '../../ports/workspace';
-import { sourceImportWizardCopy as copy } from './copy';
+import { useSourceImportWizardLocalization } from './copy';
 import { buildSourceObjectIdentityKey } from './sourceImportCatalogModel';
 import type { SourceImportWizardState } from './types';
 
@@ -15,6 +15,7 @@ interface LoaderParams {
 }
 
 export function useConnectionsLoader({ open, warehouseSourceImport, setState }: LoaderParams) {
+  const { copy } = useSourceImportWizardLocalization();
   useEffect(() => {
     if (!open) {
       return;
@@ -46,7 +47,7 @@ export function useConnectionsLoader({ open, warehouseSourceImport, setState }: 
     return () => {
       cancelled = true;
     };
-  }, [open, setState, warehouseSourceImport]);
+  }, [copy.loadConnectionsError, open, setState, warehouseSourceImport]);
 }
 
 interface SourceObjectsLoaderParams extends LoaderParams {
@@ -63,6 +64,7 @@ export function useSourceObjectsLoader({
   warehouseSourceImport,
   setState,
 }: SourceObjectsLoaderParams) {
+  const { copy } = useSourceImportWizardLocalization();
   useEffect(() => {
     if (!open || !selectedConnection) {
       return;
@@ -116,5 +118,12 @@ export function useSourceObjectsLoader({
     return () => {
       cancelled = true;
     };
-  }, [initiallySelectedSourceObjects, open, selectedConnection, setState, warehouseSourceImport]);
+  }, [
+    copy.loadSourceObjectsError,
+    initiallySelectedSourceObjects,
+    open,
+    selectedConnection,
+    setState,
+    warehouseSourceImport,
+  ]);
 }

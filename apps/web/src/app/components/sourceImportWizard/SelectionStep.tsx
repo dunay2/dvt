@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Card } from '../ui/card';
 import { Input } from '../ui/input';
 import { ScrollArea } from '../ui/scroll-area';
-import { sourceImportCatalogNumberFormatter, sourceImportWizardCopy as copy } from './copy';
+import { useSourceImportWizardLocalization } from './copy';
 import { SourceImportActiveObjectMetadata } from './SourceImportActiveObjectMetadata';
 import { SourceImportCatalogView } from './SourceImportCatalogView';
 import { SourceImportSelectionBasket } from './SourceImportSelectionBasket';
@@ -62,6 +62,7 @@ export function SelectionStep({
   onToggleSchema,
   onToggleSourceObject,
 }: SelectionStepProps) {
+  const { copy, numberFormatter } = useSourceImportWizardLocalization();
   const [catalogFilterId, setCatalogFilterId] = useState<SourceImportCatalogFilterId>('all');
   const catalogViewModel = buildSourceImportCatalogViewModel({
     sourceObjects,
@@ -69,7 +70,7 @@ export function SelectionStep({
     searchQuery: sourceObjectSearchQuery,
     filterId: catalogFilterId,
     copy: copy.catalog,
-    numberFormatter: sourceImportCatalogNumberFormatter,
+    numberFormatter,
   });
   const activeBrowseSourceObject =
     sourceObjects.find(

@@ -1,4 +1,4 @@
-import { sourceImportWizardCopy as copy } from './copy';
+import { useSourceImportWizardLocalization } from './copy';
 import { ConnectionStep } from './ConnectionStep';
 import { ResultStep } from './ResultStep';
 import { ReviewStep } from './ReviewStep';
@@ -11,6 +11,7 @@ interface WizardStepContentProps {
 }
 
 export function WizardStepContent({ controller }: WizardStepContentProps) {
+  const { copy } = useSourceImportWizardLocalization();
   const { state } = controller;
   switch (state.currentStep) {
     case 'connection':

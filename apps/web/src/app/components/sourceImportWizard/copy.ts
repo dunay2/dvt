@@ -1,7 +1,21 @@
-export const sourceImportWizardCopy = {
+/** Owned concern: localize Source Import presentation from the application language authority. */
+import {
+  type ApplicationLanguage,
+  useApplicationLanguageStore,
+} from '../../stores/applicationLanguageStore';
+
+const EN_COPY = {
   title: 'Add source',
   description:
     'Explore governed connections, inspect source objects, and attach supported origins to the canvas.',
+  closeAction: 'Close source import',
+  sections: {
+    ariaLabel: 'Add source sections',
+    connections: 'Connections',
+    browse: 'Browse',
+    metadata: 'Metadata',
+    selected: 'Selected',
+  },
   footer: {
     doneAction: 'Done',
     cancelAction: 'Cancel',
@@ -16,11 +30,14 @@ export const sourceImportWizardCopy = {
   importError: 'Failed to register data objects.',
   connection: {
     title: 'Choose database connection',
+    databaseBadge: 'Database',
     description:
       'Choose which database connection should be used to discover candidate data objects',
     loading: 'Loading connections...',
     searchLabel: 'Search governed connections',
     catalogSource: 'Catalog: .dvt/warehouse-connections.json',
+    catalogSummarySingular: '{count} connection in governed catalog',
+    catalogSummaryPlural: '{count} connections in governed catalog',
     empty: 'No governed database connections found.',
     emptyHint: 'Add database connections to the workspace catalog before importing sources.',
     noMatches: 'No governed connections match the current search.',
@@ -32,6 +49,7 @@ export const sourceImportWizardCopy = {
     createTypeLabel: 'Connection type',
     createDatabaseLabel: 'Database',
     createCredentialRefLabel: 'Credential reference',
+    createCredentialRefPlaceholder: 'env:DVT_LOCAL_POSTGRES_WAREHOUSE_URL',
     createSubmitAction: 'Create connection',
     creatingAction: 'Creating...',
     createCancelAction: 'Cancel',
@@ -71,13 +89,11 @@ export const sourceImportWizardCopy = {
     description: 'Choose how relational source objects should be grouped in the dbt registry',
     options: {
       schema: {
-        id: 'schema',
         label: 'Group by Schema (Recommended)',
         description: 'Creates one source per schema. Example: RAW.ERP.ORDERS -> source(erp)',
         badge: 'Enterprise-friendly',
       },
       database: {
-        id: 'database',
         label: 'Group by Database',
         description: 'Creates one source per database. Best for small projects.',
       },
@@ -86,6 +102,9 @@ export const sourceImportWizardCopy = {
   options: {
     title: 'Metadata Options',
     description: 'Configure what metadata to include when registering data objects',
+    defaultLabel: 'Default',
+    enabledShortLabel: 'ON',
+    disabledShortLabel: 'OFF',
   },
   review: {
     title: 'Selected sources',
@@ -95,6 +114,8 @@ export const sourceImportWizardCopy = {
     sourceObjectsSelectedLabel: 'Source objects selected:',
     dataObjectGroupsLabel: 'Data object groups:',
     groupingStrategyLabel: 'Grouping strategy:',
+    groupingStrategySchemaLabel: 'Schema',
+    groupingStrategyDatabaseLabel: 'Database',
     enabledLabel: 'Yes',
     disabledLabel: 'No',
     registryFileLabel: 'Registry file',
@@ -159,6 +180,7 @@ export const sourceImportWizardCopy = {
     groupsCreatedLabel: 'Groups created:',
     objectsRegisteredLabel: 'Objects registered:',
     filesTitle: 'Source files updated',
+    fileLabel: 'file',
     graphDraftWarning:
       'Canvas queued the imported source ids and will focus them when the governed draft authority refreshes.',
     dbtProjectFilesWarning:
@@ -166,4 +188,235 @@ export const sourceImportWizardCopy = {
   },
 } as const;
 
-export const sourceImportCatalogNumberFormatter = new Intl.NumberFormat('en-US');
+type LocalizedCopyShape<Value> = Value extends string
+  ? string
+  : Value extends Readonly<Record<string, unknown>>
+    ? { readonly [Key in keyof Value]: LocalizedCopyShape<Value[Key]> }
+    : Value;
+
+export type SourceImportWizardCopy = LocalizedCopyShape<typeof EN_COPY>;
+
+const ES_COPY = {
+  title: 'Añadir origen',
+  description:
+    'Explora conexiones gobernadas, inspecciona objetos de origen y adjunta al canvas los orígenes compatibles.',
+  closeAction: 'Cerrar importación de orígenes',
+  sections: {
+    ariaLabel: 'Secciones para añadir orígenes',
+    connections: 'Conexiones',
+    browse: 'Explorar',
+    metadata: 'Metadatos',
+    selected: 'Seleccionados',
+  },
+  footer: {
+    doneAction: 'Terminar',
+    cancelAction: 'Cancelar',
+    attachingAction: 'Adjuntando...',
+    attachAction: 'Adjuntar orígenes al canvas',
+  },
+  selectConnectionError: 'Selecciona una conexión',
+  selectAtLeastOneObjectError: 'Selecciona al menos un objeto de origen importable.',
+  loadConnectionsError: 'No se pudieron cargar las conexiones del warehouse.',
+  loadSourceObjectsError: 'No se pudieron cargar los objetos de origen.',
+  importSuccess: 'Orígenes adjuntados correctamente',
+  importError: 'No se pudieron registrar los objetos de datos.',
+  connection: {
+    title: 'Elegir conexión a base de datos',
+    databaseBadge: 'Base de datos',
+    description:
+      'Elige la conexión a base de datos que se usará para descubrir los objetos de datos disponibles.',
+    loading: 'Cargando conexiones...',
+    searchLabel: 'Buscar conexiones gobernadas',
+    catalogSource: 'Catálogo: .dvt/warehouse-connections.json',
+    catalogSummarySingular: '{count} conexión en el catálogo gobernado',
+    catalogSummaryPlural: '{count} conexiones en el catálogo gobernado',
+    empty: 'No se encontraron conexiones gobernadas a bases de datos.',
+    emptyHint:
+      'Añade conexiones a base de datos al catálogo del workspace antes de importar orígenes.',
+    noMatches: 'Ninguna conexión gobernada coincide con la búsqueda actual.',
+    createAction: 'Nueva conexión',
+    createTitle: 'Registrar conexión a base de datos',
+    createDescription:
+      'Crea una entrada gobernada en el catálogo mediante una referencia de credencial resuelta por el servidor.',
+    createNameLabel: 'Nombre de la conexión',
+    createTypeLabel: 'Tipo de conexión',
+    createDatabaseLabel: 'Base de datos',
+    createCredentialRefLabel: 'Referencia de credencial',
+    createCredentialRefPlaceholder: 'env:DVT_LOCAL_POSTGRES_WAREHOUSE_URL',
+    createSubmitAction: 'Crear conexión',
+    creatingAction: 'Creando...',
+    createCancelAction: 'Cancelar',
+    createValidationError:
+      'El nombre, la base de datos y la referencia de credencial son obligatorios.',
+    createSuccess: 'Conexión al warehouse creada',
+    createError: 'No se pudo crear la conexión al warehouse.',
+    testAction: 'Probar conexión',
+    testingAction: 'Probando...',
+    testPassed: 'Conexión correcta',
+    testFailed: 'Conexión fallida',
+    testError: 'No se pudo probar la conexión al warehouse.',
+    reachableObjects: 'objetos accesibles',
+  },
+  selection: {
+    title: 'Explorar objetos de origen',
+    descriptionPrefix: 'Elige los objetos compatibles que se adjuntarán como nodos. Seleccionados:',
+    destinationPosture:
+      'El destino se selecciona en un nodo DVT Sink después de adjuntar los orígenes. Elige allí la base de datos, el esquema, la tabla y el modo de escritura antes de previsualizar o ejecutar.',
+    loading: 'Cargando objetos de origen...',
+    empty: 'No hay objetos de origen disponibles para esta conexión.',
+    searchLabel: 'Buscar en el catálogo de orígenes',
+    searchPlaceholder: 'Buscar por nombre, localizador, columna o tipo',
+  },
+  metadata: {
+    title: 'Metadatos del origen',
+    description:
+      'Inspecciona el objeto de origen activo antes de registrarlo en el grafo del canvas.',
+    noObjectSelected: 'Ningún objeto de origen seleccionado',
+    rowsUnknown: 'Filas desconocidas',
+    sizeUnknown: 'Tamaño desconocido',
+    noColumns: '0 columnas',
+    columnsUnavailable: 'No hay metadatos de columnas registrados para el objeto de origen activo.',
+    optionsUnavailable:
+      'Las opciones de importación no están disponibles porque el importador relacional aún no puede adjuntar este objeto de origen.',
+  },
+  grouping: {
+    title: 'Estrategia de agrupación',
+    description: 'Elige cómo agrupar los objetos de origen relacionales en el registro dbt.',
+    options: {
+      schema: {
+        label: 'Agrupar por esquema (recomendado)',
+        description: 'Crea un origen por esquema. Ejemplo: RAW.ERP.ORDERS -> source(erp)',
+        badge: 'Adecuado para empresas',
+      },
+      database: {
+        label: 'Agrupar por base de datos',
+        description: 'Crea un origen por base de datos. Recomendado para proyectos pequeños.',
+      },
+    },
+  },
+  options: {
+    title: 'Opciones de metadatos',
+    description: 'Configura los metadatos que se incluirán al registrar los objetos de datos.',
+    defaultLabel: 'Predeterminado',
+    enabledShortLabel: 'SÍ',
+    disabledShortLabel: 'NO',
+  },
+  review: {
+    title: 'Orígenes seleccionados',
+    description: 'Revisa los objetos de origen seleccionados antes de adjuntarlos al canvas.',
+    previewTitle: 'Vista previa de adjuntos del canvas',
+    connectionLabel: 'Conexión:',
+    sourceObjectsSelectedLabel: 'Objetos de origen seleccionados:',
+    dataObjectGroupsLabel: 'Grupos de objetos de datos:',
+    groupingStrategyLabel: 'Estrategia de agrupación:',
+    groupingStrategySchemaLabel: 'Esquema',
+    groupingStrategyDatabaseLabel: 'Base de datos',
+    enabledLabel: 'Sí',
+    disabledLabel: 'No',
+    registryFileLabel: 'Archivo de registro',
+    destinationPosture:
+      'El destino se configura en un nodo DVT Sink después de registrar el origen; verifica el destino de salida antes de previsualizar o ejecutar el grafo.',
+    dataObjectGroupPrefix: 'grupo-de-objetos-de-datos',
+    moreSourceObjectsPrefix: '... y',
+    moreSourceObjectsSuffix: 'objetos más',
+  },
+  selectionBasket: {
+    title: 'Orígenes seleccionados',
+    empty: 'Aún no se ha seleccionado ningún objeto de origen.',
+    selected: 'seleccionado',
+    remove: 'Quitar',
+    noColumns: 'No hay metadatos de columnas registrados para este origen seleccionado.',
+    moreColumnsPrefix: 'y',
+    moreColumnsSuffix: 'columnas más',
+  },
+  catalog: {
+    selectSourceObject: 'Seleccionar objeto de origen',
+    selectSourceDatabase: 'Seleccionar base de datos de origen',
+    selectSourceSchema: 'Seleccionar esquema de origen',
+    inSourceDatabase: 'En la base de datos de origen',
+    inspectSourceObjectMetadata: 'Inspeccionar objeto de origen',
+    metadata: 'metadatos',
+    rowSingular: 'fila',
+    rowPlural: 'filas',
+    estimatedSizePrefix: 'Estimado',
+    columnSingular: 'columna',
+    columnPlural: 'columnas',
+    objectSingular: 'objeto',
+    objectPlural: 'objetos',
+    schemaSingular: 'esquema',
+    schemaPlural: 'esquemas',
+    allSelected: 'Todos seleccionados',
+    nullable: 'Admite null',
+    required: 'Obligatorio',
+    primaryKey: 'Clave primaria',
+    unique: 'Único',
+    available: 'disponibles',
+    showing: 'Mostrando',
+    of: 'de',
+    filterAll: 'Todos',
+    filterSelected: 'Seleccionados',
+    filterWithColumns: 'Con columnas',
+    filterImportable: 'Importables',
+    filterListLabel: 'Filtros del catálogo de orígenes',
+    filterAccessibilityPrefix: 'Filtrar el catálogo de orígenes por',
+    locatorKindLabels: {
+      relation: 'Relaciones',
+      file: 'Archivos',
+      endpoint: 'Endpoints',
+      stream: 'Streams',
+    },
+    unsupportedImport:
+      'Visible para inspección. Este importador sólo adjunta actualmente objetos de origen relacionales.',
+  },
+  result: {
+    title: 'Orígenes importados',
+    description:
+      'Los objetos de origen seleccionados se escribieron mediante la autoridad de edición activa del Canvas.',
+    groupsCreatedLabel: 'Grupos creados:',
+    objectsRegisteredLabel: 'Objetos registrados:',
+    filesTitle: 'Archivos de origen actualizados',
+    fileLabel: 'archivo',
+    graphDraftWarning:
+      'Canvas ha puesto en cola los identificadores importados y los enfocará cuando se actualice la autoridad gobernada del borrador.',
+    dbtProjectFilesWarning:
+      'Se actualizaron los archivos del proyecto dbt y la proyección del grafo se refrescará desde la autoridad del proyecto.',
+  },
+} satisfies SourceImportWizardCopy;
+
+const COPY_BY_LANGUAGE: Readonly<Record<ApplicationLanguage, SourceImportWizardCopy>> = {
+  en: EN_COPY,
+  es: ES_COPY,
+};
+
+const NUMBER_FORMATTER_BY_LANGUAGE: Readonly<Record<ApplicationLanguage, Intl.NumberFormat>> = {
+  en: new Intl.NumberFormat('en-US'),
+  es: new Intl.NumberFormat('es-ES'),
+};
+
+export const sourceImportWizardCopy = EN_COPY;
+export const sourceImportCatalogNumberFormatter = NUMBER_FORMATTER_BY_LANGUAGE.en;
+
+export function resolveSourceImportWizardCopy(
+  language: ApplicationLanguage
+): SourceImportWizardCopy {
+  return COPY_BY_LANGUAGE[language];
+}
+
+export function resolveSourceImportCatalogNumberFormatter(
+  language: ApplicationLanguage
+): Intl.NumberFormat {
+  return NUMBER_FORMATTER_BY_LANGUAGE[language];
+}
+
+export function useSourceImportWizardLocalization(): Readonly<{
+  copy: SourceImportWizardCopy;
+  language: ApplicationLanguage;
+  numberFormatter: Intl.NumberFormat;
+}> {
+  const language = useApplicationLanguageStore((state) => state.language);
+  return {
+    copy: resolveSourceImportWizardCopy(language),
+    language,
+    numberFormatter: resolveSourceImportCatalogNumberFormatter(language),
+  };
+}

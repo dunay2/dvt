@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -10,16 +11,103 @@ import {
 import type { ImportSourcesInput } from '../ports/workspace';
 import { buildGraphDraftSourceImportResult } from '../../testing/sourceImportTestFixtures';
 import { buildSourceImportTestMetricEvidence } from './sourceImportWizard/sourceImportWizard.testFixtures';
+import { useApplicationLanguageStore } from '../stores/applicationLanguageStore';
 
 describe('SourceImportWizard', () => {
   let harness: ReturnType<typeof createSourceImportWizardHarness>;
 
   beforeEach(() => {
+    useApplicationLanguageStore.getState().configureApplicationLanguage('en');
     harness = createSourceImportWizardHarness();
   });
 
   afterEach(() => {
     harness.cleanup();
+    useApplicationLanguageStore.getState().configureApplicationLanguage('en');
+  });
+
+  it('renders the complete connection entry in Spanish and reacts to language changes', async () => {
+    useApplicationLanguageStore.getState().configureApplicationLanguage('es');
+
+    await harness.renderWizard();
+
+    expect(document.body.textContent).toContain('Añadir origen');
+    expect(document.body.textContent).toContain('Conexiones');
+    expect(document.body.textContent).toContain('Explorar');
+    expect(document.body.textContent).toContain('Metadatos');
+    expect(document.body.textContent).toContain('Seleccionados');
+    expect(document.body.textContent).toContain('Elegir conexión a base de datos');
+    expect(document.body.textContent).toContain('1 conexión en el catálogo gobernado');
+    expect(document.body.textContent).toContain('Nueva conexión');
+    expect(document.body.textContent).toContain('Probar conexión');
+    expect(document.body.textContent).toContain('Cancelar');
+    expect(document.body.textContent).toContain('Adjuntar orígenes al canvas');
+    expect(harness.findButtonContaining('Cerrar importación de orígenes')).toBeDefined();
+    expect(document.body.textContent).not.toContain('Choose database connection');
+
+    await harness.clickButtonContaining('Nueva conexión');
+
+    expect(document.body.textContent).toContain('Registrar conexión a base de datos');
+    expect(harness.findButtonContaining('Crear conexión')).toBeDefined();
+    expect(document.querySelector('[aria-label="Nombre de la conexión"]')).not.toBeNull();
+    expect(document.querySelector('[aria-label="Base de datos"]')).not.toBeNull();
+    expect(document.querySelector('[aria-label="Referencia de credencial"]')).not.toBeNull();
+
+    await act(async () => {
+      useApplicationLanguageStore.getState().configureApplicationLanguage('en');
+    });
+
+    expect(document.body.textContent).toContain('Add source');
+    expect(document.body.textContent).toContain('Register database connection');
+    expect(document.body.textContent).not.toContain('Añadir origen');
+  });
+
+  it('keeps browse, metadata, options, review, numbers and result localized in Spanish', async () => {
+    useApplicationLanguageStore.getState().configureApplicationLanguage('es');
+
+    await harness.renderWizard({
+      warehouseSourceImport: buildWarehouseSourceImportPort({
+        listSourceObjects: async () => [
+          buildSourceObject({
+            metricEvidence: buildSourceImportTestMetricEvidence(15_000, 4096),
+          }),
+        ],
+      }),
+    });
+
+    await harness.clickConnectionOption('Local Postgres proof');
+    await harness.clickTab('Explorar');
+    await harness.clickSourceObjectSelectionCheckbox(buildSourceObject().objectId);
+
+    expect(document.body.textContent).toContain('Explorar objetos de origen');
+    expect(document.body.textContent).toContain('15.000 filas');
+    expect(document.body.textContent).toContain('Orígenes seleccionados');
+    expect(
+      document.body
+        .querySelector('[data-slot="metric-evidence-hotspot"]')
+        ?.getAttribute('aria-label')
+    ).toContain('Estimado mediante estadísticas del proveedor. Confianza: media.');
+
+    await harness.clickTab('Metadatos');
+
+    expect(document.body.textContent).toContain('Metadatos del origen');
+    expect(document.body.textContent).toContain('Opciones de metadatos');
+    expect(document.body.textContent).toContain('Incluir metadatos de columnas');
+    expect(document.body.textContent).toContain('Predeterminado: SÍ');
+    expect(document.body.textContent).toContain('Estrategia de agrupación');
+    expect(document.body.textContent).toContain('Agrupar por esquema');
+
+    await harness.clickTab('Seleccionados');
+
+    expect(document.body.textContent).toContain('Vista previa de adjuntos del canvas');
+    expect(document.body.textContent).toContain('Conexión:');
+
+    await harness.clickButtonContaining('Adjuntar orígenes al canvas');
+
+    expect(document.body.textContent).toContain('Orígenes importados');
+    expect(document.body.textContent).toContain('Archivos de origen actualizados');
+    expect(harness.findButtonContaining('Terminar')).toBeDefined();
+    expect(document.body.textContent).not.toContain('Sources imported');
   });
 
   it('opens on governed database connections without unavailable source-type placeholders', async () => {

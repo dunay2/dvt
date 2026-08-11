@@ -125,22 +125,52 @@ export const dvtWarehouseSourceContributions: PluginContributions = {
       options: [
         {
           id: 'includeColumns',
-          label: 'Include Column Metadata',
-          description: 'Add column names and data types to imported source metadata.',
+          label: {
+            key: 'dvt.sourceImport.includeColumns.label',
+            fallback: 'Include Column Metadata',
+            translations: { es: 'Incluir metadatos de columnas' },
+          },
+          description: {
+            key: 'dvt.sourceImport.includeColumns.description',
+            fallback: 'Add column names and data types to imported source metadata.',
+            translations: {
+              es: 'Añade nombres de columnas y tipos de datos a los metadatos del origen importado.',
+            },
+          },
           defaultEnabled: true,
           order: 10,
         },
         {
           id: 'addTests',
-          label: 'Add Generic Tests',
-          description: 'Automatically add not_null and unique tests for detected primary keys.',
+          label: {
+            key: 'dvt.sourceImport.addTests.label',
+            fallback: 'Add Generic Tests',
+            translations: { es: 'Añadir tests genéricos' },
+          },
+          description: {
+            key: 'dvt.sourceImport.addTests.description',
+            fallback: 'Automatically add not_null and unique tests for detected primary keys.',
+            translations: {
+              es: 'Añade automáticamente tests not_null y unique para las claves primarias detectadas.',
+            },
+          },
           defaultEnabled: false,
           order: 20,
         },
         {
           id: 'addFreshness',
-          label: 'Add Freshness Checks',
-          description: 'Add default freshness thresholds for imported source freshness metadata.',
+          label: {
+            key: 'dvt.sourceImport.addFreshness.label',
+            fallback: 'Add Freshness Checks',
+            translations: { es: 'Añadir comprobaciones de actualización' },
+          },
+          description: {
+            key: 'dvt.sourceImport.addFreshness.description',
+            fallback: 'Add default freshness thresholds for imported source freshness metadata.',
+            translations: {
+              es: 'Añade umbrales predeterminados a los metadatos de actualización del origen importado.',
+            },
+          },
           defaultEnabled: false,
           order: 30,
         },

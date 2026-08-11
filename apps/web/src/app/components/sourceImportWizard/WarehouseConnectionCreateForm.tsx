@@ -4,7 +4,7 @@ import {
 } from '../../ports/workspace';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
-import { sourceImportWizardCopy as copy } from './copy';
+import { useSourceImportWizardLocalization } from './copy';
 
 interface WarehouseConnectionCreateFormProps {
   form: CreateWarehouseConnectionInput;
@@ -26,6 +26,8 @@ export function WarehouseConnectionCreateForm({
   onCancel,
   onSubmit,
 }: WarehouseConnectionCreateFormProps) {
+  const { copy } = useSourceImportWizardLocalization();
+
   return (
     <Card className="border-slate-700 bg-slate-950/50 p-4">
       <form
@@ -118,7 +120,7 @@ export function WarehouseConnectionCreateForm({
             aria-label={copy.connection.createCredentialRefLabel}
             value={form.credentialRef}
             disabled={isCreating}
-            placeholder="env:DVT_LOCAL_POSTGRES_WAREHOUSE_URL"
+            placeholder={copy.connection.createCredentialRefPlaceholder}
             className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-500 focus:border-blue-500"
             onInput={(event) => onFieldChange('credentialRef', event.currentTarget.value)}
             onChange={(event) => onFieldChange('credentialRef', event.currentTarget.value)}
