@@ -398,12 +398,15 @@ test('type-only and unused value imports do not establish production reachabilit
       'apps/api/src/app.ts',
       [
         "import type { TypeOnly } from './typeOnly.js';",
+        "import { UsedType } from './usedType.js';",
         "import { unusedValue } from './unusedValue.js';",
+        'export type ProductContract = UsedType;',
         'export const app = 1;',
       ].join('\n'),
     ],
     ['apps/api/src/server.ts', 'export const server = 1;\n'],
     ['apps/api/src/typeOnly.ts', 'export interface TypeOnly { readonly value: string }\n'],
+    ['apps/api/src/usedType.ts', 'export interface UsedType { readonly id: string }\n'],
     ['apps/api/src/unusedValue.ts', 'export const unusedValue = 1;\n'],
   ]);
   const result = classifyApiSourceReachability({
@@ -418,6 +421,12 @@ test('type-only and unused value imports do not establish production reachabilit
             dynamic: false,
           },
           {
+            module: './usedType.js',
+            resolved: 'apps/api/src/usedType.ts',
+            dependencyTypes: ['type-only', 'import'],
+            dynamic: false,
+          },
+          {
             module: './unusedValue.js',
             resolved: 'apps/api/src/unusedValue.ts',
             dependencyTypes: ['import'],
@@ -427,6 +436,7 @@ test('type-only and unused value imports do not establish production reachabilit
       },
       { source: 'apps/api/src/server.ts', dependencies: [] },
       { source: 'apps/api/src/typeOnly.ts', dependencies: [] },
+      { source: 'apps/api/src/usedType.ts', dependencies: [] },
       { source: 'apps/api/src/unusedValue.ts', dependencies: [] },
     ],
     sourceFiles: [...sourceContents.keys()],
@@ -439,6 +449,15 @@ test('type-only and unused value imports do not establish production reachabilit
   );
 
   assert.equal(bySource.get('apps/api/src/typeOnly.ts'), API_REACHABILITY_CLASSIFICATIONS.orphan);
+  assert.deepEqual(
+    result.classifications.find(({ source }) => source === 'apps/api/src/usedType.ts'),
+    {
+      source: 'apps/api/src/usedType.ts',
+      classification: API_REACHABILITY_CLASSIFICATIONS.production,
+      runtimeReachability: 'none',
+      retentionReason: 'production-type-support',
+    }
+  );
   assert.equal(
     bySource.get('apps/api/src/unusedValue.ts'),
     API_REACHABILITY_CLASSIFICATIONS.orphan
@@ -470,10 +489,11 @@ test('supported API profiles are proven from composition semantics and dynamic e
       [
         'apps/api/src/composition.ts',
         [
-          'if (env.OIDC_JWKS_URI && env.OIDC_ISSUER && env.OIDC_AUDIENCE) { await buildProtectedRuntimeModule(); } else { publicOnly(); }',
-          'if (!env.DVT_INTENT_RECONCILER_ENABLED) return null; createIntentReconcilerRuntimeComposition();',
-          'if (!env.OBS_ENABLED) return createNoopObservability(); return new OtelObservability({});',
-          'if (!context.env.TEMPORAL_ADDRESS) return null;',
+          "async function buildProtectedRuntimeModule() { await import('@dvt/adapter-postgres'); }",
+          'async function buildApp(env) { if (env.OIDC_JWKS_URI && env.OIDC_ISSUER && env.OIDC_AUDIENCE) { await buildProtectedRuntimeModule(); } else { publicOnly(); } }',
+          'function buildObservability(env) { if (!env.OBS_ENABLED) return createNoopObservability(); return new OtelObservability({}); }',
+          'class Reconciler { resolveConfig() { if (!this.env.DVT_INTENT_RECONCILER_ENABLED) return null; return {}; } createWorker() { return new IntentReconcilerWorker(); } }',
+          "async function buildTemporal(context) { if (!context.env.TEMPORAL_ADDRESS) return null; return import('@dvt/adapter-temporal'); }",
         ].join('\n'),
       ],
     ]),
@@ -491,6 +511,70 @@ test('supported API profiles are proven from composition semantics and dynamic e
       ['reconciler-enabled', API_REACHABILITY_CLASSIFICATIONS.conditionalProduction],
       ['temporal-provider', API_REACHABILITY_CLASSIFICATIONS.conditionalProduction],
     ]
+  );
+});
+
+test('enabled profiles require the same executable scope and imported composition call path', () => {
+  const profileEvidence = collectApiDeploymentProfileEvidence({
+    modules: [
+      {
+        source: 'apps/api/src/app.ts',
+        dependencies: [
+          {
+            module: './protected.js',
+            resolved: 'apps/api/src/protected.ts',
+            dynamic: false,
+          },
+        ],
+      },
+      {
+        source: 'apps/api/src/profile.ts',
+        dependencies: [{ module: '@dvt/adapter-temporal', dynamic: true }],
+      },
+      {
+        source: 'apps/api/src/protected.ts',
+        dependencies: [{ module: '@dvt/adapter-postgres', dynamic: true }],
+      },
+    ],
+    productionSources: new Set([
+      'apps/api/src/app.ts',
+      'apps/api/src/profile.ts',
+      'apps/api/src/protected.ts',
+    ]),
+    sourceContents: new Map([
+      [
+        'apps/api/src/app.ts',
+        [
+          "import { buildProtectedRuntimeModule } from './protected.js';",
+          'async function buildApp(env) {',
+          '  if (env.OIDC_JWKS_URI && env.OIDC_ISSUER && env.OIDC_AUDIENCE) { await buildProtectedRuntimeModule(); } else { publicOnly(); }',
+          '}',
+        ].join('\n'),
+      ],
+      [
+        'apps/api/src/profile.ts',
+        [
+          'function buildObservability(env) { if (!env.OBS_ENABLED) return createNoopObservability(); return null; }',
+          'function disconnectedOtel() { return new OtelObservability({}); }',
+          'class Reconciler { resolveConfig() { if (!this.env.DVT_INTENT_RECONCILER_ENABLED) return null; return {}; } }',
+          'function disconnectedWorker() { return new IntentReconcilerWorker(); }',
+          'async function temporalGuard(context) { if (!context.env.TEMPORAL_ADDRESS) return null; return null; }',
+          "async function disconnectedTemporal() { return import('@dvt/adapter-temporal'); }",
+        ].join('\n'),
+      ],
+      [
+        'apps/api/src/protected.ts',
+        [
+          'export async function buildProtectedRuntimeModule() { return {}; }',
+          "async function disconnectedPostgres() { return import('@dvt/adapter-postgres'); }",
+        ].join('\n'),
+      ],
+    ]),
+  });
+
+  assert.deepEqual(
+    profileEvidence.map(({ profile }) => profile),
+    ['observability-noop', 'oidc-protected-runtime', 'oidc-public-only', 'reconciler-disabled']
   );
 });
 
