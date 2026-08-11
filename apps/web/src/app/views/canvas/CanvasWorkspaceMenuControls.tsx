@@ -130,7 +130,8 @@ export function CanvasWorkspaceMenuControls({
       <DropdownMenuItem
         data-slot="canvas-workspace-open-project-code-command"
         disabled={!contribution.canOpenProjectCode || contribution.onOpenProjectCode == null}
-        onClick={() => {
+        onSelect={(event) => {
+          event.preventDefault();
           onProjectCodeSelected?.();
           contribution.onOpenProjectCode?.();
         }}
