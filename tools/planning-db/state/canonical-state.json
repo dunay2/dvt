@@ -13691,6 +13691,83 @@
         "source_content_sha256": null
       },
       {
+        "evidence_id": "EVIDENCE-API-H2-4-BOUNDARY-COMMAND-LOCAL",
+        "subject_kind": "command",
+        "subject_id": "ApplyArchitectureDependencyBoundaryGate",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "component-metadata integrity passed for four exact #2274 owners",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T10:32:59.473+00:00",
+        "source_content_sha256": "9ea6002bce50a36b35513d00ad8164f9a542bd898aa8101e4294f0b68e17566a"
+      },
+      {
+        "evidence_id": "EVIDENCE-API-H2-4-DESIGN-QUERY-LOCAL",
+        "subject_kind": "query",
+        "subject_id": "ReadArchitectureDesignAuthority",
+        "evidence_kind": "query",
+        "evidence_origin": "local_execution",
+        "source_ref": "pnpm planning:db:query architecture-designs --design API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811 --no-refresh",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T10:32:53.897+00:00",
+        "source_content_sha256": "bfdae7bf78bc382bf5e2fbca85180689eae11ccefdfabaa4dc5a01faac9b5735"
+      },
+      {
+        "evidence_id": "EVIDENCE-API-H2-4-DISPOSITION-QUERY-LOCAL",
+        "subject_kind": "query",
+        "subject_id": "ClassifyArchitectureDocumentationDisposition",
+        "evidence_kind": "query",
+        "evidence_origin": "local_execution",
+        "source_ref": "pnpm planning:db:query fowler-analysis-retirement --path <source> --no-refresh",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T10:32:56.7+00:00",
+        "source_content_sha256": "cdaaf7fc7b2e5d2b77ba032ae10d427b2d1c38d79c48c59d276de680012b70a9"
+      },
+      {
+        "evidence_id": "EVIDENCE-API-H2-4-LIFECYCLE-LOCAL",
+        "subject_kind": "test",
+        "subject_id": "TEST-API-H2-4-DOCUMENT-LIFECYCLE-DISPOSITION",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/planning-db-schema.test.cjs scripts/documentation-publication.test.cjs scripts/planning-db-export.test.cjs scripts/planning-db-import.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T10:32:24.398+00:00",
+        "source_content_sha256": "cdaaf7fc7b2e5d2b77ba032ae10d427b2d1c38d79c48c59d276de680012b70a9"
+      },
+      {
+        "evidence_id": "EVIDENCE-API-H2-4-LIFECYCLE-QUERY-LOCAL",
+        "subject_kind": "query",
+        "subject_id": "ListDocumentationLifecycleFacts",
+        "evidence_kind": "query",
+        "evidence_origin": "local_execution",
+        "source_ref": "pnpm planning:db:query documentation-lifecycle --path <source> --no-refresh",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T10:32:55.288+00:00",
+        "source_content_sha256": "bfdae7bf78bc382bf5e2fbca85180689eae11ccefdfabaa4dc5a01faac9b5735"
+      },
+      {
+        "evidence_id": "EVIDENCE-API-H2-4-PROVENANCE-LOCAL",
+        "subject_kind": "test",
+        "subject_id": "TEST-API-H2-4-EVIDENCE-PROVENANCE",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/planning-db-query.test.cjs scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs scripts/planning-db-operate-tests/component-create.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T10:32:25.887+00:00",
+        "source_content_sha256": "9ea6002bce50a36b35513d00ad8164f9a542bd898aa8101e4294f0b68e17566a"
+      },
+      {
+        "evidence_id": "EVIDENCE-API-H2-4-PUBLICATION-COMMAND-LOCAL",
+        "subject_kind": "command",
+        "subject_id": "GeneratePlanningDerivedSurfaces",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "pnpm docs:publish (1764 routes, digest 7bf47ca1a5ad9e95034d1b6bf7ad41dc7fbdb78af04bef990913cefd1c0d6b5b)",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T10:32:58.113+00:00",
+        "source_content_sha256": "db5072ae2b773fe2418a91db0528e5fd6541ea37ae6368377639a9d94e8f7311"
+      },
+      {
         "evidence_id": "EVIDENCE-CODE-WORKING-TREE-POST-SAVE-CONSUMER",
         "subject_kind": "component",
         "subject_id": "SYS-WEB-CODE-WORKING-TREE-SYNC",
@@ -88850,6 +88927,30 @@
         "created_at": "2026-08-10T20:06:22.12+00:00"
       },
       {
+        "operation_id": "466aa445-0299-4cb9-96d2-9a8a3c28accb",
+        "idempotency_key": "architecture_evidence_record:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811:EVIDENCE-API-H2-4-LIFECYCLE-QUERY-LOCAL:226af6f6473b01f8",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "source_ref": "pnpm planning:db:query documentation-lifecycle --path <source> --no-refresh",
+        "source_content_sha256": "bfdae7bf78bc382bf5e2fbca85180689eae11ccefdfabaa4dc5a01faac9b5735",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+          "sourceRef": "pnpm planning:db:query documentation-lifecycle --path <source> --no-refresh",
+          "subjectId": "ListDocumentationLifecycleFacts",
+          "evidenceId": "EVIDENCE-API-H2-4-LIFECYCLE-QUERY-LOCAL",
+          "resultState": "pass",
+          "subjectKind": "query",
+          "evidenceKind": "query",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "bfdae7bf78bc382bf5e2fbca85180689eae11ccefdfabaa4dc5a01faac9b5735"
+        },
+        "created_at": "2026-08-11T10:32:55.288+00:00"
+      },
+      {
         "operation_id": "46769dbb-5dae-4162-afdf-7bf1171611b0",
         "idempotency_key": "codex-api-h2-2-reachability-v5-superseded-v6",
         "operation_type": "architecture_design_transition",
@@ -89060,6 +89161,30 @@
         "created_at": "2026-08-11T07:37:47.544+00:00"
       },
       {
+        "operation_id": "4c71313f-7647-44d1-b254-e83df62cf307",
+        "idempotency_key": "architecture_evidence_record:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811:EVIDENCE-API-H2-4-DESIGN-QUERY-LOCAL:43871902cc9375ce",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "source_ref": "pnpm planning:db:query architecture-designs --design API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811 --no-refresh",
+        "source_content_sha256": "bfdae7bf78bc382bf5e2fbca85180689eae11ccefdfabaa4dc5a01faac9b5735",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+          "sourceRef": "pnpm planning:db:query architecture-designs --design API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811 --no-refresh",
+          "subjectId": "ReadArchitectureDesignAuthority",
+          "evidenceId": "EVIDENCE-API-H2-4-DESIGN-QUERY-LOCAL",
+          "resultState": "pass",
+          "subjectKind": "query",
+          "evidenceKind": "query",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "bfdae7bf78bc382bf5e2fbca85180689eae11ccefdfabaa4dc5a01faac9b5735"
+        },
+        "created_at": "2026-08-11T10:32:53.897+00:00"
+      },
+      {
         "operation_id": "4d1e17c4-3fee-470d-a70b-0a828895c7e9",
         "idempotency_key": "codex-api-h2-2-reachability-v5-approve-evidence",
         "operation_type": "architecture_design_transition",
@@ -89143,6 +89268,30 @@
           "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
         },
         "created_at": "2026-08-10T22:11:11.708+00:00"
+      },
+      {
+        "operation_id": "4f3783f3-afef-4644-9c75-6b0ca6020050",
+        "idempotency_key": "architecture_evidence_record:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811:EVIDENCE-API-H2-4-PROVENANCE-LOCAL:60794f89e9e7fb9c",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "source_ref": "node --test scripts/planning-db-query.test.cjs scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs scripts/planning-db-operate-tests/component-create.test.cjs",
+        "source_content_sha256": "9ea6002bce50a36b35513d00ad8164f9a542bd898aa8101e4294f0b68e17566a",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+          "sourceRef": "node --test scripts/planning-db-query.test.cjs scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs scripts/planning-db-operate-tests/component-create.test.cjs",
+          "subjectId": "TEST-API-H2-4-EVIDENCE-PROVENANCE",
+          "evidenceId": "EVIDENCE-API-H2-4-PROVENANCE-LOCAL",
+          "resultState": "pass",
+          "subjectKind": "test",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "9ea6002bce50a36b35513d00ad8164f9a542bd898aa8101e4294f0b68e17566a"
+        },
+        "created_at": "2026-08-11T10:32:25.887+00:00"
       },
       {
         "operation_id": "51dc462a-a1f3-4e10-8a2f-0968b073281f",
@@ -90908,6 +91057,30 @@
         "created_at": "2026-08-10T21:04:09.599+00:00"
       },
       {
+        "operation_id": "7718876c-ba45-41bf-8a06-52f51909dcce",
+        "idempotency_key": "architecture_evidence_record:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811:EVIDENCE-API-H2-4-LIFECYCLE-LOCAL:a6808f4b68827651",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "source_ref": "node --test scripts/planning-db-schema.test.cjs scripts/documentation-publication.test.cjs scripts/planning-db-export.test.cjs scripts/planning-db-import.test.cjs",
+        "source_content_sha256": "cdaaf7fc7b2e5d2b77ba032ae10d427b2d1c38d79c48c59d276de680012b70a9",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+          "sourceRef": "node --test scripts/planning-db-schema.test.cjs scripts/documentation-publication.test.cjs scripts/planning-db-export.test.cjs scripts/planning-db-import.test.cjs",
+          "subjectId": "TEST-API-H2-4-DOCUMENT-LIFECYCLE-DISPOSITION",
+          "evidenceId": "EVIDENCE-API-H2-4-LIFECYCLE-LOCAL",
+          "resultState": "pass",
+          "subjectKind": "test",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "cdaaf7fc7b2e5d2b77ba032ae10d427b2d1c38d79c48c59d276de680012b70a9"
+        },
+        "created_at": "2026-08-11T10:32:24.398+00:00"
+      },
+      {
         "operation_id": "7766ec19-5313-4e14-bc79-86d29b0eeef8",
         "idempotency_key": "codex-api-h2-2-reachability-test-evidence",
         "operation_type": "architecture_test_record",
@@ -91110,6 +91283,30 @@
           "sourceContentSha256": "76dc7134d826169f42fc824f2aac69dd158a23a28d4e719ca1ff9f8c90755e8a"
         },
         "created_at": "2026-08-11T07:40:00.966+00:00"
+      },
+      {
+        "operation_id": "7b381d1b-8be2-49e3-80ae-e4af30b731ec",
+        "idempotency_key": "architecture_evidence_record:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811:EVIDENCE-API-H2-4-DISPOSITION-QUERY-LOCAL:b02228121f84ac49",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "source_ref": "pnpm planning:db:query fowler-analysis-retirement --path <source> --no-refresh",
+        "source_content_sha256": "cdaaf7fc7b2e5d2b77ba032ae10d427b2d1c38d79c48c59d276de680012b70a9",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+          "sourceRef": "pnpm planning:db:query fowler-analysis-retirement --path <source> --no-refresh",
+          "subjectId": "ClassifyArchitectureDocumentationDisposition",
+          "evidenceId": "EVIDENCE-API-H2-4-DISPOSITION-QUERY-LOCAL",
+          "resultState": "pass",
+          "subjectKind": "query",
+          "evidenceKind": "query",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "cdaaf7fc7b2e5d2b77ba032ae10d427b2d1c38d79c48c59d276de680012b70a9"
+        },
+        "created_at": "2026-08-11T10:32:56.7+00:00"
       },
       {
         "operation_id": "7b66bd9d-146f-4082-badd-1a723b4f8cfc",
@@ -93289,6 +93486,30 @@
         "created_at": "2026-08-10T15:49:38.226+00:00"
       },
       {
+        "operation_id": "b47ba570-59f8-4897-aeb4-0db52ee8ba04",
+        "idempotency_key": "architecture_evidence_record:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811:EVIDENCE-API-H2-4-BOUNDARY-COMMAND-LOCAL:d63159a5832830a1",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "source_ref": "component-metadata integrity passed for four exact #2274 owners",
+        "source_content_sha256": "9ea6002bce50a36b35513d00ad8164f9a542bd898aa8101e4294f0b68e17566a",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+          "sourceRef": "component-metadata integrity passed for four exact #2274 owners",
+          "subjectId": "ApplyArchitectureDependencyBoundaryGate",
+          "evidenceId": "EVIDENCE-API-H2-4-BOUNDARY-COMMAND-LOCAL",
+          "resultState": "pass",
+          "subjectKind": "command",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "9ea6002bce50a36b35513d00ad8164f9a542bd898aa8101e4294f0b68e17566a"
+        },
+        "created_at": "2026-08-11T10:32:59.473+00:00"
+      },
+      {
         "operation_id": "b4d0f121-ccd7-455c-abd6-26a7ab161893",
         "idempotency_key": "gh-2167-update-test-sys-api-http-entrypoint-tests-authentication-4-v1",
         "operation_type": "architecture_test_record",
@@ -93312,6 +93533,30 @@
           "sourceContentSha256": "c319921befc49127ae2f7b507b54ff1c7f1ab7e2deb7bf3da35853dde8ac9340"
         },
         "created_at": "2026-08-10T21:04:21.294+00:00"
+      },
+      {
+        "operation_id": "b52ac6c9-c50b-4b64-9335-1dd7b0d007b0",
+        "idempotency_key": "architecture_evidence_record:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811:EVIDENCE-API-H2-4-PUBLICATION-COMMAND-LOCAL:a66411fbaca8e8c1",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "source_ref": "pnpm docs:publish (1764 routes, digest 7bf47ca1a5ad9e95034d1b6bf7ad41dc7fbdb78af04bef990913cefd1c0d6b5b)",
+        "source_content_sha256": "db5072ae2b773fe2418a91db0528e5fd6541ea37ae6368377639a9d94e8f7311",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+          "sourceRef": "pnpm docs:publish (1764 routes, digest 7bf47ca1a5ad9e95034d1b6bf7ad41dc7fbdb78af04bef990913cefd1c0d6b5b)",
+          "subjectId": "GeneratePlanningDerivedSurfaces",
+          "evidenceId": "EVIDENCE-API-H2-4-PUBLICATION-COMMAND-LOCAL",
+          "resultState": "pass",
+          "subjectKind": "command",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "db5072ae2b773fe2418a91db0528e5fd6541ea37ae6368377639a9d94e8f7311"
+        },
+        "created_at": "2026-08-11T10:32:58.113+00:00"
       },
       {
         "operation_id": "b5a0b8b7-e4e5-4ee8-8628-526c61779eb0",
