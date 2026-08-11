@@ -1390,6 +1390,8 @@ test('architecture evidence rejects forged CI origin and source hash drift', asy
     }),
     repositorySlug: 'dunay2/dvt',
     subjectImplementation: {
+      rail_source_path: 'scripts/architecture-evidence-ledger.cjs',
+      rail_source_content_sha256: committedImplementationSha256,
       implementation_files: [
         {
           implementation_path: 'scripts/architecture-evidence-ledger.cjs',
@@ -1412,6 +1414,8 @@ test('architecture evidence rejects forged CI origin and source hash drift', asy
       }),
       repositorySlug: 'dunay2/dvt',
       subjectImplementation: {
+        rail_source_path: 'scripts/architecture-evidence-ledger.cjs',
+        rail_source_content_sha256: committedImplementationSha256,
         implementation_files: [
           {
             implementation_path: 'scripts/architecture-evidence-ledger.cjs',

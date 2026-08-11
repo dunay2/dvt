@@ -115,9 +115,13 @@ test('architecture proof distinguishes assertions from fresh executions', () => 
     schemaSql,
     /CREATE VIEW architecture\.evidence_subject_implementation_query[\s\S]*command_query_rail_query[\s\S]*implementation_refs[\s\S]*governance_files[\s\S]*sha256_text/u
   );
+  assert.match(schemaSql, /CREATE VIEW architecture\.evidence_query[\s\S]*source_changed/u);
+  assert.match(schemaSql, /CREATE VIEW architecture\.evidence_query[\s\S]*implementation_changed/u);
+  assert.match(schemaSql, /CREATE VIEW architecture\.evidence_query[\s\S]*assertion_only/u);
+  assert.match(schemaSql, /CREATE VIEW architecture\.evidence_query[\s\S]*verified/u);
   assert.match(
     schemaSql,
-    /CREATE VIEW architecture\.evidence_query[\s\S]*implementation_changed[\s\S]*source_changed[\s\S]*assertion_only[\s\S]*verified[\s\S]*evidence_subject_implementation_query/u
+    /CREATE VIEW architecture\.evidence_query[\s\S]*evidence_subject_implementation_query/u
   );
   assert.match(
     schemaSql,

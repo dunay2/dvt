@@ -2784,6 +2784,38 @@ async function assertArchitectureEvidenceOriginAuthenticity(command, options = {
         `source bytes at the proven commit hash to ${committedSourceSha256}, not ${command.sourceContentSha256}`
       );
     }
+    if (command.subjectKind === 'command' || command.subjectKind === 'query') {
+      const subjectImplementation = options.subjectImplementation;
+      if (
+        !subjectImplementation ||
+        !Array.isArray(subjectImplementation.implementation_files) ||
+        subjectImplementation.implementation_files.length === 0 ||
+        !subjectImplementation.rail_source_path ||
+        !subjectImplementation.rail_source_content_sha256
+      ) {
+        throw new Error(
+          `canonical implementation inputs are missing for ${command.subjectKind} ${command.subjectId}`
+        );
+      }
+      const implementationInputs = new Map([
+        [subjectImplementation.rail_source_path, subjectImplementation.rail_source_content_sha256],
+        ...subjectImplementation.implementation_files.map((implementationFile) => [
+          implementationFile.implementation_path,
+          implementationFile.implementation_content_hash,
+        ]),
+      ]);
+      for (const [implementationPath, expectedHash] of implementationInputs) {
+        const committedImplementationSha256 = crypto
+          .createHash('sha256')
+          .update(readGitFileAtCommit(currentGitSha, implementationPath, options))
+          .digest('hex');
+        if (committedImplementationSha256 !== expectedHash) {
+          throw new Error(
+            `implementation bytes at the proven commit for ${implementationPath} hash to ${committedImplementationSha256}, not ${expectedHash}`
+          );
+        }
+      }
+    }
     return command;
   } catch (error) {
     throw new Error(
@@ -4293,6 +4325,7 @@ function planArchitectureEvidenceRecordOperation({
   design,
   designScopes,
   sourceFile,
+  subjectImplementation,
   operationId,
   now,
 }) {
@@ -4314,6 +4347,18 @@ function planArchitectureEvidenceRecordOperation({
       `ARCH-EVIDENCE-SOURCE-HASH-MISMATCH: ${command.sourcePath} is ${currentSourceHash ?? 'missing'}, not ${command.sourceContentSha256}.`
     );
   }
+  const requiresImplementationProof =
+    command.subjectKind === 'command' || command.subjectKind === 'query';
+  if (
+    requiresImplementationProof &&
+    (!subjectImplementation ||
+      !subjectImplementation.current_implementation_content_sha256 ||
+      Number(subjectImplementation.missing_implementation_ref_count) !== 0)
+  ) {
+    throw new Error(
+      `ARCH-EVIDENCE-SUBJECT-IMPLEMENTATION-MISSING: ${command.subjectKind} ${command.subjectId}`
+    );
+  }
 
   const evidence = {
     evidenceId: command.evidenceId,
@@ -4327,6 +4372,9 @@ function planArchitectureEvidenceRecordOperation({
     resultState: command.resultState,
     recordedAt: toIso(now),
     sourceContentSha256: command.sourceContentSha256,
+    implementationContentSha256: requiresImplementationProof
+      ? subjectImplementation.current_implementation_content_sha256
+      : null,
   };
   const audit = architectureScopedAudit({ command, operationId, now });
 
@@ -5567,6 +5615,18 @@ async function readArchitectureEvidenceSourceFile(client, sourcePath) {
   return result.rows[0] || null;
 }
 
+async function readArchitectureEvidenceSubjectImplementation(client, subjectKind, subjectId) {
+  if (subjectKind !== 'command' && subjectKind !== 'query') return null;
+  const result = await client.query(
+    `select *
+     from architecture.evidence_subject_implementation_query
+     where subject_kind = $1
+       and subject_id = $2`,
+    [subjectKind, subjectId]
+  );
+  return result.rows[0] || null;
+}
+
 async function readArchitectureImplementationViolations(client, designId) {
   const result = await client.query(
     `select violation_kind, subject_kind, subject_id, severity
@@ -6188,8 +6248,9 @@ async function writePlannedArchitectureEvidenceRecordOperation(client, planned) 
   await client.query(
     `insert into architecture.evidence
       (evidence_id, design_id, subject_kind, subject_id, evidence_kind, evidence_origin,
-       source_ref, source_path, result_state, recorded_at, source_content_sha256)
-     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+       source_ref, source_path, result_state, recorded_at, source_content_sha256,
+       implementation_content_sha256)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
     [
       planned.evidence.evidenceId,
       planned.evidence.designId,
@@ -6202,6 +6263,7 @@ async function writePlannedArchitectureEvidenceRecordOperation(client, planned) 
       planned.evidence.resultState,
       planned.evidence.recordedAt,
       planned.evidence.sourceContentSha256,
+      planned.evidence.implementationContentSha256,
     ]
   );
 
@@ -7420,20 +7482,26 @@ async function applyArchitectureEvidenceRecordOperation(command, options = {}) {
     options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
   const ownsClient = !options.client;
 
-  await assertArchitectureEvidenceOriginAuthenticity(command, {
-    currentGitSha: options.currentGitSha,
-    environment: options.environment || process.env,
-    fetch: options.fetch,
-    githubToken: options.githubToken,
-    repoRoot: options.repoRoot,
-    repositorySlug: options.repositorySlug,
-  });
   if (ownsClient) {
     await client.connect();
   }
 
   try {
     await assertPlanningDbCurrentSchemaReady(client);
+    const subjectImplementation = await readArchitectureEvidenceSubjectImplementation(
+      client,
+      command.subjectKind,
+      command.subjectId
+    );
+    await assertArchitectureEvidenceOriginAuthenticity(command, {
+      currentGitSha: options.currentGitSha,
+      environment: options.environment || process.env,
+      fetch: options.fetch,
+      githubToken: options.githubToken,
+      repoRoot: options.repoRoot,
+      repositorySlug: options.repositorySlug,
+      subjectImplementation,
+    });
     await client.query('begin');
 
     const existing = await readExistingArchitectureDesignOperation(client, command.idempotencyKey);
@@ -7451,6 +7519,7 @@ async function applyArchitectureEvidenceRecordOperation(command, options = {}) {
       design,
       designScopes,
       sourceFile,
+      subjectImplementation,
       operationId: options.operationId || crypto.randomUUID(),
       now: options.now || new Date(),
     });
