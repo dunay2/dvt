@@ -6256,13 +6256,13 @@ CREATE VIEW planning_query_store.fowler_analysis_document_query AS
 
 CREATE VIEW planning_query_store.fowler_analysis_canonical_coverage_query AS
  WITH accepted_targets AS (
-         SELECT DISTINCT ON (target_1.document_path) target_1.document_path,
+         SELECT DISTINCT ON (target_1.document_path, target_1.source_content_sha256) target_1.document_path,
             target_1.target_path,
             target_1.target_status,
             target_1.source_content_sha256
            FROM planning_query_store.fowler_analysis_canonical_targets target_1
           WHERE (target_1.target_status = 'accepted'::text)
-          ORDER BY target_1.document_path, target_1.linked_at DESC, target_1.target_path
+          ORDER BY target_1.document_path, target_1.source_content_sha256, target_1.linked_at DESC, target_1.target_path
         )
  SELECT document.document_path,
     document.subject_key,
@@ -6275,9 +6275,9 @@ CREATE VIEW planning_query_store.fowler_analysis_canonical_coverage_query AS
             WHEN (target_document.document_path IS NULL) THEN 'target_missing_from_import'::text
             ELSE 'covered'::text
         END AS coverage_state,
-    COALESCE(target.source_content_sha256, document.source_content_sha256) AS source_content_sha256
+   COALESCE(target.source_content_sha256, document.source_content_sha256) AS source_content_sha256
    FROM ((planning_query_store.fowler_analysis_document_query document
-     LEFT JOIN accepted_targets target ON ((target.document_path = document.document_path)))
+     LEFT JOIN accepted_targets target ON (((target.document_path = document.document_path) AND (target.source_content_sha256 = document.source_content_sha256))))
      LEFT JOIN planning_query_store.knowledge_documents target_document ON ((target_document.document_path = target.target_path)));
 
 
@@ -6570,12 +6570,13 @@ CREATE VIEW planning_query_store.fowler_analysis_work_query AS
 
 CREATE VIEW planning_query_store.fowler_analysis_intended_work_query AS
  WITH accepted_targets AS (
-         SELECT DISTINCT ON (target.document_path) target.document_path,
+         SELECT DISTINCT ON (target.document_path, target.source_content_sha256) target.document_path,
             target.target_path AS canonical_target_path,
-            target.target_status AS canonical_target_status
+            target.target_status AS canonical_target_status,
+            target.source_content_sha256
            FROM planning_query_store.fowler_analysis_canonical_targets target
           WHERE (target.target_status = 'accepted'::text)
-          ORDER BY target.document_path, target.linked_at DESC, target.target_path
+          ORDER BY target.document_path, target.source_content_sha256, target.linked_at DESC, target.target_path
         ), source_actions AS (
          SELECT document.document_id,
             document.document_path,
@@ -6594,7 +6595,7 @@ CREATE VIEW planning_query_store.fowler_analysis_intended_work_query AS
             (lower(COALESCE(action.status, ''::text)) <> ALL (ARRAY['deferred'::text, 'done'::text, 'rejected'::text, 'resolved'::text, 'superseded'::text])) AS is_open_action
            FROM ((planning_query_store.fowler_analysis_work_query document
              JOIN planning_query_store.knowledge_action_items action ON ((action.source_document_id = document.document_id)))
-             LEFT JOIN accepted_targets target ON ((target.document_path = document.document_path)))
+             LEFT JOIN accepted_targets target ON (((target.document_path = document.document_path) AND (target.source_content_sha256 = document.source_content_sha256))))
         ), normalized_actions AS (
          SELECT source_actions.document_id,
             source_actions.document_path,
