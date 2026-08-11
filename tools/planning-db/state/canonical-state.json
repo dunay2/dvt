@@ -1481,14 +1481,14 @@
         "layer": "adapter",
         "owner": "Architecture / API",
         "repo_path": "apps/api/src/infrastructure",
-        "public_contract": "Aggregate API infrastructure adapter boundary; concrete adapter, plugin, and database-pool files resolve to responsibility-owned child components.",
+        "public_contract": "Aggregate API infrastructure adapter boundary; composition explicitly selects createNoopObservability when OBS_ENABLED=false and OtelObservability when enabled; concrete ownership remains delegated to child components.",
         "runtime": "node",
         "criticality": "high",
         "status": "review",
-        "maturity_score": 84,
+        "maturity_score": null,
         "parent_component_id": "SYS-API-ROOT",
         "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
+        "updated_at": "2026-08-11T12:25:52.945+00:00"
       },
       {
         "component_id": "SYS-API-OPS-ROUTES",
@@ -5048,15 +5048,15 @@
         "kind": "port",
         "layer": "contracts",
         "owner": "ObservabilityContracts",
-        "repo_path": "packages/@dvt/observability/src/contracts/IObservability.ts",
-        "public_contract": "Observability port contract boundary",
+        "repo_path": "packages/@dvt/observability/src/noopObservability.ts",
+        "public_contract": "createNoopObservability is the sole approved valid-null-object selected explicitly when observability is disabled; it is production infrastructure, not dead or test-only code.",
         "runtime": "node",
         "criticality": "medium",
         "status": "review",
         "maturity_score": null,
         "parent_component_id": "SYS-OBSERVABILITY-ROOT",
         "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
+        "updated_at": "2026-08-11T12:25:30.798+00:00"
       },
       {
         "component_id": "SYS-OBSERVABILITY-OTEL-ADAPTER",
@@ -5065,14 +5065,14 @@
         "layer": "adapter",
         "owner": "OtelObservabilityAdapter",
         "repo_path": "packages/@dvt/observability-otel/src/OtelObservability.ts",
-        "public_contract": "OpenTelemetry observability adapter boundary",
+        "public_contract": "Exports OpenTelemetry traces and structured logs; metrics intentionally remain unavailable because the current metrics implementation is noop.",
         "runtime": "node",
         "criticality": "medium",
         "status": "review",
         "maturity_score": null,
         "parent_component_id": "SYS-OBSERVABILITY-ROOT",
         "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
+        "updated_at": "2026-08-11T12:25:41.783+00:00"
       },
       {
         "component_id": "SYS-OBSERVABILITY-ROOT",
@@ -17123,6 +17123,33 @@
         "required": true,
         "status": "not_applicable",
         "created_at": "2026-08-07T00:52:38.502668+00:00"
+      },
+      {
+        "observability_id": "OBS-API-H2-4-NOOP-DISABLED-MODE",
+        "component_id": "SYS-OBSERVABILITY-CONTRACTS-NOOP",
+        "signal_name": "OBS_ENABLED=false explicitly selects the approved createNoopObservability production mode; emitting runtime signals is intentionally not applicable.",
+        "signal_kind": "log",
+        "required": true,
+        "status": "not_applicable",
+        "created_at": "2026-08-11T12:28:27.753+00:00"
+      },
+      {
+        "observability_id": "OBS-API-H2-4-OTEL-METRICS",
+        "component_id": "SYS-OBSERVABILITY-OTEL-ADAPTER",
+        "signal_name": "OpenTelemetry metric export is unavailable: OtelObservability currently binds IMetrics to NoopMetrics.",
+        "signal_kind": "metric",
+        "required": true,
+        "status": "missing",
+        "created_at": "2026-08-11T12:28:32.827+00:00"
+      },
+      {
+        "observability_id": "OBS-API-H2-4-START-RUN-TRACING",
+        "component_id": "SYS-OBSERVABILITY-OTEL-ADAPTER",
+        "signal_name": "StartRun exports one connected API to engine to Temporal OpenTelemetry trace with bounded attributes and no prohibited payload data.",
+        "signal_kind": "trace",
+        "required": true,
+        "status": "implemented",
+        "created_at": "2026-08-11T12:28:30.58+00:00"
       },
       {
         "observability_id": "OBS-API-RUN-OPERATIONAL-TRUTH",
@@ -37355,10 +37382,10 @@
       {
         "responsibility_id": "RESP-SYS-API-INFRASTRUCTURE",
         "component_id": "SYS-API-INFRASTRUCTURE",
-        "responsibility": "Own the aggregate API infrastructure boundary and delegate concrete adapter ownership to API infrastructure leaves.",
-        "reason_to_change": "API infrastructure taxonomy, adapter ownership, command/query grouping, or API infrastructure component hierarchy changes.",
+        "responsibility": "Own the aggregate API infrastructure boundary, make operational-mode selection explicit in composition, and delegate concrete adapter ownership to API infrastructure leaves.",
+        "reason_to_change": "API infrastructure taxonomy, explicit composition mode, adapter ownership, command/query grouping, or component hierarchy changes.",
         "ddd_owner": "ApiInfrastructureCatalog",
-        "status": "implemented",
+        "status": "proposed",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -39200,19 +39227,19 @@
       {
         "responsibility_id": "RESP-SYS-OBSERVABILITY-CONTRACTS-NOOP",
         "component_id": "SYS-OBSERVABILITY-CONTRACTS-NOOP",
-        "responsibility": "Define the observability port language and safe default implementation for runtime packages.",
-        "reason_to_change": "Observability contract, context, noop behavior, cardinality policy, package metadata, or tests change.",
+        "responsibility": "Define the observability port language and the sole approved explicit disabled-mode Null Object; no constructor may silently select another inert fallback.",
+        "reason_to_change": "Observability contract, explicit disabled mode, noop behavior, cardinality policy, package metadata, or tests change.",
         "ddd_owner": "ObservabilityContracts",
-        "status": "implemented",
+        "status": "proposed",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
         "responsibility_id": "RESP-SYS-OBSERVABILITY-OTEL-ADAPTER",
         "component_id": "SYS-OBSERVABILITY-OTEL-ADAPTER",
-        "responsibility": "Adapt DVT observability events to OpenTelemetry without changing the observability contract package.",
-        "reason_to_change": "OpenTelemetry adapter behavior, package metadata, README, or tests change.",
+        "responsibility": "Adapt DVT observability to delivered OpenTelemetry tracing without advertising noop metrics as exported metrics.",
+        "reason_to_change": "OpenTelemetry trace export, structured logging, explicit metrics availability, package metadata, or tests change.",
         "ddd_owner": "OtelObservabilityAdapter",
-        "status": "implemented",
+        "status": "proposed",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -87533,6 +87560,30 @@
         "created_at": "2026-08-10T20:09:39.613+00:00"
       },
       {
+        "operation_id": "0f68892a-b06e-4761-bddc-4ed0e7e64985",
+        "idempotency_key": "architecture_observability_record:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811:SYS-OBSERVABILITY-OTEL-ADAPTER:b2a551cc0fd575d1",
+        "operation_type": "architecture_observability_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "apps/api/test/integration/startRunOpenTelemetry.integration.test.ts",
+        "source_content_sha256": "fa0676f14a0ed3c8db73c3cf6f106d025eb2afb2df14f2f62558f77571009464",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "status": "implemented",
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+          "required": true,
+          "sourceRef": "apps/api/test/integration/startRunOpenTelemetry.integration.test.ts",
+          "signalKind": "trace",
+          "signalName": "StartRun exports one connected API to engine to Temporal OpenTelemetry trace with bounded attributes and no prohibited payload data.",
+          "componentId": "SYS-OBSERVABILITY-OTEL-ADAPTER",
+          "observabilityId": "OBS-API-H2-4-START-RUN-TRACING",
+          "sourceContentSha256": "fa0676f14a0ed3c8db73c3cf6f106d025eb2afb2df14f2f62558f77571009464"
+        },
+        "created_at": "2026-08-11T12:28:30.58+00:00"
+      },
+      {
         "operation_id": "0f83b1e2-0e15-466c-a362-300af8f8bf09",
         "idempotency_key": "gh-2167-approve-db-first-projection-20260810",
         "operation_type": "architecture_design_transition",
@@ -87552,6 +87603,30 @@
           "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
         },
         "created_at": "2026-08-10T23:26:23.715+00:00"
+      },
+      {
+        "operation_id": "101733ce-f4cd-4356-8d51-7af00af4b935",
+        "idempotency_key": "architecture_observability_record:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811:SYS-OBSERVABILITY-CONTRACTS-NOOP:79693660990bd5d8",
+        "operation_type": "architecture_observability_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "apps/api/src/plugins/observability.ts",
+        "source_content_sha256": "d0dd827f2651d7921d60c41b550ae25723ea4e161ec69e9392651a0bdd4422f7",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "status": "not_applicable",
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+          "required": true,
+          "sourceRef": "apps/api/src/plugins/observability.ts",
+          "signalKind": "log",
+          "signalName": "OBS_ENABLED=false explicitly selects the approved createNoopObservability production mode; emitting runtime signals is intentionally not applicable.",
+          "componentId": "SYS-OBSERVABILITY-CONTRACTS-NOOP",
+          "observabilityId": "OBS-API-H2-4-NOOP-DISABLED-MODE",
+          "sourceContentSha256": "d0dd827f2651d7921d60c41b550ae25723ea4e161ec69e9392651a0bdd4422f7"
+        },
+        "created_at": "2026-08-11T12:28:27.753+00:00"
       },
       {
         "operation_id": "115f433c-18cd-4711-8a60-b49216f614fb",
@@ -88424,6 +88499,43 @@
           "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
         },
         "created_at": "2026-08-10T22:58:44.087+00:00"
+      },
+      {
+        "operation_id": "26007dde-18cd-4488-9da1-b05f079afcbe",
+        "idempotency_key": "architecture_component_record:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811:SYS-OBSERVABILITY-OTEL-ADAPTER:27c38683a3acb68e",
+        "operation_type": "architecture_component_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "packages/@dvt/observability-otel/src/OtelObservability.ts",
+        "source_content_sha256": "55a0655ebc7e12691190612dfcc8133306f23d6c0969a936376d38fcbc470a7a",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "kind": "adapter",
+          "name": "OpenTelemetry observability adapter",
+          "layer": "adapter",
+          "owner": "OtelObservabilityAdapter",
+          "status": "review",
+          "runtime": "node",
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+          "repoPath": "packages/@dvt/observability-otel/src/OtelObservability.ts",
+          "sourceRef": "packages/@dvt/observability-otel/src/OtelObservability.ts",
+          "componentId": "SYS-OBSERVABILITY-OTEL-ADAPTER",
+          "criticality": "medium",
+          "publicContract": "Exports OpenTelemetry traces and structured logs; metrics intentionally remain unavailable because the current metrics implementation is noop.",
+          "responsibilities": [
+            {
+              "dddOwner": "OtelObservabilityAdapter",
+              "reasonToChange": "OpenTelemetry trace export, structured logging, explicit metrics availability, package metadata, or tests change.",
+              "responsibility": "Adapt DVT observability to delivered OpenTelemetry tracing without advertising noop metrics as exported metrics.",
+              "responsibilityId": "RESP-SYS-OBSERVABILITY-OTEL-ADAPTER"
+            }
+          ],
+          "parentComponentId": "SYS-OBSERVABILITY-ROOT",
+          "sourceContentSha256": "55a0655ebc7e12691190612dfcc8133306f23d6c0969a936376d38fcbc470a7a"
+        },
+        "created_at": "2026-08-11T12:25:41.783+00:00"
       },
       {
         "operation_id": "283ed0e9-fb08-4fcc-ade0-c941d5b96333",
@@ -90921,6 +91033,43 @@
           "sourceContentSha256": "d991a64882ed4504214a639d7c4d8b309ee21dfd49650ea70ecdac55f7a23290"
         },
         "created_at": "2026-08-11T08:16:59.213+00:00"
+      },
+      {
+        "operation_id": "64e7e47a-b0ea-4f82-b1f4-12fe99b66925",
+        "idempotency_key": "architecture_component_record:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811:SYS-API-INFRASTRUCTURE:2f6b1c1ccc72ec1b",
+        "operation_type": "architecture_component_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "apps/api/src/plugins/observability.ts",
+        "source_content_sha256": "d0dd827f2651d7921d60c41b550ae25723ea4e161ec69e9392651a0bdd4422f7",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "kind": "adapter",
+          "name": "API infrastructure adapters",
+          "layer": "adapter",
+          "owner": "Architecture / API",
+          "status": "review",
+          "runtime": "node",
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+          "repoPath": "apps/api/src/infrastructure",
+          "sourceRef": "apps/api/src/plugins/observability.ts",
+          "componentId": "SYS-API-INFRASTRUCTURE",
+          "criticality": "high",
+          "publicContract": "Aggregate API infrastructure adapter boundary; composition explicitly selects createNoopObservability when OBS_ENABLED=false and OtelObservability when enabled; concrete ownership remains delegated to child components.",
+          "responsibilities": [
+            {
+              "dddOwner": "ApiInfrastructureCatalog",
+              "reasonToChange": "API infrastructure taxonomy, explicit composition mode, adapter ownership, command/query grouping, or component hierarchy changes.",
+              "responsibility": "Own the aggregate API infrastructure boundary, make operational-mode selection explicit in composition, and delegate concrete adapter ownership to API infrastructure leaves.",
+              "responsibilityId": "RESP-SYS-API-INFRASTRUCTURE"
+            }
+          ],
+          "parentComponentId": "SYS-API-ROOT",
+          "sourceContentSha256": "d0dd827f2651d7921d60c41b550ae25723ea4e161ec69e9392651a0bdd4422f7"
+        },
+        "created_at": "2026-08-11T12:25:52.945+00:00"
       },
       {
         "operation_id": "65f75259-b486-4f53-b38d-785db1261564",
@@ -94741,6 +94890,30 @@
         "created_at": "2026-08-10T21:04:10.294+00:00"
       },
       {
+        "operation_id": "b7a1c68c-f64e-4710-8757-88da31ac5369",
+        "idempotency_key": "architecture_observability_record:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811:SYS-OBSERVABILITY-OTEL-ADAPTER:0bac7afb67a6e70a",
+        "operation_type": "architecture_observability_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "packages/@dvt/observability-otel/src/OtelObservability.ts",
+        "source_content_sha256": "55a0655ebc7e12691190612dfcc8133306f23d6c0969a936376d38fcbc470a7a",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "status": "missing",
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+          "required": true,
+          "sourceRef": "packages/@dvt/observability-otel/src/OtelObservability.ts",
+          "signalKind": "metric",
+          "signalName": "OpenTelemetry metric export is unavailable: OtelObservability currently binds IMetrics to NoopMetrics.",
+          "componentId": "SYS-OBSERVABILITY-OTEL-ADAPTER",
+          "observabilityId": "OBS-API-H2-4-OTEL-METRICS",
+          "sourceContentSha256": "55a0655ebc7e12691190612dfcc8133306f23d6c0969a936376d38fcbc470a7a"
+        },
+        "created_at": "2026-08-11T12:28:32.827+00:00"
+      },
+      {
         "operation_id": "b7c0144f-f391-43fc-ad6d-25e357c6a63a",
         "idempotency_key": "codex-api-h2-2-reachability-v11-review",
         "operation_type": "architecture_design_transition",
@@ -97134,6 +97307,43 @@
           "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
         },
         "created_at": "2026-08-10T20:06:48.609+00:00"
+      },
+      {
+        "operation_id": "da93fd9a-3147-40f9-b6ba-b11904423204",
+        "idempotency_key": "architecture_component_record:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811:SYS-OBSERVABILITY-CONTRACTS-NOOP:8b44c52e0ba218a3",
+        "operation_type": "architecture_component_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "packages/@dvt/observability/src/noopObservability.ts",
+        "source_content_sha256": "bace4b2c2f264884017f4d2b5bb874f26583d1603c4b37cc8fa85c660dd40111",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "kind": "port",
+          "name": "Observability contracts noop implementation and policy",
+          "layer": "contracts",
+          "owner": "ObservabilityContracts",
+          "status": "review",
+          "runtime": "node",
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+          "repoPath": "packages/@dvt/observability/src/noopObservability.ts",
+          "sourceRef": "packages/@dvt/observability/src/noopObservability.ts",
+          "componentId": "SYS-OBSERVABILITY-CONTRACTS-NOOP",
+          "criticality": "medium",
+          "publicContract": "createNoopObservability is the sole approved valid-null-object selected explicitly when observability is disabled; it is production infrastructure, not dead or test-only code.",
+          "responsibilities": [
+            {
+              "dddOwner": "ObservabilityContracts",
+              "reasonToChange": "Observability contract, explicit disabled mode, noop behavior, cardinality policy, package metadata, or tests change.",
+              "responsibility": "Define the observability port language and the sole approved explicit disabled-mode Null Object; no constructor may silently select another inert fallback.",
+              "responsibilityId": "RESP-SYS-OBSERVABILITY-CONTRACTS-NOOP"
+            }
+          ],
+          "parentComponentId": "SYS-OBSERVABILITY-ROOT",
+          "sourceContentSha256": "bace4b2c2f264884017f4d2b5bb874f26583d1603c4b37cc8fa85c660dd40111"
+        },
+        "created_at": "2026-08-11T12:25:30.798+00:00"
       },
       {
         "operation_id": "db0eaec2-19df-461f-a1cb-9aea9aeb7fab",
@@ -102021,7 +102231,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "8999192e82b2e0674a45ef966e1ad2a42051776cb678141408d90fd6af75f37e",
+      "sourceContentSha256": "8256a48788a3ba25d3a214b1fb89b3885caafeb437a8af301d4f5604ed9ddbdd",
       "rawRail": {
         "name": "RecordArchitectureEvidenceExecution",
         "type": "command",
@@ -107587,7 +107797,7 @@
         "pnpm docs:feature-mechanization:implementation"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "8999192e82b2e0674a45ef966e1ad2a42051776cb678141408d90fd6af75f37e",
+      "sourceContentSha256": "8256a48788a3ba25d3a214b1fb89b3885caafeb437a8af301d4f5604ed9ddbdd",
       "rawRail": {
         "name": "RecordArchitectureStorageIo",
         "type": "command",
