@@ -43,6 +43,10 @@ test('CI tool static partition excludes tests that import package dependencies',
   );
 });
 
+test('sync docs status policy runs in the executable CI tool partition', () => {
+  assert.ok(EXECUTABLE_CI_TOOL_TESTS.includes('tools/ci/sync-docs-status-policy.test.mjs'));
+});
+
 test('CI tool test partition fails closed when an executable test path is missing', () => {
   assert.throws(
     () => assertCiToolTestPartition(['tools/ci/workflow-pattern-parity.test.mjs']),
