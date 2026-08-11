@@ -647,72 +647,119 @@ function staticallySelectedSwitchClauseIndex(statement) {
   return defaultIndex;
 }
 
-function statementAlwaysTerminates(statement) {
-  if (ts.isReturnStatement(statement) || ts.isThrowStatement(statement)) return true;
-  if (ts.isBlock(statement)) {
-    return statement.statements.some((nestedStatement) =>
-      statementAlwaysTerminates(nestedStatement)
+function resolveAbruptCompletionTarget(statement) {
+  if (statement.label) {
+    for (let current = statement.parent; current; current = current.parent) {
+      if (isExecutableScope(current)) return null;
+      if (ts.isLabeledStatement(current) && current.label.text === statement.label.text) {
+        return current;
+      }
+    }
+    return null;
+  }
+
+  for (let current = statement.parent; current; current = current.parent) {
+    if (isExecutableScope(current)) return null;
+    const isIteration =
+      ts.isDoStatement(current) ||
+      ts.isWhileStatement(current) ||
+      ts.isForStatement(current) ||
+      ts.isForInStatement(current) ||
+      ts.isForOfStatement(current);
+    if (ts.isContinueStatement(statement) && isIteration) return current;
+    if (ts.isBreakStatement(statement) && (isIteration || ts.isSwitchStatement(current))) {
+      return current;
+    }
+  }
+  return null;
+}
+
+function sequenceCompletionOutcomes(statements) {
+  let outcomes = [{ kind: 'normal', target: null }];
+  for (const statement of statements) {
+    const nextOutcomes = statementCompletionOutcomes(statement);
+    outcomes = outcomes.flatMap((outcome) =>
+      outcome.kind === 'normal' ? nextOutcomes : [outcome]
     );
+    if (!outcomes.some((outcome) => outcome.kind === 'normal')) break;
+  }
+  return outcomes;
+}
+
+function statementCompletionOutcomes(statement) {
+  if (ts.isReturnStatement(statement)) return [{ kind: 'return', target: null }];
+  if (ts.isThrowStatement(statement)) return [{ kind: 'throw', target: null }];
+  if (ts.isBreakStatement(statement) || ts.isContinueStatement(statement)) {
+    return [
+      {
+        kind: ts.isBreakStatement(statement) ? 'break' : 'continue',
+        target: resolveAbruptCompletionTarget(statement),
+      },
+    ];
+  }
+  if (ts.isBlock(statement)) return sequenceCompletionOutcomes(statement.statements);
+  if (ts.isIfStatement(statement)) {
+    const condition = staticBooleanValue(statement.expression);
+    if (condition === true) return statementCompletionOutcomes(statement.thenStatement);
+    if (condition === false) {
+      return statement.elseStatement
+        ? statementCompletionOutcomes(statement.elseStatement)
+        : [{ kind: 'normal', target: null }];
+    }
+    return [
+      ...statementCompletionOutcomes(statement.thenStatement),
+      ...(statement.elseStatement
+        ? statementCompletionOutcomes(statement.elseStatement)
+        : [{ kind: 'normal', target: null }]),
+    ];
   }
   if (ts.isTryStatement(statement)) {
-    if (statement.finallyBlock && statementAlwaysTerminates(statement.finallyBlock)) return true;
-    if (!statementAlwaysTerminates(statement.tryBlock)) return false;
-    return !statement.catchClause || statementAlwaysTerminates(statement.catchClause.block);
+    let outcomes = statementCompletionOutcomes(statement.tryBlock);
+    if (statement.catchClause) {
+      const hasThrowCompletion = outcomes.some((outcome) => outcome.kind === 'throw');
+      outcomes = [
+        ...outcomes.filter((outcome) => outcome.kind !== 'throw'),
+        ...(hasThrowCompletion ? statementCompletionOutcomes(statement.catchClause.block) : []),
+      ];
+    }
+    if (statement.finallyBlock) {
+      const finallyOutcomes = statementCompletionOutcomes(statement.finallyBlock);
+      outcomes = finallyOutcomes.some((outcome) => outcome.kind === 'normal')
+        ? [...outcomes, ...finallyOutcomes.filter((outcome) => outcome.kind !== 'normal')]
+        : finallyOutcomes;
+    }
+    return outcomes;
+  }
+  if (ts.isLabeledStatement(statement)) {
+    return statementCompletionOutcomes(statement.statement).map((outcome) =>
+      outcome.kind === 'break' && outcome.target === statement
+        ? { kind: 'normal', target: null }
+        : outcome
+    );
   }
   if (ts.isSwitchStatement(statement)) {
     const selectedIndex = staticallySelectedSwitchClauseIndex(statement);
-    if (selectedIndex === null || selectedIndex < 0) return false;
-    const clauses = statement.caseBlock.clauses;
-    for (const clause of clauses.slice(selectedIndex)) {
-      for (const clauseStatement of clause.statements) {
-        if (ts.isBreakStatement(clauseStatement)) return false;
-        if (statementAlwaysTerminates(clauseStatement)) return true;
-      }
+    if (selectedIndex === null || selectedIndex < 0) {
+      return [{ kind: 'normal', target: null }];
     }
-    return false;
+    const selectedStatements = statement.caseBlock.clauses
+      .slice(selectedIndex)
+      .flatMap((clause) => [...clause.statements]);
+    return sequenceCompletionOutcomes(selectedStatements).map((outcome) =>
+      outcome.kind === 'break' && outcome.target === statement
+        ? { kind: 'normal', target: null }
+        : outcome
+    );
   }
-  if (!ts.isIfStatement(statement)) return false;
 
-  const condition = staticBooleanValue(statement.expression);
-  if (condition === true) return statementAlwaysTerminates(statement.thenStatement);
-  if (condition === false) {
-    return statement.elseStatement ? statementAlwaysTerminates(statement.elseStatement) : false;
-  }
-  return (
-    statement.elseStatement !== undefined &&
-    statementAlwaysTerminates(statement.thenStatement) &&
-    statementAlwaysTerminates(statement.elseStatement)
-  );
+  return [{ kind: 'normal', target: null }];
+}
+
+function statementAlwaysTerminates(statement) {
+  return !statementCompletionOutcomes(statement).some((outcome) => outcome.kind === 'normal');
 }
 
 function statementAlwaysExitsSwitchPath(statement) {
-  if (ts.isBreakStatement(statement) || ts.isContinueStatement(statement)) return true;
-  if (ts.isBlock(statement)) {
-    return statement.statements.some((nestedStatement) =>
-      statementAlwaysExitsSwitchPath(nestedStatement)
-    );
-  }
-  if (ts.isTryStatement(statement)) {
-    if (statement.finallyBlock && statementAlwaysExitsSwitchPath(statement.finallyBlock)) {
-      return true;
-    }
-    if (!statementAlwaysExitsSwitchPath(statement.tryBlock)) return false;
-    return !statement.catchClause || statementAlwaysExitsSwitchPath(statement.catchClause.block);
-  }
-  if (ts.isIfStatement(statement)) {
-    const condition = staticBooleanValue(statement.expression);
-    if (condition === true) return statementAlwaysExitsSwitchPath(statement.thenStatement);
-    if (condition === false) {
-      return statement.elseStatement
-        ? statementAlwaysExitsSwitchPath(statement.elseStatement)
-        : false;
-    }
-    return (
-      statement.elseStatement !== undefined &&
-      statementAlwaysExitsSwitchPath(statement.thenStatement) &&
-      statementAlwaysExitsSwitchPath(statement.elseStatement)
-    );
-  }
   return statementAlwaysTerminates(statement);
 }
 
@@ -742,14 +789,6 @@ function switchClauseIsStaticallyReachable(clause, containingStatement) {
 }
 
 function isStaticallyReachable(node, boundary) {
-  let followsSwitchPath = false;
-  for (let ancestor = node.parent; ancestor && ancestor !== boundary; ancestor = ancestor.parent) {
-    if (ts.isCaseClause(ancestor) || ts.isDefaultClause(ancestor)) {
-      followsSwitchPath = true;
-      break;
-    }
-  }
-
   for (let current = node; current && current !== boundary; current = current.parent) {
     const parent = current.parent;
     if (!parent) break;
@@ -791,11 +830,7 @@ function isStaticallyReachable(node, boundary) {
         if (
           parent.statements
             .slice(0, statementIndex)
-            .some((statement) =>
-              followsSwitchPath
-                ? statementAlwaysExitsSwitchPath(statement)
-                : statementAlwaysTerminates(statement)
-            )
+            .some((statement) => statementAlwaysTerminates(statement))
         ) {
           return false;
         }
