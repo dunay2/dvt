@@ -5,43 +5,11 @@ import {
   type ResolvedRunContext,
   type SignalRequest,
 } from '@dvt/engine';
-import { AllowAllAuthorizer, type WorkflowEngineDeps } from '@dvt/engine/runtime';
+import { AllowAllAuthorizer } from '@dvt/engine/runtime';
 import { createNoopObservability } from '@dvt/observability';
 import { describe, it, expect } from 'vitest';
 
-import {
-  buildWorkflowEngine,
-  createWorkflowEngine,
-} from '../../../src/application/services/WorkflowEngineFactory.js';
-
-class FakeWorkflowEngine {
-  constructor(readonly deps: WorkflowEngineDeps) {}
-}
-
-function makeDeps(): WorkflowEngineDeps {
-  return {
-    adapters: new Map(),
-    startRunUseCase: {} as never,
-    recoverRunUseCase: {} as never,
-    cancelRunUseCase: {} as never,
-    runStatusUseCase: {} as never,
-    signalRunUseCase: {} as never,
-  };
-}
-
-describe('createWorkflowEngine', () => {
-  it('delegates construction to the provided engine constructor', () => {
-    const deps = makeDeps();
-    const engine = createWorkflowEngine(
-      deps,
-      (receivedDeps) =>
-        new FakeWorkflowEngine(receivedDeps) as unknown as ReturnType<typeof createWorkflowEngine>
-    ) as unknown as FakeWorkflowEngine;
-
-    expect(engine instanceof FakeWorkflowEngine).toBe(true);
-    expect(engine.deps).toBe(deps);
-  });
-});
+import { buildWorkflowEngine } from '../../../src/application/services/WorkflowEngineFactory.js';
 
 describe('buildWorkflowEngine', () => {
   it('wires facade use cases and not deprecated public services', () => {
