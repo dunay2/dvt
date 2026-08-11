@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { HexColorInput, HexColorPicker } from 'react-colorful';
 import { NavLink, useNavigate } from 'react-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { ProjectIdentityBadge } from '../../shell/projectIdentityBadge';
 import type { ShellNavigationModel } from '../../shell/shellNavigationModel';
 import {
@@ -93,6 +93,7 @@ export function ShellMenu({
   copy,
 }: ShellMenuProps) {
   const [open, setOpen] = useState(false);
+  const preventWorkspaceFocusRestoreRef = useRef(false);
   const navigate = useNavigate();
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const configureApplicationLanguage = useApplicationLanguageStore(
@@ -125,7 +126,16 @@ export function ShellMenu({
             : copy.shell}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-72">
+      <DropdownMenuContent
+        align="end"
+        className="w-72"
+        onCloseAutoFocus={(event) => {
+          if (preventWorkspaceFocusRestoreRef.current) {
+            event.preventDefault();
+            preventWorkspaceFocusRestoreRef.current = false;
+          }
+        }}
+      >
         {isWorkspaceMenu ? (
           <>
             <DropdownMenuLabel>{copy.globalNavigation}</DropdownMenuLabel>
@@ -167,7 +177,12 @@ export function ShellMenu({
                 </div>
               </>
             ) : null}
-            <CanvasWorkspaceMenuControls onProjectCodeSelected={() => setOpen(false)} />
+            <CanvasWorkspaceMenuControls
+              onProjectCodeSelected={() => {
+                preventWorkspaceFocusRestoreRef.current = true;
+                setOpen(false);
+              }}
+            />
           </>
         ) : (
           <>
