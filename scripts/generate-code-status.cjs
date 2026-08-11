@@ -10,6 +10,7 @@ const {
   readArchitectureComponentRows,
   readArchitectureDriftRows,
   readArchitectureMaturityRows,
+  readArchitectureObservabilityRows,
   readArchitectureRelationRows,
   readArchitectureResponsibilityRows,
   readCommandQueryRailRows,
@@ -984,6 +985,8 @@ async function readComponentTopologyFacts(client, readers = {}) {
   const responsibilityReader =
     readers.readArchitectureResponsibilityRows || readArchitectureResponsibilityRows;
   const maturityReader = readers.readArchitectureMaturityRows || readArchitectureMaturityRows;
+  const observabilityReader =
+    readers.readArchitectureObservabilityRows || readArchitectureObservabilityRows;
   const driftReader = readers.readArchitectureDriftRows || readArchitectureDriftRows;
   const documentReader =
     readers.readArchitectureComponentDocumentRows || readArchitectureComponentDocumentRows;
@@ -992,6 +995,7 @@ async function readComponentTopologyFacts(client, readers = {}) {
     relations,
     responsibilities,
     maturity,
+    observability,
     componentDrift,
     relationDrift,
     documents,
@@ -1000,6 +1004,7 @@ async function readComponentTopologyFacts(client, readers = {}) {
     relationReader(client, { limit }),
     responsibilityReader(client, { limit }),
     maturityReader(client, { limit }),
+    observabilityReader(client, { limit }),
     driftReader(client, { limit, subjectKind: 'component' }),
     driftReader(client, { limit, subjectKind: 'relation' }),
     documentReader(client),
@@ -1009,6 +1014,7 @@ async function readComponentTopologyFacts(client, readers = {}) {
     relations,
     responsibilities,
     maturity,
+    observability,
     drift: [...componentDrift, ...relationDrift],
     documents,
   };
@@ -1172,6 +1178,11 @@ function buildComponentTopologyProjection(facts, options = {}) {
     knownComponentIds,
     'responsibility'
   );
+  const observabilityByComponent = groupRowsByComponent(
+    facts.observability || [],
+    knownComponentIds,
+    'observability'
+  );
   const relationById = new Map(relations.map((relation) => [relation.relationId, relation]));
   const maturityByComponent = uniqueRowsByComponent(
     facts.maturity || [],
@@ -1252,6 +1263,15 @@ function buildComponentTopologyProjection(facts, options = {}) {
         }))
         .sort((left, right) => left.responsibilityId.localeCompare(right.responsibilityId, 'en'));
       const maturity = maturityByComponent.get(componentId);
+      const observability = (observabilityByComponent.get(componentId) || [])
+        .map((signal) => ({
+          observabilityId: String(signal.observability_id ?? signal.observabilityId ?? '-'),
+          required: Boolean(signal.required),
+          signalKind: String(signal.signal_kind ?? signal.signalKind ?? '-'),
+          signalName: String(signal.signal_name ?? signal.signalName ?? '-'),
+          status: String(signal.status || '-'),
+        }))
+        .sort((left, right) => left.observabilityId.localeCompare(right.observabilityId, 'en'));
       const drift = (driftByComponent.get(componentId) || [])
         .map((row) => String(row.drift_code ?? row.driftCode ?? '-'))
         .sort((left, right) => left.localeCompare(right, 'en'));
@@ -1274,6 +1294,7 @@ function buildComponentTopologyProjection(facts, options = {}) {
           : '-',
         name: String(component.name || componentId),
         owner: String(component.owner || '-'),
+        observability,
         publicContract: String(component.public_contract ?? component.publicContract ?? '-'),
         relationCounts: relationCounts.get(componentId),
         repositoryLink: repositoryEntryType
@@ -1322,6 +1343,14 @@ function renderComponentMap(projection, utcDate) {
       : '-',
     `out ${component.relationCounts.outbound}<br>in ${component.relationCounts.inbound}`,
     component.drift.length > 0 ? component.drift.join('<br>') : 'none',
+    component.observability.length > 0
+      ? component.observability
+          .map(
+            (signal) =>
+              `\`${signal.observabilityId}\`<br>${signal.signalKind}: ${signal.signalName}<br>${signal.status}${signal.required ? ' (required)' : ''}`
+          )
+          .join('<br>')
+      : 'none',
     component.gaps.length > 0 ? component.gaps.join('<br>') : 'none',
   ]);
   const relationRows = projection.relations.map((relation) => [
@@ -1343,8 +1372,9 @@ function renderComponentMap(projection, utcDate) {
     '# DVT Component Map',
     '',
     'This is the current DB-first projection of registered DVT components and their exact directed relations.',
-    'Planning DB owns the structured architecture facts; Git at the evaluated commit owns repository-path existence.',
-    'Authored component pages remain the authority for rationale and invariants. Missing bindings are explicit gaps and are never inferred.',
+    'Planning DB is the current architecture and design authority; Git at the evaluated commit owns repository-path existence.',
+    'Architecture and design consultation must use the Planning DB query rails. Authored pages are supporting context, not parallel current authority.',
+    'This disposable page changes only when an operator explicitly requests generation; build, serve and CI do not regenerate it.',
     '',
     '## Current state',
     '',
@@ -1359,6 +1389,7 @@ function renderComponentMap(projection, utcDate) {
         ['Component authority', '`architecture-components`'],
         ['Relation authority', '`architecture-relations`'],
         ['Responsibility authority', '`architecture-responsibilities`'],
+        ['Observability authority', '`component-profile` / `architecture-components`'],
         ['Maturity authority', '`architecture-maturity`'],
       ]
     ),
@@ -1381,6 +1412,7 @@ function renderComponentMap(projection, utcDate) {
         'Current canonical document',
         'Direct relations',
         'Drift',
+        'Registered observability',
         'Gap',
       ],
       componentRows
@@ -1396,7 +1428,7 @@ function renderComponentMap(projection, utcDate) {
     '',
     '- A missing repository path is reported; it is not replaced by a guessed file.',
     '- Zero or multiple current canonical documents are reported as explicit gaps.',
-    '- Responsibilities, maturity and drift appear only when registered by their owning read models.',
+    '- Responsibilities, observability, maturity and drift appear only when registered by their owning read models.',
     '- Duplicate component identity, unknown relation endpoints, and invalid current document paths fail generation.',
     '',
     '## Related authored context',
