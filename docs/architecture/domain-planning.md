@@ -15,7 +15,7 @@ artifact helpers that attach compiled-code references.
 
 Current target reading for graph-source generalization:
 
-- `docs/guides/generic-graph-source-technical-manual-20260404.md`
+- [DB-first Component Map](./component-map.md)
 - `docs/guides/generic-graph-source-user-manual-20260404.md`
 - `docs/planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md`
 
