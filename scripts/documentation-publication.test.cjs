@@ -306,6 +306,28 @@ test('accepts related proposal and supporting documents without treating them as
   assert.equal(receipt.routeCount, 2);
 });
 
+test('excludes a DB-replaced canonical source without rewriting its tracked bytes', async () => {
+  const root = createMinimalFixture();
+  const sourcePath = 'docs/index.md';
+  const originalBytes = fs.readFileSync(path.join(root, sourcePath));
+  const assembler = new DocumentationPublicationAssembler(
+    fixtureAssemblerOptions(root, {
+      lifecycleRows: [
+        lifecycleRow(root, sourcePath, {
+          lifecycle_state: 'superseded',
+          canonical_disposition: 'db_authority_historical',
+        }),
+      ],
+      readGitSha: () => 'fixture-head',
+    })
+  );
+
+  const receipt = await assembler.assemble({ runGenerators: false });
+
+  assert.equal(receipt.routeCount, 0);
+  assert.deepEqual(fs.readFileSync(path.join(root, sourcePath)), originalBytes);
+});
+
 test('ignores untracked Markdown instead of treating filesystem placement as authority', async () => {
   const root = createMinimalFixture();
   fs.writeFileSync(path.join(root, 'docs', 'ignored-index.md'), '# Ignored\n', 'utf8');

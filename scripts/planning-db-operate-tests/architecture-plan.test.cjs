@@ -11,6 +11,7 @@ const {
   planArchitecturePortRecordOperation,
   planArchitectureStorageIoRecordOperation,
   planArchitectureTestRecordOperation,
+  planArchitectureEvidenceRecordOperation,
   planArchitectureObservabilityRecordOperation,
   planArchitectureRelationRecordOperation,
   writePlannedArchitectureContractRecordOperation,
@@ -906,6 +907,52 @@ test('architecture observability evidence planner emits component_observability 
   assert.equal(planned.observability.status, 'implemented');
   assert.equal(planned.audit.operationType, 'architecture_observability_record');
   assert.equal(planned.audit.designId, command.designId);
+});
+
+test('architecture execution evidence planner requires must-prove scope and records provenance', () => {
+  const now = new Date('2026-08-11T12:00:00.000Z');
+  const command = parseArgs([
+    'architecture-evidence',
+    'record-execution',
+    '--design',
+    'API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-20260811',
+    '--evidence',
+    'EVIDENCE-API-H2-4-LIFECYCLE-LOCAL',
+    '--subject-kind',
+    'test',
+    '--subject',
+    'TEST-API-H2-4-DOCUMENT-LIFECYCLE-DISPOSITION',
+    '--evidence-kind',
+    'test',
+    '--origin',
+    'local_execution',
+    '--result',
+    'pass',
+    '--source-ref',
+    'node --test scripts/planning-db-schema.test.cjs',
+    '--source-content-sha256',
+    'e'.repeat(64),
+    '--actor',
+    'codex',
+  ]);
+
+  const planned = planArchitectureEvidenceRecordOperation({
+    command,
+    design: { design_id: command.designId, status: 'implementing' },
+    designScopes: [
+      {
+        subject_kind: 'test',
+        subject_id: 'TEST-API-H2-4-DOCUMENT-LIFECYCLE-DISPOSITION',
+        scope_kind: 'must_prove',
+      },
+    ],
+    operationId: 'op-architecture-evidence-record',
+    now,
+  });
+
+  assert.equal(planned.evidence.evidenceOrigin, 'local_execution');
+  assert.equal(planned.evidence.resultState, 'pass');
+  assert.equal(planned.audit.operationType, 'architecture_evidence_record');
 });
 
 test('architecture scoped operation idempotency rejects stale source-hash replays', () => {

@@ -541,6 +541,39 @@ test('parseArgs builds an architecture observability evidence record command', (
   assert.equal(command.required, true);
 });
 
+test('parseArgs builds a fresh architecture execution evidence command', () => {
+  const command = parseArgs([
+    'architecture-evidence',
+    'record-execution',
+    '--design',
+    'API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-20260811',
+    '--evidence',
+    'EVIDENCE-API-H2-4-LIFECYCLE-LOCAL',
+    '--subject-kind',
+    'test',
+    '--subject',
+    'TEST-API-H2-4-DOCUMENT-LIFECYCLE-DISPOSITION',
+    '--evidence-kind',
+    'test',
+    '--origin',
+    'local_execution',
+    '--result',
+    'pass',
+    '--source-ref',
+    'node --test scripts/planning-db-schema.test.cjs',
+    '--source-content-sha256',
+    'e'.repeat(64),
+    '--actor',
+    'codex',
+  ]);
+
+  assert.equal(command.kind, 'architecture_evidence_record');
+  assert.equal(command.evidenceId, 'EVIDENCE-API-H2-4-LIFECYCLE-LOCAL');
+  assert.equal(command.subjectKind, 'test');
+  assert.equal(command.evidenceOrigin, 'local_execution');
+  assert.equal(command.resultState, 'pass');
+});
+
 test('parseArgs rejects relation record statuses that the relation table cannot store', () => {
   assert.throws(
     () =>

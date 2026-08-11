@@ -90,6 +90,33 @@ test('current schema accepts audited architecture design transitions', () => {
   );
 });
 
+test('architecture proof distinguishes assertions from fresh executions', () => {
+  const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
+
+  assert.match(
+    schemaSql,
+    /architecture\.evidence[\s\S]*evidence_origin text NOT NULL[\s\S]*imported_assertion[\s\S]*local_execution[\s\S]*ci_execution/u
+  );
+  assert.match(
+    schemaSql,
+    /CREATE VIEW architecture\.evidence_query[\s\S]*assertion_only[\s\S]*verified/u
+  );
+  assert.match(
+    schemaSql,
+    /implementation_violation_query[\s\S]*evidence_origin[\s\S]*local_execution[\s\S]*ci_execution[\s\S]*30 days/u
+  );
+});
+
+test('documentation lifecycle accepts only hash-matched DB authority dispositions', () => {
+  const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
+
+  assert.match(
+    schemaSql,
+    /documentation_lifecycle_query[\s\S]*fowler_analysis_dispositions[\s\S]*db_authority_historical/u
+  );
+  assert.match(schemaSql, /disposition\.source_content_sha256 = document\.source_content_sha256/u);
+});
+
 test('current schema accepts audited governance component revisions', () => {
   const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
 

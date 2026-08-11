@@ -3093,6 +3093,51 @@ test('runQuery dispatches documentation-lifecycle through the database lifecycle
   ]);
 });
 
+test('architecture evidence query exposes provenance and proof state', async () => {
+  const client = {
+    async query(sql) {
+      assert.match(sql, /evidence_origin/u);
+      assert.match(sql, /verification_state/u);
+      return {
+        rows: [
+          {
+            evidence_id: 'EVIDENCE-LOCAL-TEST',
+            subject_kind: 'test',
+            subject_id: 'TEST-DB-FIRST',
+            evidence_kind: 'test',
+            evidence_origin: 'local_execution',
+            result_state: 'pass',
+            verification_state: 'verified',
+            freshness_state: 'fresh',
+            source_ref: 'pnpm test',
+          },
+        ],
+      };
+    },
+  };
+
+  const rows = await runQuery({
+    queryName: 'architecture-evidence',
+    filters: { limit: 5 },
+    client,
+    print: false,
+  });
+
+  assert.deepEqual(rows, [
+    [
+      'EVIDENCE-LOCAL-TEST',
+      'test',
+      'TEST-DB-FIRST',
+      'test',
+      'local_execution',
+      'pass',
+      'verified',
+      'fresh',
+      'pnpm test',
+    ],
+  ]);
+});
+
 test('buildDocumentationPanelRows exposes relational panel fields without prose parsing', () => {
   const rows = buildDocumentationPanelRows([
     {
