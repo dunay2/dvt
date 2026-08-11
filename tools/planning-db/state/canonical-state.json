@@ -10387,14 +10387,28 @@
         "work_item_id": "GH-2273",
         "title": "Prove callback and factory-product consumption",
         "owner": "ArchitectureBoundaryGuard",
-        "status": "implemented",
+        "status": "superseded",
         "rationale": "Replace inferred callback and factory edges with parameter-invocation and consumed-product proof, and extend static flow truth to cast literals and terminating switches while preserving the existing rail and report.",
         "fowler_signal": "evolutionary_architecture",
         "rail_ref": "ApplyArchitectureDependencyBoundaryGate",
         "approved_at": "2026-08-11T05:21:54.828+00:00",
         "supersedes_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V7-20260811",
         "created_at": "2026-08-11T05:21:51.158+00:00",
-        "updated_at": "2026-08-11T05:28:50.775+00:00"
+        "updated_at": "2026-08-11T05:57:15.735+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V9-20260811",
+        "work_item_id": "GH-2273",
+        "title": "Exclude statically unselected switch clauses",
+        "owner": "ArchitectureBoundaryGuard",
+        "status": "implemented",
+        "rationale": "Extend the existing executable-path proof to model statically selected switch entry clauses, default selection, fallthrough, break, and termination so inline targets, invoked callbacks, and consumed factory products cannot prove a deployment profile from an unselected case.",
+        "fowler_signal": "evolutionary_architecture",
+        "rail_ref": "ApplyArchitectureDependencyBoundaryGate",
+        "approved_at": "2026-08-11T05:47:27.781+00:00",
+        "supersedes_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V8-20260811",
+        "created_at": "2026-08-11T05:47:10.393+00:00",
+        "updated_at": "2026-08-11T05:54:30.001+00:00"
       },
       {
         "design_id": "CANVAS-BACKLOG-INTEGRITY-READINESS-20260626",
@@ -60692,6 +60706,54 @@
         "created_at": "2026-08-11T05:21:51.158+00:00"
       },
       {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V9-20260811",
+        "subject_kind": "command",
+        "subject_id": "ApplyArchitectureDependencyBoundaryGate",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T05:47:10.393+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V9-20260811",
+        "subject_kind": "component",
+        "subject_id": "SYS-CI-GOVERNANCE-TOOLS-CI-ARCHITECTURE-BOUNDARIES",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-11T05:47:10.393+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V9-20260811",
+        "subject_kind": "component",
+        "subject_id": "SYS-CI-GOVERNANCE-TOOLS-CI-ARCHITECTURE-BOUNDARIES",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T05:47:10.393+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V9-20260811",
+        "subject_kind": "path",
+        "subject_id": "tools/ci/architecture-dependency-guard.test.mjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T05:47:10.393+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V9-20260811",
+        "subject_kind": "path",
+        "subject_id": "tools/ci/check-architecture-dependencies.mjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T05:47:10.393+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V9-20260811",
+        "subject_kind": "test",
+        "subject_id": "TEST-CI-API-PRODUCTION-REACHABILITY",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T05:47:10.393+00:00"
+      },
+      {
         "design_id": "CANVAS-BOTTOM-DRAWER-ACTIONABLE-READ-MODEL-20260626",
         "subject_kind": "component",
         "subject_id": "web.component.shell.BottomOperationalDrawer",
@@ -87930,6 +87992,27 @@
         "created_at": "2026-08-08T02:12:27.921+00:00"
       },
       {
+        "operation_id": "66a8ce50-b576-4b0d-896c-ff84b7470f4e",
+        "idempotency_key": "codex-api-h2-2-reachability-v9-implemented",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V9-20260811",
+        "source_ref": "tools/ci/check-architecture-dependencies.mjs",
+        "source_content_sha256": "463b543f974ee2a26cdd31a2e9473f8152745612f8bc462a3bc357b0e35d43e4",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "V9 passes 22 architecture tests, all 281 CI-tool tests, the unchanged eight-profile real report, and the switch inline/callback/factory/default/fallthrough/break matrix without debt or stubs.",
+          "designId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V9-20260811",
+          "toStatus": "implemented",
+          "sourceRef": "tools/ci/check-architecture-dependencies.mjs",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "463b543f974ee2a26cdd31a2e9473f8152745612f8bc462a3bc357b0e35d43e4"
+        },
+        "created_at": "2026-08-11T05:54:30.001+00:00"
+      },
+      {
         "operation_id": "67401b66-0d32-498b-b97a-a4661e8972ef",
         "idempotency_key": "codex-api-h2-2-reachability-approve-v2",
         "operation_type": "architecture_design_transition",
@@ -90809,6 +90892,27 @@
         "created_at": "2026-08-10T21:04:01.317+00:00"
       },
       {
+        "operation_id": "baff42f9-839c-45ca-98e2-ab0a2c9cb272",
+        "idempotency_key": "codex-api-h2-2-reachability-v8-superseded-by-v9",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V8-20260811",
+        "source_ref": "tools/ci/check-architecture-dependencies.mjs",
+        "source_content_sha256": "463b543f974ee2a26cdd31a2e9473f8152745612f8bc462a3bc357b0e35d43e4",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "V9 supersedes V8 after the seventh independent Fowler QA proved that statically unselected switch clauses could still fabricate deployment-profile evidence.",
+          "designId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V8-20260811",
+          "toStatus": "superseded",
+          "sourceRef": "tools/ci/check-architecture-dependencies.mjs",
+          "fromStatus": "implemented",
+          "sourceContentSha256": "463b543f974ee2a26cdd31a2e9473f8152745612f8bc462a3bc357b0e35d43e4"
+        },
+        "created_at": "2026-08-11T05:57:15.735+00:00"
+      },
+      {
         "operation_id": "bc1b2418-188b-4319-8358-c2939d22aec0",
         "idempotency_key": "gh-2167-api-governance-qa-closeout-v1",
         "operation_type": "architecture_design_create",
@@ -91708,6 +91812,70 @@
         "created_at": "2026-08-10T21:06:24.138+00:00"
       },
       {
+        "operation_id": "c4b6e326-e62e-48bd-81d4-52b936301893",
+        "idempotency_key": "codex-api-h2-2-reachability-v9-create",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V9-20260811",
+        "source_ref": "tools/ci/check-architecture-dependencies.mjs",
+        "source_content_sha256": "995ad5790791389c3241e330d1234373d6f4b7ec130b2502896fd55acdbedd10",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "ArchitectureBoundaryGuard",
+          "title": "Exclude statically unselected switch clauses",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "ApplyArchitectureDependencyBoundaryGate",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-CI-GOVERNANCE-TOOLS-CI-ARCHITECTURE-BOUNDARIES",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-CI-GOVERNANCE-TOOLS-CI-ARCHITECTURE-BOUNDARIES",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "tools/ci/architecture-dependency-guard.test.mjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "tools/ci/check-architecture-dependencies.mjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-CI-API-PRODUCTION-REACHABILITY",
+              "subjectKind": "test"
+            }
+          ],
+          "status": "proposed",
+          "railRef": "ApplyArchitectureDependencyBoundaryGate",
+          "designId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V9-20260811",
+          "rationale": "Extend the existing executable-path proof to model statically selected switch entry clauses, default selection, fallthrough, break, and termination so inline targets, invoked callbacks, and consumed factory products cannot prove a deployment profile from an unselected case.",
+          "sourceRef": "tools/ci/check-architecture-dependencies.mjs",
+          "workItemId": "GH-2273",
+          "fowlerSignal": "evolutionary_architecture",
+          "supersedesId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V8-20260811",
+          "sourceContentSha256": "995ad5790791389c3241e330d1234373d6f4b7ec130b2502896fd55acdbedd10"
+        },
+        "created_at": "2026-08-11T05:47:10.393+00:00"
+      },
+      {
         "operation_id": "c4f69ff0-44fa-4005-9a55-acae95e4957a",
         "idempotency_key": "codex-api-h2-2-reachability-v6-approve-evidence",
         "operation_type": "architecture_design_transition",
@@ -92104,6 +92272,27 @@
           "sourceContentSha256": "0716cec0195201625580137f36fb01347f63fca0ff33f4992ee6db623659f886"
         },
         "created_at": "2026-08-10T11:12:07.149+00:00"
+      },
+      {
+        "operation_id": "ccf5a996-aeed-4ae7-adbf-e0ce34fc0c5d",
+        "idempotency_key": "codex-api-h2-2-reachability-v9-review",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V9-20260811",
+        "source_ref": "tools/ci/check-architecture-dependencies.mjs",
+        "source_content_sha256": "995ad5790791389c3241e330d1234373d6f4b7ec130b2502896fd55acdbedd10",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Review the V9 RED matrix for unselected inline cases, callbacks invoked only in an unselected case, factory products consumed only there, and positive fallthrough/default/break behavior before implementation.",
+          "designId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V9-20260811",
+          "toStatus": "review",
+          "sourceRef": "tools/ci/check-architecture-dependencies.mjs",
+          "fromStatus": "proposed",
+          "sourceContentSha256": "995ad5790791389c3241e330d1234373d6f4b7ec130b2502896fd55acdbedd10"
+        },
+        "created_at": "2026-08-11T05:47:19.464+00:00"
       },
       {
         "operation_id": "ce9466cd-d60b-4712-9c63-b3170e84ed37",
@@ -93492,6 +93681,27 @@
         "created_at": "2026-08-10T22:58:50.304+00:00"
       },
       {
+        "operation_id": "f9440aa7-2d85-4015-ad6f-d3f4d155ddb1",
+        "idempotency_key": "codex-api-h2-2-reachability-v9-implementing",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V9-20260811",
+        "source_ref": "tools/ci/check-architecture-dependencies.mjs",
+        "source_content_sha256": "995ad5790791389c3241e330d1234373d6f4b7ec130b2502896fd55acdbedd10",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Begin V9 RED-GREEN after database design approval.",
+          "designId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V9-20260811",
+          "toStatus": "implementing",
+          "sourceRef": "tools/ci/check-architecture-dependencies.mjs",
+          "fromStatus": "approved",
+          "sourceContentSha256": "995ad5790791389c3241e330d1234373d6f4b7ec130b2502896fd55acdbedd10"
+        },
+        "created_at": "2026-08-11T05:47:34.238+00:00"
+      },
+      {
         "operation_id": "f990207f-a2e1-4631-b56e-2c1a3ce92f3e",
         "idempotency_key": "codex-api-h2-2-reachability-v7-approve-evidence",
         "operation_type": "architecture_design_transition",
@@ -93714,6 +93924,27 @@
           "sourceContentSha256": "85c45588da6ec295fbfadbfc02118eb8beca80b2008d636c309be4d7485eb5cc"
         },
         "created_at": "2026-08-10T21:06:27.033+00:00"
+      },
+      {
+        "operation_id": "fde62249-cfb3-479d-9bb6-3831ca9193ec",
+        "idempotency_key": "codex-api-h2-2-reachability-v9-approve",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V9-20260811",
+        "source_ref": "tools/ci/check-architecture-dependencies.mjs",
+        "source_content_sha256": "995ad5790791389c3241e330d1234373d6f4b7ec130b2502896fd55acdbedd10",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Approve the minimum AST reachability change: a statically known switch executes only clauses reachable from the selected entry through fallthrough, stopping at reachable break or termination; unknown discriminants remain conservative.",
+          "designId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V9-20260811",
+          "toStatus": "approved",
+          "sourceRef": "tools/ci/check-architecture-dependencies.mjs",
+          "fromStatus": "review",
+          "sourceContentSha256": "995ad5790791389c3241e330d1234373d6f4b7ec130b2502896fd55acdbedd10"
+        },
+        "created_at": "2026-08-11T05:47:27.781+00:00"
       },
       {
         "operation_id": "fe96c78c-4af4-4ed2-837f-c4904929300a",
@@ -96802,7 +97033,10 @@
         "tools/ci/check-architecture-dependencies.mjs#executableScopeKey",
         "tools/ci/check-architecture-dependencies.mjs#topLevelNamedExecutableScope",
         "tools/ci/check-architecture-dependencies.mjs#unwrapExpression",
-        "tools/ci/check-architecture-dependencies.mjs#staticPrimitiveValue"
+        "tools/ci/check-architecture-dependencies.mjs#staticPrimitiveValue",
+        "tools/ci/check-architecture-dependencies.mjs#staticallySelectedSwitchClauseIndex",
+        "tools/ci/check-architecture-dependencies.mjs#statementAlwaysExitsSwitchPath",
+        "tools/ci/check-architecture-dependencies.mjs#switchClauseIsStaticallyReachable"
       ],
       "implementationRefs": [
         ".github/workflows/pr-quality-gate.yml#Validate architecture dependency boundaries",
@@ -96894,7 +97128,10 @@
         "tools/ci/check-architecture-dependencies.mjs#executableScopeKey",
         "tools/ci/check-architecture-dependencies.mjs#topLevelNamedExecutableScope",
         "tools/ci/check-architecture-dependencies.mjs#unwrapExpression",
-        "tools/ci/check-architecture-dependencies.mjs#staticPrimitiveValue"
+        "tools/ci/check-architecture-dependencies.mjs#staticPrimitiveValue",
+        "tools/ci/check-architecture-dependencies.mjs#staticallySelectedSwitchClauseIndex",
+        "tools/ci/check-architecture-dependencies.mjs#statementAlwaysExitsSwitchPath",
+        "tools/ci/check-architecture-dependencies.mjs#switchClauseIsStaticallyReachable"
       ],
       "documentationRefs": [
         "docs/planning/proposals/mandatory/governance-and-docs/architecture-dependency-boundary-guard-implementation-plan-20260502.md",
@@ -96927,7 +97164,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "tools/ci/check-architecture-dependencies.mjs",
-      "sourceContentSha256": "995ad5790791389c3241e330d1234373d6f4b7ec130b2502896fd55acdbedd10",
+      "sourceContentSha256": "463b543f974ee2a26cdd31a2e9473f8152745612f8bc462a3bc357b0e35d43e4",
       "rawRail": {
         "name": "ApplyArchitectureDependencyBoundaryGate",
         "type": "command",
@@ -97282,7 +97519,8 @@
               "One typed repository graph replaces drifting package-local guards and filename exception lists.",
               "Reachable guards and the concrete composition factory/create entrypoint govern supported profile evidence.",
               "Live composition roots and executable control flow govern deployment-profile evidence.",
-              "Invoked parameters and consumed factory products replace inferred executable edges."
+              "Invoked parameters and consumed factory products replace inferred executable edges.",
+              "Statically selected switch clauses, fallthrough, and abrupt completion govern deployment-profile evidence."
             ],
             "cypressCoverage": "N/A - repository architecture governance command",
             "architectureGuard": "pnpm arch:deps"
@@ -97849,7 +98087,8 @@
               "Executable call-path evidence rejects dead constant branches and uncalled same-class provider methods.",
               "Reachable guards and the concrete composition factory/create entrypoint govern supported profile evidence.",
               "Live composition roots and executable control flow govern deployment-profile evidence.",
-              "Invoked parameters and consumed factory products replace inferred executable edges."
+              "Invoked parameters and consumed factory products replace inferred executable edges.",
+              "Statically selected switch clauses, fallthrough, and abrupt completion govern deployment-profile evidence."
             ],
             "cypressCoverage": "N/A - repository architecture governance command",
             "architectureGuard": "pnpm arch:deps"
@@ -97876,7 +98115,8 @@
               "Executable call-path evidence rejects dead constant branches and uncalled same-class provider methods.",
               "Reachable guards and the concrete composition factory/create entrypoint govern supported profile evidence.",
               "Live composition roots and executable control flow govern deployment-profile evidence.",
-              "Invoked parameters and consumed factory products replace inferred executable edges."
+              "Invoked parameters and consumed factory products replace inferred executable edges.",
+              "Statically selected switch clauses, fallthrough, and abrupt completion govern deployment-profile evidence."
             ],
             "cypressCoverage": "N/A - repository architecture governance command",
             "architectureGuard": "pnpm arch:deps"
@@ -97915,7 +98155,8 @@
               "Executable call-path evidence rejects dead constant branches and uncalled same-class provider methods.",
               "Reachable guards and the concrete composition factory/create entrypoint govern supported profile evidence.",
               "Live composition roots and executable control flow govern deployment-profile evidence.",
-              "Invoked parameters and consumed factory products replace inferred executable edges."
+              "Invoked parameters and consumed factory products replace inferred executable edges.",
+              "Statically selected switch clauses, fallthrough, and abrupt completion govern deployment-profile evidence."
             ],
             "cypressCoverage": "N/A - repository architecture governance command",
             "architectureGuard": "pnpm arch:deps"
@@ -97929,7 +98170,8 @@
             "fowlerSignals": [
               "Executable call-path evidence rejects dead constant branches and uncalled same-class provider methods.",
               "Reachable guards and the concrete composition factory/create entrypoint govern supported profile evidence.",
-              "Invoked parameters and consumed factory products replace inferred executable edges."
+              "Invoked parameters and consumed factory products replace inferred executable edges.",
+              "Statically selected switch clauses, fallthrough, and abrupt completion govern deployment-profile evidence."
             ],
             "cypressCoverage": "N/A - repository architecture governance command",
             "architectureGuard": "pnpm arch:deps"
@@ -97942,7 +98184,8 @@
             "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
             "fowlerSignals": [
               "Live composition roots and executable control flow govern deployment-profile evidence.",
-              "Invoked parameters and consumed factory products replace inferred executable edges."
+              "Invoked parameters and consumed factory products replace inferred executable edges.",
+              "Statically selected switch clauses, fallthrough, and abrupt completion govern deployment-profile evidence."
             ],
             "cypressCoverage": "N/A - repository architecture governance command",
             "architectureGuard": "pnpm arch:deps"
@@ -97955,7 +98198,8 @@
             "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
             "fowlerSignals": [
               "Live composition roots and executable control flow govern deployment-profile evidence.",
-              "Invoked parameters and consumed factory products replace inferred executable edges."
+              "Invoked parameters and consumed factory products replace inferred executable edges.",
+              "Statically selected switch clauses, fallthrough, and abrupt completion govern deployment-profile evidence."
             ],
             "cypressCoverage": "N/A - repository architecture governance command",
             "architectureGuard": "pnpm arch:deps"
@@ -97968,7 +98212,8 @@
             "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
             "fowlerSignals": [
               "Live composition roots and executable control flow govern deployment-profile evidence.",
-              "Invoked parameters and consumed factory products replace inferred executable edges."
+              "Invoked parameters and consumed factory products replace inferred executable edges.",
+              "Statically selected switch clauses, fallthrough, and abrupt completion govern deployment-profile evidence."
             ],
             "cypressCoverage": "N/A - repository architecture governance command",
             "architectureGuard": "pnpm arch:deps"
@@ -97981,7 +98226,8 @@
             "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
             "fowlerSignals": [
               "Live composition roots and executable control flow govern deployment-profile evidence.",
-              "Invoked parameters and consumed factory products replace inferred executable edges."
+              "Invoked parameters and consumed factory products replace inferred executable edges.",
+              "Statically selected switch clauses, fallthrough, and abrupt completion govern deployment-profile evidence."
             ],
             "cypressCoverage": "N/A - repository architecture governance command",
             "architectureGuard": "pnpm arch:deps"
@@ -97994,7 +98240,8 @@
             "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
             "fowlerSignals": [
               "Live composition roots and executable control flow govern deployment-profile evidence.",
-              "Invoked parameters and consumed factory products replace inferred executable edges."
+              "Invoked parameters and consumed factory products replace inferred executable edges.",
+              "Statically selected switch clauses, fallthrough, and abrupt completion govern deployment-profile evidence."
             ],
             "cypressCoverage": "N/A - repository architecture governance command",
             "architectureGuard": "pnpm arch:deps"
@@ -98006,7 +98253,44 @@
             "dddOwner": "Repository CI governance baseline",
             "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
             "fowlerSignals": [
-              "Invoked parameters and consumed factory products replace inferred executable edges."
+              "Invoked parameters and consumed factory products replace inferred executable edges.",
+              "Statically selected switch clauses, fallthrough, and abrupt completion govern deployment-profile evidence."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "staticallySelectedSwitchClauseIndex",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "Statically selected switch clauses, fallthrough, and abrupt completion govern deployment-profile evidence."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "statementAlwaysExitsSwitchPath",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "Statically selected switch clauses, fallthrough, and abrupt completion govern deployment-profile evidence."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "switchClauseIsStaticallyReachable",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "Statically selected switch clauses, fallthrough, and abrupt completion govern deployment-profile evidence."
             ],
             "cypressCoverage": "N/A - repository architecture governance command",
             "architectureGuard": "pnpm arch:deps"
@@ -98027,7 +98311,8 @@
           "Executable call-path evidence rejects dead constant branches and uncalled same-class provider methods.",
           "Reachable guards and the concrete composition factory/create entrypoint govern supported profile evidence.",
           "Live composition roots and executable control flow govern deployment-profile evidence.",
-          "Invoked parameters and consumed factory products replace inferred executable edges."
+          "Invoked parameters and consumed factory products replace inferred executable edges.",
+          "Statically selected switch clauses, fallthrough, and abrupt completion govern deployment-profile evidence."
         ],
         "completionGate": [
           "node --test tools/ci/architecture-dependency-guard.test.mjs",
@@ -98037,7 +98322,7 @@
         "redGreenCycles": [
           {
             "id": "applyarchitecturedependencyboundarygate-record",
-            "redTest": "node --test --test-name-pattern requires-invoked-callbacks tools/ci/architecture-dependency-guard.test.mjs",
+            "redTest": "node --test --test-name-pattern unselected-switch-clauses tools/ci/architecture-dependency-guard.test.mjs",
             "greenTest": "node --test tools/ci/architecture-dependency-guard.test.mjs and pnpm arch:deps",
             "patchSurfaces": [
               "tools/ci/check-architecture-dependencies.mjs",
@@ -98046,7 +98331,7 @@
               "apps/api/package.json",
               ".github/workflows/pr-quality-gate.yml"
             ],
-            "expectedFailure": "Ignored function arguments, unconsumed factory products, cast-false branches, or terminating switches establish deployment profiles."
+            "expectedFailure": "A statically unselected switch case, callback, or factory-product consumer establishes a deployment profile."
           }
         ],
         "componentGuides": [
@@ -98081,7 +98366,7 @@
         ],
         "forbiddenImplementationSurfaces": ["apps/api/.dependency-cruiser.cjs"]
       },
-      "revision": 8,
+      "revision": 9,
       "createdBy": "codex",
       "createdAt": "2026-08-08T00:00:00.000Z"
     },
@@ -154356,6 +154641,87 @@
         "forbiddenImplementationSurfaces": ["apps/api/.dependency-cruiser.cjs"]
       },
       "createdAt": "2026-08-11T05:27:16.579Z"
+    },
+    {
+      "operationId": "cf533e9f-4472-46df-8722-3a6bcba3f7f1",
+      "idempotencyKey": "codex-api-h2-2-arch-deps-switch-clauses-9",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#ARCH-DEPS-GUARD#command#applyarchitecturedependencyboundarygate",
+      "sourcePath": "tools/ci/check-architecture-dependencies.mjs",
+      "sourceContentSha256": "463b543f974ee2a26cdd31a2e9473f8152745612f8bc462a3bc357b0e35d43e4",
+      "expectedRevision": 8,
+      "previousRevision": 8,
+      "resultingRevision": 9,
+      "payload": {
+        "redTest": "node --test --test-name-pattern unselected-switch-clauses tools/ci/architecture-dependency-guard.test.mjs",
+        "dddOwner": "Repository CI governance baseline",
+        "railName": "ApplyArchitectureDependencyBoundaryGate",
+        "railType": "command",
+        "featureId": "ARCH-DEPS-GUARD",
+        "greenTest": "node --test tools/ci/architecture-dependency-guard.test.mjs and pnpm arch:deps",
+        "sourceRef": "tools/ci/check-architecture-dependencies.mjs",
+        "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2273"],
+        "cypressFlows": ["N/A - repository architecture governance command"],
+        "domainObjects": ["ApiProductionReachabilityReport"],
+        "fowlerSignals": [
+          "Statically selected switch clauses, fallthrough, and abrupt completion govern deployment-profile evidence."
+        ],
+        "patchSurfaces": [
+          "tools/ci/check-architecture-dependencies.mjs",
+          "tools/ci/architecture-dependency-guard.test.mjs"
+        ],
+        "completionGate": [
+          "node --test tools/ci/architecture-dependency-guard.test.mjs",
+          "pnpm arch:deps",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "A statically unselected switch case, callback, or factory-product consumer establishes a deployment profile.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "architectureGuards": ["pnpm arch:deps"],
+        "implementationPlan": "docs/planning/proposals/mandatory/governance-and-docs/architecture-dependency-boundary-guard-implementation-plan-20260502.md",
+        "implementationRefs": [
+          "tools/ci/check-architecture-dependencies.mjs#collectApiDeploymentProfileEvidence",
+          "tools/ci/check-architecture-dependencies.mjs#collectProductionExecutableScopes",
+          "tools/ci/check-architecture-dependencies.mjs#staticPrimitiveValue",
+          "tools/ci/check-architecture-dependencies.mjs#staticBooleanValue",
+          "tools/ci/check-architecture-dependencies.mjs#staticallySelectedSwitchClauseIndex",
+          "tools/ci/check-architecture-dependencies.mjs#statementAlwaysTerminates",
+          "tools/ci/check-architecture-dependencies.mjs#statementAlwaysExitsSwitchPath",
+          "tools/ci/check-architecture-dependencies.mjs#switchClauseIsStaticallyReachable",
+          "tools/ci/check-architecture-dependencies.mjs#isStaticallyReachable",
+          "tools/ci/check-architecture-dependencies.mjs#hasReachableReconcilerEnabledPath",
+          "tools/ci/check-architecture-dependencies.mjs#enclosingClassScope",
+          "tools/ci/check-architecture-dependencies.mjs#executableScopeKey",
+          "tools/ci/check-architecture-dependencies.mjs#topLevelNamedExecutableScope",
+          "tools/ci/check-architecture-dependencies.mjs#unwrapExpression"
+        ],
+        "normalizedRailName": "applyarchitecturedependencyboundarygate",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "463b543f974ee2a26cdd31a2e9473f8152745612f8bc462a3bc357b0e35d43e4",
+        "allowedImplementationSurfaces": [
+          "tools/ci/check-architecture-dependencies.mjs",
+          "tools/ci/architecture-dependency-guard.test.mjs",
+          ".dependency-cruiser.cjs",
+          ".github/workflows/pr-quality-gate.yml",
+          "apps/api/package.json",
+          "pnpm-lock.yaml",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": ["apps/api/.dependency-cruiser.cjs"]
+      },
+      "createdAt": "2026-08-11T05:58:49.509Z"
     }
   ],
   "governanceComponentDefinitions": [
