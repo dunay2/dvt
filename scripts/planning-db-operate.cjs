@@ -282,6 +282,10 @@ const componentListOptionKeys = new Set([
   'governance',
   'fowler-signal',
   'scope',
+  'add-owns',
+  'remove-owns',
+  'add-excludes',
+  'remove-excludes',
 ]);
 const featureMechanizationListOptionKeys = new Set([
   'component-guide',
