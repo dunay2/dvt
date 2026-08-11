@@ -5,7 +5,13 @@ const path = require('node:path');
 const repoRoot = path.resolve(__dirname, '..');
 const composeFile = path.join(repoRoot, 'infra', 'planning-db', 'docker-compose.yml');
 const projectName = 'dvt-planning-db';
-const defaultDataDir = 'C:\\dvt\\planning-db\\postgres-data';
+
+function resolveDefaultDataDir(platform = process.platform, root = repoRoot) {
+  if (platform === 'win32') return 'C:\\dvt\\planning-db\\postgres-data';
+  return path.posix.join(root, 'planning-db', 'postgres-data');
+}
+
+const defaultDataDir = resolveDefaultDataDir();
 const defaultPgUrl = 'postgresql://dvt_planning:dvt_planning_local@localhost:55432/dvt_planning';
 const containerName = 'dvt-planning-db-postgres';
 const resetConfirmFlag = '--confirm-destroy-shared-planning-db';
@@ -362,6 +368,7 @@ module.exports = {
   ensureDataDir,
   isPlanningDbActive,
   planResetDataDir,
+  resolveDefaultDataDir,
   resolveComposeCommand,
   runPlanningDbHealth,
   runPlanningDbUp,
