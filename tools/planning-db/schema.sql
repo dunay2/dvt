@@ -6438,7 +6438,8 @@ CREATE VIEW planning_query_store.fowler_analysis_retirement_query AS
           WHERE (disposition.disposition_status = 'accepted'::text)
         ), retirement_decisions AS (
          SELECT decision.document_path,
-            decision.decision_status AS retirement_decision_status
+            decision.decision_status AS retirement_decision_status,
+            decision.source_content_sha256
            FROM planning_query_store.fowler_analysis_retirement_decisions decision
         ), policy AS (
          SELECT document.document_id,
@@ -6472,7 +6473,7 @@ CREATE VIEW planning_query_store.fowler_analysis_retirement_query AS
              LEFT JOIN reference_counts ON ((reference_counts.document_path = document.document_path)))
              LEFT JOIN accepted_targets ON ((accepted_targets.document_path = document.document_path)))
              LEFT JOIN accepted_dispositions ON (((accepted_dispositions.document_path = document.document_path) AND (accepted_dispositions.source_content_sha256 = document.source_content_sha256))))
-             LEFT JOIN retirement_decisions ON ((retirement_decisions.document_path = document.document_path)))
+             LEFT JOIN retirement_decisions ON (((retirement_decisions.document_path = document.document_path) AND (retirement_decisions.source_content_sha256 = document.source_content_sha256))))
         )
  SELECT document_id,
     document_path,
