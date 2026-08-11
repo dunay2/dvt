@@ -688,6 +688,14 @@ test('current API report classifies every source and exposes cleanup candidates 
     )?.classification,
     'test-support-export'
   );
+  assert.equal(
+    first.exportEvidence.find(
+      ({ source, symbol }) =>
+        source === 'apps/api/src/modules/dbtProjectImport/buildDbtProjectImportRuntime.ts' &&
+        symbol === 'DbtProjectImportRuntime'
+    )?.classification,
+    'production-export'
+  );
   assert.ok(
     first.classifications.some(
       ({ classification }) =>
