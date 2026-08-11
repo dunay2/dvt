@@ -3516,7 +3516,7 @@ CREATE VIEW planning_query_store.documentation_lifecycle_query AS
             (count(*) FILTER (WHERE (stateful_1.canonicality = 'closeout'::text)))::integer AS closeout_counterpart_count,
             (count(*) FILTER (WHERE (stateful_1.canonicality = 'intake'::text)))::integer AS intake_counterpart_count
            FROM stateful stateful_1
-          WHERE (stateful_1.subject_key IS NOT NULL)
+          WHERE ((stateful_1.subject_key IS NOT NULL) AND (stateful_1.lifecycle_state <> ALL (ARRAY['archived'::text, 'discarded'::text, 'superseded'::text])))
           GROUP BY stateful_1.subject_key
         )
  SELECT stateful.document_id,
