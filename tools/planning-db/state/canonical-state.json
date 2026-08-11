@@ -107715,6 +107715,140 @@
       "createdAt": "2026-08-11T18:18:59.313Z"
     },
     {
+      "railId": "local#API-H2-4-PLANNING-DB-RUNTIME-BOOT#command#prepareplanningdbruntime",
+      "featureId": "API-H2-4-PLANNING-DB-RUNTIME-BOOT",
+      "mechanizationStatus": "implemented",
+      "railName": "PreparePlanningDbRuntime",
+      "normalizedRailName": "prepareplanningdbruntime",
+      "railType": "command",
+      "dddOwner": "PlanningDbRuntime",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "scripts/planning-db-run.cjs#defaultDataDir",
+        "scripts/planning-db-run.cjs#resolveDefaultDataDir"
+      ],
+      "implementationRefs": [
+        "scripts/planning-db-run.cjs#defaultDataDir",
+        "scripts/planning-db-run.cjs#resolveDefaultDataDir"
+      ],
+      "documentationRefs": ["https://github.com/dunay2/dvt/issues/2274"],
+      "governingSources": [
+        "AGENTS.md",
+        "docs/planning/status/governance-document-rule-inventory.md",
+        "docs/adr/ADR-0063-planning-db-current-schema-rebuild.md",
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "scripts/planning-db-run.cjs",
+        "scripts/planning-db-run.test.cjs",
+        "package.json",
+        "tools/planning-db/state/canonical-state.json"
+      ],
+      "architectureGuards": [
+        "Planning DB bind storage resolves to a Docker-compatible absolute path on the active host."
+      ],
+      "completionGate": [
+        "node --test scripts/planning-db-run.test.cjs",
+        "pnpm docs:sync:check",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "scripts/planning-db-run.cjs",
+      "sourceContentSha256": "9469e3033556eb5173b795657c9608a3647597975790d966644544b5ad2a3b8d",
+      "rawRail": {
+        "name": "PreparePlanningDbRuntime",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "PlanningDbRuntime"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "defaultDataDir",
+            "path": "scripts/planning-db-run.cjs",
+            "cqRails": ["PreparePlanningDbRuntime"],
+            "dddOwner": "PlanningDbRuntime",
+            "unitTests": ["scripts/planning-db-run.test.cjs"],
+            "fowlerSignals": ["hidden_platform_assumption"],
+            "cypressCoverage": "N/A - operating-system path behavior is covered by deterministic Node tests and CI startup.",
+            "architectureGuard": "Planning DB bind storage resolves to a Docker-compatible absolute path on the active host."
+          },
+          {
+            "name": "resolveDefaultDataDir",
+            "path": "scripts/planning-db-run.cjs",
+            "cqRails": ["PreparePlanningDbRuntime"],
+            "dddOwner": "PlanningDbRuntime",
+            "unitTests": ["scripts/planning-db-run.test.cjs"],
+            "fowlerSignals": ["hidden_platform_assumption"],
+            "cypressCoverage": "N/A - operating-system path behavior is covered by deterministic Node tests and CI startup.",
+            "architectureGuard": "Planning DB bind storage resolves to a Docker-compatible absolute path on the active host."
+          }
+        ],
+        "version": 1,
+        "featureId": "API-H2-4-PLANNING-DB-RUNTIME-BOOT",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2274"],
+        "cypressFlows": [
+          "N/A - operating-system path behavior is covered by deterministic Node tests and CI startup."
+        ],
+        "domainObjects": ["PlanningDbRuntime"],
+        "fowlerSignals": ["hidden_platform_assumption"],
+        "completionGate": [
+          "node --test scripts/planning-db-run.test.cjs",
+          "pnpm docs:sync:check",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "prepareplanningdbruntime-record",
+            "redTest": "node --test scripts/planning-db-run.test.cjs",
+            "greenTest": "node --test scripts/planning-db-run.test.cjs",
+            "patchSurfaces": [
+              "scripts/planning-db-run.cjs",
+              "scripts/planning-db-run.test.cjs"
+            ],
+            "expectedFailure": "Linux callers inherit the Windows bind mount and Docker rejects Planning DB startup."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/adr/ADR-0063-planning-db-current-schema-rebuild.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "PreparePlanningDbRuntime",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "PlanningDbRuntime"
+          }
+        ],
+        "architectureGuards": [
+          "Planning DB bind storage resolves to a Docker-compatible absolute path on the active host."
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2274",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-run.cjs",
+          "scripts/planning-db-run.test.cjs",
+          "package.json",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "infra/db/migrations/**",
+          "packages/**"
+        ]
+      },
+      "revision": 0,
+      "createdBy": "codex",
+      "createdAt": "2026-08-11T19:47:04.735Z"
+    },
+    {
       "railId": "local#ARCH-DEPS-GUARD#command#applyarchitecturedependencyboundarygate",
       "featureId": "ARCH-DEPS-GUARD",
       "mechanizationStatus": "implemented",
@@ -168418,6 +168552,78 @@
         ]
       },
       "createdAt": "2026-08-11T18:53:09.867Z"
+    },
+    {
+      "operationId": "e9b98bc2-0c6c-43b4-a78d-977159ee51e4",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:API-H2-4-PLANNING-DB-RUNTIME-BOOT:command:prepareplanningdbruntime:latest:c45bad4653ef7739",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#API-H2-4-PLANNING-DB-RUNTIME-BOOT#command#prepareplanningdbruntime",
+      "sourcePath": "scripts/planning-db-run.cjs",
+      "sourceContentSha256": "9469e3033556eb5173b795657c9608a3647597975790d966644544b5ad2a3b8d",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "node --test scripts/planning-db-run.test.cjs",
+        "dddOwner": "PlanningDbRuntime",
+        "railName": "PreparePlanningDbRuntime",
+        "railType": "command",
+        "featureId": "API-H2-4-PLANNING-DB-RUNTIME-BOOT",
+        "greenTest": "node --test scripts/planning-db-run.test.cjs",
+        "sourceRef": "scripts/planning-db-run.cjs",
+        "unitTests": ["scripts/planning-db-run.test.cjs"],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2274"],
+        "cypressFlows": [
+          "N/A - operating-system path behavior is covered by deterministic Node tests and CI startup."
+        ],
+        "domainObjects": ["PlanningDbRuntime"],
+        "fowlerSignals": ["hidden_platform_assumption"],
+        "patchSurfaces": [
+          "scripts/planning-db-run.cjs",
+          "scripts/planning-db-run.test.cjs"
+        ],
+        "completionGate": [
+          "node --test scripts/planning-db-run.test.cjs",
+          "pnpm docs:sync:check",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Linux callers inherit the Windows bind mount and Docker rejects Planning DB startup.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/adr/ADR-0063-planning-db-current-schema-rebuild.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": ["https://github.com/dunay2/dvt/issues/2274"],
+        "architectureGuards": [
+          "Planning DB bind storage resolves to a Docker-compatible absolute path on the active host."
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2274",
+        "implementationRefs": [
+          "scripts/planning-db-run.cjs#defaultDataDir",
+          "scripts/planning-db-run.cjs#resolveDefaultDataDir"
+        ],
+        "normalizedRailName": "prepareplanningdbruntime",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "9469e3033556eb5173b795657c9608a3647597975790d966644544b5ad2a3b8d",
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-run.cjs",
+          "scripts/planning-db-run.test.cjs",
+          "package.json",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "infra/db/migrations/**",
+          "packages/**"
+        ]
+      },
+      "createdAt": "2026-08-11T19:47:04.735Z"
     }
   ],
   "governanceComponentDefinitions": [
