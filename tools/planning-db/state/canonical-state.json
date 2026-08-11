@@ -10285,6 +10285,34 @@
         "updated_at": "2026-08-11T02:02:40.096+00:00"
       },
       {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-20260811",
+        "work_item_id": "GH-2273",
+        "title": "Consolidate API production reachability architecture guard",
+        "owner": "ArchitectureBoundaryGuard",
+        "status": "superseded",
+        "rationale": "Extend the existing ApplyArchitectureDependencyBoundaryGate rail to classify every API source from production and test roots, model supported runtime profiles semantically, reject new test-only or fake reachability, and retire the drifting package-local guard without a filename allowlist.",
+        "fowler_signal": "evolutionary_architecture",
+        "rail_ref": "ApplyArchitectureDependencyBoundaryGate",
+        "approved_at": "2026-08-11T02:28:40.313+00:00",
+        "supersedes_id": null,
+        "created_at": "2026-08-11T02:26:48.234+00:00",
+        "updated_at": "2026-08-11T03:06:48.68+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V2-20260811",
+        "work_item_id": "GH-2273",
+        "title": "Consolidate API production reachability architecture guard",
+        "owner": "ArchitectureBoundaryGuard",
+        "status": "implemented",
+        "rationale": "Extend the existing ApplyArchitectureDependencyBoundaryGate rail to classify every API source from production and test roots, model supported runtime profiles semantically, reject new test-only or fake reachability, and retire the drifting package-local guard without a filename allowlist.",
+        "fowler_signal": "evolutionary_architecture",
+        "rail_ref": "ApplyArchitectureDependencyBoundaryGate",
+        "approved_at": "2026-08-11T03:06:52.328+00:00",
+        "supersedes_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-20260811",
+        "created_at": "2026-08-11T03:06:49.896+00:00",
+        "updated_at": "2026-08-11T03:06:54.705+00:00"
+      },
+      {
         "design_id": "CANVAS-BACKLOG-INTEGRITY-READINESS-20260626",
         "work_item_id": "E-CANVAS-UXDB-COMPONENT-SLICES-1",
         "title": "Canvas backlog component integrity readiness projection",
@@ -41729,6 +41757,16 @@
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
+        "test_id": "TEST-CI-API-PRODUCTION-REACHABILITY",
+        "component_id": "SYS-CI-GOVERNANCE-TOOLS-CI-ARCHITECTURE-BOUNDARIES",
+        "test_path": "tools/ci/architecture-dependency-guard.test.mjs",
+        "test_kind": "architecture",
+        "coverage_level": "boundary",
+        "required": true,
+        "validation_command": "node --test tools/ci/architecture-dependency-guard.test.mjs",
+        "created_at": "2026-08-11T03:06:51.109+00:00"
+      },
+      {
         "test_id": "TEST-CI-GOVERNANCE-SCRIPTS-UNIT-COVERAGE",
         "component_id": "SYS-CI-GOVERNANCE-SCRIPTS",
         "test_path": "scripts/check-governance-unit-coverage.test.cjs",
@@ -60136,6 +60174,150 @@
         "scope_kind": "must_prove",
         "required": true,
         "created_at": "2026-08-11T01:38:10.991+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-20260811",
+        "subject_kind": "command",
+        "subject_id": "ApplyArchitectureDependencyBoundaryGate",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T02:26:48.234+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-20260811",
+        "subject_kind": "component",
+        "subject_id": "SYS-CI-GOVERNANCE-TOOLS-CI-ARCHITECTURE-BOUNDARIES",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T02:26:48.234+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-20260811",
+        "subject_kind": "path",
+        "subject_id": ".dependency-cruiser.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T02:26:48.234+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-20260811",
+        "subject_kind": "path",
+        "subject_id": "apps/api/.dependency-cruiser.cjs",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-11T02:26:48.234+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-20260811",
+        "subject_kind": "path",
+        "subject_id": "apps/api/package.json",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T02:26:48.234+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-20260811",
+        "subject_kind": "path",
+        "subject_id": "tools/ci/check-architecture-dependencies.mjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T02:26:48.234+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-20260811",
+        "subject_kind": "test",
+        "subject_id": "tools/ci/architecture-dependency-guard.test.mjs",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T02:26:48.234+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V2-20260811",
+        "subject_kind": "command",
+        "subject_id": "ApplyArchitectureDependencyBoundaryGate",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T03:06:49.896+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V2-20260811",
+        "subject_kind": "component",
+        "subject_id": "SYS-CI-GOVERNANCE-TOOLS-CI-ARCHITECTURE-BOUNDARIES",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-11T03:06:49.896+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V2-20260811",
+        "subject_kind": "component",
+        "subject_id": "SYS-CI-GOVERNANCE-TOOLS-CI-ARCHITECTURE-BOUNDARIES",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T03:06:49.896+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V2-20260811",
+        "subject_kind": "path",
+        "subject_id": ".dependency-cruiser.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T03:06:49.896+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V2-20260811",
+        "subject_kind": "path",
+        "subject_id": ".github/workflows/pr-quality-gate.yml",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T03:06:49.896+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V2-20260811",
+        "subject_kind": "path",
+        "subject_id": "apps/api/.dependency-cruiser.cjs",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-11T03:06:49.896+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V2-20260811",
+        "subject_kind": "path",
+        "subject_id": "apps/api/package.json",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T03:06:49.896+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V2-20260811",
+        "subject_kind": "path",
+        "subject_id": "pnpm-lock.yaml",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T03:06:49.896+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V2-20260811",
+        "subject_kind": "path",
+        "subject_id": "tools/ci/architecture-dependency-guard.test.mjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T03:06:49.896+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V2-20260811",
+        "subject_kind": "path",
+        "subject_id": "tools/ci/check-architecture-dependencies.mjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T03:06:49.896+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V2-20260811",
+        "subject_kind": "test",
+        "subject_id": "TEST-CI-API-PRODUCTION-REACHABILITY",
+        "scope_kind": "may_create",
+        "required": true,
+        "created_at": "2026-08-11T03:06:49.896+00:00"
       },
       {
         "design_id": "CANVAS-BOTTOM-DRAWER-ACTIONABLE-READ-MODEL-20260626",
@@ -85352,6 +85534,27 @@
         "created_at": "2026-08-10T21:04:44.804+00:00"
       },
       {
+        "operation_id": "2080af97-39c0-4cdf-8be5-8f44b3317765",
+        "idempotency_key": "codex-api-h2-2-reachability-implemented-v2",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V2-20260811",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2273",
+        "source_content_sha256": "445d0a77a2208b4198a706920223128ba7051884116b3ec95250a2c30232d691",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Production reachability classification, consolidated rules, dynamic-edge analysis, semantic profile proofs, deterministic reporting, and negative fixtures are implemented and locally validated.",
+          "designId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V2-20260811",
+          "toStatus": "implemented",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2273",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "445d0a77a2208b4198a706920223128ba7051884116b3ec95250a2c30232d691"
+        },
+        "created_at": "2026-08-11T03:06:54.705+00:00"
+      },
+      {
         "operation_id": "2327b513-e87b-454d-9c3a-367210ccbf7b",
         "idempotency_key": "gh-2167-validation-test-sys-api-application-services-primary-v1",
         "operation_type": "architecture_test_record",
@@ -86779,6 +86982,27 @@
         "created_at": "2026-08-08T02:12:27.921+00:00"
       },
       {
+        "operation_id": "67401b66-0d32-498b-b97a-a4661e8972ef",
+        "idempotency_key": "codex-api-h2-2-reachability-approve-v2",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V2-20260811",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2273",
+        "source_content_sha256": "445d0a77a2208b4198a706920223128ba7051884116b3ec95250a2c30232d691",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Corrected scope covers every changed surface and the architecture evidence rail records the executable boundary proof.",
+          "designId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V2-20260811",
+          "toStatus": "approved",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2273",
+          "fromStatus": "review",
+          "sourceContentSha256": "445d0a77a2208b4198a706920223128ba7051884116b3ec95250a2c30232d691"
+        },
+        "created_at": "2026-08-11T03:06:52.328+00:00"
+      },
+      {
         "operation_id": "69831e8c-395e-4dc0-bf07-1fb44451933e",
         "idempotency_key": "gh-2167-update-test-sys-api-infra-runtime-telemetry-2-v1",
         "operation_type": "architecture_test_record",
@@ -86914,6 +87138,27 @@
           "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
         },
         "created_at": "2026-08-10T20:05:46.248+00:00"
+      },
+      {
+        "operation_id": "721d3cc9-af8d-4430-a71c-3cde34a46214",
+        "idempotency_key": "codex-api-h2-2-reachability-implementing-v2",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V2-20260811",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2273",
+        "source_content_sha256": "445d0a77a2208b4198a706920223128ba7051884116b3ec95250a2c30232d691",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Implementation exists in microcommits and is ready for canonical closeout validation.",
+          "designId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V2-20260811",
+          "toStatus": "implementing",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2273",
+          "fromStatus": "approved",
+          "sourceContentSha256": "445d0a77a2208b4198a706920223128ba7051884116b3ec95250a2c30232d691"
+        },
+        "created_at": "2026-08-11T03:06:53.534+00:00"
       },
       {
         "operation_id": "72a008f0-f37d-46e3-82d1-dd68f46b1468",
@@ -87118,6 +87363,101 @@
           "sourceContentSha256": "c770f3d34e90d2ad2f546af24f8f2833870c7df91f1fb1c97e45151de29563b6"
         },
         "created_at": "2026-08-10T21:04:09.599+00:00"
+      },
+      {
+        "operation_id": "7766ec19-5313-4e14-bc79-86d29b0eeef8",
+        "idempotency_key": "codex-api-h2-2-reachability-test-evidence",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V2-20260811",
+        "source_ref": "tools/ci/architecture-dependency-guard.test.mjs",
+        "source_content_sha256": "8cf31e97ffee0867fe6908dd08f37e23d2728b0ca9397a58135c30a5b6d85520",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-CI-API-PRODUCTION-REACHABILITY",
+          "designId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V2-20260811",
+          "required": true,
+          "testKind": "architecture",
+          "testPath": "tools/ci/architecture-dependency-guard.test.mjs",
+          "sourceRef": "tools/ci/architecture-dependency-guard.test.mjs",
+          "componentId": "SYS-CI-GOVERNANCE-TOOLS-CI-ARCHITECTURE-BOUNDARIES",
+          "coverageLevel": "boundary",
+          "validationCommand": "node --test tools/ci/architecture-dependency-guard.test.mjs",
+          "sourceContentSha256": "8cf31e97ffee0867fe6908dd08f37e23d2728b0ca9397a58135c30a5b6d85520"
+        },
+        "created_at": "2026-08-11T03:06:51.109+00:00"
+      },
+      {
+        "operation_id": "7789b5c9-7fe6-4c9e-b7a3-5f5bcf7118e7",
+        "idempotency_key": "codex-api-h2-2-reachability-design",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-20260811",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2273",
+        "source_content_sha256": "4e4c3b46531a026b0e9a3043a9d35184adf24f1208f51ec9d98646d239407d9a",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "ArchitectureBoundaryGuard",
+          "title": "Consolidate API production reachability architecture guard",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-CI-GOVERNANCE-TOOLS-CI-ARCHITECTURE-BOUNDARIES",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "ApplyArchitectureDependencyBoundaryGate",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "tools/ci/check-architecture-dependencies.mjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "tools/ci/architecture-dependency-guard.test.mjs",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": ".dependency-cruiser.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "apps/api/.dependency-cruiser.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/package.json",
+              "subjectKind": "path"
+            }
+          ],
+          "status": "review",
+          "railRef": "ApplyArchitectureDependencyBoundaryGate",
+          "designId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-20260811",
+          "rationale": "Extend the existing ApplyArchitectureDependencyBoundaryGate rail to classify every API source from production and test roots, model supported runtime profiles semantically, reject new test-only or fake reachability, and retire the drifting package-local guard without a filename allowlist.",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2273",
+          "workItemId": "GH-2273",
+          "fowlerSignal": "evolutionary_architecture",
+          "supersedesId": null,
+          "sourceContentSha256": "4e4c3b46531a026b0e9a3043a9d35184adf24f1208f51ec9d98646d239407d9a"
+        },
+        "created_at": "2026-08-11T02:26:48.234+00:00"
       },
       {
         "operation_id": "79cdd56c-1762-4be8-a777-e851cec9f3e7",
@@ -87970,6 +88310,100 @@
         "created_at": "2026-08-10T21:04:18.788+00:00"
       },
       {
+        "operation_id": "96989edf-7f50-4802-956c-97c65dab33d9",
+        "idempotency_key": "codex-api-h2-2-reachability-design-v2",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V2-20260811",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2273",
+        "source_content_sha256": "445d0a77a2208b4198a706920223128ba7051884116b3ec95250a2c30232d691",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "ArchitectureBoundaryGuard",
+          "title": "Consolidate API production reachability architecture guard",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-CI-GOVERNANCE-TOOLS-CI-ARCHITECTURE-BOUNDARIES",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-CI-GOVERNANCE-TOOLS-CI-ARCHITECTURE-BOUNDARIES",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "ApplyArchitectureDependencyBoundaryGate",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "tools/ci/check-architecture-dependencies.mjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "tools/ci/architecture-dependency-guard.test.mjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_create",
+              "subjectId": "TEST-CI-API-PRODUCTION-REACHABILITY",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": ".dependency-cruiser.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "apps/api/.dependency-cruiser.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/package.json",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "pnpm-lock.yaml",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": ".github/workflows/pr-quality-gate.yml",
+              "subjectKind": "path"
+            }
+          ],
+          "status": "review",
+          "railRef": "ApplyArchitectureDependencyBoundaryGate",
+          "designId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V2-20260811",
+          "rationale": "Extend the existing ApplyArchitectureDependencyBoundaryGate rail to classify every API source from production and test roots, model supported runtime profiles semantically, reject new test-only or fake reachability, and retire the drifting package-local guard without a filename allowlist.",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2273",
+          "workItemId": "GH-2273",
+          "fowlerSignal": "evolutionary_architecture",
+          "supersedesId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-20260811",
+          "sourceContentSha256": "445d0a77a2208b4198a706920223128ba7051884116b3ec95250a2c30232d691"
+        },
+        "created_at": "2026-08-11T03:06:49.896+00:00"
+      },
+      {
         "operation_id": "977e7476-b34a-4110-a56c-226728ff2374",
         "idempotency_key": "gh-2167-validation-test-sys-api-tests-module-composition-2-v1",
         "operation_type": "architecture_test_record",
@@ -88537,6 +88971,48 @@
           "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
         },
         "created_at": "2026-08-10T20:06:14.944+00:00"
+      },
+      {
+        "operation_id": "adff5850-b408-4a79-9181-ec6b8cf9c4c5",
+        "idempotency_key": "codex-api-h2-2-reachability-supersede-v1",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-20260811",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2273",
+        "source_content_sha256": "445d0a77a2208b4198a706920223128ba7051884116b3ec95250a2c30232d691",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Replace the design with corrected evidence identity and complete changed-surface scope before closure.",
+          "designId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-20260811",
+          "toStatus": "superseded",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2273",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "445d0a77a2208b4198a706920223128ba7051884116b3ec95250a2c30232d691"
+        },
+        "created_at": "2026-08-11T03:06:48.68+00:00"
+      },
+      {
+        "operation_id": "ae2652d2-a353-4ae2-964f-1a554801e58e",
+        "idempotency_key": "codex-api-h2-2-reachability-approve",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-20260811",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2273",
+        "source_content_sha256": "c52f490729a67b6e750b00b54ba40e4805633a1832b185bfff50c25582187804",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "DoR fixes roots, profiles, dynamic edges, one existing command rail, generated classifications, and negative/positive proofs without a filename registry.",
+          "designId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-20260811",
+          "toStatus": "approved",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2273",
+          "fromStatus": "review",
+          "sourceContentSha256": "c52f490729a67b6e750b00b54ba40e4805633a1832b185bfff50c25582187804"
+        },
+        "created_at": "2026-08-11T02:28:40.313+00:00"
       },
       {
         "operation_id": "affc1a17-ecac-4a1b-8a32-45739ad9d20b",
@@ -89657,6 +90133,27 @@
           "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
         },
         "created_at": "2026-08-10T22:58:47.826+00:00"
+      },
+      {
+        "operation_id": "c4401c87-b9db-40d9-985d-398d3d1b3714",
+        "idempotency_key": "codex-api-h2-2-reachability-implementing",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-20260811",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2273",
+        "source_content_sha256": "c52f490729a67b6e750b00b54ba40e4805633a1832b185bfff50c25582187804",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Begin TDD against the approved root architecture guard design.",
+          "designId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-20260811",
+          "toStatus": "implementing",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2273",
+          "fromStatus": "approved",
+          "sourceContentSha256": "c52f490729a67b6e750b00b54ba40e4805633a1832b185bfff50c25582187804"
+        },
+        "created_at": "2026-08-11T02:28:41.554+00:00"
       },
       {
         "operation_id": "c468203e-38c6-41d9-87d2-ec0568dd5dc4",
@@ -94205,6 +94702,811 @@
         "noHumanDecisionsRemaining": true
       },
       "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "local#ARCH-DEPS-GUARD#command#applyarchitecturedependencyboundarygate",
+      "featureId": "ARCH-DEPS-GUARD",
+      "mechanizationStatus": "implemented",
+      "railName": "ApplyArchitectureDependencyBoundaryGate",
+      "normalizedRailName": "applyarchitecturedependencyboundarygate",
+      "railType": "command",
+      "dddOwner": "Repository CI governance baseline",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        ".github/workflows/pr-quality-gate.yml#Validate architecture dependency boundaries",
+        "package.json#arch:deps",
+        "tools/ci/check-architecture-dependencies.mjs",
+        "tools/ci/architecture-dependency-guard.test.mjs",
+        "tools/ci/architecture-dependency-guard.test.mjs#current API report classifies every source and exposes cleanup candidates deterministically",
+        "tools/ci/check-architecture-dependencies.mjs#ARCHITECTURE_DEPENDENCY_TARGETS",
+        "tools/ci/check-architecture-dependencies.mjs#ADAPTER_CANONICAL_CONTRACT_RULE_NAME",
+        "tools/ci/check-architecture-dependencies.mjs#ADAPTER_SOURCE_FILE_PATTERN",
+        "tools/ci/check-architecture-dependencies.mjs#SKIPPED_DIRECTORY_NAMES",
+        "tools/ci/check-architecture-dependencies.mjs#VERSIONED_CANONICAL_CONTRACT_FILE_PATTERN",
+        "tools/ci/check-architecture-dependencies.mjs#ADAPTER_CONTRACT_FOLDER_PATTERN",
+        "tools/ci/check-architecture-dependencies.mjs#VERSIONED_CANONICAL_EXPORT_PATTERN",
+        "tools/ci/check-architecture-dependencies.mjs#API_PRODUCTION_ROOTS",
+        "tools/ci/check-architecture-dependencies.mjs#API_REACHABILITY_CLASSIFICATIONS",
+        "tools/ci/check-architecture-dependencies.mjs#REQUIRED_API_DEPLOYMENT_PROFILES",
+        "tools/ci/check-architecture-dependencies.mjs#localRequire",
+        "tools/ci/check-architecture-dependencies.mjs#ts",
+        "tools/ci/check-architecture-dependencies.mjs#API_SOURCE_FILE_PATTERN",
+        "tools/ci/check-architecture-dependencies.mjs#API_TEST_FILE_PATTERN",
+        "tools/ci/check-architecture-dependencies.mjs#normalizePath",
+        "tools/ci/check-architecture-dependencies.mjs#readArchitectureDependencyConfig",
+        "tools/ci/check-architecture-dependencies.mjs#listFilesRecursive",
+        "tools/ci/check-architecture-dependencies.mjs#getAdapterCanonicalContractReason",
+        "tools/ci/check-architecture-dependencies.mjs#collectAdapterCanonicalContractFindings",
+        "tools/ci/check-architecture-dependencies.mjs#parseCruiseOutput",
+        "tools/ci/check-architecture-dependencies.mjs#normalizeCruiseModules",
+        "tools/ci/check-architecture-dependencies.mjs#traverseReachability",
+        "tools/ci/check-architecture-dependencies.mjs#classifyApiSourceReachability",
+        "tools/ci/check-architecture-dependencies.mjs#combinedProductionSource",
+        "tools/ci/check-architecture-dependencies.mjs#dynamicPackageImports",
+        "tools/ci/check-architecture-dependencies.mjs#collectApiDeploymentProfileEvidence",
+        "tools/ci/check-architecture-dependencies.mjs#sourceFileFor",
+        "tools/ci/check-architecture-dependencies.mjs#hasExportModifier",
+        "tools/ci/check-architecture-dependencies.mjs#exportedNames",
+        "tools/ci/check-architecture-dependencies.mjs#countIdentifier",
+        "tools/ci/check-architecture-dependencies.mjs#importedNamesByTarget",
+        "tools/ci/check-architecture-dependencies.mjs#collectApiExportReachabilityEvidence",
+        "tools/ci/check-architecture-dependencies.mjs#collectSideEffectLocalImports",
+        "tools/ci/check-architecture-dependencies.mjs#collectApiReachabilityFindings",
+        "tools/ci/check-architecture-dependencies.mjs#readSourceContents",
+        "tools/ci/check-architecture-dependencies.mjs#listChangedApiSources",
+        "tools/ci/check-architecture-dependencies.mjs#collectApiProductionReachability",
+        "tools/ci/check-architecture-dependencies.mjs#formatApiReachabilityFindings",
+        "tools/ci/check-architecture-dependencies.mjs#formatApiReachabilityReport",
+        "tools/ci/check-architecture-dependencies.mjs#runDependencyCruiseReport",
+        "tools/ci/check-architecture-dependencies.mjs#runApiReachabilityCruiseReport",
+        "tools/ci/check-architecture-dependencies.mjs#runDependencyCruise",
+        "tools/ci/check-architecture-dependencies.mjs#formatCruiseViolations",
+        "tools/ci/check-architecture-dependencies.mjs#formatAdapterCanonicalContractFindings",
+        "tools/ci/check-architecture-dependencies.mjs#runArchitectureDependencyGuard",
+        "tools/ci/check-architecture-dependencies.mjs#main"
+      ],
+      "implementationRefs": [
+        ".github/workflows/pr-quality-gate.yml#Validate architecture dependency boundaries",
+        "package.json#arch:deps",
+        "tools/ci/check-architecture-dependencies.mjs",
+        "tools/ci/architecture-dependency-guard.test.mjs",
+        "tools/ci/architecture-dependency-guard.test.mjs#current API report classifies every source and exposes cleanup candidates deterministically",
+        "tools/ci/check-architecture-dependencies.mjs#ARCHITECTURE_DEPENDENCY_TARGETS",
+        "tools/ci/check-architecture-dependencies.mjs#ADAPTER_CANONICAL_CONTRACT_RULE_NAME",
+        "tools/ci/check-architecture-dependencies.mjs#ADAPTER_SOURCE_FILE_PATTERN",
+        "tools/ci/check-architecture-dependencies.mjs#SKIPPED_DIRECTORY_NAMES",
+        "tools/ci/check-architecture-dependencies.mjs#VERSIONED_CANONICAL_CONTRACT_FILE_PATTERN",
+        "tools/ci/check-architecture-dependencies.mjs#ADAPTER_CONTRACT_FOLDER_PATTERN",
+        "tools/ci/check-architecture-dependencies.mjs#VERSIONED_CANONICAL_EXPORT_PATTERN",
+        "tools/ci/check-architecture-dependencies.mjs#API_PRODUCTION_ROOTS",
+        "tools/ci/check-architecture-dependencies.mjs#API_REACHABILITY_CLASSIFICATIONS",
+        "tools/ci/check-architecture-dependencies.mjs#REQUIRED_API_DEPLOYMENT_PROFILES",
+        "tools/ci/check-architecture-dependencies.mjs#localRequire",
+        "tools/ci/check-architecture-dependencies.mjs#ts",
+        "tools/ci/check-architecture-dependencies.mjs#API_SOURCE_FILE_PATTERN",
+        "tools/ci/check-architecture-dependencies.mjs#API_TEST_FILE_PATTERN",
+        "tools/ci/check-architecture-dependencies.mjs#normalizePath",
+        "tools/ci/check-architecture-dependencies.mjs#readArchitectureDependencyConfig",
+        "tools/ci/check-architecture-dependencies.mjs#listFilesRecursive",
+        "tools/ci/check-architecture-dependencies.mjs#getAdapterCanonicalContractReason",
+        "tools/ci/check-architecture-dependencies.mjs#collectAdapterCanonicalContractFindings",
+        "tools/ci/check-architecture-dependencies.mjs#parseCruiseOutput",
+        "tools/ci/check-architecture-dependencies.mjs#normalizeCruiseModules",
+        "tools/ci/check-architecture-dependencies.mjs#traverseReachability",
+        "tools/ci/check-architecture-dependencies.mjs#classifyApiSourceReachability",
+        "tools/ci/check-architecture-dependencies.mjs#combinedProductionSource",
+        "tools/ci/check-architecture-dependencies.mjs#dynamicPackageImports",
+        "tools/ci/check-architecture-dependencies.mjs#collectApiDeploymentProfileEvidence",
+        "tools/ci/check-architecture-dependencies.mjs#sourceFileFor",
+        "tools/ci/check-architecture-dependencies.mjs#hasExportModifier",
+        "tools/ci/check-architecture-dependencies.mjs#exportedNames",
+        "tools/ci/check-architecture-dependencies.mjs#countIdentifier",
+        "tools/ci/check-architecture-dependencies.mjs#importedNamesByTarget",
+        "tools/ci/check-architecture-dependencies.mjs#collectApiExportReachabilityEvidence",
+        "tools/ci/check-architecture-dependencies.mjs#collectSideEffectLocalImports",
+        "tools/ci/check-architecture-dependencies.mjs#collectApiReachabilityFindings",
+        "tools/ci/check-architecture-dependencies.mjs#readSourceContents",
+        "tools/ci/check-architecture-dependencies.mjs#listChangedApiSources",
+        "tools/ci/check-architecture-dependencies.mjs#collectApiProductionReachability",
+        "tools/ci/check-architecture-dependencies.mjs#formatApiReachabilityFindings",
+        "tools/ci/check-architecture-dependencies.mjs#formatApiReachabilityReport",
+        "tools/ci/check-architecture-dependencies.mjs#runDependencyCruiseReport",
+        "tools/ci/check-architecture-dependencies.mjs#runApiReachabilityCruiseReport",
+        "tools/ci/check-architecture-dependencies.mjs#runDependencyCruise",
+        "tools/ci/check-architecture-dependencies.mjs#formatCruiseViolations",
+        "tools/ci/check-architecture-dependencies.mjs#formatAdapterCanonicalContractFindings",
+        "tools/ci/check-architecture-dependencies.mjs#runArchitectureDependencyGuard",
+        "tools/ci/check-architecture-dependencies.mjs#main"
+      ],
+      "documentationRefs": [
+        "docs/planning/proposals/mandatory/governance-and-docs/architecture-dependency-boundary-guard-implementation-plan-20260502.md",
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/guides/testing-and-ci-capabilities.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/guides/testing-and-ci-capabilities.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "pnpm arch:deps",
+        "PR Quality Gate",
+        "tools/ci/check-architecture-dependencies.mjs",
+        "tools/ci/architecture-dependency-guard.test.mjs",
+        ".dependency-cruiser.cjs",
+        ".github/workflows/pr-quality-gate.yml"
+      ],
+      "architectureGuards": [
+        "PR quality gate and local scripts must both run pnpm arch:deps.",
+        "pnpm arch:deps"
+      ],
+      "completionGate": [
+        "node --test tools/ci/architecture-dependency-guard.test.mjs",
+        "pnpm arch:deps",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2273",
+      "sourceContentSha256": "c52f490729a67b6e750b00b54ba40e4805633a1832b185bfff50c25582187804",
+      "rawRail": {
+        "name": "ApplyArchitectureDependencyBoundaryGate",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "Repository CI governance baseline"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "Validate architecture dependency boundaries",
+            "path": ".github/workflows/pr-quality-gate.yml",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "arch:deps",
+            "path": "package.json",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "current API report classifies every source and exposes cleanup candidates deterministically",
+            "path": "tools/ci/architecture-dependency-guard.test.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "ARCHITECTURE_DEPENDENCY_TARGETS",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "ADAPTER_CANONICAL_CONTRACT_RULE_NAME",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "ADAPTER_SOURCE_FILE_PATTERN",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "SKIPPED_DIRECTORY_NAMES",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "VERSIONED_CANONICAL_CONTRACT_FILE_PATTERN",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "ADAPTER_CONTRACT_FOLDER_PATTERN",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "VERSIONED_CANONICAL_EXPORT_PATTERN",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "API_PRODUCTION_ROOTS",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "API_REACHABILITY_CLASSIFICATIONS",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "REQUIRED_API_DEPLOYMENT_PROFILES",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "localRequire",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "ts",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "API_SOURCE_FILE_PATTERN",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "API_TEST_FILE_PATTERN",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "normalizePath",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "readArchitectureDependencyConfig",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "listFilesRecursive",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "getAdapterCanonicalContractReason",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "collectAdapterCanonicalContractFindings",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "parseCruiseOutput",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "normalizeCruiseModules",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "traverseReachability",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "classifyApiSourceReachability",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "combinedProductionSource",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "dynamicPackageImports",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "collectApiDeploymentProfileEvidence",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "sourceFileFor",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "hasExportModifier",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "exportedNames",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "countIdentifier",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "importedNamesByTarget",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "collectApiExportReachabilityEvidence",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "collectSideEffectLocalImports",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "collectApiReachabilityFindings",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "readSourceContents",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "listChangedApiSources",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "collectApiProductionReachability",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "formatApiReachabilityFindings",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "formatApiReachabilityReport",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "runDependencyCruiseReport",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "runApiReachabilityCruiseReport",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "runDependencyCruise",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "formatCruiseViolations",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "formatAdapterCanonicalContractFindings",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "runArchitectureDependencyGuard",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "main",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "One typed repository graph replaces drifting package-local guards and filename exception lists."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          }
+        ],
+        "version": 1,
+        "featureId": "ARCH-DEPS-GUARD",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2273"],
+        "cypressFlows": ["N/A - repository architecture governance command"],
+        "domainObjects": [
+          "RepositoryDependencyGraph",
+          "ApiProductionReachabilityReport"
+        ],
+        "fowlerSignals": [
+          "One typed repository graph replaces drifting package-local guards and filename exception lists."
+        ],
+        "completionGate": [
+          "node --test tools/ci/architecture-dependency-guard.test.mjs",
+          "pnpm arch:deps",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "applyarchitecturedependencyboundarygate-record",
+            "redTest": "node --test tools/ci/architecture-dependency-guard.test.mjs",
+            "greenTest": "node --test tools/ci/architecture-dependency-guard.test.mjs && pnpm arch:deps",
+            "patchSurfaces": [
+              "tools/ci/check-architecture-dependencies.mjs",
+              "tools/ci/architecture-dependency-guard.test.mjs",
+              ".dependency-cruiser.cjs",
+              "apps/api/package.json",
+              ".github/workflows/pr-quality-gate.yml"
+            ],
+            "expectedFailure": "New test-only, orphan, production-to-test, fake-reachability, unproven profile, or unconsolidated API dependency behavior is accepted."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/guides/testing-and-ci-capabilities.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ApplyArchitectureDependencyBoundaryGate",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "Repository CI governance baseline"
+          }
+        ],
+        "architectureGuards": ["pnpm arch:deps"],
+        "implementationPlan": "docs/planning/proposals/mandatory/governance-and-docs/architecture-dependency-boundary-guard-implementation-plan-20260502.md",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "pnpm arch:deps",
+          "tools/ci/check-architecture-dependencies.mjs",
+          "tools/ci/architecture-dependency-guard.test.mjs",
+          ".dependency-cruiser.cjs",
+          ".github/workflows/pr-quality-gate.yml"
+        ],
+        "forbiddenImplementationSurfaces": ["apps/api/.dependency-cruiser.cjs"]
+      },
+      "revision": 0,
       "createdBy": "codex",
       "createdAt": "2026-08-08T00:00:00.000Z"
     },
@@ -149819,6 +151121,128 @@
         ]
       },
       "createdAt": "2026-08-10T21:08:56.592Z"
+    },
+    {
+      "operationId": "9157d1ab-d131-4c48-9c4e-1cb3c80e9532",
+      "idempotencyKey": "codex-api-h2-2-arch-deps-local-rail-0",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#ARCH-DEPS-GUARD#command#applyarchitecturedependencyboundarygate",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2273",
+      "sourceContentSha256": "c52f490729a67b6e750b00b54ba40e4805633a1832b185bfff50c25582187804",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "node --test tools/ci/architecture-dependency-guard.test.mjs",
+        "dddOwner": "Repository CI governance baseline",
+        "railName": "ApplyArchitectureDependencyBoundaryGate",
+        "railType": "command",
+        "featureId": "ARCH-DEPS-GUARD",
+        "greenTest": "node --test tools/ci/architecture-dependency-guard.test.mjs && pnpm arch:deps",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2273",
+        "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2273"],
+        "cypressFlows": ["N/A - repository architecture governance command"],
+        "domainObjects": [
+          "RepositoryDependencyGraph",
+          "ApiProductionReachabilityReport"
+        ],
+        "fowlerSignals": [
+          "One typed repository graph replaces drifting package-local guards and filename exception lists."
+        ],
+        "patchSurfaces": [
+          "tools/ci/check-architecture-dependencies.mjs",
+          "tools/ci/architecture-dependency-guard.test.mjs",
+          ".dependency-cruiser.cjs",
+          "apps/api/package.json",
+          ".github/workflows/pr-quality-gate.yml"
+        ],
+        "completionGate": [
+          "node --test tools/ci/architecture-dependency-guard.test.mjs",
+          "pnpm arch:deps",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "New test-only, orphan, production-to-test, fake-reachability, unproven profile, or unconsolidated API dependency behavior is accepted.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/guides/testing-and-ci-capabilities.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/guides/testing-and-ci-capabilities.md"
+        ],
+        "architectureGuards": ["pnpm arch:deps"],
+        "implementationPlan": "docs/planning/proposals/mandatory/governance-and-docs/architecture-dependency-boundary-guard-implementation-plan-20260502.md",
+        "implementationRefs": [
+          ".github/workflows/pr-quality-gate.yml#Validate architecture dependency boundaries",
+          "package.json#arch:deps",
+          "tools/ci/architecture-dependency-guard.test.mjs#current API report classifies every source and exposes cleanup candidates deterministically",
+          "tools/ci/check-architecture-dependencies.mjs#ARCHITECTURE_DEPENDENCY_TARGETS",
+          "tools/ci/check-architecture-dependencies.mjs#ADAPTER_CANONICAL_CONTRACT_RULE_NAME",
+          "tools/ci/check-architecture-dependencies.mjs#ADAPTER_SOURCE_FILE_PATTERN",
+          "tools/ci/check-architecture-dependencies.mjs#SKIPPED_DIRECTORY_NAMES",
+          "tools/ci/check-architecture-dependencies.mjs#VERSIONED_CANONICAL_CONTRACT_FILE_PATTERN",
+          "tools/ci/check-architecture-dependencies.mjs#ADAPTER_CONTRACT_FOLDER_PATTERN",
+          "tools/ci/check-architecture-dependencies.mjs#VERSIONED_CANONICAL_EXPORT_PATTERN",
+          "tools/ci/check-architecture-dependencies.mjs#API_PRODUCTION_ROOTS",
+          "tools/ci/check-architecture-dependencies.mjs#API_REACHABILITY_CLASSIFICATIONS",
+          "tools/ci/check-architecture-dependencies.mjs#REQUIRED_API_DEPLOYMENT_PROFILES",
+          "tools/ci/check-architecture-dependencies.mjs#localRequire",
+          "tools/ci/check-architecture-dependencies.mjs#ts",
+          "tools/ci/check-architecture-dependencies.mjs#API_SOURCE_FILE_PATTERN",
+          "tools/ci/check-architecture-dependencies.mjs#API_TEST_FILE_PATTERN",
+          "tools/ci/check-architecture-dependencies.mjs#normalizePath",
+          "tools/ci/check-architecture-dependencies.mjs#readArchitectureDependencyConfig",
+          "tools/ci/check-architecture-dependencies.mjs#listFilesRecursive",
+          "tools/ci/check-architecture-dependencies.mjs#getAdapterCanonicalContractReason",
+          "tools/ci/check-architecture-dependencies.mjs#collectAdapterCanonicalContractFindings",
+          "tools/ci/check-architecture-dependencies.mjs#parseCruiseOutput",
+          "tools/ci/check-architecture-dependencies.mjs#normalizeCruiseModules",
+          "tools/ci/check-architecture-dependencies.mjs#traverseReachability",
+          "tools/ci/check-architecture-dependencies.mjs#classifyApiSourceReachability",
+          "tools/ci/check-architecture-dependencies.mjs#combinedProductionSource",
+          "tools/ci/check-architecture-dependencies.mjs#dynamicPackageImports",
+          "tools/ci/check-architecture-dependencies.mjs#collectApiDeploymentProfileEvidence",
+          "tools/ci/check-architecture-dependencies.mjs#sourceFileFor",
+          "tools/ci/check-architecture-dependencies.mjs#hasExportModifier",
+          "tools/ci/check-architecture-dependencies.mjs#exportedNames",
+          "tools/ci/check-architecture-dependencies.mjs#countIdentifier",
+          "tools/ci/check-architecture-dependencies.mjs#importedNamesByTarget",
+          "tools/ci/check-architecture-dependencies.mjs#collectApiExportReachabilityEvidence",
+          "tools/ci/check-architecture-dependencies.mjs#collectSideEffectLocalImports",
+          "tools/ci/check-architecture-dependencies.mjs#collectApiReachabilityFindings",
+          "tools/ci/check-architecture-dependencies.mjs#readSourceContents",
+          "tools/ci/check-architecture-dependencies.mjs#listChangedApiSources",
+          "tools/ci/check-architecture-dependencies.mjs#collectApiProductionReachability",
+          "tools/ci/check-architecture-dependencies.mjs#formatApiReachabilityFindings",
+          "tools/ci/check-architecture-dependencies.mjs#formatApiReachabilityReport",
+          "tools/ci/check-architecture-dependencies.mjs#runDependencyCruiseReport",
+          "tools/ci/check-architecture-dependencies.mjs#runApiReachabilityCruiseReport",
+          "tools/ci/check-architecture-dependencies.mjs#runDependencyCruise",
+          "tools/ci/check-architecture-dependencies.mjs#formatCruiseViolations",
+          "tools/ci/check-architecture-dependencies.mjs#formatAdapterCanonicalContractFindings",
+          "tools/ci/check-architecture-dependencies.mjs#runArchitectureDependencyGuard",
+          "tools/ci/check-architecture-dependencies.mjs#main"
+        ],
+        "normalizedRailName": "applyarchitecturedependencyboundarygate",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "c52f490729a67b6e750b00b54ba40e4805633a1832b185bfff50c25582187804",
+        "allowedImplementationSurfaces": [
+          "pnpm arch:deps",
+          "tools/ci/check-architecture-dependencies.mjs",
+          "tools/ci/architecture-dependency-guard.test.mjs",
+          ".dependency-cruiser.cjs",
+          ".github/workflows/pr-quality-gate.yml"
+        ],
+        "forbiddenImplementationSurfaces": ["apps/api/.dependency-cruiser.cjs"]
+      },
+      "createdAt": "2026-08-11T02:50:38.051Z"
     }
   ],
   "governanceComponentDefinitions": [
