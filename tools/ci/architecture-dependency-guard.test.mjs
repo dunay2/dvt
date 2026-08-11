@@ -256,6 +256,9 @@ test('root package exposes the architecture dependency guard', () => {
 
 test('PR quality gate runs the architecture dependency guard remotely', () => {
   const workflow = readText('.github/workflows/pr-quality-gate.yml');
+  const pushBaseFetchStep = workflow.match(
+    /- name: Fetch architecture push comparison base[\s\S]*?(?=\n\s+- name:)/u
+  )?.[0];
   const architectureStep = workflow.match(
     /- name: Validate architecture dependency boundaries[\s\S]*?(?=\n\s+- name:)/u
   )?.[0];
@@ -263,9 +266,18 @@ test('PR quality gate runs the architecture dependency guard remotely', () => {
   for (const command of REQUIRED_ARCH_DEPENDENCY_COMMANDS) {
     assert.match(workflow, new RegExp(command.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
+  assert.ok(pushBaseFetchStep, 'missing push comparison base fetch step');
+  assert.match(pushBaseFetchStep, /if: github\.event_name == 'push'/u);
+  assert.match(pushBaseFetchStep, /git fetch --no-tags --depth=1 origin "\$GIT_BASE"/u);
+  assert.match(pushBaseFetchStep, /GIT_BASE: \$\{\{ github\.event\.before \}\}/u);
   assert.ok(architectureStep, 'missing architecture dependency workflow step');
   assert.match(architectureStep, /pull_request\.base\.sha/u);
   assert.match(architectureStep, /github\.event\.before/u);
+  assert.match(architectureStep, /'origin\/main'/u);
+  assert.ok(
+    workflow.indexOf(pushBaseFetchStep) < workflow.indexOf(architectureStep),
+    'push comparison base must be fetched before the architecture dependency guard runs'
+  );
 });
 
 test('root dependency-cruiser config declares the initial Fowler boundary rules', () => {
