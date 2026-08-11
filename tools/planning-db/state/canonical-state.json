@@ -13719,83 +13719,6 @@
         "source_content_sha256": null
       },
       {
-        "evidence_id": "EVIDENCE-API-H2-4-BOUNDARY-COMMAND-LOCAL",
-        "subject_kind": "command",
-        "subject_id": "ApplyArchitectureDependencyBoundaryGate",
-        "evidence_kind": "test",
-        "evidence_origin": "local_execution",
-        "source_ref": "component-metadata integrity passed for four exact #2274 owners",
-        "result_state": "pass",
-        "recorded_at": "2026-08-11T10:32:59.473+00:00",
-        "source_content_sha256": "9ea6002bce50a36b35513d00ad8164f9a542bd898aa8101e4294f0b68e17566a"
-      },
-      {
-        "evidence_id": "EVIDENCE-API-H2-4-DESIGN-QUERY-LOCAL",
-        "subject_kind": "query",
-        "subject_id": "ReadArchitectureDesignAuthority",
-        "evidence_kind": "query",
-        "evidence_origin": "local_execution",
-        "source_ref": "pnpm planning:db:query architecture-designs --design API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811 --no-refresh",
-        "result_state": "pass",
-        "recorded_at": "2026-08-11T10:32:53.897+00:00",
-        "source_content_sha256": "bfdae7bf78bc382bf5e2fbca85180689eae11ccefdfabaa4dc5a01faac9b5735"
-      },
-      {
-        "evidence_id": "EVIDENCE-API-H2-4-DISPOSITION-QUERY-LOCAL",
-        "subject_kind": "query",
-        "subject_id": "ClassifyArchitectureDocumentationDisposition",
-        "evidence_kind": "query",
-        "evidence_origin": "local_execution",
-        "source_ref": "pnpm planning:db:query fowler-analysis-retirement --path <source> --no-refresh",
-        "result_state": "pass",
-        "recorded_at": "2026-08-11T10:32:56.7+00:00",
-        "source_content_sha256": "cdaaf7fc7b2e5d2b77ba032ae10d427b2d1c38d79c48c59d276de680012b70a9"
-      },
-      {
-        "evidence_id": "EVIDENCE-API-H2-4-LIFECYCLE-LOCAL",
-        "subject_kind": "test",
-        "subject_id": "TEST-API-H2-4-DOCUMENT-LIFECYCLE-DISPOSITION",
-        "evidence_kind": "test",
-        "evidence_origin": "local_execution",
-        "source_ref": "node --test scripts/planning-db-schema.test.cjs scripts/documentation-publication.test.cjs scripts/planning-db-export.test.cjs scripts/planning-db-import.test.cjs",
-        "result_state": "pass",
-        "recorded_at": "2026-08-11T10:32:24.398+00:00",
-        "source_content_sha256": "cdaaf7fc7b2e5d2b77ba032ae10d427b2d1c38d79c48c59d276de680012b70a9"
-      },
-      {
-        "evidence_id": "EVIDENCE-API-H2-4-LIFECYCLE-QUERY-LOCAL",
-        "subject_kind": "query",
-        "subject_id": "ListDocumentationLifecycleFacts",
-        "evidence_kind": "query",
-        "evidence_origin": "local_execution",
-        "source_ref": "pnpm planning:db:query documentation-lifecycle --path <source> --no-refresh",
-        "result_state": "pass",
-        "recorded_at": "2026-08-11T10:32:55.288+00:00",
-        "source_content_sha256": "bfdae7bf78bc382bf5e2fbca85180689eae11ccefdfabaa4dc5a01faac9b5735"
-      },
-      {
-        "evidence_id": "EVIDENCE-API-H2-4-PROVENANCE-LOCAL",
-        "subject_kind": "test",
-        "subject_id": "TEST-API-H2-4-EVIDENCE-PROVENANCE",
-        "evidence_kind": "test",
-        "evidence_origin": "local_execution",
-        "source_ref": "node --test scripts/planning-db-query.test.cjs scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs scripts/planning-db-operate-tests/component-create.test.cjs",
-        "result_state": "pass",
-        "recorded_at": "2026-08-11T10:32:25.887+00:00",
-        "source_content_sha256": "9ea6002bce50a36b35513d00ad8164f9a542bd898aa8101e4294f0b68e17566a"
-      },
-      {
-        "evidence_id": "EVIDENCE-API-H2-4-PUBLICATION-COMMAND-LOCAL",
-        "subject_kind": "command",
-        "subject_id": "GeneratePlanningDerivedSurfaces",
-        "evidence_kind": "test",
-        "evidence_origin": "local_execution",
-        "source_ref": "pnpm docs:publish (1764 routes, digest 7bf47ca1a5ad9e95034d1b6bf7ad41dc7fbdb78af04bef990913cefd1c0d6b5b)",
-        "result_state": "pass",
-        "recorded_at": "2026-08-11T10:32:58.113+00:00",
-        "source_content_sha256": "db5072ae2b773fe2418a91db0528e5fd6541ea37ae6368377639a9d94e8f7311"
-      },
-      {
         "evidence_id": "EVIDENCE-CODE-WORKING-TREE-POST-SAVE-CONSUMER",
         "subject_kind": "component",
         "subject_id": "SYS-WEB-CODE-WORKING-TREE-SYNC",
@@ -45122,26 +45045,6 @@
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
-        "test_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-10",
-        "component_id": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
-        "test_path": "apps/api/test/application/services/NoopAdmissionTelemetry.test.ts",
-        "test_kind": "architecture",
-        "coverage_level": "flow",
-        "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- apps/api/test/application/services/startRunAuthorizedFacade.auth.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.admissionModes.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.duplicateFlow.test.ts apps/api/test/application/services/engineStartRunUseCase.commandPath.test.ts apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts apps/api/test/application/services/startRunTargetAdapterRegistry.test.ts",
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "test_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-11",
-        "component_id": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
-        "test_path": "apps/api/test/application/services/NoopDuplicateRunProbe.test.ts",
-        "test_kind": "architecture",
-        "coverage_level": "flow",
-        "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- apps/api/test/application/services/startRunAuthorizedFacade.auth.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.admissionModes.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.duplicateFlow.test.ts apps/api/test/application/services/engineStartRunUseCase.commandPath.test.ts apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts apps/api/test/application/services/startRunTargetAdapterRegistry.test.ts",
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
         "test_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-12",
         "component_id": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
         "test_path": "apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts",
@@ -45415,16 +45318,6 @@
         "test_id": "TEST-SYS-API-TESTS-INFRASTRUCTURE-2",
         "component_id": "SYS-API-TESTS-INFRASTRUCTURE",
         "test_path": "apps/api/test/infrastructure/backpressure/CircuitBreakingBackpressureStore.test.ts",
-        "test_kind": "unit",
-        "coverage_level": "boundary",
-        "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- infrastructure",
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "test_id": "TEST-SYS-API-TESTS-INFRASTRUCTURE-3",
-        "component_id": "SYS-API-TESTS-INFRASTRUCTURE",
-        "test_path": "apps/api/test/infrastructure/planner/ManifestArtifactResolver.test.ts",
         "test_kind": "unit",
         "coverage_level": "boundary",
         "required": true,
@@ -87996,6 +87889,20 @@
         "created_at": "2026-08-10T21:04:37.91+00:00"
       },
       {
+        "operation_id": "16f64f91-0a86-4ef3-aa9b-2dc3687995e4",
+        "idempotency_key": "architecture_evidence_retire:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811:EVIDENCE-API-H2-4-DISPOSITION-QUERY-LOCAL:44136fa355b3678a",
+        "operation_type": "architecture_evidence_retire",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "scripts/planning-db-operate.cjs",
+        "source_content_sha256": "f964324c95c3f5120c53cf5dbd17697139ec7a9e1fd8efc91a38c4a4535b080d",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {},
+        "created_at": "2026-08-11T11:55:45.266+00:00"
+      },
+      {
         "operation_id": "1878ae5f-127a-4e6f-b3e6-8bd33f2b085c",
         "idempotency_key": "codex-api-h2-2-reachability-v5-implemented",
         "operation_type": "architecture_design_transition",
@@ -88726,6 +88633,20 @@
         "created_at": "2026-08-10T21:04:02.743+00:00"
       },
       {
+        "operation_id": "2e436564-6c8c-4836-b1ca-b47d433db68c",
+        "idempotency_key": "architecture_evidence_retire:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811:EVIDENCE-API-H2-4-PROVENANCE-LOCAL:44136fa355b3678a",
+        "operation_type": "architecture_evidence_retire",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "scripts/planning-db-operate.cjs",
+        "source_content_sha256": "f964324c95c3f5120c53cf5dbd17697139ec7a9e1fd8efc91a38c4a4535b080d",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {},
+        "created_at": "2026-08-11T11:55:49.404+00:00"
+      },
+      {
         "operation_id": "307469f2-b365-41ae-8647-e7cb3ef8d9d2",
         "idempotency_key": "codex-api-h2-2-reachability-v5-approved",
         "operation_type": "architecture_design_transition",
@@ -89361,6 +89282,20 @@
           "sourceContentSha256": "4dbcb55f49bf5f498484f71e70efaab1380b0290b33e8007dac59d8ce8fb5e69"
         },
         "created_at": "2026-08-11T06:34:25.422+00:00"
+      },
+      {
+        "operation_id": "4117fe82-ecfb-439e-85c7-f78944110746",
+        "idempotency_key": "architecture_test_retire:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811:SYS-API-TESTS-INFRASTRUCTURE:44136fa355b3678a",
+        "operation_type": "architecture_test_retire",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "scripts/planning-db-operate.cjs",
+        "source_content_sha256": "f964324c95c3f5120c53cf5dbd17697139ec7a9e1fd8efc91a38c4a4535b080d",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {},
+        "created_at": "2026-08-11T11:55:41.158+00:00"
       },
       {
         "operation_id": "415020e2-0c99-487a-a67e-48b402543350",
@@ -90748,6 +90683,20 @@
           "sourceContentSha256": "972c21a525dd6abfeb44af39559f53d345ed08570d93872dddfbf3e966c32d88"
         },
         "created_at": "2026-08-11T04:42:24.036+00:00"
+      },
+      {
+        "operation_id": "5fd0540c-6647-4a04-b2da-f153c2a624a9",
+        "idempotency_key": "architecture_test_retire:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811:SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION:44136fa355b3678a",
+        "operation_type": "architecture_test_retire",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "scripts/planning-db-operate.cjs",
+        "source_content_sha256": "f964324c95c3f5120c53cf5dbd17697139ec7a9e1fd8efc91a38c4a4535b080d",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {},
+        "created_at": "2026-08-11T11:55:38.371+00:00"
       },
       {
         "operation_id": "601dfef4-fc59-481d-b5a0-acc8183462b1",
@@ -93595,6 +93544,20 @@
         "created_at": "2026-08-10T21:04:26.234+00:00"
       },
       {
+        "operation_id": "a7d32dac-d743-49eb-b28d-33b77d4786d9",
+        "idempotency_key": "architecture_evidence_retire:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811:EVIDENCE-API-H2-4-PUBLICATION-COMMAND-LOCAL:44136fa355b3678a",
+        "operation_type": "architecture_evidence_retire",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "scripts/planning-db-operate.cjs",
+        "source_content_sha256": "f964324c95c3f5120c53cf5dbd17697139ec7a9e1fd8efc91a38c4a4535b080d",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {},
+        "created_at": "2026-08-11T11:55:50.807+00:00"
+      },
+      {
         "operation_id": "a9359dbb-e5e9-4bdc-909d-4df82520390d",
         "idempotency_key": "create-api-h2-4-consolidated-v5",
         "operation_type": "architecture_design_create",
@@ -94083,6 +94046,20 @@
         "created_at": "2026-08-10T21:06:36.683+00:00"
       },
       {
+        "operation_id": "aba189e7-1acb-4a1c-870d-ae161975afb8",
+        "idempotency_key": "architecture_evidence_retire:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811:EVIDENCE-API-H2-4-BOUNDARY-COMMAND-LOCAL:44136fa355b3678a",
+        "operation_type": "architecture_evidence_retire",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "scripts/planning-db-operate.cjs",
+        "source_content_sha256": "f964324c95c3f5120c53cf5dbd17697139ec7a9e1fd8efc91a38c4a4535b080d",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {},
+        "created_at": "2026-08-11T11:55:42.555+00:00"
+      },
+      {
         "operation_id": "ad1e5eaf-55a3-4bea-bb5c-73221f9ca0fa",
         "idempotency_key": "architecture_design_create:codex:DOC1-6-STORAGE-IO-RETIREMENT-20260810:b733c3778da57e42",
         "operation_type": "architecture_design_create",
@@ -94471,6 +94448,20 @@
           "expectedStorageObject": "docs/planning/status/generated-code-state.md"
         },
         "created_at": "2026-08-10T15:49:38.226+00:00"
+      },
+      {
+        "operation_id": "b423c494-86d9-4d7e-8213-cf73f5d0f2a6",
+        "idempotency_key": "architecture_evidence_retire:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811:EVIDENCE-API-H2-4-LIFECYCLE-QUERY-LOCAL:44136fa355b3678a",
+        "operation_type": "architecture_evidence_retire",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "scripts/planning-db-operate.cjs",
+        "source_content_sha256": "f964324c95c3f5120c53cf5dbd17697139ec7a9e1fd8efc91a38c4a4535b080d",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {},
+        "created_at": "2026-08-11T11:55:48.023+00:00"
       },
       {
         "operation_id": "b47ba570-59f8-4897-aeb4-0db52ee8ba04",
@@ -97823,6 +97814,20 @@
         "created_at": "2026-08-10T23:26:25.555+00:00"
       },
       {
+        "operation_id": "ed1d4083-7a74-4cfb-a3b3-e6ba2389abf5",
+        "idempotency_key": "architecture_evidence_retire:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811:EVIDENCE-API-H2-4-DESIGN-QUERY-LOCAL:44136fa355b3678a",
+        "operation_type": "architecture_evidence_retire",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "scripts/planning-db-operate.cjs",
+        "source_content_sha256": "f964324c95c3f5120c53cf5dbd17697139ec7a9e1fd8efc91a38c4a4535b080d",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {},
+        "created_at": "2026-08-11T11:55:43.898+00:00"
+      },
+      {
         "operation_id": "ed3c112e-a0dc-4063-b135-93b64291c998",
         "idempotency_key": "codex-api-h2-2-reachability-design-v3",
         "operation_type": "architecture_design_create",
@@ -98033,6 +98038,27 @@
           "sourceContentSha256": "21703c9d45ade37be5be8316f16371c022813ddc26d03c6f7e2fc00bc6a210d6"
         },
         "created_at": "2026-08-10T21:04:42.95+00:00"
+      },
+      {
+        "operation_id": "f12aef5f-c042-4c1c-b264-7d37b2dbd537",
+        "idempotency_key": "architecture_test_retire:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811:SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION:6397d8f1f4e845d6",
+        "operation_type": "architecture_test_retire",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "scripts/planning-db-operate.cjs",
+        "source_content_sha256": "35e4974226a03ded6968e7b170dcf5d7716c52d692334deba49636b2d2e62d0a",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The approved hard cut removed this test source; current DB authority must not require an absent file.",
+          "testId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-11",
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+          "sourceRef": "scripts/planning-db-operate.cjs",
+          "componentId": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
+          "sourceContentSha256": "35e4974226a03ded6968e7b170dcf5d7716c52d692334deba49636b2d2e62d0a"
+        },
+        "created_at": "2026-08-11T11:59:14.064+00:00"
       },
       {
         "operation_id": "f1544198-39d9-4419-a2fa-fdde2233b2b2",
@@ -98250,6 +98276,20 @@
           "sourceContentSha256": "a095b22199bc35663876c10c5abaddbb85cca70227f06be99a74d3161a23bde6"
         },
         "created_at": "2026-08-11T04:38:17.263+00:00"
+      },
+      {
+        "operation_id": "f528e502-e79f-4e5f-b4fa-ca9522bd3a0c",
+        "idempotency_key": "architecture_evidence_retire:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811:EVIDENCE-API-H2-4-LIFECYCLE-LOCAL:44136fa355b3678a",
+        "operation_type": "architecture_evidence_retire",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "scripts/planning-db-operate.cjs",
+        "source_content_sha256": "f964324c95c3f5120c53cf5dbd17697139ec7a9e1fd8efc91a38c4a4535b080d",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {},
+        "created_at": "2026-08-11T11:55:46.631+00:00"
       },
       {
         "operation_id": "f5476db9-c19d-45a2-bc14-09ea26d65dc6",
@@ -101823,444 +101863,6 @@
       "revision": 1,
       "createdBy": "codex",
       "createdAt": "2026-08-08T00:00:00.000Z"
-    },
-    {
-      "railId": "local#API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE#command#importplanninggovernancequerystore",
-      "featureId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE",
-      "mechanizationStatus": "implemented",
-      "railName": "ImportPlanningGovernanceQueryStore",
-      "normalizedRailName": "importplanninggovernancequerystore",
-      "railType": "command",
-      "dddOwner": "Planning / Governance query-store",
-      "railStatus": "implemented",
-      "symbolRefs": [
-        "scripts/planning-db-import.cjs#restoreFowlerAnalysisState"
-      ],
-      "implementationRefs": [
-        "scripts/planning-db-import.cjs#restoreFowlerAnalysisState"
-      ],
-      "documentationRefs": ["https://github.com/dunay2/dvt/issues/2274"],
-      "governingSources": [
-        "docs/planning/status/governance-document-rule-inventory.md",
-        "docs/architecture/command-query-rail-governance.md",
-        "docs/architecture/fowler-opportunity-planning-governance.md"
-      ],
-      "allowedImplementationSurfaces": [
-        "scripts/planning-db-import.cjs",
-        "scripts/planning-db-export.cjs",
-        "tools/planning-db/state/canonical-state.json"
-      ],
-      "architectureGuards": ["TEST-API-H2-4-FOWLER-RECOVERY"],
-      "completionGate": ["pnpm verify:prepush"],
-      "sourcePath": "scripts/planning-db-import.cjs",
-      "sourceContentSha256": "e851cf730d34bc3aa1c1125ae5646094b498b595989ad190b4997de4bf4edbe1",
-      "rawRail": {
-        "name": "ImportPlanningGovernanceQueryStore",
-        "type": "command",
-        "status": "implemented",
-        "dddOwner": "Planning / Governance query-store"
-      },
-      "rawManifest": {
-        "symbols": [
-          {
-            "name": "restoreFowlerAnalysisState",
-            "path": "scripts/planning-db-import.cjs",
-            "cqRails": ["ImportPlanningGovernanceQueryStore"],
-            "dddOwner": "Planning / Governance query-store",
-            "unitTests": [
-              "scripts/planning-db-import.test.cjs",
-              "scripts/planning-db-export.test.cjs"
-            ],
-            "fowlerSignals": ["hidden_authority"],
-            "cypressCoverage": "scripts/planning-db-import.test.cjs canonical round-trip integration",
-            "architectureGuard": "TEST-API-H2-4-FOWLER-RECOVERY"
-          }
-        ],
-        "version": 1,
-        "featureId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE",
-        "userStories": [
-          "GH-2274 preserves DB-owned Fowler authority across exact canonical import/export"
-        ],
-        "cypressFlows": [
-          "scripts/planning-db-import.test.cjs canonical round-trip integration"
-        ],
-        "domainObjects": ["ArchitectureGovernanceQueryStore"],
-        "fowlerSignals": ["hidden_authority"],
-        "completionGate": ["pnpm verify:prepush"],
-        "redGreenCycles": [
-          {
-            "id": "importplanninggovernancequerystore-record",
-            "redTest": "node --test scripts/planning-db-import.test.cjs scripts/planning-db-export.test.cjs",
-            "greenTest": "node --test scripts/planning-db-import.test.cjs scripts/planning-db-export.test.cjs",
-            "patchSurfaces": [
-              "scripts/planning-db-import.cjs",
-              "scripts/planning-db-export.cjs"
-            ],
-            "expectedFailure": "DB-owned Fowler disposition facts disappear during canonical recovery"
-          }
-        ],
-        "componentGuides": [
-          "planning-db://component/SYS-PLANSTORE-API-COMPOSITION"
-        ],
-        "governingSources": [
-          "docs/planning/status/governance-document-rule-inventory.md",
-          "docs/architecture/command-query-rail-governance.md",
-          "docs/architecture/fowler-opportunity-planning-governance.md"
-        ],
-        "commandQueryRails": [
-          {
-            "name": "ImportPlanningGovernanceQueryStore",
-            "type": "command",
-            "status": "implemented",
-            "dddOwner": "Planning / Governance query-store"
-          }
-        ],
-        "architectureGuards": ["TEST-API-H2-4-FOWLER-RECOVERY"],
-        "implementationPlan": "GH-2274 / API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
-        "mechanizationStatus": "implemented",
-        "noHumanDecisionsRemaining": true,
-        "allowedImplementationSurfaces": [
-          "scripts/planning-db-import.cjs",
-          "scripts/planning-db-export.cjs",
-          "tools/planning-db/state/canonical-state.json"
-        ],
-        "forbiddenImplementationSurfaces": [
-          "docs/**/*.md as architecture authority"
-        ]
-      },
-      "revision": 1,
-      "createdBy": "codex",
-      "createdAt": "2026-08-11T11:05:59.237Z"
-    },
-    {
-      "railId": "local#API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE#command#recordarchitecturetestevidence",
-      "featureId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE",
-      "mechanizationStatus": "implemented",
-      "railName": "RecordArchitectureTestEvidence",
-      "normalizedRailName": "recordarchitecturetestevidence",
-      "railType": "command",
-      "dddOwner": "Architecture / Planning DB evidence",
-      "railStatus": "implemented",
-      "symbolRefs": [
-        "scripts/planning-db-operate.cjs#allowedArchitectureEvidenceKinds",
-        "scripts/planning-db-operate.cjs#allowedArchitectureEvidenceOrigins",
-        "scripts/planning-db-operate.cjs#allowedArchitectureEvidenceResultStates",
-        "scripts/planning-db-operate.cjs#applyArchitectureEvidenceRecordOperation",
-        "scripts/planning-db-operate.cjs#assertArchitectureDesignMayProve",
-        "scripts/planning-db-operate.cjs#planArchitectureEvidenceRecordOperation",
-        "scripts/planning-db-operate.cjs#validateArchitectureEvidenceId",
-        "scripts/planning-db-operate.cjs#validateArchitectureEvidenceKind",
-        "scripts/planning-db-operate.cjs#validateArchitectureEvidenceOrigin",
-        "scripts/planning-db-operate.cjs#validateArchitectureEvidenceRecordCommand",
-        "scripts/planning-db-operate.cjs#validateArchitectureEvidenceResultState",
-        "scripts/planning-db-operate.cjs#validateArchitectureEvidenceSubjectKind",
-        "scripts/planning-db-operate.cjs#writePlannedArchitectureEvidenceRecordOperation"
-      ],
-      "implementationRefs": [
-        "scripts/planning-db-operate.cjs#allowedArchitectureEvidenceKinds",
-        "scripts/planning-db-operate.cjs#allowedArchitectureEvidenceOrigins",
-        "scripts/planning-db-operate.cjs#allowedArchitectureEvidenceResultStates",
-        "scripts/planning-db-operate.cjs#applyArchitectureEvidenceRecordOperation",
-        "scripts/planning-db-operate.cjs#assertArchitectureDesignMayProve",
-        "scripts/planning-db-operate.cjs#planArchitectureEvidenceRecordOperation",
-        "scripts/planning-db-operate.cjs#validateArchitectureEvidenceId",
-        "scripts/planning-db-operate.cjs#validateArchitectureEvidenceKind",
-        "scripts/planning-db-operate.cjs#validateArchitectureEvidenceOrigin",
-        "scripts/planning-db-operate.cjs#validateArchitectureEvidenceRecordCommand",
-        "scripts/planning-db-operate.cjs#validateArchitectureEvidenceResultState",
-        "scripts/planning-db-operate.cjs#validateArchitectureEvidenceSubjectKind",
-        "scripts/planning-db-operate.cjs#writePlannedArchitectureEvidenceRecordOperation"
-      ],
-      "documentationRefs": ["https://github.com/dunay2/dvt/issues/2274"],
-      "governingSources": [
-        "docs/planning/status/governance-document-rule-inventory.md",
-        "docs/architecture/command-query-rail-governance.md",
-        "docs/architecture/fowler-opportunity-planning-governance.md"
-      ],
-      "allowedImplementationSurfaces": [
-        "scripts/planning-db-operate.cjs",
-        "scripts/planning-db-query.cjs",
-        "tools/planning-db/schema.sql",
-        "tools/planning-db/state/canonical-state.json"
-      ],
-      "architectureGuards": ["TEST-API-H2-4-EVIDENCE-PROVENANCE"],
-      "completionGate": ["pnpm verify:prepush"],
-      "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "9ea6002bce50a36b35513d00ad8164f9a542bd898aa8101e4294f0b68e17566a",
-      "rawRail": {
-        "name": "RecordArchitectureTestEvidence",
-        "type": "command",
-        "status": "implemented",
-        "dddOwner": "Architecture / Planning DB evidence"
-      },
-      "rawManifest": {
-        "symbols": [
-          {
-            "name": "allowedArchitectureEvidenceKinds",
-            "path": "scripts/planning-db-operate.cjs",
-            "cqRails": ["RecordArchitectureTestEvidence"],
-            "dddOwner": "Architecture / Planning DB evidence",
-            "unitTests": [
-              "scripts/planning-db-schema.test.cjs",
-              "scripts/planning-db-query.test.cjs",
-              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
-              "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
-              "scripts/planning-db-operate-tests/component-create.test.cjs"
-            ],
-            "fowlerSignals": ["hidden_authority"],
-            "cypressCoverage": "scripts/planning-db-operate-tests/component-create.test.cjs command integration",
-            "architectureGuard": "TEST-API-H2-4-EVIDENCE-PROVENANCE"
-          },
-          {
-            "name": "allowedArchitectureEvidenceOrigins",
-            "path": "scripts/planning-db-operate.cjs",
-            "cqRails": ["RecordArchitectureTestEvidence"],
-            "dddOwner": "Architecture / Planning DB evidence",
-            "unitTests": [
-              "scripts/planning-db-schema.test.cjs",
-              "scripts/planning-db-query.test.cjs",
-              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
-              "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
-              "scripts/planning-db-operate-tests/component-create.test.cjs"
-            ],
-            "fowlerSignals": ["hidden_authority"],
-            "cypressCoverage": "scripts/planning-db-operate-tests/component-create.test.cjs command integration",
-            "architectureGuard": "TEST-API-H2-4-EVIDENCE-PROVENANCE"
-          },
-          {
-            "name": "allowedArchitectureEvidenceResultStates",
-            "path": "scripts/planning-db-operate.cjs",
-            "cqRails": ["RecordArchitectureTestEvidence"],
-            "dddOwner": "Architecture / Planning DB evidence",
-            "unitTests": [
-              "scripts/planning-db-schema.test.cjs",
-              "scripts/planning-db-query.test.cjs",
-              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
-              "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
-              "scripts/planning-db-operate-tests/component-create.test.cjs"
-            ],
-            "fowlerSignals": ["hidden_authority"],
-            "cypressCoverage": "scripts/planning-db-operate-tests/component-create.test.cjs command integration",
-            "architectureGuard": "TEST-API-H2-4-EVIDENCE-PROVENANCE"
-          },
-          {
-            "name": "applyArchitectureEvidenceRecordOperation",
-            "path": "scripts/planning-db-operate.cjs",
-            "cqRails": ["RecordArchitectureTestEvidence"],
-            "dddOwner": "Architecture / Planning DB evidence",
-            "unitTests": [
-              "scripts/planning-db-schema.test.cjs",
-              "scripts/planning-db-query.test.cjs",
-              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
-              "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
-              "scripts/planning-db-operate-tests/component-create.test.cjs"
-            ],
-            "fowlerSignals": ["hidden_authority"],
-            "cypressCoverage": "scripts/planning-db-operate-tests/component-create.test.cjs command integration",
-            "architectureGuard": "TEST-API-H2-4-EVIDENCE-PROVENANCE"
-          },
-          {
-            "name": "assertArchitectureDesignMayProve",
-            "path": "scripts/planning-db-operate.cjs",
-            "cqRails": ["RecordArchitectureTestEvidence"],
-            "dddOwner": "Architecture / Planning DB evidence",
-            "unitTests": [
-              "scripts/planning-db-schema.test.cjs",
-              "scripts/planning-db-query.test.cjs",
-              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
-              "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
-              "scripts/planning-db-operate-tests/component-create.test.cjs"
-            ],
-            "fowlerSignals": ["hidden_authority"],
-            "cypressCoverage": "scripts/planning-db-operate-tests/component-create.test.cjs command integration",
-            "architectureGuard": "TEST-API-H2-4-EVIDENCE-PROVENANCE"
-          },
-          {
-            "name": "planArchitectureEvidenceRecordOperation",
-            "path": "scripts/planning-db-operate.cjs",
-            "cqRails": ["RecordArchitectureTestEvidence"],
-            "dddOwner": "Architecture / Planning DB evidence",
-            "unitTests": [
-              "scripts/planning-db-schema.test.cjs",
-              "scripts/planning-db-query.test.cjs",
-              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
-              "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
-              "scripts/planning-db-operate-tests/component-create.test.cjs"
-            ],
-            "fowlerSignals": ["hidden_authority"],
-            "cypressCoverage": "scripts/planning-db-operate-tests/component-create.test.cjs command integration",
-            "architectureGuard": "TEST-API-H2-4-EVIDENCE-PROVENANCE"
-          },
-          {
-            "name": "validateArchitectureEvidenceId",
-            "path": "scripts/planning-db-operate.cjs",
-            "cqRails": ["RecordArchitectureTestEvidence"],
-            "dddOwner": "Architecture / Planning DB evidence",
-            "unitTests": [
-              "scripts/planning-db-schema.test.cjs",
-              "scripts/planning-db-query.test.cjs",
-              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
-              "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
-              "scripts/planning-db-operate-tests/component-create.test.cjs"
-            ],
-            "fowlerSignals": ["hidden_authority"],
-            "cypressCoverage": "scripts/planning-db-operate-tests/component-create.test.cjs command integration",
-            "architectureGuard": "TEST-API-H2-4-EVIDENCE-PROVENANCE"
-          },
-          {
-            "name": "validateArchitectureEvidenceKind",
-            "path": "scripts/planning-db-operate.cjs",
-            "cqRails": ["RecordArchitectureTestEvidence"],
-            "dddOwner": "Architecture / Planning DB evidence",
-            "unitTests": [
-              "scripts/planning-db-schema.test.cjs",
-              "scripts/planning-db-query.test.cjs",
-              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
-              "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
-              "scripts/planning-db-operate-tests/component-create.test.cjs"
-            ],
-            "fowlerSignals": ["hidden_authority"],
-            "cypressCoverage": "scripts/planning-db-operate-tests/component-create.test.cjs command integration",
-            "architectureGuard": "TEST-API-H2-4-EVIDENCE-PROVENANCE"
-          },
-          {
-            "name": "validateArchitectureEvidenceOrigin",
-            "path": "scripts/planning-db-operate.cjs",
-            "cqRails": ["RecordArchitectureTestEvidence"],
-            "dddOwner": "Architecture / Planning DB evidence",
-            "unitTests": [
-              "scripts/planning-db-schema.test.cjs",
-              "scripts/planning-db-query.test.cjs",
-              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
-              "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
-              "scripts/planning-db-operate-tests/component-create.test.cjs"
-            ],
-            "fowlerSignals": ["hidden_authority"],
-            "cypressCoverage": "scripts/planning-db-operate-tests/component-create.test.cjs command integration",
-            "architectureGuard": "TEST-API-H2-4-EVIDENCE-PROVENANCE"
-          },
-          {
-            "name": "validateArchitectureEvidenceRecordCommand",
-            "path": "scripts/planning-db-operate.cjs",
-            "cqRails": ["RecordArchitectureTestEvidence"],
-            "dddOwner": "Architecture / Planning DB evidence",
-            "unitTests": [
-              "scripts/planning-db-schema.test.cjs",
-              "scripts/planning-db-query.test.cjs",
-              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
-              "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
-              "scripts/planning-db-operate-tests/component-create.test.cjs"
-            ],
-            "fowlerSignals": ["hidden_authority"],
-            "cypressCoverage": "scripts/planning-db-operate-tests/component-create.test.cjs command integration",
-            "architectureGuard": "TEST-API-H2-4-EVIDENCE-PROVENANCE"
-          },
-          {
-            "name": "validateArchitectureEvidenceResultState",
-            "path": "scripts/planning-db-operate.cjs",
-            "cqRails": ["RecordArchitectureTestEvidence"],
-            "dddOwner": "Architecture / Planning DB evidence",
-            "unitTests": [
-              "scripts/planning-db-schema.test.cjs",
-              "scripts/planning-db-query.test.cjs",
-              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
-              "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
-              "scripts/planning-db-operate-tests/component-create.test.cjs"
-            ],
-            "fowlerSignals": ["hidden_authority"],
-            "cypressCoverage": "scripts/planning-db-operate-tests/component-create.test.cjs command integration",
-            "architectureGuard": "TEST-API-H2-4-EVIDENCE-PROVENANCE"
-          },
-          {
-            "name": "validateArchitectureEvidenceSubjectKind",
-            "path": "scripts/planning-db-operate.cjs",
-            "cqRails": ["RecordArchitectureTestEvidence"],
-            "dddOwner": "Architecture / Planning DB evidence",
-            "unitTests": [
-              "scripts/planning-db-schema.test.cjs",
-              "scripts/planning-db-query.test.cjs",
-              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
-              "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
-              "scripts/planning-db-operate-tests/component-create.test.cjs"
-            ],
-            "fowlerSignals": ["hidden_authority"],
-            "cypressCoverage": "scripts/planning-db-operate-tests/component-create.test.cjs command integration",
-            "architectureGuard": "TEST-API-H2-4-EVIDENCE-PROVENANCE"
-          },
-          {
-            "name": "writePlannedArchitectureEvidenceRecordOperation",
-            "path": "scripts/planning-db-operate.cjs",
-            "cqRails": ["RecordArchitectureTestEvidence"],
-            "dddOwner": "Architecture / Planning DB evidence",
-            "unitTests": [
-              "scripts/planning-db-schema.test.cjs",
-              "scripts/planning-db-query.test.cjs",
-              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
-              "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
-              "scripts/planning-db-operate-tests/component-create.test.cjs"
-            ],
-            "fowlerSignals": ["hidden_authority"],
-            "cypressCoverage": "scripts/planning-db-operate-tests/component-create.test.cjs command integration",
-            "architectureGuard": "TEST-API-H2-4-EVIDENCE-PROVENANCE"
-          }
-        ],
-        "version": 1,
-        "featureId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE",
-        "userStories": [
-          "GH-2274 distinguishes assertions from fresh scoped local or CI execution proof"
-        ],
-        "cypressFlows": [
-          "scripts/planning-db-operate-tests/component-create.test.cjs command integration"
-        ],
-        "domainObjects": ["ArchitectureEvidence"],
-        "fowlerSignals": ["hidden_authority"],
-        "completionGate": ["pnpm verify:prepush"],
-        "redGreenCycles": [
-          {
-            "id": "recordarchitecturetestevidence-record",
-            "redTest": "node --test scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs scripts/planning-db-operate-tests/component-create.test.cjs",
-            "greenTest": "node --test scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs scripts/planning-db-operate-tests/component-create.test.cjs",
-            "patchSurfaces": [
-              "scripts/planning-db-operate.cjs",
-              "scripts/planning-db-query.cjs",
-              "tools/planning-db/schema.sql"
-            ],
-            "expectedFailure": "Architecture evidence cannot prove origin freshness and exact must_prove scope"
-          }
-        ],
-        "componentGuides": [
-          "planning-db://component/SYS-PLANSTORE-API-COMPOSITION"
-        ],
-        "governingSources": [
-          "docs/planning/status/governance-document-rule-inventory.md",
-          "docs/architecture/command-query-rail-governance.md",
-          "docs/architecture/fowler-opportunity-planning-governance.md"
-        ],
-        "commandQueryRails": [
-          {
-            "name": "RecordArchitectureTestEvidence",
-            "type": "command",
-            "status": "implemented",
-            "dddOwner": "Architecture / Planning DB evidence"
-          }
-        ],
-        "architectureGuards": ["TEST-API-H2-4-EVIDENCE-PROVENANCE"],
-        "implementationPlan": "GH-2274 / API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
-        "mechanizationStatus": "implemented",
-        "noHumanDecisionsRemaining": true,
-        "allowedImplementationSurfaces": [
-          "scripts/planning-db-operate.cjs",
-          "scripts/planning-db-query.cjs",
-          "tools/planning-db/schema.sql",
-          "tools/planning-db/state/canonical-state.json"
-        ],
-        "forbiddenImplementationSurfaces": [
-          "docs/**/*.md as architecture authority"
-        ]
-      },
-      "revision": 1,
-      "createdBy": "codex",
-      "createdAt": "2026-08-11T11:06:00.635Z"
     },
     {
       "railId": "local#ARCH-DEPS-GUARD#command#applyarchitecturedependencyboundarygate",
@@ -107709,7 +107311,7 @@
         "pnpm docs:feature-mechanization:implementation"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "9ea6002bce50a36b35513d00ad8164f9a542bd898aa8101e4294f0b68e17566a",
+      "sourceContentSha256": "35e4974226a03ded6968e7b170dcf5d7716c52d692334deba49636b2d2e62d0a",
       "rawRail": {
         "name": "RecordArchitectureStorageIo",
         "type": "command",
@@ -132685,7 +132287,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-export.cjs",
-      "sourceContentSha256": "d65673f916a4b5b49d07e3fe3800f0cda3f48ac870484e4b9c350e835be5d2d4",
+      "sourceContentSha256": "b86444355581f372613142bc99969b67f9d731115a8888445592c0e00aa9848d",
       "rawRail": {
         "name": "ExportPlanningDbCanonicalArchitectureState",
         "type": "command",
@@ -160585,6 +160187,34 @@
         ]
       },
       "createdAt": "2026-08-11T11:12:26.592Z"
+    },
+    {
+      "operationId": "469ac7ad-04ba-4efc-ab2a-33841823a5a7",
+      "idempotencyKey": "feature_mechanization_rail_retire:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE:command:importplanninggovernancequerystore:1:44136fa355b3678a",
+      "operationType": "feature_mechanization_rail_retire",
+      "actor": "codex",
+      "railId": "local#API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE#command#importplanninggovernancequerystore",
+      "sourcePath": "scripts/planning-db-operate.cjs",
+      "sourceContentSha256": "f964324c95c3f5120c53cf5dbd17697139ec7a9e1fd8efc91a38c4a4535b080d",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {},
+      "createdAt": "2026-08-11T11:55:52.181Z"
+    },
+    {
+      "operationId": "976107be-df1a-44fd-b453-43bfb0431997",
+      "idempotencyKey": "feature_mechanization_rail_retire:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE:command:recordarchitecturetestevidence:1:44136fa355b3678a",
+      "operationType": "feature_mechanization_rail_retire",
+      "actor": "codex",
+      "railId": "local#API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE#command#recordarchitecturetestevidence",
+      "sourcePath": "scripts/planning-db-operate.cjs",
+      "sourceContentSha256": "f964324c95c3f5120c53cf5dbd17697139ec7a9e1fd8efc91a38c4a4535b080d",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {},
+      "createdAt": "2026-08-11T11:55:53.535Z"
     }
   ],
   "governanceComponentDefinitions": [
