@@ -112,6 +112,30 @@ function createCanonicalStateFixture(repoRoot) {
     payload: { status: 'superseded' },
     createdAt: componentDefinition.createdAt,
   };
+  const fowlerDisposition = {
+    documentPath: 'docs/architecture/example.md',
+    dispositionStatus: 'accepted',
+    dispositionKind: 'db_authority_historical',
+    canonicalTargetPath: null,
+    reason: 'Planning DB is current authority.',
+    sourceContentSha256: 'c'.repeat(64),
+    recordedBy: 'codex',
+    recordedAt: '2026-08-11T12:00:00.000Z',
+    rawDisposition: { dispositionKind: 'db_authority_historical' },
+  };
+  const fowlerOperation = {
+    operationId: 'fowler-analysis:test-operation',
+    idempotencyKey: 'fowler-analysis-test-operation',
+    operationType: 'fowler_analysis_disposition_record',
+    actor: 'codex',
+    documentPath: fowlerDisposition.documentPath,
+    targetPath: null,
+    referencePath: null,
+    relationType: null,
+    sourceContentSha256: fowlerDisposition.sourceContentSha256,
+    payload: { dispositionKind: 'db_authority_historical' },
+    createdAt: fowlerDisposition.recordedAt,
+  };
   const dbGovernanceSurface = {
     surfaceName: 'Governance component definition',
     canonicalSource: 'DB-authored component definitions',
@@ -212,6 +236,12 @@ function createCanonicalStateFixture(repoRoot) {
       if (text.includes('db_governance_surfaces surface')) {
         return { rows: [dbGovernanceSurface] };
       }
+      if (text.includes('fowler_analysis_dispositions disposition')) {
+        return { rows: [fowlerDisposition] };
+      }
+      if (text.includes('fowler_analysis_operations operation')) {
+        return { rows: [fowlerOperation] };
+      }
       return { rows: [] };
     },
   };
@@ -223,6 +253,8 @@ function createCanonicalStateFixture(repoRoot) {
     componentOperation,
     dbGovernanceSurface,
     effectiveComponentDefinitions,
+    fowlerDisposition,
+    fowlerOperation,
     operation,
     rail,
     runner,
@@ -284,6 +316,8 @@ test('planning DB export reads current architecture state and every current feat
   assert.ok(capturedSql.some((sql) => /governance_component_local_operations/u.test(sql)));
   assert.ok(capturedSql.some((sql) => /db_governance_surfaces/u.test(sql)));
   assert.ok(capturedSql.some((sql) => /governance_unit_query/u.test(sql)));
+  assert.ok(capturedSql.some((sql) => /fowler_analysis_dispositions/u.test(sql)));
+  assert.ok(capturedSql.some((sql) => /fowler_analysis_operations/u.test(sql)));
   assert.equal(architectureReads, 1);
 });
 
@@ -295,6 +329,8 @@ test('planning DB export writes deterministic current architecture state', async
     componentDefinition,
     componentOperation,
     dbGovernanceSurface,
+    fowlerDisposition,
+    fowlerOperation,
     operation,
     rail,
     runner,
@@ -314,6 +350,11 @@ test('planning DB export writes deterministic current architecture state', async
     assert.deepEqual(snapshot.governanceComponentOperations, [componentOperation]);
     assert.deepEqual(snapshot.governanceComponentOwnershipPatterns, []);
     assert.deepEqual(snapshot.governanceComponentSemanticItems, []);
+    assert.deepEqual(snapshot.fowlerAnalysisDispositions, [fowlerDisposition]);
+    assert.deepEqual(snapshot.fowlerAnalysisCanonicalTargets, []);
+    assert.deepEqual(snapshot.fowlerAnalysisReferenceResolutions, []);
+    assert.deepEqual(snapshot.fowlerAnalysisRetirementDecisions, []);
+    assert.deepEqual(snapshot.fowlerAnalysisOperations, [fowlerOperation]);
     assert.deepEqual(
       JSON.parse(
         fs.readFileSync(
