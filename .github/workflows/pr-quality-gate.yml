@@ -102,18 +102,13 @@ jobs:
           GIT_BASE: ${{ github.event.pull_request.base.sha }}
           GIT_HEAD: ${{ github.sha }}
 
-      - name: Validate docs sync outputs (ADR/index coherence)
-        if:
-          github.event_name == 'pull_request' && steps.scope.outputs.docs_structure_changed ==
-          'true'
-        run: pnpm docs:sync:check
-
       - name: Prepare planning DB for DB-backed validation
         if:
           github.event_name == 'push' || (github.event_name == 'pull_request' &&
           (steps.scope.outputs.feature_mechanization_relevant == 'true' ||
           steps.scope.outputs.governance_global_relevant == 'true' ||
-          steps.scope.outputs.generated_status_relevant == 'true')) || (github.event_name ==
+          steps.scope.outputs.generated_status_relevant == 'true' ||
+          steps.scope.outputs.docs_structure_changed == 'true')) || (github.event_name ==
           'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
         uses: ./.github/actions/prepare-planning-db
         env:
@@ -121,6 +116,12 @@ jobs:
             ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha ||
             'origin/main' }}
           GIT_HEAD: ${{ github.sha }}
+
+      - name: Validate docs sync outputs (ADR/index coherence)
+        if:
+          github.event_name == 'pull_request' && steps.scope.outputs.docs_structure_changed ==
+          'true'
+        run: pnpm docs:sync:check
 
       - name: Validate docs quality policy (English/no duplicate indexes)
         if:
