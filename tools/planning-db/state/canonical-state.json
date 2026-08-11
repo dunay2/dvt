@@ -10541,14 +10541,14 @@
         "work_item_id": "GH-2274",
         "title": "Remove current links to superseded architecture documents",
         "owner": "Architecture / Docs / Planning",
-        "status": "review",
+        "status": "implemented",
         "rationale": "Five active canonical pages still link to four lifecycle-superseded documents; current navigation must use the existing DB-first projection while historical evidence remains byte-unchanged.",
         "fowler_signal": "hidden_authority",
         "rail_ref": "GeneratePlanningDerivedSurfaces;ClassifyArchitectureDocumentationDisposition",
-        "approved_at": null,
+        "approved_at": "2026-08-11T12:57:16.603+00:00",
         "supersedes_id": null,
         "created_at": "2026-08-11T12:42:32.421+00:00",
-        "updated_at": "2026-08-11T12:42:32.421+00:00"
+        "updated_at": "2026-08-11T13:03:22.765+00:00"
       },
       {
         "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-20260811",
@@ -10611,14 +10611,14 @@
         "work_item_id": "GH-2274",
         "title": "Close DB-first product truth and evidence gaps after independent Fowler QA",
         "owner": "Architecture / Docs / Planning",
-        "status": "review",
+        "status": "implemented",
         "rationale": "Close all seven independent-QA P1 findings through exact-hash authority, audited retirement, design/source-bound latest evidence, DB-owned observability truth, and on-demand generated navigation without rewriting history.",
         "fowler_signal": "hidden_authority",
         "rail_ref": "RetireArchitectureTestEvidence;RetireArchitectureEvidenceExecution;RetireFeatureMechanizationRail;RecordArchitectureEvidenceExecution;ReadArchitectureEvidence;TransitionArchitectureDesign;ClassifyArchitectureDocumentationDisposition;ReadArchitectureComponentProfile;RecordArchitectureComponent;RecordArchitectureObservabilityEvidence;GeneratePlanningDerivedSurfaces;RestorePlanningDbCanonicalArchitectureState",
-        "approved_at": null,
+        "approved_at": "2026-08-11T12:57:13.67+00:00",
         "supersedes_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V4-20260811",
         "created_at": "2026-08-11T11:39:17.204+00:00",
-        "updated_at": "2026-08-11T11:39:17.204+00:00"
+        "updated_at": "2026-08-11T13:03:21.306+00:00"
       },
       {
         "design_id": "API-H2-4-DB-FIRST-INDEX-GENERATION-20260811",
@@ -10639,14 +10639,14 @@
         "work_item_id": "GH-2274",
         "title": "Make documentation index generation lifecycle DB-first",
         "owner": "Architecture / Docs / Planning",
-        "status": "review",
+        "status": "implemented",
         "rationale": "Explicit docs:sync must filter current Markdown navigation through Planning DB, exclude superseded pages and ADRs, preserve archive navigation, and never add a local registry or implicit generation.",
         "fowler_signal": "hidden_authority",
         "rail_ref": "GeneratePlanningDerivedSurfaces;ListDocumentationLifecycleFacts;ClassifyArchitectureDocumentationDisposition",
-        "approved_at": null,
+        "approved_at": "2026-08-11T12:57:19.429+00:00",
         "supersedes_id": "API-H2-4-DB-FIRST-INDEX-GENERATION-20260811",
         "created_at": "2026-08-11T12:53:29.414+00:00",
-        "updated_at": "2026-08-11T12:53:29.414+00:00"
+        "updated_at": "2026-08-11T13:03:24.212+00:00"
       },
       {
         "design_id": "CANVAS-BACKLOG-INTEGRITY-READINESS-20260626",
@@ -13729,6 +13729,227 @@
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
         "source_content_sha256": null
+      },
+      {
+        "evidence_id": "EV-PTH14-IDX-CLASSIFY",
+        "design_id": "API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811",
+        "subject_kind": "query",
+        "subject_id": "ClassifyArchitectureDocumentationDisposition",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test tools/ci/sync-docs-status-policy.test.mjs",
+        "source_path": "tools/ci/sync-docs-status-policy.test.mjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T13:02:44.347+00:00",
+        "source_content_sha256": "efe621f4806a1b5e14a392a4ea99b93929ce4e3a0caf9281b93c631b23534c83"
+      },
+      {
+        "evidence_id": "EV-PTH14-IDX-GENERATE",
+        "design_id": "API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811",
+        "subject_kind": "command",
+        "subject_id": "GeneratePlanningDerivedSurfaces",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test tools/ci/sync-docs-status-policy.test.mjs",
+        "source_path": "tools/ci/sync-docs-status-policy.test.mjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T13:02:42.94+00:00",
+        "source_content_sha256": "efe621f4806a1b5e14a392a4ea99b93929ce4e3a0caf9281b93c631b23534c83"
+      },
+      {
+        "evidence_id": "EV-PTH14-IDX-LIFECYCLE",
+        "design_id": "API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811",
+        "subject_kind": "query",
+        "subject_id": "ListDocumentationLifecycleFacts",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test tools/ci/sync-docs-status-policy.test.mjs",
+        "source_path": "tools/ci/sync-docs-status-policy.test.mjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T13:02:45.726+00:00",
+        "source_content_sha256": "efe621f4806a1b5e14a392a4ea99b93929ce4e3a0caf9281b93c631b23534c83"
+      },
+      {
+        "evidence_id": "EV-PTH14-REF-CLASSIFY",
+        "design_id": "API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811",
+        "subject_kind": "query",
+        "subject_id": "ClassifyArchitectureDocumentationDisposition",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/planning-db-schema.test.cjs",
+        "source_path": "scripts/planning-db-schema.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T13:02:41.515+00:00",
+        "source_content_sha256": "9480cc084b84772de27846cd45ac898473cce80162541d945a99c4f84d7bd07d"
+      },
+      {
+        "evidence_id": "EV-PTH14-REF-GENERATE",
+        "design_id": "API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811",
+        "subject_kind": "command",
+        "subject_id": "GeneratePlanningDerivedSurfaces",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/generate-code-status.test.cjs",
+        "source_path": "scripts/generate-code-status.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T13:02:40.092+00:00",
+        "source_content_sha256": "12b0520908e076692c1860c5b0efdd8176e709386f95f6f22cf85616831b214c"
+      },
+      {
+        "evidence_id": "EV-PTH14-V5-CLASSIFY",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "query",
+        "subject_id": "ClassifyArchitectureDocumentationDisposition",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/planning-db-schema.test.cjs",
+        "source_path": "scripts/planning-db-schema.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T13:02:35.757+00:00",
+        "source_content_sha256": "9480cc084b84772de27846cd45ac898473cce80162541d945a99c4f84d7bd07d"
+      },
+      {
+        "evidence_id": "EV-PTH14-V5-GENERATE",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "command",
+        "subject_id": "GeneratePlanningDerivedSurfaces",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/generate-code-status.test.cjs",
+        "source_path": "scripts/generate-code-status.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T13:02:22.878+00:00",
+        "source_content_sha256": "12b0520908e076692c1860c5b0efdd8176e709386f95f6f22cf85616831b214c"
+      },
+      {
+        "evidence_id": "EV-PTH14-V5-READ-COMP",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "query",
+        "subject_id": "ReadArchitectureComponentProfile",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/planning-db-query.test.cjs",
+        "source_path": "scripts/planning-db-query.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T13:02:37.159+00:00",
+        "source_content_sha256": "02ef5b3e23c275e077de8bdfc69f540240cb61a87fa48542ad1c2ee85a2b6719"
+      },
+      {
+        "evidence_id": "EV-PTH14-V5-READ-EVID",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "query",
+        "subject_id": "ReadArchitectureEvidence",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/planning-db-query.test.cjs",
+        "source_path": "scripts/planning-db-query.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T13:02:38.564+00:00",
+        "source_content_sha256": "02ef5b3e23c275e077de8bdfc69f540240cb61a87fa48542ad1c2ee85a2b6719"
+      },
+      {
+        "evidence_id": "EV-PTH14-V5-REC-COMP",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "command",
+        "subject_id": "RecordArchitectureComponent",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/planning-db-operate.test.cjs",
+        "source_path": "scripts/planning-db-operate.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T13:02:24.335+00:00",
+        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598"
+      },
+      {
+        "evidence_id": "EV-PTH14-V5-REC-EVID",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "command",
+        "subject_id": "RecordArchitectureEvidenceExecution",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/planning-db-operate.test.cjs",
+        "source_path": "scripts/planning-db-operate.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T13:02:25.82+00:00",
+        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598"
+      },
+      {
+        "evidence_id": "EV-PTH14-V5-REC-OBS",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "command",
+        "subject_id": "RecordArchitectureObservabilityEvidence",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/planning-db-operate.test.cjs",
+        "source_path": "scripts/planning-db-operate.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T13:02:27.272+00:00",
+        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598"
+      },
+      {
+        "evidence_id": "EV-PTH14-V5-RESTORE",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "command",
+        "subject_id": "RestorePlanningDbCanonicalArchitectureState",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/planning-db-import.test.cjs",
+        "source_path": "scripts/planning-db-import.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T13:02:28.674+00:00",
+        "source_content_sha256": "55767a047a77672d88a780344a7e6dd6a0b9ea796f24b5db0ed87c67f5edcaa3"
+      },
+      {
+        "evidence_id": "EV-PTH14-V5-RET-EVID",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "command",
+        "subject_id": "RetireArchitectureEvidenceExecution",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/planning-db-operate.test.cjs",
+        "source_path": "scripts/planning-db-operate.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T13:02:30.093+00:00",
+        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598"
+      },
+      {
+        "evidence_id": "EV-PTH14-V5-RET-RAIL",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "command",
+        "subject_id": "RetireFeatureMechanizationRail",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/planning-db-operate.test.cjs",
+        "source_path": "scripts/planning-db-operate.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T13:02:32.957+00:00",
+        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598"
+      },
+      {
+        "evidence_id": "EV-PTH14-V5-RET-TEST",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "command",
+        "subject_id": "RetireArchitectureTestEvidence",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/planning-db-operate.test.cjs",
+        "source_path": "scripts/planning-db-operate.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T13:02:31.521+00:00",
+        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598"
+      },
+      {
+        "evidence_id": "EV-PTH14-V5-TRANSITION",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "command",
+        "subject_id": "TransitionArchitectureDesign",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/planning-db-operate.test.cjs",
+        "source_path": "scripts/planning-db-operate.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T13:02:34.37+00:00",
+        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598"
       },
       {
         "evidence_id": "EV-RUN-OPERATIONAL-TRUTH-STRICT-LIVE-20260719",
@@ -87376,6 +87597,31 @@
     ],
     "design_operations": [
       {
+        "operation_id": "0256b04a-b3f5-4b83-8e65-03b66491c7d1",
+        "idempotency_key": "architecture_evidence_record:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811:EV-PTH14-V5-TRANSITION:e2d5b79777a7e827",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "node --test scripts/planning-db-operate.test.cjs",
+        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+          "sourceRef": "node --test scripts/planning-db-operate.test.cjs",
+          "subjectId": "TransitionArchitectureDesign",
+          "evidenceId": "EV-PTH14-V5-TRANSITION",
+          "sourcePath": "scripts/planning-db-operate.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "command",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598"
+        },
+        "created_at": "2026-08-11T13:02:34.37+00:00"
+      },
+      {
         "operation_id": "02ee94ec-f692-4e33-a96c-fd2f09aa9526",
         "idempotency_key": "gh-2167-update-test-sys-api-infra-workspace-local-adapters-7-v1",
         "operation_type": "architecture_test_record",
@@ -88556,6 +88802,27 @@
         "created_at": "2026-08-11T03:06:54.705+00:00"
       },
       {
+        "operation_id": "2200cc10-b353-434c-8603-8ceafcc4ae6c",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811:81338f46da68c63c",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "docs/architecture/command-query-rail-governance.md",
+        "source_content_sha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The DB-first design scope and governing rails are exact and implementation-ready.",
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+          "toStatus": "approved",
+          "sourceRef": "docs/architecture/command-query-rail-governance.md",
+          "fromStatus": "review",
+          "sourceContentSha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc"
+        },
+        "created_at": "2026-08-11T12:57:13.67+00:00"
+      },
+      {
         "operation_id": "2327b513-e87b-454d-9c3a-367210ccbf7b",
         "idempotency_key": "gh-2167-validation-test-sys-api-application-services-primary-v1",
         "operation_type": "architecture_test_record",
@@ -88579,6 +88846,31 @@
           "sourceContentSha256": "21703c9d45ade37be5be8316f16371c022813ddc26d03c6f7e2fc00bc6a210d6"
         },
         "created_at": "2026-08-10T21:06:24.803+00:00"
+      },
+      {
+        "operation_id": "2500cddc-df6e-497b-928c-06dcbaccf731",
+        "idempotency_key": "architecture_evidence_record:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811:EV-PTH14-V5-REC-EVID:1d697f55b5f4ca35",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "node --test scripts/planning-db-operate.test.cjs",
+        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+          "sourceRef": "node --test scripts/planning-db-operate.test.cjs",
+          "subjectId": "RecordArchitectureEvidenceExecution",
+          "evidenceId": "EV-PTH14-V5-REC-EVID",
+          "sourcePath": "scripts/planning-db-operate.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "command",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598"
+        },
+        "created_at": "2026-08-11T13:02:25.82+00:00"
       },
       {
         "operation_id": "2504ff0e-d573-4720-b327-febb10846fe7",
@@ -89075,6 +89367,48 @@
         "created_at": "2026-08-11T11:55:49.404+00:00"
       },
       {
+        "operation_id": "2edc750f-1a6a-4665-974e-4d9e2d7c2e48",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811:617b1d52e5b21588",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811",
+        "source_ref": "docs/architecture/command-query-rail-governance.md",
+        "source_content_sha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The DB-first design scope and governing rails are exact and implementation-ready.",
+          "designId": "API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811",
+          "toStatus": "approved",
+          "sourceRef": "docs/architecture/command-query-rail-governance.md",
+          "fromStatus": "review",
+          "sourceContentSha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc"
+        },
+        "created_at": "2026-08-11T12:57:16.603+00:00"
+      },
+      {
+        "operation_id": "30173fd0-b328-4024-8233-b5c45bcd9aba",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811:91cbbaea88a9112d",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "scripts/planning-db-operate.test.cjs",
+        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Required implementation evidence is current, exact-hash matched, and free of blocker violations.",
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+          "toStatus": "implemented",
+          "sourceRef": "scripts/planning-db-operate.test.cjs",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598"
+        },
+        "created_at": "2026-08-11T13:03:21.306+00:00"
+      },
+      {
         "operation_id": "307469f2-b365-41ae-8647-e7cb3ef8d9d2",
         "idempotency_key": "codex-api-h2-2-reachability-v5-approved",
         "operation_type": "architecture_design_transition",
@@ -89246,6 +89580,31 @@
         "created_at": "2026-08-11T09:00:43.17+00:00"
       },
       {
+        "operation_id": "352e19fb-12e2-4ec7-ab10-4c6768ee5194",
+        "idempotency_key": "architecture_evidence_record:codex:API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811:EV-PTH14-IDX-LIFECYCLE:b1c4e09623ab9876",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811",
+        "source_ref": "node --test tools/ci/sync-docs-status-policy.test.mjs",
+        "source_content_sha256": "efe621f4806a1b5e14a392a4ea99b93929ce4e3a0caf9281b93c631b23534c83",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811",
+          "sourceRef": "node --test tools/ci/sync-docs-status-policy.test.mjs",
+          "subjectId": "ListDocumentationLifecycleFacts",
+          "evidenceId": "EV-PTH14-IDX-LIFECYCLE",
+          "sourcePath": "tools/ci/sync-docs-status-policy.test.mjs",
+          "resultState": "pass",
+          "subjectKind": "query",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "efe621f4806a1b5e14a392a4ea99b93929ce4e3a0caf9281b93c631b23534c83"
+        },
+        "created_at": "2026-08-11T13:02:45.726+00:00"
+      },
+      {
         "operation_id": "361dbaf8-64c8-434e-ba79-7288cce5a920",
         "idempotency_key": "gh-2167-validation-contract-sys-api-http-error-translation-surface-v1",
         "operation_type": "architecture_contract_record",
@@ -89357,6 +89716,56 @@
           "sourceContentSha256": "485d599b16dda3ff5e147104020fbad480f1fe51c69acbaa111000ca98c17cf5"
         },
         "created_at": "2026-08-11T02:02:40.096+00:00"
+      },
+      {
+        "operation_id": "3885120d-cd09-4985-839b-be67e930a248",
+        "idempotency_key": "architecture_evidence_record:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811:EV-PTH14-V5-GENERATE:58335d5f725bca3a",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "node --test scripts/generate-code-status.test.cjs",
+        "source_content_sha256": "12b0520908e076692c1860c5b0efdd8176e709386f95f6f22cf85616831b214c",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+          "sourceRef": "node --test scripts/generate-code-status.test.cjs",
+          "subjectId": "GeneratePlanningDerivedSurfaces",
+          "evidenceId": "EV-PTH14-V5-GENERATE",
+          "sourcePath": "scripts/generate-code-status.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "command",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "12b0520908e076692c1860c5b0efdd8176e709386f95f6f22cf85616831b214c"
+        },
+        "created_at": "2026-08-11T13:02:22.878+00:00"
+      },
+      {
+        "operation_id": "38b55e26-0bba-4995-abc8-da447508c131",
+        "idempotency_key": "architecture_evidence_record:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811:EV-PTH14-V5-READ-COMP:c0bec650874fc5ea",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "node --test scripts/planning-db-query.test.cjs",
+        "source_content_sha256": "02ef5b3e23c275e077de8bdfc69f540240cb61a87fa48542ad1c2ee85a2b6719",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+          "sourceRef": "node --test scripts/planning-db-query.test.cjs",
+          "subjectId": "ReadArchitectureComponentProfile",
+          "evidenceId": "EV-PTH14-V5-READ-COMP",
+          "sourcePath": "scripts/planning-db-query.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "query",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "02ef5b3e23c275e077de8bdfc69f540240cb61a87fa48542ad1c2ee85a2b6719"
+        },
+        "created_at": "2026-08-11T13:02:37.159+00:00"
       },
       {
         "operation_id": "3918d928-2335-4ad6-a9e1-8fb6f963918e",
@@ -89865,6 +90274,48 @@
           "sourceContentSha256": "a095b22199bc35663876c10c5abaddbb85cca70227f06be99a74d3161a23bde6"
         },
         "created_at": "2026-08-11T04:38:16.064+00:00"
+      },
+      {
+        "operation_id": "4705d159-de8d-4a6d-aef8-ba6ba4d3053b",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811:cec0814c5110822d",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811",
+        "source_ref": "scripts/planning-db-operate.test.cjs",
+        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Required implementation evidence is current, exact-hash matched, and free of blocker violations.",
+          "designId": "API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811",
+          "toStatus": "implemented",
+          "sourceRef": "scripts/planning-db-operate.test.cjs",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598"
+        },
+        "created_at": "2026-08-11T13:03:24.212+00:00"
+      },
+      {
+        "operation_id": "472b26d6-2624-4dc6-9b00-dfa263d75384",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811:923a73f2697a83be",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811",
+        "source_ref": "docs/architecture/command-query-rail-governance.md",
+        "source_content_sha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The DB-first design scope and governing rails are exact and implementation-ready.",
+          "designId": "API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811",
+          "toStatus": "approved",
+          "sourceRef": "docs/architecture/command-query-rail-governance.md",
+          "fromStatus": "review",
+          "sourceContentSha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc"
+        },
+        "created_at": "2026-08-11T12:57:19.429+00:00"
       },
       {
         "operation_id": "49f4e974-4f94-495e-9e87-25c365e0ba80",
@@ -90791,6 +91242,31 @@
         "created_at": "2026-08-10T20:07:00.63+00:00"
       },
       {
+        "operation_id": "58013ce6-2d79-4b8c-a7d2-5115aad1f433",
+        "idempotency_key": "architecture_evidence_record:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811:EV-PTH14-V5-RET-EVID:48686a6b68bfb339",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "node --test scripts/planning-db-operate.test.cjs",
+        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+          "sourceRef": "node --test scripts/planning-db-operate.test.cjs",
+          "subjectId": "RetireArchitectureEvidenceExecution",
+          "evidenceId": "EV-PTH14-V5-RET-EVID",
+          "sourcePath": "scripts/planning-db-operate.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "command",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598"
+        },
+        "created_at": "2026-08-11T13:02:30.093+00:00"
+      },
+      {
         "operation_id": "581e471d-d411-4c8b-af65-955188836d26",
         "idempotency_key": "codex-api-h2-2-reachability-v7-review",
         "operation_type": "architecture_design_transition",
@@ -90973,6 +91449,56 @@
           "sourceContentSha256": "76dc7134d826169f42fc824f2aac69dd158a23a28d4e719ca1ff9f8c90755e8a"
         },
         "created_at": "2026-08-11T07:40:03.269+00:00"
+      },
+      {
+        "operation_id": "5b6ee361-0242-4e67-8734-c8dd21291102",
+        "idempotency_key": "architecture_evidence_record:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811:EV-PTH14-V5-REC-OBS:43015345ab7d3a21",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "node --test scripts/planning-db-operate.test.cjs",
+        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+          "sourceRef": "node --test scripts/planning-db-operate.test.cjs",
+          "subjectId": "RecordArchitectureObservabilityEvidence",
+          "evidenceId": "EV-PTH14-V5-REC-OBS",
+          "sourcePath": "scripts/planning-db-operate.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "command",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598"
+        },
+        "created_at": "2026-08-11T13:02:27.272+00:00"
+      },
+      {
+        "operation_id": "5bae5a45-bea2-440a-aec1-1adec900702b",
+        "idempotency_key": "architecture_evidence_record:codex:API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811:EV-PTH14-REF-CLASSIFY:88aebacea68b58c8",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811",
+        "source_ref": "node --test scripts/planning-db-schema.test.cjs",
+        "source_content_sha256": "9480cc084b84772de27846cd45ac898473cce80162541d945a99c4f84d7bd07d",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811",
+          "sourceRef": "node --test scripts/planning-db-schema.test.cjs",
+          "subjectId": "ClassifyArchitectureDocumentationDisposition",
+          "evidenceId": "EV-PTH14-REF-CLASSIFY",
+          "sourcePath": "scripts/planning-db-schema.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "query",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "9480cc084b84772de27846cd45ac898473cce80162541d945a99c4f84d7bd07d"
+        },
+        "created_at": "2026-08-11T13:02:41.515+00:00"
       },
       {
         "operation_id": "5c65ebb6-1f3d-44ae-8647-ca8ed3303f0b",
@@ -91220,6 +91746,27 @@
           "sourceContentSha256": "db569c5cae1b6c30107c1987bed106fdc6f6b76183942b95e47505d9cee844c2"
         },
         "created_at": "2026-08-11T04:25:08.2+00:00"
+      },
+      {
+        "operation_id": "60ee7ca6-0d8a-49cf-8e9b-dad40d7bf6aa",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811:5ed0d4df37579495",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811",
+        "source_ref": "docs/architecture/command-query-rail-governance.md",
+        "source_content_sha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Implementation proceeds through the approved command/query rails and Fowler controls.",
+          "designId": "API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811",
+          "toStatus": "implementing",
+          "sourceRef": "docs/architecture/command-query-rail-governance.md",
+          "fromStatus": "approved",
+          "sourceContentSha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc"
+        },
+        "created_at": "2026-08-11T12:57:20.872+00:00"
       },
       {
         "operation_id": "620063ab-2af3-4147-91df-498fabf4d6c7",
@@ -92442,6 +92989,31 @@
         "created_at": "2026-08-10T21:07:21.739+00:00"
       },
       {
+        "operation_id": "7f5e994e-7250-44f7-bd81-82033c6caf13",
+        "idempotency_key": "architecture_evidence_record:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811:EV-PTH14-V5-RESTORE:3f463609ea88f150",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "node --test scripts/planning-db-import.test.cjs",
+        "source_content_sha256": "55767a047a77672d88a780344a7e6dd6a0b9ea796f24b5db0ed87c67f5edcaa3",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+          "sourceRef": "node --test scripts/planning-db-import.test.cjs",
+          "subjectId": "RestorePlanningDbCanonicalArchitectureState",
+          "evidenceId": "EV-PTH14-V5-RESTORE",
+          "sourcePath": "scripts/planning-db-import.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "command",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "55767a047a77672d88a780344a7e6dd6a0b9ea796f24b5db0ed87c67f5edcaa3"
+        },
+        "created_at": "2026-08-11T13:02:28.674+00:00"
+      },
+      {
         "operation_id": "7f74ecfd-f9ce-46f6-9c1a-fe368c25968b",
         "idempotency_key": "gh-2167-update-port-sys-api-docs-primary-v1",
         "operation_type": "architecture_port_record",
@@ -92736,6 +93308,31 @@
           "sourceContentSha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a"
         },
         "created_at": "2026-08-11T10:13:43.802+00:00"
+      },
+      {
+        "operation_id": "87a0da90-bf12-4776-bdb8-0c5b61116961",
+        "idempotency_key": "architecture_evidence_record:codex:API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811:EV-PTH14-IDX-CLASSIFY:48c87722e6580bed",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811",
+        "source_ref": "node --test tools/ci/sync-docs-status-policy.test.mjs",
+        "source_content_sha256": "efe621f4806a1b5e14a392a4ea99b93929ce4e3a0caf9281b93c631b23534c83",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811",
+          "sourceRef": "node --test tools/ci/sync-docs-status-policy.test.mjs",
+          "subjectId": "ClassifyArchitectureDocumentationDisposition",
+          "evidenceId": "EV-PTH14-IDX-CLASSIFY",
+          "sourcePath": "tools/ci/sync-docs-status-policy.test.mjs",
+          "resultState": "pass",
+          "subjectKind": "query",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "efe621f4806a1b5e14a392a4ea99b93929ce4e3a0caf9281b93c631b23534c83"
+        },
+        "created_at": "2026-08-11T13:02:44.347+00:00"
       },
       {
         "operation_id": "87b23430-b4c3-4c02-aae7-8030613e3964",
@@ -93095,6 +93692,31 @@
         "created_at": "2026-08-10T21:04:06.239+00:00"
       },
       {
+        "operation_id": "9110d72d-5760-454a-9ece-b4b91f14bd54",
+        "idempotency_key": "architecture_evidence_record:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811:EV-PTH14-V5-READ-EVID:96571192c66b217e",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "node --test scripts/planning-db-query.test.cjs",
+        "source_content_sha256": "02ef5b3e23c275e077de8bdfc69f540240cb61a87fa48542ad1c2ee85a2b6719",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+          "sourceRef": "node --test scripts/planning-db-query.test.cjs",
+          "subjectId": "ReadArchitectureEvidence",
+          "evidenceId": "EV-PTH14-V5-READ-EVID",
+          "sourcePath": "scripts/planning-db-query.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "query",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "02ef5b3e23c275e077de8bdfc69f540240cb61a87fa48542ad1c2ee85a2b6719"
+        },
+        "created_at": "2026-08-11T13:02:38.564+00:00"
+      },
+      {
         "operation_id": "914de078-adb6-43c0-bafa-4fd63128ffcc",
         "idempotency_key": "codex-api-h2-2-reachability-v10-implementing",
         "operation_type": "architecture_design_transition",
@@ -93249,6 +93871,31 @@
           "sourceContentSha256": "63d66b23d84d46240f768bc66f3ac9609439dd53ee0768b380807a2b6f62a87a"
         },
         "created_at": "2026-08-10T21:06:37.993+00:00"
+      },
+      {
+        "operation_id": "93e9055e-9f5e-4dea-8d83-5661791f0ff0",
+        "idempotency_key": "architecture_evidence_record:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811:EV-PTH14-V5-RET-TEST:3391ab971e4633db",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "node --test scripts/planning-db-operate.test.cjs",
+        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+          "sourceRef": "node --test scripts/planning-db-operate.test.cjs",
+          "subjectId": "RetireArchitectureTestEvidence",
+          "evidenceId": "EV-PTH14-V5-RET-TEST",
+          "sourcePath": "scripts/planning-db-operate.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "command",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598"
+        },
+        "created_at": "2026-08-11T13:02:31.521+00:00"
       },
       {
         "operation_id": "93fd4924-7af9-4f17-8116-05ef4b1fff21",
@@ -93631,6 +94278,52 @@
           "sourceContentSha256": "595aa9f6d737b5540b328b0cfa0aead758923619ddd12635de33c9cf8763ada1"
         },
         "created_at": "2026-08-10T21:04:45.419+00:00"
+      },
+      {
+        "operation_id": "988b9382-a529-45bc-b38a-cbed34b385bd",
+        "idempotency_key": "architecture_evidence_record:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811:EV-PTH14-V5-RET-RAIL:ffadaf99d18d9ddf",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "node --test scripts/planning-db-operate.test.cjs",
+        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+          "sourceRef": "node --test scripts/planning-db-operate.test.cjs",
+          "subjectId": "RetireFeatureMechanizationRail",
+          "evidenceId": "EV-PTH14-V5-RET-RAIL",
+          "sourcePath": "scripts/planning-db-operate.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "command",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598"
+        },
+        "created_at": "2026-08-11T13:02:32.957+00:00"
+      },
+      {
+        "operation_id": "988f80e8-db12-4479-ab64-2325bf8a8dfe",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811:cb9e295f9877b19f",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811",
+        "source_ref": "docs/architecture/command-query-rail-governance.md",
+        "source_content_sha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Implementation proceeds through the approved command/query rails and Fowler controls.",
+          "designId": "API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811",
+          "toStatus": "implementing",
+          "sourceRef": "docs/architecture/command-query-rail-governance.md",
+          "fromStatus": "approved",
+          "sourceContentSha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc"
+        },
+        "created_at": "2026-08-11T12:57:17.996+00:00"
       },
       {
         "operation_id": "98d05061-0dfd-40a4-97a2-3766c1096e07",
@@ -94809,6 +95502,31 @@
           "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
         },
         "created_at": "2026-08-10T20:06:14.944+00:00"
+      },
+      {
+        "operation_id": "ad5f08fa-288c-4ff4-b90f-dbaa47a5baba",
+        "idempotency_key": "architecture_evidence_record:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811:EV-PTH14-V5-CLASSIFY:21947f44ae9f0cb0",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "node --test scripts/planning-db-schema.test.cjs",
+        "source_content_sha256": "9480cc084b84772de27846cd45ac898473cce80162541d945a99c4f84d7bd07d",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+          "sourceRef": "node --test scripts/planning-db-schema.test.cjs",
+          "subjectId": "ClassifyArchitectureDocumentationDisposition",
+          "evidenceId": "EV-PTH14-V5-CLASSIFY",
+          "sourcePath": "scripts/planning-db-schema.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "query",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "9480cc084b84772de27846cd45ac898473cce80162541d945a99c4f84d7bd07d"
+        },
+        "created_at": "2026-08-11T13:02:35.757+00:00"
       },
       {
         "operation_id": "adff5850-b408-4a79-9181-ec6b8cf9c4c5",
@@ -96496,6 +97214,31 @@
         "created_at": "2026-08-10T21:06:24.138+00:00"
       },
       {
+        "operation_id": "c48d63c9-24fc-456a-bd50-7d23e7658c02",
+        "idempotency_key": "architecture_evidence_record:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811:EV-PTH14-V5-REC-COMP:602107d883102f02",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "node --test scripts/planning-db-operate.test.cjs",
+        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+          "sourceRef": "node --test scripts/planning-db-operate.test.cjs",
+          "subjectId": "RecordArchitectureComponent",
+          "evidenceId": "EV-PTH14-V5-REC-COMP",
+          "sourcePath": "scripts/planning-db-operate.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "command",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598"
+        },
+        "created_at": "2026-08-11T13:02:24.335+00:00"
+      },
+      {
         "operation_id": "c4b6e326-e62e-48bd-81d4-52b936301893",
         "idempotency_key": "codex-api-h2-2-reachability-v9-create",
         "operation_type": "architecture_design_create",
@@ -97443,6 +98186,27 @@
         "created_at": "2026-08-11T05:21:49.411+00:00"
       },
       {
+        "operation_id": "d52f8a3c-db79-476f-885c-d27498f88f14",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811:6563752e7ecb0992",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "docs/architecture/command-query-rail-governance.md",
+        "source_content_sha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Implementation proceeds through the approved command/query rails and Fowler controls.",
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+          "toStatus": "implementing",
+          "sourceRef": "docs/architecture/command-query-rail-governance.md",
+          "fromStatus": "approved",
+          "sourceContentSha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc"
+        },
+        "created_at": "2026-08-11T12:57:15.161+00:00"
+      },
+      {
         "operation_id": "d5886203-4d3e-46b1-8ec9-684688217c50",
         "idempotency_key": "codex-api-h2-2-reachability-v5-evidence-drift",
         "operation_type": "architecture_design_transition",
@@ -97499,6 +98263,31 @@
           "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
         },
         "created_at": "2026-08-10T20:08:53.967+00:00"
+      },
+      {
+        "operation_id": "d61ce0d0-07b5-4f23-9638-bdf29a6d36d2",
+        "idempotency_key": "architecture_evidence_record:codex:API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811:EV-PTH14-IDX-GENERATE:9dcf50044b8b79be",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811",
+        "source_ref": "node --test tools/ci/sync-docs-status-policy.test.mjs",
+        "source_content_sha256": "efe621f4806a1b5e14a392a4ea99b93929ce4e3a0caf9281b93c631b23534c83",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811",
+          "sourceRef": "node --test tools/ci/sync-docs-status-policy.test.mjs",
+          "subjectId": "GeneratePlanningDerivedSurfaces",
+          "evidenceId": "EV-PTH14-IDX-GENERATE",
+          "sourcePath": "tools/ci/sync-docs-status-policy.test.mjs",
+          "resultState": "pass",
+          "subjectKind": "command",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "efe621f4806a1b5e14a392a4ea99b93929ce4e3a0caf9281b93c631b23534c83"
+        },
+        "created_at": "2026-08-11T13:02:42.94+00:00"
       },
       {
         "operation_id": "d6ebc8e2-f566-4878-afc9-0a0b4fbc3c40",
@@ -98063,6 +98852,31 @@
         "created_at": "2026-08-10T20:06:17.343+00:00"
       },
       {
+        "operation_id": "e03a96c8-a91d-4d97-aa49-97c3294e5f62",
+        "idempotency_key": "architecture_evidence_record:codex:API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811:EV-PTH14-REF-GENERATE:add069694afef7b8",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811",
+        "source_ref": "node --test scripts/generate-code-status.test.cjs",
+        "source_content_sha256": "12b0520908e076692c1860c5b0efdd8176e709386f95f6f22cf85616831b214c",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811",
+          "sourceRef": "node --test scripts/generate-code-status.test.cjs",
+          "subjectId": "GeneratePlanningDerivedSurfaces",
+          "evidenceId": "EV-PTH14-REF-GENERATE",
+          "sourcePath": "scripts/generate-code-status.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "command",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "12b0520908e076692c1860c5b0efdd8176e709386f95f6f22cf85616831b214c"
+        },
+        "created_at": "2026-08-11T13:02:40.092+00:00"
+      },
+      {
         "operation_id": "e121b2bc-75fe-4a48-a52a-9f412f75c1a0",
         "idempotency_key": "gh-2167-update-rel-sys-api-http-entrypoint-tests-architecture-harness-guards-api-http-runtime-route-registry-v1",
         "operation_type": "architecture_relation_record",
@@ -98160,6 +98974,27 @@
           "sourceContentSha256": "753edb16f56b6a048f351042f40b9760b1e07205f7bf28b7e18b54071e50ac04"
         },
         "created_at": "2026-08-10T21:06:33.458+00:00"
+      },
+      {
+        "operation_id": "e5696135-e81e-4b96-96fd-040dd01c7d9c",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811:eac069ac9887b6cb",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811",
+        "source_ref": "scripts/planning-db-operate.test.cjs",
+        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Required implementation evidence is current, exact-hash matched, and free of blocker violations.",
+          "designId": "API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811",
+          "toStatus": "implemented",
+          "sourceRef": "scripts/planning-db-operate.test.cjs",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598"
+        },
+        "created_at": "2026-08-11T13:03:22.765+00:00"
       },
       {
         "operation_id": "e59ac7e9-19f5-4473-96ef-99365319a615",
