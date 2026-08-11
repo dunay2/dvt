@@ -1255,6 +1255,82 @@ test('profile evidence excludes statically unselected switch clauses', () => {
   );
 });
 
+test('profile evidence respects directed completion after switches', () => {
+  const collectProfiles = (statements) =>
+    collectApiDeploymentProfileEvidence({
+      modules: [{ source: 'apps/api/src/app.ts', dependencies: [] }],
+      productionSources: new Set(['apps/api/src/app.ts']),
+      sourceContents: new Map([
+        [
+          'apps/api/src/app.ts',
+          [
+            'function buildObservability(env) {',
+            ...statements,
+            '}',
+            'buildObservability(env);',
+          ].join('\n'),
+        ],
+      ]),
+    }).map(({ profile }) => profile);
+
+  assert.deepEqual(
+    collectProfiles([
+      '  outer: {',
+      "    switch ('on') { case 'on': break outer; }",
+      '    if (!env.OBS_ENABLED) return createNoopObservability();',
+      '    return new OtelObservability({});',
+      '  }',
+      '  return null;',
+    ]),
+    []
+  );
+
+  assert.deepEqual(
+    collectProfiles([
+      '  for (;;) {',
+      "    switch ('on') { case 'on': continue; }",
+      '    if (!env.OBS_ENABLED) return createNoopObservability();',
+      '    return new OtelObservability({});',
+      '  }',
+    ]),
+    []
+  );
+
+  assert.deepEqual(
+    collectProfiles([
+      '  outer: for (;;) {',
+      "    switch ('on') { case 'on': continue outer; }",
+      '    if (!env.OBS_ENABLED) return createNoopObservability();',
+      '    return new OtelObservability({});',
+      '  }',
+    ]),
+    []
+  );
+
+  assert.deepEqual(
+    collectProfiles([
+      "  switch ('on') { case 'on': break; }",
+      '  if (!env.OBS_ENABLED) return createNoopObservability();',
+      '  return new OtelObservability({});',
+    ]),
+    ['observability-noop', 'observability-otel']
+  );
+
+  assert.deepEqual(
+    collectProfiles([
+      "  switch ('on') {",
+      "    case 'on':",
+      '      while (env.pending) { break; }',
+      "      switch ('inner') { case 'inner': break; }",
+      '      break;',
+      '  }',
+      '  if (!env.OBS_ENABLED) return createNoopObservability();',
+      '  return new OtelObservability({});',
+    ]),
+    ['observability-noop', 'observability-otel']
+  );
+});
+
 test('comments and disconnected tokens cannot prove deployment profiles', () => {
   const profileEvidence = collectApiDeploymentProfileEvidence({
     modules: [
