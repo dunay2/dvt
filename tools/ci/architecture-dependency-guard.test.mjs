@@ -1122,6 +1122,31 @@ test('profile evidence excludes statically unselected switch clauses', () => {
 
   assert.deepEqual(factoryEvidence, []);
 
+  const breakStopsFallthroughEvidence = collectApiDeploymentProfileEvidence({
+    modules: [{ source: 'apps/api/src/app.ts', dependencies: [] }],
+    productionSources: new Set(['apps/api/src/app.ts']),
+    sourceContents: new Map([
+      [
+        'apps/api/src/app.ts',
+        [
+          'function buildObservability(env) {',
+          "  switch ('on') {",
+          "    case 'on': break;",
+          "    case 'dead':",
+          '      if (!env.OBS_ENABLED) return createNoopObservability();',
+          '      return new OtelObservability({});',
+          '    default: return null;',
+          '  }',
+          '  return null;',
+          '}',
+          'buildObservability(env);',
+        ].join('\n'),
+      ],
+    ]),
+  });
+
+  assert.deepEqual(breakStopsFallthroughEvidence, []);
+
   const selectedFallthroughEvidence = collectApiDeploymentProfileEvidence({
     modules: [{ source: 'apps/api/src/app.ts', dependencies: [] }],
     productionSources: new Set(['apps/api/src/app.ts']),
@@ -1147,6 +1172,32 @@ test('profile evidence excludes statically unselected switch clauses', () => {
 
   assert.deepEqual(
     selectedFallthroughEvidence.map(({ profile }) => profile),
+    ['observability-noop', 'observability-otel']
+  );
+
+  const selectedDefaultEvidence = collectApiDeploymentProfileEvidence({
+    modules: [{ source: 'apps/api/src/app.ts', dependencies: [] }],
+    productionSources: new Set(['apps/api/src/app.ts']),
+    sourceContents: new Map([
+      [
+        'apps/api/src/app.ts',
+        [
+          'function buildObservability(env) {',
+          "  switch ('off') {",
+          "    case 'on': return null;",
+          '    default:',
+          '      if (!env.OBS_ENABLED) return createNoopObservability();',
+          '      return new OtelObservability({});',
+          '  }',
+          '}',
+          'buildObservability(env);',
+        ].join('\n'),
+      ],
+    ]),
+  });
+
+  assert.deepEqual(
+    selectedDefaultEvidence.map(({ profile }) => profile),
     ['observability-noop', 'observability-otel']
   );
 });
