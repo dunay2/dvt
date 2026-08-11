@@ -13392,7 +13392,8 @@
         "source_ref": "25 API operational-truth tests passed: projector, bounded list rail, and detail rail",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:50.637985+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EV-API-WAREHOUSE-CONNECTION-PUBLIC-PROJECTION-20260719",
@@ -13402,7 +13403,8 @@
         "source_ref": "WorkspaceWarehouseConnectionCatalog.test.ts: 8 passed; persisted credentialRef is absent from ListWarehouseConnections",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:50.64837+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EV-CI-RELEASE-CANDIDATE-AUTHORITY-CLI-20260719",
@@ -13412,7 +13414,8 @@
         "source_ref": "node --test tools/ci/release-candidate-integrity/releaseCandidateAuthorityCli.test.mjs",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:45.962718+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EV-CI-RELEASE-CANDIDATE-AUTHORITY-SPECIFICATION-20260719",
@@ -13422,7 +13425,8 @@
         "source_ref": "node --test tools/ci/release-candidate-integrity/releaseCandidateAuthority.test.mjs",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:45.962718+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EV-CI-RELEASE-CANDIDATE-AUTHORITY-WORKFLOW-20260719",
@@ -13432,7 +13436,8 @@
         "source_ref": "node --test tools/ci/workflow-pattern-parity.test.mjs",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:45.962718+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EV-CI-RELEASE-CANDIDATE-CHECK-PUBLICATION-SERVICE-20260719",
@@ -13442,7 +13447,8 @@
         "source_ref": "node --test tools/ci/release-candidate-integrity/releaseCandidateCheckPublication.test.mjs",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:45.292675+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EV-CI-RELEASE-CANDIDATE-GITHUB-CHECK-ADAPTER-20260719",
@@ -13452,7 +13458,8 @@
         "source_ref": "node --test tools/ci/release-candidate-integrity/releaseCandidateCheckGithubAdapter.test.mjs",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:45.292675+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EV-CI-RELEASE-CANDIDATE-INTEGRITY-GIT-ADAPTER-20260719",
@@ -13462,7 +13469,8 @@
         "source_ref": "node --test tools/ci/release-candidate-integrity/releaseCandidateIntegrityCli.test.mjs",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:44.872667+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EV-CI-RELEASE-CANDIDATE-INTEGRITY-POLICY-ADAPTER-20260719",
@@ -13472,7 +13480,8 @@
         "source_ref": "node --test tools/ci/release-candidate-integrity/releaseMergePolicyCli.test.mjs",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:44.872667+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EV-CI-RELEASE-CANDIDATE-INTEGRITY-SPECIFICATION-20260719",
@@ -13482,7 +13491,8 @@
         "source_ref": "node --test tools/ci/release-candidate-integrity/releaseCandidateIntegrity.test.mjs",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:44.872667+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EV-CI-RELEASE-CANDIDATE-INTEGRITY-WORKFLOW-20260719",
@@ -13492,7 +13502,8 @@
         "source_ref": "node --test tools/ci/workflow-pattern-parity.test.mjs",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:44.872667+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EV-CI-TRUSTED-PR-METADATA-AUTHORITY-20260720",
@@ -13502,7 +13513,8 @@
         "source_ref": "node --test tools/ci/github-collaboration-governance.test.mjs tools/ci/workflow-pattern-parity.test.mjs tools/ci/ci-tool-test-suite.test.mjs",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:45.205967+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EV-DBT-RUNTIME-BUNDLE-SECRET-BOUNDARY-TEST-20260712",
@@ -13512,7 +13524,8 @@
         "source_ref": "apps/api/test/application/services/DbtRunExecutionContextBindingUseCase.bundleSecurity.test.ts",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EV-DBT-RUNTIME-CONTEXT-REF-PROVENANCE-TEST-20260712",
@@ -13522,7 +13535,8 @@
         "source_ref": "apps/api/test/application/services/DbtRunExecutionContextBindingUseCase.bundleSecurity.test.ts",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EV-DBT-RUNTIME-PROFILE-ADMISSION-TEST-20260712",
@@ -13532,7 +13546,8 @@
         "source_ref": "apps/api/test/application/services/DbtRunExecutionContextBindingUseCase.bundleSecurity.test.ts",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EV-FEATURE-MANIFEST-EVIDENCE-NORMALIZATION",
@@ -13542,7 +13557,8 @@
         "source_ref": "pnpm docs:feature-mechanization:implementation",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EV-LIVE-SOURCE-OBJECT-DISCOVERY",
@@ -13552,7 +13568,8 @@
         "source_ref": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/WarehouseConnectionSourceObjectReader.test.ts test/application/services/importWarehouseSourcesUseCase.test.ts test/application/services/warehouseSourceYaml.test.ts test/entrypoints/http/warehouseSourceImportRoutes.test.ts test/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.test.ts",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EV-PLANNING-DB-CQ-IMPLEMENTATION-EVIDENCE",
@@ -13562,7 +13579,8 @@
         "source_ref": "node --test scripts/planning-db/command-query-rail-reference-index.test.cjs",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EV-RUN-OPERATIONAL-TRUTH-STRICT-LIVE-20260719",
@@ -13572,7 +13590,8 @@
         "source_ref": "canvas-preview-run-live.cy.ts: 2 passed against Temporal, Postgres, protected API, and browser UI",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:50.64837+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EV-SCOPED-WORKSPACE-FILE-STORAGE-IMPLEMENTED",
@@ -13582,7 +13601,8 @@
         "source_ref": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/infrastructure/workspaceFiles/LocalWorkspaceFileRepository.test.ts test/entrypoints/http/workspaceFilesRoutes.test.ts test/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionCatalog.test.ts test/application/services/importWarehouseSourcesUseCase.test.ts test/entrypoints/http/warehouseSourceImportRoutes.test.ts test/application/services/DbtRunExecutionContextBindingUseCase.test.ts",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EV-START-RUN-DBT-BUNDLE-NEGATIVE-RAIL-20260712",
@@ -13592,7 +13612,8 @@
         "source_ref": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EV-WEB-RUN-OPERATIONAL-PRESENTATION-20260719",
@@ -13602,7 +13623,8 @@
         "source_ref": "15 Runs presentation tests passed with explicit unavailable lifecycle evidence",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:50.637985+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EV-WEB-RUN-OPERATIONAL-TRUTH-20260719",
@@ -13612,7 +13634,8 @@
         "source_ref": "33 Web adapter and table-model tests passed without lifecycle fabrication",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:50.637985+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EV-WORKSPACE-CAS-INTEGRITY-AND-RAIL-RECONCILIATION",
@@ -13622,7 +13645,8 @@
         "source_ref": "pnpm planning:db:integrity:check",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EVIDENCE-CODE-WORKING-TREE-POST-SAVE-CONSUMER",
@@ -13632,7 +13656,8 @@
         "source_ref": "apps/web/src/app/views/code/useCodeWorkingTreeSync.test.tsx",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:35.669759+00:00",
-        "source_content_sha256": "34b36d9acee8dce4d5bae5b22f03d757186248ac630f973803d76b8c2b3330fa"
+        "source_content_sha256": "34b36d9acee8dce4d5bae5b22f03d757186248ac630f973803d76b8c2b3330fa",
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EVIDENCE-DBT-CODE-SAVE-REANALYSIS-LIVE",
@@ -13642,7 +13667,8 @@
         "source_ref": "apps/web/cypress/e2e/dbt/dbt-project-yaml-description-edit-live.cy.ts",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:35.669759+00:00",
-        "source_content_sha256": "dcd354679a3263a303c7d8fd9a68f5187ab33595de600d9ca3c2592f3d95c126"
+        "source_content_sha256": "dcd354679a3263a303c7d8fd9a68f5187ab33595de600d9ca3c2592f3d95c126",
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EVIDENCE-DBT-CODE-TARGET-ADAPTER",
@@ -13652,7 +13678,8 @@
         "source_ref": "apps/web/src/app/views/canvas/dbtProjectFileCodeWorkbench.test.tsx",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:35.669759+00:00",
-        "source_content_sha256": "24566be376a33de7750361791bf5eca8b694d317fdd873ee7f932c12d21e06dd"
+        "source_content_sha256": "24566be376a33de7750361791bf5eca8b694d317fdd873ee7f932c12d21e06dd",
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EVIDENCE-DBT-EXECUTION-TARGET-PORT",
@@ -13662,7 +13689,8 @@
         "source_ref": "apps/api/test/infrastructure/dbt/ConfiguredDbtExecutionTargetResolver.test.ts",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
-        "source_content_sha256": "ee50c022a6edd4f167d32bd8f1801fdcee50c022a6edd4f167d32bd8f1801fdc"
+        "source_content_sha256": "ee50c022a6edd4f167d32bd8f1801fdcee50c022a6edd4f167d32bd8f1801fdc",
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EVIDENCE-DBT-EXPLICIT-SELECTION-STRICT-BROWSER",
@@ -13672,7 +13700,8 @@
         "source_ref": "apps/web/cypress/e2e/dbt/dbt-project-preview-run-live.cy.ts",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
-        "source_content_sha256": "c731cb4a23f94b6ecd94539e86fb1a01c731cb4a23f94b6ecd94539e86fb1a01"
+        "source_content_sha256": "c731cb4a23f94b6ecd94539e86fb1a01c731cb4a23f94b6ecd94539e86fb1a01",
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EVIDENCE-DBT-FILE-EXECUTION-BUNDLE",
@@ -13682,7 +13711,8 @@
         "source_ref": "apps/api/test/infrastructure/dbt/DbtProjectBundleBuilder.test.ts",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
-        "source_content_sha256": "710c3d1520e62caab9460b1e62ea7e85710c3d1520e62caab9460b1e62ea7e85"
+        "source_content_sha256": "710c3d1520e62caab9460b1e62ea7e85710c3d1520e62caab9460b1e62ea7e85",
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EVIDENCE-DBT-FILE-EXECUTION-PREVIEW-AUTHORITY",
@@ -13692,7 +13722,8 @@
         "source_ref": "apps/api/test/application/services/resolveAuthorizedPreviewSelection.test.ts",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
-        "source_content_sha256": "e24303cc5f9a17a989c6a43341250fa4e24303cc5f9a17a989c6a43341250fa4"
+        "source_content_sha256": "e24303cc5f9a17a989c6a43341250fa4e24303cc5f9a17a989c6a43341250fa4",
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EVIDENCE-DBT-FILE-EXECUTION-RT006",
@@ -13702,7 +13733,8 @@
         "source_ref": "apps/web/cypress/e2e/dbt/dbt-project-preview-run-live.cy.ts",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
-        "source_content_sha256": "ac6b3207f56203d8cc3a113290308ab1ac6b3207f56203d8cc3a113290308ab1"
+        "source_content_sha256": "ac6b3207f56203d8cc3a113290308ab1ac6b3207f56203d8cc3a113290308ab1",
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EVIDENCE-DBT-FILE-EXECUTION-RUN-ADMISSION",
@@ -13712,7 +13744,8 @@
         "source_ref": "apps/api/test/application/services/DbtRunExecutionContextBindingUseCase.bundleSecurity.test.ts",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
-        "source_content_sha256": "2fe0310792e28c6eab817786ad4dc3242fe0310792e28c6eab817786ad4dc324"
+        "source_content_sha256": "2fe0310792e28c6eab817786ad4dc3242fe0310792e28c6eab817786ad4dc324",
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EVIDENCE-DBT-FILE-EXECUTION-WEB",
@@ -13722,7 +13755,8 @@
         "source_ref": "apps/web/src/app/views/canvas/dbtProjectFileExecutionStrategy.test.ts",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
-        "source_content_sha256": "ced27fb63a6dedb635cee71f0dbd9d61ced27fb63a6dedb635cee71f0dbd9d61"
+        "source_content_sha256": "ced27fb63a6dedb635cee71f0dbd9d61ced27fb63a6dedb635cee71f0dbd9d61",
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EVIDENCE-DBT-PROJECT-BUNDLE-PORT",
@@ -13732,7 +13766,8 @@
         "source_ref": "apps/api/test/infrastructure/dbt/DbtProjectBundleBuilder.test.ts",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
-        "source_content_sha256": "94431a6e174817b35b9677ed8e23e8c494431a6e174817b35b9677ed8e23e8c4"
+        "source_content_sha256": "94431a6e174817b35b9677ed8e23e8c494431a6e174817b35b9677ed8e23e8c4",
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EVIDENCE-DBT-PROJECT-SOURCE-PATH-POLICY-DOC",
@@ -13742,7 +13777,8 @@
         "source_ref": "docs/architecture/components/web/graph/dbt-project-import-and-source-authority-component.md",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
-        "source_content_sha256": "4ad7a6184297419075d7ecbaa3a19cf64ad7a6184297419075d7ecbaa3a19cf6"
+        "source_content_sha256": "4ad7a6184297419075d7ecbaa3a19cf64ad7a6184297419075d7ecbaa3a19cf6",
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EVIDENCE-DBT-PROJECT-SOURCE-PATH-POLICY-UNIT",
@@ -13752,7 +13788,8 @@
         "source_ref": "apps/api/test/infrastructure/dbt/dbtProjectPathPolicy.test.ts",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
-        "source_content_sha256": "bac20c4452284b154fb16c5726852466bac20c4452284b154fb16c5726852466"
+        "source_content_sha256": "bac20c4452284b154fb16c5726852466bac20c4452284b154fb16c5726852466",
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EVIDENCE-DBT-RUN-CONTEXT-WRITER-PORT",
@@ -13762,7 +13799,8 @@
         "source_ref": "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
-        "source_content_sha256": "af4daacacc8dbc944394083335e80a3eaf4daacacc8dbc944394083335e80a3e"
+        "source_content_sha256": "af4daacacc8dbc944394083335e80a3eaf4daacacc8dbc944394083335e80a3e",
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EVIDENCE-DBT-YAML-DESCRIPTION-APPLY-COMMAND",
@@ -13772,7 +13810,8 @@
         "source_ref": "apps/api/test/application/services/dbtYamlDescriptionEdit/ApplyDbtYamlDescriptionEditCommand.test.ts",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:38.502668+00:00",
-        "source_content_sha256": "467c556afe063843172b914076fba0843a9eb74b86703655afd0194f2924d7c1"
+        "source_content_sha256": "467c556afe063843172b914076fba0843a9eb74b86703655afd0194f2924d7c1",
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EVIDENCE-DBT-YAML-DESCRIPTION-INTEGRITY-PROPERTIES",
@@ -13782,7 +13821,8 @@
         "source_ref": "apps/api/test/application/services/dbtYamlDescriptionEdit/dbtYamlDescriptionEditIntegrity.test.ts",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:38.502668+00:00",
-        "source_content_sha256": "dbc42bff3a62eea9a4886766a7b41ea157bdcdf8161f1d2c44c0f724d0183efd"
+        "source_content_sha256": "dbc42bff3a62eea9a4886766a7b41ea157bdcdf8161f1d2c44c0f724d0183efd",
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EVIDENCE-DBT-YAML-DESCRIPTION-PORTS-CONTRACT",
@@ -13792,7 +13832,8 @@
         "source_ref": "packages/@dvt/contracts/test/dbt-yaml-description-edit.contract.test.ts",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:38.502668+00:00",
-        "source_content_sha256": "ebccdd6ccb6be23909aed09b96c84362ffba73b42ab0d96a5b292efaf68b6c8e"
+        "source_content_sha256": "ebccdd6ccb6be23909aed09b96c84362ffba73b42ab0d96a5b292efaf68b6c8e",
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EVIDENCE-DBT-YAML-DESCRIPTION-PROPOSAL-QUERY",
@@ -13802,7 +13843,8 @@
         "source_ref": "apps/api/test/application/services/dbtYamlDescriptionEdit/ProposeDbtYamlDescriptionEditQuery.test.ts",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:38.502668+00:00",
-        "source_content_sha256": "7c6d918738e21ae2b7e25407af02cf3d3dce5cbd7a93e79f1b4b59f5ab790b44"
+        "source_content_sha256": "7c6d918738e21ae2b7e25407af02cf3d3dce5cbd7a93e79f1b4b59f5ab790b44",
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EVIDENCE-DBT-YAML-DESCRIPTION-RECEIPT-STORE",
@@ -13812,7 +13854,8 @@
         "source_ref": "apps/api/test/infrastructure/dbtYamlDescriptionEdit/WorkspaceMetadataDbtYamlDescriptionReceiptStore.test.ts",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:38.502668+00:00",
-        "source_content_sha256": "3ebbb334bcd4bb669382bd3c2f91f6f2bda961671771b085137fc5e88005fb10"
+        "source_content_sha256": "3ebbb334bcd4bb669382bd3c2f91f6f2bda961671771b085137fc5e88005fb10",
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EVIDENCE-DBT-YAML-DESCRIPTION-RESOURCE-RESOLVER",
@@ -13822,7 +13865,8 @@
         "source_ref": "apps/api/test/application/services/dbtYamlDescriptionEdit/DbtYamlDescriptionResourceResolver.test.ts",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:38.502668+00:00",
-        "source_content_sha256": "af21df1225bc7a9ff61a0c973c98a5d9b8723c7ae052fcddc72e3670728af497"
+        "source_content_sha256": "af21df1225bc7a9ff61a0c973c98a5d9b8723c7ae052fcddc72e3670728af497",
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EVIDENCE-DBT-YAML-DESCRIPTION-REVERT-COMMAND",
@@ -13832,7 +13876,8 @@
         "source_ref": "apps/api/test/application/services/dbtYamlDescriptionEdit/RevertDbtYamlDescriptionEditCommand.test.ts",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:38.502668+00:00",
-        "source_content_sha256": "43f23fcbe0e81970385ab4261a55a9a42b7e61e82e831e896e27e301a110284e"
+        "source_content_sha256": "43f23fcbe0e81970385ab4261a55a9a42b7e61e82e831e896e27e301a110284e",
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EVIDENCE-DBT-YAML-DESCRIPTION-STRICT-LIVE",
@@ -13842,7 +13887,8 @@
         "source_ref": "apps/web/cypress/e2e/dbt/dbt-project-yaml-description-edit-live.cy.ts",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:35.669759+00:00",
-        "source_content_sha256": "dcd354679a3263a303c7d8fd9a68f5187ab33595de600d9ca3c2592f3d95c126"
+        "source_content_sha256": "dcd354679a3263a303c7d8fd9a68f5187ab33595de600d9ca3c2592f3d95c126",
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EVIDENCE-WEB-CANVAS-DBT-GRAPH-SQL-REPLACEMENT-ORCHESTRATION",
@@ -13852,7 +13898,8 @@
         "source_ref": "apps/web/src/app/views/canvas/useCanvasExecutionActions.graphSqlReplacement.test.tsx",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:53.73454+00:00",
-        "source_content_sha256": "9c40ffd70f47313aeabada99bf10f0b79c40ffd70f47313aeabada99bf10f0b7"
+        "source_content_sha256": "9c40ffd70f47313aeabada99bf10f0b79c40ffd70f47313aeabada99bf10f0b7",
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EVIDENCE-WEB-CANVAS-DBT-GRAPH-SQL-REPLACEMENT-PRESENTATION",
@@ -13862,7 +13909,8 @@
         "source_ref": "apps/web/src/app/views/canvas/GraphSqlReplacementConfirmationDialog.test.tsx",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:53.73454+00:00",
-        "source_content_sha256": "c5c6e02eabe00e787d0cdc6e51362ceac5c6e02eabe00e787d0cdc6e51362cea"
+        "source_content_sha256": "c5c6e02eabe00e787d0cdc6e51362ceac5c6e02eabe00e787d0cdc6e51362cea",
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EVIDENCE-WEB-CODE-FILE-EDIT-POSTURE-UNIT",
@@ -13872,7 +13920,8 @@
         "source_ref": "apps/web/src/app/views/code/codeWorkspaceFileEditPosture.test.ts",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:50.942727+00:00",
-        "source_content_sha256": "129b46aefc920c855fec4d1692b8368b129b46aefc920c855fec4d1692b8368b"
+        "source_content_sha256": "129b46aefc920c855fec4d1692b8368b129b46aefc920c855fec4d1692b8368b",
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EVIDENCE-WEB-CODE-FILE-SURFACE-INTEGRATION",
@@ -13882,7 +13931,8 @@
         "source_ref": "apps/web/src/app/views/CodeView.test.tsx",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:50.942727+00:00",
-        "source_content_sha256": "186b1d41ca50840b2b28dd017aec6050186b1d41ca50840b2b28dd017aec6050"
+        "source_content_sha256": "186b1d41ca50840b2b28dd017aec6050186b1d41ca50840b2b28dd017aec6050",
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EVIDENCE-WEB-CODE-FILE-SURFACE-PRESENTATION",
@@ -13892,7 +13942,8 @@
         "source_ref": "apps/web/src/app/views/code/CodeWorkspaceFileSurface.test.tsx",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:50.942727+00:00",
-        "source_content_sha256": "3652465a316c124d5e3f9ca965ccb0e53652465a316c124d5e3f9ca965ccb0e5"
+        "source_content_sha256": "3652465a316c124d5e3f9ca965ccb0e53652465a316c124d5e3f9ca965ccb0e5",
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EVIDENCE-WEB-CODE-GRAPH-OWNED-FILE-SURFACE-LIVE",
@@ -13902,7 +13953,8 @@
         "source_ref": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:50.942727+00:00",
-        "source_content_sha256": "81bfabab7c960f7551adef04192e1f0581bfabab7c960f7551adef04192e1f05"
+        "source_content_sha256": "81bfabab7c960f7551adef04192e1f0581bfabab7c960f7551adef04192e1f05",
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EVIDENCE-WEB-DBT-GRAPH-ARTIFACT-PUBLISHER-UNIT",
@@ -13912,7 +13964,8 @@
         "source_ref": "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:50.942727+00:00",
-        "source_content_sha256": "ef5de9e9f9f5fc38ae092bc6b43a7b05ef5de9e9f9f5fc38ae092bc6b43a7b05"
+        "source_content_sha256": "ef5de9e9f9f5fc38ae092bc6b43a7b05ef5de9e9f9f5fc38ae092bc6b43a7b05",
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EVIDENCE-WEB-DBT-GRAPH-PLAN-AUTHORITY-INTEGRATION",
@@ -13922,7 +13975,8 @@
         "source_ref": "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:50.942727+00:00",
-        "source_content_sha256": "5f4b912f2e09ead452d35584caa621185f4b912f2e09ead452d35584caa62118"
+        "source_content_sha256": "5f4b912f2e09ead452d35584caa621185f4b912f2e09ead452d35584caa62118",
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EVIDENCE-WEB-DBT-GRAPH-SQL-AUTHORITY-LIVE",
@@ -13932,7 +13986,8 @@
         "source_ref": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:53.73454+00:00",
-        "source_content_sha256": "8aed8bd6be7554603ce30963dee6edf48aed8bd6be7554603ce30963dee6edf4"
+        "source_content_sha256": "8aed8bd6be7554603ce30963dee6edf48aed8bd6be7554603ce30963dee6edf4",
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EVIDENCE-WEB-DBT-GRAPH-SQL-POLICY-UNIT",
@@ -13942,7 +13997,8 @@
         "source_ref": "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:50.942727+00:00",
-        "source_content_sha256": "633fa76a4e6489a1a50fa61dfcacdc57633fa76a4e6489a1a50fa61dfcacdc57"
+        "source_content_sha256": "633fa76a4e6489a1a50fa61dfcacdc57633fa76a4e6489a1a50fa61dfcacdc57",
+        "evidence_origin": "imported_assertion"
       },
       {
         "evidence_id": "EVIDENCE-WEB-NODE-WORKBENCH-POSITION-STRICT-BROWSER",
@@ -13952,7 +14008,8 @@
         "source_ref": "apps/web/cypress/e2e/dbt/dbt-project-yaml-description-edit-live.cy.ts",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:38.502668+00:00",
-        "source_content_sha256": "3e7de17a253b0e49a2a96256f1e6dcbbd35f281a88115d3673a7eff8eb43f5ad"
+        "source_content_sha256": "3e7de17a253b0e49a2a96256f1e6dcbbd35f281a88115d3673a7eff8eb43f5ad",
+        "evidence_origin": "imported_assertion"
       }
     ],
     "component_health_check": [],

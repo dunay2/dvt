@@ -1701,7 +1701,9 @@ function buildArchitectureEvidenceRows(rows) {
     row.subject_kind ?? row.subjectKind,
     row.subject_id ?? row.subjectId,
     row.evidence_kind ?? row.evidenceKind,
+    row.evidence_origin ?? row.evidenceOrigin,
     row.result_state ?? row.resultState,
+    row.verification_state ?? row.verificationState ?? '-',
     row.freshness_state ?? row.freshnessState ?? '-',
     row.source_ref ?? row.sourceRef ?? '-',
   ]);
@@ -2277,11 +2279,13 @@ function architectureEvidenceSelect() {
       subject_kind,
       subject_id,
       evidence_kind,
+      evidence_origin,
       source_ref,
       result_state,
       recorded_at,
       source_content_sha256,
-      freshness_state
+      freshness_state,
+      verification_state
     from ${architectureSchemaName}.evidence_query`;
 }
 
