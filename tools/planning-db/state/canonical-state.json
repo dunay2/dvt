@@ -10439,6 +10439,20 @@
         "updated_at": "2026-08-11T06:15:55.208+00:00"
       },
       {
+        "design_id": "API-H2-2-PUSH-DIFF-BASELINE-V12-20260811",
+        "work_item_id": "GH-2273",
+        "title": "Bind push reachability diff to pre-push SHA",
+        "owner": "ArchitectureBoundaryGuard",
+        "status": "approved",
+        "rationale": "Use the pull-request base SHA for PRs and github.event.before for pushes so changed-only orphan and test-support enforcement evaluates the actual delivered delta on every mandatory workflow trigger.",
+        "fowler_signal": "evolutionary_architecture",
+        "rail_ref": "ApplyArchitectureDependencyBoundaryGate",
+        "approved_at": "2026-08-11T07:05:29.659+00:00",
+        "supersedes_id": null,
+        "created_at": "2026-08-11T07:05:26.237+00:00",
+        "updated_at": "2026-08-11T07:05:29.659+00:00"
+      },
+      {
         "design_id": "CANVAS-BACKLOG-INTEGRITY-READINESS-20260626",
         "work_item_id": "E-CANVAS-UXDB-COMPONENT-SLICES-1",
         "title": "Canvas backlog component integrity readiness projection",
@@ -60878,6 +60892,54 @@
         "created_at": "2026-08-11T05:47:10.393+00:00"
       },
       {
+        "design_id": "API-H2-2-PUSH-DIFF-BASELINE-V12-20260811",
+        "subject_kind": "command",
+        "subject_id": "ApplyArchitectureDependencyBoundaryGate",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T07:05:26.237+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PUSH-DIFF-BASELINE-V12-20260811",
+        "subject_kind": "component",
+        "subject_id": "SYS-CI-GOVERNANCE-TOOLS-CI-ARCHITECTURE-BOUNDARIES",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-11T07:05:26.237+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PUSH-DIFF-BASELINE-V12-20260811",
+        "subject_kind": "component",
+        "subject_id": "SYS-CI-GOVERNANCE-TOOLS-CI-ARCHITECTURE-BOUNDARIES",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T07:05:26.237+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PUSH-DIFF-BASELINE-V12-20260811",
+        "subject_kind": "path",
+        "subject_id": ".github/workflows/pr-quality-gate.yml",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T07:05:26.237+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PUSH-DIFF-BASELINE-V12-20260811",
+        "subject_kind": "path",
+        "subject_id": "tools/ci/architecture-dependency-guard.test.mjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T07:05:26.237+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PUSH-DIFF-BASELINE-V12-20260811",
+        "subject_kind": "test",
+        "subject_id": "TEST-CI-API-PRODUCTION-REACHABILITY",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T07:05:26.237+00:00"
+      },
+      {
         "design_id": "CANVAS-BOTTOM-DRAWER-ACTIONABLE-READ-MODEL-20260626",
         "subject_kind": "component",
         "subject_id": "web.component.shell.BottomOperationalDrawer",
@@ -86471,6 +86533,27 @@
         "created_at": "2026-08-10T21:04:55.589+00:00"
       },
       {
+        "operation_id": "258b856e-cc01-4c5a-aeca-ff746daa52d1",
+        "idempotency_key": "codex-api-h2-2-push-diff-v12-approve",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-2-PUSH-DIFF-BASELINE-V12-20260811",
+        "source_ref": ".github/workflows/pr-quality-gate.yml",
+        "source_content_sha256": "0972a4db45cbfbac69c27ba6b80080ce608e71e0416eb4b27ad009c26796e0a1",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The minimum solution changes only the workflow base expression and adds an executable workflow contract test.",
+          "designId": "API-H2-2-PUSH-DIFF-BASELINE-V12-20260811",
+          "toStatus": "approved",
+          "sourceRef": ".github/workflows/pr-quality-gate.yml",
+          "fromStatus": "review",
+          "sourceContentSha256": "0972a4db45cbfbac69c27ba6b80080ce608e71e0416eb4b27ad009c26796e0a1"
+        },
+        "created_at": "2026-08-11T07:05:29.659+00:00"
+      },
+      {
         "operation_id": "25c81258-aacb-40bc-9bc9-5ab1cd170abf",
         "idempotency_key": "gh-2167-update-test-sys-api-tests-application-services-start-run-admission-9-v1",
         "operation_type": "architecture_test_record",
@@ -87185,6 +87268,27 @@
         "created_at": "2026-08-11T06:34:25.422+00:00"
       },
       {
+        "operation_id": "415020e2-0c99-487a-a67e-48b402543350",
+        "idempotency_key": "codex-api-h2-2-push-diff-v12-review",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-2-PUSH-DIFF-BASELINE-V12-20260811",
+        "source_ref": ".github/workflows/pr-quality-gate.yml",
+        "source_content_sha256": "0972a4db45cbfbac69c27ba6b80080ce608e71e0416eb4b27ad009c26796e0a1",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The remote P2 establishes a concrete direct-push false-negative and the existing command rail owns the correction.",
+          "designId": "API-H2-2-PUSH-DIFF-BASELINE-V12-20260811",
+          "toStatus": "review",
+          "sourceRef": ".github/workflows/pr-quality-gate.yml",
+          "fromStatus": "proposed",
+          "sourceContentSha256": "0972a4db45cbfbac69c27ba6b80080ce608e71e0416eb4b27ad009c26796e0a1"
+        },
+        "created_at": "2026-08-11T07:05:27.974+00:00"
+      },
+      {
         "operation_id": "44b94844-4dc8-48f7-9e01-d966ad292ae0",
         "idempotency_key": "gh-2167-update-test-sys-api-infra-workspace-local-adapters-8-v1",
         "operation_type": "architecture_test_record",
@@ -87848,6 +87952,70 @@
           "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
         },
         "created_at": "2026-08-10T22:58:42.838+00:00"
+      },
+      {
+        "operation_id": "56cb4906-f1b0-4953-bb32-2ae4c57c34e8",
+        "idempotency_key": "codex-api-h2-2-push-diff-v12-create",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "API-H2-2-PUSH-DIFF-BASELINE-V12-20260811",
+        "source_ref": ".github/workflows/pr-quality-gate.yml",
+        "source_content_sha256": "0972a4db45cbfbac69c27ba6b80080ce608e71e0416eb4b27ad009c26796e0a1",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "ArchitectureBoundaryGuard",
+          "title": "Bind push reachability diff to pre-push SHA",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "ApplyArchitectureDependencyBoundaryGate",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-CI-GOVERNANCE-TOOLS-CI-ARCHITECTURE-BOUNDARIES",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-CI-GOVERNANCE-TOOLS-CI-ARCHITECTURE-BOUNDARIES",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": ".github/workflows/pr-quality-gate.yml",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "tools/ci/architecture-dependency-guard.test.mjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-CI-API-PRODUCTION-REACHABILITY",
+              "subjectKind": "test"
+            }
+          ],
+          "status": "proposed",
+          "railRef": "ApplyArchitectureDependencyBoundaryGate",
+          "designId": "API-H2-2-PUSH-DIFF-BASELINE-V12-20260811",
+          "rationale": "Use the pull-request base SHA for PRs and github.event.before for pushes so changed-only orphan and test-support enforcement evaluates the actual delivered delta on every mandatory workflow trigger.",
+          "sourceRef": ".github/workflows/pr-quality-gate.yml",
+          "workItemId": "GH-2273",
+          "fowlerSignal": "evolutionary_architecture",
+          "supersedesId": null,
+          "sourceContentSha256": "0972a4db45cbfbac69c27ba6b80080ce608e71e0416eb4b27ad009c26796e0a1"
+        },
+        "created_at": "2026-08-11T07:05:26.237+00:00"
       },
       {
         "operation_id": "56e8c5f8-a172-4acf-b782-230dd86042eb",
