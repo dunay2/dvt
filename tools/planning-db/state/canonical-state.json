@@ -105852,7 +105852,8 @@
       "governingSources": [
         "AGENTS.md",
         "docs/planning/status/governance-document-rule-inventory.md",
-        "docs/architecture/command-query-rail-governance.md"
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
       ],
       "allowedImplementationSurfaces": [
         "scripts/planning-db-operate.cjs",
@@ -105958,7 +105959,8 @@
         "governingSources": [
           "AGENTS.md",
           "docs/planning/status/governance-document-rule-inventory.md",
-          "docs/architecture/command-query-rail-governance.md"
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
         ],
         "commandQueryRails": [
           {
@@ -105982,7 +105984,7 @@
           "docs/planning/proposals/mandatory/**"
         ]
       },
-      "revision": 0,
+      "revision": 1,
       "createdBy": "codex",
       "createdAt": "2026-08-11T18:18:58.964Z"
     },
@@ -107507,7 +107509,8 @@
       "governingSources": [
         "AGENTS.md",
         "docs/planning/status/governance-document-rule-inventory.md",
-        "docs/architecture/command-query-rail-governance.md"
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
       ],
       "allowedImplementationSurfaces": [
         "scripts/planning-db-query.cjs",
@@ -107569,7 +107572,8 @@
         "governingSources": [
           "AGENTS.md",
           "docs/planning/status/governance-document-rule-inventory.md",
-          "docs/architecture/command-query-rail-governance.md"
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
         ],
         "commandQueryRails": [
           {
@@ -107593,7 +107597,7 @@
           "docs/planning/proposals/mandatory/**"
         ]
       },
-      "revision": 0,
+      "revision": 1,
       "createdBy": "codex",
       "createdAt": "2026-08-11T18:18:59.176Z"
     },
@@ -107618,7 +107622,8 @@
       "governingSources": [
         "AGENTS.md",
         "docs/planning/status/governance-document-rule-inventory.md",
-        "docs/architecture/command-query-rail-governance.md"
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
       ],
       "allowedImplementationSurfaces": [
         "scripts/planning-db-query.cjs",
@@ -107680,7 +107685,8 @@
         "governingSources": [
           "AGENTS.md",
           "docs/planning/status/governance-document-rule-inventory.md",
-          "docs/architecture/command-query-rail-governance.md"
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
         ],
         "commandQueryRails": [
           {
@@ -107704,7 +107710,7 @@
           "docs/planning/proposals/mandatory/**"
         ]
       },
-      "revision": 0,
+      "revision": 1,
       "createdBy": "codex",
       "createdAt": "2026-08-11T18:18:59.313Z"
     },
@@ -168205,6 +168211,213 @@
         ]
       },
       "createdAt": "2026-08-11T18:40:20.236Z"
+    },
+    {
+      "operationId": "481ea76b-0138-4855-9aa2-8b653fc10b3b",
+      "idempotencyKey": "issue-2274-fowler-governance-recordarchitecturecomponent",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE#command#recordarchitecturecomponent",
+      "sourcePath": "scripts/planning-db-operate.cjs",
+      "sourceContentSha256": "6ec6e0ec94701875a1c749ebb433011b2d6b36228a9194cd7dfa09a13af18a9e",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+        "dddOwner": "ArchitectureCatalog",
+        "railName": "RecordArchitectureComponent",
+        "railType": "command",
+        "featureId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE",
+        "greenTest": "node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+        "sourceRef": "scripts/planning-db-operate.cjs",
+        "unitTests": [
+          "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+          "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2274"],
+        "cypressFlows": ["N/A - repository governance CLI"],
+        "domainObjects": ["ArchitectureComponent"],
+        "fowlerSignals": ["explicit command/query rail"],
+        "patchSurfaces": [
+          "scripts/planning-db-operate.cjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "completionGate": [
+          "node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+          "pnpm planning:db:export --check",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "The RecordArchitectureComponent product intent has no canonical command/query rail declaration.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "architectureGuards": [
+          "node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+        ],
+        "implementationPlan": "Issue #2274 declares the existing RecordArchitectureComponent rail as canonical Planning DB architecture truth.",
+        "implementationRefs": [
+          "scripts/planning-db-operate.cjs#parseArchitectureComponentCommand",
+          "scripts/planning-db-operate.cjs#planArchitectureComponentRecordOperation",
+          "scripts/planning-db-operate.cjs#writePlannedArchitectureComponentRecordOperation",
+          "scripts/planning-db-operate.cjs#applyArchitectureComponentRecordOperation"
+        ],
+        "normalizedRailName": "recordarchitecturecomponent",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "6ec6e0ec94701875a1c749ebb433011b2d6b36228a9194cd7dfa09a13af18a9e",
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-operate.cjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "docs/planning/proposals/mandatory/**"
+        ]
+      },
+      "createdAt": "2026-08-11T18:53:09.688Z"
+    },
+    {
+      "operationId": "340027e2-5660-46d1-bdae-cc4bdfcdbc7f",
+      "idempotencyKey": "issue-2274-fowler-governance-readarchitecturecomponentprofile",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE#query#readarchitecturecomponentprofile",
+      "sourcePath": "scripts/planning-db-query.cjs",
+      "sourceContentSha256": "0ed1b90fd10e5e1b860c8c71ccfc5a4d67cf7911b20564103fe8a522e8637973",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "node --test scripts/planning-db-query.test.cjs",
+        "dddOwner": "ArchitectureCatalogReadModel",
+        "railName": "ReadArchitectureComponentProfile",
+        "railType": "query",
+        "featureId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE",
+        "greenTest": "node --test scripts/planning-db-query.test.cjs",
+        "sourceRef": "scripts/planning-db-query.cjs",
+        "unitTests": ["scripts/planning-db-query.test.cjs"],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2274"],
+        "cypressFlows": ["N/A - repository governance CLI"],
+        "domainObjects": ["ArchitectureComponentProfile"],
+        "fowlerSignals": ["explicit command/query rail"],
+        "patchSurfaces": [
+          "scripts/planning-db-query.cjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "completionGate": [
+          "node --test scripts/planning-db-query.test.cjs",
+          "pnpm planning:db:export --check",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "The ReadArchitectureComponentProfile product intent has no canonical command/query rail declaration.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "architectureGuards": [
+          "node --test scripts/planning-db-query.test.cjs"
+        ],
+        "implementationPlan": "Issue #2274 declares the existing ReadArchitectureComponentProfile rail as canonical Planning DB architecture truth.",
+        "implementationRefs": [
+          "scripts/planning-db-query.cjs#readArchitectureComponentRows"
+        ],
+        "normalizedRailName": "readarchitecturecomponentprofile",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "0ed1b90fd10e5e1b860c8c71ccfc5a4d67cf7911b20564103fe8a522e8637973",
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-query.cjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "docs/planning/proposals/mandatory/**"
+        ]
+      },
+      "createdAt": "2026-08-11T18:53:09.790Z"
+    },
+    {
+      "operationId": "07784543-48f7-46c6-93a8-396ecbad5a91",
+      "idempotencyKey": "issue-2274-fowler-governance-readarchitectureevidence",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE#query#readarchitectureevidence",
+      "sourcePath": "scripts/planning-db-query.cjs",
+      "sourceContentSha256": "0ed1b90fd10e5e1b860c8c71ccfc5a4d67cf7911b20564103fe8a522e8637973",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "node --test scripts/planning-db-query.test.cjs",
+        "dddOwner": "ArchitectureEvidenceReadModel",
+        "railName": "ReadArchitectureEvidence",
+        "railType": "query",
+        "featureId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE",
+        "greenTest": "node --test scripts/planning-db-query.test.cjs",
+        "sourceRef": "scripts/planning-db-query.cjs",
+        "unitTests": ["scripts/planning-db-query.test.cjs"],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2274"],
+        "cypressFlows": ["N/A - repository governance CLI"],
+        "domainObjects": ["ArchitectureEvidence"],
+        "fowlerSignals": ["explicit command/query rail"],
+        "patchSurfaces": [
+          "scripts/planning-db-query.cjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "completionGate": [
+          "node --test scripts/planning-db-query.test.cjs",
+          "pnpm planning:db:export --check",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "The ReadArchitectureEvidence product intent has no canonical command/query rail declaration.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "architectureGuards": [
+          "node --test scripts/planning-db-query.test.cjs"
+        ],
+        "implementationPlan": "Issue #2274 declares the existing ReadArchitectureEvidence rail as canonical Planning DB architecture truth.",
+        "implementationRefs": [
+          "scripts/planning-db-query.cjs#readArchitectureEvidenceRows"
+        ],
+        "normalizedRailName": "readarchitectureevidence",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "0ed1b90fd10e5e1b860c8c71ccfc5a4d67cf7911b20564103fe8a522e8637973",
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-query.cjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "docs/planning/proposals/mandatory/**"
+        ]
+      },
+      "createdAt": "2026-08-11T18:53:09.867Z"
     }
   ],
   "governanceComponentDefinitions": [
