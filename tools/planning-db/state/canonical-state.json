@@ -10359,14 +10359,28 @@
         "work_item_id": "GH-2273",
         "title": "Anchor profile evidence to reachable guards and composition entrypoints",
         "owner": "ArchitectureBoundaryGuard",
-        "status": "implemented",
+        "status": "superseded",
         "rationale": "Reject unreachable guards, negated constant target branches, terminated blocks, and dead reconciler orchestrators while preserving the existing report and rail.",
         "fowler_signal": "evolutionary_architecture",
         "rail_ref": "ApplyArchitectureDependencyBoundaryGate",
         "approved_at": "2026-08-11T04:38:18.454+00:00",
         "supersedes_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V5-20260811",
         "created_at": "2026-08-11T04:38:14.865+00:00",
-        "updated_at": "2026-08-11T04:44:06.664+00:00"
+        "updated_at": "2026-08-11T04:56:59.732+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V7-20260811",
+        "work_item_id": "GH-2273",
+        "title": "Anchor profile evidence to live composition roots",
+        "owner": "ArchitectureBoundaryGuard",
+        "status": "implemented",
+        "rationale": "Require deployment guards and enabled targets to be statically reachable through executable composition roots, including literal and short-circuit control flow, and require reconciler evidence to traverse its create entrypoint.",
+        "fowler_signal": "evolutionary_architecture",
+        "rail_ref": "ApplyArchitectureDependencyBoundaryGate",
+        "approved_at": "2026-08-11T04:57:05.155+00:00",
+        "supersedes_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V6-20260811",
+        "created_at": "2026-08-11T04:57:01.544+00:00",
+        "updated_at": "2026-08-11T05:08:22.332+00:00"
       },
       {
         "design_id": "CANVAS-BACKLOG-INTEGRITY-READINESS-20260626",
@@ -60568,6 +60582,54 @@
         "created_at": "2026-08-11T04:38:14.865+00:00"
       },
       {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V7-20260811",
+        "subject_kind": "command",
+        "subject_id": "ApplyArchitectureDependencyBoundaryGate",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T04:57:01.544+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V7-20260811",
+        "subject_kind": "component",
+        "subject_id": "SYS-CI-GOVERNANCE-TOOLS-CI-ARCHITECTURE-BOUNDARIES",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-11T04:57:01.544+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V7-20260811",
+        "subject_kind": "component",
+        "subject_id": "SYS-CI-GOVERNANCE-TOOLS-CI-ARCHITECTURE-BOUNDARIES",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T04:57:01.544+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V7-20260811",
+        "subject_kind": "path",
+        "subject_id": "tools/ci/architecture-dependency-guard.test.mjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T04:57:01.544+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V7-20260811",
+        "subject_kind": "path",
+        "subject_id": "tools/ci/check-architecture-dependencies.mjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T04:57:01.544+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V7-20260811",
+        "subject_kind": "test",
+        "subject_id": "TEST-CI-API-PRODUCTION-REACHABILITY",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T04:57:01.544+00:00"
+      },
+      {
         "design_id": "CANVAS-BOTTOM-DRAWER-ACTIONABLE-READ-MODEL-20260626",
         "subject_kind": "component",
         "subject_id": "web.component.shell.BottomOperationalDrawer",
@@ -85075,6 +85137,27 @@
         "created_at": "2026-08-10T21:04:41.689+00:00"
       },
       {
+        "operation_id": "03ae141c-5055-40c0-b556-4fccbd0436ad",
+        "idempotency_key": "codex-api-h2-2-reachability-v7-implemented",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V7-20260811",
+        "source_ref": "tools/ci/check-architecture-dependencies.mjs",
+        "source_content_sha256": "a1b1c865ff403d57d786adaf61f98d6296967c4923a712414c2135b8cd4392c7",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "V7 passes 20 architecture tests, all 279 CI-tool tests, the real eight-profile report, Planning DB integrity, and DB-first feature mechanization with no debt or stubs.",
+          "designId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V7-20260811",
+          "toStatus": "implemented",
+          "sourceRef": "tools/ci/check-architecture-dependencies.mjs",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "a1b1c865ff403d57d786adaf61f98d6296967c4923a712414c2135b8cd4392c7"
+        },
+        "created_at": "2026-08-11T05:08:22.332+00:00"
+      },
+      {
         "operation_id": "0681355a-1013-4ec2-bd31-f1274e4705ad",
         "idempotency_key": "gh-2167-update-contract-sys-api-tests-application-services-workspace-evidence-v1",
         "operation_type": "architecture_contract_record",
@@ -85655,6 +85738,27 @@
           "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
         },
         "created_at": "2026-08-10T20:11:20.986+00:00"
+      },
+      {
+        "operation_id": "14f4517e-b941-41a7-af43-80308c0d38b6",
+        "idempotency_key": "codex-api-h2-2-reachability-v7-final-validation",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V7-20260811",
+        "source_ref": "tools/ci/check-architecture-dependencies.mjs",
+        "source_content_sha256": "a1b1c865ff403d57d786adaf61f98d6296967c4923a712414c2135b8cd4392c7",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Run the final database and repository validation gates before V7 implementation closure.",
+          "designId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V7-20260811",
+          "toStatus": "implementing",
+          "sourceRef": "tools/ci/check-architecture-dependencies.mjs",
+          "fromStatus": "approved",
+          "sourceContentSha256": "a1b1c865ff403d57d786adaf61f98d6296967c4923a712414c2135b8cd4392c7"
+        },
+        "created_at": "2026-08-11T05:07:32.754+00:00"
       },
       {
         "operation_id": "14feb541-ca1c-484e-b1b7-e5baa4d0ed09",
@@ -87332,6 +87436,27 @@
         "created_at": "2026-08-10T20:07:00.63+00:00"
       },
       {
+        "operation_id": "581e471d-d411-4c8b-af65-955188836d26",
+        "idempotency_key": "codex-api-h2-2-reachability-v7-review",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V7-20260811",
+        "source_ref": "tools/ci/check-architecture-dependencies.mjs",
+        "source_content_sha256": "972c21a525dd6abfeb44af39559f53d345ed08570d93872dddfbf3e966c32d88",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The V7 scope preserves the existing rail and report while adding executable-root and JavaScript control-flow proof; review the RED matrix before implementation.",
+          "designId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V7-20260811",
+          "toStatus": "review",
+          "sourceRef": "tools/ci/check-architecture-dependencies.mjs",
+          "fromStatus": "proposed",
+          "sourceContentSha256": "972c21a525dd6abfeb44af39559f53d345ed08570d93872dddfbf3e966c32d88"
+        },
+        "created_at": "2026-08-11T04:57:03.38+00:00"
+      },
+      {
         "operation_id": "584d13e0-4bdc-4f45-bb0c-c1b266c69bb5",
         "idempotency_key": "gh-2167-validation-test-sys-api-http-authentication-1-v1",
         "operation_type": "architecture_test_record",
@@ -87701,6 +87826,27 @@
         "created_at": "2026-08-11T03:06:52.328+00:00"
       },
       {
+        "operation_id": "67f972b8-e27a-45e3-9a8b-33908ebc690e",
+        "idempotency_key": "codex-api-h2-2-reachability-v7-evidence-drift",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V7-20260811",
+        "source_ref": "tools/ci/check-architecture-dependencies.mjs",
+        "source_content_sha256": "a1b1c865ff403d57d786adaf61f98d6296967c4923a712414c2135b8cd4392c7",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "V7 RED-GREEN changed control-flow truth evaluation, executable composition-root traversal, factory-product method anchoring, and reconciler create-path enforcement; refresh evidence.",
+          "designId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V7-20260811",
+          "toStatus": "drift",
+          "sourceRef": "tools/ci/check-architecture-dependencies.mjs",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "a1b1c865ff403d57d786adaf61f98d6296967c4923a712414c2135b8cd4392c7"
+        },
+        "created_at": "2026-08-11T05:06:13.964+00:00"
+      },
+      {
         "operation_id": "68f93835-038c-45b9-9551-1c4f40fa0c94",
         "idempotency_key": "codex-api-h2-2-reachability-implementing-v4",
         "operation_type": "architecture_design_transition",
@@ -87745,6 +87891,31 @@
           "sourceContentSha256": "10ad018e65819d6ace50f6d70d4ff91671574cccb3aa1af768eaea661caba292"
         },
         "created_at": "2026-08-10T21:04:34.284+00:00"
+      },
+      {
+        "operation_id": "6c8d7a89-2683-4333-9662-508b6a5b9bc7",
+        "idempotency_key": "codex-api-h2-2-reachability-test-evidence-v7",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V7-20260811",
+        "source_ref": "tools/ci/architecture-dependency-guard.test.mjs",
+        "source_content_sha256": "54d2f730a7c0751b97c184d222a44ee58addf58793e7bad6f3702d7edc7f1f4c",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-CI-API-PRODUCTION-REACHABILITY",
+          "designId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V7-20260811",
+          "required": true,
+          "testKind": "architecture",
+          "testPath": "tools/ci/architecture-dependency-guard.test.mjs",
+          "sourceRef": "tools/ci/architecture-dependency-guard.test.mjs",
+          "componentId": "SYS-CI-GOVERNANCE-TOOLS-CI-ARCHITECTURE-BOUNDARIES",
+          "coverageLevel": "boundary",
+          "validationCommand": "node --test tools/ci/architecture-dependency-guard.test.mjs",
+          "sourceContentSha256": "54d2f730a7c0751b97c184d222a44ee58addf58793e7bad6f3702d7edc7f1f4c"
+        },
+        "created_at": "2026-08-11T05:06:15.798+00:00"
       },
       {
         "operation_id": "6ccd5387-7f6d-433e-8750-47f66e800a1b",
@@ -87795,6 +87966,70 @@
           "sourceContentSha256": "89d19f7206c5ae8e990fb82afd59aafe1f3771131b381b827fe37c5b3738dcd3"
         },
         "created_at": "2026-08-10T21:06:20.782+00:00"
+      },
+      {
+        "operation_id": "6eb5d180-bcd2-4ee0-bb04-3e6713978c9c",
+        "idempotency_key": "codex-api-h2-2-reachability-v7-create",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V7-20260811",
+        "source_ref": "tools/ci/check-architecture-dependencies.mjs",
+        "source_content_sha256": "972c21a525dd6abfeb44af39559f53d345ed08570d93872dddfbf3e966c32d88",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "ArchitectureBoundaryGuard",
+          "title": "Anchor profile evidence to live composition roots",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "ApplyArchitectureDependencyBoundaryGate",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-CI-GOVERNANCE-TOOLS-CI-ARCHITECTURE-BOUNDARIES",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-CI-GOVERNANCE-TOOLS-CI-ARCHITECTURE-BOUNDARIES",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "tools/ci/architecture-dependency-guard.test.mjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "tools/ci/check-architecture-dependencies.mjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-CI-API-PRODUCTION-REACHABILITY",
+              "subjectKind": "test"
+            }
+          ],
+          "status": "proposed",
+          "railRef": "ApplyArchitectureDependencyBoundaryGate",
+          "designId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V7-20260811",
+          "rationale": "Require deployment guards and enabled targets to be statically reachable through executable composition roots, including literal and short-circuit control flow, and require reconciler evidence to traverse its create entrypoint.",
+          "sourceRef": "tools/ci/check-architecture-dependencies.mjs",
+          "workItemId": "GH-2273",
+          "fowlerSignal": "evolutionary_architecture",
+          "supersedesId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V6-20260811",
+          "sourceContentSha256": "972c21a525dd6abfeb44af39559f53d345ed08570d93872dddfbf3e966c32d88"
+        },
+        "created_at": "2026-08-11T04:57:01.544+00:00"
       },
       {
         "operation_id": "70a131ff-2be8-4bda-a6b3-b9fad2a04598",
@@ -88471,6 +88706,27 @@
           "sourceContentSha256": "5a630980b35f3732ff605438d1aa374d3b608dd2ea70af18a7bc101803197cf7"
         },
         "created_at": "2026-08-10T21:04:24.973+00:00"
+      },
+      {
+        "operation_id": "83c3c205-8098-422c-a76b-fd6b77c08d7e",
+        "idempotency_key": "codex-api-h2-2-reachability-v7-evidence-review",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V7-20260811",
+        "source_ref": "tools/ci/check-architecture-dependencies.mjs",
+        "source_content_sha256": "a1b1c865ff403d57d786adaf61f98d6296967c4923a712414c2135b8cd4392c7",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "V7 implementation and architecture tests now reject every fifth-QA bypass while the real report preserves all eight profiles and classifications.",
+          "designId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V7-20260811",
+          "toStatus": "review",
+          "sourceRef": "tools/ci/check-architecture-dependencies.mjs",
+          "fromStatus": "drift",
+          "sourceContentSha256": "a1b1c865ff403d57d786adaf61f98d6296967c4923a712414c2135b8cd4392c7"
+        },
+        "created_at": "2026-08-11T05:07:29.104+00:00"
       },
       {
         "operation_id": "84e8640e-8f4b-4b1b-8603-02eb67b483f1",
@@ -90042,6 +90298,27 @@
         "created_at": "2026-08-10T21:04:15.538+00:00"
       },
       {
+        "operation_id": "b222dba2-4d5b-49a6-a887-bcb52245b657",
+        "idempotency_key": "codex-api-h2-2-reachability-v6-superseded-v7",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V6-20260811",
+        "source_ref": "tools/ci/check-architecture-dependencies.mjs",
+        "source_content_sha256": "972c21a525dd6abfeb44af39559f53d345ed08570d93872dddfbf3e966c32d88",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Fifth Fowler QA proved numeric false branches, short-circuit dead targets, try-finally termination, unanchored reconciler fast paths, and never-called functions can still establish profile evidence; V7 owns the correction.",
+          "designId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V6-20260811",
+          "toStatus": "superseded",
+          "sourceRef": "tools/ci/check-architecture-dependencies.mjs",
+          "fromStatus": "implemented",
+          "sourceContentSha256": "972c21a525dd6abfeb44af39559f53d345ed08570d93872dddfbf3e966c32d88"
+        },
+        "created_at": "2026-08-11T04:56:59.732+00:00"
+      },
+      {
         "operation_id": "b25d54d8-91c2-44b7-ac61-4873f0be4906",
         "idempotency_key": "codex-api-h2-2-reachability-implementing-v3-final",
         "operation_type": "architecture_design_transition",
@@ -91271,6 +91548,27 @@
         "created_at": "2026-08-10T21:06:28.387+00:00"
       },
       {
+        "operation_id": "c745853e-8f6e-401b-bbc3-5ab0591d332f",
+        "idempotency_key": "codex-api-h2-2-reachability-v7-approve",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V7-20260811",
+        "source_ref": "tools/ci/check-architecture-dependencies.mjs",
+        "source_content_sha256": "972c21a525dd6abfeb44af39559f53d345ed08570d93872dddfbf3e966c32d88",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Review approves conservative root-to-guard proof, explicit dead-control-flow rejection, and mandatory reconciler create anchoring with no filename allowlist or parallel command.",
+          "designId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V7-20260811",
+          "toStatus": "approved",
+          "sourceRef": "tools/ci/check-architecture-dependencies.mjs",
+          "fromStatus": "review",
+          "sourceContentSha256": "972c21a525dd6abfeb44af39559f53d345ed08570d93872dddfbf3e966c32d88"
+        },
+        "created_at": "2026-08-11T04:57:05.155+00:00"
+      },
+      {
         "operation_id": "c7a1240a-1bb7-4c25-80db-ffa1a7b653be",
         "idempotency_key": "gh-2167-update-test-sys-api-application-services-authorization-v1",
         "operation_type": "architecture_test_record",
@@ -92404,6 +92702,27 @@
         "created_at": "2026-08-10T21:03:56.869+00:00"
       },
       {
+        "operation_id": "ef7f9586-5689-4917-91a4-4c52b95884b9",
+        "idempotency_key": "codex-api-h2-2-reachability-v7-implementing",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V7-20260811",
+        "source_ref": "tools/ci/check-architecture-dependencies.mjs",
+        "source_content_sha256": "972c21a525dd6abfeb44af39559f53d345ed08570d93872dddfbf3e966c32d88",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Begin V7 RED-GREEN only after database design approval.",
+          "designId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V7-20260811",
+          "toStatus": "implementing",
+          "sourceRef": "tools/ci/check-architecture-dependencies.mjs",
+          "fromStatus": "approved",
+          "sourceContentSha256": "972c21a525dd6abfeb44af39559f53d345ed08570d93872dddfbf3e966c32d88"
+        },
+        "created_at": "2026-08-11T04:57:06.95+00:00"
+      },
+      {
         "operation_id": "ef99372b-64f1-41da-a0d2-cf7c626a556a",
         "idempotency_key": "gh-2167-update-rel-sys-api-tests-application-services-architecture-harness-guards-api-application-services-v1",
         "operation_type": "architecture_relation_record",
@@ -92852,6 +93171,27 @@
           "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
         },
         "created_at": "2026-08-10T22:58:50.304+00:00"
+      },
+      {
+        "operation_id": "f990207f-a2e1-4631-b56e-2c1a3ce92f3e",
+        "idempotency_key": "codex-api-h2-2-reachability-v7-approve-evidence",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V7-20260811",
+        "source_ref": "tools/ci/check-architecture-dependencies.mjs",
+        "source_content_sha256": "a1b1c865ff403d57d786adaf61f98d6296967c4923a712414c2135b8cd4392c7",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Evidence review accepts live-root traversal, dead-control-flow rejection, and reconciler create anchoring with the existing rail and deterministic report.",
+          "designId": "API-H2-2-PRODUCTION-REACHABILITY-GUARD-V7-20260811",
+          "toStatus": "approved",
+          "sourceRef": "tools/ci/check-architecture-dependencies.mjs",
+          "fromStatus": "review",
+          "sourceContentSha256": "a1b1c865ff403d57d786adaf61f98d6296967c4923a712414c2135b8cd4392c7"
+        },
+        "created_at": "2026-08-11T05:07:30.934+00:00"
       },
       {
         "operation_id": "f9c5c360-769b-4840-b5e6-3d0639425913",
@@ -96116,7 +96456,12 @@
         "tools/ci/check-architecture-dependencies.mjs#nodeIsWithin",
         "tools/ci/check-architecture-dependencies.mjs#reachableThisMethodCalls",
         "tools/ci/check-architecture-dependencies.mjs#statementAlwaysTerminates",
-        "tools/ci/check-architecture-dependencies.mjs#staticBooleanValue"
+        "tools/ci/check-architecture-dependencies.mjs#staticBooleanValue",
+        "tools/ci/check-architecture-dependencies.mjs#collectProductionExecutableScopes",
+        "tools/ci/check-architecture-dependencies.mjs#enclosingClassScope",
+        "tools/ci/check-architecture-dependencies.mjs#executableScopeKey",
+        "tools/ci/check-architecture-dependencies.mjs#topLevelNamedExecutableScope",
+        "tools/ci/check-architecture-dependencies.mjs#unwrapExpression"
       ],
       "implementationRefs": [
         ".github/workflows/pr-quality-gate.yml#Validate architecture dependency boundaries",
@@ -96202,7 +96547,12 @@
         "tools/ci/check-architecture-dependencies.mjs#nodeIsWithin",
         "tools/ci/check-architecture-dependencies.mjs#reachableThisMethodCalls",
         "tools/ci/check-architecture-dependencies.mjs#statementAlwaysTerminates",
-        "tools/ci/check-architecture-dependencies.mjs#staticBooleanValue"
+        "tools/ci/check-architecture-dependencies.mjs#staticBooleanValue",
+        "tools/ci/check-architecture-dependencies.mjs#collectProductionExecutableScopes",
+        "tools/ci/check-architecture-dependencies.mjs#enclosingClassScope",
+        "tools/ci/check-architecture-dependencies.mjs#executableScopeKey",
+        "tools/ci/check-architecture-dependencies.mjs#topLevelNamedExecutableScope",
+        "tools/ci/check-architecture-dependencies.mjs#unwrapExpression"
       ],
       "documentationRefs": [
         "docs/planning/proposals/mandatory/governance-and-docs/architecture-dependency-boundary-guard-implementation-plan-20260502.md",
@@ -96220,7 +96570,10 @@
         "tools/ci/check-architecture-dependencies.mjs",
         "tools/ci/architecture-dependency-guard.test.mjs",
         ".dependency-cruiser.cjs",
-        ".github/workflows/pr-quality-gate.yml"
+        ".github/workflows/pr-quality-gate.yml",
+        "apps/api/package.json",
+        "pnpm-lock.yaml",
+        "tools/planning-db/state/canonical-state.json"
       ],
       "architectureGuards": [
         "PR quality gate and local scripts must both run pnpm arch:deps.",
@@ -96232,7 +96585,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "tools/ci/check-architecture-dependencies.mjs",
-      "sourceContentSha256": "972c21a525dd6abfeb44af39559f53d345ed08570d93872dddfbf3e966c32d88",
+      "sourceContentSha256": "a1b1c865ff403d57d786adaf61f98d6296967c4923a712414c2135b8cd4392c7",
       "rawRail": {
         "name": "ApplyArchitectureDependencyBoundaryGate",
         "type": "command",
@@ -96585,7 +96938,8 @@
             "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
             "fowlerSignals": [
               "One typed repository graph replaces drifting package-local guards and filename exception lists.",
-              "Reachable guards and the concrete composition factory/create entrypoint govern supported profile evidence."
+              "Reachable guards and the concrete composition factory/create entrypoint govern supported profile evidence.",
+              "Live composition roots and executable control flow govern deployment-profile evidence."
             ],
             "cypressCoverage": "N/A - repository architecture governance command",
             "architectureGuard": "pnpm arch:deps"
@@ -97150,7 +97504,8 @@
             "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
             "fowlerSignals": [
               "Executable call-path evidence rejects dead constant branches and uncalled same-class provider methods.",
-              "Reachable guards and the concrete composition factory/create entrypoint govern supported profile evidence."
+              "Reachable guards and the concrete composition factory/create entrypoint govern supported profile evidence.",
+              "Live composition roots and executable control flow govern deployment-profile evidence."
             ],
             "cypressCoverage": "N/A - repository architecture governance command",
             "architectureGuard": "pnpm arch:deps"
@@ -97175,7 +97530,8 @@
             "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
             "fowlerSignals": [
               "Executable call-path evidence rejects dead constant branches and uncalled same-class provider methods.",
-              "Reachable guards and the concrete composition factory/create entrypoint govern supported profile evidence."
+              "Reachable guards and the concrete composition factory/create entrypoint govern supported profile evidence.",
+              "Live composition roots and executable control flow govern deployment-profile evidence."
             ],
             "cypressCoverage": "N/A - repository architecture governance command",
             "architectureGuard": "pnpm arch:deps"
@@ -97212,7 +97568,8 @@
             "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
             "fowlerSignals": [
               "Executable call-path evidence rejects dead constant branches and uncalled same-class provider methods.",
-              "Reachable guards and the concrete composition factory/create entrypoint govern supported profile evidence."
+              "Reachable guards and the concrete composition factory/create entrypoint govern supported profile evidence.",
+              "Live composition roots and executable control flow govern deployment-profile evidence."
             ],
             "cypressCoverage": "N/A - repository architecture governance command",
             "architectureGuard": "pnpm arch:deps"
@@ -97226,6 +97583,66 @@
             "fowlerSignals": [
               "Executable call-path evidence rejects dead constant branches and uncalled same-class provider methods.",
               "Reachable guards and the concrete composition factory/create entrypoint govern supported profile evidence."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "collectProductionExecutableScopes",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "Live composition roots and executable control flow govern deployment-profile evidence."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "enclosingClassScope",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "Live composition roots and executable control flow govern deployment-profile evidence."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "executableScopeKey",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "Live composition roots and executable control flow govern deployment-profile evidence."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "topLevelNamedExecutableScope",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "Live composition roots and executable control flow govern deployment-profile evidence."
+            ],
+            "cypressCoverage": "N/A - repository architecture governance command",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "unwrapExpression",
+            "path": "tools/ci/check-architecture-dependencies.mjs",
+            "cqRails": ["ApplyArchitectureDependencyBoundaryGate"],
+            "dddOwner": "Repository CI governance baseline",
+            "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+            "fowlerSignals": [
+              "Live composition roots and executable control flow govern deployment-profile evidence."
             ],
             "cypressCoverage": "N/A - repository architecture governance command",
             "architectureGuard": "pnpm arch:deps"
@@ -97244,7 +97661,8 @@
           "AST-bound profile evidence and runtime-only dependency traversal prevent textual and type-only bypasses.",
           "Runtime reachability, compile-time retention, and executable provider scopes are independent generated evidence axes.",
           "Executable call-path evidence rejects dead constant branches and uncalled same-class provider methods.",
-          "Reachable guards and the concrete composition factory/create entrypoint govern supported profile evidence."
+          "Reachable guards and the concrete composition factory/create entrypoint govern supported profile evidence.",
+          "Live composition roots and executable control flow govern deployment-profile evidence."
         ],
         "completionGate": [
           "node --test tools/ci/architecture-dependency-guard.test.mjs",
@@ -97254,7 +97672,7 @@
         "redGreenCycles": [
           {
             "id": "applyarchitecturedependencyboundarygate-record",
-            "redTest": "node --test --test-name-pattern profile-guards tools/ci/architecture-dependency-guard.test.mjs",
+            "redTest": "node --test --test-name-pattern profile-evidence-rejects tools/ci/architecture-dependency-guard.test.mjs",
             "greenTest": "node --test tools/ci/architecture-dependency-guard.test.mjs and pnpm arch:deps",
             "patchSurfaces": [
               "tools/ci/check-architecture-dependencies.mjs",
@@ -97263,7 +97681,7 @@
               "apps/api/package.json",
               ".github/workflows/pr-quality-gate.yml"
             ],
-            "expectedFailure": "Unreachable guards, negated constants, terminated blocks, or dead orchestrators establish deployment profiles."
+            "expectedFailure": "Dead literal, short-circuit, try-finally, uncalled function, dead factory, or non-create reconciler path establishes a deployment profile."
           }
         ],
         "componentGuides": [
@@ -97291,11 +97709,14 @@
           "tools/ci/check-architecture-dependencies.mjs",
           "tools/ci/architecture-dependency-guard.test.mjs",
           ".dependency-cruiser.cjs",
-          ".github/workflows/pr-quality-gate.yml"
+          ".github/workflows/pr-quality-gate.yml",
+          "apps/api/package.json",
+          "pnpm-lock.yaml",
+          "tools/planning-db/state/canonical-state.json"
         ],
         "forbiddenImplementationSurfaces": ["apps/api/.dependency-cruiser.cjs"]
       },
-      "revision": 5,
+      "revision": 7,
       "createdBy": "codex",
       "createdAt": "2026-08-08T00:00:00.000Z"
     },
@@ -153349,6 +153770,149 @@
         "forbiddenImplementationSurfaces": ["apps/api/.dependency-cruiser.cjs"]
       },
       "createdAt": "2026-08-11T04:42:41.400Z"
+    },
+    {
+      "operationId": "8089df54-7b0f-44c8-80cf-9c3c85f76baf",
+      "idempotencyKey": "codex-api-h2-2-arch-deps-live-roots-6",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#ARCH-DEPS-GUARD#command#applyarchitecturedependencyboundarygate",
+      "sourcePath": "tools/ci/check-architecture-dependencies.mjs",
+      "sourceContentSha256": "a1b1c865ff403d57d786adaf61f98d6296967c4923a712414c2135b8cd4392c7",
+      "expectedRevision": 5,
+      "previousRevision": 5,
+      "resultingRevision": 6,
+      "payload": {
+        "redTest": "node --test --test-name-pattern profile-evidence-rejects tools/ci/architecture-dependency-guard.test.mjs",
+        "dddOwner": "Repository CI governance baseline",
+        "railName": "ApplyArchitectureDependencyBoundaryGate",
+        "railType": "command",
+        "featureId": "ARCH-DEPS-GUARD",
+        "greenTest": "node --test tools/ci/architecture-dependency-guard.test.mjs and pnpm arch:deps",
+        "sourceRef": "tools/ci/check-architecture-dependencies.mjs",
+        "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2273"],
+        "cypressFlows": ["N/A - repository architecture governance command"],
+        "domainObjects": ["ApiProductionReachabilityReport"],
+        "fowlerSignals": [
+          "Live composition roots and executable control flow govern deployment-profile evidence."
+        ],
+        "patchSurfaces": [
+          "tools/ci/check-architecture-dependencies.mjs",
+          "tools/ci/architecture-dependency-guard.test.mjs"
+        ],
+        "completionGate": [
+          "node --test tools/ci/architecture-dependency-guard.test.mjs",
+          "pnpm arch:deps",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Dead literal, short-circuit, try-finally, uncalled function, dead factory, or non-create reconciler path establishes a deployment profile.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "architectureGuards": ["pnpm arch:deps"],
+        "implementationPlan": "docs/planning/proposals/mandatory/governance-and-docs/architecture-dependency-boundary-guard-implementation-plan-20260502.md",
+        "implementationRefs": [
+          "tools/ci/check-architecture-dependencies.mjs#collectApiDeploymentProfileEvidence",
+          "tools/ci/check-architecture-dependencies.mjs#collectProductionExecutableScopes",
+          "tools/ci/check-architecture-dependencies.mjs#isStaticallyReachable",
+          "tools/ci/check-architecture-dependencies.mjs#statementAlwaysTerminates",
+          "tools/ci/check-architecture-dependencies.mjs#hasReachableReconcilerEnabledPath"
+        ],
+        "normalizedRailName": "applyarchitecturedependencyboundarygate",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "a1b1c865ff403d57d786adaf61f98d6296967c4923a712414c2135b8cd4392c7",
+        "allowedImplementationSurfaces": [
+          "tools/ci/check-architecture-dependencies.mjs",
+          "tools/ci/architecture-dependency-guard.test.mjs"
+        ],
+        "forbiddenImplementationSurfaces": ["apps/api/.dependency-cruiser.cjs"]
+      },
+      "createdAt": "2026-08-11T05:06:17.631Z"
+    },
+    {
+      "operationId": "841685d0-3767-431b-913b-8243edc5760e",
+      "idempotencyKey": "codex-api-h2-2-arch-deps-live-roots-complete-7",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#ARCH-DEPS-GUARD#command#applyarchitecturedependencyboundarygate",
+      "sourcePath": "tools/ci/check-architecture-dependencies.mjs",
+      "sourceContentSha256": "a1b1c865ff403d57d786adaf61f98d6296967c4923a712414c2135b8cd4392c7",
+      "expectedRevision": 6,
+      "previousRevision": 6,
+      "resultingRevision": 7,
+      "payload": {
+        "redTest": "node --test --test-name-pattern profile-evidence-rejects tools/ci/architecture-dependency-guard.test.mjs",
+        "dddOwner": "Repository CI governance baseline",
+        "railName": "ApplyArchitectureDependencyBoundaryGate",
+        "railType": "command",
+        "featureId": "ARCH-DEPS-GUARD",
+        "greenTest": "node --test tools/ci/architecture-dependency-guard.test.mjs and pnpm arch:deps",
+        "sourceRef": "tools/ci/check-architecture-dependencies.mjs",
+        "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2273"],
+        "cypressFlows": ["N/A - repository architecture governance command"],
+        "domainObjects": ["ApiProductionReachabilityReport"],
+        "fowlerSignals": [
+          "Live composition roots and executable control flow govern deployment-profile evidence."
+        ],
+        "patchSurfaces": [
+          "tools/ci/check-architecture-dependencies.mjs",
+          "tools/ci/architecture-dependency-guard.test.mjs"
+        ],
+        "completionGate": [
+          "node --test tools/ci/architecture-dependency-guard.test.mjs",
+          "pnpm arch:deps",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Dead literal, short-circuit, try-finally, uncalled function, dead factory, or non-create reconciler path establishes a deployment profile.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "architectureGuards": ["pnpm arch:deps"],
+        "implementationPlan": "docs/planning/proposals/mandatory/governance-and-docs/architecture-dependency-boundary-guard-implementation-plan-20260502.md",
+        "implementationRefs": [
+          "tools/ci/check-architecture-dependencies.mjs#collectApiDeploymentProfileEvidence",
+          "tools/ci/check-architecture-dependencies.mjs#collectProductionExecutableScopes",
+          "tools/ci/check-architecture-dependencies.mjs#isStaticallyReachable",
+          "tools/ci/check-architecture-dependencies.mjs#statementAlwaysTerminates",
+          "tools/ci/check-architecture-dependencies.mjs#hasReachableReconcilerEnabledPath",
+          "tools/ci/check-architecture-dependencies.mjs#enclosingClassScope",
+          "tools/ci/check-architecture-dependencies.mjs#executableScopeKey",
+          "tools/ci/check-architecture-dependencies.mjs#topLevelNamedExecutableScope",
+          "tools/ci/check-architecture-dependencies.mjs#unwrapExpression"
+        ],
+        "normalizedRailName": "applyarchitecturedependencyboundarygate",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "a1b1c865ff403d57d786adaf61f98d6296967c4923a712414c2135b8cd4392c7",
+        "allowedImplementationSurfaces": [
+          "tools/ci/check-architecture-dependencies.mjs",
+          "tools/ci/architecture-dependency-guard.test.mjs",
+          ".dependency-cruiser.cjs",
+          ".github/workflows/pr-quality-gate.yml",
+          "apps/api/package.json",
+          "pnpm-lock.yaml",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": ["apps/api/.dependency-cruiser.cjs"]
+      },
+      "createdAt": "2026-08-11T05:08:06.368Z"
     }
   ],
   "governanceComponentDefinitions": [
