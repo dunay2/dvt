@@ -364,7 +364,6 @@ describe('internal alpha route gate architecture', () => {
     expect(codeStage?.evidenceRefs).toEqual(
       expect.arrayContaining([
         'docs/architecture/components/web/code-workbench-workspace-files-component.md',
-        'apps/api/test/architecture/workspaceFilesQueryRail.architecture.test.ts',
         'apps/api/test/entrypoints/http/workspaceFilesRoutes.test.ts',
         'apps/web/src/app/services/workspace/workspacePorts.files.test.ts',
         'apps/web/src/app/views/CodeView.test.tsx',
