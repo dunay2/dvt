@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import test from 'node:test';
 
@@ -8,6 +10,36 @@ const {
   shouldIncludePlanningDoc,
   splitFrontmatter,
 } = require('../../scripts/sync-docs.cjs');
+
+test('docs sync waits for Planning DB readiness before importing', () => {
+  const packageJson = JSON.parse(
+    readFileSync(new URL('../../package.json', import.meta.url), 'utf8')
+  );
+
+  assert.equal(
+    packageJson.scripts['docs:sync'],
+    'pnpm planning:db:up && pnpm planning:db:health --wait && pnpm planning:db:import && node scripts/sync-docs.cjs'
+  );
+});
+
+test('Planning DB runtime evidence binds the productive docs sync composition', () => {
+  const packageSource = readFileSync(new URL('../../package.json', import.meta.url), 'utf8');
+  const canonicalState = JSON.parse(
+    readFileSync(
+      new URL('../../tools/planning-db/state/canonical-state.json', import.meta.url),
+      'utf8'
+    )
+  );
+  const rail = canonicalState.featureMechanizationRails.find(
+    ({ railName }) => railName === 'PreparePlanningDbRuntime'
+  );
+
+  assert.ok(rail, 'Expected the canonical PreparePlanningDbRuntime rail');
+  assert.ok(rail.implementationRefs.includes('package.json#docs:sync'));
+  assert.ok(rail.symbolRefs.includes('package.json#docs:sync'));
+  assert.equal(rail.sourcePath, 'package.json');
+  assert.equal(rail.sourceContentSha256, createHash('sha256').update(packageSource).digest('hex'));
+});
 
 test('planning doc index generation excludes superseded and archived docs', () => {
   assert.equal(shouldIncludePlanningDoc('Active'), true);
@@ -64,5 +96,21 @@ test('section index generation sorts equal labels by link for cross-platform sta
   assert.ok(
     equalLabelPairCount > 0,
     'Expected evidence docs to contain equal-label rows that exercise the tie-breaker'
+  );
+});
+
+test('section index generation excludes lifecycle-superseded documents from Planning DB', () => {
+  const lifecycleByPath = new Map([
+    [
+      'docs/guides/generic-graph-source-technical-manual-20260404.md',
+      { lifecycle_state: 'superseded' },
+    ],
+  ]);
+
+  const entries = scanSectionEntries('guides', lifecycleByPath);
+
+  assert.equal(
+    entries.some((entry) => entry.link === 'generic-graph-source-technical-manual-20260404.md'),
+    false
   );
 });

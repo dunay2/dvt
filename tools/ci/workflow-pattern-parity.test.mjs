@@ -244,6 +244,30 @@ test('workflow scope policy stays wired into ci and pr quality workflows', () =>
   });
 });
 
+test('PR docs sync runs only after Planning DB preparation', () => {
+  const prQualityGate = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
+  const prepareIndex = prQualityGate.indexOf(
+    '- name: Prepare planning DB for DB-backed validation'
+  );
+  const syncIndex = prQualityGate.indexOf(
+    '- name: Validate docs sync outputs (ADR/index coherence)'
+  );
+
+  assert.ok(prepareIndex >= 0);
+  assert.ok(syncIndex >= 0);
+  assert.ok(prepareIndex < syncIndex, 'Planning DB preparation must precede DB-first docs sync');
+
+  const prepareBlock = prQualityGate.slice(prepareIndex, syncIndex);
+  assert.match(prepareBlock, /steps\.scope\.outputs\.docs_structure_changed == 'true'/u);
+
+  const syncBlock = namedWorkflowStep(
+    prQualityGate,
+    'Validate docs sync outputs (ADR/index coherence)'
+  );
+  assertWorkflowContains(syncBlock, 'GIT_BASE: ${{ github.event.pull_request.base.sha }}');
+  assertWorkflowContains(syncBlock, 'GIT_HEAD: ${{ github.sha }}');
+});
+
 test('contracts and test workflows consume semantic scope outputs instead of inline filters', () => {
   const contractsWorkflow = readFileSync('.github/workflows/contracts.yml', 'utf8');
   const testWorkflow = readFileSync('.github/workflows/test.yml', 'utf8');
@@ -413,6 +437,19 @@ test('PR quality gate prepares planning DB before DB-first feature implementatio
   assertWorkflowContains(prQualityGate, 'GIT_BASE:');
   assertWorkflowContains(prQualityGate, 'github.event.pull_request.base.sha');
   assertWorkflowContains(prQualityGate, 'GIT_HEAD: ${{ github.sha }}');
+});
+
+test('the canonical docs sync rail provisions and imports Planning DB for every caller', () => {
+  const packageScripts = JSON.parse(readFileSync('package.json', 'utf8')).scripts;
+  const localDocsPreflight = readFileSync('scripts/docs-pr-local.cjs', 'utf8');
+
+  assert.match(
+    packageScripts['docs:sync'],
+    /^pnpm planning:db:up && pnpm planning:db:health --wait && pnpm planning:db:import && node scripts\/sync-docs\.cjs$/u
+  );
+  assert.match(packageScripts['docs:sync:check'], /^pnpm docs:sync &&/u);
+  assert.match(packageScripts['docs:ci'], /^pnpm docs:sync &&/u);
+  assert.match(localDocsPreflight, /\['pnpm', \['docs:sync:check'\]\]/u);
 });
 
 test('main full CI prepares DB-first planning projections before the full baseline', () => {

@@ -1244,7 +1244,7 @@ CREATE TABLE architecture.design_operations (
     resulting_revision integer NOT NULL,
     payload jsonb DEFAULT '{}'::jsonb NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT architecture_design_operations_type_check CHECK ((operation_type = ANY (ARRAY['architecture_design_create'::text, 'architecture_design_transition'::text, 'architecture_component_record'::text, 'architecture_relation_record'::text, 'architecture_contract_record'::text, 'architecture_port_record'::text, 'architecture_storage_io_record'::text, 'architecture_fitness_scan'::text, 'architecture_test_record'::text, 'architecture_observability_record'::text]))),
+    CONSTRAINT architecture_design_operations_type_check CHECK ((operation_type = ANY (ARRAY['architecture_design_create'::text, 'architecture_design_transition'::text, 'architecture_component_record'::text, 'architecture_relation_record'::text, 'architecture_contract_record'::text, 'architecture_port_record'::text, 'architecture_storage_io_record'::text, 'architecture_fitness_scan'::text, 'architecture_test_record'::text, 'architecture_test_retire'::text, 'architecture_observability_record'::text, 'architecture_evidence_record'::text, 'architecture_evidence_retire'::text]))),
     CONSTRAINT design_operations_expected_revision_check CHECK (((expected_revision IS NULL) OR (expected_revision >= 0))),
     CONSTRAINT design_operations_previous_revision_check CHECK ((previous_revision >= 0)),
     CONSTRAINT design_operations_resulting_revision_check CHECK ((resulting_revision >= 0)),
@@ -1312,38 +1312,24 @@ CREATE VIEW architecture.design_scope_query AS
 
 CREATE TABLE architecture.evidence (
     evidence_id text NOT NULL,
+    design_id text,
     subject_kind text NOT NULL,
     subject_id text NOT NULL,
     evidence_kind text NOT NULL,
+    evidence_origin text NOT NULL,
     source_ref text NOT NULL,
+    source_path text,
     result_state text NOT NULL,
     recorded_at timestamp with time zone DEFAULT now() NOT NULL,
     source_content_sha256 text,
+    implementation_content_sha256 text,
+    CONSTRAINT architecture_evidence_execution_provenance_check CHECK ((((evidence_origin = ANY (ARRAY['declared'::text, 'imported_assertion'::text])) AND (design_id IS NULL) AND (source_path IS NULL)) OR ((evidence_origin = ANY (ARRAY['local_execution'::text, 'ci_execution'::text])) AND (design_id IS NOT NULL) AND (source_path IS NOT NULL) AND (source_content_sha256 ~ '^[a-f0-9]{64}$'::text)))),
+    CONSTRAINT architecture_evidence_implementation_hash_check CHECK (((implementation_content_sha256 IS NULL) OR (implementation_content_sha256 ~ '^[a-f0-9]{64}$'::text))),
     CONSTRAINT architecture_evidence_kind_check CHECK ((evidence_kind = ANY (ARRAY['test'::text, 'query'::text, 'doc'::text, 'risk'::text, 'screenshot'::text, 'ci'::text]))),
+    CONSTRAINT architecture_evidence_origin_check CHECK ((evidence_origin = ANY (ARRAY['declared'::text, 'imported_assertion'::text, 'local_execution'::text, 'ci_execution'::text]))),
     CONSTRAINT architecture_evidence_result_state_check CHECK ((result_state = ANY (ARRAY['pass'::text, 'fail'::text, 'missing'::text, 'stale'::text]))),
-    CONSTRAINT architecture_evidence_subject_kind_check CHECK ((subject_kind = ANY (ARRAY['component'::text, 'relation'::text, 'contract'::text, 'flow'::text, 'decision'::text, 'check'::text])))
+    CONSTRAINT architecture_evidence_subject_kind_check CHECK ((subject_kind = ANY (ARRAY['component'::text, 'command'::text, 'relation'::text, 'contract'::text, 'port'::text, 'flow'::text, 'check'::text, 'path'::text, 'query'::text, 'decision'::text, 'evidence'::text, 'risk'::text, 'test'::text])))
 );
-
-
---
--- Name: evidence_query; Type: VIEW; Schema: architecture; Owner: -
---
-
-CREATE VIEW architecture.evidence_query AS
- SELECT evidence_id,
-    subject_kind,
-    subject_id,
-    evidence_kind,
-    source_ref,
-    result_state,
-    recorded_at,
-    source_content_sha256,
-        CASE
-            WHEN (result_state = 'stale'::text) THEN 'stale'::text
-            WHEN (recorded_at < (now() - '30 days'::interval)) THEN 'stale'::text
-            ELSE 'fresh'::text
-        END AS freshness_state
-   FROM architecture.evidence evidence;
 
 
 --
@@ -1363,35 +1349,6 @@ CREATE VIEW architecture.implementation_authorization_query AS
    FROM (architecture.design_scope scope
      JOIN architecture.design design ON ((design.design_id = scope.design_id)))
   WHERE (design.status = ANY (ARRAY['approved'::text, 'implementing'::text, 'implemented'::text]));
-
-
---
--- Name: implementation_violation_query; Type: VIEW; Schema: architecture; Owner: -
---
-
-CREATE VIEW architecture.implementation_violation_query AS
- SELECT health_check.check_id AS violation_id,
-    NULL::text AS design_id,
-    health_check.subject_kind,
-    health_check.subject_id,
-    'health_check_failed'::text AS violation_kind,
-    health_check.severity,
-    jsonb_build_object('checkKind', health_check.check_kind, 'predicate', health_check.predicate, 'queryRef', health_check.query_ref, 'status', health_check.status) AS evidence
-   FROM architecture.component_health_check health_check
-  WHERE ((health_check.status = ANY (ARRAY['fail'::text, 'not_indexed'::text])) AND (health_check.severity = ANY (ARRAY['error'::text, 'blocker'::text])))
-UNION ALL
- SELECT ((((scope.design_id || ':'::text) || scope.subject_kind) || ':'::text) || scope.subject_id) AS violation_id,
-    scope.design_id,
-    scope.subject_kind,
-    scope.subject_id,
-    'required_evidence_missing'::text AS violation_kind,
-    'blocker'::text AS severity,
-    jsonb_build_object('scopeKind', scope.scope_kind, 'required', scope.required, 'designStatus', design.status) AS evidence
-   FROM (architecture.design_scope scope
-     JOIN architecture.design design ON ((design.design_id = scope.design_id)))
-  WHERE (scope.required AND (scope.scope_kind = 'must_prove'::text) AND (design.status = ANY (ARRAY['approved'::text, 'implementing'::text, 'implemented'::text])) AND (NOT (EXISTS ( SELECT 1
-           FROM architecture.evidence evidence
-          WHERE ((evidence.subject_kind = scope.subject_kind) AND (evidence.subject_id = scope.subject_id) AND (evidence.result_state = 'pass'::text))))));
 
 
 --
@@ -3356,11 +3313,35 @@ CREATE TABLE planning_query_store.knowledge_intake_repository_references (
 
 
 --
+-- Name: fowler_analysis_dispositions; Type: TABLE; Schema: planning_query_store; Owner: -
+--
+
+CREATE TABLE planning_query_store.fowler_analysis_dispositions (
+    document_path text NOT NULL,
+    disposition_status text NOT NULL,
+    disposition_kind text NOT NULL,
+    canonical_target_path text,
+    reason text NOT NULL,
+    source_content_sha256 text NOT NULL,
+    recorded_by text NOT NULL,
+    recorded_at timestamp with time zone DEFAULT now() NOT NULL,
+    raw_disposition jsonb DEFAULT '{}'::jsonb NOT NULL,
+    CONSTRAINT fowler_analysis_dispositions_status_check CHECK ((disposition_status = ANY (ARRAY['proposed'::text, 'accepted'::text, 'rejected'::text, 'superseded'::text])))
+);
+
+
+--
 -- Name: documentation_lifecycle_query; Type: VIEW; Schema: planning_query_store; Owner: -
 --
 
 CREATE VIEW planning_query_store.documentation_lifecycle_query AS
- WITH action_counts AS (
+ WITH accepted_db_authority_dispositions AS (
+         SELECT disposition.document_path,
+            disposition.disposition_kind,
+            disposition.source_content_sha256
+           FROM planning_query_store.fowler_analysis_dispositions disposition
+          WHERE ((disposition.disposition_status = 'accepted'::text) AND (disposition.disposition_kind = 'db_authority_historical'::text))
+        ), action_counts AS (
          SELECT action.source_document_id AS document_id,
             (count(*))::integer AS action_count,
             (count(*) FILTER (WHERE (lower(COALESCE(action.status, ''::text)) <> ALL (ARRAY['deferred'::text, 'done'::text, 'rejected'::text, 'resolved'::text, 'superseded'::text]))))::integer AS open_action_count
@@ -3387,7 +3368,8 @@ CREATE VIEW planning_query_store.documentation_lifecycle_query AS
             document.planning_type,
             document.owner,
             document.mandatory,
-            NULLIF(COALESCE((document.raw_frontmatter ->> 'canonical_disposition'::text), (document.raw_frontmatter ->> 'canonicalDisposition'::text)), ''::text) AS canonical_disposition,
+            COALESCE(disposition.disposition_kind, NULLIF(COALESCE((document.raw_frontmatter ->> 'canonical_disposition'::text), (document.raw_frontmatter ->> 'canonicalDisposition'::text)), ''::text)) AS canonical_disposition,
+            disposition.disposition_kind AS db_disposition_kind,
             planning_query_store.documentation_subject_key(document.title) AS subject_key,
                 CASE
                     WHEN (document.document_path ~~ 'buzon/%'::text) THEN 'intake'::text
@@ -3403,10 +3385,11 @@ CREATE VIEW planning_query_store.documentation_lifecycle_query AS
             COALESCE(reference_counts.inbound_knowledge_reference_count, 0) AS inbound_knowledge_reference_count,
             COALESCE(repository_counts.inbound_repository_reference_count, 0) AS inbound_repository_reference_count,
             document.source_content_sha256
-           FROM (((planning_query_store.knowledge_documents document
+           FROM ((((planning_query_store.knowledge_documents document
              LEFT JOIN action_counts ON ((action_counts.document_id = document.document_id)))
              LEFT JOIN knowledge_reference_counts reference_counts ON ((reference_counts.document_id = document.document_id)))
              LEFT JOIN repository_reference_counts repository_counts ON ((repository_counts.document_id = document.document_id)))
+             LEFT JOIN accepted_db_authority_dispositions disposition ON (((disposition.document_path = document.document_path) AND (disposition.source_content_sha256 = document.source_content_sha256))))
         ), stateful AS (
          SELECT classified.document_id,
             classified.document_path,
@@ -3417,6 +3400,7 @@ CREATE VIEW planning_query_store.documentation_lifecycle_query AS
             classified.owner,
             classified.mandatory,
             classified.canonical_disposition,
+            classified.db_disposition_kind,
             classified.subject_key,
             classified.canonicality,
             classified.action_count,
@@ -3425,6 +3409,7 @@ CREATE VIEW planning_query_store.documentation_lifecycle_query AS
             classified.inbound_repository_reference_count,
             classified.source_content_sha256,
                 CASE
+                    WHEN (classified.db_disposition_kind = 'db_authority_historical'::text) THEN 'superseded'::text
                     WHEN ((lower(COALESCE(classified.status, ''::text)) = ANY (ARRAY['rejected'::text, 'discarded'::text, 'disposable'::text])) OR (classified.document_path ~~ 'docs/planning/proposals/disposable/%'::text)) THEN 'discarded'::text
                     WHEN ((lower(COALESCE(classified.status, ''::text)) = 'superseded'::text) OR (classified.document_path ~~ 'docs/planning/proposals/superseded/%'::text)) THEN 'superseded'::text
                     WHEN (classified.document_path ~~ 'docs/archive/%'::text) THEN 'archived'::text
@@ -3447,7 +3432,7 @@ CREATE VIEW planning_query_store.documentation_lifecycle_query AS
             (count(*) FILTER (WHERE (stateful_1.canonicality = 'closeout'::text)))::integer AS closeout_counterpart_count,
             (count(*) FILTER (WHERE (stateful_1.canonicality = 'intake'::text)))::integer AS intake_counterpart_count
            FROM stateful stateful_1
-          WHERE (stateful_1.subject_key IS NOT NULL)
+          WHERE ((stateful_1.subject_key IS NOT NULL) AND (stateful_1.lifecycle_state <> ALL (ARRAY['archived'::text, 'discarded'::text, 'superseded'::text])))
           GROUP BY stateful_1.subject_key
         )
  SELECT stateful.document_id,
@@ -4286,6 +4271,135 @@ CREATE VIEW planning_query_store.command_query_rail_query AS
    FROM (ranked_canonical_rails rail
      JOIN reference_rollup rollup ON (((rollup.rail_type = rail.rail_type) AND (rollup.normalized_rail_name = rail.normalized_rail_name))))
   WHERE (rail.canonical_rank = 1);
+
+
+--
+-- Name: evidence_subject_implementation_query; Type: VIEW; Schema: architecture; Owner: -
+--
+
+CREATE VIEW architecture.evidence_subject_implementation_query AS
+ WITH implementation_inputs AS (
+         SELECT rail.rail_type AS subject_kind,
+            rail.rail_name AS subject_id,
+            rail.source_path AS rail_source_path,
+            rail.source_content_sha256 AS rail_source_content_sha256,
+            reference.value AS implementation_ref,
+            split_part(reference.value, '#'::text, 1) AS implementation_path,
+            implementation_file.content_hash AS implementation_content_hash
+           FROM ((planning_query_store.command_query_rail_query rail
+             CROSS JOIN LATERAL jsonb_array_elements_text(rail.implementation_refs) reference(value))
+             LEFT JOIN planning_query_store.governance_files implementation_file ON ((implementation_file.path = split_part(reference.value, '#'::text, 1))))
+        )
+ SELECT implementation_inputs.subject_kind,
+    implementation_inputs.subject_id,
+    implementation_inputs.rail_source_path,
+    implementation_inputs.rail_source_content_sha256,
+    (count(*))::integer AS implementation_ref_count,
+    (count(*) FILTER (WHERE (implementation_inputs.implementation_content_hash IS NULL)))::integer AS missing_implementation_ref_count,
+    jsonb_agg(jsonb_build_object('implementation_ref', implementation_inputs.implementation_ref, 'implementation_path', implementation_inputs.implementation_path, 'implementation_content_hash', implementation_inputs.implementation_content_hash) ORDER BY implementation_inputs.implementation_ref) AS implementation_files,
+    planning_query_store.sha256_text((((((((implementation_inputs.subject_kind || E'\n'::text) || implementation_inputs.subject_id) || E'\n'::text) || implementation_inputs.rail_source_path) || E'\n'::text) || implementation_inputs.rail_source_content_sha256) || E'\n'::text) || string_agg(((implementation_inputs.implementation_ref || '='::text) || COALESCE(implementation_inputs.implementation_content_hash, 'missing'::text)), E'\n'::text ORDER BY implementation_inputs.implementation_ref)) AS current_implementation_content_sha256
+   FROM implementation_inputs
+  GROUP BY implementation_inputs.subject_kind, implementation_inputs.subject_id, implementation_inputs.rail_source_path, implementation_inputs.rail_source_content_sha256;
+
+
+--
+-- Name: evidence_query; Type: VIEW; Schema: architecture; Owner: -
+--
+
+CREATE VIEW architecture.evidence_query AS
+ SELECT evidence.evidence_id,
+    evidence.design_id,
+    evidence.subject_kind,
+    evidence.subject_id,
+    evidence.evidence_kind,
+    evidence.evidence_origin,
+    evidence.source_ref,
+    evidence.source_path,
+    evidence.result_state,
+    evidence.recorded_at,
+    evidence.source_content_sha256,
+    source.content_hash AS current_source_content_sha256,
+    evidence.implementation_content_sha256,
+    subject_implementation.current_implementation_content_sha256,
+        CASE
+            WHEN (evidence.evidence_origin = ANY (ARRAY['declared'::text, 'imported_assertion'::text])) THEN 'assertion_only'::text
+            WHEN (source.path IS NULL) THEN 'missing_source'::text
+            WHEN (evidence.source_content_sha256 IS DISTINCT FROM source.content_hash) THEN 'source_changed'::text
+            WHEN ((evidence.subject_kind = ANY (ARRAY['command'::text, 'query'::text])) AND (subject_implementation.current_implementation_content_sha256 IS NULL)) THEN 'missing_implementation'::text
+            WHEN ((evidence.subject_kind = ANY (ARRAY['command'::text, 'query'::text])) AND (evidence.implementation_content_sha256 IS DISTINCT FROM subject_implementation.current_implementation_content_sha256)) THEN 'implementation_changed'::text
+            WHEN (evidence.result_state = 'stale'::text) THEN 'stale'::text
+            WHEN (evidence.recorded_at < (now() - '30 days'::interval)) THEN 'stale'::text
+            ELSE 'fresh'::text
+        END AS freshness_state,
+        CASE
+            WHEN (evidence.evidence_origin = ANY (ARRAY['declared'::text, 'imported_assertion'::text])) THEN 'assertion_only'::text
+            WHEN ((source.path IS NULL) OR (evidence.source_content_sha256 IS DISTINCT FROM source.content_hash) OR ((evidence.subject_kind = ANY (ARRAY['command'::text, 'query'::text])) AND ((subject_implementation.current_implementation_content_sha256 IS NULL) OR (evidence.implementation_content_sha256 IS DISTINCT FROM subject_implementation.current_implementation_content_sha256))) OR (evidence.result_state = 'stale'::text) OR (evidence.recorded_at < (now() - '30 days'::interval))) THEN 'stale'::text
+            WHEN (evidence.result_state = 'pass'::text) THEN 'verified'::text
+            WHEN (evidence.result_state = 'fail'::text) THEN 'failed'::text
+            ELSE 'missing'::text
+        END AS verification_state,
+        CASE
+            WHEN (evidence.evidence_origin = ANY (ARRAY['declared'::text, 'imported_assertion'::text])) THEN 'assertion_only'::text
+            WHEN (source.path IS NULL) THEN 'missing'::text
+            WHEN (evidence.source_content_sha256 IS DISTINCT FROM source.content_hash) THEN 'changed'::text
+            ELSE 'verified'::text
+        END AS source_verification_state,
+        CASE
+            WHEN (evidence.subject_kind <> ALL (ARRAY['command'::text, 'query'::text])) THEN 'not_applicable'::text
+            WHEN (subject_implementation.current_implementation_content_sha256 IS NULL) THEN 'missing'::text
+            WHEN (evidence.implementation_content_sha256 IS DISTINCT FROM subject_implementation.current_implementation_content_sha256) THEN 'changed'::text
+            ELSE 'verified'::text
+        END AS implementation_verification_state
+   FROM ((architecture.evidence evidence
+     LEFT JOIN planning_query_store.governance_files source ON ((source.path = evidence.source_path)))
+     LEFT JOIN architecture.evidence_subject_implementation_query subject_implementation ON (((subject_implementation.subject_kind = evidence.subject_kind) AND (subject_implementation.subject_id = evidence.subject_id))));
+
+
+--
+-- Name: implementation_violation_query; Type: VIEW; Schema: architecture; Owner: -
+--
+
+CREATE VIEW architecture.implementation_violation_query AS
+ WITH ranked_execution AS (
+         SELECT evidence.evidence_id,
+            evidence.design_id,
+            evidence.subject_kind,
+            evidence.subject_id,
+            evidence.evidence_origin,
+            evidence.result_state,
+            evidence.recorded_at,
+            evidence.source_path,
+            evidence.source_content_sha256,
+            source.content_hash AS current_source_content_sha256,
+            evidence.implementation_content_sha256,
+            subject_implementation.current_implementation_content_sha256,
+            row_number() OVER (PARTITION BY evidence.design_id, evidence.subject_kind, evidence.subject_id ORDER BY evidence.recorded_at DESC, evidence.evidence_id DESC) AS execution_rank
+           FROM ((architecture.evidence evidence
+             LEFT JOIN planning_query_store.governance_files source ON ((source.path = evidence.source_path)))
+             LEFT JOIN architecture.evidence_subject_implementation_query subject_implementation ON (((subject_implementation.subject_kind = evidence.subject_kind) AND (subject_implementation.subject_id = evidence.subject_id))))
+          WHERE (evidence.evidence_origin = ANY (ARRAY['local_execution'::text, 'ci_execution'::text]))
+        )
+ SELECT health_check.check_id AS violation_id,
+    NULL::text AS design_id,
+    health_check.subject_kind,
+    health_check.subject_id,
+    'health_check_failed'::text AS violation_kind,
+    health_check.severity,
+    jsonb_build_object('checkKind', health_check.check_kind, 'predicate', health_check.predicate, 'queryRef', health_check.query_ref, 'status', health_check.status) AS evidence
+   FROM architecture.component_health_check health_check
+  WHERE ((health_check.status = ANY (ARRAY['fail'::text, 'not_indexed'::text])) AND (health_check.severity = ANY (ARRAY['error'::text, 'blocker'::text])))
+UNION ALL
+ SELECT ((((scope.design_id || ':'::text) || scope.subject_kind) || ':'::text) || scope.subject_id) AS violation_id,
+    scope.design_id,
+    scope.subject_kind,
+    scope.subject_id,
+    'required_evidence_missing'::text AS violation_kind,
+    'blocker'::text AS severity,
+    jsonb_build_object('scopeKind', scope.scope_kind, 'required', scope.required, 'designStatus', design.status, 'latestEvidenceId', evidence.evidence_id, 'latestResult', evidence.result_state, 'sourcePath', evidence.source_path, 'sourceHash', evidence.source_content_sha256, 'currentSourceHash', evidence.current_source_content_sha256, 'implementationHash', evidence.implementation_content_sha256, 'currentImplementationHash', evidence.current_implementation_content_sha256) AS evidence
+   FROM ((architecture.design_scope scope
+     JOIN architecture.design design ON ((design.design_id = scope.design_id)))
+     LEFT JOIN ranked_execution evidence ON (((evidence.design_id = scope.design_id) AND (evidence.subject_kind = scope.subject_kind) AND (evidence.subject_id = scope.subject_id) AND (evidence.execution_rank = 1))))
+  WHERE (scope.required AND (scope.scope_kind = 'must_prove'::text) AND (design.status = ANY (ARRAY['approved'::text, 'implementing'::text, 'implemented'::text])) AND ((evidence.evidence_id IS NULL) OR (evidence.result_state <> 'pass'::text) OR (evidence.recorded_at < (now() - '30 days'::interval)) OR (evidence.current_source_content_sha256 IS NULL) OR (evidence.source_content_sha256 IS DISTINCT FROM evidence.current_source_content_sha256) OR ((scope.subject_kind = ANY (ARRAY['command'::text, 'query'::text])) AND ((evidence.current_implementation_content_sha256 IS NULL) OR (evidence.implementation_content_sha256 IS DISTINCT FROM evidence.current_implementation_content_sha256)))));
 
 
 --
@@ -6187,13 +6301,13 @@ CREATE VIEW planning_query_store.fowler_analysis_document_query AS
 
 CREATE VIEW planning_query_store.fowler_analysis_canonical_coverage_query AS
  WITH accepted_targets AS (
-         SELECT DISTINCT ON (target_1.document_path) target_1.document_path,
+         SELECT DISTINCT ON (target_1.document_path, target_1.source_content_sha256) target_1.document_path,
             target_1.target_path,
             target_1.target_status,
             target_1.source_content_sha256
            FROM planning_query_store.fowler_analysis_canonical_targets target_1
           WHERE (target_1.target_status = 'accepted'::text)
-          ORDER BY target_1.document_path, target_1.linked_at DESC, target_1.target_path
+          ORDER BY target_1.document_path, target_1.source_content_sha256, target_1.linked_at DESC, target_1.target_path
         )
  SELECT document.document_path,
     document.subject_key,
@@ -6206,28 +6320,10 @@ CREATE VIEW planning_query_store.fowler_analysis_canonical_coverage_query AS
             WHEN (target_document.document_path IS NULL) THEN 'target_missing_from_import'::text
             ELSE 'covered'::text
         END AS coverage_state,
-    COALESCE(target.source_content_sha256, document.source_content_sha256) AS source_content_sha256
+   COALESCE(target.source_content_sha256, document.source_content_sha256) AS source_content_sha256
    FROM ((planning_query_store.fowler_analysis_document_query document
-     LEFT JOIN accepted_targets target ON ((target.document_path = document.document_path)))
+     LEFT JOIN accepted_targets target ON (((target.document_path = document.document_path) AND (target.source_content_sha256 = document.source_content_sha256))))
      LEFT JOIN planning_query_store.knowledge_documents target_document ON ((target_document.document_path = target.target_path)));
-
-
---
--- Name: fowler_analysis_dispositions; Type: TABLE; Schema: planning_query_store; Owner: -
---
-
-CREATE TABLE planning_query_store.fowler_analysis_dispositions (
-    document_path text NOT NULL,
-    disposition_status text NOT NULL,
-    disposition_kind text NOT NULL,
-    canonical_target_path text,
-    reason text NOT NULL,
-    source_content_sha256 text NOT NULL,
-    recorded_by text NOT NULL,
-    recorded_at timestamp with time zone DEFAULT now() NOT NULL,
-    raw_disposition jsonb DEFAULT '{}'::jsonb NOT NULL,
-    CONSTRAINT fowler_analysis_dispositions_status_check CHECK ((disposition_status = ANY (ARRAY['proposed'::text, 'accepted'::text, 'rejected'::text, 'superseded'::text])))
-);
 
 
 --
@@ -6276,12 +6372,14 @@ CREATE TABLE planning_query_store.fowler_analysis_reference_resolutions (
 CREATE VIEW planning_query_store.fowler_analysis_reference_query AS
  WITH accepted_targets AS MATERIALIZED (
          SELECT target.document_path,
+            target.source_content_sha256,
             min(target.target_path) AS canonical_target_path
            FROM planning_query_store.fowler_analysis_canonical_targets target
           WHERE (target.target_status = 'accepted'::text)
-          GROUP BY target.document_path
+          GROUP BY target.document_path, target.source_content_sha256
         ), imported_references AS MATERIALIZED (
          SELECT document.document_path,
+            document.source_content_sha256 AS document_source_content_sha256,
             'repository_path_reference'::text AS reference_kind,
             reference.relation_type,
             reference.source_path AS reference_path,
@@ -6295,6 +6393,7 @@ CREATE VIEW planning_query_store.fowler_analysis_reference_query AS
           WHERE (reference.source_path !~~ 'buzon/%'::text)
         UNION ALL
          SELECT document.document_path,
+            document.source_content_sha256 AS document_source_content_sha256,
             'knowledge_document_link'::text AS reference_kind,
             link.relation_type,
             source_document.document_path AS reference_path,
@@ -6321,10 +6420,10 @@ CREATE VIEW planning_query_store.fowler_analysis_reference_query AS
             reference.reference_component_id,
             reference.reference_file_role,
             reference.sample_text,
-            reference.source_content_sha256
+           reference.source_content_sha256
            FROM ((imported_references reference
-             LEFT JOIN accepted_targets target ON ((target.document_path = reference.document_path)))
-             LEFT JOIN planning_query_store.fowler_analysis_reference_resolutions resolution ON (((resolution.document_path = reference.document_path) AND (resolution.reference_path = reference.reference_path) AND (resolution.relation_type = reference.relation_type))))
+             LEFT JOIN accepted_targets target ON (((target.document_path = reference.document_path) AND (target.source_content_sha256 = reference.document_source_content_sha256))))
+             LEFT JOIN planning_query_store.fowler_analysis_reference_resolutions resolution ON (((resolution.document_path = reference.document_path) AND (resolution.reference_path = reference.reference_path) AND (resolution.relation_type = reference.relation_type) AND (resolution.source_content_sha256 = reference.document_source_content_sha256))))
         )
  SELECT document_path,
     reference_kind,
@@ -6372,21 +6471,24 @@ CREATE VIEW planning_query_store.fowler_analysis_retirement_query AS
            FROM planning_query_store.fowler_analysis_reference_query reference
           GROUP BY reference.document_path
         ), accepted_targets AS (
-         SELECT DISTINCT ON (target.document_path) target.document_path,
+         SELECT DISTINCT ON (target.document_path, target.source_content_sha256) target.document_path,
             target.target_path AS canonical_target_path,
-            target.target_status AS canonical_target_status
+            target.target_status AS canonical_target_status,
+            target.source_content_sha256
            FROM planning_query_store.fowler_analysis_canonical_targets target
           WHERE (target.target_status = 'accepted'::text)
-          ORDER BY target.document_path, target.linked_at DESC, target.target_path
+          ORDER BY target.document_path, target.source_content_sha256, target.linked_at DESC, target.target_path
         ), accepted_dispositions AS (
          SELECT disposition.document_path,
             disposition.disposition_status,
-            disposition.disposition_kind
+            disposition.disposition_kind,
+            disposition.source_content_sha256
            FROM planning_query_store.fowler_analysis_dispositions disposition
           WHERE (disposition.disposition_status = 'accepted'::text)
         ), retirement_decisions AS (
          SELECT decision.document_path,
-            decision.decision_status AS retirement_decision_status
+            decision.decision_status AS retirement_decision_status,
+            decision.source_content_sha256
            FROM planning_query_store.fowler_analysis_retirement_decisions decision
         ), policy AS (
          SELECT document.document_id,
@@ -6418,9 +6520,9 @@ CREATE VIEW planning_query_store.fowler_analysis_retirement_query AS
            FROM (((((planning_query_store.fowler_analysis_document_query document
              LEFT JOIN improvement_counts ON ((improvement_counts.document_path = document.document_path)))
              LEFT JOIN reference_counts ON ((reference_counts.document_path = document.document_path)))
-             LEFT JOIN accepted_targets ON ((accepted_targets.document_path = document.document_path)))
-             LEFT JOIN accepted_dispositions ON ((accepted_dispositions.document_path = document.document_path)))
-             LEFT JOIN retirement_decisions ON ((retirement_decisions.document_path = document.document_path)))
+             LEFT JOIN accepted_targets ON (((accepted_targets.document_path = document.document_path) AND (accepted_targets.source_content_sha256 = document.source_content_sha256))))
+             LEFT JOIN accepted_dispositions ON (((accepted_dispositions.document_path = document.document_path) AND (accepted_dispositions.source_content_sha256 = document.source_content_sha256))))
+             LEFT JOIN retirement_decisions ON (((retirement_decisions.document_path = document.document_path) AND (retirement_decisions.source_content_sha256 = document.source_content_sha256))))
         )
  SELECT document_id,
     document_path,
@@ -6513,12 +6615,13 @@ CREATE VIEW planning_query_store.fowler_analysis_work_query AS
 
 CREATE VIEW planning_query_store.fowler_analysis_intended_work_query AS
  WITH accepted_targets AS (
-         SELECT DISTINCT ON (target.document_path) target.document_path,
+         SELECT DISTINCT ON (target.document_path, target.source_content_sha256) target.document_path,
             target.target_path AS canonical_target_path,
-            target.target_status AS canonical_target_status
+            target.target_status AS canonical_target_status,
+            target.source_content_sha256
            FROM planning_query_store.fowler_analysis_canonical_targets target
           WHERE (target.target_status = 'accepted'::text)
-          ORDER BY target.document_path, target.linked_at DESC, target.target_path
+          ORDER BY target.document_path, target.source_content_sha256, target.linked_at DESC, target.target_path
         ), source_actions AS (
          SELECT document.document_id,
             document.document_path,
@@ -6537,7 +6640,7 @@ CREATE VIEW planning_query_store.fowler_analysis_intended_work_query AS
             (lower(COALESCE(action.status, ''::text)) <> ALL (ARRAY['deferred'::text, 'done'::text, 'rejected'::text, 'resolved'::text, 'superseded'::text])) AS is_open_action
            FROM ((planning_query_store.fowler_analysis_work_query document
              JOIN planning_query_store.knowledge_action_items action ON ((action.source_document_id = document.document_id)))
-             LEFT JOIN accepted_targets target ON ((target.document_path = document.document_path)))
+             LEFT JOIN accepted_targets target ON (((target.document_path = document.document_path) AND (target.source_content_sha256 = document.source_content_sha256))))
         ), normalized_actions AS (
          SELECT source_actions.document_id,
             source_actions.document_path,
@@ -10176,6 +10279,14 @@ ALTER TABLE ONLY architecture.design_operations
 
 ALTER TABLE ONLY architecture.design_scope
     ADD CONSTRAINT design_scope_design_id_fkey FOREIGN KEY (design_id) REFERENCES architecture.design(design_id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: evidence evidence_design_id_fkey; Type: FK CONSTRAINT; Schema: architecture; Owner: -
+--
+
+ALTER TABLE ONLY architecture.evidence
+    ADD CONSTRAINT evidence_design_id_fkey FOREIGN KEY (design_id) REFERENCES architecture.design(design_id) ON DELETE RESTRICT DEFERRABLE INITIALLY DEFERRED;
 
 
 --

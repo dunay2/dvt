@@ -57,4 +57,4 @@ must happen before `buildPlan(...)` reaches the planner boundary.
 
 - [Planner component entry](./index.md)
 - [Planner contracts](../../../contracts/planner/index.md)
-- [Planner current state assessment](../../../planning/status/planner-current-state-assessment.md)
+- [DB-first Component Map](../../component-map.md)

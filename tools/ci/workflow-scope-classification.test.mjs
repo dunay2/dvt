@@ -183,6 +183,17 @@ test('docs and ci helper script paths keep workspace matrix empty while validati
   }
 });
 
+test('sync docs source routes executable CI contracts without workspace fan-out', () => {
+  const file = 'scripts/sync-docs.cjs';
+  const scope = computeBooleanScope([file], WORKFLOW_SCOPE_PATTERNS);
+  const matrix = computeWorkspaceMatrix([file]);
+
+  assert.equal(scope.changed_file_validation_relevant, true);
+  assert.equal(scope.ci_tool_executable_contracts_relevant, true);
+  assert.equal(matrix.anyChanged, false);
+  assert.deepEqual(matrix.include, []);
+});
+
 test('classifies executable CI tool contracts separately from static CI policy tests', () => {
   const executableScope = computeBooleanScope(
     ['tools/ci/docs-manifest-contract.test.mjs'],
@@ -197,6 +208,14 @@ test('classifies executable CI tool contracts separately from static CI policy t
   assert.equal(executableScope.ci_tool_executable_contracts_relevant, true);
   assert.equal(staticScope.changed_file_validation_relevant, true);
   assert.equal(staticScope.ci_tool_executable_contracts_relevant, false);
+
+  const syncDocsScope = computeBooleanScope(
+    ['tools/ci/sync-docs-status-policy.test.mjs'],
+    WORKFLOW_SCOPE_PATTERNS
+  );
+
+  assert.equal(syncDocsScope.changed_file_validation_relevant, true);
+  assert.equal(syncDocsScope.ci_tool_executable_contracts_relevant, true);
 });
 
 test('workspace matrix covers every workspace with a build or typecheck script', () => {

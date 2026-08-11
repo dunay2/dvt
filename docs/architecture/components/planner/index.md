@@ -9,17 +9,16 @@ last_reviewed: 2026-04-10
 
 ## Canonical reading order
 
-1. [Planner current state assessment](../../../planning/status/planner-current-state-assessment.md)
+1. [DB-first component map](../../component-map.md)
 2. [Planner contracts](../../../contracts/planner/index.md)
 3. [Planner private behavior ports component](./planner-private-behavior-ports-component.md)
 4. [Workspace authoring draft aggregate](./workspace-authoring-draft-aggregate.md)
 5. [Executable subgraph derivation component](./executable-subgraph-derivation-component.md)
 6. [Transformation flow compiler mapping v1](../../../contracts/planner/TransformationFlowCompiler.v1.md)
-7. [GenericGraphSource technical manual](../../../guides/generic-graph-source-technical-manual-20260404.md)
-8. [GenericGraphSource user manual](../../../guides/generic-graph-source-user-manual-20260404.md)
-9. [Planner cycle detection technical manual](../../../guides/planner-cycle-detection-technical-manual-20260404.md)
-10. [Planner cycle detection user manual](../../../guides/planner-cycle-detection-user-manual-20260404.md)
-11. [MW-A2 GenericGraphSource plan](../../../planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md)
+7. [GenericGraphSource user manual](../../../guides/generic-graph-source-user-manual-20260404.md)
+8. [Planner cycle detection technical manual](../../../guides/planner-cycle-detection-technical-manual-20260404.md)
+9. [Planner cycle detection user manual](../../../guides/planner-cycle-detection-user-manual-20260404.md)
+10. [MW-A2 GenericGraphSource plan](../../../planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md)
 
 ## Scope and location
 

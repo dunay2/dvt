@@ -13,6 +13,7 @@ const {
   isPlanningDbActive,
   planResetDataDir,
   resetPlanningDb,
+  resolveDefaultDataDir,
   resolveComposeCommand,
   runPlanningDbUp,
   runPlanningDbHealth,
@@ -22,11 +23,24 @@ const {
 
 const scriptPath = path.join(__dirname, 'planning-db-run.cjs');
 
-test('planning DB defaults to a shared machine-local Windows data directory', () => {
-  assert.equal(defaultDataDir, 'C:\\dvt\\planning-db\\postgres-data');
+test('planning DB resolves the shared machine-local Windows data directory', () => {
+  assert.equal(resolveDefaultDataDir('win32'), 'C:\\dvt\\planning-db\\postgres-data');
   assert.equal(
     defaultPgUrl,
     'postgresql://dvt_planning:dvt_planning_local@localhost:55432/dvt_planning'
+  );
+});
+
+test('planning DB default data directory follows the active platform', () => {
+  assert.equal(defaultDataDir, resolveDefaultDataDir());
+});
+
+test('planning DB defaults to a Docker-compatible workspace directory on Linux', () => {
+  const linuxRepoRoot = '/home/runner/work/dvt/dvt';
+
+  assert.equal(
+    resolveDefaultDataDir('linux', linuxRepoRoot),
+    path.posix.join(linuxRepoRoot, 'planning-db', 'postgres-data')
   );
 });
 

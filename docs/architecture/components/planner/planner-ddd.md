@@ -47,5 +47,5 @@ flowchart LR
 ## Canonical references
 
 - [Planner component entry](./index.md)
-- [Planner current state assessment](../../../planning/status/planner-current-state-assessment.md)
+- [DB-first Component Map](../../component-map.md)
 - [MW-A2 GenericGraphSource plan](../../../planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md)

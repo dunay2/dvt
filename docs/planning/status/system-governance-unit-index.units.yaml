@@ -104,10 +104,10 @@ units:
     parent: SYS-API-ROOT
     level: component
     status: coverage-required
+    ownedConcern:
+      Owns application-layer error types and failure semantics not delegated to narrower components.
     owns:
       - apps/api/src/application/errors/**
-    excludes:
-      - apps/api/src/application/errors/ManifestArtifactResolutionError.ts
     childrenRequired: false
     dddOwner: AS
     cqRails: API application command and query failure semantics
@@ -255,12 +255,13 @@ units:
     parent: SYS-API-ROOT
     level: component
     status: coverage-required
+    ownedConcern:
+      Owns API infrastructure adapters and plugin composition not delegated to narrower components.
     owns:
       - apps/api/src/db/**
       - apps/api/src/infrastructure/**
       - apps/api/src/plugins/**
     excludes:
-      - apps/api/src/infrastructure/planner/ManifestArtifactResolver.ts
       - apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts
       - apps/api/src/infrastructure/startRun/ArtifactStoreDbtProjectBundleBindingPolicy.ts
     childrenRequired: false
@@ -364,7 +365,6 @@ units:
       - apps/api/test/application/services/WorkflowEngineFactory.test.ts
       - apps/api/test/application/services/storedPlanExecutabilityValidator/**
       - apps/api/test/entrypoints/http/**
-      - apps/api/test/infrastructure/planner/ManifestArtifactResolver.test.ts
       - apps/api/test/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.test.ts
     childrenRequired: false
     dddOwner: INFRA
@@ -579,22 +579,19 @@ units:
       - apps/api/src/application/services/StoredPlanExecutabilityValidator.ts
       - apps/api/src/entrypoints/http/planRoutePlanRefParser.ts
     owns:
-      - apps/api/src/application/errors/ManifestArtifactResolutionError.ts
       - apps/api/src/application/services/StoredExecutablePlanResolver.ts
       - apps/api/src/application/services/StoredPlanExecutabilityValidator.ts
       - apps/api/src/application/services/WorkflowEngineFactory.ts
       - apps/api/src/entrypoints/http/planRefHttpMapper.ts
       - apps/api/src/entrypoints/http/planRoutePlanRefParser.ts
-      - apps/api/src/infrastructure/planner/ManifestArtifactResolver.ts
       - apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts
       - apps/api/src/infrastructure/startRun/ArtifactStoreDbtProjectBundleBindingPolicy.ts
       - apps/api/test/application/services/StoredExecutablePlanResolver.test.ts
       - apps/api/test/application/services/WorkflowEngineFactory.test.ts
       - apps/api/test/application/services/storedPlanExecutabilityValidator/**
       - apps/api/test/entrypoints/http/planRoutePlanSourcePolicy.test.ts
-      - apps/api/test/infrastructure/planner/ManifestArtifactResolver.test.ts
       - apps/api/test/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.test.ts
-    childrenRequired: true
+    childrenRequired: false
     dddOwner: AS
     cqRails: PS-Q03, PS-C02
     governance:

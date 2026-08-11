@@ -507,6 +507,96 @@ test('parseArgs builds an architecture test evidence record command', () => {
   assert.equal(command.required, true);
 });
 
+test('parseArgs builds scoped retirement commands for stale architecture evidence', () => {
+  const shared = [
+    '--design',
+    'API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811',
+    '--reason',
+    'Independent QA proved the current authority points to a retired source.',
+    '--source-ref',
+    'scripts/planning-db-operate.cjs',
+    '--source-content-sha256',
+    'e'.repeat(64),
+    '--actor',
+    'codex',
+  ];
+  const testCommand = parseArgs([
+    'architecture-evidence',
+    'retire-test',
+    '--test',
+    'TEST-SYS-API-TESTS-INFRASTRUCTURE-3',
+    '--component',
+    'SYS-API-TESTS-INFRASTRUCTURE',
+    ...shared,
+  ]);
+  const executionCommand = parseArgs([
+    'architecture-evidence',
+    'retire-execution',
+    '--evidence',
+    'EVIDENCE-API-H2-4-LIFECYCLE-LOCAL',
+    ...shared,
+  ]);
+
+  assert.equal(testCommand.kind, 'architecture_test_retire');
+  assert.equal(testCommand.testId, 'TEST-SYS-API-TESTS-INFRASTRUCTURE-3');
+  assert.equal(testCommand.componentId, 'SYS-API-TESTS-INFRASTRUCTURE');
+  assert.equal(executionCommand.kind, 'architecture_evidence_retire');
+  assert.equal(executionCommand.evidenceId, 'EVIDENCE-API-H2-4-LIFECYCLE-LOCAL');
+  assert.match(executionCommand.reason, /Independent QA/);
+
+  const secondTestCommand = parseArgs([
+    'architecture-evidence',
+    'retire-test',
+    '--test',
+    'TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-11',
+    '--component',
+    'SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION',
+    ...shared,
+  ]);
+  const firstAdmissionTestCommand = parseArgs([
+    'architecture-evidence',
+    'retire-test',
+    '--test',
+    'TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-10',
+    '--component',
+    'SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION',
+    ...shared,
+  ]);
+  assert.notEqual(firstAdmissionTestCommand.idempotencyKey, secondTestCommand.idempotencyKey);
+});
+
+test('parseArgs builds an audited feature rail retirement command', () => {
+  const command = parseArgs([
+    'feature-mechanization',
+    'retire',
+    '--design',
+    'API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811',
+    '--feature',
+    'API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE',
+    '--rail',
+    'ImportPlanningGovernanceQueryStore',
+    '--type',
+    'command',
+    '--expected-revision',
+    '1',
+    '--reason',
+    'ADR-0063 owns the same intent under RestorePlanningDbCanonicalArchitectureState.',
+    '--source-ref',
+    'scripts/planning-db-import.cjs',
+    '--source-content-sha256',
+    'e'.repeat(64),
+    '--actor',
+    'codex',
+  ]);
+
+  assert.equal(command.kind, 'feature_mechanization_rail_retire');
+  assert.equal(
+    command.railId,
+    'local#API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE#command#importplanninggovernancequerystore'
+  );
+  assert.equal(command.expectedRevision, 1);
+});
+
 test('parseArgs builds an architecture observability evidence record command', () => {
   const command = parseArgs([
     'architecture-evidence',
@@ -539,6 +629,42 @@ test('parseArgs builds an architecture observability evidence record command', (
   assert.equal(command.signalKind, 'log');
   assert.equal(command.status, 'implemented');
   assert.equal(command.required, true);
+});
+
+test('parseArgs builds a fresh architecture execution evidence command', () => {
+  const command = parseArgs([
+    'architecture-evidence',
+    'record-execution',
+    '--design',
+    'API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-20260811',
+    '--evidence',
+    'EVIDENCE-API-H2-4-LIFECYCLE-LOCAL',
+    '--subject-kind',
+    'test',
+    '--subject',
+    'TEST-API-H2-4-DOCUMENT-LIFECYCLE-DISPOSITION',
+    '--evidence-kind',
+    'test',
+    '--origin',
+    'local_execution',
+    '--result',
+    'pass',
+    '--source-ref',
+    'node --test scripts/planning-db-schema.test.cjs',
+    '--source-path',
+    'scripts/planning-db-schema.test.cjs',
+    '--source-content-sha256',
+    'e'.repeat(64),
+    '--actor',
+    'codex',
+  ]);
+
+  assert.equal(command.kind, 'architecture_evidence_record');
+  assert.equal(command.evidenceId, 'EVIDENCE-API-H2-4-LIFECYCLE-LOCAL');
+  assert.equal(command.subjectKind, 'test');
+  assert.equal(command.evidenceOrigin, 'local_execution');
+  assert.equal(command.resultState, 'pass');
+  assert.equal(command.sourcePath, 'scripts/planning-db-schema.test.cjs');
 });
 
 test('parseArgs rejects relation record statuses that the relation table cannot store', () => {

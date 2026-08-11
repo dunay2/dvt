@@ -1,4 +1,5 @@
 const test = require('node:test');
+const crypto = require('node:crypto');
 const {
   assert,
   assertArchitectureDesignIdempotentReplayMatches,
@@ -10,13 +11,22 @@ const {
   planArchitectureContractRecordOperation,
   planArchitecturePortRecordOperation,
   planArchitectureStorageIoRecordOperation,
+  planArchitectureTestRetireOperation,
   planArchitectureTestRecordOperation,
+  planArchitectureEvidenceRetireOperation,
+  planArchitectureEvidenceRecordOperation,
+  assertArchitectureEvidenceOriginAuthenticity,
   planArchitectureObservabilityRecordOperation,
   planArchitectureRelationRecordOperation,
   writePlannedArchitectureContractRecordOperation,
   writePlannedArchitecturePortRecordOperation,
   writePlannedArchitectureStorageIoRecordOperation,
+  writePlannedArchitectureEvidenceRecordOperation,
+  writePlannedArchitectureEvidenceRetireOperation,
+  writePlannedArchitectureTestRetireOperation,
   writePlannedArchitectureDesignTransitionOperation,
+  planFeatureMechanizationRailRetireOperation,
+  writePlannedFeatureMechanizationRailRetireOperation,
 } = require('./helpers.cjs');
 
 test('planArchitectureDesignCreateOperation emits design scope and audit rows', () => {
@@ -119,6 +129,40 @@ test('architecture design transition planner enforces current state and approval
         now,
       }),
     /ARCH-DESIGN-TRANSITION-CONFLICT/
+  );
+});
+
+test('architecture design transition rejects implementation with must-prove violations', () => {
+  assert.throws(
+    () =>
+      planArchitectureDesignTransitionOperation({
+        command: {
+          kind: 'architecture_design_transition',
+          designId: 'DESIGN-FAIL-CLOSED',
+          fromStatus: 'implementing',
+          toStatus: 'implemented',
+          reason: 'Implementation complete.',
+          sourceRef: 'scripts/planning-db-operate.cjs',
+          sourceContentSha256: 'e'.repeat(64),
+          actor: 'codex',
+          idempotencyKey: 'transition-fail-closed',
+        },
+        existingDesign: {
+          design_id: 'DESIGN-FAIL-CLOSED',
+          status: 'implementing',
+        },
+        implementationViolations: [
+          {
+            violation_kind: 'required_evidence_missing',
+            subject_kind: 'command',
+            subject_id: 'RecordArchitectureEvidenceExecution',
+            severity: 'blocker',
+          },
+        ],
+        operationId: 'op-transition-fail-closed',
+        now: new Date('2026-08-11T13:30:00.000Z'),
+      }),
+    /ARCH-DESIGN-IMPLEMENTATION-EVIDENCE-MISSING/
   );
 });
 
@@ -853,7 +897,232 @@ test('architecture test evidence planner emits component_test and audit rows', (
   assert.equal(planned.audit.designId, command.designId);
 });
 
-test('architecture observability evidence planner emits component_observability and audit rows', () => {
+test('architecture test and execution retirement require exact may-delete scope', () => {
+  const now = new Date('2026-08-11T13:00:00.000Z');
+  const shared = [
+    '--design',
+    'API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811',
+    '--reason',
+    'Independent QA proved the fact is stale current authority.',
+    '--source-ref',
+    'scripts/planning-db-operate.cjs',
+    '--source-content-sha256',
+    'e'.repeat(64),
+    '--actor',
+    'codex',
+  ];
+  const testCommand = parseArgs([
+    'architecture-evidence',
+    'retire-test',
+    '--test',
+    'TEST-SYS-API-TESTS-INFRASTRUCTURE-3',
+    '--component',
+    'SYS-API-TESTS-INFRASTRUCTURE',
+    ...shared,
+  ]);
+  const testPlan = planArchitectureTestRetireOperation({
+    command: testCommand,
+    design: { design_id: testCommand.designId, status: 'review' },
+    designScopes: [
+      {
+        subject_kind: 'test',
+        subject_id: testCommand.testId,
+        scope_kind: 'may_delete',
+      },
+      {
+        subject_kind: 'component',
+        subject_id: testCommand.componentId,
+        scope_kind: 'may_reference',
+      },
+    ],
+    existingTest: {
+      test_id: testCommand.testId,
+      component_id: testCommand.componentId,
+      test_path: 'apps/api/test/infrastructure/planner/ManifestArtifactResolver.test.ts',
+    },
+    operationId: 'op-architecture-test-retire',
+    now,
+  });
+  assert.equal(testPlan.retirement.testId, testCommand.testId);
+  assert.equal(testPlan.audit.operationType, 'architecture_test_retire');
+  assert.equal(testPlan.audit.payload.testId, testCommand.testId);
+
+  const executionCommand = parseArgs([
+    'architecture-evidence',
+    'retire-execution',
+    '--evidence',
+    'EVIDENCE-API-H2-4-LIFECYCLE-LOCAL',
+    ...shared,
+  ]);
+  const executionPlan = planArchitectureEvidenceRetireOperation({
+    command: executionCommand,
+    design: { design_id: executionCommand.designId, status: 'review' },
+    designScopes: [
+      {
+        subject_kind: 'evidence',
+        subject_id: executionCommand.evidenceId,
+        scope_kind: 'may_delete',
+      },
+    ],
+    existingEvidence: {
+      evidence_id: executionCommand.evidenceId,
+      design_id: executionCommand.designId,
+    },
+    operationId: 'op-architecture-evidence-retire',
+    now,
+  });
+  assert.equal(executionPlan.retirement.evidenceId, executionCommand.evidenceId);
+  assert.equal(executionPlan.audit.operationType, 'architecture_evidence_retire');
+  assert.equal(executionPlan.audit.payload.evidenceId, executionCommand.evidenceId);
+
+  assert.throws(
+    () =>
+      planArchitectureEvidenceRetireOperation({
+        command: executionCommand,
+        design: { design_id: executionCommand.designId, status: 'review' },
+        designScopes: [
+          {
+            subject_kind: 'evidence',
+            subject_id: executionCommand.evidenceId,
+            scope_kind: 'may_delete',
+          },
+        ],
+        existingEvidence: {
+          evidence_id: executionCommand.evidenceId,
+          design_id: 'OTHER-DESIGN',
+        },
+        operationId: 'op-owner-mismatch',
+        now,
+      }),
+    /ARCH-EVIDENCE-RETIRE-DESIGN-MISMATCH/
+  );
+
+  assert.throws(
+    () =>
+      planArchitectureEvidenceRetireOperation({
+        command: executionCommand,
+        design: { design_id: executionCommand.designId, status: 'review' },
+        designScopes: [],
+        existingEvidence: { evidence_id: executionCommand.evidenceId },
+        operationId: 'op-missing-scope',
+        now,
+      }),
+    /ARCH-EVIDENCE-RETIRE-DESIGN-SCOPE-MISSING/
+  );
+});
+
+test('retirement writers delete exact rows before recording architecture audit', async () => {
+  const queries = [];
+  const client = {
+    async query(sql, params) {
+      queries.push({ sql, params });
+      return { rows: [], rowCount: 1 };
+    },
+  };
+  const audit = {
+    operationId: 'op-retire',
+    idempotencyKey: 'retire-idempotency',
+    operationType: 'architecture_test_retire',
+    actor: 'codex',
+    designId: 'API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811',
+    sourceRef: 'scripts/planning-db-operate.cjs',
+    sourceContentSha256: 'e'.repeat(64),
+    expectedRevision: null,
+    previousRevision: 0,
+    resultingRevision: 0,
+    payload: {},
+    createdAt: '2026-08-11T13:00:00.000Z',
+  };
+  await writePlannedArchitectureTestRetireOperation(client, {
+    retirement: { testId: 'TEST-SYS-API-TESTS-INFRASTRUCTURE-3' },
+    audit,
+  });
+  await writePlannedArchitectureEvidenceRetireOperation(client, {
+    retirement: { evidenceId: 'EVIDENCE-API-H2-4-LIFECYCLE-LOCAL' },
+    audit: { ...audit, operationType: 'architecture_evidence_retire' },
+  });
+
+  assert.ok(
+    queries.some(
+      ({ sql, params }) =>
+        sql.includes('delete from architecture.component_test') &&
+        params[0] === 'TEST-SYS-API-TESTS-INFRASTRUCTURE-3'
+    )
+  );
+  assert.ok(
+    queries.some(
+      ({ sql, params }) =>
+        sql.includes('delete from architecture.evidence') &&
+        params[0] === 'EVIDENCE-API-H2-4-LIFECYCLE-LOCAL'
+    )
+  );
+  assert.equal(
+    queries.filter(({ sql }) => sql.includes('architecture.design_operations')).length,
+    2
+  );
+});
+
+test('feature mechanization retirement uses design scope, CAS, and audited deletion', async () => {
+  const command = parseArgs([
+    'feature-mechanization',
+    'retire',
+    '--design',
+    'API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811',
+    '--feature',
+    'API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE',
+    '--rail',
+    'ImportPlanningGovernanceQueryStore',
+    '--type',
+    'command',
+    '--expected-revision',
+    '1',
+    '--reason',
+    'Reuse RestorePlanningDbCanonicalArchitectureState.',
+    '--source-ref',
+    'scripts/planning-db-import.cjs',
+    '--source-content-sha256',
+    'e'.repeat(64),
+    '--actor',
+    'codex',
+  ]);
+  const planned = planFeatureMechanizationRailRetireOperation({
+    command,
+    design: { design_id: command.designId, status: 'review' },
+    designScopes: [
+      {
+        subject_kind: 'decision',
+        subject_id: command.railId,
+        scope_kind: 'may_delete',
+      },
+    ],
+    existingRail: { rail_id: command.railId, revision: 1 },
+    operationId: 'op-feature-rail-retire',
+    now: new Date('2026-08-11T13:00:00.000Z'),
+  });
+  const queries = [];
+  await writePlannedFeatureMechanizationRailRetireOperation(
+    {
+      async query(sql, params) {
+        queries.push({ sql, params });
+        return { rows: [], rowCount: 1 };
+      },
+    },
+    planned
+  );
+
+  assert.equal(planned.retirement.railId, command.railId);
+  assert.equal(planned.audit.payload.railId, command.railId);
+  assert.ok(
+    queries.some(
+      ({ sql, params }) =>
+        sql.includes('delete from planning_query_store.feature_mechanization_local_rails') &&
+        params[0] === command.railId
+    )
+  );
+  assert.ok(queries.some(({ sql }) => sql.includes('feature_mechanization_local_operations')));
+});
+
+test('architecture observability evidence planner accepts component update authority', () => {
   const now = new Date('2026-06-12T14:00:00.000Z');
   const command = parseArgs([
     'architecture-evidence',
@@ -892,7 +1161,7 @@ test('architecture observability evidence planner emits component_observability 
       {
         subject_kind: 'component',
         subject_id: 'SYS-API-OPS-ROUTES',
-        scope_kind: 'may_reference',
+        scope_kind: 'may_update',
       },
     ],
     component: { component_id: 'SYS-API-OPS-ROUTES' },
@@ -906,6 +1175,327 @@ test('architecture observability evidence planner emits component_observability 
   assert.equal(planned.observability.status, 'implemented');
   assert.equal(planned.audit.operationType, 'architecture_observability_record');
   assert.equal(planned.audit.designId, command.designId);
+});
+
+test('architecture execution evidence planner requires must-prove scope and records provenance', () => {
+  const now = new Date('2026-08-11T12:00:00.000Z');
+  const command = parseArgs([
+    'architecture-evidence',
+    'record-execution',
+    '--design',
+    'API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-20260811',
+    '--evidence',
+    'EVIDENCE-API-H2-4-LIFECYCLE-LOCAL',
+    '--subject-kind',
+    'query',
+    '--subject',
+    'ClassifyArchitectureDocumentationDisposition',
+    '--evidence-kind',
+    'test',
+    '--origin',
+    'local_execution',
+    '--result',
+    'pass',
+    '--source-ref',
+    'node --test scripts/planning-db-schema.test.cjs',
+    '--source-path',
+    'scripts/planning-db-schema.test.cjs',
+    '--source-content-sha256',
+    'e'.repeat(64),
+    '--actor',
+    'codex',
+  ]);
+
+  const planned = planArchitectureEvidenceRecordOperation({
+    command,
+    design: { design_id: command.designId, status: 'implementing' },
+    designScopes: [
+      {
+        subject_kind: 'query',
+        subject_id: 'ClassifyArchitectureDocumentationDisposition',
+        scope_kind: 'must_prove',
+      },
+    ],
+    sourceFile: {
+      path: 'scripts/planning-db-schema.test.cjs',
+      content_hash: 'e'.repeat(64),
+    },
+    subjectImplementation: {
+      current_implementation_content_sha256: 'd'.repeat(64),
+      missing_implementation_ref_count: 0,
+    },
+    operationId: 'op-architecture-evidence-record',
+    now,
+  });
+
+  assert.equal(planned.evidence.evidenceOrigin, 'local_execution');
+  assert.equal(planned.evidence.resultState, 'pass');
+  assert.equal(planned.evidence.designId, command.designId);
+  assert.equal(planned.evidence.sourcePath, command.sourcePath);
+  assert.equal(planned.evidence.implementationContentSha256, 'd'.repeat(64));
+  assert.equal(planned.audit.operationType, 'architecture_evidence_record');
+
+  assert.throws(
+    () =>
+      planArchitectureEvidenceRecordOperation({
+        command,
+        design: { design_id: command.designId, status: 'implementing' },
+        designScopes: [
+          {
+            subject_kind: command.subjectKind,
+            subject_id: command.subjectId,
+            scope_kind: 'must_prove',
+          },
+        ],
+        sourceFile: {
+          path: command.sourcePath,
+          content_hash: command.sourceContentSha256,
+        },
+        subjectImplementation: null,
+        operationId: 'op-architecture-evidence-missing-implementation',
+        now,
+      }),
+    /ARCH-EVIDENCE-SUBJECT-IMPLEMENTATION-MISSING/u
+  );
+});
+
+test('architecture execution evidence writer persists proof before its audit row', async () => {
+  const queries = [];
+  const client = {
+    async query(sql, params) {
+      queries.push({ sql, params });
+      return { rows: [], rowCount: 1 };
+    },
+  };
+  const planned = {
+    evidence: {
+      evidenceId: 'EVIDENCE-API-H2-4-LIFECYCLE-LOCAL',
+      designId: 'API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-20260811',
+      subjectKind: 'test',
+      subjectId: 'TEST-API-H2-4-DOCUMENT-LIFECYCLE-DISPOSITION',
+      evidenceKind: 'test',
+      evidenceOrigin: 'local_execution',
+      sourceRef: 'node --test scripts/planning-db-schema.test.cjs',
+      sourcePath: 'scripts/planning-db-schema.test.cjs',
+      resultState: 'pass',
+      recordedAt: '2026-08-11T12:00:00.000Z',
+      sourceContentSha256: 'e'.repeat(64),
+      implementationContentSha256: 'd'.repeat(64),
+    },
+    audit: {
+      operationId: 'op-architecture-evidence-record',
+      idempotencyKey: 'evidence-idempotency-key',
+      operationType: 'architecture_evidence_record',
+      actor: 'codex',
+      designId: 'API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-20260811',
+      sourceRef: 'node --test scripts/planning-db-schema.test.cjs',
+      sourceContentSha256: 'e'.repeat(64),
+      expectedRevision: null,
+      previousRevision: 0,
+      resultingRevision: 0,
+      payload: {},
+      createdAt: '2026-08-11T12:00:00.000Z',
+    },
+  };
+
+  await writePlannedArchitectureEvidenceRecordOperation(client, planned);
+
+  assert.match(queries[0].sql, /insert into architecture\.evidence/u);
+  assert.match(queries[0].sql, /design_id/u);
+  assert.match(queries[0].sql, /source_path/u);
+  assert.match(queries[0].sql, /implementation_content_sha256/u);
+  assert.equal(queries[0].params[11], 'd'.repeat(64));
+  assert.equal(queries[0].params[5], 'local_execution');
+  assert.match(queries[1].sql, /insert into architecture\.design_operations/u);
+});
+
+test('architecture evidence rejects forged CI origin and source hash drift', async () => {
+  const committedSourceBytes = Buffer.from('committed architecture evidence source\n', 'utf8');
+  const committedImplementationBytes = Buffer.from('committed implementation source\n', 'utf8');
+  const committedSourceSha256 = crypto
+    .createHash('sha256')
+    .update(committedSourceBytes)
+    .digest('hex');
+  const committedImplementationSha256 = crypto
+    .createHash('sha256')
+    .update(committedImplementationBytes)
+    .digest('hex');
+  const command = parseArgs([
+    'architecture-evidence',
+    'record-execution',
+    '--design',
+    'API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-20260811',
+    '--evidence',
+    'EVIDENCE-API-H2-4-CI',
+    '--subject-kind',
+    'command',
+    '--subject',
+    'RecordArchitectureEvidenceExecution',
+    '--evidence-kind',
+    'ci',
+    '--origin',
+    'ci_execution',
+    '--result',
+    'pass',
+    '--source-ref',
+    'https://github.com/dunay2/dvt/actions/runs/1234/job/5678',
+    '--source-path',
+    'scripts/planning-db-operate.cjs',
+    '--source-content-sha256',
+    committedSourceSha256,
+    '--actor',
+    'codex',
+  ]);
+
+  await assert.rejects(
+    assertArchitectureEvidenceOriginAuthenticity(command, {
+      currentGitSha: 'a'.repeat(40),
+      fetch: async () => ({ ok: false, status: 404, json: async () => ({}) }),
+      repositorySlug: 'dunay2/dvt',
+    }),
+    /ARCH-EVIDENCE-CI-ORIGIN-UNVERIFIED/
+  );
+
+  const githubResponses = new Map([
+    [
+      'https://api.github.com/repos/dunay2/dvt/actions/runs/1234',
+      {
+        id: 1234,
+        head_sha: 'a'.repeat(40),
+        status: 'completed',
+        conclusion: 'success',
+        html_url: 'https://github.com/dunay2/dvt/actions/runs/1234',
+        repository: { full_name: 'dunay2/dvt' },
+      },
+    ],
+    [
+      'https://api.github.com/repos/dunay2/dvt/actions/jobs/5678',
+      {
+        id: 5678,
+        run_id: 1234,
+        head_sha: 'a'.repeat(40),
+        status: 'completed',
+        conclusion: 'success',
+        html_url: command.sourceRef,
+        name: 'PR Quality Checks',
+      },
+    ],
+  ]);
+  const verified = await assertArchitectureEvidenceOriginAuthenticity(command, {
+    currentGitSha: 'a'.repeat(40),
+    fetch: async (url) => ({
+      ok: githubResponses.has(url),
+      status: githubResponses.has(url) ? 200 : 404,
+      json: async () => githubResponses.get(url) || {},
+    }),
+    repositorySlug: 'dunay2/dvt',
+    subjectImplementation: {
+      rail_source_path: 'scripts/architecture-evidence-ledger.cjs',
+      rail_source_content_sha256: committedImplementationSha256,
+      implementation_files: [
+        {
+          implementation_path: 'scripts/architecture-evidence-ledger.cjs',
+          implementation_content_hash: committedImplementationSha256,
+        },
+      ],
+    },
+    readGitFileAtCommit: (_commitSha, filePath) =>
+      filePath === command.sourcePath ? committedSourceBytes : committedImplementationBytes,
+  });
+  assert.equal(verified, command);
+
+  await assert.rejects(
+    assertArchitectureEvidenceOriginAuthenticity(command, {
+      currentGitSha: 'a'.repeat(40),
+      fetch: async (url) => ({
+        ok: githubResponses.has(url),
+        status: githubResponses.has(url) ? 200 : 404,
+        json: async () => githubResponses.get(url) || {},
+      }),
+      repositorySlug: 'dunay2/dvt',
+      subjectImplementation: {
+        rail_source_path: 'scripts/architecture-evidence-ledger.cjs',
+        rail_source_content_sha256: committedImplementationSha256,
+        implementation_files: [
+          {
+            implementation_path: 'scripts/architecture-evidence-ledger.cjs',
+            implementation_content_hash: committedImplementationSha256,
+          },
+        ],
+      },
+      readGitFileAtCommit: (_commitSha, filePath) =>
+        filePath === command.sourcePath
+          ? committedSourceBytes
+          : Buffer.from('changed implementation source\n'),
+    }),
+    /ARCH-EVIDENCE-CI-ORIGIN-UNVERIFIED.*implementation bytes at the proven commit/u
+  );
+
+  await assert.rejects(
+    assertArchitectureEvidenceOriginAuthenticity(command, {
+      currentGitSha: 'a'.repeat(40),
+      fetch: async (url) => ({
+        ok: true,
+        status: 200,
+        json: async () => githubResponses.get(url),
+      }),
+      repositorySlug: 'dunay2/dvt',
+      readGitFileAtCommit: () => Buffer.from('different committed bytes\n', 'utf8'),
+    }),
+    /ARCH-EVIDENCE-CI-ORIGIN-UNVERIFIED.*source bytes at the proven commit/u
+  );
+
+  const failedJobResponses = new Map(githubResponses);
+  failedJobResponses.set('https://api.github.com/repos/dunay2/dvt/actions/jobs/5678', {
+    ...githubResponses.get('https://api.github.com/repos/dunay2/dvt/actions/jobs/5678'),
+    conclusion: 'failure',
+  });
+  await assert.rejects(
+    assertArchitectureEvidenceOriginAuthenticity(command, {
+      currentGitSha: 'a'.repeat(40),
+      fetch: async (url) => ({
+        ok: true,
+        status: 200,
+        json: async () => failedJobResponses.get(url),
+      }),
+      repositorySlug: 'dunay2/dvt',
+    }),
+    /ARCH-EVIDENCE-CI-ORIGIN-UNVERIFIED.*successful completed job/u
+  );
+
+  await assert.rejects(
+    assertArchitectureEvidenceOriginAuthenticity(command, {
+      currentGitSha: 'b'.repeat(40),
+      fetch: async (url) => ({
+        ok: true,
+        status: 200,
+        json: async () => githubResponses.get(url),
+      }),
+      repositorySlug: 'dunay2/dvt',
+    }),
+    /ARCH-EVIDENCE-CI-ORIGIN-UNVERIFIED.*current commit/u
+  );
+  assert.throws(
+    () =>
+      planArchitectureEvidenceRecordOperation({
+        command: { ...command, evidenceOrigin: 'local_execution' },
+        design: { design_id: command.designId, status: 'implementing' },
+        designScopes: [
+          {
+            subject_kind: command.subjectKind,
+            subject_id: command.subjectId,
+            scope_kind: 'must_prove',
+          },
+        ],
+        sourceFile: {
+          path: command.sourcePath,
+          content_hash: 'f'.repeat(64),
+        },
+        operationId: 'op-source-drift',
+        now: new Date('2026-08-11T13:30:00.000Z'),
+      }),
+    /ARCH-EVIDENCE-SOURCE-HASH-MISMATCH/
+  );
 });
 
 test('architecture scoped operation idempotency rejects stale source-hash replays', () => {

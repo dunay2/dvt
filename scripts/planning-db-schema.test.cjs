@@ -90,6 +90,139 @@ test('current schema accepts audited architecture design transitions', () => {
   );
 });
 
+test('current schema accepts audited architecture authority retirements', () => {
+  const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
+
+  assert.match(
+    schemaSql,
+    /architecture_design_operations_type_check[^\r\n]*'architecture_test_retire'::text/u
+  );
+  assert.match(
+    schemaSql,
+    /architecture_design_operations_type_check[^\r\n]*'architecture_evidence_retire'::text/u
+  );
+});
+
+test('architecture proof distinguishes assertions from fresh executions', () => {
+  const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
+
+  assert.match(
+    schemaSql,
+    /architecture\.evidence[\s\S]*design_id text[\s\S]*evidence_origin text NOT NULL[\s\S]*source_path text[\s\S]*imported_assertion[\s\S]*local_execution[\s\S]*ci_execution/u
+  );
+  assert.match(schemaSql, /architecture\.evidence[\s\S]*implementation_content_sha256 text/u);
+  assert.match(
+    schemaSql,
+    /CREATE VIEW architecture\.evidence_subject_implementation_query[\s\S]*command_query_rail_query[\s\S]*implementation_refs[\s\S]*governance_files[\s\S]*sha256_text/u
+  );
+  assert.match(schemaSql, /CREATE VIEW architecture\.evidence_query[\s\S]*source_changed/u);
+  assert.match(schemaSql, /CREATE VIEW architecture\.evidence_query[\s\S]*implementation_changed/u);
+  assert.match(schemaSql, /CREATE VIEW architecture\.evidence_query[\s\S]*assertion_only/u);
+  assert.match(schemaSql, /CREATE VIEW architecture\.evidence_query[\s\S]*verified/u);
+  assert.match(
+    schemaSql,
+    /CREATE VIEW architecture\.evidence_query[\s\S]*evidence_subject_implementation_query/u
+  );
+  assert.match(
+    schemaSql,
+    /implementation_violation_query[\s\S]*row_number\(\)[\s\S]*PARTITION BY evidence\.design_id[\s\S]*evidence\.recorded_at DESC[\s\S]*evidence\.design_id = scope\.design_id/u
+  );
+  assert.match(
+    schemaSql,
+    /implementation_violation_query[\s\S]*evidence_subject_implementation_query[\s\S]*30 days[\s\S]*source_content_sha256 IS DISTINCT FROM evidence\.current_source_content_sha256[\s\S]*implementation_content_sha256 IS DISTINCT FROM evidence\.current_implementation_content_sha256/u
+  );
+  assert.match(schemaSql, /evidence_design_id_fkey[\s\S]*REFERENCES architecture\.design/u);
+});
+
+test('documentation lifecycle accepts only hash-matched DB authority dispositions', () => {
+  const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
+
+  assert.match(
+    schemaSql,
+    /documentation_lifecycle_query[\s\S]*fowler_analysis_dispositions[\s\S]*db_authority_historical/u
+  );
+  assert.match(schemaSql, /disposition\.source_content_sha256 = document\.source_content_sha256/u);
+  assert.match(
+    schemaSql,
+    /fowler_analysis_retirement_query[\s\S]*accepted_dispositions[\s\S]*accepted_dispositions\.source_content_sha256 = document\.source_content_sha256/u
+  );
+  assert.match(
+    schemaSql,
+    /LEFT JOIN retirement_decisions ON \(\(\(retirement_decisions\.document_path = document\.document_path\) AND \(retirement_decisions\.source_content_sha256 = document\.source_content_sha256\)\)\)/u
+  );
+});
+
+test('Fowler read models invalidate accepted decisions when analyzed source bytes change', () => {
+  const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
+  const coverageView = schemaSql.slice(
+    schemaSql.indexOf(
+      'CREATE VIEW planning_query_store.fowler_analysis_canonical_coverage_query AS'
+    ),
+    schemaSql.indexOf(
+      '-- Name: fowler_analysis_improvement_query',
+      schemaSql.indexOf(
+        'CREATE VIEW planning_query_store.fowler_analysis_canonical_coverage_query AS'
+      )
+    )
+  );
+  const referenceView = schemaSql.slice(
+    schemaSql.indexOf('CREATE VIEW planning_query_store.fowler_analysis_reference_query AS'),
+    schemaSql.indexOf(
+      '-- Name: fowler_analysis_retirement_decisions',
+      schemaSql.indexOf('CREATE VIEW planning_query_store.fowler_analysis_reference_query AS')
+    )
+  );
+  const retirementView = schemaSql.slice(
+    schemaSql.indexOf('CREATE VIEW planning_query_store.fowler_analysis_retirement_query AS'),
+    schemaSql.indexOf(
+      '-- Name: fowler_analysis_work_query',
+      schemaSql.indexOf('CREATE VIEW planning_query_store.fowler_analysis_retirement_query AS')
+    )
+  );
+  const intendedWorkView = schemaSql.slice(
+    schemaSql.indexOf('CREATE VIEW planning_query_store.fowler_analysis_intended_work_query AS'),
+    schemaSql.indexOf(
+      '-- Name: fowler_analysis_duplicate_intent_query',
+      schemaSql.indexOf('CREATE VIEW planning_query_store.fowler_analysis_intended_work_query AS')
+    )
+  );
+
+  assert.match(coverageView, /target\.source_content_sha256 = document\.source_content_sha256/u);
+  assert.match(referenceView, /document\.source_content_sha256 AS document_source_content_sha256/u);
+  assert.match(
+    referenceView,
+    /target\.source_content_sha256 = reference\.document_source_content_sha256/u
+  );
+  assert.match(
+    referenceView,
+    /resolution\.source_content_sha256 = reference\.document_source_content_sha256/u
+  );
+  assert.match(
+    retirementView,
+    /accepted_targets\.source_content_sha256 = document\.source_content_sha256/u
+  );
+  assert.match(
+    intendedWorkView,
+    /target\.source_content_sha256 = document\.source_content_sha256/u
+  );
+});
+
+test('documentation lifecycle duplicate counts exclude non-publishable documents', () => {
+  const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
+  const lifecycleView = schemaSql.slice(
+    schemaSql.indexOf('CREATE VIEW planning_query_store.documentation_lifecycle_query AS'),
+    schemaSql.indexOf(
+      '-- Name: knowledge_document_sections',
+      schemaSql.indexOf('CREATE VIEW planning_query_store.documentation_lifecycle_query AS')
+    )
+  );
+
+  assert.match(
+    lifecycleView,
+    /WHERE \(\(stateful_1\.subject_key IS NOT NULL\) AND \(stateful_1\.lifecycle_state <> ALL \(ARRAY\['archived'::text, 'discarded'::text, 'superseded'::text\]\)\)\)/u
+  );
+});
+
 test('current schema accepts audited governance component revisions', () => {
   const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
 

@@ -8,6 +8,7 @@
  * @version 1.2.0
  */
 const crypto = require('node:crypto');
+const { spawnSync } = require('node:child_process');
 const { Client } = require('pg');
 
 const { defaultPgUrl } = require('./planning-db-run.cjs');
@@ -244,6 +245,16 @@ const allowedArchitectureObservabilityStatuses = new Set([
   'missing',
   'not_applicable',
 ]);
+const allowedArchitectureEvidenceKinds = new Set([
+  'test',
+  'query',
+  'doc',
+  'risk',
+  'screenshot',
+  'ci',
+]);
+const allowedArchitectureEvidenceOrigins = new Set(['local_execution', 'ci_execution']);
+const allowedArchitectureEvidenceResultStates = new Set(['pass', 'fail']);
 const allowedComponentStatuses = new Set([
   'canonical',
   'review',
@@ -272,6 +283,10 @@ const componentListOptionKeys = new Set([
   'governance',
   'fowler-signal',
   'scope',
+  'add-owns',
+  'remove-owns',
+  'add-excludes',
+  'remove-excludes',
 ]);
 const featureMechanizationListOptionKeys = new Set([
   'component-guide',
@@ -375,14 +390,24 @@ const operationHelp = Object.freeze({
     ],
   },
   'architecture-evidence': {
-    operations: ['record-test', 'record-observability'],
+    operations: [
+      'record-test',
+      'retire-test',
+      'record-observability',
+      'record-execution',
+      'retire-execution',
+    ],
     usage:
-      'pnpm planning:db:operate architecture-evidence <record-test|record-observability> --design <DESIGN-ID> --component <SYS-ID> --actor <actor>',
+      'pnpm planning:db:operate architecture-evidence <record-test|retire-test|record-observability|record-execution|retire-execution> --design <DESIGN-ID> --actor <actor>',
     details: [
       'RecordArchitectureTestEvidence attaches required test evidence to a scoped architecture component.',
       'Requires --test-path, --test-kind, --coverage-level, --validation-command, --source-ref, and --source-content-sha256.',
       'RecordArchitectureObservabilityEvidence attaches observability evidence to a scoped architecture component.',
       'Requires --observability, --signal-name, --signal-kind, --status, --source-ref, and --source-content-sha256.',
+      'RecordArchitectureEvidenceExecution records a local or CI execution against an exact must-prove subject.',
+      'Requires --evidence, --subject-kind, --subject, --evidence-kind, --origin, --result, --source-ref, --source-path, and --source-content-sha256.',
+      'ci_execution is post-completion evidence: --source-ref must identify a concrete GitHub Actions job for the canonical repository and current commit, verified through the GitHub API.',
+      'RetireArchitectureTestEvidence and RetireArchitectureEvidenceExecution remove stale current authority under exact may-delete design scope and preserve an audited operation.',
     ],
   },
   'docs-disposition': {
@@ -395,12 +420,13 @@ const operationHelp = Object.freeze({
     ],
   },
   'feature-mechanization': {
-    operations: ['record'],
+    operations: ['record', 'retire'],
     usage:
-      'pnpm planning:db:operate feature-mechanization record --feature <FEATURE-ID> --rail <RailName> --type <command|query> --actor <actor>',
+      'pnpm planning:db:operate feature-mechanization <record|retire> --feature <FEATURE-ID> --rail <RailName> --type <command|query> --actor <actor>',
     details: [
       'RecordFeatureMechanizationRail stores a database command/query rail declaration and a valid feature-mechanization manifest projection without editing Markdown manifests.',
       'Requires --ddd-owner, --implementation-plan, --source-ref, --source-content-sha256, governance/doc/surface/validation fields, and at least one --implementation-ref in path#symbol form.',
+      'RetireFeatureMechanizationRail deletes one stale local rail under exact may-delete design scope, expected revision, and audited provenance.',
     ],
   },
   'fowler-analysis': {
@@ -1353,6 +1379,17 @@ function operationPayload(command) {
     };
   }
 
+  if (command.kind === 'architecture_test_retire') {
+    return {
+      designId: command.designId,
+      testId: command.testId,
+      componentId: command.componentId,
+      reason: command.reason,
+      sourceRef: command.sourceRef,
+      sourceContentSha256: command.sourceContentSha256,
+    };
+  }
+
   if (command.kind === 'architecture_observability_record') {
     return {
       designId: command.designId,
@@ -1362,6 +1399,31 @@ function operationPayload(command) {
       signalKind: command.signalKind,
       required: command.required,
       status: command.status,
+      sourceRef: command.sourceRef,
+      sourceContentSha256: command.sourceContentSha256,
+    };
+  }
+
+  if (command.kind === 'architecture_evidence_record') {
+    return {
+      designId: command.designId,
+      evidenceId: command.evidenceId,
+      subjectKind: command.subjectKind,
+      subjectId: command.subjectId,
+      evidenceKind: command.evidenceKind,
+      evidenceOrigin: command.evidenceOrigin,
+      resultState: command.resultState,
+      sourceRef: command.sourceRef,
+      sourcePath: command.sourcePath,
+      sourceContentSha256: command.sourceContentSha256,
+    };
+  }
+
+  if (command.kind === 'architecture_evidence_retire') {
+    return {
+      designId: command.designId,
+      evidenceId: command.evidenceId,
+      reason: command.reason,
       sourceRef: command.sourceRef,
       sourceContentSha256: command.sourceContentSha256,
     };
@@ -1464,6 +1526,21 @@ function operationPayload(command) {
     };
   }
 
+  if (command.kind === 'feature_mechanization_rail_retire') {
+    return {
+      designId: command.designId,
+      featureId: command.featureId,
+      railId: command.railId,
+      railName: command.railName,
+      normalizedRailName: command.normalizedRailName,
+      railType: command.railType,
+      expectedRevision: command.expectedRevision,
+      reason: command.reason,
+      sourceRef: command.sourceRef,
+      sourceContentSha256: command.sourceContentSha256,
+    };
+  }
+
   if (command.kind && command.kind.startsWith('fowler_analysis_')) {
     return [
       command.kind,
@@ -1548,7 +1625,10 @@ function defaultIdempotencyKey(command) {
     command.kind === 'architecture_storage_io_record' ||
     command.kind === 'architecture_fitness_scan' ||
     command.kind === 'architecture_test_record' ||
-    command.kind === 'architecture_observability_record'
+    command.kind === 'architecture_test_retire' ||
+    command.kind === 'architecture_observability_record' ||
+    command.kind === 'architecture_evidence_record' ||
+    command.kind === 'architecture_evidence_retire'
   ) {
     return [
       command.kind,
@@ -1562,6 +1642,7 @@ function defaultIdempotencyKey(command) {
         command.scanId ||
         command.testId ||
         command.observabilityId ||
+        command.evidenceId ||
         'no-subject',
       crypto
         .createHash('sha256')
@@ -1584,7 +1665,10 @@ function defaultIdempotencyKey(command) {
     ].join(':');
   }
 
-  if (command.kind === 'feature_mechanization_rail_record') {
+  if (
+    command.kind === 'feature_mechanization_rail_record' ||
+    command.kind === 'feature_mechanization_rail_retire'
+  ) {
     return [
       command.kind,
       command.actor || 'anonymous',
@@ -2517,6 +2601,230 @@ function validateArchitectureObservabilityRecordCommand(command) {
   return command;
 }
 
+function validateArchitectureEvidenceRecordCommand(command) {
+  const requiredTextFields = [
+    ['evidence', command.evidenceId],
+    ['subject-kind', command.subjectKind],
+    ['subject', command.subjectId],
+    ['evidence-kind', command.evidenceKind],
+    ['origin', command.evidenceOrigin],
+    ['result', command.resultState],
+    ['source-ref', command.sourceRef],
+    ['source-path', command.sourcePath],
+  ];
+  for (const [field, value] of requiredTextFields) {
+    if (!normalizeOptionalText(value)) {
+      throw new Error(`ARCH-EVIDENCE-EXECUTION-SEMANTICS-MISSING: missing required --${field}.`);
+    }
+  }
+
+  return command;
+}
+
+function normalizeGitHubRepositorySlug(value) {
+  const normalized = String(value || '')
+    .trim()
+    .replace(/\.git$/u, '')
+    .replace(/\/$/u, '');
+  const match =
+    normalized.match(/^([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)$/u) ||
+    normalized.match(/^https:\/\/github\.com\/([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)$/u) ||
+    normalized.match(/^git@github\.com:([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)$/u) ||
+    normalized.match(/^ssh:\/\/git@github\.com\/([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)$/u);
+  if (!match) {
+    throw new Error(`cannot resolve canonical GitHub repository from ${normalized || 'empty'}`);
+  }
+  return match[1];
+}
+
+function readGitValue(args, options = {}) {
+  const result = spawnSync('git', args, {
+    cwd: options.repoRoot || __dirname,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  if (result.error) throw result.error;
+  if (result.status !== 0) {
+    throw new Error(
+      String(result.stderr || result.stdout).trim() || `git ${args.join(' ')} failed`
+    );
+  }
+  return String(result.stdout).trim();
+}
+
+function readGitFileAtCommit(commitSha, filePath, options = {}) {
+  if (typeof options.readGitFileAtCommit === 'function') {
+    const content = options.readGitFileAtCommit(commitSha, filePath);
+    return Buffer.isBuffer(content) ? content : Buffer.from(content);
+  }
+  const result = spawnSync('git', ['show', `${commitSha}:${filePath}`], {
+    cwd: options.repoRoot || __dirname,
+    encoding: null,
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  if (result.error) throw result.error;
+  if (result.status !== 0) {
+    throw new Error(
+      String(result.stderr || result.stdout).trim() || `git show ${commitSha}:${filePath} failed`
+    );
+  }
+  return Buffer.isBuffer(result.stdout) ? result.stdout : Buffer.from(result.stdout || '');
+}
+
+async function readGitHubActionsEvidence(url, options = {}) {
+  const fetchImplementation = options.fetch || globalThis.fetch;
+  if (typeof fetchImplementation !== 'function') {
+    throw new Error('GitHub API fetch is unavailable');
+  }
+  const environment = options.environment || process.env;
+  const token = options.githubToken || environment.GITHUB_TOKEN || environment.GH_TOKEN;
+  const headers = {
+    Accept: 'application/vnd.github+json',
+    'User-Agent': 'dvt-planning-db-evidence-verifier',
+    'X-GitHub-Api-Version': '2022-11-28',
+  };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const response = await fetchImplementation(url, { headers });
+  if (!response?.ok) {
+    throw new Error(`GitHub API ${url} returned HTTP ${response?.status ?? 'unknown'}`);
+  }
+  return response.json();
+}
+
+async function assertArchitectureEvidenceOriginAuthenticity(command, options = {}) {
+  if (command.evidenceOrigin !== 'ci_execution') {
+    return command;
+  }
+  try {
+    const sourceMatch = command.sourceRef.match(
+      /^https:\/\/github\.com\/([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)\/actions\/runs\/([1-9]\d*)\/job\/([1-9]\d*)$/u
+    );
+    if (!sourceMatch) {
+      throw new Error('source-ref must identify one concrete GitHub Actions job');
+    }
+    if (command.evidenceKind !== 'ci') {
+      throw new Error('ci_execution requires evidence-kind=ci');
+    }
+
+    const sourceRepositorySlug = `${sourceMatch[1]}/${sourceMatch[2]}`;
+    const canonicalRepositorySlug = normalizeGitHubRepositorySlug(
+      options.repositorySlug || readGitValue(['remote', 'get-url', 'origin'], options)
+    );
+    if (sourceRepositorySlug.toLowerCase() !== canonicalRepositorySlug.toLowerCase()) {
+      throw new Error(
+        `source repository ${sourceRepositorySlug} is not canonical repository ${canonicalRepositorySlug}`
+      );
+    }
+
+    const currentGitSha = String(
+      options.currentGitSha || readGitValue(['rev-parse', 'HEAD'], options)
+    )
+      .trim()
+      .toLowerCase();
+    if (!/^[a-f0-9]{40}$/u.test(currentGitSha)) {
+      throw new Error(`current commit ${currentGitSha || 'empty'} is not a full Git SHA`);
+    }
+
+    const runId = Number(sourceMatch[3]);
+    const jobId = Number(sourceMatch[4]);
+    const apiRepositorySlug = canonicalRepositorySlug
+      .split('/')
+      .map((segment) => encodeURIComponent(segment))
+      .join('/');
+    const [run, job] = await Promise.all([
+      readGitHubActionsEvidence(
+        `https://api.github.com/repos/${apiRepositorySlug}/actions/runs/${runId}`,
+        options
+      ),
+      readGitHubActionsEvidence(
+        `https://api.github.com/repos/${apiRepositorySlug}/actions/jobs/${jobId}`,
+        options
+      ),
+    ]);
+    if (
+      Number(run.id) !== runId ||
+      String(run.repository?.full_name || '').toLowerCase() !==
+        canonicalRepositorySlug.toLowerCase() ||
+      run.html_url !== `https://github.com/${sourceRepositorySlug}/actions/runs/${runId}`
+    ) {
+      throw new Error('GitHub API run identity does not match source-ref and repository');
+    }
+    if (
+      Number(job.id) !== jobId ||
+      Number(job.run_id) !== runId ||
+      job.html_url !== command.sourceRef ||
+      !normalizeOptionalText(job.name)
+    ) {
+      throw new Error('GitHub API job identity does not match source-ref and run');
+    }
+    if (run.status !== 'completed' || job.status !== 'completed') {
+      throw new Error('GitHub Actions run and job must both be completed');
+    }
+    if (
+      command.resultState === 'pass' &&
+      (run.conclusion !== 'success' || job.conclusion !== 'success')
+    ) {
+      throw new Error('pass evidence requires a successful completed job and run');
+    }
+    if (command.resultState === 'fail' && job.conclusion === 'success') {
+      throw new Error('fail evidence requires a non-successful completed job');
+    }
+    if (
+      String(run.head_sha || '').toLowerCase() !== currentGitSha ||
+      String(job.head_sha || '').toLowerCase() !== currentGitSha
+    ) {
+      throw new Error('GitHub Actions evidence does not prove the current commit');
+    }
+    const committedSourceSha256 = crypto
+      .createHash('sha256')
+      .update(readGitFileAtCommit(currentGitSha, command.sourcePath, options))
+      .digest('hex');
+    if (committedSourceSha256 !== command.sourceContentSha256) {
+      throw new Error(
+        `source bytes at the proven commit hash to ${committedSourceSha256}, not ${command.sourceContentSha256}`
+      );
+    }
+    if (command.subjectKind === 'command' || command.subjectKind === 'query') {
+      const subjectImplementation = options.subjectImplementation;
+      if (
+        !subjectImplementation ||
+        !Array.isArray(subjectImplementation.implementation_files) ||
+        subjectImplementation.implementation_files.length === 0 ||
+        !subjectImplementation.rail_source_path ||
+        !subjectImplementation.rail_source_content_sha256
+      ) {
+        throw new Error(
+          `canonical implementation inputs are missing for ${command.subjectKind} ${command.subjectId}`
+        );
+      }
+      const implementationInputs = new Map([
+        [subjectImplementation.rail_source_path, subjectImplementation.rail_source_content_sha256],
+        ...subjectImplementation.implementation_files.map((implementationFile) => [
+          implementationFile.implementation_path,
+          implementationFile.implementation_content_hash,
+        ]),
+      ]);
+      for (const [implementationPath, expectedHash] of implementationInputs) {
+        const committedImplementationSha256 = crypto
+          .createHash('sha256')
+          .update(readGitFileAtCommit(currentGitSha, implementationPath, options))
+          .digest('hex');
+        if (committedImplementationSha256 !== expectedHash) {
+          throw new Error(
+            `implementation bytes at the proven commit for ${implementationPath} hash to ${committedImplementationSha256}, not ${expectedHash}`
+          );
+        }
+      }
+    }
+    return command;
+  } catch (error) {
+    throw new Error(
+      `ARCH-EVIDENCE-CI-ORIGIN-UNVERIFIED: ${error instanceof Error ? error.message : String(error)}`,
+      { cause: error }
+    );
+  }
+}
+
 function validateArchitectureTestId(value) {
   const normalized = String(value || '').trim();
   if (!/^TEST-[A-Z0-9]+(?:-[A-Z0-9]+)*$/.test(normalized)) {
@@ -2539,8 +2847,119 @@ function validateArchitectureObservabilityId(value) {
   return normalized;
 }
 
+function validateArchitectureEvidenceId(value) {
+  const normalized = String(value || '').trim();
+  if (!/^(?:EV|EVIDENCE)-[A-Z0-9]+(?:-[A-Z0-9]+)*$/.test(normalized)) {
+    throw new Error(
+      `Invalid --evidence "${value}". Expected an uppercase EV-* or EVIDENCE-* architecture evidence id.`
+    );
+  }
+
+  return normalized;
+}
+
+function validateArchitectureEvidenceSubjectKind(value) {
+  if (!allowedArchitectureScopeSubjectKinds.has(value)) {
+    throw new Error(
+      `Invalid --subject-kind "${value}". Expected: ${[
+        ...allowedArchitectureScopeSubjectKinds,
+      ].join(', ')}.`
+    );
+  }
+  return value;
+}
+
+function validateArchitectureEvidenceKind(value) {
+  if (!allowedArchitectureEvidenceKinds.has(value)) {
+    throw new Error(
+      `Invalid --evidence-kind "${value}". Expected: ${[...allowedArchitectureEvidenceKinds].join(
+        ', '
+      )}.`
+    );
+  }
+  return value;
+}
+
+function validateArchitectureEvidenceOrigin(value) {
+  if (!allowedArchitectureEvidenceOrigins.has(value)) {
+    throw new Error(
+      `Invalid --origin "${value}". Expected local_execution or ci_execution; assertions cannot prove must-prove scope.`
+    );
+  }
+  return value;
+}
+
+function validateArchitectureEvidenceResultState(value) {
+  if (!allowedArchitectureEvidenceResultStates.has(value)) {
+    throw new Error(`Invalid --result "${value}". Expected pass or fail.`);
+  }
+  return value;
+}
+
 function parseArchitectureEvidenceCommand(action, args) {
   const options = parseFlagOptions(args);
+
+  if (action === 'retire-test') {
+    const command = {
+      kind: 'architecture_test_retire',
+      designId: validateArchitectureDesignId(requireOption(options, 'design')),
+      testId: validateArchitectureTestId(requireOption(options, 'test')),
+      componentId: validateArchitectureComponentId(
+        requireOption(options, 'component'),
+        'component'
+      ),
+      reason: requireOption(options, 'reason'),
+      sourceRef: requireOption(options, 'sourceRef'),
+      sourceContentSha256: validateSha256(
+        requireOption(options, 'sourceContentSha256'),
+        'source-content-sha256'
+      ),
+      actor: requireOption(options, 'actor'),
+      idempotencyKey: options.idempotencyKey,
+    };
+    return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
+  }
+
+  if (action === 'retire-execution') {
+    const command = {
+      kind: 'architecture_evidence_retire',
+      designId: validateArchitectureDesignId(requireOption(options, 'design')),
+      evidenceId: validateArchitectureEvidenceId(requireOption(options, 'evidence')),
+      reason: requireOption(options, 'reason'),
+      sourceRef: requireOption(options, 'sourceRef'),
+      sourceContentSha256: validateSha256(
+        requireOption(options, 'sourceContentSha256'),
+        'source-content-sha256'
+      ),
+      actor: requireOption(options, 'actor'),
+      idempotencyKey: options.idempotencyKey,
+    };
+    return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
+  }
+
+  if (action === 'record-execution') {
+    const command = {
+      kind: 'architecture_evidence_record',
+      designId: validateArchitectureDesignId(requireOption(options, 'design')),
+      evidenceId: validateArchitectureEvidenceId(requireOption(options, 'evidence')),
+      subjectKind: validateArchitectureEvidenceSubjectKind(requireOption(options, 'subjectKind')),
+      subjectId: requireOption(options, 'subject'),
+      evidenceKind: validateArchitectureEvidenceKind(requireOption(options, 'evidenceKind')),
+      evidenceOrigin: validateArchitectureEvidenceOrigin(requireOption(options, 'origin')),
+      resultState: validateArchitectureEvidenceResultState(requireOption(options, 'result')),
+      sourceRef: requireOption(options, 'sourceRef'),
+      sourcePath: requireOption(options, 'sourcePath'),
+      sourceContentSha256: validateSha256(
+        requireOption(options, 'sourceContentSha256'),
+        'source-content-sha256'
+      ),
+      actor: requireOption(options, 'actor'),
+      idempotencyKey: options.idempotencyKey,
+    };
+
+    validateArchitectureEvidenceRecordCommand(command);
+    return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
+  }
 
   if (action === 'record-observability') {
     const command = {
@@ -2570,7 +2989,7 @@ function parseArchitectureEvidenceCommand(action, args) {
 
   if (action !== 'record-test') {
     throw new Error(
-      `Unknown architecture-evidence operation "${action}". Expected record-test or record-observability.`
+      `Unknown architecture-evidence operation "${action}". Expected record-test, retire-test, record-observability, record-execution, or retire-execution.`
     );
   }
 
@@ -2714,15 +3133,43 @@ function validateFeatureMechanizationRecordCommand(command) {
 }
 
 function parseFeatureMechanizationCommand(action, args) {
-  if (action !== 'record') {
-    throw new Error(`Unknown feature-mechanization operation "${action}". Expected record.`);
-  }
-
   const options = parseFlagOptions(args);
   const featureId = validateFeatureMechanizationFeatureId(requireOption(options, 'feature'));
   const railName = requireOption(options, 'rail');
   const railType = validateFeatureMechanizationRailType(requireOption(options, 'type'));
   const normalizedRailName = normalizeFeatureMechanizationRailName(railName);
+
+  if (action === 'retire') {
+    const command = {
+      kind: 'feature_mechanization_rail_retire',
+      designId: validateArchitectureDesignId(requireOption(options, 'design')),
+      featureId,
+      railName,
+      normalizedRailName,
+      railId: featureMechanizationRailId({ featureId, railType, normalizedRailName }),
+      railType,
+      expectedRevision: parseIntegerOption(
+        requireOption(options, 'expectedRevision'),
+        'expected-revision'
+      ),
+      reason: requireOption(options, 'reason'),
+      sourceRef: requireOption(options, 'sourceRef'),
+      sourceContentSha256: validateSha256(
+        requireOption(options, 'sourceContentSha256'),
+        'source-content-sha256'
+      ),
+      actor: requireOption(options, 'actor'),
+      idempotencyKey: options.idempotencyKey,
+    };
+    return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
+  }
+
+  if (action !== 'record') {
+    throw new Error(
+      `Unknown feature-mechanization operation "${action}". Expected record or retire.`
+    );
+  }
+
   const command = {
     kind: 'feature_mechanization_rail_record',
     featureId,
@@ -2945,7 +3392,7 @@ function parseArgs(args = process.argv.slice(2)) {
   if (resource === 'architecture-evidence') {
     if (!action) {
       throw new Error(
-        'Missing architecture-evidence operation. Expected record-test or record-observability.'
+        'Missing architecture-evidence operation. Expected record-test, retire-test, record-observability, record-execution, or retire-execution.'
       );
     }
 
@@ -3189,6 +3636,21 @@ function assertArchitectureDesignMayScan(design, command) {
   return normalized;
 }
 
+function assertArchitectureDesignMayProve(design, command) {
+  const normalized = normalizeArchitectureDesign(design);
+  if (!normalized || normalized.designId !== command.designId) {
+    throw new Error(`ARCH-EVIDENCE-DESIGN-MISSING: ${command.designId}`);
+  }
+
+  if (!['implementing', 'implemented'].includes(normalized.status)) {
+    throw new Error(
+      `ARCH-EVIDENCE-DESIGN-INACTIVE: design ${command.designId} is ${normalized.status}; execution proof requires implementing or implemented.`
+    );
+  }
+
+  return normalized;
+}
+
 function assertArchitectureDesignScope(designScopes, subjectKind, subjectId, scopeKinds, code) {
   if (!hasArchitectureDesignScope(designScopes, subjectKind, subjectId, scopeKinds)) {
     throw new Error(`${code}: missing ${subjectKind}:${subjectId}:${scopeKinds.join('|')} scope.`);
@@ -3288,7 +3750,13 @@ function planArchitectureDesignCreateOperation({ command, existingDesign, operat
   return { design, scopes, audit };
 }
 
-function planArchitectureDesignTransitionOperation({ command, existingDesign, operationId, now }) {
+function planArchitectureDesignTransitionOperation({
+  command,
+  existingDesign,
+  implementationViolations = [],
+  operationId,
+  now,
+}) {
   const existing = normalizeArchitectureDesign(existingDesign);
   if (!existing) {
     throw new Error(
@@ -3301,6 +3769,24 @@ function planArchitectureDesignTransitionOperation({ command, existingDesign, op
     );
   }
   validateArchitectureDesignTransition(command.fromStatus, command.toStatus);
+  if (
+    command.toStatus === 'implemented' &&
+    implementationViolations.some(
+      (violation) =>
+        (violation.violation_kind ?? violation.violationKind) === 'required_evidence_missing' &&
+        violation.severity === 'blocker'
+    )
+  ) {
+    const subjects = implementationViolations
+      .map(
+        (violation) =>
+          `${violation.subject_kind ?? violation.subjectKind}:${violation.subject_id ?? violation.subjectId}`
+      )
+      .join(', ');
+    throw new Error(
+      `ARCH-DESIGN-IMPLEMENTATION-EVIDENCE-MISSING: ${command.designId} cannot become implemented while required proof is invalid for ${subjects}.`
+    );
+  }
 
   const updatedAt = toIso(now);
   const transition = {
@@ -3746,6 +4232,45 @@ function planArchitectureTestRecordOperation({
   return { testEvidence, audit };
 }
 
+function planArchitectureTestRetireOperation({
+  command,
+  design,
+  designScopes,
+  existingTest,
+  operationId,
+  now,
+}) {
+  assertArchitectureDesignMayRecord(design, command);
+  assertArchitectureDesignScope(
+    designScopes,
+    'test',
+    command.testId,
+    ['may_delete'],
+    'ARCH-TEST-EVIDENCE-RETIRE-DESIGN-SCOPE-MISSING'
+  );
+  assertArchitectureDesignScope(
+    designScopes,
+    'component',
+    command.componentId,
+    ['may_reference'],
+    'ARCH-TEST-EVIDENCE-RETIRE-COMPONENT-SCOPE-MISSING'
+  );
+  if (!existingTest) {
+    throw new Error(`ARCH-TEST-EVIDENCE-RETIRE-NOT-FOUND: ${command.testId}`);
+  }
+  const existingComponentId = existingTest.component_id ?? existingTest.componentId;
+  if (existingComponentId !== command.componentId) {
+    throw new Error(
+      `ARCH-TEST-EVIDENCE-RETIRE-COMPONENT-MISMATCH: ${command.testId} belongs to ${existingComponentId}.`
+    );
+  }
+
+  return {
+    retirement: { testId: command.testId },
+    audit: architectureScopedAudit({ command, operationId, now }),
+  };
+}
+
 function planArchitectureObservabilityRecordOperation({
   command,
   design,
@@ -3768,7 +4293,7 @@ function planArchitectureObservabilityRecordOperation({
     designScopes,
     'component',
     command.componentId,
-    ['may_reference'],
+    ['may_reference', 'may_update', 'may_create'],
     'ARCH-OBSERVABILITY-EVIDENCE-COMPONENT-SCOPE-MISSING'
   );
 
@@ -3793,6 +4318,98 @@ function planArchitectureObservabilityRecordOperation({
   const audit = architectureScopedAudit({ command, operationId, now });
 
   return { observability, audit };
+}
+
+function planArchitectureEvidenceRecordOperation({
+  command,
+  design,
+  designScopes,
+  sourceFile,
+  subjectImplementation,
+  operationId,
+  now,
+}) {
+  assertArchitectureDesignMayProve(design, command);
+  assertArchitectureDesignScope(
+    designScopes,
+    command.subjectKind,
+    command.subjectId,
+    ['must_prove'],
+    'ARCH-EVIDENCE-MUST-PROVE-SCOPE-MISSING'
+  );
+  validateArchitectureEvidenceRecordCommand(command);
+  if (!sourceFile || (sourceFile.path ?? sourceFile.sourcePath) !== command.sourcePath) {
+    throw new Error(`ARCH-EVIDENCE-SOURCE-MISSING: ${command.sourcePath}`);
+  }
+  const currentSourceHash = sourceFile.content_hash ?? sourceFile.contentHash;
+  if (currentSourceHash !== command.sourceContentSha256) {
+    throw new Error(
+      `ARCH-EVIDENCE-SOURCE-HASH-MISMATCH: ${command.sourcePath} is ${currentSourceHash ?? 'missing'}, not ${command.sourceContentSha256}.`
+    );
+  }
+  const requiresImplementationProof =
+    command.subjectKind === 'command' || command.subjectKind === 'query';
+  if (
+    requiresImplementationProof &&
+    (!subjectImplementation ||
+      !subjectImplementation.current_implementation_content_sha256 ||
+      Number(subjectImplementation.missing_implementation_ref_count) !== 0)
+  ) {
+    throw new Error(
+      `ARCH-EVIDENCE-SUBJECT-IMPLEMENTATION-MISSING: ${command.subjectKind} ${command.subjectId}`
+    );
+  }
+
+  const evidence = {
+    evidenceId: command.evidenceId,
+    designId: command.designId,
+    subjectKind: command.subjectKind,
+    subjectId: command.subjectId,
+    evidenceKind: command.evidenceKind,
+    evidenceOrigin: command.evidenceOrigin,
+    sourceRef: command.sourceRef,
+    sourcePath: command.sourcePath,
+    resultState: command.resultState,
+    recordedAt: toIso(now),
+    sourceContentSha256: command.sourceContentSha256,
+    implementationContentSha256: requiresImplementationProof
+      ? subjectImplementation.current_implementation_content_sha256
+      : null,
+  };
+  const audit = architectureScopedAudit({ command, operationId, now });
+
+  return { evidence, audit };
+}
+
+function planArchitectureEvidenceRetireOperation({
+  command,
+  design,
+  designScopes,
+  existingEvidence,
+  operationId,
+  now,
+}) {
+  assertArchitectureDesignMayRecord(design, command);
+  assertArchitectureDesignScope(
+    designScopes,
+    'evidence',
+    command.evidenceId,
+    ['may_delete'],
+    'ARCH-EVIDENCE-RETIRE-DESIGN-SCOPE-MISSING'
+  );
+  if (!existingEvidence) {
+    throw new Error(`ARCH-EVIDENCE-RETIRE-NOT-FOUND: ${command.evidenceId}`);
+  }
+  if (existingEvidence.design_id !== command.designId) {
+    throw new Error(
+      `ARCH-EVIDENCE-RETIRE-DESIGN-MISMATCH: evidence ${command.evidenceId} does not belong to design ${command.designId}.`
+    );
+  }
+
+  return {
+    retirement: { evidenceId: command.evidenceId },
+    audit: architectureScopedAudit({ command, operationId, now }),
+  };
 }
 
 function planComponentCreateOperation({
@@ -4544,6 +5161,52 @@ function planFeatureMechanizationRailRecordOperation({ command, existingRail, op
   return { rail, audit };
 }
 
+function planFeatureMechanizationRailRetireOperation({
+  command,
+  design,
+  designScopes,
+  existingRail,
+  operationId,
+  now,
+}) {
+  assertArchitectureDesignMayRecord(design, command);
+  assertArchitectureDesignScope(
+    designScopes,
+    'decision',
+    command.railId,
+    ['may_delete'],
+    'FEATURE-MECHANIZATION-RETIRE-DESIGN-SCOPE-MISSING'
+  );
+  const previous = normalizeFeatureMechanizationRail(existingRail);
+  if (!previous || previous.railId !== command.railId) {
+    throw new Error(`FEATURE-MECHANIZATION-RETIRE-NOT-FOUND: ${command.railId}`);
+  }
+  if (previous.revision !== command.expectedRevision) {
+    throw new Error(
+      `FEATURE-MECHANIZATION-RETIRE-REVISION-CONFLICT: expected ${command.expectedRevision}, found ${previous.revision}.`
+    );
+  }
+
+  const createdAt = toIso(now);
+  return {
+    retirement: { railId: command.railId, expectedRevision: command.expectedRevision },
+    audit: {
+      operationId,
+      idempotencyKey: command.idempotencyKey,
+      operationType: command.kind,
+      actor: command.actor,
+      railId: command.railId,
+      sourcePath: command.sourceRef,
+      sourceContentSha256: command.sourceContentSha256,
+      expectedRevision: command.expectedRevision,
+      previousRevision: previous.revision,
+      resultingRevision: previous.revision + 1,
+      payload: operationPayload(command),
+      createdAt,
+    },
+  };
+}
+
 function fowlerAnalysisAudit({ command, operationId, now }) {
   return {
     operationId,
@@ -4929,6 +5592,49 @@ async function readArchitectureTest(client, testId) {
   );
 
   return result.rows[0] || null;
+}
+
+async function readArchitectureEvidence(client, evidenceId) {
+  const result = await client.query(
+    `select *
+     from architecture.evidence
+     where evidence_id = $1`,
+    [evidenceId]
+  );
+
+  return result.rows[0] || null;
+}
+
+async function readArchitectureEvidenceSourceFile(client, sourcePath) {
+  const result = await client.query(
+    `select path, content_hash
+     from ${schemaName}.governance_files
+     where path = $1`,
+    [sourcePath]
+  );
+  return result.rows[0] || null;
+}
+
+async function readArchitectureEvidenceSubjectImplementation(client, subjectKind, subjectId) {
+  if (subjectKind !== 'command' && subjectKind !== 'query') return null;
+  const result = await client.query(
+    `select *
+     from architecture.evidence_subject_implementation_query
+     where subject_kind = $1
+       and subject_id = $2`,
+    [subjectKind, subjectId]
+  );
+  return result.rows[0] || null;
+}
+
+async function readArchitectureImplementationViolations(client, designId) {
+  const result = await client.query(
+    `select violation_kind, subject_kind, subject_id, severity
+     from architecture.implementation_violation_query
+     where design_id = $1`,
+    [designId]
+  );
+  return result.rows;
 }
 
 async function readArchitectureObservability(client, observabilityId) {
@@ -5499,6 +6205,20 @@ async function writePlannedArchitectureTestRecordOperation(client, planned) {
   await writeArchitectureScopedAudit(client, planned.audit);
 }
 
+async function writePlannedArchitectureTestRetireOperation(client, planned) {
+  const result = await client.query(
+    `delete from architecture.component_test
+     where test_id = $1`,
+    [planned.retirement.testId]
+  );
+  if (result.rowCount !== 1) {
+    throw new Error(
+      `ARCH-TEST-EVIDENCE-RETIRE-CONFLICT: ${planned.retirement.testId} was not deleted.`
+    );
+  }
+  await writeArchitectureScopedAudit(client, planned.audit);
+}
+
 async function writePlannedArchitectureObservabilityRecordOperation(client, planned) {
   await client.query(
     `insert into architecture.component_observability
@@ -5521,6 +6241,46 @@ async function writePlannedArchitectureObservabilityRecordOperation(client, plan
     ]
   );
 
+  await writeArchitectureScopedAudit(client, planned.audit);
+}
+
+async function writePlannedArchitectureEvidenceRecordOperation(client, planned) {
+  await client.query(
+    `insert into architecture.evidence
+      (evidence_id, design_id, subject_kind, subject_id, evidence_kind, evidence_origin,
+       source_ref, source_path, result_state, recorded_at, source_content_sha256,
+       implementation_content_sha256)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+    [
+      planned.evidence.evidenceId,
+      planned.evidence.designId,
+      planned.evidence.subjectKind,
+      planned.evidence.subjectId,
+      planned.evidence.evidenceKind,
+      planned.evidence.evidenceOrigin,
+      planned.evidence.sourceRef,
+      planned.evidence.sourcePath,
+      planned.evidence.resultState,
+      planned.evidence.recordedAt,
+      planned.evidence.sourceContentSha256,
+      planned.evidence.implementationContentSha256,
+    ]
+  );
+
+  await writeArchitectureScopedAudit(client, planned.audit);
+}
+
+async function writePlannedArchitectureEvidenceRetireOperation(client, planned) {
+  const result = await client.query(
+    `delete from architecture.evidence
+     where evidence_id = $1`,
+    [planned.retirement.evidenceId]
+  );
+  if (result.rowCount !== 1) {
+    throw new Error(
+      `ARCH-EVIDENCE-RETIRE-CONFLICT: ${planned.retirement.evidenceId} was not deleted.`
+    );
+  }
   await writeArchitectureScopedAudit(client, planned.audit);
 }
 
@@ -5922,6 +6682,42 @@ async function writePlannedFeatureMechanizationRailRecordOperation(client, plann
   );
 }
 
+async function writePlannedFeatureMechanizationRailRetireOperation(client, planned) {
+  const result = await client.query(
+    `delete from ${schemaName}.feature_mechanization_local_rails
+     where rail_id = $1
+       and revision = $2`,
+    [planned.retirement.railId, planned.retirement.expectedRevision]
+  );
+  if (result.rowCount !== 1) {
+    throw new Error(
+      `FEATURE-MECHANIZATION-RETIRE-CONFLICT: ${planned.retirement.railId} no longer has revision ${planned.retirement.expectedRevision}.`
+    );
+  }
+
+  await client.query(
+    `insert into ${schemaName}.feature_mechanization_local_operations
+      (operation_id, idempotency_key, operation_type, actor, rail_id, source_path,
+       source_content_sha256, expected_revision, previous_revision, resulting_revision,
+       payload, created_at)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb, $12)`,
+    [
+      planned.audit.operationId,
+      planned.audit.idempotencyKey,
+      planned.audit.operationType,
+      planned.audit.actor,
+      planned.audit.railId,
+      planned.audit.sourcePath,
+      planned.audit.sourceContentSha256,
+      planned.audit.expectedRevision,
+      planned.audit.previousRevision,
+      planned.audit.resultingRevision,
+      toJson(planned.audit.payload),
+      planned.audit.createdAt,
+    ]
+  );
+}
+
 async function writePlannedFowlerAnalysisOperation(client, planned) {
   if (planned.disposition) {
     await client.query(
@@ -6217,9 +7013,14 @@ async function applyArchitectureDesignTransitionOperation(command, options = {})
     }
 
     const existingDesign = await readArchitectureDesign(client, command.designId);
+    const implementationViolations =
+      command.toStatus === 'implemented'
+        ? await readArchitectureImplementationViolations(client, command.designId)
+        : [];
     const planned = planArchitectureDesignTransitionOperation({
       command,
       existingDesign,
+      implementationViolations,
       operationId: options.operationId || crypto.randomUUID(),
       now: options.now || new Date(),
     });
@@ -6587,6 +7388,45 @@ async function applyArchitectureTestRecordOperation(command, options = {}) {
   }
 }
 
+async function applyArchitectureTestRetireOperation(command, options = {}) {
+  const client =
+    options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
+  const ownsClient = !options.client;
+  if (ownsClient) await client.connect();
+
+  try {
+    await assertPlanningDbCurrentSchemaReady(client);
+    await client.query('begin');
+    const existing = await readExistingArchitectureDesignOperation(client, command.idempotencyKey);
+    if (existing) {
+      assertArchitectureScopedOperationIdempotentReplayMatches(existing, command);
+      await client.query('commit');
+      return { idempotent: true, audit: existing };
+    }
+    const [design, designScopes, existingTest] = await Promise.all([
+      readArchitectureDesign(client, command.designId),
+      readArchitectureDesignScopes(client, command.designId),
+      readArchitectureTest(client, command.testId),
+    ]);
+    const planned = planArchitectureTestRetireOperation({
+      command,
+      design,
+      designScopes,
+      existingTest,
+      operationId: options.operationId || crypto.randomUUID(),
+      now: options.now || new Date(),
+    });
+    await writePlannedArchitectureTestRetireOperation(client, planned);
+    await client.query('commit');
+    return { idempotent: false, ...planned };
+  } catch (error) {
+    await client.query('rollback');
+    throw error;
+  } finally {
+    if (ownsClient) await client.end();
+  }
+}
+
 async function applyArchitectureObservabilityRecordOperation(command, options = {}) {
   const client =
     options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
@@ -6634,6 +7474,105 @@ async function applyArchitectureObservabilityRecordOperation(command, options = 
     if (ownsClient) {
       await client.end();
     }
+  }
+}
+
+async function applyArchitectureEvidenceRecordOperation(command, options = {}) {
+  const client =
+    options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
+  const ownsClient = !options.client;
+
+  if (ownsClient) {
+    await client.connect();
+  }
+
+  try {
+    await assertPlanningDbCurrentSchemaReady(client);
+    const subjectImplementation = await readArchitectureEvidenceSubjectImplementation(
+      client,
+      command.subjectKind,
+      command.subjectId
+    );
+    await assertArchitectureEvidenceOriginAuthenticity(command, {
+      currentGitSha: options.currentGitSha,
+      environment: options.environment || process.env,
+      fetch: options.fetch,
+      githubToken: options.githubToken,
+      repoRoot: options.repoRoot,
+      repositorySlug: options.repositorySlug,
+      subjectImplementation,
+    });
+    await client.query('begin');
+
+    const existing = await readExistingArchitectureDesignOperation(client, command.idempotencyKey);
+    if (existing) {
+      assertArchitectureScopedOperationIdempotentReplayMatches(existing, command);
+      await client.query('commit');
+      return { idempotent: true, audit: existing };
+    }
+
+    const design = await readArchitectureDesign(client, command.designId);
+    const designScopes = await readArchitectureDesignScopes(client, command.designId);
+    const sourceFile = await readArchitectureEvidenceSourceFile(client, command.sourcePath);
+    const planned = planArchitectureEvidenceRecordOperation({
+      command,
+      design,
+      designScopes,
+      sourceFile,
+      subjectImplementation,
+      operationId: options.operationId || crypto.randomUUID(),
+      now: options.now || new Date(),
+    });
+
+    await writePlannedArchitectureEvidenceRecordOperation(client, planned);
+    await client.query('commit');
+    return { idempotent: false, ...planned };
+  } catch (error) {
+    await client.query('rollback');
+    throw error;
+  } finally {
+    if (ownsClient) {
+      await client.end();
+    }
+  }
+}
+
+async function applyArchitectureEvidenceRetireOperation(command, options = {}) {
+  const client =
+    options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
+  const ownsClient = !options.client;
+  if (ownsClient) await client.connect();
+
+  try {
+    await assertPlanningDbCurrentSchemaReady(client);
+    await client.query('begin');
+    const existing = await readExistingArchitectureDesignOperation(client, command.idempotencyKey);
+    if (existing) {
+      assertArchitectureScopedOperationIdempotentReplayMatches(existing, command);
+      await client.query('commit');
+      return { idempotent: true, audit: existing };
+    }
+    const [design, designScopes, existingEvidence] = await Promise.all([
+      readArchitectureDesign(client, command.designId),
+      readArchitectureDesignScopes(client, command.designId),
+      readArchitectureEvidence(client, command.evidenceId),
+    ]);
+    const planned = planArchitectureEvidenceRetireOperation({
+      command,
+      design,
+      designScopes,
+      existingEvidence,
+      operationId: options.operationId || crypto.randomUUID(),
+      now: options.now || new Date(),
+    });
+    await writePlannedArchitectureEvidenceRetireOperation(client, planned);
+    await client.query('commit');
+    return { idempotent: false, ...planned };
+  } catch (error) {
+    await client.query('rollback');
+    throw error;
+  } finally {
+    if (ownsClient) await client.end();
   }
 }
 
@@ -6867,6 +7806,48 @@ async function applyFeatureMechanizationRailRecordOperation(command, options = {
   }
 }
 
+async function applyFeatureMechanizationRailRetireOperation(command, options = {}) {
+  const client =
+    options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
+  const ownsClient = !options.client;
+  if (ownsClient) await client.connect();
+
+  try {
+    await assertPlanningDbCurrentSchemaReady(client);
+    await client.query('begin');
+    const existing = await readExistingFeatureMechanizationOperation(
+      client,
+      command.idempotencyKey
+    );
+    if (existing) {
+      assertFeatureMechanizationRailIdempotentReplayMatches(existing, command);
+      await client.query('commit');
+      return { idempotent: true, audit: existing };
+    }
+    const [design, designScopes, existingRail] = await Promise.all([
+      readArchitectureDesign(client, command.designId),
+      readArchitectureDesignScopes(client, command.designId),
+      readLocalFeatureMechanizationRail(client, command.railId, true),
+    ]);
+    const planned = planFeatureMechanizationRailRetireOperation({
+      command,
+      design,
+      designScopes,
+      existingRail,
+      operationId: options.operationId || crypto.randomUUID(),
+      now: options.now || new Date(),
+    });
+    await writePlannedFeatureMechanizationRailRetireOperation(client, planned);
+    await client.query('commit');
+    return { idempotent: false, ...planned };
+  } catch (error) {
+    await client.query('rollback');
+    throw error;
+  } finally {
+    if (ownsClient) await client.end();
+  }
+}
+
 async function applyFowlerAnalysisOperation(command, options = {}) {
   const client =
     options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
@@ -7033,6 +8014,20 @@ function printOperationResult(result) {
     return;
   }
 
+  if (result.evidence) {
+    console.log(
+      `[planning:db:operate] ${result.audit.operationType} ${result.evidence.evidenceId} subject=${result.evidence.subjectKind}:${result.evidence.subjectId} origin=${result.evidence.evidenceOrigin} result=${result.evidence.resultState}`
+    );
+    return;
+  }
+
+  if (result.retirement) {
+    console.log(
+      `[planning:db:operate] ${result.audit.operationType} retired=${result.retirement.testId || result.retirement.evidenceId || result.retirement.railId}`
+    );
+    return;
+  }
+
   if (result.definition) {
     console.log(
       `[planning:db:operate] ${result.audit.operationType} ${result.definition.componentId} revision=${result.audit.resultingRevision}`
@@ -7122,27 +8117,41 @@ async function main() {
                       ? await applyArchitectureFitnessScanOperation(command)
                       : command.kind === 'architecture_test_record'
                         ? await applyArchitectureTestRecordOperation(command)
-                        : command.kind === 'architecture_observability_record'
-                          ? await applyArchitectureObservabilityRecordOperation(command)
-                          : command.kind === 'component_create'
-                            ? await applyComponentCreateOperation(command)
-                            : command.kind === 'component_revise'
-                              ? await applyComponentReviseOperation(command)
-                              : command.kind === 'component_reparent'
-                                ? await applyComponentReparentOperation(command)
-                                : command.kind === 'db_surface_upsert'
-                                  ? await applyDbSurfaceUpsertOperation(command)
-                                  : command.kind === 'feature_mechanization_rail_record'
-                                    ? await applyFeatureMechanizationRailRecordOperation(command)
-                                    : command.kind === 'governance_refresh_run_record'
-                                      ? await applyGovernanceRefreshRunRecordOperation(command)
-                                      : command.kind.startsWith('fowler_analysis_')
-                                        ? await applyFowlerAnalysisOperation(command)
-                                        : (() => {
-                                            throw new Error(
-                                              `Unsupported planning DB operation "${command.kind}".`
-                                            );
-                                          })();
+                        : command.kind === 'architecture_test_retire'
+                          ? await applyArchitectureTestRetireOperation(command)
+                          : command.kind === 'architecture_observability_record'
+                            ? await applyArchitectureObservabilityRecordOperation(command)
+                            : command.kind === 'architecture_evidence_record'
+                              ? await applyArchitectureEvidenceRecordOperation(command)
+                              : command.kind === 'architecture_evidence_retire'
+                                ? await applyArchitectureEvidenceRetireOperation(command)
+                                : command.kind === 'component_create'
+                                  ? await applyComponentCreateOperation(command)
+                                  : command.kind === 'component_revise'
+                                    ? await applyComponentReviseOperation(command)
+                                    : command.kind === 'component_reparent'
+                                      ? await applyComponentReparentOperation(command)
+                                      : command.kind === 'db_surface_upsert'
+                                        ? await applyDbSurfaceUpsertOperation(command)
+                                        : command.kind === 'feature_mechanization_rail_record'
+                                          ? await applyFeatureMechanizationRailRecordOperation(
+                                              command
+                                            )
+                                          : command.kind === 'feature_mechanization_rail_retire'
+                                            ? await applyFeatureMechanizationRailRetireOperation(
+                                                command
+                                              )
+                                            : command.kind === 'governance_refresh_run_record'
+                                              ? await applyGovernanceRefreshRunRecordOperation(
+                                                  command
+                                                )
+                                              : command.kind.startsWith('fowler_analysis_')
+                                                ? await applyFowlerAnalysisOperation(command)
+                                                : (() => {
+                                                    throw new Error(
+                                                      `Unsupported planning DB operation "${command.kind}".`
+                                                    );
+                                                  })();
   printOperationResult(result);
 }
 
@@ -7162,7 +8171,10 @@ module.exports = {
   applyArchitecturePortRecordOperation,
   applyArchitectureStorageIoRecordOperation,
   applyArchitectureTestRecordOperation,
+  applyArchitectureTestRetireOperation,
   applyArchitectureObservabilityRecordOperation,
+  applyArchitectureEvidenceRecordOperation,
+  applyArchitectureEvidenceRetireOperation,
   applyArchitectureRelationRecordOperation,
   applyComponentCreateOperation,
   applyComponentReviseOperation,
@@ -7171,8 +8183,10 @@ module.exports = {
   applyDocsResolutionOperation,
   applyFowlerAnalysisOperation,
   applyFeatureMechanizationRailRecordOperation,
+  applyFeatureMechanizationRailRetireOperation,
   applyGovernanceRefreshRunRecordOperation,
   assertArchitectureDesignIdempotentReplayMatches,
+  assertArchitectureEvidenceOriginAuthenticity,
   assertArchitectureScopedOperationIdempotentReplayMatches,
   assertComponentIdempotentReplayMatches,
   assertDbSurfaceIdempotentReplayMatches,
@@ -7192,13 +8206,17 @@ module.exports = {
   planArchitecturePortRecordOperation,
   planArchitectureStorageIoRecordOperation,
   planArchitectureTestRecordOperation,
+  planArchitectureTestRetireOperation,
   planArchitectureObservabilityRecordOperation,
+  planArchitectureEvidenceRecordOperation,
+  planArchitectureEvidenceRetireOperation,
   planArchitectureRelationRecordOperation,
   planComponentCreateOperation,
   planComponentReviseOperation,
   planComponentReparentOperation,
   planDbSurfaceUpsertOperation,
   planFeatureMechanizationRailRecordOperation,
+  planFeatureMechanizationRailRetireOperation,
   planFowlerAnalysisOperation,
   planGovernanceRefreshRunRecordOperation,
   planDocsResolutionOperation,
@@ -7218,8 +8236,12 @@ module.exports = {
   writePlannedArchitecturePortRecordOperation,
   writePlannedArchitectureStorageIoRecordOperation,
   writePlannedArchitectureTestRecordOperation,
+  writePlannedArchitectureTestRetireOperation,
   writePlannedArchitectureObservabilityRecordOperation,
+  writePlannedArchitectureEvidenceRecordOperation,
+  writePlannedArchitectureEvidenceRetireOperation,
   writePlannedFeatureMechanizationRailRecordOperation,
+  writePlannedFeatureMechanizationRailRetireOperation,
   writePlannedFowlerAnalysisOperation,
   writePlannedGovernanceRefreshRunRecordOperation,
 };

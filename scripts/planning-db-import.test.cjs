@@ -38,6 +38,7 @@ const {
   restoreLocalFeatureMechanizationOperations,
   restoreLocalFeatureMechanizationRails,
   restoreLocalGovernanceComponentState,
+  restoreFowlerAnalysisState,
   restoreDbGovernanceSurfaceCatalog,
   restoreDbtProjectRoundtripCapabilityCatalog,
   runPlanningImport,
@@ -1562,6 +1563,23 @@ test('planning DB import reads and validates the canonical DB-authored state sna
         governanceComponentOwnershipPatterns: [],
         governanceComponentSemanticItems: [],
         governanceComponentOperations: [],
+        fowlerAnalysisDispositions: [
+          {
+            documentPath: 'docs/architecture/example.md',
+            dispositionStatus: 'accepted',
+            dispositionKind: 'db_authority_historical',
+            canonicalTargetPath: null,
+            reason: 'Planning DB is current authority.',
+            sourceContentSha256: 'c'.repeat(64),
+            recordedBy: 'codex',
+            recordedAt: '2026-08-11T12:00:00.000Z',
+            rawDisposition: {},
+          },
+        ],
+        fowlerAnalysisCanonicalTargets: [],
+        fowlerAnalysisReferenceResolutions: [],
+        fowlerAnalysisRetirementDecisions: [],
+        fowlerAnalysisOperations: [],
       }),
       'utf8'
     );
@@ -1569,6 +1587,7 @@ test('planning DB import reads and validates the canonical DB-authored state sna
     const snapshot = readCanonicalStateSnapshot(snapshotPath);
     assert.deepEqual(snapshot.architectureState, emptyArchitectureState());
     assert.deepEqual(snapshot.featureMechanizationRails, [rail]);
+    assert.equal(snapshot.fowlerAnalysisDispositions.length, 1);
 
     fs.writeFileSync(snapshotPath, JSON.stringify({ schemaVersion: 2 }), 'utf8');
     assert.throws(
@@ -1578,6 +1597,57 @@ test('planning DB import reads and validates the canonical DB-authored state sna
   } finally {
     fs.rmSync(tempRoot, { recursive: true, force: true });
   }
+});
+
+test('planning DB import restores Fowler authority and audit state without cleanup semantics', async () => {
+  const queries = [];
+  const snapshot = {
+    fowlerAnalysisDispositions: [
+      {
+        documentPath: 'docs/architecture/example.md',
+        dispositionStatus: 'accepted',
+        dispositionKind: 'db_authority_historical',
+        canonicalTargetPath: null,
+        reason: 'Planning DB is current authority.',
+        sourceContentSha256: 'c'.repeat(64),
+        recordedBy: 'codex',
+        recordedAt: '2026-08-11T12:00:00.000Z',
+        rawDisposition: {},
+      },
+    ],
+    fowlerAnalysisCanonicalTargets: [],
+    fowlerAnalysisReferenceResolutions: [],
+    fowlerAnalysisRetirementDecisions: [],
+    fowlerAnalysisOperations: [
+      {
+        operationId: 'fowler-analysis:test-operation',
+        idempotencyKey: 'fowler-analysis-test-operation',
+        operationType: 'fowler_analysis_disposition_record',
+        actor: 'codex',
+        documentPath: 'docs/architecture/example.md',
+        targetPath: null,
+        referencePath: null,
+        relationType: null,
+        sourceContentSha256: 'c'.repeat(64),
+        payload: {},
+        createdAt: '2026-08-11T12:00:00.000Z',
+      },
+    ],
+  };
+
+  await restoreFowlerAnalysisState(
+    {
+      query: async (sql, params = []) => {
+        queries.push({ sql: String(sql), params });
+        return { rows: [] };
+      },
+    },
+    snapshot
+  );
+
+  assert.ok(queries.some((query) => query.sql.includes('fowler_analysis_dispositions')));
+  assert.ok(queries.some((query) => query.sql.includes('fowler_analysis_operations')));
+  assert.ok(!queries.some((query) => /delete\s+from|truncate\s+/iu.test(query.sql)));
 });
 
 test('canonical Planning DB recovery references the live architecture restore owner', () => {
