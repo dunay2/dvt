@@ -1248,7 +1248,7 @@ test('architecture execution evidence writer persists proof before its audit row
   assert.match(queries[0].sql, /insert into architecture\.evidence/u);
   assert.match(queries[0].sql, /design_id/u);
   assert.match(queries[0].sql, /source_path/u);
-  assert.equal(queries[0].params[4], 'local_execution');
+  assert.equal(queries[0].params[5], 'local_execution');
   assert.match(queries[1].sql, /insert into architecture\.design_operations/u);
 });
 

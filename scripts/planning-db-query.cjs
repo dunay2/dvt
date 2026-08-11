@@ -1698,6 +1698,7 @@ function buildArchitectureEnforcementRows(rows) {
 function buildArchitectureEvidenceRows(rows) {
   return rows.map((row) => [
     row.evidence_id ?? row.evidenceId,
+    row.design_id ?? row.designId ?? '-',
     row.subject_kind ?? row.subjectKind,
     row.subject_id ?? row.subjectId,
     row.evidence_kind ?? row.evidenceKind,
@@ -1705,6 +1706,8 @@ function buildArchitectureEvidenceRows(rows) {
     row.result_state ?? row.resultState,
     row.verification_state ?? row.verificationState ?? '-',
     row.freshness_state ?? row.freshnessState ?? '-',
+    row.source_verification_state ?? row.sourceVerificationState ?? '-',
+    row.source_path ?? row.sourcePath ?? '-',
     row.source_ref ?? row.sourceRef ?? '-',
   ]);
 }
@@ -2276,16 +2279,19 @@ function architectureEvidenceSelect() {
   return `
     select
       evidence_id,
+      design_id,
       subject_kind,
       subject_id,
       evidence_kind,
       evidence_origin,
       source_ref,
+      source_path,
       result_state,
       recorded_at,
       source_content_sha256,
       freshness_state,
-      verification_state
+      verification_state,
+      source_verification_state
     from ${architectureSchemaName}.evidence_query`;
 }
 

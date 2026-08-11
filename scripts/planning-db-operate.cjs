@@ -404,7 +404,7 @@ const operationHelp = Object.freeze({
       'RecordArchitectureObservabilityEvidence attaches observability evidence to a scoped architecture component.',
       'Requires --observability, --signal-name, --signal-kind, --status, --source-ref, and --source-content-sha256.',
       'RecordArchitectureEvidenceExecution records a local or CI execution against an exact must-prove subject.',
-      'Requires --evidence, --subject-kind, --subject, --evidence-kind, --origin, --result, --source-ref, and --source-content-sha256.',
+      'Requires --evidence, --subject-kind, --subject, --evidence-kind, --origin, --result, --source-ref, --source-path, and --source-content-sha256.',
       'RetireArchitectureTestEvidence and RetireArchitectureEvidenceExecution remove stale current authority under exact may-delete design scope and preserve an audited operation.',
     ],
   },
@@ -1412,6 +1412,7 @@ function operationPayload(command) {
       evidenceOrigin: command.evidenceOrigin,
       resultState: command.resultState,
       sourceRef: command.sourceRef,
+      sourcePath: command.sourcePath,
       sourceContentSha256: command.sourceContentSha256,
     };
   }
@@ -2607,6 +2608,7 @@ function validateArchitectureEvidenceRecordCommand(command) {
     ['origin', command.evidenceOrigin],
     ['result', command.resultState],
     ['source-ref', command.sourceRef],
+    ['source-path', command.sourcePath],
   ];
   for (const [field, value] of requiredTextFields) {
     if (!normalizeOptionalText(value)) {
@@ -2614,6 +2616,23 @@ function validateArchitectureEvidenceRecordCommand(command) {
     }
   }
 
+  return command;
+}
+
+function assertArchitectureEvidenceOriginAuthenticity(command, environment = process.env) {
+  if (command.evidenceOrigin !== 'ci_execution') {
+    return command;
+  }
+  if (
+    environment.GITHUB_ACTIONS !== 'true' ||
+    !/^https:\/\/github\.com\/[^/]+\/[^/]+\/actions\/runs\/\d+(?:\/job\/\d+)?$/u.test(
+      command.sourceRef
+    )
+  ) {
+    throw new Error(
+      'ARCH-EVIDENCE-CI-ORIGIN-UNVERIFIED: ci_execution requires a live GitHub Actions environment and run URL.'
+    );
+  }
   return command;
 }
 
@@ -2740,6 +2759,7 @@ function parseArchitectureEvidenceCommand(action, args) {
       evidenceOrigin: validateArchitectureEvidenceOrigin(requireOption(options, 'origin')),
       resultState: validateArchitectureEvidenceResultState(requireOption(options, 'result')),
       sourceRef: requireOption(options, 'sourceRef'),
+      sourcePath: requireOption(options, 'sourcePath'),
       sourceContentSha256: validateSha256(
         requireOption(options, 'sourceContentSha256'),
         'source-content-sha256'
@@ -3541,7 +3561,13 @@ function planArchitectureDesignCreateOperation({ command, existingDesign, operat
   return { design, scopes, audit };
 }
 
-function planArchitectureDesignTransitionOperation({ command, existingDesign, operationId, now }) {
+function planArchitectureDesignTransitionOperation({
+  command,
+  existingDesign,
+  implementationViolations = [],
+  operationId,
+  now,
+}) {
   const existing = normalizeArchitectureDesign(existingDesign);
   if (!existing) {
     throw new Error(
@@ -3554,6 +3580,24 @@ function planArchitectureDesignTransitionOperation({ command, existingDesign, op
     );
   }
   validateArchitectureDesignTransition(command.fromStatus, command.toStatus);
+  if (
+    command.toStatus === 'implemented' &&
+    implementationViolations.some(
+      (violation) =>
+        (violation.violation_kind ?? violation.violationKind) === 'required_evidence_missing' &&
+        violation.severity === 'blocker'
+    )
+  ) {
+    const subjects = implementationViolations
+      .map(
+        (violation) =>
+          `${violation.subject_kind ?? violation.subjectKind}:${violation.subject_id ?? violation.subjectId}`
+      )
+      .join(', ');
+    throw new Error(
+      `ARCH-DESIGN-IMPLEMENTATION-EVIDENCE-MISSING: ${command.designId} cannot become implemented while required proof is invalid for ${subjects}.`
+    );
+  }
 
   const updatedAt = toIso(now);
   const transition = {
@@ -4091,6 +4135,7 @@ function planArchitectureEvidenceRecordOperation({
   command,
   design,
   designScopes,
+  sourceFile,
   operationId,
   now,
 }) {
@@ -4103,14 +4148,25 @@ function planArchitectureEvidenceRecordOperation({
     'ARCH-EVIDENCE-MUST-PROVE-SCOPE-MISSING'
   );
   validateArchitectureEvidenceRecordCommand(command);
+  if (!sourceFile || (sourceFile.path ?? sourceFile.sourcePath) !== command.sourcePath) {
+    throw new Error(`ARCH-EVIDENCE-SOURCE-MISSING: ${command.sourcePath}`);
+  }
+  const currentSourceHash = sourceFile.content_hash ?? sourceFile.contentHash;
+  if (currentSourceHash !== command.sourceContentSha256) {
+    throw new Error(
+      `ARCH-EVIDENCE-SOURCE-HASH-MISMATCH: ${command.sourcePath} is ${currentSourceHash ?? 'missing'}, not ${command.sourceContentSha256}.`
+    );
+  }
 
   const evidence = {
     evidenceId: command.evidenceId,
+    designId: command.designId,
     subjectKind: command.subjectKind,
     subjectId: command.subjectId,
     evidenceKind: command.evidenceKind,
     evidenceOrigin: command.evidenceOrigin,
     sourceRef: command.sourceRef,
+    sourcePath: command.sourcePath,
     resultState: command.resultState,
     recordedAt: toIso(now),
     sourceContentSha256: command.sourceContentSha256,
@@ -5339,6 +5395,26 @@ async function readArchitectureEvidence(client, evidenceId) {
   return result.rows[0] || null;
 }
 
+async function readArchitectureEvidenceSourceFile(client, sourcePath) {
+  const result = await client.query(
+    `select path, content_hash
+     from ${schemaName}.governance_files
+     where path = $1`,
+    [sourcePath]
+  );
+  return result.rows[0] || null;
+}
+
+async function readArchitectureImplementationViolations(client, designId) {
+  const result = await client.query(
+    `select violation_kind, subject_kind, subject_id, severity
+     from architecture.implementation_violation_query
+     where design_id = $1`,
+    [designId]
+  );
+  return result.rows;
+}
+
 async function readArchitectureObservability(client, observabilityId) {
   const result = await client.query(
     `select *
@@ -5949,16 +6025,18 @@ async function writePlannedArchitectureObservabilityRecordOperation(client, plan
 async function writePlannedArchitectureEvidenceRecordOperation(client, planned) {
   await client.query(
     `insert into architecture.evidence
-      (evidence_id, subject_kind, subject_id, evidence_kind, evidence_origin,
-       source_ref, result_state, recorded_at, source_content_sha256)
-     values ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      (evidence_id, design_id, subject_kind, subject_id, evidence_kind, evidence_origin,
+       source_ref, source_path, result_state, recorded_at, source_content_sha256)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
     [
       planned.evidence.evidenceId,
+      planned.evidence.designId,
       planned.evidence.subjectKind,
       planned.evidence.subjectId,
       planned.evidence.evidenceKind,
       planned.evidence.evidenceOrigin,
       planned.evidence.sourceRef,
+      planned.evidence.sourcePath,
       planned.evidence.resultState,
       planned.evidence.recordedAt,
       planned.evidence.sourceContentSha256,
@@ -6711,9 +6789,14 @@ async function applyArchitectureDesignTransitionOperation(command, options = {})
     }
 
     const existingDesign = await readArchitectureDesign(client, command.designId);
+    const implementationViolations =
+      command.toStatus === 'implemented'
+        ? await readArchitectureImplementationViolations(client, command.designId)
+        : [];
     const planned = planArchitectureDesignTransitionOperation({
       command,
       existingDesign,
+      implementationViolations,
       operationId: options.operationId || crypto.randomUUID(),
       now: options.now || new Date(),
     });
@@ -7180,6 +7263,7 @@ async function applyArchitectureEvidenceRecordOperation(command, options = {}) {
   }
 
   try {
+    assertArchitectureEvidenceOriginAuthenticity(command, options.environment || process.env);
     await assertPlanningDbCurrentSchemaReady(client);
     await client.query('begin');
 
@@ -7192,10 +7276,12 @@ async function applyArchitectureEvidenceRecordOperation(command, options = {}) {
 
     const design = await readArchitectureDesign(client, command.designId);
     const designScopes = await readArchitectureDesignScopes(client, command.designId);
+    const sourceFile = await readArchitectureEvidenceSourceFile(client, command.sourcePath);
     const planned = planArchitectureEvidenceRecordOperation({
       command,
       design,
       designScopes,
+      sourceFile,
       operationId: options.operationId || crypto.randomUUID(),
       now: options.now || new Date(),
     });
@@ -7862,6 +7948,7 @@ module.exports = {
   applyFeatureMechanizationRailRetireOperation,
   applyGovernanceRefreshRunRecordOperation,
   assertArchitectureDesignIdempotentReplayMatches,
+  assertArchitectureEvidenceOriginAuthenticity,
   assertArchitectureScopedOperationIdempotentReplayMatches,
   assertComponentIdempotentReplayMatches,
   assertDbSurfaceIdempotentReplayMatches,
