@@ -594,20 +594,33 @@ function collectScopedDescendants(root, predicate) {
   return matches;
 }
 
-function staticBooleanValue(expression) {
+function staticPrimitiveValue(expression) {
   let current = expression;
-  while (ts.isParenthesizedExpression(current)) current = current.expression;
-  if (current.kind === ts.SyntaxKind.TrueKeyword) return true;
-  if (current.kind === ts.SyntaxKind.FalseKeyword) return false;
-  if (current.kind === ts.SyntaxKind.NullKeyword) return false;
-  if (ts.isNumericLiteral(current)) return Number(current.text) !== 0;
+  while (
+    ts.isParenthesizedExpression(current) ||
+    ts.isAsExpression(current) ||
+    ts.isSatisfiesExpression(current) ||
+    ts.isNonNullExpression(current)
+  ) {
+    current = current.expression;
+  }
+  if (current.kind === ts.SyntaxKind.TrueKeyword) return { known: true, value: true };
+  if (current.kind === ts.SyntaxKind.FalseKeyword) return { known: true, value: false };
+  if (current.kind === ts.SyntaxKind.NullKeyword) return { known: true, value: null };
+  if (ts.isNumericLiteral(current)) return { known: true, value: Number(current.text) };
   if (ts.isStringLiteral(current) || ts.isNoSubstitutionTemplateLiteral(current)) {
-    return current.text.length > 0;
+    return { known: true, value: current.text };
   }
   if (ts.isPrefixUnaryExpression(current) && current.operator === ts.SyntaxKind.ExclamationToken) {
-    const operand = staticBooleanValue(current.operand);
-    return operand === null ? null : !operand;
+    const operand = staticPrimitiveValue(current.operand);
+    return operand.known ? { known: true, value: !operand.value } : operand;
   }
+  return { known: false, value: undefined };
+}
+
+function staticBooleanValue(expression) {
+  const value = staticPrimitiveValue(expression);
+  if (value.known) return Boolean(value.value);
   return null;
 }
 
@@ -626,6 +639,26 @@ function statementAlwaysTerminates(statement) {
     if (statement.finallyBlock && statementAlwaysTerminates(statement.finallyBlock)) return true;
     if (!statementAlwaysTerminates(statement.tryBlock)) return false;
     return !statement.catchClause || statementAlwaysTerminates(statement.catchClause.block);
+  }
+  if (ts.isSwitchStatement(statement)) {
+    const switchValue = staticPrimitiveValue(statement.expression);
+    if (!switchValue.known) return false;
+    const clauses = statement.caseBlock.clauses;
+    let selectedIndex = clauses.findIndex(
+      (clause) =>
+        ts.isCaseClause(clause) &&
+        staticPrimitiveValue(clause.expression).known &&
+        staticPrimitiveValue(clause.expression).value === switchValue.value
+    );
+    if (selectedIndex < 0) selectedIndex = clauses.findIndex(ts.isDefaultClause);
+    if (selectedIndex < 0) return false;
+    for (const clause of clauses.slice(selectedIndex)) {
+      for (const clauseStatement of clause.statements) {
+        if (ts.isBreakStatement(clauseStatement)) return false;
+        if (statementAlwaysTerminates(clauseStatement)) return true;
+      }
+    }
+    return false;
   }
   if (!ts.isIfStatement(statement)) return false;
 
@@ -927,6 +960,40 @@ function collectProductionExecutableScopes({
     queue.push({ source, scope });
   };
 
+  const resolveExportedExecutable = (source, exportedName, visited = new Set()) => {
+    const parsed = parsedBySource.get(source);
+    if (!parsed) return null;
+    const visitKey = `${source}:${exportedName}`;
+    if (visited.has(visitKey)) return null;
+    visited.add(visitKey);
+
+    const local = topLevelNamedExecutableScope(parsed, exportedName);
+    if (local) return { source, scope: local };
+
+    const module = moduleMap.get(source);
+    const dependenciesBySpecifier = new Map(
+      (module?.dependencies ?? []).map((dependency) => [dependency.module, dependency.resolved])
+    );
+    for (const statement of parsed.statements) {
+      if (
+        !ts.isExportDeclaration(statement) ||
+        !ts.isStringLiteral(statement.moduleSpecifier) ||
+        !statement.exportClause ||
+        !ts.isNamedExports(statement.exportClause)
+      ) {
+        continue;
+      }
+      const exported = statement.exportClause.elements.find(
+        (element) => element.name.text === exportedName
+      );
+      if (!exported) continue;
+      const targetSource = dependenciesBySpecifier.get(statement.moduleSpecifier.text);
+      const targetName = exported.propertyName?.text ?? exported.name.text;
+      if (targetSource) return resolveExportedExecutable(targetSource, targetName, visited);
+    }
+    return null;
+  };
+
   const resolveIdentifier = (source, identifierName) => {
     const parsed = parsedBySource.get(source);
     if (!parsed) return null;
@@ -951,12 +1018,8 @@ function collectProductionExecutableScopes({
       );
       if (!imported) continue;
       const targetSource = dependenciesBySpecifier.get(statement.moduleSpecifier.text);
-      const targetParsed = targetSource ? parsedBySource.get(targetSource) : null;
       const importedName = imported.propertyName?.text ?? imported.name.text;
-      const targetScope = targetParsed
-        ? topLevelNamedExecutableScope(targetParsed, importedName)
-        : null;
-      return targetSource && targetScope ? { source: targetSource, scope: targetScope } : null;
+      return targetSource ? resolveExportedExecutable(targetSource, importedName, new Set()) : null;
     }
     return null;
   };
@@ -1016,6 +1079,120 @@ function collectProductionExecutableScopes({
     return null;
   };
 
+  const parameterNameAt = (scope, index) => {
+    const parameter = scope.parameters?.[index];
+    return parameter && ts.isIdentifier(parameter.name) ? parameter.name.text : null;
+  };
+
+  const parameterIsDirectlyInvoked = (scope, parameterName) =>
+    collectReachableScopedDescendants(
+      scope,
+      (node) =>
+        ts.isCallExpression(node) &&
+        ts.isIdentifier(node.expression) &&
+        node.expression.text === parameterName
+    ).length > 0;
+
+  const parameterIsInvokedByReturnedCallable = (scope, parameterName) =>
+    collectReachableScopedDescendants(
+      scope,
+      (node) => ts.isReturnStatement(node) && node.expression !== undefined
+    ).some((returnStatement) => {
+      const returned = unwrapExpression(returnStatement.expression);
+      if (!returned || (!ts.isArrowFunction(returned) && !ts.isFunctionExpression(returned))) {
+        return false;
+      }
+      return (
+        collectReachableScopedDescendants(
+          returned,
+          (node) =>
+            ts.isCallExpression(node) &&
+            ts.isIdentifier(node.expression) &&
+            node.expression.text === parameterName
+        ).length > 0
+      );
+    });
+
+  const callResultVariableName = (call, boundary) => {
+    for (let current = call; current && current !== boundary; current = current.parent) {
+      if (
+        ts.isVariableDeclaration(current) &&
+        ts.isIdentifier(current.name) &&
+        current.initializer &&
+        nodeIsWithin(call, current.initializer)
+      ) {
+        return current.name.text;
+      }
+    }
+    return null;
+  };
+
+  const returnedCallableIsConsumed = (source, scope, producerCall) => {
+    const variableName = callResultVariableName(producerCall, scope);
+    if (!variableName) return false;
+    return collectReachableScopedDescendants(scope, ts.isCallExpression).some((consumerCall) => {
+      if (consumerCall.pos <= producerCall.end) return false;
+      const parameterIndex = consumerCall.arguments.findIndex(
+        (argument) => ts.isIdentifier(argument) && argument.text === variableName
+      );
+      if (parameterIndex < 0) return false;
+      const consumerTarget = resolveCall(source, scope, consumerCall);
+      const parameterName = consumerTarget
+        ? parameterNameAt(consumerTarget.scope, parameterIndex)
+        : null;
+      return Boolean(
+        parameterName && parameterIsDirectlyInvoked(consumerTarget.scope, parameterName)
+      );
+    });
+  };
+
+  const consumedParameterMethods = (scope, parameterName) => {
+    const methods = new Set(
+      collectReachableScopedDescendants(
+        scope,
+        (node) =>
+          ts.isCallExpression(node) &&
+          ts.isPropertyAccessExpression(node.expression) &&
+          ts.isIdentifier(node.expression.expression) &&
+          node.expression.expression.text === parameterName
+      ).map((call) => call.expression.name.text)
+    );
+    const loops = collectReachableScopedDescendants(scope, ts.isForOfStatement);
+    for (const loop of loops) {
+      if (!ts.isIdentifier(unwrapExpression(loop.expression))) continue;
+      if (unwrapExpression(loop.expression).text !== parameterName) continue;
+      if (!ts.isVariableDeclarationList(loop.initializer)) continue;
+      const declaration = loop.initializer.declarations[0];
+      if (!declaration || !ts.isIdentifier(declaration.name)) continue;
+      for (const call of collectReachableScopedDescendants(loop.statement, ts.isCallExpression)) {
+        if (
+          ts.isPropertyAccessExpression(call.expression) &&
+          ts.isIdentifier(call.expression.expression) &&
+          call.expression.expression.text === declaration.name.text
+        ) {
+          methods.add(call.expression.name.text);
+        }
+      }
+    }
+    return methods;
+  };
+
+  const valueExpression = (scope, expression) => {
+    if (!ts.isIdentifier(expression)) return expression;
+    const declaration = collectReachableScopedDescendants(
+      scope,
+      (node) =>
+        ts.isVariableDeclaration(node) &&
+        ts.isIdentifier(node.name) &&
+        node.name.text === expression.text &&
+        node.initializer !== undefined
+    )[0];
+    return declaration?.initializer ?? expression;
+  };
+
+  const productFactoryCalls = (scope, expression) =>
+    collectReachableScopedDescendants(valueExpression(scope, expression), ts.isCallExpression);
+
   for (const root of productionRoots) {
     if (productionSources.has(root)) enqueue(root, parsedBySource.get(root));
   }
@@ -1028,16 +1205,30 @@ function collectProductionExecutableScopes({
       const target = resolveCall(current.source, current.scope, call);
       if (target) {
         enqueue(target.source, target.scope);
-        const targetName = executableScopeName(target.scope);
-        if (targetName && /^create.*Factory$/u.test(targetName)) {
-          const buildMethod = productMethod(target, 'build');
-          if (buildMethod) enqueue(buildMethod.source, buildMethod.scope);
+        for (let index = 0; index < call.arguments.length; index += 1) {
+          const parameterName = parameterNameAt(target.scope, index);
+          if (!parameterName) continue;
+          const argument = call.arguments[index];
+          if (ts.isIdentifier(argument)) {
+            const callback = resolveIdentifier(current.source, argument.text);
+            if (
+              callback &&
+              (parameterIsDirectlyInvoked(target.scope, parameterName) ||
+                (parameterIsInvokedByReturnedCallable(target.scope, parameterName) &&
+                  returnedCallableIsConsumed(current.source, current.scope, call)))
+            ) {
+              enqueue(callback.source, callback.scope);
+            }
+          }
+          for (const methodName of consumedParameterMethods(target.scope, parameterName)) {
+            for (const factoryCall of productFactoryCalls(current.scope, argument)) {
+              const factoryTarget = resolveCall(current.source, current.scope, factoryCall);
+              if (!factoryTarget) continue;
+              const method = productMethod(factoryTarget, methodName);
+              if (method) enqueue(method.source, method.scope);
+            }
+          }
         }
-      }
-      for (const argument of call.arguments) {
-        if (!ts.isIdentifier(argument)) continue;
-        const callback = resolveIdentifier(current.source, argument.text);
-        if (callback) enqueue(callback.source, callback.scope);
       }
     }
   }
