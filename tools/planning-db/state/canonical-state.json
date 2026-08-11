@@ -11265,6 +11265,34 @@
         "updated_at": "2026-08-07T00:52:38.502668+00:00"
       },
       {
+        "design_id": "DOC1-2-LOCAL-RAIL-DUPLICATE-RETIREMENT-20260811",
+        "work_item_id": "GH-2274",
+        "title": "Retire duplicate local documentation generation rail",
+        "owner": "Architecture / Docs / Planning",
+        "status": "superseded",
+        "rationale": "The DOC1-2 local promotion duplicates the existing GeneratePlanningDerivedSurfaces declaration; retain one canonical rail and move implementation evidence to its accepted DB authority.",
+        "fowler_signal": "hidden_authority",
+        "rail_ref": "RetireFeatureMechanizationRail",
+        "approved_at": "2026-08-11T13:27:16.49+00:00",
+        "supersedes_id": null,
+        "created_at": "2026-08-11T13:27:14.888+00:00",
+        "updated_at": "2026-08-11T13:28:00.417+00:00"
+      },
+      {
+        "design_id": "DOC1-2-LOCAL-RAIL-DUPLICATE-RETIREMENT-V2-20260811",
+        "work_item_id": "GH-2274",
+        "title": "Retire duplicate local documentation generation rail with review authority",
+        "owner": "Architecture / Docs / Planning",
+        "status": "implemented",
+        "rationale": "Retire the DOC1-2 local promotion while the design is in review, preserving the existing canonical GeneratePlanningDerivedSurfaces declaration.",
+        "fowler_signal": "hidden_authority",
+        "rail_ref": "RetireFeatureMechanizationRail",
+        "approved_at": "2026-08-11T13:28:05.102+00:00",
+        "supersedes_id": "DOC1-2-LOCAL-RAIL-DUPLICATE-RETIREMENT-20260811",
+        "created_at": "2026-08-11T13:28:01.997+00:00",
+        "updated_at": "2026-08-11T13:28:08.205+00:00"
+      },
+      {
         "design_id": "DOC1-5-SYSTEM-DELIVERY-STATUS-PROJECTION-20260810",
         "work_item_id": "GH-2148",
         "title": "DB-first System Delivery Status projection",
@@ -65995,6 +66023,22 @@
         "created_at": "2026-08-07T00:52:35.686161+00:00"
       },
       {
+        "design_id": "DOC1-2-LOCAL-RAIL-DUPLICATE-RETIREMENT-20260811",
+        "subject_kind": "decision",
+        "subject_id": "local#DOC1-2-ON-DEMAND-PUBLICATION-20260810#command#generateplanningderivedsurfaces",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-11T13:27:14.888+00:00"
+      },
+      {
+        "design_id": "DOC1-2-LOCAL-RAIL-DUPLICATE-RETIREMENT-V2-20260811",
+        "subject_kind": "decision",
+        "subject_id": "local#DOC1-2-ON-DEMAND-PUBLICATION-20260810#command#generateplanningderivedsurfaces",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-11T13:28:01.997+00:00"
+      },
+      {
         "design_id": "DOC1-5-SYSTEM-DELIVERY-STATUS-PROJECTION-20260810",
         "subject_kind": "command",
         "subject_id": "GeneratePlanningDerivedSurfaces",
@@ -87934,6 +87978,27 @@
         "created_at": "2026-08-10T21:07:21.077+00:00"
       },
       {
+        "operation_id": "0ba0c2b9-abb5-4aa3-aec8-70ed0a9631f1",
+        "idempotency_key": "architecture_design_transition:codex:DOC1-2-LOCAL-RAIL-DUPLICATE-RETIREMENT-V2-20260811:097ff1a5b31f8aba",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "DOC1-2-LOCAL-RAIL-DUPLICATE-RETIREMENT-V2-20260811",
+        "source_ref": "scripts/sync-docs.cjs",
+        "source_content_sha256": "d4ff035dc1fd532fc5c77f7dc835d35138970ca5da2dc586fa80aeb477c44b31",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The duplicate local rail is absent and no must-prove violations remain.",
+          "designId": "DOC1-2-LOCAL-RAIL-DUPLICATE-RETIREMENT-V2-20260811",
+          "toStatus": "implemented",
+          "sourceRef": "scripts/sync-docs.cjs",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "d4ff035dc1fd532fc5c77f7dc835d35138970ca5da2dc586fa80aeb477c44b31"
+        },
+        "created_at": "2026-08-11T13:28:08.205+00:00"
+      },
+      {
         "operation_id": "0e9586d8-08b0-4064-9a96-140ec07fb7dd",
         "idempotency_key": "gh-2167-update-test-sys-api-infra-workspace-draft-2-v1",
         "operation_type": "architecture_test_record",
@@ -88358,6 +88423,27 @@
           "sourceContentSha256": "c319921befc49127ae2f7b507b54ff1c7f1ab7e2deb7bf3da35853dde8ac9340"
         },
         "created_at": "2026-08-10T21:06:27.716+00:00"
+      },
+      {
+        "operation_id": "14a16e84-824b-460f-8293-591a2bd70b1d",
+        "idempotency_key": "architecture_design_transition:codex:DOC1-2-LOCAL-RAIL-DUPLICATE-RETIREMENT-20260811:338b21ffee73f589",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "DOC1-2-LOCAL-RAIL-DUPLICATE-RETIREMENT-20260811",
+        "source_ref": "scripts/sync-docs.cjs",
+        "source_content_sha256": "d4ff035dc1fd532fc5c77f7dc835d35138970ca5da2dc586fa80aeb477c44b31",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Exact duplicate confirmed by the DB rail vocabulary integrity query.",
+          "designId": "DOC1-2-LOCAL-RAIL-DUPLICATE-RETIREMENT-20260811",
+          "toStatus": "approved",
+          "sourceRef": "scripts/sync-docs.cjs",
+          "fromStatus": "review",
+          "sourceContentSha256": "d4ff035dc1fd532fc5c77f7dc835d35138970ca5da2dc586fa80aeb477c44b31"
+        },
+        "created_at": "2026-08-11T13:27:16.49+00:00"
       },
       {
         "operation_id": "14cb8dcf-8a1b-4641-a8f9-f6b8fa73ec9c",
@@ -92802,6 +92888,27 @@
         "created_at": "2026-08-10T22:58:46.58+00:00"
       },
       {
+        "operation_id": "7a06269b-6ea2-4ba9-b959-4a999b47fc5f",
+        "idempotency_key": "architecture_design_transition:codex:DOC1-2-LOCAL-RAIL-DUPLICATE-RETIREMENT-20260811:5d8d5c96776dfbbb",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "DOC1-2-LOCAL-RAIL-DUPLICATE-RETIREMENT-20260811",
+        "source_ref": "scripts/sync-docs.cjs",
+        "source_content_sha256": "d4ff035dc1fd532fc5c77f7dc835d35138970ca5da2dc586fa80aeb477c44b31",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The retirement writer requires review-state authority; V2 corrects the lifecycle sequence without relaxing the guard.",
+          "designId": "DOC1-2-LOCAL-RAIL-DUPLICATE-RETIREMENT-20260811",
+          "toStatus": "superseded",
+          "sourceRef": "scripts/sync-docs.cjs",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "d4ff035dc1fd532fc5c77f7dc835d35138970ca5da2dc586fa80aeb477c44b31"
+        },
+        "created_at": "2026-08-11T13:28:00.417+00:00"
+      },
+      {
         "operation_id": "7a9594ff-1603-4f0b-bc94-a4bc16177b78",
         "idempotency_key": "architecture_design_transition:codex:API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811:f63295b89025faa8",
         "operation_type": "architecture_design_transition",
@@ -93039,6 +93146,27 @@
           "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
         },
         "created_at": "2026-08-10T21:04:53.66+00:00"
+      },
+      {
+        "operation_id": "7fb8c4a1-816e-45de-864a-70f3607b78dc",
+        "idempotency_key": "architecture_design_transition:codex:DOC1-2-LOCAL-RAIL-DUPLICATE-RETIREMENT-V2-20260811:0ccfbbc67277a692",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "DOC1-2-LOCAL-RAIL-DUPLICATE-RETIREMENT-V2-20260811",
+        "source_ref": "scripts/sync-docs.cjs",
+        "source_content_sha256": "d4ff035dc1fd532fc5c77f7dc835d35138970ca5da2dc586fa80aeb477c44b31",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Retirement is complete and integrity verification is ready.",
+          "designId": "DOC1-2-LOCAL-RAIL-DUPLICATE-RETIREMENT-V2-20260811",
+          "toStatus": "implementing",
+          "sourceRef": "scripts/sync-docs.cjs",
+          "fromStatus": "approved",
+          "sourceContentSha256": "d4ff035dc1fd532fc5c77f7dc835d35138970ca5da2dc586fa80aeb477c44b31"
+        },
+        "created_at": "2026-08-11T13:28:06.604+00:00"
       },
       {
         "operation_id": "7fe75607-2ed1-4a11-b0b3-a97e69ce051e",
@@ -94255,6 +94383,27 @@
         "created_at": "2026-08-10T21:06:36.028+00:00"
       },
       {
+        "operation_id": "986321c9-f334-4436-9075-a019fd7dde7b",
+        "idempotency_key": "architecture_design_transition:codex:DOC1-2-LOCAL-RAIL-DUPLICATE-RETIREMENT-V2-20260811:3279e127c21537b6",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "DOC1-2-LOCAL-RAIL-DUPLICATE-RETIREMENT-V2-20260811",
+        "source_ref": "scripts/sync-docs.cjs",
+        "source_content_sha256": "d4ff035dc1fd532fc5c77f7dc835d35138970ca5da2dc586fa80aeb477c44b31",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The exact duplicate local rail has been retired under review-state authorization.",
+          "designId": "DOC1-2-LOCAL-RAIL-DUPLICATE-RETIREMENT-V2-20260811",
+          "toStatus": "approved",
+          "sourceRef": "scripts/sync-docs.cjs",
+          "fromStatus": "review",
+          "sourceContentSha256": "d4ff035dc1fd532fc5c77f7dc835d35138970ca5da2dc586fa80aeb477c44b31"
+        },
+        "created_at": "2026-08-11T13:28:05.102+00:00"
+      },
+      {
         "operation_id": "986394f9-f849-4385-a4be-b339dd4b1123",
         "idempotency_key": "gh-2167-update-test-sys-api-tests-application-services-authorization-3-v1",
         "operation_type": "architecture_test_record",
@@ -94427,6 +94576,40 @@
           "sourceContentSha256": "c770f3d34e90d2ad2f546af24f8f2833870c7df91f1fb1c97e45151de29563b6"
         },
         "created_at": "2026-08-10T21:06:34.732+00:00"
+      },
+      {
+        "operation_id": "9b2ec564-7334-4df0-ad6f-c7f1ba9ce6ca",
+        "idempotency_key": "architecture_design_create:codex:DOC1-2-LOCAL-RAIL-DUPLICATE-RETIREMENT-V2-20260811:79ae6547a9840604",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "DOC1-2-LOCAL-RAIL-DUPLICATE-RETIREMENT-V2-20260811",
+        "source_ref": "scripts/sync-docs.cjs",
+        "source_content_sha256": "d4ff035dc1fd532fc5c77f7dc835d35138970ca5da2dc586fa80aeb477c44b31",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "Architecture / Docs / Planning",
+          "title": "Retire duplicate local documentation generation rail with review authority",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "local#DOC1-2-ON-DEMAND-PUBLICATION-20260810#command#generateplanningderivedsurfaces",
+              "subjectKind": "decision"
+            }
+          ],
+          "status": "review",
+          "railRef": "RetireFeatureMechanizationRail",
+          "designId": "DOC1-2-LOCAL-RAIL-DUPLICATE-RETIREMENT-V2-20260811",
+          "rationale": "Retire the DOC1-2 local promotion while the design is in review, preserving the existing canonical GeneratePlanningDerivedSurfaces declaration.",
+          "sourceRef": "scripts/sync-docs.cjs",
+          "workItemId": "GH-2274",
+          "fowlerSignal": "hidden_authority",
+          "supersedesId": "DOC1-2-LOCAL-RAIL-DUPLICATE-RETIREMENT-20260811",
+          "sourceContentSha256": "d4ff035dc1fd532fc5c77f7dc835d35138970ca5da2dc586fa80aeb477c44b31"
+        },
+        "created_at": "2026-08-11T13:28:01.997+00:00"
       },
       {
         "operation_id": "9b4a8549-d90a-4db5-9047-7d54245247f2",
@@ -95971,6 +96154,27 @@
         "created_at": "2026-08-10T21:04:10.294+00:00"
       },
       {
+        "operation_id": "b7263c6a-a4df-4e98-a51b-ff9c76f24756",
+        "idempotency_key": "architecture_design_transition:codex:DOC1-2-LOCAL-RAIL-DUPLICATE-RETIREMENT-20260811:d82ec19a79cca6e9",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "DOC1-2-LOCAL-RAIL-DUPLICATE-RETIREMENT-20260811",
+        "source_ref": "scripts/sync-docs.cjs",
+        "source_content_sha256": "d4ff035dc1fd532fc5c77f7dc835d35138970ca5da2dc586fa80aeb477c44b31",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Retirement is authorized through the existing RetireFeatureMechanizationRail command.",
+          "designId": "DOC1-2-LOCAL-RAIL-DUPLICATE-RETIREMENT-20260811",
+          "toStatus": "implementing",
+          "sourceRef": "scripts/sync-docs.cjs",
+          "fromStatus": "approved",
+          "sourceContentSha256": "d4ff035dc1fd532fc5c77f7dc835d35138970ca5da2dc586fa80aeb477c44b31"
+        },
+        "created_at": "2026-08-11T13:27:18.058+00:00"
+      },
+      {
         "operation_id": "b7a1c68c-f64e-4710-8757-88da31ac5369",
         "idempotency_key": "architecture_observability_record:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811:SYS-OBSERVABILITY-OTEL-ADAPTER:0bac7afb67a6e70a",
         "operation_type": "architecture_observability_record",
@@ -97347,6 +97551,40 @@
           "sourceContentSha256": "f420dd8569bf585c162ff9bcdf08f4e7a48b4575097d7367091a3a61c9e24e4a"
         },
         "created_at": "2026-08-10T21:06:37.342+00:00"
+      },
+      {
+        "operation_id": "c636cb9e-4f34-4c4e-8587-b406f9ef6763",
+        "idempotency_key": "architecture_design_create:codex:DOC1-2-LOCAL-RAIL-DUPLICATE-RETIREMENT-20260811:06812835137a51e5",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "DOC1-2-LOCAL-RAIL-DUPLICATE-RETIREMENT-20260811",
+        "source_ref": "scripts/sync-docs.cjs",
+        "source_content_sha256": "d4ff035dc1fd532fc5c77f7dc835d35138970ca5da2dc586fa80aeb477c44b31",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "Architecture / Docs / Planning",
+          "title": "Retire duplicate local documentation generation rail",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "local#DOC1-2-ON-DEMAND-PUBLICATION-20260810#command#generateplanningderivedsurfaces",
+              "subjectKind": "decision"
+            }
+          ],
+          "status": "review",
+          "railRef": "RetireFeatureMechanizationRail",
+          "designId": "DOC1-2-LOCAL-RAIL-DUPLICATE-RETIREMENT-20260811",
+          "rationale": "The DOC1-2 local promotion duplicates the existing GeneratePlanningDerivedSurfaces declaration; retain one canonical rail and move implementation evidence to its accepted DB authority.",
+          "sourceRef": "scripts/sync-docs.cjs",
+          "workItemId": "GH-2274",
+          "fowlerSignal": "hidden_authority",
+          "supersedesId": null,
+          "sourceContentSha256": "d4ff035dc1fd532fc5c77f7dc835d35138970ca5da2dc586fa80aeb477c44b31"
+        },
+        "created_at": "2026-08-11T13:27:14.888+00:00"
       },
       {
         "operation_id": "c65907df-1331-46a6-a6b0-e6d9f26fd6cd",
@@ -107870,647 +108108,6 @@
       "createdAt": "2026-08-04T01:29:12.684Z"
     },
     {
-      "railId": "local#DOC1-2-ON-DEMAND-PUBLICATION-20260810#command#generateplanningderivedsurfaces",
-      "featureId": "DOC1-2-ON-DEMAND-PUBLICATION-20260810",
-      "mechanizationStatus": "closed",
-      "railName": "GeneratePlanningDerivedSurfaces",
-      "normalizedRailName": "generateplanningderivedsurfaces",
-      "railType": "command",
-      "dddOwner": "PlanningGeneratedArtifact",
-      "railStatus": "implemented",
-      "symbolRefs": [
-        "scripts/documentation-publication.cjs#DocumentationPublicationPolicy",
-        "scripts/documentation-publication.cjs#DocumentationPublicationAssembler",
-        "scripts/documentation-publication.cjs#runDocumentationPublicationCli",
-        "tools/docs/check-links.ts#loadGeneratedPublicationRoutes",
-        "scripts/generate-code-status.cjs#generateRepositoryMap",
-        "scripts/generate-code-status.cjs#repositoryMapOutputPath",
-        "scripts/pr-closeout.cjs#buildPrCloseoutPlan",
-        "scripts/sync-docs.cjs#collectPlanningDocs",
-        "scripts/sync-docs.cjs#collectPlanningReferenceDirs",
-        "scripts/sync-docs.cjs#generateAdrLanding",
-        "scripts/sync-docs.cjs#generateContractSubIndexes",
-        "scripts/sync-docs.cjs#generatePlanningIndexes",
-        "scripts/sync-docs.cjs#generateSectionIndexes",
-        "scripts/sync-docs.cjs#lifecycleAuthorityParts",
-        "scripts/sync-docs.cjs#lifecycleStateIsPublishable",
-        "scripts/sync-docs.cjs#main",
-        "scripts/sync-docs.cjs#normalizePlanningDocs",
-        "scripts/sync-docs.cjs#readDocumentationLifecycleAuthority",
-        "scripts/sync-docs.cjs#renderContractDocsList",
-        "scripts/sync-docs.cjs#shouldIncludeDocumentationPath"
-      ],
-      "implementationRefs": [
-        "scripts/documentation-publication.cjs#DocumentationPublicationAssembler",
-        "scripts/documentation-publication.cjs#DocumentationPublicationPolicy",
-        "scripts/documentation-publication.cjs#runDocumentationPublicationCli",
-        "scripts/generate-code-status.cjs#generateRepositoryMap",
-        "scripts/generate-code-status.cjs#repositoryMapOutputPath",
-        "scripts/pr-closeout.cjs#buildPrCloseoutPlan",
-        "tools/docs/check-links.ts#loadGeneratedPublicationRoutes",
-        "scripts/documentation-publication.cjs#GeneratePlanningDerivedSurfaces",
-        "scripts/generate-spec-traceability-report.cjs#GeneratePlanningDerivedSurfaces",
-        "scripts/sync-docs.cjs#collectPlanningDocs",
-        "scripts/sync-docs.cjs#collectPlanningReferenceDirs",
-        "scripts/sync-docs.cjs#generateAdrLanding",
-        "scripts/sync-docs.cjs#generateContractSubIndexes",
-        "scripts/sync-docs.cjs#generatePlanningIndexes",
-        "scripts/sync-docs.cjs#generateSectionIndexes",
-        "scripts/sync-docs.cjs#lifecycleAuthorityParts",
-        "scripts/sync-docs.cjs#lifecycleStateIsPublishable",
-        "scripts/sync-docs.cjs#main",
-        "scripts/sync-docs.cjs#normalizePlanningDocs",
-        "scripts/sync-docs.cjs#readDocumentationLifecycleAuthority",
-        "scripts/sync-docs.cjs#renderContractDocsList",
-        "scripts/sync-docs.cjs#shouldIncludeDocumentationPath"
-      ],
-      "documentationRefs": [
-        {
-          "name": "GeneratePlanningDerivedSurfaces",
-          "path": "docs/planning/closeouts/20260507-gov-s3-planning-db-export-parity-closeout.md",
-          "sourceKind": "documentation"
-        },
-        {
-          "name": "GeneratePlanningDerivedSurfaces",
-          "path": "docs/planning/proposals/mandatory/governance-and-docs/doc1-1-repository-map-projection-plan-20260807.md",
-          "sourceKind": "documentation"
-        },
-        "docs/architecture/command-query-rail-governance.md"
-      ],
-      "governingSources": [
-        "AGENTS.md",
-        "docs/planning/status/governance-document-rule-inventory.md",
-        "docs/guides/ai-work-protocol.md",
-        "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
-        "docs/adr/ADR-0063-planning-db-current-schema-rebuild.md",
-        "docs/architecture/command-query-rail-governance.md",
-        "docs/architecture/fowler-opportunity-planning-governance.md",
-        "docs/planning/state/planning-control-tower.md",
-        "docs/generated-docs-policy.json"
-      ],
-      "allowedImplementationSurfaces": [
-        ".github/workflows/docs-deploy.yml",
-        ".github/workflows/pr-quality-gate.yml",
-        ".gitignore",
-        "AGENTS.md",
-        "docs/.manifest.json",
-        "docs/**/index.md",
-        "docs/DOCS_README.md",
-        "docs/concepts/repository-map.md",
-        "docs/generated-docs-policy.json",
-        "docs/guides/documentation-maintenance-guide-20260407.md",
-        "docs/guides/pr-preflight-and-ci-triage.md",
-        "docs/guides/testing-and-ci-capabilities.md",
-        "docs/planning/proposals/mandatory/governance-and-docs/doc1-2-on-demand-publication-plan-20260810.md",
-        "docs/planning/status/generated-code-state.md",
-        "docs/runbooks/planning-generated-artifacts-operations-20260403.md",
-        "package.json",
-        "scripts/docs-quality-check.cjs",
-        "scripts/documentation-publication.cjs",
-        "scripts/documentation-publication.test.cjs",
-        "scripts/generate-code-status.cjs",
-        "scripts/generate-code-status.test.cjs",
-        "scripts/governance-refresh.cjs",
-        "scripts/governance-refresh.test.cjs",
-        "scripts/pr-closeout.cjs",
-        "scripts/pr-closeout.test.cjs",
-        "tools/ci/repository-command-catalog.mjs",
-        "tools/ci/repository-command-catalog.test.mjs",
-        "tools/ci/policy/workflow-scope.json",
-        "tools/ci/workflow-pattern-parity.test.mjs",
-        "tools/docs/check-links.ts",
-        "zensical.yml",
-        "scripts/sync-docs.cjs",
-        "tools/ci/sync-docs-status-policy.test.mjs",
-        "docs/adr/index.md",
-        "docs/guides/index.md",
-        "docs/architecture/domain-planning.md",
-        "docs/planning/domains/planner-and-contracts.md",
-        "docs/architecture/components/engine/architecture/index.md",
-        "docs/architecture/components/planner/index.md",
-        "docs/architecture/components/planner/planner-ddd.md",
-        "docs/architecture/components/planner/planner-functional.md",
-        "docs/architecture/components/planner/planner-sequence.md",
-        "docs/guides/generic-graph-source-user-manual-20260404.md",
-        "tools/planning-db/state/canonical-state.json"
-      ],
-      "architectureGuards": [
-        "node --test scripts/documentation-publication.test.cjs scripts/generate-code-status.test.cjs",
-        "pnpm test:ci-tools",
-        "pnpm docs:gov:links",
-        "node --test tools/ci/sync-docs-status-policy.test.mjs"
-      ],
-      "completionGate": [
-        "node --test scripts/documentation-publication.test.cjs scripts/generate-code-status.test.cjs",
-        "pnpm test:ci-tools",
-        "pnpm docs:publish",
-        "pnpm docs:build",
-        "pnpm docs:gov:links",
-        "pnpm governance:refresh",
-        "pnpm verify:prepush",
-        "node --test tools/ci/sync-docs-status-policy.test.mjs",
-        "pnpm docs:sync"
-      ],
-      "sourcePath": "scripts/sync-docs.cjs",
-      "sourceContentSha256": "d4ff035dc1fd532fc5c77f7dc835d35138970ca5da2dc586fa80aeb477c44b31",
-      "rawRail": {
-        "name": "GeneratePlanningDerivedSurfaces",
-        "type": "command",
-        "status": "implemented",
-        "dddOwner": "PlanningGeneratedArtifact"
-      },
-      "rawManifest": {
-        "symbols": [
-          {
-            "name": "DocumentationPublicationPolicy",
-            "path": "scripts/documentation-publication.cjs",
-            "cqRails": [
-              "GeneratePlanningDerivedSurfaces",
-              "ListDocumentationLifecycleFacts"
-            ],
-            "dddOwner": "DocumentationPublicationPolicy",
-            "unitTests": [
-              "node --test scripts/documentation-publication.test.cjs"
-            ],
-            "fowlerSignals": ["Hidden Authority", "Duplicate Semantics"],
-            "cypressCoverage": "N/A - repository publication policy",
-            "architectureGuard": "node --test scripts/documentation-publication.test.cjs"
-          },
-          {
-            "name": "DocumentationPublicationAssembler",
-            "path": "scripts/documentation-publication.cjs",
-            "cqRails": [
-              "GeneratePlanningDerivedSurfaces",
-              "ListDocumentationLifecycleFacts"
-            ],
-            "dddOwner": "PlanningGeneratedArtifact",
-            "unitTests": [
-              "node --test scripts/documentation-publication.test.cjs"
-            ],
-            "fowlerSignals": ["Hidden Authority", "Duplicate Semantics"],
-            "cypressCoverage": "N/A - repository publication policy",
-            "architectureGuard": "node --test scripts/documentation-publication.test.cjs"
-          },
-          {
-            "name": "runDocumentationPublicationCli",
-            "path": "scripts/documentation-publication.cjs",
-            "cqRails": [
-              "GeneratePlanningDerivedSurfaces",
-              "ListDocumentationLifecycleFacts"
-            ],
-            "dddOwner": "PlanningGeneratedArtifact",
-            "unitTests": [
-              "node --test scripts/documentation-publication.test.cjs"
-            ],
-            "fowlerSignals": ["Hidden Authority", "Duplicate Semantics"],
-            "cypressCoverage": "N/A - repository publication policy",
-            "architectureGuard": "node --test scripts/documentation-publication.test.cjs"
-          },
-          {
-            "name": "loadGeneratedPublicationRoutes",
-            "path": "tools/docs/check-links.ts",
-            "cqRails": [
-              "GeneratePlanningDerivedSurfaces",
-              "ListDocumentationLifecycleFacts"
-            ],
-            "dddOwner": "DocumentationConsultationReadModel",
-            "unitTests": [
-              "node --test scripts/documentation-publication.test.cjs"
-            ],
-            "fowlerSignals": ["Hidden Authority", "Duplicate Semantics"],
-            "cypressCoverage": "N/A - repository publication policy",
-            "architectureGuard": "node --test scripts/documentation-publication.test.cjs"
-          },
-          {
-            "name": "generateRepositoryMap",
-            "path": "scripts/generate-code-status.cjs",
-            "cqRails": [
-              "GeneratePlanningDerivedSurfaces",
-              "ListDocumentationLifecycleFacts"
-            ],
-            "dddOwner": "PlanningGeneratedArtifact",
-            "unitTests": [
-              "node --test scripts/documentation-publication.test.cjs"
-            ],
-            "fowlerSignals": ["Hidden Authority", "Duplicate Semantics"],
-            "cypressCoverage": "N/A - repository publication policy",
-            "architectureGuard": "node --test scripts/documentation-publication.test.cjs"
-          },
-          {
-            "name": "repositoryMapOutputPath",
-            "path": "scripts/generate-code-status.cjs",
-            "cqRails": [
-              "GeneratePlanningDerivedSurfaces",
-              "ListDocumentationLifecycleFacts"
-            ],
-            "dddOwner": "PlanningGeneratedArtifact",
-            "unitTests": [
-              "node --test scripts/documentation-publication.test.cjs"
-            ],
-            "fowlerSignals": ["Hidden Authority", "Duplicate Semantics"],
-            "cypressCoverage": "N/A - repository publication policy",
-            "architectureGuard": "node --test scripts/documentation-publication.test.cjs"
-          },
-          {
-            "name": "buildPrCloseoutPlan",
-            "path": "scripts/pr-closeout.cjs",
-            "cqRails": [
-              "GeneratePlanningDerivedSurfaces",
-              "ListDocumentationLifecycleFacts"
-            ],
-            "dddOwner": "PlanningGeneratedArtifact",
-            "unitTests": [
-              "node --test scripts/documentation-publication.test.cjs"
-            ],
-            "fowlerSignals": ["Hidden Authority", "Duplicate Semantics"],
-            "cypressCoverage": "N/A - repository publication policy",
-            "architectureGuard": "node --test scripts/documentation-publication.test.cjs"
-          },
-          {
-            "name": "collectPlanningDocs",
-            "path": "scripts/sync-docs.cjs",
-            "cqRails": ["GeneratePlanningDerivedSurfaces"],
-            "dddOwner": "PlanningGeneratedArtifact",
-            "unitTests": ["tools/ci/sync-docs-status-policy.test.mjs"],
-            "fowlerSignals": [
-              "Hidden authority from filesystem-only index generation."
-            ],
-            "cypressCoverage": "N/A - documentation publication tooling",
-            "architectureGuard": "node --test tools/ci/sync-docs-status-policy.test.mjs"
-          },
-          {
-            "name": "collectPlanningReferenceDirs",
-            "path": "scripts/sync-docs.cjs",
-            "cqRails": ["GeneratePlanningDerivedSurfaces"],
-            "dddOwner": "PlanningGeneratedArtifact",
-            "unitTests": ["tools/ci/sync-docs-status-policy.test.mjs"],
-            "fowlerSignals": [
-              "Hidden authority from filesystem-only index generation."
-            ],
-            "cypressCoverage": "N/A - documentation publication tooling",
-            "architectureGuard": "node --test tools/ci/sync-docs-status-policy.test.mjs"
-          },
-          {
-            "name": "generateAdrLanding",
-            "path": "scripts/sync-docs.cjs",
-            "cqRails": ["GeneratePlanningDerivedSurfaces"],
-            "dddOwner": "PlanningGeneratedArtifact",
-            "unitTests": ["tools/ci/sync-docs-status-policy.test.mjs"],
-            "fowlerSignals": [
-              "Hidden authority from filesystem-only index generation."
-            ],
-            "cypressCoverage": "N/A - documentation publication tooling",
-            "architectureGuard": "node --test tools/ci/sync-docs-status-policy.test.mjs"
-          },
-          {
-            "name": "generateContractSubIndexes",
-            "path": "scripts/sync-docs.cjs",
-            "cqRails": ["GeneratePlanningDerivedSurfaces"],
-            "dddOwner": "PlanningGeneratedArtifact",
-            "unitTests": ["tools/ci/sync-docs-status-policy.test.mjs"],
-            "fowlerSignals": [
-              "Hidden authority from filesystem-only index generation."
-            ],
-            "cypressCoverage": "N/A - documentation publication tooling",
-            "architectureGuard": "node --test tools/ci/sync-docs-status-policy.test.mjs"
-          },
-          {
-            "name": "generatePlanningIndexes",
-            "path": "scripts/sync-docs.cjs",
-            "cqRails": ["GeneratePlanningDerivedSurfaces"],
-            "dddOwner": "PlanningGeneratedArtifact",
-            "unitTests": ["tools/ci/sync-docs-status-policy.test.mjs"],
-            "fowlerSignals": [
-              "Hidden authority from filesystem-only index generation."
-            ],
-            "cypressCoverage": "N/A - documentation publication tooling",
-            "architectureGuard": "node --test tools/ci/sync-docs-status-policy.test.mjs"
-          },
-          {
-            "name": "generateSectionIndexes",
-            "path": "scripts/sync-docs.cjs",
-            "cqRails": ["GeneratePlanningDerivedSurfaces"],
-            "dddOwner": "PlanningGeneratedArtifact",
-            "unitTests": ["tools/ci/sync-docs-status-policy.test.mjs"],
-            "fowlerSignals": [
-              "Hidden authority from filesystem-only index generation."
-            ],
-            "cypressCoverage": "N/A - documentation publication tooling",
-            "architectureGuard": "node --test tools/ci/sync-docs-status-policy.test.mjs"
-          },
-          {
-            "name": "lifecycleAuthorityParts",
-            "path": "scripts/sync-docs.cjs",
-            "cqRails": ["GeneratePlanningDerivedSurfaces"],
-            "dddOwner": "PlanningGeneratedArtifact",
-            "unitTests": ["tools/ci/sync-docs-status-policy.test.mjs"],
-            "fowlerSignals": [
-              "Hidden authority from filesystem-only index generation."
-            ],
-            "cypressCoverage": "N/A - documentation publication tooling",
-            "architectureGuard": "node --test tools/ci/sync-docs-status-policy.test.mjs"
-          },
-          {
-            "name": "lifecycleStateIsPublishable",
-            "path": "scripts/sync-docs.cjs",
-            "cqRails": ["GeneratePlanningDerivedSurfaces"],
-            "dddOwner": "PlanningGeneratedArtifact",
-            "unitTests": ["tools/ci/sync-docs-status-policy.test.mjs"],
-            "fowlerSignals": [
-              "Hidden authority from filesystem-only index generation."
-            ],
-            "cypressCoverage": "N/A - documentation publication tooling",
-            "architectureGuard": "node --test tools/ci/sync-docs-status-policy.test.mjs"
-          },
-          {
-            "name": "main",
-            "path": "scripts/sync-docs.cjs",
-            "cqRails": ["GeneratePlanningDerivedSurfaces"],
-            "dddOwner": "PlanningGeneratedArtifact",
-            "unitTests": ["tools/ci/sync-docs-status-policy.test.mjs"],
-            "fowlerSignals": [
-              "Hidden authority from filesystem-only index generation."
-            ],
-            "cypressCoverage": "N/A - documentation publication tooling",
-            "architectureGuard": "node --test tools/ci/sync-docs-status-policy.test.mjs"
-          },
-          {
-            "name": "normalizePlanningDocs",
-            "path": "scripts/sync-docs.cjs",
-            "cqRails": ["GeneratePlanningDerivedSurfaces"],
-            "dddOwner": "PlanningGeneratedArtifact",
-            "unitTests": ["tools/ci/sync-docs-status-policy.test.mjs"],
-            "fowlerSignals": [
-              "Hidden authority from filesystem-only index generation."
-            ],
-            "cypressCoverage": "N/A - documentation publication tooling",
-            "architectureGuard": "node --test tools/ci/sync-docs-status-policy.test.mjs"
-          },
-          {
-            "name": "readDocumentationLifecycleAuthority",
-            "path": "scripts/sync-docs.cjs",
-            "cqRails": ["GeneratePlanningDerivedSurfaces"],
-            "dddOwner": "PlanningGeneratedArtifact",
-            "unitTests": ["tools/ci/sync-docs-status-policy.test.mjs"],
-            "fowlerSignals": [
-              "Hidden authority from filesystem-only index generation."
-            ],
-            "cypressCoverage": "N/A - documentation publication tooling",
-            "architectureGuard": "node --test tools/ci/sync-docs-status-policy.test.mjs"
-          },
-          {
-            "name": "renderContractDocsList",
-            "path": "scripts/sync-docs.cjs",
-            "cqRails": ["GeneratePlanningDerivedSurfaces"],
-            "dddOwner": "PlanningGeneratedArtifact",
-            "unitTests": ["tools/ci/sync-docs-status-policy.test.mjs"],
-            "fowlerSignals": [
-              "Hidden authority from filesystem-only index generation."
-            ],
-            "cypressCoverage": "N/A - documentation publication tooling",
-            "architectureGuard": "node --test tools/ci/sync-docs-status-policy.test.mjs"
-          },
-          {
-            "name": "shouldIncludeDocumentationPath",
-            "path": "scripts/sync-docs.cjs",
-            "cqRails": ["GeneratePlanningDerivedSurfaces"],
-            "dddOwner": "PlanningGeneratedArtifact",
-            "unitTests": ["tools/ci/sync-docs-status-policy.test.mjs"],
-            "fowlerSignals": [
-              "Hidden authority from filesystem-only index generation."
-            ],
-            "cypressCoverage": "N/A - documentation publication tooling",
-            "architectureGuard": "node --test tools/ci/sync-docs-status-policy.test.mjs"
-          }
-        ],
-        "version": 1,
-        "featureId": "DOC1-2-ON-DEMAND-PUBLICATION-20260810",
-        "userStories": [
-          "docs/planning/proposals/mandatory/governance-and-docs/doc1-2-on-demand-publication-plan-20260810.md"
-        ],
-        "cypressFlows": [
-          "N/A - documentation publication tooling; demanding-user proof uses the built Zensical site",
-          "N/A - documentation publication tooling"
-        ],
-        "domainObjects": [
-          "DocumentationPublicationPolicy",
-          "DocumentationPublicationManifest",
-          "PublicationRoute",
-          "PlanningGeneratedArtifact"
-        ],
-        "fowlerSignals": [
-          "Hidden Authority",
-          "Duplicate Semantics",
-          "Responsibility Overload",
-          "Documentation Drift",
-          "Test-Only Confidence",
-          "Hidden authority from filesystem-only index generation."
-        ],
-        "completionGate": [
-          "node --test scripts/documentation-publication.test.cjs scripts/generate-code-status.test.cjs",
-          "pnpm test:ci-tools",
-          "pnpm docs:publish",
-          "pnpm docs:build",
-          "pnpm docs:gov:links",
-          "pnpm governance:refresh",
-          "pnpm verify:prepush",
-          "node --test tools/ci/sync-docs-status-policy.test.mjs",
-          "pnpm docs:sync"
-        ],
-        "redGreenCycles": [
-          {
-            "id": "explicit-on-demand-publication",
-            "redTest": "node --test scripts/documentation-publication.test.cjs",
-            "greenTest": "node --test scripts/documentation-publication.test.cjs",
-            "patchSurfaces": [
-              "package.json",
-              ".github/workflows/docs-deploy.yml",
-              "scripts/documentation-publication.cjs",
-              "scripts/documentation-publication.test.cjs"
-            ],
-            "expectedFailure": "Serve, build, and CI still regenerate documentation implicitly instead of consuming an explicit publication receipt."
-          },
-          {
-            "id": "fail-closed-route-policy",
-            "redTest": "node --test scripts/documentation-publication.test.cjs",
-            "greenTest": "node --test scripts/documentation-publication.test.cjs",
-            "patchSurfaces": [
-              "scripts/documentation-publication.cjs",
-              "scripts/documentation-publication.test.cjs",
-              "docs/generated-docs-policy.json"
-            ],
-            "expectedFailure": "Duplicate routes, path escape, missing generated sources, and historical navigation leakage are accepted."
-          },
-          {
-            "id": "repository-map-generated-route",
-            "redTest": "node --test scripts/documentation-publication.test.cjs scripts/generate-code-status.test.cjs",
-            "greenTest": "node --test scripts/documentation-publication.test.cjs scripts/generate-code-status.test.cjs",
-            "patchSurfaces": [
-              "docs/concepts/repository-map.md",
-              "docs/generated-docs-policy.json",
-              "scripts/generate-code-status.cjs",
-              "scripts/generate-code-status.test.cjs",
-              "tools/docs/check-links.ts"
-            ],
-            "expectedFailure": "Repository Map remains a tracked generated authority and raw link checks cannot resolve its declared generated route."
-          },
-          {
-            "id": "deterministic-consumption",
-            "redTest": "node --test scripts/documentation-publication.test.cjs tools/ci/workflow-pattern-parity.test.mjs",
-            "greenTest": "node --test scripts/documentation-publication.test.cjs tools/ci/workflow-pattern-parity.test.mjs",
-            "patchSurfaces": [
-              "scripts/documentation-publication.cjs",
-              "scripts/documentation-publication.test.cjs",
-              "package.json",
-              "zensical.yml",
-              ".github/workflows/docs-deploy.yml",
-              "tools/ci/workflow-pattern-parity.test.mjs"
-            ],
-            "expectedFailure": "Repeated assemblies retain stale files or differ, and workflow/package consumers can bypass the same publication contract."
-          },
-          {
-            "id": "DB-owned-input-receipt",
-            "redTest": "node --test scripts/documentation-publication.test.cjs scripts/pr-closeout.test.cjs",
-            "greenTest": "node --test scripts/documentation-publication.test.cjs scripts/pr-closeout.test.cjs tools/ci/workflow-pattern-parity.test.mjs",
-            "patchSurfaces": [
-              "scripts/documentation-publication.cjs",
-              "scripts/documentation-publication.test.cjs",
-              "scripts/pr-closeout.cjs",
-              "scripts/pr-closeout.test.cjs",
-              ".github/workflows/docs-deploy.yml",
-              "tools/ci/policy/workflow-scope.json"
-            ],
-            "expectedFailure": "Filesystem-only pages, stale sources or lifecycle facts, and implicit closeout generation can bypass explicit DB-first publication."
-          },
-          {
-            "id": "generateplanningderivedsurfaces-record",
-            "redTest": "node --test tools/ci/sync-docs-status-policy.test.mjs",
-            "greenTest": "node --test tools/ci/sync-docs-status-policy.test.mjs",
-            "patchSurfaces": [
-              "scripts/sync-docs.cjs",
-              "tools/ci/sync-docs-status-policy.test.mjs",
-              "docs/adr/index.md",
-              "docs/guides/index.md",
-              "docs/architecture/domain-planning.md",
-              "docs/planning/domains/planner-and-contracts.md",
-              "docs/architecture/components/engine/architecture/index.md",
-              "docs/architecture/components/planner/index.md",
-              "docs/architecture/components/planner/planner-ddd.md",
-              "docs/architecture/components/planner/planner-functional.md",
-              "docs/architecture/components/planner/planner-sequence.md",
-              "docs/guides/generic-graph-source-user-manual-20260404.md",
-              "tools/planning-db/state/canonical-state.json"
-            ],
-            "expectedFailure": "Section indexes include superseded documents because generation ignores Planning DB lifecycle authority."
-          }
-        ],
-        "componentGuides": [
-          "docs/architecture/components/ci-governance/documentation-usability-canon-component.md",
-          "docs/planning/domains/documentation-governance.md"
-        ],
-        "governingSources": [
-          "AGENTS.md",
-          "docs/planning/status/governance-document-rule-inventory.md",
-          "docs/guides/ai-work-protocol.md",
-          "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
-          "docs/adr/ADR-0063-planning-db-current-schema-rebuild.md",
-          "docs/architecture/command-query-rail-governance.md",
-          "docs/architecture/fowler-opportunity-planning-governance.md",
-          "docs/planning/state/planning-control-tower.md",
-          "docs/generated-docs-policy.json"
-        ],
-        "commandQueryRails": [
-          {
-            "name": "GeneratePlanningDerivedSurfaces",
-            "type": "command",
-            "status": "implemented",
-            "dddOwner": "PlanningGeneratedArtifact"
-          },
-          {
-            "name": "ReadArchitectureDesignAuthority",
-            "type": "query",
-            "dddOwner": "ArchitectureDesignAuthority"
-          },
-          {
-            "name": "QueryDocumentationConsultationPath",
-            "type": "query",
-            "dddOwner": "DocumentationConsultationReadModel"
-          },
-          {
-            "name": "ListDocumentationLifecycleFacts",
-            "type": "query",
-            "dddOwner": "DocumentationLifecycleReadModel"
-          }
-        ],
-        "architectureGuards": [
-          "node --test scripts/documentation-publication.test.cjs scripts/generate-code-status.test.cjs",
-          "pnpm test:ci-tools",
-          "pnpm docs:gov:links",
-          "node --test tools/ci/sync-docs-status-policy.test.mjs"
-        ],
-        "implementationPlan": "docs/planning/proposals/mandatory/governance-and-docs/doc1-2-on-demand-publication-plan-20260810.md",
-        "mechanizationStatus": "closed",
-        "noHumanDecisionsRemaining": true,
-        "allowedImplementationSurfaces": [
-          ".github/workflows/docs-deploy.yml",
-          ".github/workflows/pr-quality-gate.yml",
-          ".gitignore",
-          "AGENTS.md",
-          "docs/.manifest.json",
-          "docs/**/index.md",
-          "docs/DOCS_README.md",
-          "docs/concepts/repository-map.md",
-          "docs/generated-docs-policy.json",
-          "docs/guides/documentation-maintenance-guide-20260407.md",
-          "docs/guides/pr-preflight-and-ci-triage.md",
-          "docs/guides/testing-and-ci-capabilities.md",
-          "docs/planning/proposals/mandatory/governance-and-docs/doc1-2-on-demand-publication-plan-20260810.md",
-          "docs/planning/status/generated-code-state.md",
-          "docs/runbooks/planning-generated-artifacts-operations-20260403.md",
-          "package.json",
-          "scripts/docs-quality-check.cjs",
-          "scripts/documentation-publication.cjs",
-          "scripts/documentation-publication.test.cjs",
-          "scripts/generate-code-status.cjs",
-          "scripts/generate-code-status.test.cjs",
-          "scripts/governance-refresh.cjs",
-          "scripts/governance-refresh.test.cjs",
-          "scripts/pr-closeout.cjs",
-          "scripts/pr-closeout.test.cjs",
-          "tools/ci/repository-command-catalog.mjs",
-          "tools/ci/repository-command-catalog.test.mjs",
-          "tools/ci/policy/workflow-scope.json",
-          "tools/ci/workflow-pattern-parity.test.mjs",
-          "tools/docs/check-links.ts",
-          "zensical.yml",
-          "scripts/sync-docs.cjs",
-          "tools/ci/sync-docs-status-policy.test.mjs",
-          "docs/adr/index.md",
-          "docs/guides/index.md",
-          "docs/architecture/domain-planning.md",
-          "docs/planning/domains/planner-and-contracts.md",
-          "docs/architecture/components/engine/architecture/index.md",
-          "docs/architecture/components/planner/index.md",
-          "docs/architecture/components/planner/planner-ddd.md",
-          "docs/architecture/components/planner/planner-functional.md",
-          "docs/architecture/components/planner/planner-sequence.md",
-          "docs/guides/generic-graph-source-user-manual-20260404.md",
-          "tools/planning-db/state/canonical-state.json"
-        ],
-        "forbiddenImplementationSurfaces": [
-          "packages/@dvt/contracts/**",
-          "packages/@dvt/engine/**",
-          "packages/@dvt/adapter-*/**",
-          "packages/@dvt/planner/**",
-          "apps/**",
-          "specs/**"
-        ]
-      },
-      "revision": 0,
-      "createdBy": "codex",
-      "createdAt": "2026-08-11T13:08:22.757Z"
-    },
-    {
       "railId": "local#DOC1-3-DB-FIRST-COMPONENT-MAP#command#generateplanningderivedsurfaces",
       "featureId": "DOC1-3-DB-FIRST-COMPONENT-MAP",
       "mechanizationStatus": "implemented",
@@ -108991,7 +108588,20 @@
         "scripts/generate-spec-traceability-report.cjs#isRegisteredVerificationCommand",
         "scripts/generate-spec-traceability-report.cjs#packageScriptFromValidation",
         "scripts/generate-spec-traceability-report.cjs#uniqueSortedSymbols",
-        "scripts/generate-spec-traceability-report.cjs#stripLeadingEnvironmentAssignments"
+        "scripts/generate-spec-traceability-report.cjs#stripLeadingEnvironmentAssignments",
+        "scripts/sync-docs.cjs#collectPlanningDocs",
+        "scripts/sync-docs.cjs#collectPlanningReferenceDirs",
+        "scripts/sync-docs.cjs#generateAdrLanding",
+        "scripts/sync-docs.cjs#generateContractSubIndexes",
+        "scripts/sync-docs.cjs#generatePlanningIndexes",
+        "scripts/sync-docs.cjs#generateSectionIndexes",
+        "scripts/sync-docs.cjs#lifecycleAuthorityParts",
+        "scripts/sync-docs.cjs#lifecycleStateIsPublishable",
+        "scripts/sync-docs.cjs#main",
+        "scripts/sync-docs.cjs#normalizePlanningDocs",
+        "scripts/sync-docs.cjs#readDocumentationLifecycleAuthority",
+        "scripts/sync-docs.cjs#renderContractDocsList",
+        "scripts/sync-docs.cjs#shouldIncludeDocumentationPath"
       ],
       "implementationRefs": [
         "scripts/generate-spec-traceability-report.cjs#buildFeatureTraceabilityProjection",
@@ -109024,11 +108634,25 @@
         "scripts/generate-spec-traceability-report.cjs#isRegisteredVerificationCommand",
         "scripts/generate-spec-traceability-report.cjs#packageScriptFromValidation",
         "scripts/generate-spec-traceability-report.cjs#uniqueSortedSymbols",
-        "scripts/generate-spec-traceability-report.cjs#stripLeadingEnvironmentAssignments"
+        "scripts/generate-spec-traceability-report.cjs#stripLeadingEnvironmentAssignments",
+        "scripts/sync-docs.cjs#collectPlanningDocs",
+        "scripts/sync-docs.cjs#collectPlanningReferenceDirs",
+        "scripts/sync-docs.cjs#generateAdrLanding",
+        "scripts/sync-docs.cjs#generateContractSubIndexes",
+        "scripts/sync-docs.cjs#generatePlanningIndexes",
+        "scripts/sync-docs.cjs#generateSectionIndexes",
+        "scripts/sync-docs.cjs#lifecycleAuthorityParts",
+        "scripts/sync-docs.cjs#lifecycleStateIsPublishable",
+        "scripts/sync-docs.cjs#main",
+        "scripts/sync-docs.cjs#normalizePlanningDocs",
+        "scripts/sync-docs.cjs#readDocumentationLifecycleAuthority",
+        "scripts/sync-docs.cjs#renderContractDocsList",
+        "scripts/sync-docs.cjs#shouldIncludeDocumentationPath"
       ],
       "documentationRefs": [
         "docs/generated-docs-policy.json",
-        "https://github.com/dunay2/dvt/issues/2147"
+        "https://github.com/dunay2/dvt/issues/2147",
+        "docs/architecture/command-query-rail-governance.md"
       ],
       "governingSources": [
         "AGENTS.md",
@@ -109047,7 +108671,19 @@
         "docs/planning/status/generated-spec-traceability.md",
         "docs/.manifest.json",
         "tools/planning-db/state/canonical-state.json",
-        "tools/ci/generated-docs-single-writer-policy.test.mjs"
+        "tools/ci/generated-docs-single-writer-policy.test.mjs",
+        "scripts/sync-docs.cjs",
+        "tools/ci/sync-docs-status-policy.test.mjs",
+        "docs/adr/index.md",
+        "docs/guides/index.md",
+        "docs/architecture/domain-planning.md",
+        "docs/planning/domains/planner-and-contracts.md",
+        "docs/architecture/components/engine/architecture/index.md",
+        "docs/architecture/components/planner/index.md",
+        "docs/architecture/components/planner/planner-ddd.md",
+        "docs/architecture/components/planner/planner-functional.md",
+        "docs/architecture/components/planner/planner-sequence.md",
+        "docs/guides/generic-graph-source-user-manual-20260404.md"
       ],
       "architectureGuards": [
         "Feature identities and relations come only from existing Planning DB feature-mechanization read models.",
@@ -109058,16 +108694,18 @@
         "The CI single-writer contract rejects the retired tracked traceability class and requires the DB-first untracked class.",
         "Environment-prefixed validations remain catalog-authorized and shell-control-free.",
         "Every executable segment in a shell chain must independently resolve in repository_command_query.",
-        "Every executable segment in a shell chain, including CR separators, must independently resolve in repository_command_query."
+        "Every executable segment in a shell chain, including CR separators, must independently resolve in repository_command_query.",
+        "node --test tools/ci/sync-docs-status-policy.test.mjs"
       ],
       "completionGate": [
         "node --test scripts/generate-spec-traceability-report.test.cjs scripts/documentation-publication.test.cjs",
         "pnpm ci:docs",
         "pnpm verify:prepush",
-        "node tools/ci/ci-tool-test-suite.mjs static"
+        "node tools/ci/ci-tool-test-suite.mjs static",
+        "node --test tools/ci/sync-docs-status-policy.test.mjs"
       ],
-      "sourcePath": "scripts/generate-spec-traceability-report.cjs",
-      "sourceContentSha256": "cc39e12c3723a990e913939ade41a4c832ee3379dea6bb59a19e6734ddc4545c",
+      "sourcePath": "scripts/sync-docs.cjs",
+      "sourceContentSha256": "d4ff035dc1fd532fc5c77f7dc835d35138970ca5da2dc586fa80aeb477c44b31",
       "rawRail": {
         "name": "GeneratePlanningDerivedSurfaces",
         "type": "command",
@@ -109715,18 +109353,179 @@
             "fowlerSignals": ["executable_specification"],
             "cypressCoverage": "N/A - generated documentation is verified through Zensical build and demanding-user browser accessibility QA.",
             "architectureGuard": "Environment-prefixed validations remain catalog-authorized and shell-control-free."
+          },
+          {
+            "name": "collectPlanningDocs",
+            "path": "scripts/sync-docs.cjs",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": ["tools/ci/sync-docs-status-policy.test.mjs"],
+            "fowlerSignals": [
+              "Hidden authority from filesystem-only index generation."
+            ],
+            "cypressCoverage": "N/A - generated documentation accessibility is verified in the built publication.",
+            "architectureGuard": "node --test tools/ci/sync-docs-status-policy.test.mjs"
+          },
+          {
+            "name": "collectPlanningReferenceDirs",
+            "path": "scripts/sync-docs.cjs",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": ["tools/ci/sync-docs-status-policy.test.mjs"],
+            "fowlerSignals": [
+              "Hidden authority from filesystem-only index generation."
+            ],
+            "cypressCoverage": "N/A - generated documentation accessibility is verified in the built publication.",
+            "architectureGuard": "node --test tools/ci/sync-docs-status-policy.test.mjs"
+          },
+          {
+            "name": "generateAdrLanding",
+            "path": "scripts/sync-docs.cjs",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": ["tools/ci/sync-docs-status-policy.test.mjs"],
+            "fowlerSignals": [
+              "Hidden authority from filesystem-only index generation."
+            ],
+            "cypressCoverage": "N/A - generated documentation accessibility is verified in the built publication.",
+            "architectureGuard": "node --test tools/ci/sync-docs-status-policy.test.mjs"
+          },
+          {
+            "name": "generateContractSubIndexes",
+            "path": "scripts/sync-docs.cjs",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": ["tools/ci/sync-docs-status-policy.test.mjs"],
+            "fowlerSignals": [
+              "Hidden authority from filesystem-only index generation."
+            ],
+            "cypressCoverage": "N/A - generated documentation accessibility is verified in the built publication.",
+            "architectureGuard": "node --test tools/ci/sync-docs-status-policy.test.mjs"
+          },
+          {
+            "name": "generatePlanningIndexes",
+            "path": "scripts/sync-docs.cjs",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": ["tools/ci/sync-docs-status-policy.test.mjs"],
+            "fowlerSignals": [
+              "Hidden authority from filesystem-only index generation."
+            ],
+            "cypressCoverage": "N/A - generated documentation accessibility is verified in the built publication.",
+            "architectureGuard": "node --test tools/ci/sync-docs-status-policy.test.mjs"
+          },
+          {
+            "name": "generateSectionIndexes",
+            "path": "scripts/sync-docs.cjs",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": ["tools/ci/sync-docs-status-policy.test.mjs"],
+            "fowlerSignals": [
+              "Hidden authority from filesystem-only index generation."
+            ],
+            "cypressCoverage": "N/A - generated documentation accessibility is verified in the built publication.",
+            "architectureGuard": "node --test tools/ci/sync-docs-status-policy.test.mjs"
+          },
+          {
+            "name": "lifecycleAuthorityParts",
+            "path": "scripts/sync-docs.cjs",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": ["tools/ci/sync-docs-status-policy.test.mjs"],
+            "fowlerSignals": [
+              "Hidden authority from filesystem-only index generation."
+            ],
+            "cypressCoverage": "N/A - generated documentation accessibility is verified in the built publication.",
+            "architectureGuard": "node --test tools/ci/sync-docs-status-policy.test.mjs"
+          },
+          {
+            "name": "lifecycleStateIsPublishable",
+            "path": "scripts/sync-docs.cjs",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": ["tools/ci/sync-docs-status-policy.test.mjs"],
+            "fowlerSignals": [
+              "Hidden authority from filesystem-only index generation."
+            ],
+            "cypressCoverage": "N/A - generated documentation accessibility is verified in the built publication.",
+            "architectureGuard": "node --test tools/ci/sync-docs-status-policy.test.mjs"
+          },
+          {
+            "name": "main",
+            "path": "scripts/sync-docs.cjs",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": ["tools/ci/sync-docs-status-policy.test.mjs"],
+            "fowlerSignals": [
+              "Hidden authority from filesystem-only index generation."
+            ],
+            "cypressCoverage": "N/A - generated documentation accessibility is verified in the built publication.",
+            "architectureGuard": "node --test tools/ci/sync-docs-status-policy.test.mjs"
+          },
+          {
+            "name": "normalizePlanningDocs",
+            "path": "scripts/sync-docs.cjs",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": ["tools/ci/sync-docs-status-policy.test.mjs"],
+            "fowlerSignals": [
+              "Hidden authority from filesystem-only index generation."
+            ],
+            "cypressCoverage": "N/A - generated documentation accessibility is verified in the built publication.",
+            "architectureGuard": "node --test tools/ci/sync-docs-status-policy.test.mjs"
+          },
+          {
+            "name": "readDocumentationLifecycleAuthority",
+            "path": "scripts/sync-docs.cjs",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": ["tools/ci/sync-docs-status-policy.test.mjs"],
+            "fowlerSignals": [
+              "Hidden authority from filesystem-only index generation."
+            ],
+            "cypressCoverage": "N/A - generated documentation accessibility is verified in the built publication.",
+            "architectureGuard": "node --test tools/ci/sync-docs-status-policy.test.mjs"
+          },
+          {
+            "name": "renderContractDocsList",
+            "path": "scripts/sync-docs.cjs",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": ["tools/ci/sync-docs-status-policy.test.mjs"],
+            "fowlerSignals": [
+              "Hidden authority from filesystem-only index generation."
+            ],
+            "cypressCoverage": "N/A - generated documentation accessibility is verified in the built publication.",
+            "architectureGuard": "node --test tools/ci/sync-docs-status-policy.test.mjs"
+          },
+          {
+            "name": "shouldIncludeDocumentationPath",
+            "path": "scripts/sync-docs.cjs",
+            "cqRails": ["GeneratePlanningDerivedSurfaces"],
+            "dddOwner": "PlanningDocumentationProjection",
+            "unitTests": ["tools/ci/sync-docs-status-policy.test.mjs"],
+            "fowlerSignals": [
+              "Hidden authority from filesystem-only index generation."
+            ],
+            "cypressCoverage": "N/A - generated documentation accessibility is verified in the built publication.",
+            "architectureGuard": "node --test tools/ci/sync-docs-status-policy.test.mjs"
           }
         ],
         "version": 1,
         "featureId": "DOC1-4-DB-FIRST-TRACEABILITY",
-        "userStories": ["https://github.com/dunay2/dvt/issues/2147"],
+        "userStories": [
+          "https://github.com/dunay2/dvt/issues/2147",
+          "https://github.com/dunay2/dvt/issues/2274"
+        ],
         "cypressFlows": [
-          "N/A - generated documentation is verified through Zensical build and demanding-user browser accessibility QA."
+          "N/A - generated documentation is verified through Zensical build and demanding-user browser accessibility QA.",
+          "N/A - generated documentation accessibility is verified in the built publication."
         ],
         "domainObjects": [
           "FeatureTraceabilityProjection",
           "FeatureTraceabilityView",
-          "DocumentationPublication"
+          "DocumentationPublication",
+          "PlanningDocumentationProjection"
         ],
         "fowlerSignals": [
           "published_language",
@@ -109734,26 +109533,41 @@
           "gateway",
           "registry",
           "service_layer",
-          "executable_specification"
+          "executable_specification",
+          "Hidden authority from filesystem-only index generation."
         ],
         "completionGate": [
           "node --test scripts/generate-spec-traceability-report.test.cjs scripts/documentation-publication.test.cjs",
           "pnpm ci:docs",
           "pnpm verify:prepush",
-          "node tools/ci/ci-tool-test-suite.mjs static"
+          "node tools/ci/ci-tool-test-suite.mjs static",
+          "node --test tools/ci/sync-docs-status-policy.test.mjs"
         ],
         "redGreenCycles": [
           {
             "id": "generateplanningderivedsurfaces-record",
-            "redTest": "node --test --test-name-pattern \"shell chain\" scripts/generate-spec-traceability-report.test.cjs",
-            "greenTest": "node --test --test-name-pattern \"shell chain\" scripts/generate-spec-traceability-report.test.cjs",
+            "redTest": "node --test tools/ci/sync-docs-status-policy.test.mjs",
+            "greenTest": "node --test tools/ci/sync-docs-status-policy.test.mjs",
             "patchSurfaces": [
               "scripts/generate-spec-traceability-report.cjs",
               "docs/generated-docs-policy.json",
               "scripts/check-generated-docs-policy.cjs",
-              "tools/ci/generated-docs-single-writer-policy.test.mjs"
+              "tools/ci/generated-docs-single-writer-policy.test.mjs",
+              "scripts/sync-docs.cjs",
+              "tools/ci/sync-docs-status-policy.test.mjs",
+              "docs/adr/index.md",
+              "docs/guides/index.md",
+              "docs/architecture/domain-planning.md",
+              "docs/planning/domains/planner-and-contracts.md",
+              "docs/architecture/components/engine/architecture/index.md",
+              "docs/architecture/components/planner/index.md",
+              "docs/architecture/components/planner/planner-ddd.md",
+              "docs/architecture/components/planner/planner-functional.md",
+              "docs/architecture/components/planner/planner-sequence.md",
+              "docs/guides/generic-graph-source-user-manual-20260404.md",
+              "tools/planning-db/state/canonical-state.json"
             ],
-            "expectedFailure": "A shell chain or carriage-return-separated command is published when only its first executable is registered."
+            "expectedFailure": "Section indexes include superseded documents because generation ignores Planning DB lifecycle authority."
           }
         ],
         "componentGuides": [
@@ -109783,7 +109597,8 @@
           "The CI single-writer contract rejects the retired tracked traceability class and requires the DB-first untracked class.",
           "Environment-prefixed validations remain catalog-authorized and shell-control-free.",
           "Every executable segment in a shell chain must independently resolve in repository_command_query.",
-          "Every executable segment in a shell chain, including CR separators, must independently resolve in repository_command_query."
+          "Every executable segment in a shell chain, including CR separators, must independently resolve in repository_command_query.",
+          "node --test tools/ci/sync-docs-status-policy.test.mjs"
         ],
         "implementationPlan": "https://github.com/dunay2/dvt/issues/2147",
         "mechanizationStatus": "implemented",
@@ -109798,7 +109613,19 @@
           "docs/planning/status/generated-spec-traceability.md",
           "docs/.manifest.json",
           "tools/planning-db/state/canonical-state.json",
-          "tools/ci/generated-docs-single-writer-policy.test.mjs"
+          "tools/ci/generated-docs-single-writer-policy.test.mjs",
+          "scripts/sync-docs.cjs",
+          "tools/ci/sync-docs-status-policy.test.mjs",
+          "docs/adr/index.md",
+          "docs/guides/index.md",
+          "docs/architecture/domain-planning.md",
+          "docs/planning/domains/planner-and-contracts.md",
+          "docs/architecture/components/engine/architecture/index.md",
+          "docs/architecture/components/planner/index.md",
+          "docs/architecture/components/planner/planner-ddd.md",
+          "docs/architecture/components/planner/planner-functional.md",
+          "docs/architecture/components/planner/planner-sequence.md",
+          "docs/guides/generic-graph-source-user-manual-20260404.md"
         ],
         "forbiddenImplementationSurfaces": [
           "apps/**",
@@ -109806,7 +109633,7 @@
           "tools/planning-db/schema.sql"
         ]
       },
-      "revision": 7,
+      "revision": 8,
       "createdBy": "codex",
       "createdAt": "2026-08-10T08:24:00.833Z"
     },
@@ -164167,6 +163994,139 @@
         ]
       },
       "createdAt": "2026-08-11T13:23:11.241Z"
+    },
+    {
+      "operationId": "ade8970c-b911-4269-8db3-f50969cbcbb0",
+      "idempotencyKey": "feature_mechanization_rail_retire:codex:DOC1-2-ON-DEMAND-PUBLICATION-20260810:command:generateplanningderivedsurfaces:0:d5cc07ec019e18dc",
+      "operationType": "feature_mechanization_rail_retire",
+      "actor": "codex",
+      "railId": "local#DOC1-2-ON-DEMAND-PUBLICATION-20260810#command#generateplanningderivedsurfaces",
+      "sourcePath": "scripts/sync-docs.cjs",
+      "sourceContentSha256": "d4ff035dc1fd532fc5c77f7dc835d35138970ca5da2dc586fa80aeb477c44b31",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "railId": "local#DOC1-2-ON-DEMAND-PUBLICATION-20260810#command#generateplanningderivedsurfaces",
+        "reason": "Remove the duplicate local promotion; the imported canonical rail remains authoritative.",
+        "designId": "DOC1-2-LOCAL-RAIL-DUPLICATE-RETIREMENT-V2-20260811",
+        "railName": "GeneratePlanningDerivedSurfaces",
+        "railType": "command",
+        "featureId": "DOC1-2-ON-DEMAND-PUBLICATION-20260810",
+        "sourceRef": "scripts/sync-docs.cjs",
+        "expectedRevision": 0,
+        "normalizedRailName": "generateplanningderivedsurfaces",
+        "sourceContentSha256": "d4ff035dc1fd532fc5c77f7dc835d35138970ca5da2dc586fa80aeb477c44b31"
+      },
+      "createdAt": "2026-08-11T13:28:03.581Z"
+    },
+    {
+      "operationId": "3583c06b-5dfe-4081-96cb-6315552fd4e9",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:DOC1-4-DB-FIRST-TRACEABILITY:command:generateplanningderivedsurfaces:7:65df537d263d8783",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#DOC1-4-DB-FIRST-TRACEABILITY#command#generateplanningderivedsurfaces",
+      "sourcePath": "scripts/sync-docs.cjs",
+      "sourceContentSha256": "d4ff035dc1fd532fc5c77f7dc835d35138970ca5da2dc586fa80aeb477c44b31",
+      "expectedRevision": 7,
+      "previousRevision": 7,
+      "resultingRevision": 8,
+      "payload": {
+        "redTest": "node --test tools/ci/sync-docs-status-policy.test.mjs",
+        "dddOwner": "PlanningDocumentationProjection",
+        "railName": "GeneratePlanningDerivedSurfaces",
+        "railType": "command",
+        "featureId": "DOC1-4-DB-FIRST-TRACEABILITY",
+        "greenTest": "node --test tools/ci/sync-docs-status-policy.test.mjs",
+        "sourceRef": "scripts/sync-docs.cjs",
+        "unitTests": ["tools/ci/sync-docs-status-policy.test.mjs"],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2274"],
+        "cypressFlows": [
+          "N/A - generated documentation accessibility is verified in the built publication."
+        ],
+        "domainObjects": ["PlanningDocumentationProjection"],
+        "fowlerSignals": [
+          "Hidden authority from filesystem-only index generation."
+        ],
+        "patchSurfaces": [
+          "scripts/sync-docs.cjs",
+          "tools/ci/sync-docs-status-policy.test.mjs",
+          "docs/adr/index.md",
+          "docs/guides/index.md",
+          "docs/architecture/domain-planning.md",
+          "docs/planning/domains/planner-and-contracts.md",
+          "docs/architecture/components/engine/architecture/index.md",
+          "docs/architecture/components/planner/index.md",
+          "docs/architecture/components/planner/planner-ddd.md",
+          "docs/architecture/components/planner/planner-functional.md",
+          "docs/architecture/components/planner/planner-sequence.md",
+          "docs/guides/generic-graph-source-user-manual-20260404.md",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "completionGate": [
+          "node --test tools/ci/sync-docs-status-policy.test.mjs",
+          "pnpm ci:docs",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Section indexes include superseded documents because generation ignores Planning DB lifecycle authority.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/planning/state/github-mvp-issue-workflow.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "architectureGuards": [
+          "node --test tools/ci/sync-docs-status-policy.test.mjs"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2147",
+        "implementationRefs": [
+          "scripts/sync-docs.cjs#collectPlanningDocs",
+          "scripts/sync-docs.cjs#collectPlanningReferenceDirs",
+          "scripts/sync-docs.cjs#generateAdrLanding",
+          "scripts/sync-docs.cjs#generateContractSubIndexes",
+          "scripts/sync-docs.cjs#generatePlanningIndexes",
+          "scripts/sync-docs.cjs#generateSectionIndexes",
+          "scripts/sync-docs.cjs#lifecycleAuthorityParts",
+          "scripts/sync-docs.cjs#lifecycleStateIsPublishable",
+          "scripts/sync-docs.cjs#main",
+          "scripts/sync-docs.cjs#normalizePlanningDocs",
+          "scripts/sync-docs.cjs#readDocumentationLifecycleAuthority",
+          "scripts/sync-docs.cjs#renderContractDocsList",
+          "scripts/sync-docs.cjs#shouldIncludeDocumentationPath"
+        ],
+        "normalizedRailName": "generateplanningderivedsurfaces",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "d4ff035dc1fd532fc5c77f7dc835d35138970ca5da2dc586fa80aeb477c44b31",
+        "allowedImplementationSurfaces": [
+          "scripts/sync-docs.cjs",
+          "tools/ci/sync-docs-status-policy.test.mjs",
+          "docs/adr/index.md",
+          "docs/guides/index.md",
+          "docs/architecture/domain-planning.md",
+          "docs/planning/domains/planner-and-contracts.md",
+          "docs/architecture/components/engine/architecture/index.md",
+          "docs/architecture/components/planner/index.md",
+          "docs/architecture/components/planner/planner-ddd.md",
+          "docs/architecture/components/planner/planner-functional.md",
+          "docs/architecture/components/planner/planner-sequence.md",
+          "docs/guides/generic-graph-source-user-manual-20260404.md",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/**",
+          "packages/@dvt/**",
+          "tools/planning-db/schema.sql"
+        ]
+      },
+      "createdAt": "2026-08-11T13:29:06.235Z"
     }
   ],
   "governanceComponentDefinitions": [
