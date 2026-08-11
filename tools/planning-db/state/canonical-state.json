@@ -10555,14 +10555,14 @@
         "work_item_id": "#2274",
         "title": "Verify GitHub Actions evidence before recording CI origin",
         "owner": "architecture-governance",
-        "status": "implementing",
+        "status": "implemented",
         "rationale": "Fail closed unless a concrete successful GitHub Actions job belongs to the canonical repository and current commit.",
         "fowler_signal": "hidden_authority",
         "rail_ref": "RecordArchitectureEvidenceExecution",
         "approved_at": "2026-08-11T13:48:55.05+00:00",
         "supersedes_id": null,
         "created_at": "2026-08-11T13:48:39.286+00:00",
-        "updated_at": "2026-08-11T13:48:56.616+00:00"
+        "updated_at": "2026-08-11T14:09:49.514+00:00"
       },
       {
         "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-20260811",
@@ -10667,14 +10667,14 @@
         "work_item_id": "#2274",
         "title": "Resolve retired documentation links in disposable publication",
         "owner": "docs-governance",
-        "status": "implementing",
+        "status": "implemented",
         "rationale": "Preserve historical source bytes while making active publication references resolve to immutable Git evidence under Planning DB lifecycle authority.",
         "fowler_signal": "published_language",
         "rail_ref": "GeneratePlanningDerivedSurfaces",
         "approved_at": "2026-08-11T13:48:51.893+00:00",
         "supersedes_id": null,
         "created_at": "2026-08-11T13:48:37.674+00:00",
-        "updated_at": "2026-08-11T13:48:53.475+00:00"
+        "updated_at": "2026-08-11T14:09:48.127+00:00"
       },
       {
         "design_id": "CANVAS-BACKLOG-INTEGRITY-READINESS-20260626",
@@ -14084,6 +14084,32 @@
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
         "source_content_sha256": null
+      },
+      {
+        "evidence_id": "EVIDENCE-API-H2-4-CI-EVIDENCE-AUTHENTICITY",
+        "design_id": "API-H2-4-CI-EVIDENCE-AUTHENTICITY-V2-20260811",
+        "subject_kind": "command",
+        "subject_id": "RecordArchitectureEvidenceExecution",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/planning-db-operate-tests/architecture-plan.test.cjs scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+        "source_path": "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T14:09:38.997+00:00",
+        "source_content_sha256": "4813b935e0ab710ef3849041715a90c252461a2e55877413b845612c46cad38c"
+      },
+      {
+        "evidence_id": "EVIDENCE-API-H2-4-HISTORICAL-LINK-PROJECTION",
+        "design_id": "API-H2-4-HISTORICAL-LINK-PROJECTION-V2-20260811",
+        "subject_kind": "command",
+        "subject_id": "GeneratePlanningDerivedSurfaces",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/documentation-publication.test.cjs",
+        "source_path": "scripts/documentation-publication.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T14:09:37.594+00:00",
+        "source_content_sha256": "96071a0f8e97109913e01f7d00560d23f147f91dd3bd6723fb38b492558af2e6"
       },
       {
         "evidence_id": "EVIDENCE-CODE-WORKING-TREE-POST-SAVE-CONSUMER",
@@ -88944,6 +88970,31 @@
         "created_at": "2026-08-10T21:06:30.516+00:00"
       },
       {
+        "operation_id": "1ca3192a-7b3a-4d36-9bf8-a1de8286ac9f",
+        "idempotency_key": "architecture_evidence_record:codex:API-H2-4-CI-EVIDENCE-AUTHENTICITY-V2-20260811:EVIDENCE-API-H2-4-CI-EVIDENCE-AUTHENTICITY:f04578597dc6dc94",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-CI-EVIDENCE-AUTHENTICITY-V2-20260811",
+        "source_ref": "node --test scripts/planning-db-operate-tests/architecture-plan.test.cjs scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+        "source_content_sha256": "4813b935e0ab710ef3849041715a90c252461a2e55877413b845612c46cad38c",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-CI-EVIDENCE-AUTHENTICITY-V2-20260811",
+          "sourceRef": "node --test scripts/planning-db-operate-tests/architecture-plan.test.cjs scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+          "subjectId": "RecordArchitectureEvidenceExecution",
+          "evidenceId": "EVIDENCE-API-H2-4-CI-EVIDENCE-AUTHENTICITY",
+          "sourcePath": "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "command",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "4813b935e0ab710ef3849041715a90c252461a2e55877413b845612c46cad38c"
+        },
+        "created_at": "2026-08-11T14:09:38.997+00:00"
+      },
+      {
         "operation_id": "1d647c5f-38d4-4119-a0a6-6ef1ee44b940",
         "idempotency_key": "gh-2167-update-rel-sys-api-tests-application-services-architecture-harness-guards-api-application-services-start-run-admission-v1",
         "operation_type": "architecture_relation_record",
@@ -89433,6 +89484,27 @@
           "sourceContentSha256": "f36efe64b0eb4dc707745d78e22df0c17a462d926c2492c55844875c47318d8b"
         },
         "created_at": "2026-08-10T21:04:36.673+00:00"
+      },
+      {
+        "operation_id": "29a9d753-1d9a-438a-b7bf-98209505366d",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-4-CI-EVIDENCE-AUTHENTICITY-V2-20260811:3383d6ad9d1d67e6",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-4-CI-EVIDENCE-AUTHENTICITY-V2-20260811",
+        "source_ref": "scripts/planning-db-operate.cjs",
+        "source_content_sha256": "ecec13d4beabd32b342753da833b76f0a4b5c2c9618e9d004364a5a60df90aca",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Mocked GitHub API contract tests prove fail-closed repository, run, job, conclusion, and current-commit verification before DB writes.",
+          "designId": "API-H2-4-CI-EVIDENCE-AUTHENTICITY-V2-20260811",
+          "toStatus": "implemented",
+          "sourceRef": "scripts/planning-db-operate.cjs",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "ecec13d4beabd32b342753da833b76f0a4b5c2c9618e9d004364a5a60df90aca"
+        },
+        "created_at": "2026-08-11T14:09:49.514+00:00"
       },
       {
         "operation_id": "2a3501f8-a663-493c-afab-6faa321ed737",
@@ -90003,6 +90075,31 @@
           "sourceContentSha256": "445d0a77a2208b4198a706920223128ba7051884116b3ec95250a2c30232d691"
         },
         "created_at": "2026-08-11T03:58:07.402+00:00"
+      },
+      {
+        "operation_id": "398c6cd9-9b02-457c-82b4-352496c2bc09",
+        "idempotency_key": "architecture_evidence_record:codex:API-H2-4-HISTORICAL-LINK-PROJECTION-V2-20260811:EVIDENCE-API-H2-4-HISTORICAL-LINK-PROJECTION:9acaf631b1dd21fc",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-HISTORICAL-LINK-PROJECTION-V2-20260811",
+        "source_ref": "node --test scripts/documentation-publication.test.cjs",
+        "source_content_sha256": "96071a0f8e97109913e01f7d00560d23f147f91dd3bd6723fb38b492558af2e6",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-HISTORICAL-LINK-PROJECTION-V2-20260811",
+          "sourceRef": "node --test scripts/documentation-publication.test.cjs",
+          "subjectId": "GeneratePlanningDerivedSurfaces",
+          "evidenceId": "EVIDENCE-API-H2-4-HISTORICAL-LINK-PROJECTION",
+          "sourcePath": "scripts/documentation-publication.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "command",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "96071a0f8e97109913e01f7d00560d23f147f91dd3bd6723fb38b492558af2e6"
+        },
+        "created_at": "2026-08-11T14:09:37.594+00:00"
       },
       {
         "operation_id": "39921801-fff9-4f1c-819e-e67fac74a866",
@@ -91477,6 +91574,27 @@
           "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
         },
         "created_at": "2026-08-10T20:07:00.63+00:00"
+      },
+      {
+        "operation_id": "56fc12b5-7645-4763-85cc-4d7cc819cd93",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-4-HISTORICAL-LINK-PROJECTION-V2-20260811:d39cbef2facc89a5",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-4-HISTORICAL-LINK-PROJECTION-V2-20260811",
+        "source_ref": "scripts/documentation-publication.cjs",
+        "source_content_sha256": "3e103b92310327c50ad13de9702c492abd3dbcbe1c696c98965a33ce244accec",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "All scoped publication tests pass and the full 1764-route projection rewrites retired references to commit-pinned Git evidence without source mutation.",
+          "designId": "API-H2-4-HISTORICAL-LINK-PROJECTION-V2-20260811",
+          "toStatus": "implemented",
+          "sourceRef": "scripts/documentation-publication.cjs",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "3e103b92310327c50ad13de9702c492abd3dbcbe1c696c98965a33ce244accec"
+        },
+        "created_at": "2026-08-11T14:09:48.127+00:00"
       },
       {
         "operation_id": "58013ce6-2d79-4b8c-a7d2-5115aad1f433",
