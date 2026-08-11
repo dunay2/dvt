@@ -13563,7 +13563,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:50.637985+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EV-API-WAREHOUSE-CONNECTION-PUBLIC-PROJECTION-20260719",
@@ -13576,7 +13577,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:50.64837+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EV-CI-RELEASE-CANDIDATE-AUTHORITY-CLI-20260719",
@@ -13589,7 +13591,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:45.962718+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EV-CI-RELEASE-CANDIDATE-AUTHORITY-SPECIFICATION-20260719",
@@ -13602,7 +13605,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:45.962718+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EV-CI-RELEASE-CANDIDATE-AUTHORITY-WORKFLOW-20260719",
@@ -13615,7 +13619,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:45.962718+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EV-CI-RELEASE-CANDIDATE-CHECK-PUBLICATION-SERVICE-20260719",
@@ -13628,7 +13633,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:45.292675+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EV-CI-RELEASE-CANDIDATE-GITHUB-CHECK-ADAPTER-20260719",
@@ -13641,7 +13647,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:45.292675+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EV-CI-RELEASE-CANDIDATE-INTEGRITY-GIT-ADAPTER-20260719",
@@ -13654,7 +13661,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:44.872667+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EV-CI-RELEASE-CANDIDATE-INTEGRITY-POLICY-ADAPTER-20260719",
@@ -13667,7 +13675,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:44.872667+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EV-CI-RELEASE-CANDIDATE-INTEGRITY-SPECIFICATION-20260719",
@@ -13680,7 +13689,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:44.872667+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EV-CI-RELEASE-CANDIDATE-INTEGRITY-WORKFLOW-20260719",
@@ -13693,7 +13703,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:44.872667+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EV-CI-TRUSTED-PR-METADATA-AUTHORITY-20260720",
@@ -13706,7 +13717,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:45.205967+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EV-DBT-RUNTIME-BUNDLE-SECRET-BOUNDARY-TEST-20260712",
@@ -13719,7 +13731,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EV-DBT-RUNTIME-CONTEXT-REF-PROVENANCE-TEST-20260712",
@@ -13732,7 +13745,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EV-DBT-RUNTIME-PROFILE-ADMISSION-TEST-20260712",
@@ -13745,7 +13759,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EV-FEATURE-MANIFEST-EVIDENCE-NORMALIZATION",
@@ -13758,7 +13773,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EV-LIVE-SOURCE-OBJECT-DISCOVERY",
@@ -13771,7 +13787,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EV-PLANNING-DB-CQ-IMPLEMENTATION-EVIDENCE",
@@ -13784,7 +13801,36 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "implementation_content_sha256": null
+      },
+      {
+        "evidence_id": "EV-PTH14-CI-AUTH-REVIEW2",
+        "design_id": "API-H2-4-CI-EVIDENCE-AUTHENTICITY-V2-20260811",
+        "subject_kind": "command",
+        "subject_id": "RecordArchitectureEvidenceExecution",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/planning-db-operate-tests/architecture-plan.test.cjs scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+        "source_path": "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T18:22:12.354+00:00",
+        "source_content_sha256": "db20758fc3916c6ac6fe780546ca2eddbe6f0a5e0f77676d7a86f173255acaf8",
+        "implementation_content_sha256": "09c1a2f0a89cddd4e427f8b3c031927cc48d565d2b62e1d8b8147d97a36d079d"
+      },
+      {
+        "evidence_id": "EV-PTH14-HLINK-GENERATE-REVIEW2",
+        "design_id": "API-H2-4-HISTORICAL-LINK-PROJECTION-V2-20260811",
+        "subject_kind": "command",
+        "subject_id": "GeneratePlanningDerivedSurfaces",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/documentation-publication.test.cjs",
+        "source_path": "scripts/documentation-publication.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T18:22:18.156+00:00",
+        "source_content_sha256": "96071a0f8e97109913e01f7d00560d23f147f91dd3bd6723fb38b492558af2e6",
+        "implementation_content_sha256": "c6cdcf11b9923e308b1c60aa59e6405619611881f096f193a9b755688b9ae6cd"
       },
       {
         "evidence_id": "EV-PTH14-IDX-CLASSIFY",
@@ -13797,7 +13843,22 @@
         "source_path": "tools/ci/sync-docs-status-policy.test.mjs",
         "result_state": "pass",
         "recorded_at": "2026-08-11T13:02:44.347+00:00",
-        "source_content_sha256": "efe621f4806a1b5e14a392a4ea99b93929ce4e3a0caf9281b93c631b23534c83"
+        "source_content_sha256": "efe621f4806a1b5e14a392a4ea99b93929ce4e3a0caf9281b93c631b23534c83",
+        "implementation_content_sha256": null
+      },
+      {
+        "evidence_id": "EV-PTH14-IDX-CLASSIFY-REVIEW4",
+        "design_id": "API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811",
+        "subject_kind": "query",
+        "subject_id": "ClassifyArchitectureDocumentationDisposition",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test tools/ci/sync-docs-status-policy.test.mjs",
+        "source_path": "tools/ci/sync-docs-status-policy.test.mjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T18:22:17.637+00:00",
+        "source_content_sha256": "efe621f4806a1b5e14a392a4ea99b93929ce4e3a0caf9281b93c631b23534c83",
+        "implementation_content_sha256": "6e6945c93520a3f3c1713622f91918203a529bde4956afa67b5707df37066a5d"
       },
       {
         "evidence_id": "EV-PTH14-IDX-GENERATE",
@@ -13810,7 +13871,22 @@
         "source_path": "tools/ci/sync-docs-status-policy.test.mjs",
         "result_state": "pass",
         "recorded_at": "2026-08-11T13:02:42.94+00:00",
-        "source_content_sha256": "efe621f4806a1b5e14a392a4ea99b93929ce4e3a0caf9281b93c631b23534c83"
+        "source_content_sha256": "efe621f4806a1b5e14a392a4ea99b93929ce4e3a0caf9281b93c631b23534c83",
+        "implementation_content_sha256": null
+      },
+      {
+        "evidence_id": "EV-PTH14-IDX-GENERATE-REVIEW4",
+        "design_id": "API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811",
+        "subject_kind": "command",
+        "subject_id": "GeneratePlanningDerivedSurfaces",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test tools/ci/sync-docs-status-policy.test.mjs",
+        "source_path": "tools/ci/sync-docs-status-policy.test.mjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T18:22:17.335+00:00",
+        "source_content_sha256": "efe621f4806a1b5e14a392a4ea99b93929ce4e3a0caf9281b93c631b23534c83",
+        "implementation_content_sha256": "c6cdcf11b9923e308b1c60aa59e6405619611881f096f193a9b755688b9ae6cd"
       },
       {
         "evidence_id": "EV-PTH14-IDX-LIFECYCLE",
@@ -13823,7 +13899,22 @@
         "source_path": "tools/ci/sync-docs-status-policy.test.mjs",
         "result_state": "pass",
         "recorded_at": "2026-08-11T13:02:45.726+00:00",
-        "source_content_sha256": "efe621f4806a1b5e14a392a4ea99b93929ce4e3a0caf9281b93c631b23534c83"
+        "source_content_sha256": "efe621f4806a1b5e14a392a4ea99b93929ce4e3a0caf9281b93c631b23534c83",
+        "implementation_content_sha256": null
+      },
+      {
+        "evidence_id": "EV-PTH14-IDX-LIFECYCLE-REVIEW4",
+        "design_id": "API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811",
+        "subject_kind": "query",
+        "subject_id": "ListDocumentationLifecycleFacts",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test tools/ci/sync-docs-status-policy.test.mjs",
+        "source_path": "tools/ci/sync-docs-status-policy.test.mjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T18:22:17.887+00:00",
+        "source_content_sha256": "efe621f4806a1b5e14a392a4ea99b93929ce4e3a0caf9281b93c631b23534c83",
+        "implementation_content_sha256": "0790c5361f82ebcfe05e3e7acfc6dce25d630e6b1c9383548cf2c99759d868c9"
       },
       {
         "evidence_id": "EV-PTH14-REF-CLASSIFY",
@@ -13836,7 +13927,8 @@
         "source_path": "scripts/planning-db-schema.test.cjs",
         "result_state": "pass",
         "recorded_at": "2026-08-11T13:02:41.515+00:00",
-        "source_content_sha256": "9480cc084b84772de27846cd45ac898473cce80162541d945a99c4f84d7bd07d"
+        "source_content_sha256": "9480cc084b84772de27846cd45ac898473cce80162541d945a99c4f84d7bd07d",
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EV-PTH14-REF-CLASSIFY-REVIEW",
@@ -13849,7 +13941,8 @@
         "source_path": "scripts/planning-db-schema.test.cjs",
         "result_state": "pass",
         "recorded_at": "2026-08-11T16:37:55.045+00:00",
-        "source_content_sha256": "dad90c2ff3b8d0d15a1f29cf5023abc4dbffb64b9f4a6fccc3441d269f04e556"
+        "source_content_sha256": "dad90c2ff3b8d0d15a1f29cf5023abc4dbffb64b9f4a6fccc3441d269f04e556",
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EV-PTH14-REF-CLASSIFY-REVIEW2",
@@ -13862,7 +13955,8 @@
         "source_path": "scripts/planning-db-schema.test.cjs",
         "result_state": "pass",
         "recorded_at": "2026-08-11T17:07:51.164+00:00",
-        "source_content_sha256": "39d479f362360f996f2c45035593c07d52372eed46f9fd57438b007c68862b21"
+        "source_content_sha256": "39d479f362360f996f2c45035593c07d52372eed46f9fd57438b007c68862b21",
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EV-PTH14-REF-CLASSIFY-REVIEW3",
@@ -13875,7 +13969,22 @@
         "source_path": "scripts/planning-db-schema.test.cjs",
         "result_state": "pass",
         "recorded_at": "2026-08-11T17:28:32.522+00:00",
-        "source_content_sha256": "ff5f3a00fb5ac2de1d07b86f5dbcd34c260e134bcbd783cd8f14ff998ae0cf51"
+        "source_content_sha256": "ff5f3a00fb5ac2de1d07b86f5dbcd34c260e134bcbd783cd8f14ff998ae0cf51",
+        "implementation_content_sha256": null
+      },
+      {
+        "evidence_id": "EV-PTH14-REF-CLASSIFY-REVIEW4",
+        "design_id": "API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811",
+        "subject_kind": "query",
+        "subject_id": "ClassifyArchitectureDocumentationDisposition",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/planning-db-schema.test.cjs",
+        "source_path": "scripts/planning-db-schema.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T18:22:12.083+00:00",
+        "source_content_sha256": "edd379482987387b160119fae60df9981a6c682fb7be03c826d447e15e9f4a7e",
+        "implementation_content_sha256": "6e6945c93520a3f3c1713622f91918203a529bde4956afa67b5707df37066a5d"
       },
       {
         "evidence_id": "EV-PTH14-REF-GENERATE",
@@ -13888,7 +13997,120 @@
         "source_path": "scripts/generate-code-status.test.cjs",
         "result_state": "pass",
         "recorded_at": "2026-08-11T13:02:40.092+00:00",
-        "source_content_sha256": "12b0520908e076692c1860c5b0efdd8176e709386f95f6f22cf85616831b214c"
+        "source_content_sha256": "12b0520908e076692c1860c5b0efdd8176e709386f95f6f22cf85616831b214c",
+        "implementation_content_sha256": null
+      },
+      {
+        "evidence_id": "EV-PTH14-REF-GENERATE-REVIEW4",
+        "design_id": "API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811",
+        "subject_kind": "command",
+        "subject_id": "GeneratePlanningDerivedSurfaces",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/generate-code-status.test.cjs",
+        "source_path": "scripts/generate-code-status.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T18:22:11.783+00:00",
+        "source_content_sha256": "12b0520908e076692c1860c5b0efdd8176e709386f95f6f22cf85616831b214c",
+        "implementation_content_sha256": "c6cdcf11b9923e308b1c60aa59e6405619611881f096f193a9b755688b9ae6cd"
+      },
+      {
+        "evidence_id": "EV-PTH14-V3-ARCH-DEPS",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "subject_kind": "command",
+        "subject_id": "ApplyArchitectureDependencyBoundaryGate",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test tools/ci/architecture-dependency-guard.test.mjs && pnpm arch:deps",
+        "source_path": "tools/ci/architecture-dependency-guard.test.mjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T18:22:12.602+00:00",
+        "source_content_sha256": "3b894bb8c8a707f3506f108e79fd5f3ada4498310d0036a14e0a522901a660b5",
+        "implementation_content_sha256": "d65082c0bb1f55d7055187f7a904e89bda17baa8acd49110a4bda4835b626528"
+      },
+      {
+        "evidence_id": "EV-PTH14-V3-CLASSIFY",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "subject_kind": "query",
+        "subject_id": "ClassifyArchitectureDocumentationDisposition",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/planning-db-schema.test.cjs",
+        "source_path": "scripts/planning-db-schema.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T18:22:13.115+00:00",
+        "source_content_sha256": "edd379482987387b160119fae60df9981a6c682fb7be03c826d447e15e9f4a7e",
+        "implementation_content_sha256": "6e6945c93520a3f3c1713622f91918203a529bde4956afa67b5707df37066a5d"
+      },
+      {
+        "evidence_id": "EV-PTH14-V3-DESIGN-AUTH",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "subject_kind": "query",
+        "subject_id": "ReadArchitectureDesignAuthority",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/planning-db-query.test.cjs",
+        "source_path": "scripts/planning-db-query.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T18:22:13.629+00:00",
+        "source_content_sha256": "02ef5b3e23c275e077de8bdfc69f540240cb61a87fa48542ad1c2ee85a2b6719",
+        "implementation_content_sha256": "5834ab693302e2731539ec6fe12ba74fd811c3b9905c3473373ece4b78be9da1"
+      },
+      {
+        "evidence_id": "EV-PTH14-V3-EVIDENCE-TEST",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "subject_kind": "test",
+        "subject_id": "TEST-API-H2-4-EVIDENCE-PROVENANCE",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+        "source_path": "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T18:22:13.915+00:00",
+        "source_content_sha256": "db20758fc3916c6ac6fe780546ca2eddbe6f0a5e0f77676d7a86f173255acaf8",
+        "implementation_content_sha256": null
+      },
+      {
+        "evidence_id": "EV-PTH14-V3-GENERATE",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "subject_kind": "command",
+        "subject_id": "GeneratePlanningDerivedSurfaces",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/generate-code-status.test.cjs",
+        "source_path": "scripts/generate-code-status.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T18:22:12.862+00:00",
+        "source_content_sha256": "12b0520908e076692c1860c5b0efdd8176e709386f95f6f22cf85616831b214c",
+        "implementation_content_sha256": "c6cdcf11b9923e308b1c60aa59e6405619611881f096f193a9b755688b9ae6cd"
+      },
+      {
+        "evidence_id": "EV-PTH14-V3-LIFECYCLE",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "subject_kind": "query",
+        "subject_id": "ListDocumentationLifecycleFacts",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/documentation-publication.test.cjs",
+        "source_path": "scripts/documentation-publication.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T18:22:13.375+00:00",
+        "source_content_sha256": "96071a0f8e97109913e01f7d00560d23f147f91dd3bd6723fb38b492558af2e6",
+        "implementation_content_sha256": "0790c5361f82ebcfe05e3e7acfc6dce25d630e6b1c9383548cf2c99759d868c9"
+      },
+      {
+        "evidence_id": "EV-PTH14-V3-LIFECYCLE-TEST",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "subject_kind": "test",
+        "subject_id": "TEST-API-H2-4-DOCUMENT-LIFECYCLE-DISPOSITION",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/planning-db-schema.test.cjs",
+        "source_path": "scripts/planning-db-schema.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T18:22:13.773+00:00",
+        "source_content_sha256": "edd379482987387b160119fae60df9981a6c682fb7be03c826d447e15e9f4a7e",
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EV-PTH14-V5-CLASSIFY",
@@ -13901,7 +14123,8 @@
         "source_path": "scripts/planning-db-schema.test.cjs",
         "result_state": "pass",
         "recorded_at": "2026-08-11T13:02:35.757+00:00",
-        "source_content_sha256": "9480cc084b84772de27846cd45ac898473cce80162541d945a99c4f84d7bd07d"
+        "source_content_sha256": "9480cc084b84772de27846cd45ac898473cce80162541d945a99c4f84d7bd07d",
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EV-PTH14-V5-CLASSIFY-REVIEW",
@@ -13914,7 +14137,8 @@
         "source_path": "scripts/planning-db-schema.test.cjs",
         "result_state": "pass",
         "recorded_at": "2026-08-11T16:37:56.493+00:00",
-        "source_content_sha256": "dad90c2ff3b8d0d15a1f29cf5023abc4dbffb64b9f4a6fccc3441d269f04e556"
+        "source_content_sha256": "dad90c2ff3b8d0d15a1f29cf5023abc4dbffb64b9f4a6fccc3441d269f04e556",
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EV-PTH14-V5-CLASSIFY-REVIEW2",
@@ -13927,7 +14151,8 @@
         "source_path": "scripts/planning-db-schema.test.cjs",
         "result_state": "pass",
         "recorded_at": "2026-08-11T17:07:52.553+00:00",
-        "source_content_sha256": "39d479f362360f996f2c45035593c07d52372eed46f9fd57438b007c68862b21"
+        "source_content_sha256": "39d479f362360f996f2c45035593c07d52372eed46f9fd57438b007c68862b21",
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EV-PTH14-V5-CLASSIFY-REVIEW3",
@@ -13940,7 +14165,22 @@
         "source_path": "scripts/planning-db-schema.test.cjs",
         "result_state": "pass",
         "recorded_at": "2026-08-11T17:29:15.593+00:00",
-        "source_content_sha256": "ff5f3a00fb5ac2de1d07b86f5dbcd34c260e134bcbd783cd8f14ff998ae0cf51"
+        "source_content_sha256": "ff5f3a00fb5ac2de1d07b86f5dbcd34c260e134bcbd783cd8f14ff998ae0cf51",
+        "implementation_content_sha256": null
+      },
+      {
+        "evidence_id": "EV-PTH14-V5-CLASSIFY-REVIEW4",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "query",
+        "subject_id": "ClassifyArchitectureDocumentationDisposition",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/planning-db-schema.test.cjs",
+        "source_path": "scripts/planning-db-schema.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T18:22:16.51+00:00",
+        "source_content_sha256": "edd379482987387b160119fae60df9981a6c682fb7be03c826d447e15e9f4a7e",
+        "implementation_content_sha256": "6e6945c93520a3f3c1713622f91918203a529bde4956afa67b5707df37066a5d"
       },
       {
         "evidence_id": "EV-PTH14-V5-GENERATE",
@@ -13953,7 +14193,22 @@
         "source_path": "scripts/generate-code-status.test.cjs",
         "result_state": "pass",
         "recorded_at": "2026-08-11T13:02:22.878+00:00",
-        "source_content_sha256": "12b0520908e076692c1860c5b0efdd8176e709386f95f6f22cf85616831b214c"
+        "source_content_sha256": "12b0520908e076692c1860c5b0efdd8176e709386f95f6f22cf85616831b214c",
+        "implementation_content_sha256": null
+      },
+      {
+        "evidence_id": "EV-PTH14-V5-GENERATE-REVIEW4",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "command",
+        "subject_id": "GeneratePlanningDerivedSurfaces",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/generate-code-status.test.cjs",
+        "source_path": "scripts/generate-code-status.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T18:22:14.165+00:00",
+        "source_content_sha256": "12b0520908e076692c1860c5b0efdd8176e709386f95f6f22cf85616831b214c",
+        "implementation_content_sha256": "c6cdcf11b9923e308b1c60aa59e6405619611881f096f193a9b755688b9ae6cd"
       },
       {
         "evidence_id": "EV-PTH14-V5-READ-COMP",
@@ -13966,7 +14221,22 @@
         "source_path": "scripts/planning-db-query.test.cjs",
         "result_state": "pass",
         "recorded_at": "2026-08-11T13:02:37.159+00:00",
-        "source_content_sha256": "02ef5b3e23c275e077de8bdfc69f540240cb61a87fa48542ad1c2ee85a2b6719"
+        "source_content_sha256": "02ef5b3e23c275e077de8bdfc69f540240cb61a87fa48542ad1c2ee85a2b6719",
+        "implementation_content_sha256": null
+      },
+      {
+        "evidence_id": "EV-PTH14-V5-READ-COMP-REVIEW4",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "query",
+        "subject_id": "ReadArchitectureComponentProfile",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/planning-db-query.test.cjs",
+        "source_path": "scripts/planning-db-query.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T18:22:16.755+00:00",
+        "source_content_sha256": "02ef5b3e23c275e077de8bdfc69f540240cb61a87fa48542ad1c2ee85a2b6719",
+        "implementation_content_sha256": "6b65e847005b5e05f53e67b8090cfbc31337e570c8454a72847bb1154f21e5db"
       },
       {
         "evidence_id": "EV-PTH14-V5-READ-EVID",
@@ -13979,7 +14249,22 @@
         "source_path": "scripts/planning-db-query.test.cjs",
         "result_state": "pass",
         "recorded_at": "2026-08-11T13:02:38.564+00:00",
-        "source_content_sha256": "02ef5b3e23c275e077de8bdfc69f540240cb61a87fa48542ad1c2ee85a2b6719"
+        "source_content_sha256": "02ef5b3e23c275e077de8bdfc69f540240cb61a87fa48542ad1c2ee85a2b6719",
+        "implementation_content_sha256": null
+      },
+      {
+        "evidence_id": "EV-PTH14-V5-READ-EVID-REVIEW4",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "query",
+        "subject_id": "ReadArchitectureEvidence",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/planning-db-query.test.cjs",
+        "source_path": "scripts/planning-db-query.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T18:22:17.053+00:00",
+        "source_content_sha256": "02ef5b3e23c275e077de8bdfc69f540240cb61a87fa48542ad1c2ee85a2b6719",
+        "implementation_content_sha256": "54b1d786a49d6e9b901d34141cd7ba73bac2960c51d045dbb7839f637212aeed"
       },
       {
         "evidence_id": "EV-PTH14-V5-REC-COMP",
@@ -13992,7 +14277,22 @@
         "source_path": "scripts/planning-db-operate.test.cjs",
         "result_state": "pass",
         "recorded_at": "2026-08-11T13:02:24.335+00:00",
-        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598"
+        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598",
+        "implementation_content_sha256": null
+      },
+      {
+        "evidence_id": "EV-PTH14-V5-REC-COMP-REVIEW4",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "command",
+        "subject_id": "RecordArchitectureComponent",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/planning-db-operate.test.cjs",
+        "source_path": "scripts/planning-db-operate.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T18:22:14.428+00:00",
+        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598",
+        "implementation_content_sha256": "f4118a995ace49595d1146d41b7f2e7f79f440ce28f4dc343d64ba9be9cfe078"
       },
       {
         "evidence_id": "EV-PTH14-V5-REC-EVID",
@@ -14005,7 +14305,22 @@
         "source_path": "scripts/planning-db-operate.test.cjs",
         "result_state": "pass",
         "recorded_at": "2026-08-11T13:02:25.82+00:00",
-        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598"
+        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598",
+        "implementation_content_sha256": null
+      },
+      {
+        "evidence_id": "EV-PTH14-V5-REC-EVID-REVIEW4",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "command",
+        "subject_id": "RecordArchitectureEvidenceExecution",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/planning-db-operate.test.cjs",
+        "source_path": "scripts/planning-db-operate.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T18:22:14.67+00:00",
+        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598",
+        "implementation_content_sha256": "09c1a2f0a89cddd4e427f8b3c031927cc48d565d2b62e1d8b8147d97a36d079d"
       },
       {
         "evidence_id": "EV-PTH14-V5-REC-OBS",
@@ -14018,7 +14333,22 @@
         "source_path": "scripts/planning-db-operate.test.cjs",
         "result_state": "pass",
         "recorded_at": "2026-08-11T13:02:27.272+00:00",
-        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598"
+        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598",
+        "implementation_content_sha256": null
+      },
+      {
+        "evidence_id": "EV-PTH14-V5-REC-OBS-REVIEW4",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "command",
+        "subject_id": "RecordArchitectureObservabilityEvidence",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/planning-db-operate.test.cjs",
+        "source_path": "scripts/planning-db-operate.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T18:22:14.912+00:00",
+        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598",
+        "implementation_content_sha256": "3f1f858d897dbc6d24810ee9b7fd0fb845652161a2ab7c26a9703414980c644b"
       },
       {
         "evidence_id": "EV-PTH14-V5-RESTORE",
@@ -14031,7 +14361,22 @@
         "source_path": "scripts/planning-db-import.test.cjs",
         "result_state": "pass",
         "recorded_at": "2026-08-11T13:02:28.674+00:00",
-        "source_content_sha256": "55767a047a77672d88a780344a7e6dd6a0b9ea796f24b5db0ed87c67f5edcaa3"
+        "source_content_sha256": "55767a047a77672d88a780344a7e6dd6a0b9ea796f24b5db0ed87c67f5edcaa3",
+        "implementation_content_sha256": null
+      },
+      {
+        "evidence_id": "EV-PTH14-V5-RESTORE-REVIEW4",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "command",
+        "subject_id": "RestorePlanningDbCanonicalArchitectureState",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/planning-db-import.test.cjs scripts/planning-db-architecture-state.test.cjs",
+        "source_path": "scripts/planning-db-import.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T18:22:16.257+00:00",
+        "source_content_sha256": "55767a047a77672d88a780344a7e6dd6a0b9ea796f24b5db0ed87c67f5edcaa3",
+        "implementation_content_sha256": "fbf759472496fd070cd03bf1eb1d8d049cbd161d09bf7a3e7bf58245d5d4c3e1"
       },
       {
         "evidence_id": "EV-PTH14-V5-RET-EVID",
@@ -14044,7 +14389,22 @@
         "source_path": "scripts/planning-db-operate.test.cjs",
         "result_state": "pass",
         "recorded_at": "2026-08-11T13:02:30.093+00:00",
-        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598"
+        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598",
+        "implementation_content_sha256": null
+      },
+      {
+        "evidence_id": "EV-PTH14-V5-RET-EVID-REVIEW4",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "command",
+        "subject_id": "RetireArchitectureEvidenceExecution",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/planning-db-operate.test.cjs",
+        "source_path": "scripts/planning-db-operate.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T18:22:15.21+00:00",
+        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598",
+        "implementation_content_sha256": "388411e6616eca0c38be61542fffc1ce49dbea83c03af331bfb5787fbe73eaaf"
       },
       {
         "evidence_id": "EV-PTH14-V5-RET-RAIL",
@@ -14057,7 +14417,22 @@
         "source_path": "scripts/planning-db-operate.test.cjs",
         "result_state": "pass",
         "recorded_at": "2026-08-11T13:02:32.957+00:00",
-        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598"
+        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598",
+        "implementation_content_sha256": null
+      },
+      {
+        "evidence_id": "EV-PTH14-V5-RET-RAIL-REVIEW4",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "command",
+        "subject_id": "RetireFeatureMechanizationRail",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/planning-db-operate.test.cjs",
+        "source_path": "scripts/planning-db-operate.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T18:22:15.746+00:00",
+        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598",
+        "implementation_content_sha256": "84d86b9ccffe790a3f99ee67d03283d9f4d9395bec2303b8e753215ebe0ed73b"
       },
       {
         "evidence_id": "EV-PTH14-V5-RET-TEST",
@@ -14070,7 +14445,22 @@
         "source_path": "scripts/planning-db-operate.test.cjs",
         "result_state": "pass",
         "recorded_at": "2026-08-11T13:02:31.521+00:00",
-        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598"
+        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598",
+        "implementation_content_sha256": null
+      },
+      {
+        "evidence_id": "EV-PTH14-V5-RET-TEST-REVIEW4",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "command",
+        "subject_id": "RetireArchitectureTestEvidence",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/planning-db-operate.test.cjs",
+        "source_path": "scripts/planning-db-operate.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T18:22:15.476+00:00",
+        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598",
+        "implementation_content_sha256": "93f2c6682fb731d5128e42f9ec2ebe8c7cb116e324a4922213dd035012d6c789"
       },
       {
         "evidence_id": "EV-PTH14-V5-TRANSITION",
@@ -14083,7 +14473,22 @@
         "source_path": "scripts/planning-db-operate.test.cjs",
         "result_state": "pass",
         "recorded_at": "2026-08-11T13:02:34.37+00:00",
-        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598"
+        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598",
+        "implementation_content_sha256": null
+      },
+      {
+        "evidence_id": "EV-PTH14-V5-TRANSITION-REVIEW4",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "command",
+        "subject_id": "TransitionArchitectureDesign",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/planning-db-operate.test.cjs",
+        "source_path": "scripts/planning-db-operate.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T18:22:15.993+00:00",
+        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598",
+        "implementation_content_sha256": "4e2ceb950ee15d23dd9e740c2cfbf028bcdbdbd6cd7e4e79b68b99c7d49744ff"
       },
       {
         "evidence_id": "EV-RUN-OPERATIONAL-TRUTH-STRICT-LIVE-20260719",
@@ -14096,7 +14501,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:50.64837+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EV-SCOPED-WORKSPACE-FILE-STORAGE-IMPLEMENTED",
@@ -14109,7 +14515,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EV-START-RUN-DBT-BUNDLE-NEGATIVE-RAIL-20260712",
@@ -14122,7 +14529,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EV-WEB-RUN-OPERATIONAL-PRESENTATION-20260719",
@@ -14135,7 +14543,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:50.637985+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EV-WEB-RUN-OPERATIONAL-TRUTH-20260719",
@@ -14148,7 +14557,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:50.637985+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EV-WORKSPACE-CAS-INTEGRITY-AND-RAIL-RECONCILIATION",
@@ -14161,7 +14571,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
-        "source_content_sha256": null
+        "source_content_sha256": null,
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EVIDENCE-API-H2-4-CI-EVIDENCE-AUTHENTICITY",
@@ -14174,7 +14585,8 @@
         "source_path": "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
         "result_state": "pass",
         "recorded_at": "2026-08-11T14:09:38.997+00:00",
-        "source_content_sha256": "4813b935e0ab710ef3849041715a90c252461a2e55877413b845612c46cad38c"
+        "source_content_sha256": "4813b935e0ab710ef3849041715a90c252461a2e55877413b845612c46cad38c",
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EVIDENCE-API-H2-4-CI-EVIDENCE-AUTHENTICITY-REVIEW",
@@ -14187,7 +14599,8 @@
         "source_path": "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
         "result_state": "pass",
         "recorded_at": "2026-08-11T16:37:57.979+00:00",
-        "source_content_sha256": "afee580050cdff8f76dc9252902de91d3b4cf987915d2dc1d3472503a9050ca6"
+        "source_content_sha256": "afee580050cdff8f76dc9252902de91d3b4cf987915d2dc1d3472503a9050ca6",
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EVIDENCE-API-H2-4-HISTORICAL-LINK-PROJECTION",
@@ -14200,7 +14613,8 @@
         "source_path": "scripts/documentation-publication.test.cjs",
         "result_state": "pass",
         "recorded_at": "2026-08-11T14:09:37.594+00:00",
-        "source_content_sha256": "96071a0f8e97109913e01f7d00560d23f147f91dd3bd6723fb38b492558af2e6"
+        "source_content_sha256": "96071a0f8e97109913e01f7d00560d23f147f91dd3bd6723fb38b492558af2e6",
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EVIDENCE-CODE-WORKING-TREE-POST-SAVE-CONSUMER",
@@ -14213,7 +14627,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:35.669759+00:00",
-        "source_content_sha256": "34b36d9acee8dce4d5bae5b22f03d757186248ac630f973803d76b8c2b3330fa"
+        "source_content_sha256": "34b36d9acee8dce4d5bae5b22f03d757186248ac630f973803d76b8c2b3330fa",
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EVIDENCE-DBT-CODE-SAVE-REANALYSIS-LIVE",
@@ -14226,7 +14641,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:35.669759+00:00",
-        "source_content_sha256": "dcd354679a3263a303c7d8fd9a68f5187ab33595de600d9ca3c2592f3d95c126"
+        "source_content_sha256": "dcd354679a3263a303c7d8fd9a68f5187ab33595de600d9ca3c2592f3d95c126",
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EVIDENCE-DBT-CODE-TARGET-ADAPTER",
@@ -14239,7 +14655,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:35.669759+00:00",
-        "source_content_sha256": "24566be376a33de7750361791bf5eca8b694d317fdd873ee7f932c12d21e06dd"
+        "source_content_sha256": "24566be376a33de7750361791bf5eca8b694d317fdd873ee7f932c12d21e06dd",
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EVIDENCE-DBT-EXECUTION-TARGET-PORT",
@@ -14252,7 +14669,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
-        "source_content_sha256": "ee50c022a6edd4f167d32bd8f1801fdcee50c022a6edd4f167d32bd8f1801fdc"
+        "source_content_sha256": "ee50c022a6edd4f167d32bd8f1801fdcee50c022a6edd4f167d32bd8f1801fdc",
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EVIDENCE-DBT-EXPLICIT-SELECTION-STRICT-BROWSER",
@@ -14265,7 +14683,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
-        "source_content_sha256": "c731cb4a23f94b6ecd94539e86fb1a01c731cb4a23f94b6ecd94539e86fb1a01"
+        "source_content_sha256": "c731cb4a23f94b6ecd94539e86fb1a01c731cb4a23f94b6ecd94539e86fb1a01",
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EVIDENCE-DBT-FILE-EXECUTION-BUNDLE",
@@ -14278,7 +14697,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
-        "source_content_sha256": "710c3d1520e62caab9460b1e62ea7e85710c3d1520e62caab9460b1e62ea7e85"
+        "source_content_sha256": "710c3d1520e62caab9460b1e62ea7e85710c3d1520e62caab9460b1e62ea7e85",
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EVIDENCE-DBT-FILE-EXECUTION-PREVIEW-AUTHORITY",
@@ -14291,7 +14711,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
-        "source_content_sha256": "e24303cc5f9a17a989c6a43341250fa4e24303cc5f9a17a989c6a43341250fa4"
+        "source_content_sha256": "e24303cc5f9a17a989c6a43341250fa4e24303cc5f9a17a989c6a43341250fa4",
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EVIDENCE-DBT-FILE-EXECUTION-RT006",
@@ -14304,7 +14725,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
-        "source_content_sha256": "ac6b3207f56203d8cc3a113290308ab1ac6b3207f56203d8cc3a113290308ab1"
+        "source_content_sha256": "ac6b3207f56203d8cc3a113290308ab1ac6b3207f56203d8cc3a113290308ab1",
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EVIDENCE-DBT-FILE-EXECUTION-RUN-ADMISSION",
@@ -14317,7 +14739,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
-        "source_content_sha256": "2fe0310792e28c6eab817786ad4dc3242fe0310792e28c6eab817786ad4dc324"
+        "source_content_sha256": "2fe0310792e28c6eab817786ad4dc3242fe0310792e28c6eab817786ad4dc324",
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EVIDENCE-DBT-FILE-EXECUTION-WEB",
@@ -14330,7 +14753,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
-        "source_content_sha256": "ced27fb63a6dedb635cee71f0dbd9d61ced27fb63a6dedb635cee71f0dbd9d61"
+        "source_content_sha256": "ced27fb63a6dedb635cee71f0dbd9d61ced27fb63a6dedb635cee71f0dbd9d61",
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EVIDENCE-DBT-PROJECT-BUNDLE-PORT",
@@ -14343,7 +14767,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
-        "source_content_sha256": "94431a6e174817b35b9677ed8e23e8c494431a6e174817b35b9677ed8e23e8c4"
+        "source_content_sha256": "94431a6e174817b35b9677ed8e23e8c494431a6e174817b35b9677ed8e23e8c4",
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EVIDENCE-DBT-PROJECT-SOURCE-PATH-POLICY-DOC",
@@ -14356,7 +14781,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
-        "source_content_sha256": "4ad7a6184297419075d7ecbaa3a19cf64ad7a6184297419075d7ecbaa3a19cf6"
+        "source_content_sha256": "4ad7a6184297419075d7ecbaa3a19cf64ad7a6184297419075d7ecbaa3a19cf6",
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EVIDENCE-DBT-PROJECT-SOURCE-PATH-POLICY-UNIT",
@@ -14369,7 +14795,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
-        "source_content_sha256": "bac20c4452284b154fb16c5726852466bac20c4452284b154fb16c5726852466"
+        "source_content_sha256": "bac20c4452284b154fb16c5726852466bac20c4452284b154fb16c5726852466",
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EVIDENCE-DBT-RUN-CONTEXT-WRITER-PORT",
@@ -14382,7 +14809,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
-        "source_content_sha256": "af4daacacc8dbc944394083335e80a3eaf4daacacc8dbc944394083335e80a3e"
+        "source_content_sha256": "af4daacacc8dbc944394083335e80a3eaf4daacacc8dbc944394083335e80a3e",
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EVIDENCE-DBT-YAML-DESCRIPTION-APPLY-COMMAND",
@@ -14395,7 +14823,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:38.502668+00:00",
-        "source_content_sha256": "467c556afe063843172b914076fba0843a9eb74b86703655afd0194f2924d7c1"
+        "source_content_sha256": "467c556afe063843172b914076fba0843a9eb74b86703655afd0194f2924d7c1",
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EVIDENCE-DBT-YAML-DESCRIPTION-INTEGRITY-PROPERTIES",
@@ -14408,7 +14837,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:38.502668+00:00",
-        "source_content_sha256": "dbc42bff3a62eea9a4886766a7b41ea157bdcdf8161f1d2c44c0f724d0183efd"
+        "source_content_sha256": "dbc42bff3a62eea9a4886766a7b41ea157bdcdf8161f1d2c44c0f724d0183efd",
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EVIDENCE-DBT-YAML-DESCRIPTION-PORTS-CONTRACT",
@@ -14421,7 +14851,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:38.502668+00:00",
-        "source_content_sha256": "ebccdd6ccb6be23909aed09b96c84362ffba73b42ab0d96a5b292efaf68b6c8e"
+        "source_content_sha256": "ebccdd6ccb6be23909aed09b96c84362ffba73b42ab0d96a5b292efaf68b6c8e",
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EVIDENCE-DBT-YAML-DESCRIPTION-PROPOSAL-QUERY",
@@ -14434,7 +14865,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:38.502668+00:00",
-        "source_content_sha256": "7c6d918738e21ae2b7e25407af02cf3d3dce5cbd7a93e79f1b4b59f5ab790b44"
+        "source_content_sha256": "7c6d918738e21ae2b7e25407af02cf3d3dce5cbd7a93e79f1b4b59f5ab790b44",
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EVIDENCE-DBT-YAML-DESCRIPTION-RECEIPT-STORE",
@@ -14447,7 +14879,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:38.502668+00:00",
-        "source_content_sha256": "3ebbb334bcd4bb669382bd3c2f91f6f2bda961671771b085137fc5e88005fb10"
+        "source_content_sha256": "3ebbb334bcd4bb669382bd3c2f91f6f2bda961671771b085137fc5e88005fb10",
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EVIDENCE-DBT-YAML-DESCRIPTION-RESOURCE-RESOLVER",
@@ -14460,7 +14893,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:38.502668+00:00",
-        "source_content_sha256": "af21df1225bc7a9ff61a0c973c98a5d9b8723c7ae052fcddc72e3670728af497"
+        "source_content_sha256": "af21df1225bc7a9ff61a0c973c98a5d9b8723c7ae052fcddc72e3670728af497",
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EVIDENCE-DBT-YAML-DESCRIPTION-REVERT-COMMAND",
@@ -14473,7 +14907,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:38.502668+00:00",
-        "source_content_sha256": "43f23fcbe0e81970385ab4261a55a9a42b7e61e82e831e896e27e301a110284e"
+        "source_content_sha256": "43f23fcbe0e81970385ab4261a55a9a42b7e61e82e831e896e27e301a110284e",
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EVIDENCE-DBT-YAML-DESCRIPTION-STRICT-LIVE",
@@ -14486,7 +14921,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:35.669759+00:00",
-        "source_content_sha256": "dcd354679a3263a303c7d8fd9a68f5187ab33595de600d9ca3c2592f3d95c126"
+        "source_content_sha256": "dcd354679a3263a303c7d8fd9a68f5187ab33595de600d9ca3c2592f3d95c126",
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EVIDENCE-WEB-CANVAS-DBT-GRAPH-SQL-REPLACEMENT-ORCHESTRATION",
@@ -14499,7 +14935,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:53.73454+00:00",
-        "source_content_sha256": "9c40ffd70f47313aeabada99bf10f0b79c40ffd70f47313aeabada99bf10f0b7"
+        "source_content_sha256": "9c40ffd70f47313aeabada99bf10f0b79c40ffd70f47313aeabada99bf10f0b7",
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EVIDENCE-WEB-CANVAS-DBT-GRAPH-SQL-REPLACEMENT-PRESENTATION",
@@ -14512,7 +14949,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:53.73454+00:00",
-        "source_content_sha256": "c5c6e02eabe00e787d0cdc6e51362ceac5c6e02eabe00e787d0cdc6e51362cea"
+        "source_content_sha256": "c5c6e02eabe00e787d0cdc6e51362ceac5c6e02eabe00e787d0cdc6e51362cea",
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EVIDENCE-WEB-CODE-FILE-EDIT-POSTURE-UNIT",
@@ -14525,7 +14963,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:50.942727+00:00",
-        "source_content_sha256": "129b46aefc920c855fec4d1692b8368b129b46aefc920c855fec4d1692b8368b"
+        "source_content_sha256": "129b46aefc920c855fec4d1692b8368b129b46aefc920c855fec4d1692b8368b",
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EVIDENCE-WEB-CODE-FILE-SURFACE-INTEGRATION",
@@ -14538,7 +14977,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:50.942727+00:00",
-        "source_content_sha256": "186b1d41ca50840b2b28dd017aec6050186b1d41ca50840b2b28dd017aec6050"
+        "source_content_sha256": "186b1d41ca50840b2b28dd017aec6050186b1d41ca50840b2b28dd017aec6050",
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EVIDENCE-WEB-CODE-FILE-SURFACE-PRESENTATION",
@@ -14551,7 +14991,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:50.942727+00:00",
-        "source_content_sha256": "3652465a316c124d5e3f9ca965ccb0e53652465a316c124d5e3f9ca965ccb0e5"
+        "source_content_sha256": "3652465a316c124d5e3f9ca965ccb0e53652465a316c124d5e3f9ca965ccb0e5",
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EVIDENCE-WEB-CODE-GRAPH-OWNED-FILE-SURFACE-LIVE",
@@ -14564,7 +15005,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:50.942727+00:00",
-        "source_content_sha256": "81bfabab7c960f7551adef04192e1f0581bfabab7c960f7551adef04192e1f05"
+        "source_content_sha256": "81bfabab7c960f7551adef04192e1f0581bfabab7c960f7551adef04192e1f05",
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EVIDENCE-WEB-DBT-GRAPH-ARTIFACT-PUBLISHER-UNIT",
@@ -14577,7 +15019,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:50.942727+00:00",
-        "source_content_sha256": "ef5de9e9f9f5fc38ae092bc6b43a7b05ef5de9e9f9f5fc38ae092bc6b43a7b05"
+        "source_content_sha256": "ef5de9e9f9f5fc38ae092bc6b43a7b05ef5de9e9f9f5fc38ae092bc6b43a7b05",
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EVIDENCE-WEB-DBT-GRAPH-PLAN-AUTHORITY-INTEGRATION",
@@ -14590,7 +15033,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:50.942727+00:00",
-        "source_content_sha256": "5f4b912f2e09ead452d35584caa621185f4b912f2e09ead452d35584caa62118"
+        "source_content_sha256": "5f4b912f2e09ead452d35584caa621185f4b912f2e09ead452d35584caa62118",
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EVIDENCE-WEB-DBT-GRAPH-SQL-AUTHORITY-LIVE",
@@ -14603,7 +15047,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:53.73454+00:00",
-        "source_content_sha256": "8aed8bd6be7554603ce30963dee6edf48aed8bd6be7554603ce30963dee6edf4"
+        "source_content_sha256": "8aed8bd6be7554603ce30963dee6edf48aed8bd6be7554603ce30963dee6edf4",
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EVIDENCE-WEB-DBT-GRAPH-SQL-POLICY-UNIT",
@@ -14616,7 +15061,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:50.942727+00:00",
-        "source_content_sha256": "633fa76a4e6489a1a50fa61dfcacdc57633fa76a4e6489a1a50fa61dfcacdc57"
+        "source_content_sha256": "633fa76a4e6489a1a50fa61dfcacdc57633fa76a4e6489a1a50fa61dfcacdc57",
+        "implementation_content_sha256": null
       },
       {
         "evidence_id": "EVIDENCE-WEB-NODE-WORKBENCH-POSITION-STRICT-BROWSER",
@@ -14629,7 +15075,8 @@
         "source_path": null,
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:38.502668+00:00",
-        "source_content_sha256": "3e7de17a253b0e49a2a96256f1e6dcbbd35f281a88115d3673a7eff8eb43f5ad"
+        "source_content_sha256": "3e7de17a253b0e49a2a96256f1e6dcbbd35f281a88115d3673a7eff8eb43f5ad",
+        "implementation_content_sha256": null
       }
     ],
     "component_health_check": [],
@@ -88047,6 +88494,31 @@
         "created_at": "2026-08-11T03:50:48.962+00:00"
       },
       {
+        "operation_id": "08bddcab-ccd1-4593-8d07-01c8a8a489f8",
+        "idempotency_key": "issue-2274-ev-pth14-v5-rec-obs-review4",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "node --test scripts/planning-db-operate.test.cjs",
+        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+          "sourceRef": "node --test scripts/planning-db-operate.test.cjs",
+          "subjectId": "RecordArchitectureObservabilityEvidence",
+          "evidenceId": "EV-PTH14-V5-REC-OBS-REVIEW4",
+          "sourcePath": "scripts/planning-db-operate.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "command",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598"
+        },
+        "created_at": "2026-08-11T18:22:14.912+00:00"
+      },
+      {
         "operation_id": "0927aa2d-ff35-4855-8990-ba8b2f2d26b4",
         "idempotency_key": "codex-api-h2-2-reachability-v3-evidence-review",
         "operation_type": "architecture_design_transition",
@@ -88223,6 +88695,31 @@
           "sourceContentSha256": "afee580050cdff8f76dc9252902de91d3b4cf987915d2dc1d3472503a9050ca6"
         },
         "created_at": "2026-08-11T16:37:57.979+00:00"
+      },
+      {
+        "operation_id": "0e62fae9-7952-4124-9ea0-6526127295c3",
+        "idempotency_key": "issue-2274-ev-pth14-v3-evidence-test",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "source_ref": "node --test scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+        "source_content_sha256": "db20758fc3916c6ac6fe780546ca2eddbe6f0a5e0f77676d7a86f173255acaf8",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+          "sourceRef": "node --test scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+          "subjectId": "TEST-API-H2-4-EVIDENCE-PROVENANCE",
+          "evidenceId": "EV-PTH14-V3-EVIDENCE-TEST",
+          "sourcePath": "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "test",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "db20758fc3916c6ac6fe780546ca2eddbe6f0a5e0f77676d7a86f173255acaf8"
+        },
+        "created_at": "2026-08-11T18:22:13.915+00:00"
       },
       {
         "operation_id": "0e9586d8-08b0-4064-9a96-140ec07fb7dd",
@@ -88553,6 +89050,31 @@
           "sourceContentSha256": "d991a64882ed4504214a639d7c4d8b309ee21dfd49650ea70ecdac55f7a23290"
         },
         "created_at": "2026-08-11T08:16:57.954+00:00"
+      },
+      {
+        "operation_id": "12d84026-6089-49dc-bb94-b85da38cdcc3",
+        "idempotency_key": "issue-2274-ev-pth14-idx-classify-review4",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811",
+        "source_ref": "node --test tools/ci/sync-docs-status-policy.test.mjs",
+        "source_content_sha256": "efe621f4806a1b5e14a392a4ea99b93929ce4e3a0caf9281b93c631b23534c83",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811",
+          "sourceRef": "node --test tools/ci/sync-docs-status-policy.test.mjs",
+          "subjectId": "ClassifyArchitectureDocumentationDisposition",
+          "evidenceId": "EV-PTH14-IDX-CLASSIFY-REVIEW4",
+          "sourcePath": "tools/ci/sync-docs-status-policy.test.mjs",
+          "resultState": "pass",
+          "subjectKind": "query",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "efe621f4806a1b5e14a392a4ea99b93929ce4e3a0caf9281b93c631b23534c83"
+        },
+        "created_at": "2026-08-11T18:22:17.637+00:00"
       },
       {
         "operation_id": "12ec84b1-8005-4730-9a76-bf471536ee89",
@@ -89690,6 +90212,31 @@
         "created_at": "2026-08-11T03:26:03.761+00:00"
       },
       {
+        "operation_id": "2a82d381-f0ff-4ef7-9747-3cac76958027",
+        "idempotency_key": "issue-2274-ev-pth14-v5-rec-evid-review4",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "node --test scripts/planning-db-operate.test.cjs",
+        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+          "sourceRef": "node --test scripts/planning-db-operate.test.cjs",
+          "subjectId": "RecordArchitectureEvidenceExecution",
+          "evidenceId": "EV-PTH14-V5-REC-EVID-REVIEW4",
+          "sourcePath": "scripts/planning-db-operate.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "command",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598"
+        },
+        "created_at": "2026-08-11T18:22:14.67+00:00"
+      },
+      {
         "operation_id": "2b5c0382-b2ee-49e4-828c-0c86059dba5c",
         "idempotency_key": "architecture_design_transition:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811:3f960f0202301914",
         "operation_type": "architecture_design_transition",
@@ -89780,6 +90327,31 @@
           "sourceContentSha256": "66b16187e6040c1d4b792e51311a6b7ae23df2d0f2543570443723a637875e30"
         },
         "created_at": "2026-08-10T21:04:02.743+00:00"
+      },
+      {
+        "operation_id": "2da2c914-072a-4c30-865a-c3e20cec96d5",
+        "idempotency_key": "issue-2274-ev-pth14-ci-auth-review2",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-CI-EVIDENCE-AUTHENTICITY-V2-20260811",
+        "source_ref": "node --test scripts/planning-db-operate-tests/architecture-plan.test.cjs scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+        "source_content_sha256": "db20758fc3916c6ac6fe780546ca2eddbe6f0a5e0f77676d7a86f173255acaf8",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-CI-EVIDENCE-AUTHENTICITY-V2-20260811",
+          "sourceRef": "node --test scripts/planning-db-operate-tests/architecture-plan.test.cjs scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+          "subjectId": "RecordArchitectureEvidenceExecution",
+          "evidenceId": "EV-PTH14-CI-AUTH-REVIEW2",
+          "sourcePath": "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "command",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "db20758fc3916c6ac6fe780546ca2eddbe6f0a5e0f77676d7a86f173255acaf8"
+        },
+        "created_at": "2026-08-11T18:22:12.354+00:00"
       },
       {
         "operation_id": "2db742fb-c6e0-4bda-8781-959d4f419e0c",
@@ -90335,6 +90907,31 @@
         "created_at": "2026-08-11T03:58:11.264+00:00"
       },
       {
+        "operation_id": "3cb40104-4c05-4661-b4af-1c8bac80d17d",
+        "idempotency_key": "issue-2274-ev-pth14-v5-classify-review4",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "node --test scripts/planning-db-schema.test.cjs",
+        "source_content_sha256": "edd379482987387b160119fae60df9981a6c682fb7be03c826d447e15e9f4a7e",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+          "sourceRef": "node --test scripts/planning-db-schema.test.cjs",
+          "subjectId": "ClassifyArchitectureDocumentationDisposition",
+          "evidenceId": "EV-PTH14-V5-CLASSIFY-REVIEW4",
+          "sourcePath": "scripts/planning-db-schema.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "query",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "edd379482987387b160119fae60df9981a6c682fb7be03c826d447e15e9f4a7e"
+        },
+        "created_at": "2026-08-11T18:22:16.51+00:00"
+      },
+      {
         "operation_id": "3d5185ee-b765-48e8-b71e-dca351896537",
         "idempotency_key": "codex-api-h2-2-reachability-v4-implemented",
         "operation_type": "architecture_design_transition",
@@ -90379,6 +90976,31 @@
           "sourceContentSha256": "10ad018e65819d6ace50f6d70d4ff91671574cccb3aa1af768eaea661caba292"
         },
         "created_at": "2026-08-10T21:04:33.684+00:00"
+      },
+      {
+        "operation_id": "3dbd039b-9ef0-4679-83dc-556fba7cd1fd",
+        "idempotency_key": "issue-2274-ev-pth14-v5-ret-rail-review4",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "node --test scripts/planning-db-operate.test.cjs",
+        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+          "sourceRef": "node --test scripts/planning-db-operate.test.cjs",
+          "subjectId": "RetireFeatureMechanizationRail",
+          "evidenceId": "EV-PTH14-V5-RET-RAIL-REVIEW4",
+          "sourcePath": "scripts/planning-db-operate.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "command",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598"
+        },
+        "created_at": "2026-08-11T18:22:15.746+00:00"
       },
       {
         "operation_id": "3e8aa9f5-cb27-4a82-b823-1eab6b7f71d7",
@@ -91011,6 +91633,31 @@
         "created_at": "2026-08-11T06:33:55.114+00:00"
       },
       {
+        "operation_id": "4b8d1da7-b250-4ebe-87c3-46da383ad521",
+        "idempotency_key": "issue-2274-ev-pth14-v3-classify",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "source_ref": "node --test scripts/planning-db-schema.test.cjs",
+        "source_content_sha256": "edd379482987387b160119fae60df9981a6c682fb7be03c826d447e15e9f4a7e",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+          "sourceRef": "node --test scripts/planning-db-schema.test.cjs",
+          "subjectId": "ClassifyArchitectureDocumentationDisposition",
+          "evidenceId": "EV-PTH14-V3-CLASSIFY",
+          "sourcePath": "scripts/planning-db-schema.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "query",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "edd379482987387b160119fae60df9981a6c682fb7be03c826d447e15e9f4a7e"
+        },
+        "created_at": "2026-08-11T18:22:13.115+00:00"
+      },
+      {
         "operation_id": "4c6eb710-2fb8-4eb9-9f03-65ae6a518c47",
         "idempotency_key": "codex-api-h2-2-push-base-v13-review",
         "operation_type": "architecture_design_transition",
@@ -91075,6 +91722,31 @@
           "sourceContentSha256": "a095b22199bc35663876c10c5abaddbb85cca70227f06be99a74d3161a23bde6"
         },
         "created_at": "2026-08-11T04:25:09.407+00:00"
+      },
+      {
+        "operation_id": "4ddb5b69-a019-46c8-bff9-f1be38efaab8",
+        "idempotency_key": "issue-2274-ev-pth14-v3-lifecycle",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "source_ref": "node --test scripts/documentation-publication.test.cjs",
+        "source_content_sha256": "96071a0f8e97109913e01f7d00560d23f147f91dd3bd6723fb38b492558af2e6",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+          "sourceRef": "node --test scripts/documentation-publication.test.cjs",
+          "subjectId": "ListDocumentationLifecycleFacts",
+          "evidenceId": "EV-PTH14-V3-LIFECYCLE",
+          "sourcePath": "scripts/documentation-publication.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "query",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "96071a0f8e97109913e01f7d00560d23f147f91dd3bd6723fb38b492558af2e6"
+        },
+        "created_at": "2026-08-11T18:22:13.375+00:00"
       },
       {
         "operation_id": "4e395389-1415-4b4e-86f3-efd7744b9697",
@@ -91635,6 +92307,31 @@
           "sourceContentSha256": "40394bf597d05b78bd90cb96948d691d711afa9f1aa38c721f54a830ce8b0ca0"
         },
         "created_at": "2026-08-11T08:59:16.186+00:00"
+      },
+      {
+        "operation_id": "5386a908-1d06-4623-b655-b8a3e9d01a7a",
+        "idempotency_key": "issue-2274-ev-pth14-v3-lifecycle-test",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "source_ref": "node --test scripts/planning-db-schema.test.cjs",
+        "source_content_sha256": "edd379482987387b160119fae60df9981a6c682fb7be03c826d447e15e9f4a7e",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+          "sourceRef": "node --test scripts/planning-db-schema.test.cjs",
+          "subjectId": "TEST-API-H2-4-DOCUMENT-LIFECYCLE-DISPOSITION",
+          "evidenceId": "EV-PTH14-V3-LIFECYCLE-TEST",
+          "sourcePath": "scripts/planning-db-schema.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "test",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "edd379482987387b160119fae60df9981a6c682fb7be03c826d447e15e9f4a7e"
+        },
+        "created_at": "2026-08-11T18:22:13.773+00:00"
       },
       {
         "operation_id": "53bdfbc6-2a69-4006-bf94-bcfc5b9ffda1",
@@ -92437,6 +93134,31 @@
         "created_at": "2026-08-11T12:25:52.945+00:00"
       },
       {
+        "operation_id": "65ac4a65-397a-4158-96a0-fbc7ec8622a0",
+        "idempotency_key": "issue-2274-ev-pth14-v5-restore-review4",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "node --test scripts/planning-db-import.test.cjs scripts/planning-db-architecture-state.test.cjs",
+        "source_content_sha256": "55767a047a77672d88a780344a7e6dd6a0b9ea796f24b5db0ed87c67f5edcaa3",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+          "sourceRef": "node --test scripts/planning-db-import.test.cjs scripts/planning-db-architecture-state.test.cjs",
+          "subjectId": "RestorePlanningDbCanonicalArchitectureState",
+          "evidenceId": "EV-PTH14-V5-RESTORE-REVIEW4",
+          "sourcePath": "scripts/planning-db-import.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "command",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "55767a047a77672d88a780344a7e6dd6a0b9ea796f24b5db0ed87c67f5edcaa3"
+        },
+        "created_at": "2026-08-11T18:22:16.257+00:00"
+      },
+      {
         "operation_id": "65f75259-b486-4f53-b38d-785db1261564",
         "idempotency_key": "architecture_design_create:codex:PLANNING-DB-CURRENT-SCHEMA-HARD-CUT-20260808:24f99b6f81287f13",
         "operation_type": "architecture_design_create",
@@ -92652,6 +93374,31 @@
         "created_at": "2026-08-10T21:04:34.284+00:00"
       },
       {
+        "operation_id": "6993898f-8b79-4424-a0e1-ac3b66243b1a",
+        "idempotency_key": "issue-2274-ev-pth14-ref-generate-review4",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811",
+        "source_ref": "node --test scripts/generate-code-status.test.cjs",
+        "source_content_sha256": "12b0520908e076692c1860c5b0efdd8176e709386f95f6f22cf85616831b214c",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811",
+          "sourceRef": "node --test scripts/generate-code-status.test.cjs",
+          "subjectId": "GeneratePlanningDerivedSurfaces",
+          "evidenceId": "EV-PTH14-REF-GENERATE-REVIEW4",
+          "sourcePath": "scripts/generate-code-status.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "command",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "12b0520908e076692c1860c5b0efdd8176e709386f95f6f22cf85616831b214c"
+        },
+        "created_at": "2026-08-11T18:22:11.783+00:00"
+      },
+      {
         "operation_id": "6c8d7a89-2683-4333-9662-508b6a5b9bc7",
         "idempotency_key": "codex-api-h2-2-reachability-test-evidence-v7",
         "operation_type": "architecture_test_record",
@@ -92700,6 +93447,31 @@
           "sourceContentSha256": "b077b5b8c2ffb478f82cb06988a069f54226d6a3af0a8caaca44d32a199195f0"
         },
         "created_at": "2026-08-10T22:05:42.795+00:00"
+      },
+      {
+        "operation_id": "6da85e32-9087-472d-9359-6f400b8c3d94",
+        "idempotency_key": "issue-2274-ev-pth14-v3-design-auth",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "source_ref": "node --test scripts/planning-db-query.test.cjs",
+        "source_content_sha256": "02ef5b3e23c275e077de8bdfc69f540240cb61a87fa48542ad1c2ee85a2b6719",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+          "sourceRef": "node --test scripts/planning-db-query.test.cjs",
+          "subjectId": "ReadArchitectureDesignAuthority",
+          "evidenceId": "EV-PTH14-V3-DESIGN-AUTH",
+          "sourcePath": "scripts/planning-db-query.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "query",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "02ef5b3e23c275e077de8bdfc69f540240cb61a87fa48542ad1c2ee85a2b6719"
+        },
+        "created_at": "2026-08-11T18:22:13.629+00:00"
       },
       {
         "operation_id": "6e2932b1-6702-41d9-bfef-b233f8beb972",
@@ -93331,6 +94103,31 @@
         "created_at": "2026-08-11T02:26:48.234+00:00"
       },
       {
+        "operation_id": "783c9751-6774-4990-9de9-8888cfad0374",
+        "idempotency_key": "issue-2274-ev-pth14-v3-generate",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "source_ref": "node --test scripts/generate-code-status.test.cjs",
+        "source_content_sha256": "12b0520908e076692c1860c5b0efdd8176e709386f95f6f22cf85616831b214c",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+          "sourceRef": "node --test scripts/generate-code-status.test.cjs",
+          "subjectId": "GeneratePlanningDerivedSurfaces",
+          "evidenceId": "EV-PTH14-V3-GENERATE",
+          "sourcePath": "scripts/generate-code-status.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "command",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "12b0520908e076692c1860c5b0efdd8176e709386f95f6f22cf85616831b214c"
+        },
+        "created_at": "2026-08-11T18:22:12.862+00:00"
+      },
+      {
         "operation_id": "789250f7-774a-4f7a-8bd8-6aeaaba89c20",
         "idempotency_key": "codex-api-h2-2-push-diff-v12-implemented",
         "operation_type": "architecture_design_transition",
@@ -93877,6 +94674,31 @@
         "created_at": "2026-08-10T22:03:06.458+00:00"
       },
       {
+        "operation_id": "85efd993-23af-43f5-a215-64ecd7088929",
+        "idempotency_key": "issue-2274-ev-pth14-v5-ret-test-review4",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "node --test scripts/planning-db-operate.test.cjs",
+        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+          "sourceRef": "node --test scripts/planning-db-operate.test.cjs",
+          "subjectId": "RetireArchitectureTestEvidence",
+          "evidenceId": "EV-PTH14-V5-RET-TEST-REVIEW4",
+          "sourcePath": "scripts/planning-db-operate.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "command",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598"
+        },
+        "created_at": "2026-08-11T18:22:15.476+00:00"
+      },
+      {
         "operation_id": "86a73916-7dad-4efe-8f8b-67a020d6c2ab",
         "idempotency_key": "gh-2167-fixture-test-1-20260810",
         "operation_type": "architecture_test_record",
@@ -93925,6 +94747,56 @@
           "expectedStorageObject": "docs/planning/status/generated-knowledge-intake-literature.md"
         },
         "created_at": "2026-08-10T15:49:36.365+00:00"
+      },
+      {
+        "operation_id": "86dd3017-772c-4d09-8f16-a5f0b07f817c",
+        "idempotency_key": "issue-2274-ev-pth14-v5-read-comp-review4",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "node --test scripts/planning-db-query.test.cjs",
+        "source_content_sha256": "02ef5b3e23c275e077de8bdfc69f540240cb61a87fa48542ad1c2ee85a2b6719",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+          "sourceRef": "node --test scripts/planning-db-query.test.cjs",
+          "subjectId": "ReadArchitectureComponentProfile",
+          "evidenceId": "EV-PTH14-V5-READ-COMP-REVIEW4",
+          "sourcePath": "scripts/planning-db-query.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "query",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "02ef5b3e23c275e077de8bdfc69f540240cb61a87fa48542ad1c2ee85a2b6719"
+        },
+        "created_at": "2026-08-11T18:22:16.755+00:00"
+      },
+      {
+        "operation_id": "86f18d1b-b210-4e9c-92e3-1581ef9a7c81",
+        "idempotency_key": "issue-2274-ev-pth14-v5-transition-review4",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "node --test scripts/planning-db-operate.test.cjs",
+        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+          "sourceRef": "node --test scripts/planning-db-operate.test.cjs",
+          "subjectId": "TransitionArchitectureDesign",
+          "evidenceId": "EV-PTH14-V5-TRANSITION-REVIEW4",
+          "sourcePath": "scripts/planning-db-operate.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "command",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598"
+        },
+        "created_at": "2026-08-11T18:22:15.993+00:00"
       },
       {
         "operation_id": "8766f3f9-3871-458f-85ea-779819d0fef1",
@@ -94171,6 +95043,31 @@
         "created_at": "2026-08-10T20:10:10.616+00:00"
       },
       {
+        "operation_id": "8c54cf60-c401-47a1-8da8-56cfdb64b6ac",
+        "idempotency_key": "issue-2274-ev-pth14-hlink-generate-review2",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-HISTORICAL-LINK-PROJECTION-V2-20260811",
+        "source_ref": "node --test scripts/documentation-publication.test.cjs",
+        "source_content_sha256": "96071a0f8e97109913e01f7d00560d23f147f91dd3bd6723fb38b492558af2e6",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-HISTORICAL-LINK-PROJECTION-V2-20260811",
+          "sourceRef": "node --test scripts/documentation-publication.test.cjs",
+          "subjectId": "GeneratePlanningDerivedSurfaces",
+          "evidenceId": "EV-PTH14-HLINK-GENERATE-REVIEW2",
+          "sourcePath": "scripts/documentation-publication.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "command",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "96071a0f8e97109913e01f7d00560d23f147f91dd3bd6723fb38b492558af2e6"
+        },
+        "created_at": "2026-08-11T18:22:18.156+00:00"
+      },
+      {
         "operation_id": "8c678a5f-68b7-4554-a19d-14a8b2875449",
         "idempotency_key": "gh-2167-update-test-sys-api-http-entrypoint-tests-runtime-route-registry-1-v1",
         "operation_type": "architecture_test_record",
@@ -94194,6 +95091,31 @@
           "sourceContentSha256": "d59dd28408b1db1b7415ed5fa40bcfa16a2bd542a0e4b59017f0e3c21f8eb680"
         },
         "created_at": "2026-08-10T21:04:28.084+00:00"
+      },
+      {
+        "operation_id": "8d72f31b-b9c9-4040-9fdf-52492257d588",
+        "idempotency_key": "issue-2274-ev-pth14-v5-read-evid-review4",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "node --test scripts/planning-db-query.test.cjs",
+        "source_content_sha256": "02ef5b3e23c275e077de8bdfc69f540240cb61a87fa48542ad1c2ee85a2b6719",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+          "sourceRef": "node --test scripts/planning-db-query.test.cjs",
+          "subjectId": "ReadArchitectureEvidence",
+          "evidenceId": "EV-PTH14-V5-READ-EVID-REVIEW4",
+          "sourcePath": "scripts/planning-db-query.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "query",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "02ef5b3e23c275e077de8bdfc69f540240cb61a87fa48542ad1c2ee85a2b6719"
+        },
+        "created_at": "2026-08-11T18:22:17.053+00:00"
       },
       {
         "operation_id": "8eced0a0-acc5-43fb-a38e-cd675b407a7e",
@@ -94866,6 +95788,31 @@
           "sourceContentSha256": "445d0a77a2208b4198a706920223128ba7051884116b3ec95250a2c30232d691"
         },
         "created_at": "2026-08-11T03:06:49.896+00:00"
+      },
+      {
+        "operation_id": "97351d45-2d4e-49de-9c0d-3bbddab0707f",
+        "idempotency_key": "issue-2274-ev-pth14-ref-classify-review4",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811",
+        "source_ref": "node --test scripts/planning-db-schema.test.cjs",
+        "source_content_sha256": "edd379482987387b160119fae60df9981a6c682fb7be03c826d447e15e9f4a7e",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811",
+          "sourceRef": "node --test scripts/planning-db-schema.test.cjs",
+          "subjectId": "ClassifyArchitectureDocumentationDisposition",
+          "evidenceId": "EV-PTH14-REF-CLASSIFY-REVIEW4",
+          "sourcePath": "scripts/planning-db-schema.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "query",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "edd379482987387b160119fae60df9981a6c682fb7be03c826d447e15e9f4a7e"
+        },
+        "created_at": "2026-08-11T18:22:12.083+00:00"
       },
       {
         "operation_id": "977e7476-b34a-4110-a56c-226728ff2374",
@@ -95554,6 +96501,31 @@
           "sourceContentSha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc"
         },
         "created_at": "2026-08-11T12:42:32.421+00:00"
+      },
+      {
+        "operation_id": "a7ba0ff6-9744-400d-82d9-ca0d9aa68f7d",
+        "idempotency_key": "issue-2274-ev-pth14-v3-arch-deps",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "source_ref": "node --test tools/ci/architecture-dependency-guard.test.mjs && pnpm arch:deps",
+        "source_content_sha256": "3b894bb8c8a707f3506f108e79fd5f3ada4498310d0036a14e0a522901a660b5",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+          "sourceRef": "node --test tools/ci/architecture-dependency-guard.test.mjs && pnpm arch:deps",
+          "subjectId": "ApplyArchitectureDependencyBoundaryGate",
+          "evidenceId": "EV-PTH14-V3-ARCH-DEPS",
+          "sourcePath": "tools/ci/architecture-dependency-guard.test.mjs",
+          "resultState": "pass",
+          "subjectKind": "command",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "3b894bb8c8a707f3506f108e79fd5f3ada4498310d0036a14e0a522901a660b5"
+        },
+        "created_at": "2026-08-11T18:22:12.602+00:00"
       },
       {
         "operation_id": "a7d32dac-d743-49eb-b28d-33b77d4786d9",
@@ -97861,6 +98833,31 @@
         "created_at": "2026-08-11T06:10:39.408+00:00"
       },
       {
+        "operation_id": "c0386e74-4508-44d5-8a81-cfceb5d90088",
+        "idempotency_key": "issue-2274-ev-pth14-v5-ret-evid-review4",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "node --test scripts/planning-db-operate.test.cjs",
+        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+          "sourceRef": "node --test scripts/planning-db-operate.test.cjs",
+          "subjectId": "RetireArchitectureEvidenceExecution",
+          "evidenceId": "EV-PTH14-V5-RET-EVID-REVIEW4",
+          "sourcePath": "scripts/planning-db-operate.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "command",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598"
+        },
+        "created_at": "2026-08-11T18:22:15.21+00:00"
+      },
+      {
         "operation_id": "c1a5582d-e965-4b8f-9877-c7e96c839584",
         "idempotency_key": "architecture_design_transition:codex:API-H2-4-HISTORICAL-LINK-PROJECTION-V2-20260811:1d493373e724d712",
         "operation_type": "architecture_design_transition",
@@ -97901,6 +98898,31 @@
           "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
         },
         "created_at": "2026-08-10T22:58:47.826+00:00"
+      },
+      {
+        "operation_id": "c39aa8e9-cf61-46a9-a47f-d4084aba6707",
+        "idempotency_key": "issue-2274-ev-pth14-idx-generate-review4",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811",
+        "source_ref": "node --test tools/ci/sync-docs-status-policy.test.mjs",
+        "source_content_sha256": "efe621f4806a1b5e14a392a4ea99b93929ce4e3a0caf9281b93c631b23534c83",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811",
+          "sourceRef": "node --test tools/ci/sync-docs-status-policy.test.mjs",
+          "subjectId": "GeneratePlanningDerivedSurfaces",
+          "evidenceId": "EV-PTH14-IDX-GENERATE-REVIEW4",
+          "sourcePath": "tools/ci/sync-docs-status-policy.test.mjs",
+          "resultState": "pass",
+          "subjectKind": "command",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "efe621f4806a1b5e14a392a4ea99b93929ce4e3a0caf9281b93c631b23534c83"
+        },
+        "created_at": "2026-08-11T18:22:17.335+00:00"
       },
       {
         "operation_id": "c4401c87-b9db-40d9-985d-398d3d1b3714",
@@ -99253,6 +100275,31 @@
         "created_at": "2026-08-10T21:04:44.182+00:00"
       },
       {
+        "operation_id": "da251f72-ace0-469f-a6e8-cff364d13a32",
+        "idempotency_key": "issue-2274-ev-pth14-v5-rec-comp-review4",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "node --test scripts/planning-db-operate.test.cjs",
+        "source_content_sha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+          "sourceRef": "node --test scripts/planning-db-operate.test.cjs",
+          "subjectId": "RecordArchitectureComponent",
+          "evidenceId": "EV-PTH14-V5-REC-COMP-REVIEW4",
+          "sourcePath": "scripts/planning-db-operate.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "command",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598"
+        },
+        "created_at": "2026-08-11T18:22:14.428+00:00"
+      },
+      {
         "operation_id": "da2ce105-3dec-4081-885c-2b332df2452a",
         "idempotency_key": "gh-2167-update-test-sys-api-http-entrypoint-tests-error-translation-2-v1",
         "operation_type": "architecture_test_record",
@@ -99768,6 +100815,31 @@
         "created_at": "2026-08-10T21:04:10.935+00:00"
       },
       {
+        "operation_id": "e155019b-2b3d-489d-933d-6be6c0be742b",
+        "idempotency_key": "issue-2274-ev-pth14-v5-generate-review4",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "node --test scripts/generate-code-status.test.cjs",
+        "source_content_sha256": "12b0520908e076692c1860c5b0efdd8176e709386f95f6f22cf85616831b214c",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+          "sourceRef": "node --test scripts/generate-code-status.test.cjs",
+          "subjectId": "GeneratePlanningDerivedSurfaces",
+          "evidenceId": "EV-PTH14-V5-GENERATE-REVIEW4",
+          "sourcePath": "scripts/generate-code-status.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "command",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "12b0520908e076692c1860c5b0efdd8176e709386f95f6f22cf85616831b214c"
+        },
+        "created_at": "2026-08-11T18:22:14.165+00:00"
+      },
+      {
         "operation_id": "e176c39d-83aa-4d46-8027-9cec62e95487",
         "idempotency_key": "architecture_design_transition:codex:R1-1D-API-GOVERNANCE-LIFECYCLE-CLOSEOUT-20260810:b178dd7d95e45545",
         "operation_type": "architecture_design_transition",
@@ -100261,6 +101333,31 @@
           "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
         },
         "created_at": "2026-08-10T23:26:25.555+00:00"
+      },
+      {
+        "operation_id": "ec7e430d-4169-4eb7-b36f-1fd99df20f91",
+        "idempotency_key": "issue-2274-ev-pth14-idx-lifecycle-review4",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811",
+        "source_ref": "node --test tools/ci/sync-docs-status-policy.test.mjs",
+        "source_content_sha256": "efe621f4806a1b5e14a392a4ea99b93929ce4e3a0caf9281b93c631b23534c83",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811",
+          "sourceRef": "node --test tools/ci/sync-docs-status-policy.test.mjs",
+          "subjectId": "ListDocumentationLifecycleFacts",
+          "evidenceId": "EV-PTH14-IDX-LIFECYCLE-REVIEW4",
+          "sourcePath": "tools/ci/sync-docs-status-policy.test.mjs",
+          "resultState": "pass",
+          "subjectKind": "query",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "efe621f4806a1b5e14a392a4ea99b93929ce4e3a0caf9281b93c631b23534c83"
+        },
+        "created_at": "2026-08-11T18:22:17.887+00:00"
       },
       {
         "operation_id": "ed1d4083-7a74-4cfb-a3b3-e6ba2389abf5",
@@ -104339,6 +105436,167 @@
       "createdAt": "2026-08-08T00:00:00.000Z"
     },
     {
+      "railId": "local#API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE#command#recordarchitecturecomponent",
+      "featureId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE",
+      "mechanizationStatus": "implemented",
+      "railName": "RecordArchitectureComponent",
+      "normalizedRailName": "recordarchitecturecomponent",
+      "railType": "command",
+      "dddOwner": "ArchitectureCatalog",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "scripts/planning-db-operate.cjs#parseArchitectureComponentCommand",
+        "scripts/planning-db-operate.cjs#planArchitectureComponentRecordOperation",
+        "scripts/planning-db-operate.cjs#writePlannedArchitectureComponentRecordOperation",
+        "scripts/planning-db-operate.cjs#applyArchitectureComponentRecordOperation"
+      ],
+      "implementationRefs": [
+        "scripts/planning-db-operate.cjs#parseArchitectureComponentCommand",
+        "scripts/planning-db-operate.cjs#planArchitectureComponentRecordOperation",
+        "scripts/planning-db-operate.cjs#writePlannedArchitectureComponentRecordOperation",
+        "scripts/planning-db-operate.cjs#applyArchitectureComponentRecordOperation"
+      ],
+      "documentationRefs": [
+        "docs/architecture/command-query-rail-governance.md"
+      ],
+      "governingSources": [
+        "AGENTS.md",
+        "docs/planning/status/governance-document-rule-inventory.md",
+        "docs/architecture/command-query-rail-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "scripts/planning-db-operate.cjs",
+        "tools/planning-db/state/canonical-state.json"
+      ],
+      "architectureGuards": [
+        "node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+      ],
+      "completionGate": [
+        "node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+        "pnpm planning:db:export --check",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "scripts/planning-db-operate.cjs",
+      "sourceContentSha256": "6ec6e0ec94701875a1c749ebb433011b2d6b36228a9194cd7dfa09a13af18a9e",
+      "rawRail": {
+        "name": "RecordArchitectureComponent",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "ArchitectureCatalog"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "parseArchitectureComponentCommand",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordArchitectureComponent"],
+            "dddOwner": "ArchitectureCatalog",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            ],
+            "fowlerSignals": ["explicit command/query rail"],
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+          },
+          {
+            "name": "planArchitectureComponentRecordOperation",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordArchitectureComponent"],
+            "dddOwner": "ArchitectureCatalog",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            ],
+            "fowlerSignals": ["explicit command/query rail"],
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+          },
+          {
+            "name": "writePlannedArchitectureComponentRecordOperation",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordArchitectureComponent"],
+            "dddOwner": "ArchitectureCatalog",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            ],
+            "fowlerSignals": ["explicit command/query rail"],
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+          },
+          {
+            "name": "applyArchitectureComponentRecordOperation",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordArchitectureComponent"],
+            "dddOwner": "ArchitectureCatalog",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            ],
+            "fowlerSignals": ["explicit command/query rail"],
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+          }
+        ],
+        "version": 1,
+        "featureId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2274"],
+        "cypressFlows": ["N/A - repository governance CLI"],
+        "domainObjects": ["ArchitectureComponent"],
+        "fowlerSignals": ["explicit command/query rail"],
+        "completionGate": [
+          "node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+          "pnpm planning:db:export --check",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "recordarchitecturecomponent-record",
+            "redTest": "node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+            "greenTest": "node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+            "patchSurfaces": [
+              "scripts/planning-db-operate.cjs",
+              "tools/planning-db/state/canonical-state.json"
+            ],
+            "expectedFailure": "The RecordArchitectureComponent product intent has no canonical command/query rail declaration."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "RecordArchitectureComponent",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "ArchitectureCatalog"
+          }
+        ],
+        "architectureGuards": [
+          "node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+        ],
+        "implementationPlan": "Issue #2274 declares the existing RecordArchitectureComponent rail as canonical Planning DB architecture truth.",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-operate.cjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "docs/planning/proposals/mandatory/**"
+        ]
+      },
+      "revision": 0,
+      "createdBy": "codex",
+      "createdAt": "2026-08-11T18:18:58.964Z"
+    },
+    {
       "railId": "local#API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE#command#recordarchitectureevidenceexecution",
       "featureId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE",
       "mechanizationStatus": "implemented",
@@ -104367,7 +105625,11 @@
         "scripts/planning-db-operate.cjs#normalizeGitHubRepositorySlug",
         "scripts/planning-db-operate.cjs#readGitValue",
         "scripts/planning-db-operate.cjs#readGitHubActionsEvidence",
-        "scripts/planning-db-operate.cjs#readGitFileAtCommit"
+        "scripts/planning-db-operate.cjs#readGitFileAtCommit",
+        "scripts/planning-db-operate.cjs#readArchitectureEvidenceSubjectImplementation",
+        "tools/planning-db/schema.sql#architecture.evidence_subject_implementation_query",
+        "tools/planning-db/schema.sql#architecture.evidence_query",
+        "tools/planning-db/schema.sql#architecture.implementation_violation_query"
       ],
       "implementationRefs": [
         "scripts/planning-db-operate.cjs#parseArchitectureEvidenceCommand",
@@ -104389,7 +105651,11 @@
         "scripts/planning-db-operate.cjs#normalizeGitHubRepositorySlug",
         "scripts/planning-db-operate.cjs#readGitValue",
         "scripts/planning-db-operate.cjs#readGitHubActionsEvidence",
-        "scripts/planning-db-operate.cjs#readGitFileAtCommit"
+        "scripts/planning-db-operate.cjs#readGitFileAtCommit",
+        "scripts/planning-db-operate.cjs#readArchitectureEvidenceSubjectImplementation",
+        "tools/planning-db/schema.sql#architecture.evidence_subject_implementation_query",
+        "tools/planning-db/schema.sql#architecture.evidence_query",
+        "tools/planning-db/schema.sql#architecture.implementation_violation_query"
       ],
       "documentationRefs": [
         "docs/architecture/command-query-rail-governance.md"
@@ -104409,7 +105675,8 @@
       "architectureGuards": [
         "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs",
         "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, and current HEAD.",
-        "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
+        "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit.",
+        "command/query evidence is stale when its recorded canonical implementation digest differs from the current rail inputs."
       ],
       "completionGate": [
         "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs",
@@ -104418,7 +105685,7 @@
         "node --test scripts/planning-db-operate-tests/architecture-plan.test.cjs scripts/planning-db-operate-tests/architecture-parse.test.cjs"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "493767688ea8a1894f30166de14e29694d3d9a151c01e0bcbbc24b684ef23c60",
+      "sourceContentSha256": "6ec6e0ec94701875a1c749ebb433011b2d6b36228a9194cd7dfa09a13af18a9e",
       "rawRail": {
         "name": "RecordArchitectureEvidenceExecution",
         "type": "command",
@@ -104439,10 +105706,11 @@
             "fowlerSignals": [
               "DB evidence ledger replaces asserted proof with exact executed proof.",
               "hidden_authority",
-              "service_layer"
+              "service_layer",
+              "DB evidence must be current, exact-hash matched, audited, and fail closed."
             ],
-            "cypressCoverage": "N/A - mocked GitHub API contract tests cover the repository governance CLI.",
-            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
           },
           {
             "name": "planArchitectureEvidenceRecordOperation",
@@ -104456,10 +105724,11 @@
             "fowlerSignals": [
               "DB evidence ledger replaces asserted proof with exact executed proof.",
               "hidden_authority",
-              "service_layer"
+              "service_layer",
+              "DB evidence must be current, exact-hash matched, audited, and fail closed."
             ],
-            "cypressCoverage": "N/A - mocked GitHub API contract tests cover the repository governance CLI.",
-            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
           },
           {
             "name": "writePlannedArchitectureEvidenceRecordOperation",
@@ -104473,10 +105742,11 @@
             "fowlerSignals": [
               "DB evidence ledger replaces asserted proof with exact executed proof.",
               "hidden_authority",
-              "service_layer"
+              "service_layer",
+              "DB evidence must be current, exact-hash matched, audited, and fail closed."
             ],
-            "cypressCoverage": "N/A - mocked GitHub API contract tests cover the repository governance CLI.",
-            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
           },
           {
             "name": "allowedArchitectureEvidenceKinds",
@@ -104490,10 +105760,11 @@
             "fowlerSignals": [
               "DB evidence must be current, exact-hash matched, audited, and fail closed.",
               "hidden_authority",
-              "service_layer"
+              "service_layer",
+              "DB evidence ledger replaces asserted proof with exact executed proof."
             ],
-            "cypressCoverage": "N/A - mocked GitHub API contract tests cover the repository governance CLI.",
-            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
           },
           {
             "name": "allowedArchitectureEvidenceOrigins",
@@ -104507,10 +105778,11 @@
             "fowlerSignals": [
               "DB evidence must be current, exact-hash matched, audited, and fail closed.",
               "hidden_authority",
-              "service_layer"
+              "service_layer",
+              "DB evidence ledger replaces asserted proof with exact executed proof."
             ],
-            "cypressCoverage": "N/A - mocked GitHub API contract tests cover the repository governance CLI.",
-            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
           },
           {
             "name": "allowedArchitectureEvidenceResultStates",
@@ -104524,10 +105796,11 @@
             "fowlerSignals": [
               "DB evidence must be current, exact-hash matched, audited, and fail closed.",
               "hidden_authority",
-              "service_layer"
+              "service_layer",
+              "DB evidence ledger replaces asserted proof with exact executed proof."
             ],
-            "cypressCoverage": "N/A - mocked GitHub API contract tests cover the repository governance CLI.",
-            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
           },
           {
             "name": "applyArchitectureEvidenceRecordOperation",
@@ -104541,10 +105814,11 @@
             "fowlerSignals": [
               "DB evidence must be current, exact-hash matched, audited, and fail closed.",
               "hidden_authority",
-              "service_layer"
+              "service_layer",
+              "DB evidence ledger replaces asserted proof with exact executed proof."
             ],
-            "cypressCoverage": "N/A - mocked GitHub API contract tests cover the repository governance CLI.",
-            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
           },
           {
             "name": "assertArchitectureEvidenceOriginAuthenticity",
@@ -104558,10 +105832,11 @@
             "fowlerSignals": [
               "DB evidence must be current, exact-hash matched, audited, and fail closed.",
               "hidden_authority",
-              "service_layer"
+              "service_layer",
+              "DB evidence ledger replaces asserted proof with exact executed proof."
             ],
-            "cypressCoverage": "N/A - mocked GitHub API contract tests cover the repository governance CLI.",
-            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
           },
           {
             "name": "readArchitectureEvidence",
@@ -104575,10 +105850,11 @@
             "fowlerSignals": [
               "DB evidence must be current, exact-hash matched, audited, and fail closed.",
               "hidden_authority",
-              "service_layer"
+              "service_layer",
+              "DB evidence ledger replaces asserted proof with exact executed proof."
             ],
-            "cypressCoverage": "N/A - mocked GitHub API contract tests cover the repository governance CLI.",
-            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
           },
           {
             "name": "readArchitectureEvidenceSourceFile",
@@ -104592,10 +105868,11 @@
             "fowlerSignals": [
               "DB evidence must be current, exact-hash matched, audited, and fail closed.",
               "hidden_authority",
-              "service_layer"
+              "service_layer",
+              "DB evidence ledger replaces asserted proof with exact executed proof."
             ],
-            "cypressCoverage": "N/A - mocked GitHub API contract tests cover the repository governance CLI.",
-            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
           },
           {
             "name": "validateArchitectureEvidenceId",
@@ -104609,10 +105886,11 @@
             "fowlerSignals": [
               "DB evidence must be current, exact-hash matched, audited, and fail closed.",
               "hidden_authority",
-              "service_layer"
+              "service_layer",
+              "DB evidence ledger replaces asserted proof with exact executed proof."
             ],
-            "cypressCoverage": "N/A - mocked GitHub API contract tests cover the repository governance CLI.",
-            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
           },
           {
             "name": "validateArchitectureEvidenceKind",
@@ -104626,10 +105904,11 @@
             "fowlerSignals": [
               "DB evidence must be current, exact-hash matched, audited, and fail closed.",
               "hidden_authority",
-              "service_layer"
+              "service_layer",
+              "DB evidence ledger replaces asserted proof with exact executed proof."
             ],
-            "cypressCoverage": "N/A - mocked GitHub API contract tests cover the repository governance CLI.",
-            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
           },
           {
             "name": "validateArchitectureEvidenceOrigin",
@@ -104643,10 +105922,11 @@
             "fowlerSignals": [
               "DB evidence must be current, exact-hash matched, audited, and fail closed.",
               "hidden_authority",
-              "service_layer"
+              "service_layer",
+              "DB evidence ledger replaces asserted proof with exact executed proof."
             ],
-            "cypressCoverage": "N/A - mocked GitHub API contract tests cover the repository governance CLI.",
-            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
           },
           {
             "name": "validateArchitectureEvidenceRecordCommand",
@@ -104660,10 +105940,11 @@
             "fowlerSignals": [
               "DB evidence must be current, exact-hash matched, audited, and fail closed.",
               "hidden_authority",
-              "service_layer"
+              "service_layer",
+              "DB evidence ledger replaces asserted proof with exact executed proof."
             ],
-            "cypressCoverage": "N/A - mocked GitHub API contract tests cover the repository governance CLI.",
-            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
           },
           {
             "name": "validateArchitectureEvidenceResultState",
@@ -104677,10 +105958,11 @@
             "fowlerSignals": [
               "DB evidence must be current, exact-hash matched, audited, and fail closed.",
               "hidden_authority",
-              "service_layer"
+              "service_layer",
+              "DB evidence ledger replaces asserted proof with exact executed proof."
             ],
-            "cypressCoverage": "N/A - mocked GitHub API contract tests cover the repository governance CLI.",
-            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
           },
           {
             "name": "validateArchitectureEvidenceSubjectKind",
@@ -104694,10 +105976,11 @@
             "fowlerSignals": [
               "DB evidence must be current, exact-hash matched, audited, and fail closed.",
               "hidden_authority",
-              "service_layer"
+              "service_layer",
+              "DB evidence ledger replaces asserted proof with exact executed proof."
             ],
-            "cypressCoverage": "N/A - mocked GitHub API contract tests cover the repository governance CLI.",
-            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
           },
           {
             "name": "normalizeGitHubRepositorySlug",
@@ -104708,9 +105991,14 @@
               "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
               "scripts/planning-db-operate-tests/architecture-parse.test.cjs"
             ],
-            "fowlerSignals": ["hidden_authority", "service_layer"],
-            "cypressCoverage": "N/A - mocked GitHub API contract tests cover the repository governance CLI.",
-            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
+            "fowlerSignals": [
+              "hidden_authority",
+              "service_layer",
+              "DB evidence ledger replaces asserted proof with exact executed proof.",
+              "DB evidence must be current, exact-hash matched, audited, and fail closed."
+            ],
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
           },
           {
             "name": "readGitValue",
@@ -104721,9 +106009,14 @@
               "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
               "scripts/planning-db-operate-tests/architecture-parse.test.cjs"
             ],
-            "fowlerSignals": ["hidden_authority", "service_layer"],
-            "cypressCoverage": "N/A - mocked GitHub API contract tests cover the repository governance CLI.",
-            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
+            "fowlerSignals": [
+              "hidden_authority",
+              "service_layer",
+              "DB evidence ledger replaces asserted proof with exact executed proof.",
+              "DB evidence must be current, exact-hash matched, audited, and fail closed."
+            ],
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
           },
           {
             "name": "readGitHubActionsEvidence",
@@ -104734,9 +106027,14 @@
               "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
               "scripts/planning-db-operate-tests/architecture-parse.test.cjs"
             ],
-            "fowlerSignals": ["hidden_authority", "service_layer"],
-            "cypressCoverage": "N/A - mocked GitHub API contract tests cover the repository governance CLI.",
-            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
+            "fowlerSignals": [
+              "hidden_authority",
+              "service_layer",
+              "DB evidence ledger replaces asserted proof with exact executed proof.",
+              "DB evidence must be current, exact-hash matched, audited, and fail closed."
+            ],
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
           },
           {
             "name": "readGitFileAtCommit",
@@ -104747,9 +106045,86 @@
               "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
               "scripts/planning-db-operate-tests/architecture-parse.test.cjs"
             ],
-            "fowlerSignals": ["hidden_authority", "service_layer"],
-            "cypressCoverage": "N/A - mocked GitHub API contract tests cover the repository governance CLI.",
-            "architectureGuard": "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
+            "fowlerSignals": [
+              "hidden_authority",
+              "service_layer",
+              "DB evidence ledger replaces asserted proof with exact executed proof.",
+              "DB evidence must be current, exact-hash matched, audited, and fail closed."
+            ],
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
+          },
+          {
+            "name": "readArchitectureEvidenceSubjectImplementation",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordArchitectureEvidenceExecution"],
+            "dddOwner": "ArchitectureEvidenceLedger",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            ],
+            "fowlerSignals": [
+              "DB evidence ledger replaces asserted proof with exact executed proof.",
+              "DB evidence must be current, exact-hash matched, audited, and fail closed.",
+              "hidden_authority",
+              "service_layer"
+            ],
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
+          },
+          {
+            "name": "architecture.evidence_subject_implementation_query",
+            "path": "tools/planning-db/schema.sql",
+            "cqRails": ["RecordArchitectureEvidenceExecution"],
+            "dddOwner": "ArchitectureEvidenceLedger",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            ],
+            "fowlerSignals": [
+              "DB evidence ledger replaces asserted proof with exact executed proof.",
+              "DB evidence must be current, exact-hash matched, audited, and fail closed.",
+              "hidden_authority",
+              "service_layer"
+            ],
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
+          },
+          {
+            "name": "architecture.evidence_query",
+            "path": "tools/planning-db/schema.sql",
+            "cqRails": ["RecordArchitectureEvidenceExecution"],
+            "dddOwner": "ArchitectureEvidenceLedger",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            ],
+            "fowlerSignals": [
+              "DB evidence ledger replaces asserted proof with exact executed proof.",
+              "DB evidence must be current, exact-hash matched, audited, and fail closed.",
+              "hidden_authority",
+              "service_layer"
+            ],
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
+          },
+          {
+            "name": "architecture.implementation_violation_query",
+            "path": "tools/planning-db/schema.sql",
+            "cqRails": ["RecordArchitectureEvidenceExecution"],
+            "dddOwner": "ArchitectureEvidenceLedger",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            ],
+            "fowlerSignals": [
+              "DB evidence ledger replaces asserted proof with exact executed proof.",
+              "DB evidence must be current, exact-hash matched, audited, and fail closed.",
+              "hidden_authority",
+              "service_layer"
+            ],
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs"
           }
         ],
         "version": 1,
@@ -104775,8 +106150,8 @@
         "redGreenCycles": [
           {
             "id": "recordarchitectureevidenceexecution-record",
-            "redTest": "node --test --test-name-pattern \"architecture evidence rejects forged\" scripts/planning-db-operate-tests/architecture-plan.test.cjs",
-            "greenTest": "node --test scripts/planning-db-operate-tests/architecture-plan.test.cjs scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+            "redTest": "node --test scripts/planning-db-schema.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+            "greenTest": "node --test scripts/planning-db-schema.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs",
             "patchSurfaces": [
               "scripts/planning-db-operate.cjs",
               "scripts/planning-db-operate-tests/**",
@@ -104784,7 +106159,7 @@
               "tools/planning-db/state/canonical-state.json",
               "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
             ],
-            "expectedFailure": "CI execution evidence accepted working-tree bytes instead of the exact source bytes at the proven commit."
+            "expectedFailure": "Execution evidence remains fresh after one declared implementation input changes."
           }
         ],
         "componentGuides": [
@@ -104807,9 +106182,10 @@
         "architectureGuards": [
           "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs",
           "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, and current HEAD.",
-          "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit."
+          "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit.",
+          "command/query evidence is stale when its recorded canonical implementation digest differs from the current rail inputs."
         ],
-        "implementationPlan": "Issue #2274 proves CI evidence against one completed GitHub Actions job and hashes the source bytes from that proven commit before any DB transaction.",
+        "implementationPlan": "Issue #2274 binds every command/query execution proof to its canonical rail and implementation input hashes; source or implementation drift invalidates the evidence.",
         "mechanizationStatus": "implemented",
         "noHumanDecisionsRemaining": true,
         "allowedImplementationSurfaces": [
@@ -104823,7 +106199,7 @@
           "environment-only CI authenticity"
         ]
       },
-      "revision": 3,
+      "revision": 4,
       "createdBy": "codex",
       "createdAt": "2026-08-11T12:22:58.150Z"
     },
@@ -104882,7 +106258,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "493767688ea8a1894f30166de14e29694d3d9a151c01e0bcbbc24b684ef23c60",
+      "sourceContentSha256": "6ec6e0ec94701875a1c749ebb433011b2d6b36228a9194cd7dfa09a13af18a9e",
       "rawRail": {
         "name": "RecordArchitectureObservabilityEvidence",
         "type": "command",
@@ -105113,7 +106489,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "493767688ea8a1894f30166de14e29694d3d9a151c01e0bcbbc24b684ef23c60",
+      "sourceContentSha256": "6ec6e0ec94701875a1c749ebb433011b2d6b36228a9194cd7dfa09a13af18a9e",
       "rawRail": {
         "name": "RetireArchitectureEvidenceExecution",
         "type": "command",
@@ -105275,7 +106651,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "493767688ea8a1894f30166de14e29694d3d9a151c01e0bcbbc24b684ef23c60",
+      "sourceContentSha256": "6ec6e0ec94701875a1c749ebb433011b2d6b36228a9194cd7dfa09a13af18a9e",
       "rawRail": {
         "name": "RetireArchitectureTestEvidence",
         "type": "command",
@@ -105437,7 +106813,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "493767688ea8a1894f30166de14e29694d3d9a151c01e0bcbbc24b684ef23c60",
+      "sourceContentSha256": "6ec6e0ec94701875a1c749ebb433011b2d6b36228a9194cd7dfa09a13af18a9e",
       "rawRail": {
         "name": "RetireFeatureMechanizationRail",
         "type": "command",
@@ -105599,7 +106975,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "493767688ea8a1894f30166de14e29694d3d9a151c01e0bcbbc24b684ef23c60",
+      "sourceContentSha256": "6ec6e0ec94701875a1c749ebb433011b2d6b36228a9194cd7dfa09a13af18a9e",
       "rawRail": {
         "name": "TransitionArchitectureDesign",
         "type": "command",
@@ -105717,6 +107093,228 @@
       "revision": 0,
       "createdBy": "codex",
       "createdAt": "2026-08-11T13:23:09.646Z"
+    },
+    {
+      "railId": "local#API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE#query#readarchitecturecomponentprofile",
+      "featureId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE",
+      "mechanizationStatus": "implemented",
+      "railName": "ReadArchitectureComponentProfile",
+      "normalizedRailName": "readarchitecturecomponentprofile",
+      "railType": "query",
+      "dddOwner": "ArchitectureCatalogReadModel",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "scripts/planning-db-query.cjs#readArchitectureComponentRows"
+      ],
+      "implementationRefs": [
+        "scripts/planning-db-query.cjs#readArchitectureComponentRows"
+      ],
+      "documentationRefs": [
+        "docs/architecture/command-query-rail-governance.md"
+      ],
+      "governingSources": [
+        "AGENTS.md",
+        "docs/planning/status/governance-document-rule-inventory.md",
+        "docs/architecture/command-query-rail-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "scripts/planning-db-query.cjs",
+        "tools/planning-db/state/canonical-state.json"
+      ],
+      "architectureGuards": ["node --test scripts/planning-db-query.test.cjs"],
+      "completionGate": [
+        "node --test scripts/planning-db-query.test.cjs",
+        "pnpm planning:db:export --check",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "scripts/planning-db-query.cjs",
+      "sourceContentSha256": "0ed1b90fd10e5e1b860c8c71ccfc5a4d67cf7911b20564103fe8a522e8637973",
+      "rawRail": {
+        "name": "ReadArchitectureComponentProfile",
+        "type": "query",
+        "status": "implemented",
+        "dddOwner": "ArchitectureCatalogReadModel"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "readArchitectureComponentRows",
+            "path": "scripts/planning-db-query.cjs",
+            "cqRails": ["ReadArchitectureComponentProfile"],
+            "dddOwner": "ArchitectureCatalogReadModel",
+            "unitTests": ["scripts/planning-db-query.test.cjs"],
+            "fowlerSignals": ["explicit command/query rail"],
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-query.test.cjs"
+          }
+        ],
+        "version": 1,
+        "featureId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2274"],
+        "cypressFlows": ["N/A - repository governance CLI"],
+        "domainObjects": ["ArchitectureComponentProfile"],
+        "fowlerSignals": ["explicit command/query rail"],
+        "completionGate": [
+          "node --test scripts/planning-db-query.test.cjs",
+          "pnpm planning:db:export --check",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "readarchitecturecomponentprofile-record",
+            "redTest": "node --test scripts/planning-db-query.test.cjs",
+            "greenTest": "node --test scripts/planning-db-query.test.cjs",
+            "patchSurfaces": [
+              "scripts/planning-db-query.cjs",
+              "tools/planning-db/state/canonical-state.json"
+            ],
+            "expectedFailure": "The ReadArchitectureComponentProfile product intent has no canonical command/query rail declaration."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ReadArchitectureComponentProfile",
+            "type": "query",
+            "status": "implemented",
+            "dddOwner": "ArchitectureCatalogReadModel"
+          }
+        ],
+        "architectureGuards": [
+          "node --test scripts/planning-db-query.test.cjs"
+        ],
+        "implementationPlan": "Issue #2274 declares the existing ReadArchitectureComponentProfile rail as canonical Planning DB architecture truth.",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-query.cjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "docs/planning/proposals/mandatory/**"
+        ]
+      },
+      "revision": 0,
+      "createdBy": "codex",
+      "createdAt": "2026-08-11T18:18:59.176Z"
+    },
+    {
+      "railId": "local#API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE#query#readarchitectureevidence",
+      "featureId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE",
+      "mechanizationStatus": "implemented",
+      "railName": "ReadArchitectureEvidence",
+      "normalizedRailName": "readarchitectureevidence",
+      "railType": "query",
+      "dddOwner": "ArchitectureEvidenceReadModel",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "scripts/planning-db-query.cjs#readArchitectureEvidenceRows"
+      ],
+      "implementationRefs": [
+        "scripts/planning-db-query.cjs#readArchitectureEvidenceRows"
+      ],
+      "documentationRefs": [
+        "docs/architecture/command-query-rail-governance.md"
+      ],
+      "governingSources": [
+        "AGENTS.md",
+        "docs/planning/status/governance-document-rule-inventory.md",
+        "docs/architecture/command-query-rail-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "scripts/planning-db-query.cjs",
+        "tools/planning-db/state/canonical-state.json"
+      ],
+      "architectureGuards": ["node --test scripts/planning-db-query.test.cjs"],
+      "completionGate": [
+        "node --test scripts/planning-db-query.test.cjs",
+        "pnpm planning:db:export --check",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "scripts/planning-db-query.cjs",
+      "sourceContentSha256": "0ed1b90fd10e5e1b860c8c71ccfc5a4d67cf7911b20564103fe8a522e8637973",
+      "rawRail": {
+        "name": "ReadArchitectureEvidence",
+        "type": "query",
+        "status": "implemented",
+        "dddOwner": "ArchitectureEvidenceReadModel"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "readArchitectureEvidenceRows",
+            "path": "scripts/planning-db-query.cjs",
+            "cqRails": ["ReadArchitectureEvidence"],
+            "dddOwner": "ArchitectureEvidenceReadModel",
+            "unitTests": ["scripts/planning-db-query.test.cjs"],
+            "fowlerSignals": ["explicit command/query rail"],
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-query.test.cjs"
+          }
+        ],
+        "version": 1,
+        "featureId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2274"],
+        "cypressFlows": ["N/A - repository governance CLI"],
+        "domainObjects": ["ArchitectureEvidence"],
+        "fowlerSignals": ["explicit command/query rail"],
+        "completionGate": [
+          "node --test scripts/planning-db-query.test.cjs",
+          "pnpm planning:db:export --check",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "readarchitectureevidence-record",
+            "redTest": "node --test scripts/planning-db-query.test.cjs",
+            "greenTest": "node --test scripts/planning-db-query.test.cjs",
+            "patchSurfaces": [
+              "scripts/planning-db-query.cjs",
+              "tools/planning-db/state/canonical-state.json"
+            ],
+            "expectedFailure": "The ReadArchitectureEvidence product intent has no canonical command/query rail declaration."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ReadArchitectureEvidence",
+            "type": "query",
+            "status": "implemented",
+            "dddOwner": "ArchitectureEvidenceReadModel"
+          }
+        ],
+        "architectureGuards": [
+          "node --test scripts/planning-db-query.test.cjs"
+        ],
+        "implementationPlan": "Issue #2274 declares the existing ReadArchitectureEvidence rail as canonical Planning DB architecture truth.",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-query.cjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "docs/planning/proposals/mandatory/**"
+        ]
+      },
+      "revision": 0,
+      "createdBy": "codex",
+      "createdAt": "2026-08-11T18:18:59.313Z"
     },
     {
       "railId": "local#ARCH-DEPS-GUARD#command#applyarchitecturedependencyboundarygate",
@@ -111471,7 +113069,7 @@
         "pnpm docs:feature-mechanization:implementation"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "493767688ea8a1894f30166de14e29694d3d9a151c01e0bcbbc24b684ef23c60",
+      "sourceContentSha256": "6ec6e0ec94701875a1c749ebb433011b2d6b36228a9194cd7dfa09a13af18a9e",
       "rawRail": {
         "name": "RecordArchitectureStorageIo",
         "type": "command",
@@ -165527,6 +167125,321 @@
         ]
       },
       "createdAt": "2026-08-11T16:07:10.811Z"
+    },
+    {
+      "operationId": "2117c05e-a0f9-4975-bb54-c50fe6e929de",
+      "idempotencyKey": "issue-2274-bind-evidence-implementation-inputs",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE#command#recordarchitectureevidenceexecution",
+      "sourcePath": "scripts/planning-db-operate.cjs",
+      "sourceContentSha256": "6ec6e0ec94701875a1c749ebb433011b2d6b36228a9194cd7dfa09a13af18a9e",
+      "expectedRevision": 3,
+      "previousRevision": 3,
+      "resultingRevision": 4,
+      "payload": {
+        "redTest": "node --test scripts/planning-db-schema.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+        "dddOwner": "ArchitectureEvidenceLedger",
+        "railName": "RecordArchitectureEvidenceExecution",
+        "railType": "command",
+        "featureId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE",
+        "greenTest": "node --test scripts/planning-db-schema.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+        "sourceRef": "scripts/planning-db-operate.cjs",
+        "unitTests": [
+          "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+          "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2274"],
+        "cypressFlows": [
+          "N/A - repository governance CLI",
+          "N/A - mocked GitHub API contract tests cover the repository governance CLI."
+        ],
+        "domainObjects": ["ArchitectureEvidenceExecution"],
+        "fowlerSignals": [
+          "DB evidence ledger replaces asserted proof with exact executed proof.",
+          "DB evidence must be current, exact-hash matched, audited, and fail closed.",
+          "hidden_authority",
+          "service_layer"
+        ],
+        "patchSurfaces": [
+          "scripts/planning-db-operate.cjs",
+          "scripts/planning-db-operate-tests/**",
+          "tools/planning-db/schema.sql",
+          "tools/planning-db/state/canonical-state.json",
+          "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+        ],
+        "completionGate": [
+          "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs",
+          "pnpm planning:db:export --check",
+          "pnpm verify:prepush",
+          "node --test scripts/planning-db-operate-tests/architecture-plan.test.cjs scripts/planning-db-operate-tests/architecture-parse.test.cjs"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Execution evidence remains fresh after one declared implementation input changes.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "architectureGuards": [
+          "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-query.test.cjs",
+          "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, and current HEAD.",
+          "ci_execution fails closed unless GitHub proves exact repository, run, job, conclusion, current HEAD, and source bytes at that commit.",
+          "command/query evidence is stale when its recorded canonical implementation digest differs from the current rail inputs."
+        ],
+        "implementationPlan": "Issue #2274 binds every command/query execution proof to its canonical rail and implementation input hashes; source or implementation drift invalidates the evidence.",
+        "implementationRefs": [
+          "scripts/planning-db-operate.cjs#parseArchitectureEvidenceCommand",
+          "scripts/planning-db-operate.cjs#planArchitectureEvidenceRecordOperation",
+          "scripts/planning-db-operate.cjs#writePlannedArchitectureEvidenceRecordOperation",
+          "scripts/planning-db-operate.cjs#allowedArchitectureEvidenceKinds",
+          "scripts/planning-db-operate.cjs#allowedArchitectureEvidenceOrigins",
+          "scripts/planning-db-operate.cjs#allowedArchitectureEvidenceResultStates",
+          "scripts/planning-db-operate.cjs#applyArchitectureEvidenceRecordOperation",
+          "scripts/planning-db-operate.cjs#assertArchitectureEvidenceOriginAuthenticity",
+          "scripts/planning-db-operate.cjs#readArchitectureEvidence",
+          "scripts/planning-db-operate.cjs#readArchitectureEvidenceSourceFile",
+          "scripts/planning-db-operate.cjs#validateArchitectureEvidenceId",
+          "scripts/planning-db-operate.cjs#validateArchitectureEvidenceKind",
+          "scripts/planning-db-operate.cjs#validateArchitectureEvidenceOrigin",
+          "scripts/planning-db-operate.cjs#validateArchitectureEvidenceRecordCommand",
+          "scripts/planning-db-operate.cjs#validateArchitectureEvidenceResultState",
+          "scripts/planning-db-operate.cjs#validateArchitectureEvidenceSubjectKind",
+          "scripts/planning-db-operate.cjs#normalizeGitHubRepositorySlug",
+          "scripts/planning-db-operate.cjs#readGitValue",
+          "scripts/planning-db-operate.cjs#readGitHubActionsEvidence",
+          "scripts/planning-db-operate.cjs#readGitFileAtCommit",
+          "scripts/planning-db-operate.cjs#readArchitectureEvidenceSubjectImplementation",
+          "tools/planning-db/schema.sql#architecture.evidence_subject_implementation_query",
+          "tools/planning-db/schema.sql#architecture.evidence_query",
+          "tools/planning-db/schema.sql#architecture.implementation_violation_query"
+        ],
+        "normalizedRailName": "recordarchitectureevidenceexecution",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "6ec6e0ec94701875a1c749ebb433011b2d6b36228a9194cd7dfa09a13af18a9e",
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-operate.cjs",
+          "scripts/planning-db-operate-tests/**",
+          "tools/planning-db/schema.sql",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "docs/planning/proposals/mandatory/**",
+          "environment-only CI authenticity"
+        ]
+      },
+      "createdAt": "2026-08-11T18:17:04.929Z"
+    },
+    {
+      "operationId": "6adbfc9a-641d-4be4-8768-86854416417d",
+      "idempotencyKey": "issue-2274-catalog-recordarchitecturecomponent",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE#command#recordarchitecturecomponent",
+      "sourcePath": "scripts/planning-db-operate.cjs",
+      "sourceContentSha256": "6ec6e0ec94701875a1c749ebb433011b2d6b36228a9194cd7dfa09a13af18a9e",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+        "dddOwner": "ArchitectureCatalog",
+        "railName": "RecordArchitectureComponent",
+        "railType": "command",
+        "featureId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE",
+        "greenTest": "node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+        "sourceRef": "scripts/planning-db-operate.cjs",
+        "unitTests": [
+          "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+          "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2274"],
+        "cypressFlows": ["N/A - repository governance CLI"],
+        "domainObjects": ["ArchitectureComponent"],
+        "fowlerSignals": ["explicit command/query rail"],
+        "patchSurfaces": [
+          "scripts/planning-db-operate.cjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "completionGate": [
+          "node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+          "pnpm planning:db:export --check",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "The RecordArchitectureComponent product intent has no canonical command/query rail declaration.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "architectureGuards": [
+          "node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+        ],
+        "implementationPlan": "Issue #2274 declares the existing RecordArchitectureComponent rail as canonical Planning DB architecture truth.",
+        "implementationRefs": [
+          "scripts/planning-db-operate.cjs#parseArchitectureComponentCommand",
+          "scripts/planning-db-operate.cjs#planArchitectureComponentRecordOperation",
+          "scripts/planning-db-operate.cjs#writePlannedArchitectureComponentRecordOperation",
+          "scripts/planning-db-operate.cjs#applyArchitectureComponentRecordOperation"
+        ],
+        "normalizedRailName": "recordarchitecturecomponent",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "6ec6e0ec94701875a1c749ebb433011b2d6b36228a9194cd7dfa09a13af18a9e",
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-operate.cjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "docs/planning/proposals/mandatory/**"
+        ]
+      },
+      "createdAt": "2026-08-11T18:18:58.964Z"
+    },
+    {
+      "operationId": "59b0ad9a-ec83-47c1-936a-c22487309a88",
+      "idempotencyKey": "issue-2274-catalog-readarchitecturecomponentprofile",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE#query#readarchitecturecomponentprofile",
+      "sourcePath": "scripts/planning-db-query.cjs",
+      "sourceContentSha256": "0ed1b90fd10e5e1b860c8c71ccfc5a4d67cf7911b20564103fe8a522e8637973",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "node --test scripts/planning-db-query.test.cjs",
+        "dddOwner": "ArchitectureCatalogReadModel",
+        "railName": "ReadArchitectureComponentProfile",
+        "railType": "query",
+        "featureId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE",
+        "greenTest": "node --test scripts/planning-db-query.test.cjs",
+        "sourceRef": "scripts/planning-db-query.cjs",
+        "unitTests": ["scripts/planning-db-query.test.cjs"],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2274"],
+        "cypressFlows": ["N/A - repository governance CLI"],
+        "domainObjects": ["ArchitectureComponentProfile"],
+        "fowlerSignals": ["explicit command/query rail"],
+        "patchSurfaces": [
+          "scripts/planning-db-query.cjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "completionGate": [
+          "node --test scripts/planning-db-query.test.cjs",
+          "pnpm planning:db:export --check",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "The ReadArchitectureComponentProfile product intent has no canonical command/query rail declaration.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "architectureGuards": [
+          "node --test scripts/planning-db-query.test.cjs"
+        ],
+        "implementationPlan": "Issue #2274 declares the existing ReadArchitectureComponentProfile rail as canonical Planning DB architecture truth.",
+        "implementationRefs": [
+          "scripts/planning-db-query.cjs#readArchitectureComponentRows"
+        ],
+        "normalizedRailName": "readarchitecturecomponentprofile",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "0ed1b90fd10e5e1b860c8c71ccfc5a4d67cf7911b20564103fe8a522e8637973",
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-query.cjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "docs/planning/proposals/mandatory/**"
+        ]
+      },
+      "createdAt": "2026-08-11T18:18:59.176Z"
+    },
+    {
+      "operationId": "bb162fc1-fe63-4ca6-a12b-0530c6862124",
+      "idempotencyKey": "issue-2274-catalog-readarchitectureevidence",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE#query#readarchitectureevidence",
+      "sourcePath": "scripts/planning-db-query.cjs",
+      "sourceContentSha256": "0ed1b90fd10e5e1b860c8c71ccfc5a4d67cf7911b20564103fe8a522e8637973",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "node --test scripts/planning-db-query.test.cjs",
+        "dddOwner": "ArchitectureEvidenceReadModel",
+        "railName": "ReadArchitectureEvidence",
+        "railType": "query",
+        "featureId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE",
+        "greenTest": "node --test scripts/planning-db-query.test.cjs",
+        "sourceRef": "scripts/planning-db-query.cjs",
+        "unitTests": ["scripts/planning-db-query.test.cjs"],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2274"],
+        "cypressFlows": ["N/A - repository governance CLI"],
+        "domainObjects": ["ArchitectureEvidence"],
+        "fowlerSignals": ["explicit command/query rail"],
+        "patchSurfaces": [
+          "scripts/planning-db-query.cjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "completionGate": [
+          "node --test scripts/planning-db-query.test.cjs",
+          "pnpm planning:db:export --check",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "The ReadArchitectureEvidence product intent has no canonical command/query rail declaration.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "architectureGuards": [
+          "node --test scripts/planning-db-query.test.cjs"
+        ],
+        "implementationPlan": "Issue #2274 declares the existing ReadArchitectureEvidence rail as canonical Planning DB architecture truth.",
+        "implementationRefs": [
+          "scripts/planning-db-query.cjs#readArchitectureEvidenceRows"
+        ],
+        "normalizedRailName": "readarchitectureevidence",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "0ed1b90fd10e5e1b860c8c71ccfc5a4d67cf7911b20564103fe8a522e8637973",
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-query.cjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "docs/planning/proposals/mandatory/**"
+        ]
+      },
+      "createdAt": "2026-08-11T18:18:59.313Z"
     }
   ],
   "governanceComponentDefinitions": [
