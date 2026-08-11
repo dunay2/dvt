@@ -260,6 +260,10 @@ test('PR quality gate runs the architecture dependency guard remotely', () => {
   for (const command of REQUIRED_ARCH_DEPENDENCY_COMMANDS) {
     assert.match(workflow, new RegExp(command.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
+  assert.match(
+    workflow,
+    /Validate architecture dependency boundaries[\s\S]*?GIT_BASE:[\s\S]*?pull_request\.base\.sha/u
+  );
 });
 
 test('root dependency-cruiser config declares the initial Fowler boundary rules', () => {

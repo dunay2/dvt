@@ -337,6 +337,11 @@ jobs:
           steps.scope.outputs.code_validation_relevant == 'true') || (github.event_name ==
           'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm arch:deps
+        env:
+          GIT_BASE:
+            ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha ||
+            'origin/main' }}
+          GIT_HEAD: ${{ github.sha }}
 
       - name: Check PR title follows Conventional Commits
         if: github.event_name == 'pull_request'
