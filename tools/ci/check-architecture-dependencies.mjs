@@ -406,6 +406,9 @@ export function collectApiDeploymentProfileEvidence({
     const ifStatements = collectDescendants(parsed, ts.isIfStatement);
 
     for (const statement of ifStatements) {
+      const statementScope = enclosingExecutableScope(statement, parsed);
+      if (!isStaticallyReachable(statement, statementScope)) continue;
+
       if (
         containsIdentifier(statement.expression, 'OBS_ENABLED') &&
         containsReachableReturnCall(statement.thenStatement, 'createNoopObservability')
@@ -491,7 +494,7 @@ export function collectApiDeploymentProfileEvidence({
           'disabled reconciler branch returns no runtime handle',
           [source]
         );
-        if (hasReachableReconcilerEnabledPath(executableScope, statement)) {
+        if (hasReachableReconcilerEnabledPath(executableScope, statement, parsed)) {
           add(
             'reconciler-enabled',
             API_REACHABILITY_CLASSIFICATIONS.conditionalProduction,
@@ -583,6 +586,10 @@ function staticBooleanValue(expression) {
   while (ts.isParenthesizedExpression(current)) current = current.expression;
   if (current.kind === ts.SyntaxKind.TrueKeyword) return true;
   if (current.kind === ts.SyntaxKind.FalseKeyword) return false;
+  if (ts.isPrefixUnaryExpression(current) && current.operator === ts.SyntaxKind.ExclamationToken) {
+    const operand = staticBooleanValue(current.operand);
+    return operand === null ? null : !operand;
+  }
   return null;
 }
 
@@ -593,8 +600,9 @@ function nodeIsWithin(node, root) {
 function statementAlwaysTerminates(statement) {
   if (ts.isReturnStatement(statement) || ts.isThrowStatement(statement)) return true;
   if (ts.isBlock(statement)) {
-    const last = statement.statements.at(-1);
-    return last ? statementAlwaysTerminates(last) : false;
+    return statement.statements.some((nestedStatement) =>
+      statementAlwaysTerminates(nestedStatement)
+    );
   }
   if (!ts.isIfStatement(statement)) return false;
 
@@ -734,7 +742,7 @@ function reachableThisMethodCalls(scope) {
   ).map((call) => ({ call, method: call.expression.name.text }));
 }
 
-function hasReachableReconcilerEnabledPath(scope, guardStatement) {
+function hasReachableReconcilerEnabledPath(scope, guardStatement, sourceFile) {
   const targetPredicate = (node) =>
     (ts.isCallExpression(node) &&
       ts.isIdentifier(node.expression) &&
@@ -745,6 +753,25 @@ function hasReachableReconcilerEnabledPath(scope, guardStatement) {
 
   if (!ts.isClassDeclaration(scope) && !ts.isClassExpression(scope)) {
     return hasReachableEnabledTarget(scope, guardStatement, targetPredicate);
+  }
+
+  const className = scope.name && ts.isIdentifier(scope.name) ? scope.name.text : null;
+  const compositionFactory = findNamedExecutableScope(
+    sourceFile,
+    'createIntentReconcilerRuntimeComposition'
+  );
+  if (
+    !className ||
+    !compositionFactory ||
+    collectReachableScopedDescendants(
+      compositionFactory,
+      (node) =>
+        ts.isNewExpression(node) &&
+        ts.isIdentifier(node.expression) &&
+        node.expression.text === className
+    ).length === 0
+  ) {
+    return false;
   }
 
   const guardMethod = enclosingExecutableScope(guardStatement, scope);
@@ -761,6 +788,8 @@ function hasReachableReconcilerEnabledPath(scope, guardStatement) {
   const callsByMethod = new Map(
     [...methods].map(([name, method]) => [name, reachableThisMethodCalls(method)])
   );
+  const entryMethod = methods.get('create');
+  if (!entryMethod) return false;
   const methodsReachingTarget = new Set(
     [...methods]
       .filter(([, method]) => collectReachableScopedDescendants(method, targetPredicate).length > 0)
@@ -781,13 +810,15 @@ function hasReachableReconcilerEnabledPath(scope, guardStatement) {
     }
   }
 
-  return [...callsByMethod.values()].some((calls) => {
-    const guardCalls = calls.filter(({ method }) => method === guardMethodName);
-    const targetCalls = calls.filter(({ method }) => methodsReachingTarget.has(method));
-    return guardCalls.some(({ call: guardCall }) =>
-      targetCalls.some(({ call: targetCall }) => targetCall.pos > guardCall.end)
-    );
-  });
+  const entryCalls = callsByMethod.get('create') ?? [];
+  const guardCalls = entryCalls.filter(({ method }) => method === guardMethodName);
+  const targetCalls = entryCalls.filter(({ method }) => methodsReachingTarget.has(method));
+  const directTargets = collectReachableScopedDescendants(entryMethod, targetPredicate);
+  return guardCalls.some(({ call: guardCall }) =>
+    [...targetCalls.map(({ call }) => call), ...directTargets].some(
+      (target) => target.pos > guardCall.end
+    )
+  );
 }
 
 function findNamedExecutableScope(sourceFile, name) {

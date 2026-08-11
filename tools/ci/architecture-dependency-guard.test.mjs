@@ -493,6 +493,7 @@ test('supported API profiles are proven from composition semantics and dynamic e
           'async function buildApp(env) { if (env.OIDC_JWKS_URI && env.OIDC_ISSUER && env.OIDC_AUDIENCE) { await buildProtectedRuntimeModule(); } else { publicOnly(); } }',
           'function buildObservability(env) { if (!env.OBS_ENABLED) return createNoopObservability(); return new OtelObservability({}); }',
           'class Reconciler { create() { const config = this.resolveConfig(); if (!config) return null; return this.createWorker(); } resolveConfig() { if (!this.env.DVT_INTENT_RECONCILER_ENABLED) return null; return {}; } createWorker() { return new IntentReconcilerWorker(); } }',
+          'function createIntentReconcilerRuntimeComposition() { return new Reconciler(); }',
           "async function buildTemporal(context) { if (!context.env.TEMPORAL_ADDRESS) return null; return import('@dvt/adapter-temporal'); }",
         ].join('\n'),
       ],
