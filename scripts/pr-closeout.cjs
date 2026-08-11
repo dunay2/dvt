@@ -248,14 +248,6 @@ function buildPrCloseoutPlan(options = {}) {
     throw new Error('INVALID_COMMIT: usage is pnpm pr:closeout <type> <scope> "<Subject>".');
   }
 
-  if (hasDocsChange(changedFiles)) {
-    pushStepOnce(steps, {
-      id: 'docs-sync',
-      command: 'pnpm',
-      args: ['docs:sync'],
-    });
-  }
-
   if (workspaceSourceChanged) {
     pushStepOnce(steps, {
       id: 'docs-status-code-state',
@@ -292,6 +284,14 @@ function buildPrCloseoutPlan(options = {}) {
       id: 'governance-refresh',
       command: 'pnpm',
       args: ['governance:refresh'],
+    });
+  }
+
+  if (hasDocsChange(changedFiles)) {
+    pushStepOnce(steps, {
+      id: 'docs-sync',
+      command: 'pnpm',
+      args: ['docs:sync'],
     });
   }
 
