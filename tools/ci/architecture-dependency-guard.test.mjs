@@ -392,6 +392,67 @@ test('reachability rejects new test-only, orphan, production-to-test and fake im
   );
 });
 
+test('type-only and unused value imports do not establish production reachability', () => {
+  const sourceContents = new Map([
+    [
+      'apps/api/src/app.ts',
+      [
+        "import type { TypeOnly } from './typeOnly.js';",
+        "import { unusedValue } from './unusedValue.js';",
+        'export const app = 1;',
+      ].join('\n'),
+    ],
+    ['apps/api/src/server.ts', 'export const server = 1;\n'],
+    ['apps/api/src/typeOnly.ts', 'export interface TypeOnly { readonly value: string }\n'],
+    ['apps/api/src/unusedValue.ts', 'export const unusedValue = 1;\n'],
+  ]);
+  const result = classifyApiSourceReachability({
+    modules: [
+      {
+        source: 'apps/api/src/app.ts',
+        dependencies: [
+          {
+            module: './typeOnly.js',
+            resolved: 'apps/api/src/typeOnly.ts',
+            dependencyTypes: ['type-only', 'import'],
+            dynamic: false,
+          },
+          {
+            module: './unusedValue.js',
+            resolved: 'apps/api/src/unusedValue.ts',
+            dependencyTypes: ['import'],
+            dynamic: false,
+          },
+        ],
+      },
+      { source: 'apps/api/src/server.ts', dependencies: [] },
+      { source: 'apps/api/src/typeOnly.ts', dependencies: [] },
+      { source: 'apps/api/src/unusedValue.ts', dependencies: [] },
+    ],
+    sourceFiles: [...sourceContents.keys()],
+    productionRoots: ['apps/api/src/app.ts', 'apps/api/src/server.ts'],
+    testRoots: [],
+    sourceContents,
+  });
+  const bySource = new Map(
+    result.classifications.map(({ source, classification }) => [source, classification])
+  );
+
+  assert.equal(bySource.get('apps/api/src/typeOnly.ts'), API_REACHABILITY_CLASSIFICATIONS.orphan);
+  assert.equal(
+    bySource.get('apps/api/src/unusedValue.ts'),
+    API_REACHABILITY_CLASSIFICATIONS.orphan
+  );
+
+  const findings = collectApiReachabilityFindings({
+    ...result,
+    changedSourceFiles: ['apps/api/src/typeOnly.ts', 'apps/api/src/unusedValue.ts'],
+    sourceContents,
+    profileEvidence: REQUIRED_API_DEPLOYMENT_PROFILES.map((profile) => ({ profile })),
+  });
+  assert.ok(findings.some(({ ruleName }) => ruleName === 'no-api-fake-reachability-import'));
+});
+
 test('supported API profiles are proven from composition semantics and dynamic edges', () => {
   const profileEvidence = collectApiDeploymentProfileEvidence({
     modules: [
@@ -431,6 +492,35 @@ test('supported API profiles are proven from composition semantics and dynamic e
       ['temporal-provider', API_REACHABILITY_CLASSIFICATIONS.conditionalProduction],
     ]
   );
+});
+
+test('comments and disconnected tokens cannot prove deployment profiles', () => {
+  const profileEvidence = collectApiDeploymentProfileEvidence({
+    modules: [
+      {
+        source: 'apps/api/src/commentOnly.ts',
+        dependencies: [
+          { module: '@dvt/adapter-postgres', dynamic: true },
+          { module: '@dvt/adapter-temporal', dynamic: true },
+        ],
+      },
+    ],
+    productionSources: new Set(['apps/api/src/commentOnly.ts']),
+    sourceContents: new Map([
+      [
+        'apps/api/src/commentOnly.ts',
+        [
+          '// OBS_ENABLED createNoopObservability() new OtelObservability()',
+          '// OIDC_JWKS_URI OIDC_ISSUER OIDC_AUDIENCE buildProtectedRuntimeModule()',
+          '// DVT_INTENT_RECONCILER_ENABLED return null createIntentReconcilerRuntimeComposition()',
+          '// TEMPORAL_ADDRESS',
+          'export const value = 1;',
+        ].join('\n'),
+      ],
+    ]),
+  });
+
+  assert.deepEqual(profileEvidence, []);
 });
 
 test('export reachability identifies a production module export used only by tests', () => {
@@ -501,6 +591,26 @@ test('current API report classifies every source and exposes cleanup candidates 
     first.exportEvidence.find(({ symbol }) => symbol === 'createWorkflowEngine')?.classification,
     'test-support-export'
   );
+  assert.equal(
+    first.exportEvidence.find(
+      ({ source, symbol }) =>
+        source === 'apps/api/src/application/errors/ManifestArtifactResolutionError.ts' &&
+        symbol === 'ManifestArtifactResolutionError'
+    )?.classification,
+    'test-support-export'
+  );
+  assert.ok(
+    first.classifications.some(
+      ({ classification }) =>
+        classification === API_REACHABILITY_CLASSIFICATIONS.conditionalProduction
+    )
+  );
+  assert.ok(
+    first.classifications.some(
+      ({ classification }) => classification === API_REACHABILITY_CLASSIFICATIONS.validNullObject
+    )
+  );
+  assert.ok(first.profileEvidence.every(({ sources }) => sources.length > 0));
   assert.equal(formatApiReachabilityReport(first), formatApiReachabilityReport(second));
 });
 
