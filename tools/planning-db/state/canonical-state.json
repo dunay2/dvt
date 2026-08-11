@@ -10569,14 +10569,14 @@
         "work_item_id": "GH-2274",
         "title": "DB-first current document and ownership reconciliation",
         "owner": "Architecture / Docs / Planning",
-        "status": "implementing",
+        "status": "implemented",
         "rationale": "Complete the approved DB-first lifecycle and evidence model by correcting the four exact generated ownership components, recording executable proof, and preserving explicit publication semantics without migration or compatibility state.",
         "fowler_signal": "boundary_drift",
         "rail_ref": "GeneratePlanningDerivedSurfaces;ClassifyArchitectureDocumentationDisposition;ListDocumentationLifecycleFacts;RecordArchitectureTestEvidence;ReadArchitectureDesignAuthority;ApplyArchitectureDependencyBoundaryGate",
         "approved_at": "2026-08-11T10:13:43.802+00:00",
         "supersedes_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V2-20260811",
         "created_at": "2026-08-11T10:13:39.234+00:00",
-        "updated_at": "2026-08-11T10:23:39.735+00:00"
+        "updated_at": "2026-08-11T10:53:25.662+00:00"
       },
       {
         "design_id": "CANVAS-BACKLOG-INTEGRITY-READINESS-20260626",
@@ -97649,6 +97649,27 @@
           "sourceContentSha256": "a095b22199bc35663876c10c5abaddbb85cca70227f06be99a74d3161a23bde6"
         },
         "created_at": "2026-08-11T04:38:18.454+00:00"
+      },
+      {
+        "operation_id": "fba5f5f8-2fff-4491-944b-ab0d22791c43",
+        "idempotency_key": "implement-api-h2-4-v3-20260811",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "source_ref": "tools/planning-db/state/canonical-state.json@1418e0721",
+        "source_content_sha256": "4bc13448fdbcf04a5024ea63ae8ad89bc3d95aea768dc44d6d46608f1a92c4f4",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "All scoped DB-first reconciliation proofs, affected tests, governance refresh, documentation publication/build, lint, type-check, and ARC classification passed without migrations or compatibility state.",
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+          "toStatus": "implemented",
+          "sourceRef": "tools/planning-db/state/canonical-state.json@1418e0721",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "4bc13448fdbcf04a5024ea63ae8ad89bc3d95aea768dc44d6d46608f1a92c4f4"
+        },
+        "created_at": "2026-08-11T10:53:25.662+00:00"
       },
       {
         "operation_id": "fc3744a0-72bd-4900-bab8-481cd67ce078",
