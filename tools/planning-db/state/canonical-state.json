@@ -10275,14 +10275,14 @@
         "work_item_id": "GH-2271",
         "title": "Require composition-owned route dependencies",
         "owner": "API HTTP composition",
-        "status": "implementing",
+        "status": "implemented",
         "rationale": "StartRun and workspace-context routes consume composition-selected observability and adapter registries; routes no longer select Null Objects or deployment defaults, while the deterministic run-id generator remains a bounded test seam.",
         "fowler_signal": "hidden_authority",
         "rail_ref": "StartRun",
         "approved_at": "2026-08-11T01:38:25.2+00:00",
         "supersedes_id": null,
         "created_at": "2026-08-11T01:38:10.991+00:00",
-        "updated_at": "2026-08-11T01:45:42.68+00:00"
+        "updated_at": "2026-08-11T02:02:40.096+00:00"
       },
       {
         "design_id": "CANVAS-BACKLOG-INTEGRITY-READINESS-20260626",
@@ -85813,6 +85813,27 @@
           "sourceContentSha256": "595aa9f6d737b5540b328b0cfa0aead758923619ddd12635de33c9cf8763ada1"
         },
         "created_at": "2026-08-10T21:04:04.799+00:00"
+      },
+      {
+        "operation_id": "3868b0aa-a6ad-4b68-aeca-254e291bff1f",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-1-EXPLICIT-ROUTE-DEPENDENCY-INJECTION-20260811:9602185267dc237d",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-1-EXPLICIT-ROUTE-DEPENDENCY-INJECTION-20260811",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2271",
+        "source_content_sha256": "485d599b16dda3ff5e147104020fbad480f1fe51c69acbaa111000ca98c17cf5",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Required route dependencies, type-level boundaries, explicit Null Object behavior, full API unit suite, architecture guard, and StartRun OpenTelemetry proof pass.",
+          "designId": "API-H2-1-EXPLICIT-ROUTE-DEPENDENCY-INJECTION-20260811",
+          "toStatus": "implemented",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2271",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "485d599b16dda3ff5e147104020fbad480f1fe51c69acbaa111000ca98c17cf5"
+        },
+        "created_at": "2026-08-11T02:02:40.096+00:00"
       },
       {
         "operation_id": "39921801-fff9-4f1c-819e-e67fac74a866",
