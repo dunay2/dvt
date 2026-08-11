@@ -895,6 +895,100 @@ test('profile evidence rejects dead JavaScript paths and uncalled composition sc
   assert.deepEqual(deadReconcilerEvidence, []);
 });
 
+test('profile evidence requires invoked callbacks and consumed factory products', () => {
+  const ignoredFunctionEvidence = collectApiDeploymentProfileEvidence({
+    modules: [
+      {
+        source: 'apps/api/src/app.ts',
+        dependencies: [
+          { module: '@dvt/adapter-postgres', dynamic: true },
+          { module: '@dvt/adapter-temporal', dynamic: true },
+        ],
+      },
+    ],
+    productionSources: new Set(['apps/api/src/app.ts']),
+    sourceContents: new Map([
+      [
+        'apps/api/src/app.ts',
+        [
+          'function ignore(value) { return null; }',
+          "async function buildProtectedRuntimeModule() { return import('@dvt/adapter-postgres'); }",
+          'async function buildApp(env) { if (env.OIDC_JWKS_URI && env.OIDC_ISSUER && env.OIDC_AUDIENCE) { await buildProtectedRuntimeModule(); } else { publicOnly(); } }',
+          'function buildObservability(env) { if (!env.OBS_ENABLED) return createNoopObservability(); return new OtelObservability({}); }',
+          "async function buildTemporal(context) { if (!context.env.TEMPORAL_ADDRESS) return null; return import('@dvt/adapter-temporal'); }",
+          'ignore(buildApp);',
+          'ignore(buildObservability);',
+          'ignore(buildTemporal);',
+        ].join('\n'),
+      ],
+    ]),
+  });
+
+  assert.deepEqual(ignoredFunctionEvidence, []);
+
+  const unconsumedFactoryEvidence = collectApiDeploymentProfileEvidence({
+    modules: [
+      {
+        source: 'apps/api/src/app.ts',
+        dependencies: [{ module: '@dvt/adapter-temporal', dynamic: true }],
+      },
+    ],
+    productionSources: new Set(['apps/api/src/app.ts']),
+    sourceContents: new Map([
+      [
+        'apps/api/src/app.ts',
+        [
+          'function createTemporalAdapterFactory() {',
+          '  return {',
+          '    async build(context) {',
+          '      if (!context.env.TEMPORAL_ADDRESS) return null;',
+          "      return import('@dvt/adapter-temporal');",
+          '    },',
+          '  };',
+          '}',
+          'createTemporalAdapterFactory();',
+        ].join('\n'),
+      ],
+    ]),
+  });
+
+  assert.deepEqual(unconsumedFactoryEvidence, []);
+
+  const staticFlowEvidence = collectApiDeploymentProfileEvidence({
+    modules: [
+      {
+        source: 'apps/api/src/app.ts',
+        dependencies: [{ module: '@dvt/adapter-temporal', dynamic: true }],
+      },
+    ],
+    productionSources: new Set(['apps/api/src/app.ts']),
+    sourceContents: new Map([
+      [
+        'apps/api/src/app.ts',
+        [
+          'function buildObservability(env) {',
+          '  if (!env.OBS_ENABLED) return createNoopObservability();',
+          '  if (false as boolean) return new OtelObservability({});',
+          '  return null;',
+          '}',
+          'async function buildTemporal(context) {',
+          '  if (!context.env.TEMPORAL_ADDRESS) return null;',
+          '  switch (0) { default: return null; }',
+          "  return import('@dvt/adapter-temporal');",
+          '}',
+          'buildObservability(env);',
+          'buildTemporal(context);',
+        ].join('\n'),
+      ],
+    ]),
+  });
+
+  assert.deepEqual(
+    staticFlowEvidence.map(({ profile }) => profile),
+    ['observability-noop']
+  );
+});
+
 test('comments and disconnected tokens cannot prove deployment profiles', () => {
   const profileEvidence = collectApiDeploymentProfileEvidence({
     modules: [
