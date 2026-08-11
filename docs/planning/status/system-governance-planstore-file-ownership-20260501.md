@@ -2,7 +2,7 @@
 title: System Governance Plan-Store Navigation
 status: Review
 owner: Architecture / Docs / Delivery
-last_reviewed: 2026-08-10
+last_reviewed: 2026-08-11
 planning_type: status
 ---
 
