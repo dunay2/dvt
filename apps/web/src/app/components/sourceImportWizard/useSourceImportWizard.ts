@@ -9,7 +9,7 @@ import type {
   WarehouseConnection,
 } from '../../ports/workspace';
 import type { SourceImportOptionContribution, SourceImportOptionId } from '../../plugins/registry';
-import { useSourceImportLocalization } from './copy';
+import { resolveSourceImportFailureMessage, useSourceImportLocalization } from './copy';
 import {
   buildSourceImportCommand,
   resolveSourceImportCommandIdentity,
@@ -32,14 +32,15 @@ import {
   toggleSourceImportSchemaSelection,
 } from './sourceImportWizardModel';
 import { useConnectionsLoader, useSourceObjectsLoader } from './useSourceImportWizardDataLoaders';
-import type {
-  SourceImportInitialSelection,
-  SourceImportDatabaseIdentity,
-  SourceImportGroupingStrategy,
-  SourceImportSchemaIdentity,
-  SourceImportSection,
-  SourceImportWizardState,
-  WizardStep,
+import {
+  buildSourceImportFailure,
+  type SourceImportDatabaseIdentity,
+  type SourceImportGroupingStrategy,
+  type SourceImportInitialSelection,
+  type SourceImportSchemaIdentity,
+  type SourceImportSection,
+  type SourceImportWizardState,
+  type WizardStep,
 } from './types';
 
 interface UseSourceImportWizardParams {
@@ -270,7 +271,10 @@ export function useSourceImportWizard({
 
   const handleTestConnection = async () => {
     if (!state.selectedConnection) {
-      setState((prev) => ({ ...prev, loadError: copy.selectConnectionError }));
+      setState((prev) => ({
+        ...prev,
+        loadError: buildSourceImportFailure('select-connection'),
+      }));
       return;
     }
 
@@ -286,9 +290,9 @@ export function useSourceImportWizard({
       );
       setState((prev) => ({ ...prev, connectionTestResult }));
     } catch (error) {
-      const message = error instanceof Error ? error.message : copy.connection.testError;
-      setState((prev) => ({ ...prev, loadError: message }));
-      toast.error(message);
+      const failure = buildSourceImportFailure('test-connection', error);
+      setState((prev) => ({ ...prev, loadError: failure }));
+      toast.error(resolveSourceImportFailureMessage(copy, failure));
     } finally {
       setState((prev) => ({ ...prev, isTestingConnection: false }));
     }
@@ -299,7 +303,7 @@ export function useSourceImportWizard({
     if (!isCreateConnectionInputComplete(input)) {
       setState((prev) => ({
         ...prev,
-        createConnectionError: copy.connection.createValidationError,
+        createConnectionError: buildSourceImportFailure('create-connection-validation'),
       }));
       return;
     }
@@ -327,9 +331,9 @@ export function useSourceImportWizard({
       }));
       toast.success(copy.connection.createSuccess);
     } catch (error) {
-      const message = error instanceof Error ? error.message : copy.connection.createError;
-      setState((prev) => ({ ...prev, createConnectionError: message }));
-      toast.error(message);
+      const failure = buildSourceImportFailure('create-connection', error);
+      setState((prev) => ({ ...prev, createConnectionError: failure }));
+      toast.error(resolveSourceImportFailureMessage(copy, failure));
     } finally {
       setState((prev) => ({ ...prev, isCreatingConnection: false }));
     }
@@ -337,7 +341,10 @@ export function useSourceImportWizard({
 
   const handleImport = async () => {
     if (!state.selectedConnection) {
-      setState((prev) => ({ ...prev, loadError: copy.selectConnectionError }));
+      setState((prev) => ({
+        ...prev,
+        loadError: buildSourceImportFailure('select-connection'),
+      }));
       return;
     }
     setState((prev) => ({ ...prev, isProcessing: true, loadError: null }));
@@ -370,9 +377,9 @@ export function useSourceImportWizard({
       onComplete?.(result);
       toast.success(copy.importSuccess);
     } catch (error) {
-      const message = error instanceof Error ? error.message : copy.importError;
-      setState((prev) => ({ ...prev, loadError: message }));
-      toast.error(message);
+      const failure = buildSourceImportFailure('import-sources', error);
+      setState((prev) => ({ ...prev, loadError: failure }));
+      toast.error(resolveSourceImportFailureMessage(copy, failure));
     } finally {
       setState((prev) => ({ ...prev, isProcessing: false }));
     }

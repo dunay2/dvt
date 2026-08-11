@@ -3,6 +3,7 @@ import {
   type ApplicationLanguage,
   useApplicationLanguageStore,
 } from '../../stores/applicationLanguageStore';
+import type { SourceImportFailure } from './types';
 
 const EN_COPY = {
   title: 'Add source',
@@ -60,6 +61,7 @@ const EN_COPY = {
     testingAction: 'Testing...',
     testPassed: 'Connection passed',
     testFailed: 'Connection failed',
+    testFailedDetail: 'Check the connection credentials and availability.',
     testError: 'Failed to test warehouse connection.',
     reachableObjects: 'objects reachable',
   },
@@ -254,6 +256,7 @@ const ES_COPY = {
     testingAction: 'Probando...',
     testPassed: 'Conexión correcta',
     testFailed: 'Conexión fallida',
+    testFailedDetail: 'Comprueba las credenciales y la disponibilidad de la conexión.',
     testError: 'No se pudo probar la conexión al warehouse.',
     reachableObjects: 'objetos accesibles',
   },
@@ -406,6 +409,32 @@ export function resolveSourceImportCatalogNumberFormatter(
   language: ApplicationLanguage
 ): Intl.NumberFormat {
   return NUMBER_FORMATTER_BY_LANGUAGE[language];
+}
+
+export function resolveSourceImportFailureMessage(
+  copy: SourceImportWizardCopy,
+  failure: SourceImportFailure | null
+): string | null {
+  if (!failure) {
+    return null;
+  }
+
+  switch (failure.code) {
+    case 'select-connection':
+      return copy.selectConnectionError;
+    case 'load-connections':
+      return copy.loadConnectionsError;
+    case 'load-source-objects':
+      return copy.loadSourceObjectsError;
+    case 'test-connection':
+      return copy.connection.testError;
+    case 'create-connection-validation':
+      return copy.connection.createValidationError;
+    case 'create-connection':
+      return copy.connection.createError;
+    case 'import-sources':
+      return copy.importError;
+  }
 }
 
 export function useSourceImportLocalization(): Readonly<{

@@ -62,6 +62,114 @@ describe('SourceImportWizard', () => {
     expect(document.body.textContent).not.toContain('Añadir origen');
   });
 
+  it('keeps a connection catalog failure localized when the language changes', async () => {
+    useApplicationLanguageStore.getState().configureApplicationLanguage('es');
+
+    await harness.renderWizard({
+      warehouseSourceImport: buildWarehouseSourceImportPort({
+        listWarehouseConnections: async () => {
+          throw new Error('raw connection catalog diagnostic');
+        },
+      }),
+    });
+    await harness.flushPendingWork();
+
+    expect(document.body.textContent).toContain(
+      'No se pudieron cargar las conexiones del warehouse.'
+    );
+    expect(document.body.textContent).not.toContain('raw connection catalog diagnostic');
+
+    await act(async () => {
+      useApplicationLanguageStore.getState().configureApplicationLanguage('en');
+    });
+
+    expect(document.body.textContent).toContain('Failed to load warehouse connections.');
+    expect(document.body.textContent).not.toContain(
+      'No se pudieron cargar las conexiones del warehouse.'
+    );
+  });
+
+  it('localizes source-object discovery failures without exposing adapter diagnostics', async () => {
+    useApplicationLanguageStore.getState().configureApplicationLanguage('es');
+
+    await harness.renderWizard({
+      warehouseSourceImport: buildWarehouseSourceImportPort({
+        listSourceObjects: async () => {
+          throw new Error('raw source object diagnostic');
+        },
+      }),
+    });
+    await harness.clickConnectionOption('Local Postgres proof');
+    await harness.flushPendingWork();
+
+    expect(document.body.textContent).toContain('No se pudieron cargar los objetos de origen.');
+    expect(document.body.textContent).not.toContain('raw source object diagnostic');
+  });
+
+  it('localizes connection test failures without exposing adapter diagnostics', async () => {
+    useApplicationLanguageStore.getState().configureApplicationLanguage('es');
+
+    await harness.renderWizard({
+      warehouseSourceImport: buildWarehouseSourceImportPort({
+        testWarehouseConnection: async () => {
+          throw new Error('raw connection test diagnostic');
+        },
+      }),
+    });
+    await harness.clickConnectionOption('Local Postgres proof');
+    await harness.clickButtonContaining('Probar conexión');
+    await harness.flushPendingWork();
+
+    expect(document.body.textContent).toContain('No se pudo probar la conexión al warehouse.');
+    expect(document.body.textContent).not.toContain('raw connection test diagnostic');
+  });
+
+  it('localizes connection creation failures without exposing adapter diagnostics', async () => {
+    useApplicationLanguageStore.getState().configureApplicationLanguage('es');
+
+    await harness.renderWizard({
+      warehouseSourceImport: buildWarehouseSourceImportPort({
+        listWarehouseConnections: async () => [],
+        createWarehouseConnection: async () => {
+          throw new Error('raw connection creation diagnostic');
+        },
+      }),
+    });
+    await harness.clickButtonContaining('Nueva conexión');
+    await harness.fillInputByLabel('Nombre de la conexión', 'Postgres local');
+    await harness.fillInputByLabel('Base de datos', 'dvt');
+    await harness.fillInputByLabel(
+      'Referencia de credencial',
+      'env:DVT_LOCAL_POSTGRES_WAREHOUSE_URL'
+    );
+    await harness.clickButtonContaining('Crear conexión');
+    await harness.flushPendingWork();
+
+    expect(document.body.textContent).toContain('No se pudo crear la conexión al warehouse.');
+    expect(document.body.textContent).not.toContain('raw connection creation diagnostic');
+  });
+
+  it('localizes import failures in the review surface without exposing adapter diagnostics', async () => {
+    useApplicationLanguageStore.getState().configureApplicationLanguage('es');
+
+    await harness.renderWizard({
+      warehouseSourceImport: buildWarehouseSourceImportPort({
+        importSources: async () => {
+          throw new Error('raw import diagnostic');
+        },
+      }),
+    });
+    await harness.clickConnectionOption('Local Postgres proof');
+    await harness.clickTab('Explorar');
+    await harness.clickSourceObjectSelectionCheckbox(buildSourceObject().objectId);
+    await harness.clickTab('Seleccionados');
+    await harness.clickButtonContaining('Adjuntar orígenes al canvas');
+    await harness.flushPendingWork();
+
+    expect(document.body.textContent).toContain('No se pudieron registrar los objetos de datos.');
+    expect(document.body.textContent).not.toContain('raw import diagnostic');
+  });
+
   it('keeps browse, metadata, options, review, numbers and result localized in Spanish', async () => {
     useApplicationLanguageStore.getState().configureApplicationLanguage('es');
 

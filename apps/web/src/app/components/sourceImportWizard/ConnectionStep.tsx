@@ -202,7 +202,7 @@ export function ConnectionStep({
                 <div className="mt-1 text-xs opacity-85">
                   {connectionTestResult.status === 'passed'
                     ? `${connectionTestResult.objectCount} ${copy.connection.reachableObjects}`
-                    : connectionTestResult.message}
+                    : copy.connection.testFailedDetail}
                 </div>
               </Card>
             ) : null}

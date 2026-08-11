@@ -1,4 +1,5 @@
-import { useSourceImportLocalization } from './copy';
+import { resolveSourceImportFailureMessage, useSourceImportLocalization } from './copy';
+import { Card } from '../ui/card';
 import { ConnectionStep } from './ConnectionStep';
 import { ResultStep } from './ResultStep';
 import { ReviewStep } from './ReviewStep';
@@ -13,6 +14,11 @@ interface WizardStepContentProps {
 export function WizardStepContent({ controller }: WizardStepContentProps) {
   const { copy } = useSourceImportLocalization();
   const { state } = controller;
+  const loadError = resolveSourceImportFailureMessage(copy, state.loadError);
+  const createConnectionError = resolveSourceImportFailureMessage(
+    copy,
+    state.createConnectionError
+  );
   switch (state.currentStep) {
     case 'connection':
       return (
@@ -26,8 +32,8 @@ export function WizardStepContent({ controller }: WizardStepContentProps) {
             isCreatingConnection={state.isCreatingConnection}
             isTestingConnection={state.isTestingConnection}
             connectionTestResult={state.connectionTestResult}
-            loadError={state.loadError}
-            createConnectionError={state.createConnectionError}
+            loadError={loadError}
+            createConnectionError={createConnectionError}
             onSelectConnection={controller.setSelectedConnection}
             onOpenCreateConnectionForm={controller.openCreateConnectionForm}
             onCancelCreateConnectionForm={controller.cancelCreateConnectionForm}
@@ -50,7 +56,7 @@ export function WizardStepContent({ controller }: WizardStepContentProps) {
             activeSourceObjectKey={state.activeSourceObjectKey}
             sourceObjectSearchQuery={state.sourceObjectSearchQuery}
             isLoadingSourceObjects={state.isLoadingSourceObjects}
-            loadError={state.loadError}
+            loadError={loadError}
             onSourceObjectSearchQueryChange={controller.setSourceObjectSearchQuery}
             onActivateSourceObject={controller.activateSourceObject}
             onToggleDatabase={controller.toggleDatabase}
@@ -73,7 +79,12 @@ export function WizardStepContent({ controller }: WizardStepContentProps) {
       );
     case 'review':
       return (
-        <div id="source-import-section-selected">
+        <div id="source-import-section-selected" className="space-y-4">
+          {loadError ? (
+            <Card className="border-red-700 bg-red-950/30 p-3 text-sm text-red-200">
+              {loadError}
+            </Card>
+          ) : null}
           <ReviewStep
             sourceObjects={state.sourceObjects}
             selectedCount={controller.selectedCount}
