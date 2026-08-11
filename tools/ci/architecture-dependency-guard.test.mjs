@@ -1041,6 +1041,116 @@ test('profile evidence requires invoked callbacks and consumed factory products'
   );
 });
 
+test('profile evidence excludes statically unselected switch clauses', () => {
+  const inlineEvidence = collectApiDeploymentProfileEvidence({
+    modules: [{ source: 'apps/api/src/app.ts', dependencies: [] }],
+    productionSources: new Set(['apps/api/src/app.ts']),
+    sourceContents: new Map([
+      [
+        'apps/api/src/app.ts',
+        [
+          'function buildObservability(env) {',
+          "  switch ('off') {",
+          "    case 'on':",
+          '      if (!env.OBS_ENABLED) return createNoopObservability();',
+          '      return new OtelObservability({});',
+          '    default:',
+          '      return null;',
+          '  }',
+          '}',
+          'buildObservability(env);',
+        ].join('\n'),
+      ],
+    ]),
+  });
+
+  assert.deepEqual(inlineEvidence, []);
+
+  const callbackEvidence = collectApiDeploymentProfileEvidence({
+    modules: [{ source: 'apps/api/src/app.ts', dependencies: [] }],
+    productionSources: new Set(['apps/api/src/app.ts']),
+    sourceContents: new Map([
+      [
+        'apps/api/src/app.ts',
+        [
+          'function invoke(callback) {',
+          "  switch ('off') {",
+          "    case 'on': return callback(env);",
+          '    default: return null;',
+          '  }',
+          '}',
+          'function buildObservability(env) { if (!env.OBS_ENABLED) return createNoopObservability(); return new OtelObservability({}); }',
+          'invoke(buildObservability);',
+        ].join('\n'),
+      ],
+    ]),
+  });
+
+  assert.deepEqual(callbackEvidence, []);
+
+  const factoryEvidence = collectApiDeploymentProfileEvidence({
+    modules: [
+      {
+        source: 'apps/api/src/app.ts',
+        dependencies: [{ module: '@dvt/adapter-temporal', dynamic: true }],
+      },
+    ],
+    productionSources: new Set(['apps/api/src/app.ts']),
+    sourceContents: new Map([
+      [
+        'apps/api/src/app.ts',
+        [
+          'function createTemporalAdapterFactory() {',
+          '  return {',
+          '    async build(context) {',
+          '      if (!context.env.TEMPORAL_ADDRESS) return null;',
+          "      return import('@dvt/adapter-temporal');",
+          '    },',
+          '  };',
+          '}',
+          'async function consume(factories) {',
+          "  switch ('off') {",
+          "    case 'on': for (const factory of factories) await factory.build(context); break;",
+          '    default: return null;',
+          '  }',
+          '}',
+          'consume([createTemporalAdapterFactory()]);',
+        ].join('\n'),
+      ],
+    ]),
+  });
+
+  assert.deepEqual(factoryEvidence, []);
+
+  const selectedFallthroughEvidence = collectApiDeploymentProfileEvidence({
+    modules: [{ source: 'apps/api/src/app.ts', dependencies: [] }],
+    productionSources: new Set(['apps/api/src/app.ts']),
+    sourceContents: new Map([
+      [
+        'apps/api/src/app.ts',
+        [
+          'function buildObservability(env) {',
+          "  switch ('on') {",
+          "    case 'on':",
+          "    case 'alias':",
+          '      if (!env.OBS_ENABLED) return createNoopObservability();',
+          '      return new OtelObservability({});',
+          '    default:',
+          '      return null;',
+          '  }',
+          '}',
+          'buildObservability(env);',
+        ].join('\n'),
+      ],
+    ]),
+  });
+
+  assert.deepEqual(
+    selectedFallthroughEvidence.map(({ profile }) => profile),
+    ['observability-noop', 'observability-otel']
+  );
+});
+
 test('comments and disconnected tokens cannot prove deployment profiles', () => {
   const profileEvidence = collectApiDeploymentProfileEvidence({
     modules: [
