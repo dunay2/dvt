@@ -13852,6 +13852,19 @@
         "source_content_sha256": "dad90c2ff3b8d0d15a1f29cf5023abc4dbffb64b9f4a6fccc3441d269f04e556"
       },
       {
+        "evidence_id": "EV-PTH14-REF-CLASSIFY-REVIEW2",
+        "design_id": "API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811",
+        "subject_kind": "query",
+        "subject_id": "ClassifyArchitectureDocumentationDisposition",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/planning-db-schema.test.cjs",
+        "source_path": "scripts/planning-db-schema.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T17:07:51.164+00:00",
+        "source_content_sha256": "39d479f362360f996f2c45035593c07d52372eed46f9fd57438b007c68862b21"
+      },
+      {
         "evidence_id": "EV-PTH14-REF-GENERATE",
         "design_id": "API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811",
         "subject_kind": "command",
@@ -13889,6 +13902,19 @@
         "result_state": "pass",
         "recorded_at": "2026-08-11T16:37:56.493+00:00",
         "source_content_sha256": "dad90c2ff3b8d0d15a1f29cf5023abc4dbffb64b9f4a6fccc3441d269f04e556"
+      },
+      {
+        "evidence_id": "EV-PTH14-V5-CLASSIFY-REVIEW2",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "query",
+        "subject_id": "ClassifyArchitectureDocumentationDisposition",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/planning-db-schema.test.cjs",
+        "source_path": "scripts/planning-db-schema.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T17:07:52.553+00:00",
+        "source_content_sha256": "39d479f362360f996f2c45035593c07d52372eed46f9fd57438b007c68862b21"
       },
       {
         "evidence_id": "EV-PTH14-V5-GENERATE",
@@ -93652,6 +93678,31 @@
         "created_at": "2026-08-10T21:04:19.44+00:00"
       },
       {
+        "operation_id": "8335fb01-0221-4f3f-adca-5860cc123784",
+        "idempotency_key": "architecture_evidence_record:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811:EV-PTH14-V5-CLASSIFY-REVIEW2:be7120ef83d67bcc",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "node --test scripts/planning-db-schema.test.cjs",
+        "source_content_sha256": "39d479f362360f996f2c45035593c07d52372eed46f9fd57438b007c68862b21",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+          "sourceRef": "node --test scripts/planning-db-schema.test.cjs",
+          "subjectId": "ClassifyArchitectureDocumentationDisposition",
+          "evidenceId": "EV-PTH14-V5-CLASSIFY-REVIEW2",
+          "sourcePath": "scripts/planning-db-schema.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "query",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "39d479f362360f996f2c45035593c07d52372eed46f9fd57438b007c68862b21"
+        },
+        "created_at": "2026-08-11T17:07:52.553+00:00"
+      },
+      {
         "operation_id": "833766bf-b005-4344-a7b5-f70441155a66",
         "idempotency_key": "gh-2167-update-test-sys-api-http-entrypoint-tests-error-translation-6-v1",
         "operation_type": "architecture_test_record",
@@ -100237,6 +100288,31 @@
           "sourceContentSha256": "18072d6d1746b846090631cf03247e347c15d36597c3be27e87dd2708a8f2f29"
         },
         "created_at": "2026-08-10T21:03:59.146+00:00"
+      },
+      {
+        "operation_id": "ee6f3915-e04b-4386-a790-6037220e9a69",
+        "idempotency_key": "architecture_evidence_record:codex:API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811:EV-PTH14-REF-CLASSIFY-REVIEW2:0bc0084a9d61a50e",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811",
+        "source_ref": "node --test scripts/planning-db-schema.test.cjs",
+        "source_content_sha256": "39d479f362360f996f2c45035593c07d52372eed46f9fd57438b007c68862b21",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811",
+          "sourceRef": "node --test scripts/planning-db-schema.test.cjs",
+          "subjectId": "ClassifyArchitectureDocumentationDisposition",
+          "evidenceId": "EV-PTH14-REF-CLASSIFY-REVIEW2",
+          "sourcePath": "scripts/planning-db-schema.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "query",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "39d479f362360f996f2c45035593c07d52372eed46f9fd57438b007c68862b21"
+        },
+        "created_at": "2026-08-11T17:07:51.164+00:00"
       },
       {
         "operation_id": "eee0c5a5-b199-40b6-a1c1-dcec86d0653b",
