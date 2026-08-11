@@ -17,7 +17,7 @@ test('docs sync waits for Planning DB readiness before importing', () => {
 
   assert.equal(
     packageJson.scripts['docs:sync'],
-    'pnpm planning:db:up && pnpm planning:db:health -- --wait && pnpm planning:db:import && node scripts/sync-docs.cjs'
+    'pnpm planning:db:up && pnpm planning:db:health --wait && pnpm planning:db:import && node scripts/sync-docs.cjs'
   );
 });
 
