@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import test from 'node:test';
 
@@ -8,6 +9,17 @@ const {
   shouldIncludePlanningDoc,
   splitFrontmatter,
 } = require('../../scripts/sync-docs.cjs');
+
+test('docs sync waits for Planning DB readiness before importing', () => {
+  const packageJson = JSON.parse(
+    readFileSync(new URL('../../package.json', import.meta.url), 'utf8')
+  );
+
+  assert.equal(
+    packageJson.scripts['docs:sync'],
+    'pnpm planning:db:up && pnpm planning:db:health -- --wait && pnpm planning:db:import && node scripts/sync-docs.cjs'
+  );
+});
 
 test('planning doc index generation excludes superseded and archived docs', () => {
   assert.equal(shouldIncludePlanningDoc('Active'), true);
