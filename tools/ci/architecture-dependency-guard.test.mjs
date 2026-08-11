@@ -526,6 +526,17 @@ test('dependency-cruiser boundary rules allow governed package entrypoints', () 
   assert.equal(violations.includes('no-cross-package-deep-imports'), false);
 });
 
+test('type-only cycles enrich reachability without becoming runtime cycle violations', () => {
+  const violations = collectDependencyViolations({
+    'packages/@dvt/engine/src/a.ts':
+      "import type { B } from './b.js'; export interface A { readonly b: B }\n",
+    'packages/@dvt/engine/src/b.ts':
+      "import type { A } from './a.js'; export interface B { readonly a: A }\n",
+  });
+
+  assert.equal(violations.includes('no-dvt-package-cycles'), false);
+});
+
 test('semantic architecture guard rejects adapter-owned canonical contract definitions', () => {
   const fixtureRoot = mkdtempSync(join(tmpdir(), 'dvt-adapter-contracts-'));
   try {

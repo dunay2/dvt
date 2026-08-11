@@ -61,7 +61,11 @@ module.exports = {
       from: { path: '^packages/@dvt/[^/]+/src/' },
       to: {
         circular: true,
-        viaOnly: { path: '^packages/@dvt/[^/]+/src/' },
+        dependencyTypesNot: ['type-only'],
+        viaOnly: {
+          path: '^packages/@dvt/[^/]+/src/',
+          dependencyTypesNot: ['type-only'],
+        },
       },
     },
     {
@@ -133,6 +137,7 @@ module.exports = {
     tsConfig: {
       fileName: 'tsconfig.json',
     },
+    tsPreCompilationDeps: true,
     reporterOptions: {
       text: {
         highlightFocused: true,

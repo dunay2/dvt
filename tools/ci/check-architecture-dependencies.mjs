@@ -703,6 +703,7 @@ export async function runDependencyCruiseReport(baseDir = process.cwd()) {
     doNotFollow: config.options?.doNotFollow,
     exclude: config.options?.exclude,
     tsConfig: config.options?.tsConfig,
+    tsPreCompilationDeps: true,
     outputType: 'json',
   });
   return parseCruiseOutput(report.output);
@@ -741,7 +742,7 @@ export async function runArchitectureDependencyGuard(baseDir = process.cwd()) {
   const cruiseResult = await runDependencyCruiseReport(baseDir);
   const dependencyViolations = cruiseResult.summary.violations ?? [];
   const adapterContractFindings = collectAdapterCanonicalContractFindings(baseDir);
-  const apiReachability = await collectApiProductionReachability(baseDir);
+  const apiReachability = await collectApiProductionReachability(baseDir, { cruiseResult });
 
   return {
     dependencyViolations,
