@@ -1187,9 +1187,9 @@ test('architecture execution evidence planner requires must-prove scope and reco
     '--evidence',
     'EVIDENCE-API-H2-4-LIFECYCLE-LOCAL',
     '--subject-kind',
-    'test',
+    'query',
     '--subject',
-    'TEST-API-H2-4-DOCUMENT-LIFECYCLE-DISPOSITION',
+    'ClassifyArchitectureDocumentationDisposition',
     '--evidence-kind',
     'test',
     '--origin',
@@ -1211,14 +1211,18 @@ test('architecture execution evidence planner requires must-prove scope and reco
     design: { design_id: command.designId, status: 'implementing' },
     designScopes: [
       {
-        subject_kind: 'test',
-        subject_id: 'TEST-API-H2-4-DOCUMENT-LIFECYCLE-DISPOSITION',
+        subject_kind: 'query',
+        subject_id: 'ClassifyArchitectureDocumentationDisposition',
         scope_kind: 'must_prove',
       },
     ],
     sourceFile: {
       path: 'scripts/planning-db-schema.test.cjs',
       content_hash: 'e'.repeat(64),
+    },
+    subjectImplementation: {
+      current_implementation_content_sha256: 'd'.repeat(64),
+      missing_implementation_ref_count: 0,
     },
     operationId: 'op-architecture-evidence-record',
     now,
@@ -1228,7 +1232,31 @@ test('architecture execution evidence planner requires must-prove scope and reco
   assert.equal(planned.evidence.resultState, 'pass');
   assert.equal(planned.evidence.designId, command.designId);
   assert.equal(planned.evidence.sourcePath, command.sourcePath);
+  assert.equal(planned.evidence.implementationContentSha256, 'd'.repeat(64));
   assert.equal(planned.audit.operationType, 'architecture_evidence_record');
+
+  assert.throws(
+    () =>
+      planArchitectureEvidenceRecordOperation({
+        command,
+        design: { design_id: command.designId, status: 'implementing' },
+        designScopes: [
+          {
+            subject_kind: command.subjectKind,
+            subject_id: command.subjectId,
+            scope_kind: 'must_prove',
+          },
+        ],
+        sourceFile: {
+          path: command.sourcePath,
+          content_hash: command.sourceContentSha256,
+        },
+        subjectImplementation: null,
+        operationId: 'op-architecture-evidence-missing-implementation',
+        now,
+      }),
+    /ARCH-EVIDENCE-SUBJECT-IMPLEMENTATION-MISSING/u
+  );
 });
 
 test('architecture execution evidence writer persists proof before its audit row', async () => {
@@ -1252,6 +1280,7 @@ test('architecture execution evidence writer persists proof before its audit row
       resultState: 'pass',
       recordedAt: '2026-08-11T12:00:00.000Z',
       sourceContentSha256: 'e'.repeat(64),
+      implementationContentSha256: 'd'.repeat(64),
     },
     audit: {
       operationId: 'op-architecture-evidence-record',
@@ -1274,15 +1303,22 @@ test('architecture execution evidence writer persists proof before its audit row
   assert.match(queries[0].sql, /insert into architecture\.evidence/u);
   assert.match(queries[0].sql, /design_id/u);
   assert.match(queries[0].sql, /source_path/u);
+  assert.match(queries[0].sql, /implementation_content_sha256/u);
+  assert.equal(queries[0].params[11], 'd'.repeat(64));
   assert.equal(queries[0].params[5], 'local_execution');
   assert.match(queries[1].sql, /insert into architecture\.design_operations/u);
 });
 
 test('architecture evidence rejects forged CI origin and source hash drift', async () => {
   const committedSourceBytes = Buffer.from('committed architecture evidence source\n', 'utf8');
+  const committedImplementationBytes = Buffer.from('committed implementation source\n', 'utf8');
   const committedSourceSha256 = crypto
     .createHash('sha256')
     .update(committedSourceBytes)
+    .digest('hex');
+  const committedImplementationSha256 = crypto
+    .createHash('sha256')
+    .update(committedImplementationBytes)
     .digest('hex');
   const command = parseArgs([
     'architecture-evidence',
@@ -1353,9 +1389,43 @@ test('architecture evidence rejects forged CI origin and source hash drift', asy
       json: async () => githubResponses.get(url) || {},
     }),
     repositorySlug: 'dunay2/dvt',
-    readGitFileAtCommit: () => committedSourceBytes,
+    subjectImplementation: {
+      implementation_files: [
+        {
+          implementation_path: 'scripts/architecture-evidence-ledger.cjs',
+          implementation_content_hash: committedImplementationSha256,
+        },
+      ],
+    },
+    readGitFileAtCommit: (_commitSha, filePath) =>
+      filePath === command.sourcePath ? committedSourceBytes : committedImplementationBytes,
   });
   assert.equal(verified, command);
+
+  await assert.rejects(
+    assertArchitectureEvidenceOriginAuthenticity(command, {
+      currentGitSha: 'a'.repeat(40),
+      fetch: async (url) => ({
+        ok: githubResponses.has(url),
+        status: githubResponses.has(url) ? 200 : 404,
+        json: async () => githubResponses.get(url) || {},
+      }),
+      repositorySlug: 'dunay2/dvt',
+      subjectImplementation: {
+        implementation_files: [
+          {
+            implementation_path: 'scripts/architecture-evidence-ledger.cjs',
+            implementation_content_hash: committedImplementationSha256,
+          },
+        ],
+      },
+      readGitFileAtCommit: (_commitSha, filePath) =>
+        filePath === command.sourcePath
+          ? committedSourceBytes
+          : Buffer.from('changed implementation source\n'),
+    }),
+    /ARCH-EVIDENCE-CI-ORIGIN-UNVERIFIED.*implementation bytes at the proven commit/u
+  );
 
   await assert.rejects(
     assertArchitectureEvidenceOriginAuthenticity(command, {

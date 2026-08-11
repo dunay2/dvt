@@ -110,9 +110,14 @@ test('architecture proof distinguishes assertions from fresh executions', () => 
     schemaSql,
     /architecture\.evidence[\s\S]*design_id text[\s\S]*evidence_origin text NOT NULL[\s\S]*source_path text[\s\S]*imported_assertion[\s\S]*local_execution[\s\S]*ci_execution/u
   );
+  assert.match(schemaSql, /architecture\.evidence[\s\S]*implementation_content_sha256 text/u);
   assert.match(
     schemaSql,
-    /CREATE VIEW architecture\.evidence_query[\s\S]*source_changed[\s\S]*assertion_only[\s\S]*verified[\s\S]*governance_files/u
+    /CREATE VIEW architecture\.evidence_subject_implementation_query[\s\S]*command_query_rail_query[\s\S]*implementation_refs[\s\S]*governance_files[\s\S]*sha256_text/u
+  );
+  assert.match(
+    schemaSql,
+    /CREATE VIEW architecture\.evidence_query[\s\S]*implementation_changed[\s\S]*source_changed[\s\S]*assertion_only[\s\S]*verified[\s\S]*evidence_subject_implementation_query/u
   );
   assert.match(
     schemaSql,
@@ -120,7 +125,7 @@ test('architecture proof distinguishes assertions from fresh executions', () => 
   );
   assert.match(
     schemaSql,
-    /implementation_violation_query[\s\S]*governance_files[\s\S]*30 days[\s\S]*source_content_sha256 IS DISTINCT FROM evidence\.current_source_content_sha256/u
+    /implementation_violation_query[\s\S]*evidence_subject_implementation_query[\s\S]*30 days[\s\S]*source_content_sha256 IS DISTINCT FROM evidence\.current_source_content_sha256[\s\S]*implementation_content_sha256 IS DISTINCT FROM evidence\.current_implementation_content_sha256/u
   );
   assert.match(schemaSql, /evidence_design_id_fkey[\s\S]*REFERENCES architecture\.design/u);
 });
