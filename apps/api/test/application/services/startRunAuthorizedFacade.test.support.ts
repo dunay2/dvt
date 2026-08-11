@@ -82,6 +82,10 @@ type FacadeOverrides = {
   readonly telemetry?: IStartRunLatencyTelemetry;
 };
 
+const TEST_START_RUN_LATENCY_TELEMETRY: IStartRunLatencyTelemetry = {
+  recordStartRunLatency() {},
+};
+
 export function buildStartRunAuthorizedFacade(
   overrides: FacadeOverrides = {}
 ): StartRunAuthorizedFacade {
@@ -124,7 +128,7 @@ export function buildStartRunAuthorizedFacade(
     authenticator,
     authorizer as AuthorizeCommandScopeService,
     useCase,
-    overrides.telemetry
+    overrides.telemetry ?? TEST_START_RUN_LATENCY_TELEMETRY
   );
 }
 

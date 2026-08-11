@@ -20,15 +20,11 @@ import { AuthorizeCommandScopeService } from './authorizeCommandScopeService.js'
 import { elapsedSlaSecondsSince } from './slaTiming.js';
 
 export class StartRunAuthorizedFacade {
-  private static readonly NOOP_TELEMETRY: IStartRunLatencyTelemetry = {
-    recordStartRunLatency() {},
-  };
-
   public constructor(
     private readonly authenticator: IAuthenticator,
     private readonly authorizer: AuthorizeCommandScopeService,
     private readonly useCase: IStartRunUseCase,
-    private readonly telemetry: IStartRunLatencyTelemetry = StartRunAuthorizedFacade.NOOP_TELEMETRY
+    private readonly telemetry: IStartRunLatencyTelemetry
   ) {}
 
   public async execute(input: {

@@ -56,6 +56,10 @@ const EXECUTABLE_SUBGRAPH_RESOLVER = {
   })),
 };
 
+const TEST_PLAN_COMPILE_TELEMETRY = {
+  recordPlanCompileLatency() {},
+};
+
 const STORED_PLAN_REF = parsePlanRef({
   uri: 'dvt-plan://postgres/plan-1',
   sha256: 'abc123',
@@ -86,6 +90,7 @@ describe('PlannerBackedStartRunUseCase', () => {
     const useCase = new PlannerBackedStartRunUseCase({
       planner: new PlannerFacade() as never,
       planStore: planStore as never,
+      compileTelemetry: TEST_PLAN_COMPILE_TELEMETRY,
       validator: {
         validatePlan: vi.fn(async () => ({
           status: 'OK' as const,
@@ -160,6 +165,7 @@ describe('PlannerBackedStartRunUseCase', () => {
     const useCase = new PlannerBackedStartRunUseCase({
       planner: new PlannerFacade() as never,
       planStore: planStore as never,
+      compileTelemetry: TEST_PLAN_COMPILE_TELEMETRY,
       validator: {
         validatePlan: vi.fn(async () => ({
           status: 'OK' as const,
@@ -314,6 +320,7 @@ describe('PlannerBackedStartRunUseCase', () => {
         buildPlan: vi.fn(async () => makeBuildResult('plan-1')),
       } as never,
       planStore: planStore as never,
+      compileTelemetry: TEST_PLAN_COMPILE_TELEMETRY,
       validator: {
         validatePlan: vi.fn(async () => rejection),
       } as never,
@@ -423,6 +430,7 @@ describe('PlannerBackedStartRunUseCase', () => {
         buildPlan: vi.fn(async () => makeBuildResult('plan-1')),
       } as never,
       planStore: planStore as never,
+      compileTelemetry: TEST_PLAN_COMPILE_TELEMETRY,
       validator: {
         validatePlan: vi.fn(async () => rejection),
       } as never,

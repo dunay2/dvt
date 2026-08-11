@@ -40,6 +40,7 @@ import { createStartRunTargetAdapterRegistryFromValues } from '../../src/applica
 import { StoredPlanExecutabilityValidator } from '../../src/application/services/StoredPlanExecutabilityValidator.js';
 import { buildWorkflowEngine } from '../../src/application/services/WorkflowEngineFactory.js';
 import { startRunRoute } from '../../src/entrypoints/http/startRunRoute.js';
+import { ObservabilityStartRunSlaTelemetry } from '../../src/infrastructure/telemetry/ObservabilityStartRunSlaTelemetry.js';
 
 const RUN_ID = 'run_0196454a-f0c8-7d37-a8e8-8a7f9afac0f1';
 const SECRET_TOKEN = 'secret-bearer-token-value';
@@ -144,9 +145,11 @@ export async function createStartRunOpenTelemetryProof(
     infrastructure: { clock, observability },
   });
   const planner = new PlannerFacade();
+  const startRunSlaTelemetry = new ObservabilityStartRunSlaTelemetry({ observability });
   const plannerBackedStartRun = new PlannerBackedStartRunUseCase({
     planner,
     planStore,
+    compileTelemetry: startRunSlaTelemetry,
     validator: new StoredPlanExecutabilityValidator({
       fetcher: planStore,
       adapters,
@@ -161,7 +164,8 @@ export async function createStartRunOpenTelemetryProof(
   const facade = new StartRunAuthorizedFacade(
     createAuthenticator(),
     createAuthorizer(authorized),
-    plannerBackedStartRun
+    plannerBackedStartRun,
+    startRunSlaTelemetry
   );
   const app = Fastify({ logger: false });
   app.post('/runs/start', async (request, reply) =>
