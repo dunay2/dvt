@@ -1147,6 +1147,59 @@ test('profile evidence excludes statically unselected switch clauses', () => {
 
   assert.deepEqual(breakStopsFallthroughEvidence, []);
 
+  const nestedBreakEvidence = collectApiDeploymentProfileEvidence({
+    modules: [{ source: 'apps/api/src/app.ts', dependencies: [] }],
+    productionSources: new Set(['apps/api/src/app.ts']),
+    sourceContents: new Map([
+      [
+        'apps/api/src/app.ts',
+        [
+          'function buildObservability(env) {',
+          "  switch ('on') {",
+          "    case 'on': {",
+          '      break;',
+          '      if (!env.OBS_ENABLED) return createNoopObservability();',
+          '      return new OtelObservability({});',
+          '    }',
+          '    default: return null;',
+          '  }',
+          '  return null;',
+          '}',
+          'buildObservability(env);',
+        ].join('\n'),
+      ],
+    ]),
+  });
+
+  assert.deepEqual(nestedBreakEvidence, []);
+
+  const nestedContinueEvidence = collectApiDeploymentProfileEvidence({
+    modules: [{ source: 'apps/api/src/app.ts', dependencies: [] }],
+    productionSources: new Set(['apps/api/src/app.ts']),
+    sourceContents: new Map([
+      [
+        'apps/api/src/app.ts',
+        [
+          'function buildObservability(env) {',
+          '  for (;;) {',
+          "    switch ('on') {",
+          "      case 'on': {",
+          '        continue;',
+          '        if (!env.OBS_ENABLED) return createNoopObservability();',
+          '        return new OtelObservability({});',
+          '      }',
+          '      default: return null;',
+          '    }',
+          '  }',
+          '}',
+          'buildObservability(env);',
+        ].join('\n'),
+      ],
+    ]),
+  });
+
+  assert.deepEqual(nestedContinueEvidence, []);
+
   const selectedFallthroughEvidence = collectApiDeploymentProfileEvidence({
     modules: [{ source: 'apps/api/src/app.ts', dependencies: [] }],
     productionSources: new Set(['apps/api/src/app.ts']),
