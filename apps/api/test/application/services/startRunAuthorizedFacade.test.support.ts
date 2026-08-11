@@ -2,6 +2,7 @@ import { parseExecutionSelection, parsePlanRef } from '@dvt/contracts';
 
 import type {
   AuthorizationAction,
+  DeniedReason,
   RequestedScope,
 } from '../../../src/application/ports/accessDecision.js';
 import {
@@ -11,7 +12,6 @@ import {
 import type {
   AuthorizedCommandExecutionContext,
   AuthorizedExecutionContext,
-  DeniedReason,
   IAuthenticator,
 } from '../../../src/application/ports/auth.js';
 import type { IStartRunLatencyTelemetry } from '../../../src/application/ports/StartRunSlaTelemetry.js';

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { cancelRunRoute } from '../../../src/entrypoints/http/cancelRunRoute.js';
-import { SIGNAL_COMMAND_ACTION } from '../../../src/entrypoints/http/signalRunRouteAuthorization.constants.js';
+import { RUN_COMMAND_ACTION } from '../../../src/entrypoints/http/runCommandRoute.constants.js';
 import { HTTP_STATUS_CODE } from '../../../src/routes/httpStatus.js';
 
 function createReply(): {
@@ -58,7 +58,7 @@ function createDeps(): {
         context: {
           principal: {},
           scope: { tenantId: { value: 'tenant-a' } },
-          action: { kind: 'command', name: SIGNAL_COMMAND_ACTION.CANCEL },
+          action: { kind: 'command', name: RUN_COMMAND_ACTION.CANCEL },
           requestId: 'req-1',
           authorizedAt: new Date('2026-03-19T00:00:00Z'),
         },
@@ -93,7 +93,7 @@ describe('cancelRunRoute', () => {
     expect(deps.authorizer.authorize).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({
-        action: { kind: 'command', name: SIGNAL_COMMAND_ACTION.CANCEL },
+        action: { kind: 'command', name: RUN_COMMAND_ACTION.CANCEL },
       }),
       'req-1'
     );

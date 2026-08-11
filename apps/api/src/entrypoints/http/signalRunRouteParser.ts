@@ -18,14 +18,8 @@ import {
   type SignalRouteCompatibilityPolicy,
 } from './signalRunRouteValidation.constants.js';
 
-export {
-  SIGNAL_COMMAND_ACTION,
-  type SignalCommandActionName,
-} from './signalRunRouteAuthorization.constants.js';
-export {
-  SIGNAL_ROUTE_COMPATIBILITY_POLICY,
-  type SignalRouteCompatibilityPolicy,
-} from './signalRunRouteValidation.constants.js';
+export type { SignalCommandActionName } from './signalRunRouteAuthorization.constants.js';
+export type { SignalRouteCompatibilityPolicy } from './signalRunRouteValidation.constants.js';
 
 export interface ParsedSignalRunRequest {
   readonly command: {
