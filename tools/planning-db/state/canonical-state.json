@@ -10551,6 +10551,20 @@
         "updated_at": "2026-08-11T13:03:22.765+00:00"
       },
       {
+        "design_id": "API-H2-4-CI-EVIDENCE-AUTHENTICITY-V2-20260811",
+        "work_item_id": "#2274",
+        "title": "Verify GitHub Actions evidence before recording CI origin",
+        "owner": "architecture-governance",
+        "status": "implementing",
+        "rationale": "Fail closed unless a concrete successful GitHub Actions job belongs to the canonical repository and current commit.",
+        "fowler_signal": "hidden_authority",
+        "rail_ref": "RecordArchitectureEvidenceExecution",
+        "approved_at": "2026-08-11T13:48:55.05+00:00",
+        "supersedes_id": null,
+        "created_at": "2026-08-11T13:48:39.286+00:00",
+        "updated_at": "2026-08-11T13:48:56.616+00:00"
+      },
+      {
         "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-20260811",
         "work_item_id": "GH-2274",
         "title": "DB-first document and evidence reconciliation",
@@ -10647,6 +10661,20 @@
         "supersedes_id": "API-H2-4-DB-FIRST-INDEX-GENERATION-20260811",
         "created_at": "2026-08-11T12:53:29.414+00:00",
         "updated_at": "2026-08-11T13:03:24.212+00:00"
+      },
+      {
+        "design_id": "API-H2-4-HISTORICAL-LINK-PROJECTION-V2-20260811",
+        "work_item_id": "#2274",
+        "title": "Resolve retired documentation links in disposable publication",
+        "owner": "docs-governance",
+        "status": "implementing",
+        "rationale": "Preserve historical source bytes while making active publication references resolve to immutable Git evidence under Planning DB lifecycle authority.",
+        "fowler_signal": "published_language",
+        "rail_ref": "GeneratePlanningDerivedSurfaces",
+        "approved_at": "2026-08-11T13:48:51.893+00:00",
+        "supersedes_id": null,
+        "created_at": "2026-08-11T13:48:37.674+00:00",
+        "updated_at": "2026-08-11T13:48:53.475+00:00"
       },
       {
         "design_id": "CANVAS-BACKLOG-INTEGRITY-READINESS-20260626",
@@ -62071,6 +62099,38 @@
         "created_at": "2026-08-11T12:42:32.421+00:00"
       },
       {
+        "design_id": "API-H2-4-CI-EVIDENCE-AUTHENTICITY-V2-20260811",
+        "subject_kind": "command",
+        "subject_id": "RecordArchitectureEvidenceExecution",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T13:48:39.286+00:00"
+      },
+      {
+        "design_id": "API-H2-4-CI-EVIDENCE-AUTHENTICITY-V2-20260811",
+        "subject_kind": "path",
+        "subject_id": "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T13:48:39.286+00:00"
+      },
+      {
+        "design_id": "API-H2-4-CI-EVIDENCE-AUTHENTICITY-V2-20260811",
+        "subject_kind": "path",
+        "subject_id": "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T13:48:39.286+00:00"
+      },
+      {
+        "design_id": "API-H2-4-CI-EVIDENCE-AUTHENTICITY-V2-20260811",
+        "subject_kind": "path",
+        "subject_id": "scripts/planning-db-operate.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T13:48:39.286+00:00"
+      },
+      {
         "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-20260811",
         "subject_kind": "command",
         "subject_id": "ApplyArchitectureDependencyBoundaryGate",
@@ -63141,6 +63201,30 @@
         "scope_kind": "must_prove",
         "required": true,
         "created_at": "2026-08-11T12:53:29.414+00:00"
+      },
+      {
+        "design_id": "API-H2-4-HISTORICAL-LINK-PROJECTION-V2-20260811",
+        "subject_kind": "command",
+        "subject_id": "GeneratePlanningDerivedSurfaces",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T13:48:37.674+00:00"
+      },
+      {
+        "design_id": "API-H2-4-HISTORICAL-LINK-PROJECTION-V2-20260811",
+        "subject_kind": "path",
+        "subject_id": "scripts/documentation-publication.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T13:48:37.674+00:00"
+      },
+      {
+        "design_id": "API-H2-4-HISTORICAL-LINK-PROJECTION-V2-20260811",
+        "subject_kind": "path",
+        "subject_id": "scripts/documentation-publication.test.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T13:48:37.674+00:00"
       },
       {
         "design_id": "CANVAS-BOTTOM-DRAWER-ACTIONABLE-READ-MODEL-20260626",
@@ -88768,6 +88852,52 @@
         "created_at": "2026-08-11T03:58:09.967+00:00"
       },
       {
+        "operation_id": "1a942e89-42f4-4eaa-8251-5a3324f9c99f",
+        "idempotency_key": "architecture_design_create:codex:API-H2-4-HISTORICAL-LINK-PROJECTION-V2-20260811:bd3dadec13b9f6a1",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "API-H2-4-HISTORICAL-LINK-PROJECTION-V2-20260811",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2274",
+        "source_content_sha256": "db5072ae2b773fe2418a91db0528e5fd6541ea37ae6368377639a9d94e8f7311",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "docs-governance",
+          "title": "Resolve retired documentation links in disposable publication",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/documentation-publication.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/documentation-publication.test.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "GeneratePlanningDerivedSurfaces",
+              "subjectKind": "command"
+            }
+          ],
+          "status": "review",
+          "railRef": "GeneratePlanningDerivedSurfaces",
+          "designId": "API-H2-4-HISTORICAL-LINK-PROJECTION-V2-20260811",
+          "rationale": "Preserve historical source bytes while making active publication references resolve to immutable Git evidence under Planning DB lifecycle authority.",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2274",
+          "workItemId": "#2274",
+          "fowlerSignal": "published_language",
+          "supersedesId": null,
+          "sourceContentSha256": "db5072ae2b773fe2418a91db0528e5fd6541ea37ae6368377639a9d94e8f7311"
+        },
+        "created_at": "2026-08-11T13:48:37.674+00:00"
+      },
+      {
         "operation_id": "1a9ea882-3f10-4c27-864e-0acc8b6fc631",
         "idempotency_key": "architecture_design_transition:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811:b10fb5d24862385d",
         "operation_type": "architecture_design_transition",
@@ -90240,6 +90370,27 @@
           "sourceContentSha256": "0972a4db45cbfbac69c27ba6b80080ce608e71e0416eb4b27ad009c26796e0a1"
         },
         "created_at": "2026-08-11T07:05:27.974+00:00"
+      },
+      {
+        "operation_id": "4492c29e-d15a-475f-bebc-a414666b0ccd",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-4-CI-EVIDENCE-AUTHENTICITY-V2-20260811:131e8d6f029622ec",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-4-CI-EVIDENCE-AUTHENTICITY-V2-20260811",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2274",
+        "source_content_sha256": "8256a48788a3ba25d3a214b1fb89b3885caafeb437a8af301d4f5604ed9ddbdd",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Issue #2274 authorizes unattended critical hardening with Fowler controls and demonstrable microcommits.",
+          "designId": "API-H2-4-CI-EVIDENCE-AUTHENTICITY-V2-20260811",
+          "toStatus": "approved",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2274",
+          "fromStatus": "review",
+          "sourceContentSha256": "8256a48788a3ba25d3a214b1fb89b3885caafeb437a8af301d4f5604ed9ddbdd"
+        },
+        "created_at": "2026-08-11T13:48:55.05+00:00"
       },
       {
         "operation_id": "44b94844-4dc8-48f7-9e01-d966ad292ae0",
@@ -97351,6 +97502,27 @@
         "created_at": "2026-08-11T06:10:39.408+00:00"
       },
       {
+        "operation_id": "c1a5582d-e965-4b8f-9877-c7e96c839584",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-4-HISTORICAL-LINK-PROJECTION-V2-20260811:1d493373e724d712",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-4-HISTORICAL-LINK-PROJECTION-V2-20260811",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2274",
+        "source_content_sha256": "db5072ae2b773fe2418a91db0528e5fd6541ea37ae6368377639a9d94e8f7311",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Issue #2274 authorizes unattended critical hardening with Fowler controls and demonstrable microcommits.",
+          "designId": "API-H2-4-HISTORICAL-LINK-PROJECTION-V2-20260811",
+          "toStatus": "implementing",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2274",
+          "fromStatus": "approved",
+          "sourceContentSha256": "db5072ae2b773fe2418a91db0528e5fd6541ea37ae6368377639a9d94e8f7311"
+        },
+        "created_at": "2026-08-11T13:48:53.475+00:00"
+      },
+      {
         "operation_id": "c3165570-64a9-4d2f-8e55-94d1e6f8670e",
         "idempotency_key": "r1-1d-supersede-db-cleanup",
         "operation_type": "architecture_design_transition",
@@ -97981,6 +98153,27 @@
         "created_at": "2026-08-11T05:47:19.464+00:00"
       },
       {
+        "operation_id": "cd5e0e59-3d01-4e28-aaf2-41bd0f6fd0db",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-4-HISTORICAL-LINK-PROJECTION-V2-20260811:565b11e2ce69e511",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-4-HISTORICAL-LINK-PROJECTION-V2-20260811",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2274",
+        "source_content_sha256": "db5072ae2b773fe2418a91db0528e5fd6541ea37ae6368377639a9d94e8f7311",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Issue #2274 authorizes unattended critical hardening with Fowler controls and demonstrable microcommits.",
+          "designId": "API-H2-4-HISTORICAL-LINK-PROJECTION-V2-20260811",
+          "toStatus": "approved",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2274",
+          "fromStatus": "review",
+          "sourceContentSha256": "db5072ae2b773fe2418a91db0528e5fd6541ea37ae6368377639a9d94e8f7311"
+        },
+        "created_at": "2026-08-11T13:48:51.893+00:00"
+      },
+      {
         "operation_id": "cd848398-42b2-48fb-a8ad-096ea41ee3c8",
         "idempotency_key": "architecture_design_create:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-20260811:262c2bcb4ef91a03",
         "operation_type": "architecture_design_create",
@@ -98501,6 +98694,79 @@
           "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
         },
         "created_at": "2026-08-10T20:08:53.967+00:00"
+      },
+      {
+        "operation_id": "d5b015e9-8e81-4bf8-aacd-d4d470f4d011",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-4-CI-EVIDENCE-AUTHENTICITY-V2-20260811:6d6dcdc0b1006200",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-4-CI-EVIDENCE-AUTHENTICITY-V2-20260811",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2274",
+        "source_content_sha256": "8256a48788a3ba25d3a214b1fb89b3885caafeb437a8af301d4f5604ed9ddbdd",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Issue #2274 authorizes unattended critical hardening with Fowler controls and demonstrable microcommits.",
+          "designId": "API-H2-4-CI-EVIDENCE-AUTHENTICITY-V2-20260811",
+          "toStatus": "implementing",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2274",
+          "fromStatus": "approved",
+          "sourceContentSha256": "8256a48788a3ba25d3a214b1fb89b3885caafeb437a8af301d4f5604ed9ddbdd"
+        },
+        "created_at": "2026-08-11T13:48:56.616+00:00"
+      },
+      {
+        "operation_id": "d5f12257-977c-49fe-a10b-923218a89aec",
+        "idempotency_key": "architecture_design_create:codex:API-H2-4-CI-EVIDENCE-AUTHENTICITY-V2-20260811:3229bec6e08de4e0",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "API-H2-4-CI-EVIDENCE-AUTHENTICITY-V2-20260811",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2274",
+        "source_content_sha256": "8256a48788a3ba25d3a214b1fb89b3885caafeb437a8af301d4f5604ed9ddbdd",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "architecture-governance",
+          "title": "Verify GitHub Actions evidence before recording CI origin",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/planning-db-operate.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "RecordArchitectureEvidenceExecution",
+              "subjectKind": "command"
+            }
+          ],
+          "status": "review",
+          "railRef": "RecordArchitectureEvidenceExecution",
+          "designId": "API-H2-4-CI-EVIDENCE-AUTHENTICITY-V2-20260811",
+          "rationale": "Fail closed unless a concrete successful GitHub Actions job belongs to the canonical repository and current commit.",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2274",
+          "workItemId": "#2274",
+          "fowlerSignal": "hidden_authority",
+          "supersedesId": null,
+          "sourceContentSha256": "8256a48788a3ba25d3a214b1fb89b3885caafeb437a8af301d4f5604ed9ddbdd"
+        },
+        "created_at": "2026-08-11T13:48:39.286+00:00"
       },
       {
         "operation_id": "d61ce0d0-07b5-4f23-9638-bdf29a6d36d2",
@@ -103757,7 +104023,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "8256a48788a3ba25d3a214b1fb89b3885caafeb437a8af301d4f5604ed9ddbdd",
+      "sourceContentSha256": "ecec13d4beabd32b342753da833b76f0a4b5c2c9618e9d004364a5a60df90aca",
       "rawRail": {
         "name": "RecordArchitectureEvidenceExecution",
         "type": "command",
@@ -104115,7 +104381,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "8256a48788a3ba25d3a214b1fb89b3885caafeb437a8af301d4f5604ed9ddbdd",
+      "sourceContentSha256": "ecec13d4beabd32b342753da833b76f0a4b5c2c9618e9d004364a5a60df90aca",
       "rawRail": {
         "name": "RetireArchitectureEvidenceExecution",
         "type": "command",
@@ -104277,7 +104543,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "8256a48788a3ba25d3a214b1fb89b3885caafeb437a8af301d4f5604ed9ddbdd",
+      "sourceContentSha256": "ecec13d4beabd32b342753da833b76f0a4b5c2c9618e9d004364a5a60df90aca",
       "rawRail": {
         "name": "RetireArchitectureTestEvidence",
         "type": "command",
@@ -104439,7 +104705,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "8256a48788a3ba25d3a214b1fb89b3885caafeb437a8af301d4f5604ed9ddbdd",
+      "sourceContentSha256": "ecec13d4beabd32b342753da833b76f0a4b5c2c9618e9d004364a5a60df90aca",
       "rawRail": {
         "name": "RetireFeatureMechanizationRail",
         "type": "command",
@@ -104601,7 +104867,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "8256a48788a3ba25d3a214b1fb89b3885caafeb437a8af301d4f5604ed9ddbdd",
+      "sourceContentSha256": "ecec13d4beabd32b342753da833b76f0a4b5c2c9618e9d004364a5a60df90aca",
       "rawRail": {
         "name": "TransitionArchitectureDesign",
         "type": "command",
@@ -110125,7 +110391,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/documentation-publication.cjs",
-      "sourceContentSha256": "db5072ae2b773fe2418a91db0528e5fd6541ea37ae6368377639a9d94e8f7311",
+      "sourceContentSha256": "3e103b92310327c50ad13de9702c492abd3dbcbe1c696c98965a33ce244accec",
       "rawRail": {
         "name": "GeneratePlanningDerivedSurfaces",
         "type": "command",
@@ -110397,7 +110663,7 @@
         "pnpm docs:feature-mechanization:implementation"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "8256a48788a3ba25d3a214b1fb89b3885caafeb437a8af301d4f5604ed9ddbdd",
+      "sourceContentSha256": "ecec13d4beabd32b342753da833b76f0a4b5c2c9618e9d004364a5a60df90aca",
       "rawRail": {
         "name": "RecordArchitectureStorageIo",
         "type": "command",
@@ -136553,7 +136819,7 @@
         "pnpm docs:feature-mechanization:implementation -- --feature R1-1D-API-GOVERNANCE-HARDCUT"
       ],
       "sourcePath": "scripts/documentation-publication.cjs",
-      "sourceContentSha256": "db5072ae2b773fe2418a91db0528e5fd6541ea37ae6368377639a9d94e8f7311",
+      "sourceContentSha256": "3e103b92310327c50ad13de9702c492abd3dbcbe1c696c98965a33ce244accec",
       "rawRail": {
         "name": "GeneratePlanningDerivedSurfaces",
         "type": "command",
