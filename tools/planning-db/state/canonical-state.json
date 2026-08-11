@@ -13889,6 +13889,20 @@
         "implementation_content_sha256": "105219abe736f3cf7db27f9a578364061ee893c861f05d300c861332db260399"
       },
       {
+        "evidence_id": "EV-PTH14-IDX-CLASSIFY-REVIEW6",
+        "design_id": "API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811",
+        "subject_kind": "query",
+        "subject_id": "ClassifyArchitectureDocumentationDisposition",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test tools/ci/sync-docs-status-policy.test.mjs",
+        "source_path": "tools/ci/sync-docs-status-policy.test.mjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T18:40:38.792+00:00",
+        "source_content_sha256": "efe621f4806a1b5e14a392a4ea99b93929ce4e3a0caf9281b93c631b23534c83",
+        "implementation_content_sha256": "f5d1b5f40f18833af1ac26fbf256be056a7b56307a88eabf25335483c44d379b"
+      },
+      {
         "evidence_id": "EV-PTH14-IDX-GENERATE",
         "design_id": "API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811",
         "subject_kind": "command",
@@ -14029,6 +14043,20 @@
         "implementation_content_sha256": "105219abe736f3cf7db27f9a578364061ee893c861f05d300c861332db260399"
       },
       {
+        "evidence_id": "EV-PTH14-REF-CLASSIFY-REVIEW6",
+        "design_id": "API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811",
+        "subject_kind": "query",
+        "subject_id": "ClassifyArchitectureDocumentationDisposition",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/planning-db-schema.test.cjs",
+        "source_path": "scripts/planning-db-schema.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T18:40:38.285+00:00",
+        "source_content_sha256": "edd379482987387b160119fae60df9981a6c682fb7be03c826d447e15e9f4a7e",
+        "implementation_content_sha256": "f5d1b5f40f18833af1ac26fbf256be056a7b56307a88eabf25335483c44d379b"
+      },
+      {
         "evidence_id": "EV-PTH14-REF-GENERATE",
         "design_id": "API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811",
         "subject_kind": "command",
@@ -14097,6 +14125,20 @@
         "recorded_at": "2026-08-11T18:33:29.584+00:00",
         "source_content_sha256": "edd379482987387b160119fae60df9981a6c682fb7be03c826d447e15e9f4a7e",
         "implementation_content_sha256": "105219abe736f3cf7db27f9a578364061ee893c861f05d300c861332db260399"
+      },
+      {
+        "evidence_id": "EV-PTH14-V3-CLASSIFY-REVIEW6",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "subject_kind": "query",
+        "subject_id": "ClassifyArchitectureDocumentationDisposition",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/planning-db-schema.test.cjs",
+        "source_path": "scripts/planning-db-schema.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T18:40:38.471+00:00",
+        "source_content_sha256": "edd379482987387b160119fae60df9981a6c682fb7be03c826d447e15e9f4a7e",
+        "implementation_content_sha256": "f5d1b5f40f18833af1ac26fbf256be056a7b56307a88eabf25335483c44d379b"
       },
       {
         "evidence_id": "EV-PTH14-V3-DESIGN-AUTH",
@@ -14251,6 +14293,20 @@
         "recorded_at": "2026-08-11T18:33:29.827+00:00",
         "source_content_sha256": "edd379482987387b160119fae60df9981a6c682fb7be03c826d447e15e9f4a7e",
         "implementation_content_sha256": "105219abe736f3cf7db27f9a578364061ee893c861f05d300c861332db260399"
+      },
+      {
+        "evidence_id": "EV-PTH14-V5-CLASSIFY-REVIEW6",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "subject_kind": "query",
+        "subject_id": "ClassifyArchitectureDocumentationDisposition",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/planning-db-schema.test.cjs",
+        "source_path": "scripts/planning-db-schema.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-11T18:40:38.632+00:00",
+        "source_content_sha256": "edd379482987387b160119fae60df9981a6c682fb7be03c826d447e15e9f4a7e",
+        "implementation_content_sha256": "f5d1b5f40f18833af1ac26fbf256be056a7b56307a88eabf25335483c44d379b"
       },
       {
         "evidence_id": "EV-PTH14-V5-GENERATE",
@@ -90208,6 +90264,31 @@
         "created_at": "2026-08-10T21:04:41.042+00:00"
       },
       {
+        "operation_id": "289bce1b-0ddd-4316-b026-e62246406c8f",
+        "idempotency_key": "issue-2274-ev-pth14-idx-classify-review6",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811",
+        "source_ref": "node --test tools/ci/sync-docs-status-policy.test.mjs",
+        "source_content_sha256": "efe621f4806a1b5e14a392a4ea99b93929ce4e3a0caf9281b93c631b23534c83",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-INDEX-GENERATION-V2-20260811",
+          "sourceRef": "node --test tools/ci/sync-docs-status-policy.test.mjs",
+          "subjectId": "ClassifyArchitectureDocumentationDisposition",
+          "evidenceId": "EV-PTH14-IDX-CLASSIFY-REVIEW6",
+          "sourcePath": "tools/ci/sync-docs-status-policy.test.mjs",
+          "resultState": "pass",
+          "subjectKind": "query",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "efe621f4806a1b5e14a392a4ea99b93929ce4e3a0caf9281b93c631b23534c83"
+        },
+        "created_at": "2026-08-11T18:40:38.792+00:00"
+      },
+      {
         "operation_id": "28f0e87e-64f6-4b40-9504-0598f980037a",
         "idempotency_key": "gh-2167-update-test-sys-api-infra-workspace-draft-1-v1",
         "operation_type": "architecture_test_record",
@@ -96596,6 +96677,31 @@
         "created_at": "2026-08-11T03:35:48.145+00:00"
       },
       {
+        "operation_id": "a3e57e53-a2a8-49a8-ac96-0e6dc61b24d4",
+        "idempotency_key": "issue-2274-ev-pth14-v5-classify-review6",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+        "source_ref": "node --test scripts/planning-db-schema.test.cjs",
+        "source_content_sha256": "edd379482987387b160119fae60df9981a6c682fb7be03c826d447e15e9f4a7e",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811",
+          "sourceRef": "node --test scripts/planning-db-schema.test.cjs",
+          "subjectId": "ClassifyArchitectureDocumentationDisposition",
+          "evidenceId": "EV-PTH14-V5-CLASSIFY-REVIEW6",
+          "sourcePath": "scripts/planning-db-schema.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "query",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "edd379482987387b160119fae60df9981a6c682fb7be03c826d447e15e9f4a7e"
+        },
+        "created_at": "2026-08-11T18:40:38.632+00:00"
+      },
+      {
         "operation_id": "a4ffe4f6-73e5-4fe1-b4be-692ddf0ec572",
         "idempotency_key": "codex-api-h2-2-reachability-v8-evidence-review",
         "operation_type": "architecture_design_transition",
@@ -99541,6 +99647,31 @@
         "created_at": "2026-08-10T21:04:03.423+00:00"
       },
       {
+        "operation_id": "c970f0ac-5a65-4da5-9990-a049eb0ab13d",
+        "idempotency_key": "issue-2274-ev-pth14-v3-classify-review6",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+        "source_ref": "node --test scripts/planning-db-schema.test.cjs",
+        "source_content_sha256": "edd379482987387b160119fae60df9981a6c682fb7be03c826d447e15e9f4a7e",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811",
+          "sourceRef": "node --test scripts/planning-db-schema.test.cjs",
+          "subjectId": "ClassifyArchitectureDocumentationDisposition",
+          "evidenceId": "EV-PTH14-V3-CLASSIFY-REVIEW6",
+          "sourcePath": "scripts/planning-db-schema.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "query",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "edd379482987387b160119fae60df9981a6c682fb7be03c826d447e15e9f4a7e"
+        },
+        "created_at": "2026-08-11T18:40:38.471+00:00"
+      },
+      {
         "operation_id": "c9fbe449-c50c-4211-867c-64368ca1688b",
         "idempotency_key": "gh-2167-update-contract-sys-api-infra-workspace-local-adapters-api-infrastructure-v1",
         "operation_type": "architecture_contract_record",
@@ -101695,6 +101826,31 @@
           "sourceContentSha256": "18072d6d1746b846090631cf03247e347c15d36597c3be27e87dd2708a8f2f29"
         },
         "created_at": "2026-08-10T21:03:59.146+00:00"
+      },
+      {
+        "operation_id": "ee1a5d5c-a59c-43e0-b2e2-8da373ddb947",
+        "idempotency_key": "issue-2274-ev-pth14-ref-classify-review6",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811",
+        "source_ref": "node --test scripts/planning-db-schema.test.cjs",
+        "source_content_sha256": "edd379482987387b160119fae60df9981a6c682fb7be03c826d447e15e9f4a7e",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811",
+          "sourceRef": "node --test scripts/planning-db-schema.test.cjs",
+          "subjectId": "ClassifyArchitectureDocumentationDisposition",
+          "evidenceId": "EV-PTH14-REF-CLASSIFY-REVIEW6",
+          "sourcePath": "scripts/planning-db-schema.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "query",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "edd379482987387b160119fae60df9981a6c682fb7be03c826d447e15e9f4a7e"
+        },
+        "created_at": "2026-08-11T18:40:38.285+00:00"
       },
       {
         "operation_id": "ee6f3915-e04b-4386-a790-6037220e9a69",
@@ -113715,13 +113871,11 @@
       "dddOwner": "ArchitectureDocumentationDispositionReadModel",
       "railStatus": "implemented",
       "symbolRefs": [
-        "packages/@dvt/contracts/test/provider-vocabulary.architecture.test.ts#activeProviderVocabularySources",
         "scripts/planning-db/queries/documentation-lifecycle-query.cjs#readDocumentationLifecycleRows",
         "scripts/documentation-publication.cjs#DocumentationPublicationPolicy",
         "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.resolveLifecycleRows"
       ],
       "implementationRefs": [
-        "packages/@dvt/contracts/test/provider-vocabulary.architecture.test.ts#activeProviderVocabularySources",
         "scripts/planning-db/queries/documentation-lifecycle-query.cjs#readDocumentationLifecycleRows",
         "scripts/documentation-publication.cjs#DocumentationPublicationPolicy",
         "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.resolveLifecycleRows"
@@ -113746,7 +113900,6 @@
         "docs/guides/workflow-engine-user-manual.v1.md",
         "docs/guides/how-to-add-step-kind-20260406.md",
         "docs/guides/plan-compile-catalog-extension-technical-manual-20260417.md",
-        "packages/@dvt/contracts/test/provider-vocabulary.architecture.test.ts",
         "docs/.manifest.json",
         "docs/evidence/**",
         "docs/risk-register/**",
@@ -113777,29 +113930,14 @@
       "rawManifest": {
         "symbols": [
           {
-            "name": "activeProviderVocabularySources",
-            "path": "packages/@dvt/contracts/test/provider-vocabulary.architecture.test.ts",
-            "cqRails": ["ClassifyArchitectureDocumentationDisposition"],
-            "dddOwner": "ArchitectureDocumentationDispositionReadModel",
-            "unitTests": [
-              "packages/@dvt/contracts/test/provider-vocabulary.architecture.test.ts"
-            ],
-            "fowlerSignals": [
-              "Documentation drift at the repository entry point",
-              "Hidden provider-support authority",
-              "Duplicate provider semantics",
-              "Test-only confidence outside guarded surfaces"
-            ],
-            "cypressCoverage": "N/A - documentation entry points and semantic contract architecture guard",
-            "architectureGuard": "pnpm --filter @dvt/contracts test -- provider-vocabulary.architecture.test.ts"
-          },
-          {
             "name": "readDocumentationLifecycleRows",
             "path": "scripts/planning-db/queries/documentation-lifecycle-query.cjs",
             "cqRails": ["ClassifyArchitectureDocumentationDisposition"],
             "dddOwner": "ArchitectureDocumentationDispositionReadModel",
             "unitTests": [
-              "packages/@dvt/contracts/test/provider-vocabulary.architecture.test.ts"
+              "scripts/planning-db-schema.test.cjs",
+              "scripts/documentation-publication.test.cjs",
+              "tools/ci/sync-docs-status-policy.test.mjs"
             ],
             "fowlerSignals": [
               "Documentation drift at the repository entry point",
@@ -113816,7 +113954,9 @@
             "cqRails": ["ClassifyArchitectureDocumentationDisposition"],
             "dddOwner": "ArchitectureDocumentationDispositionReadModel",
             "unitTests": [
-              "packages/@dvt/contracts/test/provider-vocabulary.architecture.test.ts"
+              "scripts/planning-db-schema.test.cjs",
+              "scripts/documentation-publication.test.cjs",
+              "tools/ci/sync-docs-status-policy.test.mjs"
             ],
             "fowlerSignals": [
               "Documentation drift at the repository entry point",
@@ -113833,7 +113973,9 @@
             "cqRails": ["ClassifyArchitectureDocumentationDisposition"],
             "dddOwner": "ArchitectureDocumentationDispositionReadModel",
             "unitTests": [
-              "packages/@dvt/contracts/test/provider-vocabulary.architecture.test.ts"
+              "scripts/planning-db-schema.test.cjs",
+              "scripts/documentation-publication.test.cjs",
+              "tools/ci/sync-docs-status-policy.test.mjs"
             ],
             "fowlerSignals": [
               "Documentation drift at the repository entry point",
@@ -113875,8 +114017,8 @@
         "redGreenCycles": [
           {
             "id": "classifyarchitecturedocumentationdisposition-record",
-            "redTest": "pnpm --filter @dvt/contracts test -- provider-vocabulary.architecture.test.ts",
-            "greenTest": "pnpm --filter @dvt/contracts test -- provider-vocabulary.architecture.test.ts",
+            "redTest": "node --test scripts/planning-db-schema.test.cjs scripts/documentation-publication.test.cjs tools/ci/sync-docs-status-policy.test.mjs",
+            "greenTest": "node --test scripts/planning-db-schema.test.cjs scripts/documentation-publication.test.cjs tools/ci/sync-docs-status-policy.test.mjs",
             "patchSurfaces": [
               "README.md",
               "docs/adr/ADR-0003-execution-model.md",
@@ -113886,14 +114028,14 @@
               "docs/guides/workflow-engine-user-manual.v1.md",
               "docs/guides/how-to-add-step-kind-20260406.md",
               "docs/guides/plan-compile-catalog-extension-technical-manual-20260417.md",
-              "packages/@dvt/contracts/test/provider-vocabulary.architecture.test.ts",
               "docs/.manifest.json",
               "docs/evidence/**",
               "docs/risk-register/**",
               "tools/planning-db/state/canonical-state.json",
-              "scripts/planning-db/queries/documentation-lifecycle-query.cjs"
+              "scripts/planning-db/queries/documentation-lifecycle-query.cjs",
+              "scripts/documentation-publication.cjs"
             ],
-            "expectedFailure": "The classification rail identifies executable test evidence as its implementation."
+            "expectedFailure": "The classification rail retains executable test evidence as an implementation input."
           }
         ],
         "componentGuides": [
@@ -113920,7 +114062,7 @@
         "architectureGuards": [
           "pnpm --filter @dvt/contracts test -- provider-vocabulary.architecture.test.ts"
         ],
-        "implementationPlan": "Issue #2274 binds documentation disposition classification to the production lifecycle reader and publication policy, never to test evidence.",
+        "implementationPlan": "Issue #2274 binds classification proof only to production lifecycle reader and publication-policy inputs.",
         "mechanizationStatus": "implemented",
         "noHumanDecisionsRemaining": true,
         "allowedImplementationSurfaces": [
@@ -113932,7 +114074,6 @@
           "docs/guides/workflow-engine-user-manual.v1.md",
           "docs/guides/how-to-add-step-kind-20260406.md",
           "docs/guides/plan-compile-catalog-extension-technical-manual-20260417.md",
-          "packages/@dvt/contracts/test/provider-vocabulary.architecture.test.ts",
           "docs/.manifest.json",
           "docs/evidence/**",
           "docs/risk-register/**",
@@ -113945,10 +114086,11 @@
           "packages/@dvt/contracts/src/**",
           "packages/@dvt/engine/**",
           "packages/@dvt/adapter-*/**",
-          "docs/archive/**"
+          "docs/archive/**",
+          "packages/@dvt/contracts/test/provider-vocabulary.architecture.test.ts"
         ]
       },
-      "revision": 5,
+      "revision": 6,
       "createdBy": "codex",
       "createdAt": "2026-08-10T17:34:19.014Z"
     },
@@ -167965,6 +168107,104 @@
         ]
       },
       "createdAt": "2026-08-11T18:33:05.679Z"
+    },
+    {
+      "operationId": "e1d67bf3-4234-4722-a183-394c9434fbfc",
+      "idempotencyKey": "issue-2274-remove-classification-test-input",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#DOC1-7-RUNTIME-PROVIDER-TRUTH#query#classifyarchitecturedocumentationdisposition",
+      "sourcePath": "scripts/planning-db/queries/documentation-lifecycle-query.cjs",
+      "sourceContentSha256": "fb20480fc35e70da450fdd6b70044bc1a317eaa89e843c3ed493a49279185307",
+      "expectedRevision": 5,
+      "previousRevision": 5,
+      "resultingRevision": 6,
+      "payload": {
+        "redTest": "node --test scripts/planning-db-schema.test.cjs scripts/documentation-publication.test.cjs tools/ci/sync-docs-status-policy.test.mjs",
+        "dddOwner": "ArchitectureDocumentationDispositionReadModel",
+        "railName": "ClassifyArchitectureDocumentationDisposition",
+        "railType": "query",
+        "featureId": "DOC1-7-RUNTIME-PROVIDER-TRUTH",
+        "greenTest": "node --test scripts/planning-db-schema.test.cjs scripts/documentation-publication.test.cjs tools/ci/sync-docs-status-policy.test.mjs",
+        "sourceRef": "scripts/planning-db/queries/documentation-lifecycle-query.cjs",
+        "unitTests": [
+          "scripts/planning-db-schema.test.cjs",
+          "scripts/documentation-publication.test.cjs",
+          "tools/ci/sync-docs-status-policy.test.mjs"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2163"],
+        "cypressFlows": [
+          "N/A - documentation entry points and semantic contract architecture guard"
+        ],
+        "domainObjects": [
+          "DocumentationEntryPointRegistry",
+          "ArchitectureDocumentationDispositionReadModel",
+          "DocumentationLifecycleReadModel",
+          "ContractsProviderAdapterEvidence"
+        ],
+        "fowlerSignals": [
+          "Documentation drift at the repository entry point",
+          "Hidden provider-support authority",
+          "Duplicate provider semantics",
+          "Test-only confidence outside guarded surfaces"
+        ],
+        "patchSurfaces": [
+          "scripts/planning-db/queries/documentation-lifecycle-query.cjs",
+          "scripts/documentation-publication.cjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "completionGate": [
+          "pnpm --filter @dvt/contracts test -- provider-vocabulary.architecture.test.ts",
+          "pnpm docs:gov:links",
+          "pnpm docs:build",
+          "pnpm planning:db:current-schema:check",
+          "pnpm planning:db:export:check",
+          "pnpm docs:feature-mechanization:implementation --feature DOC1-7-RUNTIME-PROVIDER-TRUTH",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/components/engine/contracts/engine/runtime-provider-vocabulary-component.md"
+        ],
+        "expectedFailure": "The classification rail retains executable test evidence as an implementation input.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/adr/ADR-0003-execution-model.md",
+          "docs/adr/ADR-0019_Adapter_Equivalence_and_Maintenance_Boundary.md",
+          "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
+          "docs/adr/ADR-0063-planning-db-current-schema-rebuild.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": ["README.md"],
+        "architectureGuards": [
+          "pnpm --filter @dvt/contracts test -- provider-vocabulary.architecture.test.ts"
+        ],
+        "implementationPlan": "Issue #2274 binds classification proof only to production lifecycle reader and publication-policy inputs.",
+        "implementationRefs": [
+          "scripts/planning-db/queries/documentation-lifecycle-query.cjs#readDocumentationLifecycleRows",
+          "scripts/documentation-publication.cjs#DocumentationPublicationPolicy",
+          "scripts/documentation-publication.cjs#DocumentationPublicationAssembler.resolveLifecycleRows"
+        ],
+        "normalizedRailName": "classifyarchitecturedocumentationdisposition",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "fb20480fc35e70da450fdd6b70044bc1a317eaa89e843c3ed493a49279185307",
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db/queries/documentation-lifecycle-query.cjs",
+          "scripts/documentation-publication.cjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/**",
+          "packages/@dvt/contracts/src/**",
+          "packages/@dvt/engine/**",
+          "packages/@dvt/adapter-*/**",
+          "docs/archive/**",
+          "packages/@dvt/contracts/test/provider-vocabulary.architecture.test.ts"
+        ]
+      },
+      "createdAt": "2026-08-11T18:40:20.236Z"
     }
   ],
   "governanceComponentDefinitions": [
