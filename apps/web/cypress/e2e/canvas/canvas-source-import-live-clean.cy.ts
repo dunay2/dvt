@@ -215,9 +215,8 @@ describe('Canvas source import live clean proof', () => {
       const scopeLabel = `${scope.tenantId} / ${scope.projectId} / ${scope.environmentId}`;
       cy.get('[data-slot="shell-workspace-menu-trigger"]', { timeout: 20_000 })
         .should('be.visible')
-        .focus()
-        .should('be.focused');
-      cy.press(Cypress.Keyboard.Keys.ENTER);
+        .and('be.enabled')
+        .click();
       cy.get('[data-slot="shell-workspace-scope-selector"]')
         .should('be.visible')
         .and('contain.text', copy.availableProjects);
@@ -241,9 +240,8 @@ describe('Canvas source import live clean proof', () => {
     ): void => {
       cy.get('[data-slot="shell-workspace-menu-trigger"]')
         .should('be.visible')
-        .focus()
-        .should('be.focused');
-      cy.press(Cypress.Keyboard.Keys.ENTER);
+        .and('be.enabled')
+        .click();
       cy.get('[data-slot="canvas-workspace-open-project-code-command"]')
         .scrollIntoView()
         .should('be.visible')
