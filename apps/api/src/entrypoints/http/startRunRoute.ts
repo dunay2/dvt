@@ -2,12 +2,11 @@
  * Owned concern: compose the authenticated start-run HTTP entrypoint over the
  * dedicated parser and response-translation seams.
  */
-import { createNoopObservability, type IObservability, type ISpan } from '@dvt/observability';
+import type { IObservability, ISpan } from '@dvt/observability';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
 import type { IStartRunTargetAdapterRegistry } from '../../application/ports/IStartRunTargetAdapterRegistry.js';
 import type { StartRunAuthorizedFacade } from '../../application/services/startRunAuthorizedFacade.js';
-import { DEFAULT_START_RUN_TARGET_ADAPTER_REGISTRY } from '../../application/services/startRunTargetAdapterRegistry.js';
 
 import { extractBearerToken } from './extractBearerToken.js';
 import type { HttpResponseModel } from './httpErrorContract.js';
@@ -16,8 +15,8 @@ import { generatePlatformRunId, type StartRunRunIdGenerator } from './startRunId
 import { parseStartRunBody } from './startRunRouteParser.js';
 
 type StartRunRouteDependencies = {
-  readonly adapterRegistry?: IStartRunTargetAdapterRegistry;
-  readonly observability?: IObservability;
+  readonly adapterRegistry: IStartRunTargetAdapterRegistry;
+  readonly observability: IObservability;
   readonly runIdGenerator?: StartRunRunIdGenerator;
 };
 
@@ -25,11 +24,9 @@ export async function startRunRoute(
   request: FastifyRequest<{ Body: unknown }>,
   reply: FastifyReply,
   facade: StartRunAuthorizedFacade,
-  dependencies: StartRunRouteDependencies = {}
+  dependencies: StartRunRouteDependencies
 ): Promise<void> {
-  const observability = dependencies.observability ?? createNoopObservability();
-
-  return observability.traces.withSpan(
+  return dependencies.observability.traces.withSpan(
     'api.startRun',
     {
       attributes: {
@@ -49,9 +46,8 @@ async function executeStartRunRoute(
   dependencies: StartRunRouteDependencies,
   span: ISpan
 ): Promise<void> {
-  const adapterRegistry = dependencies.adapterRegistry ?? DEFAULT_START_RUN_TARGET_ADAPTER_REGISTRY;
   const runIdGenerator = dependencies.runIdGenerator ?? generatePlatformRunId;
-  const parsed = parseStartRunBody(request.body, adapterRegistry, runIdGenerator);
+  const parsed = parseStartRunBody(request.body, dependencies.adapterRegistry, runIdGenerator);
   if (!parsed.ok) {
     respondAndObserve(span, reply, httpErrorTranslation.parse.issue(parsed.issue));
     return;

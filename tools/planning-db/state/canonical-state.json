@@ -10271,6 +10271,20 @@
         "updated_at": "2026-08-07T00:52:44.335077+00:00"
       },
       {
+        "design_id": "API-H2-1-EXPLICIT-ROUTE-DEPENDENCY-INJECTION-20260811",
+        "work_item_id": "GH-2271",
+        "title": "Require composition-owned route dependencies",
+        "owner": "API HTTP composition",
+        "status": "implemented",
+        "rationale": "StartRun and workspace-context routes consume composition-selected observability and adapter registries; routes no longer select Null Objects or deployment defaults, while the deterministic run-id generator remains a bounded test seam.",
+        "fowler_signal": "hidden_authority",
+        "rail_ref": "StartRun",
+        "approved_at": "2026-08-11T01:38:25.2+00:00",
+        "supersedes_id": null,
+        "created_at": "2026-08-11T01:38:10.991+00:00",
+        "updated_at": "2026-08-11T02:02:40.096+00:00"
+      },
+      {
         "design_id": "CANVAS-BACKLOG-INTEGRITY-READINESS-20260626",
         "work_item_id": "E-CANVAS-UXDB-COMPONENT-SLICES-1",
         "title": "Canvas backlog component integrity readiness projection",
@@ -60076,6 +60090,54 @@
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
+        "design_id": "API-H2-1-EXPLICIT-ROUTE-DEPENDENCY-INJECTION-20260811",
+        "subject_kind": "command",
+        "subject_id": "StartRun",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T01:38:10.991+00:00"
+      },
+      {
+        "design_id": "API-H2-1-EXPLICIT-ROUTE-DEPENDENCY-INJECTION-20260811",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/entrypoints/http/startRunRoute.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T01:38:10.991+00:00"
+      },
+      {
+        "design_id": "API-H2-1-EXPLICIT-ROUTE-DEPENDENCY-INJECTION-20260811",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/entrypoints/http/workspaceContextRoute.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T01:38:10.991+00:00"
+      },
+      {
+        "design_id": "API-H2-1-EXPLICIT-ROUTE-DEPENDENCY-INJECTION-20260811",
+        "subject_kind": "query",
+        "subject_id": "ReadWorkspaceLocalAdapters",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-11T01:38:10.991+00:00"
+      },
+      {
+        "design_id": "API-H2-1-EXPLICIT-ROUTE-DEPENDENCY-INJECTION-20260811",
+        "subject_kind": "test",
+        "subject_id": "apps/api/test/entrypoints/http/startRunRoute.test.support.ts",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T01:38:10.991+00:00"
+      },
+      {
+        "design_id": "API-H2-1-EXPLICIT-ROUTE-DEPENDENCY-INJECTION-20260811",
+        "subject_kind": "test",
+        "subject_id": "apps/api/test/entrypoints/http/workspaceContextRoute.test.ts",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T01:38:10.991+00:00"
+      },
+      {
         "design_id": "CANVAS-BOTTOM-DRAWER-ACTIONABLE-READ-MODEL-20260626",
         "subject_kind": "component",
         "subject_id": "web.component.shell.BottomOperationalDrawer",
@@ -85753,6 +85815,27 @@
         "created_at": "2026-08-10T21:04:04.799+00:00"
       },
       {
+        "operation_id": "3868b0aa-a6ad-4b68-aeca-254e291bff1f",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-1-EXPLICIT-ROUTE-DEPENDENCY-INJECTION-20260811:9602185267dc237d",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-1-EXPLICIT-ROUTE-DEPENDENCY-INJECTION-20260811",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2271",
+        "source_content_sha256": "485d599b16dda3ff5e147104020fbad480f1fe51c69acbaa111000ca98c17cf5",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Required route dependencies, type-level boundaries, explicit Null Object behavior, full API unit suite, architecture guard, and StartRun OpenTelemetry proof pass.",
+          "designId": "API-H2-1-EXPLICIT-ROUTE-DEPENDENCY-INJECTION-20260811",
+          "toStatus": "implemented",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2271",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "485d599b16dda3ff5e147104020fbad480f1fe51c69acbaa111000ca98c17cf5"
+        },
+        "created_at": "2026-08-11T02:02:40.096+00:00"
+      },
+      {
         "operation_id": "39921801-fff9-4f1c-819e-e67fac74a866",
         "idempotency_key": "architecture_test_record:codex:R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810:SYS-API-TESTS-APPLICATION-SERVICES-ARCHITECTURE-HARNESS:b119c8e9c74c7e01",
         "operation_type": "architecture_test_record",
@@ -88456,6 +88539,70 @@
         "created_at": "2026-08-10T20:06:14.944+00:00"
       },
       {
+        "operation_id": "affc1a17-ecac-4a1b-8a32-45739ad9d20b",
+        "idempotency_key": "architecture_design_create:codex:API-H2-1-EXPLICIT-ROUTE-DEPENDENCY-INJECTION-20260811:b23fba629a48ee99",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "API-H2-1-EXPLICIT-ROUTE-DEPENDENCY-INJECTION-20260811",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2271",
+        "source_content_sha256": "7d7ef4209d18b84c568120801202f5321010b6e85d4c3fd7d2aebe251c73cafe",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "API HTTP composition",
+          "title": "Require composition-owned route dependencies",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "StartRun",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "ReadWorkspaceLocalAdapters",
+              "subjectKind": "query"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/src/entrypoints/http/startRunRoute.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/src/entrypoints/http/workspaceContextRoute.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "apps/api/test/entrypoints/http/startRunRoute.test.support.ts",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "apps/api/test/entrypoints/http/workspaceContextRoute.test.ts",
+              "subjectKind": "test"
+            }
+          ],
+          "status": "review",
+          "railRef": "StartRun",
+          "designId": "API-H2-1-EXPLICIT-ROUTE-DEPENDENCY-INJECTION-20260811",
+          "rationale": "StartRun and workspace-context routes consume composition-selected observability and adapter registries; routes no longer select Null Objects or deployment defaults, while the deterministic run-id generator remains a bounded test seam.",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2271",
+          "workItemId": "GH-2271",
+          "fowlerSignal": "hidden_authority",
+          "supersedesId": null,
+          "sourceContentSha256": "7d7ef4209d18b84c568120801202f5321010b6e85d4c3fd7d2aebe251c73cafe"
+        },
+        "created_at": "2026-08-11T01:38:10.991+00:00"
+      },
+      {
         "operation_id": "b032953b-675e-4ef5-a131-2f41d057609e",
         "idempotency_key": "gh-2167-validation-contract-sys-api-tests-module-composition-evidence-v1",
         "operation_type": "architecture_contract_record",
@@ -89922,6 +90069,27 @@
         "created_at": "2026-08-10T21:04:49.817+00:00"
       },
       {
+        "operation_id": "d13e40d6-01c8-4a2b-91c1-9e921e7eb66c",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-1-EXPLICIT-ROUTE-DEPENDENCY-INJECTION-20260811:13960191058cac06",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-1-EXPLICIT-ROUTE-DEPENDENCY-INJECTION-20260811",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2271",
+        "source_content_sha256": "7d7ef4209d18b84c568120801202f5321010b6e85d4c3fd7d2aebe251c73cafe",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "DoR evidence complete, existing rails reused, and user authorized unattended implementation",
+          "designId": "API-H2-1-EXPLICIT-ROUTE-DEPENDENCY-INJECTION-20260811",
+          "toStatus": "approved",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2271",
+          "fromStatus": "review",
+          "sourceContentSha256": "7d7ef4209d18b84c568120801202f5321010b6e85d4c3fd7d2aebe251c73cafe"
+        },
+        "created_at": "2026-08-11T01:38:25.2+00:00"
+      },
+      {
         "operation_id": "d5a10907-d38d-4a00-96a8-5addaa67f44a",
         "idempotency_key": "architecture_component_record:codex:R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810:SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS:84d9fc1ade82159c",
         "operation_type": "architecture_component_record",
@@ -90378,6 +90546,27 @@
           "sourceContentSha256": "479e32e472d9e62d580bccbe89a4b961f32146853c7825879a7383c53fc438e6"
         },
         "created_at": "2026-08-10T21:04:21.909+00:00"
+      },
+      {
+        "operation_id": "e853900d-792d-4d41-85ea-923d0f5fc530",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-1-EXPLICIT-ROUTE-DEPENDENCY-INJECTION-20260811:d796533765a392f5",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-1-EXPLICIT-ROUTE-DEPENDENCY-INJECTION-20260811",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2271",
+        "source_content_sha256": "485d599b16dda3ff5e147104020fbad480f1fe51c69acbaa111000ca98c17cf5",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Implementation starts after approved DB-first design and completed issue readiness review.",
+          "designId": "API-H2-1-EXPLICIT-ROUTE-DEPENDENCY-INJECTION-20260811",
+          "toStatus": "implementing",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2271",
+          "fromStatus": "approved",
+          "sourceContentSha256": "485d599b16dda3ff5e147104020fbad480f1fe51c69acbaa111000ca98c17cf5"
+        },
+        "created_at": "2026-08-11T01:45:42.68+00:00"
       },
       {
         "operation_id": "e8c249e9-3ae3-4b03-a100-17bbed9f692b",

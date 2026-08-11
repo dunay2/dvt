@@ -12,6 +12,15 @@ import {
 } from './startRunRoute.test.support.js';
 
 describe('startRunRoute auth and success outcomes', () => {
+  it('accepts a StartRun request with explicitly injected disabled observability', async () => {
+    const { reply } = await invokeStartRunRoute({
+      observability: createNoopObservability(),
+    });
+
+    expect(reply.statusCode).toBe(202);
+    expect(reply.payload).toEqual({ runId: VALID_GENERATED_RUN_ID, accepted: true });
+  });
+
   it('bounds an accepted request with the governed StartRun HTTP span', async () => {
     const span = createTrackingSpan();
     const withSpan = vi.fn((_name, _options, run) => run(span));

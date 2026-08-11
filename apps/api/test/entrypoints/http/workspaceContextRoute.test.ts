@@ -43,6 +43,7 @@ describe('workspaceContextRoute', () => {
     };
 
     await workspaceContextRoute({ headers: {} } as never, reply as never, {
+      adapterRegistry: registryWith('temporal'),
       authenticator,
       workspaceContextQuery,
     });
@@ -78,6 +79,7 @@ describe('workspaceContextRoute', () => {
       } as never,
       reply as never,
       {
+        adapterRegistry: registryWith('temporal'),
         authenticator,
         workspaceContextQuery,
       }
@@ -133,6 +135,7 @@ describe('workspaceContextRoute', () => {
       } as never,
       reply as never,
       {
+        adapterRegistry: registryWith('temporal'),
         authenticator,
         workspaceContextQuery,
       }
@@ -169,12 +172,7 @@ describe('workspaceContextRoute', () => {
         availableWorkspaces: [effectiveWorkspace],
       })),
     };
-    const adapterRegistry: IStartRunTargetAdapterRegistry = {
-      isSupported(_value: string): _value is StartRunTargetAdapter {
-        return false;
-      },
-      listSupported: () => [],
-    };
+    const adapterRegistry = registryWith();
 
     await workspaceContextRoute(
       {
@@ -199,3 +197,14 @@ describe('workspaceContextRoute', () => {
     });
   });
 });
+
+function registryWith(...supported: StartRunTargetAdapter[]): IStartRunTargetAdapterRegistry {
+  return {
+    isSupported(value: string): value is StartRunTargetAdapter {
+      return supported.includes(value as StartRunTargetAdapter);
+    },
+    listSupported() {
+      return [...supported];
+    },
+  };
+}

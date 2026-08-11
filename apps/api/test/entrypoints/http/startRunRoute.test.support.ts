@@ -1,4 +1,4 @@
-import type { IObservability } from '@dvt/observability';
+import { createNoopObservability, type IObservability } from '@dvt/observability';
 
 import type { IStartRunTargetAdapterRegistry } from '../../../src/application/ports/IStartRunTargetAdapterRegistry.js';
 import { startRunRoute } from '../../../src/entrypoints/http/startRunRoute.js';
@@ -134,8 +134,8 @@ export async function invokeStartRunRoute(args: InvokeRouteArgs = {}): Promise<{
   const hasBodyOverride = args.request !== undefined && Object.hasOwn(args.request, 'body');
 
   const routeDependencies = {
-    ...(args.registry === undefined ? {} : { adapterRegistry: args.registry }),
-    ...(args.observability === undefined ? {} : { observability: args.observability }),
+    adapterRegistry: args.registry ?? registryWith('temporal'),
+    observability: args.observability ?? createNoopObservability(),
     runIdGenerator: args.runIdGenerator ?? (() => VALID_GENERATED_RUN_ID),
   };
 
