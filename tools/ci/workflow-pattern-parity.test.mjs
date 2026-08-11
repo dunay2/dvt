@@ -432,6 +432,19 @@ test('PR quality gate prepares planning DB before DB-first feature implementatio
   assertWorkflowContains(prQualityGate, 'GIT_HEAD: ${{ github.sha }}');
 });
 
+test('the canonical docs sync rail provisions and imports Planning DB for every caller', () => {
+  const packageScripts = JSON.parse(readFileSync('package.json', 'utf8')).scripts;
+  const localDocsPreflight = readFileSync('scripts/docs-pr-local.cjs', 'utf8');
+
+  assert.match(
+    packageScripts['docs:sync'],
+    /^pnpm planning:db:up && pnpm planning:db:import && node scripts\/sync-docs\.cjs$/u
+  );
+  assert.match(packageScripts['docs:sync:check'], /^pnpm docs:sync &&/u);
+  assert.match(packageScripts['docs:ci'], /^pnpm docs:sync &&/u);
+  assert.match(localDocsPreflight, /\['pnpm', \['docs:sync:check'\]\]/u);
+});
+
 test('main full CI prepares DB-first planning projections before the full baseline', () => {
   const ciWorkflow = readFileSync('.github/workflows/ci.yml', 'utf8');
   const preparePlanningDbAction = readFileSync(
