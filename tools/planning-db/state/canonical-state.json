@@ -94847,8 +94847,8 @@
         "pnpm arch:deps",
         "pnpm verify:prepush"
       ],
-      "sourcePath": "https://github.com/dunay2/dvt/issues/2273",
-      "sourceContentSha256": "c52f490729a67b6e750b00b54ba40e4805633a1832b185bfff50c25582187804",
+      "sourcePath": "tools/ci/check-architecture-dependencies.mjs",
+      "sourceContentSha256": "595515fed8b66cf39a5cf29dd37a24c5c1a49040a9a6e52bfaaca8cf867b7245",
       "rawRail": {
         "name": "ApplyArchitectureDependencyBoundaryGate",
         "type": "command",
@@ -95506,7 +95506,7 @@
         ],
         "forbiddenImplementationSurfaces": ["apps/api/.dependency-cruiser.cjs"]
       },
-      "revision": 0,
+      "revision": 1,
       "createdBy": "codex",
       "createdAt": "2026-08-08T00:00:00.000Z"
     },
@@ -151243,6 +151243,60 @@
         "forbiddenImplementationSurfaces": ["apps/api/.dependency-cruiser.cjs"]
       },
       "createdAt": "2026-08-11T02:50:38.051Z"
+    },
+    {
+      "operationId": "86a60cc8-1787-42c8-8eae-6e5cad867807",
+      "idempotencyKey": "codex-api-h2-2-arch-deps-source-ref-1",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#ARCH-DEPS-GUARD#command#applyarchitecturedependencyboundarygate",
+      "sourcePath": "tools/ci/check-architecture-dependencies.mjs",
+      "sourceContentSha256": "595515fed8b66cf39a5cf29dd37a24c5c1a49040a9a6e52bfaaca8cf867b7245",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "node --test tools/ci/architecture-dependency-guard.test.mjs",
+        "dddOwner": "Repository CI governance baseline",
+        "railName": "ApplyArchitectureDependencyBoundaryGate",
+        "railType": "command",
+        "featureId": "ARCH-DEPS-GUARD",
+        "greenTest": "node --test tools/ci/architecture-dependency-guard.test.mjs && pnpm arch:deps",
+        "sourceRef": "tools/ci/check-architecture-dependencies.mjs",
+        "unitTests": ["tools/ci/architecture-dependency-guard.test.mjs"],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2273"],
+        "cypressFlows": ["N/A - repository architecture governance command"],
+        "domainObjects": ["RepositoryDependencyGraph"],
+        "fowlerSignals": [
+          "One typed repository graph replaces drifting package-local guards and filename exception lists."
+        ],
+        "patchSurfaces": ["tools/ci/check-architecture-dependencies.mjs"],
+        "completionGate": ["pnpm verify:prepush"],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "New test-only, orphan, production-to-test, fake-reachability, unproven profile, or unconsolidated API dependency behavior is accepted.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "architectureGuards": ["pnpm arch:deps"],
+        "implementationPlan": "docs/planning/proposals/mandatory/governance-and-docs/architecture-dependency-boundary-guard-implementation-plan-20260502.md",
+        "implementationRefs": [
+          "tools/ci/check-architecture-dependencies.mjs#runArchitectureDependencyGuard"
+        ],
+        "normalizedRailName": "applyarchitecturedependencyboundarygate",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "595515fed8b66cf39a5cf29dd37a24c5c1a49040a9a6e52bfaaca8cf867b7245",
+        "allowedImplementationSurfaces": [
+          "tools/ci/check-architecture-dependencies.mjs"
+        ],
+        "forbiddenImplementationSurfaces": ["apps/api/.dependency-cruiser.cjs"]
+      },
+      "createdAt": "2026-08-11T03:11:34.892Z"
     }
   ],
   "governanceComponentDefinitions": [
