@@ -32,6 +32,7 @@ class FeatureImplementationGuard {
     this.currentFiles = Array.from(new Set((options.currentFiles || []).map(toPosix))).sort();
     this.addedLinesByPath = this.normalizePathMap(options.addedLinesByPath || {});
     this.fileContentsByPath = this.normalizePathMap(options.fileContentsByPath || {});
+    this.retirementOwnerManifestEntries = null;
   }
 
   validate() {
@@ -99,11 +100,41 @@ class FeatureImplementationGuard {
       return false;
     }
 
-    return this.collectSurfacePatterns('forbiddenImplementationSurfaces').some(
+    const owningManifestEntries = this.findRetirementOwnerManifestEntries();
+    if (owningManifestEntries.length === 0) {
+      return false;
+    }
+
+    return this.collectSurfacePatterns(
+      'forbiddenImplementationSurfaces',
+      owningManifestEntries
+    ).some(
       (pattern) =>
         this.matchesSurface(filePath, pattern) &&
         !this.currentFiles.some((currentFile) => this.matchesSurface(currentFile, pattern))
     );
+  }
+
+  findRetirementOwnerManifestEntries() {
+    if (this.retirementOwnerManifestEntries) {
+      return this.retirementOwnerManifestEntries;
+    }
+
+    const owningFeatureIds = new Set();
+    for (const changedFile of this.changedFiles) {
+      if (this.deletedFiles.has(changedFile)) {
+        continue;
+      }
+
+      for (const entry of this.findMostSpecificManifestEntriesAllowingFile(changedFile)) {
+        owningFeatureIds.add(entry.manifest.featureId);
+      }
+    }
+
+    this.retirementOwnerManifestEntries = this.manifestEntries.filter((entry) =>
+      owningFeatureIds.has(entry.manifest.featureId)
+    );
+    return this.retirementOwnerManifestEntries;
   }
 
   validateDeclaredSymbols(errors) {

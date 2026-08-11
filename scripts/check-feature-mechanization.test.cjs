@@ -483,6 +483,7 @@ test('validateFeatureImplementationManifests rejects changed files on forbidden 
 
 test('validateFeatureImplementationManifests permits deletion of a forbidden surface', () => {
   const deletedPath = 'apps/web/src/app/views/canvas/tokenRefreshShortcut.ts';
+  const ownedPath = validManifest.allowedImplementationSurfaces[0];
   const result = validateFeatureImplementationManifests(
     [
       {
@@ -494,8 +495,9 @@ test('validateFeatureImplementationManifests permits deletion of a forbidden sur
       },
     ],
     {
-      changedFiles: [deletedPath],
+      changedFiles: [ownedPath, deletedPath],
       deletedFiles: [deletedPath],
+      currentFiles: [ownedPath],
     }
   );
 
@@ -522,6 +524,7 @@ test('validateFeatureImplementationManifests rejects deletion outside allowed an
 
 test('validateFeatureImplementationManifests permits deletion of a complete forbidden subtree', () => {
   const deletedPath = 'apps/api/docs/retired-component.md';
+  const ownedPath = validManifest.allowedImplementationSurfaces[0];
   const result = validateFeatureImplementationManifests(
     [
       {
@@ -534,9 +537,9 @@ test('validateFeatureImplementationManifests permits deletion of a complete forb
       },
     ],
     {
-      changedFiles: [deletedPath],
+      changedFiles: [ownedPath, deletedPath],
       deletedFiles: [deletedPath],
-      currentFiles: ['apps/api/src/server.ts'],
+      currentFiles: [ownedPath, 'apps/api/src/server.ts'],
     }
   );
 
@@ -545,6 +548,7 @@ test('validateFeatureImplementationManifests permits deletion of a complete forb
 
 test('validateFeatureImplementationManifests rejects deletion authorized only by another feature wildcard', () => {
   const deletedPath = 'apps/api/src/auth.ts';
+  const ownedPath = validManifest.allowedImplementationSurfaces[0];
   const result = validateFeatureImplementationManifests(
     [
       {
@@ -559,15 +563,48 @@ test('validateFeatureImplementationManifests rejects deletion authorized only by
         manifest: {
           ...validManifest,
           featureId: 'UNRELATED-API',
-          allowedImplementationSurfaces: ['apps/web/**'],
+          allowedImplementationSurfaces: ['apps/worker/**'],
           forbiddenImplementationSurfaces: ['apps/api/** backend authorization changes'],
         },
       },
     ],
     {
-      changedFiles: [deletedPath],
+      changedFiles: [ownedPath, deletedPath],
       deletedFiles: [deletedPath],
-      currentFiles: ['apps/api/src/server.ts'],
+      currentFiles: [ownedPath],
+    }
+  );
+
+  assert.match(result.errors.join('\n'), /outside allowedImplementationSurfaces/);
+});
+
+test('validateFeatureImplementationManifests rejects deletion authorized only by another feature exact path', () => {
+  const deletedPath = 'apps/api/src/auth.ts';
+  const ownedPath = validManifest.allowedImplementationSurfaces[0];
+  const result = validateFeatureImplementationManifests(
+    [
+      {
+        sourcePath: 'canvas-plan.md',
+        manifest: {
+          ...validManifest,
+          featureId: 'TF-E2-M-C',
+          allowedImplementationSurfaces: [ownedPath],
+        },
+      },
+      {
+        sourcePath: 'unrelated-api-plan.md',
+        manifest: {
+          ...validManifest,
+          featureId: 'UNRELATED-API',
+          allowedImplementationSurfaces: ['apps/worker/**'],
+          forbiddenImplementationSurfaces: [deletedPath],
+        },
+      },
+    ],
+    {
+      changedFiles: [ownedPath, deletedPath],
+      deletedFiles: [deletedPath],
+      currentFiles: [ownedPath],
     }
   );
 
