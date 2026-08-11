@@ -384,10 +384,17 @@ export function collectApiDeploymentProfileEvidence({
   modules,
   productionSources,
   sourceContents,
+  productionRoots = API_PRODUCTION_ROOTS,
 }) {
   const moduleMap = new Map(
     normalizeCruiseModules(modules).map((module) => [module.source, module])
   );
+  const reachableExecutableScopes = collectProductionExecutableScopes({
+    moduleMap,
+    productionSources,
+    sourceContents,
+    productionRoots,
+  });
   const evidence = new Map();
   const add = (profile, classification, proof, sources) => {
     const current = evidence.get(profile);
@@ -407,7 +414,12 @@ export function collectApiDeploymentProfileEvidence({
 
     for (const statement of ifStatements) {
       const statementScope = enclosingExecutableScope(statement, parsed);
-      if (!isStaticallyReachable(statement, statementScope)) continue;
+      if (
+        !reachableExecutableScopes.has(executableScopeKey(source, statementScope)) ||
+        !isStaticallyReachable(statement, statementScope)
+      ) {
+        continue;
+      }
 
       if (
         containsIdentifier(statement.expression, 'OBS_ENABLED') &&
@@ -472,6 +484,7 @@ export function collectApiDeploymentProfileEvidence({
           : null;
         if (
           protectedScope &&
+          reachableExecutableScopes.has(executableScopeKey(protectedSource, protectedScope)) &&
           containsReachableDynamicImport(protectedScope, '@dvt/adapter-postgres')
         ) {
           add(
@@ -586,6 +599,11 @@ function staticBooleanValue(expression) {
   while (ts.isParenthesizedExpression(current)) current = current.expression;
   if (current.kind === ts.SyntaxKind.TrueKeyword) return true;
   if (current.kind === ts.SyntaxKind.FalseKeyword) return false;
+  if (current.kind === ts.SyntaxKind.NullKeyword) return false;
+  if (ts.isNumericLiteral(current)) return Number(current.text) !== 0;
+  if (ts.isStringLiteral(current) || ts.isNoSubstitutionTemplateLiteral(current)) {
+    return current.text.length > 0;
+  }
   if (ts.isPrefixUnaryExpression(current) && current.operator === ts.SyntaxKind.ExclamationToken) {
     const operand = staticBooleanValue(current.operand);
     return operand === null ? null : !operand;
@@ -603,6 +621,11 @@ function statementAlwaysTerminates(statement) {
     return statement.statements.some((nestedStatement) =>
       statementAlwaysTerminates(nestedStatement)
     );
+  }
+  if (ts.isTryStatement(statement)) {
+    if (statement.finallyBlock && statementAlwaysTerminates(statement.finallyBlock)) return true;
+    if (!statementAlwaysTerminates(statement.tryBlock)) return false;
+    return !statement.catchClause || statementAlwaysTerminates(statement.catchClause.block);
   }
   if (!ts.isIfStatement(statement)) return false;
 
@@ -634,6 +657,13 @@ function isStaticallyReachable(node, boundary) {
       const condition = staticBooleanValue(parent.condition);
       if (condition === false && nodeIsWithin(node, parent.whenTrue)) return false;
       if (condition === true && nodeIsWithin(node, parent.whenFalse)) return false;
+    }
+    if (ts.isBinaryExpression(parent) && nodeIsWithin(node, parent.right)) {
+      const left = staticBooleanValue(parent.left);
+      if (parent.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken && left === false) {
+        return false;
+      }
+      if (parent.operatorToken.kind === ts.SyntaxKind.BarBarToken && left === true) return false;
     }
     if (ts.isWhileStatement(parent) && staticBooleanValue(parent.expression) === false) {
       return false;
@@ -777,7 +807,6 @@ function hasReachableReconcilerEnabledPath(scope, guardStatement, sourceFile) {
   const guardMethod = enclosingExecutableScope(guardStatement, scope);
   const guardMethodName = executableScopeName(guardMethod);
   if (!guardMethodName) return false;
-  if (hasReachableEnabledTarget(guardMethod, guardStatement, targetPredicate)) return true;
 
   const methods = new Map(
     scope.members
@@ -790,6 +819,9 @@ function hasReachableReconcilerEnabledPath(scope, guardStatement, sourceFile) {
   );
   const entryMethod = methods.get('create');
   if (!entryMethod) return false;
+  if (guardMethod === entryMethod) {
+    return hasReachableEnabledTarget(entryMethod, guardStatement, targetPredicate);
+  }
   const methodsReachingTarget = new Set(
     [...methods]
       .filter(([, method]) => collectReachableScopedDescendants(method, targetPredicate).length > 0)
@@ -829,9 +861,188 @@ function findNamedExecutableScope(sourceFile, name) {
         isExecutableScope(node) &&
         node.name !== undefined &&
         ts.isIdentifier(node.name) &&
-        node.name.text === name
+        node.name.text === name &&
+        isStaticallyReachable(node, enclosingExecutableScope(node, sourceFile))
     )[0] ?? null
   );
+}
+
+function topLevelNamedExecutableScope(sourceFile, name) {
+  return (
+    sourceFile.statements.find(
+      (statement) =>
+        isExecutableScope(statement) &&
+        statement.name !== undefined &&
+        ts.isIdentifier(statement.name) &&
+        statement.name.text === name
+    ) ?? null
+  );
+}
+
+function executableScopeKey(source, scope) {
+  return `${source}:${scope.pos}:${scope.end}`;
+}
+
+function enclosingClassScope(node) {
+  for (let current = node.parent; current; current = current.parent) {
+    if (ts.isClassDeclaration(current) || ts.isClassExpression(current)) return current;
+  }
+  return null;
+}
+
+function unwrapExpression(expression) {
+  let current = expression;
+  while (
+    current &&
+    (ts.isParenthesizedExpression(current) ||
+      ts.isAwaitExpression(current) ||
+      ts.isAsExpression(current) ||
+      ts.isSatisfiesExpression(current))
+  ) {
+    current = current.expression;
+  }
+  return current;
+}
+
+function collectProductionExecutableScopes({
+  moduleMap,
+  productionSources,
+  sourceContents,
+  productionRoots,
+}) {
+  const parsedBySource = new Map(
+    [...productionSources].flatMap((source) => {
+      const contents = sourceContents.get(source);
+      return contents ? [[source, sourceFileFor(source, contents)]] : [];
+    })
+  );
+  const reachable = new Set();
+  const queued = new Set();
+  const queue = [];
+  const enqueue = (source, scope) => {
+    if (!scope) return;
+    const key = executableScopeKey(source, scope);
+    if (queued.has(key)) return;
+    queued.add(key);
+    queue.push({ source, scope });
+  };
+
+  const resolveIdentifier = (source, identifierName) => {
+    const parsed = parsedBySource.get(source);
+    if (!parsed) return null;
+    const local = topLevelNamedExecutableScope(parsed, identifierName);
+    if (local) return { source, scope: local };
+
+    const module = moduleMap.get(source);
+    const dependenciesBySpecifier = new Map(
+      (module?.dependencies ?? []).map((dependency) => [dependency.module, dependency.resolved])
+    );
+    for (const statement of parsed.statements) {
+      if (
+        !ts.isImportDeclaration(statement) ||
+        !ts.isStringLiteral(statement.moduleSpecifier) ||
+        !statement.importClause?.namedBindings ||
+        !ts.isNamedImports(statement.importClause.namedBindings)
+      ) {
+        continue;
+      }
+      const imported = statement.importClause.namedBindings.elements.find(
+        (element) => element.name.text === identifierName
+      );
+      if (!imported) continue;
+      const targetSource = dependenciesBySpecifier.get(statement.moduleSpecifier.text);
+      const targetParsed = targetSource ? parsedBySource.get(targetSource) : null;
+      const importedName = imported.propertyName?.text ?? imported.name.text;
+      const targetScope = targetParsed
+        ? topLevelNamedExecutableScope(targetParsed, importedName)
+        : null;
+      return targetSource && targetScope ? { source: targetSource, scope: targetScope } : null;
+    }
+    return null;
+  };
+
+  const productMethod = (factoryTarget, methodName) => {
+    const returns = collectReachableScopedDescendants(
+      factoryTarget.scope,
+      (node) => ts.isReturnStatement(node) && node.expression !== undefined
+    );
+    for (const returnStatement of returns) {
+      const expression = unwrapExpression(returnStatement.expression);
+      if (expression && ts.isObjectLiteralExpression(expression)) {
+        const method = expression.properties.find(
+          (property) =>
+            (ts.isMethodDeclaration(property) ||
+              ts.isPropertyAssignment(property) ||
+              ts.isShorthandPropertyAssignment(property)) &&
+            property.name !== undefined &&
+            ts.isIdentifier(property.name) &&
+            property.name.text === methodName
+        );
+        if (method && ts.isMethodDeclaration(method)) {
+          return { source: factoryTarget.source, scope: method };
+        }
+      }
+      if (expression && ts.isNewExpression(expression) && ts.isIdentifier(expression.expression)) {
+        const parsed = parsedBySource.get(factoryTarget.source);
+        const classScope = parsed?.statements.find(
+          (statement) =>
+            ts.isClassDeclaration(statement) && statement.name?.text === expression.expression.text
+        );
+        const method = classScope?.members.find(
+          (member) => executableScopeName(member) === methodName
+        );
+        if (method) return { source: factoryTarget.source, scope: method };
+      }
+    }
+    return null;
+  };
+
+  const resolveCall = (source, scope, call) => {
+    if (ts.isIdentifier(call.expression)) return resolveIdentifier(source, call.expression.text);
+    if (!ts.isPropertyAccessExpression(call.expression)) return null;
+    if (call.expression.expression.kind === ts.SyntaxKind.ThisKeyword) {
+      const classScope = enclosingClassScope(scope);
+      const method = classScope?.members.find(
+        (member) => executableScopeName(member) === call.expression.name.text
+      );
+      return method ? { source, scope: method } : null;
+    }
+    if (ts.isCallExpression(call.expression.expression)) {
+      const factoryTarget = resolveCall(source, scope, call.expression.expression);
+      if (!factoryTarget) return null;
+      enqueue(factoryTarget.source, factoryTarget.scope);
+      return productMethod(factoryTarget, call.expression.name.text);
+    }
+    return null;
+  };
+
+  for (const root of productionRoots) {
+    if (productionSources.has(root)) enqueue(root, parsedBySource.get(root));
+  }
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    reachable.add(executableScopeKey(current.source, current.scope));
+    const calls = collectReachableScopedDescendants(current.scope, ts.isCallExpression);
+    for (const call of calls) {
+      const target = resolveCall(current.source, current.scope, call);
+      if (target) {
+        enqueue(target.source, target.scope);
+        const targetName = executableScopeName(target.scope);
+        if (targetName && /^create.*Factory$/u.test(targetName)) {
+          const buildMethod = productMethod(target, 'build');
+          if (buildMethod) enqueue(buildMethod.source, buildMethod.scope);
+        }
+      }
+      for (const argument of call.arguments) {
+        if (!ts.isIdentifier(argument)) continue;
+        const callback = resolveIdentifier(current.source, argument.text);
+        if (callback) enqueue(callback.source, callback.scope);
+      }
+    }
+  }
+
+  return reachable;
 }
 
 function importedSymbolTarget(module, parsed, symbol) {

@@ -476,7 +476,7 @@ test('supported API profiles are proven from composition semantics and dynamic e
   const profileEvidence = collectApiDeploymentProfileEvidence({
     modules: [
       {
-        source: 'apps/api/src/composition.ts',
+        source: 'apps/api/src/app.ts',
         dependencies: [
           { module: '@dvt/adapter-postgres', dynamic: true },
           { module: '@dvt/engine/runtime', dynamic: true },
@@ -484,10 +484,10 @@ test('supported API profiles are proven from composition semantics and dynamic e
         ],
       },
     ],
-    productionSources: new Set(['apps/api/src/composition.ts']),
+    productionSources: new Set(['apps/api/src/app.ts']),
     sourceContents: new Map([
       [
-        'apps/api/src/composition.ts',
+        'apps/api/src/app.ts',
         [
           "async function buildProtectedRuntimeModule() { await import('@dvt/adapter-postgres'); }",
           'async function buildApp(env) { if (env.OIDC_JWKS_URI && env.OIDC_ISSUER && env.OIDC_AUDIENCE) { await buildProtectedRuntimeModule(); } else { publicOnly(); } }',
@@ -495,6 +495,8 @@ test('supported API profiles are proven from composition semantics and dynamic e
           'class Reconciler { create() { const config = this.resolveConfig(); if (!config) return null; return this.createWorker(); } resolveConfig() { if (!this.env.DVT_INTENT_RECONCILER_ENABLED) return null; return {}; } createWorker() { return new IntentReconcilerWorker(); } }',
           'function createIntentReconcilerRuntimeComposition() { return new Reconciler(); }',
           "async function buildTemporal(context) { if (!context.env.TEMPORAL_ADDRESS) return null; return import('@dvt/adapter-temporal'); }",
+          'async function main() { await buildApp(env); buildObservability(env); await createIntentReconcilerRuntimeComposition().create(); await buildTemporal(context); }',
+          'main();',
         ].join('\n'),
       ],
     ]),
@@ -542,6 +544,11 @@ test('enabled profiles require the same executable scope and imported compositio
       'apps/api/src/profile.ts',
       'apps/api/src/protected.ts',
     ]),
+    productionRoots: [
+      'apps/api/src/app.ts',
+      'apps/api/src/profile.ts',
+      'apps/api/src/protected.ts',
+    ],
     sourceContents: new Map([
       [
         'apps/api/src/app.ts',
@@ -550,6 +557,7 @@ test('enabled profiles require the same executable scope and imported compositio
           'async function buildApp(env) {',
           '  if (env.OIDC_JWKS_URI && env.OIDC_ISSUER && env.OIDC_AUDIENCE) { await buildProtectedRuntimeModule(); } else { publicOnly(); }',
           '}',
+          'buildApp(env);',
         ].join('\n'),
       ],
       [
@@ -557,10 +565,14 @@ test('enabled profiles require the same executable scope and imported compositio
         [
           'function buildObservability(env) { if (!env.OBS_ENABLED) return createNoopObservability(); return null; }',
           'function disconnectedOtel() { return new OtelObservability({}); }',
-          'class Reconciler { resolveConfig() { if (!this.env.DVT_INTENT_RECONCILER_ENABLED) return null; return {}; } }',
+          'class Reconciler { create() { return this.resolveConfig(); } resolveConfig() { if (!this.env.DVT_INTENT_RECONCILER_ENABLED) return null; return {}; } }',
+          'function createIntentReconcilerRuntimeComposition() { return new Reconciler(); }',
           'function disconnectedWorker() { return new IntentReconcilerWorker(); }',
           'async function temporalGuard(context) { if (!context.env.TEMPORAL_ADDRESS) return null; return null; }',
           "async function disconnectedTemporal() { return import('@dvt/adapter-temporal'); }",
+          'buildObservability(env);',
+          'createIntentReconcilerRuntimeComposition().create();',
+          'temporalGuard(context);',
         ].join('\n'),
       ],
       [
@@ -606,6 +618,11 @@ test('dead branches and uncalled same-class methods cannot prove enabled profile
       'apps/api/src/profile.ts',
       'apps/api/src/protected.ts',
     ]),
+    productionRoots: [
+      'apps/api/src/app.ts',
+      'apps/api/src/profile.ts',
+      'apps/api/src/protected.ts',
+    ],
     sourceContents: new Map([
       [
         'apps/api/src/app.ts',
@@ -614,6 +631,7 @@ test('dead branches and uncalled same-class methods cannot prove enabled profile
           'async function buildApp(env) {',
           '  if (env.OIDC_JWKS_URI && env.OIDC_ISSUER && env.OIDC_AUDIENCE) { await buildProtectedRuntimeModule(); } else { publicOnly(); }',
           '}',
+          'buildApp(env);',
         ].join('\n'),
       ],
       [
@@ -625,14 +643,19 @@ test('dead branches and uncalled same-class methods cannot prove enabled profile
           '  return null;',
           '}',
           'class Reconciler {',
+          '  create() { return this.resolveConfig(); }',
           '  resolveConfig() { if (!this.env.DVT_INTENT_RECONCILER_ENABLED) return null; return {}; }',
           '  neverCalled() { return new IntentReconcilerWorker(); }',
           '}',
+          'function createIntentReconcilerRuntimeComposition() { return new Reconciler(); }',
           'async function buildTemporal(context) {',
           '  if (!context.env.TEMPORAL_ADDRESS) return null;',
           "  if (false) return import('@dvt/adapter-temporal');",
           '  return null;',
           '}',
+          'buildObservability(env);',
+          'createIntentReconcilerRuntimeComposition().create();',
+          'buildTemporal(context);',
         ].join('\n'),
       ],
       [
@@ -728,6 +751,7 @@ test('profile guards and reconciler orchestration must be reachable from composi
       },
     ],
     productionSources: new Set(['apps/api/src/profile.ts']),
+    productionRoots: ['apps/api/src/profile.ts'],
     sourceContents: new Map([
       [
         'apps/api/src/profile.ts',
@@ -737,6 +761,8 @@ test('profile guards and reconciler orchestration must be reachable from composi
           '  if (!true) return new OtelObservability({});',
           '  return null;',
           '}',
+          'buildObservability(env);',
+          'buildTemporal(context);',
           'async function buildTemporal(context) {',
           '  if (!context.env.TEMPORAL_ADDRESS) return null;',
           '  { return null; sideEffect(); }',
@@ -755,17 +781,19 @@ test('profile guards and reconciler orchestration must be reachable from composi
   const deadOrchestratorEvidence = collectApiDeploymentProfileEvidence({
     modules: [{ source: 'apps/api/src/reconciler.ts', dependencies: [] }],
     productionSources: new Set(['apps/api/src/reconciler.ts']),
+    productionRoots: ['apps/api/src/reconciler.ts'],
     sourceContents: new Map([
       [
         'apps/api/src/reconciler.ts',
         [
           'class Reconciler {',
-          '  create() { return null; }',
+          '  create() { this.resolveConfig(); return null; }',
           '  resolveConfig() { if (!this.env.DVT_INTENT_RECONCILER_ENABLED) return null; return {}; }',
           '  createWorker() { return new IntentReconcilerWorker(); }',
           '  neverCalled() { const config = this.resolveConfig(); if (!config) return null; return this.createWorker(); }',
           '}',
           'function createIntentReconcilerRuntimeComposition() { return new Reconciler(); }',
+          'createIntentReconcilerRuntimeComposition().create();',
         ].join('\n'),
       ],
     ]),
