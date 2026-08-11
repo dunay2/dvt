@@ -1287,6 +1287,18 @@ test('profile evidence respects directed completion after switches', () => {
 
   assert.deepEqual(
     collectProfiles([
+      '  outer: {',
+      "    switch ('on') { case 'on': try { break outer; } finally { cleanup(); } }",
+      '    if (!env.OBS_ENABLED) return createNoopObservability();',
+      '    return new OtelObservability({});',
+      '  }',
+      '  return null;',
+    ]),
+    []
+  );
+
+  assert.deepEqual(
+    collectProfiles([
       '  for (;;) {',
       "    switch ('on') { case 'on': continue; }",
       '    if (!env.OBS_ENABLED) return createNoopObservability();',
@@ -1312,6 +1324,17 @@ test('profile evidence respects directed completion after switches', () => {
       "  switch ('on') { case 'on': break; }",
       '  if (!env.OBS_ENABLED) return createNoopObservability();',
       '  return new OtelObservability({});',
+    ]),
+    ['observability-noop', 'observability-otel']
+  );
+
+  assert.deepEqual(
+    collectProfiles([
+      '  outer: {',
+      "    switch ('on') { case 'on': if (env.skip) break outer; }",
+      '    if (!env.OBS_ENABLED) return createNoopObservability();',
+      '    return new OtelObservability({});',
+      '  }',
     ]),
     ['observability-noop', 'observability-otel']
   );
