@@ -543,6 +543,26 @@ test('parseArgs builds scoped retirement commands for stale architecture evidenc
   assert.equal(executionCommand.kind, 'architecture_evidence_retire');
   assert.equal(executionCommand.evidenceId, 'EVIDENCE-API-H2-4-LIFECYCLE-LOCAL');
   assert.match(executionCommand.reason, /Independent QA/);
+
+  const secondTestCommand = parseArgs([
+    'architecture-evidence',
+    'retire-test',
+    '--test',
+    'TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-11',
+    '--component',
+    'SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION',
+    ...shared,
+  ]);
+  const firstAdmissionTestCommand = parseArgs([
+    'architecture-evidence',
+    'retire-test',
+    '--test',
+    'TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-10',
+    '--component',
+    'SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION',
+    ...shared,
+  ]);
+  assert.notEqual(firstAdmissionTestCommand.idempotencyKey, secondTestCommand.idempotencyKey);
 });
 
 test('parseArgs builds an audited feature rail retirement command', () => {

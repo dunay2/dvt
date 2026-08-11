@@ -909,6 +909,7 @@ test('architecture test and execution retirement require exact may-delete scope'
   });
   assert.equal(testPlan.retirement.testId, testCommand.testId);
   assert.equal(testPlan.audit.operationType, 'architecture_test_retire');
+  assert.equal(testPlan.audit.payload.testId, testCommand.testId);
 
   const executionCommand = parseArgs([
     'architecture-evidence',
@@ -933,6 +934,7 @@ test('architecture test and execution retirement require exact may-delete scope'
   });
   assert.equal(executionPlan.retirement.evidenceId, executionCommand.evidenceId);
   assert.equal(executionPlan.audit.operationType, 'architecture_evidence_retire');
+  assert.equal(executionPlan.audit.payload.evidenceId, executionCommand.evidenceId);
 
   assert.throws(
     () =>
@@ -1048,6 +1050,7 @@ test('feature mechanization retirement uses design scope, CAS, and audited delet
   );
 
   assert.equal(planned.retirement.railId, command.railId);
+  assert.equal(planned.audit.payload.railId, command.railId);
   assert.ok(
     queries.some(
       ({ sql, params }) =>
