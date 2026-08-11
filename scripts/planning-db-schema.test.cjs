@@ -137,6 +137,10 @@ test('documentation lifecycle accepts only hash-matched DB authority disposition
     schemaSql,
     /fowler_analysis_retirement_query[\s\S]*accepted_dispositions[\s\S]*accepted_dispositions\.source_content_sha256 = document\.source_content_sha256/u
   );
+  assert.match(
+    schemaSql,
+    /LEFT JOIN retirement_decisions ON \(\(\(retirement_decisions\.document_path = document\.document_path\) AND \(retirement_decisions\.source_content_sha256 = document\.source_content_sha256\)\)\)/u
+  );
 });
 
 test('current schema accepts audited governance component revisions', () => {
