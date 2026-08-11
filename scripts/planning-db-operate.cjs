@@ -4352,6 +4352,11 @@ function planArchitectureEvidenceRetireOperation({
   if (!existingEvidence) {
     throw new Error(`ARCH-EVIDENCE-RETIRE-NOT-FOUND: ${command.evidenceId}`);
   }
+  if (existingEvidence.design_id !== command.designId) {
+    throw new Error(
+      `ARCH-EVIDENCE-RETIRE-DESIGN-MISMATCH: evidence ${command.evidenceId} does not belong to design ${command.designId}.`
+    );
+  }
 
   return {
     retirement: { evidenceId: command.evidenceId },
