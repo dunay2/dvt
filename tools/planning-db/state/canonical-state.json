@@ -10537,6 +10537,20 @@
         "updated_at": "2026-08-11T08:50:07.905+00:00"
       },
       {
+        "design_id": "API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811",
+        "work_item_id": "GH-2274",
+        "title": "Remove current links to superseded architecture documents",
+        "owner": "Architecture / Docs / Planning",
+        "status": "review",
+        "rationale": "Five active canonical pages still link to four lifecycle-superseded documents; current navigation must use the existing DB-first projection while historical evidence remains byte-unchanged.",
+        "fowler_signal": "hidden_authority",
+        "rail_ref": "GeneratePlanningDerivedSurfaces;ClassifyArchitectureDocumentationDisposition",
+        "approved_at": null,
+        "supersedes_id": null,
+        "created_at": "2026-08-11T12:42:32.421+00:00",
+        "updated_at": "2026-08-11T12:42:32.421+00:00"
+      },
+      {
         "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-20260811",
         "work_item_id": "GH-2274",
         "title": "DB-first document and evidence reconciliation",
@@ -61724,6 +61738,62 @@
         "created_at": "2026-08-11T08:35:52.373+00:00"
       },
       {
+        "design_id": "API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811",
+        "subject_kind": "command",
+        "subject_id": "GeneratePlanningDerivedSurfaces",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T12:42:32.421+00:00"
+      },
+      {
+        "design_id": "API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811",
+        "subject_kind": "path",
+        "subject_id": "docs/architecture/components/planner/planner-ddd.md",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T12:42:32.421+00:00"
+      },
+      {
+        "design_id": "API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811",
+        "subject_kind": "path",
+        "subject_id": "docs/architecture/components/planner/planner-functional.md",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T12:42:32.421+00:00"
+      },
+      {
+        "design_id": "API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811",
+        "subject_kind": "path",
+        "subject_id": "docs/architecture/components/planner/planner-sequence.md",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T12:42:32.421+00:00"
+      },
+      {
+        "design_id": "API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811",
+        "subject_kind": "path",
+        "subject_id": "docs/architecture/domain-planning.md",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T12:42:32.421+00:00"
+      },
+      {
+        "design_id": "API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811",
+        "subject_kind": "path",
+        "subject_id": "docs/guides/generic-graph-source-user-manual-20260404.md",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T12:42:32.421+00:00"
+      },
+      {
+        "design_id": "API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811",
+        "subject_kind": "query",
+        "subject_id": "ClassifyArchitectureDocumentationDisposition",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T12:42:32.421+00:00"
+      },
+      {
         "design_id": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-20260811",
         "subject_kind": "command",
         "subject_id": "ApplyArchitectureDependencyBoundaryGate",
@@ -93807,6 +93877,76 @@
         "created_at": "2026-08-10T21:04:26.234+00:00"
       },
       {
+        "operation_id": "a6d25920-95e1-42ac-96ed-9a88f8f9e40d",
+        "idempotency_key": "architecture_design_create:codex:API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811:19983b062eafd02d",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811",
+        "source_ref": "docs/architecture/command-query-rail-governance.md",
+        "source_content_sha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "Architecture / Docs / Planning",
+          "title": "Remove current links to superseded architecture documents",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "docs/architecture/domain-planning.md",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "docs/guides/generic-graph-source-user-manual-20260404.md",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "docs/architecture/components/planner/planner-sequence.md",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "docs/architecture/components/planner/planner-functional.md",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "docs/architecture/components/planner/planner-ddd.md",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "GeneratePlanningDerivedSurfaces",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "ClassifyArchitectureDocumentationDisposition",
+              "subjectKind": "query"
+            }
+          ],
+          "status": "review",
+          "railRef": "GeneratePlanningDerivedSurfaces;ClassifyArchitectureDocumentationDisposition",
+          "designId": "API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811",
+          "rationale": "Five active canonical pages still link to four lifecycle-superseded documents; current navigation must use the existing DB-first projection while historical evidence remains byte-unchanged.",
+          "sourceRef": "docs/architecture/command-query-rail-governance.md",
+          "workItemId": "GH-2274",
+          "fowlerSignal": "hidden_authority",
+          "supersedesId": null,
+          "sourceContentSha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc"
+        },
+        "created_at": "2026-08-11T12:42:32.421+00:00"
+      },
+      {
         "operation_id": "a7d32dac-d743-49eb-b28d-33b77d4786d9",
         "idempotency_key": "architecture_evidence_retire:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811:EVIDENCE-API-H2-4-PUBLICATION-COMMAND-LOCAL:44136fa355b3678a",
         "operation_type": "architecture_evidence_retire",
@@ -105816,7 +105956,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/generate-code-status.cjs",
-      "sourceContentSha256": "b6474c8fbfbd122df6c0227cb372146ae787f64d32f022c299dfb6b701a6f157",
+      "sourceContentSha256": "3641609de0f05650ca61a171abe3be10852b3365584774aaf87cdfad5dc154ce",
       "rawRail": {
         "name": "GeneratePlanningDerivedSurfaces",
         "type": "command",
@@ -107116,7 +107256,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/generate-code-status.cjs",
-      "sourceContentSha256": "b6474c8fbfbd122df6c0227cb372146ae787f64d32f022c299dfb6b701a6f157",
+      "sourceContentSha256": "3641609de0f05650ca61a171abe3be10852b3365584774aaf87cdfad5dc154ce",
       "rawRail": {
         "name": "GeneratePlanningDerivedSurfaces",
         "type": "command",
