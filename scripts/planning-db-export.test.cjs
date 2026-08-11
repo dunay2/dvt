@@ -310,6 +310,10 @@ test('planning DB export reads current architecture state and every current feat
 
   assert.ok(capturedSql.some((sql) => /feature_mechanization_local_rails/u.test(sql)));
   assert.ok(capturedSql.some((sql) => /feature_mechanization_local_operations/u.test(sql)));
+  const operationExportSql = capturedSql.find((sql) =>
+    /feature_mechanization_local_operations/u.test(sql)
+  );
+  assert.doesNotMatch(operationExportSql, /where exists[\s\S]*feature_mechanization_local_rails/u);
   assert.ok(capturedSql.some((sql) => /governance_component_local_definitions/u.test(sql)));
   assert.ok(capturedSql.some((sql) => /governance_component_local_ownership_patterns/u.test(sql)));
   assert.ok(capturedSql.some((sql) => /governance_component_local_semantic_items/u.test(sql)));
