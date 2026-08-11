@@ -175,6 +175,22 @@ test('Fowler read models invalidate accepted decisions when analyzed source byte
   );
 });
 
+test('documentation lifecycle duplicate counts exclude non-publishable documents', () => {
+  const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
+  const lifecycleView = schemaSql.slice(
+    schemaSql.indexOf('CREATE VIEW planning_query_store.documentation_lifecycle_query AS'),
+    schemaSql.indexOf(
+      '-- Name: knowledge_document_sections',
+      schemaSql.indexOf('CREATE VIEW planning_query_store.documentation_lifecycle_query AS')
+    )
+  );
+
+  assert.match(
+    lifecycleView,
+    /WHERE \(\(stateful_1\.subject_key IS NOT NULL\) AND \(stateful_1\.lifecycle_state <> ALL \(ARRAY\['archived'::text, 'discarded'::text, 'superseded'::text\]\)\)\)/u
+  );
+});
+
 test('current schema accepts audited governance component revisions', () => {
   const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
 
