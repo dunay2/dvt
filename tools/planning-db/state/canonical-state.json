@@ -10439,6 +10439,20 @@
         "updated_at": "2026-08-11T06:15:55.208+00:00"
       },
       {
+        "design_id": "API-H2-2-PUSH-BASE-AVAILABILITY-V13-20260811",
+        "work_item_id": "GH-2273",
+        "title": "Guarantee push comparison base availability",
+        "owner": "ArchitectureBoundaryGuard",
+        "status": "approved",
+        "rationale": "Fetch github.event.before explicitly for push-triggered architecture checks so a shallow checkout can compare multi-commit deliveries; retain PR and workflow-dispatch baselines and the existing no-merge-base direct-tree fallback.",
+        "fowler_signal": "evolutionary_architecture",
+        "rail_ref": "ApplyArchitectureDependencyBoundaryGate",
+        "approved_at": "2026-08-11T07:37:49.273+00:00",
+        "supersedes_id": "API-H2-2-PUSH-DIFF-BASELINE-V12-20260811",
+        "created_at": "2026-08-11T07:37:45.821+00:00",
+        "updated_at": "2026-08-11T07:37:49.273+00:00"
+      },
+      {
         "design_id": "API-H2-2-PUSH-DIFF-BASELINE-V12-20260811",
         "work_item_id": "GH-2273",
         "title": "Bind push reachability diff to pre-push SHA",
@@ -60892,6 +60906,54 @@
         "created_at": "2026-08-11T05:47:10.393+00:00"
       },
       {
+        "design_id": "API-H2-2-PUSH-BASE-AVAILABILITY-V13-20260811",
+        "subject_kind": "command",
+        "subject_id": "ApplyArchitectureDependencyBoundaryGate",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-11T07:37:45.821+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PUSH-BASE-AVAILABILITY-V13-20260811",
+        "subject_kind": "component",
+        "subject_id": "SYS-CI-GOVERNANCE-TOOLS-CI-ARCHITECTURE-BOUNDARIES",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-11T07:37:45.821+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PUSH-BASE-AVAILABILITY-V13-20260811",
+        "subject_kind": "component",
+        "subject_id": "SYS-CI-GOVERNANCE-TOOLS-CI-ARCHITECTURE-BOUNDARIES",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T07:37:45.821+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PUSH-BASE-AVAILABILITY-V13-20260811",
+        "subject_kind": "path",
+        "subject_id": ".github/workflows/pr-quality-gate.yml",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T07:37:45.821+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PUSH-BASE-AVAILABILITY-V13-20260811",
+        "subject_kind": "path",
+        "subject_id": "tools/ci/architecture-dependency-guard.test.mjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T07:37:45.821+00:00"
+      },
+      {
+        "design_id": "API-H2-2-PUSH-BASE-AVAILABILITY-V13-20260811",
+        "subject_kind": "test",
+        "subject_id": "TEST-CI-API-PRODUCTION-REACHABILITY",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-11T07:37:45.821+00:00"
+      },
+      {
         "design_id": "API-H2-2-PUSH-DIFF-BASELINE-V12-20260811",
         "subject_kind": "command",
         "subject_id": "ApplyArchitectureDependencyBoundaryGate",
@@ -87503,6 +87565,27 @@
         "created_at": "2026-08-11T06:33:55.114+00:00"
       },
       {
+        "operation_id": "4c6eb710-2fb8-4eb9-9f03-65ae6a518c47",
+        "idempotency_key": "codex-api-h2-2-push-base-v13-review",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-2-PUSH-BASE-AVAILABILITY-V13-20260811",
+        "source_ref": ".github/workflows/pr-quality-gate.yml",
+        "source_content_sha256": "bdf20dae616bfda993737a4ffe143a28189db1cbb51ca4654faa3247328756e3",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Independent Fowler QA reproduced the shallow multi-commit base-availability gap after V12.",
+          "designId": "API-H2-2-PUSH-BASE-AVAILABILITY-V13-20260811",
+          "toStatus": "review",
+          "sourceRef": ".github/workflows/pr-quality-gate.yml",
+          "fromStatus": "proposed",
+          "sourceContentSha256": "bdf20dae616bfda993737a4ffe143a28189db1cbb51ca4654faa3247328756e3"
+        },
+        "created_at": "2026-08-11T07:37:47.544+00:00"
+      },
+      {
         "operation_id": "4d1e17c4-3fee-470d-a70b-0a828895c7e9",
         "idempotency_key": "codex-api-h2-2-reachability-v5-approve-evidence",
         "operation_type": "architecture_design_transition",
@@ -88368,6 +88451,70 @@
         "created_at": "2026-08-11T04:25:08.2+00:00"
       },
       {
+        "operation_id": "620063ab-2af3-4147-91df-498fabf4d6c7",
+        "idempotency_key": "codex-api-h2-2-push-base-v13-create",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "API-H2-2-PUSH-BASE-AVAILABILITY-V13-20260811",
+        "source_ref": ".github/workflows/pr-quality-gate.yml",
+        "source_content_sha256": "bdf20dae616bfda993737a4ffe143a28189db1cbb51ca4654faa3247328756e3",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "ArchitectureBoundaryGuard",
+          "title": "Guarantee push comparison base availability",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "ApplyArchitectureDependencyBoundaryGate",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-CI-GOVERNANCE-TOOLS-CI-ARCHITECTURE-BOUNDARIES",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-CI-GOVERNANCE-TOOLS-CI-ARCHITECTURE-BOUNDARIES",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": ".github/workflows/pr-quality-gate.yml",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "tools/ci/architecture-dependency-guard.test.mjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-CI-API-PRODUCTION-REACHABILITY",
+              "subjectKind": "test"
+            }
+          ],
+          "status": "proposed",
+          "railRef": "ApplyArchitectureDependencyBoundaryGate",
+          "designId": "API-H2-2-PUSH-BASE-AVAILABILITY-V13-20260811",
+          "rationale": "Fetch github.event.before explicitly for push-triggered architecture checks so a shallow checkout can compare multi-commit deliveries; retain PR and workflow-dispatch baselines and the existing no-merge-base direct-tree fallback.",
+          "sourceRef": ".github/workflows/pr-quality-gate.yml",
+          "workItemId": "GH-2273",
+          "fowlerSignal": "evolutionary_architecture",
+          "supersedesId": "API-H2-2-PUSH-DIFF-BASELINE-V12-20260811",
+          "sourceContentSha256": "bdf20dae616bfda993737a4ffe143a28189db1cbb51ca4654faa3247328756e3"
+        },
+        "created_at": "2026-08-11T07:37:45.821+00:00"
+      },
+      {
         "operation_id": "65f75259-b486-4f53-b38d-785db1261564",
         "idempotency_key": "architecture_design_create:codex:PLANNING-DB-CURRENT-SCHEMA-HARD-CUT-20260808:24f99b6f81287f13",
         "operation_type": "architecture_design_create",
@@ -88699,6 +88846,27 @@
           "sourceContentSha256": "972c21a525dd6abfeb44af39559f53d345ed08570d93872dddfbf3e966c32d88"
         },
         "created_at": "2026-08-11T04:57:01.544+00:00"
+      },
+      {
+        "operation_id": "6f2e1838-4973-4324-a540-7f92c01fe4c0",
+        "idempotency_key": "codex-api-h2-2-push-base-v13-approve",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-2-PUSH-BASE-AVAILABILITY-V13-20260811",
+        "source_ref": ".github/workflows/pr-quality-gate.yml",
+        "source_content_sha256": "bdf20dae616bfda993737a4ffe143a28189db1cbb51ca4654faa3247328756e3",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The minimum correction fetches only the push base SHA, keeps fetch-depth two, and strengthens the workflow contract before implementation.",
+          "designId": "API-H2-2-PUSH-BASE-AVAILABILITY-V13-20260811",
+          "toStatus": "approved",
+          "sourceRef": ".github/workflows/pr-quality-gate.yml",
+          "fromStatus": "review",
+          "sourceContentSha256": "bdf20dae616bfda993737a4ffe143a28189db1cbb51ca4654faa3247328756e3"
+        },
+        "created_at": "2026-08-11T07:37:49.273+00:00"
       },
       {
         "operation_id": "70a131ff-2be8-4bda-a6b3-b9fad2a04598",
