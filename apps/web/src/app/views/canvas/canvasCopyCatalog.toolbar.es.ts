@@ -74,6 +74,9 @@ export const canvasViewToolbarCopyEs = {
   canvasNodePortBlockedMessage:
     'Los nodos compatibles están bloqueados por la política actual del grafo',
   canvasAddNodeCatalogTitle: 'Añadir componente',
+  canvasAddNodeCatalogDescription:
+    'Busca en el catálogo de componentes gobernados y añade un elemento al canvas.',
+  canvasAddNodeCatalogCloseLabel: 'Cerrar catálogo de componentes',
   canvasAddNodeCatalogSearchLabel: 'Buscar componentes',
   canvasAddNodeCatalogSearchPlaceholder: 'Buscar origen, modelo, transformación, test, salida...',
   canvasAddNodeCatalogEmptyMessage: 'No hay componentes coincidentes',

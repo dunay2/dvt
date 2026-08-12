@@ -9,10 +9,7 @@ import {
   buildCanvasAddNodeCatalogMenuModel,
   buildCanvasContextMenuModel,
 } from './canvasInteractionCommandSurface';
-import {
-  CanvasContextMenuView,
-  resolveCanvasContextMenuSurfaceStyle,
-} from './CanvasContextMenuView';
+import { CanvasContextMenuView } from './CanvasContextMenuView';
 
 describe('CanvasContextMenuView', () => {
   let container: HTMLDivElement;
@@ -41,6 +38,7 @@ describe('CanvasContextMenuView', () => {
           model={null}
           menuRef={createRef<HTMLDivElement>()}
           onClose={vi.fn()}
+          onCatalogClose={vi.fn()}
           onCanvasAction={vi.fn()}
           onCreateNodeAction={vi.fn()}
           onEdgeAction={vi.fn()}
@@ -74,6 +72,7 @@ describe('CanvasContextMenuView', () => {
           model={model}
           menuRef={createRef<HTMLDivElement>()}
           onClose={vi.fn()}
+          onCatalogClose={vi.fn()}
           onCanvasAction={onCanvasAction}
           onCreateNodeAction={onCreateNodeAction}
           onEdgeAction={vi.fn()}
@@ -135,6 +134,7 @@ describe('CanvasContextMenuView', () => {
           model={catalogModel}
           menuRef={createRef<HTMLDivElement>()}
           onClose={vi.fn()}
+          onCatalogClose={vi.fn()}
           onCanvasAction={onCanvasAction}
           onCreateNodeAction={onCreateNodeAction}
           onEdgeAction={vi.fn()}
@@ -144,12 +144,15 @@ describe('CanvasContextMenuView', () => {
       );
     });
 
-    expect(container.textContent).toContain('Add component');
-    expect(container.textContent).toContain('Add source');
-    expect(container.textContent).toContain('Sources');
-    expect(container.textContent).toContain('Attach a governed warehouse or dbt source');
+    expect(document.body.textContent).toContain('Add component');
+    expect(document.querySelector('[role="dialog"]')).not.toBeNull();
+    expect(document.querySelector('[role="dialog"]')?.getAttribute('aria-modal')).toBe('true');
+    expect(document.querySelector('[role="menu"]')).toBeNull();
+    expect(document.body.textContent).toContain('Add source');
+    expect(document.body.textContent).toContain('Sources');
+    expect(document.body.textContent).toContain('Attach a governed warehouse or dbt source');
 
-    await clickMenuItem('Add source');
+    await clickCatalogAction('Add source');
 
     expect(onCreateNodeAction).toHaveBeenCalledWith({
       action: 'create-node',
@@ -184,6 +187,7 @@ describe('CanvasContextMenuView', () => {
           model={catalogModel}
           menuRef={createRef<HTMLDivElement>()}
           onClose={vi.fn()}
+          onCatalogClose={vi.fn()}
           onCanvasAction={onCanvasAction}
           onCreateNodeAction={onCreateNodeAction}
           onEdgeAction={vi.fn()}
@@ -193,15 +197,15 @@ describe('CanvasContextMenuView', () => {
       );
     });
 
-    expect(container.textContent).toContain('Add source');
-    expect(container.textContent).toContain('Sources');
+    expect(document.body.textContent).toContain('Add source');
+    expect(document.body.textContent).toContain('Sources');
     expect(
-      container.querySelector(
-        '[data-slot="canvas-context-menu-add-catalog-item"][data-menu-item-kind="catalog"][data-menu-action="open-source-import"]'
+      document.querySelector(
+        '[data-slot="canvas-context-menu-add-catalog-item"][data-menu-action="open-source-import"]'
       )?.textContent
     ).toContain('Add source');
 
-    await clickMenuItem('Add source');
+    await clickCatalogAction('Add source');
 
     expect(onCanvasAction).toHaveBeenCalledWith({
       action: 'open-source-import',
@@ -230,6 +234,7 @@ describe('CanvasContextMenuView', () => {
           model={model}
           menuRef={createRef<HTMLDivElement>()}
           onClose={vi.fn()}
+          onCatalogClose={vi.fn()}
           onCanvasAction={onCanvasAction}
           onCreateNodeAction={onCreateNodeAction}
           onEdgeAction={onEdgeAction}
@@ -249,26 +254,23 @@ describe('CanvasContextMenuView', () => {
     expect(onCreateNodeAction).not.toHaveBeenCalled();
   });
 
-  it('keeps the menu surface inside the visible viewport near canvas edges', () => {
-    expect(
-      resolveCanvasContextMenuSurfaceStyle(
-        { x: 1000, y: 700 },
-        {
-          width: 1024,
-          height: 720,
-        }
-      )
-    ).toEqual({
-      left: 724,
-      top: 548,
-      maxHeight: 'calc(100vh - 560px)',
-    });
-  });
-
   async function clickMenuItem(label: string): Promise<void> {
     const button = Array.from(document.querySelectorAll<HTMLElement>('[role="menuitem"]')).find(
       (candidate) => candidate.textContent?.includes(label)
     );
+    expect(button, label).toBeDefined();
+
+    await act(async () => {
+      button?.click();
+    });
+  }
+
+  async function clickCatalogAction(label: string): Promise<void> {
+    const button = Array.from(
+      document.querySelectorAll<HTMLButtonElement>(
+        '[data-slot="canvas-context-menu-add-catalog-item"]'
+      )
+    ).find((candidate) => candidate.textContent?.includes(label));
     expect(button, label).toBeDefined();
 
     await act(async () => {

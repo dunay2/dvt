@@ -292,6 +292,7 @@ export function CanvasViewportSurfaceView({
         model={contextMenuPresenter.model}
         menuRef={contextMenuPresenter.menuRef}
         onClose={() => contextMenuPresenter.closeContextMenu({ preserveCatalog: true })}
+        onCatalogClose={contextMenuPresenter.closeContextMenu}
         onCanvasAction={contextMenuPresenter.handleCanvasAction}
         onCreateNodeAction={contextMenuPresenter.handleCreateNodeAction}
         onEdgeAction={contextMenuPresenter.handleEdgeAction}
