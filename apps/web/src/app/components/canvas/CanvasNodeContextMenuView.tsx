@@ -1,15 +1,14 @@
-/** Owned concern: render the governed Canvas node context menu presentation. */
+/** Owned concern: render the governed Canvas node operations menu presentation. */
+import { Fragment } from 'react';
+
 import {
-  CanvasNodeContextMenuActionPrimitive,
-  CanvasNodeContextMenuGroupFrame,
-  CanvasNodeContextMenuGroupLabel,
-  CanvasNodeContextMenuSurface,
-  CanvasNodeContextMenuTitle,
-} from './CanvasNodeContextMenuPrimitives';
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuLabel,
+  ContextMenuSeparator,
+} from '../ui/context-menu';
 import type {
-  CanvasNodeContextMenuAction,
   CanvasNodeContextMenuActionId,
-  CanvasNodeContextMenuActionGroup,
   CanvasNodeContextMenuModel,
 } from './canvasNodeContextMenuModel';
 
@@ -23,60 +22,31 @@ export function CanvasNodeContextMenuView({
   onAction,
 }: CanvasNodeContextMenuViewProps): JSX.Element {
   return (
-    <CanvasNodeContextMenuSurface>
-      <CanvasNodeContextMenuTitle>{model.target.nodeName}</CanvasNodeContextMenuTitle>
-      {model.actionGroups.map((group, groupIndex) => (
-        <CanvasNodeContextMenuGroup
-          key={group.id}
-          group={group}
-          showLabel={groupIndex > 0}
-          onAction={onAction}
-        />
-      ))}
-    </CanvasNodeContextMenuSurface>
-  );
-}
-
-export type CanvasNodeContextMenuGroupProps = Readonly<{
-  group: CanvasNodeContextMenuActionGroup;
-  showLabel: boolean;
-  onAction: (actionId: CanvasNodeContextMenuActionId) => void;
-}>;
-
-export function CanvasNodeContextMenuGroup({
-  group,
-  showLabel,
-  onAction,
-}: CanvasNodeContextMenuGroupProps): JSX.Element {
-  return (
-    <CanvasNodeContextMenuGroupFrame>
-      {showLabel ? (
-        <CanvasNodeContextMenuGroupLabel>{group.label}</CanvasNodeContextMenuGroupLabel>
-      ) : null}
-      {group.actions.map((action) => (
-        <CanvasNodeContextMenuActionItem key={action.id} action={action} onAction={onAction} />
-      ))}
-    </CanvasNodeContextMenuGroupFrame>
-  );
-}
-
-export type CanvasNodeContextMenuActionItemProps = Readonly<{
-  action: CanvasNodeContextMenuAction;
-  onAction: (actionId: CanvasNodeContextMenuActionId) => void;
-}>;
-
-export function CanvasNodeContextMenuActionItem({
-  action,
-  onAction,
-}: CanvasNodeContextMenuActionItemProps): JSX.Element {
-  return (
-    <CanvasNodeContextMenuActionPrimitive
-      destructive={action.destructive}
-      disabled={action.disabled}
-      disabledReason={action.disabledReason}
-      onSelect={() => onAction(action.id)}
+    <ContextMenuContent
+      data-slot="canvas-node-context-menu"
+      className="w-56 border-(--border-default) bg-(--surface-panel) text-(--text-default)"
     >
-      {action.label}
-    </CanvasNodeContextMenuActionPrimitive>
+      <ContextMenuLabel className="truncate font-mono text-xs text-(--text-muted)">
+        {model.target.nodeName}
+      </ContextMenuLabel>
+      {model.actionGroups.map((group, groupIndex) => (
+        <Fragment key={group.id}>
+          <ContextMenuSeparator className="bg-(--border-muted)" />
+          {groupIndex > 0 ? <ContextMenuLabel>{group.label}</ContextMenuLabel> : null}
+          {group.actions.map((action) => (
+            <ContextMenuItem
+              key={action.id}
+              data-slot="canvas-node-context-menu-item"
+              variant={action.destructive ? 'destructive' : undefined}
+              disabled={action.disabled}
+              title={action.disabledReason}
+              onSelect={() => onAction(action.id)}
+            >
+              {action.label}
+            </ContextMenuItem>
+          ))}
+        </Fragment>
+      ))}
+    </ContextMenuContent>
   );
 }

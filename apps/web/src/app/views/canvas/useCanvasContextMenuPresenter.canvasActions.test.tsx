@@ -75,11 +75,13 @@ describe('useCanvasContextMenuPresenter canvas actions', () => {
       );
     });
     await act(async () => {
-      presenter?.handlePaneContextMenu({
+      presenter?.handleViewportContextMenu({
         preventDefault: vi.fn(),
+        stopPropagation: vi.fn(),
+        target: document.createElement('div'),
         clientX: 320,
         clientY: 260,
-      } as unknown as React.MouseEvent<Element>);
+      } as unknown as React.MouseEvent<HTMLDivElement>);
     });
     expect(presenter).not.toBeNull();
     return presenter as CanvasContextMenuPresenter;

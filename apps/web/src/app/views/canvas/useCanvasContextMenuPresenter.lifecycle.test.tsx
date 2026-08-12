@@ -54,11 +54,13 @@ function createPresenterLifecycleHarness(): {
     },
     openPaneMenuAt: async (clientX, clientY) => {
       await act(async () => {
-        presenter?.handlePaneContextMenu({
+        presenter?.handleViewportContextMenu({
           preventDefault: vi.fn(),
+          stopPropagation: vi.fn(),
+          target: document.createElement('div'),
           clientX,
           clientY,
-        } as unknown as React.MouseEvent<Element>);
+        } as unknown as React.MouseEvent<HTMLDivElement>);
       });
     },
     render: async () => {

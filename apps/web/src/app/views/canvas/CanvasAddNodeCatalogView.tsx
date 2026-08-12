@@ -7,18 +7,10 @@ import {
   type CanvasAddNodeCatalogItem,
 } from './canvasAddNodeCatalogModel';
 
-const CATALOG_LAYOUT_CLASS_NAME =
-  'flex min-h-0 w-full min-w-0 flex-col overflow-x-hidden overflow-y-hidden';
 const CATALOG_SEARCH_CLASS_NAME =
   'h-9 w-full rounded-md border border-(--border-subtle) bg-(--surface-base) px-3 text-sm text-(--text-default) outline-none focus-visible:border-(--accent-default) focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]';
-const CATALOG_RESULTS_CLASS_NAME = 'min-h-0 flex-1 overflow-x-hidden overflow-y-auto pr-1';
-const CATALOG_EMPTY_CLASS_NAME = 'px-1 py-4 text-sm text-(--text-muted)';
-const CATALOG_CATEGORY_CLASS_NAME =
-  'min-w-0 border-t border-(--border-subtle) py-2 first:border-t-0 first:pt-0';
 const CATALOG_CATEGORY_TITLE_CLASS_NAME =
   'px-1 pb-1.5 text-xs font-semibold uppercase tracking-wide text-(--text-muted)';
-const CATALOG_ITEM_CLASS_NAME =
-  'flex w-full min-w-0 rounded-md px-2 py-2.5 text-left text-sm text-(--text-default) hover:bg-(--surface-elevated) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]';
 const CATALOG_ITEM_DESCRIPTION_CLASS_NAME =
   'mt-1 block whitespace-normal break-words text-xs leading-5 text-(--text-muted)';
 
@@ -53,7 +45,10 @@ export function CanvasAddNodeCatalogView({
   );
 
   return (
-    <div data-slot="canvas-context-menu-add-catalog-layout" className={CATALOG_LAYOUT_CLASS_NAME}>
+    <div
+      data-slot="canvas-context-menu-add-catalog-layout"
+      className="flex min-h-0 w-full min-w-0 flex-col overflow-x-hidden overflow-y-hidden"
+    >
       <label className="sr-only" htmlFor={searchId}>
         {copy.canvasAddNodeCatalogSearchLabel}
       </label>
@@ -68,9 +63,14 @@ export function CanvasAddNodeCatalogView({
         onChange={(event) => setQuery(event.currentTarget.value)}
       />
 
-      <div data-slot="canvas-add-node-catalog-results" className={CATALOG_RESULTS_CLASS_NAME}>
+      <div
+        data-slot="canvas-add-node-catalog-results"
+        className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto pr-1"
+      >
         {visibleItems.length === 0 ? (
-          <div className={CATALOG_EMPTY_CLASS_NAME}>{copy.canvasAddNodeCatalogEmptyMessage}</div>
+          <div className="px-1 py-4 text-sm text-(--text-muted)">
+            {copy.canvasAddNodeCatalogEmptyMessage}
+          </div>
         ) : (
           <div data-slot="canvas-context-menu-add-catalog-group" className="pt-3">
             {visibleGroups.map(([category, groupItems]) => {
@@ -84,7 +84,7 @@ export function CanvasAddNodeCatalogView({
                   aria-label={categoryLabel}
                   data-slot="canvas-context-menu-add-catalog-category"
                   data-catalog-category={category}
-                  className={CATALOG_CATEGORY_CLASS_NAME}
+                  className="min-w-0 border-t border-(--border-subtle) py-2 first:border-t-0 first:pt-0"
                 >
                   <h3 id={categoryHeadingId} className={CATALOG_CATEGORY_TITLE_CLASS_NAME}>
                     {categoryLabel}
@@ -96,7 +96,7 @@ export function CanvasAddNodeCatalogView({
                       data-slot="canvas-context-menu-add-catalog-item"
                       data-menu-action={resolveCanvasAddNodeCatalogActionId(item)}
                       data-registration-kind={item.registration.kind}
-                      className={CATALOG_ITEM_CLASS_NAME}
+                      className="flex w-full min-w-0 rounded-md px-2 py-2.5 text-left text-sm text-(--text-default) hover:bg-(--surface-elevated) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
                       title={item.description}
                       onClick={() => onSelectItem(item)}
                     >

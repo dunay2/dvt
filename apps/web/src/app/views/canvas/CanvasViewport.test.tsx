@@ -179,21 +179,23 @@ describe('CanvasViewport', () => {
       onOpenCanvasSettings: vi.fn(),
     });
 
-    const onPaneContextMenu = xyflowState.lastReactFlowProps?.onPaneContextMenu as
-      | ((event: { preventDefault: () => void; clientX: number; clientY: number }) => void)
-      | undefined;
-    expect(onPaneContextMenu).toBeTypeOf('function');
+    const contextSurface = container.querySelector('[data-slot="canvas-viewport-context-surface"]');
+    expect(contextSurface).not.toBeNull();
 
     await act(async () => {
-      onPaneContextMenu?.({
-        preventDefault: vi.fn(),
-        clientX: 320,
-        clientY: 240,
-      });
+      contextSurface?.dispatchEvent(
+        new MouseEvent('contextmenu', {
+          bubbles: true,
+          cancelable: true,
+          button: 2,
+          clientX: 320,
+          clientY: 240,
+        })
+      );
     });
 
-    expect(container.querySelector('[data-slot="canvas-context-menu"]')).not.toBeNull();
-    expect(container.textContent).toContain('Canvas settings');
+    expect(document.querySelector('[data-slot="canvas-context-menu"]')).not.toBeNull();
+    expect(document.body.textContent).toContain('Canvas settings');
   });
 
   it('uses one governed CSS grid layer for visibility, color, size, and snap policy', async () => {
