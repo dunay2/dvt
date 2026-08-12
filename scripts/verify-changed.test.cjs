@@ -35,6 +35,19 @@ test('buildFocusedChangedTestPlan retains adjacent script tests without duplicat
   assert.ok(!labels.includes('pnpm governance:db:import'));
 });
 
+test('buildFocusedChangedTestPlan retains the ordinary-workflow publication guard', () => {
+  const labels = focusedLabelsFor([
+    '.github/workflows/pr-quality-gate.yml',
+    'scripts/documentation-publication.test.cjs',
+  ]);
+
+  assert.equal(
+    labels.filter((label) => label === 'node --test scripts/documentation-publication.test.cjs')
+      .length,
+    1
+  );
+});
+
 test('buildVerifyChangedPlan keeps docs-only iteration on changed-file gates', () => {
   const labels = labelsFor(['docs/planning/templates/component-engineering-record-template.md']);
 
