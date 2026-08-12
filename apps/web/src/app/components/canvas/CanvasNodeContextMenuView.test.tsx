@@ -131,9 +131,9 @@ describe('CanvasNodeContextMenuView', () => {
     expect(onAction).toHaveBeenNthCalledWith(1, 'duplicate-node');
     expect(onAction).toHaveBeenNthCalledWith(2, 'select-node-for-execution');
     expect(onAction).toHaveBeenNthCalledWith(3, 'remove-node');
-    expect(screen.getByRole('menuitem', { name: 'Delete' }).getAttribute('data-variant')).toBe(
-      'destructive'
-    );
+    const deleteAction = screen.getByRole('menuitem', { name: 'Delete' });
+    expect(deleteAction.getAttribute('data-variant')).toBe('destructive');
+    expect(deleteAction.style.color).toBe('var(--status-danger)');
 
     for (const retiredNavigationLabel of [
       'Open workbench',
