@@ -193,4 +193,16 @@ describe('NodePropertySectionView', () => {
     expect(container.querySelector('h3')).toBeNull();
     expect(container.querySelector('[data-slot="node-section-code"]')).not.toBeNull();
   });
+
+  it('does not repeat the active General tab as an inner workbench heading', () => {
+    ({ container, root } = renderSection({
+      id: 'general',
+      label: 'General',
+      rows: [{ id: NODE_PROPERTY_ROW_ID.status, label: 'Status', value: 'Ready' }],
+      tableRows: [],
+    }));
+
+    expect(container.querySelector('h3')).toBeNull();
+    expect(container.querySelector('dl')?.textContent).toContain('Status');
+  });
 });
