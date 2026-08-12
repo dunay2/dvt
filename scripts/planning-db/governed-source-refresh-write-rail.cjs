@@ -129,7 +129,7 @@ function readGovernedSourceSnapshots(options) {
   return { sourceCommitSha, sources };
 }
 
-function defaultGovernedSourceRefreshIdempotencyKey(command) {
+function defaultGovernedSourceRefreshIdempotencyKey(command, snapshot) {
   return [
     command.kind,
     command.actor || 'anonymous',
@@ -137,6 +137,11 @@ function defaultGovernedSourceRefreshIdempotencyKey(command) {
       stableStringify({
         paths: command.paths,
         expectedContentSha256ByPath: command.expectedContentSha256ByPath || {},
+        sourceCommitSha: snapshot.sourceCommitSha,
+        sources: snapshot.sources.map(({ path: sourcePath, contentHash }) => ({
+          path: sourcePath,
+          contentHash,
+        })),
       })
     ).slice(0, 16),
   ].join(':');
@@ -319,6 +324,12 @@ async function applyGovernedSourceRefreshOperation(command, options = {}) {
     lstat: options.lstat,
     realpath: options.realpath,
   });
+  const effectiveCommand = command.idempotencyKey
+    ? command
+    : {
+        ...command,
+        idempotencyKey: defaultGovernedSourceRefreshIdempotencyKey(command, snapshot),
+      };
   const client =
     options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
   const ownsClient = !options.client;
@@ -327,16 +338,16 @@ async function applyGovernedSourceRefreshOperation(command, options = {}) {
   try {
     await assertPlanningDbCurrentSchemaReady(client);
     await client.query('begin');
-    const existing = await readExistingOperation(client, command.idempotencyKey);
+    const existing = await readExistingOperation(client, effectiveCommand.idempotencyKey);
     if (existing) {
-      assertIdempotentReplayMatches(existing, command, snapshot.sourceCommitSha);
+      assertIdempotentReplayMatches(existing, effectiveCommand, snapshot.sourceCommitSha);
       await client.query('commit');
       return { idempotent: true, audit: existing };
     }
 
-    const governedRows = await readGovernedRowsForUpdate(client, command.paths);
+    const governedRows = await readGovernedRowsForUpdate(client, effectiveCommand.paths);
     const planned = planGovernedSourceRefreshOperation({
-      command,
+      command: effectiveCommand,
       sourceCommitSha: snapshot.sourceCommitSha,
       snapshots: snapshot.sources,
       governedRows,
