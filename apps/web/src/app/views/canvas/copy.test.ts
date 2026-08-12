@@ -76,12 +76,12 @@ describe('canvas copy catalog', () => {
 
     expect(canvasViewCopy.inspectorDbtPackageLabel).toBe('Package');
     expect(canvasViewCopy.inspectorDbtModelSqlUnavailableMessage).toBe(
-      'Connect this model to a DBT source or model before generating an executable artifact.'
+      'Define the SQL this node runs.'
     );
     expect(canvasViewCopy.inspectorErrorDbtPackageRequired).toBe('Package is required.');
     expect(spanishCopy.inspectorDbtPackageLabel).toBe('Paquete');
     expect(spanishCopy.inspectorDbtModelSqlUnavailableMessage).toBe(
-      'Conecta este modelo a un source o modelo DBT antes de generar un artefacto ejecutable.'
+      'Define el SQL que ejecuta este nodo.'
     );
     expect(spanishCopy.inspectorErrorDbtPackageRequired).toBe('El paquete es obligatorio.');
     expect(spanishCopy.inspectorDvtWriteModeLabel).toBe('Modo de escritura');

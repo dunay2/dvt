@@ -180,4 +180,17 @@ describe('NodePropertySectionView', () => {
     expect(container.textContent).not.toContain('No properties are recorded for this section.');
     expect(container.querySelector('textarea[aria-label="Model SQL"]')).not.toBeNull();
   });
+
+  it('does not repeat the active Code tab as an inner workbench heading', () => {
+    ({ container, root } = renderSection({
+      id: 'code',
+      label: 'Code',
+      rows: [],
+      tableRows: [],
+      code: 'select 1',
+    }));
+
+    expect(container.querySelector('h3')).toBeNull();
+    expect(container.querySelector('[data-slot="node-section-code"]')).not.toBeNull();
+  });
 });

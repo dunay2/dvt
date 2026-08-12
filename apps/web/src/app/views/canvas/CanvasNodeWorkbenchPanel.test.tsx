@@ -288,7 +288,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(tabsList?.textContent).not.toContain('Columns');
   });
 
-  it('keeps the authoritative node-file editor launch inside the Code section', () => {
+  it('does not repeat an external code action when the node already supports inline authoring', () => {
     const onOpenNodeCode = vi.fn();
 
     act(() => {
@@ -320,17 +320,42 @@ describe('CanvasNodeWorkbenchPanel', () => {
 
     expect(onOpenNodeCode).not.toHaveBeenCalled();
 
-    const openCodeEditor = container.querySelector<HTMLButtonElement>(
-      '[data-slot="canvas-node-workbench-open-code-editor"]'
-    );
-    expect(openCodeEditor).not.toBeNull();
+    expect(
+      container.querySelector('[data-slot="canvas-node-workbench-open-code-editor"]')
+    ).toBeNull();
+    expect(container.querySelector('textarea[name="dbt-model-sql"]')).not.toBeNull();
+    expect(onOpenNodeCode).not.toHaveBeenCalled();
+  });
+
+  it('retains one explicit file editor action for a file-backed node without inline authoring', () => {
+    const onOpenNodeCode = vi.fn();
 
     act(() => {
-      fireEvent.click(openCodeEditor!);
+      root.render(
+        <CanvasNodeWorkbenchPanel
+          node={MODEL_NODE}
+          nodes={[SOURCE_NODE, MODEL_NODE]}
+          edges={EDGES}
+          activeRunId={null}
+          preferredTabId="code"
+          authoring={{ canEditNode: false, onApplyNodeDraft: vi.fn() }}
+          onOpenNodeCode={onOpenNodeCode}
+          onClose={vi.fn()}
+        />
+      );
+    });
+
+    const editSqlFile = container.querySelector<HTMLButtonElement>(
+      '[data-slot="canvas-node-workbench-open-code-editor"]'
+    );
+    expect(editSqlFile?.textContent).toBe('Edit SQL file');
+    expect(container.querySelector('textarea[name="dbt-model-sql"]')).toBeNull();
+
+    act(() => {
+      fireEvent.click(editSqlFile!);
     });
 
     expect(onOpenNodeCode).toHaveBeenCalledTimes(1);
-    expect(container.querySelector('textarea[aria-label="Model SQL"]')).toBeNull();
   });
 
   it('keeps the accessible movement handle separate from the close command', () => {
