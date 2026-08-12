@@ -16,16 +16,18 @@ import {
   ContextMenuLabel,
   ContextMenuTrigger,
 } from '../../components/ui/context-menu';
-import type {
-  CanvasContextMenuCanvasAction,
-  CanvasContextMenuCatalogAction,
-  CanvasContextMenuCreateNodeAction,
-  CanvasContextMenuEdgeAction,
-  CanvasContextMenuModel,
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import {
+  localizeCanvasContextMenuModel,
+  type CanvasContextMenuCanvasAction,
+  type CanvasContextMenuCatalogAction,
+  type CanvasContextMenuCreateNodeAction,
+  type CanvasContextMenuEdgeAction,
+  type CanvasContextMenuModel,
 } from './canvasInteractionCommandSurface';
 import { buildCanvasAddNodeCatalogItems } from './canvasAddNodeCatalogModel';
 import { CanvasAddNodeCatalogView } from './CanvasAddNodeCatalogView';
-import { canvasViewCopy } from './copy';
+import { resolveCanvasViewCopy } from './copy';
 import {
   buildCanvasContextMenuSections,
   type CanvasContextMenuViewItem,
@@ -47,18 +49,24 @@ export function CanvasContextMenuView({
   children,
   model,
   menuRef,
-  ariaLabel = canvasViewCopy.canvasContextMenuLabel,
+  ariaLabel,
   onClose,
   onCatalogClose,
   onCanvasAction,
   onCreateNodeAction,
   onEdgeAction,
 }: CanvasContextMenuViewProps): JSX.Element {
-  const commandSurfaceOpen = model != null && model.surface !== 'add-node-catalog';
-  const commandSections = commandSurfaceOpen ? buildCanvasContextMenuSections(model) : [];
+  const applicationLanguage = useApplicationLanguageStore((state) => state.language);
+  const copy = resolveCanvasViewCopy(applicationLanguage);
+  const localizedModel = model == null ? null : localizeCanvasContextMenuModel(model, copy);
+  const commandSurfaceOpen =
+    localizedModel != null && localizedModel.surface !== 'add-node-catalog';
+  const commandSections = commandSurfaceOpen
+    ? buildCanvasContextMenuSections(localizedModel, copy)
+    : [];
   const catalogItems =
-    model?.surface === 'add-node-catalog'
-      ? buildCanvasAddNodeCatalogItems({ actions: model.catalogActions })
+    localizedModel?.surface === 'add-node-catalog'
+      ? buildCanvasAddNodeCatalogItems({ actions: localizedModel.catalogActions, copy })
       : [];
 
   return (
@@ -78,7 +86,7 @@ export function CanvasContextMenuView({
 
         {commandSurfaceOpen ? (
           <ContextMenuContent
-            aria-label={ariaLabel}
+            aria-label={ariaLabel ?? copy.canvasContextMenuLabel}
             className="w-72 max-w-[calc(100vw-1.5rem)]"
             onCloseAutoFocus={(event) => event.preventDefault()}
           >
@@ -117,31 +125,29 @@ export function CanvasContextMenuView({
       </ContextMenu>
 
       <Dialog
-        open={model?.surface === 'add-node-catalog'}
+        open={localizedModel?.surface === 'add-node-catalog'}
         onOpenChange={(open) => {
-          if (!open && model?.surface === 'add-node-catalog') {
+          if (!open && localizedModel?.surface === 'add-node-catalog') {
             onCatalogClose();
           }
         }}
       >
-        {model?.surface === 'add-node-catalog' ? (
+        {localizedModel?.surface === 'add-node-catalog' ? (
           <DialogContent
             ref={menuRef}
             aria-modal="true"
-            closeLabel={canvasViewCopy.canvasAddNodeCatalogCloseLabel}
+            closeLabel={copy.canvasAddNodeCatalogCloseLabel}
             className="grid max-h-[calc(100vh-2rem)] w-[42rem] max-w-[calc(100vw-2rem)] grid-rows-[auto_minmax(0,1fr)] gap-4 overflow-hidden bg-(--surface-panel) p-5 sm:max-w-[42rem]"
             onCloseAutoFocus={(event) => event.preventDefault()}
           >
             <DialogHeader>
-              <DialogTitle>{canvasViewCopy.canvasAddNodeCatalogTitle}</DialogTitle>
-              <DialogDescription>
-                {canvasViewCopy.canvasAddNodeCatalogDescription}
-              </DialogDescription>
+              <DialogTitle>{copy.canvasAddNodeCatalogTitle}</DialogTitle>
+              <DialogDescription>{copy.canvasAddNodeCatalogDescription}</DialogDescription>
             </DialogHeader>
             <CanvasAddNodeCatalogView
               items={catalogItems}
               onSelectItem={(item) => {
-                const action = model.catalogActions.find((candidate) => {
+                const action = localizedModel.catalogActions.find((candidate) => {
                   const candidateId = `${candidate.action}:${candidate.registration.kind}`;
                   return candidateId === item.actionId;
                 });
