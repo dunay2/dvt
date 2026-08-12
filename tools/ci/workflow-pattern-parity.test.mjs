@@ -224,9 +224,11 @@ test('workflow scope policy stays wired into ci and pr quality workflows', () =>
   );
   assert.match(
     prQualityGate,
-    /steps\.scope\.outputs\.changed_file_validation_relevant\s*== 'true'/u
+    /steps\.scope\.outputs\.changed_file_validation_relevant\s*== 'true'[\s\S]*steps\.scope\.outputs\.docs_changed\s*== 'true'/u
   );
+  assertWorkflowContains(prQualityGate, 'run: pnpm lint:md:changed');
   assertWorkflowContains(prQualityGate, 'run: node scripts/check-changed.cjs');
+  assertWorkflowContains(prQualityGate, 'run: pnpm verify:changed -- --committed-tests');
 
   assertWorkflowContains(
     prQualityGate,
