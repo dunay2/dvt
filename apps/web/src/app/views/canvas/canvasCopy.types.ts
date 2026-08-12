@@ -137,6 +137,8 @@ export type CanvasViewCopy = {
   readonly canvasNodePortNoCompatibleNodesMessage: string;
   readonly canvasNodePortBlockedMessage: string;
   readonly canvasAddNodeCatalogTitle: string;
+  readonly canvasAddNodeCatalogDescription: string;
+  readonly canvasAddNodeCatalogCloseLabel: string;
   readonly canvasAddNodeCatalogSearchLabel: string;
   readonly canvasAddNodeCatalogSearchPlaceholder: string;
   readonly canvasAddNodeCatalogEmptyMessage: string;

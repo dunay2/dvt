@@ -271,6 +271,14 @@ export const canvasViewToolbarCopyByKey = {
     key: 'canvas.addNodeCatalog.title',
     fallback: 'Add component',
   },
+  canvasAddNodeCatalogDescription: {
+    key: 'canvas.addNodeCatalog.description',
+    fallback: 'Search the governed component catalog and add one item to the canvas.',
+  },
+  canvasAddNodeCatalogCloseLabel: {
+    key: 'canvas.addNodeCatalog.closeLabel',
+    fallback: 'Close component catalog',
+  },
   canvasAddNodeCatalogSearchLabel: {
     key: 'canvas.addNodeCatalog.searchLabel',
     fallback: 'Search components',

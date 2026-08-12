@@ -31,8 +31,12 @@ describe('CanvasAddNodeCatalogView', () => {
   it('renders searchable categorized catalog items with descriptions', async () => {
     await renderCatalog();
 
-    expect(container.textContent).toContain('Add component');
     expect(searchInput()).toBeDefined();
+    expect(document.activeElement).toBe(searchInput());
+    expect(container.querySelectorAll('[role="menuitem"]')).toHaveLength(0);
+    expect(
+      container.querySelectorAll('[data-slot="canvas-context-menu-add-catalog-item"]')
+    ).toHaveLength(2);
     expect(container.textContent).toContain('Add source');
     expect(container.textContent).toContain('Sources');
     expect(container.textContent).toContain('Attach a governed warehouse or dbt source');

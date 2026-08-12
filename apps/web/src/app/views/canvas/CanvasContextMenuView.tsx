@@ -1,6 +1,13 @@
 /** Owned concern: render the Canvas contextual surfaces without owning interaction decisions. */
-import type { CSSProperties, ReactElement, RefObject } from 'react';
+import type { ReactElement, RefObject } from 'react';
 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '../../components/ui/dialog';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -15,12 +22,10 @@ import type {
   CanvasContextMenuCreateNodeAction,
   CanvasContextMenuEdgeAction,
   CanvasContextMenuModel,
-  CanvasContextMenuPosition,
 } from './canvasInteractionCommandSurface';
 import { buildCanvasAddNodeCatalogItems } from './canvasAddNodeCatalogModel';
 import { CanvasAddNodeCatalogView } from './CanvasAddNodeCatalogView';
 import { canvasViewCopy } from './copy';
-import { CanvasContextMenuSurface } from './CanvasContextMenuPrimitives';
 import {
   buildCanvasContextMenuSections,
   type CanvasContextMenuViewItem,
@@ -32,57 +37,11 @@ type CanvasContextMenuViewProps = Readonly<{
   menuRef: RefObject<HTMLDivElement>;
   ariaLabel?: string;
   onClose: () => void;
+  onCatalogClose: () => void;
   onCanvasAction: (action: CanvasContextMenuCanvasAction) => void;
   onCreateNodeAction: (action: CanvasContextMenuCreateNodeAction) => void;
   onEdgeAction: (action: CanvasContextMenuEdgeAction) => void;
 }>;
-
-const CANVAS_CONTEXT_MENU_VIEWPORT_GUTTER_PX = 12;
-const CANVAS_CONTEXT_MENU_SURFACE_WIDTH_PX = 288;
-const CANVAS_CONTEXT_MENU_MIN_VISIBLE_HEIGHT_PX = 160;
-
-type CanvasContextMenuViewport = Readonly<{
-  width: number;
-  height: number;
-}>;
-
-function resolveBrowserViewport(): CanvasContextMenuViewport {
-  if (typeof window === 'undefined') {
-    return {
-      width: CANVAS_CONTEXT_MENU_SURFACE_WIDTH_PX + CANVAS_CONTEXT_MENU_VIEWPORT_GUTTER_PX * 2,
-      height:
-        CANVAS_CONTEXT_MENU_MIN_VISIBLE_HEIGHT_PX + CANVAS_CONTEXT_MENU_VIEWPORT_GUTTER_PX * 2,
-    };
-  }
-
-  return {
-    width: window.innerWidth,
-    height: window.innerHeight,
-  };
-}
-
-export function resolveCanvasContextMenuSurfaceStyle(
-  screenPosition: CanvasContextMenuPosition,
-  viewport: CanvasContextMenuViewport = resolveBrowserViewport()
-): CSSProperties {
-  const maxLeft =
-    viewport.width - CANVAS_CONTEXT_MENU_SURFACE_WIDTH_PX - CANVAS_CONTEXT_MENU_VIEWPORT_GUTTER_PX;
-  const maxTop =
-    viewport.height -
-    CANVAS_CONTEXT_MENU_MIN_VISIBLE_HEIGHT_PX -
-    CANVAS_CONTEXT_MENU_VIEWPORT_GUTTER_PX;
-  const left = Math.max(
-    CANVAS_CONTEXT_MENU_VIEWPORT_GUTTER_PX,
-    Math.min(screenPosition.x, maxLeft)
-  );
-  const top = Math.max(CANVAS_CONTEXT_MENU_VIEWPORT_GUTTER_PX, Math.min(screenPosition.y, maxTop));
-
-  return {
-    left,
-    top,
-    maxHeight: `calc(100vh - ${top + CANVAS_CONTEXT_MENU_VIEWPORT_GUTTER_PX}px)`,
-  };
-}
 
 export function CanvasContextMenuView({
   children,
@@ -90,6 +49,7 @@ export function CanvasContextMenuView({
   menuRef,
   ariaLabel = canvasViewCopy.canvasContextMenuLabel,
   onClose,
+  onCatalogClose,
   onCanvasAction,
   onCreateNodeAction,
   onEdgeAction,
@@ -156,26 +116,43 @@ export function CanvasContextMenuView({
         ) : null}
       </ContextMenu>
 
-      {model?.surface === 'add-node-catalog' ? (
-        <CanvasContextMenuSurface
-          ariaLabel={ariaLabel}
-          menuRef={menuRef}
-          style={resolveCanvasContextMenuSurfaceStyle(model.screenPosition)}
-        >
-          <CanvasAddNodeCatalogView
-            items={catalogItems}
-            onSelectItem={(item) => {
-              const action = model.catalogActions.find((candidate) => {
-                const candidateId = `${candidate.action}:${candidate.registration.kind}`;
-                return candidateId === item.actionId;
-              });
-              if (action) {
-                selectCanvasCatalogAction({ action, onCanvasAction, onCreateNodeAction });
-              }
-            }}
-          />
-        </CanvasContextMenuSurface>
-      ) : null}
+      <Dialog
+        open={model?.surface === 'add-node-catalog'}
+        onOpenChange={(open) => {
+          if (!open && model?.surface === 'add-node-catalog') {
+            onCatalogClose();
+          }
+        }}
+      >
+        {model?.surface === 'add-node-catalog' ? (
+          <DialogContent
+            ref={menuRef}
+            aria-modal="true"
+            closeLabel={canvasViewCopy.canvasAddNodeCatalogCloseLabel}
+            className="grid max-h-[calc(100vh-2rem)] w-[42rem] max-w-[calc(100vw-2rem)] grid-rows-[auto_minmax(0,1fr)] gap-4 overflow-hidden bg-(--surface-panel) p-5 sm:max-w-[42rem]"
+            onCloseAutoFocus={(event) => event.preventDefault()}
+          >
+            <DialogHeader>
+              <DialogTitle>{canvasViewCopy.canvasAddNodeCatalogTitle}</DialogTitle>
+              <DialogDescription>
+                {canvasViewCopy.canvasAddNodeCatalogDescription}
+              </DialogDescription>
+            </DialogHeader>
+            <CanvasAddNodeCatalogView
+              items={catalogItems}
+              onSelectItem={(item) => {
+                const action = model.catalogActions.find((candidate) => {
+                  const candidateId = `${candidate.action}:${candidate.registration.kind}`;
+                  return candidateId === item.actionId;
+                });
+                if (action) {
+                  selectCanvasCatalogAction({ action, onCanvasAction, onCreateNodeAction });
+                }
+              }}
+            />
+          </DialogContent>
+        ) : null}
+      </Dialog>
     </>
   );
 }
