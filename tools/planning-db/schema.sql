@@ -428,7 +428,7 @@ CREATE TABLE architecture.component_relation (
     CONSTRAINT architecture_component_relation_direction_check CHECK ((direction = ANY (ARRAY['outbound'::text, 'inbound'::text, 'bidirectional'::text]))),
     CONSTRAINT architecture_component_relation_no_self_check CHECK ((source_component_id <> target_component_id)),
     CONSTRAINT architecture_component_relation_source_refs_check CHECK ((jsonb_typeof(source_refs) = 'array'::text)),
-    CONSTRAINT architecture_component_relation_status_check CHECK ((status = ANY (ARRAY['proposed'::text, 'approved'::text, 'implemented'::text, 'drift'::text]))),
+    CONSTRAINT architecture_component_relation_status_check CHECK ((status = ANY (ARRAY['proposed'::text, 'approved'::text, 'implemented'::text, 'deprecated'::text, 'drift'::text]))),
     CONSTRAINT architecture_component_relation_sync_async_check CHECK ((sync_async = ANY (ARRAY['sync'::text, 'async'::text, 'batch'::text, 'build_time'::text]))),
     CONSTRAINT architecture_component_relation_type_check CHECK ((relation_type = ANY (ARRAY['contains'::text, 'depends_on'::text, 'calls'::text, 'publishes'::text, 'consumes'::text, 'reads'::text, 'writes'::text, 'implements_port'::text, 'exposes_api'::text, 'transforms'::text, 'guards'::text])))
 );
