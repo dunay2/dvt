@@ -10,6 +10,9 @@ const {
   shouldIncludePlanningDoc,
   splitFrontmatter,
 } = require('../../scripts/sync-docs.cjs');
+const {
+  normalizeTextBytesForHash,
+} = require('../../scripts/generate-governance-file-component-index.cjs');
 
 test('docs sync waits for Planning DB readiness before importing', () => {
   const packageJson = JSON.parse(
@@ -23,7 +26,9 @@ test('docs sync waits for Planning DB readiness before importing', () => {
 });
 
 test('Planning DB runtime evidence binds the productive docs sync composition', () => {
-  const packageSource = readFileSync(new URL('../../package.json', import.meta.url), 'utf8');
+  const packageSource = normalizeTextBytesForHash(
+    readFileSync(new URL('../../package.json', import.meta.url))
+  );
   const canonicalState = JSON.parse(
     readFileSync(
       new URL('../../tools/planning-db/state/canonical-state.json', import.meta.url),
