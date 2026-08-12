@@ -281,6 +281,25 @@ function ciToolingTestSteps(changedFiles) {
     );
 }
 
+function documentationPublicationTestSteps(changedFiles) {
+  const relevant = changedFiles.some(
+    (filePath) =>
+      filePath.startsWith('.github/workflows/') ||
+      filePath === 'scripts/documentation-publication.cjs' ||
+      filePath === 'scripts/documentation-publication.test.cjs'
+  );
+  return relevant
+    ? [
+        step(
+          'test-documentation-publication',
+          'node',
+          '--test',
+          'scripts/documentation-publication.test.cjs'
+        ),
+      ]
+    : [];
+}
+
 function hasWebChange(changedFiles) {
   return changedFiles.some((filePath) => filePath.startsWith('apps/web/'));
 }
@@ -384,6 +403,7 @@ function buildFocusedChangedTestPlan(files) {
   const directPlanningWorkflowTestSteps = planningWorkflowTestSteps(changedFiles);
   pushSteps(plan, directPlanningWorkflowTestSteps);
   pushSteps(plan, ciToolingTestSteps(changedFiles));
+  pushSteps(plan, documentationPublicationTestSteps(changedFiles));
   const runsCurrentSchemaTestDirectly = directPlanningWorkflowTestSteps.some(
     (nextStep) => commandLabel(nextStep) === 'node --test scripts/planning-db-schema.test.cjs'
   );
