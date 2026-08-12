@@ -387,6 +387,37 @@ test('PR quality gate keeps merge-blocking non-projection governance commands wi
   }
 });
 
+test('test and contract workflows expose stable merge-blocking outcomes', () => {
+  const testWorkflow = yaml.load(readFileSync('.github/workflows/test.yml', 'utf8'));
+  const contractsWorkflow = yaml.load(readFileSync('.github/workflows/contracts.yml', 'utf8'));
+  const testAggregator = testWorkflow.jobs['test-suite-required'];
+  const contractsAggregator = contractsWorkflow.jobs['contracts-required'];
+
+  assert.equal(testAggregator.name, 'Test Suite Required for Merge');
+  assert.deepEqual(testAggregator.needs, [
+    'detect_test_matrix',
+    'package-tests',
+    'adapter-temporal',
+    'web-frontend-tests',
+    'adapter-postgres',
+    'test-determinism',
+    'coverage',
+  ]);
+  assert.equal(contractsAggregator.name, 'Contracts Required for Merge');
+  assert.deepEqual(contractsAggregator.needs, [
+    'detect-changes',
+    'validate-json-schemas',
+    'determinism-checks',
+    'contract-validate',
+    'contract-hashes',
+  ]);
+
+  for (const aggregator of [testAggregator, contractsAggregator]) {
+    assert.equal(aggregator.if, 'always()');
+    assert.match(aggregator.steps[0].with.script, /\['failure', 'cancelled'\]/u);
+  }
+});
+
 test('PR quality gate consumes prepush-equivalent scope outputs for expensive gates', () => {
   const prQualityGate = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
 
