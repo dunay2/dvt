@@ -138962,6 +138962,125 @@
       "createdAt": "2026-07-31T19:13:06.127Z"
     },
     {
+      "railId": "local#PTH1-CONNECTED-SOURCE-TRUTH#command#configureapplicationlanguage",
+      "featureId": "PTH1-CONNECTED-SOURCE-TRUTH",
+      "mechanizationStatus": "implemented",
+      "railName": "ConfigureApplicationLanguage",
+      "normalizedRailName": "configureapplicationlanguage",
+      "railType": "command",
+      "dddOwner": "ApplicationLanguagePreference",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "apps/web/src/app/stores/applicationLanguageStore.ts#useApplicationLanguageStore"
+      ],
+      "implementationRefs": [
+        "apps/web/src/app/stores/applicationLanguageStore.ts#useApplicationLanguageStore"
+      ],
+      "documentationRefs": [
+        "docs/planning/proposals/mandatory/frontend-and-ux/cux1-wux1-workbench-ux-convergence-plan-20260806.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "apps/web/src/app/stores/applicationLanguageStore.test.ts",
+        "apps/web/src/app/components/SourceImportWizard.test.tsx",
+        "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts"
+      ],
+      "architectureGuards": [
+        "pnpm docs:feature-mechanization:implementation -- --feature PTH1-CONNECTED-SOURCE-TRUTH"
+      ],
+      "completionGate": [
+        "pnpm --filter @dvt/web test -- applicationLanguageStore.test.ts SourceImportWizard.test.tsx",
+        "pnpm --filter @dvt/web test:e2e:source-import:live",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "docs/planning/proposals/mandatory/frontend-and-ux/cux1-wux1-workbench-ux-convergence-plan-20260806.md",
+      "sourceContentSha256": "3e88046dec8089d75475e754858c4f56d1d17f212bfc53203af855387ee82093",
+      "rawRail": {
+        "name": "ConfigureApplicationLanguage",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "ApplicationLanguagePreference"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "useApplicationLanguageStore",
+            "path": "apps/web/src/app/stores/applicationLanguageStore.ts",
+            "cqRails": ["ConfigureApplicationLanguage"],
+            "dddOwner": "ApplicationLanguagePreference",
+            "unitTests": [
+              "apps/web/src/app/stores/applicationLanguageStore.test.ts",
+              "apps/web/src/app/components/SourceImportWizard.test.tsx"
+            ],
+            "fowlerSignals": ["Hidden authority"],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature PTH1-CONNECTED-SOURCE-TRUTH"
+          }
+        ],
+        "version": 1,
+        "featureId": "PTH1-CONNECTED-SOURCE-TRUTH",
+        "userStories": [
+          "As a Spanish-speaking Canvas author my validated language preference survives reload and governs the complete Source Import flow."
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts"
+        ],
+        "domainObjects": ["ApplicationLanguagePreference"],
+        "fowlerSignals": ["Hidden authority"],
+        "completionGate": [
+          "pnpm --filter @dvt/web test -- applicationLanguageStore.test.ts SourceImportWizard.test.tsx",
+          "pnpm --filter @dvt/web test:e2e:source-import:live",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "configureapplicationlanguage-record",
+            "redTest": "pnpm --filter @dvt/web test -- applicationLanguageStore.test.ts SourceImportWizard.test.tsx",
+            "greenTest": "pnpm --filter @dvt/web test -- applicationLanguageStore.test.ts SourceImportWizard.test.tsx && pnpm --filter @dvt/web test:e2e:source-import:live",
+            "patchSurfaces": [
+              "apps/web/src/app/stores/applicationLanguageStore.test.ts",
+              "apps/web/src/app/components/SourceImportWizard.test.tsx",
+              "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts"
+            ],
+            "expectedFailure": "The active Spanish preference is not proven to survive rehydration and govern Source Import after reload."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/components/web/frontend-component-inventory.md"
+        ],
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ConfigureApplicationLanguage",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "ApplicationLanguagePreference"
+          }
+        ],
+        "architectureGuards": [
+          "pnpm docs:feature-mechanization:implementation -- --feature PTH1-CONNECTED-SOURCE-TRUTH"
+        ],
+        "implementationPlan": "docs/planning/proposals/mandatory/frontend-and-ux/cux1-wux1-workbench-ux-convergence-plan-20260806.md",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/stores/applicationLanguageStore.test.ts",
+          "apps/web/src/app/components/SourceImportWizard.test.tsx",
+          "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "database migrations or migration-state compatibility"
+        ]
+      },
+      "revision": 0,
+      "createdBy": "codex",
+      "createdAt": "2026-08-12T01:43:48.775Z"
+    },
+    {
       "railId": "local#PTH1-CONNECTED-SOURCE-TRUTH#command#importwarehousesources",
       "featureId": "PTH1-CONNECTED-SOURCE-TRUTH",
       "mechanizationStatus": "implemented",
@@ -139426,7 +139545,8 @@
           "As an operator I get an explicit failure instead of guessed legacy connection state.",
           "As a Canvas author I cannot Preview an unbound or unsupported warehouse source.",
           "As a Canvas author I cannot preview a warehouse model unless its source has an explicit supported connection binding.",
-          "As a Spanish-speaking Canvas author I can complete Source Import at narrow viewport without clipped actions or English copy after reload."
+          "As a Spanish-speaking Canvas author I can complete Source Import at narrow viewport without clipped actions or English copy after reload.",
+          "As a Canvas author I can complete Source Import at narrow viewport without clipped actions."
         ],
         "cypressFlows": [
           "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts"
@@ -139706,8 +139826,8 @@
           },
           {
             "id": "importwarehousesources-record",
-            "redTest": "pnpm --filter @dvt/web test -- SourceImportWizard.test.tsx applicationLanguageStore.test.ts",
-            "greenTest": "pnpm --filter @dvt/web test -- SourceImportWizard.test.tsx applicationLanguageStore.test.ts && pnpm --filter @dvt/web test:e2e:source-import:live",
+            "redTest": "pnpm --filter @dvt/web test -- SourceImportWizard.test.tsx",
+            "greenTest": "pnpm --filter @dvt/web test -- SourceImportWizard.test.tsx && pnpm --filter @dvt/web test:e2e:source-import:live",
             "patchSurfaces": [
               "apps/api/src/application/services/graphDraftWarehouseSourceImportStrategy.ts",
               "apps/api/src/application/services/warehouseSourceYamlBindings.ts",
@@ -139723,7 +139843,7 @@
               "apps/web/src/app/stores/applicationLanguageStore.test.ts",
               "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts"
             ],
-            "expectedFailure": "The active Spanish language did not survive reload in proof, and fixed-width child actions overflowed the clipped dialog viewport at 640 pixels."
+            "expectedFailure": "Source Import action controls overflow the clipped dialog viewport at 640 pixels."
           }
         ],
         "componentGuides": [
@@ -139853,7 +139973,7 @@
           "apps/api/docs/**"
         ]
       },
-      "revision": 4,
+      "revision": 5,
       "createdBy": "codex",
       "createdAt": "2026-08-09T09:16:34.047Z"
     },
@@ -168973,6 +169093,148 @@
         ]
       },
       "createdAt": "2026-08-12T01:27:56.122Z"
+    },
+    {
+      "operationId": "c76d0c3f-8c54-464d-8adc-23004d6a2308",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:PTH1-CONNECTED-SOURCE-TRUTH:command:importwarehousesources:4:70db4df7ac97674f",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH1-CONNECTED-SOURCE-TRUTH#command#importwarehousesources",
+      "sourcePath": "docs/planning/proposals/mandatory/product-truth-connection-hardening-20260808.md",
+      "sourceContentSha256": "d87eb1cdf62d70336bca5c03d826d3100007c9d9e80375f120a420dfc9de8edf",
+      "expectedRevision": 4,
+      "previousRevision": 4,
+      "resultingRevision": 5,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web test -- SourceImportWizard.test.tsx",
+        "dddOwner": "Warehouse Source Import",
+        "railName": "ImportWarehouseSources",
+        "railType": "command",
+        "featureId": "PTH1-CONNECTED-SOURCE-TRUTH",
+        "greenTest": "pnpm --filter @dvt/web test -- SourceImportWizard.test.tsx && pnpm --filter @dvt/web test:e2e:source-import:live",
+        "sourceRef": "docs/planning/proposals/mandatory/product-truth-connection-hardening-20260808.md",
+        "unitTests": [
+          "apps/web/src/app/components/SourceImportWizard.test.tsx"
+        ],
+        "railStatus": "implemented",
+        "userStories": [
+          "As a Canvas author I can complete Source Import at narrow viewport without clipped actions."
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts"
+        ],
+        "domainObjects": ["WarehouseConnection"],
+        "fowlerSignals": ["Boundary drift"],
+        "patchSurfaces": [
+          "apps/web/src/app/components/sourceImportWizard/ConnectionStep.tsx",
+          "apps/web/src/app/components/sourceImportWizard/WarehouseConnectionCreateForm.tsx",
+          "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts"
+        ],
+        "completionGate": [
+          "pnpm --filter @dvt/web test:e2e:source-import:live",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": ["docs/architecture/components/source-import.md"],
+        "expectedFailure": "Source Import action controls overflow the clipped dialog viewport at 640 pixels.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/planning/proposals/mandatory/product-truth-connection-hardening-20260808.md"
+        ],
+        "architectureGuards": [
+          "pnpm docs:feature-mechanization:implementation -- --feature PTH1-CONNECTED-SOURCE-TRUTH"
+        ],
+        "implementationPlan": "docs/planning/proposals/mandatory/product-truth-connection-hardening-20260808.md",
+        "implementationRefs": [
+          "apps/web/src/app/components/sourceImportWizard/ConnectionStep.tsx#ConnectionStep",
+          "apps/web/src/app/components/sourceImportWizard/WarehouseConnectionCreateForm.tsx#WarehouseConnectionCreateForm"
+        ],
+        "normalizedRailName": "importwarehousesources",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "d87eb1cdf62d70336bca5c03d826d3100007c9d9e80375f120a420dfc9de8edf",
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/components/sourceImportWizard/ConnectionStep.tsx",
+          "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "database migrations or migration-state compatibility"
+        ]
+      },
+      "createdAt": "2026-08-12T01:43:29.025Z"
+    },
+    {
+      "operationId": "196d1528-7a4a-410a-9ca3-d80fa59fb33f",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:PTH1-CONNECTED-SOURCE-TRUTH:command:configureapplicationlanguage:latest:6ab4db1f4397b174",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH1-CONNECTED-SOURCE-TRUTH#command#configureapplicationlanguage",
+      "sourcePath": "docs/planning/proposals/mandatory/frontend-and-ux/cux1-wux1-workbench-ux-convergence-plan-20260806.md",
+      "sourceContentSha256": "3e88046dec8089d75475e754858c4f56d1d17f212bfc53203af855387ee82093",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web test -- applicationLanguageStore.test.ts SourceImportWizard.test.tsx",
+        "dddOwner": "ApplicationLanguagePreference",
+        "railName": "ConfigureApplicationLanguage",
+        "railType": "command",
+        "featureId": "PTH1-CONNECTED-SOURCE-TRUTH",
+        "greenTest": "pnpm --filter @dvt/web test -- applicationLanguageStore.test.ts SourceImportWizard.test.tsx && pnpm --filter @dvt/web test:e2e:source-import:live",
+        "sourceRef": "docs/planning/proposals/mandatory/frontend-and-ux/cux1-wux1-workbench-ux-convergence-plan-20260806.md",
+        "unitTests": [
+          "apps/web/src/app/stores/applicationLanguageStore.test.ts",
+          "apps/web/src/app/components/SourceImportWizard.test.tsx"
+        ],
+        "railStatus": "implemented",
+        "userStories": [
+          "As a Spanish-speaking Canvas author my validated language preference survives reload and governs the complete Source Import flow."
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts"
+        ],
+        "domainObjects": ["ApplicationLanguagePreference"],
+        "fowlerSignals": ["Hidden authority"],
+        "patchSurfaces": [
+          "apps/web/src/app/stores/applicationLanguageStore.test.ts",
+          "apps/web/src/app/components/SourceImportWizard.test.tsx",
+          "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts"
+        ],
+        "completionGate": [
+          "pnpm --filter @dvt/web test -- applicationLanguageStore.test.ts SourceImportWizard.test.tsx",
+          "pnpm --filter @dvt/web test:e2e:source-import:live",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/components/web/frontend-component-inventory.md"
+        ],
+        "expectedFailure": "The active Spanish preference is not proven to survive rehydration and govern Source Import after reload.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/planning/proposals/mandatory/frontend-and-ux/cux1-wux1-workbench-ux-convergence-plan-20260806.md"
+        ],
+        "architectureGuards": [
+          "pnpm docs:feature-mechanization:implementation -- --feature PTH1-CONNECTED-SOURCE-TRUTH"
+        ],
+        "implementationPlan": "docs/planning/proposals/mandatory/frontend-and-ux/cux1-wux1-workbench-ux-convergence-plan-20260806.md",
+        "implementationRefs": [
+          "apps/web/src/app/stores/applicationLanguageStore.ts#useApplicationLanguageStore"
+        ],
+        "normalizedRailName": "configureapplicationlanguage",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "3e88046dec8089d75475e754858c4f56d1d17f212bfc53203af855387ee82093",
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/stores/applicationLanguageStore.test.ts",
+          "apps/web/src/app/components/SourceImportWizard.test.tsx",
+          "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "database migrations or migration-state compatibility"
+        ]
+      },
+      "createdAt": "2026-08-12T01:43:48.775Z"
     }
   ],
   "governanceComponentDefinitions": [
