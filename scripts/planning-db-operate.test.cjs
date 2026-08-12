@@ -8,3 +8,4 @@ require('./planning-db-operate-tests/architecture-parse.test.cjs');
 require('./planning-db-operate-tests/architecture-plan.test.cjs');
 require('./planning-db-operate-tests/architecture-fitness.test.cjs');
 require('./planning-db-operate-tests/governance-refresh.test.cjs');
+require('./planning-db-operate-tests/governed-source-refresh.test.cjs');
