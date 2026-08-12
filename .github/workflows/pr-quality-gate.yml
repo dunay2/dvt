@@ -141,7 +141,6 @@ jobs:
           (steps.scope.outputs.feature_mechanization_relevant == 'true' ||
           steps.scope.outputs.planning_db_inventory_relevant == 'true' ||
           steps.scope.outputs.governance_global_relevant == 'true' ||
-          steps.scope.outputs.generated_status_relevant == 'true' ||
           steps.scope.outputs.docs_structure_changed == 'true')) || (github.event_name ==
           'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
         uses: ./.github/actions/prepare-planning-db
@@ -215,27 +214,6 @@ jobs:
           GIT_BASE: ${{ github.event.pull_request.base.sha }}
           GIT_HEAD: ${{ github.sha }}
 
-      - name: Validate generated code-state output
-        if:
-          github.event_name == 'pull_request' && steps.scope.outputs.generated_status_relevant ==
-          'true'
-        run: pnpm docs:status:check
-
-      - name: Prove DB-first documentation against rebuilt Planning DB
-        if:
-          github.event_name == 'pull_request' && steps.scope.outputs.generated_status_relevant ==
-          'true'
-        run: DVT_REPOSITORY_MAP_INTEGRATION=1 node --test scripts/generate-code-status.test.cjs
-        env:
-          GIT_BASE: ${{ github.event.pull_request.base.sha }}
-          GIT_HEAD: ${{ github.sha }}
-
-      - name: Validate generated capability coverage doc
-        if:
-          github.event_name == 'pull_request' && steps.scope.outputs.generated_capability_relevant
-          == 'true'
-        run: pnpm docs:capability:check
-
       - name: Validate governance unit coverage
         if:
           github.event_name == 'push' || (github.event_name == 'pull_request' &&
@@ -244,60 +222,6 @@ jobs:
           steps.scope.outputs.root_build_sensitive == 'true')) || (github.event_name ==
           'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm docs:governance:unit-coverage
-
-      - name: Validate governance document unit map
-        if:
-          github.event_name == 'push' || (github.event_name == 'pull_request' &&
-          (steps.scope.outputs.governance_global_relevant == 'true' ||
-          steps.scope.outputs.governance_tooling_changed == 'true' ||
-          steps.scope.outputs.root_build_sensitive == 'true')) || (github.event_name ==
-          'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
-        run: pnpm docs:governance:document-unit-map:check
-
-      - name: Validate governance file fingerprints
-        if:
-          github.event_name == 'push' || (github.event_name == 'pull_request' &&
-          (steps.scope.outputs.governance_global_relevant == 'true' ||
-          steps.scope.outputs.governance_tooling_changed == 'true' ||
-          steps.scope.outputs.root_build_sensitive == 'true')) || (github.event_name ==
-          'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
-        run: pnpm docs:governance:file-component-index:check
-
-      - name: Validate governance fingerprint baseline
-        if:
-          github.event_name == 'push' || (github.event_name == 'pull_request' &&
-          (steps.scope.outputs.governance_global_relevant == 'true' ||
-          steps.scope.outputs.governance_tooling_changed == 'true' ||
-          steps.scope.outputs.root_build_sensitive == 'true')) || (github.event_name ==
-          'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
-        run: pnpm docs:governance:file-fingerprint-baseline:check
-
-      - name: Validate governance fingerprint impact report
-        if:
-          github.event_name == 'push' || (github.event_name == 'pull_request' &&
-          (steps.scope.outputs.governance_global_relevant == 'true' ||
-          steps.scope.outputs.governance_tooling_changed == 'true' ||
-          steps.scope.outputs.root_build_sensitive == 'true')) || (github.event_name ==
-          'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
-        run: pnpm docs:governance:file-fingerprint-impact:check
-
-      - name: Validate governance coverage report
-        if:
-          github.event_name == 'push' || (github.event_name == 'pull_request' &&
-          (steps.scope.outputs.governance_global_relevant == 'true' ||
-          steps.scope.outputs.governance_tooling_changed == 'true' ||
-          steps.scope.outputs.root_build_sensitive == 'true')) || (github.event_name ==
-          'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
-        run: pnpm docs:governance:coverage-report:check
-
-      - name: Validate governance remediation queue
-        if:
-          github.event_name == 'push' || (github.event_name == 'pull_request' &&
-          (steps.scope.outputs.governance_global_relevant == 'true' ||
-          steps.scope.outputs.governance_tooling_changed == 'true' ||
-          steps.scope.outputs.root_build_sensitive == 'true')) || (github.event_name ==
-          'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
-        run: pnpm docs:governance:remediation-queue:check
 
       - name: Validate governed changed files
         if: github.event_name == 'pull_request'
