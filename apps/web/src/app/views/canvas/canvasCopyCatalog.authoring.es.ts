@@ -84,8 +84,8 @@ export const canvasViewAuthoringCopyEs = {
   nodeWorkbenchCloseLabel: 'Cerrar',
   nodeWorkbenchMoveLabel: 'Mover banco de trabajo del nodo',
   nodeWorkbenchMoreLabel: 'Más',
-  nodeWorkbenchOpenCodeLabel: 'Abrir código del nodo',
-  nodeWorkbenchOpenCodeDescription: 'Abre el código de este nodo en el editor contextual.',
+  nodeWorkbenchEditCodeFileLabel: 'Editar archivo SQL',
+  nodeWorkbenchEditCodeFileDescription: 'Edita este archivo SQL en el editor contextual.',
   sqlContextWorkbenchNodeTitle: 'Código del nodo',
   sqlContextWorkbenchProjectTitle: 'Código del proyecto',
   sqlContextWorkbenchProjectDescription:
@@ -113,8 +113,6 @@ export const canvasViewAuthoringCopyEs = {
     'Artefacto DBT generado: {path}. Edítalo para asumir su autoría.',
   inspectorDbtModelSqlAuthoredDetailTemplate: 'SQL DBT escrita: {path}.',
   inspectorDbtNoConnectedOriginsMessage: 'No hay orígenes dbt conectados.',
-  inspectorDbtModelSqlUnavailableMessage:
-    'Conecta este modelo a un source o modelo DBT antes de generar un artefacto ejecutable.',
   inspectorDbtOriginKindSourceLabel: 'source',
   inspectorDbtOriginKindModelLabel: 'modelo',
   inspectorDbtMaterializedViewLabel: 'vista',

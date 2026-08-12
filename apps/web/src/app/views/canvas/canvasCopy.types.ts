@@ -361,8 +361,8 @@ export type CanvasViewCopy = {
   readonly nodeWorkbenchCloseLabel: string;
   readonly nodeWorkbenchMoveLabel: string;
   readonly nodeWorkbenchMoreLabel: string;
-  readonly nodeWorkbenchOpenCodeLabel: string;
-  readonly nodeWorkbenchOpenCodeDescription: string;
+  readonly nodeWorkbenchEditCodeFileLabel: string;
+  readonly nodeWorkbenchEditCodeFileDescription: string;
   readonly sqlContextWorkbenchNodeTitle: string;
   readonly sqlContextWorkbenchProjectTitle: string;
   readonly sqlContextWorkbenchProjectDescription: string;
@@ -387,7 +387,6 @@ export type CanvasViewCopy = {
   readonly inspectorDbtModelSqlGeneratedDetailTemplate: string;
   readonly inspectorDbtModelSqlAuthoredDetailTemplate: string;
   readonly inspectorDbtNoConnectedOriginsMessage: string;
-  readonly inspectorDbtModelSqlUnavailableMessage: string;
   readonly inspectorDbtOriginKindSourceLabel: string;
   readonly inspectorDbtOriginKindModelLabel: string;
   readonly inspectorDbtMaterializedViewLabel: string;

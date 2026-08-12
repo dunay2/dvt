@@ -298,7 +298,7 @@ export function CanvasNodeWorkbenchPanel({
     setActiveTab(nextTabId);
   };
 
-  if (onOpenNodeCode != null) {
+  if (onOpenNodeCode != null && !authoring.canEditNode) {
     sectionBeforeChildren.code = (
       <>
         <div className="flex justify-end pb-2">
@@ -307,10 +307,10 @@ export function CanvasNodeWorkbenchPanel({
             variant="outline"
             size="sm"
             data-slot="canvas-node-workbench-open-code-editor"
-            aria-label={copy.nodeWorkbenchOpenCodeDescription}
+            aria-label={copy.nodeWorkbenchEditCodeFileDescription}
             onClick={onOpenNodeCode}
           >
-            {copy.nodeWorkbenchOpenCodeLabel}
+            {copy.nodeWorkbenchEditCodeFileLabel}
           </Button>
         </div>
         {sectionBeforeChildren.code}

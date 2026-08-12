@@ -28,7 +28,7 @@ export function DbtModelCodeAuthoringSection({
   const editorValue = draft.modelSql ?? artifact?.body ?? '';
   const provenanceDetail =
     artifact == null
-      ? canvasViewCopy.inspectorDbtModelSqlUnavailableMessage
+      ? null
       : formatCanvasCopyTemplate(
           artifact.provenance === 'authored'
             ? canvasViewCopy.inspectorDbtModelSqlAuthoredDetailTemplate
@@ -42,12 +42,14 @@ export function DbtModelCodeAuthoringSection({
         <Label htmlFor={`inspector-dbt-model-sql-${node.id}`}>
           {canvasViewCopy.inspectorDbtModelSqlLabel}
         </Label>
-        <p
-          data-slot="dbt-model-code-provenance"
-          className={inspectorVisualClasses.inspectorArtifactDetail}
-        >
-          {provenanceDetail}
-        </p>
+        {provenanceDetail == null ? null : (
+          <p
+            data-slot="dbt-model-code-provenance"
+            className={inspectorVisualClasses.inspectorArtifactDetail}
+          >
+            {provenanceDetail}
+          </p>
+        )}
         <Textarea
           id={`inspector-dbt-model-sql-${node.id}`}
           name="dbt-model-sql"

@@ -262,13 +262,13 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.nodeWorkbench.moreLabel',
     fallback: 'More',
   },
-  nodeWorkbenchOpenCodeLabel: {
-    key: 'canvas.nodeWorkbench.openCodeLabel',
-    fallback: 'Open node code',
+  nodeWorkbenchEditCodeFileLabel: {
+    key: 'canvas.nodeWorkbench.editCodeFileLabel',
+    fallback: 'Edit SQL file',
   },
-  nodeWorkbenchOpenCodeDescription: {
-    key: 'canvas.nodeWorkbench.openCodeDescription',
-    fallback: 'Open this node code in the contextual editor.',
+  nodeWorkbenchEditCodeFileDescription: {
+    key: 'canvas.nodeWorkbench.editCodeFileDescription',
+    fallback: 'Edit this file-backed SQL in the contextual editor.',
   },
   sqlContextWorkbenchNodeTitle: {
     key: 'canvas.sqlContextWorkbench.nodeTitle',
@@ -365,11 +365,6 @@ export const canvasViewAuthoringCopyByKey = {
   inspectorDbtNoConnectedOriginsMessage: {
     key: 'canvas.inspector.authoring.dbtNoConnectedOriginsMessage',
     fallback: 'No connected dbt origins.',
-  },
-  inspectorDbtModelSqlUnavailableMessage: {
-    key: 'canvas.inspector.authoring.dbtModelSqlUnavailableMessage',
-    fallback:
-      'Connect this model to a DBT source or model before generating an executable artifact.',
   },
   inspectorDbtOriginKindSourceLabel: {
     key: 'canvas.inspector.authoring.dbtOriginKindSourceLabel',
