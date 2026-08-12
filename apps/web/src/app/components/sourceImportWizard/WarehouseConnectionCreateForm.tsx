@@ -129,16 +129,23 @@ export function WarehouseConnectionCreateForm({
 
         <div
           data-slot="source-import-create-connection-actions"
-          className="flex flex-wrap justify-end gap-2"
+          className="grid w-full min-w-0 grid-cols-1 gap-2 sm:ml-auto sm:w-auto sm:grid-cols-2"
         >
-          <Button type="button" variant="ghost" size="sm" disabled={isCreating} onClick={onCancel}>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="w-full min-w-0"
+            disabled={isCreating}
+            onClick={onCancel}
+          >
             {copy.connection.createCancelAction}
           </Button>
           <Button
             type="submit"
             size="sm"
             disabled={isCreating}
-            className="bg-blue-700 text-white hover:bg-blue-600 disabled:bg-slate-800 disabled:text-slate-300 disabled:opacity-100"
+            className="w-full min-w-0 bg-blue-700 text-white hover:bg-blue-600 disabled:bg-slate-800 disabled:text-slate-300 disabled:opacity-100"
           >
             {isCreating ? copy.connection.creatingAction : copy.connection.createSubmitAction}
           </Button>

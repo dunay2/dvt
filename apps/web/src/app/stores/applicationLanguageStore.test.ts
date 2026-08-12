@@ -33,4 +33,17 @@ describe('ConfigureApplicationLanguage', () => {
 
     expect(localStorage.getItem(APPLICATION_LANGUAGE_STORAGE_KEY)).toContain('"language":"es"');
   });
+
+  it('rehydrates the persisted language as the visible document authority', async () => {
+    useApplicationLanguageStore.getState().configureApplicationLanguage('es');
+    const persistedSpanishPreference = localStorage.getItem(APPLICATION_LANGUAGE_STORAGE_KEY);
+    useApplicationLanguageStore.setState({ language: 'en' });
+    localStorage.setItem(APPLICATION_LANGUAGE_STORAGE_KEY, persistedSpanishPreference ?? '');
+    document.documentElement.lang = 'en';
+
+    await useApplicationLanguageStore.persist.rehydrate();
+
+    expect(useApplicationLanguageStore.getState().language).toBe('es');
+    expect(document.documentElement.lang).toBe('es');
+  });
 });

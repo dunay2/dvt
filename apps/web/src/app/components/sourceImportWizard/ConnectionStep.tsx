@@ -129,7 +129,7 @@ export function ConnectionStep({
             <div className="rounded-lg border border-slate-700 bg-slate-950/40 p-3">
               <div
                 data-slot="source-import-connection-summary"
-                className="mb-2 flex flex-wrap items-start justify-between gap-3 text-xs text-slate-300"
+                className="mb-2 flex min-w-0 flex-col items-stretch gap-3 text-xs text-slate-300 md:flex-row md:items-start md:justify-between"
               >
                 <div className="min-w-0">
                   <div>{formatConnectionCatalogSummary(connections.length, copy.connection)}</div>
@@ -137,12 +137,13 @@ export function ConnectionStep({
                 </div>
                 <div
                   data-slot="source-import-connection-actions"
-                  className="flex min-w-0 flex-wrap gap-2"
+                  className="grid w-full min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 md:w-auto md:shrink-0"
                 >
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
+                    className="w-full min-w-0"
                     disabled={isCreatingConnection}
                     onClick={onOpenCreateConnectionForm}
                   >
@@ -152,6 +153,7 @@ export function ConnectionStep({
                     type="button"
                     variant="outline"
                     size="sm"
+                    className="w-full min-w-0"
                     disabled={!selectedConnection || isTestingConnection}
                     onClick={onTestConnection}
                   >
