@@ -28,6 +28,12 @@ const {
   createGovernanceRefreshCommandParser,
   validateGovernanceRefreshRunState,
 } = require('./planning-db/commands/governance-refresh-command.cjs');
+const {
+  createGovernedSourceRefreshCommandParser,
+} = require('./planning-db/commands/governed-source-refresh-command.cjs');
+const {
+  applyGovernedSourceRefreshOperation,
+} = require('./planning-db/governed-source-refresh-write-rail.cjs');
 
 const allowedDocsResolutionStatuses = new Set(['resolved', 'accepted', 'ignored', 'linked']);
 const allowedFowlerAnalysisDispositionStatuses = new Set([
@@ -453,6 +459,15 @@ const operationHelp = Object.freeze({
       'Requires --source-ref, --source-content-sha256, --max-passes, and --generation-passes.',
     ],
   },
+  'governed-source': {
+    operations: ['refresh'],
+    usage:
+      'pnpm planning:db:operate governed-source refresh --path <repo-relative-path> --actor <actor>',
+    details: [
+      'RefreshGovernedSourceContent records exact clean HEAD content identity for existing governed files.',
+      'It does not import architecture, mutate ownership, or generate human documentation.',
+    ],
+  },
 });
 
 function isHelpCommand(value) {
@@ -464,7 +479,7 @@ function isHelpFlag(value) {
 }
 
 function unknownOperationMessage() {
-  return 'Unknown planning DB operation. Expected "component", "db-surface", "architecture-design", "architecture-component", "architecture-relation", "architecture-contract", "architecture-port", "architecture-storage-io", "architecture-fitness", "architecture-evidence", "docs-disposition", "feature-mechanization", "fowler-analysis", or "governance-refresh".';
+  return 'Unknown planning DB operation. Expected "component", "db-surface", "architecture-design", "architecture-component", "architecture-relation", "architecture-contract", "architecture-port", "architecture-storage-io", "architecture-fitness", "architecture-evidence", "docs-disposition", "feature-mechanization", "fowler-analysis", "governance-refresh", or "governed-source".';
 }
 
 function buildPlanningDbOperateHelpText(resource, action) {
@@ -3303,6 +3318,11 @@ const parseGovernanceRefreshCommand = createGovernanceRefreshCommandParser({
   parseIntegerOption,
   requireOption,
 });
+const parseGovernedSourceRefreshCommand = createGovernedSourceRefreshCommandParser({
+  normalizeOptionalText,
+  parseFlagOptions,
+  requireOption,
+});
 
 function parseArgs(args = process.argv.slice(2)) {
   const helpText = resolveOperateHelpRequest(args);
@@ -3424,6 +3444,13 @@ function parseArgs(args = process.argv.slice(2)) {
     }
 
     return parseGovernanceRefreshCommand(action, rest);
+  }
+
+  if (resource === 'governed-source') {
+    if (!action) {
+      throw new Error('Missing governed-source operation. Expected refresh.');
+    }
+    return parseGovernedSourceRefreshCommand(action, rest);
   }
 
   if (resource === 'docs-disposition') {
@@ -8088,6 +8115,13 @@ function printOperationResult(result) {
     return;
   }
 
+  if (result.sources) {
+    console.log(
+      `[planning:db:operate] ${result.audit.operationType} paths=${result.sources.length} sourceCommit=${result.audit.sourceCommitSha}`
+    );
+    return;
+  }
+
   throw new Error(
     `Unsupported planning DB operation result "${result.audit.operationType || 'unknown'}".`
   );
@@ -8149,13 +8183,15 @@ async function main() {
                                               ? await applyGovernanceRefreshRunRecordOperation(
                                                   command
                                                 )
-                                              : command.kind.startsWith('fowler_analysis_')
-                                                ? await applyFowlerAnalysisOperation(command)
-                                                : (() => {
-                                                    throw new Error(
-                                                      `Unsupported planning DB operation "${command.kind}".`
-                                                    );
-                                                  })();
+                                              : command.kind === 'governed_source_content_refresh'
+                                                ? await applyGovernedSourceRefreshOperation(command)
+                                                : command.kind.startsWith('fowler_analysis_')
+                                                  ? await applyFowlerAnalysisOperation(command)
+                                                  : (() => {
+                                                      throw new Error(
+                                                        `Unsupported planning DB operation "${command.kind}".`
+                                                      );
+                                                    })();
   printOperationResult(result);
 }
 
@@ -8189,6 +8225,7 @@ module.exports = {
   applyFeatureMechanizationRailRecordOperation,
   applyFeatureMechanizationRailRetireOperation,
   applyGovernanceRefreshRunRecordOperation,
+  applyGovernedSourceRefreshOperation,
   assertArchitectureDesignIdempotentReplayMatches,
   assertArchitectureEvidenceOriginAuthenticity,
   assertArchitectureScopedOperationIdempotentReplayMatches,

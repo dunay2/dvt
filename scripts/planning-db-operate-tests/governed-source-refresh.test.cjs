@@ -77,6 +77,7 @@ test('snapshot reader accepts only clean regular tracked HEAD blobs', () => {
     repoRoot: 'C:/repo',
     git,
     lstat: () => ({ isFile: () => true, isSymbolicLink: () => false }),
+    realpath: (absolutePath) => absolutePath,
   });
 
   assert.equal(snapshots.sourceCommitSha, 'b'.repeat(40));
@@ -105,6 +106,7 @@ test('snapshot reader fails closed for dirty, missing and symlinked sources', ()
         repoRoot: 'C:/repo',
         git: baseGit(' M package.json\0', ''),
         lstat: regularFile,
+        realpath: (absolutePath) => absolutePath,
       }),
     /unmodified/u
   );
@@ -115,6 +117,7 @@ test('snapshot reader fails closed for dirty, missing and symlinked sources', ()
         repoRoot: 'C:/repo',
         git: baseGit('', ''),
         lstat: regularFile,
+        realpath: (absolutePath) => absolutePath,
       }),
     /tracked regular file/u
   );
@@ -125,6 +128,7 @@ test('snapshot reader fails closed for dirty, missing and symlinked sources', ()
         repoRoot: 'C:/repo',
         git: baseGit('', `120000 blob ${'c'.repeat(40)}\tpackage.json\0`),
         lstat: () => ({ isFile: () => false, isSymbolicLink: () => true }),
+        realpath: (absolutePath) => absolutePath,
       }),
     /symbolic links/u
   );
