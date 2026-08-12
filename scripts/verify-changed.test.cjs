@@ -22,10 +22,14 @@ function focusedLabelsFor(files) {
 test('buildFocusedChangedTestPlan retains adjacent script tests without duplicating general gates', () => {
   const labels = focusedLabelsFor([
     'docs/guides/testing-and-ci-capabilities.md',
+    'scripts/git-local-changes.cjs',
     'scripts/planning-db-query.cjs',
   ]);
 
-  assert.deepEqual(labels, ['node --test scripts/planning-db-query.test.cjs']);
+  assert.deepEqual(labels, [
+    'node --test scripts/git-local-changes.test.cjs',
+    'node --test scripts/planning-db-query.test.cjs',
+  ]);
   assert.ok(!labels.includes('pnpm lint:md:changed'));
   assert.ok(!labels.includes('pnpm test:web:changed'));
   assert.ok(!labels.includes('pnpm governance:db:import'));
