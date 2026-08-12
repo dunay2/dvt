@@ -323,6 +323,7 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/CanvasShell.architecture.test.tsx
   - apps/web/src/app/views/canvas/CanvasShell.contextMenuIntegration.test.tsx
   - apps/web/src/app/views/canvas/CanvasViewport.tsx
+  - apps/web/src/app/views/canvas/CanvasViewport.test.tsx
   - apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx
   - apps/web/src/app/views/canvas/CanvasViewport.architecture.test.ts
   - apps/web/src/app/views/canvas/CanvasViewport.contextMenu.test.tsx
@@ -340,6 +341,8 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/canvasNodeWorkbenchHardening.architecture.test.ts
   - apps/web/src/app/views/canvas/useCanvasContextMenuLifecycle.ts
   - apps/web/src/app/views/canvas/useCanvasContextMenuPresenter.ts
+  - apps/web/src/app/views/canvas/useCanvasContextMenuPresenter.canvasActions.test.tsx
+  - apps/web/src/app/views/canvas/useCanvasContextMenuPresenter.graphActions.test.tsx
   - apps/web/src/app/views/canvas/useCanvasContextMenuPresenter.lifecycle.test.tsx
   - apps/web/src/testing/vitestSuites.changedRouting.architecture.test.ts
   - apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
