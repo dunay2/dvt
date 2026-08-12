@@ -269,6 +269,69 @@ test('architecture component record planner emits component, responsibility, and
   assert.equal(planned.audit.sourceContentSha256, 'e'.repeat(64));
 });
 
+test('architecture component updates preserve governed maturity and creation time', () => {
+  const now = new Date('2026-08-12T12:00:00.000Z');
+  const createdAt = '2026-06-19T09:30:00.000Z';
+  const command = parseArgs([
+    'architecture-component',
+    'record',
+    '--design',
+    'db-canvas-context-menu-component-path-2310-v1',
+    '--component',
+    'SYS-WEB-CANVAS-CONTEXT-MENU-PRIMITIVES',
+    '--name',
+    'Canvas context menu primitives',
+    '--kind',
+    'ui-view',
+    '--layer',
+    'ui',
+    '--owner',
+    'Frontend / Canvas',
+    '--repo-path',
+    'apps/web/src/app/views/canvas/CanvasContextMenuView.tsx',
+    '--public-contract',
+    'Reusable Canvas context-menu surface, section, and item primitives.',
+    '--runtime',
+    'browser',
+    '--criticality',
+    'medium',
+    '--status',
+    'review',
+    '--responsibility',
+    'RESP-SYS-WEB-CANVAS-CONTEXT-MENU-PRIMITIVES|Own reusable Canvas context-menu primitive rendering.|Context-menu primitive markup, accessibility role, design token, or surface styling changes.|CanvasContextMenuPresentationPrimitives',
+    '--source-ref',
+    'apps/web/src/app/views/canvas/CanvasContextMenuView.tsx',
+    '--source-content-sha256',
+    'f'.repeat(64),
+    '--actor',
+    'codex',
+  ]);
+
+  const planned = planArchitectureComponentRecordOperation({
+    command,
+    design: { design_id: command.designId, status: 'review' },
+    designScopes: [
+      {
+        subject_kind: 'component',
+        subject_id: command.componentId,
+        scope_kind: 'may_update',
+      },
+    ],
+    existingComponent: {
+      component_id: command.componentId,
+      maturity_score: 78,
+      created_at: createdAt,
+    },
+    parentComponent: null,
+    operationId: 'op-architecture-component-update',
+    now,
+  });
+
+  assert.equal(planned.component.maturityScore, 78);
+  assert.equal(planned.component.createdAt, createdAt);
+  assert.equal(planned.component.updatedAt, now.toISOString());
+});
+
 test('architecture relation record planner requires design scope and existing endpoints', () => {
   const now = new Date('2026-05-15T12:00:00.000Z');
   const command = parseArgs([
