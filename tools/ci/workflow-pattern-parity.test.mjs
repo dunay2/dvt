@@ -273,28 +273,9 @@ test('workflow scope policy stays wired into ci and pr quality workflows', () =>
   });
 });
 
-test('PR docs sync runs only after Planning DB preparation', () => {
+test('PR quality does not materialize human documentation indexes', () => {
   const prQualityGate = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
-  const prepareIndex = prQualityGate.indexOf(
-    '- name: Prepare planning DB for DB-backed validation'
-  );
-  const syncIndex = prQualityGate.indexOf(
-    '- name: Validate docs sync outputs (ADR/index coherence)'
-  );
-
-  assert.ok(prepareIndex >= 0);
-  assert.ok(syncIndex >= 0);
-  assert.ok(prepareIndex < syncIndex, 'Planning DB preparation must precede DB-first docs sync');
-
-  const prepareBlock = prQualityGate.slice(prepareIndex, syncIndex);
-  assert.match(prepareBlock, /steps\.scope\.outputs\.docs_structure_changed == 'true'/u);
-
-  const syncBlock = namedWorkflowStep(
-    prQualityGate,
-    'Validate docs sync outputs (ADR/index coherence)'
-  );
-  assertWorkflowContains(syncBlock, 'GIT_BASE: ${{ github.event.pull_request.base.sha }}');
-  assertWorkflowContains(syncBlock, 'GIT_HEAD: ${{ github.sha }}');
+  assertWorkflowExcludes(prQualityGate, 'pnpm docs:sync:check');
 });
 
 test('contracts and test workflows consume semantic scope outputs instead of inline filters', () => {
@@ -481,7 +462,7 @@ test('the canonical docs sync rail provisions and imports Planning DB for every 
   assert.match(localDocsPreflight, /\['pnpm', \['docs:sync:check'\]\]/u);
 });
 
-test('main full CI prepares DB-first planning projections before the full baseline', () => {
+test('main full CI prepares Planning DB before the full validation baseline', () => {
   const ciWorkflow = readFileSync('.github/workflows/ci.yml', 'utf8');
   const preparePlanningDbAction = readFileSync(
     '.github/actions/prepare-planning-db/action.yml',
