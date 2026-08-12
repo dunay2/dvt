@@ -80,10 +80,10 @@ describe('Canvas Node Workbench W4 hardening contracts', () => {
       expect(CanvasToolbarCopyEsSource).not.toContain(retiredFact);
     }
 
-    expect(CanvasAuthoringCopySource).toContain('nodeWorkbenchOpenCodeLabel');
-    expect(CanvasAuthoringCopySource).toContain('nodeWorkbenchOpenCodeDescription');
-    expect(CanvasNodeWorkbenchPanelSource).toContain('copy.nodeWorkbenchOpenCodeLabel');
-    expect(CanvasNodeWorkbenchPanelSource).toContain('copy.nodeWorkbenchOpenCodeDescription');
+    expect(CanvasAuthoringCopySource).toContain('nodeWorkbenchEditCodeFileLabel');
+    expect(CanvasAuthoringCopySource).toContain('nodeWorkbenchEditCodeFileDescription');
+    expect(CanvasNodeWorkbenchPanelSource).toContain('copy.nodeWorkbenchEditCodeFileLabel');
+    expect(CanvasNodeWorkbenchPanelSource).toContain('copy.nodeWorkbenchEditCodeFileDescription');
   });
 
   it('keeps code inside Properties navigation before any file-authoritative editor opens', () => {
