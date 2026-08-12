@@ -138980,7 +138980,8 @@
         "docs/planning/proposals/mandatory/frontend-and-ux/cux1-wux1-workbench-ux-convergence-plan-20260806.md"
       ],
       "governingSources": [
-        "docs/architecture/command-query-rail-governance.md"
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
       ],
       "allowedImplementationSurfaces": [
         "apps/web/src/app/stores/applicationLanguageStore.test.ts",
@@ -139051,7 +139052,8 @@
           "docs/architecture/components/web/frontend-component-inventory.md"
         ],
         "governingSources": [
-          "docs/architecture/command-query-rail-governance.md"
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
         ],
         "commandQueryRails": [
           {
@@ -139076,7 +139078,7 @@
           "database migrations or migration-state compatibility"
         ]
       },
-      "revision": 0,
+      "revision": 1,
       "createdBy": "codex",
       "createdAt": "2026-08-12T01:43:48.775Z"
     },
@@ -169235,6 +169237,80 @@
         ]
       },
       "createdAt": "2026-08-12T01:43:48.775Z"
+    },
+    {
+      "operationId": "4c583dba-1e18-449a-8319-b8e35bf1dbdb",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:PTH1-CONNECTED-SOURCE-TRUTH:command:configureapplicationlanguage:0:3f6629a3565a2f82",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH1-CONNECTED-SOURCE-TRUTH#command#configureapplicationlanguage",
+      "sourcePath": "docs/planning/proposals/mandatory/frontend-and-ux/cux1-wux1-workbench-ux-convergence-plan-20260806.md",
+      "sourceContentSha256": "3e88046dec8089d75475e754858c4f56d1d17f212bfc53203af855387ee82093",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web test -- applicationLanguageStore.test.ts SourceImportWizard.test.tsx",
+        "dddOwner": "ApplicationLanguagePreference",
+        "railName": "ConfigureApplicationLanguage",
+        "railType": "command",
+        "featureId": "PTH1-CONNECTED-SOURCE-TRUTH",
+        "greenTest": "pnpm --filter @dvt/web test -- applicationLanguageStore.test.ts SourceImportWizard.test.tsx && pnpm --filter @dvt/web test:e2e:source-import:live",
+        "sourceRef": "docs/planning/proposals/mandatory/frontend-and-ux/cux1-wux1-workbench-ux-convergence-plan-20260806.md",
+        "unitTests": [
+          "apps/web/src/app/stores/applicationLanguageStore.test.ts",
+          "apps/web/src/app/components/SourceImportWizard.test.tsx"
+        ],
+        "railStatus": "implemented",
+        "userStories": [
+          "As a Spanish-speaking Canvas author my validated language preference survives reload and governs the complete Source Import flow."
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts"
+        ],
+        "domainObjects": ["ApplicationLanguagePreference"],
+        "fowlerSignals": ["Hidden authority"],
+        "patchSurfaces": [
+          "apps/web/src/app/stores/applicationLanguageStore.test.ts",
+          "apps/web/src/app/components/SourceImportWizard.test.tsx",
+          "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts"
+        ],
+        "completionGate": [
+          "pnpm --filter @dvt/web test -- applicationLanguageStore.test.ts SourceImportWizard.test.tsx",
+          "pnpm --filter @dvt/web test:e2e:source-import:live",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/components/web/frontend-component-inventory.md"
+        ],
+        "expectedFailure": "The active Spanish preference is not proven to survive rehydration and govern Source Import after reload.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/planning/proposals/mandatory/frontend-and-ux/cux1-wux1-workbench-ux-convergence-plan-20260806.md"
+        ],
+        "architectureGuards": [
+          "pnpm docs:feature-mechanization:implementation -- --feature PTH1-CONNECTED-SOURCE-TRUTH"
+        ],
+        "implementationPlan": "docs/planning/proposals/mandatory/frontend-and-ux/cux1-wux1-workbench-ux-convergence-plan-20260806.md",
+        "implementationRefs": [
+          "apps/web/src/app/stores/applicationLanguageStore.ts#useApplicationLanguageStore"
+        ],
+        "normalizedRailName": "configureapplicationlanguage",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "3e88046dec8089d75475e754858c4f56d1d17f212bfc53203af855387ee82093",
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/stores/applicationLanguageStore.test.ts",
+          "apps/web/src/app/components/SourceImportWizard.test.tsx",
+          "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "database migrations or migration-state compatibility"
+        ]
+      },
+      "createdAt": "2026-08-12T01:44:55.180Z"
     }
   ],
   "governanceComponentDefinitions": [
