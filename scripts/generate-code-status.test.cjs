@@ -20,6 +20,20 @@ const zensicalRequirementsInputPath = path.join(repoRoot, '.github', 'requiremen
 const workflowScopePath = path.join(repoRoot, 'tools', 'ci', 'policy', 'workflow-scope.json');
 const packageJson = require('../package.json');
 
+function assertPrWorkflowSkipsDocumentationPublicationToolchain(steps) {
+  const stepNames = steps.map((step) => step.name);
+  assert.equal(stepNames.includes('Setup Python for DB-first documentation publication'), false);
+  assert.equal(
+    stepNames.includes('Install Zensical for DB-first documentation publication'),
+    false
+  );
+  assert.equal(stepNames.includes('Validate DB-first documentation publication and links'), false);
+  assert.equal(
+    steps.some((step) => typeof step.run === 'string' && step.run.includes('pnpm docs:publish')),
+    false
+  );
+}
+
 const {
   buildSystemDeliveryStatusProjection,
   buildComponentTopologyProjection,
@@ -1121,51 +1135,24 @@ test('live Planning DB workflow provides explicit Git refs to the importer', () 
   }
 });
 
-test('DB-first documentation publication provisions the pinned Zensical runtime first', () => {
+test('ordinary PR checks skip publication while explicit docs deploy pins Zensical', () => {
   const workflow = yaml.load(fs.readFileSync(prQualityWorkflowPath, 'utf8'));
   const deployWorkflow = yaml.load(fs.readFileSync(docsDeployWorkflowPath, 'utf8'));
   const steps = workflow.jobs['pr-checks'].steps;
   const deploySteps = deployWorkflow.jobs['build-deploy'].steps;
-  const setupPythonIndex = steps.findIndex(
-    (step) => step.name === 'Setup Python for DB-first documentation publication'
-  );
-  const installZensicalIndex = steps.findIndex(
-    (step) => step.name === 'Install Zensical for DB-first documentation publication'
-  );
-  const publicationIndex = steps.findIndex(
-    (step) => step.name === 'Validate DB-first documentation publication and links'
-  );
   const canonicalSetup = deploySteps.find((step) => step.name === 'Setup Python');
   const canonicalInstall = deploySteps.find((step) => step.name === 'Install Zensical');
 
-  assert.ok(setupPythonIndex >= 0, 'expected a DB-first documentation Python setup step');
-  assert.ok(installZensicalIndex > setupPythonIndex, 'expected Zensical installation after Python');
-  assert.ok(publicationIndex > installZensicalIndex, 'expected publication after Zensical setup');
-
-  const setupPython = steps[setupPythonIndex];
-  const installZensical = steps[installZensicalIndex];
-  const publication = steps[publicationIndex];
-  assert.equal(setupPython.if, publication.if);
-  assert.equal(installZensical.if, publication.if);
-  assert.equal(setupPython.uses, canonicalSetup.uses);
-  assert.match(setupPython.uses, /^actions\/setup-python@[0-9a-f]{40}$/u);
+  assertPrWorkflowSkipsDocumentationPublicationToolchain(steps);
   assert.match(canonicalSetup.uses, /^actions\/setup-python@[0-9a-f]{40}$/u);
-  assert.equal(setupPython.with['python-version'], canonicalSetup.with['python-version']);
-  assert.equal(setupPython.with['python-version'], '3.12.10');
-  assert.equal(setupPython.with.cache, 'pip');
-  assert.equal(setupPython.with['cache-dependency-path'], '.github/requirements/zensical.lock');
-  assert.equal(canonicalSetup.with.cache, setupPython.with.cache);
+  assert.equal(canonicalSetup.with['python-version'], '3.12.10');
+  assert.equal(canonicalSetup.with.cache, 'pip');
+  assert.equal(canonicalSetup.with['cache-dependency-path'], '.github/requirements/zensical.lock');
   assert.equal(
-    canonicalSetup.with['cache-dependency-path'],
-    setupPython.with['cache-dependency-path']
-  );
-  assert.equal(installZensical.run.trim(), canonicalInstall.run.trim());
-  assert.equal(
-    installZensical.run.trim(),
+    canonicalInstall.run.trim(),
     'python -m pip install --disable-pip-version-check --require-hashes -r .github/requirements/zensical.lock'
   );
-  assert.doesNotMatch(installZensical.run, /--upgrade/u);
-  assert.equal(publication.run, 'pnpm docs:publish && pnpm docs:build && pnpm docs:gov:links');
+  assert.doesNotMatch(canonicalInstall.run, /--upgrade/u);
 
   const lockedRequirements = fs.readFileSync(zensicalRequirementsPath, 'utf8');
   const directRequirements = fs

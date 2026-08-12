@@ -13,6 +13,13 @@ const {
 
 const temporaryRoots = [];
 
+function assertPrWorkflowDoesNotPublishDocumentation(workflow) {
+  assert.doesNotMatch(workflow, /Setup Python for DB-first documentation publication/u);
+  assert.doesNotMatch(workflow, /Install Zensical for DB-first documentation publication/u);
+  assert.doesNotMatch(workflow, /Validate DB-first documentation publication and links/u);
+  assert.doesNotMatch(workflow, /pnpm docs:publish/u);
+}
+
 function sha256(value) {
   return createHash('sha256').update(value).digest('hex');
 }
@@ -766,10 +773,7 @@ test('package and manual deploy expose one explicit publication command', () => 
   assert.doesNotMatch(closeoutSource, /docs:status:generate.*--repository-map-only/u);
   assert.ok(workflowScope.docs_changed.includes('scripts/documentation-*.cjs'));
   assert.ok(workflowScope.generated_status_relevant.includes('scripts/documentation-*.cjs'));
-  assert.match(
-    prWorkflow,
-    /- name: Validate DB-first documentation publication and links[\s\S]*?run: pnpm docs:publish && pnpm docs:build && pnpm docs:gov:links\n\s+env:\n\s+GIT_BASE: \$\{\{ github\.event\.pull_request\.base\.sha \}\}\n\s+GIT_HEAD: \$\{\{ github\.sha \}\}/u
-  );
+  assertPrWorkflowDoesNotPublishDocumentation(prWorkflow);
 });
 
 test('published docs expose keyboard table regions and a focus-correct skip link', () => {
