@@ -176,3 +176,30 @@ jobs:
       - name: Lint all Markdown files (push/manual)
         if: github.event_name != 'pull_request'
         run: pnpm lint:md
+
+  code-quality-required:
+    name: Code Quality Required for Merge
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs:
+      [
+        ci-tool-contracts,
+        detect-affected,
+        ci-tool-executable-contracts,
+        affected-preflight,
+        no-affected-workspaces,
+      ]
+    if: always()
+    steps:
+      - name: Check code quality jobs
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const jobs = ${{ toJSON(needs) }};
+            const failedJobs = Object.entries(jobs)
+              .filter(([_, job]) => ['failure', 'cancelled'].includes(job.result))
+              .map(([name, _]) => name);
+
+            if (failedJobs.length > 0) {
+              core.setFailed(`The following code quality jobs failed: ${failedJobs.join(', ')}`);
+            }
