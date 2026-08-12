@@ -4,6 +4,7 @@ import React, { act, createRef } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { buildTestNodeKind } from './canvasKindRegistration.testSupport';
 import {
   buildCanvasAddNodeCatalogMenuModel,
@@ -16,6 +17,7 @@ describe('CanvasContextMenuView', () => {
   let root: Root;
 
   beforeEach(() => {
+    useApplicationLanguageStore.setState({ language: 'en' });
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
@@ -29,6 +31,7 @@ describe('CanvasContextMenuView', () => {
       root.unmount();
     });
     container.remove();
+    useApplicationLanguageStore.setState({ language: 'en' });
   });
 
   it('does not render a menu when no context model is active', async () => {
@@ -253,6 +256,104 @@ describe('CanvasContextMenuView', () => {
     expect(onCanvasAction).not.toHaveBeenCalled();
     expect(onCreateNodeAction).not.toHaveBeenCalled();
   });
+
+  it('relocalizes an open pane menu when the application language changes', async () => {
+    const model = buildCanvasContextMenuModel({
+      target: {
+        kind: 'pane',
+        screenPosition: { x: 480, y: 320 },
+        flowPosition: { x: 580, y: 280 },
+      },
+      canMutateGraph: true,
+      canOpenCanvasSettings: true,
+      authoringNodeKinds: [buildTestNodeKind('dvt:source', 'Source')],
+    });
+
+    await renderContextMenu(model);
+    await openCommandMenu();
+    expect(document.body.textContent).toContain('Add...');
+    expect(document.body.textContent).toContain('Canvas settings');
+
+    await changeApplicationLanguage('es');
+
+    expect(document.body.textContent).toContain('Añadir...');
+    expect(document.body.textContent).toContain('Configuración de canvas');
+    expect(document.body.textContent).not.toContain('Canvas settings');
+  });
+
+  it('relocalizes an open component catalog when the application language changes', async () => {
+    const sourceKind = buildTestNodeKind('dvt:source', 'Source');
+    const rootModel = buildCanvasContextMenuModel({
+      target: {
+        kind: 'pane',
+        screenPosition: { x: 480, y: 320 },
+        flowPosition: { x: 580, y: 280 },
+      },
+      canMutateGraph: true,
+      authoringNodeKinds: [sourceKind],
+    });
+    const catalogModel = buildCanvasAddNodeCatalogMenuModel({
+      sourceModel: rootModel,
+      authoringNodeKinds: [sourceKind],
+    });
+
+    await renderContextMenu(catalogModel);
+    expect(document.body.textContent).toContain('Add source');
+    expect(document.body.textContent).toContain('Sources');
+
+    await changeApplicationLanguage('es');
+
+    expect(document.body.textContent).toContain('Añadir origen');
+    expect(document.body.textContent).toContain('Orígenes');
+    expect(document.body.textContent).not.toContain('Add source');
+  });
+
+  it('relocalizes an open edge menu when the application language changes', async () => {
+    const model = buildCanvasContextMenuModel({
+      target: {
+        kind: 'edge',
+        edgeId: 'edge-source-model',
+        screenPosition: { x: 600, y: 360 },
+      },
+      canMutateGraph: true,
+      authoringNodeKinds: [buildTestNodeKind('dvt:source', 'Source')],
+    });
+
+    await renderContextMenu(model);
+    await openCommandMenu();
+    expect(document.body.textContent).toContain('Remove connection');
+
+    await changeApplicationLanguage('es');
+
+    expect(document.body.textContent).toContain('Eliminar conexión');
+    expect(document.body.textContent).not.toContain('Remove connection');
+  });
+
+  async function renderContextMenu(
+    model: ReturnType<typeof buildCanvasContextMenuModel> | null
+  ): Promise<void> {
+    await act(async () => {
+      root.render(
+        <CanvasContextMenuView
+          model={model}
+          menuRef={createRef<HTMLDivElement>()}
+          onClose={vi.fn()}
+          onCatalogClose={vi.fn()}
+          onCanvasAction={vi.fn()}
+          onCreateNodeAction={vi.fn()}
+          onEdgeAction={vi.fn()}
+        >
+          <div>Canvas trigger</div>
+        </CanvasContextMenuView>
+      );
+    });
+  }
+
+  async function changeApplicationLanguage(language: 'en' | 'es'): Promise<void> {
+    await act(async () => {
+      useApplicationLanguageStore.getState().configureApplicationLanguage(language);
+    });
+  }
 
   async function clickMenuItem(label: string): Promise<void> {
     const button = Array.from(document.querySelectorAll<HTMLElement>('[role="menuitem"]')).find(

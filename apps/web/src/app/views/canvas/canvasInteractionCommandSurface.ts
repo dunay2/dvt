@@ -107,6 +107,30 @@ function formatCreateNodeActionLabel(
   return `${copy.canvasContextMenuAddNodeLabel} ${label.charAt(0).toLowerCase()}${label.slice(1)}`;
 }
 
+function resolveCanvasActionLabel(
+  action: CanvasContextMenuCanvasAction['action'],
+  copy: CanvasViewCopy
+): string {
+  switch (action) {
+    case 'open-add-node-catalog':
+      return copy.canvasContextMenuAddLabel;
+    case 'open-source-import':
+      return copy.canvasContextMenuAddSourceLabel;
+    case 'open-canvas-settings':
+      return copy.canvasContextMenuCanvasSettingsLabel;
+  }
+}
+
+function resolveCatalogActionLabel(
+  action: CanvasContextMenuCatalogAction['action'],
+  registration: NodeKindRegistration,
+  copy: CanvasViewCopy
+): string {
+  return action === 'open-source-import'
+    ? copy.canvasContextMenuAddSourceLabel
+    : formatCreateNodeActionLabel(registration, copy);
+}
+
 export function buildCanvasContextMenuModel({
   target,
   canMutateGraph,
@@ -124,13 +148,13 @@ export function buildCanvasContextMenuModel({
     ) {
       canvasActions.push({
         action: 'open-add-node-catalog',
-        label: copy.canvasContextMenuAddLabel,
+        label: resolveCanvasActionLabel('open-add-node-catalog', copy),
       });
     }
     if (canOpenCanvasSettings) {
       canvasActions.push({
         action: 'open-canvas-settings',
-        label: copy.canvasContextMenuCanvasSettingsLabel,
+        label: resolveCanvasActionLabel('open-canvas-settings', copy),
       });
     }
   }
@@ -189,7 +213,7 @@ export function buildCanvasAddNodeCatalogMenuModel({
       : [
           {
             action: 'open-source-import',
-            label: copy.canvasContextMenuAddSourceLabel,
+            label: resolveCatalogActionLabel('open-source-import', sourceImportRegistration, copy),
             registration: sourceImportRegistration,
           },
         ];
@@ -198,7 +222,7 @@ export function buildCanvasAddNodeCatalogMenuModel({
         .filter((registration) => registration !== sourceImportRegistration)
         .map((registration) => ({
           action: 'create-node',
-          label: formatCreateNodeActionLabel(registration, copy),
+          label: resolveCatalogActionLabel('create-node', registration, copy),
           registration,
         }))
     : [];
@@ -210,6 +234,42 @@ export function buildCanvasAddNodeCatalogMenuModel({
     catalogActions: [...sourceImportActions, ...createNodeActions],
     createNodeActions,
     edgeActions: [],
+  };
+}
+
+export function localizeCanvasContextMenuModel(
+  model: CanvasContextMenuModel,
+  copy: CanvasViewCopy
+): CanvasContextMenuModel {
+  const localizeCreateNodeAction = (
+    action: CanvasContextMenuCreateNodeAction
+  ): CanvasContextMenuCreateNodeAction => ({
+    ...action,
+    label: resolveCatalogActionLabel(action.action, action.registration, copy),
+  });
+  const localizeCatalogAction = (
+    action: CanvasContextMenuCatalogAction
+  ): CanvasContextMenuCatalogAction =>
+    action.action === 'open-source-import'
+      ? {
+          ...action,
+          label: resolveCatalogActionLabel(action.action, action.registration, copy),
+        }
+      : localizeCreateNodeAction(action);
+
+  // Reproject presentation copy without rebuilding command intent or its captured target.
+  return {
+    ...model,
+    canvasActions: model.canvasActions.map((action) => ({
+      ...action,
+      label: resolveCanvasActionLabel(action.action, copy),
+    })),
+    catalogActions: model.catalogActions.map(localizeCatalogAction),
+    createNodeActions: model.createNodeActions.map(localizeCreateNodeAction),
+    edgeActions: model.edgeActions.map((action) => ({
+      ...action,
+      label: copy.canvasContextMenuRemoveEdgeLabel,
+    })),
   };
 }
 
