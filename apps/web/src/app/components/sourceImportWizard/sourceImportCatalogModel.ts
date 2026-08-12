@@ -197,9 +197,13 @@ export function formatSourceImportColumnCount(
 
 export function formatSourceImportSizeEvidence(
   sourceObject: Pick<SelectableSourceObject, 'metricEvidence'>,
-  copy: Pick<SourceImportCatalogCopy, 'estimatedSizePrefix'>
+  copy: Pick<SourceImportCatalogCopy, 'estimatedSizePrefix'>,
+  numberFormatter: Intl.NumberFormat
 ): string {
-  const size = formatSourceObjectMetricByteSize(sourceObject.metricEvidence.byteSize.value);
+  const size = formatSourceObjectMetricByteSize(
+    sourceObject.metricEvidence.byteSize.value,
+    numberFormatter
+  );
   return sourceObject.metricEvidence.byteSize.provenance === 'estimated'
     ? `${copy.estimatedSizePrefix} ${size}`
     : size;
@@ -324,7 +328,7 @@ export function buildSourceImportObjectViewModel(
     copy,
     numberFormatter
   );
-  const byteSizeLabel = formatSourceImportSizeEvidence(sourceObject, copy);
+  const byteSizeLabel = formatSourceImportSizeEvidence(sourceObject, copy, numberFormatter);
   const columnCountLabel = formatSourceImportColumnCount(
     sourceObject.columns?.length ?? 0,
     copy,

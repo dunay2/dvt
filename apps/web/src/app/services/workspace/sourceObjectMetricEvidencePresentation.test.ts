@@ -41,6 +41,15 @@ describe('describeSourceObjectMetricEvidence', () => {
     );
   });
 
+  it('uses the active locale for exact and compact byte values', () => {
+    const spanishNumberFormatter = new Intl.NumberFormat('es-ES');
+
+    expect(formatSourceObjectMetricByteSize(1536, spanishNumberFormatter)).toBe('1,5 KB');
+    expect(formatSourceObjectMetricByteDetail(1536, spanishNumberFormatter)).toBe(
+      '1536 B (1,5 KB)'
+    );
+  });
+
   it('explains provenance, method, confidence, storage basis, and snapshot time', () => {
     expect(
       describeSourceObjectMetricEvidence({

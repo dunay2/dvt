@@ -83,24 +83,30 @@ const metricEvidenceCopyByLanguage: Readonly<Record<'en' | 'es', MetricEvidenceC
   },
 };
 
-export function formatSourceObjectMetricByteSize(value: number): string {
+export function formatSourceObjectMetricByteSize(
+  value: number,
+  numberFormatter = new Intl.NumberFormat('en-US')
+): string {
+  const formatCompactValue = (compactValue: number) =>
+    numberFormatter.format(Number(compactValue.toFixed(1)));
+
   if (Math.abs(value) >= 1024 * 1024 * 1024) {
-    return `${(value / (1024 * 1024 * 1024)).toFixed(1).replace(/\.0$/, '')} GB`;
+    return `${formatCompactValue(value / (1024 * 1024 * 1024))} GB`;
   }
   if (Math.abs(value) >= 1024 * 1024) {
-    return `${(value / (1024 * 1024)).toFixed(1).replace(/\.0$/, '')} MB`;
+    return `${formatCompactValue(value / (1024 * 1024))} MB`;
   }
   if (Math.abs(value) >= 1024) {
-    return `${(value / 1024).toFixed(1).replace(/\.0$/, '')} KB`;
+    return `${formatCompactValue(value / 1024)} KB`;
   }
-  return `${value} B`;
+  return `${numberFormatter.format(value)} B`;
 }
 
 export function formatSourceObjectMetricByteDetail(
   value: number,
   numberFormatter = new Intl.NumberFormat()
 ): string {
-  const compact = formatSourceObjectMetricByteSize(value);
+  const compact = formatSourceObjectMetricByteSize(value, numberFormatter);
   const exact = `${numberFormatter.format(Math.round(value))} B`;
   return exact === compact ? exact : `${exact} (${compact})`;
 }
