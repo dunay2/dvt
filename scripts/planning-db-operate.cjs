@@ -5943,7 +5943,7 @@ async function writePlannedArchitectureComponentRecordOperation(client, planned)
          responsibility = excluded.responsibility,
          reason_to_change = excluded.reason_to_change,
          ddd_owner = excluded.ddd_owner,
-         status = excluded.status`,
+         status = architecture.component_responsibility.status`,
       [
         responsibility.responsibilityId,
         responsibility.componentId,
