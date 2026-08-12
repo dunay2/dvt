@@ -1,4 +1,5 @@
 const assert = require('node:assert/strict');
+const crypto = require('node:crypto');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
@@ -431,6 +432,24 @@ test('planning DB export writes deterministic current architecture state', async
     );
   } finally {
     fs.rmSync(outputRoot, { recursive: true, force: true });
+  }
+});
+
+test('planning DB export hashes text rails identically for CRLF and LF worktrees', async () => {
+  const repoRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'planning-db-export-eol-'));
+  const sourcePath = path.join(repoRoot, 'scripts', 'planning-db-export.cjs');
+  fs.mkdirSync(path.dirname(sourcePath), { recursive: true });
+  fs.writeFileSync(sourcePath, 'first\r\nsecond\r\n', 'utf8');
+  const { client, runner } = createCanonicalStateFixture(repoRoot);
+
+  try {
+    const rows = await runner.readCanonicalStateRows(client);
+    assert.equal(
+      rows.featureMechanizationRails[0].sourceContentSha256,
+      crypto.createHash('sha256').update('first\nsecond\n').digest('hex')
+    );
+  } finally {
+    fs.rmSync(repoRoot, { recursive: true, force: true });
   }
 });
 

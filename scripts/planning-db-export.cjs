@@ -19,6 +19,8 @@ const dependencies = (() => {
       .assertCurrentRailDecisionState,
     assertCurrentStateValue: require('./planning-db-architecture-state.cjs')
       .assertCurrentStateValue,
+    normalizeTextBytesForHash: require('./generate-governance-file-component-index.cjs')
+      .normalizeTextBytesForHash,
     repoRoot: path.resolve(__dirname, '..'),
   };
 })();
@@ -363,7 +365,7 @@ class PlanningDbExportRunner {
         ...rail,
         sourceContentSha256: this.deps.crypto
           .createHash('sha256')
-          .update(this.deps.fs.readFileSync(sourcePath))
+          .update(this.deps.normalizeTextBytesForHash(this.deps.fs.readFileSync(sourcePath)))
           .digest('hex'),
       };
     });
