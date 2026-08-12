@@ -77,6 +77,13 @@ jobs:
       - name: Enforce forbidden generated files policy
         run: node scripts/check-forbidden-tracked-files.cjs
 
+      - name: Enforce retired knowledge-intake path
+        if: github.event_name == 'pull_request'
+        run: node scripts/planning-db/knowledge-intake-retirement-guard.cjs --committed
+        env:
+          GIT_BASE: ${{ github.event.pull_request.base.sha }}
+          GIT_HEAD: ${{ github.sha }}
+
       - name: Setup pnpm, cache and dependencies (fast-fail)
         if:
           github.event_name == 'pull_request' || github.event_name == 'push' || (github.event_name
@@ -132,6 +139,7 @@ jobs:
         if:
           github.event_name == 'push' || (github.event_name == 'pull_request' &&
           (steps.scope.outputs.feature_mechanization_relevant == 'true' ||
+          steps.scope.outputs.planning_db_inventory_relevant == 'true' ||
           steps.scope.outputs.governance_global_relevant == 'true' ||
           steps.scope.outputs.generated_status_relevant == 'true' ||
           steps.scope.outputs.docs_structure_changed == 'true')) || (github.event_name ==
@@ -142,6 +150,18 @@ jobs:
             ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha ||
             'origin/main' }}
           GIT_HEAD: ${{ github.sha }}
+
+      - name: Validate Planning DB inventory for committed changes
+        if:
+          github.event_name == 'pull_request' && steps.scope.outputs.planning_db_inventory_relevant
+          == 'true'
+        run: pnpm planning:db:inventory:check
+
+      - name: Validate Planning DB integrity for committed changes
+        if:
+          github.event_name == 'pull_request' && steps.scope.outputs.planning_db_inventory_relevant
+          == 'true'
+        run: pnpm planning:db:integrity:check
 
       - name: Validate docs sync outputs (ADR/index coherence)
         if:
