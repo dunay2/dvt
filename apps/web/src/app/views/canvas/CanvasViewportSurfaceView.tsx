@@ -177,12 +177,6 @@ function CanvasViewportReactFlowSurface({
     onCloseNodeHealthPopover();
     onNodeDragStop(event, node, nodes);
   };
-  const handlePaneContextMenu: NonNullable<ReactFlowProps<Node, Edge>['onPaneContextMenu']> = (
-    event
-  ) => {
-    onCloseNodeHealthPopover();
-    contextMenuPresenter.handlePaneContextMenu(event);
-  };
   const handleEdgeContextMenu: NonNullable<ReactFlowProps<Node, Edge>['onEdgeContextMenu']> = (
     event,
     edge
@@ -246,7 +240,6 @@ function CanvasViewportReactFlowSurface({
         }}
         onDrop={onDrop}
         onDragOver={onDragOver}
-        onPaneContextMenu={handlePaneContextMenu}
         onEdgeContextMenu={handleEdgeContextMenu}
         className="bg-(--canvas-surface)"
         ariaLabelConfig={buildCanvasReactFlowAriaLabelConfig(copy)}

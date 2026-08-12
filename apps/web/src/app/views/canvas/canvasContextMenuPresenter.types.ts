@@ -31,7 +31,8 @@ export type UseCanvasContextMenuPresenterArgs = Readonly<{
 export type ContextMenuEvent = Pick<
   MouseEvent | ReactMouseEvent<HTMLDivElement>,
   'clientX' | 'clientY' | 'preventDefault' | 'stopPropagation' | 'target'
->;
+> &
+  Readonly<{ nativeEvent?: MouseEvent }>;
 
 export type PaneClickEvent = Pick<
   MouseEvent | ReactMouseEvent<Element>,
@@ -58,7 +59,6 @@ export type UseCanvasContextMenuPresenterResult = Readonly<{
   handlePaneClick: (event: PaneClickEvent) => void;
   handleViewportContextMenu: (event: ReactMouseEvent<HTMLDivElement>) => void;
   handleViewportContextMenuKeyDown: (event: ContextMenuKeyboardEvent) => void;
-  handlePaneContextMenu: NonNullable<ReactFlowProps<FlowNode, Edge>['onPaneContextMenu']>;
   handleEdgeContextMenu: NonNullable<ReactFlowProps<FlowNode, Edge>['onEdgeContextMenu']>;
   handleCanvasAction: (action: CanvasContextMenuCanvasAction) => void;
   handleCreateNodeAction: (action: CanvasContextMenuCreateNodeAction) => void;

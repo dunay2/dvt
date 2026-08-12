@@ -73,11 +73,13 @@ describe('useCanvasContextMenuPresenter graph actions', () => {
   it('creates authoring nodes from the add-node catalog at the captured flow position', async () => {
     await renderPresenter();
     await act(async () => {
-      presenter?.handlePaneContextMenu({
+      presenter?.handleViewportContextMenu({
         preventDefault: vi.fn(),
+        stopPropagation: vi.fn(),
+        target: document.createElement('div'),
         clientX: 320,
         clientY: 260,
-      } as unknown as React.MouseEvent<Element>);
+      } as unknown as React.MouseEvent<HTMLDivElement>);
     });
 
     await act(async () => {

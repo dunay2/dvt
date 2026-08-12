@@ -50,15 +50,11 @@ describe('DbtNodeComponent architecture', () => {
     expect(existsSync(CANVAS_NODE_SHELL_PATH)).toBe(true);
     expect(existsSync(CANVAS_NODE_PORT_HANDLE_PATH)).toBe(true);
     expect(existsSync(CANVAS_NODE_CONTEXT_MENU_VIEW_PATH)).toBe(true);
-    expect(existsSync(CANVAS_NODE_CONTEXT_MENU_PRIMITIVES_PATH)).toBe(true);
+    expect(existsSync(CANVAS_NODE_CONTEXT_MENU_PRIMITIVES_PATH)).toBe(false);
     const canvasNodeShellSource = readFileSync(CANVAS_NODE_SHELL_PATH, 'utf8');
     const canvasNodePortHandleSource = readFileSync(CANVAS_NODE_PORT_HANDLE_PATH, 'utf8');
     const canvasNodeContextMenuViewSource = readFileSync(
       CANVAS_NODE_CONTEXT_MENU_VIEW_PATH,
-      'utf8'
-    );
-    const canvasNodeContextMenuPrimitivesSource = readFileSync(
-      CANVAS_NODE_CONTEXT_MENU_PRIMITIVES_PATH,
       'utf8'
     );
 
@@ -77,13 +73,12 @@ describe('DbtNodeComponent architecture', () => {
     expect(canvasNodeShellSource).not.toContain('ContextMenuContent');
     expect(canvasNodePortHandleSource).toContain("from '@xyflow/react'");
     expect(canvasNodePortHandleSource).toContain('data-slot="canvas-node-port-handle"');
-    expect(canvasNodeContextMenuViewSource).toContain("from './CanvasNodeContextMenuPrimitives'");
-    expect(canvasNodeContextMenuViewSource).not.toContain("from '../ui/context-menu'");
-    expect(canvasNodeContextMenuViewSource).not.toContain('className=');
-    expect(canvasNodeContextMenuViewSource).not.toContain('text-[10px]');
-    expect(canvasNodeContextMenuPrimitivesSource).toContain('ContextMenuContent');
-    expect(canvasNodeContextMenuPrimitivesSource).toContain(
-      'const canvasNodeContextMenuClassNames'
+    expect(canvasNodeContextMenuViewSource).not.toContain(
+      "from './CanvasNodeContextMenuPrimitives'"
     );
+    expect(canvasNodeContextMenuViewSource).toContain("from '../ui/context-menu'");
+    expect(canvasNodeContextMenuViewSource).toContain('ContextMenuContent');
+    expect(canvasNodeContextMenuViewSource).toContain('ContextMenuItem');
+    expect(canvasNodeContextMenuViewSource).not.toContain('text-[10px]');
   });
 });

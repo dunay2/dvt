@@ -163,20 +163,33 @@ export function useCanvasContextMenuPresenter({
     [openCanvasContextMenu]
   );
 
-  const handleViewportContextMenuEvent = useCallback((event: ContextMenuEvent) => {
-    if (resolveCanvasViewportContextMenuRequest(event) != null) {
-      return;
-    }
+  const handleViewportContextMenuEvent = useCallback(
+    (event: ContextMenuEvent) => {
+      const sourceEvent = event.nativeEvent ?? event;
+      if (
+        (sourceEvent as MouseEvent & Readonly<{ dvtNodeActionsRequest?: boolean }>)
+          .dvtNodeActionsRequest === true
+      ) {
+        return;
+      }
 
-    const targetsEdge =
-      event.target instanceof Element && event.target.closest('.react-flow__edge') != null;
-    if (targetsEdge) {
-      return;
-    }
+      const request = resolveCanvasViewportContextMenuRequest(event);
+      if (request != null) {
+        openCanvasContextMenu(request, { suppressPointerEcho: true });
+        return;
+      }
 
-    event.preventDefault();
-    event.stopPropagation();
-  }, []);
+      const targetsEdge =
+        event.target instanceof Element && event.target.closest('.react-flow__edge') != null;
+      if (targetsEdge) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+    },
+    [openCanvasContextMenu]
+  );
 
   const handleViewportContextMenu = useCallback(
     (event: ReactMouseEvent<HTMLDivElement>) => {
@@ -184,17 +197,6 @@ export function useCanvasContextMenuPresenter({
     },
     [handleViewportContextMenuEvent]
   );
-
-  const handlePaneContextMenu: NonNullable<ReactFlowProps<FlowNode, Edge>['onPaneContextMenu']> =
-    useCallback(
-      (event) => {
-        openCanvasContextMenu(
-          { x: event.clientX, y: event.clientY },
-          { suppressPointerEcho: true }
-        );
-      },
-      [openCanvasContextMenu]
-    );
 
   const handleEdgeContextMenu: NonNullable<ReactFlowProps<FlowNode, Edge>['onEdgeContextMenu']> =
     useCallback(
@@ -284,7 +286,6 @@ export function useCanvasContextMenuPresenter({
     handlePaneClick,
     handleViewportContextMenu,
     handleViewportContextMenuKeyDown,
-    handlePaneContextMenu,
     handleEdgeContextMenu,
     handleCanvasAction,
     handleCreateNodeAction,
