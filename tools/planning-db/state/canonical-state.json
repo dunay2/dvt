@@ -105290,7 +105290,7 @@
         "pnpm --filter @dvt/web test:unit:run -- src/app/services/workspace/workspacePorts.api.test.ts"
       ],
       "sourcePath": "apps/web/src/app/services/workspace/workspacePorts.api.ts",
-      "sourceContentSha256": "741f755939fa9963e9dda9674c49dec4c386c20fd65701a9bab070d76d79d67d",
+      "sourceContentSha256": "b68ae391e5b59bc930e80d16683fe6335d2595777875a02d9eff09f6a7fa7f09",
       "rawRail": {
         "name": "ListAdminAuditLog",
         "type": "query",
@@ -105358,7 +105358,7 @@
         "pnpm --filter @dvt/web test:unit:run -- src/app/services/workspace/workspacePorts.api.test.ts"
       ],
       "sourcePath": "apps/web/src/app/services/workspace/workspacePorts.api.ts",
-      "sourceContentSha256": "741f755939fa9963e9dda9674c49dec4c386c20fd65701a9bab070d76d79d67d",
+      "sourceContentSha256": "b68ae391e5b59bc930e80d16683fe6335d2595777875a02d9eff09f6a7fa7f09",
       "rawRail": {
         "name": "ListAdminRoles",
         "type": "query",
@@ -107763,7 +107763,7 @@
         "node --test scripts/planning-db-run.test.cjs tools/ci/sync-docs-status-policy.test.mjs"
       ],
       "sourcePath": "package.json",
-      "sourceContentSha256": "023d8018d53680331543c3671950f587a17ef250c4c790760767fcac7f197c3a",
+      "sourceContentSha256": "003adc03d0e1be9f5331b874415312230f993d405920b9fe00e9d6892fb76937",
       "rawRail": {
         "name": "PreparePlanningDbRuntime",
         "type": "command",
@@ -108163,7 +108163,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "tools/ci/check-architecture-dependencies.mjs",
-      "sourceContentSha256": "4f02c340d242cb834a03990064924683692fae7c4dee8c19f29eeb47f3a75ce3",
+      "sourceContentSha256": "949ba1aaa7eab5cbad7314f34f94163989ef15fcd082c902f9c0e9d19809c91a",
       "rawRail": {
         "name": "ApplyArchitectureDependencyBoundaryGate",
         "type": "command",
@@ -109486,7 +109486,7 @@
         "pnpm docs:feature-mechanization:implementation"
       ],
       "sourcePath": "apps/web/src/app/views/canvas/canvasGraphFilter.ts",
-      "sourceContentSha256": "e839ad03106f9c80b4041535b08b3ec1aeae9c5cbe71979373f0dbd06ee4a77e",
+      "sourceContentSha256": "ee00ee7087a0a1dc6155f71f243681612976872c2ea8fbc6760aaeac17dd8d46",
       "rawRail": {
         "name": "FilterCanvasGraph",
         "type": "query",
@@ -109716,7 +109716,7 @@
         "pnpm --filter @dvt/web lint"
       ],
       "sourcePath": "apps/web/src/app/views/canvas/useCanvasGraphSearchActivation.ts",
-      "sourceContentSha256": "45cd0c8872f7ef164aaec527bbca6e9bc3fb6d136707c030501e1b0e742d74c1",
+      "sourceContentSha256": "8ef1273099546b1a3f72e3e24dc17997f37beaa17d68f4c62f3ecff2a8b9d561",
       "rawRail": {
         "name": "ActivateCanvasGraphSearchResult",
         "type": "command",
@@ -114377,7 +114377,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "packages/@dvt/contracts/test/provider-vocabulary.architecture.test.ts",
-      "sourceContentSha256": "74c4650cd0064ec81126d3aeed2e983ee768c547bcd50c459ad1a5ace95a5b91",
+      "sourceContentSha256": "34e20687260f558a5983f0f4f263d94276a61cf464e8185a1fdbc54f62d0f6ba",
       "rawRail": {
         "name": "ClassifyDocumentationEntryPoint",
         "type": "query",
@@ -114563,7 +114563,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "packages/@dvt/contracts/test/provider-vocabulary.architecture.test.ts",
-      "sourceContentSha256": "74c4650cd0064ec81126d3aeed2e983ee768c547bcd50c459ad1a5ace95a5b91",
+      "sourceContentSha256": "34e20687260f558a5983f0f4f263d94276a61cf464e8185a1fdbc54f62d0f6ba",
       "rawRail": {
         "name": "ListDocumentationLifecycleFacts",
         "type": "query",
@@ -114765,7 +114765,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "tools/docs/check-filenames.ts",
-      "sourceContentSha256": "fd2f58de1c857a1f8259914a590bcecb91aabc192bf511e56da420aeab2c651c",
+      "sourceContentSha256": "688c0adfbf5b2d018ea7fbcc70b9ca271df820c3599839632de92cb919738a2b",
       "rawRail": {
         "name": "ValidateChangedDocumentFilenames",
         "type": "query",
@@ -138534,7 +138534,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
-      "sourceContentSha256": "dc10810f42262c5bb84b49cae96bc0d78273a4cf13828f67100c4b7c030cdbe6",
+      "sourceContentSha256": "2e5ff8f7bb76ee283be965e19fea01f606af0688b3326dc4912b6374165487f5",
       "rawRail": {
         "name": "RecordPlanExecutability",
         "type": "command",
@@ -138980,7 +138980,9 @@
         "apps/web/cypress/support/liveWarehouseSourceImport.ts#expectedLivePostgresSourceName",
         "apps/web/cypress/support/liveWarehouseSourceImport.ts#createLivePostgresConnection",
         "apps/api/src/application/services/graphDraftWarehouseSourceImportStrategy.ts#GraphDraftWarehouseSourceImportStrategy",
-        "apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.ts#projectDbtModelArtifact"
+        "apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.ts#projectDbtModelArtifact",
+        "apps/web/src/app/components/sourceImportWizard/ConnectionStep.tsx#ConnectionStep",
+        "apps/web/src/app/components/sourceImportWizard/WarehouseConnectionCreateForm.tsx#WarehouseConnectionCreateForm"
       ],
       "implementationRefs": [
         "apps/web/cypress/support/liveWarehouseSourceImport.ts#createLivePostgresConnection",
@@ -138996,7 +138998,9 @@
         "apps/api/src/entrypoints/http/warehouseSourceImportRouteGroup.ts#ImportWarehouseSources",
         "apps/api/src/entrypoints/http/warehouseSourceImportRoutes.ts#ImportWarehouseSources",
         "apps/api/src/application/services/graphDraftWarehouseSourceImportStrategy.ts#GraphDraftWarehouseSourceImportStrategy",
-        "apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.ts#projectDbtModelArtifact"
+        "apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.ts#projectDbtModelArtifact",
+        "apps/web/src/app/components/sourceImportWizard/ConnectionStep.tsx#ConnectionStep",
+        "apps/web/src/app/components/sourceImportWizard/WarehouseConnectionCreateForm.tsx#WarehouseConnectionCreateForm"
       ],
       "documentationRefs": [
         {
@@ -139125,7 +139129,8 @@
           "sourceKind": "documentation"
         },
         "docs/architecture/components/source-import.md",
-        "docs/evidence/ED-20260808-pth1-connected-source-truth.md"
+        "docs/evidence/ED-20260808-pth1-connected-source-truth.md",
+        "docs/planning/proposals/mandatory/product-truth-connection-hardening-20260808.md"
       ],
       "governingSources": [
         "docs/planning/status/governance-document-rule-inventory.md",
@@ -139190,7 +139195,10 @@
         "tools/planning-db/state/canonical-state.json",
         "apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts",
         "apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx",
-        "apps/web/src/app/views/canvas/dbtAuthoringFieldsModel.test.ts"
+        "apps/web/src/app/views/canvas/dbtAuthoringFieldsModel.test.ts",
+        "apps/web/src/app/components/SourceImportWizard.test.tsx",
+        "apps/web/src/app/components/sourceImportWizard/WarehouseConnectionCreateForm.tsx",
+        "apps/web/src/app/stores/applicationLanguageStore.test.ts"
       ],
       "architectureGuards": [
         "pnpm docs:feature-mechanization:implementation -- --feature PTH1-CONNECTED-SOURCE-TRUTH",
@@ -139382,6 +139390,32 @@
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
             "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature PTH1-CONNECTED-SOURCE-TRUTH"
+          },
+          {
+            "name": "ConnectionStep",
+            "path": "apps/web/src/app/components/sourceImportWizard/ConnectionStep.tsx",
+            "cqRails": ["ImportWarehouseSources"],
+            "dddOwner": "Warehouse Source Import",
+            "unitTests": [
+              "apps/web/src/app/components/SourceImportWizard.test.tsx",
+              "apps/web/src/app/stores/applicationLanguageStore.test.ts"
+            ],
+            "fowlerSignals": ["Boundary drift"],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature PTH1-CONNECTED-SOURCE-TRUTH"
+          },
+          {
+            "name": "WarehouseConnectionCreateForm",
+            "path": "apps/web/src/app/components/sourceImportWizard/WarehouseConnectionCreateForm.tsx",
+            "cqRails": ["ImportWarehouseSources"],
+            "dddOwner": "Warehouse Source Import",
+            "unitTests": [
+              "apps/web/src/app/components/SourceImportWizard.test.tsx",
+              "apps/web/src/app/stores/applicationLanguageStore.test.ts"
+            ],
+            "fowlerSignals": ["Boundary drift"],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature PTH1-CONNECTED-SOURCE-TRUTH"
           }
         ],
         "version": 1,
@@ -139391,7 +139425,8 @@
           "As a workspace user I can switch between scopes with colliding paths without stale data.",
           "As an operator I get an explicit failure instead of guessed legacy connection state.",
           "As a Canvas author I cannot Preview an unbound or unsupported warehouse source.",
-          "As a Canvas author I cannot preview a warehouse model unless its source has an explicit supported connection binding."
+          "As a Canvas author I cannot preview a warehouse model unless its source has an explicit supported connection binding.",
+          "As a Spanish-speaking Canvas author I can complete Source Import at narrow viewport without clipped actions or English copy after reload."
         ],
         "cypressFlows": [
           "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts"
@@ -139671,8 +139706,8 @@
           },
           {
             "id": "importwarehousesources-record",
-            "redTest": "pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts",
-            "greenTest": "pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts",
+            "redTest": "pnpm --filter @dvt/web test -- SourceImportWizard.test.tsx applicationLanguageStore.test.ts",
+            "greenTest": "pnpm --filter @dvt/web test -- SourceImportWizard.test.tsx applicationLanguageStore.test.ts && pnpm --filter @dvt/web test:e2e:source-import:live",
             "patchSurfaces": [
               "apps/api/src/application/services/graphDraftWarehouseSourceImportStrategy.ts",
               "apps/api/src/application/services/warehouseSourceYamlBindings.ts",
@@ -139681,9 +139716,14 @@
               "apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts",
               "apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx",
               "apps/web/src/app/views/canvas/dbtAuthoringFieldsModel.test.ts",
-              "docs/planning/proposals/mandatory/product-truth-connection-hardening-20260808.md"
+              "docs/planning/proposals/mandatory/product-truth-connection-hardening-20260808.md",
+              "apps/web/src/app/components/SourceImportWizard.test.tsx",
+              "apps/web/src/app/components/sourceImportWizard/ConnectionStep.tsx",
+              "apps/web/src/app/components/sourceImportWizard/WarehouseConnectionCreateForm.tsx",
+              "apps/web/src/app/stores/applicationLanguageStore.test.ts",
+              "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts"
             ],
-            "expectedFailure": "ConnectionRefSchema and ConnectedSourceRefSchema are not exported."
+            "expectedFailure": "The active Spanish language did not survive reload in proof, and fixed-width child actions overflowed the clipped dialog viewport at 640 pixels."
           }
         ],
         "componentGuides": [
@@ -139789,7 +139829,10 @@
           "tools/planning-db/state/canonical-state.json",
           "apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts",
           "apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx",
-          "apps/web/src/app/views/canvas/dbtAuthoringFieldsModel.test.ts"
+          "apps/web/src/app/views/canvas/dbtAuthoringFieldsModel.test.ts",
+          "apps/web/src/app/components/SourceImportWizard.test.tsx",
+          "apps/web/src/app/components/sourceImportWizard/WarehouseConnectionCreateForm.tsx",
+          "apps/web/src/app/stores/applicationLanguageStore.test.ts"
         ],
         "forbiddenImplementationSurfaces": [
           "database migrations or migration-state compatibility",
@@ -139810,7 +139853,7 @@
           "apps/api/docs/**"
         ]
       },
-      "revision": 3,
+      "revision": 4,
       "createdBy": "codex",
       "createdAt": "2026-08-09T09:16:34.047Z"
     },
@@ -168857,6 +168900,79 @@
         ]
       },
       "createdAt": "2026-08-11T21:15:25.097Z"
+    },
+    {
+      "operationId": "84745c0c-5ea9-4e52-be9c-f4ad12ddd662",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:PTH1-CONNECTED-SOURCE-TRUTH:command:importwarehousesources:3:1438de4678513e20",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH1-CONNECTED-SOURCE-TRUTH#command#importwarehousesources",
+      "sourcePath": "docs/planning/proposals/mandatory/product-truth-connection-hardening-20260808.md",
+      "sourceContentSha256": "d87eb1cdf62d70336bca5c03d826d3100007c9d9e80375f120a420dfc9de8edf",
+      "expectedRevision": 3,
+      "previousRevision": 3,
+      "resultingRevision": 4,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web test -- SourceImportWizard.test.tsx applicationLanguageStore.test.ts",
+        "dddOwner": "Warehouse Source Import",
+        "railName": "ImportWarehouseSources",
+        "railType": "command",
+        "featureId": "PTH1-CONNECTED-SOURCE-TRUTH",
+        "greenTest": "pnpm --filter @dvt/web test -- SourceImportWizard.test.tsx applicationLanguageStore.test.ts && pnpm --filter @dvt/web test:e2e:source-import:live",
+        "sourceRef": "docs/planning/proposals/mandatory/product-truth-connection-hardening-20260808.md",
+        "unitTests": [
+          "apps/web/src/app/components/SourceImportWizard.test.tsx",
+          "apps/web/src/app/stores/applicationLanguageStore.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": [
+          "As a Spanish-speaking Canvas author I can complete Source Import at narrow viewport without clipped actions or English copy after reload."
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts"
+        ],
+        "domainObjects": ["WarehouseConnection"],
+        "fowlerSignals": ["Boundary drift"],
+        "patchSurfaces": [
+          "apps/web/src/app/components/SourceImportWizard.test.tsx",
+          "apps/web/src/app/components/sourceImportWizard/ConnectionStep.tsx",
+          "apps/web/src/app/components/sourceImportWizard/WarehouseConnectionCreateForm.tsx",
+          "apps/web/src/app/stores/applicationLanguageStore.test.ts",
+          "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts"
+        ],
+        "completionGate": [
+          "pnpm --filter @dvt/web test:e2e:source-import:live",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": ["docs/architecture/components/source-import.md"],
+        "expectedFailure": "The active Spanish language did not survive reload in proof, and fixed-width child actions overflowed the clipped dialog viewport at 640 pixels.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/planning/proposals/mandatory/product-truth-connection-hardening-20260808.md"
+        ],
+        "architectureGuards": [
+          "pnpm docs:feature-mechanization:implementation -- --feature PTH1-CONNECTED-SOURCE-TRUTH"
+        ],
+        "implementationPlan": "docs/planning/proposals/mandatory/product-truth-connection-hardening-20260808.md",
+        "implementationRefs": [
+          "apps/web/src/app/components/sourceImportWizard/ConnectionStep.tsx#ConnectionStep",
+          "apps/web/src/app/components/sourceImportWizard/WarehouseConnectionCreateForm.tsx#WarehouseConnectionCreateForm"
+        ],
+        "normalizedRailName": "importwarehousesources",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "d87eb1cdf62d70336bca5c03d826d3100007c9d9e80375f120a420dfc9de8edf",
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/components/SourceImportWizard.test.tsx",
+          "apps/web/src/app/components/sourceImportWizard/WarehouseConnectionCreateForm.tsx",
+          "apps/web/src/app/stores/applicationLanguageStore.test.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "database migrations or migration-state compatibility"
+        ]
+      },
+      "createdAt": "2026-08-12T01:27:56.122Z"
     }
   ],
   "governanceComponentDefinitions": [
