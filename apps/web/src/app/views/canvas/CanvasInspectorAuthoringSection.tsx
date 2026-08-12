@@ -217,6 +217,7 @@ export function CanvasInspectorAuthoringSection({
             </Button>
             <Button
               type="button"
+              variant="secondary"
               size="sm"
               disabled={!canApply}
               onClick={() => {

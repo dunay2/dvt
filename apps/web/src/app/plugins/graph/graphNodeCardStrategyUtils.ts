@@ -309,8 +309,56 @@ export type GraphNodeColumnMetricPresentation = Readonly<{
   detail?: string;
 }>;
 
+export type GraphNodeCodeMetricPresentation = Readonly<{
+  label: string;
+  value: string;
+  detail?: string;
+}>;
+
 function interpolateCount(template: string, count: number): string {
   return template.replaceAll('{count}', String(count));
+}
+
+function interpolatePath(template: string, path: string): string {
+  return template.replaceAll('{path}', path);
+}
+
+export function resolveCodeMetricPresentation(
+  data: Record<string, unknown>
+): GraphNodeCodeMetricPresentation | null {
+  const truth = isCanvasNodePresentationTruth(data.presentationTruth)
+    ? data.presentationTruth
+    : null;
+  const copy = isCanvasNodePresentationCopy(data.presentationCopy) ? data.presentationCopy : null;
+
+  if (truth == null || truth.code.kind === 'unavailable') {
+    return null;
+  }
+
+  const label = copy?.codeLabel ?? 'Code';
+  if (truth.code.kind === 'inline') {
+    return { label, value: copy?.valueLabels?.authored ?? 'Authored' };
+  }
+
+  if (truth.code.kind === 'generated') {
+    return {
+      label,
+      value: copy?.valueLabels?.generated ?? 'Generated',
+      detail:
+        copy == null
+          ? `Generated code at ${truth.code.path}.`
+          : interpolatePath(copy.generatedCodeDetailTemplate, truth.code.path),
+    };
+  }
+
+  return {
+    label,
+    value: copy?.valueLabels?.file ?? 'File',
+    detail:
+      copy == null
+        ? `Code lives at ${truth.code.path}.`
+        : interpolatePath(copy.workspaceCodeDetailTemplate, truth.code.path),
+  };
 }
 
 export function resolveColumnMetricPresentation(

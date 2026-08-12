@@ -1,5 +1,5 @@
 /** Owned concern: render the contextual NodeWorkbench overlay presentation shell. */
-import { type HTMLAttributes, type ReactNode, type RefObject } from 'react';
+import { useCallback, useEffect, type HTMLAttributes, type ReactNode, type RefObject } from 'react';
 
 import type {
   CanvasShellChromeCommands,
@@ -33,6 +33,7 @@ export type CanvasNodeWorkbenchOverlayProps = Readonly<{
 }>;
 
 function CanvasNodeWorkbenchOverlaySurface({
+  accessibleLabel,
   children,
   onPointerCancel,
   onPointerMove,
@@ -40,6 +41,7 @@ function CanvasNodeWorkbenchOverlaySurface({
   position,
   surfaceRef,
 }: Readonly<{
+  accessibleLabel: string;
   children: ReactNode;
   onPointerCancel: HTMLAttributes<HTMLDivElement>['onPointerCancel'];
   onPointerMove: HTMLAttributes<HTMLDivElement>['onPointerMove'];
@@ -51,6 +53,8 @@ function CanvasNodeWorkbenchOverlaySurface({
     <div
       ref={surfaceRef}
       data-slot="canvas-node-workbench-overlay"
+      role="dialog"
+      aria-label={accessibleLabel}
       className={canvasNodeWorkbenchVisualTokens.overlay}
       style={{
         left: `${position.left}px`,
@@ -83,7 +87,7 @@ export function CanvasNodeWorkbenchOverlay({
   const positionController = useCanvasNodeWorkbenchPosition(visible);
   const inspectorNodeId = panels.inspectorNode?.id ?? null;
 
-  const hideAndRestoreNodeFocus = (): void => {
+  const hideAndRestoreNodeFocus = useCallback((): void => {
     onHide();
     window.requestAnimationFrame(() => {
       const nodeElement = Array.from(
@@ -91,7 +95,33 @@ export function CanvasNodeWorkbenchOverlay({
       ).find((candidate) => candidate.dataset.id === inspectorNodeId);
       nodeElement?.focus({ preventScroll: true });
     });
-  };
+  }, [inspectorNodeId, onHide]);
+
+  useEffect(() => {
+    if (!visible) {
+      return;
+    }
+
+    const focusFrame = window.requestAnimationFrame(() => {
+      positionController.surfaceRef.current
+        ?.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]')
+        ?.focus({ preventScroll: true });
+    });
+    const closeOnEscape = (event: KeyboardEvent): void => {
+      if (event.key !== 'Escape') {
+        return;
+      }
+
+      event.preventDefault();
+      hideAndRestoreNodeFocus();
+    };
+
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      window.cancelAnimationFrame(focusFrame);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [hideAndRestoreNodeFocus, positionController.surfaceRef, visible]);
 
   if (!visible || surfaceStrategy == null || panels.inspectorNode == null) {
     return null;
@@ -99,6 +129,7 @@ export function CanvasNodeWorkbenchOverlay({
 
   return (
     <CanvasNodeWorkbenchOverlaySurface
+      accessibleLabel={copy.inspectorEditablePropertiesTitle}
       position={positionController.position}
       surfaceRef={positionController.surfaceRef}
       {...positionController.surfacePointerProps}

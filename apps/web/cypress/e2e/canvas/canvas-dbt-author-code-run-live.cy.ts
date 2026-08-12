@@ -187,6 +187,10 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
     clickButtonNatively('Apply');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
+    cy.get('.react-flow__node[data-id="orders_model"]')
+      .should('contain.text', 'Payments Model')
+      .and('contain.text', 'Code')
+      .and('contain.text', 'Generated');
 
     openNodeCodeWorkbench('orders_model');
     cy.get('textarea[name="dbt-model-sql"]')
@@ -194,6 +198,10 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
       .type(AUTHORED_MODEL_SQL, { parseSpecialCharSequences: false, delay: 0 });
     clickButtonNatively('Apply');
     waitForPersistedDbtModelConfig();
+    cy.get('.react-flow__node[data-id="orders_model"]')
+      .should('contain.text', 'Payments Model')
+      .and('contain.text', 'Code')
+      .and('contain.text', 'Authored');
 
     clickPreviewExecutionPlanFromOperationalDrawer();
     cy.get('[data-testid="plan-preview-modal"]', { timeout: 30_000 }).should('be.visible');
@@ -234,6 +242,18 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
 
     visitWithLiveWorkspaceSession('/canvas');
     cy.contains('dbt authoring live', { timeout: 20_000 }).should('be.visible');
+    cy.get('.react-flow__node[data-id="orders_model"]')
+      .should('contain.text', 'Payments Model')
+      .and('contain.text', 'Code')
+      .and('contain.text', 'Authored');
+    openNodeCodeWorkbench('orders_model');
+    cy.get('[data-slot="canvas-node-workbench-tab-code"]').should(
+      'have.attr',
+      'aria-selected',
+      'true'
+    );
+    cy.get('textarea[name="dbt-model-sql"]').should('have.value', AUTHORED_MODEL_SQL);
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
     openLiveGraphProjectCodeFile(workingTreePath);
     cy.get('[data-slot="canvas-contextual-workbench"]').within(() => {
       cy.contains('button', 'Save').should('not.exist');

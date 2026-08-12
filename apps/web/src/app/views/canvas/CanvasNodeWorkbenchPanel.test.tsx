@@ -252,16 +252,40 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(CanvasNodeWorkbenchPanelSource).not.toContain('PRIMARY_NODE_WORKBENCH_SECTION_IDS');
   });
 
-  it('renders primary text tabs and a More menu without tab icons', () => {
+  it('renders only source capabilities and keeps data-backed extras in More', () => {
     renderPanel(root);
 
     const tabsList = container.querySelector('[data-slot="canvas-node-workbench-tabs-list"]');
     expect(tabsList).not.toBeNull();
     expect(tabsList?.querySelectorAll('svg')).toHaveLength(0);
 
-    for (const label of ['General', 'Columns', 'Inputs / Outputs', 'Tests', 'Code', 'More']) {
+    for (const label of ['General', 'Columns', 'Inputs / Outputs', 'Tests', 'More']) {
       expect(tabsList?.textContent).toContain(label);
     }
+    expect(tabsList?.textContent).not.toContain('Code');
+    expect(tabsList?.textContent).not.toContain('Indexes');
+  });
+
+  it('does not mistake the read-model empty-columns description for a source capability', () => {
+    renderNodePanel(
+      root,
+      {
+        ...SOURCE_NODE,
+        metadata: {
+          ...SOURCE_NODE.metadata,
+          columns: [],
+        },
+      },
+      null,
+      {
+        canEditNode: false,
+        onApplyNodeDraft: vi.fn(),
+      }
+    );
+
+    const tabsList = container.querySelector('[data-slot="canvas-node-workbench-tabs-list"]');
+    expect(tabsList).not.toBeNull();
+    expect(tabsList?.textContent).not.toContain('Columns');
   });
 
   it('keeps the authoritative node-file editor launch inside the Code section', () => {

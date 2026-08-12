@@ -176,7 +176,7 @@ export function buildCanvasAuthoringDraft({
             dbt: {
               packageName: 'analytics',
               materialized: 'view',
-              selectedSourceId: '',
+              selectedSourceId: authoringGenerated ? 'raw_orders' : '',
             },
           },
         },
