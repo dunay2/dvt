@@ -16,10 +16,7 @@ import {
   type CanvasContextMenuModel,
   type CanvasContextMenuPosition,
 } from './canvasInteractionCommandSurface';
-import {
-  useCanvasContextMenuLifecycle,
-  useCanvasContextSurfaceContextMenu,
-} from './useCanvasContextMenuLifecycle';
+import { useCanvasContextMenuLifecycle } from './useCanvasContextMenuLifecycle';
 import type {
   ContextMenuKeyboardEvent,
   UseCanvasContextMenuPresenterArgs,
@@ -90,20 +87,6 @@ export function useCanvasContextMenuPresenter({
     ]
   );
 
-  const handleViewportContextMenuEvent = useCallback(
-    (event: ContextMenuEvent) => {
-      const contextMenuPosition = resolveCanvasViewportContextMenuRequest(event);
-      if (contextMenuPosition == null) {
-        return;
-      }
-
-      event.preventDefault();
-      event.stopPropagation();
-      openCanvasContextMenu(contextMenuPosition, { suppressPointerEcho: true });
-    },
-    [openCanvasContextMenu]
-  );
-
   const openAddNodeCatalog = useCallback(
     (screenPosition: CanvasContextMenuPosition, opener?: HTMLElement) => {
       const flowPosition = screenToFlowPosition(screenPosition);
@@ -143,13 +126,6 @@ export function useCanvasContextMenuPresenter({
     ]
   );
 
-  const handleViewportContextMenu = useCallback(
-    (event: ReactMouseEvent<HTMLDivElement>) => {
-      handleViewportContextMenuEvent(event);
-    },
-    [handleViewportContextMenuEvent]
-  );
-
   const handleViewportContextMenuKeyDown = useCallback(
     (event: ContextMenuKeyboardEvent) => {
       const opensContextMenu =
@@ -161,26 +137,57 @@ export function useCanvasContextMenuPresenter({
       event.preventDefault();
       event.stopPropagation();
       const bounds = event.currentTarget.getBoundingClientRect();
-      openCanvasContextMenu(
-        {
-          x: bounds.left + Math.max(bounds.width, 1) / 2,
-          y: bounds.top + Math.max(bounds.height, 1) / 2,
-        },
-        { opener: event.currentTarget }
+      const position = resolveCanvasViewportContextMenuRequest({
+        clientX: bounds.left + Math.max(bounds.width, 1) / 2,
+        clientY: bounds.top + Math.max(bounds.height, 1) / 2,
+        target: event.currentTarget,
+        preventDefault: () => undefined,
+        stopPropagation: () => undefined,
+      });
+      if (position == null) {
+        return;
+      }
+
+      openCanvasContextMenu(position, { opener: event.currentTarget });
+      event.currentTarget.dispatchEvent(
+        new MouseEvent('contextmenu', {
+          bubbles: true,
+          cancelable: true,
+          button: 2,
+          buttons: 2,
+          clientX: position.x,
+          clientY: position.y,
+        })
       );
     },
     [openCanvasContextMenu]
   );
 
-  useCanvasContextSurfaceContextMenu({
-    contextSurfaceRef,
-    onContextSurfaceContextMenu: handleViewportContextMenuEvent,
-  });
+  const handleViewportContextMenuEvent = useCallback((event: ContextMenuEvent) => {
+    if (resolveCanvasViewportContextMenuRequest(event) != null) {
+      return;
+    }
+
+    const targetsEdge =
+      event.target instanceof Element && event.target.closest('.react-flow__edge') != null;
+    if (targetsEdge) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+  }, []);
+
+  const handleViewportContextMenu = useCallback(
+    (event: ReactMouseEvent<HTMLDivElement>) => {
+      handleViewportContextMenuEvent(event);
+    },
+    [handleViewportContextMenuEvent]
+  );
 
   const handlePaneContextMenu: NonNullable<ReactFlowProps<FlowNode, Edge>['onPaneContextMenu']> =
     useCallback(
       (event) => {
-        event.preventDefault();
         openCanvasContextMenu(
           { x: event.clientX, y: event.clientY },
           { suppressPointerEcho: true }
@@ -192,7 +199,6 @@ export function useCanvasContextMenuPresenter({
   const handleEdgeContextMenu: NonNullable<ReactFlowProps<FlowNode, Edge>['onEdgeContextMenu']> =
     useCallback(
       (event, edge) => {
-        event.preventDefault();
         markContextMenuOpened({ targetKind: 'edge' });
         flushSync(() => {
           setModel(

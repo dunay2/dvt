@@ -49,7 +49,6 @@ type CanvasViewportSurfaceViewProps = Readonly<{
   onDrop: DragEventHandler<HTMLDivElement>;
   onDragOver: DragEventHandler<HTMLDivElement>;
   contextMenuPresenter: CanvasContextMenuPresenter;
-  renderContextMenuView: boolean;
   contextSurfaceLabel: string;
   contextMenuLabel: string;
   nodeHealthPopoverModel: {
@@ -152,7 +151,6 @@ function CanvasViewportReactFlowSurface({
   CanvasViewportSurfaceViewProps,
   | 'viewportRef'
   | 'resolvedCanvasPalette'
-  | 'renderContextMenuView'
   | 'contextMenuLabel'
   | 'nodeHealthPopoverModel'
   | 'graphFilterController'
@@ -272,7 +270,6 @@ function CanvasViewportReactFlowSurface({
 export function CanvasViewportSurfaceView({
   viewportRef,
   resolvedCanvasPalette,
-  renderContextMenuView,
   contextSurfaceLabel,
   contextMenuLabel,
   contextMenuPresenter,
@@ -290,14 +287,24 @@ export function CanvasViewportSurfaceView({
       data-canvas-palette={resolvedCanvasPalette}
       className="relative flex-1 overflow-hidden"
     >
-      <CanvasViewportReactFlowSurface
-        {...reactFlowSurfaceProps}
-        contextMenuPresenter={contextMenuPresenter}
-        contextSurfaceLabel={contextSurfaceLabel}
-        onCloseNodeHealthPopover={onCloseNodeHealthPopover}
-        graphSearchController={graphSearchController}
-        copy={copy}
-      />
+      <CanvasContextMenuView
+        ariaLabel={contextMenuLabel}
+        model={contextMenuPresenter.model}
+        menuRef={contextMenuPresenter.menuRef}
+        onClose={() => contextMenuPresenter.closeContextMenu({ preserveCatalog: true })}
+        onCanvasAction={contextMenuPresenter.handleCanvasAction}
+        onCreateNodeAction={contextMenuPresenter.handleCreateNodeAction}
+        onEdgeAction={contextMenuPresenter.handleEdgeAction}
+      >
+        <CanvasViewportReactFlowSurface
+          {...reactFlowSurfaceProps}
+          contextMenuPresenter={contextMenuPresenter}
+          contextSurfaceLabel={contextSurfaceLabel}
+          onCloseNodeHealthPopover={onCloseNodeHealthPopover}
+          graphSearchController={graphSearchController}
+          copy={copy}
+        />
+      </CanvasContextMenuView>
       <CanvasGraphSearchControl
         model={graphSearchController.model}
         copy={copy}
@@ -327,16 +334,6 @@ export function CanvasViewportSurfaceView({
           onClose={() => onCloseNodeHealthPopover(true)}
         />
       )}
-      {renderContextMenuView ? (
-        <CanvasContextMenuView
-          ariaLabel={contextMenuLabel}
-          model={contextMenuPresenter.model}
-          menuRef={contextMenuPresenter.menuRef}
-          onCanvasAction={contextMenuPresenter.handleCanvasAction}
-          onCreateNodeAction={contextMenuPresenter.handleCreateNodeAction}
-          onEdgeAction={contextMenuPresenter.handleEdgeAction}
-        />
-      ) : null}
     </div>
   );
 }

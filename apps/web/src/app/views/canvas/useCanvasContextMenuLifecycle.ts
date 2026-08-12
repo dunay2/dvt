@@ -8,7 +8,6 @@ import type {
 } from './canvasInteractionCommandSurface';
 import type {
   CloseCanvasContextMenuOptions,
-  ContextMenuEvent,
   PaneClickEvent,
 } from './canvasContextMenuPresenter.types';
 
@@ -101,8 +100,15 @@ export function useCanvasContextMenuLifecycle({
       clearPendingDocumentPointerEchoTimeout();
       pendingPaneClickEchoRef.current = false;
       lastPaneContextMenuScreenPositionRef.current = null;
-      restoreFocusAfterCloseRef.current = options?.restoreFocus !== false;
-      setModel(null);
+      setModel((currentModel) => {
+        if (options?.preserveCatalog === true && currentModel?.surface === 'add-node-catalog') {
+          restoreFocusAfterCloseRef.current = false;
+          return currentModel;
+        }
+
+        restoreFocusAfterCloseRef.current = options?.restoreFocus !== false;
+        return null;
+      });
     },
     [clearPendingDocumentPointerEchoTimeout, setModel]
   );
@@ -249,33 +255,4 @@ export function useCanvasContextMenuLifecycle({
     restoreContextMenuOpenerFocus,
     handlePaneClick,
   };
-}
-
-export function useCanvasContextSurfaceContextMenu({
-  contextSurfaceRef,
-  onContextSurfaceContextMenu,
-}: Readonly<{
-  contextSurfaceRef: RefObject<HTMLDivElement>;
-  onContextSurfaceContextMenu: (event: ContextMenuEvent) => void;
-}>): void {
-  useLayoutEffect(() => {
-    const handleDocumentContextMenu = (event: MouseEvent): void => {
-      const contextSurface = contextSurfaceRef.current;
-      if (
-        contextSurface == null ||
-        !(event.target instanceof Element) ||
-        !contextSurface.contains(event.target)
-      ) {
-        return;
-      }
-
-      onContextSurfaceContextMenu(event);
-    };
-
-    document.addEventListener('contextmenu', handleDocumentContextMenu, true);
-
-    return () => {
-      document.removeEventListener('contextmenu', handleDocumentContextMenu, true);
-    };
-  }, [onContextSurfaceContextMenu]);
 }
