@@ -200,11 +200,12 @@
 
   test('reusable prepush validation fingerprint excludes branch upstream refs', () => {
     const commands = [];
+    const baseRef = process.env.GIT_BASE || 'origin/main';
     const outputByCommand = new Map([
       ['rev-parse --verify HEAD', 'head-a\n'],
-      ['rev-parse --verify origin/main', 'base-a\n'],
+      [`rev-parse --verify ${baseRef}`, 'base-a\n'],
       ['rev-parse --verify @{u}', 'upstream-a\n'],
-      ['diff --binary --diff-filter=ACMRD origin/main...HEAD', 'base-diff\n'],
+      [`diff --binary --diff-filter=ACMRD ${baseRef}...HEAD`, 'base-diff\n'],
       ['diff --binary --diff-filter=ACMRD @{u}...HEAD', 'upstream-diff\n'],
       ['diff --cached --binary --diff-filter=ACMRD', 'cached\n'],
       ['diff --binary --diff-filter=ACMRD', 'worktree\n'],
@@ -224,7 +225,7 @@
     const second = computePrepushValidationFingerprint(['scripts/verify-prepush.cjs'], {
       runGitText,
     });
-    outputByCommand.set('diff --binary --diff-filter=ACMRD origin/main...HEAD', 'changed\n');
+    outputByCommand.set(`diff --binary --diff-filter=ACMRD ${baseRef}...HEAD`, 'changed\n');
     const changedBaseDiff = computePrepushValidationFingerprint(['scripts/verify-prepush.cjs'], {
       runGitText,
     });
@@ -232,7 +233,7 @@
     assert.equal(first, second);
     assert.notEqual(first, changedBaseDiff);
     assert.ok(commands.includes('rev-parse --verify HEAD'));
-    assert.ok(commands.includes('rev-parse --verify origin/main'));
+    assert.ok(commands.includes(`rev-parse --verify ${baseRef}`));
     assert.ok(!commands.includes('rev-parse --verify @{u}'));
     assert.ok(!commands.includes('diff --binary --diff-filter=ACMRD @{u}...HEAD'));
   });
