@@ -5,12 +5,16 @@ const {
   createKnowledgeIntakeRetirementGuardComponent,
 } = require('./planning-db/knowledge-intake-retirement-guard.cjs');
 
-function createComponent(changedFiles) {
+function createComponent(changedFiles, committedFiles = changedFiles) {
   return createKnowledgeIntakeRetirementGuardComponent({
     gitLocalChanges: {
       listLocalChangedFiles(options) {
         assert.equal(options.diffFilter, 'AR');
         return changedFiles;
+      },
+      listCommittedChangedFiles(options) {
+        assert.equal(options.diffFilter, 'AR');
+        return committedFiles;
       },
       toPosix(filePath) {
         return filePath.replace(/\\/g, '/');
@@ -40,6 +44,14 @@ test('knowledge intake retirement guard ignores modified existing intake documen
 
   assert.deepEqual(component.listNewBuzonIntakeFiles(), []);
   assert.equal(component.main({ logger: { log() {} } }), 0);
+});
+
+test('knowledge intake retirement guard reads the exact committed diff when requested', () => {
+  const component = createComponent([], ['buzon/committed-intake.md']);
+
+  assert.deepEqual(component.listNewBuzonIntakeFiles({ committed: true }), [
+    'buzon/committed-intake.md',
+  ]);
 });
 
 test('knowledge intake retirement message points agents to DB-first rails', () => {

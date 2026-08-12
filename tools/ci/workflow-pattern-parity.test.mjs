@@ -234,6 +234,29 @@ test('workflow scope policy stays wired into ci and pr quality workflows', () =>
   assertWorkflowContains(prQualityGate, 'run: node scripts/check-changed.cjs');
   assertWorkflowContains(prQualityGate, 'run: pnpm verify:changed --committed-tests');
   assertWorkflowExcludes(prQualityGate, 'run: pnpm verify:changed -- --committed-tests');
+  assertWorkflowContains(
+    prQualityGate,
+    'run: node scripts/planning-db/knowledge-intake-retirement-guard.cjs --committed'
+  );
+  assertWorkflowContains(
+    prQualityGate,
+    "steps.scope.outputs.planning_db_inventory_relevant == 'true'"
+  );
+  assertWorkflowContains(prQualityGate, 'run: pnpm planning:db:inventory:check');
+  assertWorkflowContains(prQualityGate, 'run: pnpm planning:db:integrity:check');
+
+  const preparePlanningDb = prQualityGate.indexOf(
+    '- name: Prepare planning DB for DB-backed validation'
+  );
+  const planningInventory = prQualityGate.indexOf(
+    '- name: Validate Planning DB inventory for committed changes'
+  );
+  const planningIntegrity = prQualityGate.indexOf(
+    '- name: Validate Planning DB integrity for committed changes'
+  );
+  assert.ok(preparePlanningDb >= 0);
+  assert.ok(preparePlanningDb < planningInventory);
+  assert.ok(planningInventory < planningIntegrity);
 
   assertWorkflowContains(
     prQualityGate,
