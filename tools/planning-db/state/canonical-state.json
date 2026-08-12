@@ -11055,6 +11055,20 @@
         "updated_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
+        "design_id": "CI-PR-WORKFLOW-RAIL-REFERENCE-REPLACEMENT-2312-20260812",
+        "work_item_id": "https://github.com/dunay2/dvt/issues/2312",
+        "title": "Replace accumulated CI rail references with exact current anchors",
+        "owner": "CI Governance",
+        "status": "review",
+        "rationale": "The append-only record rail retained three superseded anchors; exact retirement and recreation restores truthful current mechanization without direct database writes.",
+        "fowler_signal": "hidden_authority",
+        "rail_ref": "RetireFeatureMechanizationRail",
+        "approved_at": null,
+        "supersedes_id": null,
+        "created_at": "2026-08-12T21:36:36.935+00:00",
+        "updated_at": "2026-08-12T21:36:36.935+00:00"
+      },
+      {
         "design_id": "CODE-WORKING-TREE-AUTOSYNC-20260712",
         "work_item_id": "E-DBT-PROJECT-ROUNDTRIP-1",
         "title": "Code working-tree automatic synchronization",
@@ -65089,6 +65103,14 @@
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
+        "design_id": "CI-PR-WORKFLOW-RAIL-REFERENCE-REPLACEMENT-2312-20260812",
+        "subject_kind": "decision",
+        "subject_id": "local#CI-PR-WORKFLOW-HARD-CUT-2312#command#enforcepullrequestvalidationpolicy",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-12T21:36:36.935+00:00"
+      },
+      {
         "design_id": "CODE-WORKING-TREE-AUTOSYNC-20260712",
         "subject_kind": "command",
         "subject_id": "SaveWorkspaceFileContent",
@@ -95974,6 +95996,40 @@
         "created_at": "2026-08-11T18:22:17.053+00:00"
       },
       {
+        "operation_id": "8e436241-43f0-4a49-a9f2-02119269ec76",
+        "idempotency_key": "architecture_design_create:codex-issue-2312:CI-PR-WORKFLOW-RAIL-REFERENCE-REPLACEMENT-2312-20260812:e7a5a98c386a54a4",
+        "operation_type": "architecture_design_create",
+        "actor": "codex-issue-2312",
+        "design_id": "CI-PR-WORKFLOW-RAIL-REFERENCE-REPLACEMENT-2312-20260812",
+        "source_ref": ".github/workflows/pr-quality-gate.yml",
+        "source_content_sha256": "47a054dd358afc5b4698f849a9c0bff766c349b7fe3edaecae99ac81dd33cb75",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "CI Governance",
+          "title": "Replace accumulated CI rail references with exact current anchors",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "local#CI-PR-WORKFLOW-HARD-CUT-2312#command#enforcepullrequestvalidationpolicy",
+              "subjectKind": "decision"
+            }
+          ],
+          "status": "review",
+          "railRef": "RetireFeatureMechanizationRail",
+          "designId": "CI-PR-WORKFLOW-RAIL-REFERENCE-REPLACEMENT-2312-20260812",
+          "rationale": "The append-only record rail retained three superseded anchors; exact retirement and recreation restores truthful current mechanization without direct database writes.",
+          "sourceRef": ".github/workflows/pr-quality-gate.yml",
+          "workItemId": "https://github.com/dunay2/dvt/issues/2312",
+          "fowlerSignal": "hidden_authority",
+          "supersedesId": null,
+          "sourceContentSha256": "47a054dd358afc5b4698f849a9c0bff766c349b7fe3edaecae99ac81dd33cb75"
+        },
+        "created_at": "2026-08-12T21:36:36.935+00:00"
+      },
+      {
         "operation_id": "8eced0a0-acc5-43fb-a38e-cd675b407a7e",
         "idempotency_key": "codex-api-h2-2-reachability-v10-review",
         "operation_type": "architecture_design_transition",
@@ -108437,7 +108493,7 @@
         "node --test scripts/planning-db-run.test.cjs tools/ci/sync-docs-status-policy.test.mjs"
       ],
       "sourcePath": "package.json",
-      "sourceContentSha256": "24c492fd9e6a42d6e7193589081924e33f4e0e4d1fb2a690348058741567a3e7",
+      "sourceContentSha256": "8d0a77e0aaa91239427038c09fb223272216fdaf528a4d86b6409947278da74f",
       "rawRail": {
         "name": "PreparePlanningDbRuntime",
         "type": "command",
@@ -111998,39 +112054,32 @@
       "dddOwner": "PullRequestValidationPolicy",
       "railStatus": "implemented",
       "symbolRefs": [
-        ".github/workflows/pr-quality-gate.yml#jobs.pr-quality.steps",
-        "scripts/documentation-publication.test.cjs#ordinaryWorkflowFiles",
-        "tools/ci/workflow-pattern-parity.test.mjs#pull-request-quality-gate-contract",
+        ".github/workflows/pr-quality-gate.yml#jobs.pr-checks.steps",
+        "package.json#ci:docs",
+        "scripts/documentation-publication.test.cjs#assertOrdinaryWorkflowsDoNotPublishDocumentation",
         "scripts/git-local-changes.cjs#listCommittedChangedFiles",
         "scripts/local-validation-plan.cjs#buildFocusedChangedTestPlan",
-        "scripts/verify-changed.cjs#main",
-        ".github/workflows/pr-quality-gate.yml#jobs.pr-checks.steps",
-        "scripts/documentation-publication.test.cjs#assertOrdinaryWorkflowsDoNotPublishDocumentation",
-        "scripts/planning-db/knowledge-intake-retirement-guard.cjs#createKnowledgeIntakeRetirementGuardComponent",
-        "tools/ci/workflow-pattern-parity.test.mjs#workflow scope policy stays wired into ci and pr quality workflows",
         "scripts/local-validation-plan.cjs#documentationPublicationTestSteps",
+        "scripts/planning-db/knowledge-intake-retirement-guard.cjs#createKnowledgeIntakeRetirementGuardComponent",
+        "scripts/verify-changed.cjs#main",
+        "tools/ci/workflow-pattern-parity.test.mjs#workflow scope policy stays wired into ci and pr quality workflows",
         "tools/ci/workflow-pattern-parity.test.mjs#PR quality gate keeps merge-blocking non-projection governance commands wired",
-        "package.json#ci:docs"
+        "tools/ci/workflow-pattern-parity.test.mjs#PR quality does not materialize human documentation indexes"
       ],
       "implementationRefs": [
-        ".github/workflows/pr-quality-gate.yml#jobs.pr-quality.steps",
-        "scripts/documentation-publication.test.cjs#ordinaryWorkflowFiles",
-        "tools/ci/workflow-pattern-parity.test.mjs#pull-request-quality-gate-contract",
+        ".github/workflows/pr-quality-gate.yml#jobs.pr-checks.steps",
+        "package.json#ci:docs",
+        "scripts/documentation-publication.test.cjs#assertOrdinaryWorkflowsDoNotPublishDocumentation",
         "scripts/git-local-changes.cjs#listCommittedChangedFiles",
         "scripts/local-validation-plan.cjs#buildFocusedChangedTestPlan",
-        "scripts/verify-changed.cjs#main",
-        ".github/workflows/pr-quality-gate.yml#jobs.pr-checks.steps",
-        "scripts/documentation-publication.test.cjs#assertOrdinaryWorkflowsDoNotPublishDocumentation",
-        "scripts/planning-db/knowledge-intake-retirement-guard.cjs#createKnowledgeIntakeRetirementGuardComponent",
-        "tools/ci/workflow-pattern-parity.test.mjs#workflow scope policy stays wired into ci and pr quality workflows",
         "scripts/local-validation-plan.cjs#documentationPublicationTestSteps",
+        "scripts/planning-db/knowledge-intake-retirement-guard.cjs#createKnowledgeIntakeRetirementGuardComponent",
+        "scripts/verify-changed.cjs#main",
+        "tools/ci/workflow-pattern-parity.test.mjs#workflow scope policy stays wired into ci and pr quality workflows",
         "tools/ci/workflow-pattern-parity.test.mjs#PR quality gate keeps merge-blocking non-projection governance commands wired",
-        "package.json#ci:docs"
+        "tools/ci/workflow-pattern-parity.test.mjs#PR quality does not materialize human documentation indexes"
       ],
-      "documentationRefs": [
-        "docs/guides/testing-and-ci-capabilities.md",
-        "https://github.com/dunay2/dvt/issues/2312"
-      ],
+      "documentationRefs": ["https://github.com/dunay2/dvt/issues/2312"],
       "governingSources": [
         "docs/architecture/command-query-rail-governance.md",
         "docs/guides/testing-and-ci-capabilities.md",
@@ -112039,25 +112088,22 @@
       "allowedImplementationSurfaces": [
         ".github/workflows/ci.yml",
         ".github/workflows/pr-quality-gate.yml",
+        "package.json",
         "scripts/documentation-publication.test.cjs",
-        "tools/ci/workflow-pattern-parity.test.mjs",
         "scripts/generate-code-status.test.cjs",
-        "tools/ci/turbo-workspace-task-contract.test.mjs",
-        "tools/planning-db/state/canonical-state.json",
         "scripts/git-local-changes.cjs",
         "scripts/git-local-changes.test.cjs",
         "scripts/local-validation-plan.cjs",
+        "scripts/planning-db-knowledge-intake-retirement-guard.test.cjs",
+        "scripts/planning-db/knowledge-intake-retirement-guard.cjs",
         "scripts/verify-changed.cjs",
         "scripts/verify-changed.test.cjs",
         "scripts/verify-prepush.test.cjs",
-        "scripts/planning-db-knowledge-intake-retirement-guard.test.cjs",
-        "scripts/planning-db/knowledge-intake-retirement-guard.cjs",
-        "package.json"
+        "tools/ci/turbo-workspace-task-contract.test.mjs",
+        "tools/ci/workflow-pattern-parity.test.mjs",
+        "tools/planning-db/state/canonical-state.json"
       ],
       "architectureGuards": [
-        "node --test scripts/documentation-publication.test.cjs tools/ci/workflow-pattern-parity.test.mjs",
-        "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/verify-changed.test.cjs tools/ci/workflow-pattern-parity.test.mjs",
-        "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/workflow-pattern-parity.test.mjs",
         "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
       ],
       "completionGate": [
@@ -112066,24 +112112,17 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": ".github/workflows/pr-quality-gate.yml",
-      "sourceContentSha256": "7544c738967bde816b5da7d243c095b60dc8ae391190c2dc0b8828b03c539e74",
+      "sourceContentSha256": "47a054dd358afc5b4698f849a9c0bff766c349b7fe3edaecae99ac81dd33cb75",
       "rawRail": {
         "name": "EnforcePullRequestValidationPolicy",
         "type": "command",
         "status": "implemented",
         "dddOwner": "PullRequestValidationPolicy",
         "negativeTests": [
-          "ordinary PR workflows cannot publish human documentation or install its site toolchain",
-          "ordinary PR workflows cannot invoke the local worktree-only verify:changed rail",
-          "changed files still receive committed-diff lint, format, and documentation-link validation",
-          "docs-only pull requests retain Markdown lint and formatting validation",
-          "changed governed scripts retain focused adjacent tests from the exact committed diff",
-          "committed-diff test fixtures honor the injected exact base ref",
-          "new or renamed buzon Markdown is rejected from the exact committed diff",
-          "Planning DB relevant changes retain inventory and integrity validation",
-          "DB implementation references resolve to real workflow or code anchors",
           "ordinary workflows cannot publish or materialize human documentation projections",
-          "ordinary workflow command aliases cannot materialize human documentation projections"
+          "ordinary workflow aliases cannot invoke human documentation projection generators",
+          "changed files retain committed-diff lint, format, link, focused-test, and Planning DB validation",
+          "implementation anchors must resolve to current code or workflow symbols"
         ],
         "adapterSurface": "GitHub Actions workflows and root CI command aliases",
         "applicationPort": "ApplyPullRequestValidationPolicy command",
@@ -112091,120 +112130,6 @@
       },
       "rawManifest": {
         "symbols": [
-          {
-            "name": "jobs.pr-quality.steps",
-            "path": ".github/workflows/pr-quality-gate.yml",
-            "cqRails": ["EnforcePullRequestValidationPolicy"],
-            "dddOwner": "PullRequestValidationPolicy",
-            "unitTests": [
-              "scripts/documentation-publication.test.cjs",
-              "tools/ci/workflow-pattern-parity.test.mjs",
-              "scripts/git-local-changes.test.cjs",
-              "scripts/verify-changed.test.cjs",
-              "scripts/verify-prepush.test.cjs"
-            ],
-            "fowlerSignals": [
-              "Remove inert clean-checkout work and hidden documentation publication while reusing committed-diff gates."
-            ],
-            "cypressCoverage": "N/A - repository CI governance command",
-            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
-          },
-          {
-            "name": "ordinaryWorkflowFiles",
-            "path": "scripts/documentation-publication.test.cjs",
-            "cqRails": ["EnforcePullRequestValidationPolicy"],
-            "dddOwner": "PullRequestValidationPolicy",
-            "unitTests": [
-              "scripts/documentation-publication.test.cjs",
-              "tools/ci/workflow-pattern-parity.test.mjs",
-              "scripts/git-local-changes.test.cjs",
-              "scripts/verify-changed.test.cjs",
-              "scripts/verify-prepush.test.cjs"
-            ],
-            "fowlerSignals": [
-              "Remove inert clean-checkout work and hidden documentation publication while reusing committed-diff gates."
-            ],
-            "cypressCoverage": "N/A - repository CI governance command",
-            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
-          },
-          {
-            "name": "pull-request-quality-gate-contract",
-            "path": "tools/ci/workflow-pattern-parity.test.mjs",
-            "cqRails": ["EnforcePullRequestValidationPolicy"],
-            "dddOwner": "PullRequestValidationPolicy",
-            "unitTests": [
-              "scripts/documentation-publication.test.cjs",
-              "tools/ci/workflow-pattern-parity.test.mjs",
-              "scripts/git-local-changes.test.cjs",
-              "scripts/verify-changed.test.cjs",
-              "scripts/verify-prepush.test.cjs"
-            ],
-            "fowlerSignals": [
-              "Remove inert clean-checkout work and hidden documentation publication while reusing committed-diff gates."
-            ],
-            "cypressCoverage": "N/A - repository CI governance command",
-            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
-          },
-          {
-            "name": "listCommittedChangedFiles",
-            "path": "scripts/git-local-changes.cjs",
-            "cqRails": ["EnforcePullRequestValidationPolicy"],
-            "dddOwner": "PullRequestValidationPolicy",
-            "unitTests": [
-              "scripts/documentation-publication.test.cjs",
-              "scripts/git-local-changes.test.cjs",
-              "scripts/verify-changed.test.cjs",
-              "tools/ci/workflow-pattern-parity.test.mjs",
-              "scripts/verify-prepush.test.cjs",
-              "scripts/planning-db-knowledge-intake-retirement-guard.test.cjs"
-            ],
-            "fowlerSignals": [
-              "Remove inert clean-checkout work and hidden documentation publication while reusing committed-diff gates.",
-              "Remove inert validation and hidden projections while reusing committed-diff and DB query rails."
-            ],
-            "cypressCoverage": "N/A - repository CI governance command",
-            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
-          },
-          {
-            "name": "buildFocusedChangedTestPlan",
-            "path": "scripts/local-validation-plan.cjs",
-            "cqRails": ["EnforcePullRequestValidationPolicy"],
-            "dddOwner": "PullRequestValidationPolicy",
-            "unitTests": [
-              "scripts/documentation-publication.test.cjs",
-              "scripts/git-local-changes.test.cjs",
-              "scripts/verify-changed.test.cjs",
-              "tools/ci/workflow-pattern-parity.test.mjs",
-              "scripts/verify-prepush.test.cjs",
-              "scripts/planning-db-knowledge-intake-retirement-guard.test.cjs"
-            ],
-            "fowlerSignals": [
-              "Remove inert clean-checkout work and hidden documentation publication while reusing committed-diff gates.",
-              "Remove inert validation and hidden projections while reusing committed-diff and DB query rails."
-            ],
-            "cypressCoverage": "N/A - repository CI governance command",
-            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
-          },
-          {
-            "name": "main",
-            "path": "scripts/verify-changed.cjs",
-            "cqRails": ["EnforcePullRequestValidationPolicy"],
-            "dddOwner": "PullRequestValidationPolicy",
-            "unitTests": [
-              "scripts/documentation-publication.test.cjs",
-              "scripts/git-local-changes.test.cjs",
-              "scripts/verify-changed.test.cjs",
-              "tools/ci/workflow-pattern-parity.test.mjs",
-              "scripts/verify-prepush.test.cjs",
-              "scripts/planning-db-knowledge-intake-retirement-guard.test.cjs"
-            ],
-            "fowlerSignals": [
-              "Remove inert clean-checkout work and hidden documentation publication while reusing committed-diff gates.",
-              "Remove inert validation and hidden projections while reusing committed-diff and DB query rails."
-            ],
-            "cypressCoverage": "N/A - repository CI governance command",
-            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
-          },
           {
             "name": "jobs.pr-checks.steps",
             "path": ".github/workflows/pr-quality-gate.yml",
@@ -112219,12 +112144,29 @@
               "tools/ci/workflow-pattern-parity.test.mjs"
             ],
             "fowlerSignals": [
-              "Remove inert clean-checkout work and hidden documentation publication while reusing committed-diff gates.",
-              "Remove inert validation and hidden projections while reusing committed-diff and DB query rails.",
-              "Remove hidden projection aliases and keep source validation on one CI command rail."
+              "Remove inert validation and hidden projections while reusing committed-diff and DB query rails."
             ],
             "cypressCoverage": "N/A - repository CI governance command",
-            "architectureGuard": "node --test scripts/documentation-publication.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
+            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
+          },
+          {
+            "name": "ci:docs",
+            "path": "package.json",
+            "cqRails": ["EnforcePullRequestValidationPolicy"],
+            "dddOwner": "PullRequestValidationPolicy",
+            "unitTests": [
+              "scripts/documentation-publication.test.cjs",
+              "scripts/git-local-changes.test.cjs",
+              "scripts/planning-db-knowledge-intake-retirement-guard.test.cjs",
+              "scripts/verify-changed.test.cjs",
+              "scripts/verify-prepush.test.cjs",
+              "tools/ci/workflow-pattern-parity.test.mjs"
+            ],
+            "fowlerSignals": [
+              "Remove inert validation and hidden projections while reusing committed-diff and DB query rails."
+            ],
+            "cypressCoverage": "N/A - repository CI governance command",
+            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
           },
           {
             "name": "assertOrdinaryWorkflowsDoNotPublishDocumentation",
@@ -112240,12 +112182,67 @@
               "tools/ci/workflow-pattern-parity.test.mjs"
             ],
             "fowlerSignals": [
-              "Remove inert clean-checkout work and hidden documentation publication while reusing committed-diff gates.",
-              "Remove inert validation and hidden projections while reusing committed-diff and DB query rails.",
-              "Remove hidden projection aliases and keep source validation on one CI command rail."
+              "Remove inert validation and hidden projections while reusing committed-diff and DB query rails."
             ],
             "cypressCoverage": "N/A - repository CI governance command",
-            "architectureGuard": "node --test scripts/documentation-publication.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
+            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
+          },
+          {
+            "name": "listCommittedChangedFiles",
+            "path": "scripts/git-local-changes.cjs",
+            "cqRails": ["EnforcePullRequestValidationPolicy"],
+            "dddOwner": "PullRequestValidationPolicy",
+            "unitTests": [
+              "scripts/documentation-publication.test.cjs",
+              "scripts/git-local-changes.test.cjs",
+              "scripts/planning-db-knowledge-intake-retirement-guard.test.cjs",
+              "scripts/verify-changed.test.cjs",
+              "scripts/verify-prepush.test.cjs",
+              "tools/ci/workflow-pattern-parity.test.mjs"
+            ],
+            "fowlerSignals": [
+              "Remove inert validation and hidden projections while reusing committed-diff and DB query rails."
+            ],
+            "cypressCoverage": "N/A - repository CI governance command",
+            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
+          },
+          {
+            "name": "buildFocusedChangedTestPlan",
+            "path": "scripts/local-validation-plan.cjs",
+            "cqRails": ["EnforcePullRequestValidationPolicy"],
+            "dddOwner": "PullRequestValidationPolicy",
+            "unitTests": [
+              "scripts/documentation-publication.test.cjs",
+              "scripts/git-local-changes.test.cjs",
+              "scripts/planning-db-knowledge-intake-retirement-guard.test.cjs",
+              "scripts/verify-changed.test.cjs",
+              "scripts/verify-prepush.test.cjs",
+              "tools/ci/workflow-pattern-parity.test.mjs"
+            ],
+            "fowlerSignals": [
+              "Remove inert validation and hidden projections while reusing committed-diff and DB query rails."
+            ],
+            "cypressCoverage": "N/A - repository CI governance command",
+            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
+          },
+          {
+            "name": "documentationPublicationTestSteps",
+            "path": "scripts/local-validation-plan.cjs",
+            "cqRails": ["EnforcePullRequestValidationPolicy"],
+            "dddOwner": "PullRequestValidationPolicy",
+            "unitTests": [
+              "scripts/documentation-publication.test.cjs",
+              "scripts/git-local-changes.test.cjs",
+              "scripts/planning-db-knowledge-intake-retirement-guard.test.cjs",
+              "scripts/verify-changed.test.cjs",
+              "scripts/verify-prepush.test.cjs",
+              "tools/ci/workflow-pattern-parity.test.mjs"
+            ],
+            "fowlerSignals": [
+              "Remove inert validation and hidden projections while reusing committed-diff and DB query rails."
+            ],
+            "cypressCoverage": "N/A - repository CI governance command",
+            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
           },
           {
             "name": "createKnowledgeIntakeRetirementGuardComponent",
@@ -112261,7 +112258,25 @@
               "tools/ci/workflow-pattern-parity.test.mjs"
             ],
             "fowlerSignals": [
-              "Remove inert clean-checkout work and hidden documentation publication while reusing committed-diff gates.",
+              "Remove inert validation and hidden projections while reusing committed-diff and DB query rails."
+            ],
+            "cypressCoverage": "N/A - repository CI governance command",
+            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
+          },
+          {
+            "name": "main",
+            "path": "scripts/verify-changed.cjs",
+            "cqRails": ["EnforcePullRequestValidationPolicy"],
+            "dddOwner": "PullRequestValidationPolicy",
+            "unitTests": [
+              "scripts/documentation-publication.test.cjs",
+              "scripts/git-local-changes.test.cjs",
+              "scripts/planning-db-knowledge-intake-retirement-guard.test.cjs",
+              "scripts/verify-changed.test.cjs",
+              "scripts/verify-prepush.test.cjs",
+              "tools/ci/workflow-pattern-parity.test.mjs"
+            ],
+            "fowlerSignals": [
               "Remove inert validation and hidden projections while reusing committed-diff and DB query rails."
             ],
             "cypressCoverage": "N/A - repository CI governance command",
@@ -112281,26 +112296,6 @@
               "tools/ci/workflow-pattern-parity.test.mjs"
             ],
             "fowlerSignals": [
-              "Remove inert clean-checkout work and hidden documentation publication while reusing committed-diff gates."
-            ],
-            "cypressCoverage": "N/A - repository CI governance command",
-            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
-          },
-          {
-            "name": "documentationPublicationTestSteps",
-            "path": "scripts/local-validation-plan.cjs",
-            "cqRails": ["EnforcePullRequestValidationPolicy"],
-            "dddOwner": "PullRequestValidationPolicy",
-            "unitTests": [
-              "scripts/documentation-publication.test.cjs",
-              "scripts/git-local-changes.test.cjs",
-              "scripts/planning-db-knowledge-intake-retirement-guard.test.cjs",
-              "scripts/verify-changed.test.cjs",
-              "scripts/verify-prepush.test.cjs",
-              "tools/ci/workflow-pattern-parity.test.mjs"
-            ],
-            "fowlerSignals": [
-              "Remove inert clean-checkout work and hidden documentation publication while reusing committed-diff gates.",
               "Remove inert validation and hidden projections while reusing committed-diff and DB query rails."
             ],
             "cypressCoverage": "N/A - repository CI governance command",
@@ -112326,30 +112321,32 @@
             "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
           },
           {
-            "name": "ci:docs",
-            "path": "package.json",
+            "name": "PR quality does not materialize human documentation indexes",
+            "path": "tools/ci/workflow-pattern-parity.test.mjs",
             "cqRails": ["EnforcePullRequestValidationPolicy"],
             "dddOwner": "PullRequestValidationPolicy",
-            "unitTests": ["scripts/documentation-publication.test.cjs"],
+            "unitTests": [
+              "scripts/documentation-publication.test.cjs",
+              "scripts/git-local-changes.test.cjs",
+              "scripts/planning-db-knowledge-intake-retirement-guard.test.cjs",
+              "scripts/verify-changed.test.cjs",
+              "scripts/verify-prepush.test.cjs",
+              "tools/ci/workflow-pattern-parity.test.mjs"
+            ],
             "fowlerSignals": [
-              "Remove hidden projection aliases and keep source validation on one CI command rail."
+              "Remove inert validation and hidden projections while reusing committed-diff and DB query rails."
             ],
             "cypressCoverage": "N/A - repository CI governance command",
-            "architectureGuard": "node --test scripts/documentation-publication.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
+            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
           }
         ],
         "version": 1,
         "featureId": "CI-PR-WORKFLOW-HARD-CUT-2312",
-        "userStories": [
-          "docs/guides/testing-and-ci-capabilities.md",
-          "https://github.com/dunay2/dvt/issues/2312"
-        ],
+        "userStories": ["https://github.com/dunay2/dvt/issues/2312"],
         "cypressFlows": ["N/A - repository CI governance command"],
         "domainObjects": ["PullRequestValidationPolicy"],
         "fowlerSignals": [
-          "Remove inert clean-checkout work and hidden documentation publication while reusing committed-diff gates.",
-          "Remove inert validation and hidden projections while reusing committed-diff and DB query rails.",
-          "Remove hidden projection aliases and keep source validation on one CI command rail."
+          "Remove inert validation and hidden projections while reusing committed-diff and DB query rails."
         ],
         "completionGate": [
           "pnpm test:ci-tools:static",
@@ -112359,27 +112356,16 @@
         "redGreenCycles": [
           {
             "id": "enforcepullrequestvalidationpolicy-record",
-            "redTest": "node --test scripts/documentation-publication.test.cjs",
-            "greenTest": "node --test scripts/documentation-publication.test.cjs",
+            "redTest": "node --test scripts/documentation-publication.test.cjs tools/ci/workflow-pattern-parity.test.mjs",
+            "greenTest": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/workflow-pattern-parity.test.mjs",
             "patchSurfaces": [
-              ".github/workflows/ci.yml",
+              "package.json",
               ".github/workflows/pr-quality-gate.yml",
               "scripts/documentation-publication.test.cjs",
               "tools/ci/workflow-pattern-parity.test.mjs",
-              "scripts/generate-code-status.test.cjs",
-              "tools/ci/turbo-workspace-task-contract.test.mjs",
-              "tools/planning-db/state/canonical-state.json",
-              "scripts/git-local-changes.cjs",
-              "scripts/git-local-changes.test.cjs",
-              "scripts/local-validation-plan.cjs",
-              "scripts/verify-changed.cjs",
-              "scripts/verify-changed.test.cjs",
-              "scripts/verify-prepush.test.cjs",
-              "scripts/planning-db-knowledge-intake-retirement-guard.test.cjs",
-              "scripts/planning-db/knowledge-intake-retirement-guard.cjs",
-              "package.json"
+              "tools/planning-db/state/canonical-state.json"
             ],
-            "expectedFailure": "The ordinary ci:full alias can hide human documentation generation behind ci:docs."
+            "expectedFailure": "An ordinary CI rail can materialize human documentation or the canonical read model can claim obsolete implementation anchors."
           }
         ],
         "componentGuides": [
@@ -112397,17 +112383,10 @@
             "status": "implemented",
             "dddOwner": "PullRequestValidationPolicy",
             "negativeTests": [
-              "ordinary PR workflows cannot publish human documentation or install its site toolchain",
-              "ordinary PR workflows cannot invoke the local worktree-only verify:changed rail",
-              "changed files still receive committed-diff lint, format, and documentation-link validation",
-              "docs-only pull requests retain Markdown lint and formatting validation",
-              "changed governed scripts retain focused adjacent tests from the exact committed diff",
-              "committed-diff test fixtures honor the injected exact base ref",
-              "new or renamed buzon Markdown is rejected from the exact committed diff",
-              "Planning DB relevant changes retain inventory and integrity validation",
-              "DB implementation references resolve to real workflow or code anchors",
               "ordinary workflows cannot publish or materialize human documentation projections",
-              "ordinary workflow command aliases cannot materialize human documentation projections"
+              "ordinary workflow aliases cannot invoke human documentation projection generators",
+              "changed files retain committed-diff lint, format, link, focused-test, and Planning DB validation",
+              "implementation anchors must resolve to current code or workflow symbols"
             ],
             "adapterSurface": "GitHub Actions workflows and root CI command aliases",
             "applicationPort": "ApplyPullRequestValidationPolicy command",
@@ -112415,9 +112394,6 @@
           }
         ],
         "architectureGuards": [
-          "node --test scripts/documentation-publication.test.cjs tools/ci/workflow-pattern-parity.test.mjs",
-          "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/verify-changed.test.cjs tools/ci/workflow-pattern-parity.test.mjs",
-          "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/workflow-pattern-parity.test.mjs",
           "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
         ],
         "implementationPlan": "https://github.com/dunay2/dvt/issues/2312",
@@ -112426,26 +112402,26 @@
         "allowedImplementationSurfaces": [
           ".github/workflows/ci.yml",
           ".github/workflows/pr-quality-gate.yml",
+          "package.json",
           "scripts/documentation-publication.test.cjs",
-          "tools/ci/workflow-pattern-parity.test.mjs",
           "scripts/generate-code-status.test.cjs",
-          "tools/ci/turbo-workspace-task-contract.test.mjs",
-          "tools/planning-db/state/canonical-state.json",
           "scripts/git-local-changes.cjs",
           "scripts/git-local-changes.test.cjs",
           "scripts/local-validation-plan.cjs",
+          "scripts/planning-db-knowledge-intake-retirement-guard.test.cjs",
+          "scripts/planning-db/knowledge-intake-retirement-guard.cjs",
           "scripts/verify-changed.cjs",
           "scripts/verify-changed.test.cjs",
           "scripts/verify-prepush.test.cjs",
-          "scripts/planning-db-knowledge-intake-retirement-guard.test.cjs",
-          "scripts/planning-db/knowledge-intake-retirement-guard.cjs",
-          "package.json"
+          "tools/ci/turbo-workspace-task-contract.test.mjs",
+          "tools/ci/workflow-pattern-parity.test.mjs",
+          "tools/planning-db/state/canonical-state.json"
         ],
         "forbiddenImplementationSurfaces": [".github/workflows/docs-deploy.yml"]
       },
-      "revision": 7,
+      "revision": 0,
       "createdBy": "codex-issue-2312",
-      "createdAt": "2026-08-12T20:03:13.174Z"
+      "createdAt": "2026-08-12T21:37:39.117Z"
     },
     {
       "railId": "local#DB-GOVERNED-SOURCE-REFRESH-2313#command#refreshgovernedsourcecontent",
@@ -172020,6 +171996,138 @@
         "forbiddenImplementationSurfaces": [".github/workflows/docs-deploy.yml"]
       },
       "createdAt": "2026-08-12T21:27:47.163Z"
+    },
+    {
+      "operationId": "62f5b613-873b-4ead-973e-f5d5e1fdede8",
+      "idempotencyKey": "feature_mechanization_rail_retire:codex-issue-2312:CI-PR-WORKFLOW-HARD-CUT-2312:command:enforcepullrequestvalidationpolicy:7:04fdab8dc008ff02",
+      "operationType": "feature_mechanization_rail_retire",
+      "actor": "codex-issue-2312",
+      "railId": "local#CI-PR-WORKFLOW-HARD-CUT-2312#command#enforcepullrequestvalidationpolicy",
+      "sourcePath": ".github/workflows/pr-quality-gate.yml",
+      "sourceContentSha256": "47a054dd358afc5b4698f849a9c0bff766c349b7fe3edaecae99ac81dd33cb75",
+      "expectedRevision": 7,
+      "previousRevision": 7,
+      "resultingRevision": 8,
+      "payload": {
+        "railId": "local#CI-PR-WORKFLOW-HARD-CUT-2312#command#enforcepullrequestvalidationpolicy",
+        "reason": "Replace accumulated obsolete implementation anchors with one exact current rail.",
+        "designId": "CI-PR-WORKFLOW-RAIL-REFERENCE-REPLACEMENT-2312-20260812",
+        "railName": "EnforcePullRequestValidationPolicy",
+        "railType": "command",
+        "featureId": "CI-PR-WORKFLOW-HARD-CUT-2312",
+        "sourceRef": ".github/workflows/pr-quality-gate.yml",
+        "expectedRevision": 7,
+        "normalizedRailName": "enforcepullrequestvalidationpolicy",
+        "sourceContentSha256": "47a054dd358afc5b4698f849a9c0bff766c349b7fe3edaecae99ac81dd33cb75"
+      },
+      "createdAt": "2026-08-12T21:36:38.849Z"
+    },
+    {
+      "operationId": "2b5bb970-317c-4ace-b36b-1ed882092d63",
+      "idempotencyKey": "feature_mechanization_rail_record:codex-issue-2312:CI-PR-WORKFLOW-HARD-CUT-2312:command:enforcepullrequestvalidationpolicy:latest:089bee02adaa0aeb",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex-issue-2312",
+      "railId": "local#CI-PR-WORKFLOW-HARD-CUT-2312#command#enforcepullrequestvalidationpolicy",
+      "sourcePath": ".github/workflows/pr-quality-gate.yml",
+      "sourceContentSha256": "47a054dd358afc5b4698f849a9c0bff766c349b7fe3edaecae99ac81dd33cb75",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "node --test scripts/documentation-publication.test.cjs tools/ci/workflow-pattern-parity.test.mjs",
+        "dddOwner": "PullRequestValidationPolicy",
+        "railName": "EnforcePullRequestValidationPolicy",
+        "railType": "command",
+        "featureId": "CI-PR-WORKFLOW-HARD-CUT-2312",
+        "greenTest": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/workflow-pattern-parity.test.mjs",
+        "sourceRef": ".github/workflows/pr-quality-gate.yml",
+        "unitTests": [
+          "scripts/documentation-publication.test.cjs",
+          "scripts/git-local-changes.test.cjs",
+          "scripts/planning-db-knowledge-intake-retirement-guard.test.cjs",
+          "scripts/verify-changed.test.cjs",
+          "scripts/verify-prepush.test.cjs",
+          "tools/ci/workflow-pattern-parity.test.mjs"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2312"],
+        "cypressFlows": ["N/A - repository CI governance command"],
+        "domainObjects": ["PullRequestValidationPolicy"],
+        "fowlerSignals": [
+          "Remove inert validation and hidden projections while reusing committed-diff and DB query rails."
+        ],
+        "negativeTests": [
+          "ordinary workflows cannot publish or materialize human documentation projections",
+          "ordinary workflow aliases cannot invoke human documentation projection generators",
+          "changed files retain committed-diff lint, format, link, focused-test, and Planning DB validation",
+          "implementation anchors must resolve to current code or workflow symbols"
+        ],
+        "patchSurfaces": [
+          "package.json",
+          ".github/workflows/pr-quality-gate.yml",
+          "scripts/documentation-publication.test.cjs",
+          "tools/ci/workflow-pattern-parity.test.mjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "adapterSurface": "GitHub Actions workflows and root CI command aliases",
+        "completionGate": [
+          "pnpm test:ci-tools:static",
+          "pnpm test:ci-tools:executable",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "ApplyPullRequestValidationPolicy command",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "An ordinary CI rail can materialize human documentation or the canonical read model can claim obsolete implementation anchors.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/guides/testing-and-ci-capabilities.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": ["https://github.com/dunay2/dvt/issues/2312"],
+        "architectureGuards": [
+          "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
+        ],
+        "authorizationScope": "repository pull-request and push workflows with read-only contents and explicit job permissions",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2312",
+        "implementationRefs": [
+          ".github/workflows/pr-quality-gate.yml#jobs.pr-checks.steps",
+          "package.json#ci:docs",
+          "scripts/documentation-publication.test.cjs#assertOrdinaryWorkflowsDoNotPublishDocumentation",
+          "scripts/git-local-changes.cjs#listCommittedChangedFiles",
+          "scripts/local-validation-plan.cjs#buildFocusedChangedTestPlan",
+          "scripts/local-validation-plan.cjs#documentationPublicationTestSteps",
+          "scripts/planning-db/knowledge-intake-retirement-guard.cjs#createKnowledgeIntakeRetirementGuardComponent",
+          "scripts/verify-changed.cjs#main",
+          "tools/ci/workflow-pattern-parity.test.mjs#workflow scope policy stays wired into ci and pr quality workflows",
+          "tools/ci/workflow-pattern-parity.test.mjs#PR quality gate keeps merge-blocking non-projection governance commands wired",
+          "tools/ci/workflow-pattern-parity.test.mjs#PR quality does not materialize human documentation indexes"
+        ],
+        "normalizedRailName": "enforcepullrequestvalidationpolicy",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "47a054dd358afc5b4698f849a9c0bff766c349b7fe3edaecae99ac81dd33cb75",
+        "allowedImplementationSurfaces": [
+          ".github/workflows/ci.yml",
+          ".github/workflows/pr-quality-gate.yml",
+          "package.json",
+          "scripts/documentation-publication.test.cjs",
+          "scripts/generate-code-status.test.cjs",
+          "scripts/git-local-changes.cjs",
+          "scripts/git-local-changes.test.cjs",
+          "scripts/local-validation-plan.cjs",
+          "scripts/planning-db-knowledge-intake-retirement-guard.test.cjs",
+          "scripts/planning-db/knowledge-intake-retirement-guard.cjs",
+          "scripts/verify-changed.cjs",
+          "scripts/verify-changed.test.cjs",
+          "scripts/verify-prepush.test.cjs",
+          "tools/ci/turbo-workspace-task-contract.test.mjs",
+          "tools/ci/workflow-pattern-parity.test.mjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [".github/workflows/docs-deploy.yml"]
+      },
+      "createdAt": "2026-08-12T21:37:39.117Z"
     }
   ],
   "governanceComponentDefinitions": [
