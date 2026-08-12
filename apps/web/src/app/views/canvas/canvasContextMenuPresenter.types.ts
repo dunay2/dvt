@@ -40,6 +40,7 @@ export type PaneClickEvent = Pick<
 
 export type CloseCanvasContextMenuOptions = Readonly<{
   restoreFocus?: boolean;
+  preserveCatalog?: boolean;
 }>;
 
 export type ContextMenuKeyboardEvent = Pick<

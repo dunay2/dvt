@@ -70,12 +70,10 @@ type CanvasViewportProps = {
 type CanvasViewportWithPresenterProps = CanvasViewportProps &
   Readonly<{
     contextMenuPresenter: CanvasContextMenuPresenter;
-    renderContextMenuView: boolean;
   }>;
 
 function CanvasViewportWithPresenter({
   contextMenuPresenter,
-  renderContextMenuView,
   ...props
 }: CanvasViewportWithPresenterProps): JSX.Element {
   const reactFlow = useReactFlow<Node, Edge>();
@@ -309,7 +307,6 @@ function CanvasViewportWithPresenter({
       onDrop={props.onDrop}
       onDragOver={props.onDragOver}
       contextMenuPresenter={contextMenuPresenter}
-      renderContextMenuView={renderContextMenuView}
       contextSurfaceLabel={copy.canvasViewportContextSurfaceLabel}
       contextMenuLabel={copy.canvasContextMenuLabel}
       nodeHealthPopoverModel={nodeHealthPopoverModel}
@@ -335,23 +332,13 @@ function CanvasViewportLocalPresenter(props: CanvasViewportProps): JSX.Element {
     onOpenCanvasSettings: props.onOpenCanvasSettings,
   });
 
-  return (
-    <CanvasViewportWithPresenter
-      {...props}
-      contextMenuPresenter={contextMenuPresenter}
-      renderContextMenuView
-    />
-  );
+  return <CanvasViewportWithPresenter {...props} contextMenuPresenter={contextMenuPresenter} />;
 }
 
 export default function CanvasViewport(props: CanvasViewportProps): JSX.Element {
   if (props.contextMenuPresenter != null) {
     return (
-      <CanvasViewportWithPresenter
-        {...props}
-        contextMenuPresenter={props.contextMenuPresenter}
-        renderContextMenuView={false}
-      />
+      <CanvasViewportWithPresenter {...props} contextMenuPresenter={props.contextMenuPresenter} />
     );
   }
 

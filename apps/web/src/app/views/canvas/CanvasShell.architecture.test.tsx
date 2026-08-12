@@ -26,9 +26,9 @@ const CANVAS_SHELL_MAIN_PANEL_FRAME_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'CanvasShellMainPanelFrame.tsx'
 );
-const CANVAS_CONTEXT_MENU_LAYER_SOURCE = readArchitectureSiblingSource(
+const CANVAS_VIEWPORT_SURFACE_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
-  'CanvasContextMenuLayer.tsx'
+  'CanvasViewportSurfaceView.tsx'
 );
 const CANVAS_ROUTE_SOURCE = readArchitectureSiblingSource(import.meta.dirname, '../Canvas.tsx');
 const CANVAS_SHELL_PROPS_BUILDER_SOURCE = readArchitectureSiblingSource(
@@ -116,14 +116,13 @@ describe('CanvasShell architecture', () => {
 
   it('keeps shell composition canvas-first without fixed side rails', () => {
     expect(CANVAS_SHELL_SOURCE).toContain("'./CanvasShellMainPanel'");
-    expect(CANVAS_SHELL_SOURCE).toContain("'./CanvasContextMenuLayer'");
-    expect(CANVAS_SHELL_SOURCE).toContain('<CanvasContextMenuLayer');
+    expect(CANVAS_SHELL_SOURCE).not.toContain("'./CanvasContextMenuLayer'");
+    expect(CANVAS_SHELL_SOURCE).not.toContain('<CanvasContextMenuLayer');
     expect(CANVAS_SHELL_SOURCE).not.toContain('<CanvasContextMenuView');
-    expect(CANVAS_CONTEXT_MENU_LAYER_SOURCE).toContain(
-      'Owned concern: host the Canvas context-menu presentation layer for shell-owned presenters.'
+    expect(CANVAS_VIEWPORT_SURFACE_SOURCE).toContain('<CanvasContextMenuView');
+    expect(CANVAS_VIEWPORT_SURFACE_SOURCE).toContain(
+      'contextMenuPresenter.closeContextMenu({ preserveCatalog: true })'
     );
-    expect(CANVAS_CONTEXT_MENU_LAYER_SOURCE).toContain('data-slot="canvas-context-menu-layer"');
-    expect(CANVAS_CONTEXT_MENU_LAYER_SOURCE).toContain('CanvasContextMenuView');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).not.toContain('layout.hostTabStrip');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).not.toContain('layout.workbenchTabStrip');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).not.toContain('CanvasToolbar');

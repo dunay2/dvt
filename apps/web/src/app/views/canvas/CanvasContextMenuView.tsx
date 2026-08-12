@@ -1,6 +1,14 @@
-/** Owned concern: render the Canvas context menu template without owning interaction decisions. */
-import type { CSSProperties, RefObject } from 'react';
+/** Owned concern: render the Canvas contextual surfaces without owning interaction decisions. */
+import type { CSSProperties, ReactElement, RefObject } from 'react';
 
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuGroup,
+  ContextMenuItem,
+  ContextMenuLabel,
+  ContextMenuTrigger,
+} from '../../components/ui/context-menu';
 import type {
   CanvasContextMenuCanvasAction,
   CanvasContextMenuCatalogAction,
@@ -12,20 +20,18 @@ import type {
 import { buildCanvasAddNodeCatalogItems } from './canvasAddNodeCatalogModel';
 import { CanvasAddNodeCatalogView } from './CanvasAddNodeCatalogView';
 import { canvasViewCopy } from './copy';
-import {
-  CanvasContextMenuItem,
-  CanvasContextMenuSection,
-  CanvasContextMenuSurface,
-} from './CanvasContextMenuPrimitives';
+import { CanvasContextMenuSurface } from './CanvasContextMenuPrimitives';
 import {
   buildCanvasContextMenuSections,
   type CanvasContextMenuViewItem,
 } from './canvasContextMenuViewModel';
 
 type CanvasContextMenuViewProps = Readonly<{
+  children: ReactElement;
   model: CanvasContextMenuModel | null;
   menuRef: RefObject<HTMLDivElement>;
   ariaLabel?: string;
+  onClose: () => void;
   onCanvasAction: (action: CanvasContextMenuCanvasAction) => void;
   onCreateNodeAction: (action: CanvasContextMenuCreateNodeAction) => void;
   onEdgeAction: (action: CanvasContextMenuEdgeAction) => void;
@@ -79,79 +85,98 @@ export function resolveCanvasContextMenuSurfaceStyle(
 }
 
 export function CanvasContextMenuView({
+  children,
   model,
   menuRef,
   ariaLabel = canvasViewCopy.canvasContextMenuLabel,
+  onClose,
   onCanvasAction,
   onCreateNodeAction,
   onEdgeAction,
-}: CanvasContextMenuViewProps): JSX.Element | null {
-  if (model == null) {
-    return null;
-  }
-
-  const menuStyle = resolveCanvasContextMenuSurfaceStyle(model.screenPosition);
-  const sections =
-    model.surface === 'add-node-catalog'
-      ? buildCanvasContextMenuSections(model)
-          .map((section) => ({
-            ...section,
-            items: section.items.filter((item) => item.kind === 'canvas'),
-          }))
-          .filter((section) => section.items.length > 0)
-      : buildCanvasContextMenuSections(model);
+}: CanvasContextMenuViewProps): JSX.Element {
+  const commandSurfaceOpen = model != null && model.surface !== 'add-node-catalog';
+  const commandSections = commandSurfaceOpen ? buildCanvasContextMenuSections(model) : [];
   const catalogItems =
-    model.surface === 'add-node-catalog'
-      ? buildCanvasAddNodeCatalogItems({
-          actions: model.catalogActions,
-        })
+    model?.surface === 'add-node-catalog'
+      ? buildCanvasAddNodeCatalogItems({ actions: model.catalogActions })
       : [];
 
   return (
-    <CanvasContextMenuSurface ariaLabel={ariaLabel} menuRef={menuRef} style={menuStyle}>
-      {model.surface === 'add-node-catalog' ? (
-        <CanvasAddNodeCatalogView
-          items={catalogItems}
-          onSelectItem={(item) => {
-            const action = model.catalogActions.find((candidate) => {
-              const candidateId = `${candidate.action}:${candidate.registration.kind}`;
-              return candidateId === item.actionId;
-            });
-            if (action) {
-              selectCanvasCatalogAction({
-                action,
-                onCanvasAction,
-                onCreateNodeAction,
-              });
-            }
-          }}
-        />
-      ) : null}
-      {sections.map((section) => (
-        <CanvasContextMenuSection
-          key={section.id}
-          dataSlot={`canvas-context-menu-${section.id}-group`}
-          title={section.title}
+    <>
+      <ContextMenu
+        onOpenChange={(open) => {
+          if (!open) {
+            onClose();
+          }
+        }}
+      >
+        <ContextMenuTrigger asChild>
+          <div data-slot="canvas-context-menu-trigger" className="h-full w-full">
+            {children}
+          </div>
+        </ContextMenuTrigger>
+
+        {commandSurfaceOpen ? (
+          <ContextMenuContent
+            aria-label={ariaLabel}
+            className="w-72 max-w-[calc(100vw-1.5rem)]"
+            onCloseAutoFocus={(event) => event.preventDefault()}
+          >
+            <div ref={menuRef} data-slot="canvas-context-menu">
+              {commandSections.map((section) => (
+                <ContextMenuGroup
+                  key={section.id}
+                  data-slot={`canvas-context-menu-${section.id}-group`}
+                >
+                  {section.title == null ? null : (
+                    <ContextMenuLabel>{section.title}</ContextMenuLabel>
+                  )}
+                  {section.items.map((item) => (
+                    <ContextMenuItem
+                      key={item.id}
+                      data-slot="canvas-context-menu-item"
+                      data-menu-item-kind={item.kind}
+                      data-menu-action={item.action.action}
+                      onSelect={() => {
+                        selectCanvasContextMenuItem({
+                          item,
+                          onCanvasAction,
+                          onCreateNodeAction,
+                          onEdgeAction,
+                        });
+                      }}
+                    >
+                      {item.label}
+                    </ContextMenuItem>
+                  ))}
+                </ContextMenuGroup>
+              ))}
+            </div>
+          </ContextMenuContent>
+        ) : null}
+      </ContextMenu>
+
+      {model?.surface === 'add-node-catalog' ? (
+        <CanvasContextMenuSurface
+          ariaLabel={ariaLabel}
+          menuRef={menuRef}
+          style={resolveCanvasContextMenuSurfaceStyle(model.screenPosition)}
         >
-          {section.items.map((item) => (
-            <CanvasContextMenuItem
-              key={item.id}
-              label={item.label}
-              dataMenuItemKind={item.kind}
-              dataMenuAction={item.action.action}
-              onSelect={() =>
-                selectCanvasContextMenuItem({
-                  item,
-                  onCanvasAction,
-                  onCreateNodeAction,
-                  onEdgeAction,
-                })
+          <CanvasAddNodeCatalogView
+            items={catalogItems}
+            onSelectItem={(item) => {
+              const action = model.catalogActions.find((candidate) => {
+                const candidateId = `${candidate.action}:${candidate.registration.kind}`;
+                return candidateId === item.actionId;
+              });
+              if (action) {
+                selectCanvasCatalogAction({ action, onCanvasAction, onCreateNodeAction });
               }
-            />
-          ))}
-        </CanvasContextMenuSection>
-      ))}
-    </CanvasContextMenuSurface>
+            }}
+          />
+        </CanvasContextMenuSurface>
+      ) : null}
+    </>
   );
 }
 
@@ -189,11 +214,7 @@ function selectCanvasContextMenuItem({
   }
 
   if (item.kind === 'catalog') {
-    selectCanvasCatalogAction({
-      action: item.action,
-      onCanvasAction,
-      onCreateNodeAction,
-    });
+    selectCanvasCatalogAction({ action: item.action, onCanvasAction, onCreateNodeAction });
     return;
   }
 

@@ -40,14 +40,17 @@ describe('CanvasContextMenuView', () => {
         <CanvasContextMenuView
           model={null}
           menuRef={createRef<HTMLDivElement>()}
+          onClose={vi.fn()}
           onCanvasAction={vi.fn()}
           onCreateNodeAction={vi.fn()}
           onEdgeAction={vi.fn()}
-        />
+        >
+          <div>Canvas trigger</div>
+        </CanvasContextMenuView>
       );
     });
 
-    expect(container.querySelector('[data-slot="canvas-context-menu"]')).toBeNull();
+    expect(document.querySelector('[data-slot="canvas-context-menu"]')).toBeNull();
   });
 
   it('renders the background root menu without inline node-scoped actions', async () => {
@@ -70,31 +73,34 @@ describe('CanvasContextMenuView', () => {
         <CanvasContextMenuView
           model={model}
           menuRef={createRef<HTMLDivElement>()}
+          onClose={vi.fn()}
           onCanvasAction={onCanvasAction}
           onCreateNodeAction={onCreateNodeAction}
           onEdgeAction={vi.fn()}
-        />
+        >
+          <div>Canvas trigger</div>
+        </CanvasContextMenuView>
       );
     });
-
-    expect(container.querySelector('[data-slot="canvas-context-menu"]')).not.toBeNull();
+    await openCommandMenu();
+    expect(document.querySelector('[data-slot="canvas-context-menu"]')).not.toBeNull();
     expect(menuButtonLabels('canvas-context-menu-add-group')).toEqual(['Add...']);
     expect(menuButtonLabels('canvas-context-menu-canvas-group')).toEqual(['Canvas settings']);
     expect(
-      container.querySelector(
+      document.querySelector(
         '[data-slot="canvas-context-menu-item"][data-menu-item-kind="canvas"][data-menu-action="open-add-node-catalog"]'
       )?.textContent
     ).toContain('Add...');
-    expect(container.textContent).not.toContain('Add source');
-    expect(container.textContent).not.toContain('Validate graph');
-    expect(container.textContent).not.toContain('Preview execution plan');
-    expect(container.textContent).not.toContain('Edit SQL');
-    expect(container.textContent).not.toContain('Properties');
-    expect(container.textContent).not.toContain('Inputs');
-    expect(container.textContent).not.toContain('Tests');
-    expect(container.textContent).not.toContain('Run from here');
-    expect(container.textContent).not.toContain('Duplicate');
-    expect(container.textContent).not.toContain('Delete');
+    expect(document.body.textContent).not.toContain('Add source');
+    expect(document.body.textContent).not.toContain('Validate graph');
+    expect(document.body.textContent).not.toContain('Preview execution plan');
+    expect(document.body.textContent).not.toContain('Edit SQL');
+    expect(document.body.textContent).not.toContain('Properties');
+    expect(document.body.textContent).not.toContain('Inputs');
+    expect(document.body.textContent).not.toContain('Tests');
+    expect(document.body.textContent).not.toContain('Run from here');
+    expect(document.body.textContent).not.toContain('Duplicate');
+    expect(document.body.textContent).not.toContain('Delete');
 
     await clickMenuItem('Add...');
     expect(onCanvasAction).toHaveBeenCalledWith({
@@ -128,10 +134,13 @@ describe('CanvasContextMenuView', () => {
         <CanvasContextMenuView
           model={catalogModel}
           menuRef={createRef<HTMLDivElement>()}
+          onClose={vi.fn()}
           onCanvasAction={onCanvasAction}
           onCreateNodeAction={onCreateNodeAction}
           onEdgeAction={vi.fn()}
-        />
+        >
+          <div>Canvas trigger</div>
+        </CanvasContextMenuView>
       );
     });
 
@@ -174,10 +183,13 @@ describe('CanvasContextMenuView', () => {
         <CanvasContextMenuView
           model={catalogModel}
           menuRef={createRef<HTMLDivElement>()}
+          onClose={vi.fn()}
           onCanvasAction={onCanvasAction}
           onCreateNodeAction={onCreateNodeAction}
           onEdgeAction={vi.fn()}
-        />
+        >
+          <div>Canvas trigger</div>
+        </CanvasContextMenuView>
       );
     });
 
@@ -217,13 +229,16 @@ describe('CanvasContextMenuView', () => {
         <CanvasContextMenuView
           model={model}
           menuRef={createRef<HTMLDivElement>()}
+          onClose={vi.fn()}
           onCanvasAction={onCanvasAction}
           onCreateNodeAction={onCreateNodeAction}
           onEdgeAction={onEdgeAction}
-        />
+        >
+          <div>Canvas trigger</div>
+        </CanvasContextMenuView>
       );
     });
-
+    await openCommandMenu();
     await clickMenuItem('Eliminar conexión');
 
     expect(onEdgeAction).toHaveBeenCalledWith({
@@ -251,8 +266,8 @@ describe('CanvasContextMenuView', () => {
   });
 
   async function clickMenuItem(label: string): Promise<void> {
-    const button = Array.from(container.querySelectorAll('button')).find((candidate) =>
-      candidate.textContent?.includes(label)
+    const button = Array.from(document.querySelectorAll<HTMLElement>('[role="menuitem"]')).find(
+      (candidate) => candidate.textContent?.includes(label)
     );
     expect(button, label).toBeDefined();
 
@@ -261,9 +276,29 @@ describe('CanvasContextMenuView', () => {
     });
   }
 
+  async function openCommandMenu(): Promise<void> {
+    const trigger = container.querySelector<HTMLElement>(
+      '[data-slot="canvas-context-menu-trigger"]'
+    );
+    expect(trigger).not.toBeNull();
+
+    await act(async () => {
+      trigger?.dispatchEvent(
+        new MouseEvent('contextmenu', {
+          bubbles: true,
+          cancelable: true,
+          button: 2,
+          buttons: 2,
+          clientX: 240,
+          clientY: 160,
+        })
+      );
+    });
+  }
+
   function menuButtonLabels(dataSlot: string): string[] {
     return Array.from(
-      container.querySelectorAll<HTMLButtonElement>(`[data-slot="${dataSlot}"] button`)
+      document.querySelectorAll<HTMLElement>(`[data-slot="${dataSlot}"] [role="menuitem"]`)
     ).map((button) => button.textContent?.trim() ?? '');
   }
 });
