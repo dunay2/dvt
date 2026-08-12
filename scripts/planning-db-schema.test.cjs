@@ -90,6 +90,15 @@ test('current schema accepts audited architecture design transitions', () => {
   );
 });
 
+test('current schema can retire superseded architecture relations', () => {
+  const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
+
+  assert.match(
+    schemaSql,
+    /architecture_component_relation_status_check[^\r\n]*'deprecated'::text/u
+  );
+});
+
 test('current schema accepts audited architecture authority retirements', () => {
   const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
 
