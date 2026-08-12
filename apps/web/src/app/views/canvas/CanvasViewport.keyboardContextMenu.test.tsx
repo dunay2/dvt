@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { fireEvent } from '@testing-library/dom';
+import { fireEvent, waitFor } from '@testing-library/dom';
 import React, { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -41,11 +41,9 @@ describe('CanvasViewport keyboard context menu', () => {
     )!;
   }
 
-  function menuItems(): HTMLButtonElement[] {
+  function menuItems(): HTMLElement[] {
     return Array.from(
-      container.querySelectorAll<HTMLButtonElement>(
-        '[data-slot="canvas-context-menu"] [role="menuitem"]'
-      )
+      document.querySelectorAll<HTMLElement>('[data-slot="canvas-context-menu"] [role="menuitem"]')
     );
   }
 
@@ -88,13 +86,13 @@ describe('CanvasViewport keyboard context menu', () => {
       expect(xyflowState.screenToFlowPosition).toHaveBeenCalledWith({ x: 500, y: 380 });
       expect(menuItems()).not.toHaveLength(0);
       expect(document.activeElement).toBe(menuItems()[0]);
-      expect(container.querySelector('[role="menu"]')?.getAttribute('aria-label')).toBe(
+      expect(document.querySelector('[role="menu"]')?.getAttribute('aria-label')).toBe(
         'Canvas actions'
       );
     }
   );
 
-  it('wraps arrow navigation and activates the focused item with Enter or Space', async () => {
+  it('navigates with the shared menu keys and activates items with Enter or Space', async () => {
     const onOpenCanvasSettings = vi.fn();
     await renderViewport({
       authoringNodeKinds: [buildTestNodeKind('dvt:source', 'Source')],
@@ -105,18 +103,29 @@ describe('CanvasViewport keyboard context menu', () => {
 
     const items = menuItems();
     const firstItem = items[0]!;
+    const secondItem = items[1]!;
     const lastItem = items.at(-1)!;
 
-    fireEvent.keyDown(firstItem, { key: 'ArrowUp' });
-    expect(document.activeElement).toBe(lastItem);
-    fireEvent.keyDown(lastItem, { key: 'ArrowDown' });
-    expect(document.activeElement).toBe(firstItem);
-    fireEvent.keyDown(firstItem, { key: 'End' });
-    expect(document.activeElement).toBe(lastItem);
-    fireEvent.keyDown(lastItem, { key: 'Home' });
-    expect(document.activeElement).toBe(firstItem);
+    await act(async () => {
+      fireEvent.keyDown(firstItem, { key: 'ArrowDown' });
+    });
+    await waitFor(() => expect(document.activeElement).toBe(secondItem));
+    await act(async () => {
+      fireEvent.keyDown(secondItem, { key: 'ArrowUp' });
+    });
+    await waitFor(() => expect(document.activeElement).toBe(firstItem));
+    await act(async () => {
+      fireEvent.keyDown(firstItem, { key: 'End' });
+    });
+    await waitFor(() => expect(document.activeElement).toBe(lastItem));
+    await act(async () => {
+      fireEvent.keyDown(lastItem, { key: 'Home' });
+    });
+    await waitFor(() => expect(document.activeElement).toBe(firstItem));
 
-    fireEvent.keyDown(firstItem, { key: 'End' });
+    await act(async () => {
+      fireEvent.keyDown(firstItem, { key: 'End' });
+    });
     await act(async () => {
       expect(fireEvent.keyDown(lastItem, { key: 'Enter' })).toBe(false);
     });
@@ -131,7 +140,7 @@ describe('CanvasViewport keyboard context menu', () => {
     expect(onOpenCanvasSettings).toHaveBeenCalledTimes(2);
   });
 
-  it('focuses the first catalog item when Add changes the menu model', async () => {
+  it('opens the catalog as a dialog and focuses its search field', async () => {
     await renderViewport({
       authoringNodeKinds: [buildTestNodeKind('dvt:source', 'Source')],
       canOpenSourceImport: true,
@@ -143,8 +152,14 @@ describe('CanvasViewport keyboard context menu', () => {
       menuItems()[0]?.click();
     });
 
-    expect(menuItems()[0]?.textContent).toContain('Add source');
-    expect(document.activeElement).toBe(menuItems()[0]);
+    const dialog = document.querySelector<HTMLElement>('[role="dialog"]');
+    const search = dialog?.querySelector<HTMLInputElement>('input[type="search"]');
+
+    expect(dialog?.textContent).toContain('Add component');
+    expect(dialog?.querySelector('[role="menu"]')).toBeNull();
+    expect(dialog?.querySelector('[role="menuitem"]')).toBeNull();
+    expect(search).not.toBeNull();
+    expect(document.activeElement).toBe(search);
   });
 
   it('leaves descendant node context-menu keys to the node interaction surface', async () => {
@@ -159,7 +174,7 @@ describe('CanvasViewport keyboard context menu', () => {
     const eventWasNotCancelled = fireEvent.keyDown(node, { key: 'F10', shiftKey: true });
 
     expect(eventWasNotCancelled).toBe(true);
-    expect(container.querySelector('[data-slot="canvas-context-menu"]')).toBeNull();
+    expect(document.querySelector('[data-slot="canvas-context-menu"]')).toBeNull();
     expect(document.activeElement).toBe(node);
   });
 
@@ -173,7 +188,7 @@ describe('CanvasViewport keyboard context menu', () => {
     await act(async () => {
       fireEvent.keyDown(document, { key: 'Escape' });
     });
-    expect(container.querySelector('[data-slot="canvas-context-menu"]')).toBeNull();
+    expect(document.querySelector('[data-slot="canvas-context-menu"]')).toBeNull();
     expect(document.activeElement).toBe(surface);
 
     await openFromKeyboard();
@@ -187,13 +202,14 @@ describe('CanvasViewport keyboard context menu', () => {
         })
       );
     });
-    expect(container.querySelector('[data-slot="canvas-context-menu"]')).toBeNull();
+    expect(document.querySelector('[data-slot="canvas-context-menu"]')).toBeNull();
     expect(document.activeElement).toBe(surface);
   });
 
   it('does not restore the Canvas opener over a dialog-owned focus target', async () => {
     const dialogFocusTarget = document.createElement('button');
     document.body.appendChild(dialogFocusTarget);
+    const focusDialog = vi.spyOn(dialogFocusTarget, 'focus');
     await renderViewport({
       authoringNodeKinds: [buildTestNodeKind('dvt:source', 'Source')],
       canOpenCanvasSettings: true,
@@ -207,8 +223,9 @@ describe('CanvasViewport keyboard context menu', () => {
         ?.click();
     });
 
-    expect(container.querySelector('[data-slot="canvas-context-menu"]')).toBeNull();
-    expect(document.activeElement).toBe(dialogFocusTarget);
+    expect(document.querySelector('[data-slot="canvas-context-menu"]')).toBeNull();
+    expect(focusDialog).toHaveBeenCalledOnce();
+    expect(document.activeElement).not.toBe(contextSurface());
     dialogFocusTarget.remove();
   });
 });

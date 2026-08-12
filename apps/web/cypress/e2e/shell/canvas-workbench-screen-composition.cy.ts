@@ -672,37 +672,54 @@ describe('Canvas workbench screen composition', () => {
       });
     cy.contains('button', 'Canvas de transformación').click();
     waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+    cy.contains('button', /^Añadir componente$/).should('not.exist');
 
     openCanvasContextMenuAt(260, 260);
     cy.get('[data-menu-action="open-add-node-catalog"]').click();
+    cy.get('[data-slot="canvas-context-menu"]').should('not.exist');
     cy.get('[data-slot="canvas-context-menu-add-catalog-layout"]')
+      .closest('[role="dialog"]')
+      .as('addComponentDialog')
       .should('be.visible')
+      .and('contain.text', 'Añadir componente')
       .and(($catalog) => {
         const element = $catalog.get(0);
         expect(element.scrollWidth).to.be.at.most(element.clientWidth);
       });
+    cy.get('@addComponentDialog').find('[role="menu"], [role="menuitem"]').should('not.exist');
+    cy.get('@addComponentDialog')
+      .find('input[type="search"]')
+      .should('be.focused')
+      .and('have.attr', 'placeholder', 'Buscar origen, modelo, transformación, test, salida...');
     cy.get('[data-slot="canvas-context-menu-add-catalog-category"]')
       .its('length')
       .should('be.greaterThan', 1);
     cy.get('[data-slot="canvas-context-menu-add-catalog-category"]')
       .then(($groups) => [...$groups].map((group) => group.getAttribute('data-catalog-category')))
       .should('deep.equal', ['source', 'transformation', 'output']);
-    cy.get('#canvas-add-node-catalog-search').type('transformación');
+    cy.get('@addComponentDialog').find('input[type="search"]').type('transformación');
     cy.get('[data-slot="canvas-context-menu-add-catalog-category"]')
       .should('have.length', 1)
       .and('have.attr', 'data-catalog-category', 'transformation');
-    cy.get('[data-slot="canvas-context-menu"]').should(($menu) => {
-      const rect = $menu.get(0).getBoundingClientRect();
+    cy.get('@addComponentDialog').should(($dialog) => {
+      const rect = $dialog.get(0).getBoundingClientRect();
       expect(rect.left).to.be.at.least(0);
       expect(rect.right).to.be.at.most(390);
       expect(rect.bottom).to.be.at.most(844);
     });
+    assertNoSeriousAccessibilityViolations('[role="dialog"]');
+    cy.get('body').type('{esc}');
+    cy.get('[data-slot="canvas-context-menu-add-catalog-layout"]').should('not.exist');
+
+    openCanvasContextMenuAt(260, 260);
+    cy.get('[data-menu-action="open-add-node-catalog"]').click();
+    cy.get('[role="dialog"] input[type="search"]').type('transformación');
     cy.get('[data-slot="canvas-context-menu-add-catalog-item"]')
       .first()
-      .focus()
-      .should('be.focused')
-      .type('{enter}');
-    cy.get('[data-slot="canvas-context-menu"]').should('not.exist');
+      .should('be.visible')
+      .should('be.enabled')
+      .click();
+    cy.get('[role="dialog"]').should('not.exist');
     cy.get('.react-flow__node').should('have.length.at.least', 1);
     cy.get('[data-slot="shell-workspace-menu-trigger"]').focus().type('{enter}');
     cy.get('[data-slot="canvas-workspace-explore-project-command"]').click();
@@ -789,6 +806,18 @@ describe('Canvas workbench screen composition', () => {
     cy.get('[data-slot="shell-language-option-en"]').click();
     cy.get('[data-slot="shell-menu-trigger"]').should('contain.text', 'View');
     cy.get('html').should('have.attr', 'lang', 'en');
+
+    openCanvasContextMenuAt(260, 260);
+    cy.get('[data-slot="canvas-context-menu"]')
+      .should('contain.text', 'Add...')
+      .and('contain.text', 'Canvas settings');
+    cy.get('[data-menu-action="open-add-node-catalog"]').click();
+    cy.get('[role="dialog"]')
+      .should('contain.text', 'Add component')
+      .find('input[type="search"]')
+      .should('be.focused')
+      .and('have.attr', 'placeholder', 'Search source, model, transformation, test, output...');
+    cy.get('body').type('{esc}');
 
     emulateBrowserZoom(4, { width: 1280, height: 1800 });
     cy.get('[data-slot="shell-workspace-menu-trigger"]').should('be.visible');
