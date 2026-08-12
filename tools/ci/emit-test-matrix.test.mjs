@@ -15,6 +15,22 @@ const DEDICATED_TEST_PACKAGES = new Set([
   '@dvt/web',
 ]);
 
+const PLANNING_DB_WITH_CI_CONTRACT_FIXTURE = [
+  'scripts/planning-db-export.cjs',
+  'scripts/planning-db-export.test.cjs',
+  'scripts/planning-db-operate-tests/feature-mechanization.test.cjs',
+  'scripts/planning-db-operate-tests/governed-source-refresh.test.cjs',
+  'scripts/planning-db-operate.cjs',
+  'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db-schema.test.cjs',
+  'scripts/planning-db/commands/governed-source-refresh-command.cjs',
+  'scripts/planning-db/governed-source-refresh-write-rail.cjs',
+  'tools/ci/sync-docs-status-policy.test.mjs',
+  'tools/planning-db/schema.sql',
+  'tools/planning-db/state/canonical-state.json',
+  'tools/planning-db/state/db-governance-surfaces.json',
+];
+
 function* walk(dir) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const fullPath = path.join(dir, entry.name);
@@ -108,6 +124,13 @@ test('test matrix routes API package tests through the CI lifecycle bypass', () 
 
 test('test matrix keeps pull-request workflow policy changes out of package tests', () => {
   const matrix = buildTestMatrixOutputs(['.github/workflows/test.yml']);
+
+  assert.equal(matrix.anyTests, false);
+  assert.deepEqual(matrix.include, []);
+});
+
+test('test matrix keeps the measured Planning DB fixture out of product package tests', () => {
+  const matrix = buildTestMatrixOutputs(PLANNING_DB_WITH_CI_CONTRACT_FIXTURE);
 
   assert.equal(matrix.anyTests, false);
   assert.deepEqual(matrix.include, []);

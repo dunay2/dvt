@@ -24,6 +24,22 @@ const scriptsOnlyContext = {
   },
 };
 
+const PLANNING_DB_WITH_CI_CONTRACT_FIXTURE = [
+  'scripts/planning-db-export.cjs',
+  'scripts/planning-db-export.test.cjs',
+  'scripts/planning-db-operate-tests/feature-mechanization.test.cjs',
+  'scripts/planning-db-operate-tests/governed-source-refresh.test.cjs',
+  'scripts/planning-db-operate.cjs',
+  'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db-schema.test.cjs',
+  'scripts/planning-db/commands/governed-source-refresh-command.cjs',
+  'scripts/planning-db/governed-source-refresh-write-rail.cjs',
+  'tools/ci/sync-docs-status-policy.test.mjs',
+  'tools/planning-db/schema.sql',
+  'tools/planning-db/state/canonical-state.json',
+  'tools/planning-db/state/db-governance-surfaces.json',
+];
+
 function packageJsonScriptChange(scriptName, previousCommand, nextCommand) {
   return classifyPackageJsonChange(
     { scripts: { [scriptName]: previousCommand } },
@@ -125,6 +141,36 @@ test('emit-scope test mode keeps scripts-only package json out of runtime capabi
   assert.equal(scope.determinism_relevant, false);
   assert.equal(scope.coverage_relevant, false);
   assert.equal(scope.postgres_capability_changed, false);
+});
+
+test('emit-scope keeps Planning DB changes with a CI contract test out of product lanes', () => {
+  const testScope = computeWorkflowModeScopeOutputs('test', PLANNING_DB_WITH_CI_CONTRACT_FIXTURE);
+  const qualityScope = computeWorkflowModeScopeOutputs(
+    'pr-quality',
+    PLANNING_DB_WITH_CI_CONTRACT_FIXTURE
+  );
+
+  assert.equal(testScope.root_build_sensitive, false);
+  assert.equal(testScope.web, false);
+  assert.equal(testScope.adapter_temporal, false);
+  assert.equal(testScope.postgres_capability_changed, false);
+  assert.equal(testScope.determinism_relevant, false);
+  assert.equal(testScope.coverage_relevant, false);
+  assert.equal(qualityScope.temporal_changed, false);
+  assert.equal(qualityScope.temporal_transformation_changed, false);
+  assert.equal(qualityScope.temporal_postgres_changed, false);
+});
+
+test('emit-scope fails closed when the semantic scope engine changes', () => {
+  const testScope = computeWorkflowModeScopeOutputs('test', ['tools/ci/scope-config.mjs']);
+  const qualityScope = computeWorkflowModeScopeOutputs('pr-quality', [
+    'tools/ci/policy/workflow-scope.json',
+  ]);
+
+  assert.equal(testScope.root_build_sensitive, true);
+  assert.equal(qualityScope.temporal_changed, true);
+  assert.equal(qualityScope.temporal_transformation_changed, true);
+  assert.equal(qualityScope.temporal_postgres_changed, true);
 });
 
 test('emit-scope test mode routes test:determinism script changes to determinism job', () => {

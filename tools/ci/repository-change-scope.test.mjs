@@ -39,6 +39,8 @@ test('classifies repository command files through the command catalog', () => {
   const planning = classifyRepositoryFileScope('scripts/planning-db-query.cjs');
   const runtimeCapability = classifyRepositoryFileScope('scripts/db-migrate.cjs');
   const ciTooling = classifyRepositoryFileScope('tools/ci/emit-scope.mjs');
+  const ciToolingTest = classifyRepositoryFileScope('tools/ci/sync-docs-status-policy.test.mjs');
+  const ciScopePolicy = classifyRepositoryFileScope('tools/ci/policy/workflow-scope.json');
   const docsTooling = classifyRepositoryFileScope('tools/docs/check-filenames.ts');
 
   assert.equal(planning.commandClass.domain, 'planning-db');
@@ -53,6 +55,13 @@ test('classifies repository command files through the command catalog', () => {
   assert.equal(ciTooling.commandClass.domain, 'ci-tooling');
   assert.equal(ciTooling.codeValidationRelevant, true);
   assert.equal(ciTooling.governanceGlobalRelevant, false);
+  assert.equal(ciTooling.runtimeWorkspaceFanout, true);
+
+  assert.equal(ciToolingTest.commandClass.domain, 'test-tooling');
+  assert.equal(ciToolingTest.runtimeWorkspaceFanout, false);
+
+  assert.equal(ciScopePolicy.repositoryCommandFile, false);
+  assert.equal(ciScopePolicy.runtimeWorkspaceFanout, true);
 
   assert.equal(docsTooling.commandClass.domain, 'docs-governance');
   assert.equal(docsTooling.governanceGlobalRelevant, true);
