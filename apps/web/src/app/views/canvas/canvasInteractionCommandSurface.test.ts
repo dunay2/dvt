@@ -2,6 +2,7 @@ import type { Edge } from '@xyflow/react';
 import { describe, expect, it } from 'vitest';
 
 import { buildTestNodeKind } from './canvasKindRegistration.testSupport';
+import { resolveCanvasViewCopy } from './copy';
 import {
   buildCanvasAddNodeCatalogMenuModel,
   buildCanvasContextMenuModel,
@@ -263,8 +264,21 @@ describe('canvasInteractionCommandSurface', () => {
       screenPosition: { x: 600, y: 360 },
       canvasActions: [],
       createNodeActions: [],
-      edgeActions: [{ action: 'remove-edge', label: 'Eliminar conexión' }],
+      edgeActions: [{ action: 'remove-edge', label: 'Remove connection' }],
     });
+
+    expect(
+      buildCanvasContextMenuModel({
+        target: {
+          kind: 'edge',
+          edgeId: 'edge-source-model',
+          screenPosition: { x: 600, y: 360 },
+        },
+        canMutateGraph: true,
+        authoringNodeKinds: [],
+        copy: resolveCanvasViewCopy('es'),
+      }).edgeActions
+    ).toEqual([{ action: 'remove-edge', label: 'Eliminar conexión' }]);
   });
 
   it('fails closed when graph mutation is not allowed', () => {

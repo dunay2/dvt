@@ -122,7 +122,9 @@ export type CanvasViewCopy = {
   readonly canvasContextMenuAddOutputLabel: string;
   readonly canvasContextMenuAddMacroLabel: string;
   readonly canvasContextMenuAddNodeLabel: string;
+  readonly canvasContextMenuCanvasGroupLabel: string;
   readonly canvasContextMenuCanvasSettingsLabel: string;
+  readonly canvasContextMenuRemoveEdgeLabel: string;
   readonly canvasSettingsDescription: string;
   readonly canvasSettingsCloseLabel: string;
   readonly canvasSettingsEnableLabel: string;

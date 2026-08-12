@@ -211,9 +211,17 @@ export const canvasViewToolbarCopyByKey = {
     key: 'canvas.contextMenu.addNodeLabel',
     fallback: 'Add',
   },
+  canvasContextMenuCanvasGroupLabel: {
+    key: 'canvas.contextMenu.canvasGroupLabel',
+    fallback: 'Canvas',
+  },
   canvasContextMenuCanvasSettingsLabel: {
     key: 'canvas.contextMenu.canvasSettingsLabel',
     fallback: 'Canvas settings',
+  },
+  canvasContextMenuRemoveEdgeLabel: {
+    key: 'canvas.contextMenu.removeEdgeLabel',
+    fallback: 'Remove connection',
   },
   canvasSettingsDescription: {
     key: 'canvas.settings.description',
