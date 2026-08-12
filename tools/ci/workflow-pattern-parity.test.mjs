@@ -43,6 +43,10 @@ function assertWorkflowContains(workflow, snippet) {
   assert.ok(workflow.includes(snippet), `workflow must include: ${snippet}`);
 }
 
+function assertWorkflowExcludes(workflow, snippet) {
+  assert.ok(!workflow.includes(snippet), `workflow must exclude: ${snippet}`);
+}
+
 function countWorkflowCommand(workflow, command) {
   return workflow.split(command).length - 1;
 }
