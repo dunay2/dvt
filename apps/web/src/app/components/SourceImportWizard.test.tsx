@@ -257,7 +257,7 @@ describe('SourceImportWizard', () => {
     expect(formActions?.className).toContain('grid');
     expect(formActions?.className).toContain('grid-cols-1');
     expect(formActions?.className).toContain('sm:grid-cols-2');
-    expect(formActions?.className).toContain('sm:justify-self-end');
+    expect(formActions?.className).toContain('sm:ml-auto');
     for (const action of Array.from(
       formActions?.querySelectorAll<HTMLButtonElement>('button') ?? []
     )) {
