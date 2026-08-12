@@ -12,6 +12,8 @@ const {
 } = require('./documentation-publication.cjs');
 
 const temporaryRoots = [];
+const implicitProjectionCommand =
+  /pnpm docs:(?:status:check|capability:check|governance:(?:document-unit-map|file-component-index|file-fingerprint-(?:baseline|impact)|coverage-report|remediation-queue):check)\b/u;
 
 function assertPrWorkflowDoesNotPublishDocumentation(workflow) {
   assert.doesNotMatch(workflow, /Setup Python for DB-first documentation publication/u);
@@ -30,11 +32,7 @@ function assertOrdinaryWorkflowsDoNotPublishDocumentation() {
   for (const workflowPath of ordinaryWorkflowPaths) {
     const workflow = fs.readFileSync(workflowPath, 'utf8');
     assert.doesNotMatch(workflow, /pnpm docs:(?:publish|build)\b/u, workflowPath);
-    assert.doesNotMatch(
-      workflow,
-      /pnpm docs:(?:status:check|capability:check|governance:(?:document-unit-map|file-component-index|file-fingerprint-(?:baseline|impact)|coverage-report|remediation-queue):check)\b/u,
-      workflowPath
-    );
+    assert.doesNotMatch(workflow, implicitProjectionCommand, workflowPath);
     assert.doesNotMatch(workflow, /DVT_REPOSITORY_MAP_INTEGRATION=1/u, workflowPath);
     assert.doesNotMatch(workflow, /\.generated-docs(?:\/|\\)/u, workflowPath);
     assert.doesNotMatch(workflow, /zensical(?:\.lock|\s+(?:build|serve))?/iu, workflowPath);
@@ -786,6 +784,7 @@ test('package and manual deploy expose one explicit publication command', () => 
   assert.match(pkg.scripts['docs:build'], /documentation-publication\.cjs --check/u);
   assert.doesNotMatch(pkg.scripts['docs:serve'], /docs:sync|docs:publish/u);
   assert.doesNotMatch(pkg.scripts['docs:build'], /docs:sync|docs:publish/u);
+  assert.doesNotMatch(pkg.scripts['ci:docs'], implicitProjectionCommand);
   assert.match(workflow, /run: pnpm docs:publish[\s\S]*run: pnpm docs:build/u);
   assert.match(
     workflow,
