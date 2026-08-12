@@ -2101,9 +2101,6 @@ function validateComponentCreateCommand(command) {
     ['name', command.name],
     ['owned-concern', command.ownedConcern],
     ['ddd-owner', command.dddOwner],
-    ['application-port', command.applicationPort],
-    ['adapter-surface', command.adapterSurface],
-    ['authorization-scope', command.authorizationScope],
     ['cq-rails', command.cqRails],
   ];
   for (const [field, value] of requiredTextFields) {
@@ -3107,6 +3104,9 @@ function validateFeatureMechanizationRecordCommand(command) {
     ['feature', command.featureId],
     ['rail', command.railName],
     ['ddd-owner', command.dddOwner],
+    ['application-port', command.applicationPort],
+    ['adapter-surface', command.adapterSurface],
+    ['authorization-scope', command.authorizationScope],
     ['implementation-plan', command.implementationPlan],
     ['red-test', command.redTest],
     ['expected-failure', command.expectedFailure],
