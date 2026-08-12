@@ -106,7 +106,7 @@ jobs:
         if:
           github.event_name == 'pull_request' &&
           steps.scope.outputs.changed_file_validation_relevant == 'true'
-        run: pnpm verify:changed -- --committed-tests
+        run: pnpm verify:changed --committed-tests
         env:
           GIT_BASE: ${{ github.event.pull_request.base.sha }}
           GIT_HEAD: ${{ github.sha }}
