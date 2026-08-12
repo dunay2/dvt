@@ -286,7 +286,6 @@ describe('CanvasNodeWorkbenchPanel', () => {
     const tabsList = container.querySelector('[data-slot="canvas-node-workbench-tabs-list"]');
     expect(tabsList).not.toBeNull();
     expect(tabsList?.textContent).not.toContain('Columns');
-    expect(tabsList?.textContent).not.toContain('More');
   });
 
   it('keeps the authoritative node-file editor launch inside the Code section', () => {

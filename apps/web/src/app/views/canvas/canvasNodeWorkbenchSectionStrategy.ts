@@ -80,12 +80,7 @@ function isEditableSection(
 }
 
 function hasRecordedSectionContent(section: NodePropertySection): boolean {
-  return (
-    section.rows.length > 0 ||
-    section.tableRows.length > 0 ||
-    section.code != null ||
-    section.description != null
-  );
+  return section.rows.length > 0 || section.tableRows.length > 0 || section.code != null;
 }
 
 function isSupportedSection(
