@@ -487,7 +487,7 @@ test('architecture relation record planner requires design scope and existing en
   assert.equal(planned.audit.operationType, 'architecture_relation_record');
 });
 
-test('architecture relation record planner promotes existing relations with update scope', () => {
+test('architecture relation record planner retires existing relations with update scope', () => {
   const now = new Date('2026-06-12T12:00:00.000Z');
   const command = parseArgs([
     'architecture-relation',
@@ -511,7 +511,7 @@ test('architecture relation record planner promotes existing relations with upda
     '--authorization-scope',
     'repo-local architecture operation',
     '--status',
-    'implemented',
+    'deprecated',
     '--source-ref',
     'docs/planning/proposals/mandatory/governance-and-docs/db-first-architecture-authority-plan-20260515.md',
     '--source-content-sha256',
@@ -547,7 +547,7 @@ test('architecture relation record planner promotes existing relations with upda
     now,
   });
 
-  assert.equal(planned.relation.status, 'implemented');
+  assert.equal(planned.relation.status, 'deprecated');
   assert.equal(planned.audit.operationType, 'architecture_relation_record');
 });
 
