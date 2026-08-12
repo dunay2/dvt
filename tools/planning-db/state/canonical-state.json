@@ -112031,11 +112031,13 @@
         "scripts/git-local-changes.test.cjs",
         "scripts/local-validation-plan.cjs",
         "scripts/verify-changed.cjs",
-        "scripts/verify-changed.test.cjs"
+        "scripts/verify-changed.test.cjs",
+        "scripts/verify-prepush.test.cjs"
       ],
       "architectureGuards": [
         "node --test scripts/documentation-publication.test.cjs tools/ci/workflow-pattern-parity.test.mjs",
-        "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/verify-changed.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
+        "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/verify-changed.test.cjs tools/ci/workflow-pattern-parity.test.mjs",
+        "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
       ],
       "completionGate": [
         "pnpm test:ci-tools:static",
@@ -112043,7 +112045,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": ".github/workflows/pr-quality-gate.yml",
-      "sourceContentSha256": "8005e88a4a5f5d2cc8a983702d329ae35244b525a35187c97552fa7553331a9b",
+      "sourceContentSha256": "0977e6a2978ee2ad52ebc917552e459a8bcf2d6c5584516587c40fa6edfc6dde",
       "rawRail": {
         "name": "EnforcePullRequestValidationPolicy",
         "type": "command",
@@ -112054,7 +112056,8 @@
           "ordinary PR workflows cannot invoke the local worktree-only verify:changed rail",
           "changed files still receive committed-diff lint, format, and documentation-link validation",
           "docs-only pull requests retain Markdown lint and formatting validation",
-          "changed governed scripts retain focused adjacent tests from the exact committed diff"
+          "changed governed scripts retain focused adjacent tests from the exact committed diff",
+          "committed-diff test fixtures honor the injected exact base ref"
         ],
         "adapterSurface": "GitHub Actions PR Quality Gate workflow",
         "applicationPort": "ApplyPullRequestValidationPolicy command",
@@ -112071,13 +112074,14 @@
               "scripts/documentation-publication.test.cjs",
               "tools/ci/workflow-pattern-parity.test.mjs",
               "scripts/git-local-changes.test.cjs",
-              "scripts/verify-changed.test.cjs"
+              "scripts/verify-changed.test.cjs",
+              "scripts/verify-prepush.test.cjs"
             ],
             "fowlerSignals": [
               "Remove inert clean-checkout work and hidden documentation publication while reusing committed-diff gates."
             ],
             "cypressCoverage": "N/A - repository CI governance command",
-            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/verify-changed.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
+            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
           },
           {
             "name": "ordinaryWorkflowFiles",
@@ -112088,13 +112092,14 @@
               "scripts/documentation-publication.test.cjs",
               "tools/ci/workflow-pattern-parity.test.mjs",
               "scripts/git-local-changes.test.cjs",
-              "scripts/verify-changed.test.cjs"
+              "scripts/verify-changed.test.cjs",
+              "scripts/verify-prepush.test.cjs"
             ],
             "fowlerSignals": [
               "Remove inert clean-checkout work and hidden documentation publication while reusing committed-diff gates."
             ],
             "cypressCoverage": "N/A - repository CI governance command",
-            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/verify-changed.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
+            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
           },
           {
             "name": "pull-request-quality-gate-contract",
@@ -112105,13 +112110,14 @@
               "scripts/documentation-publication.test.cjs",
               "tools/ci/workflow-pattern-parity.test.mjs",
               "scripts/git-local-changes.test.cjs",
-              "scripts/verify-changed.test.cjs"
+              "scripts/verify-changed.test.cjs",
+              "scripts/verify-prepush.test.cjs"
             ],
             "fowlerSignals": [
               "Remove inert clean-checkout work and hidden documentation publication while reusing committed-diff gates."
             ],
             "cypressCoverage": "N/A - repository CI governance command",
-            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/verify-changed.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
+            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
           },
           {
             "name": "listCommittedChangedFiles",
@@ -112122,13 +112128,14 @@
               "scripts/documentation-publication.test.cjs",
               "scripts/git-local-changes.test.cjs",
               "scripts/verify-changed.test.cjs",
-              "tools/ci/workflow-pattern-parity.test.mjs"
+              "tools/ci/workflow-pattern-parity.test.mjs",
+              "scripts/verify-prepush.test.cjs"
             ],
             "fowlerSignals": [
               "Remove inert clean-checkout work and hidden documentation publication while reusing committed-diff gates."
             ],
             "cypressCoverage": "N/A - repository CI governance command",
-            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/verify-changed.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
+            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
           },
           {
             "name": "buildFocusedChangedTestPlan",
@@ -112139,13 +112146,14 @@
               "scripts/documentation-publication.test.cjs",
               "scripts/git-local-changes.test.cjs",
               "scripts/verify-changed.test.cjs",
-              "tools/ci/workflow-pattern-parity.test.mjs"
+              "tools/ci/workflow-pattern-parity.test.mjs",
+              "scripts/verify-prepush.test.cjs"
             ],
             "fowlerSignals": [
               "Remove inert clean-checkout work and hidden documentation publication while reusing committed-diff gates."
             ],
             "cypressCoverage": "N/A - repository CI governance command",
-            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/verify-changed.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
+            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
           },
           {
             "name": "main",
@@ -112156,13 +112164,14 @@
               "scripts/documentation-publication.test.cjs",
               "scripts/git-local-changes.test.cjs",
               "scripts/verify-changed.test.cjs",
-              "tools/ci/workflow-pattern-parity.test.mjs"
+              "tools/ci/workflow-pattern-parity.test.mjs",
+              "scripts/verify-prepush.test.cjs"
             ],
             "fowlerSignals": [
               "Remove inert clean-checkout work and hidden documentation publication while reusing committed-diff gates."
             ],
             "cypressCoverage": "N/A - repository CI governance command",
-            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/verify-changed.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
+            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
           }
         ],
         "version": 1,
@@ -112181,8 +112190,8 @@
         "redGreenCycles": [
           {
             "id": "enforcepullrequestvalidationpolicy-record",
-            "redTest": "node --test scripts/git-local-changes.test.cjs scripts/verify-changed.test.cjs tools/ci/workflow-pattern-parity.test.mjs",
-            "greenTest": "node --test scripts/git-local-changes.test.cjs scripts/verify-changed.test.cjs tools/ci/workflow-pattern-parity.test.mjs",
+            "redTest": "node --test scripts/git-local-changes.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/workflow-pattern-parity.test.mjs",
+            "greenTest": "node --test scripts/git-local-changes.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/workflow-pattern-parity.test.mjs",
             "patchSurfaces": [
               ".github/workflows/ci.yml",
               ".github/workflows/pr-quality-gate.yml",
@@ -112195,9 +112204,10 @@
               "scripts/git-local-changes.test.cjs",
               "scripts/local-validation-plan.cjs",
               "scripts/verify-changed.cjs",
-              "scripts/verify-changed.test.cjs"
+              "scripts/verify-changed.test.cjs",
+              "scripts/verify-prepush.test.cjs"
             ],
-            "expectedFailure": "An ordinary workflow can reintroduce implicit publication, omit docs-only lint/format, or skip focused tests for committed script changes."
+            "expectedFailure": "An ordinary workflow can reintroduce implicit publication, omit docs-only lint/format, skip focused tests, or invoke committed-diff tests with invalid arguments or base fixtures."
           }
         ],
         "componentGuides": [
@@ -112219,7 +112229,8 @@
               "ordinary PR workflows cannot invoke the local worktree-only verify:changed rail",
               "changed files still receive committed-diff lint, format, and documentation-link validation",
               "docs-only pull requests retain Markdown lint and formatting validation",
-              "changed governed scripts retain focused adjacent tests from the exact committed diff"
+              "changed governed scripts retain focused adjacent tests from the exact committed diff",
+              "committed-diff test fixtures honor the injected exact base ref"
             ],
             "adapterSurface": "GitHub Actions PR Quality Gate workflow",
             "applicationPort": "ApplyPullRequestValidationPolicy command",
@@ -112228,7 +112239,8 @@
         ],
         "architectureGuards": [
           "node --test scripts/documentation-publication.test.cjs tools/ci/workflow-pattern-parity.test.mjs",
-          "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/verify-changed.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
+          "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/verify-changed.test.cjs tools/ci/workflow-pattern-parity.test.mjs",
+          "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
         ],
         "implementationPlan": "docs/guides/testing-and-ci-capabilities.md",
         "mechanizationStatus": "implemented",
@@ -112245,11 +112257,12 @@
           "scripts/git-local-changes.test.cjs",
           "scripts/local-validation-plan.cjs",
           "scripts/verify-changed.cjs",
-          "scripts/verify-changed.test.cjs"
+          "scripts/verify-changed.test.cjs",
+          "scripts/verify-prepush.test.cjs"
         ],
         "forbiddenImplementationSurfaces": [".github/workflows/docs-deploy.yml"]
       },
-      "revision": 2,
+      "revision": 3,
       "createdBy": "codex-issue-2312",
       "createdAt": "2026-08-12T20:03:13.174Z"
     },
@@ -171310,6 +171323,114 @@
         "forbiddenImplementationSurfaces": [".github/workflows/docs-deploy.yml"]
       },
       "createdAt": "2026-08-12T20:25:24.132Z"
+    },
+    {
+      "operationId": "ba7f2d18-1de4-4257-bbac-a3d7caaf08ae",
+      "idempotencyKey": "feature_mechanization_rail_record:codex-issue-2312:CI-PR-WORKFLOW-HARD-CUT-2312:command:enforcepullrequestvalidationpolicy:2:e56dec42bb5dbedf",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex-issue-2312",
+      "railId": "local#CI-PR-WORKFLOW-HARD-CUT-2312#command#enforcepullrequestvalidationpolicy",
+      "sourcePath": ".github/workflows/pr-quality-gate.yml",
+      "sourceContentSha256": "0977e6a2978ee2ad52ebc917552e459a8bcf2d6c5584516587c40fa6edfc6dde",
+      "expectedRevision": 2,
+      "previousRevision": 2,
+      "resultingRevision": 3,
+      "payload": {
+        "redTest": "node --test scripts/git-local-changes.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/workflow-pattern-parity.test.mjs",
+        "dddOwner": "PullRequestValidationPolicy",
+        "railName": "EnforcePullRequestValidationPolicy",
+        "railType": "command",
+        "featureId": "CI-PR-WORKFLOW-HARD-CUT-2312",
+        "greenTest": "node --test scripts/git-local-changes.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/workflow-pattern-parity.test.mjs",
+        "sourceRef": ".github/workflows/pr-quality-gate.yml",
+        "unitTests": [
+          "scripts/documentation-publication.test.cjs",
+          "scripts/git-local-changes.test.cjs",
+          "scripts/verify-changed.test.cjs",
+          "scripts/verify-prepush.test.cjs",
+          "tools/ci/workflow-pattern-parity.test.mjs"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["docs/guides/testing-and-ci-capabilities.md"],
+        "cypressFlows": ["N/A - repository CI governance command"],
+        "domainObjects": ["PullRequestValidationPolicy"],
+        "fowlerSignals": [
+          "Remove inert clean-checkout work and hidden documentation publication while reusing committed-diff gates."
+        ],
+        "negativeTests": [
+          "ordinary PR workflows cannot publish human documentation or install its site toolchain",
+          "ordinary PR workflows cannot invoke the local worktree-only verify:changed rail",
+          "changed files still receive committed-diff lint, format, and documentation-link validation",
+          "docs-only pull requests retain Markdown lint and formatting validation",
+          "changed governed scripts retain focused adjacent tests from the exact committed diff",
+          "committed-diff test fixtures honor the injected exact base ref"
+        ],
+        "patchSurfaces": [
+          ".github/workflows/ci.yml",
+          ".github/workflows/pr-quality-gate.yml",
+          "scripts/documentation-publication.test.cjs",
+          "scripts/generate-code-status.test.cjs",
+          "scripts/git-local-changes.cjs",
+          "scripts/git-local-changes.test.cjs",
+          "scripts/local-validation-plan.cjs",
+          "scripts/verify-changed.cjs",
+          "scripts/verify-changed.test.cjs",
+          "scripts/verify-prepush.test.cjs",
+          "tools/ci/turbo-workspace-task-contract.test.mjs",
+          "tools/ci/workflow-pattern-parity.test.mjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "adapterSurface": "GitHub Actions PR Quality Gate workflow",
+        "completionGate": [
+          "pnpm test:ci-tools:static",
+          "pnpm test:ci-tools:executable",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "ApplyPullRequestValidationPolicy command",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "An ordinary workflow can reintroduce implicit publication, omit docs-only lint/format, skip focused tests, or invoke committed-diff tests with invalid arguments or base fixtures.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/guides/testing-and-ci-capabilities.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": ["docs/guides/testing-and-ci-capabilities.md"],
+        "architectureGuards": [
+          "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
+        ],
+        "authorizationScope": "repository pull-request workflow with read-only contents and explicit job permissions",
+        "implementationPlan": "docs/guides/testing-and-ci-capabilities.md",
+        "implementationRefs": [
+          ".github/workflows/pr-quality-gate.yml#jobs.pr-quality.steps",
+          "scripts/documentation-publication.test.cjs#ordinaryWorkflowFiles",
+          "scripts/git-local-changes.cjs#listCommittedChangedFiles",
+          "scripts/local-validation-plan.cjs#buildFocusedChangedTestPlan",
+          "scripts/verify-changed.cjs#main",
+          "tools/ci/workflow-pattern-parity.test.mjs#pull-request-quality-gate-contract"
+        ],
+        "normalizedRailName": "enforcepullrequestvalidationpolicy",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "0977e6a2978ee2ad52ebc917552e459a8bcf2d6c5584516587c40fa6edfc6dde",
+        "allowedImplementationSurfaces": [
+          ".github/workflows/ci.yml",
+          ".github/workflows/pr-quality-gate.yml",
+          "scripts/documentation-publication.test.cjs",
+          "scripts/generate-code-status.test.cjs",
+          "scripts/git-local-changes.cjs",
+          "scripts/git-local-changes.test.cjs",
+          "scripts/local-validation-plan.cjs",
+          "scripts/verify-changed.cjs",
+          "scripts/verify-changed.test.cjs",
+          "scripts/verify-prepush.test.cjs",
+          "tools/ci/turbo-workspace-task-contract.test.mjs",
+          "tools/ci/workflow-pattern-parity.test.mjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [".github/workflows/docs-deploy.yml"]
+      },
+      "createdAt": "2026-08-12T20:43:37.163Z"
     }
   ],
   "governanceComponentDefinitions": [
