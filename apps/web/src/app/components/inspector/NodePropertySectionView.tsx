@@ -187,7 +187,7 @@ export function NodePropertySectionView({
 
   return (
     <section data-slot={sectionSlot(section, slots)} className="space-y-3">
-      {surface === 'workbench' && section.id === 'code' ? null : (
+      {surface === 'workbench' && (section.id === 'code' || section.id === 'general') ? null : (
         <div className="flex items-center justify-between gap-3">
           <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>{section.label}</h3>
           {showCountBadge ? renderSectionCountBadge(section) : null}

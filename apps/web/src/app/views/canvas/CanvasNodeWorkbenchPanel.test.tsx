@@ -429,6 +429,17 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(generalSection).not.toBeNull();
     expect(generalSection?.textContent).toContain('Name');
     expect(generalSection?.querySelector('input[name="node-name"]')).not.toBeNull();
+    expect(generalSection?.querySelector('input[name="node-tags"]')).not.toBeNull();
+    expect(generalSection?.querySelector('textarea[name="node-description"]')).not.toBeNull();
+    expect(
+      Array.from(generalSection?.querySelectorAll('h3') ?? [], (heading) =>
+        heading.textContent?.trim()
+      )
+    ).not.toContain('General');
+    expect(generalSection?.textContent).not.toContain('Editable properties');
+    expect(generalSection?.textContent).not.toContain(
+      'Name, tags, and description saved with this canvas.'
+    );
     expect(container.querySelector('[data-slot="canvas-node-workbench-authoring"]')).not.toBeNull();
   });
 
