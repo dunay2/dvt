@@ -2,6 +2,7 @@ const assert = require('node:assert/strict');
 const test = require('node:test');
 
 const {
+  applyGovernedSourceRefreshOperation,
   canonicalSourceContentHash,
   defaultGovernedSourceRefreshIdempotencyKey,
   normalizeGovernedSourcePath,
@@ -73,6 +74,75 @@ test('default governed-source idempotency keys include the exact source snapshot
       sources: [{ path: 'package.json', contentHash: 'b'.repeat(64) }],
     })
   );
+});
+
+test('refresh serializes an idempotency key before reading its prior operation', async () => {
+  const queries = [];
+  const command = {
+    kind: 'governed_source_content_refresh',
+    actor: 'codex',
+    paths: ['package.json'],
+    expectedContentSha256ByPath: {},
+    idempotencyKey: 'concurrent-delivery',
+  };
+  const client = {
+    async query(sql) {
+      queries.push(sql);
+      if (String(sql).includes("to_regclass('planning_query_store.command_query_rails')")) {
+        return {
+          rows: [
+            {
+              has_query_store: true,
+              has_component_engineering: true,
+              has_architecture: true,
+              has_no_migration_ledger: true,
+              has_no_migration_state: true,
+            },
+          ],
+        };
+      }
+      if (String(sql).includes('governed_source_content_operations where idempotency_key')) {
+        return {
+          rows: [
+            {
+              idempotency_key: command.idempotencyKey,
+              operation_type: command.kind,
+              actor: command.actor,
+              source_commit_sha: 'b'.repeat(40),
+              paths: command.paths,
+              expected_content_sha256_by_path: {},
+            },
+          ],
+        };
+      }
+      return { rows: [] };
+    },
+  };
+  const git = (args) => {
+    if (args[0] === 'rev-parse') return Buffer.from(`${'b'.repeat(40)}\n`);
+    if (args[0] === 'status') return Buffer.alloc(0);
+    if (args[0] === 'ls-tree') {
+      return Buffer.from(`100644 blob ${'c'.repeat(40)}\tpackage.json\0`);
+    }
+    if (args[0] === 'show') return Buffer.from('{}\n');
+    throw new Error(`Unexpected git call: ${args.join(' ')}`);
+  };
+
+  const result = await applyGovernedSourceRefreshOperation(command, {
+    client,
+    repoRoot: 'C:/repo',
+    git,
+    lstat: () => ({ isFile: () => true, isSymbolicLink: () => false }),
+    realpath: (absolutePath) => absolutePath,
+  });
+
+  const lockIndex = queries.findIndex((sql) => String(sql).includes('pg_advisory_xact_lock'));
+  const replayReadIndex = queries.findIndex((sql) =>
+    String(sql).includes('governed_source_content_operations where idempotency_key')
+  );
+  assert.equal(result.idempotent, true);
+  assert.ok(lockIndex >= 0, 'expected an idempotency-scoped transaction lock');
+  assert.ok(lockIndex < replayReadIndex, 'the lock must precede the replay lookup');
 });
 
 test('governed-source paths reject ambiguous and escaping inputs', () => {
