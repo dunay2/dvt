@@ -7145,14 +7145,14 @@
         "layer": "ui",
         "owner": "Frontend / Canvas",
         "repo_path": "apps/web/src/app/views/canvas/CanvasContextMenuPrimitives.tsx",
-        "public_contract": "Reusable Canvas context-menu surface, section, and item primitives.",
+        "public_contract": "Retired Canvas context-menu primitive boundary; CanvasContextMenuView is the surviving owner.",
         "runtime": "browser",
         "criticality": "medium",
-        "status": "review",
+        "status": "deprecated",
         "maturity_score": 78,
         "parent_component_id": "SYS-WEB-CANVAS-CONTEXT-MENU-CORE",
         "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
+        "updated_at": "2026-08-12T18:53:43.821+00:00"
       },
       {
         "component_id": "SYS-WEB-CANVAS-CONTEXT-MENU-VIEW",
@@ -11097,6 +11097,34 @@
         "updated_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
+        "design_id": "db-canvas-context-menu-component-retirement-2310-v1",
+        "work_item_id": "https://github.com/dunay2/dvt/issues/2310",
+        "title": "Retire removed Canvas context menu primitive authority",
+        "owner": "CanvasContextMenuPresentation",
+        "status": "superseded",
+        "rationale": "Retire the removed PRIMITIVES component and its containment relation while preserving the surviving VIEW authority and historical state.",
+        "fowler_signal": "boundary_drift",
+        "rail_ref": "RecordArchitectureComponent",
+        "approved_at": "2026-08-12T18:53:48.602+00:00",
+        "supersedes_id": null,
+        "created_at": "2026-08-12T18:53:41.733+00:00",
+        "updated_at": "2026-08-12T18:54:34.509+00:00"
+      },
+      {
+        "design_id": "db-canvas-context-menu-relation-retirement-2310-v2",
+        "work_item_id": "https://github.com/dunay2/dvt/issues/2310",
+        "title": "Retire removed Canvas primitive containment relation",
+        "owner": "CanvasContextMenuPresentation",
+        "status": "implemented",
+        "rationale": "Retire the obsolete CORE-to-PRIMITIVES containment relation with explicit reference authority over both endpoints.",
+        "fowler_signal": "boundary_drift",
+        "rail_ref": "RecordArchitectureRelation",
+        "approved_at": "2026-08-12T18:55:04.167+00:00",
+        "supersedes_id": "db-canvas-context-menu-component-retirement-2310-v1",
+        "created_at": "2026-08-12T18:54:36.595+00:00",
+        "updated_at": "2026-08-12T18:55:08.664+00:00"
+      },
+      {
         "design_id": "DBT-CODE-RECONCILIATION-TRUTH-20260719",
         "work_item_id": "E-WEB-DBT-CODE-RECONCILIATION-TRUTH-1",
         "title": "DBT Code persistence and semantic reconciliation truth",
@@ -13578,6 +13606,34 @@
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:50.64837+00:00",
         "source_content_sha256": null,
+        "implementation_content_sha256": null
+      },
+      {
+        "evidence_id": "EV-CANVAS-CONTEXT-MENU-RELATION-RETIREMENT-2310",
+        "design_id": "db-canvas-context-menu-relation-retirement-2310-v2",
+        "subject_kind": "test",
+        "subject_id": "canvas-context-menu-retirement-integrity",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "pnpm planning:db:integrity:check",
+        "source_path": "apps/web/src/app/views/canvas/CanvasContextMenuView.tsx",
+        "result_state": "pass",
+        "recorded_at": "2026-08-12T18:55:07.122+00:00",
+        "source_content_sha256": "bbc8ea1611154619bf136c2ba07254a4dca90bc9d006cf3589fdd3c2f849beb5",
+        "implementation_content_sha256": null
+      },
+      {
+        "evidence_id": "EV-CANVAS-CONTEXT-MENU-RETIREMENT-2310",
+        "design_id": "db-canvas-context-menu-component-retirement-2310-v1",
+        "subject_kind": "test",
+        "subject_id": "canvas-context-menu-retirement-integrity",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "pnpm planning:db:integrity:check",
+        "source_path": "apps/web/src/app/views/canvas/CanvasContextMenuView.tsx",
+        "result_state": "pass",
+        "recorded_at": "2026-08-12T18:53:52.689+00:00",
+        "source_content_sha256": "bbc8ea1611154619bf136c2ba07254a4dca90bc9d006cf3589fdd3c2f849beb5",
         "implementation_content_sha256": null
       },
       {
@@ -33238,12 +33294,14 @@
         "direction": "outbound",
         "sync_async": "sync",
         "contract_id": null,
-        "failure_mode": "missing primitive leaf keeps rendering chrome in the composite core",
+        "failure_mode": "Retired primitive leaf is superseded by the canonical Canvas context menu view.",
         "authorization_scope": "canvas-ui-local",
-        "source_refs": ["tools/planning-db/schema.sql"],
-        "status": "implemented",
+        "source_refs": [
+          "apps/web/src/app/views/canvas/CanvasContextMenuView.tsx"
+        ],
+        "status": "deprecated",
         "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
+        "updated_at": "2026-08-12T18:54:38.76+00:00"
       },
       {
         "relation_id": "REL-WEB-CANVAS-CONTEXT-MENU-CORE-CONTAINS-VIEW",
@@ -65211,6 +65269,62 @@
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
+        "design_id": "db-canvas-context-menu-component-retirement-2310-v1",
+        "subject_kind": "component",
+        "subject_id": "SYS-WEB-CANVAS-CONTEXT-MENU-PRIMITIVES",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-12T18:53:41.733+00:00"
+      },
+      {
+        "design_id": "db-canvas-context-menu-component-retirement-2310-v1",
+        "subject_kind": "relation",
+        "subject_id": "REL-WEB-CANVAS-CONTEXT-MENU-CORE-CONTAINS-PRIMITIVES",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-12T18:53:41.733+00:00"
+      },
+      {
+        "design_id": "db-canvas-context-menu-component-retirement-2310-v1",
+        "subject_kind": "test",
+        "subject_id": "canvas-context-menu-retirement-integrity",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-12T18:53:41.733+00:00"
+      },
+      {
+        "design_id": "db-canvas-context-menu-relation-retirement-2310-v2",
+        "subject_kind": "component",
+        "subject_id": "SYS-WEB-CANVAS-CONTEXT-MENU-CORE",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-12T18:54:36.595+00:00"
+      },
+      {
+        "design_id": "db-canvas-context-menu-relation-retirement-2310-v2",
+        "subject_kind": "component",
+        "subject_id": "SYS-WEB-CANVAS-CONTEXT-MENU-PRIMITIVES",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-12T18:54:36.595+00:00"
+      },
+      {
+        "design_id": "db-canvas-context-menu-relation-retirement-2310-v2",
+        "subject_kind": "relation",
+        "subject_id": "REL-WEB-CANVAS-CONTEXT-MENU-CORE-CONTAINS-PRIMITIVES",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-12T18:54:36.595+00:00"
+      },
+      {
+        "design_id": "db-canvas-context-menu-relation-retirement-2310-v2",
+        "subject_kind": "test",
+        "subject_id": "canvas-context-menu-retirement-integrity",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-12T18:54:36.595+00:00"
+      },
+      {
         "design_id": "DBT-CODE-RECONCILIATION-TRUTH-20260719",
         "subject_kind": "command",
         "subject_id": "SaveWorkspaceFileContent",
@@ -88524,6 +88638,79 @@
         "created_at": "2026-08-11T09:00:12.608+00:00"
       },
       {
+        "operation_id": "0430ef46-a5c4-47ec-a0b7-5ad9f5bca270",
+        "idempotency_key": "architecture_design_create:codex:db-canvas-context-menu-relation-retirement-2310-v2:4a265599edc3535d",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "db-canvas-context-menu-relation-retirement-2310-v2",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2310",
+        "source_content_sha256": "a93f7eb2f1923c969913d6d4b84102a69ed27a47dac1e080355615334b214ec1",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "CanvasContextMenuPresentation",
+          "title": "Retire removed Canvas primitive containment relation",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "REL-WEB-CANVAS-CONTEXT-MENU-CORE-CONTAINS-PRIMITIVES",
+              "subjectKind": "relation"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-WEB-CANVAS-CONTEXT-MENU-CORE",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-WEB-CANVAS-CONTEXT-MENU-PRIMITIVES",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "canvas-context-menu-retirement-integrity",
+              "subjectKind": "test"
+            }
+          ],
+          "status": "review",
+          "railRef": "RecordArchitectureRelation",
+          "designId": "db-canvas-context-menu-relation-retirement-2310-v2",
+          "rationale": "Retire the obsolete CORE-to-PRIMITIVES containment relation with explicit reference authority over both endpoints.",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2310",
+          "workItemId": "https://github.com/dunay2/dvt/issues/2310",
+          "fowlerSignal": "boundary_drift",
+          "supersedesId": "db-canvas-context-menu-component-retirement-2310-v1",
+          "sourceContentSha256": "a93f7eb2f1923c969913d6d4b84102a69ed27a47dac1e080355615334b214ec1"
+        },
+        "created_at": "2026-08-12T18:54:36.595+00:00"
+      },
+      {
+        "operation_id": "04b34db7-2873-4661-943c-f9c96af330bc",
+        "idempotency_key": "architecture_design_transition:codex:db-canvas-context-menu-relation-retirement-2310-v2:8016593ba67679d2",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "db-canvas-context-menu-relation-retirement-2310-v2",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2310",
+        "source_content_sha256": "a93f7eb2f1923c969913d6d4b84102a69ed27a47dac1e080355615334b214ec1",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The current-schema relation retirement passed PostgreSQL integrity.",
+          "designId": "db-canvas-context-menu-relation-retirement-2310-v2",
+          "toStatus": "implementing",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2310",
+          "fromStatus": "approved",
+          "sourceContentSha256": "a93f7eb2f1923c969913d6d4b84102a69ed27a47dac1e080355615334b214ec1"
+        },
+        "created_at": "2026-08-12T18:55:05.743+00:00"
+      },
+      {
         "operation_id": "0681355a-1013-4ec2-bd31-f1274e4705ad",
         "idempotency_key": "gh-2167-update-contract-sys-api-tests-application-services-workspace-evidence-v1",
         "operation_type": "architecture_contract_record",
@@ -89240,6 +89427,27 @@
           "sourceContentSha256": "10ad018e65819d6ace50f6d70d4ff91671574cccb3aa1af768eaea661caba292"
         },
         "created_at": "2026-08-10T21:04:02.004+00:00"
+      },
+      {
+        "operation_id": "131ee4fd-4afb-4e03-bbff-eabccd64a24a",
+        "idempotency_key": "architecture_design_transition:codex:db-canvas-context-menu-relation-retirement-2310-v2:344b2b077b4e4c8b",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "db-canvas-context-menu-relation-retirement-2310-v2",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2310",
+        "source_content_sha256": "a93f7eb2f1923c969913d6d4b84102a69ed27a47dac1e080355615334b214ec1",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Focused tests and current-schema PostgreSQL integrity prove one surviving context-menu view authority.",
+          "designId": "db-canvas-context-menu-relation-retirement-2310-v2",
+          "toStatus": "implemented",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2310",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "a93f7eb2f1923c969913d6d4b84102a69ed27a47dac1e080355615334b214ec1"
+        },
+        "created_at": "2026-08-12T18:55:08.664+00:00"
       },
       {
         "operation_id": "132f195f-ec64-44c3-a04b-d9fb0ba5f424",
@@ -90427,6 +90635,27 @@
         "created_at": "2026-08-11T18:22:14.67+00:00"
       },
       {
+        "operation_id": "2aae75ad-47bb-4b5e-a70e-be11ccae0289",
+        "idempotency_key": "architecture_design_transition:codex:db-canvas-context-menu-component-retirement-2310-v1:94f101ef894d87c4",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "db-canvas-context-menu-component-retirement-2310-v1",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2310",
+        "source_content_sha256": "a93f7eb2f1923c969913d6d4b84102a69ed27a47dac1e080355615334b214ec1",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Continue the bounded retirement with explicit endpoint reference scopes for the obsolete relation.",
+          "designId": "db-canvas-context-menu-component-retirement-2310-v1",
+          "toStatus": "superseded",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2310",
+          "fromStatus": "implemented",
+          "sourceContentSha256": "a93f7eb2f1923c969913d6d4b84102a69ed27a47dac1e080355615334b214ec1"
+        },
+        "created_at": "2026-08-12T18:54:34.509+00:00"
+      },
+      {
         "operation_id": "2b5c0382-b2ee-49e4-828c-0c86059dba5c",
         "idempotency_key": "architecture_design_transition:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811:3f960f0202301914",
         "operation_type": "architecture_design_transition",
@@ -91122,6 +91351,52 @@
         "created_at": "2026-08-11T03:58:11.264+00:00"
       },
       {
+        "operation_id": "3bf1743f-1b99-4a28-a84c-a2653bdb0129",
+        "idempotency_key": "architecture_design_create:codex:db-canvas-context-menu-component-retirement-2310-v1:62c4cf26e21c6dca",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "db-canvas-context-menu-component-retirement-2310-v1",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2310",
+        "source_content_sha256": "a93f7eb2f1923c969913d6d4b84102a69ed27a47dac1e080355615334b214ec1",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "CanvasContextMenuPresentation",
+          "title": "Retire removed Canvas context menu primitive authority",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-WEB-CANVAS-CONTEXT-MENU-PRIMITIVES",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "REL-WEB-CANVAS-CONTEXT-MENU-CORE-CONTAINS-PRIMITIVES",
+              "subjectKind": "relation"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "canvas-context-menu-retirement-integrity",
+              "subjectKind": "test"
+            }
+          ],
+          "status": "review",
+          "railRef": "RecordArchitectureComponent",
+          "designId": "db-canvas-context-menu-component-retirement-2310-v1",
+          "rationale": "Retire the removed PRIMITIVES component and its containment relation while preserving the surviving VIEW authority and historical state.",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2310",
+          "workItemId": "https://github.com/dunay2/dvt/issues/2310",
+          "fowlerSignal": "boundary_drift",
+          "supersedesId": null,
+          "sourceContentSha256": "a93f7eb2f1923c969913d6d4b84102a69ed27a47dac1e080355615334b214ec1"
+        },
+        "created_at": "2026-08-12T18:53:41.733+00:00"
+      },
+      {
         "operation_id": "3cb40104-4c05-4661-b4af-1c8bac80d17d",
         "idempotency_key": "issue-2274-ev-pth14-v5-classify-review4",
         "operation_type": "architecture_evidence_record",
@@ -91437,6 +91712,27 @@
         "created_at": "2026-08-11T06:34:25.422+00:00"
       },
       {
+        "operation_id": "40a2fe00-bd8d-4a67-ac7e-6f9f113f4567",
+        "idempotency_key": "architecture_design_transition:codex:db-canvas-context-menu-component-retirement-2310-v1:6d18746b5c16ed9b",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "db-canvas-context-menu-component-retirement-2310-v1",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2310",
+        "source_content_sha256": "a93f7eb2f1923c969913d6d4b84102a69ed27a47dac1e080355615334b214ec1",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The retirement leaves one live VIEW owner and preserves component history.",
+          "designId": "db-canvas-context-menu-component-retirement-2310-v1",
+          "toStatus": "approved",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2310",
+          "fromStatus": "review",
+          "sourceContentSha256": "a93f7eb2f1923c969913d6d4b84102a69ed27a47dac1e080355615334b214ec1"
+        },
+        "created_at": "2026-08-12T18:53:48.602+00:00"
+      },
+      {
         "operation_id": "4117fe82-ecfb-439e-85c7-f78944110746",
         "idempotency_key": "architecture_test_retire:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811:SYS-API-TESTS-INFRASTRUCTURE:44136fa355b3678a",
         "operation_type": "architecture_test_retire",
@@ -91566,6 +91862,27 @@
           "sourceContentSha256": "ebdc623a68bf4c65fe9bcf5e935db0969a3659ef5d5c46398d31cec3007a4e85"
         },
         "created_at": "2026-08-10T21:04:43.572+00:00"
+      },
+      {
+        "operation_id": "4608f8da-a76f-481a-ae62-da62eb6243d1",
+        "idempotency_key": "architecture_design_transition:codex:db-canvas-context-menu-component-retirement-2310-v1:d64b9c6b2740edd4",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "db-canvas-context-menu-component-retirement-2310-v1",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2310",
+        "source_content_sha256": "a93f7eb2f1923c969913d6d4b84102a69ed27a47dac1e080355615334b214ec1",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Current-schema PostgreSQL execution and focused tests prove retirement without duplicate authority.",
+          "designId": "db-canvas-context-menu-component-retirement-2310-v1",
+          "toStatus": "implemented",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2310",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "a93f7eb2f1923c969913d6d4b84102a69ed27a47dac1e080355615334b214ec1"
+        },
+        "created_at": "2026-08-12T18:53:55.145+00:00"
       },
       {
         "operation_id": "4649872d-e089-4854-9f20-d8289447364e",
@@ -92913,6 +93230,34 @@
         "created_at": "2026-08-11T03:50:50.225+00:00"
       },
       {
+        "operation_id": "5a987e70-df21-45a8-a3d1-95ad5f8f46b5",
+        "idempotency_key": "architecture_relation_record:codex:db-canvas-context-menu-relation-retirement-2310-v2:REL-WEB-CANVAS-CONTEXT-MENU-CORE-CONTAINS-PRIMITIVES:8759b31d738beb68",
+        "operation_type": "architecture_relation_record",
+        "actor": "codex",
+        "design_id": "db-canvas-context-menu-relation-retirement-2310-v2",
+        "source_ref": "apps/web/src/app/views/canvas/CanvasContextMenuView.tsx",
+        "source_content_sha256": "bbc8ea1611154619bf136c2ba07254a4dca90bc9d006cf3589fdd3c2f849beb5",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "status": "deprecated",
+          "designId": "db-canvas-context-menu-relation-retirement-2310-v2",
+          "direction": "outbound",
+          "sourceRef": "apps/web/src/app/views/canvas/CanvasContextMenuView.tsx",
+          "syncAsync": "sync",
+          "contractId": null,
+          "relationId": "REL-WEB-CANVAS-CONTEXT-MENU-CORE-CONTAINS-PRIMITIVES",
+          "failureMode": "Retired primitive leaf is superseded by the canonical Canvas context menu view.",
+          "relationType": "contains",
+          "sourceComponentId": "SYS-WEB-CANVAS-CONTEXT-MENU-CORE",
+          "targetComponentId": "SYS-WEB-CANVAS-CONTEXT-MENU-PRIMITIVES",
+          "authorizationScope": "canvas-ui-local",
+          "sourceContentSha256": "bbc8ea1611154619bf136c2ba07254a4dca90bc9d006cf3589fdd3c2f849beb5"
+        },
+        "created_at": "2026-08-12T18:54:38.76+00:00"
+      },
+      {
         "operation_id": "5aa64d67-03c4-493a-a1c4-c9a22cf74376",
         "idempotency_key": "gh-2167-update-test-sys-api-infra-workspace-local-adapters-4-v1",
         "operation_type": "architecture_test_record",
@@ -93826,6 +94171,27 @@
           "sourceContentSha256": "972c21a525dd6abfeb44af39559f53d345ed08570d93872dddfbf3e966c32d88"
         },
         "created_at": "2026-08-11T04:57:01.544+00:00"
+      },
+      {
+        "operation_id": "6ec27810-4f81-4f42-bb91-5c637fae4830",
+        "idempotency_key": "architecture_design_transition:codex:db-canvas-context-menu-component-retirement-2310-v1:ae9b13d226c142ee",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "db-canvas-context-menu-component-retirement-2310-v1",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2310",
+        "source_content_sha256": "a93f7eb2f1923c969913d6d4b84102a69ed27a47dac1e080355615334b214ec1",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The bounded retirement is ready for integrity proof.",
+          "designId": "db-canvas-context-menu-component-retirement-2310-v1",
+          "toStatus": "implementing",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2310",
+          "fromStatus": "approved",
+          "sourceContentSha256": "a93f7eb2f1923c969913d6d4b84102a69ed27a47dac1e080355615334b214ec1"
+        },
+        "created_at": "2026-08-12T18:53:50.638+00:00"
       },
       {
         "operation_id": "6ee84e5d-1228-410f-8477-2444cabab54d",
@@ -95267,6 +95633,27 @@
         "created_at": "2026-08-10T21:04:07.532+00:00"
       },
       {
+        "operation_id": "89b2206c-1f7b-4458-ad41-c5b5c716bea8",
+        "idempotency_key": "architecture_design_transition:codex:db-canvas-context-menu-relation-retirement-2310-v2:9795b36ebf750556",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "db-canvas-context-menu-relation-retirement-2310-v2",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2310",
+        "source_content_sha256": "a93f7eb2f1923c969913d6d4b84102a69ed27a47dac1e080355615334b214ec1",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The relation retirement is scoped to the existing relation and explicit endpoint references.",
+          "designId": "db-canvas-context-menu-relation-retirement-2310-v2",
+          "toStatus": "approved",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2310",
+          "fromStatus": "review",
+          "sourceContentSha256": "a93f7eb2f1923c969913d6d4b84102a69ed27a47dac1e080355615334b214ec1"
+        },
+        "created_at": "2026-08-12T18:55:04.167+00:00"
+      },
+      {
         "operation_id": "8a0053c9-b70d-4b89-af83-f1764882c2af",
         "idempotency_key": "gh-2167-update-port-sys-api-tests-primary-v1",
         "operation_type": "architecture_port_record",
@@ -95930,6 +96317,43 @@
           "sourceContentSha256": "40394bf597d05b78bd90cb96948d691d711afa9f1aa38c721f54a830ce8b0ca0"
         },
         "created_at": "2026-08-11T08:57:30.773+00:00"
+      },
+      {
+        "operation_id": "96294da1-352c-4556-9349-0847d617b092",
+        "idempotency_key": "architecture_component_record:codex:db-canvas-context-menu-component-retirement-2310-v1:SYS-WEB-CANVAS-CONTEXT-MENU-PRIMITIVES:9721c1484c8488c1",
+        "operation_type": "architecture_component_record",
+        "actor": "codex",
+        "design_id": "db-canvas-context-menu-component-retirement-2310-v1",
+        "source_ref": "apps/web/src/app/views/canvas/CanvasContextMenuView.tsx",
+        "source_content_sha256": "bbc8ea1611154619bf136c2ba07254a4dca90bc9d006cf3589fdd3c2f849beb5",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "kind": "ui-view",
+          "name": "Canvas context menu primitives",
+          "layer": "ui",
+          "owner": "Frontend / Canvas",
+          "status": "deprecated",
+          "runtime": "browser",
+          "designId": "db-canvas-context-menu-component-retirement-2310-v1",
+          "repoPath": "apps/web/src/app/views/canvas/CanvasContextMenuPrimitives.tsx",
+          "sourceRef": "apps/web/src/app/views/canvas/CanvasContextMenuView.tsx",
+          "componentId": "SYS-WEB-CANVAS-CONTEXT-MENU-PRIMITIVES",
+          "criticality": "medium",
+          "publicContract": "Retired Canvas context-menu primitive boundary; CanvasContextMenuView is the surviving owner.",
+          "responsibilities": [
+            {
+              "dddOwner": "CanvasContextMenuPresentationPrimitives",
+              "reasonToChange": "Context-menu primitive markup, accessibility role, design token, or surface styling changes.",
+              "responsibility": "Own reusable Canvas context-menu primitive rendering.",
+              "responsibilityId": "RESP-SYS-WEB-CANVAS-CONTEXT-MENU-PRIMITIVES"
+            }
+          ],
+          "parentComponentId": "SYS-WEB-CANVAS-CONTEXT-MENU-CORE",
+          "sourceContentSha256": "bbc8ea1611154619bf136c2ba07254a4dca90bc9d006cf3589fdd3c2f849beb5"
+        },
+        "created_at": "2026-08-12T18:53:43.821+00:00"
       },
       {
         "operation_id": "968fbcb7-3b4d-411e-b8a5-4510bc001d7f",
@@ -99173,6 +99597,31 @@
         "created_at": "2026-08-11T18:22:15.21+00:00"
       },
       {
+        "operation_id": "c18f6cbb-fdc4-4b24-be7c-d66cfe8269bd",
+        "idempotency_key": "architecture_evidence_record:codex:db-canvas-context-menu-component-retirement-2310-v1:EV-CANVAS-CONTEXT-MENU-RETIREMENT-2310:85ed4d6c36896233",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "db-canvas-context-menu-component-retirement-2310-v1",
+        "source_ref": "pnpm planning:db:integrity:check",
+        "source_content_sha256": "bbc8ea1611154619bf136c2ba07254a4dca90bc9d006cf3589fdd3c2f849beb5",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "db-canvas-context-menu-component-retirement-2310-v1",
+          "sourceRef": "pnpm planning:db:integrity:check",
+          "subjectId": "canvas-context-menu-retirement-integrity",
+          "evidenceId": "EV-CANVAS-CONTEXT-MENU-RETIREMENT-2310",
+          "sourcePath": "apps/web/src/app/views/canvas/CanvasContextMenuView.tsx",
+          "resultState": "pass",
+          "subjectKind": "test",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "bbc8ea1611154619bf136c2ba07254a4dca90bc9d006cf3589fdd3c2f849beb5"
+        },
+        "created_at": "2026-08-12T18:53:52.689+00:00"
+      },
+      {
         "operation_id": "c1a5582d-e965-4b8f-9877-c7e96c839584",
         "idempotency_key": "architecture_design_transition:codex:API-H2-4-HISTORICAL-LINK-PROJECTION-V2-20260811:1d493373e724d712",
         "operation_type": "architecture_design_transition",
@@ -101125,6 +101574,31 @@
           "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
         },
         "created_at": "2026-08-10T20:06:17.343+00:00"
+      },
+      {
+        "operation_id": "e012d347-3d0e-445e-9cb3-6b25533345eb",
+        "idempotency_key": "architecture_evidence_record:codex:db-canvas-context-menu-relation-retirement-2310-v2:EV-CANVAS-CONTEXT-MENU-RELATION-RETIREMENT-2310:13c94e51eb993854",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "db-canvas-context-menu-relation-retirement-2310-v2",
+        "source_ref": "pnpm planning:db:integrity:check",
+        "source_content_sha256": "bbc8ea1611154619bf136c2ba07254a4dca90bc9d006cf3589fdd3c2f849beb5",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "db-canvas-context-menu-relation-retirement-2310-v2",
+          "sourceRef": "pnpm planning:db:integrity:check",
+          "subjectId": "canvas-context-menu-retirement-integrity",
+          "evidenceId": "EV-CANVAS-CONTEXT-MENU-RELATION-RETIREMENT-2310",
+          "sourcePath": "apps/web/src/app/views/canvas/CanvasContextMenuView.tsx",
+          "resultState": "pass",
+          "subjectKind": "test",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "bbc8ea1611154619bf136c2ba07254a4dca90bc9d006cf3589fdd3c2f849beb5"
+        },
+        "created_at": "2026-08-12T18:55:07.122+00:00"
       },
       {
         "operation_id": "e03a96c8-a91d-4d97-aa49-97c3294e5f62",
@@ -105868,7 +106342,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "6ec6e0ec94701875a1c749ebb433011b2d6b36228a9194cd7dfa09a13af18a9e",
+      "sourceContentSha256": "872833d93b957d1dd1b7c9646b67e984966e69595e368bc22068695f584e9d0c",
       "rawRail": {
         "name": "RecordArchitectureComponent",
         "type": "command",
@@ -106078,7 +106552,7 @@
         "node --test scripts/planning-db-operate-tests/architecture-plan.test.cjs scripts/planning-db-operate-tests/architecture-parse.test.cjs"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "6ec6e0ec94701875a1c749ebb433011b2d6b36228a9194cd7dfa09a13af18a9e",
+      "sourceContentSha256": "872833d93b957d1dd1b7c9646b67e984966e69595e368bc22068695f584e9d0c",
       "rawRail": {
         "name": "RecordArchitectureEvidenceExecution",
         "type": "command",
@@ -106652,7 +107126,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "6ec6e0ec94701875a1c749ebb433011b2d6b36228a9194cd7dfa09a13af18a9e",
+      "sourceContentSha256": "872833d93b957d1dd1b7c9646b67e984966e69595e368bc22068695f584e9d0c",
       "rawRail": {
         "name": "RecordArchitectureObservabilityEvidence",
         "type": "command",
@@ -106883,7 +107357,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "6ec6e0ec94701875a1c749ebb433011b2d6b36228a9194cd7dfa09a13af18a9e",
+      "sourceContentSha256": "872833d93b957d1dd1b7c9646b67e984966e69595e368bc22068695f584e9d0c",
       "rawRail": {
         "name": "RetireArchitectureEvidenceExecution",
         "type": "command",
@@ -107045,7 +107519,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "6ec6e0ec94701875a1c749ebb433011b2d6b36228a9194cd7dfa09a13af18a9e",
+      "sourceContentSha256": "872833d93b957d1dd1b7c9646b67e984966e69595e368bc22068695f584e9d0c",
       "rawRail": {
         "name": "RetireArchitectureTestEvidence",
         "type": "command",
@@ -107207,7 +107681,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "6ec6e0ec94701875a1c749ebb433011b2d6b36228a9194cd7dfa09a13af18a9e",
+      "sourceContentSha256": "872833d93b957d1dd1b7c9646b67e984966e69595e368bc22068695f584e9d0c",
       "rawRail": {
         "name": "RetireFeatureMechanizationRail",
         "type": "command",
@@ -107369,7 +107843,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "6ec6e0ec94701875a1c749ebb433011b2d6b36228a9194cd7dfa09a13af18a9e",
+      "sourceContentSha256": "872833d93b957d1dd1b7c9646b67e984966e69595e368bc22068695f584e9d0c",
       "rawRail": {
         "name": "TransitionArchitectureDesign",
         "type": "command",
@@ -113680,7 +114154,7 @@
         "pnpm docs:feature-mechanization:implementation"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "6ec6e0ec94701875a1c749ebb433011b2d6b36228a9194cd7dfa09a13af18a9e",
+      "sourceContentSha256": "872833d93b957d1dd1b7c9646b67e984966e69595e368bc22068695f584e9d0c",
       "rawRail": {
         "name": "RecordArchitectureStorageIo",
         "type": "command",
