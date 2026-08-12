@@ -30,7 +30,7 @@ import {
   resolveCanvasNodeWorkbenchContributions,
   type CanvasNodeWorkbenchContribution,
 } from './canvasNodeWorkbenchContribution';
-import { resolveNodeWorkbenchPrimarySectionIds } from './canvasNodeWorkbenchSectionStrategy';
+import { resolveCanvasNodeWorkbenchSectionModel } from './canvasNodeWorkbenchSectionStrategy';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { buildCanvasNodePresentationCopy } from './canvasNodePresentationCopy';
@@ -239,7 +239,7 @@ export function CanvasNodeWorkbenchPanel({
     presentationTruth,
   });
   const contributionModel = resolveCanvasNodeWorkbenchContributions(node.id, contributions);
-  const model = buildNodeWorkbenchReadModel({
+  const unfilteredModel = buildNodeWorkbenchReadModel({
     model: baseModel,
     node,
     canEditNode: authoring.canEditNode,
@@ -247,10 +247,26 @@ export function CanvasNodeWorkbenchPanel({
     supersededSectionIds: contributionModel.supersededSectionIds,
   });
   const panels = getInspectorPanels(node, { activeRunId, registeredPlugins });
-  const resolvedPrimarySectionIds =
-    primarySectionIds == null
-      ? undefined
-      : resolveNodeWorkbenchPrimarySectionIds(primarySectionIds);
+  const contributedSectionIds = new Set<NodePropertySectionId>([
+    ...contributionModel.beforeBodyBySection.keys(),
+    ...contributionModel.afterBodyBySection.keys(),
+  ]);
+  const sectionModel = resolveCanvasNodeWorkbenchSectionModel({
+    nodeKind: node.kind,
+    canEditNode: authoring.canEditNode,
+    canOpenNodeCode: onOpenNodeCode != null,
+    strategySectionIds: primarySectionIds ?? [
+      'code',
+      'properties',
+      'columns',
+      'inputs-outputs',
+      'tests',
+    ],
+    contributedSectionIds,
+    sections: unfilteredModel.sections,
+  });
+  const model = { ...unfilteredModel, sections: sectionModel.sections };
+  const resolvedPrimarySectionIds = sectionModel.primarySectionIds;
   const panelIds = panels.map((panel) => panel.id);
   const resolvedActiveTab = resolveActiveNodeWorkbenchTab({ activeTab, model, panelIds });
   const dotClass = inspectorStatusDotClasses[node.status] ?? inspectorStatusDotClasses.idle;
