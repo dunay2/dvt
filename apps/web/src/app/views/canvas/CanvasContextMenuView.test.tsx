@@ -244,11 +244,11 @@ describe('CanvasContextMenuView', () => {
       );
     });
     await openCommandMenu();
-    await clickMenuItem('Eliminar conexión');
+    await clickMenuItem('Remove connection');
 
     expect(onEdgeAction).toHaveBeenCalledWith({
       action: 'remove-edge',
-      label: 'Eliminar conexión',
+      label: 'Remove connection',
     });
     expect(onCanvasAction).not.toHaveBeenCalled();
     expect(onCreateNodeAction).not.toHaveBeenCalled();

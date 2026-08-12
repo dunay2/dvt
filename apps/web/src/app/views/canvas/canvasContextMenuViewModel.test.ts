@@ -6,6 +6,7 @@ import {
   buildCanvasContextMenuModel,
 } from './canvasInteractionCommandSurface';
 import { buildCanvasContextMenuSections } from './canvasContextMenuViewModel';
+import { resolveCanvasViewCopy } from './copy';
 
 describe('canvasContextMenuViewModel', () => {
   it('groups background root actions without rendering the node-type catalog inline', () => {
@@ -95,6 +96,26 @@ describe('canvasContextMenuViewModel', () => {
     ]);
   });
 
+  it('projects the Canvas section title from the active copy contract', () => {
+    const copy = {
+      ...resolveCanvasViewCopy('en'),
+      canvasContextMenuCanvasGroupLabel: 'Active graph',
+    };
+    const model = buildCanvasContextMenuModel({
+      target: {
+        kind: 'pane',
+        screenPosition: { x: 320, y: 180 },
+        flowPosition: { x: 220, y: 90 },
+      },
+      canMutateGraph: true,
+      canOpenCanvasSettings: true,
+      authoringNodeKinds: [],
+      copy,
+    });
+
+    expect(buildCanvasContextMenuSections(model, copy)[0]?.title).toBe('Active graph');
+  });
+
   it('keeps edge actions in an edge-only section', () => {
     const model = buildCanvasContextMenuModel({
       target: {
@@ -112,9 +133,9 @@ describe('canvasContextMenuViewModel', () => {
         items: [
           {
             id: 'edge:remove-edge',
-            label: 'Eliminar conexión',
+            label: 'Remove connection',
             kind: 'edge',
-            action: { action: 'remove-edge', label: 'Eliminar conexión' },
+            action: { action: 'remove-edge', label: 'Remove connection' },
           },
         ],
       },

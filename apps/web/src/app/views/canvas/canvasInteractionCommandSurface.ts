@@ -159,7 +159,7 @@ export function buildCanvasContextMenuModel({
   return {
     ...baseModel,
     edgeId: target.edgeId,
-    edgeActions: [{ action: 'remove-edge', label: 'Eliminar conexión' }],
+    edgeActions: [{ action: 'remove-edge', label: copy.canvasContextMenuRemoveEdgeLabel }],
   };
 }
 

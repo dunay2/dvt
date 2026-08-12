@@ -6,6 +6,7 @@ import type {
   CanvasContextMenuEdgeAction,
   CanvasContextMenuModel,
 } from './canvasInteractionCommandSurface';
+import { canvasViewCopy, type CanvasViewCopy } from './copy';
 
 export type CanvasContextMenuViewItem =
   | Readonly<{
@@ -29,7 +30,7 @@ export type CanvasContextMenuViewItem =
 
 export type CanvasContextMenuViewSection = Readonly<{
   id: 'add' | 'canvas' | 'edge';
-  title?: 'Canvas';
+  title?: string;
   items: readonly CanvasContextMenuViewItem[];
 }>;
 
@@ -61,7 +62,8 @@ function edgeActionItem(action: CanvasContextMenuEdgeAction): CanvasContextMenuV
 }
 
 export function buildCanvasContextMenuSections(
-  model: CanvasContextMenuModel
+  model: CanvasContextMenuModel,
+  copy: CanvasViewCopy = canvasViewCopy
 ): readonly CanvasContextMenuViewSection[] {
   const addItems = [
     ...model.canvasActions.filter(
@@ -84,7 +86,11 @@ export function buildCanvasContextMenuSections(
   }
 
   if (canvasItems.length > 0) {
-    sections.push({ id: 'canvas', title: 'Canvas', items: canvasItems });
+    sections.push({
+      id: 'canvas',
+      title: copy.canvasContextMenuCanvasGroupLabel,
+      items: canvasItems,
+    });
   }
 
   if (edgeItems.length > 0) {
