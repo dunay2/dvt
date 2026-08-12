@@ -39,6 +39,8 @@ const PLANNING_WORKFLOW_SCRIPT_TESTS = Object.freeze({
   'scripts/governance-generated-paths.test.cjs': 'scripts/governance-generated-paths.test.cjs',
   'scripts/governance-refresh.cjs': 'scripts/governance-refresh.test.cjs',
   'scripts/governance-refresh.test.cjs': 'scripts/governance-refresh.test.cjs',
+  'scripts/git-local-changes.cjs': 'scripts/git-local-changes.test.cjs',
+  'scripts/git-local-changes.test.cjs': 'scripts/git-local-changes.test.cjs',
   'scripts/planning-db-integrity-check.cjs': 'scripts/planning-db-integrity-check.test.cjs',
   'scripts/planning-db-integrity-check.test.cjs': 'scripts/planning-db-integrity-check.test.cjs',
   'scripts/planning-db-export.cjs': 'scripts/planning-db-export.test.cjs',

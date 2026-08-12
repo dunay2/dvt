@@ -171,7 +171,6 @@ test('local changed-files gate has semantic component docs and shared rail consu
     'scripts/type-check-prepush.cjs',
     'scripts/lint-markdown-changed.cjs',
     'scripts/format-markdown-changed.cjs',
-    'scripts/docs-workboard-check-changed.cjs',
     'scripts/fix-changed.cjs',
     'scripts/qa-artifact-check.cjs',
     'scripts/validate-arc-evidence-frontmatter.cjs',
