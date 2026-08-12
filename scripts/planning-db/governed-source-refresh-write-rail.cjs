@@ -143,16 +143,14 @@ function defaultGovernedSourceRefreshIdempotencyKey(command) {
 }
 
 function normalizeRow(row) {
+  const rawOverrideRevision = row.override_revision ?? row.overrideRevision ?? null;
   return {
     path: row.path,
     pathHash: row.path_hash ?? row.pathHash,
     importedContentHash: row.content_hash ?? row.contentHash,
     governanceHash: row.governance_hash ?? row.governanceHash,
     overrideContentHash: row.override_content_hash ?? row.overrideContentHash ?? null,
-    revision:
-      row.override_revision === undefined && row.overrideRevision === undefined
-        ? null
-        : Number(row.override_revision ?? row.overrideRevision),
+    revision: rawOverrideRevision === null ? null : Number(rawOverrideRevision),
   };
 }
 

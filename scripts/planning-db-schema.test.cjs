@@ -122,7 +122,7 @@ test('architecture proof distinguishes assertions from fresh executions', () => 
   assert.match(schemaSql, /architecture\.evidence[\s\S]*implementation_content_sha256 text/u);
   assert.match(
     schemaSql,
-    /CREATE VIEW architecture\.evidence_subject_implementation_query[\s\S]*command_query_rail_query[\s\S]*implementation_refs[\s\S]*governance_files[\s\S]*sha256_text/u
+    /CREATE VIEW architecture\.evidence_subject_implementation_query[\s\S]*command_query_rail_query[\s\S]*implementation_refs[\s\S]*governance_file_query[\s\S]*sha256_text/u
   );
   assert.match(schemaSql, /CREATE VIEW architecture\.evidence_query[\s\S]*source_changed/u);
   assert.match(schemaSql, /CREATE VIEW architecture\.evidence_query[\s\S]*implementation_changed/u);
@@ -141,6 +141,37 @@ test('architecture proof distinguishes assertions from fresh executions', () => 
     /implementation_violation_query[\s\S]*evidence_subject_implementation_query[\s\S]*30 days[\s\S]*source_content_sha256 IS DISTINCT FROM evidence\.current_source_content_sha256[\s\S]*implementation_content_sha256 IS DISTINCT FROM evidence\.current_implementation_content_sha256/u
   );
   assert.match(schemaSql, /evidence_design_id_fkey[\s\S]*REFERENCES architecture\.design/u);
+});
+
+test('governed source current content is an audited overlay over immutable imports', () => {
+  const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
+
+  assert.match(
+    schemaSql,
+    /CREATE TABLE planning_query_store\.governed_source_content_overrides[\s\S]*content_hash text NOT NULL[\s\S]*state_fingerprint text NOT NULL[\s\S]*source_commit_sha text NOT NULL[\s\S]*revision integer/u
+  );
+  assert.match(
+    schemaSql,
+    /CREATE TABLE planning_query_store\.governed_source_content_operations[\s\S]*idempotency_key text NOT NULL[\s\S]*paths jsonb NOT NULL[\s\S]*changes jsonb NOT NULL/u
+  );
+  assert.match(
+    schemaSql,
+    /CREATE VIEW planning_query_store\.governance_file_query AS[\s\S]*COALESCE\(current_content\.content_hash, imported\.content_hash\) AS content_hash[\s\S]*LEFT JOIN planning_query_store\.governed_source_content_overrides current_content/u
+  );
+  assert.match(
+    schemaSql,
+    /CREATE VIEW planning_query_store\.command_query_rail_manifest_query AS[\s\S]*governance_file_query[\s\S]*COALESCE\(source\.content_hash/u
+  );
+  const evidenceSql = schemaSql.slice(
+    schemaSql.indexOf('CREATE VIEW architecture.evidence_subject_implementation_query AS'),
+    schemaSql.indexOf('-- Name: implementation_violation_query')
+  );
+  assert.match(evidenceSql, /planning_query_store\.governance_file_query/u);
+  assert.doesNotMatch(evidenceSql, /planning_query_store\.governance_files/u);
+  assert.match(
+    schemaSql,
+    /governed_source_content_overrides_path_fkey[\s\S]*REFERENCES planning_query_store\.governance_files\(path\) ON DELETE CASCADE/u
+  );
 });
 
 test('documentation lifecycle accepts only hash-matched DB authority dispositions', () => {

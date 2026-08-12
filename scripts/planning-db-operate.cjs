@@ -5639,7 +5639,7 @@ async function readArchitectureEvidence(client, evidenceId) {
 async function readArchitectureEvidenceSourceFile(client, sourcePath) {
   const result = await client.query(
     `select path, content_hash
-     from ${schemaName}.governance_files
+     from ${schemaName}.governance_file_query
      where path = $1`,
     [sourcePath]
   );
@@ -7920,6 +7920,13 @@ async function applyFowlerAnalysisOperation(command, options = {}) {
 
 function printOperationResult(result) {
   if (result.idempotent) {
+    if (result.audit.source_commit_sha && result.audit.paths) {
+      console.log(
+        `[planning:db:operate] idempotent operation=${result.audit.operation_id} paths=${result.audit.paths.length} sourceCommit=${result.audit.source_commit_sha}`
+      );
+      return;
+    }
+
     if (result.audit.component_id) {
       console.log(
         `[planning:db:operate] idempotent operation=${result.audit.operation_id} component=${result.audit.component_id}`
