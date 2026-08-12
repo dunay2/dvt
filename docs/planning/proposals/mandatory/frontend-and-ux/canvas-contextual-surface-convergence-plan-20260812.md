@@ -321,6 +321,7 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/CanvasContextMenuView.architecture.test.tsx
   - apps/web/src/app/views/canvas/CanvasShell.tsx
   - apps/web/src/app/views/canvas/CanvasShell.architecture.test.tsx
+  - apps/web/src/app/views/canvas/CanvasShell.contextMenuIntegration.test.tsx
   - apps/web/src/app/views/canvas/CanvasViewport.tsx
   - apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx
   - apps/web/src/app/views/canvas/CanvasViewport.architecture.test.ts
