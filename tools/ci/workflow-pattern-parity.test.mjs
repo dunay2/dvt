@@ -222,6 +222,11 @@ test('workflow scope policy stays wired into ci and pr quality workflows', () =>
     ciWorkflow,
     /needs\.detect-affected\.outputs\.changed_file_validation_relevant/u
   );
+  assertWorkflowContains(
+    prQualityGate,
+    "steps.scope.outputs.changed_file_validation_relevant == 'true'"
+  );
+  assertWorkflowContains(prQualityGate, 'run: node scripts/check-changed.cjs');
 
   assertWorkflowContains(
     prQualityGate,
