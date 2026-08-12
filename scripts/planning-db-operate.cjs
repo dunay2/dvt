@@ -3537,6 +3537,8 @@ function normalizeArchitectureComponent(row) {
 
   return {
     componentId: row.component_id ?? row.componentId,
+    maturityScore: row.maturity_score ?? row.maturityScore ?? null,
+    createdAt: row.created_at ?? row.createdAt,
   };
 }
 
@@ -3846,7 +3848,8 @@ function planArchitectureComponentRecordOperation({
 
   validateArchitectureComponentRecordCommand(command);
 
-  const createdAt = toIso(now);
+  const updatedAt = toIso(now);
+  const createdAt = existing?.createdAt ?? updatedAt;
   const component = {
     componentId: command.componentId,
     name: command.name,
@@ -3858,10 +3861,10 @@ function planArchitectureComponentRecordOperation({
     runtime: command.runtime,
     criticality: command.criticality,
     status: command.status,
-    maturityScore: null,
+    maturityScore: existing?.maturityScore ?? null,
     parentComponentId: command.parentComponentId,
     createdAt,
-    updatedAt: createdAt,
+    updatedAt,
   };
   const responsibilities = command.responsibilities.map((responsibility) => ({
     ...responsibility,
