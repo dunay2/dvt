@@ -366,10 +366,9 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.dbtNoConnectedOriginsMessage',
     fallback: 'No connected dbt origins.',
   },
-  inspectorDbtModelSqlUnavailableMessage: {
-    key: 'canvas.inspector.authoring.dbtModelSqlUnavailableMessage',
-    fallback:
-      'Connect this model to a DBT source or model before generating an executable artifact.',
+  inspectorDbtModelSqlDescription: {
+    key: 'canvas.inspector.authoring.dbtModelSqlDescription',
+    fallback: 'Define the SQL this node runs.',
   },
   inspectorDbtOriginKindSourceLabel: {
     key: 'canvas.inspector.authoring.dbtOriginKindSourceLabel',

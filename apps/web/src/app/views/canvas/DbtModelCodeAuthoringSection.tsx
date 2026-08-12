@@ -28,7 +28,7 @@ export function DbtModelCodeAuthoringSection({
   const editorValue = draft.modelSql ?? artifact?.body ?? '';
   const provenanceDetail =
     artifact == null
-      ? canvasViewCopy.inspectorDbtModelSqlUnavailableMessage
+      ? canvasViewCopy.inspectorDbtModelSqlDescription
       : formatCanvasCopyTemplate(
           artifact.provenance === 'authored'
             ? canvasViewCopy.inspectorDbtModelSqlAuthoredDetailTemplate

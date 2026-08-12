@@ -75,12 +75,10 @@ describe('canvas copy catalog', () => {
     const spanishCopy = resolveCanvasViewCopy('es-ES');
 
     expect(canvasViewCopy.inspectorDbtPackageLabel).toBe('Package');
-    expect(canvasViewCopy.inspectorDbtModelSqlUnavailableMessage).toBe(
-      'Define the SQL this node runs.'
-    );
+    expect(canvasViewCopy.inspectorDbtModelSqlDescription).toBe('Define the SQL this node runs.');
     expect(canvasViewCopy.inspectorErrorDbtPackageRequired).toBe('Package is required.');
     expect(spanishCopy.inspectorDbtPackageLabel).toBe('Paquete');
-    expect(spanishCopy.inspectorDbtModelSqlUnavailableMessage).toBe(
+    expect(spanishCopy.inspectorDbtModelSqlDescription).toBe(
       'Define el SQL que ejecuta este nodo.'
     );
     expect(spanishCopy.inspectorErrorDbtPackageRequired).toBe('El paquete es obligatorio.');
