@@ -106542,7 +106542,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "afd4f62974ec2bbb2f8e7dde3f0811b30be1e328ccefdd1e0b601800f4d5b26b",
+      "sourceContentSha256": "a7c88bc2849d457a4ba113621092fc685365dd8b178633149ae841f1f7ff6cb0",
       "rawRail": {
         "name": "RecordArchitectureComponent",
         "type": "command",
@@ -106752,7 +106752,7 @@
         "node --test scripts/planning-db-operate-tests/architecture-plan.test.cjs scripts/planning-db-operate-tests/architecture-parse.test.cjs"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "afd4f62974ec2bbb2f8e7dde3f0811b30be1e328ccefdd1e0b601800f4d5b26b",
+      "sourceContentSha256": "a7c88bc2849d457a4ba113621092fc685365dd8b178633149ae841f1f7ff6cb0",
       "rawRail": {
         "name": "RecordArchitectureEvidenceExecution",
         "type": "command",
@@ -107326,7 +107326,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "afd4f62974ec2bbb2f8e7dde3f0811b30be1e328ccefdd1e0b601800f4d5b26b",
+      "sourceContentSha256": "a7c88bc2849d457a4ba113621092fc685365dd8b178633149ae841f1f7ff6cb0",
       "rawRail": {
         "name": "RecordArchitectureObservabilityEvidence",
         "type": "command",
@@ -107557,7 +107557,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "afd4f62974ec2bbb2f8e7dde3f0811b30be1e328ccefdd1e0b601800f4d5b26b",
+      "sourceContentSha256": "a7c88bc2849d457a4ba113621092fc685365dd8b178633149ae841f1f7ff6cb0",
       "rawRail": {
         "name": "RetireArchitectureEvidenceExecution",
         "type": "command",
@@ -107719,7 +107719,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "afd4f62974ec2bbb2f8e7dde3f0811b30be1e328ccefdd1e0b601800f4d5b26b",
+      "sourceContentSha256": "a7c88bc2849d457a4ba113621092fc685365dd8b178633149ae841f1f7ff6cb0",
       "rawRail": {
         "name": "RetireArchitectureTestEvidence",
         "type": "command",
@@ -107881,7 +107881,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "afd4f62974ec2bbb2f8e7dde3f0811b30be1e328ccefdd1e0b601800f4d5b26b",
+      "sourceContentSha256": "a7c88bc2849d457a4ba113621092fc685365dd8b178633149ae841f1f7ff6cb0",
       "rawRail": {
         "name": "RetireFeatureMechanizationRail",
         "type": "command",
@@ -108043,7 +108043,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "afd4f62974ec2bbb2f8e7dde3f0811b30be1e328ccefdd1e0b601800f4d5b26b",
+      "sourceContentSha256": "a7c88bc2849d457a4ba113621092fc685365dd8b178633149ae841f1f7ff6cb0",
       "rawRail": {
         "name": "TransitionArchitectureDesign",
         "type": "command",
@@ -112021,7 +112021,8 @@
         "scripts/planning-db/governed-source-refresh-write-rail.cjs#repoRoot",
         "scripts/planning-db/governed-source-refresh-write-rail.cjs#sha256",
         "scripts/planning-db/governed-source-refresh-write-rail.cjs#stableStringify",
-        "scripts/planning-db/governed-source-refresh-write-rail.cjs#writePlan"
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#writePlan",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#acquireIdempotencyLock"
       ],
       "implementationRefs": [
         "scripts/planning-db-operate.cjs#parseGovernedSourceRefreshCommand",
@@ -112047,7 +112048,8 @@
         "scripts/planning-db/governed-source-refresh-write-rail.cjs#repoRoot",
         "scripts/planning-db/governed-source-refresh-write-rail.cjs#sha256",
         "scripts/planning-db/governed-source-refresh-write-rail.cjs#stableStringify",
-        "scripts/planning-db/governed-source-refresh-write-rail.cjs#writePlan"
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#writePlan",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#acquireIdempotencyLock"
       ],
       "documentationRefs": ["https://github.com/dunay2/dvt/issues/2313"],
       "governingSources": [
@@ -112074,12 +112076,20 @@
       ],
       "completionGate": ["pnpm verify:prepush"],
       "sourcePath": "scripts/planning-db/governed-source-refresh-write-rail.cjs",
-      "sourceContentSha256": "9f8d2cc5973d3187eaa461369916fe8b77312b5964ed20a8713bb0f385b14916",
+      "sourceContentSha256": "07bac6af7a0fcbc7a73aa88018642f615e3691352670d467f05a69d0310012d8",
       "rawRail": {
         "name": "RefreshGovernedSourceContent",
         "type": "command",
         "status": "implemented",
-        "dddOwner": "GovernedSourceInventory"
+        "dddOwner": "GovernedSourceInventory",
+        "negativeTests": [
+          "Reject unknown flags, dirty, untracked, symlinked, ambiguous, and escaping paths",
+          "Reject non-governed paths and effective-content compare-and-set mismatches",
+          "Serialize duplicate idempotency deliveries before replay lookup"
+        ],
+        "adapterSurface": "pnpm planning:db:operate governed-source refresh",
+        "applicationPort": "GovernedSourceContentRefresh application command",
+        "authorizationScope": "Repository-local governed paths; explicit actor; clean tracked HEAD; governed membership; optional content CAS"
       },
       "rawManifest": {
         "symbols": [
@@ -112370,6 +112380,18 @@
             "fowlerSignals": ["hidden_authority"],
             "cypressCoverage": "not-applicable: database command rail",
             "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-export.test.cjs"
+          },
+          {
+            "name": "acquireIdempotencyLock",
+            "path": "scripts/planning-db/governed-source-refresh-write-rail.cjs",
+            "cqRails": ["RefreshGovernedSourceContent"],
+            "dddOwner": "GovernedSourceInventory",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/governed-source-refresh.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority"],
+            "cypressCoverage": "not-applicable: database command rail",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-export.test.cjs"
           }
         ],
         "version": 1,
@@ -112412,7 +112434,15 @@
             "name": "RefreshGovernedSourceContent",
             "type": "command",
             "status": "implemented",
-            "dddOwner": "GovernedSourceInventory"
+            "dddOwner": "GovernedSourceInventory",
+            "negativeTests": [
+              "Reject unknown flags, dirty, untracked, symlinked, ambiguous, and escaping paths",
+              "Reject non-governed paths and effective-content compare-and-set mismatches",
+              "Serialize duplicate idempotency deliveries before replay lookup"
+            ],
+            "adapterSurface": "pnpm planning:db:operate governed-source refresh",
+            "applicationPort": "GovernedSourceContentRefresh application command",
+            "authorizationScope": "Repository-local governed paths; explicit actor; clean tracked HEAD; governed membership; optional content CAS"
           }
         ],
         "architectureGuards": [
@@ -112440,7 +112470,7 @@
           "scripts/publish-docs.cjs"
         ]
       },
-      "revision": 0,
+      "revision": 2,
       "createdBy": "codex",
       "createdAt": "2026-08-12T19:13:00.602Z"
     },
@@ -114810,7 +114840,7 @@
         "pnpm docs:feature-mechanization:implementation"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "afd4f62974ec2bbb2f8e7dde3f0811b30be1e328ccefdd1e0b601800f4d5b26b",
+      "sourceContentSha256": "a7c88bc2849d457a4ba113621092fc685365dd8b178633149ae841f1f7ff6cb0",
       "rawRail": {
         "name": "RecordArchitectureStorageIo",
         "type": "command",
@@ -170545,6 +170575,231 @@
         ]
       },
       "createdAt": "2026-08-12T19:13:00.602Z"
+    },
+    {
+      "operationId": "b66017e2-6960-493f-9fd0-89d298078d6b",
+      "idempotencyKey": "gh-2313-complete-refresh-rail-authority-v1",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#DB-GOVERNED-SOURCE-REFRESH-2313#command#refreshgovernedsourcecontent",
+      "sourcePath": "scripts/planning-db/governed-source-refresh-write-rail.cjs",
+      "sourceContentSha256": "07bac6af7a0fcbc7a73aa88018642f615e3691352670d467f05a69d0310012d8",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "node --test scripts/planning-db-operate.test.cjs",
+        "dddOwner": "GovernedSourceInventory",
+        "railName": "RefreshGovernedSourceContent",
+        "railType": "command",
+        "featureId": "DB-GOVERNED-SOURCE-REFRESH-2313",
+        "greenTest": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-export.test.cjs",
+        "sourceRef": "scripts/planning-db/governed-source-refresh-write-rail.cjs",
+        "unitTests": [
+          "scripts/planning-db-operate-tests/governed-source-refresh.test.cjs"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2313"],
+        "cypressFlows": ["not-applicable: database command rail"],
+        "domainObjects": ["GovernedSourceInventory"],
+        "fowlerSignals": ["hidden_authority"],
+        "negativeTests": [
+          "Reject unknown flags, dirty, untracked, symlinked, ambiguous, and escaping paths",
+          "Reject non-governed paths and effective-content compare-and-set mismatches",
+          "Serialize duplicate idempotency deliveries before replay lookup"
+        ],
+        "patchSurfaces": [
+          "tools/planning-db/schema.sql",
+          "scripts/planning-db-operate.cjs",
+          "scripts/planning-db-operate.test.cjs",
+          "scripts/planning-db-operate-tests/governed-source-refresh.test.cjs",
+          "scripts/planning-db/commands/governed-source-refresh-command.cjs",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs",
+          "scripts/planning-db-schema.test.cjs",
+          "scripts/planning-db-export.cjs",
+          "scripts/planning-db-export.test.cjs",
+          "tools/ci/sync-docs-status-policy.test.mjs",
+          "tools/planning-db/state/canonical-state.json",
+          "tools/planning-db/state/db-governance-surfaces.json"
+        ],
+        "adapterSurface": "pnpm planning:db:operate governed-source refresh",
+        "completionGate": ["pnpm verify:prepush"],
+        "applicationPort": "GovernedSourceContentRefresh application command",
+        "componentGuides": ["planning-db://component/SYS-DOCS-GOVERNANCE-ROOT"],
+        "expectedFailure": "RefreshGovernedSourceContent is absent and evidence reads the imported stale hash.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/adr/ADR-0053-file-state-fingerprint-governance.md"
+        ],
+        "documentationRefs": ["https://github.com/dunay2/dvt/issues/2313"],
+        "architectureGuards": [
+          "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-export.test.cjs"
+        ],
+        "authorizationScope": "Repository-local governed paths; explicit actor; clean tracked HEAD; governed membership; optional content CAS",
+        "implementationPlan": "TDD validates exact clean HEAD blobs, persists audited effective hashes transactionally, and routes freshness projections through the overlay.",
+        "implementationRefs": [
+          "scripts/planning-db-operate.cjs#parseGovernedSourceRefreshCommand",
+          "scripts/planning-db/commands/governed-source-refresh-command.cjs#createGovernedSourceRefreshCommandParser",
+          "scripts/planning-db/commands/governed-source-refresh-command.cjs#parseExpectedContentHashes",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#applyGovernedSourceRefreshOperation",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#assertIdempotentReplayMatches",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#assertInsideRepository",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#canonicalSourceContentHash",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#crypto",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#databaseUrl",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#defaultGit",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#defaultGovernedSourceRefreshIdempotencyKey",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#fs",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#normalizeGovernedSourcePath",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#normalizeRow",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#parseTreeEntry",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#path",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#planGovernedSourceRefreshOperation",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#readExistingOperation",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#readGovernedRowsForUpdate",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#readGovernedSourceSnapshots",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#repoRoot",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#sha256",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#stableStringify",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#writePlan"
+        ],
+        "normalizedRailName": "refreshgovernedsourcecontent",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "07bac6af7a0fcbc7a73aa88018642f615e3691352670d467f05a69d0310012d8",
+        "allowedImplementationSurfaces": [
+          "tools/planning-db/schema.sql",
+          "scripts/planning-db-operate.cjs",
+          "scripts/planning-db-operate.test.cjs",
+          "scripts/planning-db-operate-tests/governed-source-refresh.test.cjs",
+          "scripts/planning-db/commands/governed-source-refresh-command.cjs",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs",
+          "scripts/planning-db-schema.test.cjs",
+          "scripts/planning-db-export.cjs",
+          "scripts/planning-db-export.test.cjs",
+          "tools/ci/sync-docs-status-policy.test.mjs",
+          "tools/planning-db/state/canonical-state.json",
+          "tools/planning-db/state/db-governance-surfaces.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "scripts/sync-docs.cjs",
+          "scripts/publish-docs.cjs"
+        ]
+      },
+      "createdAt": "2026-08-12T19:37:40.229Z"
+    },
+    {
+      "operationId": "c77144ad-77b9-4c80-8172-07d2ad3dbb8b",
+      "idempotencyKey": "gh-2313-complete-refresh-rail-authority-v2",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#DB-GOVERNED-SOURCE-REFRESH-2313#command#refreshgovernedsourcecontent",
+      "sourcePath": "scripts/planning-db/governed-source-refresh-write-rail.cjs",
+      "sourceContentSha256": "07bac6af7a0fcbc7a73aa88018642f615e3691352670d467f05a69d0310012d8",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "node --test scripts/planning-db-operate.test.cjs",
+        "dddOwner": "GovernedSourceInventory",
+        "railName": "RefreshGovernedSourceContent",
+        "railType": "command",
+        "featureId": "DB-GOVERNED-SOURCE-REFRESH-2313",
+        "greenTest": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-export.test.cjs",
+        "sourceRef": "scripts/planning-db/governed-source-refresh-write-rail.cjs",
+        "unitTests": [
+          "scripts/planning-db-operate-tests/governed-source-refresh.test.cjs"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2313"],
+        "cypressFlows": ["not-applicable: database command rail"],
+        "domainObjects": ["GovernedSourceInventory"],
+        "fowlerSignals": ["hidden_authority"],
+        "negativeTests": [
+          "Reject unknown flags, dirty, untracked, symlinked, ambiguous, and escaping paths",
+          "Reject non-governed paths and effective-content compare-and-set mismatches",
+          "Serialize duplicate idempotency deliveries before replay lookup"
+        ],
+        "patchSurfaces": [
+          "tools/planning-db/schema.sql",
+          "scripts/planning-db-operate.cjs",
+          "scripts/planning-db-operate.test.cjs",
+          "scripts/planning-db-operate-tests/governed-source-refresh.test.cjs",
+          "scripts/planning-db/commands/governed-source-refresh-command.cjs",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs",
+          "scripts/planning-db-schema.test.cjs",
+          "scripts/planning-db-export.cjs",
+          "scripts/planning-db-export.test.cjs",
+          "tools/ci/sync-docs-status-policy.test.mjs",
+          "tools/planning-db/state/canonical-state.json",
+          "tools/planning-db/state/db-governance-surfaces.json"
+        ],
+        "adapterSurface": "pnpm planning:db:operate governed-source refresh",
+        "completionGate": ["pnpm verify:prepush"],
+        "applicationPort": "GovernedSourceContentRefresh application command",
+        "componentGuides": ["planning-db://component/SYS-DOCS-GOVERNANCE-ROOT"],
+        "expectedFailure": "RefreshGovernedSourceContent is absent and evidence reads the imported stale hash.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/adr/ADR-0053-file-state-fingerprint-governance.md"
+        ],
+        "documentationRefs": ["https://github.com/dunay2/dvt/issues/2313"],
+        "architectureGuards": [
+          "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-export.test.cjs"
+        ],
+        "authorizationScope": "Repository-local governed paths; explicit actor; clean tracked HEAD; governed membership; optional content CAS",
+        "implementationPlan": "TDD validates exact clean HEAD blobs, persists audited effective hashes transactionally, and routes freshness projections through the overlay.",
+        "implementationRefs": [
+          "scripts/planning-db-operate.cjs#parseGovernedSourceRefreshCommand",
+          "scripts/planning-db/commands/governed-source-refresh-command.cjs#createGovernedSourceRefreshCommandParser",
+          "scripts/planning-db/commands/governed-source-refresh-command.cjs#parseExpectedContentHashes",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#applyGovernedSourceRefreshOperation",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#assertIdempotentReplayMatches",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#assertInsideRepository",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#canonicalSourceContentHash",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#crypto",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#databaseUrl",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#defaultGit",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#defaultGovernedSourceRefreshIdempotencyKey",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#fs",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#normalizeGovernedSourcePath",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#normalizeRow",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#parseTreeEntry",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#path",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#planGovernedSourceRefreshOperation",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#readExistingOperation",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#readGovernedRowsForUpdate",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#readGovernedSourceSnapshots",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#repoRoot",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#sha256",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#stableStringify",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#writePlan",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#acquireIdempotencyLock"
+        ],
+        "normalizedRailName": "refreshgovernedsourcecontent",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "07bac6af7a0fcbc7a73aa88018642f615e3691352670d467f05a69d0310012d8",
+        "allowedImplementationSurfaces": [
+          "tools/planning-db/schema.sql",
+          "scripts/planning-db-operate.cjs",
+          "scripts/planning-db-operate.test.cjs",
+          "scripts/planning-db-operate-tests/governed-source-refresh.test.cjs",
+          "scripts/planning-db/commands/governed-source-refresh-command.cjs",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs",
+          "scripts/planning-db-schema.test.cjs",
+          "scripts/planning-db-export.cjs",
+          "scripts/planning-db-export.test.cjs",
+          "tools/ci/sync-docs-status-policy.test.mjs",
+          "tools/planning-db/state/canonical-state.json",
+          "tools/planning-db/state/db-governance-surfaces.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "scripts/sync-docs.cjs",
+          "scripts/publish-docs.cjs"
+        ]
+      },
+      "createdAt": "2026-08-12T19:38:14.170Z"
     }
   ],
   "governanceComponentDefinitions": [
