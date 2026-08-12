@@ -162,6 +162,13 @@ jobs:
         if: github.event_name == 'pull_request' && steps.scope.outputs.docs_changed == 'true'
         run: pnpm docs:gov:frontmatter:changed
 
+      - name: Enforce changed docs links
+        if: github.event_name == 'pull_request' && steps.scope.outputs.docs_changed == 'true'
+        run: pnpm docs:gov:links:changed
+        env:
+          GIT_BASE: ${{ github.event.pull_request.base.sha }}
+          GIT_HEAD: ${{ github.sha }}
+
       - name: Validate generated code-state output
         if:
           github.event_name == 'pull_request' && steps.scope.outputs.generated_status_relevant ==
