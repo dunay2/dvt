@@ -228,3 +228,30 @@ jobs:
           path: |
             packages/@dvt/engine/test/contracts/results/
             .golden/hashes.json
+
+  contracts-required:
+    name: Contracts Required for Merge
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs:
+      [
+        detect-changes,
+        validate-json-schemas,
+        determinism-checks,
+        contract-validate,
+        contract-hashes,
+      ]
+    if: always()
+    steps:
+      - name: Check contract jobs
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const jobs = ${{ toJSON(needs) }};
+            const failedJobs = Object.entries(jobs)
+              .filter(([_, job]) => ['failure', 'cancelled'].includes(job.result))
+              .map(([name, _]) => name);
+
+            if (failedJobs.length > 0) {
+              core.setFailed(`The following contract jobs failed: ${failedJobs.join(', ')}`);
+            }
