@@ -24,12 +24,6 @@ const PR_QUALITY_GOVERNANCE_COMMANDS = [
   'pnpm docs:gov:filenames:changed',
   'pnpm docs:gov:frontmatter:changed',
   'pnpm docs:governance:unit-coverage',
-  'pnpm docs:governance:document-unit-map:check',
-  'pnpm docs:governance:file-component-index:check',
-  'pnpm docs:governance:file-fingerprint-baseline:check',
-  'pnpm docs:governance:file-fingerprint-impact:check',
-  'pnpm docs:governance:coverage-report:check',
-  'pnpm docs:governance:remediation-queue:check',
   'pnpm traceability:adr0',
   'pnpm docs:feature-mechanization',
   'pnpm docs:feature-mechanization:implementation',
@@ -398,7 +392,7 @@ test('engine coverage scope is a semantic superset of engine workspace policy', 
   }
 });
 
-test('PR quality gate keeps merge-blocking governance commands wired', () => {
+test('PR quality gate keeps merge-blocking non-projection governance commands wired', () => {
   const prQualityGate = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
 
   assertWorkflowContains(prQualityGate, 'pnpm docs:gov:locations -- --changed-only');
