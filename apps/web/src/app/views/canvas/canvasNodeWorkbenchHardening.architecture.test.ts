@@ -3,8 +3,10 @@ import { describe, expect, it } from 'vitest';
 import DbtNodeComponentSource from '../../components/canvas/DbtNodeComponent.tsx?raw';
 import CanvasNodeShellSource from '../../components/canvas/CanvasNodeShell.tsx?raw';
 import CanvasNodeContextMenuModelSource from '../../components/canvas/canvasNodeContextMenuModel.ts?raw';
+import NodePropertySectionViewSource from '../../components/inspector/NodePropertySectionView.tsx?raw';
 import GraphNodeCardViewSource from '../../plugins/graph/GraphNodeCardView.tsx?raw';
 import CanvasInspectorAuthoringContractSource from './canvasInspectorAuthoring.types.ts?raw';
+import CanvasInspectorAuthoringSectionSource from './CanvasInspectorAuthoringSection.tsx?raw';
 import CanvasNodePresentationCopySource from './canvasNodePresentationCopy.ts?raw';
 import CanvasCopyTypesSource from './canvasCopy.types.ts?raw';
 import CanvasAuthoringCopySource from './canvasCopyCatalog.authoring.ts?raw';
@@ -120,6 +122,20 @@ describe('Canvas Node Workbench W4 hardening contracts', () => {
     expect(CanvasNodeWorkbenchPanelSource).toContain(
       'className="ml-auto flex shrink-0 items-center gap-1"'
     );
+  });
+
+  it('keeps primary Workbench tabs free of repeated General and Code presentation chrome', () => {
+    expect(NodePropertySectionViewSource).toContain(
+      "section.id === 'code' || section.id === 'general'"
+    );
+    expect(CanvasInspectorAuthoringSectionSource).not.toContain(
+      'canvasViewCopy.inspectorEditablePropertiesTitle'
+    );
+    expect(CanvasInspectorAuthoringSectionSource).not.toContain(
+      'canvasViewCopy.inspectorEditablePropertiesDescription'
+    );
+    expect(CanvasNodeWorkbenchPanelSource).toContain('copy.inspectorEditablePropertiesTitle');
+    expect(CanvasNodeWorkbenchPanelSource).toContain('copy.inspectorEditablePropertiesDescription');
   });
 
   it('removes application-level React Flow click and visual-selection seams that own no behavior', () => {
