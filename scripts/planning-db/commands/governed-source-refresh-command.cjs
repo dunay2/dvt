@@ -1,8 +1,7 @@
 /** Owned concern: parse the bounded governed-source current-content command. */
-const {
-  defaultGovernedSourceRefreshIdempotencyKey,
-  normalizeGovernedSourcePath,
-} = require('../governed-source-refresh-write-rail.cjs');
+const { normalizeGovernedSourcePath } = require('../governed-source-refresh-write-rail.cjs');
+
+const supportedFlags = new Set(['path', 'expected-content-sha256', 'actor', 'idempotency-key']);
 
 function parseExpectedContentHashes(values) {
   const entries = Array.isArray(values) ? values : values ? [values] : [];
@@ -44,6 +43,9 @@ function createGovernedSourceRefreshCommandParser(deps) {
         throw new Error(`Invalid governed-source flag sequence near "${flag || ''}".`);
       }
       const key = flag.slice(2);
+      if (!supportedFlags.has(key)) {
+        throw new Error(`Unknown governed-source flag "${flag}".`);
+      }
       const camelKey = key.replace(/-([a-z])/gu, (_, character) => character.toUpperCase());
       if (repeatable.has(key)) {
         options[camelKey] = options[camelKey] || [];
@@ -87,10 +89,7 @@ function createGovernedSourceRefreshCommandParser(deps) {
       idempotencyKey: normalizeOptionalText(options.idempotencyKey),
     };
 
-    return {
-      ...command,
-      idempotencyKey: command.idempotencyKey || defaultGovernedSourceRefreshIdempotencyKey(command),
-    };
+    return command;
   };
 }
 
