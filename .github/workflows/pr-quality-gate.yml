@@ -85,6 +85,15 @@ jobs:
         with:
           node-version: 22.x
 
+      - name: Validate changed file format and lint
+        if:
+          github.event_name == 'pull_request' &&
+          steps.scope.outputs.changed_file_validation_relevant == 'true'
+        run: node scripts/check-changed.cjs
+        env:
+          GIT_BASE: ${{ github.event.pull_request.base.sha }}
+          GIT_HEAD: ${{ github.sha }}
+
       - name: ARC policy evaluate
         if: github.event_name == 'pull_request'
         run: node tools/ci/arc-check.mjs > arc.json
