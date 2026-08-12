@@ -6,6 +6,7 @@
 const path = require('node:path');
 
 const {
+  buildFocusedChangedTestPlan,
   buildVerifyChangedPlan,
   commandLabel,
   executeCommandPlan,
@@ -13,7 +14,7 @@ const {
   hasPlanningDbChange,
   normalizeChangedFiles,
 } = require('./local-validation-plan.cjs');
-const { listLocalChangedFiles } = require('./git-local-changes.cjs');
+const { listCommittedChangedFiles, listLocalChangedFiles } = require('./git-local-changes.cjs');
 const { buildPrepushStamp, writePrepushStamp } = require('./verify-prepush.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
@@ -26,10 +27,14 @@ function executeVerifyChangedPlan(plan, options = {}) {
 }
 
 function parseArgs(argv) {
-  const args = { dryRun: false };
+  const args = { dryRun: false, committedTests: false };
   for (const arg of argv) {
     if (arg === '--dry-run') {
       args.dryRun = true;
+      continue;
+    }
+    if (arg === '--committed-tests') {
+      args.committedTests = true;
       continue;
     }
     throw new Error(`Unknown argument: ${arg}`);
@@ -68,10 +73,21 @@ function main(argv = process.argv.slice(2), options = {}) {
   const args = parseArgs(argv);
   const root = options.repoRootPath || repoRoot;
   const changedFiles =
-    options.changedFiles || normalizeChangedFiles(listLocalChangedFiles({ repoRootPath: root }));
-  const plan = buildVerifyChangedPlan(changedFiles);
+    options.changedFiles ||
+    normalizeChangedFiles(
+      args.committedTests
+        ? (options.listCommittedChangedFiles || listCommittedChangedFiles)({
+            repoRootPath: root,
+          })
+        : listLocalChangedFiles({ repoRootPath: root })
+    );
+  const plan = args.committedTests
+    ? buildFocusedChangedTestPlan(changedFiles)
+    : buildVerifyChangedPlan(changedFiles);
   const print = options.printPlan || printPlan;
-  const executePlan = options.executeVerifyChangedPlan || executeVerifyChangedPlan;
+  const executePlan = args.committedTests
+    ? options.executeFocusedChangedTestPlan || executeVerifyChangedPlan
+    : options.executeVerifyChangedPlan || executeVerifyChangedPlan;
 
   if (args.dryRun || plan.length === 0) {
     print(changedFiles, plan);
@@ -79,7 +95,7 @@ function main(argv = process.argv.slice(2), options = {}) {
   }
 
   const status = executePlan(plan, { repoRootPath: root });
-  if (status === 0) {
+  if (status === 0 && !args.committedTests) {
     recordSuccessfulChangedValidation(changedFiles, {
       ...options,
       repoRootPath: root,
@@ -98,6 +114,7 @@ if (require.main === module) {
 }
 
 module.exports = {
+  buildFocusedChangedTestPlan,
   buildVerifyChangedPlan,
   commandLabel,
   executeVerifyChangedPlan,

@@ -92,6 +92,38 @@ function withPathspec(args, pathspecs) {
   return [...args, '--', ...pathspecs];
 }
 
+function listCommittedChangedFiles(options = {}) {
+  const runGitLines = options.runGitLines || defaultRunGitLines;
+  const repoOptions = { repoRootPath: options.repoRootPath };
+  const diffFilter = options.diffFilter || 'ACMR';
+  const pathspecs = options.pathspecs || [];
+  const baseRef = options.baseRef || process.env.GIT_BASE;
+  const headRef = options.headRef || process.env.GIT_HEAD || 'HEAD';
+
+  if (!baseRef) {
+    throw new Error('GIT_BASE is required to read committed changed files.');
+  }
+
+  try {
+    return unique(
+      runGitLines(
+        withPathspec(
+          ['diff', '--name-only', `--diff-filter=${diffFilter}`, `${baseRef}...${headRef}`],
+          pathspecs
+        ),
+        repoOptions
+      )
+    ).sort();
+  } catch (error) {
+    throw new Error(
+      `Unable to read committed changed files between ${baseRef} and ${headRef}: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+      { cause: error }
+    );
+  }
+}
+
 function listLocalChangedFiles(options = {}) {
   const runGitLines = options.runGitLines || defaultRunGitLines;
   const repoOptions = { repoRootPath: options.repoRootPath };
@@ -146,6 +178,7 @@ function toAbsoluteRepoPath(repoRootPath, filePath) {
 
 module.exports = {
   defaultRunGitLines,
+  listCommittedChangedFiles,
   listLocalChangedFiles,
   parseGitLines,
   toAbsoluteRepoPath,
