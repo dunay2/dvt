@@ -13,14 +13,17 @@ function createKnowledgeIntakeRetirementGuardComponent(deps = {}) {
   }
 
   function listNewBuzonIntakeFiles(options = {}) {
-    return git
-      .listLocalChangedFiles({
-        ...options,
-        diffFilter: 'AR',
-        includeUntracked: options.includeUntracked !== false,
-        repoRootPath: options.repoRootPath || repoRoot,
-      })
-      .filter(isBuzonMarkdownIntake);
+    const query = options.committed ? git.listCommittedChangedFiles : git.listLocalChangedFiles;
+    const queryOptions = {
+      ...options,
+      diffFilter: 'AR',
+      repoRootPath: options.repoRootPath || repoRoot,
+    };
+    if (!options.committed) {
+      queryOptions.includeUntracked = options.includeUntracked !== false;
+    }
+
+    return query(queryOptions).filter(isBuzonMarkdownIntake);
   }
 
   function buildBuzonIntakeRetirementMessage(files) {
@@ -60,7 +63,9 @@ function createKnowledgeIntakeRetirementGuardComponent(deps = {}) {
 }
 
 if (require.main === module) {
-  process.exitCode = createKnowledgeIntakeRetirementGuardComponent().main();
+  process.exitCode = createKnowledgeIntakeRetirementGuardComponent().main({
+    committed: process.argv.slice(2).includes('--committed'),
+  });
 }
 
 module.exports = createKnowledgeIntakeRetirementGuardComponent();
