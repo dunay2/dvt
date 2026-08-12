@@ -1099,16 +1099,16 @@ test('generator no longer reads the empty documentation panel binding', () => {
   assert.doesNotMatch(source, /npm_lifecycle_event === 'docs:status:check'/u);
 });
 
-test('live Planning DB workflow provides explicit Git refs to the importer', () => {
-  const workflow = fs.readFileSync(prQualityWorkflowPath, 'utf8');
+test('on-demand Planning DB publication provides explicit Git refs to the importer', () => {
+  const workflow = yaml.load(fs.readFileSync(docsDeployWorkflowPath, 'utf8'));
   const workflowScope = JSON.parse(fs.readFileSync(workflowScopePath, 'utf8'));
-  const liveStep = workflow.match(
-    /- name: Prove DB-first documentation against rebuilt Planning DB[\s\S]*?(?=\n\s+- name:)/u
-  )?.[0];
+  const publicationAuthorityStep = workflow.jobs['build-deploy'].steps.find(
+    (step) => step.name === 'Prepare Planning DB publication authority'
+  );
 
-  assert.ok(liveStep, 'expected the live Repository Map workflow step');
-  assert.match(liveStep, /GIT_BASE: \$\{\{ github\.event\.pull_request\.base\.sha \}\}/u);
-  assert.match(liveStep, /GIT_HEAD: \$\{\{ github\.sha \}\}/u);
+  assert.ok(publicationAuthorityStep, 'expected the on-demand Planning DB publication step');
+  assert.equal(publicationAuthorityStep.env.GIT_BASE, '${{ github.sha }}');
+  assert.equal(publicationAuthorityStep.env.GIT_HEAD, '${{ github.sha }}');
   assert.ok(workflowScope.generated_status_relevant.includes('scripts/generated-doc-date.cjs'));
   assert.ok(
     workflowScope.generated_status_relevant.includes('tools/planning-db/state/canonical-state.json')
