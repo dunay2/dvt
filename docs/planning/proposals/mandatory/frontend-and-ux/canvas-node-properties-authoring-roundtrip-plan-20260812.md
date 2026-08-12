@@ -188,6 +188,7 @@ allowedImplementationSurfaces:
   - apps/web/src/app/plugins/graph/graphNodeCardStrategyUtils.ts
   - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx
   - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx
+  - apps/web/src/app/views/canvas/CanvasInspectorAuthoringSection.tsx
   - apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.es.ts
   - apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.ts
   - apps/web/src/app/views/canvas/canvasCopy.types.ts
@@ -197,6 +198,7 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/canvasNodeWorkbenchHardening.architecture.test.ts
   - apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts
   - apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
+  - apps/web/cypress/support/canvasDraftAuthoring.ts
   - apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
   - apps/web/cypress/e2e/dbt/dbt-project-yaml-description-edit-live.cy.ts
   - docs/planning/proposals/mandatory/frontend-and-ux/canvas-node-properties-authoring-roundtrip-plan-20260812.md
@@ -258,6 +260,106 @@ symbols:
     fowlerSignals: [Feature envy, Test-only confidence]
     architectureGuard: pnpm --filter @dvt/web test:canvas
     cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas]
+  - path: apps/web/src/app/plugins/graph/graphNodeCardStrategyUtils.ts
+    name: GraphNodeCodeMetricPresentation
+    kind: type
+    exported: true
+    dddOwner: Graph node-card read model
+    cqRails: [InspectCanvasNode]
+    fowlerSignals: [Feature envy]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas]
+  - path: apps/web/src/app/plugins/graph/graphNodeCardStrategyUtils.ts
+    name: interpolatePath
+    kind: function
+    exported: false
+    dddOwner: Graph node-card read model
+    cqRails: [InspectCanvasNode]
+    fowlerSignals: [Feature envy]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas]
+  - path: apps/web/src/app/views/canvas/canvasNodeWorkbenchSectionStrategy.ts
+    name: CanvasNodeWorkbenchSectionModel
+    kind: type
+    exported: true
+    dddOwner: Node Properties section presentation policy
+    cqRails: [InspectCanvasNode]
+    fowlerSignals: [Responsibility overload, Duplicate semantics]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas]
+  - path: apps/web/src/app/views/canvas/canvasNodeWorkbenchSectionStrategy.ts
+    name: ResolveCanvasNodeWorkbenchSectionModelArgs
+    kind: type
+    exported: false
+    dddOwner: Node Properties section presentation policy
+    cqRails: [InspectCanvasNode]
+    fowlerSignals: [Responsibility overload]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas]
+  - path: apps/web/src/app/views/canvas/canvasNodeWorkbenchSectionStrategy.ts
+    name: isEditableSection
+    kind: function
+    exported: false
+    dddOwner: Node Properties section presentation policy
+    cqRails: [InspectCanvasNode]
+    fowlerSignals: [Responsibility overload]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas]
+  - path: apps/web/src/app/views/canvas/canvasNodeWorkbenchSectionStrategy.ts
+    name: hasRecordedSectionContent
+    kind: function
+    exported: false
+    dddOwner: Node Properties section presentation policy
+    cqRails: [InspectCanvasNode]
+    fowlerSignals: [Duplicate semantics]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas]
+  - path: apps/web/src/app/views/canvas/canvasNodeWorkbenchSectionStrategy.ts
+    name: isSupportedSection
+    kind: function
+    exported: false
+    dddOwner: Node Properties section presentation policy
+    cqRails: [InspectCanvasNode]
+    fowlerSignals: [Responsibility overload, Duplicate semantics]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas]
+  - path: apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts
+    name: assertNoSeriousAccessibilityViolations
+    kind: function
+    exported: false
+    dddOwner: Canvas acceptance proof
+    cqRails: [InspectCanvasNode]
+    fowlerSignals: [Test-only confidence]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas]
+  - path: apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts
+    name: findDraftSaveContainingConfiguredModel
+    kind: function
+    exported: false
+    dddOwner: Canvas acceptance proof
+    cqRails: [SaveWorkspaceGraphDraft]
+    fowlerSignals: [Test-only confidence]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas]
+  - path: apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts
+    name: waitForDraftSaveContainingConfiguredModel
+    kind: function
+    exported: false
+    dddOwner: Canvas acceptance proof
+    cqRails: [SaveWorkspaceGraphDraft]
+    fowlerSignals: [Test-only confidence]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts
     unitTests: [pnpm --filter @dvt/web test:canvas]
 fowlerSignals:
   - unsupported Node Properties sections leak through overflow presentation
