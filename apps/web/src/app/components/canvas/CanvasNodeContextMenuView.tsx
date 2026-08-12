@@ -38,6 +38,7 @@ export function CanvasNodeContextMenuView({
               key={action.id}
               data-slot="canvas-node-context-menu-item"
               variant={action.destructive ? 'destructive' : undefined}
+              style={action.destructive ? { color: 'var(--status-danger)' } : undefined}
               disabled={action.disabled}
               title={action.disabledReason}
               onSelect={() => onAction(action.id)}
