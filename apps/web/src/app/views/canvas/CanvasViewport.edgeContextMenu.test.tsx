@@ -34,7 +34,7 @@ describe('CanvasViewport edge context menu', () => {
   });
 
   function getMenuText(): string {
-    return container.querySelector('[data-slot="canvas-context-menu"]')?.textContent ?? '';
+    return document.querySelector('[data-slot="canvas-context-menu"]')?.textContent ?? '';
   }
 
   async function openEdgeContextMenu(props: CanvasViewportProps): Promise<void> {
@@ -55,6 +55,23 @@ describe('CanvasViewport edge context menu', () => {
         } as unknown as React.MouseEvent<Element>,
         edge
       );
+
+      const contextSurface = container.querySelector(
+        '[data-slot="canvas-viewport-context-surface"]'
+      );
+      const edgeTarget = document.createElement('div');
+      edgeTarget.className = 'react-flow__edge';
+      contextSurface?.appendChild(edgeTarget);
+      edgeTarget.dispatchEvent(
+        new MouseEvent('contextmenu', {
+          bubbles: true,
+          cancelable: true,
+          button: 2,
+          buttons: 2,
+          clientX: 600,
+          clientY: 360,
+        })
+      );
     });
   }
 
@@ -70,35 +87,15 @@ describe('CanvasViewport edge context menu', () => {
       onEdgesChange: vi.fn(),
     });
 
-    const edgeContextMenu = xyflowState.lastReactFlowProps?.onEdgeContextMenu as
-      | ((event: React.MouseEvent<Element>, edge: NonNullable<typeof props.edges>[number]) => void)
-      | undefined;
-    const preventDefault = vi.fn();
-    const edge = props.edges?.[0];
-    if (edge == null) {
-      throw new Error('EXPECTED_TEST_EDGE');
-    }
+    await openEdgeContextMenu(props);
 
-    await act(async () => {
-      edgeContextMenu?.(
-        {
-          preventDefault,
-          clientX: 600,
-          clientY: 360,
-        } as unknown as React.MouseEvent<Element>,
-        edge
-      );
-    });
-
-    expect(preventDefault).toHaveBeenCalledTimes(1);
-
-    const removeButton = Array.from(container.querySelectorAll('button')).find((button) =>
-      button.textContent?.includes('Eliminar conexión')
+    const removeAction = document.querySelector<HTMLElement>(
+      '[data-slot="canvas-context-menu-item"][data-menu-action="remove-edge"]'
     );
-    expect(removeButton).toBeDefined();
+    expect(removeAction?.textContent).toContain('Remove connection');
 
     await act(async () => {
-      removeButton?.click();
+      removeAction?.click();
     });
 
     expect(props.onEdgesChange).toHaveBeenCalledWith([
@@ -123,7 +120,7 @@ describe('CanvasViewport edge context menu', () => {
 
     await openEdgeContextMenu(props);
 
-    expect(getMenuText()).toContain('Eliminar conexión');
+    expect(getMenuText()).toContain('Remove connection');
 
     const paneClick = xyflowState.lastReactFlowProps?.onPaneClick as
       ((event: React.MouseEvent<Element>) => void) | undefined;
@@ -132,7 +129,7 @@ describe('CanvasViewport edge context menu', () => {
       paneClick?.({ button: 0 } as React.MouseEvent<Element>);
     });
 
-    expect(getMenuText()).not.toContain('Eliminar conexión');
+    expect(getMenuText()).not.toContain('Remove connection');
     expect(props.onEdgesChange).not.toHaveBeenCalled();
   });
 
@@ -150,13 +147,13 @@ describe('CanvasViewport edge context menu', () => {
 
     await openEdgeContextMenu(props);
 
-    expect(getMenuText()).toContain('Eliminar conexión');
+    expect(getMenuText()).toContain('Remove connection');
 
     await act(async () => {
       document.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true }));
     });
 
-    expect(getMenuText()).not.toContain('Eliminar conexión');
+    expect(getMenuText()).not.toContain('Remove connection');
     expect(props.onEdgesChange).not.toHaveBeenCalled();
   });
 });
