@@ -11125,6 +11125,20 @@
         "updated_at": "2026-08-12T18:55:08.664+00:00"
       },
       {
+        "design_id": "db-governed-source-refresh-2313-v1",
+        "work_item_id": "https://github.com/dunay2/dvt/issues/2313",
+        "title": "Bounded governed source content refresh",
+        "owner": "GovernedSourceInventory",
+        "status": "implemented",
+        "rationale": "Record exact HEAD content identity without broad import, human documentation generation, or mutation of imported governance classification.",
+        "fowler_signal": "hidden_authority",
+        "rail_ref": "RefreshGovernedSourceContent",
+        "approved_at": "2026-08-12T19:12:41.627+00:00",
+        "supersedes_id": null,
+        "created_at": "2026-08-12T19:12:40.133+00:00",
+        "updated_at": "2026-08-12T19:13:54.789+00:00"
+      },
+      {
         "design_id": "DBT-CODE-RECONCILIATION-TRUTH-20260719",
         "work_item_id": "E-WEB-DBT-CODE-RECONCILIATION-TRUTH-1",
         "title": "DBT Code persistence and semantic reconciliation truth",
@@ -13774,6 +13788,20 @@
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:45.205967+00:00",
         "source_content_sha256": null,
+        "implementation_content_sha256": null
+      },
+      {
+        "evidence_id": "EV-DB-GOVERNED-SOURCE-REFRESH-2313",
+        "design_id": "db-governed-source-refresh-2313-v1",
+        "subject_kind": "test",
+        "subject_id": "governed-source-refresh-contract",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-export.test.cjs tools/ci/sync-docs-status-policy.test.mjs",
+        "source_path": "scripts/planning-db-operate-tests/governed-source-refresh.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-12T19:13:53.08+00:00",
+        "source_content_sha256": "1b7fe27780ed15d9686b616308a6feb81699183bf54373a0d414ce446525a8c5",
         "implementation_content_sha256": null
       },
       {
@@ -65325,6 +65353,38 @@
         "created_at": "2026-08-12T18:54:36.595+00:00"
       },
       {
+        "design_id": "db-governed-source-refresh-2313-v1",
+        "subject_kind": "command",
+        "subject_id": "RefreshGovernedSourceContent",
+        "scope_kind": "may_create",
+        "required": true,
+        "created_at": "2026-08-12T19:12:40.133+00:00"
+      },
+      {
+        "design_id": "db-governed-source-refresh-2313-v1",
+        "subject_kind": "path",
+        "subject_id": "scripts/planning-db-operate.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-12T19:12:40.133+00:00"
+      },
+      {
+        "design_id": "db-governed-source-refresh-2313-v1",
+        "subject_kind": "path",
+        "subject_id": "tools/planning-db/schema.sql",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-12T19:12:40.133+00:00"
+      },
+      {
+        "design_id": "db-governed-source-refresh-2313-v1",
+        "subject_kind": "test",
+        "subject_id": "governed-source-refresh-contract",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-12T19:12:40.133+00:00"
+      },
+      {
         "design_id": "DBT-CODE-RECONCILIATION-TRUTH-20260719",
         "subject_kind": "command",
         "subject_id": "SaveWorkspaceFileContent",
@@ -89637,6 +89697,27 @@
         "created_at": "2026-08-10T21:04:08.887+00:00"
       },
       {
+        "operation_id": "15673e0c-2340-426c-b81a-e42d68945792",
+        "idempotency_key": "architecture_design_transition:codex:db-governed-source-refresh-2313-v1:ac483019ab18f642",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "db-governed-source-refresh-2313-v1",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2313",
+        "source_content_sha256": "0d44cd43036f06d7594d77c1396d2ccaf88b7dc1862db12e066f6ed6a52f26e3",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Rebased current-schema tests, idempotent PostgreSQL execution, mechanization, inventory, and integrity all pass.",
+          "designId": "db-governed-source-refresh-2313-v1",
+          "toStatus": "implemented",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2313",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "0d44cd43036f06d7594d77c1396d2ccaf88b7dc1862db12e066f6ed6a52f26e3"
+        },
+        "created_at": "2026-08-12T19:13:54.789+00:00"
+      },
+      {
         "operation_id": "1582b7b6-11fe-4b90-9ff7-9b17565ddecb",
         "idempotency_key": "gh-2167-validation-test-sys-api-http-error-translation-1-v1",
         "operation_type": "architecture_test_record",
@@ -93541,6 +93622,27 @@
         "created_at": "2026-08-10T21:06:23.492+00:00"
       },
       {
+        "operation_id": "5f1a5cd6-996d-4f0f-8e05-8f6745fc522a",
+        "idempotency_key": "architecture_design_transition:codex:db-governed-source-refresh-2313-v1:33a41aa6e7ceebcf",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "db-governed-source-refresh-2313-v1",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2313",
+        "source_content_sha256": "0d44cd43036f06d7594d77c1396d2ccaf88b7dc1862db12e066f6ed6a52f26e3",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The bounded command reuses governed source inventory and adds an audited content overlay only.",
+          "designId": "db-governed-source-refresh-2313-v1",
+          "toStatus": "approved",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2313",
+          "fromStatus": "review",
+          "sourceContentSha256": "0d44cd43036f06d7594d77c1396d2ccaf88b7dc1862db12e066f6ed6a52f26e3"
+        },
+        "created_at": "2026-08-12T19:12:41.627+00:00"
+      },
+      {
         "operation_id": "5f64f5c7-700b-4208-acc5-95d77aebc0c8",
         "idempotency_key": "codex-api-h2-2-reachability-v6-evidence-drift",
         "operation_type": "architecture_design_transition",
@@ -93833,6 +93935,31 @@
         "created_at": "2026-08-08T02:12:27.921+00:00"
       },
       {
+        "operation_id": "66401005-9f97-4581-ba0d-177f9fb733e8",
+        "idempotency_key": "architecture_evidence_record:codex:db-governed-source-refresh-2313-v1:EV-DB-GOVERNED-SOURCE-REFRESH-2313:15957b5a5e90571d",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "db-governed-source-refresh-2313-v1",
+        "source_ref": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-export.test.cjs tools/ci/sync-docs-status-policy.test.mjs",
+        "source_content_sha256": "1b7fe27780ed15d9686b616308a6feb81699183bf54373a0d414ce446525a8c5",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "db-governed-source-refresh-2313-v1",
+          "sourceRef": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-export.test.cjs tools/ci/sync-docs-status-policy.test.mjs",
+          "subjectId": "governed-source-refresh-contract",
+          "evidenceId": "EV-DB-GOVERNED-SOURCE-REFRESH-2313",
+          "sourcePath": "scripts/planning-db-operate-tests/governed-source-refresh.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "test",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "1b7fe27780ed15d9686b616308a6feb81699183bf54373a0d414ce446525a8c5"
+        },
+        "created_at": "2026-08-12T19:13:53.08+00:00"
+      },
+      {
         "operation_id": "66a8ce50-b576-4b0d-896c-ff84b7470f4e",
         "idempotency_key": "codex-api-h2-2-reachability-v9-implemented",
         "operation_type": "architecture_design_transition",
@@ -94057,6 +94184,58 @@
           "sourceContentSha256": "b077b5b8c2ffb478f82cb06988a069f54226d6a3af0a8caaca44d32a199195f0"
         },
         "created_at": "2026-08-10T22:05:42.795+00:00"
+      },
+      {
+        "operation_id": "6d74b452-df0f-44ad-aa05-43874455ebe0",
+        "idempotency_key": "architecture_design_create:codex:db-governed-source-refresh-2313-v1:798d997f9d7217b9",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "db-governed-source-refresh-2313-v1",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2313",
+        "source_content_sha256": "0d44cd43036f06d7594d77c1396d2ccaf88b7dc1862db12e066f6ed6a52f26e3",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "GovernedSourceInventory",
+          "title": "Bounded governed source content refresh",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_create",
+              "subjectId": "RefreshGovernedSourceContent",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/planning-db-operate.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "tools/planning-db/schema.sql",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "governed-source-refresh-contract",
+              "subjectKind": "test"
+            }
+          ],
+          "status": "review",
+          "railRef": "RefreshGovernedSourceContent",
+          "designId": "db-governed-source-refresh-2313-v1",
+          "rationale": "Record exact HEAD content identity without broad import, human documentation generation, or mutation of imported governance classification.",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2313",
+          "workItemId": "https://github.com/dunay2/dvt/issues/2313",
+          "fowlerSignal": "hidden_authority",
+          "supersedesId": null,
+          "sourceContentSha256": "0d44cd43036f06d7594d77c1396d2ccaf88b7dc1862db12e066f6ed6a52f26e3"
+        },
+        "created_at": "2026-08-12T19:12:40.133+00:00"
       },
       {
         "operation_id": "6da85e32-9087-472d-9359-6f400b8c3d94",
@@ -95878,6 +96057,27 @@
           "sourceContentSha256": "a1b1c865ff403d57d786adaf61f98d6296967c4923a712414c2135b8cd4392c7"
         },
         "created_at": "2026-08-11T05:21:51.158+00:00"
+      },
+      {
+        "operation_id": "8f5cf507-d72c-4b2b-ba39-56a88b0a9521",
+        "idempotency_key": "architecture_design_transition:codex:db-governed-source-refresh-2313-v1:3f9aaa47cca1a46a",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "db-governed-source-refresh-2313-v1",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2313",
+        "source_content_sha256": "0d44cd43036f06d7594d77c1396d2ccaf88b7dc1862db12e066f6ed6a52f26e3",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The focused implementation is ready for execution proof on the rebased current schema.",
+          "designId": "db-governed-source-refresh-2313-v1",
+          "toStatus": "implementing",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2313",
+          "fromStatus": "approved",
+          "sourceContentSha256": "0d44cd43036f06d7594d77c1396d2ccaf88b7dc1862db12e066f6ed6a52f26e3"
+        },
+        "created_at": "2026-08-12T19:12:43.159+00:00"
       },
       {
         "operation_id": "8fce95da-5ec2-4684-b200-b157759e2431",
@@ -105764,7 +105964,7 @@
         "pnpm --filter @dvt/web test:unit:run -- src/app/services/workspace/workspacePorts.api.test.ts"
       ],
       "sourcePath": "apps/web/src/app/services/workspace/workspacePorts.api.ts",
-      "sourceContentSha256": "b68ae391e5b59bc930e80d16683fe6335d2595777875a02d9eff09f6a7fa7f09",
+      "sourceContentSha256": "741f755939fa9963e9dda9674c49dec4c386c20fd65701a9bab070d76d79d67d",
       "rawRail": {
         "name": "ListAdminAuditLog",
         "type": "query",
@@ -105832,7 +106032,7 @@
         "pnpm --filter @dvt/web test:unit:run -- src/app/services/workspace/workspacePorts.api.test.ts"
       ],
       "sourcePath": "apps/web/src/app/services/workspace/workspacePorts.api.ts",
-      "sourceContentSha256": "b68ae391e5b59bc930e80d16683fe6335d2595777875a02d9eff09f6a7fa7f09",
+      "sourceContentSha256": "741f755939fa9963e9dda9674c49dec4c386c20fd65701a9bab070d76d79d67d",
       "rawRail": {
         "name": "ListAdminRoles",
         "type": "query",
@@ -106342,7 +106542,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "872833d93b957d1dd1b7c9646b67e984966e69595e368bc22068695f584e9d0c",
+      "sourceContentSha256": "afd4f62974ec2bbb2f8e7dde3f0811b30be1e328ccefdd1e0b601800f4d5b26b",
       "rawRail": {
         "name": "RecordArchitectureComponent",
         "type": "command",
@@ -106552,7 +106752,7 @@
         "node --test scripts/planning-db-operate-tests/architecture-plan.test.cjs scripts/planning-db-operate-tests/architecture-parse.test.cjs"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "872833d93b957d1dd1b7c9646b67e984966e69595e368bc22068695f584e9d0c",
+      "sourceContentSha256": "afd4f62974ec2bbb2f8e7dde3f0811b30be1e328ccefdd1e0b601800f4d5b26b",
       "rawRail": {
         "name": "RecordArchitectureEvidenceExecution",
         "type": "command",
@@ -107126,7 +107326,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "872833d93b957d1dd1b7c9646b67e984966e69595e368bc22068695f584e9d0c",
+      "sourceContentSha256": "afd4f62974ec2bbb2f8e7dde3f0811b30be1e328ccefdd1e0b601800f4d5b26b",
       "rawRail": {
         "name": "RecordArchitectureObservabilityEvidence",
         "type": "command",
@@ -107357,7 +107557,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "872833d93b957d1dd1b7c9646b67e984966e69595e368bc22068695f584e9d0c",
+      "sourceContentSha256": "afd4f62974ec2bbb2f8e7dde3f0811b30be1e328ccefdd1e0b601800f4d5b26b",
       "rawRail": {
         "name": "RetireArchitectureEvidenceExecution",
         "type": "command",
@@ -107519,7 +107719,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "872833d93b957d1dd1b7c9646b67e984966e69595e368bc22068695f584e9d0c",
+      "sourceContentSha256": "afd4f62974ec2bbb2f8e7dde3f0811b30be1e328ccefdd1e0b601800f4d5b26b",
       "rawRail": {
         "name": "RetireArchitectureTestEvidence",
         "type": "command",
@@ -107681,7 +107881,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "872833d93b957d1dd1b7c9646b67e984966e69595e368bc22068695f584e9d0c",
+      "sourceContentSha256": "afd4f62974ec2bbb2f8e7dde3f0811b30be1e328ccefdd1e0b601800f4d5b26b",
       "rawRail": {
         "name": "RetireFeatureMechanizationRail",
         "type": "command",
@@ -107843,7 +108043,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "872833d93b957d1dd1b7c9646b67e984966e69595e368bc22068695f584e9d0c",
+      "sourceContentSha256": "afd4f62974ec2bbb2f8e7dde3f0811b30be1e328ccefdd1e0b601800f4d5b26b",
       "rawRail": {
         "name": "TransitionArchitectureDesign",
         "type": "command",
@@ -108637,7 +108837,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "tools/ci/check-architecture-dependencies.mjs",
-      "sourceContentSha256": "949ba1aaa7eab5cbad7314f34f94163989ef15fcd082c902f9c0e9d19809c91a",
+      "sourceContentSha256": "4f02c340d242cb834a03990064924683692fae7c4dee8c19f29eeb47f3a75ce3",
       "rawRail": {
         "name": "ApplyArchitectureDependencyBoundaryGate",
         "type": "command",
@@ -109960,7 +110160,7 @@
         "pnpm docs:feature-mechanization:implementation"
       ],
       "sourcePath": "apps/web/src/app/views/canvas/canvasGraphFilter.ts",
-      "sourceContentSha256": "ee00ee7087a0a1dc6155f71f243681612976872c2ea8fbc6760aaeac17dd8d46",
+      "sourceContentSha256": "e839ad03106f9c80b4041535b08b3ec1aeae9c5cbe71979373f0dbd06ee4a77e",
       "rawRail": {
         "name": "FilterCanvasGraph",
         "type": "query",
@@ -110190,7 +110390,7 @@
         "pnpm --filter @dvt/web lint"
       ],
       "sourcePath": "apps/web/src/app/views/canvas/useCanvasGraphSearchActivation.ts",
-      "sourceContentSha256": "8ef1273099546b1a3f72e3e24dc17997f37beaa17d68f4c62f3ecff2a8b9d561",
+      "sourceContentSha256": "45cd0c8872f7ef164aaec527bbca6e9bc3fb6d136707c030501e1b0e742d74c1",
       "rawRail": {
         "name": "ActivateCanvasGraphSearchResult",
         "type": "command",
@@ -110494,7 +110694,7 @@
         "pnpm docs:feature-mechanization:implementation"
       ],
       "sourcePath": "apps/web/src/app/views/canvas/canvasGraphSearch.ts",
-      "sourceContentSha256": "5c34d87d4f0f17b5f6d1367b654f80ae207dc87aaac6992d905debf734d33756",
+      "sourceContentSha256": "8348100bded81b847024aabf9e2775e8d4541724a390235a06a024639c3e0a08",
       "rawRail": {
         "name": "SearchCanvasGraph",
         "type": "query",
@@ -111787,6 +111987,462 @@
       "revision": 14,
       "createdBy": "codex",
       "createdAt": "2026-08-04T01:29:12.684Z"
+    },
+    {
+      "railId": "local#DB-GOVERNED-SOURCE-REFRESH-2313#command#refreshgovernedsourcecontent",
+      "featureId": "DB-GOVERNED-SOURCE-REFRESH-2313",
+      "mechanizationStatus": "implemented",
+      "railName": "RefreshGovernedSourceContent",
+      "normalizedRailName": "refreshgovernedsourcecontent",
+      "railType": "command",
+      "dddOwner": "GovernedSourceInventory",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "scripts/planning-db-operate.cjs#parseGovernedSourceRefreshCommand",
+        "scripts/planning-db/commands/governed-source-refresh-command.cjs#createGovernedSourceRefreshCommandParser",
+        "scripts/planning-db/commands/governed-source-refresh-command.cjs#parseExpectedContentHashes",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#applyGovernedSourceRefreshOperation",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#assertIdempotentReplayMatches",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#assertInsideRepository",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#canonicalSourceContentHash",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#crypto",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#databaseUrl",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#defaultGit",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#defaultGovernedSourceRefreshIdempotencyKey",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#fs",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#normalizeGovernedSourcePath",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#normalizeRow",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#parseTreeEntry",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#path",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#planGovernedSourceRefreshOperation",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#readExistingOperation",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#readGovernedRowsForUpdate",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#readGovernedSourceSnapshots",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#repoRoot",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#sha256",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#stableStringify",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#writePlan"
+      ],
+      "implementationRefs": [
+        "scripts/planning-db-operate.cjs#parseGovernedSourceRefreshCommand",
+        "scripts/planning-db/commands/governed-source-refresh-command.cjs#createGovernedSourceRefreshCommandParser",
+        "scripts/planning-db/commands/governed-source-refresh-command.cjs#parseExpectedContentHashes",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#applyGovernedSourceRefreshOperation",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#assertIdempotentReplayMatches",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#assertInsideRepository",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#canonicalSourceContentHash",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#crypto",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#databaseUrl",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#defaultGit",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#defaultGovernedSourceRefreshIdempotencyKey",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#fs",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#normalizeGovernedSourcePath",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#normalizeRow",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#parseTreeEntry",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#path",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#planGovernedSourceRefreshOperation",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#readExistingOperation",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#readGovernedRowsForUpdate",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#readGovernedSourceSnapshots",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#repoRoot",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#sha256",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#stableStringify",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs#writePlan"
+      ],
+      "documentationRefs": ["https://github.com/dunay2/dvt/issues/2313"],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md",
+        "docs/adr/ADR-0053-file-state-fingerprint-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "tools/planning-db/schema.sql",
+        "scripts/planning-db-operate.cjs",
+        "scripts/planning-db-operate.test.cjs",
+        "scripts/planning-db-operate-tests/governed-source-refresh.test.cjs",
+        "scripts/planning-db/commands/governed-source-refresh-command.cjs",
+        "scripts/planning-db/governed-source-refresh-write-rail.cjs",
+        "scripts/planning-db-schema.test.cjs",
+        "scripts/planning-db-export.cjs",
+        "scripts/planning-db-export.test.cjs",
+        "tools/ci/sync-docs-status-policy.test.mjs",
+        "tools/planning-db/state/canonical-state.json",
+        "tools/planning-db/state/db-governance-surfaces.json"
+      ],
+      "architectureGuards": [
+        "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-export.test.cjs"
+      ],
+      "completionGate": ["pnpm verify:prepush"],
+      "sourcePath": "scripts/planning-db/governed-source-refresh-write-rail.cjs",
+      "sourceContentSha256": "9f8d2cc5973d3187eaa461369916fe8b77312b5964ed20a8713bb0f385b14916",
+      "rawRail": {
+        "name": "RefreshGovernedSourceContent",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "GovernedSourceInventory"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "parseGovernedSourceRefreshCommand",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RefreshGovernedSourceContent"],
+            "dddOwner": "GovernedSourceInventory",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/governed-source-refresh.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority"],
+            "cypressCoverage": "not-applicable: database command rail",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-export.test.cjs"
+          },
+          {
+            "name": "createGovernedSourceRefreshCommandParser",
+            "path": "scripts/planning-db/commands/governed-source-refresh-command.cjs",
+            "cqRails": ["RefreshGovernedSourceContent"],
+            "dddOwner": "GovernedSourceInventory",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/governed-source-refresh.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority"],
+            "cypressCoverage": "not-applicable: database command rail",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-export.test.cjs"
+          },
+          {
+            "name": "parseExpectedContentHashes",
+            "path": "scripts/planning-db/commands/governed-source-refresh-command.cjs",
+            "cqRails": ["RefreshGovernedSourceContent"],
+            "dddOwner": "GovernedSourceInventory",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/governed-source-refresh.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority"],
+            "cypressCoverage": "not-applicable: database command rail",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-export.test.cjs"
+          },
+          {
+            "name": "applyGovernedSourceRefreshOperation",
+            "path": "scripts/planning-db/governed-source-refresh-write-rail.cjs",
+            "cqRails": ["RefreshGovernedSourceContent"],
+            "dddOwner": "GovernedSourceInventory",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/governed-source-refresh.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority"],
+            "cypressCoverage": "not-applicable: database command rail",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-export.test.cjs"
+          },
+          {
+            "name": "assertIdempotentReplayMatches",
+            "path": "scripts/planning-db/governed-source-refresh-write-rail.cjs",
+            "cqRails": ["RefreshGovernedSourceContent"],
+            "dddOwner": "GovernedSourceInventory",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/governed-source-refresh.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority"],
+            "cypressCoverage": "not-applicable: database command rail",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-export.test.cjs"
+          },
+          {
+            "name": "assertInsideRepository",
+            "path": "scripts/planning-db/governed-source-refresh-write-rail.cjs",
+            "cqRails": ["RefreshGovernedSourceContent"],
+            "dddOwner": "GovernedSourceInventory",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/governed-source-refresh.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority"],
+            "cypressCoverage": "not-applicable: database command rail",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-export.test.cjs"
+          },
+          {
+            "name": "canonicalSourceContentHash",
+            "path": "scripts/planning-db/governed-source-refresh-write-rail.cjs",
+            "cqRails": ["RefreshGovernedSourceContent"],
+            "dddOwner": "GovernedSourceInventory",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/governed-source-refresh.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority"],
+            "cypressCoverage": "not-applicable: database command rail",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-export.test.cjs"
+          },
+          {
+            "name": "crypto",
+            "path": "scripts/planning-db/governed-source-refresh-write-rail.cjs",
+            "cqRails": ["RefreshGovernedSourceContent"],
+            "dddOwner": "GovernedSourceInventory",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/governed-source-refresh.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority"],
+            "cypressCoverage": "not-applicable: database command rail",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-export.test.cjs"
+          },
+          {
+            "name": "databaseUrl",
+            "path": "scripts/planning-db/governed-source-refresh-write-rail.cjs",
+            "cqRails": ["RefreshGovernedSourceContent"],
+            "dddOwner": "GovernedSourceInventory",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/governed-source-refresh.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority"],
+            "cypressCoverage": "not-applicable: database command rail",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-export.test.cjs"
+          },
+          {
+            "name": "defaultGit",
+            "path": "scripts/planning-db/governed-source-refresh-write-rail.cjs",
+            "cqRails": ["RefreshGovernedSourceContent"],
+            "dddOwner": "GovernedSourceInventory",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/governed-source-refresh.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority"],
+            "cypressCoverage": "not-applicable: database command rail",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-export.test.cjs"
+          },
+          {
+            "name": "defaultGovernedSourceRefreshIdempotencyKey",
+            "path": "scripts/planning-db/governed-source-refresh-write-rail.cjs",
+            "cqRails": ["RefreshGovernedSourceContent"],
+            "dddOwner": "GovernedSourceInventory",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/governed-source-refresh.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority"],
+            "cypressCoverage": "not-applicable: database command rail",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-export.test.cjs"
+          },
+          {
+            "name": "fs",
+            "path": "scripts/planning-db/governed-source-refresh-write-rail.cjs",
+            "cqRails": ["RefreshGovernedSourceContent"],
+            "dddOwner": "GovernedSourceInventory",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/governed-source-refresh.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority"],
+            "cypressCoverage": "not-applicable: database command rail",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-export.test.cjs"
+          },
+          {
+            "name": "normalizeGovernedSourcePath",
+            "path": "scripts/planning-db/governed-source-refresh-write-rail.cjs",
+            "cqRails": ["RefreshGovernedSourceContent"],
+            "dddOwner": "GovernedSourceInventory",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/governed-source-refresh.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority"],
+            "cypressCoverage": "not-applicable: database command rail",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-export.test.cjs"
+          },
+          {
+            "name": "normalizeRow",
+            "path": "scripts/planning-db/governed-source-refresh-write-rail.cjs",
+            "cqRails": ["RefreshGovernedSourceContent"],
+            "dddOwner": "GovernedSourceInventory",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/governed-source-refresh.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority"],
+            "cypressCoverage": "not-applicable: database command rail",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-export.test.cjs"
+          },
+          {
+            "name": "parseTreeEntry",
+            "path": "scripts/planning-db/governed-source-refresh-write-rail.cjs",
+            "cqRails": ["RefreshGovernedSourceContent"],
+            "dddOwner": "GovernedSourceInventory",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/governed-source-refresh.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority"],
+            "cypressCoverage": "not-applicable: database command rail",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-export.test.cjs"
+          },
+          {
+            "name": "path",
+            "path": "scripts/planning-db/governed-source-refresh-write-rail.cjs",
+            "cqRails": ["RefreshGovernedSourceContent"],
+            "dddOwner": "GovernedSourceInventory",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/governed-source-refresh.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority"],
+            "cypressCoverage": "not-applicable: database command rail",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-export.test.cjs"
+          },
+          {
+            "name": "planGovernedSourceRefreshOperation",
+            "path": "scripts/planning-db/governed-source-refresh-write-rail.cjs",
+            "cqRails": ["RefreshGovernedSourceContent"],
+            "dddOwner": "GovernedSourceInventory",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/governed-source-refresh.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority"],
+            "cypressCoverage": "not-applicable: database command rail",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-export.test.cjs"
+          },
+          {
+            "name": "readExistingOperation",
+            "path": "scripts/planning-db/governed-source-refresh-write-rail.cjs",
+            "cqRails": ["RefreshGovernedSourceContent"],
+            "dddOwner": "GovernedSourceInventory",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/governed-source-refresh.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority"],
+            "cypressCoverage": "not-applicable: database command rail",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-export.test.cjs"
+          },
+          {
+            "name": "readGovernedRowsForUpdate",
+            "path": "scripts/planning-db/governed-source-refresh-write-rail.cjs",
+            "cqRails": ["RefreshGovernedSourceContent"],
+            "dddOwner": "GovernedSourceInventory",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/governed-source-refresh.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority"],
+            "cypressCoverage": "not-applicable: database command rail",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-export.test.cjs"
+          },
+          {
+            "name": "readGovernedSourceSnapshots",
+            "path": "scripts/planning-db/governed-source-refresh-write-rail.cjs",
+            "cqRails": ["RefreshGovernedSourceContent"],
+            "dddOwner": "GovernedSourceInventory",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/governed-source-refresh.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority"],
+            "cypressCoverage": "not-applicable: database command rail",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-export.test.cjs"
+          },
+          {
+            "name": "repoRoot",
+            "path": "scripts/planning-db/governed-source-refresh-write-rail.cjs",
+            "cqRails": ["RefreshGovernedSourceContent"],
+            "dddOwner": "GovernedSourceInventory",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/governed-source-refresh.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority"],
+            "cypressCoverage": "not-applicable: database command rail",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-export.test.cjs"
+          },
+          {
+            "name": "sha256",
+            "path": "scripts/planning-db/governed-source-refresh-write-rail.cjs",
+            "cqRails": ["RefreshGovernedSourceContent"],
+            "dddOwner": "GovernedSourceInventory",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/governed-source-refresh.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority"],
+            "cypressCoverage": "not-applicable: database command rail",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-export.test.cjs"
+          },
+          {
+            "name": "stableStringify",
+            "path": "scripts/planning-db/governed-source-refresh-write-rail.cjs",
+            "cqRails": ["RefreshGovernedSourceContent"],
+            "dddOwner": "GovernedSourceInventory",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/governed-source-refresh.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority"],
+            "cypressCoverage": "not-applicable: database command rail",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-export.test.cjs"
+          },
+          {
+            "name": "writePlan",
+            "path": "scripts/planning-db/governed-source-refresh-write-rail.cjs",
+            "cqRails": ["RefreshGovernedSourceContent"],
+            "dddOwner": "GovernedSourceInventory",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/governed-source-refresh.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority"],
+            "cypressCoverage": "not-applicable: database command rail",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-export.test.cjs"
+          }
+        ],
+        "version": 1,
+        "featureId": "DB-GOVERNED-SOURCE-REFRESH-2313",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2313"],
+        "cypressFlows": ["not-applicable: database command rail"],
+        "domainObjects": ["GovernedSourceInventory"],
+        "fowlerSignals": ["hidden_authority"],
+        "completionGate": ["pnpm verify:prepush"],
+        "redGreenCycles": [
+          {
+            "id": "refreshgovernedsourcecontent-record",
+            "redTest": "node --test scripts/planning-db-operate.test.cjs",
+            "greenTest": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-export.test.cjs",
+            "patchSurfaces": [
+              "tools/planning-db/schema.sql",
+              "scripts/planning-db-operate.cjs",
+              "scripts/planning-db-operate.test.cjs",
+              "scripts/planning-db-operate-tests/governed-source-refresh.test.cjs",
+              "scripts/planning-db/commands/governed-source-refresh-command.cjs",
+              "scripts/planning-db/governed-source-refresh-write-rail.cjs",
+              "scripts/planning-db-schema.test.cjs",
+              "scripts/planning-db-export.cjs",
+              "scripts/planning-db-export.test.cjs",
+              "tools/ci/sync-docs-status-policy.test.mjs",
+              "tools/planning-db/state/canonical-state.json",
+              "tools/planning-db/state/db-governance-surfaces.json"
+            ],
+            "expectedFailure": "RefreshGovernedSourceContent is absent and evidence reads the imported stale hash."
+          }
+        ],
+        "componentGuides": ["planning-db://component/SYS-DOCS-GOVERNANCE-ROOT"],
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/adr/ADR-0053-file-state-fingerprint-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "RefreshGovernedSourceContent",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "GovernedSourceInventory"
+          }
+        ],
+        "architectureGuards": [
+          "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-export.test.cjs"
+        ],
+        "implementationPlan": "TDD validates exact clean HEAD blobs, persists audited effective hashes transactionally, and routes freshness projections through the overlay.",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "tools/planning-db/schema.sql",
+          "scripts/planning-db-operate.cjs",
+          "scripts/planning-db-operate.test.cjs",
+          "scripts/planning-db-operate-tests/governed-source-refresh.test.cjs",
+          "scripts/planning-db/commands/governed-source-refresh-command.cjs",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs",
+          "scripts/planning-db-schema.test.cjs",
+          "scripts/planning-db-export.cjs",
+          "scripts/planning-db-export.test.cjs",
+          "tools/ci/sync-docs-status-policy.test.mjs",
+          "tools/planning-db/state/canonical-state.json",
+          "tools/planning-db/state/db-governance-surfaces.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "scripts/sync-docs.cjs",
+          "scripts/publish-docs.cjs"
+        ]
+      },
+      "revision": 0,
+      "createdBy": "codex",
+      "createdAt": "2026-08-12T19:13:00.602Z"
     },
     {
       "railId": "local#DOC1-3-DB-FIRST-COMPONENT-MAP#command#generateplanningderivedsurfaces",
@@ -114154,7 +114810,7 @@
         "pnpm docs:feature-mechanization:implementation"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "872833d93b957d1dd1b7c9646b67e984966e69595e368bc22068695f584e9d0c",
+      "sourceContentSha256": "afd4f62974ec2bbb2f8e7dde3f0811b30be1e328ccefdd1e0b601800f4d5b26b",
       "rawRail": {
         "name": "RecordArchitectureStorageIo",
         "type": "command",
@@ -114851,7 +115507,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "packages/@dvt/contracts/test/provider-vocabulary.architecture.test.ts",
-      "sourceContentSha256": "34e20687260f558a5983f0f4f263d94276a61cf464e8185a1fdbc54f62d0f6ba",
+      "sourceContentSha256": "74c4650cd0064ec81126d3aeed2e983ee768c547bcd50c459ad1a5ace95a5b91",
       "rawRail": {
         "name": "ClassifyDocumentationEntryPoint",
         "type": "query",
@@ -115037,7 +115693,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "packages/@dvt/contracts/test/provider-vocabulary.architecture.test.ts",
-      "sourceContentSha256": "34e20687260f558a5983f0f4f263d94276a61cf464e8185a1fdbc54f62d0f6ba",
+      "sourceContentSha256": "74c4650cd0064ec81126d3aeed2e983ee768c547bcd50c459ad1a5ace95a5b91",
       "rawRail": {
         "name": "ListDocumentationLifecycleFacts",
         "type": "query",
@@ -115239,7 +115895,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "tools/docs/check-filenames.ts",
-      "sourceContentSha256": "688c0adfbf5b2d018ea7fbcc70b9ca271df820c3599839632de92cb919738a2b",
+      "sourceContentSha256": "fd2f58de1c857a1f8259914a590bcecb91aabc192bf511e56da420aeab2c651c",
       "rawRail": {
         "name": "ValidateChangedDocumentFilenames",
         "type": "query",
@@ -134657,7 +135313,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "apps/api/src/infrastructure/dbtDependencyEdit/LocalDbtDependencyEditPublicationGateway.ts",
-      "sourceContentSha256": "9dcd84dd88cf8e327d873facfaa06e8751b776835a4d2901f4bfb898b7f76c3b",
+      "sourceContentSha256": "74295fdd984477773544a4043c1caed1f6190b8931d5114ca113ab17e156e463",
       "rawRail": {
         "name": "ApplySelectedDbtDependencyEdit",
         "type": "command",
@@ -136707,7 +137363,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "apps/api/src/application/services/analyzeSelectedDbtModelQuery.ts",
-      "sourceContentSha256": "468209e50e9d2f5eb1fdc753d2b69a4876bac59f79ef6fc62a0dd1af99f80790",
+      "sourceContentSha256": "33c98a5edbcc0b99a5dbb91b3473d0ebcb7cf0b573f0f1efe13aa8430543b84f",
       "rawRail": {
         "name": "AnalyzeSelectedDbtModel",
         "type": "query",
@@ -139008,7 +139664,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
-      "sourceContentSha256": "2e5ff8f7bb76ee283be965e19fea01f606af0688b3326dc4912b6374165487f5",
+      "sourceContentSha256": "dc10810f42262c5bb84b49cae96bc0d78273a4cf13828f67100c4b7c030cdbe6",
       "rawRail": {
         "name": "RecordPlanExecutability",
         "type": "command",
@@ -139178,7 +139834,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-export.cjs",
-      "sourceContentSha256": "b86444355581f372613142bc99969b67f9d731115a8888445592c0e00aa9848d",
+      "sourceContentSha256": "a779d7013172e9384e6fab0bdba7f0aa96963cbcdde39b9c0abcc7d39bb66f57",
       "rawRail": {
         "name": "ExportPlanningDbCanonicalArchitectureState",
         "type": "command",
@@ -140738,7 +141394,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts",
-      "sourceContentSha256": "09f2fd7c12b3e9d1e0316806badb3a39c7e31041e07c17a6d3c67b077d050eb0",
+      "sourceContentSha256": "9c3d6c3b7660f619693535e1744085b83c1f967798b621838320505ebd1a43ad",
       "rawRail": {
         "name": "ClassifyProtectedRuntimeRouteRails",
         "type": "query",
@@ -141435,7 +142091,7 @@
         "pnpm docs:feature-mechanization:implementation"
       ],
       "sourcePath": "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresStepActivity.ts",
-      "sourceContentSha256": "597cdb094d84fd0978fd9d0ff33fd31ac9200e32954b065571d525f7a9704eac",
+      "sourceContentSha256": "db8162fd0bd4379d7367f8f45202c2195014be1c1c7b2fc224b9c60f6ce224d8",
       "rawRail": {
         "name": "WorkflowEngine.startRun",
         "type": "command",
@@ -169785,6 +170441,110 @@
         ]
       },
       "createdAt": "2026-08-12T01:44:55.180Z"
+    },
+    {
+      "operationId": "3afe0cc3-6902-437e-bec8-dd9a564e7a9e",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:DB-GOVERNED-SOURCE-REFRESH-2313:command:refreshgovernedsourcecontent:latest:ee827926d5c64489",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#DB-GOVERNED-SOURCE-REFRESH-2313#command#refreshgovernedsourcecontent",
+      "sourcePath": "scripts/planning-db/governed-source-refresh-write-rail.cjs",
+      "sourceContentSha256": "9f8d2cc5973d3187eaa461369916fe8b77312b5964ed20a8713bb0f385b14916",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "node --test scripts/planning-db-operate.test.cjs",
+        "dddOwner": "GovernedSourceInventory",
+        "railName": "RefreshGovernedSourceContent",
+        "railType": "command",
+        "featureId": "DB-GOVERNED-SOURCE-REFRESH-2313",
+        "greenTest": "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-export.test.cjs",
+        "sourceRef": "scripts/planning-db/governed-source-refresh-write-rail.cjs",
+        "unitTests": [
+          "scripts/planning-db-operate-tests/governed-source-refresh.test.cjs"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2313"],
+        "cypressFlows": ["not-applicable: database command rail"],
+        "domainObjects": ["GovernedSourceInventory"],
+        "fowlerSignals": ["hidden_authority"],
+        "patchSurfaces": [
+          "tools/planning-db/schema.sql",
+          "scripts/planning-db-operate.cjs",
+          "scripts/planning-db-operate.test.cjs",
+          "scripts/planning-db-operate-tests/governed-source-refresh.test.cjs",
+          "scripts/planning-db/commands/governed-source-refresh-command.cjs",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs",
+          "scripts/planning-db-schema.test.cjs",
+          "scripts/planning-db-export.cjs",
+          "scripts/planning-db-export.test.cjs",
+          "tools/ci/sync-docs-status-policy.test.mjs",
+          "tools/planning-db/state/canonical-state.json",
+          "tools/planning-db/state/db-governance-surfaces.json"
+        ],
+        "completionGate": ["pnpm verify:prepush"],
+        "componentGuides": ["planning-db://component/SYS-DOCS-GOVERNANCE-ROOT"],
+        "expectedFailure": "RefreshGovernedSourceContent is absent and evidence reads the imported stale hash.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/adr/ADR-0053-file-state-fingerprint-governance.md"
+        ],
+        "documentationRefs": ["https://github.com/dunay2/dvt/issues/2313"],
+        "architectureGuards": [
+          "node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs scripts/planning-db-export.test.cjs"
+        ],
+        "implementationPlan": "TDD validates exact clean HEAD blobs, persists audited effective hashes transactionally, and routes freshness projections through the overlay.",
+        "implementationRefs": [
+          "scripts/planning-db-operate.cjs#parseGovernedSourceRefreshCommand",
+          "scripts/planning-db/commands/governed-source-refresh-command.cjs#createGovernedSourceRefreshCommandParser",
+          "scripts/planning-db/commands/governed-source-refresh-command.cjs#parseExpectedContentHashes",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#applyGovernedSourceRefreshOperation",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#assertIdempotentReplayMatches",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#assertInsideRepository",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#canonicalSourceContentHash",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#crypto",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#databaseUrl",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#defaultGit",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#defaultGovernedSourceRefreshIdempotencyKey",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#fs",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#normalizeGovernedSourcePath",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#normalizeRow",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#parseTreeEntry",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#path",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#planGovernedSourceRefreshOperation",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#readExistingOperation",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#readGovernedRowsForUpdate",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#readGovernedSourceSnapshots",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#repoRoot",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#sha256",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#stableStringify",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs#writePlan"
+        ],
+        "normalizedRailName": "refreshgovernedsourcecontent",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "9f8d2cc5973d3187eaa461369916fe8b77312b5964ed20a8713bb0f385b14916",
+        "allowedImplementationSurfaces": [
+          "tools/planning-db/schema.sql",
+          "scripts/planning-db-operate.cjs",
+          "scripts/planning-db-operate.test.cjs",
+          "scripts/planning-db-operate-tests/governed-source-refresh.test.cjs",
+          "scripts/planning-db/commands/governed-source-refresh-command.cjs",
+          "scripts/planning-db/governed-source-refresh-write-rail.cjs",
+          "scripts/planning-db-schema.test.cjs",
+          "scripts/planning-db-export.cjs",
+          "scripts/planning-db-export.test.cjs",
+          "tools/ci/sync-docs-status-policy.test.mjs",
+          "tools/planning-db/state/canonical-state.json",
+          "tools/planning-db/state/db-governance-surfaces.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "scripts/sync-docs.cjs",
+          "scripts/publish-docs.cjs"
+        ]
+      },
+      "createdAt": "2026-08-12T19:13:00.602Z"
     }
   ],
   "governanceComponentDefinitions": [
