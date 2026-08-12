@@ -102,6 +102,16 @@
       "authorityMode": "generated"
     },
     {
+      "surfaceName": "Governed source current content",
+      "canonicalSource": "Audited exact-HEAD content overlay",
+      "writeRail": "RefreshGovernedSourceContent",
+      "writeRailKind": "db_command",
+      "readQueryRail": "governance_file_query",
+      "projection": "Effective content hash and state fingerprint over imported classification",
+      "validation": "Governed-source command contract, schema integrity, evidence freshness",
+      "authorityMode": "database"
+    },
+    {
       "surfaceName": "Knowledge intake literature",
       "canonicalSource": "Knowledge documents, links, actions, and component ownership projections",
       "writeRail": "pnpm governance:refresh or pnpm docs:knowledge-intake:generate after DB import",
