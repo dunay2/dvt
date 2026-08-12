@@ -3,6 +3,7 @@ const test = require('node:test');
 
 const {
   canonicalSourceContentHash,
+  defaultGovernedSourceRefreshIdempotencyKey,
   normalizeGovernedSourcePath,
   planGovernedSourceRefreshOperation,
   readGovernedSourceSnapshots,
@@ -27,7 +28,51 @@ test('parseArgs builds a bounded governed-source refresh command', () => {
   assert.deepEqual(command.paths, ['package.json', 'scripts/planning-db-export.cjs']);
   assert.equal(command.expectedContentSha256ByPath['package.json'], 'a'.repeat(64));
   assert.equal(command.actor, 'codex');
-  assert.match(command.idempotencyKey, /^governed_source_content_refresh:codex:/u);
+  assert.equal(command.idempotencyKey, null);
+});
+
+test('governed-source refresh rejects unknown flags instead of weakening caller intent', () => {
+  assert.throws(
+    () =>
+      parseArgs([
+        'governed-source',
+        'refresh',
+        '--path',
+        'package.json',
+        '--expected-content-sha',
+        'a'.repeat(64),
+        '--actor',
+        'codex',
+      ]),
+    /Unknown governed-source flag "--expected-content-sha"/u
+  );
+});
+
+test('default governed-source idempotency keys include the exact source snapshot', () => {
+  const command = {
+    kind: 'governed_source_content_refresh',
+    actor: 'codex',
+    paths: ['package.json'],
+    expectedContentSha256ByPath: {},
+  };
+
+  const first = defaultGovernedSourceRefreshIdempotencyKey(command, {
+    sourceCommitSha: 'a'.repeat(40),
+    sources: [{ path: 'package.json', contentHash: 'b'.repeat(64) }],
+  });
+  const nextCommit = defaultGovernedSourceRefreshIdempotencyKey(command, {
+    sourceCommitSha: 'c'.repeat(40),
+    sources: [{ path: 'package.json', contentHash: 'b'.repeat(64) }],
+  });
+
+  assert.notEqual(first, nextCommit);
+  assert.equal(
+    first,
+    defaultGovernedSourceRefreshIdempotencyKey(command, {
+      sourceCommitSha: 'a'.repeat(40),
+      sources: [{ path: 'package.json', contentHash: 'b'.repeat(64) }],
+    })
+  );
 });
 
 test('governed-source paths reject ambiguous and escaping inputs', () => {
