@@ -20,6 +20,21 @@ function assertPrWorkflowDoesNotPublishDocumentation(workflow) {
   assert.doesNotMatch(workflow, /pnpm docs:publish/u);
 }
 
+function assertOrdinaryWorkflowsDoNotPublishDocumentation() {
+  const workflowRoot = path.join(path.resolve(__dirname, '..'), '.github', 'workflows');
+  const ordinaryWorkflowPaths = fs
+    .readdirSync(workflowRoot)
+    .filter((fileName) => /\.ya?ml$/u.test(fileName) && fileName !== 'docs-deploy.yml')
+    .map((fileName) => path.join(workflowRoot, fileName));
+
+  for (const workflowPath of ordinaryWorkflowPaths) {
+    const workflow = fs.readFileSync(workflowPath, 'utf8');
+    assert.doesNotMatch(workflow, /pnpm docs:(?:publish|build)\b/u, workflowPath);
+    assert.doesNotMatch(workflow, /\.generated-docs(?:\/|\\)/u, workflowPath);
+    assert.doesNotMatch(workflow, /zensical(?:\.lock|\s+(?:build|serve))?/iu, workflowPath);
+  }
+}
+
 function sha256(value) {
   return createHash('sha256').update(value).digest('hex');
 }
@@ -774,6 +789,11 @@ test('package and manual deploy expose one explicit publication command', () => 
   assert.ok(workflowScope.docs_changed.includes('scripts/documentation-*.cjs'));
   assert.ok(workflowScope.generated_status_relevant.includes('scripts/documentation-*.cjs'));
   assertPrWorkflowDoesNotPublishDocumentation(prWorkflow);
+  assertOrdinaryWorkflowsDoNotPublishDocumentation();
+  assert.match(
+    prWorkflow,
+    /- name: Enforce changed docs links[\s\S]*?run: pnpm docs:gov:links:changed/u
+  );
 });
 
 test('published docs expose keyboard table regions and a focus-correct skip link', () => {
