@@ -3,6 +3,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 const {
+  buildFocusedChangedTestPlan,
   buildVerifyChangedPlan,
   commandLabel,
   executeVerifyChangedPlan,
@@ -13,6 +14,22 @@ const {
 function labelsFor(files) {
   return buildVerifyChangedPlan(files).map(commandLabel);
 }
+
+function focusedLabelsFor(files) {
+  return buildFocusedChangedTestPlan(files).map(commandLabel);
+}
+
+test('buildFocusedChangedTestPlan retains adjacent script tests without duplicating general gates', () => {
+  const labels = focusedLabelsFor([
+    'docs/guides/testing-and-ci-capabilities.md',
+    'scripts/planning-db-query.cjs',
+  ]);
+
+  assert.deepEqual(labels, ['node --test scripts/planning-db-query.test.cjs']);
+  assert.ok(!labels.includes('pnpm lint:md:changed'));
+  assert.ok(!labels.includes('pnpm test:web:changed'));
+  assert.ok(!labels.includes('pnpm governance:db:import'));
+});
 
 test('buildVerifyChangedPlan keeps docs-only iteration on changed-file gates', () => {
   const labels = labelsFor(['docs/planning/templates/component-engineering-record-template.md']);
@@ -395,7 +412,29 @@ test('main does not record a prepush stamp when changed verification fails', () 
   assert.deepEqual(stamps, []);
 });
 
+test('main runs focused tests from the exact committed diff without writing a local stamp', () => {
+  const calls = [];
+  const stamps = [];
+  const status = main(['--committed-tests'], {
+    listCommittedChangedFiles: () => ['scripts/planning-db-query.cjs'],
+    executeFocusedChangedTestPlan: (plan) => {
+      calls.push(...plan.map(commandLabel));
+      return 0;
+    },
+    printPlan: () => {},
+    writePrepushStamp: (stamp) => stamps.push(stamp),
+  });
+
+  assert.equal(status, 0);
+  assert.deepEqual(calls, ['node --test scripts/planning-db-query.test.cjs']);
+  assert.deepEqual(stamps, []);
+});
+
 test('parseArgs supports dry-run planning without executing commands', () => {
-  assert.deepEqual(parseArgs(['--dry-run']), { dryRun: true });
+  assert.deepEqual(parseArgs(['--dry-run']), { dryRun: true, committedTests: false });
+  assert.deepEqual(parseArgs(['--committed-tests']), {
+    dryRun: false,
+    committedTests: true,
+  });
   assert.throws(() => parseArgs(['--unknown']), /Unknown argument: --unknown/);
 });

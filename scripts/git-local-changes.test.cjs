@@ -2,7 +2,39 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { listLocalChangedFiles } = require('./git-local-changes.cjs');
+const { listCommittedChangedFiles, listLocalChangedFiles } = require('./git-local-changes.cjs');
+
+test('listCommittedChangedFiles uses the exact configured base and head refs', () => {
+  const calls = [];
+  const changedFiles = listCommittedChangedFiles({
+    baseRef: 'base-sha',
+    headRef: 'merge-sha',
+    runGitLines: (args) => {
+      calls.push(args.join(' '));
+      return ['scripts/planning-db-query.cjs', 'docs/guides/testing-and-ci-capabilities.md'];
+    },
+  });
+
+  assert.deepEqual(changedFiles, [
+    'docs/guides/testing-and-ci-capabilities.md',
+    'scripts/planning-db-query.cjs',
+  ]);
+  assert.deepEqual(calls, ['diff --name-only --diff-filter=ACMR base-sha...merge-sha']);
+});
+
+test('listCommittedChangedFiles fails closed when an exact diff cannot be read', () => {
+  assert.throws(
+    () =>
+      listCommittedChangedFiles({
+        baseRef: 'missing-base',
+        headRef: 'merge-sha',
+        runGitLines: () => {
+          throw new Error('missing ref');
+        },
+      }),
+    /Unable to read committed changed files between missing-base and merge-sha/
+  );
+});
 
 test('listLocalChangedFiles excludes upstream-only base-vs-worktree changes', () => {
   const calls = [];
