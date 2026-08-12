@@ -108437,7 +108437,7 @@
         "node --test scripts/planning-db-run.test.cjs tools/ci/sync-docs-status-policy.test.mjs"
       ],
       "sourcePath": "package.json",
-      "sourceContentSha256": "023d8018d53680331543c3671950f587a17ef250c4c790760767fcac7f197c3a",
+      "sourceContentSha256": "24c492fd9e6a42d6e7193589081924e33f4e0e4d1fb2a690348058741567a3e7",
       "rawRail": {
         "name": "PreparePlanningDbRuntime",
         "type": "command",
@@ -112009,7 +112009,8 @@
         "scripts/planning-db/knowledge-intake-retirement-guard.cjs#createKnowledgeIntakeRetirementGuardComponent",
         "tools/ci/workflow-pattern-parity.test.mjs#workflow scope policy stays wired into ci and pr quality workflows",
         "scripts/local-validation-plan.cjs#documentationPublicationTestSteps",
-        "tools/ci/workflow-pattern-parity.test.mjs#PR quality gate keeps merge-blocking non-projection governance commands wired"
+        "tools/ci/workflow-pattern-parity.test.mjs#PR quality gate keeps merge-blocking non-projection governance commands wired",
+        "package.json#ci:docs"
       ],
       "implementationRefs": [
         ".github/workflows/pr-quality-gate.yml#jobs.pr-quality.steps",
@@ -112023,7 +112024,8 @@
         "scripts/planning-db/knowledge-intake-retirement-guard.cjs#createKnowledgeIntakeRetirementGuardComponent",
         "tools/ci/workflow-pattern-parity.test.mjs#workflow scope policy stays wired into ci and pr quality workflows",
         "scripts/local-validation-plan.cjs#documentationPublicationTestSteps",
-        "tools/ci/workflow-pattern-parity.test.mjs#PR quality gate keeps merge-blocking non-projection governance commands wired"
+        "tools/ci/workflow-pattern-parity.test.mjs#PR quality gate keeps merge-blocking non-projection governance commands wired",
+        "package.json#ci:docs"
       ],
       "documentationRefs": [
         "docs/guides/testing-and-ci-capabilities.md",
@@ -112049,7 +112051,8 @@
         "scripts/verify-changed.test.cjs",
         "scripts/verify-prepush.test.cjs",
         "scripts/planning-db-knowledge-intake-retirement-guard.test.cjs",
-        "scripts/planning-db/knowledge-intake-retirement-guard.cjs"
+        "scripts/planning-db/knowledge-intake-retirement-guard.cjs",
+        "package.json"
       ],
       "architectureGuards": [
         "node --test scripts/documentation-publication.test.cjs tools/ci/workflow-pattern-parity.test.mjs",
@@ -112079,11 +112082,12 @@
           "new or renamed buzon Markdown is rejected from the exact committed diff",
           "Planning DB relevant changes retain inventory and integrity validation",
           "DB implementation references resolve to real workflow or code anchors",
-          "ordinary workflows cannot publish or materialize human documentation projections"
+          "ordinary workflows cannot publish or materialize human documentation projections",
+          "ordinary workflow command aliases cannot materialize human documentation projections"
         ],
-        "adapterSurface": "GitHub Actions PR Quality Gate workflow",
+        "adapterSurface": "GitHub Actions workflows and root CI command aliases",
         "applicationPort": "ApplyPullRequestValidationPolicy command",
-        "authorizationScope": "repository pull-request workflow with read-only contents and explicit job permissions"
+        "authorizationScope": "repository pull-request and push workflows with read-only contents and explicit job permissions"
       },
       "rawManifest": {
         "symbols": [
@@ -112216,10 +112220,11 @@
             ],
             "fowlerSignals": [
               "Remove inert clean-checkout work and hidden documentation publication while reusing committed-diff gates.",
-              "Remove inert validation and hidden projections while reusing committed-diff and DB query rails."
+              "Remove inert validation and hidden projections while reusing committed-diff and DB query rails.",
+              "Remove hidden projection aliases and keep source validation on one CI command rail."
             ],
             "cypressCoverage": "N/A - repository CI governance command",
-            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
+            "architectureGuard": "node --test scripts/documentation-publication.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
           },
           {
             "name": "assertOrdinaryWorkflowsDoNotPublishDocumentation",
@@ -112236,10 +112241,11 @@
             ],
             "fowlerSignals": [
               "Remove inert clean-checkout work and hidden documentation publication while reusing committed-diff gates.",
-              "Remove inert validation and hidden projections while reusing committed-diff and DB query rails."
+              "Remove inert validation and hidden projections while reusing committed-diff and DB query rails.",
+              "Remove hidden projection aliases and keep source validation on one CI command rail."
             ],
             "cypressCoverage": "N/A - repository CI governance command",
-            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
+            "architectureGuard": "node --test scripts/documentation-publication.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
           },
           {
             "name": "createKnowledgeIntakeRetirementGuardComponent",
@@ -112318,6 +112324,18 @@
             ],
             "cypressCoverage": "N/A - repository CI governance command",
             "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
+          },
+          {
+            "name": "ci:docs",
+            "path": "package.json",
+            "cqRails": ["EnforcePullRequestValidationPolicy"],
+            "dddOwner": "PullRequestValidationPolicy",
+            "unitTests": ["scripts/documentation-publication.test.cjs"],
+            "fowlerSignals": [
+              "Remove hidden projection aliases and keep source validation on one CI command rail."
+            ],
+            "cypressCoverage": "N/A - repository CI governance command",
+            "architectureGuard": "node --test scripts/documentation-publication.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
           }
         ],
         "version": 1,
@@ -112330,7 +112348,8 @@
         "domainObjects": ["PullRequestValidationPolicy"],
         "fowlerSignals": [
           "Remove inert clean-checkout work and hidden documentation publication while reusing committed-diff gates.",
-          "Remove inert validation and hidden projections while reusing committed-diff and DB query rails."
+          "Remove inert validation and hidden projections while reusing committed-diff and DB query rails.",
+          "Remove hidden projection aliases and keep source validation on one CI command rail."
         ],
         "completionGate": [
           "pnpm test:ci-tools:static",
@@ -112340,8 +112359,8 @@
         "redGreenCycles": [
           {
             "id": "enforcepullrequestvalidationpolicy-record",
-            "redTest": "node --test scripts/documentation-publication.test.cjs tools/ci/workflow-pattern-parity.test.mjs",
-            "greenTest": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/workflow-pattern-parity.test.mjs",
+            "redTest": "node --test scripts/documentation-publication.test.cjs",
+            "greenTest": "node --test scripts/documentation-publication.test.cjs",
             "patchSurfaces": [
               ".github/workflows/ci.yml",
               ".github/workflows/pr-quality-gate.yml",
@@ -112357,9 +112376,10 @@
               "scripts/verify-changed.test.cjs",
               "scripts/verify-prepush.test.cjs",
               "scripts/planning-db-knowledge-intake-retirement-guard.test.cjs",
-              "scripts/planning-db/knowledge-intake-retirement-guard.cjs"
+              "scripts/planning-db/knowledge-intake-retirement-guard.cjs",
+              "package.json"
             ],
-            "expectedFailure": "An ordinary workflow can materialize human documentation, accept retired intake paths, skip Planning DB integrity, omit focused tests, or claim nonexistent DB implementation anchors."
+            "expectedFailure": "The ordinary ci:full alias can hide human documentation generation behind ci:docs."
           }
         ],
         "componentGuides": [
@@ -112386,11 +112406,12 @@
               "new or renamed buzon Markdown is rejected from the exact committed diff",
               "Planning DB relevant changes retain inventory and integrity validation",
               "DB implementation references resolve to real workflow or code anchors",
-              "ordinary workflows cannot publish or materialize human documentation projections"
+              "ordinary workflows cannot publish or materialize human documentation projections",
+              "ordinary workflow command aliases cannot materialize human documentation projections"
             ],
-            "adapterSurface": "GitHub Actions PR Quality Gate workflow",
+            "adapterSurface": "GitHub Actions workflows and root CI command aliases",
             "applicationPort": "ApplyPullRequestValidationPolicy command",
-            "authorizationScope": "repository pull-request workflow with read-only contents and explicit job permissions"
+            "authorizationScope": "repository pull-request and push workflows with read-only contents and explicit job permissions"
           }
         ],
         "architectureGuards": [
@@ -112399,7 +112420,7 @@
           "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/workflow-pattern-parity.test.mjs",
           "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
         ],
-        "implementationPlan": "docs/guides/testing-and-ci-capabilities.md",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2312",
         "mechanizationStatus": "implemented",
         "noHumanDecisionsRemaining": true,
         "allowedImplementationSurfaces": [
@@ -112417,11 +112438,12 @@
           "scripts/verify-changed.test.cjs",
           "scripts/verify-prepush.test.cjs",
           "scripts/planning-db-knowledge-intake-retirement-guard.test.cjs",
-          "scripts/planning-db/knowledge-intake-retirement-guard.cjs"
+          "scripts/planning-db/knowledge-intake-retirement-guard.cjs",
+          "package.json"
         ],
         "forbiddenImplementationSurfaces": [".github/workflows/docs-deploy.yml"]
       },
-      "revision": 6,
+      "revision": 7,
       "createdBy": "codex-issue-2312",
       "createdAt": "2026-08-12T20:03:13.174Z"
     },
@@ -171929,6 +171951,75 @@
         "forbiddenImplementationSurfaces": [".github/workflows/docs-deploy.yml"]
       },
       "createdAt": "2026-08-12T21:17:01.027Z"
+    },
+    {
+      "operationId": "2487db96-6f43-4a6b-bc31-15958fcf7695",
+      "idempotencyKey": "feature_mechanization_rail_record:codex-issue-2312:CI-PR-WORKFLOW-HARD-CUT-2312:command:enforcepullrequestvalidationpolicy:6:94c85cf55295fbea",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex-issue-2312",
+      "railId": "local#CI-PR-WORKFLOW-HARD-CUT-2312#command#enforcepullrequestvalidationpolicy",
+      "sourcePath": ".github/workflows/pr-quality-gate.yml",
+      "sourceContentSha256": "7544c738967bde816b5da7d243c095b60dc8ae391190c2dc0b8828b03c539e74",
+      "expectedRevision": 6,
+      "previousRevision": 6,
+      "resultingRevision": 7,
+      "payload": {
+        "redTest": "node --test scripts/documentation-publication.test.cjs",
+        "dddOwner": "PullRequestValidationPolicy",
+        "railName": "EnforcePullRequestValidationPolicy",
+        "railType": "command",
+        "featureId": "CI-PR-WORKFLOW-HARD-CUT-2312",
+        "greenTest": "node --test scripts/documentation-publication.test.cjs",
+        "sourceRef": ".github/workflows/pr-quality-gate.yml",
+        "unitTests": ["scripts/documentation-publication.test.cjs"],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2312"],
+        "cypressFlows": ["N/A - repository CI governance command"],
+        "domainObjects": ["PullRequestValidationPolicy"],
+        "fowlerSignals": [
+          "Remove hidden projection aliases and keep source validation on one CI command rail."
+        ],
+        "negativeTests": [
+          "ordinary workflow command aliases cannot materialize human documentation projections"
+        ],
+        "patchSurfaces": [
+          "package.json",
+          "scripts/documentation-publication.test.cjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "adapterSurface": "GitHub Actions workflows and root CI command aliases",
+        "completionGate": ["pnpm verify:prepush"],
+        "applicationPort": "ApplyPullRequestValidationPolicy command",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "The ordinary ci:full alias can hide human documentation generation behind ci:docs.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": ["https://github.com/dunay2/dvt/issues/2312"],
+        "architectureGuards": [
+          "node --test scripts/documentation-publication.test.cjs tools/ci/workflow-pattern-parity.test.mjs"
+        ],
+        "authorizationScope": "repository pull-request and push workflows with read-only contents and explicit job permissions",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2312",
+        "implementationRefs": [
+          "package.json#ci:docs",
+          ".github/workflows/pr-quality-gate.yml#jobs.pr-checks.steps",
+          "scripts/documentation-publication.test.cjs#assertOrdinaryWorkflowsDoNotPublishDocumentation"
+        ],
+        "normalizedRailName": "enforcepullrequestvalidationpolicy",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "7544c738967bde816b5da7d243c095b60dc8ae391190c2dc0b8828b03c539e74",
+        "allowedImplementationSurfaces": [
+          "package.json",
+          ".github/workflows/pr-quality-gate.yml",
+          "scripts/documentation-publication.test.cjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [".github/workflows/docs-deploy.yml"]
+      },
+      "createdAt": "2026-08-12T21:27:47.163Z"
     }
   ],
   "governanceComponentDefinitions": [
