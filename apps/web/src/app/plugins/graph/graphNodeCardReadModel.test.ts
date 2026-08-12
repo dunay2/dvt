@@ -429,6 +429,113 @@ describe('buildGraphNodeCardReadModel', () => {
     });
   });
 
+  it('projects localized generated, authored, and file-backed code posture on the graph card', () => {
+    const baseData = {
+      presentationCopy: {
+        columnsLabel: 'Columnas',
+        declaredColumnsDetailTemplate: '{count} columnas declaradas.',
+        inheritedColumnsDetailTemplate: '{count} columnas heredadas.',
+        noColumnsDetail: 'Sin columnas.',
+        codeLabel: 'Código',
+        workspaceCodeDetailTemplate: 'El código vive en {path}.',
+        generatedCodeDetailTemplate: 'Código generado en {path}.',
+        codeUnavailableMessage: 'Sin código.',
+        valueLabels: {
+          authored: 'Escrito',
+          generated: 'Generado',
+          file: 'Archivo',
+        },
+      },
+    };
+    const node = buildNode({
+      kind: 'dbt:model',
+      pluginId: 'dbt',
+      role: 'transform',
+      name: 'orders',
+    });
+
+    const generated = buildGraphNodeCardReadModel(
+      node,
+      {
+        ...baseData,
+        presentationTruth: {
+          columns: {
+            declared: [],
+            inherited: [],
+            visible: [],
+            declaredCount: 0,
+            inheritedCount: 0,
+            visibleCount: 0,
+            visibleProvenance: 'none',
+          },
+          code: {
+            kind: 'generated',
+            content: 'select * from raw_orders',
+            path: 'models/orders.sql',
+            language: 'sql',
+          },
+        },
+      },
+      [dbtGraphNodeCardStrategy]
+    );
+    const authored = buildGraphNodeCardReadModel(
+      node,
+      {
+        ...baseData,
+        presentationTruth: {
+          columns: {
+            declared: [],
+            inherited: [],
+            visible: [],
+            declaredCount: 0,
+            inheritedCount: 0,
+            visibleCount: 0,
+            visibleProvenance: 'none',
+          },
+          code: { kind: 'inline', content: 'select order_id from raw_orders', language: 'sql' },
+        },
+      },
+      [dbtGraphNodeCardStrategy]
+    );
+    const fileBacked = buildGraphNodeCardReadModel(
+      node,
+      {
+        ...baseData,
+        presentationTruth: {
+          columns: {
+            declared: [],
+            inherited: [],
+            visible: [],
+            declaredCount: 0,
+            inheritedCount: 0,
+            visibleCount: 0,
+            visibleProvenance: 'none',
+          },
+          code: { kind: 'workspace-file', path: 'models/orders.sql', language: 'sql' },
+        },
+      },
+      [dbtGraphNodeCardStrategy]
+    );
+
+    expect(generated.metrics).toContainEqual({
+      id: 'code',
+      label: 'Código',
+      value: 'Generado',
+      detail: 'Código generado en models/orders.sql.',
+    });
+    expect(authored.metrics).toContainEqual({
+      id: 'code',
+      label: 'Código',
+      value: 'Escrito',
+    });
+    expect(fileBacked.metrics).toContainEqual({
+      id: 'code',
+      label: 'Código',
+      value: 'Archivo',
+      detail: 'El código vive en models/orders.sql.',
+    });
+  });
+
   it('adds DBT source operational metrics from recorded warehouse metadata', () => {
     const model = buildGraphNodeCardReadModel(
       buildNode({
