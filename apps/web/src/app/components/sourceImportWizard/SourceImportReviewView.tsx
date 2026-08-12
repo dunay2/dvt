@@ -5,7 +5,7 @@ import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
 import type { SourceImportOptionContribution, SourceImportOptionId } from '../../plugins/registry';
 import { resolveString } from '../../plugins/contracts/PluginManifest';
-import { sourceImportWizardCopy as copy } from './copy';
+import { useSourceImportLocalization } from './copy';
 import { SourceImportSelectionBasket } from './SourceImportSelectionBasket';
 import type { SourceImportObjectViewModel } from './sourceImportCatalogModel';
 import type { SourceImportReviewPreviewGroupViewModel } from './sourceImportReviewModel';
@@ -58,6 +58,8 @@ export function SourceImportReviewView({
   sourceImportOptionValues,
   onRemoveSourceObject,
 }: SourceImportReviewViewProps): JSX.Element {
+  const { copy } = useSourceImportLocalization();
+
   return (
     <div className={sourceImportReviewViewClassNames.root}>
       <div>
@@ -104,6 +106,8 @@ export function SourceImportReviewSummaryCard({
   sourceImportOptions,
   sourceImportOptionValues,
 }: SourceImportReviewSummaryCardProps): JSX.Element {
+  const { copy, language } = useSourceImportLocalization();
+
   return (
     <Card className={sourceImportReviewViewClassNames.card}>
       <div className={sourceImportReviewViewClassNames.summary}>
@@ -124,7 +128,11 @@ export function SourceImportReviewSummaryCard({
           <span className={sourceImportReviewViewClassNames.summaryLabel}>
             {copy.review.groupingStrategyLabel}
           </span>
-          <Badge variant="outline">{groupingStrategy}</Badge>
+          <Badge variant="outline">
+            {groupingStrategy === 'schema'
+              ? copy.review.groupingStrategySchemaLabel
+              : copy.review.groupingStrategyDatabaseLabel}
+          </Badge>
         </div>
         <Separator />
         {sourceImportOptions.map((option) => {
@@ -132,7 +140,7 @@ export function SourceImportReviewSummaryCard({
           return (
             <div key={option.id} className={sourceImportReviewViewClassNames.optionRow}>
               <span className={sourceImportReviewViewClassNames.summaryLabel}>
-                {resolveString(option.label)}:
+                {resolveString(option.label, language)}:
               </span>
               <Badge variant={enabled ? 'default' : 'secondary'}>
                 {enabled ? copy.review.enabledLabel : copy.review.disabledLabel}
@@ -166,6 +174,8 @@ export function SourceImportAttachmentPreview({
   selectedSourceObjects,
   previewGroups,
 }: SourceImportAttachmentPreviewProps): JSX.Element {
+  const { copy } = useSourceImportLocalization();
+
   return (
     <Card className={sourceImportReviewViewClassNames.card}>
       <h4 className={sourceImportReviewViewClassNames.previewTitle}>{copy.review.previewTitle}</h4>

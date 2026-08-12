@@ -9,7 +9,7 @@ import type {
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
-import { sourceImportWizardCopy as copy } from './copy';
+import { type SourceImportWizardCopy, useSourceImportLocalization } from './copy';
 import { WarehouseConnectionCreateForm } from './WarehouseConnectionCreateForm';
 
 interface ConnectionStepProps {
@@ -57,10 +57,12 @@ function filterConnections(
   );
 }
 
-function formatConnectionCatalogSummary(connectionCount: number): string {
-  return `${connectionCount} ${
-    connectionCount === 1 ? 'connection' : 'connections'
-  } in governed catalog`;
+function formatConnectionCatalogSummary(
+  connectionCount: number,
+  copy: SourceImportWizardCopy['connection']
+): string {
+  const template = connectionCount === 1 ? copy.catalogSummarySingular : copy.catalogSummaryPlural;
+  return template.replace('{count}', String(connectionCount));
 }
 
 export function ConnectionStep({
@@ -81,6 +83,7 @@ export function ConnectionStep({
   onCreateConnection,
   onTestConnection,
 }: ConnectionStepProps) {
+  const { copy } = useSourceImportLocalization();
   const [searchValue, setSearchValue] = useState('');
   const selectedConnectionOptionRef = useRef<HTMLButtonElement | null>(null);
   const visibleConnections = useMemo(
@@ -106,7 +109,7 @@ export function ConnectionStep({
       <div>
         <div className="mb-2 flex items-center gap-2">
           <h3 className="text-lg font-medium">{copy.connection.title}</h3>
-          <Badge variant="outline">Database</Badge>
+          <Badge variant="outline">{copy.connection.databaseBadge}</Badge>
         </div>
         <p className="mb-4 text-sm text-slate-300">{copy.connection.description}</p>
       </div>
@@ -124,12 +127,18 @@ export function ConnectionStep({
         ) : (
           <>
             <div className="rounded-lg border border-slate-700 bg-slate-950/40 p-3">
-              <div className="mb-2 flex items-center justify-between gap-3 text-xs text-slate-300">
+              <div
+                data-slot="source-import-connection-summary"
+                className="mb-2 flex flex-wrap items-start justify-between gap-3 text-xs text-slate-300"
+              >
                 <div className="min-w-0">
-                  <div>{formatConnectionCatalogSummary(connections.length)}</div>
+                  <div>{formatConnectionCatalogSummary(connections.length, copy.connection)}</div>
                   <div className="truncate text-slate-400">{copy.connection.catalogSource}</div>
                 </div>
-                <div className="flex shrink-0 gap-2">
+                <div
+                  data-slot="source-import-connection-actions"
+                  className="flex min-w-0 flex-wrap gap-2"
+                >
                   <Button
                     type="button"
                     variant="outline"
@@ -193,7 +202,7 @@ export function ConnectionStep({
                 <div className="mt-1 text-xs opacity-85">
                   {connectionTestResult.status === 'passed'
                     ? `${connectionTestResult.objectCount} ${copy.connection.reachableObjects}`
-                    : connectionTestResult.message}
+                    : copy.connection.testFailedDetail}
                 </div>
               </Card>
             ) : null}
@@ -218,7 +227,7 @@ export function ConnectionStep({
                     ref={isSelected ? selectedConnectionOptionRef : undefined}
                     data-slot="source-import-connection-option"
                     aria-pressed={isSelected}
-                    className={`flex w-full flex-col gap-6 rounded-xl border bg-card p-4 text-left text-card-foreground transition-all ${
+                    className={`flex w-full min-w-0 flex-col gap-6 overflow-hidden rounded-xl border bg-card p-4 text-left text-card-foreground transition-all ${
                       isSelected
                         ? 'border-blue-500 bg-blue-900/20'
                         : 'border-slate-600 hover:border-gray-600'

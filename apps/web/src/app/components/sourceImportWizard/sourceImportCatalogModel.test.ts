@@ -5,7 +5,7 @@ import {
   buildSourceImportCatalogViewModel,
   buildSourceObjectIdentityKey,
 } from './sourceImportCatalogModel';
-import { sourceImportWizardCopy } from './copy';
+import { resolveSourceImportWizardCopy, sourceImportWizardCopy } from './copy';
 import {
   buildSourceImportTestMetricEvidence,
   buildSourceImportTestObject as buildRelation,
@@ -109,6 +109,27 @@ describe('sourceImportCatalogModel relational catalog', () => {
       })
     );
     expect(catalog.activeSourceObject?.byteSizeDetail).toContain('Estimated using schema width');
+  });
+
+  it('formats compact byte evidence with the active Spanish locale', () => {
+    const spanishNumberFormatter = new Intl.NumberFormat('es-ES');
+    const relation = buildRelation({
+      metricEvidence: buildSourceImportTestMetricEvidence(128, 1536),
+    });
+
+    const catalog = buildSourceImportCatalogViewModel({
+      sourceObjects: [relation],
+      activeSourceObjectKey: relation.objectId,
+      copy: resolveSourceImportWizardCopy('es').catalog,
+      numberFormatter: spanishNumberFormatter,
+    });
+
+    expect(catalog.activeSourceObject).toEqual(
+      expect.objectContaining({
+        byteSizeLabel: '1,5 KB',
+        byteSizeDetail: expect.stringContaining('1536 B (1,5 KB)'),
+      })
+    );
   });
 
   it('groups relations by database and schema without merging dotted identities', () => {

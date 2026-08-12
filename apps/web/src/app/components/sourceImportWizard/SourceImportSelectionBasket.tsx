@@ -3,7 +3,7 @@ import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { MetricEvidenceHotspot } from '../metrics/MetricEvidenceHotspot';
-import { sourceImportWizardCopy as copy } from './copy';
+import { useSourceImportLocalization } from './copy';
 import type { SourceImportObjectViewModel } from './sourceImportCatalogModel';
 
 const selectionBasketClassNames = {
@@ -36,6 +36,8 @@ export function SourceImportSelectionBasket({
   selectedSourceObjects,
   onRemoveSourceObject,
 }: SourceImportSelectionBasketProps): JSX.Element {
+  const { copy } = useSourceImportLocalization();
+
   return (
     <Card className={selectionBasketClassNames.card}>
       <div className={selectionBasketClassNames.header}>
@@ -91,6 +93,8 @@ export function SourceImportSelectionBasket({
 function SourceImportSelectedColumnPreview({
   sourceObject,
 }: Readonly<{ sourceObject: SourceImportObjectViewModel }>): JSX.Element {
+  const { copy } = useSourceImportLocalization();
+
   if (sourceObject.columns.length === 0) {
     return (
       <p className={selectionBasketClassNames.columnEmpty}>{copy.selectionBasket.noColumns}</p>

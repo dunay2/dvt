@@ -398,7 +398,7 @@ describe('ShellTopBar workspace context', () => {
         '[data-slot="shell-language-option-es"]'
       );
       expect(command).not.toBeNull();
-      return command;
+      return command as HTMLElement;
     });
 
     await act(async () => {
@@ -409,6 +409,55 @@ describe('ShellTopBar workspace context', () => {
     expect(container.querySelector('[data-slot="shell-menu-trigger"]')?.textContent).toContain(
       'Vista'
     );
+    await waitFor(() => {
+      expect(document.body.querySelector('[data-slot="shell-language-menu"]')).toBeNull();
+    });
+  });
+
+  it('dismisses the Workspace menu when keyboard selection opens project code', async () => {
+    const onOpenProjectCode = vi.fn();
+    useCanvasWorkspaceMenuContributionStore.setState({
+      contribution: {
+        canExportProjectSnapshot: false,
+        canImportProjectSnapshot: false,
+        canOpenProjectCode: true,
+        onExportProjectSnapshot: vi.fn(),
+        onImportProjectSnapshotFile: vi.fn(),
+        onOpenProjectCode,
+      },
+    });
+
+    await act(async () => {
+      root.render(renderShellTopBar('/canvas'));
+    });
+    const workspaceMenuTrigger = container.querySelector<HTMLElement>(
+      '[data-slot="shell-workspace-menu-trigger"]'
+    );
+    await act(async () => {
+      fireEvent.pointerDown(workspaceMenuTrigger!);
+    });
+
+    const projectCodeCommand = await waitFor(() => {
+      const command = document.body.querySelector<HTMLElement>(
+        '[data-slot="canvas-workspace-open-project-code-command"]'
+      );
+      expect(command).not.toBeNull();
+      return command as HTMLElement;
+    });
+
+    await act(async () => {
+      projectCodeCommand.focus();
+      fireEvent.keyDown(projectCodeCommand, { key: 'Enter', code: 'Enter' });
+      fireEvent.keyUp(projectCodeCommand, { key: 'Enter', code: 'Enter' });
+    });
+
+    expect(onOpenProjectCode).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      expect(
+        document.body.querySelector('[data-slot="canvas-workspace-open-project-code-command"]')
+      ).toBeNull();
+    });
+    expect(document.activeElement).not.toBe(workspaceMenuTrigger);
   });
 
   it('opens an About dialog from the Raven application menu with compiled version metadata', async () => {

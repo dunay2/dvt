@@ -4,7 +4,7 @@ import {
 } from '../../ports/workspace';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
-import { sourceImportWizardCopy as copy } from './copy';
+import { useSourceImportLocalization } from './copy';
 
 interface WarehouseConnectionCreateFormProps {
   form: CreateWarehouseConnectionInput;
@@ -26,6 +26,8 @@ export function WarehouseConnectionCreateForm({
   onCancel,
   onSubmit,
 }: WarehouseConnectionCreateFormProps) {
+  const { copy } = useSourceImportLocalization();
+
   return (
     <Card className="border-slate-700 bg-slate-950/50 p-4">
       <form
@@ -118,18 +120,26 @@ export function WarehouseConnectionCreateForm({
             aria-label={copy.connection.createCredentialRefLabel}
             value={form.credentialRef}
             disabled={isCreating}
-            placeholder="env:DVT_LOCAL_POSTGRES_WAREHOUSE_URL"
+            placeholder={copy.connection.createCredentialRefPlaceholder}
             className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-500 focus:border-blue-500"
             onInput={(event) => onFieldChange('credentialRef', event.currentTarget.value)}
             onChange={(event) => onFieldChange('credentialRef', event.currentTarget.value)}
           />
         </label>
 
-        <div className="flex justify-end gap-2">
+        <div
+          data-slot="source-import-create-connection-actions"
+          className="flex flex-wrap justify-end gap-2"
+        >
           <Button type="button" variant="ghost" size="sm" disabled={isCreating} onClick={onCancel}>
             {copy.connection.createCancelAction}
           </Button>
-          <Button type="submit" size="sm" disabled={isCreating}>
+          <Button
+            type="submit"
+            size="sm"
+            disabled={isCreating}
+            className="bg-blue-700 text-white hover:bg-blue-600 disabled:bg-slate-800 disabled:text-slate-300 disabled:opacity-100"
+          >
             {isCreating ? copy.connection.creatingAction : copy.connection.createSubmitAction}
           </Button>
         </div>

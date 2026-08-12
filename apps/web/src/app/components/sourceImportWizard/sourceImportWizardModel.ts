@@ -13,13 +13,12 @@ import type {
 
 export const SOURCE_IMPORT_SECTIONS: readonly {
   id: SourceImportSection;
-  label: 'Connections' | 'Browse' | 'Metadata' | 'Selected';
   step: WizardStep;
 }[] = [
-  { id: 'connections', label: 'Connections', step: 'connection' },
-  { id: 'browse', label: 'Browse', step: 'selection' },
-  { id: 'metadata', label: 'Metadata', step: 'options' },
-  { id: 'selected', label: 'Selected', step: 'review' },
+  { id: 'connections', step: 'connection' },
+  { id: 'browse', step: 'selection' },
+  { id: 'metadata', step: 'options' },
+  { id: 'selected', step: 'review' },
 ];
 
 export function getSelectedCount(sourceObjects: SelectableSourceObject[]): number {

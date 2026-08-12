@@ -3,13 +3,14 @@ import { AlertCircle, CheckCircle2 } from 'lucide-react';
 import type { ImportSourcesResult } from '../../ports/workspace';
 import { Card } from '../ui/card';
 import { ScrollArea } from '../ui/scroll-area';
-import { sourceImportWizardCopy as copy } from './copy';
+import { useSourceImportLocalization } from './copy';
 
 type ResultStepProps = Readonly<{
   result: ImportSourcesResult;
 }>;
 
 export function ResultStep({ result }: ResultStepProps) {
+  const { copy } = useSourceImportLocalization();
   const warning =
     result.outcome.kind === 'graph-draft'
       ? copy.result.graphDraftWarning
@@ -53,7 +54,7 @@ export function ResultStep({ result }: ResultStepProps) {
           <div className="space-y-1 font-mono text-xs">
             {result.yamlFiles.map((file) => (
               <div key={file} className="text-slate-300">
-                [file] {file}
+                [{copy.result.fileLabel}] {file}
               </div>
             ))}
           </div>

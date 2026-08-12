@@ -4,9 +4,8 @@ import { useEffect, type Dispatch, type SetStateAction } from 'react';
 import { isRelationalSourceObject } from '@dvt/contracts';
 
 import type { IWarehouseSourceImportPort, SourceObject } from '../../ports/workspace';
-import { sourceImportWizardCopy as copy } from './copy';
 import { buildSourceObjectIdentityKey } from './sourceImportCatalogModel';
-import type { SourceImportWizardState } from './types';
+import { buildSourceImportFailure, type SourceImportWizardState } from './types';
 
 interface LoaderParams {
   open: boolean;
@@ -32,9 +31,11 @@ export function useConnectionsLoader({ open, warehouseSourceImport, setState }: 
           setState((prev) => ({ ...prev, connections }));
         }
       } catch (error) {
-        const message = error instanceof Error ? error.message : copy.loadConnectionsError;
         if (!cancelled) {
-          setState((prev) => ({ ...prev, loadError: message }));
+          setState((prev) => ({
+            ...prev,
+            loadError: buildSourceImportFailure('load-connections', error),
+          }));
         }
       } finally {
         if (!cancelled) {
@@ -97,11 +98,10 @@ export function useSourceObjectsLoader({
           }));
         }
       } catch (error) {
-        const message = error instanceof Error ? error.message : copy.loadSourceObjectsError;
         if (!cancelled) {
           setState((prev) => ({
             ...prev,
-            loadError: message,
+            loadError: buildSourceImportFailure('load-source-objects', error),
             sourceObjects: [],
             activeSourceObjectKey: null,
           }));

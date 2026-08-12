@@ -3,7 +3,7 @@ import { Card } from '../ui/card';
 import { Checkbox } from '../ui/checkbox';
 import type { SourceImportOptionContribution, SourceImportOptionId } from '../../plugins/registry';
 import { resolveString } from '../../plugins/contracts/PluginManifest';
-import { sourceImportWizardCopy as copy } from './copy';
+import { useSourceImportLocalization } from './copy';
 
 interface OptionsStepProps {
   sourceImportOptions: readonly SourceImportOptionContribution[];
@@ -16,6 +16,8 @@ export function OptionsStep({
   sourceImportOptionValues,
   onSourceImportOptionChange,
 }: OptionsStepProps) {
+  const { copy, language } = useSourceImportLocalization();
+
   return (
     <div className="space-y-4">
       <div>
@@ -27,10 +29,15 @@ export function OptionsStep({
         <Card key={option.id} className="border-slate-600 p-4">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
-              <h4 className="mb-1 text-sm font-medium">{resolveString(option.label)}</h4>
-              <p className="text-xs text-slate-300">{resolveString(option.description)}</p>
+              <h4 className="mb-1 text-sm font-medium">{resolveString(option.label, language)}</h4>
+              <p className="text-xs text-slate-300">
+                {resolveString(option.description, language)}
+              </p>
               <Badge variant="secondary" className="mt-2 text-xs">
-                Default: {option.defaultEnabled ? 'ON' : 'OFF'}
+                {copy.options.defaultLabel}:{' '}
+                {option.defaultEnabled
+                  ? copy.options.enabledShortLabel
+                  : copy.options.disabledShortLabel}
               </Badge>
             </div>
             <Checkbox

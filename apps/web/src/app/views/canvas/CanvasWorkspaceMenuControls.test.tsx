@@ -48,6 +48,7 @@ describe('CanvasWorkspaceMenuControls', () => {
     const onImportProjectSnapshotFile = vi.fn();
     const onOpenProjectExplorer = vi.fn();
     const onOpenProjectCode = vi.fn();
+    const onProjectCodeSelected = vi.fn();
     const onImportDbtProject = vi.fn();
     const snapshotFile = new File(['{}'], 'project-snapshot.json', {
       type: 'application/json',
@@ -70,7 +71,7 @@ describe('CanvasWorkspaceMenuControls', () => {
               onOpenProjectCode={onOpenProjectCode}
               onImportDbtProject={onImportDbtProject}
             />
-            <CanvasWorkspaceMenuControls />
+            <CanvasWorkspaceMenuControls onProjectCodeSelected={onProjectCodeSelected} />
           </DropdownMenuContent>
         </DropdownMenu>
       );
@@ -97,6 +98,10 @@ describe('CanvasWorkspaceMenuControls', () => {
 
     expect(onOpenProjectExplorer).toHaveBeenCalledTimes(1);
     expect(onOpenProjectCode).toHaveBeenCalledTimes(1);
+    expect(onProjectCodeSelected).toHaveBeenCalledTimes(1);
+    expect(onProjectCodeSelected.mock.invocationCallOrder[0]).toBeLessThan(
+      onOpenProjectCode.mock.invocationCallOrder[0] ?? Number.POSITIVE_INFINITY
+    );
 
     await act(async () => {
       document.body

@@ -48,6 +48,30 @@ export type SourceImportDatabaseIdentity = Readonly<{
   database: string;
 }>;
 
+export type SourceImportFailureCode =
+  | 'select-connection'
+  | 'load-connections'
+  | 'load-source-objects'
+  | 'test-connection'
+  | 'create-connection-validation'
+  | 'create-connection'
+  | 'import-sources';
+
+export type SourceImportFailure = Readonly<{
+  code: SourceImportFailureCode;
+  diagnostic: string | null;
+}>;
+
+export function buildSourceImportFailure(
+  code: SourceImportFailureCode,
+  cause?: unknown
+): SourceImportFailure {
+  return {
+    code,
+    diagnostic: cause instanceof Error ? cause.message : null,
+  };
+}
+
 export interface SourceImportWizardState {
   currentStep: WizardStep;
   connections: WarehouseConnection[];
@@ -65,8 +89,8 @@ export interface SourceImportWizardState {
   isCreatingConnection: boolean;
   isTestingConnection: boolean;
   connectionTestResult: TestWarehouseConnectionResult | null;
-  loadError: string | null;
-  createConnectionError: string | null;
+  loadError: SourceImportFailure | null;
+  createConnectionError: SourceImportFailure | null;
   importResult: ImportSourcesResult | null;
   activeSourceObjectKey: string | null;
   sourceObjectSearchQuery: string;
