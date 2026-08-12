@@ -346,6 +346,7 @@ allowedImplementationSurfaces:
   - docs/architecture/components/web/graph/canvas-interaction-command-surface-user-stories.md
   - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
   - docs/planning/proposals/mandatory/frontend-and-ux/canvas-contextual-surface-convergence-plan-20260812.md
+  - docs/planning/status/generated-code-state.md
 forbiddenImplementationSurfaces:
   - apps/api/**
   - packages/@dvt/contracts/**
