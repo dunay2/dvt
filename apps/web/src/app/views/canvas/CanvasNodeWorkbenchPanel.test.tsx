@@ -266,6 +266,29 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(tabsList?.textContent).not.toContain('Indexes');
   });
 
+  it('does not mistake the read-model empty-columns description for a source capability', () => {
+    renderNodePanel(
+      root,
+      {
+        ...SOURCE_NODE,
+        metadata: {
+          ...SOURCE_NODE.metadata,
+          columns: [],
+        },
+      },
+      null,
+      {
+        canEditNode: false,
+        onApplyNodeDraft: vi.fn(),
+      }
+    );
+
+    const tabsList = container.querySelector('[data-slot="canvas-node-workbench-tabs-list"]');
+    expect(tabsList).not.toBeNull();
+    expect(tabsList?.textContent).not.toContain('Columns');
+    expect(tabsList?.textContent).not.toContain('More');
+  });
+
   it('keeps the authoritative node-file editor launch inside the Code section', () => {
     const onOpenNodeCode = vi.fn();
 

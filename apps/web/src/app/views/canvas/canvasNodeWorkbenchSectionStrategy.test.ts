@@ -53,7 +53,10 @@ describe('resolveCanvasNodeWorkbenchSectionModel', () => {
       contributedSectionIds: new Set(),
       sections: [
         section('general', { rows: [{ id: 'name', label: 'Name', value: 'Orders' }] }),
-        section('columns', { emptyState: 'No columns' }),
+        section('columns', {
+          description: 'No columns are currently recorded.',
+          emptyState: 'No columns',
+        }),
         section('inputs-outputs', {
           tableRows: [{ id: 'input:1', cells: { direction: 'Input', node: 'Raw orders' } }],
         }),

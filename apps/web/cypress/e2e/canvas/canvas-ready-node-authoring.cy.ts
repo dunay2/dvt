@@ -361,11 +361,24 @@ describe('Canvas ready node authoring', () => {
 
     cy.viewport(640, 800);
     cy.get('.react-flow__node[data-id="orders_model"]')
-      .find('[data-slot="canvas-node-shell"]')
-      .dblclick({ force: true });
+      .should('be.visible')
+      .focus()
+      .should('have.focus')
+      .type('{enter}');
+    cy.get('[data-slot="canvas-node-workbench-overlay"]')
+      .should('be.visible')
+      .then(($overlay) => {
+        const rect = $overlay[0]?.getBoundingClientRect();
+        expect(rect, 'contextual Properties bounds').to.not.be.undefined;
+        expect(rect!.left).to.be.at.least(0);
+        expect(rect!.top).to.be.at.least(0);
+        expect(rect!.right).to.be.at.most(640);
+        expect(rect!.bottom).to.be.at.most(800);
+      });
     cy.get('[data-slot="canvas-node-workbench-tab-code"]')
       .should('be.visible')
-      .and('contain.text', 'Código');
+      .and('contain.text', 'Código')
+      .and('have.focus');
     cy.get('textarea[name="dbt-model-sql"]').type('\n-- compact visibility', {
       parseSpecialCharSequences: false,
       delay: 0,
@@ -374,7 +387,15 @@ describe('Canvas ready node authoring', () => {
       'be.visible'
     );
     cy.get('[data-slot="canvas-node-workbench-close"]').should('be.visible');
+    cy.document().then((document) => {
+      expect(document.documentElement.scrollWidth).to.be.at.most(
+        document.documentElement.clientWidth
+      );
+    });
     assertNoSeriousAccessibilityViolations('[data-slot="canvas-node-workbench-overlay"]');
+    cy.focused().type('{esc}');
+    cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
+    cy.get('.react-flow__node[data-id="orders_model"]').should('have.focus');
   });
 
   it('does not present failed draft saves as persisted after reload', () => {
