@@ -14,6 +14,7 @@ import {
   resolveNodeCardStatus,
   resolveColumnCount,
   resolveColumnMetricPresentation,
+  resolveCodeMetricPresentation,
   stringValue,
 } from './graphNodeCardStrategyUtils';
 import { buildGraphNodeTitlePresentation } from './graphNodeTitlePresentation';
@@ -32,6 +33,7 @@ function buildDefaultCard(
     data,
   });
   const columnPresentation = resolveColumnMetricPresentation(metadata, data);
+  const codePresentation = resolveCodeMetricPresentation(data);
 
   pushMetric(
     metrics,
@@ -45,6 +47,9 @@ function buildDefaultCard(
     'Cost',
     node.lastCost == null ? null : `$${node.lastCost.toFixed(2)}`
   );
+  pushMetric(metrics, 'code', codePresentation?.label ?? 'Code', codePresentation?.value ?? null, {
+    ...(codePresentation?.detail == null ? {} : { detail: codePresentation.detail }),
+  });
   pushMetric(metrics, 'columns', columnPresentation.label, resolveColumnCount(metadata, data), {
     ...(columnPresentation.detail == null ? {} : { detail: columnPresentation.detail }),
   });

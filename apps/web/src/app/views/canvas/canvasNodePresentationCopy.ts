@@ -34,6 +34,9 @@ const NODE_PROPERTY_PRESENTATION_COPY = {
     columnLabels: {},
     valueLabels: {
       input: 'Input',
+      authored: 'Authored',
+      generated: 'Generated',
+      file: 'File',
     },
   },
   es: {
@@ -144,6 +147,9 @@ const NODE_PROPERTY_PRESENTATION_COPY = {
       lineage: 'Linaje',
       validation: 'Validación',
       dependency: 'Dependencia',
+      authored: 'Escrito',
+      generated: 'Generado',
+      file: 'Archivo',
     },
   },
 } as const;
