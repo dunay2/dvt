@@ -23,6 +23,14 @@ function featureMechanizationRecordArgs(options = {}) {
     'command',
     '--ddd-owner',
     'PlanningDbFeatureMechanizationCatalog',
+    '--application-port',
+    'RecordFeatureMechanizationRail application command',
+    '--adapter-surface',
+    'pnpm planning:db:operate feature-mechanization record',
+    '--authorization-scope',
+    'repository-local governance writer with explicit actor and compare-and-set revision',
+    '--negative-test',
+    'reject missing rail metadata',
     '--mechanization-status',
     'implemented',
     '--rail-status',
@@ -100,6 +108,13 @@ test('parseArgs builds a feature mechanization rail record command', () => {
   assert.equal(command.normalizedRailName, 'recordfeaturemechanizationrail');
   assert.equal(command.railType, 'command');
   assert.equal(command.dddOwner, 'PlanningDbFeatureMechanizationCatalog');
+  assert.equal(command.applicationPort, 'RecordFeatureMechanizationRail application command');
+  assert.equal(command.adapterSurface, 'pnpm planning:db:operate feature-mechanization record');
+  assert.equal(
+    command.authorizationScope,
+    'repository-local governance writer with explicit actor and compare-and-set revision'
+  );
+  assert.deepEqual(command.negativeTests, ['reject missing rail metadata']);
   assert.deepEqual(command.implementationRefs, [
     'scripts/planning-db-operate.cjs#parseFeatureMechanizationCommand',
   ]);
@@ -158,6 +173,17 @@ test('feature mechanization rail planner emits a local rail and audit row', () =
   assert.equal(planned.audit.operationType, 'feature_mechanization_rail_record');
   assert.equal(planned.audit.railId, planned.rail.railId);
   assert.equal(planned.audit.resultingRevision, 0);
+  assert.deepEqual(planned.rail.rawRail, {
+    name: 'RecordFeatureMechanizationRail',
+    type: 'command',
+    dddOwner: 'PlanningDbFeatureMechanizationCatalog',
+    status: 'implemented',
+    applicationPort: 'RecordFeatureMechanizationRail application command',
+    adapterSurface: 'pnpm planning:db:operate feature-mechanization record',
+    authorizationScope:
+      'repository-local governance writer with explicit actor and compare-and-set revision',
+    negativeTests: ['reject missing rail metadata'],
+  });
   assert.deepEqual(
     validateFeatureMechanizationManifest(planned.rail.rawManifest, planned.rail.sourcePath).errors,
     []
