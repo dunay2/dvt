@@ -1517,6 +1517,10 @@ function operationPayload(command) {
       normalizedRailName: command.normalizedRailName,
       railType: command.railType,
       dddOwner: command.dddOwner,
+      applicationPort: command.applicationPort,
+      adapterSurface: command.adapterSurface,
+      authorizationScope: command.authorizationScope,
+      negativeTests: command.negativeTests || [],
       mechanizationStatus: command.mechanizationStatus,
       railStatus: command.railStatus,
       implementationRefs: command.implementationRefs || [],
@@ -2097,6 +2101,9 @@ function validateComponentCreateCommand(command) {
     ['name', command.name],
     ['owned-concern', command.ownedConcern],
     ['ddd-owner', command.dddOwner],
+    ['application-port', command.applicationPort],
+    ['adapter-surface', command.adapterSurface],
+    ['authorization-scope', command.authorizationScope],
     ['cq-rails', command.cqRails],
   ];
   for (const [field, value] of requiredTextFields) {
@@ -3126,6 +3133,7 @@ function validateFeatureMechanizationRecordCommand(command) {
     ['cypress-flow', command.cypressFlows],
     ['completion-gate', command.completionGate],
     ['unit-test', command.unitTests],
+    ['negative-test', command.negativeTests],
   ];
   for (const [field, value] of requiredListFields) {
     if (!Array.isArray(value) || value.length === 0) {
@@ -3194,6 +3202,10 @@ function parseFeatureMechanizationCommand(action, args) {
     railId: featureMechanizationRailId({ featureId, railType, normalizedRailName }),
     railType,
     dddOwner: requireOption(options, 'dddOwner'),
+    applicationPort: requireOption(options, 'applicationPort'),
+    adapterSurface: requireOption(options, 'adapterSurface'),
+    authorizationScope: requireOption(options, 'authorizationScope'),
+    negativeTests: normalizeListOption(options.negativeTest),
     mechanizationStatus: validateFeatureMechanizationStatus(
       options.mechanizationStatus || 'implemented'
     ),
@@ -5099,6 +5111,10 @@ function planFeatureMechanizationRailRecordOperation({ command, existingRail, op
     type: command.railType,
     dddOwner: command.dddOwner,
     status: command.railStatus,
+    applicationPort: command.applicationPort,
+    adapterSurface: command.adapterSurface,
+    authorizationScope: command.authorizationScope,
+    negativeTests: command.negativeTests,
   });
   const patchSurfaces =
     command.patchSurfaces.length > 0
