@@ -19,6 +19,7 @@ const {
   planArchitectureObservabilityRecordOperation,
   planArchitectureRelationRecordOperation,
   writePlannedArchitectureContractRecordOperation,
+  writePlannedArchitectureComponentRecordOperation,
   writePlannedArchitecturePortRecordOperation,
   writePlannedArchitectureStorageIoRecordOperation,
   writePlannedArchitectureEvidenceRecordOperation,
@@ -330,6 +331,66 @@ test('architecture component updates preserve governed maturity and creation tim
   assert.equal(planned.component.maturityScore, 78);
   assert.equal(planned.component.createdAt, createdAt);
   assert.equal(planned.component.updatedAt, now.toISOString());
+});
+
+test('architecture component updates do not downgrade existing responsibility status', async () => {
+  const queries = [];
+  const client = {
+    async query(sql, params) {
+      queries.push({ sql, params });
+      return { rows: [], rowCount: 1 };
+    },
+  };
+  const timestamp = '2026-08-12T12:00:00.000Z';
+
+  await writePlannedArchitectureComponentRecordOperation(client, {
+    component: {
+      componentId: 'SYS-WEB-CANVAS-CONTEXT-MENU-PRIMITIVES',
+      name: 'Canvas context menu primitives',
+      kind: 'ui-view',
+      layer: 'ui',
+      owner: 'Frontend / Canvas',
+      repoPath: 'apps/web/src/app/views/canvas/CanvasContextMenuView.tsx',
+      publicContract: 'Reusable Canvas context-menu surface, section, and item primitives.',
+      runtime: 'browser',
+      criticality: 'medium',
+      status: 'review',
+      maturityScore: 78,
+      parentComponentId: 'SYS-WEB-CANVAS-CONTEXT-MENU-CORE',
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    },
+    responsibilities: [
+      {
+        responsibilityId: 'RESP-SYS-WEB-CANVAS-CONTEXT-MENU-PRIMITIVES',
+        componentId: 'SYS-WEB-CANVAS-CONTEXT-MENU-PRIMITIVES',
+        responsibility: 'Own reusable Canvas context-menu primitive rendering.',
+        reasonToChange: 'Context-menu primitive rendering changes.',
+        dddOwner: 'CanvasContextMenuPresentationPrimitives',
+        status: 'proposed',
+        createdAt: timestamp,
+      },
+    ],
+    audit: {
+      operationId: 'op-architecture-component-update',
+      idempotencyKey: 'architecture_component_record:test',
+      operationType: 'architecture_component_record',
+      actor: 'codex',
+      designId: 'db-canvas-context-menu-component-path-2310-v1',
+      sourceRef: 'apps/web/src/app/views/canvas/CanvasContextMenuView.tsx',
+      sourceContentSha256: 'f'.repeat(64),
+      expectedRevision: null,
+      previousRevision: 0,
+      resultingRevision: 0,
+      payload: {},
+      createdAt: timestamp,
+    },
+  });
+
+  const responsibilityWrite = queries.find((query) =>
+    query.sql.includes('architecture.component_responsibility')
+  );
+  assert.match(responsibilityWrite.sql, /status = architecture\.component_responsibility\.status/u);
 });
 
 test('architecture relation record planner requires design scope and existing endpoints', () => {
