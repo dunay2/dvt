@@ -106542,7 +106542,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "a7c88bc2849d457a4ba113621092fc685365dd8b178633149ae841f1f7ff6cb0",
+      "sourceContentSha256": "defe0768972a12a45d5ebfe7f8e24dd2799639e3963b806d65bb2a3c79451de9",
       "rawRail": {
         "name": "RecordArchitectureComponent",
         "type": "command",
@@ -106752,7 +106752,7 @@
         "node --test scripts/planning-db-operate-tests/architecture-plan.test.cjs scripts/planning-db-operate-tests/architecture-parse.test.cjs"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "a7c88bc2849d457a4ba113621092fc685365dd8b178633149ae841f1f7ff6cb0",
+      "sourceContentSha256": "defe0768972a12a45d5ebfe7f8e24dd2799639e3963b806d65bb2a3c79451de9",
       "rawRail": {
         "name": "RecordArchitectureEvidenceExecution",
         "type": "command",
@@ -107326,7 +107326,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "a7c88bc2849d457a4ba113621092fc685365dd8b178633149ae841f1f7ff6cb0",
+      "sourceContentSha256": "defe0768972a12a45d5ebfe7f8e24dd2799639e3963b806d65bb2a3c79451de9",
       "rawRail": {
         "name": "RecordArchitectureObservabilityEvidence",
         "type": "command",
@@ -107557,7 +107557,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "a7c88bc2849d457a4ba113621092fc685365dd8b178633149ae841f1f7ff6cb0",
+      "sourceContentSha256": "defe0768972a12a45d5ebfe7f8e24dd2799639e3963b806d65bb2a3c79451de9",
       "rawRail": {
         "name": "RetireArchitectureEvidenceExecution",
         "type": "command",
@@ -107719,7 +107719,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "a7c88bc2849d457a4ba113621092fc685365dd8b178633149ae841f1f7ff6cb0",
+      "sourceContentSha256": "defe0768972a12a45d5ebfe7f8e24dd2799639e3963b806d65bb2a3c79451de9",
       "rawRail": {
         "name": "RetireArchitectureTestEvidence",
         "type": "command",
@@ -107881,7 +107881,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "a7c88bc2849d457a4ba113621092fc685365dd8b178633149ae841f1f7ff6cb0",
+      "sourceContentSha256": "defe0768972a12a45d5ebfe7f8e24dd2799639e3963b806d65bb2a3c79451de9",
       "rawRail": {
         "name": "RetireFeatureMechanizationRail",
         "type": "command",
@@ -108043,7 +108043,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "a7c88bc2849d457a4ba113621092fc685365dd8b178633149ae841f1f7ff6cb0",
+      "sourceContentSha256": "defe0768972a12a45d5ebfe7f8e24dd2799639e3963b806d65bb2a3c79451de9",
       "rawRail": {
         "name": "TransitionArchitectureDesign",
         "type": "command",
@@ -114840,7 +114840,7 @@
         "pnpm docs:feature-mechanization:implementation"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "a7c88bc2849d457a4ba113621092fc685365dd8b178633149ae841f1f7ff6cb0",
+      "sourceContentSha256": "defe0768972a12a45d5ebfe7f8e24dd2799639e3963b806d65bb2a3c79451de9",
       "rawRail": {
         "name": "RecordArchitectureStorageIo",
         "type": "command",
