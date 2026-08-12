@@ -95,34 +95,6 @@ jobs:
       - name: Run executable CI tool contract tests
         run: pnpm test:ci-tools:executable
 
-  lint-and-format:
-    name: Changed-slice verification
-    needs: detect-affected
-    if: >-
-      github.event_name == 'pull_request' && (needs.detect-affected.outputs.any_changed == 'true' ||
-      needs.detect-affected.outputs.docs_changed == 'true' ||
-      needs.detect-affected.outputs.changed_file_validation_relevant == 'true' )
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 1
-
-      - name: Fetch pull-request base ref
-        uses: ./.github/actions/fetch-scope-base
-        with:
-          base-ref: ${{ github.base_ref }}
-
-      - name: Setup pnpm, cache and dependencies
-        uses: ./.github/actions/setup-node-pnpm
-
-      - name: Run changed-slice verification
-        run: pnpm verify:changed
-        env:
-          GIT_BASE: origin/${{ github.base_ref }}
-
   affected-preflight:
     name: Affected workspace preflight
     needs: detect-affected

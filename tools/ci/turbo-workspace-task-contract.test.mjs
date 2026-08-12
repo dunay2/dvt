@@ -18,6 +18,11 @@ const rootPackage = JSON.parse(readFileSync('package.json', 'utf8'));
 const ciWorkflow = readFileSync('.github/workflows/ci.yml', 'utf8');
 const testWorkflow = readFileSync('.github/workflows/test.yml', 'utf8');
 
+function assertPrWorkflowExcludesLocalChangedGate(workflow) {
+  assert.doesNotMatch(workflow, /name: Changed-slice verification/u);
+  assert.doesNotMatch(workflow, /run: pnpm verify:changed/u);
+}
+
 test('Turbo workspace wrapper accepts governed task names and defaults to the affected filter', () => {
   assert.throws(() => parseArgs([]), /Unsupported Turbo workspace task/);
   assert.equal(DEFAULT_BASE_REF, 'origin/main');
@@ -112,7 +117,7 @@ test('root affected commands and CI matrix lint/build/typecheck steps use the Tu
     'pnpm ci:affected:build && pnpm ci:affected:lint && pnpm ci:affected:typecheck'
   );
 
-  assert.ok(ciWorkflow.includes('run: pnpm verify:changed'));
+  assertPrWorkflowExcludesLocalChangedGate(ciWorkflow);
   assert.ok(ciWorkflow.includes('GIT_BASE: origin/${{ github.base_ref }}'));
   assert.ok(ciWorkflow.includes('run: pnpm preflight:affected:ci'));
   assert.match(
