@@ -418,6 +418,22 @@ test('test and contract workflows expose stable merge-blocking outcomes', () => 
   }
 });
 
+test('code quality workflow exposes a stable merge-blocking outcome', () => {
+  const ciWorkflow = yaml.load(readFileSync('.github/workflows/ci.yml', 'utf8'));
+  const aggregator = ciWorkflow.jobs['code-quality-required'];
+
+  assert.equal(aggregator.name, 'Code Quality Required for Merge');
+  assert.deepEqual(aggregator.needs, [
+    'ci-tool-contracts',
+    'detect-affected',
+    'ci-tool-executable-contracts',
+    'affected-preflight',
+    'no-affected-workspaces',
+  ]);
+  assert.equal(aggregator.if, 'always()');
+  assert.match(aggregator.steps[0].with.script, /\['failure', 'cancelled'\]/u);
+});
+
 test('PR quality gate consumes prepush-equivalent scope outputs for expensive gates', () => {
   const prQualityGate = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
 
