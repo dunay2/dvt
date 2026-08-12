@@ -230,8 +230,20 @@ describe('SourceImportWizard', () => {
     );
 
     expect(dialog?.className).toContain('sm:max-w-5xl');
-    expect(connectionSummary?.className).toContain('flex-wrap');
-    expect(connectionActions?.className).toContain('flex-wrap');
+    expect(connectionSummary?.className).toContain('flex-col');
+    expect(connectionSummary?.className).toContain('md:flex-row');
+    expect(connectionActions?.className).toContain('grid');
+    expect(connectionActions?.className).toContain('w-full');
+    expect(connectionActions?.className).toContain('sm:grid-cols-2');
+
+    const connectionActionButtons = Array.from(
+      connectionActions?.querySelectorAll<HTMLButtonElement>('button') ?? []
+    );
+    expect(connectionActionButtons).toHaveLength(2);
+    for (const action of connectionActionButtons) {
+      expect(action.className).toContain('min-w-0');
+      expect(action.className).toContain('w-full');
+    }
 
     const attachAction = harness.findButtonContaining('Attach sources to canvas');
     expect(attachAction?.className).toContain('disabled:opacity-100');
@@ -242,7 +254,16 @@ describe('SourceImportWizard', () => {
     const formActions = document.body.querySelector<HTMLElement>(
       '[data-slot="source-import-create-connection-actions"]'
     );
-    expect(formActions?.className).toContain('flex-wrap');
+    expect(formActions?.className).toContain('grid');
+    expect(formActions?.className).toContain('grid-cols-1');
+    expect(formActions?.className).toContain('sm:grid-cols-2');
+    expect(formActions?.className).toContain('sm:justify-self-end');
+    for (const action of Array.from(
+      formActions?.querySelectorAll<HTMLButtonElement>('button') ?? []
+    )) {
+      expect(action.className).toContain('min-w-0');
+      expect(action.className).toContain('w-full');
+    }
     const createAction = document.body.querySelector<HTMLButtonElement>('button[type="submit"]');
     expect(createAction?.className).toContain('bg-blue-700');
     expect(createAction?.className).toContain('text-white');

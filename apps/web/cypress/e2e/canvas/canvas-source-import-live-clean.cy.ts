@@ -716,6 +716,16 @@ describe('Canvas source import live clean proof', () => {
     cy.press(Cypress.Keyboard.Keys.ENTER);
     cy.get('html').should('have.attr', 'lang', 'es');
     cy.get('[data-slot="shell-menu-trigger"]').should('contain.text', 'Vista');
+    cy.window().should((window) => {
+      expect(window.localStorage.getItem('dvt-web-application-language')).to.contain(
+        '"language":"es"'
+      );
+    });
+    cy.reload();
+    cy.get('html').should('have.attr', 'lang', 'es');
+    cy.get('[data-slot="shell-menu-trigger"]', { timeout: 20_000 })
+      .should('be.visible')
+      .and('contain.text', 'Vista');
 
     selectWorkspaceScope(session, {
       availableProjects: 'Proyectos disponibles en esta sesión',
@@ -743,9 +753,20 @@ describe('Canvas source import live clean proof', () => {
       .should('be.visible')
       .and(($actions) => {
         const dialogBounds = Cypress.$('[role="dialog"]').get(0).getBoundingClientRect();
-        const actionBounds = $actions.get(0).getBoundingClientRect();
+        const actions = $actions.get(0);
+        const actionBounds = actions.getBoundingClientRect();
         expect(actionBounds.left).to.be.at.least(dialogBounds.left);
         expect(actionBounds.right).to.be.at.most(dialogBounds.right);
+        expect(actions.scrollWidth, 'connection actions horizontal overflow').to.be.at.most(
+          actions.clientWidth
+        );
+        for (const action of actions.querySelectorAll('button')) {
+          const bounds = action.getBoundingClientRect();
+          expect(bounds.left, `${action.textContent} left edge`).to.be.at.least(actionBounds.left);
+          expect(bounds.right, `${action.textContent} right edge`).to.be.at.most(
+            actionBounds.right
+          );
+        }
       });
     cy.contains('[role="dialog"] button', 'Nueva conexión').click();
     cy.get('[data-slot="source-import-create-connection-name"]')
@@ -763,6 +784,20 @@ describe('Canvas source import live clean proof', () => {
     cy.get('[data-slot="source-import-create-connection-actions"]')
       .scrollIntoView()
       .should('be.visible')
+      .and(($actions) => {
+        const actions = $actions.get(0);
+        const actionBounds = actions.getBoundingClientRect();
+        expect(actions.scrollWidth, 'form actions horizontal overflow').to.be.at.most(
+          actions.clientWidth
+        );
+        for (const action of actions.querySelectorAll('button')) {
+          const bounds = action.getBoundingClientRect();
+          expect(bounds.left, `${action.textContent} left edge`).to.be.at.least(actionBounds.left);
+          expect(bounds.right, `${action.textContent} right edge`).to.be.at.most(
+            actionBounds.right
+          );
+        }
+      })
       .within(() => {
         cy.contains('button', 'Cancelar').should('be.visible').and('be.enabled');
         cy.contains('button', 'Crear conexión').should('be.visible').and('be.enabled');
