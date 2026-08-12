@@ -67,6 +67,30 @@ function Harness(): JSX.Element {
   );
 }
 
+function UnconnectedHarness(): JSX.Element {
+  const [draft, setDraft] = useState<CanvasInspectorNodeDraft>(() =>
+    createCanvasInspectorNodeDraft({
+      ...model,
+      metadata: { dbt: { materialized: 'view' } },
+    })
+  );
+
+  return (
+    <DbtModelCodeAuthoringSection
+      node={model}
+      disabled={false}
+      draft={draft.dbt!}
+      projection={{
+        originOptions: [],
+        selectedOriginId: '',
+        modelArtifact: null,
+        projectionError: null,
+      }}
+      onChange={setDraft}
+    />
+  );
+}
+
 describe('DbtModelCodeAuthoringSection', () => {
   let container: HTMLDivElement;
   let root: Root;
@@ -118,6 +142,15 @@ describe('DbtModelCodeAuthoringSection', () => {
 
     expect(editor?.value).toBe('');
     expect(container.querySelector('[data-slot="model-sql-draft"]')?.textContent).toBe('');
+  });
+
+  it('shows the empty SQL editor without redundant helper copy', () => {
+    act(() => root.render(<UnconnectedHarness />));
+
+    expect(container.querySelector('label')?.textContent).toBe('Model SQL');
+    expect(container.querySelector('textarea[name="dbt-model-sql"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="dbt-model-code-provenance"]')).toBeNull();
+    expect(container.textContent).not.toContain('Define the SQL this node runs.');
   });
 
   it('opts the SQL editor out of React Flow global keyboard commands', () => {
