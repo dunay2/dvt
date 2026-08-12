@@ -369,6 +369,16 @@ function buildVerifyChangedPlan(files) {
   if (hasWebChange(changedFiles)) {
     pushSteps(plan, VERIFY_CHANGED_GROUPS.web);
   }
+  pushSteps(plan, buildFocusedChangedTestPlan(changedFiles));
+
+  pushSteps(plan, VERIFY_CHANGED_POST_TEST_STEPS);
+
+  return plan;
+}
+
+function buildFocusedChangedTestPlan(files) {
+  const changedFiles = normalizeChangedFiles(files);
+  const plan = [];
   const directPlanningWorkflowTestSteps = planningWorkflowTestSteps(changedFiles);
   pushSteps(plan, directPlanningWorkflowTestSteps);
   pushSteps(plan, ciToolingTestSteps(changedFiles));
@@ -402,7 +412,6 @@ function buildVerifyChangedPlan(files) {
       }
     }
   }
-  pushSteps(plan, VERIFY_CHANGED_POST_TEST_STEPS);
 
   return plan;
 }
@@ -439,6 +448,7 @@ function executeCommandPlan(plan, options = {}) {
 }
 
 module.exports = {
+  buildFocusedChangedTestPlan,
   buildPrepushPlan,
   buildVerifyChangedPlan,
   classifyPrepushScope,
