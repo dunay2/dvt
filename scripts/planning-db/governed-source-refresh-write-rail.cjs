@@ -233,6 +233,10 @@ async function readExistingOperation(client, idempotencyKey) {
   return result.rows[0] || null;
 }
 
+async function acquireIdempotencyLock(client, idempotencyKey) {
+  await client.query('select pg_advisory_xact_lock(hashtextextended($1, 0))', [idempotencyKey]);
+}
+
 function assertIdempotentReplayMatches(existing, command, sourceCommitSha) {
   const paths = existing.paths || [];
   const expected = existing.expected_content_sha256_by_path || {};
@@ -338,6 +342,7 @@ async function applyGovernedSourceRefreshOperation(command, options = {}) {
   try {
     await assertPlanningDbCurrentSchemaReady(client);
     await client.query('begin');
+    await acquireIdempotencyLock(client, effectiveCommand.idempotencyKey);
     const existing = await readExistingOperation(client, effectiveCommand.idempotencyKey);
     if (existing) {
       assertIdempotentReplayMatches(existing, effectiveCommand, snapshot.sourceCommitSha);
