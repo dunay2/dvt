@@ -11059,14 +11059,14 @@
         "work_item_id": "https://github.com/dunay2/dvt/issues/2312",
         "title": "Replace accumulated CI rail references with exact current anchors",
         "owner": "CI Governance",
-        "status": "review",
+        "status": "implemented",
         "rationale": "The append-only record rail retained three superseded anchors; exact retirement and recreation restores truthful current mechanization without direct database writes.",
         "fowler_signal": "hidden_authority",
         "rail_ref": "RetireFeatureMechanizationRail",
-        "approved_at": null,
+        "approved_at": "2026-08-12T21:43:47.126+00:00",
         "supersedes_id": null,
         "created_at": "2026-08-12T21:36:36.935+00:00",
-        "updated_at": "2026-08-12T21:36:36.935+00:00"
+        "updated_at": "2026-08-12T21:43:51.184+00:00"
       },
       {
         "design_id": "CODE-WORKING-TREE-AUTOSYNC-20260712",
@@ -93810,6 +93810,27 @@
         "created_at": "2026-08-11T07:37:45.821+00:00"
       },
       {
+        "operation_id": "628acc6f-92dd-44c9-a678-1630b27df6ae",
+        "idempotency_key": "architecture_design_transition:codex-issue-2312:CI-PR-WORKFLOW-RAIL-REFERENCE-REPLACEMENT-2312-20260812:42aa2c2fa4a6136b",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex-issue-2312",
+        "design_id": "CI-PR-WORKFLOW-RAIL-REFERENCE-REPLACEMENT-2312-20260812",
+        "source_ref": ".github/workflows/pr-quality-gate.yml",
+        "source_content_sha256": "47a054dd358afc5b4698f849a9c0bff766c349b7fe3edaecae99ac81dd33cb75",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Exact CAS retirement and current-anchor recreation have been reviewed.",
+          "designId": "CI-PR-WORKFLOW-RAIL-REFERENCE-REPLACEMENT-2312-20260812",
+          "toStatus": "approved",
+          "sourceRef": ".github/workflows/pr-quality-gate.yml",
+          "fromStatus": "review",
+          "sourceContentSha256": "47a054dd358afc5b4698f849a9c0bff766c349b7fe3edaecae99ac81dd33cb75"
+        },
+        "created_at": "2026-08-12T21:43:47.126+00:00"
+      },
+      {
         "operation_id": "6371e660-ed34-437d-924b-105fd3c4ee52",
         "idempotency_key": "architecture_design_transition:codex:API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-20260811:971feda656429d44",
         "operation_type": "architecture_design_transition",
@@ -95021,6 +95042,27 @@
           "sourceContentSha256": "d4ff035dc1fd532fc5c77f7dc835d35138970ca5da2dc586fa80aeb477c44b31"
         },
         "created_at": "2026-08-11T13:28:00.417+00:00"
+      },
+      {
+        "operation_id": "7a49004a-860b-4186-a93d-6c6fa452591a",
+        "idempotency_key": "architecture_design_transition:codex-issue-2312:CI-PR-WORKFLOW-RAIL-REFERENCE-REPLACEMENT-2312-20260812:ff5cf53755995fe5",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex-issue-2312",
+        "design_id": "CI-PR-WORKFLOW-RAIL-REFERENCE-REPLACEMENT-2312-20260812",
+        "source_ref": ".github/workflows/pr-quality-gate.yml",
+        "source_content_sha256": "47a054dd358afc5b4698f849a9c0bff766c349b7fe3edaecae99ac81dd33cb75",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The stale references are retired and the single current rail passes implementation integrity.",
+          "designId": "CI-PR-WORKFLOW-RAIL-REFERENCE-REPLACEMENT-2312-20260812",
+          "toStatus": "implemented",
+          "sourceRef": ".github/workflows/pr-quality-gate.yml",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "47a054dd358afc5b4698f849a9c0bff766c349b7fe3edaecae99ac81dd33cb75"
+        },
+        "created_at": "2026-08-12T21:43:51.184+00:00"
       },
       {
         "operation_id": "7a9594ff-1603-4f0b-bc94-a4bc16177b78",
@@ -103413,6 +103455,27 @@
           "sourceContentSha256": "66b16187e6040c1d4b792e51311a6b7ae23df2d0f2543570443723a637875e30"
         },
         "created_at": "2026-08-10T21:04:36.083+00:00"
+      },
+      {
+        "operation_id": "fc3fb78f-c49d-409c-971e-ed47b80582f8",
+        "idempotency_key": "architecture_design_transition:codex-issue-2312:CI-PR-WORKFLOW-RAIL-REFERENCE-REPLACEMENT-2312-20260812:54ab702aec71355c",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex-issue-2312",
+        "design_id": "CI-PR-WORKFLOW-RAIL-REFERENCE-REPLACEMENT-2312-20260812",
+        "source_ref": ".github/workflows/pr-quality-gate.yml",
+        "source_content_sha256": "47a054dd358afc5b4698f849a9c0bff766c349b7fe3edaecae99ac81dd33cb75",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The governed correction is being persisted and validated.",
+          "designId": "CI-PR-WORKFLOW-RAIL-REFERENCE-REPLACEMENT-2312-20260812",
+          "toStatus": "implementing",
+          "sourceRef": ".github/workflows/pr-quality-gate.yml",
+          "fromStatus": "approved",
+          "sourceContentSha256": "47a054dd358afc5b4698f849a9c0bff766c349b7fe3edaecae99ac81dd33cb75"
+        },
+        "created_at": "2026-08-12T21:43:49.068+00:00"
       },
       {
         "operation_id": "fcbddf0f-ceae-4226-9f28-4e4c460c07ba",
