@@ -85,15 +85,6 @@ export function CanvasInspectorAuthoringSection({
       <div className="space-y-3">
         {showGeneral ? (
           <>
-            <div>
-              <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>
-                {canvasViewCopy.inspectorEditablePropertiesTitle}
-              </h3>
-              <p className={inspectorVisualClasses.inspectorBody}>
-                {canvasViewCopy.inspectorEditablePropertiesDescription}
-              </p>
-            </div>
-
             <div className="space-y-2">
               <Label htmlFor={`inspector-node-name-${node.id}`}>
                 {canvasViewCopy.inspectorNodeNameLabel}
