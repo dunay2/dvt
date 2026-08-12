@@ -215,3 +215,41 @@ test('refresh plan rejects unknown governed paths and compare-and-set mismatches
     /expected effective content/u
   );
 });
+
+test('refresh plan treats a SQL null override revision as an absent overlay', () => {
+  const planned = planGovernedSourceRefreshOperation({
+    command: {
+      kind: 'governed_source_content_refresh',
+      actor: 'codex',
+      paths: ['package.json'],
+      expectedContentSha256ByPath: {},
+      idempotencyKey: 'refresh-null-revision',
+    },
+    sourceCommitSha: 'd'.repeat(40),
+    snapshots: [{ path: 'package.json', contentHash: 'b'.repeat(64) }],
+    governedRows: [
+      {
+        path: 'package.json',
+        path_hash: 'c'.repeat(64),
+        content_hash: 'a'.repeat(64),
+        governance_hash: 'd'.repeat(64),
+        override_content_hash: null,
+        override_revision: null,
+      },
+    ],
+    existingOverrides: [
+      {
+        path: 'package.json',
+        path_hash: 'c'.repeat(64),
+        content_hash: 'a'.repeat(64),
+        governance_hash: 'd'.repeat(64),
+        override_content_hash: null,
+        override_revision: null,
+      },
+    ],
+    operationId: 'operation-null-revision',
+    now: new Date('2026-08-12T12:00:00.000Z'),
+  });
+
+  assert.equal(planned.sources[0].revision, 0);
+});

@@ -2110,30 +2110,85 @@ CREATE TABLE planning_query_store.governance_files (
 
 
 --
+-- Name: governed_source_content_overrides; Type: TABLE; Schema: planning_query_store; Owner: -
+--
+
+CREATE TABLE planning_query_store.governed_source_content_overrides (
+    path text PRIMARY KEY,
+    content_hash text NOT NULL,
+    state_fingerprint text NOT NULL,
+    source_commit_sha text NOT NULL,
+    source_blob_sha text,
+    revision integer DEFAULT 0 NOT NULL,
+    updated_by text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT governed_source_content_overrides_content_hash_check CHECK ((content_hash ~ '^[a-f0-9]{64}$'::text)),
+    CONSTRAINT governed_source_content_overrides_revision_check CHECK ((revision >= 0)),
+    CONSTRAINT governed_source_content_overrides_source_blob_sha_check CHECK (((source_blob_sha IS NULL) OR (source_blob_sha ~ '^[a-f0-9]{40,64}$'::text))),
+    CONSTRAINT governed_source_content_overrides_source_commit_sha_check CHECK ((source_commit_sha ~ '^[a-f0-9]{40,64}$'::text)),
+    CONSTRAINT governed_source_content_overrides_state_fingerprint_check CHECK ((state_fingerprint ~ '^[a-f0-9]{64}$'::text))
+);
+
+
+--
+-- Name: governed_source_content_operations; Type: TABLE; Schema: planning_query_store; Owner: -
+--
+
+CREATE TABLE planning_query_store.governed_source_content_operations (
+    operation_id text PRIMARY KEY,
+    idempotency_key text NOT NULL UNIQUE,
+    operation_type text NOT NULL,
+    actor text NOT NULL,
+    source_commit_sha text NOT NULL,
+    paths jsonb NOT NULL,
+    changes jsonb NOT NULL,
+    expected_content_sha256_by_path jsonb DEFAULT '{}'::jsonb NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT governed_source_content_operations_changes_check CHECK ((jsonb_typeof(changes) = 'array'::text)),
+    CONSTRAINT governed_source_content_operations_expected_check CHECK ((jsonb_typeof(expected_content_sha256_by_path) = 'object'::text)),
+    CONSTRAINT governed_source_content_operations_paths_check CHECK ((jsonb_typeof(paths) = 'array'::text)),
+    CONSTRAINT governed_source_content_operations_source_commit_sha_check CHECK ((source_commit_sha ~ '^[a-f0-9]{40,64}$'::text)),
+    CONSTRAINT governed_source_content_operations_type_check CHECK ((operation_type = 'governed_source_content_refresh'::text))
+);
+
+
+--
 -- Name: governance_file_query; Type: VIEW; Schema: planning_query_store; Owner: -
 --
 
 CREATE VIEW planning_query_store.governance_file_query AS
- SELECT path,
-    file_id,
-    owning_unit,
-    root_unit,
-    domain_unit,
-    component_unit,
-    owner_level,
-    unit_status,
-    governance_state,
-    canonical_role,
-    evidence_state,
-    is_drift,
-    is_legacy,
-    ddd_owner,
-    cq_rails,
-    source_path,
-    source_content_sha256,
-    governance_refs,
-    raw_file
-   FROM planning_query_store.governance_files;
+ SELECT imported.path,
+    imported.file_id,
+    imported.shard_id,
+    imported.path_hash,
+    COALESCE(current_content.content_hash, imported.content_hash) AS content_hash,
+    imported.governance_hash,
+    COALESCE(current_content.state_fingerprint, imported.state_fingerprint) AS state_fingerprint,
+    imported.owning_unit,
+    imported.root_unit,
+    imported.domain_unit,
+    imported.component_unit,
+    imported.owner_level,
+    imported.unit_status,
+    imported.governance_state,
+    imported.canonical_role,
+    imported.evidence_state,
+    imported.is_drift,
+    imported.is_legacy,
+    imported.ddd_owner,
+    imported.cq_rails,
+    imported.source_path,
+    imported.source_content_sha256,
+    imported.governance_refs,
+    jsonb_set(jsonb_set(imported.raw_file, '{contentHash}'::text[], to_jsonb(COALESCE(current_content.content_hash, imported.content_hash))), '{stateFingerprint}'::text[], to_jsonb(COALESCE(current_content.state_fingerprint, imported.state_fingerprint))) AS raw_file,
+    current_content.source_commit_sha AS current_source_commit_sha,
+    current_content.source_blob_sha AS current_source_blob_sha,
+    current_content.revision AS current_content_revision,
+    current_content.updated_by AS current_content_updated_by,
+    current_content.updated_at AS current_content_updated_at
+   FROM (planning_query_store.governance_files imported
+     LEFT JOIN planning_query_store.governed_source_content_overrides current_content ON ((current_content.path = imported.path)));
 
 
 --
@@ -2881,13 +2936,14 @@ CREATE VIEW planning_query_store.command_query_rail_manifest_query AS
             command_query_rails.architecture_guards,
             command_query_rails.completion_gate,
             command_query_rails.source_path,
-            command_query_rails.source_content_sha256,
+            COALESCE(source.content_hash, command_query_rails.source_content_sha256) AS source_content_sha256,
             command_query_rails.raw_rail,
             command_query_rails.raw_manifest,
             command_query_rails.imported_at,
             'imported'::text AS rail_source,
             1 AS source_priority
-           FROM planning_query_store.command_query_rails
+           FROM (planning_query_store.command_query_rails
+             LEFT JOIN planning_query_store.governance_file_query source ON ((source.path = command_query_rails.source_path)))
         ), local_rails AS (
          SELECT feature_mechanization_local_rails.rail_id,
             feature_mechanization_local_rails.feature_id,
@@ -2905,13 +2961,14 @@ CREATE VIEW planning_query_store.command_query_rail_manifest_query AS
             feature_mechanization_local_rails.architecture_guards,
             feature_mechanization_local_rails.completion_gate,
             feature_mechanization_local_rails.source_path,
-            feature_mechanization_local_rails.source_content_sha256,
+            COALESCE(source.content_hash, feature_mechanization_local_rails.source_content_sha256) AS source_content_sha256,
             feature_mechanization_local_rails.raw_rail,
             feature_mechanization_local_rails.raw_manifest,
             feature_mechanization_local_rails.updated_at AS imported_at,
             'local'::text AS rail_source,
             0 AS source_priority
-           FROM planning_query_store.feature_mechanization_local_rails
+           FROM (planning_query_store.feature_mechanization_local_rails
+             LEFT JOIN planning_query_store.governance_file_query source ON ((source.path = feature_mechanization_local_rails.source_path)))
         ), ranked_rails AS (
          SELECT combined_rails.rail_id,
             combined_rails.feature_id,
@@ -4288,7 +4345,7 @@ CREATE VIEW architecture.evidence_subject_implementation_query AS
             implementation_file.content_hash AS implementation_content_hash
            FROM ((planning_query_store.command_query_rail_query rail
              CROSS JOIN LATERAL jsonb_array_elements_text(rail.implementation_refs) reference(value))
-             LEFT JOIN planning_query_store.governance_files implementation_file ON ((implementation_file.path = split_part(reference.value, '#'::text, 1))))
+             LEFT JOIN planning_query_store.governance_file_query implementation_file ON ((implementation_file.path = split_part(reference.value, '#'::text, 1))))
         )
  SELECT implementation_inputs.subject_kind,
     implementation_inputs.subject_id,
@@ -4351,7 +4408,7 @@ CREATE VIEW architecture.evidence_query AS
             ELSE 'verified'::text
         END AS implementation_verification_state
    FROM ((architecture.evidence evidence
-     LEFT JOIN planning_query_store.governance_files source ON ((source.path = evidence.source_path)))
+     LEFT JOIN planning_query_store.governance_file_query source ON ((source.path = evidence.source_path)))
      LEFT JOIN architecture.evidence_subject_implementation_query subject_implementation ON (((subject_implementation.subject_kind = evidence.subject_kind) AND (subject_implementation.subject_id = evidence.subject_id))));
 
 
@@ -4375,7 +4432,7 @@ CREATE VIEW architecture.implementation_violation_query AS
             subject_implementation.current_implementation_content_sha256,
             row_number() OVER (PARTITION BY evidence.design_id, evidence.subject_kind, evidence.subject_id ORDER BY evidence.recorded_at DESC, evidence.evidence_id DESC) AS execution_rank
            FROM ((architecture.evidence evidence
-             LEFT JOIN planning_query_store.governance_files source ON ((source.path = evidence.source_path)))
+             LEFT JOIN planning_query_store.governance_file_query source ON ((source.path = evidence.source_path)))
              LEFT JOIN architecture.evidence_subject_implementation_query subject_implementation ON (((subject_implementation.subject_kind = evidence.subject_kind) AND (subject_implementation.subject_id = evidence.subject_id))))
           WHERE (evidence.evidence_origin = ANY (ARRAY['local_execution'::text, 'ci_execution'::text]))
         )
@@ -10471,6 +10528,14 @@ ALTER TABLE ONLY planning_query_store.governance_file_shards
 
 ALTER TABLE ONLY planning_query_store.governance_files
     ADD CONSTRAINT governance_files_shard_id_fkey FOREIGN KEY (shard_id) REFERENCES planning_query_store.governance_file_shards(shard_id) ON DELETE CASCADE;
+
+
+--
+-- Name: governed_source_content_overrides governed_source_content_overrides_path_fkey; Type: FK CONSTRAINT; Schema: planning_query_store; Owner: -
+--
+
+ALTER TABLE ONLY planning_query_store.governed_source_content_overrides
+    ADD CONSTRAINT governed_source_content_overrides_path_fkey FOREIGN KEY (path) REFERENCES planning_query_store.governance_files(path) ON DELETE CASCADE;
 
 
 --
