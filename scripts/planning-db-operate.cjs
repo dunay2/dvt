@@ -176,6 +176,7 @@ const allowedArchitectureRelationRecordStatuses = new Set([
   'proposed',
   'approved',
   'implemented',
+  'deprecated',
   'drift',
 ]);
 const allowedArchitectureContractKinds = new Set([
