@@ -13,7 +13,7 @@ const {
 
 const temporaryRoots = [];
 const implicitProjectionCommand =
-  /pnpm docs:(?:status:check|capability:check|governance:(?:document-unit-map|file-component-index|file-fingerprint-(?:baseline|impact)|coverage-report|remediation-queue):check)\b/u;
+  /pnpm docs:(?:sync:check|status:check|capability:check|governance:(?:document-unit-map|file-component-index|file-fingerprint-(?:baseline|impact)|coverage-report|remediation-queue):check)\b/u;
 
 function assertPrWorkflowDoesNotPublishDocumentation(workflow) {
   assert.doesNotMatch(workflow, /Setup Python for DB-first documentation publication/u);
