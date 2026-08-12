@@ -8234,6 +8234,7 @@ module.exports = {
   writePlannedComponentReparentOperation,
   writePlannedDbSurfaceUpsertOperation,
   writePlannedArchitectureContractRecordOperation,
+  writePlannedArchitectureComponentRecordOperation,
   writePlannedArchitectureDesignTransitionOperation,
   writePlannedArchitectureFitnessScanOperation,
   writePlannedArchitecturePortRecordOperation,
