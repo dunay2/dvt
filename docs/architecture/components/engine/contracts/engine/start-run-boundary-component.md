@@ -126,13 +126,13 @@ CAPACITY_SIGNAL_UNAVAILABLE"]
 - `packages/@dvt/contracts/src/validation/runtime.ts`
 - `packages/@dvt/contracts/test/start-run-boundary.contract.test.ts`
 - `apps/api/src/application/ports/startRunUseCasePort.ts`
-- `apps/api/src/application/ports/startRunUseCasePort.ts`
 - `apps/api/src/application/services/BackpressureAwareStartRunUseCase.ts`
 - `apps/api/src/application/services/PlannerBackedStartRunUseCase.ts`
 - `apps/api/src/application/services/engineStartRunUseCase.ts`
 - `apps/api/src/entrypoints/http/startRunRouteCommandBuilder.ts`
 - `apps/api/src/entrypoints/http/startRunRouteParser.ts`
 - `apps/api/src/entrypoints/http/startRunRouteTargetAdapterParser.ts`
+- `apps/api/src/entrypoints/http/protectedRuntimeRunRoutes.ts`
 
 ## Focused file map
 

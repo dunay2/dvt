@@ -321,8 +321,8 @@ const ref = await this.engine.startRun(
   },
   {
     tenantId: context.scope.tenantId.value,
-    projectId: context.scope.projectId?.value ?? '',
-    environmentId: context.scope.environmentId?.value ?? '',
+    projectId: requireStartRunScope(context.scope.projectId?.value, 'projectId'),
+    environmentId: requireStartRunScope(context.scope.environmentId?.value, 'environmentId'),
     runId: command.runId,
     targetAdapter: command.targetAdapter,
     logicalAttemptId: 1,
@@ -334,9 +334,9 @@ Error handling on that path is also already layered:
 
 1. `startRunRoute` rejects malformed request bodies such as invalid `planRef`
    with HTTP `400`;
-2. `StartRunAuthorizedFacade` turns authentication and authorization failures
-   into explicit facade results instead of leaking HTTP concerns into the
-   domain;
+2. `startRunRoute` applies the shared runtime authentication and authorization
+   boundary, records start-run telemetry, and maps failures without leaking
+   HTTP concerns into the domain;
 3. `EngineStartRunUseCase` does not swallow engine errors;
 4. `WorkflowEngine.startRun()` validates `PlanRef` through `parsePlanRef()`,
    validates schema and policy preconditions before adapter dispatch, and then
