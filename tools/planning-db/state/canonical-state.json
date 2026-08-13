@@ -140436,7 +140436,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
-      "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+      "sourceContentSha256": "31eb0bc80cb48fe3a7268f2142dce94d35275cd76bcd2522bbb851849551e842",
       "rawRail": {
         "name": "WorkflowEngine.startRun",
         "type": "command",
@@ -156225,7 +156225,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
-      "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+      "sourceContentSha256": "31eb0bc80cb48fe3a7268f2142dce94d35275cd76bcd2522bbb851849551e842",
       "rawRail": {
         "name": "CancelRun",
         "type": "command",
@@ -156585,7 +156585,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
-      "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+      "sourceContentSha256": "31eb0bc80cb48fe3a7268f2142dce94d35275cd76bcd2522bbb851849551e842",
       "rawRail": {
         "name": "RecoverRun",
         "type": "command",
@@ -156937,7 +156937,7 @@
         "pnpm docs:feature-mechanization:implementation"
       ],
       "sourcePath": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
-      "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+      "sourceContentSha256": "31eb0bc80cb48fe3a7268f2142dce94d35275cd76bcd2522bbb851849551e842",
       "rawRail": {
         "name": "SignalRun",
         "type": "command",
@@ -157224,7 +157224,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
-      "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+      "sourceContentSha256": "31eb0bc80cb48fe3a7268f2142dce94d35275cd76bcd2522bbb851849551e842",
       "rawRail": {
         "name": "GetRunStatus",
         "type": "query",
@@ -157495,7 +157495,7 @@
       ],
       "completionGate": ["pnpm verify:prepush"],
       "sourcePath": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
-      "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+      "sourceContentSha256": "31eb0bc80cb48fe3a7268f2142dce94d35275cd76bcd2522bbb851849551e842",
       "rawRail": {
         "name": "ListRunEvents",
         "type": "query",
@@ -157655,7 +157655,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
-      "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+      "sourceContentSha256": "31eb0bc80cb48fe3a7268f2142dce94d35275cd76bcd2522bbb851849551e842",
       "rawRail": {
         "name": "ListRuns",
         "type": "query",
@@ -157824,7 +157824,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
-      "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+      "sourceContentSha256": "31eb0bc80cb48fe3a7268f2142dce94d35275cd76bcd2522bbb851849551e842",
       "rawRail": {
         "name": "RunEventFeed",
         "type": "query",
