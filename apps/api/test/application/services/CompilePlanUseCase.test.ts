@@ -177,6 +177,11 @@ describe('CompilePlanUseCase', () => {
         requestedBy: 'principal-1',
         requestId: 'req-compile-1',
         requestedAtIso: '2026-04-19T00:00:00.000Z',
+        ownership: {
+          tenantId: 'tenant-1',
+          projectId: 'project-1',
+          environmentId: 'env-1',
+        },
       })
     );
   });

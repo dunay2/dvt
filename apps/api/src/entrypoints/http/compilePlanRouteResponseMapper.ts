@@ -1,7 +1,8 @@
 /**
- * Owned concern: internal compile-plan response mapping inside the plan-route
- * response translation component.
+ * Owned concern: map compile-plan application results to HTTP responses.
  */
+import type { PlanCompileResponseV1SchemaT } from '@dvt/contracts';
+
 import type { CompilePlanResult } from '../../application/services/CompilePlanUseCase.js';
 
 import type { PlanRouteFacadeResponse } from './executePlanRouteFacade.js';
@@ -11,14 +12,19 @@ import {
   type HttpResponseModel,
 } from './httpErrorContract.js';
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
-import { buildPlanCompileResponse } from './planCompileResponseMapper.js';
 
 export function mapCompilePlanUseCaseResult(
   result: CompilePlanResult
-): PlanRouteFacadeResponse<ReturnType<typeof buildPlanCompileResponse>> {
+): PlanRouteFacadeResponse<PlanCompileResponseV1SchemaT> {
   return {
     kind: 'accepted',
-    payload: buildPlanCompileResponse(result),
+    payload: {
+      plan: result.plan,
+      compile: {
+        persisted: false,
+        executabilityValidated: false,
+      },
+    },
   };
 }
 

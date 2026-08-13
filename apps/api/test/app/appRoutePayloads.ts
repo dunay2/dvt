@@ -37,6 +37,7 @@ export function buildStartRunPayload(args: {
 
 export function buildPreviewPayload(runId: string): Record<string, unknown> {
   return {
+    previewProfile: 'planner-generic-v1',
     context: {
       runId,
       tenantId: 'tenant-a',
@@ -54,6 +55,7 @@ export function buildPreviewPayload(runId: string): Record<string, unknown> {
       sourceVersion: 'manifest-v10',
       nodes: [{ nodeId: 'model.orders', stepKind: 'DBT_MODEL', dependsOn: [] }],
     },
+    persist: true,
   };
 }
 

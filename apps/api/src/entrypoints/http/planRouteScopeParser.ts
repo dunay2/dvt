@@ -1,7 +1,7 @@
 import { EnvironmentId, ProjectId, TenantId } from '../../domain/auth/types.js';
 
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
-import { asStringOrUndefined } from './planRouteBodyParser.js';
+import { asStringOrUndefined, parsePlanRouteBodyRecord } from './planRouteBodyParser.js';
 import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
 
 export type ParsedPlanRouteScope = {
@@ -9,6 +9,22 @@ export type ParsedPlanRouteScope = {
   readonly projectId: ProjectId;
   readonly environmentId: EnvironmentId;
 };
+
+export function parsePlanRouteRequestedScope(
+  body: unknown
+): RouteParseResult<ParsedPlanRouteScope> {
+  const bodyRecord = parsePlanRouteBodyRecord(body);
+  if (!bodyRecord.ok) {
+    return bodyRecord;
+  }
+
+  const contextRecord = parsePlanRouteBodyRecord(bodyRecord.value.context);
+  if (!contextRecord.ok) {
+    return contextRecord;
+  }
+
+  return parsePlanRouteScope(contextRecord.value);
+}
 
 export function parsePlanRouteScope(
   record: Record<string, unknown>

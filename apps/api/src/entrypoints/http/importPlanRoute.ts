@@ -8,22 +8,36 @@ import type { ImportPlanUseCase } from '../../application/services/ImportPlanUse
 
 import { createPlanRouteHandler } from './executePlanRouteFacade.js';
 import {
-  resolveImportPlanRouteRequest,
-  type ImportPlanRouteRequestResolverDeps,
-} from './importPlanRouteRequestResolver.js';
-import { planRouteResponseTranslation } from './planRouteResponseTranslation.js';
+  parseImportPlanRouteInput,
+  type ParsedImportPlanRouteInput,
+} from './importPlanRouteParser.js';
+import {
+  mapImportPlanInternalError,
+  mapImportPlanUseCaseResult,
+} from './importPlanRouteResponseMapper.js';
+import {
+  createAuthorizedPlanRouteRequestResolver,
+  type PlanRouteAuthorizationResolverDeps,
+} from './planRouteRequestResolver.js';
 
-type ImportPlanRouteDeps = ImportPlanRouteRequestResolverDeps & {
+type ImportPlanRouteDeps = PlanRouteAuthorizationResolverDeps & {
   readonly useCase: Pick<ImportPlanUseCase, 'execute'>;
 };
+
+const resolveImportPlanRouteRequest = createAuthorizedPlanRouteRequestResolver<
+  ImportPlanRouteDeps,
+  ParsedImportPlanRouteInput
+>({
+  parseRequestBody: parseImportPlanRouteInput,
+});
 
 export const importPlanRoute = createPlanRouteHandler({
   logMessage: 'plan import failed',
   resolveRequest: resolveImportPlanRouteRequest,
   executeUseCase: (resolvedRequest, deps: ImportPlanRouteDeps) =>
     deps.useCase.execute(resolvedRequest.parsedRequest.command),
-  mapResult: (result) => planRouteResponseTranslation.import.result(result),
-  mapInternalError: () => planRouteResponseTranslation.import.internalError(),
+  mapResult: mapImportPlanUseCaseResult,
+  mapInternalError: mapImportPlanInternalError,
 }) satisfies (
   request: FastifyRequest<{ Body: unknown }>,
   reply: FastifyReply,

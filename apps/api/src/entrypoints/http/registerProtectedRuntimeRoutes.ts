@@ -20,9 +20,9 @@ import { registerProtectedAdminRouteGroup } from './protectedRuntimeAdminRouteGr
 import { registerProtectedPlanRoutes } from './protectedRuntimePlanRoutes.js';
 import { buildProtectedRuntimeRouteDependencies } from './protectedRuntimeRouteDependencies.js';
 import { registerProtectedRunRoutes } from './protectedRuntimeRunRoutes.js';
+import { registerProtectedSessionRoutes } from './protectedRuntimeSessionRoutes.js';
 import { registerProtectedWorkspaceContextRouteGroup } from './protectedRuntimeWorkspaceContextRouteGroup.js';
 import { registerProtectedWorkspaceGraphDraftRouteGroup } from './protectedRuntimeWorkspaceGraphDraftRouteGroup.js';
-import { PROTECTED_RUNTIME_ROUTE_SUMMARY } from './runtimeRoutes.constants.js';
 import { registerProtectedWarehouseSourceImportRouteGroup } from './warehouseSourceImportRouteGroup.js';
 import { registerProtectedWorkspaceDiffChangesRouteGroup } from './workspaceDiffChangesRouteGroup.js';
 import { registerWorkspaceFileHistoryRoutes } from './workspaceFileHistoryRoutes.js';
@@ -42,6 +42,7 @@ export async function registerProtectedRuntimeRoutes(
   const { env, observability, protectedModule } = options;
   const dependencies = buildProtectedRuntimeRouteDependencies(options);
 
+  registerProtectedSessionRoutes(app, env, protectedModule);
   registerProtectedPlanRoutes(app, env, protectedModule, dependencies);
   registerProjectOnboardingRouteGroup(app, env, protectedModule);
   registerProtectedWorkspaceContextRouteGroup(app, env, protectedModule);
@@ -111,5 +112,5 @@ export async function registerProtectedRuntimeRoutes(
   registerProtectedRunRoutes(app, env, protectedModule, dependencies);
   registerProtectedAdminRouteGroup(app, env, protectedModule, dependencies.runtimeAuth);
 
-  app.log.info(`protected runtime routes registered: ${PROTECTED_RUNTIME_ROUTE_SUMMARY}`);
+  app.log.info('protected runtime routes registered');
 }

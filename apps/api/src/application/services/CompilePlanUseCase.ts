@@ -8,7 +8,6 @@ import type {
 
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
 
-import { PLAN_ROUTE_POLICY_CATALOG } from './planRoutePolicyCatalog.js';
 import { resolveAuthorizedPlannerInputEnvelope } from './resolveAuthorizedPlannerInputEnvelope.js';
 
 export interface CompilePlanCommand {
@@ -39,17 +38,11 @@ export class CompilePlanUseCase {
       selection: command.selection,
       ...(command.policies === undefined ? {} : { policies: command.policies }),
       ...(command.environment === undefined ? {} : { environment: command.environment }),
-      ...(command.observability === undefined
-        ? {}
-        : { observability: command.observability }),
+      ...(command.observability === undefined ? {} : { observability: command.observability }),
     };
 
     const buildResult = await this.deps.planner.buildPlan(
-      resolveAuthorizedPlannerInputEnvelope(
-        plannerInputSeed,
-        context,
-        PLAN_ROUTE_POLICY_CATALOG.COMPILE.plannerInput
-      )
+      resolveAuthorizedPlannerInputEnvelope(plannerInputSeed, context)
     );
 
     return {

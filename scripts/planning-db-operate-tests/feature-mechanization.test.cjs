@@ -276,7 +276,7 @@ test('feature mechanization rail planner extends existing evidence without resto
         status: 'implemented',
         decorator: 'apps/web/src/retiredProjection.ts',
       },
-      forbiddenImplementationSurfaces: ['apps/web/cypress/e2e/canvas/**'],
+      forbiddenImplementationSurfaces: ['apps/web/cypress/e2e/canvas/** legacy direct-write ban'],
       redGreenCycles: [
         {
           id: 'existing-cycle',
@@ -331,11 +331,103 @@ test('feature mechanization rail planner extends existing evidence without resto
   );
   assert.equal(
     planned.rail.rawManifest.forbiddenImplementationSurfaces.includes(
-      'apps/web/cypress/e2e/canvas/**'
+      'apps/web/cypress/e2e/canvas/** legacy direct-write ban'
     ),
     false
   );
   assert.deepEqual(planned.rail.rawManifest.redGreenCycles[0].patchSurfaces, []);
+});
+
+test('feature mechanization rail planner replaces inherited implementation authority on explicit hard cut', () => {
+  const command = parseArgs(
+    featureMechanizationRecordArgs({
+      implementationRefs: ['apps/api/src/currentRoute.ts#currentRoute'],
+      extraArgs: ['--replace-implementation-refs', 'true'],
+    })
+  );
+  const existingRail = {
+    rail_id: command.railId,
+    revision: 2,
+    created_at: '2026-06-01T12:00:00.000Z',
+    symbol_refs: ['apps/api/src/retiredRoute.ts#retiredRoute'],
+    implementation_refs: ['apps/api/src/retiredRoute.ts#retiredRoute'],
+    raw_rail: { name: command.railName, type: command.railType },
+    raw_manifest: {
+      symbols: [
+        {
+          name: 'retiredRoute',
+          path: 'apps/api/src/retiredRoute.ts',
+        },
+      ],
+    },
+  };
+
+  const planned = planFeatureMechanizationRailRecordOperation({
+    command,
+    existingRail,
+    operationId: 'op-feature-mechanization-hard-cut',
+    now: new Date('2026-06-05T18:00:00.000Z'),
+  });
+
+  assert.deepEqual(planned.rail.symbolRefs, ['apps/api/src/currentRoute.ts#currentRoute']);
+  assert.deepEqual(planned.rail.implementationRefs, ['apps/api/src/currentRoute.ts#currentRoute']);
+  assert.deepEqual(
+    planned.rail.rawManifest.symbols.map(({ path, name }) => `${path}#${name}`),
+    ['apps/api/src/currentRoute.ts#currentRoute']
+  );
+  assert.equal(planned.audit.payload.replaceImplementationRefs, true);
+});
+
+test('feature mechanization hard cut has a distinct default idempotency identity', () => {
+  const additive = parseArgs(featureMechanizationRecordArgs());
+  const replacement = parseArgs(
+    featureMechanizationRecordArgs({
+      extraArgs: ['--replace-implementation-refs', 'true'],
+    })
+  );
+
+  assert.notEqual(replacement.idempotencyKey, additive.idempotencyKey);
+});
+
+test('feature mechanization rail planner replaces inherited architecture guards on explicit hard cut', () => {
+  const command = parseArgs(
+    featureMechanizationRecordArgs({
+      extraArgs: ['--replace-architecture-guards', 'true'],
+    })
+  );
+  const existingRail = {
+    rail_id: command.railId,
+    revision: 3,
+    created_at: '2026-06-01T12:00:00.000Z',
+    architecture_guards: ['[object Object]', 'retired topology guard'],
+    raw_rail: { name: command.railName, type: command.railType },
+    raw_manifest: {
+      architectureGuards: [{ name: 'legacy guard' }, 'retired topology guard'],
+      symbols: [],
+    },
+  };
+
+  const planned = planFeatureMechanizationRailRecordOperation({
+    command,
+    existingRail,
+    operationId: 'op-feature-mechanization-guard-hard-cut',
+    now: new Date('2026-06-05T18:00:00.000Z'),
+  });
+
+  assert.deepEqual(planned.rail.architectureGuards, command.architectureGuards);
+  assert.deepEqual(planned.rail.rawManifest.architectureGuards, command.architectureGuards);
+  assert.equal(planned.audit.payload.replaceArchitectureGuards, true);
+});
+
+test('feature mechanization architecture-guard hard cut has a distinct idempotency identity', () => {
+  const additive = parseArgs(featureMechanizationRecordArgs());
+  const replacement = parseArgs(
+    featureMechanizationRecordArgs({
+      extraArgs: ['--replace-architecture-guards', 'true'],
+    })
+  );
+
+  assert.notEqual(replacement.idempotencyKey, additive.idempotencyKey);
 });
 
 test('feature mechanization rail writer stores local rails without mutating imports', async () => {

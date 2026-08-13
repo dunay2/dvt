@@ -15,16 +15,13 @@ import type {
   IPlanner,
   PlanRecord,
   PlanRef,
-  PlannerPolicyClassSet,
   PlannerSelection,
   PlanPreviewProvenance,
   PlanPreviewSelectionRejection,
-  StartRunPlannerEnvironmentInput,
 } from '@dvt/contracts';
 
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
 
-import { PLAN_ROUTE_POLICY_CATALOG } from './planRoutePolicyCatalog.js';
 import { resolveAuthorizedPlannerInputEnvelope } from './resolveAuthorizedPlannerInputEnvelope.js';
 import { ResolveAuthorizedPreviewSelectionService } from './resolveAuthorizedPreviewSelection.js';
 import {
@@ -38,8 +35,6 @@ export interface PreviewPlanCommand {
   readonly graphSource: GenericGraphSourceV1;
   readonly selection: ExecutionSelection;
   readonly provenance?: PlanPreviewProvenance;
-  readonly policies?: PlannerPolicyClassSet;
-  readonly environment?: StartRunPlannerEnvironmentInput;
   readonly observability?: ExecutionPlan['observability'];
 }
 
@@ -118,16 +113,10 @@ export class PreviewPlanUseCase {
         nodeIds: previewSelection.value.decisionScopeNodeIds,
         requestedRootNodeIds: previewSelection.value.requestedRootNodeIds,
       },
-      ...(command.policies === undefined ? {} : { policies: command.policies }),
-      ...(command.environment === undefined ? {} : { environment: command.environment }),
       ...(command.observability === undefined ? {} : { observability: command.observability }),
     };
 
-    const plannerInput = resolveAuthorizedPlannerInputEnvelope(
-      plannerInputSeed,
-      context,
-      PLAN_ROUTE_POLICY_CATALOG.PREVIEW.plannerInput
-    );
+    const plannerInput = resolveAuthorizedPlannerInputEnvelope(plannerInputSeed, context);
 
     const buildResult = await this.deps.planner.buildPlan(plannerInput);
     const admission = await this.planAdmission.admit(buildResult, command.targetAdapter);

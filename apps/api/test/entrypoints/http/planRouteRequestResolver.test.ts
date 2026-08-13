@@ -1,15 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import {
-  EnvironmentId,
-  ProjectId,
-  TenantId,
-} from '../../../src/domain/auth/types.js';
-import {
-  createAuthorizedPlanRouteRequestResolver,
-  resolveAuthorizedPlanRouteRequest,
-} from '../../../src/entrypoints/http/planRouteRequestResolver.js';
-import { badRequestResult } from '../../../src/entrypoints/http/routeParseIssue.js';
+import { EnvironmentId, ProjectId, TenantId } from '../../../src/domain/auth/types.js';
+import { resolveAuthorizedPlanRouteRequest } from '../../../src/entrypoints/http/planRouteRequestResolver.js';
 
 import { createPreviewRequest, okAuthDeps } from './planRouteHttpTestSupport.js';
 
@@ -36,17 +28,12 @@ function buildParsedRequest(): ParsedPlanRouteRequest {
 describe('resolveAuthorizedPlanRouteRequest', () => {
   it('returns parse failures directly without calling authentication or authorization', async () => {
     const deps = okAuthDeps();
-    const request = createPreviewRequest({ id: 'req-plan-route-parse-failure' });
+    const parseRequestBody = vi.fn(() => ({ ok: true as const, value: buildParsedRequest() }));
+    const request = createPreviewRequest({ id: 'req-plan-route-parse-failure', body: {} });
 
-    const result = await resolveAuthorizedPlanRouteRequest(
-      request as never,
-      deps as never,
-      badRequestResult<ParsedPlanRouteRequest>('invalid_body'),
-      {
-        selectRequestedScope: (parsedRequest) => parsedRequest.routeContext,
-        action: { kind: 'command', name: 'run:start' },
-      }
-    );
+    const result = await resolveAuthorizedPlanRouteRequest(request as never, deps as never, {
+      parseRequestBody,
+    });
 
     expect(result).toEqual({
       ok: false,
@@ -59,26 +46,22 @@ describe('resolveAuthorizedPlanRouteRequest', () => {
     });
     expect(deps.authenticator.authenticateBearerToken).not.toHaveBeenCalled();
     expect(deps.authorizer.authorize).not.toHaveBeenCalled();
+    expect(parseRequestBody).not.toHaveBeenCalled();
   });
 
-  it('authorizes the requested scope with the action supplied by the route wrapper', async () => {
+  it('authorizes the requested scope with the canonical plan command action', async () => {
     const deps = okAuthDeps();
     const request = createPreviewRequest({
       id: 'req-plan-route-authorized',
       authorization: 'Bearer shared-token',
     });
     const parsedRequest = buildParsedRequest();
-    const action = { kind: 'command', name: 'run:retry' } as const;
+    const parseRequestBody = vi.fn(() => ({ ok: true as const, value: parsedRequest }));
+    const action = { kind: 'command', name: 'run:start' } as const;
 
-    const result = await resolveAuthorizedPlanRouteRequest(
-      request as never,
-      deps as never,
-      { ok: true, value: parsedRequest },
-      {
-        selectRequestedScope: (value) => value.routeContext,
-        action,
-      }
-    );
+    const result = await resolveAuthorizedPlanRouteRequest(request as never, deps as never, {
+      parseRequestBody,
+    });
 
     expect(deps.authenticator.authenticateBearerToken).toHaveBeenCalledWith('shared-token');
     expect(deps.authorizer.authorize).toHaveBeenCalledWith(
@@ -103,21 +86,16 @@ describe('resolveAuthorizedPlanRouteRequest', () => {
 
   it('returns authorization failures as HTTP responses without exposing a resolved request', async () => {
     const deps = okAuthDeps();
+    const parseRequestBody = vi.fn(() => ({ ok: true as const, value: buildParsedRequest() }));
     deps.authorizer.authorize.mockResolvedValueOnce({
       ok: false,
       reason: 'ACTION_NOT_GRANTED',
     });
     const request = createPreviewRequest({ id: 'req-plan-route-forbidden' });
 
-    const result = await resolveAuthorizedPlanRouteRequest(
-      request as never,
-      deps as never,
-      { ok: true, value: buildParsedRequest() },
-      {
-        selectRequestedScope: (value) => value.routeContext,
-        action: { kind: 'command', name: 'run:start' },
-      }
-    );
+    const result = await resolveAuthorizedPlanRouteRequest(request as never, deps as never, {
+      parseRequestBody,
+    });
 
     expect(result).toEqual({
       ok: false,
@@ -128,44 +106,6 @@ describe('resolveAuthorizedPlanRouteRequest', () => {
         },
       },
     });
-  });
-
-  it('builds declarative resolvers that run an optional post-authorization guard', async () => {
-    const deps = okAuthDeps();
-    const request = createPreviewRequest({ id: 'req-plan-route-builder-guard' });
-    const parsedRequest = buildParsedRequest();
-    const validateAuthorizedRequest = vi.fn(async () => ({
-      status: 422 as const,
-      body: {
-        error: { type: 'unprocessable', reason: 'guard_failed' },
-      },
-    }));
-    const resolver = createAuthorizedPlanRouteRequestResolver({
-      parseRequestBody: () => ({ ok: true, value: parsedRequest }),
-      selectRequestedScope: (value) => value.routeContext,
-      action: { kind: 'command', name: 'run:start' },
-      validateAuthorizedRequest,
-    });
-
-    const result = await resolver(request as never, deps as never);
-
-    expect(validateAuthorizedRequest).toHaveBeenCalledWith(
-      expect.objectContaining({
-        parsedRequest,
-        context: expect.objectContaining({
-          principal: { principalId: 'principal-1' },
-        }),
-      }),
-      deps
-    );
-    expect(result).toEqual({
-      ok: false,
-      response: {
-        status: 422,
-        body: {
-          error: { type: 'unprocessable', reason: 'guard_failed' },
-        },
-      },
-    });
+    expect(parseRequestBody).not.toHaveBeenCalled();
   });
 });

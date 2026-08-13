@@ -16,7 +16,7 @@ export function parsePlanRouteContextRecord(
     return context;
   }
 
-  return mapPlanRouteContext(context.value);
+  return toParsedPlanRouteContext(context.value);
 }
 
 function parsePlanRouteContext(raw: unknown): RouteParseResult<RunContextSchemaT> {
@@ -34,7 +34,7 @@ function parsePlanRouteContext(raw: unknown): RouteParseResult<RunContextSchemaT
   }
 }
 
-function mapPlanRouteContext(
+export function toParsedPlanRouteContext(
   context: RunContextSchemaT
 ): RouteParseResult<ParsedPlanRouteContext> {
   const scopeResult = parsePlanRouteScope({

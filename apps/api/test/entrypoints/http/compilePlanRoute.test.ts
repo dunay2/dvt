@@ -2,13 +2,35 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { compilePlanRoute } from '../../../src/entrypoints/http/compilePlanRoute.js';
 
-import {
-  buildCompileBody,
-  buildTransformationStoredPlan,
-} from './planRouteFixtures.js';
+import { buildCompileBody, buildTransformationStoredPlan } from './planRouteFixtures.js';
 import { createCompileRequest, createReply, okAuthDeps } from './planRouteHttpTestSupport.js';
 
 describe('compilePlanRoute', () => {
+  it('returns 401 without executing CompilePlan when bearer authentication fails', async () => {
+    const reply = createReply();
+    const useCase = { execute: vi.fn() };
+    const authDeps = okAuthDeps();
+    authDeps.authenticator.authenticateBearerToken.mockResolvedValueOnce({
+      ok: false,
+      code: 'missing_bearer_token',
+    });
+
+    await compilePlanRoute(
+      createCompileRequest({
+        id: 'req-compile-no-token',
+        authorization: null,
+      }) as never,
+      reply as never,
+      { ...authDeps, useCase } as never
+    );
+
+    expect(reply.statusCode).toBe(401);
+    expect(reply.payload).toEqual({
+      error: { type: 'unauthorized', reason: 'missing_bearer_token' },
+    });
+    expect(useCase.execute).not.toHaveBeenCalled();
+  });
+
   it('returns a compiled plan without persistence side effects', async () => {
     const reply = createReply();
     const plan = buildTransformationStoredPlan();
@@ -62,5 +84,27 @@ describe('compilePlanRoute', () => {
       error: { type: 'bad_request', reason: 'invalid_plan_source' },
     });
     expect(useCase.execute).not.toHaveBeenCalled();
+  });
+
+  it('contains unexpected compile failures behind the canonical 500 envelope', async () => {
+    const reply = createReply();
+    const logError = vi.fn();
+    const useCase = {
+      execute: vi.fn(async () => {
+        throw new Error('planner unavailable');
+      }),
+    };
+
+    await compilePlanRoute(
+      createCompileRequest({ id: 'req-compile-failure', logError }) as never,
+      reply as never,
+      { ...okAuthDeps(), useCase } as never
+    );
+
+    expect(reply.statusCode).toBe(500);
+    expect(reply.payload).toEqual({
+      error: { type: 'internal_server_error', reason: 'internal_error' },
+    });
+    expect(logError).toHaveBeenCalledTimes(1);
   });
 });

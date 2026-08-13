@@ -15,11 +15,12 @@ import type { ProtectedRuntimeRouteDependencies } from './protectedRuntimeRouteD
 import { recoverRunRoute } from './recoverRunRoute.js';
 import { RUNTIME_ROUTE_PATH } from './runtimeRoutes.constants.js';
 import { signalRunRoute } from './signalRunRoute.js';
+import { startRunRoute } from './startRunRoute.js';
 
 export function registerProtectedRunRoutes(
   app: FastifyInstance,
   env: Env,
-  _protectedModule: ProtectedRuntimeModule,
+  protectedModule: ProtectedRuntimeModule,
   dependencies: ProtectedRuntimeRouteDependencies
 ): void {
   const { runtimeAuth } = dependencies;
@@ -27,6 +28,16 @@ export function registerProtectedRunRoutes(
     max: env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_MAX,
     timeWindow: env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_TIME_WINDOW_MS,
   };
+
+  app.post<{ Body: Parameters<typeof startRunRoute>[0]['body'] }>(
+    RUNTIME_ROUTE_PATH.start,
+    { config: { rateLimit } },
+    async (request, reply) =>
+      startRunRoute(request as never, reply, protectedModule.facade, {
+        adapterRegistry: protectedModule.startRunTargetAdapterRegistry,
+        observability: dependencies.observability,
+      })
+  );
 
   app.get(RUNTIME_ROUTE_PATH.list, { config: { rateLimit } }, async (request, reply) =>
     listRunsRoute(request as never, reply, {

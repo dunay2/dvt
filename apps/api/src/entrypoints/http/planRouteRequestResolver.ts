@@ -1,12 +1,12 @@
 /**
  * Owned concern: resolve protected plan-route requests through shared parsing,
- * authorization, and optional post-authorization validation.
+ * authorization.
  */
 import type { FastifyRequest } from 'fastify';
 
 import {
+  AUTHORIZATION_ACTION,
   buildEnvironmentAccessScope,
-  type CommandAuthorizationAction,
 } from '../../application/ports/accessDecision.js';
 import type {
   AuthorizedCommandExecutionContext,
@@ -18,7 +18,7 @@ import { authorizeExecutionScope } from './authorizeExecutionScope.js';
 import { extractBearerToken } from './extractBearerToken.js';
 import type { HttpResponseModel } from './httpErrorContract.js';
 import { httpErrorTranslation } from './httpErrorTranslation.js';
-import type { ParsedPlanRouteScope } from './planRouteScopeParser.js';
+import { parsePlanRouteRequestedScope } from './planRouteScopeParser.js';
 import type { RouteParseResult } from './routeParseIssue.js';
 
 export interface PlanRouteAuthorizationResolverDeps {
@@ -37,46 +37,23 @@ export type ResolvedAuthorizedPlanRouteRequest<TParsedRequest> =
       readonly response: HttpResponseModel;
     };
 
-export interface PlanRouteAuthorizationRequestOptions<TParsedRequest> {
-  readonly selectRequestedScope: (parsedRequest: TParsedRequest) => ParsedPlanRouteScope;
-  readonly action: CommandAuthorizationAction;
-}
-
-type ResolvedAuthorizedPlanRouteRequestOk<TParsedRequest> = Extract<
-  ResolvedAuthorizedPlanRouteRequest<TParsedRequest>,
-  { readonly ok: true }
->;
-
-type AuthorizedPlanRouteRequestValidator<
-  TDeps extends PlanRouteAuthorizationResolverDeps,
-  TParsedRequest,
-> = (
-  resolvedRequest: ResolvedAuthorizedPlanRouteRequestOk<TParsedRequest>,
-  deps: TDeps
-) => HttpResponseModel | null | Promise<HttpResponseModel | null>;
-
-export interface AuthorizedPlanRouteRequestResolverOptions<
-  TDeps extends PlanRouteAuthorizationResolverDeps,
-  TParsedRequest,
-> extends PlanRouteAuthorizationRequestOptions<TParsedRequest> {
+export interface AuthorizedPlanRouteRequestResolverOptions<TParsedRequest> {
   readonly parseRequestBody: (body: unknown) => RouteParseResult<TParsedRequest>;
-  readonly validateAuthorizedRequest?: AuthorizedPlanRouteRequestValidator<TDeps, TParsedRequest>;
 }
 
 export async function resolveAuthorizedPlanRouteRequest<TParsedRequest>(
   request: FastifyRequest<{ Body: unknown }>,
   deps: PlanRouteAuthorizationResolverDeps,
-  parsedRequest: RouteParseResult<TParsedRequest>,
-  options: PlanRouteAuthorizationRequestOptions<TParsedRequest>
+  options: AuthorizedPlanRouteRequestResolverOptions<TParsedRequest>
 ): Promise<ResolvedAuthorizedPlanRouteRequest<TParsedRequest>> {
-  if (!parsedRequest.ok) {
+  const requestedScope = parsePlanRouteRequestedScope(request.body);
+  if (!requestedScope.ok) {
     return {
       ok: false,
-      response: httpErrorTranslation.parse.issue(parsedRequest.issue),
+      response: httpErrorTranslation.parse.issue(requestedScope.issue),
     };
   }
 
-  const requestedScope = options.selectRequestedScope(parsedRequest.value);
   const authz = await authorizeExecutionScope({
     authenticator: deps.authenticator,
     authorizer: deps.authorizer,
@@ -84,17 +61,25 @@ export async function resolveAuthorizedPlanRouteRequest<TParsedRequest>(
     requestId: request.id,
     requestedScope: {
       ...buildEnvironmentAccessScope(
-        requestedScope.tenantId,
-        requestedScope.projectId,
-        requestedScope.environmentId
+        requestedScope.value.tenantId,
+        requestedScope.value.projectId,
+        requestedScope.value.environmentId
       ),
-      action: options.action,
+      action: AUTHORIZATION_ACTION.runStart,
     },
   });
   if (!authz.ok) {
     return {
       ok: false,
       response: authz.response,
+    };
+  }
+
+  const parsedRequest = options.parseRequestBody(request.body);
+  if (!parsedRequest.ok) {
+    return {
+      ok: false,
+      response: httpErrorTranslation.parse.issue(parsedRequest.issue),
     };
   }
 
@@ -109,7 +94,7 @@ export function createAuthorizedPlanRouteRequestResolver<
   TDeps extends PlanRouteAuthorizationResolverDeps,
   TParsedRequest,
 >(
-  options: AuthorizedPlanRouteRequestResolverOptions<TDeps, TParsedRequest>
+  options: AuthorizedPlanRouteRequestResolverOptions<TParsedRequest>
 ): (
   request: FastifyRequest<{ Body: unknown }>,
   deps: TDeps
@@ -118,29 +103,6 @@ export function createAuthorizedPlanRouteRequestResolver<
     request: FastifyRequest<{ Body: unknown }>,
     deps: TDeps
   ): Promise<ResolvedAuthorizedPlanRouteRequest<TParsedRequest>> => {
-    const resolvedRequest = await resolveAuthorizedPlanRouteRequest(
-      request,
-      deps,
-      options.parseRequestBody(request.body),
-      {
-        selectRequestedScope: options.selectRequestedScope,
-        action: options.action,
-      }
-    );
-    if (!resolvedRequest.ok) {
-      return resolvedRequest;
-    }
-
-    const validationResponse = options.validateAuthorizedRequest
-      ? await options.validateAuthorizedRequest(resolvedRequest, deps)
-      : null;
-    if (validationResponse !== null) {
-      return {
-        ok: false,
-        response: validationResponse,
-      };
-    }
-
-    return resolvedRequest;
+    return resolveAuthorizedPlanRouteRequest(request, deps, options);
   };
 }

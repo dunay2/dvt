@@ -127,6 +127,8 @@ describe('previewPlanRoute outcomes', () => {
       ...SCOPED_VALID_PLAN_REF,
       adapterId: 'temporal',
     });
+    expect(deps.planStore.storePlanArtifact).toHaveBeenCalledTimes(1);
+    expect(materializeAndValidatePlan).toHaveBeenCalledTimes(1);
     expect(deps.planStore.markStoredPlanArtifactValid).toHaveBeenCalledWith(SCOPED_VALID_PLAN_REF);
     expect(deps.planStore.markStoredPlanArtifactInvalid).not.toHaveBeenCalled();
   });

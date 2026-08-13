@@ -89,6 +89,11 @@ function buildValidTransformationPlan(): Readonly<Record<string, unknown>> {
       inputHashSha256: 'a'.repeat(64),
       planId: 'b'.repeat(64),
       createdAtIso: '2026-04-03T00:00:00.000Z',
+      ownership: {
+        tenantId: 't1',
+        projectId: 'p1',
+        environmentId: 'canonical-env',
+      },
     },
     steps: [
       {
@@ -456,7 +461,7 @@ describe('createPlansService', () => {
     );
   });
 
-  it('prefers scoped environment tags when projecting the UI target', async () => {
+  it('uses canonical ownership when telemetry scope tags disagree', async () => {
     const postJsonMock = vi.fn(async () =>
       buildTransformationPreviewPayload({
         plan: {
@@ -490,7 +495,7 @@ describe('createPlansService', () => {
       }),
     });
 
-    expect(plan.target).toBe('scoped-env');
+    expect(plan.target).toBe('canonical-env');
   });
 
   it('derives transformation preview step nodes from step ids when canonical nodeIds are absent', async () => {

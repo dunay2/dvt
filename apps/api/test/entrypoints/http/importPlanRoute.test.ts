@@ -42,6 +42,30 @@ function createImportDeps(
 }
 
 describe('importPlanRoute', () => {
+  it('returns 401 without executing ImportPlan when bearer authentication fails', async () => {
+    const reply = createReply();
+    const deps = createImportDeps({
+      authenticator: {
+        authenticateBearerToken: vi.fn(async () => ({
+          ok: false as const,
+          code: 'missing_bearer_token' as const,
+        })),
+      },
+    });
+
+    await importPlanRoute(
+      createImportRequest({ id: 'req-import-no-token', authorization: null }) as never,
+      reply as never,
+      deps as never
+    );
+
+    expect(reply.statusCode).toBe(401);
+    expect(reply.payload).toEqual({
+      error: { type: 'unauthorized', reason: 'missing_bearer_token' },
+    });
+    expect(deps.planResolver.fetch).not.toHaveBeenCalled();
+  });
+
   it('returns 400 when planRef is invalid', async () => {
     const reply = createReply();
 

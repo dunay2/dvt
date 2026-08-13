@@ -7,15 +7,26 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { PreviewPlanUseCase } from '../../application/services/PreviewPlanUseCase.js';
 
 import { createPlanRouteHandler } from './executePlanRouteFacade.js';
-import { planRouteResponseTranslation } from './planRouteResponseTranslation.js';
 import {
-  resolvePreviewPlanRouteRequest,
-  type PreviewPlanRouteRequestResolverDeps,
-} from './previewPlanRouteRequestResolver.js';
+  createAuthorizedPlanRouteRequestResolver,
+  type PlanRouteAuthorizationResolverDeps,
+} from './planRouteRequestResolver.js';
+import { parsePreviewPlanBody, type ParsedPreviewPlanRequest } from './previewPlanRouteParser.js';
+import {
+  mapPreviewPlanInternalError,
+  mapPreviewPlanUseCaseResult,
+} from './previewPlanRouteResponseMapper.js';
 
-type PreviewPlanRouteDeps = PreviewPlanRouteRequestResolverDeps & {
+type PreviewPlanRouteDeps = PlanRouteAuthorizationResolverDeps & {
   readonly useCase: Pick<PreviewPlanUseCase, 'execute'>;
 };
+
+const resolvePreviewPlanRouteRequest = createAuthorizedPlanRouteRequestResolver<
+  PreviewPlanRouteDeps,
+  ParsedPreviewPlanRequest
+>({
+  parseRequestBody: parsePreviewPlanBody,
+});
 
 export const previewPlanRoute = createPlanRouteHandler({
   logMessage: 'plan preview failed',
@@ -23,8 +34,8 @@ export const previewPlanRoute = createPlanRouteHandler({
   executeUseCase: (resolvedRequest, deps: PreviewPlanRouteDeps) =>
     deps.useCase.execute(resolvedRequest.parsedRequest.command, resolvedRequest.context),
   mapResult: (result, resolvedRequest) =>
-    planRouteResponseTranslation.preview.result(result, resolvedRequest.parsedRequest),
-  mapInternalError: () => planRouteResponseTranslation.preview.internalError(),
+    mapPreviewPlanUseCaseResult(result, resolvedRequest.parsedRequest),
+  mapInternalError: mapPreviewPlanInternalError,
 }) satisfies (
   request: FastifyRequest<{ Body: unknown }>,
   reply: FastifyReply,

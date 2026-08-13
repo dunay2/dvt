@@ -432,6 +432,7 @@ const operationHelp = Object.freeze({
       'pnpm planning:db:operate feature-mechanization <record|retire> --feature <FEATURE-ID> --rail <RailName> --type <command|query> --actor <actor>',
     details: [
       'RecordFeatureMechanizationRail stores a database command/query rail declaration and a valid feature-mechanization manifest projection without editing Markdown manifests.',
+      'Explicit replace flags hard-cut inherited implementation refs or architecture guards with audited idempotency.',
       'Requires --ddd-owner, --implementation-plan, --source-ref, --source-content-sha256, governance/doc/surface/validation fields, and at least one --implementation-ref in path#symbol form.',
       'RetireFeatureMechanizationRail deletes one stale local rail under exact may-delete design scope, expected revision, and audited provenance.',
     ],
@@ -1541,6 +1542,8 @@ function operationPayload(command) {
       expectedFailure: command.expectedFailure,
       patchSurfaces: command.patchSurfaces || [],
       greenTest: command.greenTest,
+      replaceImplementationRefs: command.replaceImplementationRefs,
+      replaceArchitectureGuards: command.replaceArchitectureGuards,
       sourceRef: command.sourceRef,
       sourceContentSha256: command.sourceContentSha256,
     };
@@ -3228,6 +3231,10 @@ function parseFeatureMechanizationCommand(action, args) {
     expectedFailure: requireOption(options, 'expectedFailure'),
     patchSurfaces: normalizeListOption(options.patchSurface),
     greenTest: requireOption(options, 'greenTest'),
+    replaceImplementationRefs:
+      parseBooleanOption(options.replaceImplementationRefs, 'replace-implementation-refs') ?? false,
+    replaceArchitectureGuards:
+      parseBooleanOption(options.replaceArchitectureGuards, 'replace-architecture-guards') ?? false,
     sourceRef: requireOption(options, 'sourceRef'),
     sourceContentSha256: validateSha256(
       requireOption(options, 'sourceContentSha256'),
@@ -4974,13 +4981,21 @@ function mergeFeatureMechanizationObjectsByKey(existing, incoming, keyOf) {
   return [...merged.values()];
 }
 
+function featureMechanizationSurfacePath(value) {
+  return String(value || '')
+    .trim()
+    .split(/\s+/, 1)[0];
+}
+
 function surfaceMatchesPattern(surface, pattern) {
-  if (surface === pattern) {
+  const normalizedSurface = featureMechanizationSurfacePath(surface);
+  const normalizedPattern = featureMechanizationSurfacePath(pattern);
+  if (normalizedSurface === normalizedPattern) {
     return true;
   }
-  if (pattern.endsWith('/**')) {
-    const prefix = pattern.slice(0, -3);
-    return surface === prefix || surface.startsWith(`${prefix}/`);
+  if (normalizedPattern.endsWith('/**')) {
+    const prefix = normalizedPattern.slice(0, -3);
+    return normalizedSurface === prefix || normalizedSurface.startsWith(`${prefix}/`);
   }
   return false;
 }
@@ -5010,7 +5025,9 @@ function pruneForbiddenFeatureMechanizationReferences(value, patterns) {
 }
 
 function mergeFeatureMechanizationManifest(existingManifest, incomingManifest, command) {
-  const existing = existingManifest || {};
+  const existing = command.replaceArchitectureGuards
+    ? { ...(existingManifest || {}), architectureGuards: [] }
+    : existingManifest || {};
   const merged = pruneForbiddenFeatureMechanizationReferences(
     mergeFeatureMechanizationValue(existing, incomingManifest),
     command.forbiddenImplementationSurfaces
@@ -5026,7 +5043,7 @@ function mergeFeatureMechanizationManifest(existingManifest, incomingManifest, c
     command.forbiddenImplementationSurfaces
   );
   const symbols = mergeFeatureMechanizationObjectsByKey(
-    (existing.symbols || []).filter(
+    (command.replaceImplementationRefs ? [] : existing.symbols || []).filter(
       (symbol) =>
         !excludesFeatureMechanizationSurface(
           `${symbol.path}#${symbol.name}`,
@@ -5158,6 +5175,10 @@ function planFeatureMechanizationRailRecordOperation({ command, existingRail, op
       (value) =>
         !excludesFeatureMechanizationSurface(value, command.forbiddenImplementationSurfaces)
     );
+  const previousSymbolRefs = command.replaceImplementationRefs ? [] : previous?.symbolRefs;
+  const previousImplementationRefs = command.replaceImplementationRefs
+    ? []
+    : previous?.implementationRefs;
   const rail = {
     railId: command.railId,
     featureId: command.featureId,
@@ -5167,9 +5188,9 @@ function planFeatureMechanizationRailRecordOperation({ command, existingRail, op
     railType: command.railType,
     dddOwner: command.dddOwner,
     railStatus: command.railStatus,
-    symbolRefs: retained(mergeUniqueValues(previous?.symbolRefs, command.implementationRefs)),
+    symbolRefs: retained(mergeUniqueValues(previousSymbolRefs, command.implementationRefs)),
     implementationRefs: retained(
-      mergeUniqueValues(previous?.implementationRefs, command.implementationRefs)
+      mergeUniqueValues(previousImplementationRefs, command.implementationRefs)
     ),
     documentationRefs: mergeUniqueValues(previous?.documentationRefs, command.documentationRefs),
     governingSources: mergeUniqueValues(previous?.governingSources, command.governingSources),
@@ -5179,7 +5200,10 @@ function planFeatureMechanizationRailRecordOperation({ command, existingRail, op
         command.allowedImplementationSurfaces
       )
     ),
-    architectureGuards: mergeUniqueValues(previous?.architectureGuards, command.architectureGuards),
+    architectureGuards: mergeUniqueValues(
+      command.replaceArchitectureGuards ? [] : previous?.architectureGuards,
+      command.architectureGuards
+    ),
     completionGate: mergeUniqueValues(previous?.completionGate, command.completionGate),
     sourcePath: command.sourceRef,
     sourceContentSha256: command.sourceContentSha256,
