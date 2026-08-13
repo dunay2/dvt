@@ -22,6 +22,7 @@ import { AllowAllAuthorizer, SequenceClock } from '@dvt/engine/runtime';
 import { InMemoryStartRunIntentStore, InMemoryTxStore } from '@dvt/engine/testing';
 import { OtelObservability } from '@dvt/observability-otel';
 import { PlannerFacade } from '@dvt/planner';
+import rateLimit from '@fastify/rate-limit';
 import { InMemorySpanExporter } from '@opentelemetry/sdk-trace-base';
 import Fastify, { type FastifyInstance } from 'fastify';
 
@@ -186,7 +187,9 @@ export async function createStartRunOpenTelemetryProof(
     }),
   });
   const app = Fastify({ logger: false });
-  app.post('/runs/start', async (request, reply) =>
+  const routeRateLimit = { max: 1, timeWindow: 60_000 } as const;
+  await app.register(rateLimit, { global: false, ...routeRateLimit });
+  app.post('/runs/start', { config: { rateLimit: routeRateLimit } }, async (request, reply) =>
     startRunRoute(request as never, reply, {
       adapterRegistry: createStartRunTargetAdapterRegistryFromValues(['temporal']),
       authenticator: createAuthenticator(),
