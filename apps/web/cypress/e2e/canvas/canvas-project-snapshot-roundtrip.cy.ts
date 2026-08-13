@@ -1,7 +1,8 @@
 /** Owned concern: prove Canvas project snapshot browser export, import rejection, and reload round trip. */
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
 import {
-  clickCanvasContextMenuItem,
+  clickCanvasAddCatalogAction,
+  clickCanvasContextMenuAction,
   openCanvasContextMenuAt,
 } from '../../support/canvasExecutionSelection';
 import {
@@ -11,6 +12,7 @@ import {
   waitForE2eApiCall,
 } from '../../support/e2eApiStub';
 import {
+  E2E_PROJECT_WORKSPACE,
   E2E_WORKSPACE_SESSION,
   stubShellBootstrapApis,
   visitWithE2eWorkspaceSession,
@@ -21,8 +23,8 @@ describe('Canvas project snapshot round trip', () => {
     resetE2eApiStubs();
     stubShellBootstrapApis();
     stubE2eJsonApi('GET', '/workspace/context', {
-      defaultWorkspace: E2E_WORKSPACE_SESSION,
-      availableWorkspaces: [E2E_WORKSPACE_SESSION],
+      defaultWorkspace: E2E_PROJECT_WORKSPACE,
+      availableWorkspaces: [E2E_PROJECT_WORKSPACE],
     });
     stubE2eJsonApi('GET', '/capabilities', {
       apiVersion: '1.0.0',
@@ -44,8 +46,17 @@ describe('Canvas project snapshot round trip', () => {
   }
 
   function addSqlTransformNode(): void {
+    cy.get('body').then(($body) => {
+      if ($body.find('[data-slot="canvas-playground-empty-state"]').length > 0) {
+        cy.get('[data-slot="canvas-playground-empty-state"]')
+          .contains('button', /Transformation|Transformación/i)
+          .should('be.enabled')
+          .click();
+      }
+    });
     openCanvasContextMenuAt(360, 260);
-    clickCanvasContextMenuItem('SQL transform');
+    clickCanvasContextMenuAction('open-add-node-catalog');
+    clickCanvasAddCatalogAction('create-node', 'dvt:sql_transform');
   }
 
   function openWorkspaceMenuIfClosed(): void {
@@ -58,15 +69,13 @@ describe('Canvas project snapshot round trip', () => {
 
   function clickVisibleWorkspaceExportSnapshotCommand(): void {
     cy.get('[data-slot="canvas-workspace-export-command"]')
-      .should(($commands) => {
-        const visibleCommands = $commands.filter(':visible');
-
-        expect(visibleCommands, 'visible export command').to.have.length(1);
-        expect(visibleCommands.first(), 'enabled export command').not.to.have.attr('data-disabled');
-      })
-      .then(($commands) => {
-        cy.wrap($commands.filter(':visible').first()).click();
+      .should('have.length', 1)
+      .scrollIntoView()
+      .should('be.visible')
+      .should(($command) => {
+        expect($command.attr('data-disabled'), 'enabled export command').to.be.undefined;
       });
+    cy.get('[data-slot="canvas-workspace-export-command"]').click();
   }
 
   function waitForDraftSaveCount(expectedCount: number): void {
@@ -83,7 +92,7 @@ describe('Canvas project snapshot round trip', () => {
     visitReadyCanvas();
 
     addSqlTransformNode();
-    cy.contains('.react-flow__node', 'SQL transform 1').should('be.visible');
+    cy.get('.react-flow__node[data-id="dvt-sql-transform-1"]').should('be.visible');
     waitForDraftSaveCount(1);
     cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
     clickVisibleWorkspaceExportSnapshotCommand();
@@ -139,6 +148,6 @@ describe('Canvas project snapshot round trip', () => {
     visitReadyCanvas();
 
     cy.contains('Sales canvas').should('be.visible');
-    cy.contains('.react-flow__node', 'SQL transform 1').should('be.visible');
+    cy.get('.react-flow__node[data-id="dvt-sql-transform-1"]').should('be.visible');
   });
 });

@@ -67,14 +67,18 @@ export function openCanvasContextMenuAt(x = 96, y = 220): void {
 export function clickCanvasContextMenuItem(label: CanvasMenuLabel): void {
   cy.contains('[data-slot="canvas-context-menu"] [role="menuitem"]', label)
     .should('be.visible')
-    .should('be.enabled')
+    .should(($item) => {
+      expect($item.attr('data-disabled')).to.be.undefined;
+    })
     .click();
 }
 
 export function clickCanvasContextMenuAction(action: string): void {
   cy.get(`[data-slot="canvas-context-menu"] [data-menu-action="${action}"]`)
     .should('be.visible')
-    .should('be.enabled')
+    .should(($item) => {
+      expect($item.attr('data-disabled')).to.be.undefined;
+    })
     .click();
 }
 
