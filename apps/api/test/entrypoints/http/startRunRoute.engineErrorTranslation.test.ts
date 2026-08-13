@@ -14,6 +14,22 @@ import {
 } from './startRunRoute.test.support.js';
 
 describe('startRunRoute engine error translation', () => {
+  it('contains unexpected infrastructure failures behind the stable HTTP error envelope', async () => {
+    const infrastructureMessage = 'connect ETIMEDOUT postgres.internal:5432';
+
+    const { reply } = await invokeStartRunRoute({
+      facade: {
+        async execute() {
+          throw new Error(infrastructureMessage);
+        },
+      },
+    });
+
+    expect(reply.statusCode).toBe(500);
+    expect(reply.payload).toEqual(httpError('internal_server_error', 'internal_error'));
+    expect(JSON.stringify(reply.payload)).not.toContain(infrastructureMessage);
+  });
+
   it('returns 422 when engine reports adapter_not_registered', async () => {
     const { reply } = await invokeStartRunRoute({
       request: {
