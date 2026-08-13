@@ -101,6 +101,20 @@ describe('StoredPlanAdmissionCoordinator', () => {
     expect(harness.planStore.markStoredPlanArtifactInvalid).not.toHaveBeenCalled();
   });
 
+  it('rejects current executability failure without rewriting a terminal valid record', async () => {
+    const harness = createHarness('VALID', ERROR_VALIDATION);
+
+    await expect(
+      harness.coordinator.admitStored(SCOPED_PLAN_REF, 'temporal')
+    ).resolves.toMatchObject({
+      accepted: false,
+      validation: ERROR_VALIDATION,
+      validationRecord: { state: 'VALID' },
+    });
+    expect(harness.planStore.markStoredPlanArtifactValid).not.toHaveBeenCalled();
+    expect(harness.planStore.markStoredPlanArtifactInvalid).not.toHaveBeenCalled();
+  });
+
   it('uses the same admission seam and closes a pending existing plan before dispatch', async () => {
     const harness = createHarness('PENDING_VALIDATION', OK_VALIDATION);
 
@@ -131,6 +145,31 @@ describe('StoredPlanAdmissionCoordinator', () => {
     expect(harness.planStore.markStoredPlanArtifactValid).not.toHaveBeenCalled();
   });
 
+  it('accepts the terminal valid state selected by a concurrent admission', async () => {
+    const harness = createHarness('PENDING_VALIDATION', OK_VALIDATION, 'VALID');
+
+    await expect(
+      harness.coordinator.admitStored(SCOPED_PLAN_REF, 'temporal')
+    ).resolves.toMatchObject({
+      accepted: true,
+      validationRecord: { state: 'VALID' },
+    });
+    expect(harness.planStore.getStoredPlanValidationRecord).toHaveBeenCalledTimes(2);
+  });
+
+  it('uses the fail-closed invalid result selected by a concurrent admission', async () => {
+    const harness = createHarness('PENDING_VALIDATION', OK_VALIDATION, 'INVALID');
+
+    await expect(
+      harness.coordinator.admitStored(SCOPED_PLAN_REF, 'temporal')
+    ).resolves.toMatchObject({
+      accepted: false,
+      validation: ERROR_VALIDATION,
+      validationRecord: { state: 'INVALID' },
+    });
+    expect(harness.planStore.getStoredPlanValidationRecord).toHaveBeenCalledTimes(2);
+  });
+
   it('fails closed when the stored validation record is missing', async () => {
     const harness = createHarness(undefined, OK_VALIDATION);
 
@@ -143,7 +182,8 @@ describe('StoredPlanAdmissionCoordinator', () => {
 
 function createHarness(
   state: 'PENDING_VALIDATION' | 'VALID' | 'INVALID' | undefined,
-  validation: typeof OK_VALIDATION | typeof ERROR_VALIDATION
+  validation: typeof OK_VALIDATION | typeof ERROR_VALIDATION,
+  concurrentWinner?: 'VALID' | 'INVALID'
 ): {
   coordinator: StoredPlanAdmissionCoordinator;
   planStore: {
@@ -170,12 +210,9 @@ function createHarness(
             ...(rejectionReport === undefined ? {} : { rejectionReport }),
           }
     ),
-    markStoredPlanArtifactValid: vi.fn(async () => {
-      currentState = 'VALID';
-    }),
+    markStoredPlanArtifactValid: vi.fn(async () => applyTransition('VALID')),
     markStoredPlanArtifactInvalid: vi.fn(async (input: { report: typeof ERROR_VALIDATION }) => {
-      currentState = 'INVALID';
-      rejectionReport = input.report;
+      await applyTransition('INVALID', input.report);
     }),
     getPlanRecordByRef: vi.fn(async () => PLAN_RECORD),
   };
@@ -186,6 +223,19 @@ function createHarness(
         : { accepted: false as const, materialized: MATERIALIZED, validation }
     ),
   };
+
+  async function applyTransition(
+    nextState: 'VALID' | 'INVALID',
+    report?: typeof ERROR_VALIDATION
+  ): Promise<void> {
+    if (concurrentWinner !== undefined) {
+      currentState = concurrentWinner;
+      rejectionReport = concurrentWinner === 'INVALID' ? ERROR_VALIDATION : undefined;
+      throw new Error('PLAN_VALIDATION_STATE_INVALID_TRANSITION: concurrent winner');
+    }
+    currentState = nextState;
+    rejectionReport = nextState === 'INVALID' ? report : undefined;
+  }
   return {
     coordinator: new StoredPlanAdmissionCoordinator({
       planStore: planStore as never,

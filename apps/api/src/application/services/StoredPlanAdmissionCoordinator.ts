@@ -37,7 +37,7 @@ export type StoredPlanAdmissionResult =
       readonly planRecord: PlanRecord;
       readonly validation: Extract<ExecutabilityValidationResult, { readonly status: 'ERROR' }>;
       readonly validationRecord: StoredPlanArtifactValidationRecord & {
-        readonly state: 'INVALID';
+        readonly state: 'VALID' | 'INVALID';
       };
     };
 
@@ -91,30 +91,38 @@ export class StoredPlanAdmissionCoordinator {
       ...scopedPlanRef,
       adapterId,
     });
-    if (!validated.accepted) {
-      const { validation } = validated;
-      await this.deps.planStore.markStoredPlanArtifactInvalid({
-        ...scopedPlanRef,
-        report: validation,
-      });
+    const validationRecord =
+      currentValidationRecord.state === 'PENDING_VALIDATION'
+        ? await this.closePendingValidation(scopedPlanRef, validated.validation)
+        : currentValidationRecord;
+
+    if (validationRecord.state === 'INVALID') {
+      if (validationRecord.rejectionReport === undefined) {
+        throw new Error(`PLAN_VALIDATION_REPORT_NOT_FOUND: ${planRef.planId}`);
+      }
       return {
         accepted: false,
         planRef,
         scopedPlanRef,
         ...(validated.materialized === undefined ? {} : { materialized: validated.materialized }),
         planRecord,
-        validation,
-        validationRecord: {
-          ...currentValidationRecord,
-          state: 'INVALID',
-          rejectionReport: validation,
-        },
+        validation: validationRecord.rejectionReport,
+        validationRecord: { ...validationRecord, state: 'INVALID' },
       };
     }
 
-    if (currentValidationRecord.state !== 'VALID') {
-      await this.deps.planStore.markStoredPlanArtifactValid(scopedPlanRef);
+    if (!validated.accepted) {
+      return {
+        accepted: false,
+        planRef,
+        scopedPlanRef,
+        ...(validated.materialized === undefined ? {} : { materialized: validated.materialized }),
+        planRecord,
+        validation: validated.validation,
+        validationRecord: { ...validationRecord, state: 'VALID' },
+      };
     }
+
     return {
       accepted: true,
       planRef,
@@ -122,8 +130,30 @@ export class StoredPlanAdmissionCoordinator {
       materialized: validated.materialized,
       planRecord,
       validation: validated.validation,
-      validationRecord: { ...currentValidationRecord, state: 'VALID' },
+      validationRecord: { ...validationRecord, state: 'VALID' },
     };
+  }
+
+  private async closePendingValidation(
+    scopedPlanRef: ScopedPlanRef,
+    validation: ExecutabilityValidationResult
+  ): Promise<StoredPlanArtifactValidationRecord> {
+    try {
+      if (validation.status === 'OK') {
+        await this.deps.planStore.markStoredPlanArtifactValid(scopedPlanRef);
+      } else {
+        await this.deps.planStore.markStoredPlanArtifactInvalid({
+          ...scopedPlanRef,
+          report: validation,
+        });
+      }
+    } catch (transitionError) {
+      const winningRecord = await this.readValidationRecord(scopedPlanRef);
+      if (winningRecord.state === 'PENDING_VALIDATION') throw transitionError;
+      return winningRecord;
+    }
+
+    return this.readValidationRecord(scopedPlanRef);
   }
 
   private async readValidationRecord(
