@@ -88,6 +88,28 @@ describe('canvasInspectorAuthoringModel', () => {
     });
   });
 
+  it('rejects blank required fields for a DVT source', () => {
+    expect(
+      validateCanvasInspectorNodeDraft({
+        name: 'Orders',
+        description: '',
+        tags: [],
+        dvt: {
+          kind: 'source',
+          schema: '   ',
+          table: '',
+          alias: ' ',
+        },
+      })
+    ).toEqual({
+      dvt: {
+        schema: 'dvt_schema_required',
+        table: 'dvt_table_required',
+        alias: 'dvt_alias_required',
+      },
+    });
+  });
+
   it('tracks dirty state and applies the edited fields back into the canonical node', () => {
     const node = buildNode();
     const draft = {
