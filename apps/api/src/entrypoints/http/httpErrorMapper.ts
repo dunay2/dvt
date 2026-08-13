@@ -1,8 +1,9 @@
 /**
- * Owned concern: translation of parse/auth/facade/engine outcomes into the
+ * Owned concern: translation of parse/auth/start-run/engine outcomes into the
  * canonical HTTP error envelope, excluding runtime-domain error classification.
  */
 import { START_RUN_PLAN_REJECTION_CODE } from '@dvt/contracts';
+import { START_RUN_RESULT_KIND, type StartRunResult } from '@dvt/contracts';
 
 import type { DeniedReason } from '../../application/ports/accessDecision.js';
 import type { AuthenticationFailureCode } from '../../application/ports/auth.js';
@@ -10,10 +11,6 @@ import {
   START_RUN_ENGINE_ERROR_KIND,
   type StartRunEngineError,
 } from '../../application/ports/startRunEngineError.js';
-import {
-  START_RUN_FACADE_RESULT_KIND,
-  type StartRunFacadeResult,
-} from '../../application/ports/startRunFacadePort.js';
 
 import {
   createHttpErrorResponse,
@@ -35,18 +32,14 @@ export function mapRouteParseIssue(issue: RouteParseIssue): HttpResponseModel {
   });
 }
 
-export function mapStartRunFacadeResult(result: StartRunFacadeResult): HttpResponseModel {
+export function mapStartRunResult(result: StartRunResult): HttpResponseModel {
   switch (result.kind) {
-    case START_RUN_FACADE_RESULT_KIND.unauthenticated:
-      return mapAuthenticationFailure(result.code);
-    case START_RUN_FACADE_RESULT_KIND.unauthorized:
-      return mapAuthorizationFailure(result.reason);
-    case START_RUN_FACADE_RESULT_KIND.accepted:
+    case START_RUN_RESULT_KIND.accepted:
       return {
         status: 202,
         body: { runId: result.runId, accepted: result.accepted },
       };
-    case START_RUN_FACADE_RESULT_KIND.duplicate:
+    case START_RUN_RESULT_KIND.duplicate:
       return {
         status: 202,
         body: {
@@ -56,19 +49,19 @@ export function mapStartRunFacadeResult(result: StartRunFacadeResult): HttpRespo
           duplicateOf: result.duplicateOf,
         },
       };
-    case START_RUN_FACADE_RESULT_KIND.tenantBackpressure:
+    case START_RUN_RESULT_KIND.tenantBackpressure:
       return createHttpErrorResponse({
         type: HTTP_ERROR_TYPE.rateLimited,
         reason: result.code,
         headers: { [HTTP_HEADER.retryAfter]: String(result.retryAfterSeconds) },
       });
-    case START_RUN_FACADE_RESULT_KIND.systemBackpressure:
+    case START_RUN_RESULT_KIND.systemBackpressure:
       return createHttpErrorResponse({
         type: HTTP_ERROR_TYPE.serviceUnavailable,
         reason: result.code,
         headers: { [HTTP_HEADER.retryAfter]: String(result.retryAfterSeconds) },
       });
-    case START_RUN_FACADE_RESULT_KIND.rateLimited:
+    case START_RUN_RESULT_KIND.rateLimited:
       return createHttpErrorResponse({
         type: HTTP_ERROR_TYPE.rateLimited,
         reason: result.code,
@@ -76,7 +69,7 @@ export function mapStartRunFacadeResult(result: StartRunFacadeResult): HttpRespo
           ? {}
           : { headers: { [HTTP_HEADER.retryAfter]: String(result.retryAfterSeconds) } }),
       });
-    case START_RUN_FACADE_RESULT_KIND.planRejected: {
+    case START_RUN_RESULT_KIND.planRejected: {
       const planRejectedDetails = compactHttpErrorDetails({
         message: result.reason,
         ...(result.cause === undefined ? {} : { cause: result.cause }),

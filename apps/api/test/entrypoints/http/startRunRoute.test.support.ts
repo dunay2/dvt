@@ -97,8 +97,8 @@ export function registryWith(...supported: Array<'temporal'>): IStartRunTargetAd
   };
 }
 
-type FacadeDouble = {
-  execute(input: Record<string, unknown>): Promise<unknown>;
+type UseCaseDouble = {
+  execute(command: Record<string, unknown>, context: unknown): Promise<unknown>;
 };
 
 type RouteRequestOverride = {
@@ -109,7 +109,10 @@ type RouteRequestOverride = {
 
 type InvokeRouteArgs = {
   readonly request?: RouteRequestOverride;
-  readonly facade?: FacadeDouble;
+  readonly useCase?: UseCaseDouble;
+  readonly authenticator?: { authenticateBearerToken(token: string | undefined): Promise<unknown> };
+  readonly authorizer?: { authorize(...args: readonly unknown[]): Promise<unknown> };
+  readonly telemetry?: { recordStartRunLatency(duration: number, outcome: string): void };
   readonly registry?: IStartRunTargetAdapterRegistry;
   readonly runIdGenerator?: () => string;
   readonly observability?: IObservability;
@@ -119,8 +122,8 @@ export async function invokeStartRunRoute(args: InvokeRouteArgs = {}): Promise<{
   readonly reply: ReplyDouble;
 }> {
   const reply = createReply();
-  const facade =
-    args.facade ??
+  const useCase =
+    args.useCase ??
     ({
       async execute() {
         return okResult({
@@ -129,13 +132,52 @@ export async function invokeStartRunRoute(args: InvokeRouteArgs = {}): Promise<{
           accepted: true,
         });
       },
-    } satisfies FacadeDouble);
+    } satisfies UseCaseDouble);
 
   const hasBodyOverride = args.request !== undefined && Object.hasOwn(args.request, 'body');
 
   const routeDependencies = {
     adapterRegistry: args.registry ?? registryWith('temporal'),
+    authenticator:
+      args.authenticator ??
+      ({
+        async authenticateBearerToken() {
+          return {
+            ok: true as const,
+            principal: {
+              principalId: 'user-1',
+              subjectId: 'user-1',
+              issuer: 'issuer',
+              audience: 'audience',
+              principalType: 'user' as const,
+              expiresAt: new Date('2030-01-01T00:00:00Z'),
+              rawScopes: [],
+              assertedTenantIds: ['t1'],
+              assertedProjectIds: ['p1'],
+            },
+          };
+        },
+      } as never),
+    authorizer:
+      args.authorizer ??
+      ({
+        async authorize(_principal: unknown, requestedScope: unknown, requestId: string) {
+          return {
+            ok: true as const,
+            context: {
+              ...(requestedScope as object),
+              principal: {},
+              scope: requestedScope,
+              action: (requestedScope as { action: unknown }).action,
+              requestId,
+              authorizedAt: new Date('2026-08-13T00:00:00Z'),
+            },
+          };
+        },
+      } as never),
     observability: args.observability ?? createNoopObservability(),
+    telemetry: args.telemetry ?? { recordStartRunLatency() {} },
+    useCase: useCase as never,
     runIdGenerator: args.runIdGenerator ?? (() => VALID_GENERATED_RUN_ID),
   };
 
@@ -147,8 +189,7 @@ export async function invokeStartRunRoute(args: InvokeRouteArgs = {}): Promise<{
       log: { error() {} },
     } as never,
     reply as never,
-    facade as never,
-    routeDependencies
+    routeDependencies as never
   );
 
   return { reply };

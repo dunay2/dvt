@@ -33,9 +33,12 @@ export function registerProtectedRunRoutes(
     RUNTIME_ROUTE_PATH.start,
     { config: { rateLimit } },
     async (request, reply) =>
-      startRunRoute(request as never, reply, protectedModule.facade, {
+      startRunRoute(request as never, reply, {
         adapterRegistry: protectedModule.startRunTargetAdapterRegistry,
+        ...runtimeAuth,
         observability: dependencies.observability,
+        telemetry: protectedModule.startRunTelemetry,
+        useCase: protectedModule.startRunUseCase,
       })
   );
 

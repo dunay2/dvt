@@ -7,8 +7,8 @@ import {
   VALID_BODY,
 } from './startRunRoute.test.support.js';
 
-describe('startRunRoute facade result translation', () => {
-  it('returns 422 missing_capability when facade rejects a plan for adapter capabilities', async () => {
+describe('startRunRoute result translation', () => {
+  it('returns 422 missing_capability when admission rejects a plan for adapter capabilities', async () => {
     const { reply } = await invokeStartRunRoute({
       request: {
         id: 'req-plan-missing-capability',
@@ -17,7 +17,7 @@ describe('startRunRoute facade result translation', () => {
           ...VALID_BODY,
         },
       },
-      facade: {
+      useCase: {
         async execute() {
           return okResult({
             kind: 'plan_rejected' as const,
@@ -50,7 +50,7 @@ describe('startRunRoute facade result translation', () => {
           ...VALID_BODY,
         },
       },
-      facade: {
+      useCase: {
         async execute() {
           return okResult({
             kind: 'tenant_backpressure' as const,
@@ -76,7 +76,7 @@ describe('startRunRoute facade result translation', () => {
           ...VALID_BODY,
         },
       },
-      facade: {
+      useCase: {
         async execute() {
           return okResult({
             kind: 'system_backpressure' as const,

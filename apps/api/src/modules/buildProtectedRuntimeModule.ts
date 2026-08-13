@@ -153,8 +153,6 @@ export async function buildProtectedRuntimeModule(
   });
   const executionCapacity = buildProtectedExecutionCapacityPort(env);
   const startRunRuntime = buildProtectedStartRunRuntime({
-    authenticator: securityRuntime.authenticator,
-    commandAuthorizer: securityRuntime.commandAuthorizer,
     duplicateProbe: admissionRuntime.duplicateProbe,
     admissionGuard: admissionRuntime.admissionGuard,
     executionCapacity,
@@ -183,7 +181,8 @@ export async function buildProtectedRuntimeModule(
   );
 
   return {
-    facade: startRunRuntime.facade,
+    startRunUseCase: startRunRuntime.startRunUseCase,
+    startRunTelemetry: startRunRuntime.startRunTelemetry,
     authenticator: securityRuntime.authenticator,
     authorizer: securityRuntime.commandAuthorizer,
     workspaceContextQuery: securityRuntime.workspaceContextQuery,

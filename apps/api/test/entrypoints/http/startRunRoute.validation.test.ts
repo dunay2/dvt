@@ -7,7 +7,7 @@ import {
   VALID_PLAN_REF,
 } from './startRunRoute.test.support.js';
 
-const REJECTING_FACADE = {
+const REJECTING_USE_CASE = {
   async execute() {
     throw new Error('should not be called');
   },
@@ -156,7 +156,7 @@ describe('startRunRoute validation', () => {
   it.each(invalidParseCases)('$description', async ({ request, expectedPayload }) => {
     const { reply } = await invokeStartRunRoute({
       request,
-      facade: REJECTING_FACADE,
+      useCase: REJECTING_USE_CASE,
     });
 
     expect(reply.statusCode).toBe(400);
@@ -165,7 +165,7 @@ describe('startRunRoute validation', () => {
 
   it('returns 400 when the platform run-id generator violates the governed run_<UUIDv7> shape', async () => {
     const { reply } = await invokeStartRunRoute({
-      facade: REJECTING_FACADE,
+      useCase: REJECTING_USE_CASE,
       runIdGenerator: () => 'run_generated_test',
     });
 

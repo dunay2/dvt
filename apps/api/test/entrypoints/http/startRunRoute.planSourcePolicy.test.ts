@@ -10,7 +10,7 @@ import {
   VALID_GRAPH_SOURCE,
 } from './startRunRoute.test.support.js';
 
-const REJECTING_FACADE = {
+const REJECTING_USE_CASE = {
   async execute() {
     throw new Error('should not be called');
   },
@@ -19,9 +19,9 @@ const REJECTING_FACADE = {
 describe('startRunRoute plan-source policy', () => {
   it('accepts planner-backed selection when graph source contains the selected nodes', async () => {
     let received: Record<string, unknown> | undefined;
-    const facade = {
-      async execute(input: Record<string, unknown>) {
-        received = input;
+    const useCase = {
+      async execute(command: Record<string, unknown>) {
+        received = command;
         return okResult({
           kind: 'accepted' as const,
           runId: VALID_GENERATED_RUN_ID,
@@ -42,13 +42,13 @@ describe('startRunRoute plan-source policy', () => {
           targetAdapter: 'temporal',
         },
       },
-      facade,
+      useCase,
       runIdGenerator: () => VALID_GENERATED_RUN_ID,
     });
 
     expect(reply.statusCode).toBe(202);
     expect(reply.payload).toEqual({ runId: VALID_GENERATED_RUN_ID, accepted: true });
-    expect(received?.command).toEqual({
+    expect(received).toEqual({
       graphSource: VALID_GRAPH_SOURCE,
       runId: VALID_GENERATED_RUN_ID,
       targetAdapter: 'temporal',
@@ -58,9 +58,9 @@ describe('startRunRoute plan-source policy', () => {
 
   it('accepts planner-backed starts with a typed graph source', async () => {
     let received: Record<string, unknown> | undefined;
-    const facade = {
-      async execute(input: Record<string, unknown>) {
-        received = input;
+    const useCase = {
+      async execute(command: Record<string, unknown>) {
+        received = command;
         return okResult({
           kind: 'accepted' as const,
           runId: VALID_GENERATED_RUN_ID_ALT,
@@ -80,12 +80,12 @@ describe('startRunRoute plan-source policy', () => {
           targetAdapter: 'temporal',
         },
       },
-      facade,
+      useCase,
       runIdGenerator: () => VALID_GENERATED_RUN_ID_ALT,
     });
 
     expect(reply.statusCode).toBe(202);
-    expect(received?.command).toEqual({
+    expect(received).toEqual({
       graphSource: VALID_GRAPH_SOURCE,
       runId: VALID_GENERATED_RUN_ID_ALT,
       targetAdapter: 'temporal',
@@ -155,7 +155,7 @@ describe('startRunRoute plan-source policy', () => {
         id: `req-${expectedReason}`,
         body,
       },
-      facade: REJECTING_FACADE,
+      useCase: REJECTING_USE_CASE,
     });
 
     expect(reply.statusCode).toBe(400);

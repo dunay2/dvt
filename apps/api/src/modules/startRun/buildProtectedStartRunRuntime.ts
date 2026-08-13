@@ -12,21 +12,20 @@ import type { EngineRunRef, IProviderAdapter, IWorkflowEngine } from '@dvt/engin
 import type { IObservability } from '@dvt/observability';
 import { PlannerFacade } from '@dvt/planner';
 
-import type { IAuthenticator } from '../../application/ports/auth.js';
 import type { IDbtExecutionTargetResolver } from '../../application/ports/dbtExecutionTarget.js';
 import type { DuplicateRunProbe } from '../../application/ports/DuplicateRunProbe.js';
 import type { IAdmissionGuard } from '../../application/ports/IAdmissionGuard.js';
 import type { AdmissionMode } from '../../application/ports/IAdmissionMode.js';
 import type { IStartRunExecutionCapacityPort } from '../../application/ports/IStartRunExecutionCapacityPort.js';
+import type { IStartRunLatencyTelemetry } from '../../application/ports/StartRunSlaTelemetry.js';
+import type { IStartRunUseCase } from '../../application/ports/startRunUseCasePort.js';
 import type { IWorkspaceGraphDraftStore } from '../../application/ports/workspaceGraphDraft.js';
-import type { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
 import { BackpressureAwareStartRunUseCase } from '../../application/services/BackpressureAwareStartRunUseCase.js';
 import { DbtRunExecutionContextBindingUseCase } from '../../application/services/DbtRunExecutionContextBindingUseCase.js';
 import { DEFAULT_START_RUN_EXECUTION_CAPACITY_PORT } from '../../application/services/defaultStartRunExecutionCapacityPort.js';
 import { EngineStartRunUseCase } from '../../application/services/engineStartRunUseCase.js';
 import { PlannerBackedStartRunUseCase } from '../../application/services/PlannerBackedStartRunUseCase.js';
 import { ResolveAuthorizedExecutableSubgraphService } from '../../application/services/resolveAuthorizedExecutableSubgraph.js';
-import { StartRunAuthorizedFacade } from '../../application/services/startRunAuthorizedFacade.js';
 import type { StoredExecutablePlanResolver } from '../../application/services/StoredExecutablePlanResolver.js';
 import { StoredPlanExecutabilityValidator } from '../../application/services/StoredPlanExecutabilityValidator.js';
 import { ObservabilityAdmissionTelemetry } from '../../infrastructure/admissionTelemetry/ObservabilityAdmissionTelemetry.js';
@@ -37,8 +36,6 @@ import { ObservabilityStartRunSlaTelemetry } from '../../infrastructure/telemetr
 import { buildPlanCompilePlanner } from '../planCompileBoundary.js';
 
 export type BuildProtectedStartRunRuntimeDeps = {
-  readonly authenticator: IAuthenticator;
-  readonly commandAuthorizer: AuthorizeCommandScopeService;
   readonly duplicateProbe: DuplicateRunProbe;
   readonly admissionGuard: IAdmissionGuard;
   readonly executionCapacity?: IStartRunExecutionCapacityPort;
@@ -57,7 +54,8 @@ export type BuildProtectedStartRunRuntimeDeps = {
 };
 
 export type ProtectedStartRunRuntime = {
-  readonly facade: StartRunAuthorizedFacade;
+  readonly startRunUseCase: IStartRunUseCase;
+  readonly startRunTelemetry: IStartRunLatencyTelemetry;
   readonly planner: IPlanner;
   readonly planCompilePlanner: IPlanner;
   readonly planValidator: StoredPlanExecutabilityValidator;
@@ -112,15 +110,9 @@ export function buildProtectedStartRunRuntime(
     retryAfterSeconds: deps.retryAfterSeconds,
     delegate: plannerBackedUseCase,
   });
-  const facade = new StartRunAuthorizedFacade(
-    deps.authenticator,
-    deps.commandAuthorizer,
-    admissionUseCase,
-    startRunSlaTelemetry
-  );
-
   return {
-    facade,
+    startRunUseCase: admissionUseCase,
+    startRunTelemetry: startRunSlaTelemetry,
     planner,
     planCompilePlanner,
     planValidator,

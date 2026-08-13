@@ -16,8 +16,8 @@ export type CanonicalErrorExpectation = {
   readonly headers?: Record<string, string>;
 };
 
-export function expectSystemBackpressureFacadeResult(
-  result: ReturnType<typeof httpErrorTranslation.startRun.facadeResult>,
+export function expectSystemBackpressureResult(
+  result: ReturnType<typeof httpErrorTranslation.startRun.result>,
   reason: string,
   retryAfterSeconds: number
 ): void {
