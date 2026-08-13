@@ -5,7 +5,7 @@ import { startRunRoute } from '../../../src/entrypoints/http/startRunRoute.js';
 
 export const VALID_PLAN_REF = {
   uri: 'https://plans.example.com/plan-1.json',
-  sha256: 'abc123',
+  sha256: 'a'.repeat(64),
   schemaVersion: '1.0.0',
   planId: 'plan-1',
   planVersion: '2.0',
