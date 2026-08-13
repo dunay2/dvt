@@ -51,7 +51,7 @@ export const START_RUN_FACADE_INPUT = {
   command: {
     planRef: parsePlanRef({
       uri: 'https://plans.example.com/plan.json',
-      sha256: 'deadbeef',
+      sha256: 'd'.repeat(64),
       schemaVersion: '1.0.0',
       planId: 'plan-1',
       planVersion: '2.0',

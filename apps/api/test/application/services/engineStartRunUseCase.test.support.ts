@@ -12,7 +12,7 @@ import { EnvironmentId, ProjectId, TenantId } from '../../../src/domain/auth/typ
 
 export const PLAN_REF = parsePlanRef({
   uri: 'https://plans.example.com/my-plan.json',
-  sha256: 'deadbeef',
+  sha256: 'd'.repeat(64),
   schemaVersion: '1.0.0',
   planId: 'plan-123',
   planVersion: '1.0',
