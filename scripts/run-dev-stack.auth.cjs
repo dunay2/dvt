@@ -175,7 +175,9 @@ async function startLocalProtectedRuntimeAuth(options = {}) {
   const scope = resolveDevWorkspaceScope(env);
   const assertedProjectIds = Array.isArray(options.assertedProjectIds)
     ? resolveAssertedProjectIds(scope, options.assertedProjectIds, false)
-    : resolveAssertedProjectIds(scope, options.additionalProjectIds);
+    : Array.isArray(options.additionalProjectIds)
+      ? resolveAssertedProjectIds(scope, options.additionalProjectIds)
+      : [];
   const tokenScopes = ['dvt:runtime', ...LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS].join(' ');
   const principalId = readNonEmptyEnv(env.DVT_DEV_PRINCIPAL_ID) ?? DEFAULT_DEV_PRINCIPAL_ID;
   const issuer = readNonEmptyEnv(env.DVT_DEV_PROTECTED_RUNTIME_ISSUER) ?? DEFAULT_DEV_ISSUER;
