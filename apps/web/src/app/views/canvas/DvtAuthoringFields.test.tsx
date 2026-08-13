@@ -136,7 +136,9 @@ describe('DvtAuthoringFields', () => {
     ) as HTMLInputElement | null;
 
     expect(container.textContent).toContain('DVT source');
-    expect(container.textContent).toContain('analytics.erp.orders');
+    expect(container.textContent).toContain('erp.orders');
+    expect(container.textContent).not.toContain('analytics.erp.orders');
+    expect(container.querySelector('input[name="dvt-source-database"]')).toBeNull();
     expect(schemaInput?.value).toBe('erp');
     expect(tableInput?.value).toBe('orders');
     expect(aliasInput?.value).toBe('warehouse_prod_analytics_erp');
@@ -172,7 +174,7 @@ describe('DvtAuthoringFields', () => {
     expect(draftJson()).toContain('"sql":"select id from public.orders"');
   });
 
-  it('renders connected source columns as selectable DVT transform inputs', () => {
+  it('does not present connected source columns as editable DVT transform inputs', () => {
     const source = buildImportedWarehouseSourceNode();
     const transform = buildDvtNode('dvt:sql_transform', {
       config: {
@@ -186,21 +188,8 @@ describe('DvtAuthoringFields', () => {
       edges: [buildEdge(source.id, transform.id)],
     });
 
-    const selectedColumn = container.querySelector(
-      `input[name="dvt-transform-column"][value="${source.id}.id"]`
-    ) as HTMLInputElement | null;
-
-    expect(container.textContent).toContain('Columns (Input)');
-    expect(container.textContent).toContain('src_warehouse_prod_analytics_erp_orders');
-    expect(container.textContent).toContain('id');
-    expect(container.textContent).toContain('number');
-    expect(selectedColumn?.checked).toBe(true);
-
-    act(() => {
-      fireEvent.click(selectedColumn!);
-    });
-
-    expect(draftJson()).toContain('"selectedColumns":[]');
+    expect(container.querySelector('input[name="dvt-transform-column"]')).toBeNull();
+    expect(draftJson()).not.toContain('selectedColumns');
   });
 
   it('renders sink destination posture and updates materialization controls', () => {
@@ -217,36 +206,29 @@ describe('DvtAuthoringFields', () => {
       })
     );
 
-    const databaseInput = container.querySelector(
-      'input[name="dvt-sink-database"]'
-    ) as HTMLInputElement | null;
     const materializationSelect = container.querySelector(
       'select[name="dvt-sink-materialization"]'
     ) as HTMLSelectElement | null;
     const writeModeSelect = container.querySelector(
       'select[name="dvt-sink-write-mode"]'
     ) as HTMLSelectElement | null;
-    const partitionStrategyInput = container.querySelector(
-      'input[name="dvt-sink-partition-strategy"]'
-    ) as HTMLInputElement | null;
-
     expect(container.textContent).toContain('DVT sink');
-    expect(container.textContent).toContain('analytics_prod.marts.orders_daily');
-    expect(databaseInput?.value).toBe('analytics_prod');
+    expect(container.textContent).toContain('marts.orders_daily');
+    expect(container.textContent).not.toContain('analytics_prod.marts.orders_daily');
+    expect(container.textContent).not.toContain('daily_by_order_date');
+    expect(container.querySelector('input[name="dvt-sink-database"]')).toBeNull();
+    expect(container.querySelector('input[name="dvt-sink-partition-strategy"]')).toBeNull();
     expect(materializationSelect?.value).toBe('view');
     expect(writeModeSelect?.value).toBe('append');
-    expect(partitionStrategyInput?.value).toBe('daily_by_order_date');
 
     act(() => {
-      fireEvent.input(databaseInput!, { target: { value: 'analytics_stage' } });
       fireEvent.change(materializationSelect!, { target: { value: 'table' } });
       fireEvent.change(writeModeSelect!, { target: { value: 'replace' } });
-      fireEvent.input(partitionStrategyInput!, { target: { value: 'none' } });
     });
 
-    expect(draftJson()).toContain('"database":"analytics_stage"');
+    expect(draftJson()).not.toContain('database');
     expect(draftJson()).toContain('"materialization":"table"');
     expect(draftJson()).toContain('"writeMode":"replace"');
-    expect(draftJson()).toContain('"partitionStrategy":"none"');
+    expect(draftJson()).not.toContain('partitionStrategy');
   });
 });
