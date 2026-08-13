@@ -153,6 +153,29 @@ describe('projectOnboardingRoutes', () => {
     expect(deps.createProjectUseCase.execute).not.toHaveBeenCalled();
   });
 
+  it('rejects request fields outside the shared create-project contract', async () => {
+    const app = Fastify({ logger: false });
+    const deps = createDeps();
+    registerProjectOnboardingRoutes(app, deps);
+    await app.ready();
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/projects',
+      headers: {
+        authorization: 'Bearer token-123',
+        'idempotency-key': 'create-analytics-1',
+      },
+      payload: { tenantId: 'tenant-a', name: 'Analytics', environmentId: 'prod' },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toEqual({
+      error: { type: 'bad_request', reason: 'invalid_create_project_request' },
+    });
+    expect(deps.createProjectUseCase.execute).not.toHaveBeenCalled();
+  });
+
   it('rejects reused idempotency keys with a conflicting payload', async () => {
     const app = Fastify({ logger: false });
     const deps = createDeps({
