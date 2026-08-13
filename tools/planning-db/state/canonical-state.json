@@ -11489,6 +11489,20 @@
         "updated_at": "2026-08-13T03:47:39.856+00:00"
       },
       {
+        "design_id": "GH-2166-MISSING-PLAN-REJECTION-20260813",
+        "work_item_id": "GH-2166",
+        "title": "Reject missing stored plans at the admission boundary",
+        "owner": "API / Plan Store",
+        "status": "implemented",
+        "rationale": "A syntactically valid reference to a missing or mismatched stored plan must return the existing plan_rejected product outcome instead of escaping as an HTTP 500.",
+        "fowler_signal": "boundary_drift",
+        "rail_ref": "CreateStoredPlan",
+        "approved_at": "2026-08-13T04:12:50.264+00:00",
+        "supersedes_id": null,
+        "created_at": "2026-08-13T03:58:21.995+00:00",
+        "updated_at": "2026-08-13T04:13:02.743+00:00"
+      },
+      {
         "design_id": "GH-2166-PLANREF-HTTP-COMPONENT-REMAP-20260813",
         "work_item_id": "GH-2166",
         "title": "Remap plan-ref HTTP boundary to the surviving parser",
@@ -67467,6 +67481,38 @@
         "created_at": "2026-08-13T03:44:12.646+00:00"
       },
       {
+        "design_id": "GH-2166-MISSING-PLAN-REJECTION-20260813",
+        "subject_kind": "command",
+        "subject_id": "CreateStoredPlan",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T03:58:21.995+00:00"
+      },
+      {
+        "design_id": "GH-2166-MISSING-PLAN-REJECTION-20260813",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T03:58:21.995+00:00"
+      },
+      {
+        "design_id": "GH-2166-MISSING-PLAN-REJECTION-20260813",
+        "subject_kind": "path",
+        "subject_id": "apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T03:58:21.995+00:00"
+      },
+      {
+        "design_id": "GH-2166-MISSING-PLAN-REJECTION-20260813",
+        "subject_kind": "path",
+        "subject_id": "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T03:58:21.995+00:00"
+      },
+      {
         "design_id": "GH-2166-PLANREF-HTTP-COMPONENT-REMAP-20260813",
         "subject_kind": "component",
         "subject_id": "SYS-PLANSTORE-API-PLANREF-HTTP",
@@ -92923,6 +92969,27 @@
         "created_at": "2026-08-11T10:32:25.887+00:00"
       },
       {
+        "operation_id": "4fc3f617-4457-4cde-994d-a348c4e9ea1d",
+        "idempotency_key": "architecture_design_transition:codex:GH-2166-MISSING-PLAN-REJECTION-20260813:a7f65c05d0f6b8b0",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2166-MISSING-PLAN-REJECTION-20260813",
+        "source_ref": "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+        "source_content_sha256": "ab941b6eda593b8d9e86594c730b001d7291fd659a14d2287275a5ed214a492c",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "API unit suite 188 files and 1013 tests, focused rejection tests, lint, and production plus test type checks pass.",
+          "designId": "GH-2166-MISSING-PLAN-REJECTION-20260813",
+          "toStatus": "implemented",
+          "sourceRef": "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "ab941b6eda593b8d9e86594c730b001d7291fd659a14d2287275a5ed214a492c"
+        },
+        "created_at": "2026-08-13T04:13:02.743+00:00"
+      },
+      {
         "operation_id": "51dc462a-a1f3-4e10-8a2f-0968b073281f",
         "idempotency_key": "gh-2167-validation-test-sys-api-http-runtime-route-registry-2-v1",
         "operation_type": "architecture_test_record",
@@ -95394,6 +95461,58 @@
           "sourceContentSha256": "cdaaf7fc7b2e5d2b77ba032ae10d427b2d1c38d79c48c59d276de680012b70a9"
         },
         "created_at": "2026-08-11T10:32:24.398+00:00"
+      },
+      {
+        "operation_id": "774e77ec-acba-4880-92e9-5d1d9ab64bbb",
+        "idempotency_key": "gh-2166-missing-plan-rejection-design-v1",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "GH-2166-MISSING-PLAN-REJECTION-20260813",
+        "source_ref": "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+        "source_content_sha256": "eda16f8337c34aa024a5526d64616f1a2f81ef56dbb2b8b6cea5371a027316a0",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "API / Plan Store",
+          "title": "Reject missing stored plans at the admission boundary",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "CreateStoredPlan",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts",
+              "subjectKind": "path"
+            }
+          ],
+          "status": "review",
+          "railRef": "CreateStoredPlan",
+          "designId": "GH-2166-MISSING-PLAN-REJECTION-20260813",
+          "rationale": "A syntactically valid reference to a missing or mismatched stored plan must return the existing plan_rejected product outcome instead of escaping as an HTTP 500.",
+          "sourceRef": "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+          "workItemId": "GH-2166",
+          "fowlerSignal": "boundary_drift",
+          "supersedesId": null,
+          "sourceContentSha256": "eda16f8337c34aa024a5526d64616f1a2f81ef56dbb2b8b6cea5371a027316a0"
+        },
+        "created_at": "2026-08-13T03:58:21.995+00:00"
       },
       {
         "operation_id": "7766ec19-5313-4e14-bc79-86d29b0eeef8",
@@ -98345,6 +98464,27 @@
         "created_at": "2026-08-11T11:55:50.807+00:00"
       },
       {
+        "operation_id": "a8c070e6-4677-4973-98ab-1c8103ed0a85",
+        "idempotency_key": "architecture_design_transition:codex:GH-2166-MISSING-PLAN-REJECTION-20260813:5c88a37beee9a8bf",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2166-MISSING-PLAN-REJECTION-20260813",
+        "source_ref": "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+        "source_content_sha256": "ab941b6eda593b8d9e86594c730b001d7291fd659a14d2287275a5ed214a492c",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Review confirmed missing and mismatched stored plan records must fail closed at the admission boundary.",
+          "designId": "GH-2166-MISSING-PLAN-REJECTION-20260813",
+          "toStatus": "approved",
+          "sourceRef": "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+          "fromStatus": "review",
+          "sourceContentSha256": "ab941b6eda593b8d9e86594c730b001d7291fd659a14d2287275a5ed214a492c"
+        },
+        "created_at": "2026-08-13T04:12:50.264+00:00"
+      },
+      {
         "operation_id": "a9359dbb-e5e9-4bdc-909d-4df82520390d",
         "idempotency_key": "create-api-h2-4-consolidated-v5",
         "operation_type": "architecture_design_create",
@@ -98995,6 +99135,27 @@
           "sourceContentSha256": "9480cc084b84772de27846cd45ac898473cce80162541d945a99c4f84d7bd07d"
         },
         "created_at": "2026-08-11T13:02:35.757+00:00"
+      },
+      {
+        "operation_id": "aded1087-74d0-4397-bc87-39b22b064bb3",
+        "idempotency_key": "architecture_design_transition:codex:GH-2166-MISSING-PLAN-REJECTION-20260813:22888eac66c44b1d",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2166-MISSING-PLAN-REJECTION-20260813",
+        "source_ref": "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+        "source_content_sha256": "ab941b6eda593b8d9e86594c730b001d7291fd659a14d2287275a5ed214a492c",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Focused red-green coverage proves the bounded admission correction before canonical rail refresh.",
+          "designId": "GH-2166-MISSING-PLAN-REJECTION-20260813",
+          "toStatus": "implementing",
+          "sourceRef": "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+          "fromStatus": "approved",
+          "sourceContentSha256": "ab941b6eda593b8d9e86594c730b001d7291fd659a14d2287275a5ed214a492c"
+        },
+        "created_at": "2026-08-13T04:12:51.503+00:00"
       },
       {
         "operation_id": "adff5850-b408-4a79-9181-ec6b8cf9c4c5",
@@ -131500,7 +131661,8 @@
         "apps/api/src/application/services/storedPlanScope.ts#createScopedPlanRef",
         "apps/api/src/application/services/storedPlanScope.ts#requireScopeIdentifier",
         "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#StoredPlanAdmissionCoordinator",
-        "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#StoredPlanAdmissionResult"
+        "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#StoredPlanAdmissionResult",
+        "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#StoredPlanCreationAdmissionResult"
       ],
       "implementationRefs": [
         "apps/api/src/application/services/storedPlanScope.ts#IncompletePlanStoreScope",
@@ -131508,7 +131670,8 @@
         "apps/api/src/application/services/storedPlanScope.ts#createScopedPlanRef",
         "apps/api/src/application/services/storedPlanScope.ts#requireScopeIdentifier",
         "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#StoredPlanAdmissionCoordinator",
-        "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#StoredPlanAdmissionResult"
+        "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#StoredPlanAdmissionResult",
+        "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#StoredPlanCreationAdmissionResult"
       ],
       "documentationRefs": ["https://github.com/dunay2/dvt/issues/2166"],
       "governingSources": [
@@ -131517,7 +131680,9 @@
       ],
       "allowedImplementationSurfaces": [
         "apps/api/src/application/services/storedPlanScope.ts",
-        "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts"
+        "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+        "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts",
+        "apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts"
       ],
       "architectureGuards": ["pnpm arch:deps"],
       "completionGate": [
@@ -131525,8 +131690,8 @@
         "pnpm --filter dvt-api typecheck",
         "pnpm verify:prepush"
       ],
-      "sourcePath": "apps/api/src/application/services/storedPlanScope.ts",
-      "sourceContentSha256": "83f1b5be6b76a084129efefd10f6c32054c66a4a994cb9abd2270b39b1ee1390",
+      "sourcePath": "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+      "sourceContentSha256": "ab941b6eda593b8d9e86594c730b001d7291fd659a14d2287275a5ed214a492c",
       "rawRail": {
         "name": "CreateStoredPlan",
         "type": "command",
@@ -131534,7 +131699,10 @@
         "dddOwner": "Stored plan admission coordinator",
         "negativeTests": [
           "blank project scope is rejected",
-          "missing environment scope is rejected"
+          "missing environment scope is rejected",
+          "missing plan records return plan_rejected",
+          "plan record metadata mismatches return plan_rejected",
+          "missing validation records fail closed"
         ],
         "adapterSurface": "PostgresPlanStore",
         "applicationPort": "IStoredPlanArtifactWriter.storePlanArtifact",
@@ -131549,11 +131717,13 @@
             "dddOwner": "Stored plan admission coordinator",
             "unitTests": [
               "apps/api/test/application/services/storedPlanScope.test.ts",
-              "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts"
+              "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts",
+              "apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts"
             ],
             "fowlerSignals": [
               "Divergent scope defaults converged behind one assertion policy.",
-              "Divergent scope and store-admission algorithms converge behind one coordinator."
+              "Divergent scope and store-admission algorithms converge behind one coordinator.",
+              "Missing record exceptions converge on the existing plan_rejected product outcome."
             ],
             "cypressCoverage": "N/A - API application authority with no new UI behavior",
             "architectureGuard": "pnpm arch:deps"
@@ -131565,11 +131735,13 @@
             "dddOwner": "Stored plan admission coordinator",
             "unitTests": [
               "apps/api/test/application/services/storedPlanScope.test.ts",
-              "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts"
+              "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts",
+              "apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts"
             ],
             "fowlerSignals": [
               "Divergent scope defaults converged behind one assertion policy.",
-              "Divergent scope and store-admission algorithms converge behind one coordinator."
+              "Divergent scope and store-admission algorithms converge behind one coordinator.",
+              "Missing record exceptions converge on the existing plan_rejected product outcome."
             ],
             "cypressCoverage": "N/A - API application authority with no new UI behavior",
             "architectureGuard": "pnpm arch:deps"
@@ -131581,11 +131753,13 @@
             "dddOwner": "Stored plan admission coordinator",
             "unitTests": [
               "apps/api/test/application/services/storedPlanScope.test.ts",
-              "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts"
+              "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts",
+              "apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts"
             ],
             "fowlerSignals": [
               "Divergent scope defaults converged behind one assertion policy.",
-              "Divergent scope and store-admission algorithms converge behind one coordinator."
+              "Divergent scope and store-admission algorithms converge behind one coordinator.",
+              "Missing record exceptions converge on the existing plan_rejected product outcome."
             ],
             "cypressCoverage": "N/A - API application authority with no new UI behavior",
             "architectureGuard": "pnpm arch:deps"
@@ -131597,11 +131771,13 @@
             "dddOwner": "Stored plan admission coordinator",
             "unitTests": [
               "apps/api/test/application/services/storedPlanScope.test.ts",
-              "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts"
+              "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts",
+              "apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts"
             ],
             "fowlerSignals": [
               "Divergent scope defaults converged behind one assertion policy.",
-              "Divergent scope and store-admission algorithms converge behind one coordinator."
+              "Divergent scope and store-admission algorithms converge behind one coordinator.",
+              "Missing record exceptions converge on the existing plan_rejected product outcome."
             ],
             "cypressCoverage": "N/A - API application authority with no new UI behavior",
             "architectureGuard": "pnpm arch:deps"
@@ -131613,10 +131789,13 @@
             "dddOwner": "Stored plan admission coordinator",
             "unitTests": [
               "apps/api/test/application/services/storedPlanScope.test.ts",
-              "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts"
+              "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts",
+              "apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts"
             ],
             "fowlerSignals": [
-              "Divergent scope and store-admission algorithms converge behind one coordinator."
+              "Divergent scope and store-admission algorithms converge behind one coordinator.",
+              "Divergent scope defaults converged behind one assertion policy.",
+              "Missing record exceptions converge on the existing plan_rejected product outcome."
             ],
             "cypressCoverage": "N/A - API application authority with no new UI behavior",
             "architectureGuard": "pnpm arch:deps"
@@ -131628,10 +131807,31 @@
             "dddOwner": "Stored plan admission coordinator",
             "unitTests": [
               "apps/api/test/application/services/storedPlanScope.test.ts",
-              "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts"
+              "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts",
+              "apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts"
             ],
             "fowlerSignals": [
-              "Divergent scope and store-admission algorithms converge behind one coordinator."
+              "Divergent scope and store-admission algorithms converge behind one coordinator.",
+              "Divergent scope defaults converged behind one assertion policy.",
+              "Missing record exceptions converge on the existing plan_rejected product outcome."
+            ],
+            "cypressCoverage": "N/A - API application authority with no new UI behavior",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "StoredPlanCreationAdmissionResult",
+            "path": "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+            "cqRails": ["CreateStoredPlan"],
+            "dddOwner": "Stored plan admission coordinator",
+            "unitTests": [
+              "apps/api/test/application/services/storedPlanScope.test.ts",
+              "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts",
+              "apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts"
+            ],
+            "fowlerSignals": [
+              "Divergent scope defaults converged behind one assertion policy.",
+              "Divergent scope and store-admission algorithms converge behind one coordinator.",
+              "Missing record exceptions converge on the existing plan_rejected product outcome."
             ],
             "cypressCoverage": "N/A - API application authority with no new UI behavior",
             "architectureGuard": "pnpm arch:deps"
@@ -131646,7 +131846,8 @@
         "domainObjects": ["ScopedPlanRef", "PlanRecord"],
         "fowlerSignals": [
           "Divergent scope defaults converged behind one assertion policy.",
-          "Divergent scope and store-admission algorithms converge behind one coordinator."
+          "Divergent scope and store-admission algorithms converge behind one coordinator.",
+          "Missing record exceptions converge on the existing plan_rejected product outcome."
         ],
         "completionGate": [
           "pnpm --filter dvt-api test:unit",
@@ -131656,13 +131857,15 @@
         "redGreenCycles": [
           {
             "id": "createstoredplan-record",
-            "redTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/StoredPlanAdmissionCoordinator.test.ts",
-            "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/StoredPlanAdmissionCoordinator.test.ts",
+            "redTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/StoredPlanAdmissionCoordinator.test.ts test/application/services/PlannerBackedStartRunUseCase.test.ts",
+            "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/StoredPlanAdmissionCoordinator.test.ts test/application/services/PlannerBackedStartRunUseCase.test.ts",
             "patchSurfaces": [
               "apps/api/src/application/services/storedPlanScope.ts",
-              "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts"
+              "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+              "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts",
+              "apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts"
             ],
-            "expectedFailure": "Store and lifecycle transitions could be performed outside the admitted plan receipt."
+            "expectedFailure": "Missing or mismatched stored plan records escaped as an HTTP 500 instead of plan_rejected."
           }
         ],
         "componentGuides": [
@@ -131680,7 +131883,10 @@
             "dddOwner": "Stored plan admission coordinator",
             "negativeTests": [
               "blank project scope is rejected",
-              "missing environment scope is rejected"
+              "missing environment scope is rejected",
+              "missing plan records return plan_rejected",
+              "plan record metadata mismatches return plan_rejected",
+              "missing validation records fail closed"
             ],
             "adapterSurface": "PostgresPlanStore",
             "applicationPort": "IStoredPlanArtifactWriter.storePlanArtifact",
@@ -131693,14 +131899,16 @@
         "noHumanDecisionsRemaining": true,
         "allowedImplementationSurfaces": [
           "apps/api/src/application/services/storedPlanScope.ts",
-          "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts"
+          "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+          "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts",
+          "apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts"
         ],
         "forbiddenImplementationSurfaces": [
           "packages/@dvt/contracts/**",
           "packages/@dvt/engine/**"
         ]
       },
-      "revision": 3,
+      "revision": 4,
       "createdBy": "codex",
       "createdAt": "2026-08-13T01:27:19.674Z"
     },
@@ -178100,6 +178308,97 @@
         "forbiddenImplementationSurfaces": ["packages/@dvt/adapter-temporal/**"]
       },
       "createdAt": "2026-08-13T03:47:14.927Z"
+    },
+    {
+      "operationId": "65715996-4c74-4f7a-a88f-f201d7dc1a46",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:GH-2166-STORED-PLAN-AUTHORITY:command:createstoredplan:3:af8a05f94fad64dc",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#GH-2166-STORED-PLAN-AUTHORITY#command#createstoredplan",
+      "sourcePath": "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+      "sourceContentSha256": "ab941b6eda593b8d9e86594c730b001d7291fd659a14d2287275a5ed214a492c",
+      "expectedRevision": 3,
+      "previousRevision": 3,
+      "resultingRevision": 4,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/StoredPlanAdmissionCoordinator.test.ts test/application/services/PlannerBackedStartRunUseCase.test.ts",
+        "dddOwner": "Stored plan admission coordinator",
+        "railName": "CreateStoredPlan",
+        "railType": "command",
+        "featureId": "GH-2166-STORED-PLAN-AUTHORITY",
+        "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/StoredPlanAdmissionCoordinator.test.ts test/application/services/PlannerBackedStartRunUseCase.test.ts",
+        "sourceRef": "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+        "unitTests": [
+          "apps/api/test/application/services/storedPlanScope.test.ts",
+          "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts",
+          "apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2166"],
+        "cypressFlows": [
+          "N/A - API application authority with no new UI behavior"
+        ],
+        "domainObjects": ["ScopedPlanRef", "PlanRecord"],
+        "fowlerSignals": [
+          "Divergent scope defaults converged behind one assertion policy.",
+          "Divergent scope and store-admission algorithms converge behind one coordinator.",
+          "Missing record exceptions converge on the existing plan_rejected product outcome."
+        ],
+        "negativeTests": [
+          "blank project scope is rejected",
+          "missing environment scope is rejected",
+          "missing plan records return plan_rejected",
+          "plan record metadata mismatches return plan_rejected",
+          "missing validation records fail closed"
+        ],
+        "patchSurfaces": [
+          "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+          "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts",
+          "apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts"
+        ],
+        "adapterSurface": "PostgresPlanStore",
+        "completionGate": [
+          "pnpm --filter dvt-api test:unit",
+          "pnpm --filter dvt-api typecheck",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "IStoredPlanArtifactWriter.storePlanArtifact",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Missing or mismatched stored plan records escaped as an HTTP 500 instead of plan_rejected.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": ["https://github.com/dunay2/dvt/issues/2166"],
+        "architectureGuards": ["pnpm arch:deps"],
+        "authorizationScope": "tenant/project/environment",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2166",
+        "implementationRefs": [
+          "apps/api/src/application/services/storedPlanScope.ts#IncompletePlanStoreScope",
+          "apps/api/src/application/services/storedPlanScope.ts#StoredPlanScopeInput",
+          "apps/api/src/application/services/storedPlanScope.ts#createScopedPlanRef",
+          "apps/api/src/application/services/storedPlanScope.ts#requireScopeIdentifier",
+          "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#StoredPlanAdmissionCoordinator",
+          "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#StoredPlanAdmissionResult",
+          "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#StoredPlanCreationAdmissionResult"
+        ],
+        "normalizedRailName": "createstoredplan",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "ab941b6eda593b8d9e86594c730b001d7291fd659a14d2287275a5ed214a492c",
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/services/storedPlanScope.ts",
+          "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+          "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts",
+          "apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "packages/@dvt/contracts/**",
+          "packages/@dvt/engine/**"
+        ]
+      },
+      "createdAt": "2026-08-13T04:12:52.790Z"
     }
   ],
   "governanceComponentDefinitions": [
