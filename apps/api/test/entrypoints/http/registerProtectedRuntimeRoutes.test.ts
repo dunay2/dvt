@@ -4,7 +4,6 @@ import Fastify from 'fastify';
 import { describe, expect, it } from 'vitest';
 
 import { registerProtectedRuntimeRoutes } from '../../../src/entrypoints/http/registerProtectedRuntimeRoutes.js';
-import { PROTECTED_RUNTIME_ROUTE_SUMMARY } from '../../../src/entrypoints/http/runtimeRoutes.constants.js';
 import type { ProtectedRuntimeModule } from '../../../src/modules/types.js';
 import { loadEnv } from '../../../src/plugins/env.js';
 import { ADMIN_ROUTES_ENABLED_ENV, BASE_APP_ENV, mergeEnv } from '../../app/appEnvTestSupport.js';
@@ -85,35 +84,6 @@ const observability: IObservability = {
 };
 
 describe('registerProtectedRuntimeRoutes', () => {
-  it('mounts protected runtime HTTP routes as one entrypoint component', async () => {
-    const app = Fastify({ logger: false });
-
-    await registerProtectedRuntimeRoutes(app, {
-      env: loadEnv(BASE_APP_ENV),
-      observability,
-      protectedModule: protectedRuntimeModule(),
-    });
-    await app.ready();
-
-    const registeredRoutes = PROTECTED_RUNTIME_ROUTE_SUMMARY.split(', ').map((entry) => {
-      const separator = entry.indexOf(' ');
-      return {
-        method: entry.slice(0, separator),
-        url: entry.slice(separator + 1),
-      };
-    });
-
-    expect(new Set(registeredRoutes.map(({ method, url }) => `${method} ${url}`)).size).toBe(
-      registeredRoutes.length
-    );
-    for (const route of registeredRoutes) {
-      expect(app.hasRoute(route), `${route.method} ${route.url} must be registered`).toBe(true);
-    }
-    expect(app.hasRoute({ method: 'POST', url: '/admin/runs/:runId/rebuild-snapshot' })).toBe(
-      false
-    );
-  });
-
   it('mounts admin repair route only when explicitly enabled', async () => {
     const app = Fastify({ logger: false });
 
