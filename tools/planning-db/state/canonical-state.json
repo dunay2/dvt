@@ -11601,6 +11601,20 @@
         "updated_at": "2026-08-13T03:47:43.465+00:00"
       },
       {
+        "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+        "work_item_id": "GH-2168",
+        "title": "Collapse plan lifecycle rail to canonical endpoints",
+        "owner": "API / Planner / Contracts",
+        "status": "review",
+        "rationale": "Retain the three distinct public plan intents while removing route-only wrappers, duplicated validation and translation, unused policy variants, misplaced session/start registration and topology-only CI. Canonical contracts own request shapes, API owns transport errors, and GH-2166 owns persisted-plan admission and materialization.",
+        "fowler_signal": "feature_envy",
+        "rail_ref": "CompilePlan;PreviewPlan;ImportPlan",
+        "approved_at": null,
+        "supersedes_id": null,
+        "created_at": "2026-08-13T06:15:43.826+00:00",
+        "updated_at": "2026-08-13T06:15:43.826+00:00"
+      },
+      {
         "design_id": "PLANNING-DB-API-APPLICATION-SERVICE-TEST-LEAF-COMPONENTS-20260619",
         "work_item_id": "PLANNING-DB-COMPONENT-INTEGRITY-VOCABULARY-RAIL-20260612",
         "title": "API application service test evidence leaf mapping",
@@ -67681,6 +67695,126 @@
         "created_at": "2026-08-13T03:46:51.174+00:00"
       },
       {
+        "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+        "subject_kind": "command",
+        "subject_id": "CompilePlan",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-13T06:15:43.826+00:00"
+      },
+      {
+        "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+        "subject_kind": "command",
+        "subject_id": "ImportPlan",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-13T06:15:43.826+00:00"
+      },
+      {
+        "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+        "subject_kind": "command",
+        "subject_id": "PreviewPlan",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-13T06:15:43.826+00:00"
+      },
+      {
+        "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-APP-PLAN-COMMANDS",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T06:15:43.826+00:00"
+      },
+      {
+        "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-HTTP-PLAN-COMMANDS",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T06:15:43.826+00:00"
+      },
+      {
+        "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/application/services/**",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T06:15:43.826+00:00"
+      },
+      {
+        "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/application/services/planRoutePolicyCatalog.ts",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-13T06:15:43.826+00:00"
+      },
+      {
+        "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/entrypoints/http/**",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T06:15:43.826+00:00"
+      },
+      {
+        "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/entrypoints/http/compilePlanRouteRequestResolver.ts",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-13T06:15:43.826+00:00"
+      },
+      {
+        "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/entrypoints/http/importPlanRouteRequestResolver.ts",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-13T06:15:43.826+00:00"
+      },
+      {
+        "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/entrypoints/http/planRouteResponseTranslation.ts",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-13T06:15:43.826+00:00"
+      },
+      {
+        "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/entrypoints/http/previewPlanRouteRequestResolver.ts",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-13T06:15:43.826+00:00"
+      },
+      {
+        "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+        "subject_kind": "path",
+        "subject_id": "apps/api/test/application/services/planRoutePolicyCatalog.test.ts",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-13T06:15:43.826+00:00"
+      },
+      {
+        "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+        "subject_kind": "path",
+        "subject_id": "apps/api/test/entrypoints/http/**",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T06:15:43.826+00:00"
+      },
+      {
+        "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+        "subject_kind": "path",
+        "subject_id": "apps/api/test/entrypoints/http/planRouteResponseTranslation.test.ts",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-13T06:15:43.826+00:00"
+      },
+      {
         "design_id": "PLANNING-DB-API-APPLICATION-SERVICE-TEST-LEAF-COMPONENTS-20260619",
         "subject_kind": "component",
         "subject_id": "SYS-API-APPLICATION-PORTS",
@@ -91706,6 +91840,124 @@
           "sourceContentSha256": "40394bf597d05b78bd90cb96948d691d711afa9f1aa38c721f54a830ce8b0ca0"
         },
         "created_at": "2026-08-11T08:57:39.952+00:00"
+      },
+      {
+        "operation_id": "343bb16b-c591-4a2a-943f-578da2a0aecb",
+        "idempotency_key": "gh-2168-plan-lifecycle-hardcut-20260813",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2168",
+        "source_content_sha256": "03006c784da9fc5d11154af0e890640adb1b5121bfe424af0e2183236e03acd7",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "API / Planner / Contracts",
+          "title": "Collapse plan lifecycle rail to canonical endpoints",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-API-HTTP-PLAN-COMMANDS",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-API-APP-PLAN-COMMANDS",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "apps/api/src/entrypoints/http/compilePlanRouteRequestResolver.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "apps/api/src/entrypoints/http/previewPlanRouteRequestResolver.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "apps/api/src/entrypoints/http/importPlanRouteRequestResolver.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "apps/api/src/entrypoints/http/planRouteResponseTranslation.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "apps/api/src/application/services/planRoutePolicyCatalog.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "apps/api/test/application/services/planRoutePolicyCatalog.test.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "apps/api/test/entrypoints/http/planRouteResponseTranslation.test.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/src/entrypoints/http/**",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/src/application/services/**",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/test/entrypoints/http/**",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "CompilePlan",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "PreviewPlan",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "ImportPlan",
+              "subjectKind": "command"
+            }
+          ],
+          "status": "review",
+          "railRef": "CompilePlan;PreviewPlan;ImportPlan",
+          "designId": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+          "rationale": "Retain the three distinct public plan intents while removing route-only wrappers, duplicated validation and translation, unused policy variants, misplaced session/start registration and topology-only CI. Canonical contracts own request shapes, API owns transport errors, and GH-2166 owns persisted-plan admission and materialization.",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2168",
+          "workItemId": "GH-2168",
+          "fowlerSignal": "feature_envy",
+          "supersedesId": null,
+          "sourceContentSha256": "03006c784da9fc5d11154af0e890640adb1b5121bfe424af0e2183236e03acd7"
+        },
+        "created_at": "2026-08-13T06:15:43.826+00:00"
       },
       {
         "operation_id": "3453ba02-816d-496b-a09e-d0a190d73590",
