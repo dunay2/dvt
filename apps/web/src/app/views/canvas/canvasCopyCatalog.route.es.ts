@@ -75,9 +75,6 @@ export const canvasViewRouteCopyEs = {
   draftCorruptPayloadTitle: 'El payload del draft persistido esta corrupto',
   draftCorruptPayloadMessage:
     'Canvas no puede cargar el draft persistido porque el payload almacenado esta corrupto y falla el contrato gobernado.',
-  draftMigrationFailedTitle: 'La migracion del draft persistido ha fallado',
-  draftMigrationFailedMessage:
-    'Canvas no puede cargar el draft persistido porque ha fallado su migracion gobernada al formato activo.',
   staleDraftTitle: 'Version de draft obsoleta',
   staleDraftMessage:
     'Se guardo un draft mas reciente en otro sitio. Recarga el draft mas reciente antes de continuar editando.',

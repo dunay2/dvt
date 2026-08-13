@@ -1,6 +1,7 @@
 /**
  * Owned concern: adapt authenticated project onboarding rails to HTTP.
  */
+import { CreateProjectRequestSchema } from '@dvt/contracts';
 import type { FastifyInstance } from 'fastify';
 
 import type { IAuthenticator } from '../../application/ports/auth.js';
@@ -15,11 +16,6 @@ type ProjectOnboardingRouteDeps = {
   readonly listProjectsUseCase: Pick<ListProjectsUseCase, 'execute'>;
   readonly createProjectUseCase: Pick<CreateProjectUseCase, 'execute'>;
   readonly rateLimit: { readonly max: number; readonly timeWindow: number };
-};
-
-type CreateProjectBody = {
-  readonly tenantId?: unknown;
-  readonly name?: unknown;
 };
 
 export function registerProjectOnboardingRoutes(
@@ -37,7 +33,7 @@ export function registerProjectOnboardingRoutes(
     }
   );
 
-  app.post<{ Body: CreateProjectBody }>(
+  app.post<{ Body: unknown }>(
     RUNTIME_ROUTE_PATH.projects,
     { config: { rateLimit: deps.rateLimit } },
     async (request, reply) => {
@@ -60,13 +56,13 @@ export function registerProjectOnboardingRoutes(
         case 'created':
           reply.code(201).send({
             project: outcome.project,
-            effectiveWorkspace: outcome.effectiveWorkspace,
+            defaultWorkspace: outcome.defaultWorkspace,
           });
           return;
         case 'replayed':
           reply.code(200).send({
             project: outcome.project,
-            effectiveWorkspace: outcome.effectiveWorkspace,
+            defaultWorkspace: outcome.defaultWorkspace,
           });
           return;
         case 'tenant_not_granted':
@@ -93,7 +89,7 @@ export function registerProjectOnboardingRoutes(
 }
 
 function parseCreateProjectRequest(
-  body: CreateProjectBody | undefined,
+  body: unknown,
   idempotencyHeader: string | string[] | undefined
 ):
   | {
@@ -112,19 +108,16 @@ function parseCreateProjectRequest(
     return { ok: false, reason: 'missing_idempotency_key' };
   }
 
-  if (typeof body?.tenantId !== 'string' || body.tenantId.trim().length === 0) {
-    return { ok: false, reason: 'invalid_tenant_id' };
-  }
-
-  if (typeof body?.name !== 'string' || body.name.trim().length === 0) {
-    return { ok: false, reason: 'invalid_project_name' };
+  const parsedBody = CreateProjectRequestSchema.safeParse(body);
+  if (!parsedBody.success) {
+    return { ok: false, reason: 'invalid_create_project_request' };
   }
 
   return {
     ok: true,
     command: {
-      tenantId: body.tenantId.trim(),
-      name: body.name.trim(),
+      tenantId: parsedBody.data.tenantId,
+      name: parsedBody.data.name,
       idempotencyKey: idempotencyKey.trim(),
     },
   };

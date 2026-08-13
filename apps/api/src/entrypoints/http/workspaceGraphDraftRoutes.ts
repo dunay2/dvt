@@ -1,11 +1,13 @@
 import {
   WorkspaceGraphDraftSaveRequestSchema,
   type WorkspaceGraphDraftSaveRequest,
+  type WorkspaceGraphDraftSaveResponse,
   type WorkspaceGraphDraftCapabilityMode,
 } from '@dvt/contracts';
 import type { IObservability, ISpan } from '@dvt/observability';
 import type { FastifyInstance } from 'fastify';
 
+import type { IAuthenticator } from '../../application/ports/auth.js';
 import {
   type IWorkspaceGraphDraftTelemetry,
   type WorkspaceGraphDraftRequestedScope,
@@ -15,7 +17,7 @@ import type { GetWorkspaceGraphDraftUseCase } from '../../application/services/g
 import type { SaveWorkspaceGraphDraftUseCase } from '../../application/services/saveWorkspaceGraphDraftUseCase.js';
 import { EnvironmentId, ProjectId, TenantId } from '../../domain/auth/types.js';
 
-import { extractBearerToken } from './extractBearerToken.js';
+import { authenticateHttpBearerRequest } from './httpBearerAuthentication.js';
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 import { httpErrorTranslation } from './httpErrorTranslation.js';
 import {
@@ -29,6 +31,7 @@ import {
 export function registerWorkspaceGraphDraftRoutes(
   app: FastifyInstance,
   deps: {
+    readonly authenticator: IAuthenticator;
     readonly capabilityService: AuthorizeWorkspaceGraphDraftCapabilityService;
     readonly getUseCase: GetWorkspaceGraphDraftUseCase;
     readonly saveUseCase: SaveWorkspaceGraphDraftUseCase;
@@ -48,6 +51,8 @@ export function registerWorkspaceGraphDraftRoutes(
     { config: { rateLimit: deps.rateLimit } },
     async (request, reply) => {
       const startedAt = Date.now();
+      const principal = await authenticateHttpBearerRequest(request, reply, deps.authenticator);
+      if (principal === null) return;
       const parsed = parseRequestedScope(request.query);
       if (!parsed.ok) {
         httpErrorTranslation.respond(reply, httpErrorTranslation.parse.issue(parsed.issue));
@@ -63,7 +68,7 @@ export function registerWorkspaceGraphDraftRoutes(
 
       try {
         const decision = await deps.capabilityService.authorize({
-          token: extractBearerToken(request.headers.authorization),
+          principal,
           requestId: request.id,
           requestedScope: parsed.value,
         });
@@ -75,19 +80,6 @@ export function registerWorkspaceGraphDraftRoutes(
         );
 
         const result = await deps.getUseCase.execute(decision);
-        if (result.kind === 'not_found') {
-          deps.telemetry.recordRead('not_found', decision.capability.mode, Date.now() - startedAt);
-          span.setAttributes({ outcome: 'not_found' });
-          httpErrorTranslation.respond(
-            reply,
-            httpErrorTranslation.workspaceGraphDraft.read.notFound({
-              correlationId: decision.correlationId,
-              decisionId: decision.decisionId,
-            })
-          );
-          return;
-        }
-
         deps.telemetry.recordRead(
           result.response.kind,
           decision.capability.mode,
@@ -116,6 +108,8 @@ export function registerWorkspaceGraphDraftRoutes(
     { config: { rateLimit: deps.rateLimit } },
     async (request, reply) => {
       const startedAt = Date.now();
+      const principal = await authenticateHttpBearerRequest(request, reply, deps.authenticator);
+      if (principal === null) return;
       const parsed = parseSaveRequest(request.body);
       if (!parsed.ok) {
         httpErrorTranslation.respond(reply, httpErrorTranslation.parse.issue(parsed.issue));
@@ -131,7 +125,7 @@ export function registerWorkspaceGraphDraftRoutes(
 
       try {
         const decision = await deps.capabilityService.authorize({
-          token: extractBearerToken(request.headers.authorization),
+          principal,
           requestId: request.id,
           requestedScope: parsed.value.requestedScope,
         });
@@ -146,49 +140,6 @@ export function registerWorkspaceGraphDraftRoutes(
           request: parsed.value.request,
           decision,
         });
-
-        if (result.kind === 'authoring_authority_conflict') {
-          deps.telemetry.recordWrite('conflict', decision.capability.mode, Date.now() - startedAt);
-          span.setAttributes({ outcome: result.kind, httpStatus: 409 });
-          httpErrorTranslation.respond(
-            reply,
-            httpErrorTranslation.workspaceGraphDraft.write.authoringAuthorityConflict(
-              {
-                correlationId: decision.correlationId,
-                decisionId: decision.decisionId,
-              },
-              result.canvasIds
-            )
-          );
-          return;
-        }
-
-        if (result.kind === 'unsupported_schema_version') {
-          deps.telemetry.recordWrite('denied', decision.capability.mode, Date.now() - startedAt);
-          span.setAttributes({ outcome: 'unsupported_schema_version', httpStatus: 422 });
-          httpErrorTranslation.respond(
-            reply,
-            httpErrorTranslation.workspaceGraphDraft.write.unsupportedSchemaVersion()
-          );
-          return;
-        }
-
-        if (result.kind === 'idempotency_mismatch') {
-          deps.telemetry.recordWrite(
-            'idempotency_mismatch',
-            decision.capability.mode,
-            Date.now() - startedAt
-          );
-          span.setAttributes({ outcome: 'idempotency_mismatch', httpStatus: 409 });
-          httpErrorTranslation.respond(
-            reply,
-            httpErrorTranslation.workspaceGraphDraft.write.idempotencyMismatch({
-              correlationId: decision.correlationId,
-              decisionId: decision.decisionId,
-            })
-          );
-          return;
-        }
 
         deps.telemetry.recordWrite(
           writeTelemetryOutcome(result.response.kind),
@@ -360,7 +311,17 @@ function attachDecisionAttributes(
 }
 
 function writeTelemetryOutcome(
-  kind: 'saved' | 'conflict' | 'denied'
-): 'saved' | 'conflict' | 'denied' {
-  return kind;
+  kind: WorkspaceGraphDraftSaveResponse['kind']
+): 'saved' | 'conflict' | 'denied' | 'idempotency_mismatch' {
+  switch (kind) {
+    case 'saved':
+    case 'conflict':
+    case 'denied':
+    case 'idempotency_mismatch':
+      return kind;
+    case 'authoring_authority_conflict':
+      return 'conflict';
+    case 'unsupported_schema_version':
+      return 'denied';
+  }
 }

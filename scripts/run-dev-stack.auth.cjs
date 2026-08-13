@@ -18,6 +18,7 @@ const DEFAULT_DEV_BEARER_TOKEN_TTL_SECONDS = 24 * 60 * 60;
 const LOCAL_TOKEN_REFRESH_PATH = '/__dvt/local-protected-runtime/token';
 
 const LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS = Object.freeze([
+  'project:create',
   'run:start',
   'run:list',
   'run:view',
@@ -71,10 +72,14 @@ function resolveDevWorkspaceScope(env = process.env) {
   };
 }
 
-function resolveAssertedProjectIds(workspaceScope, additionalProjectIds = []) {
+function resolveAssertedProjectIds(
+  workspaceScope,
+  additionalProjectIds = [],
+  includeWorkspaceProject = true
+) {
   return Array.from(
     new Set(
-      [workspaceScope.projectId, ...additionalProjectIds]
+      [...(includeWorkspaceProject ? [workspaceScope.projectId] : []), ...additionalProjectIds]
         .map((projectId) => readNonEmptyEnv(projectId))
         .filter((projectId) => projectId !== undefined)
     )
@@ -168,7 +173,9 @@ async function startLocalProtectedRuntimeAuth(options = {}) {
   const env = options.env ?? process.env;
   const host = readNonEmptyEnv(options.host) ?? DEFAULT_HOST;
   const scope = resolveDevWorkspaceScope(env);
-  const assertedProjectIds = resolveAssertedProjectIds(scope, options.additionalProjectIds);
+  const assertedProjectIds = Array.isArray(options.assertedProjectIds)
+    ? resolveAssertedProjectIds(scope, options.assertedProjectIds, false)
+    : resolveAssertedProjectIds(scope, options.additionalProjectIds);
   const tokenScopes = ['dvt:runtime', ...LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS].join(' ');
   const principalId = readNonEmptyEnv(env.DVT_DEV_PRINCIPAL_ID) ?? DEFAULT_DEV_PRINCIPAL_ID;
   const issuer = readNonEmptyEnv(env.DVT_DEV_PROTECTED_RUNTIME_ISSUER) ?? DEFAULT_DEV_ISSUER;

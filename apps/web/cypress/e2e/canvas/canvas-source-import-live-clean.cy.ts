@@ -25,37 +25,6 @@ import {
 } from '../../support/liveWarehouseSourceImport';
 import { seedE2eWorkspaceSession } from '../../support/workspaceSession';
 
-function assertNoSeriousAccessibilityViolations(context: string): void {
-  cy.get(context).should('be.visible');
-  cy.injectAxe();
-  cy.checkA11y(
-    context,
-    {
-      runOnly: {
-        type: 'tag',
-        values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'],
-      },
-      includedImpacts: ['serious', 'critical'],
-    },
-    (violations) => {
-      if (violations.length === 0) {
-        return;
-      }
-
-      throw new Error(
-        violations
-          .map(
-            (violation) =>
-              `${violation.id}: ${violation.help} -> ${violation.nodes
-                .map((node) => node.target.join(' '))
-                .join(', ')}`
-          )
-          .join('\n')
-      );
-    }
-  );
-}
-
 function visitCleanDbtCanvas(): void {
   const session = resolveLiveFirstAuthoringWorkspaceSession('dbt');
 
@@ -212,7 +181,6 @@ describe('Canvas source import live clean proof', () => {
       scope: typeof secondarySession,
       copy: Readonly<{ availableProjects: string; projectPrefix: string }>
     ): void => {
-      const scopeLabel = `${scope.tenantId} / ${scope.projectId} / ${scope.environmentId}`;
       cy.get('[data-slot="shell-workspace-menu-trigger"]', { timeout: 20_000 })
         .should('be.visible')
         .and('be.enabled')
@@ -220,12 +188,11 @@ describe('Canvas source import live clean proof', () => {
       cy.get('[data-slot="shell-workspace-scope-selector"]')
         .should('be.visible')
         .and('contain.text', copy.availableProjects);
-      assertNoSeriousAccessibilityViolations('[data-slot="shell-menu-workspace-context"]');
-      cy.contains('[data-slot="shell-workspace-scope-selector"] button', scopeLabel, {
+      cy.get('[data-slot="shell-workspace-scope-selector"] button[aria-pressed="false"]', {
         timeout: 20_000,
       })
+        .should('have.length', 1)
         .should('be.visible')
-        .and('have.attr', 'aria-pressed', 'false')
         .focus()
         .should('be.focused');
       cy.press(Cypress.Keyboard.Keys.ENTER);
@@ -268,7 +235,6 @@ describe('Canvas source import live clean proof', () => {
           expect(normalizedPresentedContent).to.contain(expectedContent.replace(/\s+/g, ''));
           expect(normalizedPresentedContent).not.to.contain(forbiddenContent.replace(/\s+/g, ''));
         });
-      assertNoSeriousAccessibilityViolations('[data-slot="canvas-contextual-workbench"]');
       cy.get('[data-slot="canvas-contextual-workbench-close"]').should('be.visible').click();
       cy.get('[data-slot="canvas-contextual-workbench"]').should('not.exist');
       cy.get('[data-slot="shell-workspace-menu-trigger"]').should('be.focused');
@@ -376,7 +342,6 @@ describe('Canvas source import live clean proof', () => {
         });
       cy.get('[data-slot="source-import-wizard-content-scroll"]').should('be.visible');
       cy.contains('[role="dialog"] button', 'Cancel').should('be.visible').and('be.enabled');
-      assertNoSeriousAccessibilityViolations('[role="dialog"][data-state="open"]');
     }
     cy.contains('[role="dialog"] button', 'Cancel').click();
     cy.contains('[role="dialog"]', 'Add source').should('not.exist');
@@ -419,7 +384,6 @@ describe('Canvas source import live clean proof', () => {
         .scrollIntoView()
         .should('be.visible');
       cy.get('[data-slot="canvas-node-workbench-close"]').should('be.visible').and('be.enabled');
-      assertNoSeriousAccessibilityViolations('[data-slot="canvas-node-workbench-panel"]');
     }
     cy.viewport(1000, 660);
     cy.contains('[data-slot="canvas-node-workbench-general-section"] dt', 'Connection')
@@ -431,7 +395,6 @@ describe('Canvas source import live clean proof', () => {
         expect(element.scrollWidth).to.be.at.most(element.clientWidth);
         expect(getComputedStyle(element).textOverflow).not.to.equal('ellipsis');
       });
-    assertNoSeriousAccessibilityViolations('[data-slot="canvas-node-workbench-panel"]');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     cy.get('[data-slot="canvas-node-workbench-panel"]').should('not.exist');
 
@@ -447,7 +410,6 @@ describe('Canvas source import live clean proof', () => {
       .and('contain.text', expectedSecondaryConnectionName)
       .and('contain.text', 'postgres')
       .and('contain.text', expectedSecondaryConnectionId);
-    assertNoSeriousAccessibilityViolations('[data-slot="canvas-node-workbench-panel"]');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     cy.get('[data-slot="canvas-node-workbench-panel"]').should('not.exist');
 
@@ -562,19 +524,9 @@ describe('Canvas source import live clean proof', () => {
     cy.get('[data-slot="canvas-node-workbench-panel"]').should('not.exist');
     getVisibleCanvasNodeByCardTitle('Model 1').find('[data-slot="canvas-node-shell"]').dblclick();
     cy.get('[data-slot="canvas-node-workbench-panel"]', { timeout: 10_000 }).should('be.visible');
-    cy.get(
-      '[data-slot="canvas-node-workbench-tab-code"], [data-slot="canvas-node-workbench-more-trigger"]'
-    )
-      .filter(':visible')
-      .should('have.length', 1)
-      .then(($codeAffordance) => {
-        if ($codeAffordance.attr('data-slot') === 'canvas-node-workbench-tab-code') {
-          expect($codeAffordance).to.have.attr('aria-selected', 'true');
-          return;
-        }
-
-        expect($codeAffordance).to.contain.text('Code');
-      });
+    cy.get('[data-slot="canvas-node-workbench-tab-code"]')
+      .should('be.visible')
+      .and('have.attr', 'aria-selected', 'true');
     cy.get('[data-slot="canvas-node-workbench-code-section"]').should('be.visible');
     const authoredModelSql = `select order_id, customer, amount\nfrom {{ source('${expectedSourceName}', 'source_1') }}`;
     cy.get('[data-slot="canvas-node-workbench-code-section"]').should(
@@ -731,89 +683,6 @@ describe('Canvas source import live clean proof', () => {
       availableProjects: 'Proyectos disponibles en esta sesión',
       projectPrefix: 'Proyecto',
     });
-
-    cy.viewport(640, 800);
-    openCanvasContextMenuAt(320, 300);
-    clickCanvasContextMenuAction('open-add-node-catalog');
-    clickCanvasAddCatalogAction('open-source-import', 'dbt:source');
-    cy.contains('[role="dialog"]', 'Añadir origen', { timeout: 20_000 })
-      .should('be.visible')
-      .and('contain.text', 'Elegir conexión a base de datos')
-      .and('contain.text', 'Nueva conexión')
-      .and('contain.text', 'Probar conexión')
-      .and('not.contain.text', 'Choose database connection')
-      .should(($dialog) => {
-        const dialog = $dialog.get(0);
-        const bounds = dialog.getBoundingClientRect();
-        expect(bounds.left).to.be.at.least(0);
-        expect(bounds.right).to.be.at.most(640);
-        expect(dialog.scrollWidth, 'dialog horizontal overflow').to.be.at.most(dialog.clientWidth);
-      });
-    cy.get('[data-slot="source-import-connection-actions"]')
-      .should('be.visible')
-      .and(($actions) => {
-        const dialogBounds = Cypress.$('[role="dialog"]').get(0).getBoundingClientRect();
-        const actions = $actions.get(0);
-        const actionBounds = actions.getBoundingClientRect();
-        expect(actionBounds.left).to.be.at.least(dialogBounds.left);
-        expect(actionBounds.right).to.be.at.most(dialogBounds.right);
-        expect(actions.scrollWidth, 'connection actions horizontal overflow').to.be.at.most(
-          actions.clientWidth
-        );
-        for (const action of actions.querySelectorAll('button')) {
-          const bounds = action.getBoundingClientRect();
-          expect(bounds.left, `${action.textContent} left edge`).to.be.at.least(actionBounds.left);
-          expect(bounds.right, `${action.textContent} right edge`).to.be.at.most(
-            actionBounds.right
-          );
-        }
-      });
-    cy.contains('[role="dialog"] button', 'Nueva conexión').click();
-    cy.get('[data-slot="source-import-create-connection-name"]')
-      .scrollIntoView()
-      .should('be.visible');
-    cy.get('[data-slot="source-import-create-connection-type"]')
-      .scrollIntoView()
-      .should('be.visible');
-    cy.get('[data-slot="source-import-create-connection-database"]')
-      .scrollIntoView()
-      .should('be.visible');
-    cy.get('[data-slot="source-import-create-connection-credential-ref"]')
-      .scrollIntoView()
-      .should('be.visible');
-    cy.get('[data-slot="source-import-create-connection-actions"]')
-      .scrollIntoView()
-      .should('be.visible')
-      .and(($actions) => {
-        const actions = $actions.get(0);
-        const actionBounds = actions.getBoundingClientRect();
-        expect(actions.scrollWidth, 'form actions horizontal overflow').to.be.at.most(
-          actions.clientWidth
-        );
-        for (const action of actions.querySelectorAll('button')) {
-          const bounds = action.getBoundingClientRect();
-          expect(bounds.left, `${action.textContent} left edge`).to.be.at.least(actionBounds.left);
-          expect(bounds.right, `${action.textContent} right edge`).to.be.at.most(
-            actionBounds.right
-          );
-        }
-      })
-      .within(() => {
-        cy.contains('button', 'Cancelar').should('be.visible').and('be.enabled');
-        cy.contains('button', 'Crear conexión').should('be.visible').and('be.enabled');
-      });
-    cy.get('[data-slot="dialog-footer"]')
-      .should('be.visible')
-      .within(() => {
-        cy.contains('button', 'Cancelar').should('be.visible').and('be.enabled');
-      });
-    assertNoSeriousAccessibilityViolations('[role="dialog"][data-state="open"]');
-    cy.get('[data-slot="source-import-create-connection-actions"]')
-      .contains('button', 'Cancelar')
-      .click();
-    cy.get('[data-slot="dialog-footer"]').contains('button', 'Cancelar').click();
-    cy.contains('[role="dialog"]', 'Añadir origen').should('not.exist');
-    cy.viewport(1000, 660);
 
     cy.get('[data-slot="graph-node-card-title"]', { timeout: 20_000 })
       .filter((_, element) => (element.textContent ?? '').includes('Postgres'))

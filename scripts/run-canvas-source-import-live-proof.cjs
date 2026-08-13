@@ -55,52 +55,22 @@ class CanvasSourceImportLiveProofRunner {
     return `${Date.now().toString(36)}-${process.pid.toString(36)}`;
   }
 
-  buildSourceImportWorkspaceScope(baseScope, runId) {
-    return {
-      tenantId: baseScope.tenantId,
-      projectId: `${baseScope.projectId}-tf-e2-m-c-first-authoring-dbt-${runId}`,
-      environmentId: baseScope.environmentId,
-    };
-  }
-
-  buildSecondaryWorkspaceScope(primaryScope) {
-    return {
-      tenantId: primaryScope.tenantId,
-      projectId: `${primaryScope.projectId}-scope-b`,
-      environmentId: `${primaryScope.environmentId}-scope-b`,
-    };
-  }
-
   formatWorkspaceOptions(scopes, key) {
     return [...new Set(scopes.map((scope) => scope[key]))]
       .map((value) => `${value}|${value}`)
       .join(',');
   }
 
-  buildProtectedRuntimeTenantAccess(workspaceScopes, tenantActions) {
-    if (workspaceScopes.length === 0) {
-      throw new Error('At least one workspace scope is required for protected-runtime grants');
-    }
-
-    const tenantId = workspaceScopes[0].tenantId;
-    if (workspaceScopes.some((scope) => scope.tenantId !== tenantId)) {
-      throw new Error('The source-import live proof requires all workspace scopes in one tenant');
+  buildInitialTenantAccess(tenantId, tenantActions) {
+    if (typeof tenantId !== 'string' || tenantId.trim().length === 0) {
+      throw new Error('A tenant id is required for the source-import live proof');
     }
 
     return [
       {
-        tenantId,
+        tenantId: tenantId.trim(),
         allowedActions: [...tenantActions],
-        projectAccess: workspaceScopes.map((scope) => ({
-          projectId: scope.projectId,
-          allowedActions: [],
-          environmentAccess: [
-            {
-              environmentId: scope.environmentId,
-              allowedActions: [],
-            },
-          ],
-        })),
+        projectAccess: [],
       },
     ];
   }
@@ -285,7 +255,7 @@ class CanvasSourceImportLiveProofRunner {
 
   async seedProtectedRuntimeGrants(args) {
     const tenantAccess = JSON.stringify(
-      this.buildProtectedRuntimeTenantAccess(args.workspaceScopes, args.tenantActions)
+      this.buildInitialTenantAccess(args.tenantId, args.tenantActions)
     );
     const client = new Client({ connectionString: args.databaseUrl });
 
@@ -307,6 +277,38 @@ class CanvasSourceImportLiveProofRunner {
     }
   }
 
+  async createGovernedProject(args) {
+    const response = await fetch(`${args.apiBaseUrl}/projects`, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        Authorization: `Bearer ${args.bearerToken}`,
+        'Content-Type': 'application/json',
+        'Idempotency-Key': args.idempotencyKey,
+      },
+      body: JSON.stringify({ tenantId: args.tenantId, name: args.name }),
+    });
+    const body = await response.json();
+    if (response.status !== 200 && response.status !== 201) {
+      throw new Error(
+        `Governed project creation failed with ${response.status}: ${JSON.stringify(body)}`
+      );
+    }
+
+    const workspace = body?.defaultWorkspace;
+    if (
+      workspace === null ||
+      typeof workspace !== 'object' ||
+      typeof workspace.tenantId !== 'string' ||
+      typeof workspace.projectId !== 'string' ||
+      typeof workspace.projectName !== 'string' ||
+      typeof workspace.environmentId !== 'string'
+    ) {
+      throw new Error('Governed project creation returned an invalid default workspace');
+    }
+    return workspace;
+  }
+
   buildCypressInvocation(args, platform = process.platform) {
     if (platform === 'win32') {
       const env = {
@@ -315,8 +317,9 @@ class CanvasSourceImportLiveProofRunner {
         CYPRESS_apiBaseUrl: `http://127.0.0.1:${args.apiPort}`,
         CYPRESS_apiBearerToken: args.apiBearerToken,
         CYPRESS_workspaceTenantId: args.workspaceScope.tenantId,
-        CYPRESS_workspaceProjectId: args.baseWorkspaceScope.projectId,
+        CYPRESS_workspaceProjectId: args.workspaceScope.projectId,
         CYPRESS_workspaceEnvironmentId: args.workspaceScope.environmentId,
+        CYPRESS_firstAuthoringProjectId: args.workspaceScope.projectId,
         CYPRESS_secondaryWorkspaceTenantId: args.secondaryWorkspaceScope.tenantId,
         CYPRESS_secondaryWorkspaceProjectId: args.secondaryWorkspaceScope.projectId,
         CYPRESS_secondaryWorkspaceEnvironmentId: args.secondaryWorkspaceScope.environmentId,
@@ -364,9 +367,11 @@ class CanvasSourceImportLiveProofRunner {
       '-e',
       `CYPRESS_workspaceTenantId=${args.workspaceScope.tenantId}`,
       '-e',
-      `CYPRESS_workspaceProjectId=${args.baseWorkspaceScope.projectId}`,
+      `CYPRESS_workspaceProjectId=${args.workspaceScope.projectId}`,
       '-e',
       `CYPRESS_workspaceEnvironmentId=${args.workspaceScope.environmentId}`,
+      '-e',
+      `CYPRESS_firstAuthoringProjectId=${args.workspaceScope.projectId}`,
       '-e',
       `CYPRESS_secondaryWorkspaceTenantId=${args.secondaryWorkspaceScope.tenantId}`,
       '-e',
@@ -425,12 +430,6 @@ class CanvasSourceImportLiveProofRunner {
     const liveProofSchema = this.allocateLiveProofSchema();
     const sourceImportRunId = this.allocateSourceImportRunId();
     const baseWorkspaceScope = resolveDevWorkspaceScope(this.env);
-    const sourceImportWorkspaceScope = this.buildSourceImportWorkspaceScope(
-      baseWorkspaceScope,
-      sourceImportRunId
-    );
-    const secondaryWorkspaceScope = this.buildSecondaryWorkspaceScope(sourceImportWorkspaceScope);
-    const workspaceScopes = [sourceImportWorkspaceScope, secondaryWorkspaceScope];
     const workspaceFilesRoot = path.resolve(
       __dirname,
       `../.dvt/live-proofs/source-import/${liveProofSchema}/workspace-files`
@@ -443,7 +442,7 @@ class CanvasSourceImportLiveProofRunner {
       processContext.localProtectedRuntimeAuth = await startLocalProtectedRuntimeAuth({
         env: this.env,
         host: this.localAuthHost,
-        additionalProjectIds: workspaceScopes.map((scope) => scope.projectId),
+        assertedProjectIds: [],
       });
 
       const apiHandle = this.spawnProcess('api-source-import-proof', this.buildApiProcessArgs(), {
@@ -493,8 +492,26 @@ class CanvasSourceImportLiveProofRunner {
         schema: liveProofSchema,
         principalId: processContext.localProtectedRuntimeAuth.principalId,
         tenantActions: LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS,
-        workspaceScopes,
+        tenantId: baseWorkspaceScope.tenantId,
       });
+
+      const apiBaseUrl = `http://127.0.0.1:${this.apiPort}`;
+      const bearerToken = processContext.localProtectedRuntimeAuth.webEnv.VITE_API_BEARER_TOKEN;
+      const sourceImportWorkspaceScope = await this.createGovernedProject({
+        apiBaseUrl,
+        bearerToken,
+        tenantId: baseWorkspaceScope.tenantId,
+        name: `Source import ${sourceImportRunId}`,
+        idempotencyKey: `source-import-${sourceImportRunId}-a`,
+      });
+      const secondaryWorkspaceScope = await this.createGovernedProject({
+        apiBaseUrl,
+        bearerToken,
+        tenantId: baseWorkspaceScope.tenantId,
+        name: `Source import ${sourceImportRunId} B`,
+        idempotencyKey: `source-import-${sourceImportRunId}-b`,
+      });
+      const workspaceScopes = [sourceImportWorkspaceScope, secondaryWorkspaceScope];
 
       const webHandle = this.spawnProcess(
         'web-source-import-proof',
@@ -514,9 +531,9 @@ class CanvasSourceImportLiveProofRunner {
             process.platform === 'win32' ? '127.0.0.1' : 'host.docker.internal'
           }:${this.apiPort}`,
           ...processContext.localProtectedRuntimeAuth.webEnv,
-          VITE_DEFAULT_TENANT_ID: baseWorkspaceScope.tenantId,
-          VITE_DEFAULT_PROJECT_ID: baseWorkspaceScope.projectId,
-          VITE_DEFAULT_ENVIRONMENT_ID: baseWorkspaceScope.environmentId,
+          VITE_DEFAULT_TENANT_ID: sourceImportWorkspaceScope.tenantId,
+          VITE_DEFAULT_PROJECT_ID: sourceImportWorkspaceScope.projectId,
+          VITE_DEFAULT_ENVIRONMENT_ID: sourceImportWorkspaceScope.environmentId,
           VITE_TENANT_OPTIONS: this.formatWorkspaceOptions(workspaceScopes, 'tenantId'),
           VITE_PROJECT_OPTIONS: this.formatWorkspaceOptions(workspaceScopes, 'projectId'),
           VITE_ENVIRONMENT_OPTIONS: this.formatWorkspaceOptions(workspaceScopes, 'environmentId'),
@@ -539,7 +556,6 @@ class CanvasSourceImportLiveProofRunner {
         apiPort: this.apiPort,
         webPort: this.webPort,
         apiBearerToken: processContext.localProtectedRuntimeAuth.webEnv.VITE_API_BEARER_TOKEN,
-        baseWorkspaceScope,
         workspaceScope: sourceImportWorkspaceScope,
         secondaryWorkspaceScope,
         sourceImportRunId,

@@ -17,6 +17,7 @@ import type {
 import { makeRunContext } from '../../testing/contractTestUtils';
 import type { CanvasHarnessState } from './useCanvasController.test.types';
 import type { PlanViewModel } from '../../types/plans';
+import { buildDraftReadNotFoundResponse } from '../../services/workspace/workspaceGraphDraftProtocol.test.fixtures';
 
 function buildDefaultCanvasHarnessSaveResult(): WorkspaceGraphDraftAuthoringSaveResult {
   return {
@@ -42,7 +43,6 @@ function buildDefaultCanvasHarnessSaveResult(): WorkspaceGraphDraftAuthoringSave
     formatMeta: {
       schemaVersion: 'workspace-graph-draft.v1',
       storedSchemaVersion: 'workspace-graph-draft.v1',
-      migrationState: 'native',
     },
     revision: 'rev-1',
   };
@@ -96,7 +96,13 @@ export function buildDefaultCanvasHarnessServices(
   };
 
   const workspaceGraphDraftAuthoringPort: IWorkspaceGraphDraftAuthoringPort = {
-    readGraphDraft: vi.fn(async () => ({ kind: 'not_found' as const })),
+    readGraphDraft: vi.fn(async () =>
+      buildDraftReadNotFoundResponse({
+        tenantId: 'tenant-a',
+        projectId: 'project-a',
+        environmentId: 'dev',
+      })
+    ),
     saveGraphDraft: vi.fn(async () => buildDefaultCanvasHarnessSaveResult()),
   };
 

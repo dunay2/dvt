@@ -1,59 +1,49 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
-import { ProjectId, TenantId } from '../../../src/domain/auth/types.js';
+import { EnvironmentId, ProjectId, TenantId } from '../../../src/domain/auth/types.js';
 import { EmbeddedAccessDecisionService } from '../../../src/infrastructure/auth/embeddedAccessDecisionService.js';
-
-function normalizeSql(sql: string): string {
-  return sql.replaceAll(/\s+/g, ' ').trim();
-}
 
 describe('EmbeddedAccessDecisionService', () => {
   it('creates the schema before the grants table', async () => {
     const queries: string[] = [];
-    const pool = {
-      async query(sql: string) {
-        queries.push(sql);
-        return { rows: [] };
+    const grants = {
+      async migrate() {
+        queries.push('migrate');
+      },
+      async load() {
+        return null;
       },
     };
 
-    const service = new EmbeddedAccessDecisionService(pool as never, 'authz');
+    const service = new EmbeddedAccessDecisionService(grants);
     await service.migrate();
 
-    expect(queries.length).toBe(2);
-    expect(normalizeSql(queries[0]!)).toMatch(/^CREATE SCHEMA IF NOT EXISTS authz;$/i);
-    expect(normalizeSql(queries[1]!)).toMatch(
-      /^CREATE TABLE IF NOT EXISTS authz\.principal_grants \(/i
-    );
+    expect(queries).toEqual(['migrate']);
   });
 
   it('allows project grant', async () => {
     const service = new EmbeddedAccessDecisionService({
-      async query() {
+      async migrate() {},
+      async load() {
         return {
-          rows: [
+          principal: { principalId: 'u1', principalType: 'user' as const },
+          suspended: false,
+          tenantAccess: [
             {
-              principal_id: 'u1',
-              principal_type: 'user',
-              suspended: false,
-              tenant_access: [
+              tenantId: 't1',
+              allowedActions: [],
+              projectAccess: [
                 {
-                  tenantId: 't1',
-                  allowedActions: [],
-                  projectAccess: [
-                    {
-                      projectId: 'p1',
-                      allowedActions: ['run:start'],
-                      environmentAccess: [],
-                    },
-                  ],
+                  projectId: 'p1',
+                  allowedActions: ['run:start'],
+                  environmentAccess: [],
                 },
               ],
             },
           ],
         };
       },
-    } as never);
+    });
 
     const outcome = await service.decide(
       {
@@ -87,25 +77,21 @@ describe('EmbeddedAccessDecisionService', () => {
 
   it('denies assertion conflict', async () => {
     const service = new EmbeddedAccessDecisionService({
-      async query() {
+      async migrate() {},
+      async load() {
         return {
-          rows: [
+          principal: { principalId: 'u1', principalType: 'user' as const },
+          suspended: false,
+          tenantAccess: [
             {
-              principal_id: 'u1',
-              principal_type: 'user',
-              suspended: false,
-              tenant_access: [
-                {
-                  tenantId: 't1',
-                  allowedActions: ['run:start'],
-                  projectAccess: [],
-                },
-              ],
+              tenantId: 't1',
+              allowedActions: ['run:start'],
+              projectAccess: [],
             },
           ],
         };
       },
-    } as never);
+    });
 
     const outcome = await service.decide(
       {
@@ -127,5 +113,66 @@ describe('EmbeddedAccessDecisionService', () => {
     );
 
     expect(outcome).toEqual({ ok: false, reason: 'TOKEN_ASSERTION_CONFLICT' });
+  });
+
+  it('derives a capability batch from one grant snapshot and enforces project assertions', async () => {
+    const load = vi.fn(async () => ({
+      principal: { principalId: 'u1', principalType: 'user' as const },
+      suspended: false,
+      tenantAccess: [
+        {
+          tenantId: 't1',
+          allowedActions: [],
+          projectAccess: [
+            {
+              projectId: 'p1',
+              allowedActions: [],
+              environmentAccess: [
+                {
+                  environmentId: 'dev',
+                  allowedActions: ['workspace:graph-draft:view'],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    }));
+    const service = new EmbeddedAccessDecisionService({ async migrate() {}, load });
+    const principal = {
+      principalId: 'u1',
+      subjectId: 'u1',
+      issuer: 'issuer',
+      audience: 'audience',
+      principalType: 'user' as const,
+      expiresAt: new Date('2030-01-01T00:00:00Z'),
+      rawScopes: [],
+      assertedTenantIds: ['t1'],
+      assertedProjectIds: ['p1'],
+    };
+    const scope = {
+      resource: 'workspace-graph-draft' as const,
+      tenantId: TenantId.unsafe('t1'),
+      projectId: ProjectId.unsafe('p1'),
+      environmentId: EnvironmentId.unsafe('dev'),
+    };
+
+    await expect(
+      service.decideMany(principal, [
+        { ...scope, action: { kind: 'query', name: 'workspace:graph-draft:view' } },
+        { ...scope, action: { kind: 'command', name: 'workspace:graph-draft:save' } },
+      ])
+    ).resolves.toEqual([
+      { ok: true, approvedScope: scope },
+      { ok: false, reason: 'ACTION_NOT_GRANTED' },
+    ]);
+    expect(load).toHaveBeenCalledOnce();
+
+    await expect(
+      service.decide(
+        { ...principal, assertedProjectIds: ['p2'] },
+        { ...scope, action: { kind: 'query', name: 'workspace:graph-draft:view' } }
+      )
+    ).resolves.toEqual({ ok: false, reason: 'TOKEN_ASSERTION_CONFLICT' });
   });
 });

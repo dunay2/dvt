@@ -113,6 +113,16 @@ describe('workspaceGraphDraftAuthoring mock port', () => {
       outcome: 'allowed',
     });
     expect(secondAttempt.auditRef.recordedAt).toEqual(expect.any(String));
-    expect(mismatchAttempt).toEqual({ kind: 'idempotency_mismatch' });
+    expect(mismatchAttempt).toMatchObject({
+      kind: 'idempotency_mismatch',
+      capability: firstAttempt.capability,
+      auditRef: {
+        correlationId: 'mock-correlation-id',
+        decisionId: 'mock-decision-id',
+        action: 'draft_write',
+        outcome: 'conflict',
+      },
+    });
+    expect(mismatchAttempt.auditRef.recordedAt).toEqual(expect.any(String));
   });
 });

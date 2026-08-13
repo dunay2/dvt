@@ -50,6 +50,7 @@ test('shouldBootstrapLocalProtectedRuntimeAuth only when the protected-runtime O
 });
 
 test('local protected-runtime tenant actions include workspace authoring, files, plugins, and source import', () => {
+  assert.ok(LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS.includes('project:create'));
   assert.ok(LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS.includes('workspace:graph-draft:view'));
   assert.ok(LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS.includes('workspace:graph-draft:save'));
   assert.ok(LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS.includes('workspace:files:view'));
@@ -143,6 +144,19 @@ test('startLocalProtectedRuntimeAuth can assert additional live-proof project id
       'project-dev-test-dynamic-a',
       'project-dev-test-dynamic-b',
     ]);
+  } finally {
+    await bootstrap.close();
+  }
+});
+
+test('startLocalProtectedRuntimeAuth can omit project assertions for governed project creation', async () => {
+  const bootstrap = await startLocalProtectedRuntimeAuth({
+    assertedProjectIds: [],
+  });
+
+  try {
+    const payload = decodeJwtPayload(bootstrap.webEnv.VITE_API_BEARER_TOKEN);
+    assert.deepEqual(payload.project_ids, []);
   } finally {
     await bootstrap.close();
   }

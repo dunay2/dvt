@@ -67,15 +67,21 @@ export function openCanvasContextMenuAt(x = 96, y = 220): void {
 export function clickCanvasContextMenuItem(label: CanvasMenuLabel): void {
   cy.contains('[data-slot="canvas-context-menu"] [role="menuitem"]', label)
     .should('be.visible')
-    .should('be.enabled')
+    .should(($item) => {
+      expect($item.attr('data-disabled')).to.be.undefined;
+    })
     .click();
 }
 
 export function clickCanvasContextMenuAction(action: string): void {
   cy.get(`[data-slot="canvas-context-menu"] [data-menu-action="${action}"]`)
     .should('be.visible')
-    .should('be.enabled')
-    .click();
+    .should(($item) => {
+      expect($item.attr('data-disabled')).to.be.undefined;
+    })
+    .then(($item) => {
+      ($item.get(0) as HTMLElement).click();
+    });
 }
 
 export function clickCanvasAddCatalogAction(action: string, registrationKind?: string): void {
@@ -83,7 +89,14 @@ export function clickCanvasAddCatalogAction(action: string, registrationKind?: s
     ? `[data-slot="canvas-context-menu-add-catalog-item"][data-menu-action="${action}"][data-registration-kind="${registrationKind}"]`
     : `[data-slot="canvas-context-menu-add-catalog-item"][data-menu-action="${action}"]`;
 
-  cy.get(selector).scrollIntoView().should('be.visible').should('be.enabled').click();
+  cy.get(selector).scrollIntoView().should('be.visible');
+  cy.get(selector)
+    .filter(':visible')
+    .then(($item) => {
+      const item = $item.get(0) as HTMLButtonElement;
+      expect(item.disabled).to.equal(false);
+      item.click();
+    });
 }
 
 export function revealOperationalDrawer(): void {

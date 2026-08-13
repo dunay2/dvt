@@ -80,15 +80,17 @@ function buildAuthenticatedSessionResponse(): Response {
 function buildWorkspaceContextResponse(): Response {
   return new Response(
     JSON.stringify({
-      effectiveWorkspace: {
+      defaultWorkspace: {
         tenantId: 'tenant-a',
         projectId: 'project-a',
+        projectName: 'Analytics',
         environmentId: 'dev',
       },
       availableWorkspaces: [
         {
           tenantId: 'tenant-a',
           projectId: 'project-a',
+          projectName: 'Analytics',
           environmentId: 'dev',
         },
       ],

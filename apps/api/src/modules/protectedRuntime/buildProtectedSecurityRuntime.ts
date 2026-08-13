@@ -15,6 +15,7 @@ import {
 } from '../../infrastructure/audit/PostgresAuthAuditAdapter.js';
 import { StructuredAuditLogger } from '../../infrastructure/audit/structuredAuditLogger.js';
 import { EmbeddedAccessDecisionService } from '../../infrastructure/auth/embeddedAccessDecisionService.js';
+import { EmbeddedPrincipalGrantRepository } from '../../infrastructure/auth/embeddedPrincipalGrantRepository.js';
 import { EmbeddedProjectOnboardingRepository } from '../../infrastructure/auth/embeddedProjectOnboardingRepository.js';
 import { EmbeddedWorkspaceContextQuery } from '../../infrastructure/auth/embeddedWorkspaceContextQuery.js';
 import { JwksJwtVerifier } from '../../infrastructure/auth/jwksJwtVerifier.js';
@@ -47,17 +48,20 @@ export type ProtectedSecurityRuntime = {
 export function buildProtectedSecurityRuntime(
   deps: BuildProtectedSecurityRuntimeDeps
 ): ProtectedSecurityRuntime {
-  const embeddedAccessDecisionService = new EmbeddedAccessDecisionService(
+  const principalGrantRepository = new EmbeddedPrincipalGrantRepository(
     deps.pool,
     deps.env.DVT_PG_SCHEMA
   );
+  const embeddedAccessDecisionService = new EmbeddedAccessDecisionService(principalGrantRepository);
   const workspaceContextQuery = new EmbeddedWorkspaceContextQuery(
+    principalGrantRepository,
     deps.pool,
     deps.env.DVT_PG_SCHEMA
   );
   const projectOnboardingRepository = new EmbeddedProjectOnboardingRepository(
     deps.pool,
-    deps.env.DVT_PG_SCHEMA
+    deps.env.DVT_PG_SCHEMA,
+    principalGrantRepository
   );
   const workspacePluginCatalogRepository = new EmbeddedWorkspacePluginCatalogRepository(
     deps.pool,
@@ -85,8 +89,14 @@ export function buildProtectedSecurityRuntime(
   return {
     accessDecisionService: embeddedAccessDecisionService,
     workspaceContextQuery,
-    listProjectsUseCase: new ListProjectsUseCase(projectOnboardingRepository),
-    createProjectUseCase: new CreateProjectUseCase(projectOnboardingRepository),
+    listProjectsUseCase: new ListProjectsUseCase(
+      projectOnboardingRepository,
+      embeddedAccessDecisionService
+    ),
+    createProjectUseCase: new CreateProjectUseCase(
+      projectOnboardingRepository,
+      embeddedAccessDecisionService
+    ),
     listWorkspacePluginsUseCase: new ListWorkspacePluginsUseCase(workspacePluginCatalogRepository),
     migrateAccessDecisionService: () => embeddedAccessDecisionService.migrate(),
     migrateProjectOnboardingRepository: () => projectOnboardingRepository.migrate(),

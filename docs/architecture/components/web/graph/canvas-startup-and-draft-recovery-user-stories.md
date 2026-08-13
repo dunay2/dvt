@@ -210,7 +210,7 @@ unsupported data.
 
 Acceptance criteria:
 
-- Unsupported schema, corrupt payload, and migration failure render format
+- Unsupported schema and corrupt payload render format
   failure posture.
 - Format failure does not render session-required or forbidden-scope copy.
 - Format failure disables unsafe mutations.

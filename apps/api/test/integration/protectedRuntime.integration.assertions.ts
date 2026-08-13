@@ -158,7 +158,6 @@ export function expectWorkspaceGraphDraftFlowSucceeded(
     formatMeta: {
       schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
       storedSchemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
-      migrationState: 'native',
     },
     revision: expect.any(String),
   });
@@ -180,7 +179,6 @@ export function expectWorkspaceGraphDraftFlowSucceeded(
     formatMeta: {
       schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
       storedSchemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
-      migrationState: 'native',
     },
     record: {
       scope: {

@@ -14,8 +14,9 @@ function buildProjectOnboardingService(
 ): ProjectOnboardingService {
   return {
     listProjects: async () => ({
-      tenants: [{ tenantId: 'tenant-1', displayName: 'Tenant 1', canCreateProject: true }],
+      tenants: [{ tenantId: 'tenant-1', canCreateProject: true }],
       projects: [],
+      integrityFindings: [],
     }),
     createProject: async () => ({
       project: {
@@ -24,9 +25,10 @@ function buildProjectOnboardingService(
         name: 'Orders',
         environmentIds: ['dev'],
       },
-      effectiveWorkspace: {
+      defaultWorkspace: {
         tenantId: 'tenant-1',
         projectId: 'orders',
+        projectName: 'Orders',
         environmentId: 'dev',
       },
     }),
@@ -66,7 +68,7 @@ describe('ProjectOnboardingView', () => {
     );
 
     expect(mounted.container.textContent).toContain('Create a project');
-    expect(mounted.container.textContent).toContain('Tenant 1');
+    expect(mounted.container.textContent).toContain('tenant-1');
 
     await act(async () => {
       fireEvent.input(
@@ -90,9 +92,10 @@ describe('ProjectOnboardingView', () => {
         name: 'Orders',
         environmentIds: ['dev'],
       },
-      effectiveWorkspace: {
+      defaultWorkspace: {
         tenantId: 'tenant-1',
         projectId: 'orders',
+        projectName: 'Orders',
         environmentId: 'dev',
       },
     });
@@ -117,6 +120,7 @@ describe('ProjectOnboardingView', () => {
                 environmentIds: ['dev'],
               },
             ],
+            integrityFindings: [],
           }),
         })}
       />

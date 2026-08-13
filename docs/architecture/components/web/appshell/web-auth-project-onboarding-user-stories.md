@@ -55,7 +55,7 @@ so that `localStorage` cannot resurrect deleted or revoked projects.
 Acceptance:
 
 - `dvt-web-session` is only a projection cache.
-- The selected workspace is replaced with the server effective workspace when
+- The selected workspace is replaced with the server default workspace when
   the persisted scope is absent from grants.
 - Negative tests cover revoked tenant, deleted project, and changed environment.
 

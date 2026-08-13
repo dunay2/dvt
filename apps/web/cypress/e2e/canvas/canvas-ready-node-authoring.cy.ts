@@ -12,7 +12,7 @@ import {
 } from '../../support/canvasExecutionSelection';
 import { getE2eApiCalls, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
 import {
-  E2E_WORKSPACE_SESSION,
+  E2E_PROJECT_WORKSPACE,
   stubShellBootstrapApis,
   visitWithE2eWorkspaceSession,
 } from '../../support/workspaceSession';
@@ -40,8 +40,8 @@ function stubRuntimeCapabilities(): void {
     scopes: ['workspace:graph-draft:view', 'workspace:graph-draft:save', 'run:start'],
   });
   stubE2eJsonApi('GET', '/workspace/context', {
-    effectiveWorkspace: E2E_WORKSPACE_SESSION,
-    availableWorkspaces: [E2E_WORKSPACE_SESSION],
+    defaultWorkspace: E2E_PROJECT_WORKSPACE,
+    availableWorkspaces: [E2E_PROJECT_WORKSPACE],
   });
   stubE2eJsonApi('GET', '/capabilities', {
     apiVersion: '1.0.0',

@@ -101,16 +101,18 @@ describe('workspaceContextRoute', () => {
   it('returns effective workspace context and granted options', async () => {
     const reply = createReply();
     const authenticatedPrincipal = principal();
-    const effectiveWorkspace = {
+    const defaultWorkspace = {
       tenantId: 'tenant-a',
       projectId: 'project-a',
+      projectName: 'Analytics',
       environmentId: 'env-a',
     };
     const availableWorkspaces = [
-      effectiveWorkspace,
+      defaultWorkspace,
       {
         tenantId: 'tenant-a',
         projectId: 'project-a',
+        projectName: 'Analytics',
         environmentId: 'prod',
       },
     ];
@@ -122,7 +124,7 @@ describe('workspaceContextRoute', () => {
     };
     const workspaceContextQuery = {
       getEffectiveWorkspaceContext: vi.fn(async () => ({
-        effectiveWorkspace,
+        defaultWorkspace,
         availableWorkspaces,
       })),
     };
@@ -143,7 +145,7 @@ describe('workspaceContextRoute', () => {
 
     expect(reply.code).toHaveBeenCalledWith(200);
     expect(reply.send).toHaveBeenCalledWith({
-      effectiveWorkspace,
+      defaultWorkspace,
       availableWorkspaces,
       deploymentScope: {
         targetAdapter: 'temporal',
@@ -155,9 +157,10 @@ describe('workspaceContextRoute', () => {
   it('returns 503 when no deployment adapter can admit protected workspace actions', async () => {
     const reply = createReply();
     const authenticatedPrincipal = principal();
-    const effectiveWorkspace = {
+    const defaultWorkspace = {
       tenantId: 'tenant-a',
       projectId: 'project-a',
+      projectName: 'Analytics',
       environmentId: 'env-a',
     };
     const authenticator = {
@@ -168,8 +171,8 @@ describe('workspaceContextRoute', () => {
     };
     const workspaceContextQuery = {
       getEffectiveWorkspaceContext: vi.fn(async () => ({
-        effectiveWorkspace,
-        availableWorkspaces: [effectiveWorkspace],
+        defaultWorkspace,
+        availableWorkspaces: [defaultWorkspace],
       })),
     };
     const adapterRegistry = registryWith();

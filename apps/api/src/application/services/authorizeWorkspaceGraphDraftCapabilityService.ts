@@ -7,11 +7,13 @@
  */
 import { randomUUID } from 'node:crypto';
 
-import type { WorkspaceGraphDraftCapabilityOutcome, WorkspaceGraphDraftScope } from '@dvt/contracts';
+import type {
+  WorkspaceGraphDraftCapabilityOutcome,
+  WorkspaceGraphDraftScope,
+} from '@dvt/contracts';
 
 import type { AuthenticatedPrincipal } from '../../domain/auth/types.js';
 import { buildWorkspaceGraphDraftAccessScope } from '../ports/accessDecision.js';
-import type { IAuthenticator } from '../ports/auth.js';
 import {
   WORKSPACE_GRAPH_DRAFT_ACTION,
   type WorkspaceGraphDraftDecisionContext,
@@ -32,48 +34,22 @@ type WorkspaceGraphDraftDecisionBase = Pick<
 
 export class AuthorizeWorkspaceGraphDraftCapabilityService {
   public constructor(
-    private readonly authenticator: IAuthenticator,
     private readonly authorizer: AuthorizeCommandScopeService,
     private readonly clock: () => Date
   ) {}
 
   public async authorize(input: {
-    readonly token: string | undefined;
+    readonly principal: AuthenticatedPrincipal;
     readonly requestId: string;
     readonly requestedScope: WorkspaceGraphDraftRequestedScope;
   }): Promise<WorkspaceGraphDraftDecisionContext> {
     const base = buildDecisionBase(input, this.clock);
 
-    const authentication = await this.authenticator.authenticateBearerToken(input.token);
-    if (!authentication.ok) {
-      return buildUnauthenticatedDecision(base);
-    }
-
     return this.authorizeAuthenticatedPrincipal(
-      authentication.principal,
+      input.principal,
       base,
       input.requestedScope,
       input.requestId
-    );
-  }
-
-  private async authorizeWorkspaceGraphDraftAction(
-    principal: AuthenticatedPrincipal,
-    requestedScope: WorkspaceGraphDraftRequestedScope,
-    action: typeof WORKSPACE_GRAPH_DRAFT_ACTION.view | typeof WORKSPACE_GRAPH_DRAFT_ACTION.save,
-    requestId: string
-  ) {
-    return this.authorizer.authorize(
-      principal,
-      {
-        ...buildWorkspaceGraphDraftAccessScope(
-          requestedScope.tenantId,
-          requestedScope.projectId,
-          requestedScope.environmentId
-        ),
-        action,
-      },
-      requestId
     );
   }
 
@@ -83,12 +59,31 @@ export class AuthorizeWorkspaceGraphDraftCapabilityService {
     requestedScope: WorkspaceGraphDraftRequestedScope,
     requestId: string
   ): Promise<WorkspaceGraphDraftDecisionContext> {
-    const readAuthorization = await this.authorizeWorkspaceGraphDraftAction(
+    const [readAuthorization, writeAuthorization] = await this.authorizer.authorizeMany(
       principal,
-      requestedScope,
-      WORKSPACE_GRAPH_DRAFT_ACTION.view,
+      [
+        {
+          ...buildWorkspaceGraphDraftAccessScope(
+            requestedScope.tenantId,
+            requestedScope.projectId,
+            requestedScope.environmentId
+          ),
+          action: WORKSPACE_GRAPH_DRAFT_ACTION.view,
+        },
+        {
+          ...buildWorkspaceGraphDraftAccessScope(
+            requestedScope.tenantId,
+            requestedScope.projectId,
+            requestedScope.environmentId
+          ),
+          action: WORKSPACE_GRAPH_DRAFT_ACTION.save,
+        },
+      ],
       requestId
     );
+    if (readAuthorization === undefined || writeAuthorization === undefined) {
+      throw new Error('Workspace graph draft capability decisions are incomplete');
+    }
     if (!readAuthorization.ok) {
       return buildAuthenticatedDecision(
         base,
@@ -101,12 +96,6 @@ export class AuthorizeWorkspaceGraphDraftCapabilityService {
       );
     }
 
-    const writeAuthorization = await this.authorizeWorkspaceGraphDraftAction(
-      principal,
-      requestedScope,
-      WORKSPACE_GRAPH_DRAFT_ACTION.save,
-      requestId
-    );
     if (!writeAuthorization.ok) {
       return buildAuthenticatedDecision(
         base,
@@ -144,19 +133,6 @@ function buildDecisionBase(
     recordedAt: clock().toISOString(),
     requestedScope: input.requestedScope,
     scope: toContractScope(input.requestedScope),
-  };
-}
-
-function buildUnauthenticatedDecision(
-  base: WorkspaceGraphDraftDecisionBase
-): WorkspaceGraphDraftDecisionContext {
-  return {
-    authentication: 'unauthenticated',
-    ...base,
-    capability: buildWorkspaceGraphDraftCapabilityFromPolicy(
-      base.scope,
-      WORKSPACE_GRAPH_DRAFT_CAPABILITY_POLICY.unauthenticated
-    ),
   };
 }
 

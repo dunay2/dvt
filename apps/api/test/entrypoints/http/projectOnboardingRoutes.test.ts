@@ -27,6 +27,7 @@ function createDeps(
       execute: vi.fn(async () => ({
         tenants: [{ tenantId: 'tenant-a', canCreateProject: true }],
         projects: [],
+        integrityFindings: [],
       })),
     },
     createProjectUseCase: {
@@ -38,9 +39,10 @@ function createDeps(
           name: 'Analytics',
           environmentIds: ['dev'],
         },
-        effectiveWorkspace: {
+        defaultWorkspace: {
           tenantId: 'tenant-a',
           projectId: 'analytics-12345678',
+          projectName: 'Analytics',
           environmentId: 'dev',
         },
       })),
@@ -89,6 +91,7 @@ describe('projectOnboardingRoutes', () => {
     expect(response.json()).toEqual({
       tenants: [{ tenantId: 'tenant-a', canCreateProject: true }],
       projects: [],
+      integrityFindings: [],
     });
     expect(deps.authenticator.authenticateBearerToken).toHaveBeenCalledWith('token-123');
   });
@@ -117,9 +120,10 @@ describe('projectOnboardingRoutes', () => {
         name: 'Analytics',
         environmentIds: ['dev'],
       },
-      effectiveWorkspace: {
+      defaultWorkspace: {
         tenantId: 'tenant-a',
         projectId: 'analytics-12345678',
+        projectName: 'Analytics',
         environmentId: 'dev',
       },
     });
@@ -145,6 +149,29 @@ describe('projectOnboardingRoutes', () => {
     expect(response.statusCode).toBe(400);
     expect(response.json()).toEqual({
       error: { type: 'bad_request', reason: 'missing_idempotency_key' },
+    });
+    expect(deps.createProjectUseCase.execute).not.toHaveBeenCalled();
+  });
+
+  it('rejects request fields outside the shared create-project contract', async () => {
+    const app = Fastify({ logger: false });
+    const deps = createDeps();
+    registerProjectOnboardingRoutes(app, deps);
+    await app.ready();
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/projects',
+      headers: {
+        authorization: 'Bearer token-123',
+        'idempotency-key': 'create-analytics-1',
+      },
+      payload: { tenantId: 'tenant-a', name: 'Analytics', environmentId: 'prod' },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toEqual({
+      error: { type: 'bad_request', reason: 'invalid_create_project_request' },
     });
     expect(deps.createProjectUseCase.execute).not.toHaveBeenCalled();
   });

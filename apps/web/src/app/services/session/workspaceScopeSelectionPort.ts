@@ -43,16 +43,16 @@ function readSelectedScope(state: Pick<SessionState, 'tenantId' | 'projectId' | 
 }
 
 function normalizeAvailableWorkspaces(
-  effectiveWorkspace: WorkspaceScopeIdentity,
+  defaultWorkspace: WorkspaceScopeIdentity,
   availableWorkspaces: readonly WorkspaceScopeIdentity[]
 ): readonly WorkspaceScopeIdentity[] {
   const normalized = [...availableWorkspaces];
   if (
     !normalized.some((availableWorkspace) =>
-      sameWorkspaceScopeIdentity(availableWorkspace, effectiveWorkspace)
+      sameWorkspaceScopeIdentity(availableWorkspace, defaultWorkspace)
     )
   ) {
-    normalized.unshift(effectiveWorkspace);
+    normalized.unshift(defaultWorkspace);
   }
   return normalized;
 }
@@ -70,20 +70,20 @@ function findGrantedWorkspaceScope(
 
 export function resolveSelectedWorkspaceScope(params: {
   currentScope: WorkspaceScopeIdentity;
-  effectiveWorkspace: WorkspaceScopeIdentity;
+  defaultWorkspace: WorkspaceScopeIdentity;
   availableWorkspaces: readonly WorkspaceScopeIdentity[];
 }): {
   readonly selectedScope: WorkspaceScopeIdentity;
   readonly availableWorkspaces: readonly WorkspaceScopeIdentity[];
 } {
   const availableWorkspaces = normalizeAvailableWorkspaces(
-    params.effectiveWorkspace,
+    params.defaultWorkspace,
     params.availableWorkspaces
   );
   return {
     selectedScope:
       findGrantedWorkspaceScope(params.currentScope, availableWorkspaces) ??
-      params.effectiveWorkspace,
+      params.defaultWorkspace,
     availableWorkspaces,
   };
 }

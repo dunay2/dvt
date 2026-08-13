@@ -73,7 +73,6 @@ function buildDraftFormatMeta() {
   return {
     schemaVersion: 'workspace-graph-draft.v1',
     storedSchemaVersion: 'workspace-graph-draft.v1',
-    migrationState: 'native' as const,
   };
 }
 
@@ -116,6 +115,16 @@ export function buildDraftReadDeniedResponse(
   };
 }
 
+export function buildDraftReadNotFoundResponse(
+  scope: WorkspaceGraphDraftScope
+): WorkspaceGraphDraftReadResponse {
+  return {
+    kind: 'not_found',
+    capability: buildDraftCapability(scope),
+    auditRef: buildDraftAuditRef('draft_read', 'allowed'),
+  };
+}
+
 export function buildDraftSaveSavedResponse(
   scope: WorkspaceGraphDraftScope,
   overrides: Partial<WorkspaceGraphDraftSaveResponse & { kind: 'saved' }> = {}
@@ -153,5 +162,27 @@ export function buildDraftSaveDeniedResponse(
     capability: buildDraftCapability(scope, { mode: 'read_only' }),
     auditRef: buildDraftAuditRef('draft_write', 'read_only'),
     ...overrides,
+  };
+}
+
+export function buildDraftSaveUnsupportedSchemaResponse(
+  scope: WorkspaceGraphDraftScope
+): WorkspaceGraphDraftSaveResponse {
+  return {
+    kind: 'unsupported_schema_version',
+    capability: buildDraftCapability(scope),
+    auditRef: buildDraftAuditRef('draft_write', 'allowed'),
+    expectedSchemaVersion: 'workspace-graph-draft.v1',
+    requestedSchemaVersion: 'workspace-graph-draft.v0',
+  };
+}
+
+export function buildDraftSaveIdempotencyMismatchResponse(
+  scope: WorkspaceGraphDraftScope
+): WorkspaceGraphDraftSaveResponse {
+  return {
+    kind: 'idempotency_mismatch',
+    capability: buildDraftCapability(scope),
+    auditRef: buildDraftAuditRef('draft_write', 'conflict'),
   };
 }

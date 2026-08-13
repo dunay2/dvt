@@ -71,6 +71,7 @@ export function resolveLiveFirstAuthoringWorkspaceSession(
   variant: FirstAuthoringVariant = 'transformation'
 ): E2eWorkspaceSession {
   const session = resolveLiveWorkspaceSession();
+  const configuredProjectId = Cypress.env('firstAuthoringProjectId');
   const configuredRunId = Cypress.env('firstAuthoringRunId');
   const runId =
     typeof configuredRunId === 'string' && configuredRunId.trim().length > 0
@@ -81,7 +82,10 @@ export function resolveLiveFirstAuthoringWorkspaceSession(
 
   return {
     tenantId: session.tenantId,
-    projectId: `${session.projectId}-tf-e2-m-c-first-authoring-${variant}-${runId}`,
+    projectId:
+      typeof configuredProjectId === 'string' && configuredProjectId.trim().length > 0
+        ? configuredProjectId.trim()
+        : `${session.projectId}-tf-e2-m-c-first-authoring-${variant}-${runId}`,
     environmentId: session.environmentId,
   };
 }
@@ -388,9 +392,7 @@ export function assertLiveFirstAuthoringDraftScopeIsClean(
 
   return cy.request(buildDraftReadRequest(session)).then((response) => {
     if (response.status === 404) {
-      expect((response.body as { error?: { reason?: string } }).error?.reason).to.equal(
-        'workspace_graph_draft_not_found'
-      );
+      expect((response.body as { kind?: string }).kind).to.equal('not_found');
       return;
     }
 

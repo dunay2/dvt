@@ -3,6 +3,7 @@ export * from './types/artifacts.js';
 export * from './workflows.js';
 export * from './contracts/source-import/index.js';
 export * from './contracts/dbt-project/index.js';
+export * from './contracts/workspace/ProjectWorkspace.v1.js';
 export * from './contracts/engine/IOutboxStorage.v1.js';
 export * from './contracts/engine/RunExecutionPolicy.v1.js';
 export * from './contracts/engine/RunExecutionContext.v1.js';
@@ -232,26 +233,32 @@ export type {
   ExecutionSelectionMode,
 } from './contracts/planner/index.js';
 export {
+  WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
   WORKSPACE_GRAPH_DRAFT_AUDIT_ACTION,
   WORKSPACE_GRAPH_DRAFT_AUDIT_OUTCOME,
   WORKSPACE_GRAPH_DRAFT_CAPABILITY_MODE,
   WORKSPACE_GRAPH_DRAFT_CAPABILITY_REASON,
   WORKSPACE_GRAPH_DRAFT_FORMAT_ERROR_REASON,
-  WORKSPACE_GRAPH_DRAFT_MIGRATION_STATE,
+  WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION,
+  resolveWorkspaceGraphDraftCanvasIds,
   WorkspaceGraphDraftAuditRefSchema,
   WorkspaceGraphDraftCapabilityOutcomeSchema,
   WorkspaceGraphDraftFormatErrorSchema,
   WorkspaceGraphDraftFormatMetaSchema,
   WorkspaceGraphDraftReadDeniedSchema,
   WorkspaceGraphDraftReadFormatFailureSchema,
+  WorkspaceGraphDraftReadNotFoundSchema,
   WorkspaceGraphDraftReadResponseSchema,
   WorkspaceGraphDraftReadSuccessSchema,
   WorkspaceGraphDraftRecordSchema,
   WorkspaceGraphDraftSaveConflictSchema,
+  WorkspaceGraphDraftSaveAuthoringAuthorityConflictSchema,
   WorkspaceGraphDraftSaveDeniedSchema,
+  WorkspaceGraphDraftSaveIdempotencyMismatchSchema,
   WorkspaceGraphDraftSaveRequestSchema,
   WorkspaceGraphDraftSaveResponseSchema,
   WorkspaceGraphDraftSaveSuccessSchema,
+  WorkspaceGraphDraftSaveUnsupportedSchemaVersionSchema,
   WorkspaceGraphDraftScopeSchema,
 } from './contracts/planner/WorkspaceGraphDraft.v1.js';
 export type {
@@ -264,17 +271,20 @@ export type {
   WorkspaceGraphDraftFormatError,
   WorkspaceGraphDraftFormatErrorReason,
   WorkspaceGraphDraftFormatMeta,
-  WorkspaceGraphDraftMigrationState,
   WorkspaceGraphDraftReadDenied,
   WorkspaceGraphDraftReadFormatFailure,
+  WorkspaceGraphDraftReadNotFound,
   WorkspaceGraphDraftReadResponse,
   WorkspaceGraphDraftReadSuccess,
   WorkspaceGraphDraftRecord,
   WorkspaceGraphDraftSaveConflict,
+  WorkspaceGraphDraftSaveAuthoringAuthorityConflict,
   WorkspaceGraphDraftSaveDenied,
+  WorkspaceGraphDraftSaveIdempotencyMismatch,
   WorkspaceGraphDraftSaveRequest,
   WorkspaceGraphDraftSaveResponse,
   WorkspaceGraphDraftSaveSuccess,
+  WorkspaceGraphDraftSaveUnsupportedSchemaVersion,
   WorkspaceGraphDraftScope,
 } from './contracts/planner/WorkspaceGraphDraft.v1.js';
 export {

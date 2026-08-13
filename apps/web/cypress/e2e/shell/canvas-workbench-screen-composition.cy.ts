@@ -1,11 +1,13 @@
 /** Owned concern: verify the governed Canvas entry screen chrome in browser e2e. */
-import { buildProtectedDraftRecord } from '../../../src/app/services/workspace/workspaceGraphDraftAuthoring.test.fixtures';
 import {
   WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
   WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION,
-} from '../../../src/app/services/workspace/workspaceGraphDraftProtocol';
+} from '@dvt/contracts';
+
+import { buildProtectedDraftRecord } from '../../../src/app/services/workspace/workspaceGraphDraftAuthoring.test.fixtures';
 import {
   buildDraftReadOkResponse,
+  buildDraftReadNotFoundResponse,
   buildDraftSaveSavedResponse,
 } from '../../../src/app/services/workspace/workspaceGraphDraftProtocol.test.fixtures';
 import { buildCanvasAuthoringDraft } from '../../support/canvasDraftAuthoring';
@@ -20,6 +22,7 @@ import {
   waitForE2eApiCall,
 } from '../../support/e2eApiStub';
 import {
+  E2E_PROJECT_WORKSPACE,
   E2E_WORKSPACE_SESSION,
   stubShellBootstrapApis,
   visitWithE2eWorkspaceSession,
@@ -29,6 +32,11 @@ const ALTERNATE_WORKSPACE_SESSION = {
   tenantId: E2E_WORKSPACE_SESSION.tenantId,
   projectId: 'e2e-project-alt',
   environmentId: 'staging',
+} as const;
+
+const ALTERNATE_PROJECT_WORKSPACE = {
+  ...ALTERNATE_WORKSPACE_SESSION,
+  projectName: 'Alternate Project',
 } as const;
 
 const MODEL_PATH = 'models/analytics/model_orders.sql';
@@ -194,8 +202,8 @@ describe('Canvas workbench screen composition', () => {
       },
     });
     stubE2eJsonApi('GET', '/workspace/context', {
-      effectiveWorkspace: E2E_WORKSPACE_SESSION,
-      availableWorkspaces: [E2E_WORKSPACE_SESSION, ALTERNATE_WORKSPACE_SESSION],
+      defaultWorkspace: E2E_PROJECT_WORKSPACE,
+      availableWorkspaces: [E2E_PROJECT_WORKSPACE, ALTERNATE_PROJECT_WORKSPACE],
     });
     stubE2eApi('GET', '/workspace/files', ({ headers }) => ({
       body:
@@ -324,12 +332,7 @@ describe('Canvas workbench screen composition', () => {
       if (persistedDraft == null) {
         return {
           statusCode: 404,
-          body: {
-            error: {
-              type: 'not_found',
-              reason: 'workspace_graph_draft_not_found',
-            },
-          },
+          body: buildDraftReadNotFoundResponse(E2E_WORKSPACE_SESSION),
         };
       }
 
@@ -551,7 +554,7 @@ describe('Canvas workbench screen composition', () => {
     cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
     cy.contains(
       '[data-slot="shell-workspace-scope-selector"] button',
-      'e2e-tenant / e2e-project-alt / staging'
+      'Alternate Project / staging'
     ).click();
     cy.get('[data-slot="shell-workspace-menu-trigger"]').should(
       'contain.text',
@@ -599,7 +602,7 @@ describe('Canvas workbench screen composition', () => {
     cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
     cy.contains(
       '[data-slot="shell-workspace-scope-selector"] button',
-      'e2e-tenant / e2e-project / e2e-env'
+      'E2E Project / e2e-env'
     ).click();
     cy.get('[data-slot="run-operational-table"]', { timeout: 20_000 })
       .should('contain.text', 'run_primary_project')
@@ -771,9 +774,14 @@ describe('Canvas workbench screen composition', () => {
       .focus()
       .type('{leftarrow}');
     cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="runs"]')
-      .should('be.focused')
-      .and('have.attr', 'aria-selected', 'true')
+      .should('have.attr', 'aria-selected', 'true')
+      .and('have.attr', 'tabindex', '0')
       .and('have.attr', 'aria-controls', 'bottom-operational-drawer-panel-runs');
+    cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="preview"]').should(
+      'have.attr',
+      'tabindex',
+      '-1'
+    );
     cy.get('#bottom-operational-drawer-panel-runs')
       .should('be.visible')
       .and('have.attr', 'role', 'tabpanel')
@@ -829,6 +837,24 @@ describe('Canvas workbench screen composition', () => {
       revision: 'rev-e2e-graph-ready',
       draft: {
         ...graphDraft,
+        nodes: graphDraft.nodes.map((node) => {
+          const sql =
+            node.id === 'model_orders'
+              ? MODEL_SQL
+              : node.id === 'orphan_metrics'
+                ? ORPHAN_SQL
+                : null;
+          return sql == null
+            ? node
+            : {
+                ...node,
+                metadata: {
+                  ...node.metadata,
+                  sql,
+                  config: { ...node.metadata?.config, sql },
+                },
+              };
+        }),
         nodePositions: {
           ...graphDraft.nodePositions,
           src_orders: { x: 40, y: 140 },
@@ -880,33 +906,21 @@ describe('Canvas workbench screen composition', () => {
     cy.get('[data-slot="canvas-node-workbench-tab-code"]')
       .should('be.visible')
       .and('have.attr', 'aria-selected', 'true');
-    cy.get('[data-slot="canvas-node-workbench-open-code-editor"]').should('be.enabled').click();
-    cy.get('[data-slot="canvas-contextual-workbench"]')
-      .should('be.visible')
-      .and('contain.text', 'Código del nodo');
-    waitForE2eApiCall('/workspace/files/models%2Fanalytics%2Fmodel_orders.sql', 'GET');
-    cy.get('[data-testid="monaco-code-editor"], [data-testid="monaco-code-viewer"]')
-      .find('.view-line')
-      .should('have.length.at.least', 4)
-      .then(($lines) => {
-        const renderedLines = [...$lines].map((line) =>
-          (line.textContent ?? '').replaceAll('\u00a0', ' ').trimEnd()
-        );
-        expect(renderedLines.join('\n')).to.equal(MODEL_SQL);
-      });
+    cy.get('[data-slot="canvas-node-workbench-open-code-editor"]').should('not.exist');
+    cy.get('[data-slot="canvas-node-workbench-overlay"]').should('be.visible');
+    cy.get('textarea[name="dvt-transform-sql"]').should('have.value', MODEL_SQL);
 
-    cy.get('[data-slot="canvas-contextual-workbench-overlay"]')
+    cy.get('[data-slot="canvas-node-workbench-overlay"]')
       .invoke('attr', 'style')
       .then((initialStyle) => {
-        cy.get('[data-slot="canvas-contextual-workbench-drag-handle"]')
+        cy.get('[data-slot="canvas-node-workbench-drag-handle"]')
           .focus()
-          .type('{rightarrow}{downarrow}');
-        cy.get('[data-slot="canvas-contextual-workbench-overlay"]')
+          .type('{leftarrow}{uparrow}');
+        cy.get('[data-slot="canvas-node-workbench-overlay"]')
           .invoke('attr', 'style')
           .should('not.equal', initialStyle);
       });
-    assertNoSeriousAccessibilityViolations('[data-slot="canvas-contextual-workbench-overlay"]');
-    cy.get('[data-slot="canvas-contextual-workbench-close"]').click();
+    assertNoSeriousAccessibilityViolations('[data-slot="canvas-node-workbench-overlay"]');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     cy.get('.react-flow__node[data-id="model_orders"]').should('be.focused');
 
@@ -916,19 +930,10 @@ describe('Canvas workbench screen composition', () => {
     cy.get('[data-slot="canvas-node-workbench-tab-code"]')
       .should('be.visible')
       .and('have.attr', 'aria-selected', 'true');
-    cy.get('[data-slot="canvas-node-workbench-open-code-editor"]').should('be.enabled').click();
-    waitForE2eApiCall('/workspace/files/models%2Fanalytics%2Forphan_metrics.sql', 'GET');
-    cy.get('[data-testid="monaco-code-editor"], [data-testid="monaco-code-viewer"]')
-      .find('.view-line')
-      .should('have.length.at.least', 5)
-      .then(($lines) => {
-        const renderedLines = [...$lines].map((line) =>
-          (line.textContent ?? '').replaceAll('\u00a0', ' ').trimEnd()
-        );
-        expect(renderedLines.join('\n')).to.equal(ORPHAN_SQL);
-        expect(renderedLines.join('\n')).not.to.equal(MODEL_SQL);
-      });
-    cy.get('[data-slot="canvas-contextual-workbench-close"]').click();
+    cy.get('[data-slot="canvas-node-workbench-open-code-editor"]').should('not.exist');
+    cy.get('textarea[name="dvt-transform-sql"]')
+      .should('have.value', ORPHAN_SQL)
+      .and('not.have.value', MODEL_SQL);
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
 
     cy.get('.react-flow__node[data-id="src_orders"]')

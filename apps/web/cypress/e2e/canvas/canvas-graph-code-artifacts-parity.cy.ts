@@ -11,6 +11,7 @@ import {
   waitForE2eApiCall,
 } from '../../support/e2eApiStub';
 import {
+  E2E_PROJECT_WORKSPACE,
   E2E_WORKSPACE_SESSION,
   stubShellBootstrapApis,
   visitWithE2eWorkspaceSession,
@@ -40,8 +41,8 @@ describe('Canvas graph to execution-preview source parity', () => {
       },
     });
     stubE2eJsonApi('GET', '/workspace/context', {
-      effectiveWorkspace: E2E_WORKSPACE_SESSION,
-      availableWorkspaces: [E2E_WORKSPACE_SESSION],
+      defaultWorkspace: E2E_PROJECT_WORKSPACE,
+      availableWorkspaces: [E2E_PROJECT_WORKSPACE],
     });
     stubStatefulCanvasDraftAuthoring();
 

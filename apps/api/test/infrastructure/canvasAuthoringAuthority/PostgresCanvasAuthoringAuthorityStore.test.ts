@@ -184,6 +184,32 @@ describeWithPostgres('PostgresCanvasAuthoringAuthorityStore', () => {
     });
   });
 
+  it('re-evaluates current Canvas authority before replaying a completed graph save', async () => {
+    await expect(saveOrdersDraft()).resolves.toMatchObject({
+      kind: 'saved',
+      deduplicated: false,
+    });
+    await pool!.query(
+      `INSERT INTO "${schema}".canvas_authoring_authorities
+        (tenant_id, project_id, environment_id, canvas_id, binding_json, revision, updated_at)
+       VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7::timestamptz)`,
+      [
+        KEY.tenantId,
+        KEY.projectId,
+        KEY.environmentId,
+        KEY.canvasId,
+        JSON.stringify(BINDING),
+        'authority-after-save',
+        '2026-07-14T10:04:15.000Z',
+      ]
+    );
+
+    await expect(saveOrdersDraft()).resolves.toEqual({
+      kind: 'authoring_authority_conflict',
+      canvasIds: [KEY.canvasId],
+    });
+  });
+
   it('rejects the complete multi-Canvas aggregate when a secondary Canvas has file authority', async () => {
     await bindOrders();
     const baseline = buildWorkspaceGraphDraftSaveRequest();

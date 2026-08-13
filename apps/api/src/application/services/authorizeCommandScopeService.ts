@@ -4,6 +4,7 @@
  */
 import type { AuthenticatedPrincipal } from '../../domain/auth/types.js';
 import type {
+  AccessDecision,
   AuthorizationAction,
   DeniedReason,
   IAccessDecisionService,
@@ -15,9 +16,13 @@ import {
   type IAuthAuditPort,
 } from '../ports/auth.js';
 
+type AuthorizationResult<TAction extends AuthorizationAction = AuthorizationAction> =
+  | { readonly ok: true; readonly context: AuthorizedExecutionContext<TAction> }
+  | { readonly ok: false; readonly reason: DeniedReason };
+
 export class AuthorizeCommandScopeService {
   public constructor(
-    private readonly accessDecisionService: IAccessDecisionService,
+    private readonly accessDecisionService: Pick<IAccessDecisionService, 'decide' | 'decideMany'>,
     private readonly audit: IAuthAuditPort,
     private readonly clock: () => Date
   ) {}
@@ -26,10 +31,7 @@ export class AuthorizeCommandScopeService {
     principal: AuthenticatedPrincipal,
     requestedScope: RequestedScope<TAction>,
     requestId: string
-  ): Promise<
-    | { readonly ok: true; readonly context: AuthorizedExecutionContext<TAction> }
-    | { readonly ok: false; readonly reason: DeniedReason }
-  > {
+  ): Promise<AuthorizationResult<TAction>> {
     const decidedAt = this.clock();
     const outcome = await this.accessDecisionService.decide(principal, requestedScope);
     if (!outcome.ok) {
@@ -61,6 +63,64 @@ export class AuthorizeCommandScopeService {
     );
 
     return { ok: true, context };
+  }
+
+  public async authorizeMany(
+    principal: AuthenticatedPrincipal,
+    requestedScopes: readonly RequestedScope[],
+    requestId: string
+  ): Promise<readonly AuthorizationResult[]> {
+    const decidedAt = this.clock();
+    const outcomes = await this.accessDecisionService.decideMany(principal, requestedScopes);
+    if (outcomes.length !== requestedScopes.length) {
+      throw new Error('Access decision batch result length does not match requested scopes');
+    }
+
+    const results: AuthorizationResult[] = [];
+    for (const [index, requestedScope] of requestedScopes.entries()) {
+      const outcome = outcomes[index]!;
+      results.push(
+        await this.toAuthorizationResult(principal, requestedScope, requestId, decidedAt, outcome)
+      );
+    }
+    return results;
+  }
+
+  private async toAuthorizationResult(
+    principal: AuthenticatedPrincipal,
+    requestedScope: RequestedScope,
+    requestId: string,
+    decidedAt: Date,
+    outcome: AccessDecision
+  ): Promise<AuthorizationResult> {
+    if (!outcome.ok) {
+      await this.recordDeniedDecision(
+        principal,
+        requestedScope,
+        requestId,
+        decidedAt,
+        outcome.reason
+      );
+      return { ok: false, reason: outcome.reason };
+    }
+
+    await this.recordGrantedDecision(
+      principal,
+      requestedScope,
+      requestId,
+      decidedAt,
+      outcome.approvedScope
+    );
+    return {
+      ok: true,
+      context: {
+        principal,
+        scope: outcome.approvedScope,
+        action: requestedScope.action,
+        requestId,
+        authorizedAt: decidedAt,
+      },
+    };
   }
 
   private recordDeniedDecision<TAction extends AuthorizationAction>(

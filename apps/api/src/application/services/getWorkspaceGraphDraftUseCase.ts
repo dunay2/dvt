@@ -11,7 +11,6 @@ import {
   WORKSPACE_GRAPH_DRAFT_AUDIT_OUTCOME,
   WORKSPACE_GRAPH_DRAFT_CAPABILITY_MODE,
   WORKSPACE_GRAPH_DRAFT_FORMAT_ERROR_REASON,
-  WORKSPACE_GRAPH_DRAFT_MIGRATION_STATE,
   WorkspaceGraphAuthoringDraftSchema,
   parseWorkspaceGraphDraftReadResponse,
   type CanvasAuthoringAuthorityResolution,
@@ -30,15 +29,11 @@ import { WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION } from '../ports/workspaceG
 
 import type { CanvasAuthoringAuthorityPolicy } from './canvasAuthoringAuthorityPolicy.js';
 
-export type GetWorkspaceGraphDraftUseCaseResult =
-  | {
-      readonly kind: 'response';
-      readonly httpStatus: 200 | 401 | 403 | 422;
-      readonly response: WorkspaceGraphDraftReadResponse;
-    }
-  | {
-      readonly kind: 'not_found';
-    };
+export type GetWorkspaceGraphDraftUseCaseResult = {
+  readonly kind: 'response';
+  readonly httpStatus: 200 | 401 | 403 | 404 | 422;
+  readonly response: WorkspaceGraphDraftReadResponse;
+};
 
 export class GetWorkspaceGraphDraftUseCase {
   public constructor(
@@ -73,13 +68,18 @@ export class GetWorkspaceGraphDraftUseCase {
 
     const stored = await this.store.read(decision.scope);
     if (stored === null) {
+      const notFound = parseWorkspaceGraphDraftReadResponse({
+        kind: 'not_found',
+        capability: decision.capability,
+        auditRef: buildAuditRef(decision, outcomeForReadableMode(decision.capability.mode)),
+      });
       await this.audit.record({
         action: WORKSPACE_GRAPH_DRAFT_AUDIT_ACTION.draftRead,
         outcome: outcomeForReadableMode(decision.capability.mode),
         decision,
         metadata: { resourceStatus: 'not_found' },
       });
-      return { kind: 'not_found' };
+      return { kind: 'response', httpStatus: 404, response: notFound };
     }
 
     if (stored.schemaVersion !== WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION) {
@@ -139,7 +139,6 @@ export class GetWorkspaceGraphDraftUseCase {
       formatMeta: {
         schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
         storedSchemaVersion: stored.schemaVersion,
-        migrationState: WORKSPACE_GRAPH_DRAFT_MIGRATION_STATE.native,
       },
       authoringAuthority: await resolveGraphDraftAuthoringAuthority(
         this.authorityPolicy,

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { WorkspaceGraphDraftAuthoringReadResult } from '../../ports/workspaceGraphDraftAuthoring';
 import {
   buildDraftReadDeniedResponse,
+  buildDraftReadNotFoundResponse,
   buildDraftReadOkResponse,
 } from '../../services/workspace/workspaceGraphDraftProtocol.test.fixtures';
 import {
@@ -84,7 +85,9 @@ describe('Canvas authoring draft read model', () => {
   );
 
   it('keeps not_found as an unknown read model with no synthetic draft', () => {
-    const result = projectCanvasAuthoringDraftReadModel({ kind: 'not_found' });
+    const result = projectCanvasAuthoringDraftReadModel(
+      buildDraftReadNotFoundResponse(DEFAULT_CANVAS_AUTHORING_SCOPE)
+    );
 
     expect(result).toEqual(createUnknownCanvasAuthoringDraftReadModel());
   });

@@ -7,6 +7,7 @@ import type {
   WorkspaceGraphDraftAuthoringSaveResult,
 } from '../../ports/workspaceGraphDraftAuthoring';
 import { createCanvasDraftRepository } from './canvasDraftRepository';
+import { buildDraftReadNotFoundResponse } from '../../services/workspace/workspaceGraphDraftProtocol.test.fixtures';
 import {
   buildAuthoringPort,
   buildSaveInput,
@@ -36,7 +37,6 @@ function buildConflictSaveResult(): WorkspaceGraphDraftAuthoringSaveResult {
     formatMeta: {
       schemaVersion: 'workspace-graph-draft.v1',
       storedSchemaVersion: 'workspace-graph-draft.v1',
-      migrationState: 'native',
     },
     currentRevision: 'rev-remote',
   };
@@ -125,7 +125,6 @@ function buildRemoteReadResult(): WorkspaceGraphDraftAuthoringReadResult {
     formatMeta: {
       schemaVersion: 'workspace-graph-draft.v1',
       storedSchemaVersion: 'workspace-graph-draft.v1',
-      migrationState: 'native',
     },
     authoringAuthority: {
       kind: 'resolved',
@@ -173,7 +172,6 @@ function buildExpectedConflictRemoteDraftState(): ConflictSaveGraphDraftResult['
     formatMeta: {
       schemaVersion: 'workspace-graph-draft.v1',
       storedSchemaVersion: 'workspace-graph-draft.v1',
-      migrationState: 'native',
     },
     record: buildExpectedConflictCurrentRecord(),
     semanticGraph: {
@@ -253,9 +251,9 @@ describe('canvasDraftRepository conflict handling', () => {
       saveGraphDraft: vi.fn(async (): Promise<WorkspaceGraphDraftAuthoringSaveResult> =>
         buildConflictSaveResult()
       ) as IWorkspaceGraphDraftAuthoringPort['saveGraphDraft'],
-      readGraphDraft: vi.fn(async (): Promise<WorkspaceGraphDraftAuthoringReadResult> => ({
-        kind: 'not_found',
-      })) as IWorkspaceGraphDraftAuthoringPort['readGraphDraft'],
+      readGraphDraft: vi.fn(async (): Promise<WorkspaceGraphDraftAuthoringReadResult> =>
+        buildDraftReadNotFoundResponse(WORKSPACE_SCOPE)
+      ) as IWorkspaceGraphDraftAuthoringPort['readGraphDraft'],
     });
     const repository = createCanvasDraftRepository(authoringPort);
 

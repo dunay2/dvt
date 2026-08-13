@@ -70,15 +70,17 @@ describe('resolveProtectedRouteSessionContext', () => {
 
       if (endpoint === '/workspace/context') {
         return {
-          effectiveWorkspace: {
+          defaultWorkspace: {
             tenantId: 'tenant-a',
             projectId: 'project-a',
+            projectName: 'Analytics',
             environmentId: 'prod',
           },
           availableWorkspaces: [
             {
               tenantId: 'tenant-a',
               projectId: 'project-a',
+              projectName: 'Analytics',
               environmentId: 'prod',
             },
           ],
@@ -107,6 +109,7 @@ describe('resolveProtectedRouteSessionContext', () => {
         {
           tenantId: 'tenant-a',
           projectId: 'project-a',
+          projectName: 'Analytics',
           environmentId: 'prod',
         },
       ],
@@ -137,15 +140,17 @@ describe('resolveProtectedRouteSessionContext', () => {
 
       if (endpoint === '/workspace/context') {
         return {
-          effectiveWorkspace: {
+          defaultWorkspace: {
             tenantId: 'tenant-a',
             projectId: 'project-a',
+            projectName: 'Analytics',
             environmentId: 'prod',
           },
           availableWorkspaces: [
             {
               tenantId: 'tenant-a',
               projectId: 'project-a',
+              projectName: 'Analytics',
               environmentId: 'prod',
             },
           ],
@@ -186,15 +191,17 @@ describe('resolveProtectedRouteSessionContext', () => {
 
       if (endpoint === '/workspace/context') {
         return {
-          effectiveWorkspace: {
+          defaultWorkspace: {
             tenantId: 'tenant-a',
             projectId: 'project-a',
+            projectName: 'Analytics',
             environmentId: 'prod',
           },
           availableWorkspaces: [
             {
               tenantId: 'tenant-a',
               projectId: 'project-a',
+              projectName: 'Analytics',
               environmentId: 'prod',
             },
           ],
@@ -236,20 +243,23 @@ describe('resolveProtectedRouteSessionContext', () => {
 
       if (endpoint === '/workspace/context') {
         return {
-          effectiveWorkspace: {
+          defaultWorkspace: {
             tenantId: 'tenant-a',
             projectId: 'project-transformation',
+            projectName: 'Transformation',
             environmentId: 'prod',
           },
           availableWorkspaces: [
             {
               tenantId: 'tenant-a',
               projectId: 'project-transformation',
+              projectName: 'Transformation',
               environmentId: 'prod',
             },
             {
               tenantId: 'tenant-a',
               projectId: 'project-dbt',
+              projectName: 'DBT',
               environmentId: 'prod',
             },
           ],

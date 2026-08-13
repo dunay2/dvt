@@ -4,6 +4,7 @@ import type { RunContext } from '../types/engine';
 export type WorkspaceScopeIdentity = {
   readonly tenantId: string;
   readonly projectId: string;
+  readonly projectName?: string;
   readonly environmentId: string;
 };
 

@@ -50,7 +50,6 @@ import { buildWorkspaceFileHistoryEndpoint } from './workspaceFileHistoryHttp';
 import {
   buildWorkspaceGraphDraftEndpoint,
   createRequestFailedApiError,
-  isWorkspaceGraphDraftNotFoundResponse,
   isWorkspaceHttpErrorEnvelope,
   parseJsonResponse,
   readWorkspaceGraphDraftScope,
@@ -83,7 +82,12 @@ async function getWorkspaceGraphSnapshot(apiClient: ApiClient): Promise<Workspac
   });
   const responseBody = await parseJsonResponse(response);
 
-  if (isWorkspaceGraphDraftNotFoundResponse({ statusCode: response.status, responseBody })) {
+  if (response.status !== 200 && response.status !== 404) {
+    throw createRequestFailedApiError(endpoint, response.status, responseBody);
+  }
+
+  const draftResponse = parseWorkspaceGraphDraftReadResponse(responseBody);
+  if (draftResponse.kind === 'not_found') {
     return {
       nodes: [],
       edges: [],
@@ -95,13 +99,7 @@ async function getWorkspaceGraphSnapshot(apiClient: ApiClient): Promise<Workspac
     };
   }
 
-  if (response.status !== 200) {
-    throw createRequestFailedApiError(endpoint, response.status, responseBody);
-  }
-
-  return projectWorkspaceGraphDraftReadResponseSnapshot(
-    parseWorkspaceGraphDraftReadResponse(responseBody)
-  );
+  return projectWorkspaceGraphDraftReadResponseSnapshot(draftResponse);
 }
 
 function rejectUnsupportedApiWorkspaceCapability(

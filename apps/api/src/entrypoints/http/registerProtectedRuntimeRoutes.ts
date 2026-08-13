@@ -15,18 +15,19 @@ import { registerProtectedDbtProjectImportRouteGroup } from './dbtProjectImportR
 import { registerProtectedDbtSelectedModelAnalysisRouteGroup } from './dbtSelectedModelAnalysisRouteGroup.js';
 import { registerProtectedDbtYamlDescriptionEditRouteGroup } from './dbtYamlDescriptionEditRouteGroup.js';
 import { registerProtectedGraphDbtWorkspaceArtifactPublicationRouteGroup } from './graphDbtWorkspaceArtifactPublicationRouteGroup.js';
-import { registerProjectOnboardingRouteGroup } from './projectOnboardingRouteGroup.js';
+import { registerProjectOnboardingRoutes } from './projectOnboardingRoutes.js';
 import { registerProtectedAdminRouteGroup } from './protectedRuntimeAdminRouteGroup.js';
 import { registerProtectedPlanRoutes } from './protectedRuntimePlanRoutes.js';
 import { buildProtectedRuntimeRouteDependencies } from './protectedRuntimeRouteDependencies.js';
 import { registerProtectedRunRoutes } from './protectedRuntimeRunRoutes.js';
 import { registerProtectedSessionRoutes } from './protectedRuntimeSessionRoutes.js';
-import { registerProtectedWorkspaceContextRouteGroup } from './protectedRuntimeWorkspaceContextRouteGroup.js';
-import { registerProtectedWorkspaceGraphDraftRouteGroup } from './protectedRuntimeWorkspaceGraphDraftRouteGroup.js';
+import { RUNTIME_ROUTE_PATH } from './runtimeRoutes.constants.js';
 import { registerProtectedWarehouseSourceImportRouteGroup } from './warehouseSourceImportRouteGroup.js';
+import { workspaceContextRoute } from './workspaceContextRoute.js';
 import { registerProtectedWorkspaceDiffChangesRouteGroup } from './workspaceDiffChangesRouteGroup.js';
 import { registerWorkspaceFileHistoryRoutes } from './workspaceFileHistoryRoutes.js';
 import { registerProtectedWorkspaceFilesRouteGroup } from './workspaceFilesRouteGroup.js';
+import { registerWorkspaceGraphDraftRoutes } from './workspaceGraphDraftRoutes.js';
 import { registerProtectedWorkspacePluginCatalogRouteGroup } from './workspacePluginCatalogRouteGroup.js';
 
 export type RegisterProtectedRuntimeRoutesOptions = {
@@ -41,17 +42,38 @@ export async function registerProtectedRuntimeRoutes(
 ): Promise<void> {
   const { env, observability, protectedModule } = options;
   const dependencies = buildProtectedRuntimeRouteDependencies(options);
+  const protectedRateLimit = {
+    max: env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_MAX,
+    timeWindow: env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_TIME_WINDOW_MS,
+  };
 
   registerProtectedSessionRoutes(app, env, protectedModule);
   registerProtectedPlanRoutes(app, env, protectedModule, dependencies);
-  registerProjectOnboardingRouteGroup(app, env, protectedModule);
-  registerProtectedWorkspaceContextRouteGroup(app, env, protectedModule);
+  registerProjectOnboardingRoutes(app, {
+    authenticator: protectedModule.authenticator,
+    listProjectsUseCase: protectedModule.listProjectsUseCase,
+    createProjectUseCase: protectedModule.createProjectUseCase,
+    rateLimit: protectedRateLimit,
+  });
+  app.get(
+    RUNTIME_ROUTE_PATH.workspaceContext,
+    { config: { rateLimit: protectedRateLimit } },
+    async (request, reply) =>
+      workspaceContextRoute(request, reply, {
+        adapterRegistry: protectedModule.startRunTargetAdapterRegistry,
+        authenticator: protectedModule.authenticator,
+        workspaceContextQuery: protectedModule.workspaceContextQuery,
+      })
+  );
   registerProtectedWorkspacePluginCatalogRouteGroup(app, env, protectedModule);
-  registerProtectedWorkspaceGraphDraftRouteGroup(app, {
-    dependencies,
-    env,
+  registerWorkspaceGraphDraftRoutes(app, {
+    authenticator: dependencies.runtimeAuth.authenticator,
+    capabilityService: protectedModule.workspaceGraphDraftCapabilityService,
+    getUseCase: protectedModule.getWorkspaceGraphDraftUseCase,
+    saveUseCase: protectedModule.saveWorkspaceGraphDraftUseCase,
+    telemetry: dependencies.workspaceGraphDraftTelemetry,
     observability,
-    protectedModule,
+    rateLimit: protectedRateLimit,
   });
   registerProtectedDbtProjectGraphRouteGroup(app, {
     env,

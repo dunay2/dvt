@@ -12,6 +12,11 @@ import type {
   WorkspaceGraphDraftCapabilityOutcome,
   WorkspaceGraphDraftScope,
 } from '@dvt/contracts';
+export {
+  resolveWorkspaceGraphDraftCanvasIds,
+  WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
+  WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION,
+} from '@dvt/contracts';
 
 import type {
   AuthenticatedPrincipal,
@@ -33,9 +38,6 @@ export const WORKSPACE_GRAPH_DRAFT_ACTION = {
   readonly view: QueryAuthorizationAction;
   readonly save: CommandAuthorizationAction;
 };
-
-export const WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION = 'workspace-graph-draft.v1';
-export const WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION = 'initial';
 
 export interface WorkspaceGraphDraftRequestedScope {
   readonly tenantId: TenantId;
@@ -88,18 +90,6 @@ export interface IWorkspaceGraphDraftStore {
     readonly revision: string;
     readonly nowIso: string;
   }): Promise<WorkspaceGraphDraftSaveStoreResult>;
-}
-
-export function resolveWorkspaceGraphDraftCanvasIds(
-  draft: WorkspaceGraphAuthoringDraft
-): readonly string[] {
-  const canvasIds = new Set<string>();
-  if (draft.canvas.id) canvasIds.add(draft.canvas.id);
-  if (draft.activeCanvasId) canvasIds.add(draft.activeCanvasId);
-  for (const workspace of draft.canvases ?? []) {
-    canvasIds.add(workspace.canvas.id);
-  }
-  return [...canvasIds].sort((left, right) => left.localeCompare(right));
 }
 
 export interface WorkspaceGraphDraftDecisionContext {

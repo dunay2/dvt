@@ -240,15 +240,6 @@ export const canvasViewRouteCopyByKey = {
     fallback:
       'Canvas cannot load the persisted draft because the stored payload is corrupt and fails the governed contract.',
   },
-  draftMigrationFailedTitle: {
-    key: 'canvas.draft.migrationFailedTitle',
-    fallback: 'Persisted draft migration failed',
-  },
-  draftMigrationFailedMessage: {
-    key: 'canvas.draft.migrationFailedMessage',
-    fallback:
-      'Canvas cannot load the persisted draft because its governed migration to the active format failed.',
-  },
   staleDraftTitle: {
     key: 'canvas.draft.staleTitle',
     fallback: 'Stale draft version',

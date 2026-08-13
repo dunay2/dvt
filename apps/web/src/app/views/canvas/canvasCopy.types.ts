@@ -57,8 +57,6 @@ export type CanvasViewCopy = {
   readonly draftUnsupportedSchemaMessage: string;
   readonly draftCorruptPayloadTitle: string;
   readonly draftCorruptPayloadMessage: string;
-  readonly draftMigrationFailedTitle: string;
-  readonly draftMigrationFailedMessage: string;
   readonly staleDraftTitle: string;
   readonly staleDraftMessage: string;
   readonly draftProjectionGapTitle: string;

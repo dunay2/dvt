@@ -10,6 +10,7 @@ import type { AuthenticatedPrincipal } from '../../domain/auth/types.js';
 
 import type { AuthorizationAction } from './accessDecisionActions.js';
 import type { ExecutionScope } from './accessDecisionScopes.js';
+import type { PrincipalGrantSnapshot } from './principalGrantRepository.js';
 
 export {
   AUTHORIZATION_ACTION,
@@ -70,4 +71,18 @@ export interface IAccessDecisionService {
     principal: AuthenticatedPrincipal,
     requestedScope: RequestedScope<TAction>
   ): Promise<AccessDecision<TAction>>;
+  decideMany(
+    principal: AuthenticatedPrincipal,
+    requestedScopes: readonly RequestedScope[]
+  ): Promise<readonly AccessDecision[]>;
+  decideFromSnapshot<TAction extends AuthorizationAction>(
+    principal: AuthenticatedPrincipal,
+    effectiveAccess: PrincipalGrantSnapshot | null,
+    requestedScope: RequestedScope<TAction>
+  ): AccessDecision<TAction>;
+  decideManyFromSnapshot(
+    principal: AuthenticatedPrincipal,
+    effectiveAccess: PrincipalGrantSnapshot | null,
+    requestedScopes: readonly RequestedScope[]
+  ): readonly AccessDecision[];
 }

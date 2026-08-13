@@ -183,7 +183,7 @@ describe('workspace scope selection command', () => {
           projectId: 'project-x',
           environmentId: 'dev',
         },
-        effectiveWorkspace: selectedScope,
+        defaultWorkspace: selectedScope,
         availableWorkspaces: [selectedScope, alternateScope],
       })
     ).toEqual({

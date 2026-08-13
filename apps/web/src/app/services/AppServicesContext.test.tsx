@@ -24,6 +24,7 @@ import type { IWorkspaceGraphDraftAuthoringPort } from '../ports/workspaceGraphD
 import type { IDbtProjectGraphQueryPort } from '../ports/dbtProjectGraph';
 import type { IDbtProjectImportPort } from '../ports/dbtProjectImport';
 import { makePlanRef, makeRunContext } from '../testing/contractTestUtils';
+import { buildDraftReadNotFoundResponse } from './workspace/workspaceGraphDraftProtocol.test.fixtures';
 import {
   AppServicesProvider,
   useCapabilitiesPort,
@@ -237,7 +238,12 @@ describe('AppServicesProvider', () => {
       }),
     };
     const workspaceGraphDraftAuthoringPort: IWorkspaceGraphDraftAuthoringPort = {
-      readGraphDraft: async () => ({ kind: 'not_found' }),
+      readGraphDraft: async () =>
+        buildDraftReadNotFoundResponse({
+          tenantId: 'tenant-a',
+          projectId: 'project-a',
+          environmentId: 'dev',
+        }),
       saveGraphDraft: async () => ({
         kind: 'saved',
         capability: {
@@ -261,7 +267,6 @@ describe('AppServicesProvider', () => {
         formatMeta: {
           schemaVersion: 'workspace-graph-draft.v1',
           storedSchemaVersion: 'workspace-graph-draft.v1',
-          migrationState: 'native',
         },
         revision: 'rev-1',
       }),

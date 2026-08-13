@@ -1,12 +1,13 @@
 import {
+  WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
+  WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION,
+} from '@dvt/contracts';
+
+import {
   buildLargeWorkspaceGraphAuthoringDraft,
   buildProtectedDraftRecord,
   buildWorkspaceGraphAuthoringDraft,
 } from '../../src/app/services/workspace/workspaceGraphDraftAuthoring.test.fixtures';
-import {
-  WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
-  WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION,
-} from '../../src/app/services/workspace/workspaceGraphDraftProtocol';
 import {
   buildDraftReadOkResponse,
   buildDraftSaveSavedResponse,

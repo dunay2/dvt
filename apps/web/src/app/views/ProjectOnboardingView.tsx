@@ -52,7 +52,7 @@ function resolveDefaultEnvironment(project: ProjectDescriptor): string {
 }
 
 function resolveTenantDisplayName(tenant: ProjectOnboardingCatalog['tenants'][number]): string {
-  return tenant.displayName ?? tenant.tenantId;
+  return tenant.tenantId;
 }
 
 export default function ProjectOnboardingView({
@@ -141,6 +141,7 @@ export default function ProjectOnboardingView({
       await onProjectSelected({
         tenantId: project.tenantId,
         projectId: project.projectId,
+        projectName: project.name,
         environmentId: resolveDefaultEnvironment(project),
       });
     } catch (error) {

@@ -1,4 +1,4 @@
-/** Owned concern: expose server-owned effective workspace context for protected web routes. */
+/** Owned concern: expose server-owned granted workspace context and default. */
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
 import type { IAuthenticator } from '../../application/ports/auth.js';

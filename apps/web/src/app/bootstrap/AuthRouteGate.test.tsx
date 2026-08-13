@@ -31,9 +31,10 @@ vi.mock('../views/ProjectOnboardingView', () => ({
             name: 'Orders',
             environmentIds: ['dev'],
           },
-          effectiveWorkspace: {
+          defaultWorkspace: {
             tenantId: 'tenant-1',
             projectId: 'orders',
+            projectName: 'Orders',
             environmentId: 'dev',
           },
         });

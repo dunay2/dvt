@@ -14,6 +14,11 @@ export const E2E_WORKSPACE_SESSION: E2eWorkspaceSession = {
   environmentId: 'e2e-env',
 };
 
+export const E2E_PROJECT_WORKSPACE = {
+  ...E2E_WORKSPACE_SESSION,
+  projectName: 'E2E Project',
+} as const;
+
 export const LIVE_WORKSPACE_SESSION: E2eWorkspaceSession = {
   tenantId: 'tenant',
   projectId: 'project',
