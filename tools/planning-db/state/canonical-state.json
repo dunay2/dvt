@@ -11741,6 +11741,34 @@
         "updated_at": "2026-08-13T08:15:10.564+00:00"
       },
       {
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "work_item_id": "https://github.com/dunay2/dvt/issues/2169",
+        "title": "Remove retired run lifecycle authority references",
+        "owner": "Architecture",
+        "status": "approved",
+        "rationale": "Active Planning DB contracts, relations, tests, and feature rails must reference only surviving run lifecycle code while historical operations remain immutable.",
+        "fowler_signal": "hidden_authority",
+        "rail_ref": "RecordArchitectureContract",
+        "approved_at": "2026-08-13T13:54:39.205+00:00",
+        "supersedes_id": null,
+        "created_at": "2026-08-13T13:51:53.076+00:00",
+        "updated_at": "2026-08-13T13:54:39.205+00:00"
+      },
+      {
+        "design_id": "MVP-2169-START-RUN-ACTIVE-EVIDENCE-HARDCUT-20260813",
+        "work_item_id": "https://github.com/dunay2/dvt/issues/2169",
+        "title": "Remove retired start-run test authority",
+        "owner": "Architecture",
+        "status": "approved",
+        "rationale": "The active test contract and guard relation must validate the surviving start-run admission boundary after the duplicate facade was removed.",
+        "fowler_signal": "hidden_authority",
+        "rail_ref": "RecordArchitectureContract",
+        "approved_at": "2026-08-13T13:58:27.337+00:00",
+        "supersedes_id": null,
+        "created_at": "2026-08-13T13:58:23.65+00:00",
+        "updated_at": "2026-08-13T13:58:27.337+00:00"
+      },
+      {
         "design_id": "MVP-2169-START-RUN-COMPONENT-PATH-CORRECTION-20260813",
         "work_item_id": "https://github.com/dunay2/dvt/issues/2169",
         "title": "Remap start-run component authority after facade retirement",
@@ -16105,9 +16133,9 @@
         "contract_ref": "API start-run admission and dispatch service boundary.",
         "compatibility": "internal",
         "status": "implemented",
-        "validation_command": "pnpm --filter dvt-api test -- apps/api/test/application/services/startRunAuthorizedFacade.auth.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.admissionModes.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.duplicateFlow.test.ts apps/api/test/application/services/engineStartRunUseCase.commandPath.test.ts apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts apps/api/test/application/services/startRunTargetAdapterRegistry.test.ts",
+        "validation_command": "pnpm --filter dvt-api test -- test/application/services/BackpressureAwareStartRunUseCase.admissionModes.test.ts test/application/services/engineStartRunUseCase.commandPath.test.ts test/entrypoints/http/startRunRoute.validation.test.ts",
         "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
+        "updated_at": "2026-08-13T13:52:19.256+00:00"
       },
       {
         "contract_id": "CONTRACT-SYS-API-APPLICATION-SERVICES-WAREHOUSE-SOURCES-API-APPLICATION-SERVICE",
@@ -16501,9 +16529,9 @@
         "contract_ref": "API start-run admission test evidence boundary.",
         "compatibility": "internal",
         "status": "implemented",
-        "validation_command": "pnpm --filter dvt-api test -- apps/api/test/application/services/startRunAuthorizedFacade.auth.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.admissionModes.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.duplicateFlow.test.ts apps/api/test/application/services/engineStartRunUseCase.commandPath.test.ts apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts apps/api/test/application/services/startRunTargetAdapterRegistry.test.ts",
+        "validation_command": "pnpm --filter dvt-api test -- test/application/services/BackpressureAwareStartRunUseCase.admissionModes.test.ts test/application/services/engineStartRunUseCase.commandPath.test.ts test/entrypoints/http/startRunRoute.validation.test.ts",
         "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
+        "updated_at": "2026-08-13T13:58:24.919+00:00"
       },
       {
         "contract_id": "CONTRACT-SYS-API-TESTS-APPLICATION-SERVICES-WAREHOUSE-SOURCES-EVIDENCE",
@@ -23379,15 +23407,14 @@
         "direction": "outbound",
         "sync_async": "build_time",
         "contract_id": null,
-        "failure_mode": "Component profile becomes incomplete if this API application-service leaf is removed or remapped without a governed Planning DB component update.",
+        "failure_mode": "Component profile becomes incomplete if the surviving start-run admission service is removed or remapped without a governed Planning DB component update.",
         "authorization_scope": "repo-local API application governance",
         "source_refs": [
-          "docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md",
-          "apps/api/src/application/services/startRunAuthorizedFacade.ts"
+          "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md"
         ],
         "status": "implemented",
         "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
+        "updated_at": "2026-08-13T13:52:20.478+00:00"
       },
       {
         "relation_id": "REL-API-APPLICATION-SERVICES-CONTAINS-WAREHOUSE-SOURCES",
@@ -24788,15 +24815,14 @@
         "direction": "outbound",
         "sync_async": "build_time",
         "contract_id": null,
-        "failure_mode": "Component profile becomes incomplete if this API application-service test evidence leaf is removed or remapped without a governed Planning DB component update.",
+        "failure_mode": "Component profile becomes incomplete if the surviving start-run admission test evidence is removed or remapped without a governed Planning DB component update.",
         "authorization_scope": "repo-local API test governance",
         "source_refs": [
-          "docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md",
-          "apps/api/test/application/services/startRunAuthorizedFacade.auth.test.ts"
+          "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md"
         ],
         "status": "implemented",
         "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
+        "updated_at": "2026-08-13T13:52:21.71+00:00"
       },
       {
         "relation_id": "REL-API-TESTS-APPLICATION-SERVICES-CONTAINS-WAREHOUSE-SOURCES",
@@ -32330,12 +32356,11 @@
         "failure_mode": "Implementation component can drift without this test evidence being visible in the Planning DB component graph.",
         "authorization_scope": "repo-local API test evidence",
         "source_refs": [
-          "docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md",
-          "apps/api/test/application/services/startRunAuthorizedFacade.auth.test.ts"
+          "apps/api/test/application/services/BackpressureAwareStartRunUseCase.admissionModes.test.ts"
         ],
         "status": "implemented",
         "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
+        "updated_at": "2026-08-13T13:58:26.148+00:00"
       },
       {
         "relation_id": "REL-SYS-API-TESTS-APPLICATION-SERVICES-WAREHOUSE-SOURCES-GUARDS-API-APPLICATION-SERVICES-WAREHOUSE-SOURCES",
@@ -46739,7 +46764,7 @@
         "test_kind": "architecture",
         "coverage_level": "flow",
         "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- apps/api/test/application/services/startRunAuthorizedFacade.auth.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.admissionModes.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.duplicateFlow.test.ts apps/api/test/application/services/engineStartRunUseCase.commandPath.test.ts apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts apps/api/test/application/services/startRunTargetAdapterRegistry.test.ts",
+        "validation_command": "pnpm --filter dvt-api test -- test/application/services/BackpressureAwareStartRunUseCase.admissionModes.test.ts",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -46749,7 +46774,7 @@
         "test_kind": "architecture",
         "coverage_level": "flow",
         "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- apps/api/test/application/services/startRunAuthorizedFacade.auth.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.admissionModes.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.duplicateFlow.test.ts apps/api/test/application/services/engineStartRunUseCase.commandPath.test.ts apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts apps/api/test/application/services/startRunTargetAdapterRegistry.test.ts",
+        "validation_command": "pnpm --filter dvt-api test -- test/application/services/PlannerBackedStartRunUseCase.test.ts",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -46759,7 +46784,7 @@
         "test_kind": "architecture",
         "coverage_level": "flow",
         "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- apps/api/test/application/services/startRunAuthorizedFacade.auth.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.admissionModes.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.duplicateFlow.test.ts apps/api/test/application/services/engineStartRunUseCase.commandPath.test.ts apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts apps/api/test/application/services/startRunTargetAdapterRegistry.test.ts",
+        "validation_command": "pnpm --filter dvt-api test -- test/application/services/resolveAuthorizedExecutableSubgraph.test.ts",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -46769,7 +46794,7 @@
         "test_kind": "architecture",
         "coverage_level": "flow",
         "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- apps/api/test/application/services/startRunAuthorizedFacade.auth.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.admissionModes.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.duplicateFlow.test.ts apps/api/test/application/services/engineStartRunUseCase.commandPath.test.ts apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts apps/api/test/application/services/startRunTargetAdapterRegistry.test.ts",
+        "validation_command": "pnpm --filter dvt-api test -- test/application/services/startRunAdmissionDecisions.test.ts",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -46779,17 +46804,7 @@
         "test_kind": "architecture",
         "coverage_level": "flow",
         "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- apps/api/test/application/services/startRunAuthorizedFacade.auth.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.admissionModes.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.duplicateFlow.test.ts apps/api/test/application/services/engineStartRunUseCase.commandPath.test.ts apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts apps/api/test/application/services/startRunTargetAdapterRegistry.test.ts",
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "test_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-16",
-        "component_id": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
-        "test_path": "apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts",
-        "test_kind": "architecture",
-        "coverage_level": "flow",
-        "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- apps/api/test/application/services/startRunAuthorizedFacade.auth.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.admissionModes.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.duplicateFlow.test.ts apps/api/test/application/services/engineStartRunUseCase.commandPath.test.ts apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts apps/api/test/application/services/startRunTargetAdapterRegistry.test.ts",
+        "validation_command": "pnpm --filter dvt-api test -- test/infrastructure/admissionTelemetry/ObservabilityAdmissionTelemetry.test.ts",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -46799,7 +46814,7 @@
         "test_kind": "architecture",
         "coverage_level": "flow",
         "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- apps/api/test/application/services/startRunAuthorizedFacade.auth.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.admissionModes.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.duplicateFlow.test.ts apps/api/test/application/services/engineStartRunUseCase.commandPath.test.ts apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts apps/api/test/application/services/startRunTargetAdapterRegistry.test.ts",
+        "validation_command": "pnpm --filter dvt-api test -- test/application/services/BackpressureAwareStartRunUseCase.executionCapacity.test.ts",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -46809,7 +46824,7 @@
         "test_kind": "architecture",
         "coverage_level": "flow",
         "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- apps/api/test/application/services/startRunAuthorizedFacade.auth.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.admissionModes.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.duplicateFlow.test.ts apps/api/test/application/services/engineStartRunUseCase.commandPath.test.ts apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts apps/api/test/application/services/startRunTargetAdapterRegistry.test.ts",
+        "validation_command": "pnpm --filter dvt-api test -- test/application/services/BackpressureAwareStartRunUseCase.duplicateFlow.test.ts",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -46819,7 +46834,7 @@
         "test_kind": "architecture",
         "coverage_level": "flow",
         "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- apps/api/test/application/services/startRunAuthorizedFacade.auth.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.admissionModes.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.duplicateFlow.test.ts apps/api/test/application/services/engineStartRunUseCase.commandPath.test.ts apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts apps/api/test/application/services/startRunTargetAdapterRegistry.test.ts",
+        "validation_command": "pnpm --filter dvt-api test -- test/application/services/startRunTargetAdapterRegistry.test.ts",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -46829,17 +46844,7 @@
         "test_kind": "architecture",
         "coverage_level": "flow",
         "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- apps/api/test/application/services/startRunAuthorizedFacade.auth.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.admissionModes.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.duplicateFlow.test.ts apps/api/test/application/services/engineStartRunUseCase.commandPath.test.ts apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts apps/api/test/application/services/startRunTargetAdapterRegistry.test.ts",
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "test_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-4",
-        "component_id": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
-        "test_path": "apps/api/test/application/services/BackpressureAwareStartRunUseCase.executionCapacity.test.ts",
-        "test_kind": "architecture",
-        "coverage_level": "flow",
-        "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- apps/api/test/application/services/startRunAuthorizedFacade.auth.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.admissionModes.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.duplicateFlow.test.ts apps/api/test/application/services/engineStartRunUseCase.commandPath.test.ts apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts apps/api/test/application/services/startRunTargetAdapterRegistry.test.ts",
+        "validation_command": "pnpm --filter dvt-api test -- test/application/services/BackpressureAwareStartRunUseCase.executionCapacityReadyzBinding.test.ts",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -46849,7 +46854,7 @@
         "test_kind": "architecture",
         "coverage_level": "flow",
         "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- apps/api/test/application/services/startRunAuthorizedFacade.auth.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.admissionModes.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.duplicateFlow.test.ts apps/api/test/application/services/engineStartRunUseCase.commandPath.test.ts apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts apps/api/test/application/services/startRunTargetAdapterRegistry.test.ts",
+        "validation_command": "pnpm --filter dvt-api test -- test/application/services/DbtRunExecutionContextBindingUseCase.test.ts",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -46859,7 +46864,7 @@
         "test_kind": "architecture",
         "coverage_level": "flow",
         "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- apps/api/test/application/services/startRunAuthorizedFacade.auth.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.admissionModes.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.duplicateFlow.test.ts apps/api/test/application/services/engineStartRunUseCase.commandPath.test.ts apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts apps/api/test/application/services/startRunTargetAdapterRegistry.test.ts",
+        "validation_command": "pnpm --filter dvt-api test -- test/application/services/defaultStartRunExecutionCapacityPort.test.ts",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -46869,7 +46874,7 @@
         "test_kind": "architecture",
         "coverage_level": "flow",
         "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- apps/api/test/application/services/startRunAuthorizedFacade.auth.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.admissionModes.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.duplicateFlow.test.ts apps/api/test/application/services/engineStartRunUseCase.commandPath.test.ts apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts apps/api/test/application/services/startRunTargetAdapterRegistry.test.ts",
+        "validation_command": "pnpm --filter dvt-api test -- test/application/services/engineStartRunUseCase.commandPath.test.ts",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -46879,17 +46884,7 @@
         "test_kind": "architecture",
         "coverage_level": "flow",
         "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- apps/api/test/application/services/startRunAuthorizedFacade.auth.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.admissionModes.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.duplicateFlow.test.ts apps/api/test/application/services/engineStartRunUseCase.commandPath.test.ts apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts apps/api/test/application/services/startRunTargetAdapterRegistry.test.ts",
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "test_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-9",
-        "component_id": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
-        "test_path": "apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts",
-        "test_kind": "architecture",
-        "coverage_level": "flow",
-        "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- apps/api/test/application/services/startRunAuthorizedFacade.auth.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.admissionModes.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.duplicateFlow.test.ts apps/api/test/application/services/engineStartRunUseCase.commandPath.test.ts apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts apps/api/test/application/services/startRunTargetAdapterRegistry.test.ts",
+        "validation_command": "pnpm --filter dvt-api test -- test/application/services/engineStartRunUseCase.errorMapping.test.ts",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -68620,6 +68615,222 @@
         "created_at": "2026-08-13T08:15:05.472+00:00"
       },
       {
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-APPLICATION-SERVICES-START-RUN-ADMISSION",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-13T13:51:53.076+00:00"
+      },
+      {
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-APPLICATION-SERVICES",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-13T13:51:53.076+00:00"
+      },
+      {
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-13T13:51:53.076+00:00"
+      },
+      {
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-TESTS-APPLICATION-SERVICES",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-13T13:51:53.076+00:00"
+      },
+      {
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "subject_kind": "contract",
+        "subject_id": "CONTRACT-SYS-API-APPLICATION-SERVICES-START-RUN-ADMISSION-API-APPLICATION-SERVICE",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T13:51:53.076+00:00"
+      },
+      {
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "subject_kind": "relation",
+        "subject_id": "REL-API-APPLICATION-SERVICES-CONTAINS-START-RUN-ADMISSION",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T13:51:53.076+00:00"
+      },
+      {
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "subject_kind": "relation",
+        "subject_id": "REL-API-TESTS-APPLICATION-SERVICES-CONTAINS-START-RUN-ADMISSION",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T13:51:53.076+00:00"
+      },
+      {
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-12",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T13:51:53.076+00:00"
+      },
+      {
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-13",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T13:51:53.076+00:00"
+      },
+      {
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-14",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T13:51:53.076+00:00"
+      },
+      {
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-15",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T13:51:53.076+00:00"
+      },
+      {
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-16",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-13T13:51:53.076+00:00"
+      },
+      {
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-19",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T13:51:53.076+00:00"
+      },
+      {
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-1",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T13:51:53.076+00:00"
+      },
+      {
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-20",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T13:51:53.076+00:00"
+      },
+      {
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-2",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T13:51:53.076+00:00"
+      },
+      {
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-3",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T13:51:53.076+00:00"
+      },
+      {
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-4",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-13T13:51:53.076+00:00"
+      },
+      {
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-5",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T13:51:53.076+00:00"
+      },
+      {
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-6",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T13:51:53.076+00:00"
+      },
+      {
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-7",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T13:51:53.076+00:00"
+      },
+      {
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-8",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T13:51:53.076+00:00"
+      },
+      {
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-9",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-13T13:51:53.076+00:00"
+      },
+      {
+        "design_id": "MVP-2169-START-RUN-ACTIVE-EVIDENCE-HARDCUT-20260813",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-APPLICATION-SERVICES-START-RUN-ADMISSION",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-13T13:58:23.65+00:00"
+      },
+      {
+        "design_id": "MVP-2169-START-RUN-ACTIVE-EVIDENCE-HARDCUT-20260813",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-13T13:58:23.65+00:00"
+      },
+      {
+        "design_id": "MVP-2169-START-RUN-ACTIVE-EVIDENCE-HARDCUT-20260813",
+        "subject_kind": "contract",
+        "subject_id": "CONTRACT-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-EVIDENCE",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T13:58:23.65+00:00"
+      },
+      {
+        "design_id": "MVP-2169-START-RUN-ACTIVE-EVIDENCE-HARDCUT-20260813",
+        "subject_kind": "relation",
+        "subject_id": "REL-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-GUARDS-API-APPLICATION-SERVICES-START-RUN-ADMISSION",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T13:58:23.65+00:00"
+      },
+      {
         "design_id": "MVP-2169-START-RUN-COMPONENT-PATH-CORRECTION-20260813",
         "subject_kind": "component",
         "subject_id": "SYS-API-APPLICATION-SERVICES-START-RUN-ADMISSION",
@@ -89983,6 +90194,27 @@
         "created_at": "2026-08-13T09:50:53.163+00:00"
       },
       {
+        "operation_id": "0212ff5e-61b9-49ff-824b-96f8fd40f469",
+        "idempotency_key": "issue-2169-retire-duplicate-test-sys-api-tests-application-services-start-run-admission-16-v1",
+        "operation_type": "architecture_test_retire",
+        "actor": "codex",
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "source_ref": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "source_content_sha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Duplicate evidence row for a test path already owned by the same surviving start-run admission component.",
+          "testId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-16",
+          "designId": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+          "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+          "componentId": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
+          "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95"
+        },
+        "created_at": "2026-08-13T13:53:09.947+00:00"
+      },
+      {
         "operation_id": "0256b04a-b3f5-4b83-8e65-03b66491c7d1",
         "idempotency_key": "architecture_evidence_record:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811:EV-PTH14-V5-TRANSITION:e2d5b79777a7e827",
         "operation_type": "architecture_evidence_record",
@@ -90328,6 +90560,27 @@
         "created_at": "2026-08-11T03:35:49.965+00:00"
       },
       {
+        "operation_id": "0981fc85-fbe6-4442-a19c-033db28673a2",
+        "idempotency_key": "issue-2169-approve-active-authority-hardcut-v1",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "source_ref": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "source_content_sha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Active start-run contracts, relations, test evidence, and run-control rails now reference only surviving files and duplicate test rows are retired.",
+          "designId": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+          "toStatus": "approved",
+          "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+          "fromStatus": "review",
+          "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95"
+        },
+        "created_at": "2026-08-13T13:54:39.205+00:00"
+      },
+      {
         "operation_id": "09a58a34-b96c-401a-870b-fa80b2f2d8b4",
         "idempotency_key": "architecture_evidence_record:codex:GH-2166-START-RUN-ERROR-CONTAINMENT-V2-20260813:EV-GH-2166-START-RUN-HTTP-NONDISCLOSURE-20260813:68efe8dc77110fad",
         "operation_type": "architecture_evidence_record",
@@ -90444,6 +90697,31 @@
         "created_at": "2026-08-11T06:41:55.135+00:00"
       },
       {
+        "operation_id": "0a9257c5-f2f7-4196-bb7b-cf716a6fcc20",
+        "idempotency_key": "issue-2169-refresh-test-sys-api-tests-application-services-start-run-admission-12-v1",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "source_ref": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "source_content_sha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-12",
+          "designId": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+          "required": true,
+          "testKind": "architecture",
+          "testPath": "apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts",
+          "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+          "componentId": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
+          "coverageLevel": "flow",
+          "validationCommand": "pnpm --filter dvt-api test -- test/application/services/PlannerBackedStartRunUseCase.test.ts",
+          "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95"
+        },
+        "created_at": "2026-08-13T13:52:42.99+00:00"
+      },
+      {
         "operation_id": "0ae717d4-2bc3-4648-b1bf-4abfbaffa780",
         "idempotency_key": "architecture_component_record:codex:R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810:SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS:a81aebf64fdfc14b",
         "operation_type": "architecture_component_record",
@@ -90479,6 +90757,172 @@
           "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
         },
         "created_at": "2026-08-10T20:09:37.199+00:00"
+      },
+      {
+        "operation_id": "0af08580-cc09-4f66-be74-a74c0d8ad560",
+        "idempotency_key": "issue-2169-active-authority-hardcut-design-v1",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "source_ref": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "source_content_sha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "Architecture",
+          "title": "Remove retired run lifecycle authority references",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "CONTRACT-SYS-API-APPLICATION-SERVICES-START-RUN-ADMISSION-API-APPLICATION-SERVICE",
+              "subjectKind": "contract"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "REL-API-APPLICATION-SERVICES-CONTAINS-START-RUN-ADMISSION",
+              "subjectKind": "relation"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "REL-API-TESTS-APPLICATION-SERVICES-CONTAINS-START-RUN-ADMISSION",
+              "subjectKind": "relation"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-API-APPLICATION-SERVICES",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-API-APPLICATION-SERVICES-START-RUN-ADMISSION",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-API-TESTS-APPLICATION-SERVICES",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-1",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-2",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-3",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-5",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-6",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-7",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-8",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-12",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-13",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-14",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-15",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-19",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-20",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-4",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-9",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-16",
+              "subjectKind": "test"
+            }
+          ],
+          "status": "review",
+          "railRef": "RecordArchitectureContract",
+          "designId": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+          "rationale": "Active Planning DB contracts, relations, tests, and feature rails must reference only surviving run lifecycle code while historical operations remain immutable.",
+          "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+          "workItemId": "https://github.com/dunay2/dvt/issues/2169",
+          "fowlerSignal": "hidden_authority",
+          "supersedesId": null,
+          "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95"
+        },
+        "created_at": "2026-08-13T13:51:53.076+00:00"
       },
       {
         "operation_id": "0b1a5687-dfd9-48fa-ac21-88811bee72b9",
@@ -91156,6 +91600,31 @@
           "sourceContentSha256": "c319921befc49127ae2f7b507b54ff1c7f1ab7e2deb7bf3da35853dde8ac9340"
         },
         "created_at": "2026-08-10T21:06:27.716+00:00"
+      },
+      {
+        "operation_id": "143e4af7-1321-44b4-b757-375a7c5baa32",
+        "idempotency_key": "issue-2169-refresh-test-sys-api-tests-application-services-start-run-admission-2-v1",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "source_ref": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "source_content_sha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-2",
+          "designId": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+          "required": true,
+          "testKind": "architecture",
+          "testPath": "apps/api/test/application/services/BackpressureAwareStartRunUseCase.duplicateFlow.test.ts",
+          "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+          "componentId": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
+          "coverageLevel": "flow",
+          "validationCommand": "pnpm --filter dvt-api test -- test/application/services/BackpressureAwareStartRunUseCase.duplicateFlow.test.ts",
+          "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95"
+        },
+        "created_at": "2026-08-13T13:52:49.016+00:00"
       },
       {
         "operation_id": "14921c92-4064-4770-b157-3cb25aa99154",
@@ -92227,6 +92696,31 @@
           "sourceContentSha256": "45bf878ab2adee3163836bc159d75b55bc8251fc2c6e0b27e223481af67f1eac"
         },
         "created_at": "2026-08-13T01:35:25.961+00:00"
+      },
+      {
+        "operation_id": "2826a8b7-0471-43bb-b970-9a4a6b08f26c",
+        "idempotency_key": "issue-2169-refresh-start-run-admission-contract-v1",
+        "operation_type": "architecture_contract_record",
+        "actor": "codex",
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "source_ref": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "source_content_sha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "status": "implemented",
+          "designId": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+          "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+          "contractId": "CONTRACT-SYS-API-APPLICATION-SERVICES-START-RUN-ADMISSION-API-APPLICATION-SERVICE",
+          "contractRef": "API start-run admission and dispatch service boundary.",
+          "contractKind": "type",
+          "compatibility": "internal",
+          "ownerComponentId": "SYS-API-APPLICATION-SERVICES-START-RUN-ADMISSION",
+          "validationCommand": "pnpm --filter dvt-api test -- test/application/services/BackpressureAwareStartRunUseCase.admissionModes.test.ts test/application/services/engineStartRunUseCase.commandPath.test.ts test/entrypoints/http/startRunRoute.validation.test.ts",
+          "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95"
+        },
+        "created_at": "2026-08-13T13:52:19.256+00:00"
       },
       {
         "operation_id": "283ed0e9-fb08-4fcc-ade0-c941d5b96333",
@@ -93489,6 +93983,34 @@
         "created_at": "2026-08-11T05:21:54.828+00:00"
       },
       {
+        "operation_id": "3696c4e9-421a-4542-9320-a3cf4cb62f47",
+        "idempotency_key": "issue-2169-refresh-start-run-application-relation-v1",
+        "operation_type": "architecture_relation_record",
+        "actor": "codex",
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "source_ref": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "source_content_sha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "status": "implemented",
+          "designId": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+          "direction": "outbound",
+          "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+          "syncAsync": "build_time",
+          "contractId": null,
+          "relationId": "REL-API-APPLICATION-SERVICES-CONTAINS-START-RUN-ADMISSION",
+          "failureMode": "Component profile becomes incomplete if the surviving start-run admission service is removed or remapped without a governed Planning DB component update.",
+          "relationType": "contains",
+          "sourceComponentId": "SYS-API-APPLICATION-SERVICES",
+          "targetComponentId": "SYS-API-APPLICATION-SERVICES-START-RUN-ADMISSION",
+          "authorizationScope": "repo-local API application governance",
+          "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95"
+        },
+        "created_at": "2026-08-13T13:52:20.478+00:00"
+      },
+      {
         "operation_id": "384145f2-d85a-42ea-b8f6-fb9779ec261a",
         "idempotency_key": "architecture_design_create:codex:GH-2166-START-RUN-ERROR-CONTAINMENT-V2-20260813:ba22f63dd723ee86",
         "operation_type": "architecture_design_create",
@@ -93880,6 +94402,31 @@
           "sourceContentSha256": "edd379482987387b160119fae60df9981a6c682fb7be03c826d447e15e9f4a7e"
         },
         "created_at": "2026-08-11T18:22:16.51+00:00"
+      },
+      {
+        "operation_id": "3cc376a1-b451-4baa-86af-65b690a0a966",
+        "idempotency_key": "issue-2169-refresh-test-sys-api-tests-application-services-start-run-admission-8-v1",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "source_ref": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "source_content_sha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-8",
+          "designId": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+          "required": true,
+          "testKind": "architecture",
+          "testPath": "apps/api/test/application/services/engineStartRunUseCase.errorMapping.test.ts",
+          "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+          "componentId": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
+          "coverageLevel": "flow",
+          "validationCommand": "pnpm --filter dvt-api test -- test/application/services/engineStartRunUseCase.errorMapping.test.ts",
+          "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95"
+        },
+        "created_at": "2026-08-13T13:52:56.321+00:00"
       },
       {
         "operation_id": "3d5185ee-b765-48e8-b71e-dca351896537",
@@ -94320,6 +94867,59 @@
         "created_at": "2026-08-11T16:37:55.045+00:00"
       },
       {
+        "operation_id": "43381ecc-2c67-4820-8625-ce99b3e88292",
+        "idempotency_key": "architecture_relation_record:codex:MVP-2169-START-RUN-ACTIVE-EVIDENCE-HARDCUT-20260813:CONTRACT-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-EVIDENCE:b6bfbc1a5d2b2aa4",
+        "operation_type": "architecture_relation_record",
+        "actor": "codex",
+        "design_id": "MVP-2169-START-RUN-ACTIVE-EVIDENCE-HARDCUT-20260813",
+        "source_ref": "apps/api/test/application/services/BackpressureAwareStartRunUseCase.admissionModes.test.ts",
+        "source_content_sha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "status": "implemented",
+          "designId": "MVP-2169-START-RUN-ACTIVE-EVIDENCE-HARDCUT-20260813",
+          "direction": "outbound",
+          "sourceRef": "apps/api/test/application/services/BackpressureAwareStartRunUseCase.admissionModes.test.ts",
+          "syncAsync": "build_time",
+          "contractId": "CONTRACT-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-EVIDENCE",
+          "relationId": "REL-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-GUARDS-API-APPLICATION-SERVICES-START-RUN-ADMISSION",
+          "failureMode": "Implementation component can drift without this test evidence being visible in the Planning DB component graph.",
+          "relationType": "guards",
+          "sourceComponentId": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
+          "targetComponentId": "SYS-API-APPLICATION-SERVICES-START-RUN-ADMISSION",
+          "authorizationScope": "repo-local API test evidence",
+          "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95"
+        },
+        "created_at": "2026-08-13T13:58:26.148+00:00"
+      },
+      {
+        "operation_id": "44754dba-e53f-4796-be67-6037bea9b432",
+        "idempotency_key": "issue-2169-refresh-test-sys-api-tests-application-services-start-run-admission-3-v1",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "source_ref": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "source_content_sha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-3",
+          "designId": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+          "required": true,
+          "testKind": "architecture",
+          "testPath": "apps/api/test/application/services/BackpressureAwareStartRunUseCase.executionCapacityReadyzBinding.test.ts",
+          "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+          "componentId": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
+          "coverageLevel": "flow",
+          "validationCommand": "pnpm --filter dvt-api test -- test/application/services/BackpressureAwareStartRunUseCase.executionCapacityReadyzBinding.test.ts",
+          "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95"
+        },
+        "created_at": "2026-08-13T13:52:51.444+00:00"
+      },
+      {
         "operation_id": "4492c29e-d15a-475f-bebc-a414666b0ccd",
         "idempotency_key": "architecture_design_transition:codex:API-H2-4-CI-EVIDENCE-AUTHENTICITY-V2-20260811:131e8d6f029622ec",
         "operation_type": "architecture_design_transition",
@@ -94631,6 +95231,31 @@
           "sourceContentSha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5"
         },
         "created_at": "2026-08-13T08:15:09.306+00:00"
+      },
+      {
+        "operation_id": "494f9ead-6533-4956-b3f4-3e5bbd672437",
+        "idempotency_key": "issue-2169-refresh-test-sys-api-tests-application-services-start-run-admission-1-v1",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "source_ref": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "source_content_sha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-1",
+          "designId": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+          "required": true,
+          "testKind": "architecture",
+          "testPath": "apps/api/test/application/services/BackpressureAwareStartRunUseCase.admissionModes.test.ts",
+          "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+          "componentId": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
+          "coverageLevel": "flow",
+          "validationCommand": "pnpm --filter dvt-api test -- test/application/services/BackpressureAwareStartRunUseCase.admissionModes.test.ts",
+          "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95"
+        },
+        "created_at": "2026-08-13T13:52:41.75+00:00"
       },
       {
         "operation_id": "49f4e974-4f94-495e-9e87-25c365e0ba80",
@@ -95095,6 +95720,34 @@
           "sourceContentSha256": "c770f3d34e90d2ad2f546af24f8f2833870c7df91f1fb1c97e45151de29563b6"
         },
         "created_at": "2026-08-10T21:06:34.083+00:00"
+      },
+      {
+        "operation_id": "5209f235-b491-453a-8f37-b916d247c033",
+        "idempotency_key": "issue-2169-refresh-start-run-test-relation-v1",
+        "operation_type": "architecture_relation_record",
+        "actor": "codex",
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "source_ref": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "source_content_sha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "status": "implemented",
+          "designId": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+          "direction": "outbound",
+          "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+          "syncAsync": "build_time",
+          "contractId": null,
+          "relationId": "REL-API-TESTS-APPLICATION-SERVICES-CONTAINS-START-RUN-ADMISSION",
+          "failureMode": "Component profile becomes incomplete if the surviving start-run admission test evidence is removed or remapped without a governed Planning DB component update.",
+          "relationType": "contains",
+          "sourceComponentId": "SYS-API-TESTS-APPLICATION-SERVICES",
+          "targetComponentId": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
+          "authorizationScope": "repo-local API test governance",
+          "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95"
+        },
+        "created_at": "2026-08-13T13:52:21.71+00:00"
       },
       {
         "operation_id": "521ebba4-bff8-43e2-9cf6-2c4b188dfa1c",
@@ -96077,6 +96730,27 @@
         "created_at": "2026-08-10T21:04:51.118+00:00"
       },
       {
+        "operation_id": "597133e2-ee8d-40b6-aa37-31928dc843e0",
+        "idempotency_key": "issue-2169-retire-duplicate-test-sys-api-tests-application-services-start-run-admission-4-v1",
+        "operation_type": "architecture_test_retire",
+        "actor": "codex",
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "source_ref": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "source_content_sha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Duplicate evidence row for a test path already owned by the same surviving start-run admission component.",
+          "testId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-4",
+          "designId": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+          "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+          "componentId": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
+          "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95"
+        },
+        "created_at": "2026-08-13T13:53:07.502+00:00"
+      },
+      {
         "operation_id": "59983ebf-73f0-4ee5-8928-1755ab661827",
         "idempotency_key": "gh-2167-update-test-sys-api-http-entrypoint-tests-runtime-route-registry-3-v1",
         "operation_type": "architecture_test_record",
@@ -96121,6 +96795,31 @@
           "sourceContentSha256": "445d0a77a2208b4198a706920223128ba7051884116b3ec95250a2c30232d691"
         },
         "created_at": "2026-08-11T03:58:12.505+00:00"
+      },
+      {
+        "operation_id": "5a4a503e-dfb8-4c06-bea1-ee18ca3a9b4b",
+        "idempotency_key": "issue-2169-refresh-test-sys-api-tests-application-services-start-run-admission-14-v1",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "source_ref": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "source_content_sha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-14",
+          "designId": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+          "required": true,
+          "testKind": "architecture",
+          "testPath": "apps/api/test/application/services/startRunAdmissionDecisions.test.ts",
+          "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+          "componentId": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
+          "coverageLevel": "flow",
+          "validationCommand": "pnpm --filter dvt-api test -- test/application/services/startRunAdmissionDecisions.test.ts",
+          "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95"
+        },
+        "created_at": "2026-08-13T13:52:45.401+00:00"
       },
       {
         "operation_id": "5a6c4061-a91a-442e-8391-320990c0a4fc",
@@ -96537,6 +97236,58 @@
           "sourceContentSha256": "1760d42ceb5ba215b37c526240e55c34f1db3b81bfbfe52cf651e7d95d2c7745"
         },
         "created_at": "2026-08-10T21:06:23.492+00:00"
+      },
+      {
+        "operation_id": "5f11bf03-b6d1-46fb-890e-9ac1b3cdb7b2",
+        "idempotency_key": "architecture_design_create:codex:MVP-2169-START-RUN-ACTIVE-EVIDENCE-HARDCUT-20260813:02893e1e11899ed9",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "MVP-2169-START-RUN-ACTIVE-EVIDENCE-HARDCUT-20260813",
+        "source_ref": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "source_content_sha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "Architecture",
+          "title": "Remove retired start-run test authority",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "CONTRACT-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-EVIDENCE",
+              "subjectKind": "contract"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "REL-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-GUARDS-API-APPLICATION-SERVICES-START-RUN-ADMISSION",
+              "subjectKind": "relation"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-API-APPLICATION-SERVICES-START-RUN-ADMISSION",
+              "subjectKind": "component"
+            }
+          ],
+          "status": "review",
+          "railRef": "RecordArchitectureContract",
+          "designId": "MVP-2169-START-RUN-ACTIVE-EVIDENCE-HARDCUT-20260813",
+          "rationale": "The active test contract and guard relation must validate the surviving start-run admission boundary after the duplicate facade was removed.",
+          "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+          "workItemId": "https://github.com/dunay2/dvt/issues/2169",
+          "fowlerSignal": "hidden_authority",
+          "supersedesId": null,
+          "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95"
+        },
+        "created_at": "2026-08-13T13:58:23.65+00:00"
       },
       {
         "operation_id": "5f1a5cd6-996d-4f0f-8e05-8f6745fc522a",
@@ -99922,6 +100673,31 @@
         "created_at": "2026-08-12T21:36:36.935+00:00"
       },
       {
+        "operation_id": "8e87111d-92cd-4235-86d4-f45396509f1b",
+        "idempotency_key": "issue-2169-refresh-test-sys-api-tests-application-services-start-run-admission-5-v1",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "source_ref": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "source_content_sha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-5",
+          "designId": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+          "required": true,
+          "testKind": "architecture",
+          "testPath": "apps/api/test/application/services/DbtRunExecutionContextBindingUseCase.test.ts",
+          "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+          "componentId": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
+          "coverageLevel": "flow",
+          "validationCommand": "pnpm --filter dvt-api test -- test/application/services/DbtRunExecutionContextBindingUseCase.test.ts",
+          "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95"
+        },
+        "created_at": "2026-08-13T13:52:52.661+00:00"
+      },
+      {
         "operation_id": "8eced0a0-acc5-43fb-a38e-cd675b407a7e",
         "idempotency_key": "codex-api-h2-2-reachability-v10-review",
         "operation_type": "architecture_design_transition",
@@ -101559,6 +102335,31 @@
         "created_at": "2026-08-10T21:04:33.082+00:00"
       },
       {
+        "operation_id": "9f65c1c5-fa2b-442d-82a0-115f5e0288fc",
+        "idempotency_key": "architecture_contract_record:codex:MVP-2169-START-RUN-ACTIVE-EVIDENCE-HARDCUT-20260813:CONTRACT-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-EVIDENCE:4e3af24c4f137399",
+        "operation_type": "architecture_contract_record",
+        "actor": "codex",
+        "design_id": "MVP-2169-START-RUN-ACTIVE-EVIDENCE-HARDCUT-20260813",
+        "source_ref": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "source_content_sha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "status": "implemented",
+          "designId": "MVP-2169-START-RUN-ACTIVE-EVIDENCE-HARDCUT-20260813",
+          "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+          "contractId": "CONTRACT-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-EVIDENCE",
+          "contractRef": "API start-run admission test evidence boundary.",
+          "contractKind": "type",
+          "compatibility": "internal",
+          "ownerComponentId": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
+          "validationCommand": "pnpm --filter dvt-api test -- test/application/services/BackpressureAwareStartRunUseCase.admissionModes.test.ts test/application/services/engineStartRunUseCase.commandPath.test.ts test/entrypoints/http/startRunRoute.validation.test.ts",
+          "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95"
+        },
+        "created_at": "2026-08-13T13:58:24.919+00:00"
+      },
+      {
         "operation_id": "9fdf6db8-21c1-41ec-99e4-34a44109ea66",
         "idempotency_key": "gh-2168-plan-test-contract-current-tests-v1",
         "operation_type": "architecture_contract_record",
@@ -101873,6 +102674,31 @@
           "sourceContentSha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc"
         },
         "created_at": "2026-08-11T12:42:32.421+00:00"
+      },
+      {
+        "operation_id": "a6d2d69f-b3dd-4056-8ba0-59abb73d6bab",
+        "idempotency_key": "issue-2169-refresh-test-sys-api-tests-application-services-start-run-admission-15-v1",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "source_ref": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "source_content_sha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-15",
+          "designId": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+          "required": true,
+          "testKind": "architecture",
+          "testPath": "apps/api/test/infrastructure/admissionTelemetry/ObservabilityAdmissionTelemetry.test.ts",
+          "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+          "componentId": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
+          "coverageLevel": "flow",
+          "validationCommand": "pnpm --filter dvt-api test -- test/infrastructure/admissionTelemetry/ObservabilityAdmissionTelemetry.test.ts",
+          "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95"
+        },
+        "created_at": "2026-08-13T13:52:46.605+00:00"
       },
       {
         "operation_id": "a7ba0ff6-9744-400d-82d9-ca0d9aa68f7d",
@@ -102711,6 +103537,31 @@
           "sourceContentSha256": "995ad5790791389c3241e330d1234373d6f4b7ec130b2502896fd55acdbedd10"
         },
         "created_at": "2026-08-11T05:28:39.35+00:00"
+      },
+      {
+        "operation_id": "afeaae65-8553-47fa-8565-b70a0cd76b7f",
+        "idempotency_key": "issue-2169-refresh-test-sys-api-tests-application-services-start-run-admission-6-v1",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "source_ref": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "source_content_sha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-6",
+          "designId": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+          "required": true,
+          "testKind": "architecture",
+          "testPath": "apps/api/test/application/services/defaultStartRunExecutionCapacityPort.test.ts",
+          "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+          "componentId": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
+          "coverageLevel": "flow",
+          "validationCommand": "pnpm --filter dvt-api test -- test/application/services/defaultStartRunExecutionCapacityPort.test.ts",
+          "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95"
+        },
+        "created_at": "2026-08-13T13:52:53.907+00:00"
       },
       {
         "operation_id": "affc1a17-ecac-4a1b-8a32-45739ad9d20b",
@@ -104477,6 +105328,27 @@
         "created_at": "2026-08-13T09:08:33.787+00:00"
       },
       {
+        "operation_id": "bfb875a2-dade-47fc-a757-63874b37e859",
+        "idempotency_key": "issue-2169-retire-duplicate-test-sys-api-tests-application-services-start-run-admission-9-v1",
+        "operation_type": "architecture_test_retire",
+        "actor": "codex",
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "source_ref": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "source_content_sha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Duplicate evidence row for a test path already owned by the same surviving start-run admission component.",
+          "testId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-9",
+          "designId": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+          "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+          "componentId": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
+          "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95"
+        },
+        "created_at": "2026-08-13T13:53:08.716+00:00"
+      },
+      {
         "operation_id": "c03389e8-7a8d-4d08-b0c9-3b3a1efbdc0f",
         "idempotency_key": "gh-2168-ci-canonical-rail-correction-create-v1",
         "operation_type": "architecture_design_create",
@@ -104558,6 +105430,27 @@
           "sourceContentSha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598"
         },
         "created_at": "2026-08-11T18:22:15.21+00:00"
+      },
+      {
+        "operation_id": "c0e78c50-fc89-4011-8ee5-b38e57ee55e4",
+        "idempotency_key": "architecture_design_transition:codex:MVP-2169-START-RUN-ACTIVE-EVIDENCE-HARDCUT-20260813:2157f111ee58aa91",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "MVP-2169-START-RUN-ACTIVE-EVIDENCE-HARDCUT-20260813",
+        "source_ref": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "source_content_sha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Active contract and guard relation reference only surviving start-run tests.",
+          "designId": "MVP-2169-START-RUN-ACTIVE-EVIDENCE-HARDCUT-20260813",
+          "toStatus": "approved",
+          "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+          "fromStatus": "review",
+          "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95"
+        },
+        "created_at": "2026-08-13T13:58:27.337+00:00"
       },
       {
         "operation_id": "c18f6cbb-fdc4-4b24-be7c-d66cfe8269bd",
@@ -105662,6 +106555,31 @@
         "created_at": "2026-08-11T10:02:33.729+00:00"
       },
       {
+        "operation_id": "ce0b576f-4592-49e9-ae5f-49b97ed81c82",
+        "idempotency_key": "issue-2169-refresh-test-sys-api-tests-application-services-start-run-admission-20-v1",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "source_ref": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "source_content_sha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-20",
+          "designId": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+          "required": true,
+          "testKind": "architecture",
+          "testPath": "apps/api/test/application/services/startRunTargetAdapterRegistry.test.ts",
+          "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+          "componentId": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
+          "coverageLevel": "flow",
+          "validationCommand": "pnpm --filter dvt-api test -- test/application/services/startRunTargetAdapterRegistry.test.ts",
+          "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95"
+        },
+        "created_at": "2026-08-13T13:52:50.22+00:00"
+      },
+      {
         "operation_id": "ce9466cd-d60b-4712-9c63-b3170e84ed37",
         "idempotency_key": "codex-api-h2-2-reachability-test-evidence-v8",
         "operation_type": "architecture_test_record",
@@ -105756,6 +106674,31 @@
           "sourceContentSha256": "4f02c340d242cb834a03990064924683692fae7c4dee8c19f29eeb47f3a75ce3"
         },
         "created_at": "2026-08-11T06:41:43.978+00:00"
+      },
+      {
+        "operation_id": "cf9560ac-de50-4cff-a5d0-eb94a7e6917f",
+        "idempotency_key": "issue-2169-refresh-test-sys-api-tests-application-services-start-run-admission-19-v1",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "source_ref": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "source_content_sha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-19",
+          "designId": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+          "required": true,
+          "testKind": "architecture",
+          "testPath": "apps/api/test/application/services/BackpressureAwareStartRunUseCase.executionCapacity.test.ts",
+          "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+          "componentId": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
+          "coverageLevel": "flow",
+          "validationCommand": "pnpm --filter dvt-api test -- test/application/services/BackpressureAwareStartRunUseCase.executionCapacity.test.ts",
+          "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95"
+        },
+        "created_at": "2026-08-13T13:52:47.81+00:00"
       },
       {
         "operation_id": "cfb29d76-96a6-4f61-bb1b-746ba9987b35",
@@ -106132,6 +107075,31 @@
           "sourceContentSha256": "8256a48788a3ba25d3a214b1fb89b3885caafeb437a8af301d4f5604ed9ddbdd"
         },
         "created_at": "2026-08-11T13:48:56.616+00:00"
+      },
+      {
+        "operation_id": "d5ee1fa3-9fa3-411d-899e-852f897c1984",
+        "idempotency_key": "issue-2169-refresh-test-sys-api-tests-application-services-start-run-admission-13-v1",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "source_ref": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "source_content_sha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-13",
+          "designId": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+          "required": true,
+          "testKind": "architecture",
+          "testPath": "apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts",
+          "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+          "componentId": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
+          "coverageLevel": "flow",
+          "validationCommand": "pnpm --filter dvt-api test -- test/application/services/resolveAuthorizedExecutableSubgraph.test.ts",
+          "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95"
+        },
+        "created_at": "2026-08-13T13:52:44.192+00:00"
       },
       {
         "operation_id": "d5f12257-977c-49fe-a10b-923218a89aec",
@@ -108223,6 +109191,31 @@
           "sourceContentSha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a"
         },
         "created_at": "2026-08-11T10:22:44.835+00:00"
+      },
+      {
+        "operation_id": "f240e1ed-d9fd-4176-bdf6-259d72a4e23a",
+        "idempotency_key": "issue-2169-refresh-test-sys-api-tests-application-services-start-run-admission-7-v1",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+        "source_ref": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "source_content_sha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-7",
+          "designId": "MVP-2169-ACTIVE-AUTHORITY-HARDCUT-20260813",
+          "required": true,
+          "testKind": "architecture",
+          "testPath": "apps/api/test/application/services/engineStartRunUseCase.commandPath.test.ts",
+          "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+          "componentId": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
+          "coverageLevel": "flow",
+          "validationCommand": "pnpm --filter dvt-api test -- test/application/services/engineStartRunUseCase.commandPath.test.ts",
+          "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95"
+        },
+        "created_at": "2026-08-13T13:52:55.122+00:00"
       },
       {
         "operation_id": "f32a6337-479c-4a56-a186-f0cb80a28b32",
@@ -155552,7 +156545,6 @@
         "apps/api/src/infrastructure/dbt/FileRunExecutionContextReferenceReader.ts",
         "apps/api/src/infrastructure/dbt/runExecutionContextArtifactPath.ts",
         "apps/web/src/app/ports/runs.ts",
-        "apps/web/src/app/services/runs/runsApiControlReceipts.ts",
         "packages/@dvt/adapter-postgres/src/PostgresPlanStore.mappers.ts",
         "packages/@dvt/artifacts/src/ports/IStoredPlanArtifactStore.ts",
         "apps/api/src/application/services/runControlPolicy.ts",
@@ -155574,14 +156566,12 @@
         "apps/api/src/modules/types.ts",
         "apps/api/test/entrypoints/http/recoverRunRoute.test.ts",
         "apps/api/test/entrypoints/http/recoverRunRouteParser.test.ts",
-        "apps/api/test/modules/registerOperationalHooks.cases.ts",
         "apps/web/src/app/services/runs/runsService.api.ts",
         "apps/web/src/app/services/runs/runsService.test.ts",
         "apps/api/src/application/ports/runExecutionContextRequirementResolver.ts",
         "apps/api/src/application/services/StoredPlanRunExecutionContextRequirementResolver.ts",
         "packages/@dvt/engine/src/services/startRun/runExecutionContextRequirements.ts",
         "apps/api/test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts",
-        "apps/api/test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts",
         "apps/api/test/infrastructure/dbt/immutableFileArtifactWriter.test.ts",
         "packages/@dvt/adapter-postgres/src/PostgresStartRunIntentStore.ts",
         "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts"
@@ -155619,7 +156609,8 @@
               "apps/api/test/application/services/recoverRunUseCase.test.ts"
             ],
             "fowlerSignals": [
-              "Recovery eligibility and deterministic child identity are decided once by the engine and its intent store."
+              "Recovery eligibility and deterministic child identity are decided once by the engine and its intent store.",
+              "Active mechanization references only surviving runtime symbols and tests."
             ],
             "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
             "architectureGuard": "packages/@dvt/engine/test/core/WorkflowEngine.test.ts"
@@ -155758,7 +156749,8 @@
           "Execution-context absence is evaluated against canonical plugin requirements from the immutable stored plan.",
           "Failed immutable writes remove only the incomplete destination created by that invocation before retry.",
           "Recovery eligibility and deterministic child identity are decided once by the engine and its intent store.",
-          "Every public lifecycle symbol is attached to its existing canonical command or query rail."
+          "Every public lifecycle symbol is attached to its existing canonical command or query rail.",
+          "Active mechanization references only surviving runtime symbols and tests."
         ],
         "completionGate": [
           "pnpm docs:feature-mechanization:implementation",
@@ -155778,7 +156770,6 @@
               "apps/api/src/infrastructure/dbt/FileRunExecutionContextReferenceReader.ts",
               "apps/api/src/infrastructure/dbt/runExecutionContextArtifactPath.ts",
               "apps/web/src/app/ports/runs.ts",
-              "apps/web/src/app/services/runs/runsApiControlReceipts.ts",
               "packages/@dvt/adapter-postgres/src/PostgresPlanStore.mappers.ts",
               "packages/@dvt/artifacts/src/ports/IStoredPlanArtifactStore.ts",
               "apps/api/src/application/services/runControlPolicy.ts",
@@ -155800,19 +156791,17 @@
               "apps/api/src/modules/types.ts",
               "apps/api/test/entrypoints/http/recoverRunRoute.test.ts",
               "apps/api/test/entrypoints/http/recoverRunRouteParser.test.ts",
-              "apps/api/test/modules/registerOperationalHooks.cases.ts",
               "apps/web/src/app/services/runs/runsService.api.ts",
               "apps/web/src/app/services/runs/runsService.test.ts",
               "apps/api/src/application/ports/runExecutionContextRequirementResolver.ts",
               "apps/api/src/application/services/StoredPlanRunExecutionContextRequirementResolver.ts",
               "packages/@dvt/engine/src/services/startRun/runExecutionContextRequirements.ts",
               "apps/api/test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts",
-              "apps/api/test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts",
               "apps/api/test/infrastructure/dbt/immutableFileArtifactWriter.test.ts",
               "packages/@dvt/adapter-postgres/src/PostgresStartRunIntentStore.ts",
               "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts"
             ],
-            "expectedFailure": "A public lifecycle symbol is absent from the canonical feature mechanization rail."
+            "expectedFailure": "An active rail references a retired source, test, or adapter surface."
           }
         ],
         "componentGuides": [
@@ -155850,7 +156839,6 @@
           "apps/api/src/infrastructure/dbt/FileRunExecutionContextReferenceReader.ts",
           "apps/api/src/infrastructure/dbt/runExecutionContextArtifactPath.ts",
           "apps/web/src/app/ports/runs.ts",
-          "apps/web/src/app/services/runs/runsApiControlReceipts.ts",
           "packages/@dvt/adapter-postgres/src/PostgresPlanStore.mappers.ts",
           "packages/@dvt/artifacts/src/ports/IStoredPlanArtifactStore.ts",
           "apps/api/src/application/services/runControlPolicy.ts",
@@ -155872,14 +156860,12 @@
           "apps/api/src/modules/types.ts",
           "apps/api/test/entrypoints/http/recoverRunRoute.test.ts",
           "apps/api/test/entrypoints/http/recoverRunRouteParser.test.ts",
-          "apps/api/test/modules/registerOperationalHooks.cases.ts",
           "apps/web/src/app/services/runs/runsService.api.ts",
           "apps/web/src/app/services/runs/runsService.test.ts",
           "apps/api/src/application/ports/runExecutionContextRequirementResolver.ts",
           "apps/api/src/application/services/StoredPlanRunExecutionContextRequirementResolver.ts",
           "packages/@dvt/engine/src/services/startRun/runExecutionContextRequirements.ts",
           "apps/api/test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts",
-          "apps/api/test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts",
           "apps/api/test/infrastructure/dbt/immutableFileArtifactWriter.test.ts",
           "packages/@dvt/adapter-postgres/src/PostgresStartRunIntentStore.ts",
           "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts"
@@ -155888,10 +156874,13 @@
           "tools/planning-db/schema.sql",
           "apps/api/src/application/ports/runRecoveryCommandCoordinator.ts",
           "apps/api/src/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.ts",
-          "apps/api/src/application/ports/runControlCommandCoordinator.ts"
+          "apps/api/src/application/ports/runControlCommandCoordinator.ts",
+          "apps/web/src/app/services/runs/runsApiControlReceipts.ts",
+          "apps/api/test/modules/registerOperationalHooks.cases.ts",
+          "apps/api/test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts"
         ]
       },
-      "revision": 7,
+      "revision": 8,
       "createdBy": "codex",
       "createdAt": "2026-08-02T14:27:24.648Z"
     },
@@ -156184,7 +157173,7 @@
       "dddOwner": "RunOperationalReadModel",
       "railStatus": "implemented",
       "symbolRefs": [
-        "apps/api/src/application/services/getRunUseCase.ts#GetRunUseCase",
+        "apps/api/src/application/services/getRunStatusUseCase.ts#GetRunStatusUseCase",
         "apps/api/src/application/services/runControlPolicy.ts#projectRunControlAvailability",
         "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#RunControlAvailability",
         "apps/api/src/application/ports/runtime.ts#RunControlActionAvailabilityDto",
@@ -156195,7 +157184,7 @@
         "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#parseRunControlResponse"
       ],
       "implementationRefs": [
-        "apps/api/src/application/services/getRunUseCase.ts#GetRunUseCase",
+        "apps/api/src/application/services/getRunStatusUseCase.ts#GetRunStatusUseCase",
         "apps/api/src/application/services/runControlPolicy.ts#projectRunControlAvailability",
         "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#RunControlAvailability",
         "apps/api/src/application/ports/runtime.ts#RunControlActionAvailabilityDto",
@@ -156223,11 +157212,11 @@
         "apps/web/src/app/ports/runs.ts",
         "apps/web/src/app/services/runs/runsApiDecoders.ts",
         "apps/web/src/app/views/canvas/useCanvasRunControlSurface.ts",
-        "apps/api/src/application/services/getRunUseCase.ts",
-        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts"
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts",
+        "apps/api/src/application/services/getRunStatusUseCase.ts"
       ],
       "architectureGuards": [
-        "apps/api/test/application/services/getRunUseCase.test.ts"
+        "apps/api/test/application/services/getRunStatusUseCase.test.ts"
       ],
       "completionGate": [
         "pnpm docs:feature-mechanization:implementation",
@@ -156251,18 +157240,18 @@
       "rawManifest": {
         "symbols": [
           {
-            "name": "GetRunUseCase",
-            "path": "apps/api/src/application/services/getRunUseCase.ts",
+            "name": "GetRunStatusUseCase",
+            "path": "apps/api/src/application/services/getRunStatusUseCase.ts",
             "cqRails": ["GetRunStatus"],
             "dddOwner": "RunOperationalReadModel",
             "unitTests": [
-              "apps/api/test/application/services/getRunUseCase.test.ts"
+              "apps/api/test/application/services/getRunStatusUseCase.test.ts"
             ],
             "fowlerSignals": [
-              "The read model exposes persisted lifecycle truth and fails closed when recovery evidence is unavailable."
+              "Active mechanization references only surviving runtime symbols and tests."
             ],
             "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
-            "architectureGuard": "apps/api/test/application/services/getRunUseCase.test.ts"
+            "architectureGuard": "apps/api/test/application/services/getRunStatusUseCase.test.ts"
           },
           {
             "name": "projectRunControlAvailability",
@@ -156270,13 +157259,13 @@
             "cqRails": ["GetRunStatus"],
             "dddOwner": "RunOperationalReadModel",
             "unitTests": [
-              "apps/api/test/application/services/getRunUseCase.test.ts"
+              "apps/api/test/application/services/getRunStatusUseCase.test.ts"
             ],
             "fowlerSignals": [
-              "The read model exposes persisted lifecycle truth and fails closed when recovery evidence is unavailable."
+              "Active mechanization references only surviving runtime symbols and tests."
             ],
             "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
-            "architectureGuard": "apps/api/test/application/services/getRunUseCase.test.ts"
+            "architectureGuard": "apps/api/test/application/services/getRunStatusUseCase.test.ts"
           },
           {
             "name": "RunControlAvailability",
@@ -156284,13 +157273,13 @@
             "cqRails": ["GetRunStatus"],
             "dddOwner": "RunOperationalReadModel",
             "unitTests": [
-              "apps/api/test/application/services/getRunUseCase.test.ts"
+              "apps/api/test/application/services/getRunStatusUseCase.test.ts"
             ],
             "fowlerSignals": [
-              "The read model exposes persisted lifecycle truth and fails closed when recovery evidence is unavailable."
+              "Active mechanization references only surviving runtime symbols and tests."
             ],
             "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
-            "architectureGuard": "apps/api/test/application/services/getRunUseCase.test.ts"
+            "architectureGuard": "apps/api/test/application/services/getRunStatusUseCase.test.ts"
           },
           {
             "name": "RunControlActionAvailabilityDto",
@@ -156301,10 +157290,10 @@
               "apps/api/test/application/services/getRunStatusUseCase.test.ts"
             ],
             "fowlerSignals": [
-              "Every public lifecycle symbol is attached to its existing canonical command or query rail."
+              "Active mechanization references only surviving runtime symbols and tests."
             ],
             "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
-            "architectureGuard": "apps/api/test/application/services/getRunUseCase.test.ts"
+            "architectureGuard": "apps/api/test/application/services/getRunStatusUseCase.test.ts"
           },
           {
             "name": "RunControlAvailabilityDto",
@@ -156315,10 +157304,10 @@
               "apps/api/test/application/services/getRunStatusUseCase.test.ts"
             ],
             "fowlerSignals": [
-              "Every public lifecycle symbol is attached to its existing canonical command or query rail."
+              "Active mechanization references only surviving runtime symbols and tests."
             ],
             "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
-            "architectureGuard": "apps/api/test/application/services/getRunUseCase.test.ts"
+            "architectureGuard": "apps/api/test/application/services/getRunStatusUseCase.test.ts"
           },
           {
             "name": "RUN_CONTROL_CONTRACT_VERSION",
@@ -156329,10 +157318,10 @@
               "apps/api/test/application/services/getRunStatusUseCase.test.ts"
             ],
             "fowlerSignals": [
-              "Every public lifecycle symbol is attached to its existing canonical command or query rail."
+              "Active mechanization references only surviving runtime symbols and tests."
             ],
             "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
-            "architectureGuard": "apps/api/test/application/services/getRunUseCase.test.ts"
+            "architectureGuard": "apps/api/test/application/services/getRunStatusUseCase.test.ts"
           },
           {
             "name": "RunControlActionAvailability",
@@ -156343,10 +157332,10 @@
               "apps/api/test/application/services/getRunStatusUseCase.test.ts"
             ],
             "fowlerSignals": [
-              "Every public lifecycle symbol is attached to its existing canonical command or query rail."
+              "Active mechanization references only surviving runtime symbols and tests."
             ],
             "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
-            "architectureGuard": "apps/api/test/application/services/getRunUseCase.test.ts"
+            "architectureGuard": "apps/api/test/application/services/getRunStatusUseCase.test.ts"
           },
           {
             "name": "RunControlUnavailableReason",
@@ -156357,10 +157346,10 @@
               "apps/api/test/application/services/getRunStatusUseCase.test.ts"
             ],
             "fowlerSignals": [
-              "Every public lifecycle symbol is attached to its existing canonical command or query rail."
+              "Active mechanization references only surviving runtime symbols and tests."
             ],
             "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
-            "architectureGuard": "apps/api/test/application/services/getRunUseCase.test.ts"
+            "architectureGuard": "apps/api/test/application/services/getRunStatusUseCase.test.ts"
           },
           {
             "name": "parseRunControlResponse",
@@ -156371,10 +157360,10 @@
               "apps/api/test/application/services/getRunStatusUseCase.test.ts"
             ],
             "fowlerSignals": [
-              "Every public lifecycle symbol is attached to its existing canonical command or query rail."
+              "Active mechanization references only surviving runtime symbols and tests."
             ],
             "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
-            "architectureGuard": "apps/api/test/application/services/getRunUseCase.test.ts"
+            "architectureGuard": "apps/api/test/application/services/getRunStatusUseCase.test.ts"
           }
         ],
         "version": 1,
@@ -156391,7 +157380,8 @@
         "fowlerSignals": [
           "All control availability is projected from canonical backend status and decoded once for every Web surface.",
           "The read model exposes persisted lifecycle truth and fails closed when recovery evidence is unavailable.",
-          "Every public lifecycle symbol is attached to its existing canonical command or query rail."
+          "Every public lifecycle symbol is attached to its existing canonical command or query rail.",
+          "Active mechanization references only surviving runtime symbols and tests."
         ],
         "completionGate": [
           "pnpm docs:feature-mechanization:implementation",
@@ -156413,10 +157403,10 @@
               "apps/web/src/app/ports/runs.ts",
               "apps/web/src/app/services/runs/runsApiDecoders.ts",
               "apps/web/src/app/views/canvas/useCanvasRunControlSurface.ts",
-              "apps/api/src/application/services/getRunUseCase.ts",
-              "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts"
+              "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts",
+              "apps/api/src/application/services/getRunStatusUseCase.ts"
             ],
-            "expectedFailure": "A public lifecycle symbol is absent from the canonical feature mechanization rail."
+            "expectedFailure": "An active rail references a retired source, test, or adapter surface."
           }
         ],
         "componentGuides": [
@@ -156441,7 +157431,7 @@
           }
         ],
         "architectureGuards": [
-          "apps/api/test/application/services/getRunUseCase.test.ts"
+          "apps/api/test/application/services/getRunStatusUseCase.test.ts"
         ],
         "implementationPlan": "https://github.com/dunay2/dvt/issues/2169#issuecomment-5279182370",
         "mechanizationStatus": "implemented",
@@ -156456,16 +157446,18 @@
           "apps/web/src/app/ports/runs.ts",
           "apps/web/src/app/services/runs/runsApiDecoders.ts",
           "apps/web/src/app/views/canvas/useCanvasRunControlSurface.ts",
-          "apps/api/src/application/services/getRunUseCase.ts",
-          "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts"
+          "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts",
+          "apps/api/src/application/services/getRunStatusUseCase.ts"
         ],
         "forbiddenImplementationSurfaces": [
           "tools/planning-db/schema.sql",
           "apps/api/src/application/ports/runControlCommandCoordinator.ts",
-          "apps/web/src/app/services/runs/runsApiControlReceipts.ts"
+          "apps/web/src/app/services/runs/runsApiControlReceipts.ts",
+          "apps/api/src/application/services/getRunUseCase.ts",
+          "apps/api/test/application/services/getRunUseCase.test.ts"
         ]
       },
-      "revision": 3,
+      "revision": 4,
       "createdBy": "codex",
       "createdAt": "2026-08-02T14:27:26.844Z"
     },
@@ -188140,6 +189132,168 @@
         ]
       },
       "createdAt": "2026-08-13T13:33:15.922Z"
+    },
+    {
+      "operationId": "9b069026-bf9b-40ef-970b-8e08a8ae20e9",
+      "idempotencyKey": "issue-2169-retire-dead-recover-surfaces-v1",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#US-F4-3-RUN-CONTROLS#command#recoverrun",
+      "sourcePath": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+      "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+      "expectedRevision": 7,
+      "previousRevision": 7,
+      "resultingRevision": 8,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api test -- apps/api/test/application/services/recoverRunUseCase.test.ts",
+        "dddOwner": "RunRecoveryApplicationService",
+        "railName": "RecoverRun",
+        "railType": "command",
+        "featureId": "US-F4-3-RUN-CONTROLS",
+        "greenTest": "pnpm --filter dvt-api test -- apps/api/test/application/services/recoverRunUseCase.test.ts",
+        "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "unitTests": [
+          "apps/api/test/application/services/recoverRunUseCase.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2169"],
+        "cypressFlows": [
+          "apps/api/test/integration/protectedRuntime.integration.test.ts"
+        ],
+        "domainObjects": ["RunRecoveryIntent"],
+        "fowlerSignals": [
+          "Active mechanization references only surviving runtime symbols and tests."
+        ],
+        "negativeTests": [
+          "reject nonterminal recovery, cross-tenant source, plan-reference drift and duplicate child identity"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "POST /api/v1/runs/:runId/recover",
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "IWorkflowEngine.recoverRun",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "An active rail references a retired source, test, or adapter surface.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md"
+        ],
+        "architectureGuards": [
+          "packages/@dvt/engine/test/core/WorkflowEngine.test.ts"
+        ],
+        "authorizationScope": "authenticated tenant plus persisted source-run tenant equality and immutable plan evidence",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2169#issuecomment-5279182370",
+        "implementationRefs": [
+          "apps/api/src/application/services/recoverRunUseCase.ts#RecoverRunUseCase"
+        ],
+        "normalizedRailName": "recoverrun",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/services/recoverRunUseCase.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/web/src/app/services/runs/runsApiControlReceipts.ts",
+          "apps/api/test/modules/registerOperationalHooks.cases.ts",
+          "apps/api/test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts"
+        ]
+      },
+      "createdAt": "2026-08-13T13:53:52.033Z"
+    },
+    {
+      "operationId": "5275ef8e-b0c0-4a55-bbfc-9524fb0f233c",
+      "idempotencyKey": "issue-2169-hardcut-get-run-symbol-authority-v1",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#US-F4-3-RUN-CONTROLS#query#getrunstatus",
+      "sourcePath": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+      "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+      "expectedRevision": 3,
+      "previousRevision": 3,
+      "resultingRevision": 4,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api test -- apps/api/test/application/services/getRunStatusUseCase.test.ts",
+        "dddOwner": "RunOperationalReadModel",
+        "railName": "GetRunStatus",
+        "railType": "query",
+        "featureId": "US-F4-3-RUN-CONTROLS",
+        "greenTest": "pnpm --filter dvt-api test -- apps/api/test/application/services/getRunStatusUseCase.test.ts",
+        "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "unitTests": [
+          "apps/api/test/application/services/getRunStatusUseCase.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2169"],
+        "cypressFlows": [
+          "apps/api/test/integration/protectedRuntime.integration.test.ts"
+        ],
+        "domainObjects": ["RunOperationalSnapshot"],
+        "fowlerSignals": [
+          "Active mechanization references only surviving runtime symbols and tests."
+        ],
+        "negativeTests": [
+          "reject cross-tenant access and propagate unexpected persistence failures without synthetic snapshots"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "GET /api/v1/runs/:runId",
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "IWorkflowEngine.getRunStatus and IGetRunUseCase",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "An active rail references a retired source, test, or adapter surface.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md"
+        ],
+        "architectureGuards": [
+          "apps/api/test/application/services/getRunStatusUseCase.test.ts"
+        ],
+        "authorizationScope": "authenticated tenant plus persisted run tenant equality",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2169#issuecomment-5279182370",
+        "implementationRefs": [
+          "apps/api/src/application/services/getRunStatusUseCase.ts#GetRunStatusUseCase",
+          "apps/api/src/application/services/runControlPolicy.ts#projectRunControlAvailability",
+          "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#RunControlAvailability",
+          "apps/api/src/application/ports/runtime.ts#RunControlActionAvailabilityDto",
+          "apps/api/src/application/ports/runtime.ts#RunControlAvailabilityDto",
+          "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#RUN_CONTROL_CONTRACT_VERSION",
+          "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#RunControlActionAvailability",
+          "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#RunControlUnavailableReason",
+          "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#parseRunControlResponse"
+        ],
+        "normalizedRailName": "getrunstatus",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "replaceArchitectureGuards": true,
+        "replaceImplementationRefs": true,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/services/getRunStatusUseCase.ts",
+          "apps/api/src/application/services/runControlPolicy.ts",
+          "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts",
+          "apps/api/src/application/ports/runtime.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/application/services/getRunUseCase.ts",
+          "apps/api/test/application/services/getRunUseCase.test.ts"
+        ]
+      },
+      "createdAt": "2026-08-13T13:53:53.330Z"
     }
   ],
   "governanceComponentDefinitions": [
