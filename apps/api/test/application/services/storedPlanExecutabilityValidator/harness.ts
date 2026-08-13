@@ -7,7 +7,11 @@ import type {
   ScopedPlanRef,
   StepKindExecutionProfile,
 } from '@dvt/contracts';
-import { CURRENT_SIGNAL_SEMANTICS_VERSION, asNonBlankString } from '@dvt/contracts';
+import {
+  CURRENT_SIGNAL_SEMANTICS_VERSION,
+  asNonBlankString,
+  asSha256HexString,
+} from '@dvt/contracts';
 import type { IProviderAdapter } from '@dvt/engine';
 import type { PlanExecutabilityValidationInput } from '@dvt/planner';
 import { vi } from 'vitest';
@@ -26,7 +30,7 @@ export const PLAN_REF: PlanRefSchemaT = {
   uri: asNonBlankString(
     'dvt-plan://postgres/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
   ),
-  sha256: asNonBlankString('abc123'),
+  sha256: asSha256HexString('a'.repeat(64)),
   schemaVersion: asNonBlankString('1.0'),
   planId: asNonBlankString('bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'),
   planVersion: asNonBlankString('1.0'),

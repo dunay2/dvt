@@ -7,6 +7,7 @@ import {
   RUN_EVENT_PAYLOAD_VERSION,
   asIsoUtcString,
   asNonBlankString,
+  asSha256HexString,
   asStepId,
   parseExecutionPlan,
   parseRunExecutionContext,
@@ -92,7 +93,7 @@ function makePlanRefFromEnginePlan(uri: string, plan: ExecutionPlan): PlanRef {
   const bytes = utf8(JSON.stringify(plan));
   return {
     uri: asNonBlankString(uri),
-    sha256: asNonBlankString(sha256Hex(bytes)),
+    sha256: asSha256HexString(sha256Hex(bytes)),
     schemaVersion: asNonBlankString(plan.metadata.schemaVersion),
     planId: asNonBlankString(plan.metadata.planId),
     planVersion: asNonBlankString(plan.metadata.planVersion),

@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 
 import {
   asNonBlankString,
+  asSha256HexString,
   type IStepTypeRegistry,
   type PlanRef,
   type ScopedPlanRef,
@@ -29,7 +30,7 @@ const PLAN_REF: PlanRef = {
   uri: asNonBlankString(
     'dvt-plan://postgres/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
   ),
-  sha256: asNonBlankString(createHash('sha256').update(EXECUTABLE_PLAN_TEXT).digest('hex')),
+  sha256: asSha256HexString(createHash('sha256').update(EXECUTABLE_PLAN_TEXT).digest('hex')),
   schemaVersion: asNonBlankString('1.0'),
   planId: asNonBlankString('bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'),
   planVersion: asNonBlankString('1.0'),
@@ -126,7 +127,7 @@ describe('StoredExecutablePlanResolver', () => {
     const resolver = new StoredExecutablePlanResolver({ fetcher: fetcher as never });
     const planRef = {
       ...PLAN_REF,
-      sha256: asNonBlankString(createHash('sha256').update(mismatchedText).digest('hex')),
+      sha256: asSha256HexString(createHash('sha256').update(mismatchedText).digest('hex')),
     };
 
     await expect(resolver.fetch({ ...SCOPED_PLAN_REF, planRef })).rejects.toMatchObject({
@@ -183,7 +184,7 @@ describe('StoredExecutablePlanResolver', () => {
     const resolver = new StoredExecutablePlanResolver({ fetcher: fetcher as never });
     const planRef = {
       ...PLAN_REF,
-      sha256: asNonBlankString(createHash('sha256').update(malformedText).digest('hex')),
+      sha256: asSha256HexString(createHash('sha256').update(malformedText).digest('hex')),
     };
 
     await expect(resolver.fetch({ ...SCOPED_PLAN_REF, planRef })).rejects.toMatchObject({
@@ -211,7 +212,7 @@ describe('StoredExecutablePlanResolver', () => {
     });
     const planRef = {
       ...PLAN_REF,
-      sha256: asNonBlankString(createHash('sha256').update(executablePlanText).digest('hex')),
+      sha256: asSha256HexString(createHash('sha256').update(executablePlanText).digest('hex')),
     };
 
     await expect(resolver.fetch({ ...SCOPED_PLAN_REF, planRef })).resolves.toMatchObject({
@@ -235,7 +236,7 @@ describe('StoredExecutablePlanResolver', () => {
     const resolver = new StoredExecutablePlanResolver({ fetcher: fetcher as never });
     const planRef = {
       ...PLAN_REF,
-      sha256: asNonBlankString(createHash('sha256').update(executablePlanText).digest('hex')),
+      sha256: asSha256HexString(createHash('sha256').update(executablePlanText).digest('hex')),
     };
 
     await expect(resolver.fetch({ ...SCOPED_PLAN_REF, planRef })).rejects.toMatchObject({

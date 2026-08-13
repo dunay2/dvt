@@ -1,11 +1,11 @@
-import { asNonBlankString, type PlanRef } from '@dvt/contracts';
+import { asNonBlankString, asSha256HexString, type PlanRef } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
 import { createScopedPlanRef } from '../../../src/application/services/storedPlanScope.js';
 
 const PLAN_REF: PlanRef = {
   uri: asNonBlankString(`dvt-plan://postgres/${'a'.repeat(64)}`),
-  sha256: asNonBlankString('b'.repeat(64)),
+  sha256: asSha256HexString('b'.repeat(64)),
   schemaVersion: asNonBlankString('1.0'),
   planId: asNonBlankString('a'.repeat(64)),
   planVersion: asNonBlankString('1.0'),
