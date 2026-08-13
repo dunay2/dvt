@@ -516,19 +516,19 @@
       },
       {
         "component_id": "SYS-API-APPLICATION-SERVICES-PLAN-COMMANDS",
-        "name": "API application plan command services",
+        "name": "API application plan lifecycle services",
         "kind": "service",
         "layer": "application",
         "owner": "ApiPlanCommandApplicationService",
         "repo_path": "apps/api/src/application/services/PreviewPlanUseCase.ts",
-        "public_contract": "API plan command application service boundary.",
+        "public_contract": "CompilePlan, PreviewPlan, and ImportPlan application service boundary.",
         "runtime": "node",
         "criticality": "high",
-        "status": "review",
+        "status": "implemented",
         "maturity_score": 80,
         "parent_component_id": "SYS-API-APPLICATION-SERVICES",
         "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
+        "updated_at": "2026-08-13T06:55:04.542+00:00"
       },
       {
         "component_id": "SYS-API-APPLICATION-SERVICES-PROJECTS-COST",
@@ -1076,19 +1076,19 @@
       },
       {
         "component_id": "SYS-API-HTTP-PLAN-COMMANDS",
-        "name": "API HTTP plan preview, import, compile, and execution routes",
+        "name": "API HTTP plan lifecycle routes",
         "kind": "adapter",
         "layer": "adapter",
         "owner": "PlanHttpCommandAdapter",
         "repo_path": "apps/api/src/entrypoints/http/previewPlanRoute.ts",
-        "public_contract": "Plan HTTP command/query adapter surface.",
+        "public_contract": "CompilePlan, PreviewPlan, and ImportPlan HTTP adapter surface.",
         "runtime": "node",
         "criticality": "high",
-        "status": "review",
+        "status": "implemented",
         "maturity_score": 78,
         "parent_component_id": "SYS-API-HTTP-ENTRYPOINTS",
         "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
+        "updated_at": "2026-08-13T06:54:10.408+00:00"
       },
       {
         "component_id": "SYS-API-HTTP-RUN-LIFECYCLE",
@@ -11601,18 +11601,46 @@
         "updated_at": "2026-08-13T03:47:43.465+00:00"
       },
       {
+        "design_id": "GH-2168-APP-PLAN-COMPONENT-RECONCILIATION-20260813",
+        "work_item_id": "GH-2168",
+        "title": "Reconcile plan application component authority",
+        "owner": "API / Planner",
+        "status": "implementing",
+        "rationale": "Replace stale policy-catalog ownership language with the three surviving CompilePlan, PreviewPlan, and ImportPlan application intents.",
+        "fowler_signal": "feature_envy",
+        "rail_ref": "CompilePlan;PreviewPlan;ImportPlan",
+        "approved_at": "2026-08-13T07:07:16.619+00:00",
+        "supersedes_id": null,
+        "created_at": "2026-08-13T06:54:34.554+00:00",
+        "updated_at": "2026-08-13T07:07:17.804+00:00"
+      },
+      {
         "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
         "work_item_id": "GH-2168",
         "title": "Collapse plan lifecycle rail to canonical endpoints",
         "owner": "API / Planner / Contracts",
-        "status": "review",
+        "status": "implementing",
         "rationale": "Retain the three distinct public plan intents while removing route-only wrappers, duplicated validation and translation, unused policy variants, misplaced session/start registration and topology-only CI. Canonical contracts own request shapes, API owns transport errors, and GH-2166 owns persisted-plan admission and materialization.",
         "fowler_signal": "feature_envy",
         "rail_ref": "CompilePlan;PreviewPlan;ImportPlan",
-        "approved_at": null,
+        "approved_at": "2026-08-13T07:07:14.167+00:00",
         "supersedes_id": null,
         "created_at": "2026-08-13T06:15:43.826+00:00",
-        "updated_at": "2026-08-13T06:15:43.826+00:00"
+        "updated_at": "2026-08-13T07:07:15.398+00:00"
+      },
+      {
+        "design_id": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+        "work_item_id": "GH-2168",
+        "title": "Reconcile plan lifecycle behavior evidence",
+        "owner": "API / Architecture",
+        "status": "implementing",
+        "rationale": "Retire duplicate and deleted topology evidence, and bind the surviving plan lifecycle components only to behavior-focused endpoint and use-case tests.",
+        "fowler_signal": "responsibility_overload",
+        "rail_ref": "CompilePlan;PreviewPlan;ImportPlan",
+        "approved_at": "2026-08-13T07:07:19.046+00:00",
+        "supersedes_id": null,
+        "created_at": "2026-08-13T06:55:55.601+00:00",
+        "updated_at": "2026-08-13T07:07:20.272+00:00"
       },
       {
         "design_id": "PLANNING-DB-API-APPLICATION-SERVICE-TEST-LEAF-COMPONENTS-20260619",
@@ -38367,8 +38395,8 @@
       {
         "responsibility_id": "RESP-SYS-API-APPLICATION-SERVICES-PLAN-COMMANDS",
         "component_id": "SYS-API-APPLICATION-SERVICES-PLAN-COMMANDS",
-        "responsibility": "Validate and translate plan command intent into planner-ready input envelopes and use-case results.",
-        "reason_to_change": "Plan compile/import/preview use cases, route policy catalog, planner input envelope authorization, or canonical planner envelope changes.",
+        "responsibility": "Execute the distinct CompilePlan, PreviewPlan, and ImportPlan intents through canonical planner and plan-store authorities.",
+        "reason_to_change": "Plan compile, preview, import, authorized planner-input, or result semantics change.",
         "ddd_owner": "ApiPlanCommandApplicationService",
         "status": "implemented",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
@@ -38565,8 +38593,8 @@
       {
         "responsibility_id": "RESP-SYS-API-HTTP-PLAN-COMMANDS",
         "component_id": "SYS-API-HTTP-PLAN-COMMANDS",
-        "responsibility": "Adapt plan authoring and execution command/query rails to HTTP while keeping planner and execution semantics in application services.",
-        "reason_to_change": "Plan request parsing, preview policy, plan source policy, plan-ref mapping, import/compile response mapping, or execute-plan facade routing changes.",
+        "responsibility": "Adapt CompilePlan, PreviewPlan, and ImportPlan to HTTP using canonical contracts and shared authorization.",
+        "reason_to_change": "Plan endpoint contracts, parsing, authorization, or response mapping changes.",
         "ddd_owner": "PlanHttpCommandAdapter",
         "status": "implemented",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
@@ -44613,7 +44641,7 @@
         "test_kind": "unit",
         "coverage_level": "behavior",
         "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- apps/api/test/application/services/CompilePlanUseCase.test.ts apps/api/test/application/services/planRoutePolicyCatalog.test.ts apps/api/test/entrypoints/http/importPlanRoute.test.ts apps/api/test/entrypoints/http/previewPlanRoute.inputPolicy.test.ts",
+        "validation_command": "pnpm --filter dvt-api test -- CompilePlanUseCase.test.ts PreviewPlanUseCase.outcomes.test.ts importPlanRoute.test.ts previewPlanRoute.inputPolicy.test.ts",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -45463,7 +45491,7 @@
         "test_kind": "integration",
         "coverage_level": "flow",
         "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- compilePlanRoute.test.ts executePlanRouteFacade.test.ts importPlanRoute.test.ts planRouteRequestResolver.test.ts planRouteResponseTranslation.test.ts previewPlanRoute.auth.test.ts previewPlanRoute.inputPolicy.test.ts previewPlanRoute.outcomes.test.ts",
+        "validation_command": "pnpm --filter dvt-api test -- compilePlanRoute.test.ts executePlanRouteFacade.test.ts importPlanRoute.test.ts planRoutePlanSourcePolicy.test.ts planRouteRequestResolver.test.ts previewPlanRoute.auth.test.ts previewPlanRoute.inputPolicy.test.ts previewPlanRoute.outcomes.test.ts",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -45473,7 +45501,7 @@
         "test_kind": "integration",
         "coverage_level": "flow",
         "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- compilePlanRoute.test.ts executePlanRouteFacade.test.ts importPlanRoute.test.ts planRouteRequestResolver.test.ts planRouteResponseTranslation.test.ts previewPlanRoute.auth.test.ts previewPlanRoute.inputPolicy.test.ts previewPlanRoute.outcomes.test.ts",
+        "validation_command": "pnpm --filter dvt-api test -- compilePlanRoute.test.ts executePlanRouteFacade.test.ts importPlanRoute.test.ts planRoutePlanSourcePolicy.test.ts planRouteRequestResolver.test.ts previewPlanRoute.auth.test.ts previewPlanRoute.inputPolicy.test.ts previewPlanRoute.outcomes.test.ts",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -45483,7 +45511,7 @@
         "test_kind": "integration",
         "coverage_level": "flow",
         "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- compilePlanRoute.test.ts executePlanRouteFacade.test.ts importPlanRoute.test.ts planRouteRequestResolver.test.ts planRouteResponseTranslation.test.ts previewPlanRoute.auth.test.ts previewPlanRoute.inputPolicy.test.ts previewPlanRoute.outcomes.test.ts",
+        "validation_command": "pnpm --filter dvt-api test -- compilePlanRoute.test.ts executePlanRouteFacade.test.ts importPlanRoute.test.ts planRoutePlanSourcePolicy.test.ts planRouteRequestResolver.test.ts previewPlanRoute.auth.test.ts previewPlanRoute.inputPolicy.test.ts previewPlanRoute.outcomes.test.ts",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -45493,7 +45521,7 @@
         "test_kind": "integration",
         "coverage_level": "flow",
         "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- compilePlanRoute.test.ts executePlanRouteFacade.test.ts importPlanRoute.test.ts planRouteRequestResolver.test.ts planRouteResponseTranslation.test.ts previewPlanRoute.auth.test.ts previewPlanRoute.inputPolicy.test.ts previewPlanRoute.outcomes.test.ts",
+        "validation_command": "pnpm --filter dvt-api test -- compilePlanRoute.test.ts executePlanRouteFacade.test.ts importPlanRoute.test.ts planRoutePlanSourcePolicy.test.ts planRouteRequestResolver.test.ts previewPlanRoute.auth.test.ts previewPlanRoute.inputPolicy.test.ts previewPlanRoute.outcomes.test.ts",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -45503,7 +45531,7 @@
         "test_kind": "integration",
         "coverage_level": "flow",
         "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- compilePlanRoute.test.ts executePlanRouteFacade.test.ts importPlanRoute.test.ts planRouteRequestResolver.test.ts planRouteResponseTranslation.test.ts previewPlanRoute.auth.test.ts previewPlanRoute.inputPolicy.test.ts previewPlanRoute.outcomes.test.ts",
+        "validation_command": "pnpm --filter dvt-api test -- compilePlanRoute.test.ts executePlanRouteFacade.test.ts importPlanRoute.test.ts planRoutePlanSourcePolicy.test.ts planRouteRequestResolver.test.ts previewPlanRoute.auth.test.ts previewPlanRoute.inputPolicy.test.ts previewPlanRoute.outcomes.test.ts",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -45513,17 +45541,7 @@
         "test_kind": "integration",
         "coverage_level": "flow",
         "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- compilePlanRoute.test.ts executePlanRouteFacade.test.ts importPlanRoute.test.ts planRouteRequestResolver.test.ts planRouteResponseTranslation.test.ts previewPlanRoute.auth.test.ts previewPlanRoute.inputPolicy.test.ts previewPlanRoute.outcomes.test.ts",
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "test_id": "TEST-SYS-API-HTTP-PLAN-COMMANDS-5",
-        "component_id": "SYS-API-HTTP-PLAN-COMMANDS",
-        "test_path": "apps/api/test/entrypoints/http/planRoutePlanSourcePolicy.test.ts",
-        "test_kind": "integration",
-        "coverage_level": "flow",
-        "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- compilePlanRoute.test.ts executePlanRouteFacade.test.ts importPlanRoute.test.ts planRouteRequestResolver.test.ts planRouteResponseTranslation.test.ts previewPlanRoute.auth.test.ts previewPlanRoute.inputPolicy.test.ts previewPlanRoute.outcomes.test.ts",
+        "validation_command": "pnpm --filter dvt-api test -- compilePlanRoute.test.ts executePlanRouteFacade.test.ts importPlanRoute.test.ts planRoutePlanSourcePolicy.test.ts planRouteRequestResolver.test.ts previewPlanRoute.auth.test.ts previewPlanRoute.inputPolicy.test.ts previewPlanRoute.outcomes.test.ts",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -45533,27 +45551,7 @@
         "test_kind": "integration",
         "coverage_level": "flow",
         "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- compilePlanRoute.test.ts executePlanRouteFacade.test.ts importPlanRoute.test.ts planRouteRequestResolver.test.ts planRouteResponseTranslation.test.ts previewPlanRoute.auth.test.ts previewPlanRoute.inputPolicy.test.ts previewPlanRoute.outcomes.test.ts",
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "test_id": "TEST-SYS-API-HTTP-PLAN-COMMANDS-7",
-        "component_id": "SYS-API-HTTP-PLAN-COMMANDS",
-        "test_path": "apps/api/test/entrypoints/http/planRouteResponseTranslation.test.ts",
-        "test_kind": "integration",
-        "coverage_level": "flow",
-        "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- compilePlanRoute.test.ts executePlanRouteFacade.test.ts importPlanRoute.test.ts planRouteRequestResolver.test.ts planRouteResponseTranslation.test.ts previewPlanRoute.auth.test.ts previewPlanRoute.inputPolicy.test.ts previewPlanRoute.outcomes.test.ts",
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "test_id": "TEST-SYS-API-HTTP-PLAN-COMMANDS-8",
-        "component_id": "SYS-API-HTTP-PLAN-COMMANDS",
-        "test_path": "apps/api/test/entrypoints/http/planRouteResponseTranslation.test.ts",
-        "test_kind": "integration",
-        "coverage_level": "flow",
-        "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- compilePlanRoute.test.ts executePlanRouteFacade.test.ts importPlanRoute.test.ts planRouteRequestResolver.test.ts planRouteResponseTranslation.test.ts previewPlanRoute.auth.test.ts previewPlanRoute.inputPolicy.test.ts previewPlanRoute.outcomes.test.ts",
+        "validation_command": "pnpm --filter dvt-api test -- compilePlanRoute.test.ts executePlanRouteFacade.test.ts importPlanRoute.test.ts planRoutePlanSourcePolicy.test.ts planRouteRequestResolver.test.ts previewPlanRoute.auth.test.ts previewPlanRoute.inputPolicy.test.ts previewPlanRoute.outcomes.test.ts",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -45563,7 +45561,7 @@
         "test_kind": "integration",
         "coverage_level": "flow",
         "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- compilePlanRoute.test.ts executePlanRouteFacade.test.ts importPlanRoute.test.ts planRouteRequestResolver.test.ts planRouteResponseTranslation.test.ts previewPlanRoute.auth.test.ts previewPlanRoute.inputPolicy.test.ts previewPlanRoute.outcomes.test.ts",
+        "validation_command": "pnpm --filter dvt-api test -- compilePlanRoute.test.ts executePlanRouteFacade.test.ts importPlanRoute.test.ts planRoutePlanSourcePolicy.test.ts planRouteRequestResolver.test.ts previewPlanRoute.auth.test.ts previewPlanRoute.inputPolicy.test.ts previewPlanRoute.outcomes.test.ts",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -67695,6 +67693,14 @@
         "created_at": "2026-08-13T03:46:51.174+00:00"
       },
       {
+        "design_id": "GH-2168-APP-PLAN-COMPONENT-RECONCILIATION-20260813",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-APPLICATION-SERVICES-PLAN-COMMANDS",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T06:54:34.554+00:00"
+      },
+      {
         "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
         "subject_kind": "command",
         "subject_id": "CompilePlan",
@@ -67813,6 +67819,118 @@
         "scope_kind": "may_delete",
         "required": true,
         "created_at": "2026-08-13T06:15:43.826+00:00"
+      },
+      {
+        "design_id": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-APPLICATION-SERVICES-PLAN-COMMANDS",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-13T06:55:55.601+00:00"
+      },
+      {
+        "design_id": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-HTTP-PLAN-COMMANDS",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-13T06:55:55.601+00:00"
+      },
+      {
+        "design_id": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-APPLICATION-SERVICES-PLAN-COMMANDS",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T06:55:55.601+00:00"
+      },
+      {
+        "design_id": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-HTTP-PLAN-COMMANDS-10",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T06:55:55.601+00:00"
+      },
+      {
+        "design_id": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-HTTP-PLAN-COMMANDS-11",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T06:55:55.601+00:00"
+      },
+      {
+        "design_id": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-HTTP-PLAN-COMMANDS-1",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T06:55:55.601+00:00"
+      },
+      {
+        "design_id": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-HTTP-PLAN-COMMANDS-2",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T06:55:55.601+00:00"
+      },
+      {
+        "design_id": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-HTTP-PLAN-COMMANDS-3",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T06:55:55.601+00:00"
+      },
+      {
+        "design_id": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-HTTP-PLAN-COMMANDS-4",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T06:55:55.601+00:00"
+      },
+      {
+        "design_id": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-HTTP-PLAN-COMMANDS-5",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-13T06:55:55.601+00:00"
+      },
+      {
+        "design_id": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-HTTP-PLAN-COMMANDS-6",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T06:55:55.601+00:00"
+      },
+      {
+        "design_id": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-HTTP-PLAN-COMMANDS-7",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-13T06:55:55.601+00:00"
+      },
+      {
+        "design_id": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-HTTP-PLAN-COMMANDS-8",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-13T06:55:55.601+00:00"
+      },
+      {
+        "design_id": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-HTTP-PLAN-COMMANDS-9",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T06:55:55.601+00:00"
       },
       {
         "design_id": "PLANNING-DB-API-APPLICATION-SERVICE-TEST-LEAF-COMPONENTS-20260619",
@@ -89658,6 +89776,31 @@
         "created_at": "2026-08-13T02:24:53.151+00:00"
       },
       {
+        "operation_id": "0e3cc2b2-8e16-4b8d-b896-14f7a296c716",
+        "idempotency_key": "gh-2168-record-test-sys-api-http-plan-commands-6-v1",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+        "source_ref": "apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts",
+        "source_content_sha256": "a9c923e5b991e7567f3a06cefb7e3520b4524d39a0e986ac5b456bb22f921f25",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-SYS-API-HTTP-PLAN-COMMANDS-6",
+          "designId": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+          "required": true,
+          "testKind": "integration",
+          "testPath": "apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts",
+          "sourceRef": "apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts",
+          "componentId": "SYS-API-HTTP-PLAN-COMMANDS",
+          "coverageLevel": "flow",
+          "validationCommand": "pnpm --filter dvt-api test -- compilePlanRoute.test.ts executePlanRouteFacade.test.ts importPlanRoute.test.ts planRoutePlanSourcePolicy.test.ts planRouteRequestResolver.test.ts previewPlanRoute.auth.test.ts previewPlanRoute.inputPolicy.test.ts previewPlanRoute.outcomes.test.ts",
+          "sourceContentSha256": "a9c923e5b991e7567f3a06cefb7e3520b4524d39a0e986ac5b456bb22f921f25"
+        },
+        "created_at": "2026-08-13T06:58:41.407+00:00"
+      },
+      {
         "operation_id": "0e62fae9-7952-4124-9ea0-6526127295c3",
         "idempotency_key": "issue-2274-ev-pth14-v3-evidence-test",
         "operation_type": "architecture_evidence_record",
@@ -91387,6 +91530,27 @@
         "created_at": "2026-08-11T18:22:14.67+00:00"
       },
       {
+        "operation_id": "2a930122-5064-45d4-8ca4-ca017504d3e5",
+        "idempotency_key": "gh-2168-gh-2168-plan-lifecycle-hardcut-20260813-implementing-v1",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+        "source_ref": "git:commit:3346487f8",
+        "source_content_sha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Implementation exists in microcommits and is undergoing final governed validation.",
+          "designId": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+          "toStatus": "implementing",
+          "sourceRef": "git:commit:3346487f8",
+          "fromStatus": "approved",
+          "sourceContentSha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5"
+        },
+        "created_at": "2026-08-13T07:07:15.398+00:00"
+      },
+      {
         "operation_id": "2aae75ad-47bb-4b5e-a70e-be11ccae0289",
         "idempotency_key": "architecture_design_transition:codex:db-canvas-context-menu-component-retirement-2310-v1:94f101ef894d87c4",
         "operation_type": "architecture_design_transition",
@@ -91803,6 +91967,27 @@
           "sourceContentSha256": "753edb16f56b6a048f351042f40b9760b1e07205f7bf28b7e18b54071e50ac04"
         },
         "created_at": "2026-08-10T21:04:28.707+00:00"
+      },
+      {
+        "operation_id": "335beb29-6fd9-4b4f-8c95-64e330314cf0",
+        "idempotency_key": "gh-2168-retire-test-sys-api-http-plan-commands-7-v1",
+        "operation_type": "architecture_test_retire",
+        "actor": "codex",
+        "design_id": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+        "source_ref": "git:commit:3346487f8",
+        "source_content_sha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Duplicate or deleted topology-only evidence; behavior remains covered by the canonical endpoint suite.",
+          "testId": "TEST-SYS-API-HTTP-PLAN-COMMANDS-7",
+          "designId": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+          "sourceRef": "git:commit:3346487f8",
+          "componentId": "SYS-API-HTTP-PLAN-COMMANDS",
+          "sourceContentSha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5"
+        },
+        "created_at": "2026-08-13T06:59:04.478+00:00"
       },
       {
         "operation_id": "340951a5-1618-4586-938d-8e7ee3991cbd",
@@ -92259,6 +92444,31 @@
           "sourceContentSha256": "445d0a77a2208b4198a706920223128ba7051884116b3ec95250a2c30232d691"
         },
         "created_at": "2026-08-11T03:58:07.402+00:00"
+      },
+      {
+        "operation_id": "396719ed-cc0d-4295-a2d1-ced35f801fec",
+        "idempotency_key": "gh-2168-record-test-sys-api-http-plan-commands-11-v1",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+        "source_ref": "apps/api/test/entrypoints/http/previewPlanRoute.outcomes.test.ts",
+        "source_content_sha256": "a5966c3629f080bed5fccbe227fa1c7f39a4c42fba7fca397aebeb6aa2232035",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-SYS-API-HTTP-PLAN-COMMANDS-11",
+          "designId": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+          "required": true,
+          "testKind": "integration",
+          "testPath": "apps/api/test/entrypoints/http/previewPlanRoute.outcomes.test.ts",
+          "sourceRef": "apps/api/test/entrypoints/http/previewPlanRoute.outcomes.test.ts",
+          "componentId": "SYS-API-HTTP-PLAN-COMMANDS",
+          "coverageLevel": "flow",
+          "validationCommand": "pnpm --filter dvt-api test -- compilePlanRoute.test.ts executePlanRouteFacade.test.ts importPlanRoute.test.ts planRoutePlanSourcePolicy.test.ts planRouteRequestResolver.test.ts previewPlanRoute.auth.test.ts previewPlanRoute.inputPolicy.test.ts previewPlanRoute.outcomes.test.ts",
+          "sourceContentSha256": "a5966c3629f080bed5fccbe227fa1c7f39a4c42fba7fca397aebeb6aa2232035"
+        },
+        "created_at": "2026-08-13T06:58:45.226+00:00"
       },
       {
         "operation_id": "398c6cd9-9b02-457c-82b4-352496c2bc09",
@@ -92775,6 +92985,31 @@
           "sourceContentSha256": "a93f7eb2f1923c969913d6d4b84102a69ed27a47dac1e080355615334b214ec1"
         },
         "created_at": "2026-08-12T18:53:48.602+00:00"
+      },
+      {
+        "operation_id": "40bb77c1-bb1e-4724-99e6-73f381368476",
+        "idempotency_key": "gh-2168-record-test-sys-api-http-plan-commands-3-v1",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+        "source_ref": "apps/api/test/entrypoints/http/importPlanRoute.test.ts",
+        "source_content_sha256": "c475731dfe762c9706ac211b26758cd0b0f611e78dd245e8aa1a22ed70b6b551",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-SYS-API-HTTP-PLAN-COMMANDS-3",
+          "designId": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+          "required": true,
+          "testKind": "integration",
+          "testPath": "apps/api/test/entrypoints/http/importPlanRoute.test.ts",
+          "sourceRef": "apps/api/test/entrypoints/http/importPlanRoute.test.ts",
+          "componentId": "SYS-API-HTTP-PLAN-COMMANDS",
+          "coverageLevel": "flow",
+          "validationCommand": "pnpm --filter dvt-api test -- compilePlanRoute.test.ts executePlanRouteFacade.test.ts importPlanRoute.test.ts planRoutePlanSourcePolicy.test.ts planRouteRequestResolver.test.ts previewPlanRoute.auth.test.ts previewPlanRoute.inputPolicy.test.ts previewPlanRoute.outcomes.test.ts",
+          "sourceContentSha256": "c475731dfe762c9706ac211b26758cd0b0f611e78dd245e8aa1a22ed70b6b551"
+        },
+        "created_at": "2026-08-13T06:58:38.927+00:00"
       },
       {
         "operation_id": "4117fe82-ecfb-439e-85c7-f78944110746",
@@ -93520,6 +93755,27 @@
           "sourceContentSha256": "ab941b6eda593b8d9e86594c730b001d7291fd659a14d2287275a5ed214a492c"
         },
         "created_at": "2026-08-13T04:13:02.743+00:00"
+      },
+      {
+        "operation_id": "50a74734-a462-4ffe-8e19-ce21fba4f4aa",
+        "idempotency_key": "gh-2168-retire-test-sys-api-http-plan-commands-5-v1",
+        "operation_type": "architecture_test_retire",
+        "actor": "codex",
+        "design_id": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+        "source_ref": "git:commit:3346487f8",
+        "source_content_sha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Duplicate or deleted topology-only evidence; behavior remains covered by the canonical endpoint suite.",
+          "testId": "TEST-SYS-API-HTTP-PLAN-COMMANDS-5",
+          "designId": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+          "sourceRef": "git:commit:3346487f8",
+          "componentId": "SYS-API-HTTP-PLAN-COMMANDS",
+          "sourceContentSha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5"
+        },
+        "created_at": "2026-08-13T06:59:03.245+00:00"
       },
       {
         "operation_id": "51dc462a-a1f3-4e10-8a2f-0968b073281f",
@@ -95049,6 +95305,43 @@
         "created_at": "2026-08-11T08:16:59.213+00:00"
       },
       {
+        "operation_id": "63c21b3c-5dbf-4dca-8d63-d1d5272d29f0",
+        "idempotency_key": "gh-2168-app-plan-component-v1",
+        "operation_type": "architecture_component_record",
+        "actor": "codex",
+        "design_id": "GH-2168-APP-PLAN-COMPONENT-RECONCILIATION-20260813",
+        "source_ref": "git:commit:3346487f8",
+        "source_content_sha256": "a7ddd9fade1c7fadba394f4779c98a14b3893a739283142bafad38990b86a7b4",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "kind": "service",
+          "name": "API application plan lifecycle services",
+          "layer": "application",
+          "owner": "ApiPlanCommandApplicationService",
+          "status": "implemented",
+          "runtime": "node",
+          "designId": "GH-2168-APP-PLAN-COMPONENT-RECONCILIATION-20260813",
+          "repoPath": "apps/api/src/application/services/PreviewPlanUseCase.ts",
+          "sourceRef": "git:commit:3346487f8",
+          "componentId": "SYS-API-APPLICATION-SERVICES-PLAN-COMMANDS",
+          "criticality": "high",
+          "publicContract": "CompilePlan, PreviewPlan, and ImportPlan application service boundary.",
+          "responsibilities": [
+            {
+              "dddOwner": "ApiPlanCommandApplicationService",
+              "reasonToChange": "Plan compile, preview, import, authorized planner-input, or result semantics change.",
+              "responsibility": "Execute the distinct CompilePlan, PreviewPlan, and ImportPlan intents through canonical planner and plan-store authorities.",
+              "responsibilityId": "RESP-SYS-API-APPLICATION-SERVICES-PLAN-COMMANDS"
+            }
+          ],
+          "parentComponentId": "SYS-API-APPLICATION-SERVICES",
+          "sourceContentSha256": "a7ddd9fade1c7fadba394f4779c98a14b3893a739283142bafad38990b86a7b4"
+        },
+        "created_at": "2026-08-13T06:55:04.542+00:00"
+      },
+      {
         "operation_id": "64e7e47a-b0ea-4f82-b1f4-12fe99b66925",
         "idempotency_key": "architecture_component_record:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811:SYS-API-INFRASTRUCTURE:2f6b1c1ccc72ec1b",
         "operation_type": "architecture_component_record",
@@ -95263,6 +95556,27 @@
         "created_at": "2026-08-11T05:06:13.964+00:00"
       },
       {
+        "operation_id": "687002c7-1395-407e-8d47-c4828a6dd3d2",
+        "idempotency_key": "gh-2168-gh-2168-app-plan-component-reconciliation-20260813-approved-v1",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2168-APP-PLAN-COMPONENT-RECONCILIATION-20260813",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2168",
+        "source_content_sha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Focused endpoint, contract, and web behavior evidence passed for the bounded plan lifecycle slice.",
+          "designId": "GH-2168-APP-PLAN-COMPONENT-RECONCILIATION-20260813",
+          "toStatus": "approved",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2168",
+          "fromStatus": "review",
+          "sourceContentSha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5"
+        },
+        "created_at": "2026-08-13T07:07:16.619+00:00"
+      },
+      {
         "operation_id": "68ac345e-dc82-4810-a895-808f8c73d91c",
         "idempotency_key": "codex-api-h2-2-reachability-v8-implementing",
         "operation_type": "architecture_design_transition",
@@ -95303,6 +95617,31 @@
           "sourceContentSha256": "445d0a77a2208b4198a706920223128ba7051884116b3ec95250a2c30232d691"
         },
         "created_at": "2026-08-11T03:50:51.409+00:00"
+      },
+      {
+        "operation_id": "6905f69f-bdb2-4a09-ae37-b05ce13f4c66",
+        "idempotency_key": "gh-2168-record-test-sys-api-http-plan-commands-2-v1",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+        "source_ref": "apps/api/test/entrypoints/http/executePlanRouteFacade.test.ts",
+        "source_content_sha256": "aa8757505d40cc3b0b99833e3b669564f575d6bb7ca9fbaa5d11bac3f2e31923",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-SYS-API-HTTP-PLAN-COMMANDS-2",
+          "designId": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+          "required": true,
+          "testKind": "integration",
+          "testPath": "apps/api/test/entrypoints/http/executePlanRouteFacade.test.ts",
+          "sourceRef": "apps/api/test/entrypoints/http/executePlanRouteFacade.test.ts",
+          "componentId": "SYS-API-HTTP-PLAN-COMMANDS",
+          "coverageLevel": "flow",
+          "validationCommand": "pnpm --filter dvt-api test -- compilePlanRoute.test.ts executePlanRouteFacade.test.ts importPlanRoute.test.ts planRoutePlanSourcePolicy.test.ts planRouteRequestResolver.test.ts previewPlanRoute.auth.test.ts previewPlanRoute.inputPolicy.test.ts previewPlanRoute.outcomes.test.ts",
+          "sourceContentSha256": "aa8757505d40cc3b0b99833e3b669564f575d6bb7ca9fbaa5d11bac3f2e31923"
+        },
+        "created_at": "2026-08-13T06:58:37.651+00:00"
       },
       {
         "operation_id": "6970587e-e9c8-4338-a4fc-41712109fa47",
@@ -95936,6 +96275,27 @@
           "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
         },
         "created_at": "2026-08-10T20:05:47.479+00:00"
+      },
+      {
+        "operation_id": "7482b928-5f63-46cb-a3a7-60944957f455",
+        "idempotency_key": "gh-2168-gh-2168-app-plan-component-reconciliation-20260813-implementing-v1",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2168-APP-PLAN-COMPONENT-RECONCILIATION-20260813",
+        "source_ref": "git:commit:3346487f8",
+        "source_content_sha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Implementation exists in microcommits and is undergoing final governed validation.",
+          "designId": "GH-2168-APP-PLAN-COMPONENT-RECONCILIATION-20260813",
+          "toStatus": "implementing",
+          "sourceRef": "git:commit:3346487f8",
+          "fromStatus": "approved",
+          "sourceContentSha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5"
+        },
+        "created_at": "2026-08-13T07:07:17.804+00:00"
       },
       {
         "operation_id": "75fe6179-a94d-4b9b-afa4-d582cfb7d130",
@@ -97031,6 +97391,40 @@
         "created_at": "2026-08-10T15:49:36.365+00:00"
       },
       {
+        "operation_id": "86d6c87e-b748-46cd-9f38-50db6703f36c",
+        "idempotency_key": "gh-2168-app-plan-component-reconcile-v1",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "GH-2168-APP-PLAN-COMPONENT-RECONCILIATION-20260813",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2168",
+        "source_content_sha256": "03006c784da9fc5d11154af0e890640adb1b5121bfe424af0e2183236e03acd7",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "API / Planner",
+          "title": "Reconcile plan application component authority",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-API-APPLICATION-SERVICES-PLAN-COMMANDS",
+              "subjectKind": "component"
+            }
+          ],
+          "status": "proposed",
+          "railRef": "CompilePlan;PreviewPlan;ImportPlan",
+          "designId": "GH-2168-APP-PLAN-COMPONENT-RECONCILIATION-20260813",
+          "rationale": "Replace stale policy-catalog ownership language with the three surviving CompilePlan, PreviewPlan, and ImportPlan application intents.",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2168",
+          "workItemId": "GH-2168",
+          "fowlerSignal": "feature_envy",
+          "supersedesId": null,
+          "sourceContentSha256": "03006c784da9fc5d11154af0e890640adb1b5121bfe424af0e2183236e03acd7"
+        },
+        "created_at": "2026-08-13T06:54:34.554+00:00"
+      },
+      {
         "operation_id": "86dd3017-772c-4d09-8f16-a5f0b07f817c",
         "idempotency_key": "issue-2274-ev-pth14-v5-read-comp-review4",
         "operation_type": "architecture_evidence_record",
@@ -98063,6 +98457,118 @@
         "created_at": "2026-08-11T08:57:30.773+00:00"
       },
       {
+        "operation_id": "94e6f618-80a8-4ab7-8548-a53c6f806d16",
+        "idempotency_key": "gh-2168-plan-test-evidence-design-v1",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2168",
+        "source_content_sha256": "03006c784da9fc5d11154af0e890640adb1b5121bfe424af0e2183236e03acd7",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "API / Architecture",
+          "title": "Reconcile plan lifecycle behavior evidence",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-API-HTTP-PLAN-COMMANDS",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-API-APPLICATION-SERVICES-PLAN-COMMANDS",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-SYS-API-HTTP-PLAN-COMMANDS-1",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-SYS-API-HTTP-PLAN-COMMANDS-2",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-SYS-API-HTTP-PLAN-COMMANDS-3",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-SYS-API-HTTP-PLAN-COMMANDS-4",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "TEST-SYS-API-HTTP-PLAN-COMMANDS-5",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-SYS-API-HTTP-PLAN-COMMANDS-6",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "TEST-SYS-API-HTTP-PLAN-COMMANDS-7",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "TEST-SYS-API-HTTP-PLAN-COMMANDS-8",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-SYS-API-HTTP-PLAN-COMMANDS-9",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-SYS-API-HTTP-PLAN-COMMANDS-10",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-SYS-API-HTTP-PLAN-COMMANDS-11",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-SYS-API-APPLICATION-SERVICES-PLAN-COMMANDS",
+              "subjectKind": "test"
+            }
+          ],
+          "status": "proposed",
+          "railRef": "CompilePlan;PreviewPlan;ImportPlan",
+          "designId": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+          "rationale": "Retire duplicate and deleted topology evidence, and bind the surviving plan lifecycle components only to behavior-focused endpoint and use-case tests.",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2168",
+          "workItemId": "GH-2168",
+          "fowlerSignal": "responsibility_overload",
+          "supersedesId": null,
+          "sourceContentSha256": "03006c784da9fc5d11154af0e890640adb1b5121bfe424af0e2183236e03acd7"
+        },
+        "created_at": "2026-08-13T06:55:55.601+00:00"
+      },
+      {
         "operation_id": "96294da1-352c-4556-9349-0847d617b092",
         "idempotency_key": "architecture_component_record:codex:db-canvas-context-menu-component-retirement-2310-v1:SYS-WEB-CANVAS-CONTEXT-MENU-PRIMITIVES:9721c1484c8488c1",
         "operation_type": "architecture_component_record",
@@ -98615,6 +99121,31 @@
         "created_at": "2026-08-10T22:58:51.559+00:00"
       },
       {
+        "operation_id": "9cbe9c1d-eed7-465d-9485-f1c8ed4d81b4",
+        "idempotency_key": "gh-2168-record-test-sys-api-http-plan-commands-4-v1",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+        "source_ref": "apps/api/test/entrypoints/http/planRoutePlanSourcePolicy.test.ts",
+        "source_content_sha256": "bdf0a97a8e8ab11b82dd62051fb50176388d2bd5e222cea7f65b01764b1588f8",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-SYS-API-HTTP-PLAN-COMMANDS-4",
+          "designId": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+          "required": true,
+          "testKind": "integration",
+          "testPath": "apps/api/test/entrypoints/http/planRoutePlanSourcePolicy.test.ts",
+          "sourceRef": "apps/api/test/entrypoints/http/planRoutePlanSourcePolicy.test.ts",
+          "componentId": "SYS-API-HTTP-PLAN-COMMANDS",
+          "coverageLevel": "flow",
+          "validationCommand": "pnpm --filter dvt-api test -- compilePlanRoute.test.ts executePlanRouteFacade.test.ts importPlanRoute.test.ts planRoutePlanSourcePolicy.test.ts planRouteRequestResolver.test.ts previewPlanRoute.auth.test.ts previewPlanRoute.inputPolicy.test.ts previewPlanRoute.outcomes.test.ts",
+          "sourceContentSha256": "bdf0a97a8e8ab11b82dd62051fb50176388d2bd5e222cea7f65b01764b1588f8"
+        },
+        "created_at": "2026-08-13T06:58:40.167+00:00"
+      },
+      {
         "operation_id": "9d748e78-96fa-4e11-950d-c82a6ad679a7",
         "idempotency_key": "gh-2167-validation-test-sys-api-tests-module-composition-1-v1",
         "operation_type": "architecture_test_record",
@@ -98815,6 +99346,31 @@
           "sourceContentSha256": "c770f3d34e90d2ad2f546af24f8f2833870c7df91f1fb1c97e45151de29563b6"
         },
         "created_at": "2026-08-10T21:04:33.082+00:00"
+      },
+      {
+        "operation_id": "a04cae92-5920-4d40-9f3b-839c549b00d3",
+        "idempotency_key": "gh-2168-record-test-sys-api-http-plan-commands-1-v1",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+        "source_ref": "apps/api/test/entrypoints/http/compilePlanRoute.test.ts",
+        "source_content_sha256": "fd675a672fd740540223bd66d7fb7521289ce1b52c06fea236c2d33cf3ee2984",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-SYS-API-HTTP-PLAN-COMMANDS-1",
+          "designId": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+          "required": true,
+          "testKind": "integration",
+          "testPath": "apps/api/test/entrypoints/http/compilePlanRoute.test.ts",
+          "sourceRef": "apps/api/test/entrypoints/http/compilePlanRoute.test.ts",
+          "componentId": "SYS-API-HTTP-PLAN-COMMANDS",
+          "coverageLevel": "flow",
+          "validationCommand": "pnpm --filter dvt-api test -- compilePlanRoute.test.ts executePlanRouteFacade.test.ts importPlanRoute.test.ts planRoutePlanSourcePolicy.test.ts planRouteRequestResolver.test.ts previewPlanRoute.auth.test.ts previewPlanRoute.inputPolicy.test.ts previewPlanRoute.outcomes.test.ts",
+          "sourceContentSha256": "fd675a672fd740540223bd66d7fb7521289ce1b52c06fea236c2d33cf3ee2984"
+        },
+        "created_at": "2026-08-13T06:58:36.352+00:00"
       },
       {
         "operation_id": "a0752061-60df-425e-b3b2-f5ff01bb2480",
@@ -99964,6 +100520,31 @@
         "created_at": "2026-08-11T01:38:10.991+00:00"
       },
       {
+        "operation_id": "affe2a5c-0e82-41de-968c-826de2c8d7b5",
+        "idempotency_key": "gh-2168-record-app-plan-test-v1",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+        "source_ref": "apps/api/test/application/services/CompilePlanUseCase.test.ts",
+        "source_content_sha256": "d8f110d94f644926a8f70a70a1dabdf3fd6ae959bf3b1b570fced229b0c0e470",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-SYS-API-APPLICATION-SERVICES-PLAN-COMMANDS",
+          "designId": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+          "required": true,
+          "testKind": "unit",
+          "testPath": "apps/api/test/application/services/CompilePlanUseCase.test.ts",
+          "sourceRef": "apps/api/test/application/services/CompilePlanUseCase.test.ts",
+          "componentId": "SYS-API-APPLICATION-SERVICES-PLAN-COMMANDS",
+          "coverageLevel": "behavior",
+          "validationCommand": "pnpm --filter dvt-api test -- CompilePlanUseCase.test.ts PreviewPlanUseCase.outcomes.test.ts importPlanRoute.test.ts previewPlanRoute.inputPolicy.test.ts",
+          "sourceContentSha256": "d8f110d94f644926a8f70a70a1dabdf3fd6ae959bf3b1b570fced229b0c0e470"
+        },
+        "created_at": "2026-08-13T06:59:02.012+00:00"
+      },
+      {
         "operation_id": "b032953b-675e-4ef5-a131-2f41d057609e",
         "idempotency_key": "gh-2167-validation-contract-sys-api-tests-module-composition-evidence-v1",
         "operation_type": "architecture_contract_record",
@@ -100277,6 +100858,27 @@
           "sourceContentSha256": "c770f3d34e90d2ad2f546af24f8f2833870c7df91f1fb1c97e45151de29563b6"
         },
         "created_at": "2026-08-10T21:04:10.294+00:00"
+      },
+      {
+        "operation_id": "b63d1789-4520-4019-9c3b-7e5595a207a1",
+        "idempotency_key": "gh-2168-retire-test-sys-api-http-plan-commands-8-v1",
+        "operation_type": "architecture_test_retire",
+        "actor": "codex",
+        "design_id": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+        "source_ref": "git:commit:3346487f8",
+        "source_content_sha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Duplicate or deleted topology-only evidence; behavior remains covered by the canonical endpoint suite.",
+          "testId": "TEST-SYS-API-HTTP-PLAN-COMMANDS-8",
+          "designId": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+          "sourceRef": "git:commit:3346487f8",
+          "componentId": "SYS-API-HTTP-PLAN-COMMANDS",
+          "sourceContentSha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5"
+        },
+        "created_at": "2026-08-13T06:59:05.705+00:00"
       },
       {
         "operation_id": "b7263c6a-a4df-4e98-a51b-ff9c76f24756",
@@ -102096,6 +102698,43 @@
         "created_at": "2026-08-10T21:04:50.468+00:00"
       },
       {
+        "operation_id": "ca6b3818-5727-4aef-b83b-0c03e20786da",
+        "idempotency_key": "gh-2168-http-plan-component-v1",
+        "operation_type": "architecture_component_record",
+        "actor": "codex",
+        "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+        "source_ref": "git:commit:3346487f8",
+        "source_content_sha256": "1051450cef6fcd4d6e985b5ba34566a54d7c98b7ba7482fbd13345a18c9f10b1",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "kind": "adapter",
+          "name": "API HTTP plan lifecycle routes",
+          "layer": "adapter",
+          "owner": "PlanHttpCommandAdapter",
+          "status": "implemented",
+          "runtime": "node",
+          "designId": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+          "repoPath": "apps/api/src/entrypoints/http/previewPlanRoute.ts",
+          "sourceRef": "git:commit:3346487f8",
+          "componentId": "SYS-API-HTTP-PLAN-COMMANDS",
+          "criticality": "high",
+          "publicContract": "CompilePlan, PreviewPlan, and ImportPlan HTTP adapter surface.",
+          "responsibilities": [
+            {
+              "dddOwner": "PlanHttpCommandAdapter",
+              "reasonToChange": "Plan endpoint contracts, parsing, authorization, or response mapping changes.",
+              "responsibility": "Adapt CompilePlan, PreviewPlan, and ImportPlan to HTTP using canonical contracts and shared authorization.",
+              "responsibilityId": "RESP-SYS-API-HTTP-PLAN-COMMANDS"
+            }
+          ],
+          "parentComponentId": "SYS-API-HTTP-ENTRYPOINTS",
+          "sourceContentSha256": "1051450cef6fcd4d6e985b5ba34566a54d7c98b7ba7482fbd13345a18c9f10b1"
+        },
+        "created_at": "2026-08-13T06:54:10.408+00:00"
+      },
+      {
         "operation_id": "ca93e609-d7da-4eb8-9560-5dab1ad7548b",
         "idempotency_key": "gh-2167-update-test-sys-api-tests-application-services-workspace-2-v1",
         "operation_type": "architecture_test_record",
@@ -102750,6 +103389,31 @@
         "created_at": "2026-08-11T01:38:25.2+00:00"
       },
       {
+        "operation_id": "d4777b91-94d8-4f02-b307-7f620567665a",
+        "idempotency_key": "gh-2168-record-test-sys-api-http-plan-commands-9-v1",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+        "source_ref": "apps/api/test/entrypoints/http/previewPlanRoute.auth.test.ts",
+        "source_content_sha256": "f76e2d61101a7c2bf6420860432674408ef523003bc630bb10e66a2769a06c64",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-SYS-API-HTTP-PLAN-COMMANDS-9",
+          "designId": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+          "required": true,
+          "testKind": "integration",
+          "testPath": "apps/api/test/entrypoints/http/previewPlanRoute.auth.test.ts",
+          "sourceRef": "apps/api/test/entrypoints/http/previewPlanRoute.auth.test.ts",
+          "componentId": "SYS-API-HTTP-PLAN-COMMANDS",
+          "coverageLevel": "flow",
+          "validationCommand": "pnpm --filter dvt-api test -- compilePlanRoute.test.ts executePlanRouteFacade.test.ts importPlanRoute.test.ts planRoutePlanSourcePolicy.test.ts planRouteRequestResolver.test.ts previewPlanRoute.auth.test.ts previewPlanRoute.inputPolicy.test.ts previewPlanRoute.outcomes.test.ts",
+          "sourceContentSha256": "f76e2d61101a7c2bf6420860432674408ef523003bc630bb10e66a2769a06c64"
+        },
+        "created_at": "2026-08-13T06:58:42.635+00:00"
+      },
+      {
         "operation_id": "d499fba0-6fa9-4db7-8ccb-31e337e96cae",
         "idempotency_key": "codex-api-h2-2-reachability-v7-superseded-v8",
         "operation_type": "architecture_design_transition",
@@ -102946,6 +103610,27 @@
           "sourceContentSha256": "efe621f4806a1b5e14a392a4ea99b93929ce4e3a0caf9281b93c631b23534c83"
         },
         "created_at": "2026-08-11T13:02:42.94+00:00"
+      },
+      {
+        "operation_id": "d6670b70-40d0-47bb-8fbc-728ea9799837",
+        "idempotency_key": "gh-2168-gh-2168-plan-test-evidence-reconciliation-20260813-implementing-v1",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+        "source_ref": "git:commit:3346487f8",
+        "source_content_sha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Implementation exists in microcommits and is undergoing final governed validation.",
+          "designId": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+          "toStatus": "implementing",
+          "sourceRef": "git:commit:3346487f8",
+          "fromStatus": "approved",
+          "sourceContentSha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5"
+        },
+        "created_at": "2026-08-13T07:07:20.272+00:00"
       },
       {
         "operation_id": "d6ebc8e2-f566-4878-afc9-0a0b4fbc3c40",
@@ -103751,6 +104436,31 @@
         "created_at": "2026-08-10T20:06:23.316+00:00"
       },
       {
+        "operation_id": "e28e8f2f-9067-467f-95ce-ef4df9d96859",
+        "idempotency_key": "gh-2168-record-test-sys-api-http-plan-commands-10-v1",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+        "source_ref": "apps/api/test/entrypoints/http/previewPlanRoute.inputPolicy.test.ts",
+        "source_content_sha256": "67131f581a98e5f985a3aefea14ab56f396544f5a72d78032902487a8579e2ab",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-SYS-API-HTTP-PLAN-COMMANDS-10",
+          "designId": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+          "required": true,
+          "testKind": "integration",
+          "testPath": "apps/api/test/entrypoints/http/previewPlanRoute.inputPolicy.test.ts",
+          "sourceRef": "apps/api/test/entrypoints/http/previewPlanRoute.inputPolicy.test.ts",
+          "componentId": "SYS-API-HTTP-PLAN-COMMANDS",
+          "coverageLevel": "flow",
+          "validationCommand": "pnpm --filter dvt-api test -- compilePlanRoute.test.ts executePlanRouteFacade.test.ts importPlanRoute.test.ts planRoutePlanSourcePolicy.test.ts planRouteRequestResolver.test.ts previewPlanRoute.auth.test.ts previewPlanRoute.inputPolicy.test.ts previewPlanRoute.outcomes.test.ts",
+          "sourceContentSha256": "67131f581a98e5f985a3aefea14ab56f396544f5a72d78032902487a8579e2ab"
+        },
+        "created_at": "2026-08-13T06:58:43.914+00:00"
+      },
+      {
         "operation_id": "e4d18a1c-8f68-4d53-ae94-45597ee2cce0",
         "idempotency_key": "gh-2167-validation-test-sys-api-http-runtime-route-registry-1-v1",
         "operation_type": "architecture_test_record",
@@ -104173,6 +104883,27 @@
           "sourceContentSha256": "1c740da0098f2dffb4906f6f41d3814c6aa6fa54ddb41a445e0e6db0211270c4"
         },
         "created_at": "2026-08-13T03:47:41.061+00:00"
+      },
+      {
+        "operation_id": "eb83bc53-65f4-4b48-b677-d16fce9753e2",
+        "idempotency_key": "gh-2168-plan-test-evidence-review-v1",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+        "source_ref": "git:commit:3346487f8",
+        "source_content_sha256": "03006c784da9fc5d11154af0e890640adb1b5121bfe424af0e2183236e03acd7",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Surviving endpoint behavior and duplicate evidence dispositions are explicit.",
+          "designId": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+          "toStatus": "review",
+          "sourceRef": "git:commit:3346487f8",
+          "fromStatus": "proposed",
+          "sourceContentSha256": "03006c784da9fc5d11154af0e890640adb1b5121bfe424af0e2183236e03acd7"
+        },
+        "created_at": "2026-08-13T06:55:56.887+00:00"
       },
       {
         "operation_id": "eb987def-f44d-4728-ba72-99701e3c573a",
@@ -105014,6 +105745,27 @@
         "created_at": "2026-08-10T21:04:20.683+00:00"
       },
       {
+        "operation_id": "f77ce2d9-3bae-4cef-94cc-db3cf022d843",
+        "idempotency_key": "gh-2168-app-plan-component-review-v1",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2168-APP-PLAN-COMPONENT-RECONCILIATION-20260813",
+        "source_ref": "git:commit:3346487f8",
+        "source_content_sha256": "a7ddd9fade1c7fadba394f4779c98a14b3893a739283142bafad38990b86a7b4",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Implementation shape and surviving application intents are evidenced by focused API tests.",
+          "designId": "GH-2168-APP-PLAN-COMPONENT-RECONCILIATION-20260813",
+          "toStatus": "review",
+          "sourceRef": "git:commit:3346487f8",
+          "fromStatus": "proposed",
+          "sourceContentSha256": "a7ddd9fade1c7fadba394f4779c98a14b3893a739283142bafad38990b86a7b4"
+        },
+        "created_at": "2026-08-13T06:55:03.265+00:00"
+      },
+      {
         "operation_id": "f793ea10-17d8-4785-bc38-ea1b5f6ed5d2",
         "idempotency_key": "architecture_design_transition:codex:GH-2166-PLAN-REJECTION-CLASSIFICATION-20260813:8f6fca6879f9a32c",
         "operation_type": "architecture_design_transition",
@@ -105054,6 +105806,27 @@
           "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
         },
         "created_at": "2026-08-10T22:58:50.304+00:00"
+      },
+      {
+        "operation_id": "f926d021-b6a1-4fb6-9628-f42bab05a790",
+        "idempotency_key": "gh-2168-gh-2168-plan-test-evidence-reconciliation-20260813-approved-v1",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2168",
+        "source_content_sha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Focused endpoint, contract, and web behavior evidence passed for the bounded plan lifecycle slice.",
+          "designId": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+          "toStatus": "approved",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2168",
+          "fromStatus": "review",
+          "sourceContentSha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5"
+        },
+        "created_at": "2026-08-13T07:07:19.046+00:00"
       },
       {
         "operation_id": "f9380fb7-55a8-4fa3-a57a-bfc52e7481d7",
@@ -105263,6 +106036,27 @@
           "sourceContentSha256": "4bc13448fdbcf04a5024ea63ae8ad89bc3d95aea768dc44d6d46608f1a92c4f4"
         },
         "created_at": "2026-08-11T10:53:25.662+00:00"
+      },
+      {
+        "operation_id": "fbdc4842-f3c3-4a2c-b7d5-26eaed5ead4b",
+        "idempotency_key": "gh-2168-gh-2168-plan-lifecycle-hardcut-20260813-approved-v1",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2168",
+        "source_content_sha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Focused endpoint, contract, and web behavior evidence passed for the bounded plan lifecycle slice.",
+          "designId": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+          "toStatus": "approved",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2168",
+          "fromStatus": "review",
+          "sourceContentSha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5"
+        },
+        "created_at": "2026-08-13T07:07:14.167+00:00"
       },
       {
         "operation_id": "fc3744a0-72bd-4900-bab8-481cd67ce078",
@@ -146988,7 +147782,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts",
-      "sourceContentSha256": "9c3d6c3b7660f619693535e1744085b83c1f967798b621838320505ebd1a43ad",
+      "sourceContentSha256": "f2a684c9867bbde19cf5c2b6fff8469ec9cb5e24d01e1e76f30154923b7a9f76",
       "rawRail": {
         "name": "ClassifyProtectedRuntimeRouteRails",
         "type": "query",
