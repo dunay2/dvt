@@ -11577,14 +11577,14 @@
         "work_item_id": "GH-2166",
         "title": "Contain unexpected StartRun failures at the HTTP boundary",
         "owner": "SYS-API-HTTP-ENTRYPOINTS",
-        "status": "implementing",
+        "status": "implemented",
         "rationale": "The admission layer preserves unexpected infrastructure errors for observability; the existing StartRun HTTP adapter must log them and return only the stable internal_server_error/internal_error envelope.",
         "fowler_signal": "boundary_drift",
         "rail_ref": "StartRun",
         "approved_at": "2026-08-13T05:03:11.458+00:00",
         "supersedes_id": "GH-2166-START-RUN-ERROR-CONTAINMENT-20260813",
         "created_at": "2026-08-13T05:03:08.951+00:00",
-        "updated_at": "2026-08-13T05:03:12.67+00:00"
+        "updated_at": "2026-08-13T05:15:32.037+00:00"
       },
       {
         "design_id": "GH-2166-VALIDATION-FETCH-RAIL-CLEAN-RECORD-20260813",
@@ -14012,6 +14012,20 @@
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
         "source_content_sha256": null,
+        "implementation_content_sha256": null
+      },
+      {
+        "evidence_id": "EV-GH-2166-START-RUN-HTTP-NONDISCLOSURE-20260813",
+        "design_id": "GH-2166-START-RUN-ERROR-CONTAINMENT-V2-20260813",
+        "subject_kind": "test",
+        "subject_id": "apps/api/test/entrypoints/http/startRunRoute.authAndSuccess.test.ts",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "git://ecb390e83#apps/api/test/entrypoints/http/startRunRoute.authAndSuccess.test.ts",
+        "source_path": "apps/api/test/entrypoints/http/startRunRoute.authAndSuccess.test.ts",
+        "result_state": "pass",
+        "recorded_at": "2026-08-13T05:15:22.618+00:00",
+        "source_content_sha256": "3f29f16c7a0d6a8c4b194e40359ec631d9e32a094b298292c848aa2e8eec4f14",
         "implementation_content_sha256": null
       },
       {
@@ -89286,6 +89300,31 @@
         "created_at": "2026-08-11T03:35:49.965+00:00"
       },
       {
+        "operation_id": "09a58a34-b96c-401a-870b-fa80b2f2d8b4",
+        "idempotency_key": "architecture_evidence_record:codex:GH-2166-START-RUN-ERROR-CONTAINMENT-V2-20260813:EV-GH-2166-START-RUN-HTTP-NONDISCLOSURE-20260813:68efe8dc77110fad",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "GH-2166-START-RUN-ERROR-CONTAINMENT-V2-20260813",
+        "source_ref": "git://ecb390e83#apps/api/test/entrypoints/http/startRunRoute.authAndSuccess.test.ts",
+        "source_content_sha256": "3f29f16c7a0d6a8c4b194e40359ec631d9e32a094b298292c848aa2e8eec4f14",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "GH-2166-START-RUN-ERROR-CONTAINMENT-V2-20260813",
+          "sourceRef": "git://ecb390e83#apps/api/test/entrypoints/http/startRunRoute.authAndSuccess.test.ts",
+          "subjectId": "apps/api/test/entrypoints/http/startRunRoute.authAndSuccess.test.ts",
+          "evidenceId": "EV-GH-2166-START-RUN-HTTP-NONDISCLOSURE-20260813",
+          "sourcePath": "apps/api/test/entrypoints/http/startRunRoute.authAndSuccess.test.ts",
+          "resultState": "pass",
+          "subjectKind": "test",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "3f29f16c7a0d6a8c4b194e40359ec631d9e32a094b298292c848aa2e8eec4f14"
+        },
+        "created_at": "2026-08-13T05:15:22.618+00:00"
+      },
+      {
         "operation_id": "09b73deb-2401-4a1f-8cfc-468e71db9eba",
         "idempotency_key": "GH-2166-VALIDATION-FETCH-RAIL-CLEAN-RECORD-20260813-implemented-v1",
         "operation_type": "architecture_design_transition",
@@ -94305,6 +94344,27 @@
           "sourceContentSha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc"
         },
         "created_at": "2026-08-11T12:53:29.414+00:00"
+      },
+      {
+        "operation_id": "5d3913ab-978f-4cb5-887b-9df842d5150a",
+        "idempotency_key": "architecture_design_transition:codex:GH-2166-START-RUN-ERROR-CONTAINMENT-V2-20260813:9f6de44acd82f9a8",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2166-START-RUN-ERROR-CONTAINMENT-V2-20260813",
+        "source_ref": "git://ecb390e83#apps/api/test/entrypoints/http/startRunRoute.authAndSuccess.test.ts",
+        "source_content_sha256": "6d7b45de83874c133f39f9fe67801d40c20510ccad26f7447db7a9be7add9c44",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "StartRun logs and records the preserved failure internally, emits only internal_server_error/internal_error, and EV-GH-2166-START-RUN-HTTP-NONDISCLOSURE-20260813 proves the infrastructure message is absent.",
+          "designId": "GH-2166-START-RUN-ERROR-CONTAINMENT-V2-20260813",
+          "toStatus": "implemented",
+          "sourceRef": "git://ecb390e83#apps/api/test/entrypoints/http/startRunRoute.authAndSuccess.test.ts",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "6d7b45de83874c133f39f9fe67801d40c20510ccad26f7447db7a9be7add9c44"
+        },
+        "created_at": "2026-08-13T05:15:32.037+00:00"
       },
       {
         "operation_id": "5d82136b-76cd-4142-8d2c-2593deab86f8",
