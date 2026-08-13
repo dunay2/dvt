@@ -14,7 +14,7 @@ import { PROJECT_ONBOARDING_POLICY } from './projectOnboardingPolicy.js';
 export class CreateProjectUseCase {
   public constructor(
     private readonly repository: IProjectOnboardingRepository,
-    private readonly accessDecisions: IAccessDecisionService
+    private readonly accessDecisions: Pick<IAccessDecisionService, 'decide'>
   ) {}
 
   public async execute(

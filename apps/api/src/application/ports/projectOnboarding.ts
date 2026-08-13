@@ -10,6 +10,8 @@ import type {
 
 import type { AuthenticatedPrincipal, PrincipalRef } from '../../domain/auth/types.js';
 
+import type { PrincipalGrantSnapshot } from './principalGrantRepository.js';
+
 export interface CreateProjectCommand {
   readonly tenantId: string;
   readonly name: string;
@@ -34,6 +36,7 @@ export type CreateProjectOutcome =
   | { readonly kind: 'idempotency_conflict' };
 
 export interface GrantedProjectCatalog {
+  readonly grantSnapshot: PrincipalGrantSnapshot | null;
   readonly tenantIds: readonly string[];
   readonly projects: readonly ProjectDescriptor[];
   readonly integrityFindings: readonly ProjectCatalogIntegrityFinding[];

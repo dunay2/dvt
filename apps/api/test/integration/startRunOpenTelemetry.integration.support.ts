@@ -322,6 +322,16 @@ function createAuthorizer(authorized: boolean): AuthorizeCommandScopeService {
           : { ok: false as const, reason: 'ACTION_NOT_GRANTED' as const }
       );
     },
+    decideFromSnapshot(_principal, _effectiveAccess, requestedScope) {
+      return authorized
+        ? { ok: true, approvedScope: toExecutionScope(requestedScope) }
+        : { ok: false, reason: 'ACTION_NOT_GRANTED' };
+    },
+    decideManyFromSnapshot(principal, effectiveAccess, requestedScopes) {
+      return requestedScopes.map((requestedScope) =>
+        this.decideFromSnapshot(principal, effectiveAccess, requestedScope)
+      );
+    },
   };
   return new AuthorizeCommandScopeService(
     accessDecision,

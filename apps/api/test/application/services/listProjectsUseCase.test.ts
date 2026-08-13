@@ -36,7 +36,7 @@ describe('ListProjectsUseCase', () => {
     const decideMany = vi.fn(() => {
       throw new Error('ListProjects must not load a second grant snapshot.');
     });
-    const decideManyFromSnapshot = vi.fn(async (_principal, _snapshot, requestedScopes) =>
+    const decideManyFromSnapshot = vi.fn((_principal, _snapshot, requestedScopes) =>
       requestedScopes.map((requestedScope: { readonly tenantId: { readonly value: string } }) =>
         requestedScope.tenantId.value === 'tenant-b'
           ? ({ ok: false, reason: 'ACTION_NOT_GRANTED' } as const)

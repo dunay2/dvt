@@ -12,13 +12,14 @@ import { PROJECT_ONBOARDING_POLICY } from './projectOnboardingPolicy.js';
 export class ListProjectsUseCase {
   public constructor(
     private readonly repository: IProjectOnboardingRepository,
-    private readonly accessDecisions: IAccessDecisionService
+    private readonly accessDecisions: Pick<IAccessDecisionService, 'decideManyFromSnapshot'>
   ) {}
 
   public async execute(principal: AuthenticatedPrincipal): Promise<ProjectOnboardingCatalog> {
     const catalog = await this.repository.listGrantedProjects(principal);
-    const createDecisions = await this.accessDecisions.decideMany(
+    const createDecisions = this.accessDecisions.decideManyFromSnapshot(
       principal,
+      catalog.grantSnapshot,
       catalog.tenantIds.map((tenantId) => ({
         resource: 'tenant' as const,
         tenantId: TenantId.unsafe(tenantId),

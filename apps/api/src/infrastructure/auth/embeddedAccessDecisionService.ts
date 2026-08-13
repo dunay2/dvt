@@ -47,17 +47,33 @@ export class EmbeddedAccessDecisionService implements IAccessDecisionService {
       principalType: principal.principalType,
     });
 
+    return this.decideManyFromSnapshot(principal, effectiveAccess, requestedScopes);
+  }
+
+  public decideManyFromSnapshot(
+    principal: AuthenticatedPrincipal,
+    effectiveAccess: PrincipalGrantSnapshot | null,
+    requestedScopes: readonly RequestedScope[]
+  ): readonly AccessDecision[] {
+    return requestedScopes.map((requestedScope) =>
+      this.decideFromSnapshot(principal, effectiveAccess, requestedScope)
+    );
+  }
+
+  public decideFromSnapshot<TAction extends AuthorizationAction>(
+    principal: AuthenticatedPrincipal,
+    effectiveAccess: PrincipalGrantSnapshot | null,
+    requestedScope: RequestedScope<TAction>
+  ): AccessDecision<TAction> {
     if (effectiveAccess === null) {
-      return requestedScopes.map(() => ({ ok: false, reason: 'TENANT_NOT_GRANTED' }));
+      return { ok: false, reason: 'TENANT_NOT_GRANTED' };
     }
 
     if (effectiveAccess.suspended) {
-      return requestedScopes.map(() => ({ ok: false, reason: 'PRINCIPAL_SUSPENDED' }));
+      return { ok: false, reason: 'PRINCIPAL_SUSPENDED' };
     }
 
-    return requestedScopes.map((requestedScope) =>
-      decideFromSnapshot(principal, effectiveAccess, requestedScope)
-    );
+    return decideFromSnapshot(principal, effectiveAccess, requestedScope);
   }
 }
 

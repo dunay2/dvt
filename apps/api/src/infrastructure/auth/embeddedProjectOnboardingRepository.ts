@@ -96,7 +96,7 @@ export class EmbeddedProjectOnboardingRepository implements IProjectOnboardingRe
   ): Promise<GrantedProjectCatalog> {
     const grants = await this.principalGrants.load(principal);
     if (grants === null || grants.suspended) {
-      return { tenantIds: [], projects: [], integrityFindings: [] };
+      return { grantSnapshot: grants, tenantIds: [], projects: [], integrityFindings: [] };
     }
 
     const visibleTenants = grants.tenantAccess.filter((tenant) =>
@@ -137,6 +137,7 @@ export class EmbeddedProjectOnboardingRepository implements IProjectOnboardingRe
     }
 
     return {
+      grantSnapshot: grants,
       tenantIds: visibleTenants.map((tenant) => tenant.tenantId),
       projects,
       integrityFindings,

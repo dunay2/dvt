@@ -22,7 +22,7 @@ type AuthorizationResult<TAction extends AuthorizationAction = AuthorizationActi
 
 export class AuthorizeCommandScopeService {
   public constructor(
-    private readonly accessDecisionService: IAccessDecisionService,
+    private readonly accessDecisionService: Pick<IAccessDecisionService, 'decide' | 'decideMany'>,
     private readonly audit: IAuthAuditPort,
     private readonly clock: () => Date
   ) {}

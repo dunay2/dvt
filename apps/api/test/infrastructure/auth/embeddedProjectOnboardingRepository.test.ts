@@ -129,6 +129,7 @@ describe('EmbeddedProjectOnboardingRepository', () => {
         assertedProjectIds: [],
       })
     ).resolves.toEqual({
+      grantSnapshot: expect.objectContaining({ principal: GRANTS.principal }),
       tenantIds: ['tenant-a'],
       projects: [
         {
