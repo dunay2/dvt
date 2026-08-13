@@ -8,7 +8,10 @@ import {
 } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
-import { StoredExecutablePlanResolver } from '../../../src/application/services/StoredExecutablePlanResolver.js';
+import {
+  STORED_PLAN_MATERIALIZATION_MODE,
+  StoredExecutablePlanResolver,
+} from '../../../src/application/services/StoredExecutablePlanResolver.js';
 
 const EXECUTABLE_PLAN_TEXT = JSON.stringify({
   metadata: {
@@ -65,6 +68,28 @@ describe('StoredExecutablePlanResolver', () => {
     expect(fetcher.fetchStoredPlanArtifact).toHaveBeenCalledWith(SCOPED_PLAN_REF);
   });
 
+  it('uses the validation read mode and returns the stored execution policy with the plan', async () => {
+    const fetcher = {
+      fetchStoredPlanArtifact: vi.fn(),
+      fetchStoredPlanArtifactForValidation: vi.fn(async () => ({
+        bytes: Buffer.from(EXECUTABLE_PLAN_TEXT, 'utf8'),
+        executionPolicy: { requiresCapabilities: [] },
+      })),
+    };
+    const resolver = new StoredExecutablePlanResolver({ fetcher: fetcher as never });
+
+    await expect(
+      resolver.materialize(SCOPED_PLAN_REF, STORED_PLAN_MATERIALIZATION_MODE.validation)
+    ).resolves.toEqual({
+      plan: expect.objectContaining({
+        metadata: expect.objectContaining({ planId: PLAN_REF.planId }),
+      }),
+      executionPolicy: { requiresCapabilities: [] },
+    });
+    expect(fetcher.fetchStoredPlanArtifactForValidation).toHaveBeenCalledWith(SCOPED_PLAN_REF);
+    expect(fetcher.fetchStoredPlanArtifact).not.toHaveBeenCalled();
+  });
+
   it('rejects stored dvt-plan refs when the executable bytes do not match the ref hash', async () => {
     const fetcher = {
       fetchStoredPlanArtifact: vi.fn(async () => ({
@@ -74,9 +99,10 @@ describe('StoredExecutablePlanResolver', () => {
     };
     const resolver = new StoredExecutablePlanResolver({ fetcher: fetcher as never });
 
-    await expect(resolver.fetch(SCOPED_PLAN_REF)).rejects.toThrow(
-      'PLAN_INTEGRITY_VALIDATION_FAILED'
-    );
+    await expect(resolver.fetch(SCOPED_PLAN_REF)).rejects.toMatchObject({
+      code: 'integrity',
+      message: expect.stringContaining('PLAN_INTEGRITY_VALIDATION_FAILED'),
+    });
   });
 
   it('rejects stored dvt-plan refs when persisted metadata does not match the ref', async () => {
@@ -103,9 +129,30 @@ describe('StoredExecutablePlanResolver', () => {
       sha256: asNonBlankString(createHash('sha256').update(mismatchedText).digest('hex')),
     };
 
-    await expect(resolver.fetch({ ...SCOPED_PLAN_REF, planRef })).rejects.toThrow(
-      'PLAN_REF_MISMATCH: planId'
-    );
+    await expect(resolver.fetch({ ...SCOPED_PLAN_REF, planRef })).rejects.toMatchObject({
+      code: 'plan_ref',
+      message: 'PLAN_REF_MISMATCH: planId',
+    });
+  });
+
+  it('classifies malformed stored bytes as a parse failure', async () => {
+    const malformedText = '{"metadata":';
+    const fetcher = {
+      fetchStoredPlanArtifact: vi.fn(async () => ({
+        bytes: Buffer.from(malformedText, 'utf8'),
+        executionPolicy: {},
+      })),
+    };
+    const resolver = new StoredExecutablePlanResolver({ fetcher: fetcher as never });
+    const planRef = {
+      ...PLAN_REF,
+      sha256: asNonBlankString(createHash('sha256').update(malformedText).digest('hex')),
+    };
+
+    await expect(resolver.fetch({ ...SCOPED_PLAN_REF, planRef })).rejects.toMatchObject({
+      code: 'plan_parse',
+      message: 'INVALID_EXECUTABLE_PLAN',
+    });
   });
 
   it('accepts custom step kinds when an explicit stepTypeRegistry is injected', async () => {
@@ -135,7 +182,7 @@ describe('StoredExecutablePlanResolver', () => {
     });
   });
 
-  it('preserves external planRef behavior for non-dvt-plan schemes', async () => {
+  it('rejects unsupported external planRef schemes instead of fabricating an empty plan', async () => {
     const fetcher = {
       fetchStoredPlanArtifact: vi.fn(async () => ({
         bytes: new Uint8Array(),
@@ -144,24 +191,17 @@ describe('StoredExecutablePlanResolver', () => {
     };
     const resolver = new StoredExecutablePlanResolver({ fetcher: fetcher as never });
 
-    const plan = await resolver.fetch({
-      ...SCOPED_PLAN_REF,
-      planRef: {
-        ...PLAN_REF,
-        uri: asNonBlankString('https://plans.example.com/plan-1.json'),
-      },
-    });
-
-    expect(plan).toEqual({
-      metadata: {
-        planId: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
-        planVersion: '1.0',
-        schemaVersion: '1.0',
-        contractVersion: '1.0.0',
-        inputHashSha256: PLAN_REF.sha256,
-        createdAtIso: expect.any(String),
-      },
-      steps: [],
+    await expect(
+      resolver.fetch({
+        ...SCOPED_PLAN_REF,
+        planRef: {
+          ...PLAN_REF,
+          uri: asNonBlankString('https://plans.example.com/plan-1.json'),
+        },
+      })
+    ).rejects.toMatchObject({
+      code: 'unsupported_scheme',
+      message: 'UNSUPPORTED_PLAN_REF_SCHEME: https:',
     });
     expect(fetcher.fetchStoredPlanArtifact).not.toHaveBeenCalled();
   });
