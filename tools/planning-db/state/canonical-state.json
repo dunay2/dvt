@@ -11643,6 +11643,34 @@
         "updated_at": "2026-08-13T07:55:05.285+00:00"
       },
       {
+        "design_id": "GH-2168-QA-EVIDENCE-CORRECTION-20260813",
+        "work_item_id": "GH-2168",
+        "title": "Remove stale plan policy test authority",
+        "owner": "API / Architecture",
+        "status": "implemented",
+        "rationale": "Independent Fowler QA found current contracts and test evidence still named a deleted policy-catalog test; remove that current authority without editing historical design scope.",
+        "fowler_signal": "hidden_authority",
+        "rail_ref": "CompilePlan;PreviewPlan;ImportPlan",
+        "approved_at": "2026-08-13T08:14:01.21+00:00",
+        "supersedes_id": null,
+        "created_at": "2026-08-13T08:13:32.152+00:00",
+        "updated_at": "2026-08-13T08:14:03.8+00:00"
+      },
+      {
+        "design_id": "GH-2168-QA-TEST-COMMAND-CORRECTION-20260813",
+        "work_item_id": "GH-2168",
+        "title": "Bind plan use-case evidence to surviving tests",
+        "owner": "API / Architecture",
+        "status": "implemented",
+        "rationale": "The surviving CompilePlan behavior test retained a validation command that also named the retired policy-catalog topology test; bind it only to the surviving test.",
+        "fowler_signal": "hidden_authority",
+        "rail_ref": "CompilePlan",
+        "approved_at": "2026-08-13T08:15:08.084+00:00",
+        "supersedes_id": null,
+        "created_at": "2026-08-13T08:15:05.472+00:00",
+        "updated_at": "2026-08-13T08:15:10.564+00:00"
+      },
+      {
         "design_id": "PLANNING-DB-API-APPLICATION-SERVICE-TEST-LEAF-COMPONENTS-20260619",
         "work_item_id": "PLANNING-DB-COMPONENT-INTEGRITY-VOCABULARY-RAIL-20260612",
         "title": "API application service test evidence leaf mapping",
@@ -15837,9 +15865,9 @@
         "contract_ref": "API plan command application service boundary.",
         "compatibility": "internal",
         "status": "implemented",
-        "validation_command": "pnpm --filter dvt-api test -- apps/api/test/application/services/CompilePlanUseCase.test.ts apps/api/test/application/services/planRoutePolicyCatalog.test.ts apps/api/test/entrypoints/http/importPlanRoute.test.ts apps/api/test/entrypoints/http/previewPlanRoute.inputPolicy.test.ts",
+        "validation_command": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/CompilePlanUseCase.test.ts test/application/services/PreviewPlanUseCase.outcomes.test.ts test/entrypoints/http/importPlanRoute.test.ts test/entrypoints/http/previewPlanRoute.inputPolicy.test.ts",
         "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
+        "updated_at": "2026-08-13T08:13:48.828+00:00"
       },
       {
         "contract_id": "CONTRACT-SYS-API-APPLICATION-SERVICES-PRIMARY",
@@ -16233,9 +16261,9 @@
         "contract_ref": "API plan command test evidence boundary.",
         "compatibility": "internal",
         "status": "implemented",
-        "validation_command": "pnpm --filter dvt-api test -- apps/api/test/application/services/CompilePlanUseCase.test.ts apps/api/test/application/services/planRoutePolicyCatalog.test.ts",
+        "validation_command": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/CompilePlanUseCase.test.ts test/application/services/PreviewPlanUseCase.outcomes.test.ts",
         "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
+        "updated_at": "2026-08-13T08:13:50.122+00:00"
       },
       {
         "contract_id": "CONTRACT-SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE-EVIDENCE",
@@ -46415,17 +46443,7 @@
         "test_kind": "unit",
         "coverage_level": "behavior",
         "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- apps/api/test/application/services/CompilePlanUseCase.test.ts apps/api/test/application/services/planRoutePolicyCatalog.test.ts",
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "test_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-PLAN-COMMANDS-2",
-        "component_id": "SYS-API-TESTS-APPLICATION-SERVICES-PLAN-COMMANDS",
-        "test_path": "apps/api/test/application/services/planRoutePolicyCatalog.test.ts",
-        "test_kind": "unit",
-        "coverage_level": "behavior",
-        "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- apps/api/test/application/services/CompilePlanUseCase.test.ts apps/api/test/application/services/planRoutePolicyCatalog.test.ts",
+        "validation_command": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/CompilePlanUseCase.test.ts",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -68015,6 +68033,62 @@
         "scope_kind": "may_update",
         "required": true,
         "created_at": "2026-08-13T06:55:55.601+00:00"
+      },
+      {
+        "design_id": "GH-2168-QA-EVIDENCE-CORRECTION-20260813",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-APPLICATION-SERVICES-PLAN-COMMANDS",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-13T08:13:32.152+00:00"
+      },
+      {
+        "design_id": "GH-2168-QA-EVIDENCE-CORRECTION-20260813",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-TESTS-APPLICATION-SERVICES-PLAN-COMMANDS",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-13T08:13:32.152+00:00"
+      },
+      {
+        "design_id": "GH-2168-QA-EVIDENCE-CORRECTION-20260813",
+        "subject_kind": "contract",
+        "subject_id": "CONTRACT-SYS-API-APPLICATION-SERVICES-PLAN-COMMANDS-API-APPLICATION-SERVICE",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T08:13:32.152+00:00"
+      },
+      {
+        "design_id": "GH-2168-QA-EVIDENCE-CORRECTION-20260813",
+        "subject_kind": "contract",
+        "subject_id": "CONTRACT-SYS-API-TESTS-APPLICATION-SERVICES-PLAN-COMMANDS-EVIDENCE",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T08:13:32.152+00:00"
+      },
+      {
+        "design_id": "GH-2168-QA-EVIDENCE-CORRECTION-20260813",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-PLAN-COMMANDS-2",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-13T08:13:32.152+00:00"
+      },
+      {
+        "design_id": "GH-2168-QA-TEST-COMMAND-CORRECTION-20260813",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-TESTS-APPLICATION-SERVICES-PLAN-COMMANDS",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-13T08:15:05.472+00:00"
+      },
+      {
+        "design_id": "GH-2168-QA-TEST-COMMAND-CORRECTION-20260813",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-PLAN-COMMANDS-1",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T08:15:05.472+00:00"
       },
       {
         "design_id": "PLANNING-DB-API-APPLICATION-SERVICE-TEST-LEAF-COMPONENTS-20260619",
@@ -90403,6 +90477,27 @@
         "created_at": "2026-08-10T21:06:27.716+00:00"
       },
       {
+        "operation_id": "14921c92-4064-4770-b157-3cb25aa99154",
+        "idempotency_key": "gh-2168-qa-evidence-approved-v1",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2168-QA-EVIDENCE-CORRECTION-20260813",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2168",
+        "source_content_sha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "QA correction reviewed against current surviving behavior tests.",
+          "designId": "GH-2168-QA-EVIDENCE-CORRECTION-20260813",
+          "toStatus": "approved",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2168",
+          "fromStatus": "review",
+          "sourceContentSha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5"
+        },
+        "created_at": "2026-08-13T08:14:01.21+00:00"
+      },
+      {
         "operation_id": "14a16e84-824b-460f-8293-591a2bd70b1d",
         "idempotency_key": "architecture_design_transition:codex:DOC1-2-LOCAL-RAIL-DUPLICATE-RETIREMENT-20260811:338b21ffee73f589",
         "operation_type": "architecture_design_transition",
@@ -91289,6 +91384,31 @@
         "created_at": "2026-08-11T12:25:41.783+00:00"
       },
       {
+        "operation_id": "265b0cda-ec6e-4ca8-8911-a593bd3dbed9",
+        "idempotency_key": "gh-2168-update-compile-plan-test-command-v1",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "GH-2168-QA-TEST-COMMAND-CORRECTION-20260813",
+        "source_ref": "apps/api/test/application/services/CompilePlanUseCase.test.ts",
+        "source_content_sha256": "d8f110d94f644926a8f70a70a1dabdf3fd6ae959bf3b1b570fced229b0c0e470",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-PLAN-COMMANDS-1",
+          "designId": "GH-2168-QA-TEST-COMMAND-CORRECTION-20260813",
+          "required": true,
+          "testKind": "unit",
+          "testPath": "apps/api/test/application/services/CompilePlanUseCase.test.ts",
+          "sourceRef": "apps/api/test/application/services/CompilePlanUseCase.test.ts",
+          "componentId": "SYS-API-TESTS-APPLICATION-SERVICES-PLAN-COMMANDS",
+          "coverageLevel": "behavior",
+          "validationCommand": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/CompilePlanUseCase.test.ts",
+          "sourceContentSha256": "d8f110d94f644926a8f70a70a1dabdf3fd6ae959bf3b1b570fced229b0c0e470"
+        },
+        "created_at": "2026-08-13T08:15:06.827+00:00"
+      },
+      {
         "operation_id": "26b019ef-8664-417a-a5b0-7d1dcd590a8b",
         "idempotency_key": "GH-2166-ENGINE-FETCH-RAIL-CLEAN-RECORD-20260813-approved-v1",
         "operation_type": "architecture_design_transition",
@@ -91564,6 +91684,46 @@
         "created_at": "2026-08-11T14:09:49.514+00:00"
       },
       {
+        "operation_id": "29b9d23e-18ba-461d-8bce-b2b54d559586",
+        "idempotency_key": "gh-2168-qa-test-command-correction-create-v1",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "GH-2168-QA-TEST-COMMAND-CORRECTION-20260813",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2168",
+        "source_content_sha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "API / Architecture",
+          "title": "Bind plan use-case evidence to surviving tests",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-API-TESTS-APPLICATION-SERVICES-PLAN-COMMANDS",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-PLAN-COMMANDS-1",
+              "subjectKind": "test"
+            }
+          ],
+          "status": "review",
+          "railRef": "CompilePlan",
+          "designId": "GH-2168-QA-TEST-COMMAND-CORRECTION-20260813",
+          "rationale": "The surviving CompilePlan behavior test retained a validation command that also named the retired policy-catalog topology test; bind it only to the surviving test.",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2168",
+          "workItemId": "GH-2168",
+          "fowlerSignal": "hidden_authority",
+          "supersedesId": null,
+          "sourceContentSha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5"
+        },
+        "created_at": "2026-08-13T08:15:05.472+00:00"
+      },
+      {
         "operation_id": "2a3501f8-a663-493c-afab-6faa321ed737",
         "idempotency_key": "architecture_design_transition:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V2-20260811:b56b902cf2c3ee58",
         "operation_type": "architecture_design_transition",
@@ -91717,6 +91877,31 @@
           "sourceContentSha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a"
         },
         "created_at": "2026-08-11T10:22:48.662+00:00"
+      },
+      {
+        "operation_id": "2b836769-d153-4f4a-86a5-1bfb930171ed",
+        "idempotency_key": "gh-2168-app-plan-contract-current-tests-v1",
+        "operation_type": "architecture_contract_record",
+        "actor": "codex",
+        "design_id": "GH-2168-QA-EVIDENCE-CORRECTION-20260813",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2168",
+        "source_content_sha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "status": "implemented",
+          "designId": "GH-2168-QA-EVIDENCE-CORRECTION-20260813",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2168",
+          "contractId": "CONTRACT-SYS-API-APPLICATION-SERVICES-PLAN-COMMANDS-API-APPLICATION-SERVICE",
+          "contractRef": "API plan command application service boundary.",
+          "contractKind": "type",
+          "compatibility": "internal",
+          "ownerComponentId": "SYS-API-APPLICATION-SERVICES-PLAN-COMMANDS",
+          "validationCommand": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/CompilePlanUseCase.test.ts test/application/services/PreviewPlanUseCase.outcomes.test.ts test/entrypoints/http/importPlanRoute.test.ts test/entrypoints/http/previewPlanRoute.inputPolicy.test.ts",
+          "sourceContentSha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5"
+        },
+        "created_at": "2026-08-13T08:13:48.828+00:00"
       },
       {
         "operation_id": "2c165532-3039-4778-8509-6a7c04f70ae2",
@@ -93536,6 +93721,27 @@
         "created_at": "2026-08-11T18:33:30.057+00:00"
       },
       {
+        "operation_id": "47fadc7a-816d-4422-851a-ca240ee771bd",
+        "idempotency_key": "gh-2168-qa-test-command-implementing-v1",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2168-QA-TEST-COMMAND-CORRECTION-20260813",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2168",
+        "source_content_sha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Apply the reviewed current-test validation command.",
+          "designId": "GH-2168-QA-TEST-COMMAND-CORRECTION-20260813",
+          "toStatus": "implementing",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2168",
+          "fromStatus": "approved",
+          "sourceContentSha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5"
+        },
+        "created_at": "2026-08-13T08:15:09.306+00:00"
+      },
+      {
         "operation_id": "49f4e974-4f94-495e-9e87-25c365e0ba80",
         "idempotency_key": "gh-2167-update-contract-sys-api-http-entrypoint-tests-authentication-evidence-v1",
         "operation_type": "architecture_contract_record",
@@ -94931,6 +95137,27 @@
         "created_at": "2026-08-11T13:02:41.515+00:00"
       },
       {
+        "operation_id": "5c3f1ed5-febc-41ab-ad46-cea35790609a",
+        "idempotency_key": "gh-2168-qa-test-command-approved-v1",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2168-QA-TEST-COMMAND-CORRECTION-20260813",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2168",
+        "source_content_sha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Correction reviewed against the surviving CompilePlan behavior test.",
+          "designId": "GH-2168-QA-TEST-COMMAND-CORRECTION-20260813",
+          "toStatus": "approved",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2168",
+          "fromStatus": "review",
+          "sourceContentSha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5"
+        },
+        "created_at": "2026-08-13T08:15:08.084+00:00"
+      },
+      {
         "operation_id": "5c65ebb6-1f3d-44ae-8647-ca8ed3303f0b",
         "idempotency_key": "gh-2167-update-test-sys-api-http-entrypoint-tests-error-translation-3-v1",
         "operation_type": "architecture_test_record",
@@ -95533,6 +95760,27 @@
           "sourceContentSha256": "a7ddd9fade1c7fadba394f4779c98a14b3893a739283142bafad38990b86a7b4"
         },
         "created_at": "2026-08-13T06:55:04.542+00:00"
+      },
+      {
+        "operation_id": "643d3996-b39c-413c-bec0-5f541bccea77",
+        "idempotency_key": "gh-2168-qa-evidence-implementing-v1",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2168-QA-EVIDENCE-CORRECTION-20260813",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2168",
+        "source_content_sha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Apply the reviewed DB-first evidence correction.",
+          "designId": "GH-2168-QA-EVIDENCE-CORRECTION-20260813",
+          "toStatus": "implementing",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2168",
+          "fromStatus": "approved",
+          "sourceContentSha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5"
+        },
+        "created_at": "2026-08-13T08:14:02.468+00:00"
       },
       {
         "operation_id": "64e7e47a-b0ea-4f82-b1f4-12fe99b66925",
@@ -97347,6 +97595,64 @@
           "sourceContentSha256": "45bf878ab2adee3163836bc159d75b55bc8251fc2c6e0b27e223481af67f1eac"
         },
         "created_at": "2026-08-13T01:36:02.305+00:00"
+      },
+      {
+        "operation_id": "83258201-50fe-4c3a-aa27-ebb90bb46647",
+        "idempotency_key": "gh-2168-qa-evidence-correction-create-v1",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "GH-2168-QA-EVIDENCE-CORRECTION-20260813",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2168",
+        "source_content_sha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "API / Architecture",
+          "title": "Remove stale plan policy test authority",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "CONTRACT-SYS-API-APPLICATION-SERVICES-PLAN-COMMANDS-API-APPLICATION-SERVICE",
+              "subjectKind": "contract"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "CONTRACT-SYS-API-TESTS-APPLICATION-SERVICES-PLAN-COMMANDS-EVIDENCE",
+              "subjectKind": "contract"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-API-APPLICATION-SERVICES-PLAN-COMMANDS",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-API-TESTS-APPLICATION-SERVICES-PLAN-COMMANDS",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-PLAN-COMMANDS-2",
+              "subjectKind": "test"
+            }
+          ],
+          "status": "review",
+          "railRef": "CompilePlan;PreviewPlan;ImportPlan",
+          "designId": "GH-2168-QA-EVIDENCE-CORRECTION-20260813",
+          "rationale": "Independent Fowler QA found current contracts and test evidence still named a deleted policy-catalog test; remove that current authority without editing historical design scope.",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2168",
+          "workItemId": "GH-2168",
+          "fowlerSignal": "hidden_authority",
+          "supersedesId": null,
+          "sourceContentSha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5"
+        },
+        "created_at": "2026-08-13T08:13:32.152+00:00"
       },
       {
         "operation_id": "832a4453-f1e4-49a3-a56c-2d4eae2d0241",
@@ -99192,6 +99498,27 @@
         "created_at": "2026-08-10T21:06:32.683+00:00"
       },
       {
+        "operation_id": "9a526cfe-8871-4c18-977b-18ff11df2c22",
+        "idempotency_key": "gh-2168-retire-plan-policy-catalog-test-v1",
+        "operation_type": "architecture_test_retire",
+        "actor": "codex",
+        "design_id": "GH-2168-QA-EVIDENCE-CORRECTION-20260813",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2168",
+        "source_content_sha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The policy catalog and its topology-only test were deleted; behavior remains covered by endpoint and use-case tests.",
+          "testId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-PLAN-COMMANDS-2",
+          "designId": "GH-2168-QA-EVIDENCE-CORRECTION-20260813",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2168",
+          "componentId": "SYS-API-TESTS-APPLICATION-SERVICES-PLAN-COMMANDS",
+          "sourceContentSha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5"
+        },
+        "created_at": "2026-08-13T08:13:51.374+00:00"
+      },
+      {
         "operation_id": "9b2762ee-8e26-430e-9c4a-60cda83eb279",
         "idempotency_key": "gh-2167-validation-test-sys-api-http-runtime-route-registry-3-v1",
         "operation_type": "architecture_test_record",
@@ -99564,6 +99891,31 @@
           "sourceContentSha256": "c770f3d34e90d2ad2f546af24f8f2833870c7df91f1fb1c97e45151de29563b6"
         },
         "created_at": "2026-08-10T21:04:33.082+00:00"
+      },
+      {
+        "operation_id": "9fdf6db8-21c1-41ec-99e4-34a44109ea66",
+        "idempotency_key": "gh-2168-plan-test-contract-current-tests-v1",
+        "operation_type": "architecture_contract_record",
+        "actor": "codex",
+        "design_id": "GH-2168-QA-EVIDENCE-CORRECTION-20260813",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2168",
+        "source_content_sha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "status": "implemented",
+          "designId": "GH-2168-QA-EVIDENCE-CORRECTION-20260813",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2168",
+          "contractId": "CONTRACT-SYS-API-TESTS-APPLICATION-SERVICES-PLAN-COMMANDS-EVIDENCE",
+          "contractRef": "API plan command test evidence boundary.",
+          "contractKind": "type",
+          "compatibility": "internal",
+          "ownerComponentId": "SYS-API-TESTS-APPLICATION-SERVICES-PLAN-COMMANDS",
+          "validationCommand": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/CompilePlanUseCase.test.ts test/application/services/PreviewPlanUseCase.outcomes.test.ts",
+          "sourceContentSha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5"
+        },
+        "created_at": "2026-08-13T08:13:50.122+00:00"
       },
       {
         "operation_id": "a04cae92-5920-4d40-9f3b-839c549b00d3",
@@ -105358,6 +105710,27 @@
         "created_at": "2026-08-11T18:22:17.887+00:00"
       },
       {
+        "operation_id": "ecfa9599-8e35-49a7-9c04-1ee0fcf922e4",
+        "idempotency_key": "gh-2168-qa-evidence-implemented-v1",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2168-QA-EVIDENCE-CORRECTION-20260813",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2168",
+        "source_content_sha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Stale contract validation commands and the deleted topology test authority are removed.",
+          "designId": "GH-2168-QA-EVIDENCE-CORRECTION-20260813",
+          "toStatus": "implemented",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2168",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5"
+        },
+        "created_at": "2026-08-13T08:14:03.8+00:00"
+      },
+      {
         "operation_id": "ed1d4083-7a74-4cfb-a3b3-e6ba2389abf5",
         "idempotency_key": "architecture_evidence_retire:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811:EVIDENCE-API-H2-4-DESIGN-QUERY-LOCAL:44136fa355b3678a",
         "operation_type": "architecture_evidence_retire",
@@ -106616,6 +106989,27 @@
           "sourceContentSha256": "85c45588da6ec295fbfadbfc02118eb8beca80b2008d636c309be4d7485eb5cc"
         },
         "created_at": "2026-08-10T21:06:27.033+00:00"
+      },
+      {
+        "operation_id": "fcfaf121-aced-4f47-9f67-6b554bbb24f1",
+        "idempotency_key": "gh-2168-qa-test-command-implemented-v1",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2168-QA-TEST-COMMAND-CORRECTION-20260813",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2168",
+        "source_content_sha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The surviving test authority no longer invokes a deleted topology test.",
+          "designId": "GH-2168-QA-TEST-COMMAND-CORRECTION-20260813",
+          "toStatus": "implemented",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2168",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5"
+        },
+        "created_at": "2026-08-13T08:15:10.564+00:00"
       },
       {
         "operation_id": "fde62249-cfb3-479d-9bb6-3831ca9193ec",
