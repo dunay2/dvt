@@ -2,7 +2,7 @@
 import { stubCanvasDraftRead } from '../../support/canvasDraftAuthoring';
 import { getLastE2eApiCall, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
 import {
-  E2E_WORKSPACE_SESSION,
+  E2E_PROJECT_WORKSPACE,
   stubShellBootstrapApis,
   visitWithE2eWorkspaceSession,
 } from '../../support/workspaceSession';
@@ -23,8 +23,8 @@ function stubCodeWorkbenchBootstrapApis(): void {
     },
   });
   stubE2eJsonApi('GET', '/workspace/context', {
-    defaultWorkspace: E2E_WORKSPACE_SESSION,
-    availableWorkspaces: [E2E_WORKSPACE_SESSION],
+    defaultWorkspace: E2E_PROJECT_WORKSPACE,
+    availableWorkspaces: [E2E_PROJECT_WORKSPACE],
   });
 }
 

@@ -3,7 +3,6 @@ import { installE2eApiFetchStub, resetE2eApiStubs, stubE2eJsonApi } from './e2eA
 export type E2eWorkspaceSession = {
   tenantId: string;
   projectId: string;
-  projectName: string;
   environmentId: string;
 };
 
@@ -12,14 +11,17 @@ const SESSION_STORAGE_KEY = 'dvt-web-session';
 export const E2E_WORKSPACE_SESSION: E2eWorkspaceSession = {
   tenantId: 'e2e-tenant',
   projectId: 'e2e-project',
-  projectName: 'E2E Project',
   environmentId: 'e2e-env',
 };
+
+export const E2E_PROJECT_WORKSPACE = {
+  ...E2E_WORKSPACE_SESSION,
+  projectName: 'E2E Project',
+} as const;
 
 export const LIVE_WORKSPACE_SESSION: E2eWorkspaceSession = {
   tenantId: 'tenant',
   projectId: 'project',
-  projectName: 'Project',
   environmentId: 'dev',
 };
 

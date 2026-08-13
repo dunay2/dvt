@@ -1,5 +1,6 @@
 import { stubE2eJsonApi } from '../../support/e2eApiStub';
 import {
+  E2E_PROJECT_WORKSPACE,
   E2E_WORKSPACE_SESSION,
   stubShellBootstrapApis,
   visitWithE2eWorkspaceSession,
@@ -15,8 +16,8 @@ function stubShellApis(): void {
     ],
   });
   stubE2eJsonApi('GET', '/workspace/context', {
-    defaultWorkspace: E2E_WORKSPACE_SESSION,
-    availableWorkspaces: [E2E_WORKSPACE_SESSION],
+    defaultWorkspace: E2E_PROJECT_WORKSPACE,
+    availableWorkspaces: [E2E_PROJECT_WORKSPACE],
   });
   stubE2eJsonApi('GET', '/capabilities', {
     apiVersion: '1.0.0',

@@ -5,7 +5,11 @@ import {
   stubE2eJsonApi,
   waitForE2eApiCall,
 } from '../../support/e2eApiStub';
-import { E2E_WORKSPACE_SESSION, stubShellBootstrapApis } from '../../support/workspaceSession';
+import {
+  E2E_PROJECT_WORKSPACE,
+  E2E_WORKSPACE_SESSION,
+  stubShellBootstrapApis,
+} from '../../support/workspaceSession';
 
 function stubRuntimeCapabilities(): void {
   stubE2eJsonApi('GET', '/capabilities', {
@@ -35,8 +39,8 @@ function stubFirstUseProjectOnboardingApis(): void {
 
     return {
       body: {
-        defaultWorkspace: E2E_WORKSPACE_SESSION,
-        availableWorkspaces: [E2E_WORKSPACE_SESSION],
+        defaultWorkspace: E2E_PROJECT_WORKSPACE,
+        availableWorkspaces: [E2E_PROJECT_WORKSPACE],
         deploymentScope: {
           targetAdapter: 'temporal',
           availableTargetAdapters: ['temporal'],
@@ -73,7 +77,7 @@ function stubFirstUseProjectOnboardingApis(): void {
           name: 'Orders workspace',
           environmentIds: [E2E_WORKSPACE_SESSION.environmentId],
         },
-        defaultWorkspace: E2E_WORKSPACE_SESSION,
+        defaultWorkspace: E2E_PROJECT_WORKSPACE,
       },
     };
   });
