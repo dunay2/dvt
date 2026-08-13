@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
+  WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION,
+  WorkspaceGraphAuthoringDraftSchema,
+  resolveWorkspaceGraphDraftCanvasIds,
+} from '../../src/index.js';
+import {
   ContractValidationError,
   parseWorkspaceGraphDraftReadResponse,
   parseWorkspaceGraphDraftSaveRequest,
@@ -80,6 +86,40 @@ const readOnlyCapability = buildCapabilityFixture({
 
 export function registerValidationWorkspaceGraphDraftSuite(): void {
   describe('workspace graph-draft persistence boundary contracts', () => {
+    it('owns the active schema and initial revision protocol constants', () => {
+      expect(WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION).toBe('workspace-graph-draft.v1');
+      expect(WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION).toBe('initial');
+    });
+
+    it('projects every declared Canvas identity through one sorted set', () => {
+      const draft = WorkspaceGraphAuthoringDraftSchema.parse({
+        ...baseDraft,
+        canvas: { ...baseDraft.canvas, id: 'secondary-canvas', title: 'Secondary' },
+        activeCanvasId: 'secondary-canvas',
+        canvases: [
+          {
+            canvas: { ...baseDraft.canvas, id: 'main-canvas' },
+            nodeIds: [],
+            nodePositions: {},
+            nodes: [],
+            edges: [],
+          },
+          {
+            canvas: { ...baseDraft.canvas, id: 'secondary-canvas', title: 'Secondary' },
+            nodeIds: baseDraft.nodeIds,
+            nodePositions: baseDraft.nodePositions,
+            nodes: baseDraft.nodes,
+            edges: baseDraft.edges,
+          },
+        ],
+      });
+
+      expect(resolveWorkspaceGraphDraftCanvasIds(draft)).toEqual([
+        'main-canvas',
+        'secondary-canvas',
+      ]);
+    });
+
     it('parses save request with compare-and-swap and idempotency semantics', () => {
       const request = parseWorkspaceGraphDraftSaveRequest({
         scope: baseScope,
@@ -137,6 +177,27 @@ export function registerValidationWorkspaceGraphDraftSuite(): void {
           },
         })
       ).toThrow(ContractValidationError);
+    });
+
+    it('parses special save outcomes through the canonical response vocabulary', () => {
+      const response = parseWorkspaceGraphDraftSaveResponse({
+        kind: 'unsupported_schema_version',
+        capability: writableCapability,
+        auditRef: {
+          correlationId: 'corr-schema',
+          decisionId: 'dec-schema',
+          action: 'draft_write',
+          outcome: 'allowed',
+          recordedAt: '2026-04-16T10:00:30.000Z',
+        },
+        expectedSchemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
+        requestedSchemaVersion: 'workspace-graph-draft.v0',
+      });
+
+      expect(response).toMatchObject({
+        kind: 'unsupported_schema_version',
+        expectedSchemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
+      });
     });
 
     it('parses read format_error outcome with read capability and audit correlation', () => {

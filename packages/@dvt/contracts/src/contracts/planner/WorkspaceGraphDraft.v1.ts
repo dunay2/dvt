@@ -24,6 +24,9 @@ import {
   type WorkspaceGraphAuthoringDraft,
 } from './WorkspaceGraphAuthoringDraft.v1.js';
 
+export const WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION = 'workspace-graph-draft.v1';
+export const WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION = 'initial';
+
 const NonBlankStringSchema = z
   .string()
   .min(1)
@@ -149,10 +152,17 @@ export interface WorkspaceGraphDraftReadDenied {
   auditRef: WorkspaceGraphDraftAuditRef;
 }
 
+export interface WorkspaceGraphDraftReadNotFound {
+  kind: 'not_found';
+  capability: WorkspaceGraphDraftCapabilityOutcome;
+  auditRef: WorkspaceGraphDraftAuditRef;
+}
+
 export type WorkspaceGraphDraftReadResponse =
   | WorkspaceGraphDraftReadSuccess
   | WorkspaceGraphDraftReadFormatFailure
-  | WorkspaceGraphDraftReadDenied;
+  | WorkspaceGraphDraftReadDenied
+  | WorkspaceGraphDraftReadNotFound;
 
 export interface WorkspaceGraphDraftSaveRequest {
   scope: WorkspaceGraphDraftScope;
@@ -184,8 +194,44 @@ export interface WorkspaceGraphDraftSaveDenied {
   auditRef: WorkspaceGraphDraftAuditRef;
 }
 
+export interface WorkspaceGraphDraftSaveUnsupportedSchemaVersion {
+  kind: 'unsupported_schema_version';
+  capability: WorkspaceGraphDraftCapabilityOutcome;
+  auditRef: WorkspaceGraphDraftAuditRef;
+  expectedSchemaVersion: string;
+  requestedSchemaVersion: string;
+}
+
+export interface WorkspaceGraphDraftSaveIdempotencyMismatch {
+  kind: 'idempotency_mismatch';
+  capability: WorkspaceGraphDraftCapabilityOutcome;
+  auditRef: WorkspaceGraphDraftAuditRef;
+}
+
+export interface WorkspaceGraphDraftSaveAuthoringAuthorityConflict {
+  kind: 'authoring_authority_conflict';
+  capability: WorkspaceGraphDraftCapabilityOutcome;
+  auditRef: WorkspaceGraphDraftAuditRef;
+  canvasIds: readonly string[];
+}
+
 export type WorkspaceGraphDraftSaveResponse =
-  WorkspaceGraphDraftSaveSuccess | WorkspaceGraphDraftSaveConflict | WorkspaceGraphDraftSaveDenied;
+  | WorkspaceGraphDraftSaveSuccess
+  | WorkspaceGraphDraftSaveConflict
+  | WorkspaceGraphDraftSaveDenied
+  | WorkspaceGraphDraftSaveUnsupportedSchemaVersion
+  | WorkspaceGraphDraftSaveIdempotencyMismatch
+  | WorkspaceGraphDraftSaveAuthoringAuthorityConflict;
+
+export function resolveWorkspaceGraphDraftCanvasIds(
+  draft: WorkspaceGraphAuthoringDraft
+): readonly string[] {
+  const canvasIds = new Set<string>();
+  if (draft.canvas.id) canvasIds.add(draft.canvas.id);
+  if (draft.activeCanvasId) canvasIds.add(draft.activeCanvasId);
+  for (const workspace of draft.canvases ?? []) canvasIds.add(workspace.canvas.id);
+  return [...canvasIds].sort((left, right) => left.localeCompare(right));
+}
 
 export const WorkspaceGraphDraftScopeSchema = z
   .object({
@@ -340,11 +386,20 @@ export const WorkspaceGraphDraftReadDeniedSchema = z
   })
   .strict() satisfies z.ZodType<WorkspaceGraphDraftReadDenied>;
 
+export const WorkspaceGraphDraftReadNotFoundSchema = z
+  .object({
+    kind: z.literal('not_found'),
+    capability: WorkspaceGraphDraftCapabilityOutcomeSchema,
+    auditRef: WorkspaceGraphDraftAuditRefSchema,
+  })
+  .strict() satisfies z.ZodType<WorkspaceGraphDraftReadNotFound>;
+
 export const WorkspaceGraphDraftReadResponseSchema = z
   .discriminatedUnion('kind', [
     WorkspaceGraphDraftReadSuccessSchema,
     WorkspaceGraphDraftReadFormatFailureSchema,
     WorkspaceGraphDraftReadDeniedSchema,
+    WorkspaceGraphDraftReadNotFoundSchema,
   ])
   .superRefine((response, ctx) => {
     if (response.auditRef.action !== WORKSPACE_GRAPH_DRAFT_AUDIT_ACTION.draftRead) {
@@ -411,11 +466,41 @@ export const WorkspaceGraphDraftSaveDeniedSchema = z
   })
   .strict() satisfies z.ZodType<WorkspaceGraphDraftSaveDenied>;
 
+export const WorkspaceGraphDraftSaveUnsupportedSchemaVersionSchema = z
+  .object({
+    kind: z.literal('unsupported_schema_version'),
+    capability: WorkspaceGraphDraftCapabilityOutcomeSchema,
+    auditRef: WorkspaceGraphDraftAuditRefSchema,
+    expectedSchemaVersion: NonBlankStringSchema,
+    requestedSchemaVersion: NonBlankStringSchema,
+  })
+  .strict() satisfies z.ZodType<WorkspaceGraphDraftSaveUnsupportedSchemaVersion>;
+
+export const WorkspaceGraphDraftSaveIdempotencyMismatchSchema = z
+  .object({
+    kind: z.literal('idempotency_mismatch'),
+    capability: WorkspaceGraphDraftCapabilityOutcomeSchema,
+    auditRef: WorkspaceGraphDraftAuditRefSchema,
+  })
+  .strict() satisfies z.ZodType<WorkspaceGraphDraftSaveIdempotencyMismatch>;
+
+export const WorkspaceGraphDraftSaveAuthoringAuthorityConflictSchema = z
+  .object({
+    kind: z.literal('authoring_authority_conflict'),
+    capability: WorkspaceGraphDraftCapabilityOutcomeSchema,
+    auditRef: WorkspaceGraphDraftAuditRefSchema,
+    canvasIds: z.array(NonBlankStringSchema).min(1).readonly(),
+  })
+  .strict() satisfies z.ZodType<WorkspaceGraphDraftSaveAuthoringAuthorityConflict>;
+
 export const WorkspaceGraphDraftSaveResponseSchema = z
   .discriminatedUnion('kind', [
     WorkspaceGraphDraftSaveSuccessSchema,
     WorkspaceGraphDraftSaveConflictSchema,
     WorkspaceGraphDraftSaveDeniedSchema,
+    WorkspaceGraphDraftSaveUnsupportedSchemaVersionSchema,
+    WorkspaceGraphDraftSaveIdempotencyMismatchSchema,
+    WorkspaceGraphDraftSaveAuthoringAuthorityConflictSchema,
   ])
   .superRefine((response, ctx) => {
     if (response.auditRef.action !== WORKSPACE_GRAPH_DRAFT_AUDIT_ACTION.draftWrite) {
