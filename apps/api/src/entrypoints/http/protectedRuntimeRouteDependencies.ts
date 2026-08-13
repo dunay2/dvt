@@ -102,7 +102,6 @@ export function buildProtectedRuntimeRouteDependencies(
     cancelRunUseCase: new CancelRunUseCase(
       protectedModule.engine,
       protectedModule.stateStore.read,
-      protectedModule.runControlCommandCoordinator,
       cancellationReceipts,
       startDispatchResolver
     ),
@@ -124,7 +123,6 @@ export function buildProtectedRuntimeRouteDependencies(
       planStore: protectedModule.planStore,
       executionContextReader: protectedModule.runExecutionContextReferenceReader,
       executionContextInheritanceWriter: protectedModule.runExecutionContextInheritanceWriter,
-      commandCoordinator: protectedModule.runControlCommandCoordinator,
       executionContextRequirementResolver,
       startRunIntentStore: protectedModule.startRunIntentStore,
       runMaintenanceService: protectedModule.runMaintenanceService,

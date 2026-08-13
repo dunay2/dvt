@@ -13,7 +13,6 @@ import {
 
 import { RunRecoveryUnavailableError } from '../errors/runControlErrors.js';
 import type { AuthorizedCommandExecutionContext } from '../ports/auth.js';
-import type { IRunControlCommandCoordinator } from '../ports/runControlCommandCoordinator.js';
 import type { IRunExecutionContextInheritanceWriter } from '../ports/runExecutionContextInheritanceWriter.js';
 import type { IRunExecutionContextReferenceReader } from '../ports/runExecutionContextReferenceReader.js';
 import type { IRunExecutionContextRequirementResolver } from '../ports/runExecutionContextRequirementResolver.js';
@@ -30,7 +29,6 @@ export interface RecoverRunUseCaseDependencies {
   readonly planStore: IStoredPlanRefReader;
   readonly executionContextReader: IRunExecutionContextReferenceReader;
   readonly executionContextInheritanceWriter: IRunExecutionContextInheritanceWriter;
-  readonly commandCoordinator: IRunControlCommandCoordinator;
   readonly executionContextRequirementResolver: IRunExecutionContextRequirementResolver;
   readonly startRunIntentStore: IStartRunIntentQueryStore;
   readonly runMaintenanceService: Pick<IRunMaintenanceService, 'reconcileStartRunIntent'>;
@@ -52,13 +50,10 @@ export class RecoverRunUseCase implements IRecoverRunUseCase {
     context: AuthorizedCommandExecutionContext
   ): Promise<RecoverRunResult> {
     const tenantId = context.scope.tenantId.value;
-    return this.dependencies.commandCoordinator.executeExclusive(
-      { action: 'recover', tenantId, runId: command.recoveryRunId },
-      () => this.executeExclusive(command, context, tenantId)
-    );
+    return this.executeCommand(command, context, tenantId);
   }
 
-  private async executeExclusive(
+  private async executeCommand(
     command: RecoverRunCommand,
     context: AuthorizedCommandExecutionContext,
     tenantId: string

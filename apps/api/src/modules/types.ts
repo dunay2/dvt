@@ -19,7 +19,6 @@ import type { IRunExecutionContextBindingPolicy } from '@dvt/engine';
 import type { IAuthenticator } from '../application/ports/auth.js';
 import type { ICanvasAuthoringAuthorityStore } from '../application/ports/canvasAuthoringAuthority.js';
 import type { IStartRunTargetAdapterRegistry } from '../application/ports/IStartRunTargetAdapterRegistry.js';
-import type { IRunControlCommandCoordinator } from '../application/ports/runControlCommandCoordinator.js';
 import type { IRunExecutionContextInheritanceWriter } from '../application/ports/runExecutionContextInheritanceWriter.js';
 import type { IRunExecutionContextReferenceReader } from '../application/ports/runExecutionContextReferenceReader.js';
 import type { IStartRunLatencyTelemetry } from '../application/ports/StartRunSlaTelemetry.js';
@@ -62,7 +61,6 @@ export interface ProtectedRuntimeModule {
   planStore: IStoredPlanArtifactStore & IStoredPlanRefReader & IPlanStoreReader;
   runExecutionContextReferenceReader: IRunExecutionContextReferenceReader;
   runExecutionContextInheritanceWriter: IRunExecutionContextInheritanceWriter;
-  runControlCommandCoordinator: IRunControlCommandCoordinator;
   systemClock: { nowIsoUtc(): IsoUtcString };
   runExecutionContextBindingPolicy: IRunExecutionContextBindingPolicy;
   planValidator: StoredPlanExecutabilityValidator;

@@ -58,42 +58,10 @@ interface TestDependencies {
   readonly planStore: { getStoredPlanRef: ReturnType<typeof vi.fn> };
   readonly executionContextReader: { read: ReturnType<typeof vi.fn> };
   readonly executionContextInheritanceWriter: { inherit: ReturnType<typeof vi.fn> };
-  readonly commandCoordinator: {
-    executeExclusive<T>(
-      key: {
-        readonly action: 'cancel' | 'recover';
-        readonly tenantId: string;
-        readonly runId: string;
-      },
-      operation: () => Promise<T>
-    ): Promise<T>;
-  };
   readonly executionContextRequirementResolver: { resolve: ReturnType<typeof vi.fn> };
   readonly startRunIntentStore: { getIntent: ReturnType<typeof vi.fn> };
   readonly runMaintenanceService: { reconcileStartRunIntent: ReturnType<typeof vi.fn> };
   readonly idempotency: { startRunIntentId: ReturnType<typeof vi.fn> };
-}
-
-function createSerialCoordinator(): TestDependencies['commandCoordinator'] {
-  const tails = new Map<string, Promise<void>>();
-  return {
-    async executeExclusive(key, operation) {
-      const lockKey = `${key.action}:${key.tenantId}:${key.runId}`;
-      const previous = tails.get(lockKey) ?? Promise.resolve();
-      let release!: () => void;
-      const current = new Promise<void>((resolve) => {
-        release = resolve;
-      });
-      tails.set(lockKey, current);
-      await previous;
-      try {
-        return await operation();
-      } finally {
-        release();
-        if (tails.get(lockKey) === current) tails.delete(lockKey);
-      }
-    },
-  };
 }
 
 function createDependencies(): TestDependencies {
@@ -136,7 +104,6 @@ function createDependencies(): TestDependencies {
         planVersion: '1.0.0',
       }),
     },
-    commandCoordinator: createSerialCoordinator(),
     executionContextRequirementResolver: {
       resolve: vi.fn().mockResolvedValue('required'),
     },
@@ -388,7 +355,7 @@ describe('RecoverRunUseCase', () => {
     expect(dependencies.engine.recoverRun).not.toHaveBeenCalled();
   });
 
-  it('serializes concurrent delivery of one recovery identity without consuming another attempt', async () => {
+  it('delegates concurrent recovery identity reuse to the canonical engine command', async () => {
     const dependencies = createDependencies();
     let recoveryMetadata:
       | typeof sourceMetadata
@@ -430,8 +397,8 @@ describe('RecoverRunUseCase', () => {
     ]);
 
     expect(results[0]).toEqual(results[1]);
-    expect(dependencies.engine.recoverRun).toHaveBeenCalledTimes(1);
-    expect(dependencies.executionContextInheritanceWriter.inherit).toHaveBeenCalledTimes(1);
+    expect(dependencies.engine.recoverRun).toHaveBeenCalledTimes(2);
+    expect(dependencies.executionContextInheritanceWriter.inherit).toHaveBeenCalledTimes(2);
   });
 
   it('rejects recovery when the source context has no original trusted reference', async () => {

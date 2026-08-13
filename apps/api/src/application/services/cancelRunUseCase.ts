@@ -7,7 +7,6 @@ import {
   toRunCancellationReceiptKey,
   type IRunCancellationReceiptStore,
 } from '../ports/runCancellationReceiptStore.js';
-import type { IRunControlCommandCoordinator } from '../ports/runControlCommandCoordinator.js';
 import {
   RUN_CONTROL_CONTRACT_VERSION,
   type CancelRunCommand,
@@ -23,7 +22,6 @@ export class CancelRunUseCase implements ICancelRunUseCase {
   public constructor(
     private readonly engine: IWorkflowEngine,
     private readonly stateStore: IRunStateStoreRead,
-    private readonly commandCoordinator: IRunControlCommandCoordinator,
     private readonly cancellationReceipts: IRunCancellationReceiptStore,
     private readonly startDispatchResolver?: IRunStartDispatchResolver
   ) {}
@@ -33,13 +31,10 @@ export class CancelRunUseCase implements ICancelRunUseCase {
     context: AuthorizedCommandExecutionContext
   ): Promise<CancelRunResult> {
     const tenantId = context.scope.tenantId.value;
-    return this.commandCoordinator.executeExclusive(
-      { action: 'cancel', tenantId, runId: command.runId },
-      () => this.executeExclusive(command, tenantId)
-    );
+    return this.executeCommand(command, tenantId);
   }
 
-  private async executeExclusive(
+  private async executeCommand(
     command: CancelRunCommand,
     tenantId: string
   ): Promise<CancelRunResult> {
