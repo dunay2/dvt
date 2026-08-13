@@ -2,7 +2,7 @@
 title: Workspace authoring draft aggregate
 status: Active
 owner: Architecture / Contracts / API / Web
-last_reviewed: 2026-04-23
+last_reviewed: 2026-08-13
 ---
 
 # Workspace authoring draft aggregate
@@ -60,7 +60,9 @@ and Engine/runtime handles execution lifecycle.
   Protected read outcome with capability, audit reference, format metadata, and
   authoring draft record.
 - `WorkspaceGraphDraftSaveResponse`
-  Protected write outcome: `saved`, `conflict`, or `denied`.
+  Protected write outcome: `saved`, `conflict`, `denied`,
+  `unsupported_schema_version`, `idempotency_mismatch`, or
+  `authoring_authority_conflict`.
 
 ## Invariants
 
@@ -75,6 +77,12 @@ and Engine/runtime handles execution lifecycle.
 - compile invariants do not belong to the persisted aggregate.
 - `DesignGraphDraft` is derived for preview/run only; it is not the editable
   persistence payload.
+- All declared Canvas identities (main, active, and secondary) are graph-owned
+  for authority conflict checks.
+- Authentication, authorization, and current Canvas authority are evaluated
+  before idempotent replay; revoked authority may refuse a prior replay.
+- Unsupported stored schema versions fail closed. No migration-state or
+  compatibility path exists in this rail.
 
 ## User stories
 

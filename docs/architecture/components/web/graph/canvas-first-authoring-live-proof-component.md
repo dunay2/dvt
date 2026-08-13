@@ -344,7 +344,7 @@ The implementation proves these failures:
 - Cypress live proof setup must not grant dynamic workspaces without also
   asserting those project ids in the local bearer token.
 - The workspace context gate must not collapse all proof variants to the first
-  effective workspace when the backend lists multiple available workspaces.
+  default workspace when the backend lists multiple granted workspaces.
 - Cypress layout assertions must not poll `draft.nodePositions` for drag
   movement. The protected draft proves graph authority only; route-local layout
   proof belongs to `dvt-web-canvas-interaction`.

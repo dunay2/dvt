@@ -34,7 +34,7 @@ describe('protected route session context architecture', () => {
     expect(sessionRoute).not.toContain('effectiveWorkspace');
     expect(sessionRoute).not.toContain('workspaceContext');
     expect(workspaceContextRoute).toContain(
-      'Owned concern: expose server-owned effective workspace context'
+      'Owned concern: expose server-owned granted workspace context and default'
     );
     expect(workspaceContextRoute).toContain('workspace_context_not_granted');
   });

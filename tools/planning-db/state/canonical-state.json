@@ -112645,7 +112645,7 @@
         "pnpm --filter @dvt/web test:unit:run -- src/app/services/workspace/workspacePorts.api.test.ts"
       ],
       "sourcePath": "apps/web/src/app/services/workspace/workspacePorts.api.ts",
-      "sourceContentSha256": "741f755939fa9963e9dda9674c49dec4c386c20fd65701a9bab070d76d79d67d",
+      "sourceContentSha256": "eee4ea86fc1e8b897a44559bed02925e170c109ec174ff78f5a2791255c03c66",
       "rawRail": {
         "name": "ListAdminAuditLog",
         "type": "query",
@@ -112713,7 +112713,7 @@
         "pnpm --filter @dvt/web test:unit:run -- src/app/services/workspace/workspacePorts.api.test.ts"
       ],
       "sourcePath": "apps/web/src/app/services/workspace/workspacePorts.api.ts",
-      "sourceContentSha256": "741f755939fa9963e9dda9674c49dec4c386c20fd65701a9bab070d76d79d67d",
+      "sourceContentSha256": "eee4ea86fc1e8b897a44559bed02925e170c109ec174ff78f5a2791255c03c66",
       "rawRail": {
         "name": "ListAdminRoles",
         "type": "query",

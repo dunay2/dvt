@@ -34,8 +34,6 @@ Canonical navigation for the Graph and Canvas architecture pack.
 - [Canvas Draft Access Posture Component](./canvas-draft-access-posture-component.md)
 - [Canvas First Authoring Live Proof Component](./canvas-first-authoring-live-proof-component.md)
 - [Canvas Authoring Draft Boundary Component](./canvas-authoring-draft-boundary-component.md)
-- [Workspace Graph Draft Test Fixture Boundary Component](./workspace-graph-draft-test-fixture-boundary-component.md)
-- [Workspace Graph Draft Test Fixture Boundary User Stories](./workspace-graph-draft-test-fixture-boundary-user-stories.md)
 - [Canvas Graph Lifecycle Component](./canvas-graph-lifecycle-component.md)
 - [Canvas Handler Contracts Component](./canvas-handler-contracts-component.md)
 - [Canvas Route Composition Component](./canvas-route-composition-component.md)

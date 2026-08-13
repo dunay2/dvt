@@ -1,5 +1,5 @@
 ---
-title: ADR-0062 - Server-owned effective workspace context
+title: ADR-0062 - Server-owned granted workspace context and default
 status: Accepted
 date: 2026-05-10
 owners:
@@ -8,11 +8,14 @@ owners:
 arc_level: ARC-1
 ---
 
-# ADR-0062 - Server-Owned Effective Workspace Context
+# ADR-0062 - Server-Owned Granted Workspace Context And Default
 
 ## Status
 
 Accepted.
+
+Amended on 2026-08-13 by #2170 to distinguish the server-owned granted set and
+default from the browser-owned validated selection.
 
 ## Context
 
@@ -29,7 +32,7 @@ authentication profile and workspace read-model selection.
 
 ## Decision
 
-Do not extend `GET /session` with effective workspace selection.
+Do not extend `GET /session` with workspace selection.
 
 Add a distinct query rail:
 
@@ -37,34 +40,37 @@ Add a distinct query rail:
 - Surface: `GET /workspace/context`
 - Owner: Protected runtime workspace context
 - Input authority: authenticated principal plus backend grant store
-- Output: effective workspace context and granted workspace options
+- Output: a deterministic `defaultWorkspace` and the granted
+  `availableWorkspaces`
 
 `GET /session` remains responsible for authenticated principal profile and
-grants. The workspace-context query owns tenant/project/environment selection
-for protected web API mode.
+grants. The workspace-context query owns the granted workspace set and its
+deterministic sorted default. It does not persist or choose the user's current
+workspace.
 
-The web protected-route gate must resolve session first, then resolve effective
-workspace context, and only then allow protected route rendering. The browser
-may display and cache the granted context as a projection, but must not invent
-it as product authority in API mode.
+The web protected-route gate must resolve session first, then resolve workspace
+context, and only then allow protected route rendering. The browser may retain
+one selected workspace only while that exact identity remains in
+`availableWorkspaces`; otherwise it must use `defaultWorkspace`. Browser state
+is a validated selection projection, never grant or authorization authority.
 
 ## Consequences
 
 Positive:
 
 - Session and workspace context remain separate bounded read models.
-- Protected route startup gets one server-owned scope before Canvas, Runs, and
-  workspace services read `sessionStore`.
-- Future workspace selectors can mutate server-validated preferences without
-  changing authentication profile shape.
+- Protected route startup gets a server-validated scope before Canvas, Runs,
+  and workspace services read `sessionStore`.
+- Workspace selectors reuse the granted set without requiring a speculative
+  server-side preference subsystem.
 
 Costs:
 
 - One additional protected API query runs during API-mode route gating.
 - Existing session documentation and tests must distinguish session from
   workspace context.
-- The current `sessionStore` remains a projection until a later slice removes
-  local selector authority completely.
+- Selection is device-local until a measured product requirement justifies a
+  separate server preference command and store.
 
 ## Validation
 

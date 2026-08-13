@@ -1,8 +1,8 @@
 ---
 title: Workspace graph draft persistence v1
-status: Draft
+status: Active
 owner: docs
-last_reviewed: 2026-04-23
+last_reviewed: 2026-08-13
 ---
 
 # Workspace graph draft persistence v1
@@ -54,22 +54,23 @@ Every protected boundary outcome carries:
 `correlationId` is the join key across caller-visible behavior, audit evidence,
 and runtime observability.
 
-## Format evolution posture
+## Format hard-cut posture
 
 Read success outcomes carry format metadata:
 
 - `schemaVersion`
 - `storedSchemaVersion`
-- `migrationState` (`native` or `read_migrated`)
 
 Typed format failures are explicit:
 
 - `unsupported_schema_version`
 - `corrupt_payload`
-- `migration_failed`
 
 Unsupported or corrupt drafts fail closed through typed outcomes; they do not
-silently degrade to empty canvas behavior.
+silently degrade to empty canvas behavior. This contract has no compatibility
+migration state: unsupported stored versions are rejected and must be handled
+by an explicit product operation outside this read/write route if one is ever
+approved.
 
 ## Compare-and-swap and idempotency
 
@@ -84,6 +85,9 @@ Write outcomes are explicit and typed:
 - `saved`
 - `conflict`
 - `denied`
+- `unsupported_schema_version`
+- `idempotency_mismatch`
+- `authoring_authority_conflict`
 
 The v1 merge posture is reject-on-stale. The server does not auto-merge
 concurrent edits in this contract line.
@@ -137,10 +141,10 @@ envelope.
 - `web` should isolate that protected boundary behind a dedicated draft
   authoring port that preserves boundary-native outcomes before any projection
   into route-level DTOs:
-  - read path: canonical `WorkspaceGraphDraftReadResponse` plus explicit
+  - read path: canonical `WorkspaceGraphDraftReadResponse`, including
     `not_found`
-  - write path: canonical `WorkspaceGraphDraftSaveResponse` plus explicit
-    transport-governed `unsupported_schema_version` and `idempotency_mismatch`
+  - write path: canonical `WorkspaceGraphDraftSaveResponse`, including
+    unsupported schema, idempotency mismatch, and authoring-authority conflict
   - capability, audit, and format metadata must survive that seam intact
 - `web` must treat `WorkspaceGraphDraftSaveResponse` as an outcome envelope:
   `saved` returns `revision`, `conflict` returns `currentRevision`, and callers

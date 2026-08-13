@@ -1,5 +1,5 @@
 /**
- * Owned concern: project effective workspace context from embedded principal
+ * Owned concern: project granted workspace context and a deterministic default from principal
  * grants without leaking grant-storage semantics to route handlers.
  */
 import type { ProjectWorkspaceDescriptor } from '@dvt/contracts';

@@ -1,4 +1,4 @@
-/** Owned concern: resolve protected route session and server-owned workspace context. */
+/** Owned concern: resolve session, granted workspaces, and validated browser selection. */
 import { WorkspaceContextResponseSchema, asNonBlankString } from '@dvt/contracts';
 import type { ProjectWorkspaceDescriptor, WorkspaceContextResponse } from '@dvt/contracts';
 

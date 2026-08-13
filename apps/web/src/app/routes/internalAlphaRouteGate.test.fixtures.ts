@@ -138,7 +138,7 @@ export const internalAlphaCombinedRouteFixture: InternalAlphaCombinedRouteFixtur
       evidenceAcceptance: 'accepted',
       evidenceRefs: [
         'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md',
-        'docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-component.md',
+        'docs/contracts/planner/workspace-graph-draft-persistence-v1.md',
         'apps/web/src/app/views/canvas/canvasStartupBootstrapPublication.architecture.test.ts',
         'apps/web/src/app/views/canvas/canvasDraftRecoveryBoundary.architecture.test.ts',
         'apps/web/src/app/views/canvas/canvasRoutePosturePriority.architecture.test.ts',

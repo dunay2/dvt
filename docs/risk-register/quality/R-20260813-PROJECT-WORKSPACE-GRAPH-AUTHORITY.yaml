@@ -1,0 +1,34 @@
+---
+id: R-20260813-PROJECT-WORKSPACE-GRAPH-AUTHORITY
+title: Project grants, workspace selection and graph authority could diverge
+status: Closed
+date: 2026-08-13
+owners:
+  - apps/api
+  - apps/web
+  - packages/@dvt/contracts
+severity: High
+probability: Low
+context: >
+  Project admission, workspace projection and graph persistence previously decoded or described
+  related authority through duplicate contracts, grant mappers and route-local translations.
+risk: >
+  Concurrent project creation could lose grants, browser state could appear authoritative, or a
+  graph replay could bypass current Canvas authority and expose inconsistent project data.
+mitigations:
+  - One normalized principal-grant repository supplies access decisions, workspace context and
+    project onboarding.
+  - Project creation uses the canonical tenant action, an explicit least-privilege creator profile
+    and serialized PostgreSQL grant mutation.
+  - The server owns granted workspaces and deterministic defaulting; browser selection is validated
+    against the granted set.
+  - Graph capability derives read and write decisions from one grant snapshot and authenticates
+    once.
+  - Canonical graph hashing, all-Canvas ownership and authority-before-replay ordering are covered
+    by focused and real PostgreSQL tests.
+  - Unsupported graph formats fail closed without migration-state compatibility.
+closure_evidence:
+  - docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md
+  - apps/api/test/infrastructure/auth/embeddedProjectOnboardingRepository.test.ts
+  - apps/api/test/infrastructure/canvasAuthoringAuthority/PostgresCanvasAuthoringAuthorityStore.test.ts
+---

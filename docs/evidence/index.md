@@ -116,6 +116,7 @@ Evidence documents that justify or validate relevant changes.
 - [ED 20260810 Active Provider Documentation Truth](ED-20260810-active-provider-documentation-truth.md)
 - [ED 20260810 On Demand Status Provider Guard](ED-20260810-on-demand-status-provider-guard.md)
 - [ED 20260813 Plan Ref Digest Boundary](ED-20260813-plan-ref-digest-boundary.md)
+- [ED 20260813 Project Workspace Graph Authority Hardcut](ED-20260813-project-workspace-graph-authority-hardcut.md)
 - [ED 20260813 Run Lifecycle Rail Hardcut](ED-20260813-run-lifecycle-rail-hardcut.md)
 - [ED 20260813 Stored Plan Materialization Boundary](ED-20260813-stored-plan-materialization-boundary.md)
 - [ED-20260402 RC-G1 governance startup and health reconciliation](ED-20260402-rc-g1-governance-startup-reconciliation.md)

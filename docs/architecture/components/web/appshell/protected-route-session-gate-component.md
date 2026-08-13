@@ -14,7 +14,7 @@ task_ids:
 
 `AuthRouteGate` and `resolveProtectedRouteSessionContext` own protected-route
 session admission in web bootstrap. The component verifies authenticated session
-and effective workspace context through canonical runtime queries, then decides
+and granted workspace context through canonical runtime queries, then decides
 route access posture.
 
 This component does not authenticate users itself and does not bypass API
@@ -62,11 +62,11 @@ stateDiagram-v2
 Protected-route admission is upstream of plan/run controls and must fail closed
 before any run intent surface appears.
 
-| Route gate rail           | Downstream rail dependency | Rule                                                        |
-| ------------------------- | -------------------------- | ----------------------------------------------------------- |
-| `ObserveWorkspaceContext` | `ObservePlanRunReadiness`  | readiness cannot render without effective workspace context |
-| `ObserveWorkspaceContext` | `SaveWorkspaceGraphDraft`  | authoring mutations blocked if scope is not admitted        |
-| `ObserveWorkspaceContext` | `ListWorkspaceFiles`       | code workbench must remain scope-bound                      |
+| Route gate rail           | Downstream rail dependency | Rule                                                                  |
+| ------------------------- | -------------------------- | --------------------------------------------------------------------- |
+| `ObserveWorkspaceContext` | `ObservePlanRunReadiness`  | readiness cannot render without a validated granted workspace context |
+| `ObserveWorkspaceContext` | `SaveWorkspaceGraphDraft`  | authoring mutations blocked if scope is not admitted                  |
+| `ObserveWorkspaceContext` | `ListWorkspaceFiles`       | code workbench must remain scope-bound                                |
 
 ## Consumers
 

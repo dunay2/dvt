@@ -2,7 +2,7 @@
 title: Web Auth Project Onboarding Component
 status: Review
 owner: Frontend / Product Architecture
-last_reviewed: 2026-05-23
+last_reviewed: 2026-08-13
 planning_type: component
 task_ids:
   - E-MAND-WEB-AUTH-ONBOARDING-CANON
@@ -16,7 +16,7 @@ task_ids:
 This component owns the semantic admission boundary for web identity, granted
 workspace scope, and project-first startup. It canonizes the accepted web-auth
 proposal into the current app shell: `/login` is the public recovery route,
-`AuthRouteGate` protects product routes, and server-owned session plus effective
+`AuthRouteGate` protects product routes, and server-owned session plus granted
 workspace context resolve before route children can render project data.
 
 The component does not own external identity-provider configuration, API
@@ -87,8 +87,8 @@ sequenceDiagram
   Gate->>Session: GET /session
   Session-->>Gate: principal, grants, permissions
   Gate->>Workspace: GET /workspace/context
-  Workspace-->>Gate: effective workspace or denied posture
-  Gate->>Store: set granted tenant/project/environment
+  Workspace-->>Gate: granted workspaces, deterministic default, or denied posture
+  Gate->>Store: retain a valid browser selection or apply the default
   Gate-->>Route: render shell children
   Route->>Canvas: load workspace manifest and draft only after admission
 ```
@@ -139,7 +139,7 @@ sequenceDiagram
 ## Semantic Fitness Function
 
 - `apps/web/src/app/bootstrap/webAuthProjectOnboarding.architecture.test.ts`
-  verifies the protected shell is gated by session and effective workspace
+  verifies the protected shell is gated by session and granted workspace
   rails, validates this component guide and user stories, and binds the accepted
   proposal to the current canonical slice.
 - `apps/web/src/app/services/session/protectedRouteSessionContext.architecture.test.ts`
