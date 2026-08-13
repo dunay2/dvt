@@ -103,6 +103,23 @@ describe('workspaceGraphDraftAuthoring api port', () => {
     await expect(port.readGraphDraft()).resolves.toEqual(responseBody);
   });
 
+  it('rejects generic authentication envelopes outside the governed read contract', async () => {
+    const scope = buildWorkspaceScope();
+    setWorkspaceScope(scope);
+    const responseBody = {
+      error: { type: 'unauthorized', reason: 'authentication_failed' },
+    };
+    const { port } = createAuthoringPortHarness({
+      requestRaw: async () => jsonResponse(responseBody, 401),
+    });
+
+    await expect(port.readGraphDraft()).rejects.toMatchObject({
+      name: 'ApiError',
+      statusCode: 401,
+      responseBody,
+    });
+  });
+
   it('maps governed 404 not-found into an explicit authoring outcome', async () => {
     const scope = buildWorkspaceScope();
     setWorkspaceScope(scope);
@@ -162,6 +179,23 @@ describe('workspaceGraphDraftAuthoring api port', () => {
       inputOverrides: {
         idempotencyKey: 'idem-authoring-3',
       },
+    });
+  });
+
+  it('rejects generic authentication envelopes outside the governed save contract', async () => {
+    const scope = buildWorkspaceScope();
+    setWorkspaceScope(scope);
+    const responseBody = {
+      error: { type: 'unauthorized', reason: 'authentication_failed' },
+    };
+    const { port } = createAuthoringPortHarness({
+      requestRaw: async () => jsonResponse(responseBody, 401),
+    });
+
+    await expect(port.saveGraphDraft(buildAuthoringSaveInput(scope))).rejects.toMatchObject({
+      name: 'ApiError',
+      statusCode: 401,
+      responseBody,
     });
   });
 
