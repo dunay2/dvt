@@ -5348,19 +5348,19 @@
       },
       {
         "component_id": "SYS-PLANSTORE-API-PLANREF-HTTP",
-        "name": "API plan-ref HTTP mapping and parsing",
+        "name": "API plan-ref HTTP parsing",
         "kind": "api",
         "layer": "adapter",
         "owner": "PlanRefHttpBoundary",
-        "repo_path": "apps/api/src/entrypoints/http/planRefHttpMapper.ts",
-        "public_contract": "Plan-ref HTTP adapter boundary",
+        "repo_path": "apps/api/src/entrypoints/http/planRoutePlanRefParser.ts",
+        "public_contract": "Canonical plan-ref HTTP parsing boundary",
         "runtime": "node",
         "criticality": "high",
         "status": "review",
         "maturity_score": null,
         "parent_component_id": "SYS-PLANSTORE-API-COMPOSITION",
         "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
+        "updated_at": "2026-08-13T03:40:45.083+00:00"
       },
       {
         "component_id": "SYS-PLANSTORE-API-STORED-PLAN-RESOLUTION",
@@ -11475,6 +11475,34 @@
         "updated_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
+        "design_id": "GH-2166-ENGINE-FETCH-RAIL-CLEAN-RECORD-20260813",
+        "work_item_id": "GH-2166",
+        "title": "Clean-record engine plan fetch mechanization rail",
+        "owner": "API / Plan Store",
+        "status": "implemented",
+        "rationale": "The accumulated local rail retains obsolete forbidden patterns that conflict with exact contract and architecture-test surfaces; retire and recreate the same rail without broad permissions or parallel intent.",
+        "fowler_signal": "boundary_drift",
+        "rail_ref": "RetireFeatureMechanizationRail",
+        "approved_at": "2026-08-13T03:47:37.407+00:00",
+        "supersedes_id": null,
+        "created_at": "2026-08-13T03:44:12.646+00:00",
+        "updated_at": "2026-08-13T03:47:39.856+00:00"
+      },
+      {
+        "design_id": "GH-2166-PLANREF-HTTP-COMPONENT-REMAP-20260813",
+        "work_item_id": "GH-2166",
+        "title": "Remap plan-ref HTTP boundary to the surviving parser",
+        "owner": "API / Plan Store",
+        "status": "implemented",
+        "rationale": "The standalone planRefHttpMapper was removed after canonical contract convergence; the existing PlanRef HTTP component must point to the surviving parser instead of a dead path.",
+        "fowler_signal": "feature_envy",
+        "rail_ref": "RecordArchitectureComponent",
+        "approved_at": "2026-08-13T03:41:05.277+00:00",
+        "supersedes_id": null,
+        "created_at": "2026-08-13T03:40:43.787+00:00",
+        "updated_at": "2026-08-13T03:47:44.735+00:00"
+      },
+      {
         "design_id": "GH-2166-RECORD-PLAN-EXECUTABILITY-DUPLICATE-RETIREMENT-20260813",
         "work_item_id": "GH-2166",
         "title": "Retire duplicate RecordPlanExecutability declaration",
@@ -11501,6 +11529,20 @@
         "supersedes_id": "GH-2166-RECORD-PLAN-EXECUTABILITY-DUPLICATE-RETIREMENT-20260813",
         "created_at": "2026-08-13T01:36:02.305+00:00",
         "updated_at": "2026-08-13T01:36:26.626+00:00"
+      },
+      {
+        "design_id": "GH-2166-VALIDATION-FETCH-RAIL-CLEAN-RECORD-20260813",
+        "work_item_id": "GH-2166",
+        "title": "Clean-record validation plan fetch mechanization rail",
+        "owner": "API / Plan Store",
+        "status": "implemented",
+        "rationale": "FetchPlanForValidation shares the resolver source with engine dispatch, so its accumulated broad prohibitions must be removed to keep the merged DB manifest exact and internally consistent.",
+        "fowler_signal": "boundary_drift",
+        "rail_ref": "RetireFeatureMechanizationRail",
+        "approved_at": "2026-08-13T03:47:41.061+00:00",
+        "supersedes_id": null,
+        "created_at": "2026-08-13T03:46:51.174+00:00",
+        "updated_at": "2026-08-13T03:47:43.465+00:00"
       },
       {
         "design_id": "PLANNING-DB-API-APPLICATION-SERVICE-TEST-LEAF-COMPONENTS-20260619",
@@ -40563,8 +40605,8 @@
       {
         "responsibility_id": "RESP-SYS-PLANSTORE-API-PLANREF-HTTP",
         "component_id": "SYS-PLANSTORE-API-PLANREF-HTTP",
-        "responsibility": "Translate plan-ref HTTP inputs and outputs while keeping route semantics aligned with plan-source policy.",
-        "reason_to_change": "Plan-ref parser, HTTP mapper, plan-source policy behavior, or route tests change.",
+        "responsibility": "Parse plan-ref HTTP inputs through the canonical contract parser.",
+        "reason_to_change": "Plan-ref parsing policy or route validation tests change.",
         "ddd_owner": "PlanRefHttpBoundary",
         "status": "implemented",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
@@ -67417,6 +67459,22 @@
         "created_at": "2026-08-10T17:19:38.904+00:00"
       },
       {
+        "design_id": "GH-2166-ENGINE-FETCH-RAIL-CLEAN-RECORD-20260813",
+        "subject_kind": "decision",
+        "subject_id": "local#GH-2166-STORED-PLAN-AUTHORITY#query#fetchplanforenginedispatch",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-13T03:44:12.646+00:00"
+      },
+      {
+        "design_id": "GH-2166-PLANREF-HTTP-COMPONENT-REMAP-20260813",
+        "subject_kind": "component",
+        "subject_id": "SYS-PLANSTORE-API-PLANREF-HTTP",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T03:40:43.787+00:00"
+      },
+      {
         "design_id": "GH-2166-RECORD-PLAN-EXECUTABILITY-DUPLICATE-RETIREMENT-20260813",
         "subject_kind": "decision",
         "subject_id": "local#GH-2166-STORED-PLAN-AUTHORITY#command#recordplanexecutability",
@@ -67431,6 +67489,14 @@
         "scope_kind": "may_delete",
         "required": true,
         "created_at": "2026-08-13T01:36:02.305+00:00"
+      },
+      {
+        "design_id": "GH-2166-VALIDATION-FETCH-RAIL-CLEAN-RECORD-20260813",
+        "subject_kind": "decision",
+        "subject_id": "local#GH-2166-STORED-PLAN-AUTHORITY#query#fetchplanforvalidation",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-13T03:46:51.174+00:00"
       },
       {
         "design_id": "PLANNING-DB-API-APPLICATION-SERVICE-TEST-LEAF-COMPONENTS-20260619",
@@ -88875,6 +88941,27 @@
         "created_at": "2026-08-12T18:55:05.743+00:00"
       },
       {
+        "operation_id": "06677ce1-f1da-4583-97b5-a70a7c289700",
+        "idempotency_key": "GH-2166-ENGINE-FETCH-RAIL-CLEAN-RECORD-20260813-implemented-v1",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2166-ENGINE-FETCH-RAIL-CLEAN-RECORD-20260813",
+        "source_ref": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+        "source_content_sha256": "1c740da0098f2dffb4906f6f41d3814c6aa6fa54ddb41a445e0e6db0211270c4",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Feature mechanization validation and Planning DB integrity pass on the clean record.",
+          "designId": "GH-2166-ENGINE-FETCH-RAIL-CLEAN-RECORD-20260813",
+          "toStatus": "implemented",
+          "sourceRef": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "1c740da0098f2dffb4906f6f41d3814c6aa6fa54ddb41a445e0e6db0211270c4"
+        },
+        "created_at": "2026-08-13T03:47:39.856+00:00"
+      },
+      {
         "operation_id": "0681355a-1013-4ec2-bd31-f1274e4705ad",
         "idempotency_key": "gh-2167-update-contract-sys-api-tests-application-services-workspace-evidence-v1",
         "operation_type": "architecture_contract_record",
@@ -89029,6 +89116,27 @@
           "sourceContentSha256": "445d0a77a2208b4198a706920223128ba7051884116b3ec95250a2c30232d691"
         },
         "created_at": "2026-08-11T03:35:49.965+00:00"
+      },
+      {
+        "operation_id": "09b73deb-2401-4a1f-8cfc-468e71db9eba",
+        "idempotency_key": "GH-2166-VALIDATION-FETCH-RAIL-CLEAN-RECORD-20260813-implemented-v1",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2166-VALIDATION-FETCH-RAIL-CLEAN-RECORD-20260813",
+        "source_ref": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+        "source_content_sha256": "1c740da0098f2dffb4906f6f41d3814c6aa6fa54ddb41a445e0e6db0211270c4",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Feature mechanization validation and Planning DB integrity pass on the clean record.",
+          "designId": "GH-2166-VALIDATION-FETCH-RAIL-CLEAN-RECORD-20260813",
+          "toStatus": "implemented",
+          "sourceRef": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "1c740da0098f2dffb4906f6f41d3814c6aa6fa54ddb41a445e0e6db0211270c4"
+        },
+        "created_at": "2026-08-13T03:47:43.465+00:00"
       },
       {
         "operation_id": "09c61628-7c57-4f04-bccc-9447ee467f03",
@@ -90240,6 +90348,61 @@
         "created_at": "2026-08-10T21:04:12.232+00:00"
       },
       {
+        "operation_id": "1ee9baa0-3ed3-4af2-a16b-e1c9774ca739",
+        "idempotency_key": "gh-2166-engine-fetch-clean-record-design-v1",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "GH-2166-ENGINE-FETCH-RAIL-CLEAN-RECORD-20260813",
+        "source_ref": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+        "source_content_sha256": "1c740da0098f2dffb4906f6f41d3814c6aa6fa54ddb41a445e0e6db0211270c4",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "API / Plan Store",
+          "title": "Clean-record engine plan fetch mechanization rail",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "local#GH-2166-STORED-PLAN-AUTHORITY#query#fetchplanforenginedispatch",
+              "subjectKind": "decision"
+            }
+          ],
+          "status": "review",
+          "railRef": "RetireFeatureMechanizationRail",
+          "designId": "GH-2166-ENGINE-FETCH-RAIL-CLEAN-RECORD-20260813",
+          "rationale": "The accumulated local rail retains obsolete forbidden patterns that conflict with exact contract and architecture-test surfaces; retire and recreate the same rail without broad permissions or parallel intent.",
+          "sourceRef": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+          "workItemId": "GH-2166",
+          "fowlerSignal": "boundary_drift",
+          "supersedesId": null,
+          "sourceContentSha256": "1c740da0098f2dffb4906f6f41d3814c6aa6fa54ddb41a445e0e6db0211270c4"
+        },
+        "created_at": "2026-08-13T03:44:12.646+00:00"
+      },
+      {
+        "operation_id": "2015258b-5d7a-448a-8717-f865e2efe9c1",
+        "idempotency_key": "gh-2166-planref-http-component-remap-implementing-v2",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2166-PLANREF-HTTP-COMPONENT-REMAP-20260813",
+        "source_ref": "apps/api/src/entrypoints/http/planRoutePlanRefParser.ts",
+        "source_content_sha256": "07a00eda74f1f4c357c9b973d9364f281a9e32fa0d8760650cbdf8a89ce7f0b1",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The DB-first component remap is recorded and entering integrity validation.",
+          "designId": "GH-2166-PLANREF-HTTP-COMPONENT-REMAP-20260813",
+          "toStatus": "implementing",
+          "sourceRef": "apps/api/src/entrypoints/http/planRoutePlanRefParser.ts",
+          "fromStatus": "approved",
+          "sourceContentSha256": "07a00eda74f1f4c357c9b973d9364f281a9e32fa0d8760650cbdf8a89ce7f0b1"
+        },
+        "created_at": "2026-08-13T03:41:06.478+00:00"
+      },
+      {
         "operation_id": "204dd1bb-bdf6-4a51-9f20-c8662d8d0249",
         "idempotency_key": "gh-2167-update-test-sys-api-tests-application-services-authorization-2-v1",
         "operation_type": "architecture_test_record",
@@ -90514,6 +90677,27 @@
           "sourceContentSha256": "55a0655ebc7e12691190612dfcc8133306f23d6c0969a936376d38fcbc470a7a"
         },
         "created_at": "2026-08-11T12:25:41.783+00:00"
+      },
+      {
+        "operation_id": "26b019ef-8664-417a-a5b0-7d1dcd590a8b",
+        "idempotency_key": "GH-2166-ENGINE-FETCH-RAIL-CLEAN-RECORD-20260813-approved-v1",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2166-ENGINE-FETCH-RAIL-CLEAN-RECORD-20260813",
+        "source_ref": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+        "source_content_sha256": "1c740da0098f2dffb4906f6f41d3814c6aa6fa54ddb41a445e0e6db0211270c4",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The clean-recorded rail preserves one existing product intent with exact current surfaces.",
+          "designId": "GH-2166-ENGINE-FETCH-RAIL-CLEAN-RECORD-20260813",
+          "toStatus": "approved",
+          "sourceRef": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+          "fromStatus": "review",
+          "sourceContentSha256": "1c740da0098f2dffb4906f6f41d3814c6aa6fa54ddb41a445e0e6db0211270c4"
+        },
+        "created_at": "2026-08-13T03:47:37.407+00:00"
       },
       {
         "operation_id": "278a928a-baff-4251-a555-517f3d1b796a",
@@ -90923,6 +91107,40 @@
           "sourceContentSha256": "445d0a77a2208b4198a706920223128ba7051884116b3ec95250a2c30232d691"
         },
         "created_at": "2026-08-11T03:58:08.701+00:00"
+      },
+      {
+        "operation_id": "2c92250e-63c0-4499-99e7-eff131aa3ac6",
+        "idempotency_key": "gh-2166-planref-http-component-remap-design-v1",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "GH-2166-PLANREF-HTTP-COMPONENT-REMAP-20260813",
+        "source_ref": "apps/api/src/entrypoints/http/planRoutePlanRefParser.ts",
+        "source_content_sha256": "07a00eda74f1f4c357c9b973d9364f281a9e32fa0d8760650cbdf8a89ce7f0b1",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "API / Plan Store",
+          "title": "Remap plan-ref HTTP boundary to the surviving parser",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-PLANSTORE-API-PLANREF-HTTP",
+              "subjectKind": "component"
+            }
+          ],
+          "status": "review",
+          "railRef": "RecordArchitectureComponent",
+          "designId": "GH-2166-PLANREF-HTTP-COMPONENT-REMAP-20260813",
+          "rationale": "The standalone planRefHttpMapper was removed after canonical contract convergence; the existing PlanRef HTTP component must point to the surviving parser instead of a dead path.",
+          "sourceRef": "apps/api/src/entrypoints/http/planRoutePlanRefParser.ts",
+          "workItemId": "GH-2166",
+          "fowlerSignal": "feature_envy",
+          "supersedesId": null,
+          "sourceContentSha256": "07a00eda74f1f4c357c9b973d9364f281a9e32fa0d8760650cbdf8a89ce7f0b1"
+        },
+        "created_at": "2026-08-13T03:40:43.787+00:00"
       },
       {
         "operation_id": "2cc40cb8-7c52-429c-b672-8759750f0d52",
@@ -92203,6 +92421,27 @@
         "created_at": "2026-08-11T04:38:16.064+00:00"
       },
       {
+        "operation_id": "468a6996-1b29-4744-bff4-2e5069ed035b",
+        "idempotency_key": "gh-2166-planref-http-component-remap-implemented-v1",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2166-PLANREF-HTTP-COMPONENT-REMAP-20260813",
+        "source_ref": "apps/api/src/entrypoints/http/planRoutePlanRefParser.ts",
+        "source_content_sha256": "07a00eda74f1f4c357c9b973d9364f281a9e32fa0d8760650cbdf8a89ce7f0b1",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The remapped component passes Planning DB integrity and architecture dependency validation.",
+          "designId": "GH-2166-PLANREF-HTTP-COMPONENT-REMAP-20260813",
+          "toStatus": "implemented",
+          "sourceRef": "apps/api/src/entrypoints/http/planRoutePlanRefParser.ts",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "07a00eda74f1f4c357c9b973d9364f281a9e32fa0d8760650cbdf8a89ce7f0b1"
+        },
+        "created_at": "2026-08-13T03:47:44.735+00:00"
+      },
+      {
         "operation_id": "46cbce5d-01ab-4f34-a6a7-e1a368cf0d33",
         "idempotency_key": "architecture_design_transition:codex:R1-1C-STORED-PLAN-AUTHORITY-20260812:8ded76fde707d2ec",
         "operation_type": "architecture_design_transition",
@@ -92264,6 +92503,27 @@
           "sourceContentSha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc"
         },
         "created_at": "2026-08-11T12:57:19.429+00:00"
+      },
+      {
+        "operation_id": "4768b56e-031a-4944-b9ed-dae44ce672c7",
+        "idempotency_key": "gh-2166-planref-http-component-remap-approved-v1",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2166-PLANREF-HTTP-COMPONENT-REMAP-20260813",
+        "source_ref": "apps/api/src/entrypoints/http/planRoutePlanRefParser.ts",
+        "source_content_sha256": "07a00eda74f1f4c357c9b973d9364f281a9e32fa0d8760650cbdf8a89ce7f0b1",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The component remap preserves the surviving canonical parser and removes the phantom path.",
+          "designId": "GH-2166-PLANREF-HTTP-COMPONENT-REMAP-20260813",
+          "toStatus": "approved",
+          "sourceRef": "apps/api/src/entrypoints/http/planRoutePlanRefParser.ts",
+          "fromStatus": "review",
+          "sourceContentSha256": "07a00eda74f1f4c357c9b973d9364f281a9e32fa0d8760650cbdf8a89ce7f0b1"
+        },
+        "created_at": "2026-08-13T03:41:05.277+00:00"
       },
       {
         "operation_id": "47a31547-2797-45ed-995a-d1761d586b0c",
@@ -95231,6 +95491,27 @@
         "created_at": "2026-08-11T02:26:48.234+00:00"
       },
       {
+        "operation_id": "77c11056-c841-4581-bd03-ffda18c14528",
+        "idempotency_key": "GH-2166-ENGINE-FETCH-RAIL-CLEAN-RECORD-20260813-implementing-v1",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2166-ENGINE-FETCH-RAIL-CLEAN-RECORD-20260813",
+        "source_ref": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+        "source_content_sha256": "1c740da0098f2dffb4906f6f41d3814c6aa6fa54ddb41a445e0e6db0211270c4",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The audited retirement and clean record are complete and validated.",
+          "designId": "GH-2166-ENGINE-FETCH-RAIL-CLEAN-RECORD-20260813",
+          "toStatus": "implementing",
+          "sourceRef": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+          "fromStatus": "approved",
+          "sourceContentSha256": "1c740da0098f2dffb4906f6f41d3814c6aa6fa54ddb41a445e0e6db0211270c4"
+        },
+        "created_at": "2026-08-13T03:47:38.625+00:00"
+      },
+      {
         "operation_id": "77c7c7c4-5fa1-40d6-acb8-c099044eb4f7",
         "idempotency_key": "gh-2166-record-plan-duplicate-retirement-v2-implemented",
         "operation_type": "architecture_design_transition",
@@ -95926,6 +96207,43 @@
           "sourceContentSha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598"
         },
         "created_at": "2026-08-11T18:22:15.476+00:00"
+      },
+      {
+        "operation_id": "866a5f3b-0e6d-4031-a024-8af74f001b1b",
+        "idempotency_key": "gh-2166-planref-http-component-remap-v1",
+        "operation_type": "architecture_component_record",
+        "actor": "codex",
+        "design_id": "GH-2166-PLANREF-HTTP-COMPONENT-REMAP-20260813",
+        "source_ref": "apps/api/src/entrypoints/http/planRoutePlanRefParser.ts",
+        "source_content_sha256": "07a00eda74f1f4c357c9b973d9364f281a9e32fa0d8760650cbdf8a89ce7f0b1",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "kind": "api",
+          "name": "API plan-ref HTTP parsing",
+          "layer": "adapter",
+          "owner": "PlanRefHttpBoundary",
+          "status": "review",
+          "runtime": "node",
+          "designId": "GH-2166-PLANREF-HTTP-COMPONENT-REMAP-20260813",
+          "repoPath": "apps/api/src/entrypoints/http/planRoutePlanRefParser.ts",
+          "sourceRef": "apps/api/src/entrypoints/http/planRoutePlanRefParser.ts",
+          "componentId": "SYS-PLANSTORE-API-PLANREF-HTTP",
+          "criticality": "high",
+          "publicContract": "Canonical plan-ref HTTP parsing boundary",
+          "responsibilities": [
+            {
+              "dddOwner": "PlanRefHttpBoundary",
+              "reasonToChange": "Plan-ref parsing policy or route validation tests change.",
+              "responsibility": "Parse plan-ref HTTP inputs through the canonical contract parser.",
+              "responsibilityId": "RESP-SYS-PLANSTORE-API-PLANREF-HTTP"
+            }
+          ],
+          "parentComponentId": "SYS-PLANSTORE-API-COMPOSITION",
+          "sourceContentSha256": "07a00eda74f1f4c357c9b973d9364f281a9e32fa0d8760650cbdf8a89ce7f0b1"
+        },
+        "created_at": "2026-08-13T03:40:45.083+00:00"
       },
       {
         "operation_id": "86a73916-7dad-4efe-8f8b-67a020d6c2ab",
@@ -101362,6 +101680,40 @@
         "created_at": "2026-08-11T06:41:43.978+00:00"
       },
       {
+        "operation_id": "cfb29d76-96a6-4f61-bb1b-746ba9987b35",
+        "idempotency_key": "gh-2166-validation-fetch-clean-record-design-v1",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "GH-2166-VALIDATION-FETCH-RAIL-CLEAN-RECORD-20260813",
+        "source_ref": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+        "source_content_sha256": "1c740da0098f2dffb4906f6f41d3814c6aa6fa54ddb41a445e0e6db0211270c4",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "API / Plan Store",
+          "title": "Clean-record validation plan fetch mechanization rail",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "local#GH-2166-STORED-PLAN-AUTHORITY#query#fetchplanforvalidation",
+              "subjectKind": "decision"
+            }
+          ],
+          "status": "review",
+          "railRef": "RetireFeatureMechanizationRail",
+          "designId": "GH-2166-VALIDATION-FETCH-RAIL-CLEAN-RECORD-20260813",
+          "rationale": "FetchPlanForValidation shares the resolver source with engine dispatch, so its accumulated broad prohibitions must be removed to keep the merged DB manifest exact and internally consistent.",
+          "sourceRef": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+          "workItemId": "GH-2166",
+          "fowlerSignal": "boundary_drift",
+          "supersedesId": null,
+          "sourceContentSha256": "1c740da0098f2dffb4906f6f41d3814c6aa6fa54ddb41a445e0e6db0211270c4"
+        },
+        "created_at": "2026-08-13T03:46:51.174+00:00"
+      },
+      {
         "operation_id": "cfb335de-2f0f-4b90-a1fb-e475ea28adaf",
         "idempotency_key": "architecture_design_create:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811:866a030f925ecae4",
         "operation_type": "architecture_design_create",
@@ -102874,6 +103226,27 @@
         "created_at": "2026-08-10T20:11:19.796+00:00"
       },
       {
+        "operation_id": "ea7a7049-4370-4e69-9123-df3cf7045396",
+        "idempotency_key": "GH-2166-VALIDATION-FETCH-RAIL-CLEAN-RECORD-20260813-approved-v1",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2166-VALIDATION-FETCH-RAIL-CLEAN-RECORD-20260813",
+        "source_ref": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+        "source_content_sha256": "1c740da0098f2dffb4906f6f41d3814c6aa6fa54ddb41a445e0e6db0211270c4",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The clean-recorded rail preserves one existing product intent with exact current surfaces.",
+          "designId": "GH-2166-VALIDATION-FETCH-RAIL-CLEAN-RECORD-20260813",
+          "toStatus": "approved",
+          "sourceRef": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+          "fromStatus": "review",
+          "sourceContentSha256": "1c740da0098f2dffb4906f6f41d3814c6aa6fa54ddb41a445e0e6db0211270c4"
+        },
+        "created_at": "2026-08-13T03:47:41.061+00:00"
+      },
+      {
         "operation_id": "eb987def-f44d-4728-ba72-99701e3c573a",
         "idempotency_key": "gh-2167-create-contract-sys-api-docs-architecture-query-v1",
         "operation_type": "architecture_contract_record",
@@ -103117,6 +103490,27 @@
           "sourceContentSha256": "39d479f362360f996f2c45035593c07d52372eed46f9fd57438b007c68862b21"
         },
         "created_at": "2026-08-11T17:07:51.164+00:00"
+      },
+      {
+        "operation_id": "ee8162ee-2bba-450c-88ba-15f751c3fd2e",
+        "idempotency_key": "GH-2166-VALIDATION-FETCH-RAIL-CLEAN-RECORD-20260813-implementing-v1",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2166-VALIDATION-FETCH-RAIL-CLEAN-RECORD-20260813",
+        "source_ref": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+        "source_content_sha256": "1c740da0098f2dffb4906f6f41d3814c6aa6fa54ddb41a445e0e6db0211270c4",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The audited retirement and clean record are complete and validated.",
+          "designId": "GH-2166-VALIDATION-FETCH-RAIL-CLEAN-RECORD-20260813",
+          "toStatus": "implementing",
+          "sourceRef": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+          "fromStatus": "approved",
+          "sourceContentSha256": "1c740da0098f2dffb4906f6f41d3814c6aa6fa54ddb41a445e0e6db0211270c4"
+        },
+        "created_at": "2026-08-13T03:47:42.245+00:00"
       },
       {
         "operation_id": "eee0c5a5-b199-40b6-a1c1-dcec86d0653b",
@@ -131500,7 +131894,8 @@
         "apps/api/src/application/services/StoredExecutablePlanResolver.ts#parseMaterializationPlanRef",
         "apps/api/src/application/services/StoredExecutablePlanResolver.ts#parseMaterializedExecutablePlan",
         "apps/api/src/application/services/StoredExecutablePlanResolver.ts#readUriScheme",
-        "apps/api/src/application/services/StoredExecutablePlanResolver.ts#toErrorMessage"
+        "apps/api/src/application/services/StoredExecutablePlanResolver.ts#toErrorMessage",
+        "apps/api/src/application/services/DbtRunExecutionContextBindingUseCase.ts#isDbtPlan"
       ],
       "implementationRefs": [
         "apps/api/src/application/services/StoredExecutablePlanResolver.ts#StoredExecutablePlanResolver",
@@ -131513,7 +131908,8 @@
         "apps/api/src/application/services/StoredExecutablePlanResolver.ts#parseMaterializationPlanRef",
         "apps/api/src/application/services/StoredExecutablePlanResolver.ts#parseMaterializedExecutablePlan",
         "apps/api/src/application/services/StoredExecutablePlanResolver.ts#readUriScheme",
-        "apps/api/src/application/services/StoredExecutablePlanResolver.ts#toErrorMessage"
+        "apps/api/src/application/services/StoredExecutablePlanResolver.ts#toErrorMessage",
+        "apps/api/src/application/services/DbtRunExecutionContextBindingUseCase.ts#isDbtPlan"
       ],
       "documentationRefs": ["https://github.com/dunay2/dvt/issues/2166"],
       "governingSources": [
@@ -131521,7 +131917,43 @@
         "docs/architecture/fowler-opportunity-planning-governance.md"
       ],
       "allowedImplementationSurfaces": [
-        "apps/api/src/application/services/StoredExecutablePlanResolver.ts"
+        "apps/api/package.json",
+        "apps/api/src/application/services/*Plan*.ts",
+        "apps/api/src/application/services/DbtRunExecutionContextBindingUseCase.ts",
+        "apps/api/src/entrypoints/http/*plan*.ts",
+        "apps/api/src/entrypoints/http/*Plan*.ts",
+        "apps/api/src/modules/buildProtectedRuntimeModule.ts",
+        "apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts",
+        "apps/api/src/modules/types.ts",
+        "apps/api/test/application/services/*Plan*.ts",
+        "apps/api/test/application/services/*startRun*.ts",
+        "apps/api/test/application/services/*StartRun*.ts",
+        "apps/api/test/application/services/DbtRunExecutionContextBindingUseCase*.ts",
+        "apps/api/test/application/services/storedPlanExecutabilityValidator/**",
+        "apps/api/test/entrypoints/http/*plan*.ts",
+        "apps/api/test/entrypoints/http/*Plan*.ts",
+        "apps/api/test/entrypoints/http/*startRun*.ts",
+        "apps/api/test/entrypoints/http/protectedRuntimeRouteDependencies.test.ts",
+        "apps/api/test/integration/plannerEngineContract.test.ts",
+        "apps/api/test/integration/startRunOpenTelemetry.integration.support.ts",
+        "apps/web/src/app/services/runs/runsService.test.ts",
+        "apps/web/src/app/testing/contractTestUtils.ts",
+        "apps/web/src/app/views/canvas/useCanvasExecutionActions.test.support.tsx",
+        "apps/web/src/testing/fixtures/mockDbtData.ts",
+        "docs/.manifest.json",
+        "docs/evidence/ED-20260813-*plan*.md",
+        "docs/evidence/index.md",
+        "docs/planning/status/system-governance-planstore-file-ownership-20260501.md",
+        "docs/planning/status/system-governance-unit-index-20260501.md",
+        "docs/risk-register/quality/R-20260813-*PLAN*.yaml",
+        "docs/risk-register/quality/index.md",
+        "packages/@dvt/cli/validate-contracts.cjs",
+        "packages/@dvt/contracts/src/schema-packs/common.ts",
+        "packages/@dvt/contracts/src/types/contracts.ts",
+        "packages/@dvt/contracts/test/validation/signal-and-error.ts",
+        "packages/@dvt/engine/test/architecture/workflowEngineBoundaryOwnership.architecture.test.ts",
+        "pnpm-lock.yaml",
+        "tools/planning-db/state/canonical-state.json"
       ],
       "architectureGuards": ["pnpm arch:deps"],
       "completionGate": [
@@ -131553,10 +131985,13 @@
             "cqRails": ["FetchPlanForEngineDispatch"],
             "dddOwner": "Stored executable plan materializer",
             "unitTests": [
-              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts"
+              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts",
+              "apps/api/test/application/services/StoredPlanAuthorityFlow.test.ts",
+              "apps/api/test/application/services/DbtRunExecutionContextBindingUseCase.test.ts"
             ],
             "fowlerSignals": [
-              "Execution and validation reads reuse one materializer while preserving lifecycle modes."
+              "Execution and validation reads reuse one materializer while preserving lifecycle modes.",
+              "DBT classification follows the canonical step capability registry."
             ],
             "cypressCoverage": "N/A - API application authority with no new UI behavior",
             "architectureGuard": "pnpm arch:deps"
@@ -131567,10 +132002,13 @@
             "cqRails": ["FetchPlanForEngineDispatch"],
             "dddOwner": "Stored executable plan materializer",
             "unitTests": [
-              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts"
+              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts",
+              "apps/api/test/application/services/StoredPlanAuthorityFlow.test.ts",
+              "apps/api/test/application/services/DbtRunExecutionContextBindingUseCase.test.ts"
             ],
             "fowlerSignals": [
-              "Execution and validation reads reuse one materializer while preserving lifecycle modes."
+              "Execution and validation reads reuse one materializer while preserving lifecycle modes.",
+              "DBT classification follows the canonical step capability registry."
             ],
             "cypressCoverage": "N/A - API application authority with no new UI behavior",
             "architectureGuard": "pnpm arch:deps"
@@ -131581,10 +132019,13 @@
             "cqRails": ["FetchPlanForEngineDispatch"],
             "dddOwner": "Stored executable plan materializer",
             "unitTests": [
-              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts"
+              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts",
+              "apps/api/test/application/services/StoredPlanAuthorityFlow.test.ts",
+              "apps/api/test/application/services/DbtRunExecutionContextBindingUseCase.test.ts"
             ],
             "fowlerSignals": [
-              "Execution and validation reads reuse one materializer while preserving lifecycle modes."
+              "Execution and validation reads reuse one materializer while preserving lifecycle modes.",
+              "DBT classification follows the canonical step capability registry."
             ],
             "cypressCoverage": "N/A - API application authority with no new UI behavior",
             "architectureGuard": "pnpm arch:deps"
@@ -131595,10 +132036,13 @@
             "cqRails": ["FetchPlanForEngineDispatch"],
             "dddOwner": "Stored executable plan materializer",
             "unitTests": [
-              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts"
+              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts",
+              "apps/api/test/application/services/StoredPlanAuthorityFlow.test.ts",
+              "apps/api/test/application/services/DbtRunExecutionContextBindingUseCase.test.ts"
             ],
             "fowlerSignals": [
-              "Execution and validation reads reuse one materializer while preserving lifecycle modes."
+              "Execution and validation reads reuse one materializer while preserving lifecycle modes.",
+              "DBT classification follows the canonical step capability registry."
             ],
             "cypressCoverage": "N/A - API application authority with no new UI behavior",
             "architectureGuard": "pnpm arch:deps"
@@ -131609,10 +132053,13 @@
             "cqRails": ["FetchPlanForEngineDispatch"],
             "dddOwner": "Stored executable plan materializer",
             "unitTests": [
-              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts"
+              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts",
+              "apps/api/test/application/services/StoredPlanAuthorityFlow.test.ts",
+              "apps/api/test/application/services/DbtRunExecutionContextBindingUseCase.test.ts"
             ],
             "fowlerSignals": [
-              "Execution and validation reads reuse one materializer while preserving lifecycle modes."
+              "Execution and validation reads reuse one materializer while preserving lifecycle modes.",
+              "DBT classification follows the canonical step capability registry."
             ],
             "cypressCoverage": "N/A - API application authority with no new UI behavior",
             "architectureGuard": "pnpm arch:deps"
@@ -131623,10 +132070,13 @@
             "cqRails": ["FetchPlanForEngineDispatch"],
             "dddOwner": "Stored executable plan materializer",
             "unitTests": [
-              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts"
+              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts",
+              "apps/api/test/application/services/StoredPlanAuthorityFlow.test.ts",
+              "apps/api/test/application/services/DbtRunExecutionContextBindingUseCase.test.ts"
             ],
             "fowlerSignals": [
-              "Execution and validation reads reuse one materializer while preserving lifecycle modes."
+              "Execution and validation reads reuse one materializer while preserving lifecycle modes.",
+              "DBT classification follows the canonical step capability registry."
             ],
             "cypressCoverage": "N/A - API application authority with no new UI behavior",
             "architectureGuard": "pnpm arch:deps"
@@ -131637,10 +132087,13 @@
             "cqRails": ["FetchPlanForEngineDispatch"],
             "dddOwner": "Stored executable plan materializer",
             "unitTests": [
-              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts"
+              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts",
+              "apps/api/test/application/services/StoredPlanAuthorityFlow.test.ts",
+              "apps/api/test/application/services/DbtRunExecutionContextBindingUseCase.test.ts"
             ],
             "fowlerSignals": [
-              "Execution and validation reads reuse one materializer while preserving lifecycle modes."
+              "Execution and validation reads reuse one materializer while preserving lifecycle modes.",
+              "DBT classification follows the canonical step capability registry."
             ],
             "cypressCoverage": "N/A - API application authority with no new UI behavior",
             "architectureGuard": "pnpm arch:deps"
@@ -131651,10 +132104,13 @@
             "cqRails": ["FetchPlanForEngineDispatch"],
             "dddOwner": "Stored executable plan materializer",
             "unitTests": [
-              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts"
+              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts",
+              "apps/api/test/application/services/StoredPlanAuthorityFlow.test.ts",
+              "apps/api/test/application/services/DbtRunExecutionContextBindingUseCase.test.ts"
             ],
             "fowlerSignals": [
-              "Execution and validation reads reuse one materializer while preserving lifecycle modes."
+              "Execution and validation reads reuse one materializer while preserving lifecycle modes.",
+              "DBT classification follows the canonical step capability registry."
             ],
             "cypressCoverage": "N/A - API application authority with no new UI behavior",
             "architectureGuard": "pnpm arch:deps"
@@ -131665,10 +132121,13 @@
             "cqRails": ["FetchPlanForEngineDispatch"],
             "dddOwner": "Stored executable plan materializer",
             "unitTests": [
-              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts"
+              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts",
+              "apps/api/test/application/services/StoredPlanAuthorityFlow.test.ts",
+              "apps/api/test/application/services/DbtRunExecutionContextBindingUseCase.test.ts"
             ],
             "fowlerSignals": [
-              "Execution and validation reads reuse one materializer while preserving lifecycle modes."
+              "Execution and validation reads reuse one materializer while preserving lifecycle modes.",
+              "DBT classification follows the canonical step capability registry."
             ],
             "cypressCoverage": "N/A - API application authority with no new UI behavior",
             "architectureGuard": "pnpm arch:deps"
@@ -131679,10 +132138,13 @@
             "cqRails": ["FetchPlanForEngineDispatch"],
             "dddOwner": "Stored executable plan materializer",
             "unitTests": [
-              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts"
+              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts",
+              "apps/api/test/application/services/StoredPlanAuthorityFlow.test.ts",
+              "apps/api/test/application/services/DbtRunExecutionContextBindingUseCase.test.ts"
             ],
             "fowlerSignals": [
-              "Execution and validation reads reuse one materializer while preserving lifecycle modes."
+              "Execution and validation reads reuse one materializer while preserving lifecycle modes.",
+              "DBT classification follows the canonical step capability registry."
             ],
             "cypressCoverage": "N/A - API application authority with no new UI behavior",
             "architectureGuard": "pnpm arch:deps"
@@ -131693,10 +132155,30 @@
             "cqRails": ["FetchPlanForEngineDispatch"],
             "dddOwner": "Stored executable plan materializer",
             "unitTests": [
-              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts"
+              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts",
+              "apps/api/test/application/services/StoredPlanAuthorityFlow.test.ts",
+              "apps/api/test/application/services/DbtRunExecutionContextBindingUseCase.test.ts"
             ],
             "fowlerSignals": [
-              "Execution and validation reads reuse one materializer while preserving lifecycle modes."
+              "Execution and validation reads reuse one materializer while preserving lifecycle modes.",
+              "DBT classification follows the canonical step capability registry."
+            ],
+            "cypressCoverage": "N/A - API application authority with no new UI behavior",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "isDbtPlan",
+            "path": "apps/api/src/application/services/DbtRunExecutionContextBindingUseCase.ts",
+            "cqRails": ["FetchPlanForEngineDispatch"],
+            "dddOwner": "Stored executable plan materializer",
+            "unitTests": [
+              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts",
+              "apps/api/test/application/services/StoredPlanAuthorityFlow.test.ts",
+              "apps/api/test/application/services/DbtRunExecutionContextBindingUseCase.test.ts"
+            ],
+            "fowlerSignals": [
+              "Execution and validation reads reuse one materializer while preserving lifecycle modes.",
+              "DBT classification follows the canonical step capability registry."
             ],
             "cypressCoverage": "N/A - API application authority with no new UI behavior",
             "architectureGuard": "pnpm arch:deps"
@@ -131708,9 +132190,13 @@
         "cypressFlows": [
           "N/A - API application authority with no new UI behavior"
         ],
-        "domainObjects": ["Stored executable plan"],
+        "domainObjects": [
+          "Stored executable plan",
+          "DBT execution requirement"
+        ],
         "fowlerSignals": [
-          "Execution and validation reads reuse one materializer while preserving lifecycle modes."
+          "Execution and validation reads reuse one materializer while preserving lifecycle modes.",
+          "DBT classification follows the canonical step capability registry."
         ],
         "completionGate": [
           "pnpm --filter dvt-api test:unit",
@@ -131720,12 +132206,13 @@
         "redGreenCycles": [
           {
             "id": "fetchplanforenginedispatch-record",
-            "redTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/StoredExecutablePlanResolver.test.ts",
-            "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/StoredExecutablePlanResolver.test.ts",
+            "redTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/StoredPlanAuthorityFlow.test.ts",
+            "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/StoredPlanAuthorityFlow.test.ts",
             "patchSurfaces": [
-              "apps/api/src/application/services/StoredExecutablePlanResolver.ts"
+              "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+              "apps/api/src/application/services/DbtRunExecutionContextBindingUseCase.ts"
             ],
-            "expectedFailure": "Execution could bypass normal-reader lifecycle protection or use a divergent parser."
+            "expectedFailure": "Execution could bypass canonical materialization, capability classification, or the exact admitted bytes."
           }
         ],
         "componentGuides": [
@@ -131756,13 +132243,49 @@
         "mechanizationStatus": "implemented",
         "noHumanDecisionsRemaining": true,
         "allowedImplementationSurfaces": [
-          "apps/api/src/application/services/StoredExecutablePlanResolver.ts"
+          "apps/api/package.json",
+          "apps/api/src/application/services/*Plan*.ts",
+          "apps/api/src/application/services/DbtRunExecutionContextBindingUseCase.ts",
+          "apps/api/src/entrypoints/http/*plan*.ts",
+          "apps/api/src/entrypoints/http/*Plan*.ts",
+          "apps/api/src/modules/buildProtectedRuntimeModule.ts",
+          "apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts",
+          "apps/api/src/modules/types.ts",
+          "apps/api/test/application/services/*Plan*.ts",
+          "apps/api/test/application/services/*startRun*.ts",
+          "apps/api/test/application/services/*StartRun*.ts",
+          "apps/api/test/application/services/DbtRunExecutionContextBindingUseCase*.ts",
+          "apps/api/test/application/services/storedPlanExecutabilityValidator/**",
+          "apps/api/test/entrypoints/http/*plan*.ts",
+          "apps/api/test/entrypoints/http/*Plan*.ts",
+          "apps/api/test/entrypoints/http/*startRun*.ts",
+          "apps/api/test/entrypoints/http/protectedRuntimeRouteDependencies.test.ts",
+          "apps/api/test/integration/plannerEngineContract.test.ts",
+          "apps/api/test/integration/startRunOpenTelemetry.integration.support.ts",
+          "apps/web/src/app/services/runs/runsService.test.ts",
+          "apps/web/src/app/testing/contractTestUtils.ts",
+          "apps/web/src/app/views/canvas/useCanvasExecutionActions.test.support.tsx",
+          "apps/web/src/testing/fixtures/mockDbtData.ts",
+          "docs/.manifest.json",
+          "docs/evidence/ED-20260813-*plan*.md",
+          "docs/evidence/index.md",
+          "docs/planning/status/system-governance-planstore-file-ownership-20260501.md",
+          "docs/planning/status/system-governance-unit-index-20260501.md",
+          "docs/risk-register/quality/R-20260813-*PLAN*.yaml",
+          "docs/risk-register/quality/index.md",
+          "packages/@dvt/cli/validate-contracts.cjs",
+          "packages/@dvt/contracts/src/schema-packs/common.ts",
+          "packages/@dvt/contracts/src/types/contracts.ts",
+          "packages/@dvt/contracts/test/validation/signal-and-error.ts",
+          "packages/@dvt/engine/test/architecture/workflowEngineBoundaryOwnership.architecture.test.ts",
+          "pnpm-lock.yaml",
+          "tools/planning-db/state/canonical-state.json"
         ],
-        "forbiddenImplementationSurfaces": ["packages/@dvt/engine/**"]
+        "forbiddenImplementationSurfaces": ["packages/@dvt/adapter-temporal/**"]
       },
-      "revision": 1,
+      "revision": 0,
       "createdBy": "codex",
-      "createdAt": "2026-08-13T02:21:38.956Z"
+      "createdAt": "2026-08-13T03:45:41.187Z"
     },
     {
       "railId": "local#GH-2166-STORED-PLAN-AUTHORITY#query#fetchplanforvalidation",
@@ -131774,6 +132297,7 @@
       "dddOwner": "Stored executable plan materializer",
       "railStatus": "implemented",
       "symbolRefs": [
+        "apps/api/src/application/services/StoredExecutablePlanResolver.ts#StoredExecutablePlanResolver",
         "apps/api/src/application/services/StoredExecutablePlanResolver.ts#MaterializedStoredExecutablePlan",
         "apps/api/src/application/services/StoredExecutablePlanResolver.ts#STORED_PLAN_MATERIALIZATION_MODE",
         "apps/api/src/application/services/StoredExecutablePlanResolver.ts#StoredPlanMaterializationError",
@@ -131783,10 +132307,10 @@
         "apps/api/src/application/services/StoredExecutablePlanResolver.ts#parseMaterializationPlanRef",
         "apps/api/src/application/services/StoredExecutablePlanResolver.ts#parseMaterializedExecutablePlan",
         "apps/api/src/application/services/StoredExecutablePlanResolver.ts#readUriScheme",
-        "apps/api/src/application/services/StoredExecutablePlanResolver.ts#toErrorMessage",
-        "apps/api/src/application/services/StoredExecutablePlanResolver.ts#StoredExecutablePlanResolver"
+        "apps/api/src/application/services/StoredExecutablePlanResolver.ts#toErrorMessage"
       ],
       "implementationRefs": [
+        "apps/api/src/application/services/StoredExecutablePlanResolver.ts#StoredExecutablePlanResolver",
         "apps/api/src/application/services/StoredExecutablePlanResolver.ts#MaterializedStoredExecutablePlan",
         "apps/api/src/application/services/StoredExecutablePlanResolver.ts#STORED_PLAN_MATERIALIZATION_MODE",
         "apps/api/src/application/services/StoredExecutablePlanResolver.ts#StoredPlanMaterializationError",
@@ -131796,8 +132320,7 @@
         "apps/api/src/application/services/StoredExecutablePlanResolver.ts#parseMaterializationPlanRef",
         "apps/api/src/application/services/StoredExecutablePlanResolver.ts#parseMaterializedExecutablePlan",
         "apps/api/src/application/services/StoredExecutablePlanResolver.ts#readUriScheme",
-        "apps/api/src/application/services/StoredExecutablePlanResolver.ts#toErrorMessage",
-        "apps/api/src/application/services/StoredExecutablePlanResolver.ts#StoredExecutablePlanResolver"
+        "apps/api/src/application/services/StoredExecutablePlanResolver.ts#toErrorMessage"
       ],
       "documentationRefs": ["https://github.com/dunay2/dvt/issues/2166"],
       "governingSources": [
@@ -131805,7 +132328,11 @@
         "docs/architecture/fowler-opportunity-planning-governance.md"
       ],
       "allowedImplementationSurfaces": [
-        "apps/api/src/application/services/StoredExecutablePlanResolver.ts"
+        "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+        "apps/api/src/application/services/StoredPlanExecutabilityValidator.ts",
+        "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts",
+        "apps/api/test/application/services/storedPlanExecutabilityValidator/**",
+        "docs/planning/status/system-governance-unit-index.units.yaml"
       ],
       "architectureGuards": ["pnpm arch:deps"],
       "completionGate": [
@@ -131832,15 +132359,30 @@
       "rawManifest": {
         "symbols": [
           {
+            "name": "StoredExecutablePlanResolver",
+            "path": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+            "cqRails": ["FetchPlanForValidation"],
+            "dddOwner": "Stored executable plan materializer",
+            "unitTests": [
+              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts",
+              "apps/api/test/application/services/storedPlanExecutabilityValidator/fetchAndAlignment.test.ts"
+            ],
+            "fowlerSignals": [
+              "Duplicated validation materialization converges behind one explicit read-mode strategy."
+            ],
+            "cypressCoverage": "N/A - API application authority with no new UI behavior",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
             "name": "MaterializedStoredExecutablePlan",
             "path": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
             "cqRails": ["FetchPlanForValidation"],
             "dddOwner": "Stored executable plan materializer",
             "unitTests": [
-              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts"
+              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts",
+              "apps/api/test/application/services/storedPlanExecutabilityValidator/fetchAndAlignment.test.ts"
             ],
             "fowlerSignals": [
-              "Duplicated materialization converged behind one explicit read-mode strategy.",
               "Duplicated validation materialization converges behind one explicit read-mode strategy."
             ],
             "cypressCoverage": "N/A - API application authority with no new UI behavior",
@@ -131852,10 +132394,10 @@
             "cqRails": ["FetchPlanForValidation"],
             "dddOwner": "Stored executable plan materializer",
             "unitTests": [
-              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts"
+              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts",
+              "apps/api/test/application/services/storedPlanExecutabilityValidator/fetchAndAlignment.test.ts"
             ],
             "fowlerSignals": [
-              "Duplicated materialization converged behind one explicit read-mode strategy.",
               "Duplicated validation materialization converges behind one explicit read-mode strategy."
             ],
             "cypressCoverage": "N/A - API application authority with no new UI behavior",
@@ -131867,10 +132409,10 @@
             "cqRails": ["FetchPlanForValidation"],
             "dddOwner": "Stored executable plan materializer",
             "unitTests": [
-              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts"
+              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts",
+              "apps/api/test/application/services/storedPlanExecutabilityValidator/fetchAndAlignment.test.ts"
             ],
             "fowlerSignals": [
-              "Duplicated materialization converged behind one explicit read-mode strategy.",
               "Duplicated validation materialization converges behind one explicit read-mode strategy."
             ],
             "cypressCoverage": "N/A - API application authority with no new UI behavior",
@@ -131882,10 +132424,10 @@
             "cqRails": ["FetchPlanForValidation"],
             "dddOwner": "Stored executable plan materializer",
             "unitTests": [
-              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts"
+              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts",
+              "apps/api/test/application/services/storedPlanExecutabilityValidator/fetchAndAlignment.test.ts"
             ],
             "fowlerSignals": [
-              "Duplicated materialization converged behind one explicit read-mode strategy.",
               "Duplicated validation materialization converges behind one explicit read-mode strategy."
             ],
             "cypressCoverage": "N/A - API application authority with no new UI behavior",
@@ -131897,10 +132439,10 @@
             "cqRails": ["FetchPlanForValidation"],
             "dddOwner": "Stored executable plan materializer",
             "unitTests": [
-              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts"
+              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts",
+              "apps/api/test/application/services/storedPlanExecutabilityValidator/fetchAndAlignment.test.ts"
             ],
             "fowlerSignals": [
-              "Duplicated materialization converged behind one explicit read-mode strategy.",
               "Duplicated validation materialization converges behind one explicit read-mode strategy."
             ],
             "cypressCoverage": "N/A - API application authority with no new UI behavior",
@@ -131912,10 +132454,10 @@
             "cqRails": ["FetchPlanForValidation"],
             "dddOwner": "Stored executable plan materializer",
             "unitTests": [
-              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts"
+              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts",
+              "apps/api/test/application/services/storedPlanExecutabilityValidator/fetchAndAlignment.test.ts"
             ],
             "fowlerSignals": [
-              "Duplicated materialization converged behind one explicit read-mode strategy.",
               "Duplicated validation materialization converges behind one explicit read-mode strategy."
             ],
             "cypressCoverage": "N/A - API application authority with no new UI behavior",
@@ -131927,10 +132469,10 @@
             "cqRails": ["FetchPlanForValidation"],
             "dddOwner": "Stored executable plan materializer",
             "unitTests": [
-              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts"
+              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts",
+              "apps/api/test/application/services/storedPlanExecutabilityValidator/fetchAndAlignment.test.ts"
             ],
             "fowlerSignals": [
-              "Duplicated materialization converged behind one explicit read-mode strategy.",
               "Duplicated validation materialization converges behind one explicit read-mode strategy."
             ],
             "cypressCoverage": "N/A - API application authority with no new UI behavior",
@@ -131942,10 +132484,10 @@
             "cqRails": ["FetchPlanForValidation"],
             "dddOwner": "Stored executable plan materializer",
             "unitTests": [
-              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts"
+              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts",
+              "apps/api/test/application/services/storedPlanExecutabilityValidator/fetchAndAlignment.test.ts"
             ],
             "fowlerSignals": [
-              "Duplicated materialization converged behind one explicit read-mode strategy.",
               "Duplicated validation materialization converges behind one explicit read-mode strategy."
             ],
             "cypressCoverage": "N/A - API application authority with no new UI behavior",
@@ -131957,10 +132499,10 @@
             "cqRails": ["FetchPlanForValidation"],
             "dddOwner": "Stored executable plan materializer",
             "unitTests": [
-              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts"
+              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts",
+              "apps/api/test/application/services/storedPlanExecutabilityValidator/fetchAndAlignment.test.ts"
             ],
             "fowlerSignals": [
-              "Duplicated materialization converged behind one explicit read-mode strategy.",
               "Duplicated validation materialization converges behind one explicit read-mode strategy."
             ],
             "cypressCoverage": "N/A - API application authority with no new UI behavior",
@@ -131972,22 +132514,8 @@
             "cqRails": ["FetchPlanForValidation"],
             "dddOwner": "Stored executable plan materializer",
             "unitTests": [
-              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts"
-            ],
-            "fowlerSignals": [
-              "Duplicated materialization converged behind one explicit read-mode strategy.",
-              "Duplicated validation materialization converges behind one explicit read-mode strategy."
-            ],
-            "cypressCoverage": "N/A - API application authority with no new UI behavior",
-            "architectureGuard": "pnpm arch:deps"
-          },
-          {
-            "name": "StoredExecutablePlanResolver",
-            "path": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
-            "cqRails": ["FetchPlanForValidation"],
-            "dddOwner": "Stored executable plan materializer",
-            "unitTests": [
-              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts"
+              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts",
+              "apps/api/test/application/services/storedPlanExecutabilityValidator/fetchAndAlignment.test.ts"
             ],
             "fowlerSignals": [
               "Duplicated validation materialization converges behind one explicit read-mode strategy."
@@ -132004,7 +132532,6 @@
         ],
         "domainObjects": ["Stored executable plan"],
         "fowlerSignals": [
-          "Duplicated materialization converged behind one explicit read-mode strategy.",
           "Duplicated validation materialization converges behind one explicit read-mode strategy."
         ],
         "completionGate": [
@@ -132018,7 +132545,8 @@
             "redTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/StoredExecutablePlanResolver.test.ts",
             "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/StoredExecutablePlanResolver.test.ts",
             "patchSurfaces": [
-              "apps/api/src/application/services/StoredExecutablePlanResolver.ts"
+              "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+              "apps/api/src/application/services/StoredPlanExecutabilityValidator.ts"
             ],
             "expectedFailure": "Validation could accept divergent bytes, hashes, reference metadata or URI schemes."
           }
@@ -132051,16 +132579,17 @@
         "mechanizationStatus": "implemented",
         "noHumanDecisionsRemaining": true,
         "allowedImplementationSurfaces": [
-          "apps/api/src/application/services/StoredExecutablePlanResolver.ts"
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+          "apps/api/src/application/services/StoredPlanExecutabilityValidator.ts",
+          "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts",
+          "apps/api/test/application/services/storedPlanExecutabilityValidator/**",
+          "docs/planning/status/system-governance-unit-index.units.yaml"
         ],
-        "forbiddenImplementationSurfaces": [
-          "packages/@dvt/contracts/**",
-          "packages/@dvt/engine/**"
-        ]
+        "forbiddenImplementationSurfaces": ["packages/@dvt/adapter-temporal/**"]
       },
-      "revision": 3,
+      "revision": 0,
       "createdBy": "codex",
-      "createdAt": "2026-08-13T01:27:38.775Z"
+      "createdAt": "2026-08-13T03:47:14.927Z"
     },
     {
       "railId": "local#MVP-144-PROTECTED-START-RUN-OTEL#command#exportobservabilitytoopentelemetry",
@@ -177169,6 +177698,408 @@
         ]
       },
       "createdAt": "2026-08-13T03:28:59.727Z"
+    },
+    {
+      "operationId": "19b72790-f212-49d6-9334-8fc68fe2d1ad",
+      "idempotencyKey": "gh-2166-declare-complete-stored-plan-change-surface-v1",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#GH-2166-STORED-PLAN-AUTHORITY#query#fetchplanforenginedispatch",
+      "sourcePath": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+      "sourceContentSha256": "1c740da0098f2dffb4906f6f41d3814c6aa6fa54ddb41a445e0e6db0211270c4",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/StoredPlanAuthorityFlow.test.ts",
+        "dddOwner": "Stored executable plan materializer",
+        "railName": "FetchPlanForEngineDispatch",
+        "railType": "query",
+        "featureId": "GH-2166-STORED-PLAN-AUTHORITY",
+        "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/StoredPlanAuthorityFlow.test.ts",
+        "sourceRef": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+        "unitTests": [
+          "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts",
+          "apps/api/test/application/services/StoredPlanAuthorityFlow.test.ts",
+          "apps/api/test/application/services/DbtRunExecutionContextBindingUseCase.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2166"],
+        "cypressFlows": [
+          "N/A - API application authority with no new UI behavior"
+        ],
+        "domainObjects": [
+          "Stored executable plan",
+          "DBT execution requirement"
+        ],
+        "fowlerSignals": [
+          "Execution and validation reads reuse one materializer while preserving lifecycle modes.",
+          "DBT classification follows the canonical step capability registry."
+        ],
+        "negativeTests": [
+          "pending and invalid records are rejected",
+          "hash and reference mismatches fail closed",
+          "unsupported URI schemes fail closed"
+        ],
+        "patchSurfaces": [
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+          "apps/api/src/application/services/DbtRunExecutionContextBindingUseCase.ts"
+        ],
+        "adapterSurface": "PostgresPlanStore",
+        "completionGate": [
+          "pnpm --filter dvt-api test:unit",
+          "pnpm --filter dvt-api test:integration:ci",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "IStoredPlanArtifactReader.fetchStoredPlanArtifact",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Execution could bypass canonical materialization, capability classification, or the exact admitted bytes.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": ["https://github.com/dunay2/dvt/issues/2166"],
+        "architectureGuards": ["pnpm arch:deps"],
+        "authorizationScope": "tenant/project/environment",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2166",
+        "implementationRefs": [
+          "apps/api/src/application/services/DbtRunExecutionContextBindingUseCase.ts#isDbtPlan"
+        ],
+        "normalizedRailName": "fetchplanforenginedispatch",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "1c740da0098f2dffb4906f6f41d3814c6aa6fa54ddb41a445e0e6db0211270c4",
+        "allowedImplementationSurfaces": [
+          "apps/api/package.json",
+          "apps/api/src/application/services/DbtRunExecutionContextBindingUseCase.ts",
+          "apps/api/src/application/services/PlannerBackedStartRunUseCase.ts",
+          "apps/api/src/application/services/PreviewPlanUseCase.ts",
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+          "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+          "apps/api/src/application/services/StoredPlanExecutabilityValidator.ts",
+          "apps/api/src/application/services/storedPlanScope.ts",
+          "apps/api/src/entrypoints/http/importPlanRouteParser.ts",
+          "apps/api/src/entrypoints/http/planImportResponseMapper.ts",
+          "apps/api/src/entrypoints/http/planPreviewResponseMapper.ts",
+          "apps/api/src/entrypoints/http/planRefHttpMapper.ts",
+          "apps/api/src/entrypoints/http/previewPlanRouteResponseMapper.ts",
+          "apps/api/src/modules/buildProtectedRuntimeModule.ts",
+          "apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts",
+          "apps/api/src/modules/types.ts",
+          "apps/api/test/application/services/BackpressureAwareStartRunUseCase.test.support.ts",
+          "apps/api/test/application/services/DbtRunExecutionContextBindingUseCase.bundleSecurity.test.ts",
+          "apps/api/test/application/services/DbtRunExecutionContextBindingUseCase.test.ts",
+          "apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts",
+          "apps/api/test/application/services/PreviewPlanUseCase.outcomes.test.ts",
+          "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts",
+          "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts",
+          "apps/api/test/application/services/StoredPlanAuthorityFlow.test.ts",
+          "apps/api/test/application/services/engineStartRunUseCase.test.support.ts",
+          "apps/api/test/application/services/startRunAuthorizedFacade.test.support.ts",
+          "apps/api/test/application/services/storedPlanExecutabilityValidator/capabilities.test.ts",
+          "apps/api/test/application/services/storedPlanExecutabilityValidator/fetchAndAlignment.test.ts",
+          "apps/api/test/application/services/storedPlanExecutabilityValidator/harness.ts",
+          "apps/api/test/application/services/storedPlanExecutabilityValidator/registry.test.ts",
+          "apps/api/test/application/services/storedPlanScope.test.ts",
+          "apps/api/test/entrypoints/http/planRouteParserHelpers.test.ts",
+          "apps/api/test/entrypoints/http/planRoutePlanSourcePolicy.test.ts",
+          "apps/api/test/entrypoints/http/planRouteResponseTranslation.test.ts",
+          "apps/api/test/entrypoints/http/previewPlanRoute.inputPolicy.test.ts",
+          "apps/api/test/entrypoints/http/previewPlanRoute.outcomes.test.ts",
+          "apps/api/test/entrypoints/http/previewPlanRouteTestSupport.ts",
+          "apps/api/test/entrypoints/http/protectedRuntimeRouteDependencies.test.ts",
+          "apps/api/test/entrypoints/http/startRunIdentity.test.ts",
+          "apps/api/test/entrypoints/http/startRunRoute.test.support.ts",
+          "apps/api/test/entrypoints/http/startRunRouteCommandBuilder.test.ts",
+          "apps/api/test/integration/plannerEngineContract.test.ts",
+          "apps/api/test/integration/startRunOpenTelemetry.integration.support.ts",
+          "apps/web/src/app/services/runs/runsService.test.ts",
+          "apps/web/src/app/testing/contractTestUtils.ts",
+          "apps/web/src/app/views/canvas/useCanvasExecutionActions.test.support.tsx",
+          "apps/web/src/testing/fixtures/mockDbtData.ts",
+          "docs/.manifest.json",
+          "docs/evidence/ED-20260813-plan-ref-digest-boundary.md",
+          "docs/evidence/ED-20260813-stored-plan-materialization-boundary.md",
+          "docs/evidence/index.md",
+          "docs/planning/status/system-governance-planstore-file-ownership-20260501.md",
+          "docs/planning/status/system-governance-unit-index-20260501.md",
+          "docs/risk-register/quality/R-20260813-PLAN-REF-DIGEST-BOUNDARY.yaml",
+          "docs/risk-register/quality/R-20260813-STORED-PLAN-BOUNDARY-ASSERTION-DRIFT.yaml",
+          "docs/risk-register/quality/index.md",
+          "packages/@dvt/cli/validate-contracts.cjs",
+          "packages/@dvt/contracts/src/schema-packs/common.ts",
+          "packages/@dvt/contracts/src/types/contracts.ts",
+          "packages/@dvt/contracts/test/validation/signal-and-error.ts",
+          "packages/@dvt/engine/test/architecture/workflowEngineBoundaryOwnership.architecture.test.ts",
+          "pnpm-lock.yaml",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": ["packages/@dvt/adapter-temporal/**"]
+      },
+      "createdAt": "2026-08-13T03:43:21.488Z"
+    },
+    {
+      "operationId": "f445203b-0052-4918-a501-fc43062d9a4f",
+      "idempotencyKey": "gh-2166-engine-fetch-clean-record-retire-v1",
+      "operationType": "feature_mechanization_rail_retire",
+      "actor": "codex",
+      "railId": "local#GH-2166-STORED-PLAN-AUTHORITY#query#fetchplanforenginedispatch",
+      "sourcePath": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+      "sourceContentSha256": "1c740da0098f2dffb4906f6f41d3814c6aa6fa54ddb41a445e0e6db0211270c4",
+      "expectedRevision": 2,
+      "previousRevision": 2,
+      "resultingRevision": 3,
+      "payload": {
+        "railId": "local#GH-2166-STORED-PLAN-AUTHORITY#query#fetchplanforenginedispatch",
+        "reason": "Replace accumulated forbidden patterns with an exact current change surface while preserving the same product intent.",
+        "designId": "GH-2166-ENGINE-FETCH-RAIL-CLEAN-RECORD-20260813",
+        "railName": "FetchPlanForEngineDispatch",
+        "railType": "query",
+        "featureId": "GH-2166-STORED-PLAN-AUTHORITY",
+        "sourceRef": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+        "expectedRevision": 2,
+        "normalizedRailName": "fetchplanforenginedispatch",
+        "sourceContentSha256": "1c740da0098f2dffb4906f6f41d3814c6aa6fa54ddb41a445e0e6db0211270c4"
+      },
+      "createdAt": "2026-08-13T03:44:13.883Z"
+    },
+    {
+      "operationId": "87f473d7-d346-42c3-a7e8-5dfa0d376f75",
+      "idempotencyKey": "gh-2166-engine-fetch-clean-record-v1",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#GH-2166-STORED-PLAN-AUTHORITY#query#fetchplanforenginedispatch",
+      "sourcePath": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+      "sourceContentSha256": "1c740da0098f2dffb4906f6f41d3814c6aa6fa54ddb41a445e0e6db0211270c4",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/StoredPlanAuthorityFlow.test.ts",
+        "dddOwner": "Stored executable plan materializer",
+        "railName": "FetchPlanForEngineDispatch",
+        "railType": "query",
+        "featureId": "GH-2166-STORED-PLAN-AUTHORITY",
+        "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/StoredPlanAuthorityFlow.test.ts",
+        "sourceRef": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+        "unitTests": [
+          "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts",
+          "apps/api/test/application/services/StoredPlanAuthorityFlow.test.ts",
+          "apps/api/test/application/services/DbtRunExecutionContextBindingUseCase.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2166"],
+        "cypressFlows": [
+          "N/A - API application authority with no new UI behavior"
+        ],
+        "domainObjects": [
+          "Stored executable plan",
+          "DBT execution requirement"
+        ],
+        "fowlerSignals": [
+          "Execution and validation reads reuse one materializer while preserving lifecycle modes.",
+          "DBT classification follows the canonical step capability registry."
+        ],
+        "negativeTests": [
+          "pending and invalid records are rejected",
+          "hash and reference mismatches fail closed",
+          "unsupported URI schemes fail closed"
+        ],
+        "patchSurfaces": [
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+          "apps/api/src/application/services/DbtRunExecutionContextBindingUseCase.ts"
+        ],
+        "adapterSurface": "PostgresPlanStore",
+        "completionGate": [
+          "pnpm --filter dvt-api test:unit",
+          "pnpm --filter dvt-api test:integration:ci",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "IStoredPlanArtifactReader.fetchStoredPlanArtifact",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Execution could bypass canonical materialization, capability classification, or the exact admitted bytes.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": ["https://github.com/dunay2/dvt/issues/2166"],
+        "architectureGuards": ["pnpm arch:deps"],
+        "authorizationScope": "tenant/project/environment",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2166",
+        "implementationRefs": [
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts#StoredExecutablePlanResolver",
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts#MaterializedStoredExecutablePlan",
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts#STORED_PLAN_MATERIALIZATION_MODE",
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts#StoredPlanMaterializationError",
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts#StoredPlanMaterializationFailureCode",
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts#StoredPlanMaterializationMode",
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts#assertSupportedPlanRefScheme",
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts#parseMaterializationPlanRef",
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts#parseMaterializedExecutablePlan",
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts#readUriScheme",
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts#toErrorMessage",
+          "apps/api/src/application/services/DbtRunExecutionContextBindingUseCase.ts#isDbtPlan"
+        ],
+        "normalizedRailName": "fetchplanforenginedispatch",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "1c740da0098f2dffb4906f6f41d3814c6aa6fa54ddb41a445e0e6db0211270c4",
+        "allowedImplementationSurfaces": [
+          "apps/api/package.json",
+          "apps/api/src/application/services/*Plan*.ts",
+          "apps/api/src/application/services/DbtRunExecutionContextBindingUseCase.ts",
+          "apps/api/src/entrypoints/http/*plan*.ts",
+          "apps/api/src/entrypoints/http/*Plan*.ts",
+          "apps/api/src/modules/buildProtectedRuntimeModule.ts",
+          "apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts",
+          "apps/api/src/modules/types.ts",
+          "apps/api/test/application/services/*Plan*.ts",
+          "apps/api/test/application/services/*startRun*.ts",
+          "apps/api/test/application/services/*StartRun*.ts",
+          "apps/api/test/application/services/DbtRunExecutionContextBindingUseCase*.ts",
+          "apps/api/test/application/services/storedPlanExecutabilityValidator/**",
+          "apps/api/test/entrypoints/http/*plan*.ts",
+          "apps/api/test/entrypoints/http/*Plan*.ts",
+          "apps/api/test/entrypoints/http/*startRun*.ts",
+          "apps/api/test/entrypoints/http/protectedRuntimeRouteDependencies.test.ts",
+          "apps/api/test/integration/plannerEngineContract.test.ts",
+          "apps/api/test/integration/startRunOpenTelemetry.integration.support.ts",
+          "apps/web/src/app/services/runs/runsService.test.ts",
+          "apps/web/src/app/testing/contractTestUtils.ts",
+          "apps/web/src/app/views/canvas/useCanvasExecutionActions.test.support.tsx",
+          "apps/web/src/testing/fixtures/mockDbtData.ts",
+          "docs/.manifest.json",
+          "docs/evidence/ED-20260813-*plan*.md",
+          "docs/evidence/index.md",
+          "docs/planning/status/system-governance-planstore-file-ownership-20260501.md",
+          "docs/planning/status/system-governance-unit-index-20260501.md",
+          "docs/risk-register/quality/R-20260813-*PLAN*.yaml",
+          "docs/risk-register/quality/index.md",
+          "packages/@dvt/cli/validate-contracts.cjs",
+          "packages/@dvt/contracts/src/schema-packs/common.ts",
+          "packages/@dvt/contracts/src/types/contracts.ts",
+          "packages/@dvt/contracts/test/validation/signal-and-error.ts",
+          "packages/@dvt/engine/test/architecture/workflowEngineBoundaryOwnership.architecture.test.ts",
+          "pnpm-lock.yaml",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": ["packages/@dvt/adapter-temporal/**"]
+      },
+      "createdAt": "2026-08-13T03:45:41.187Z"
+    },
+    {
+      "operationId": "ee0c0d85-073f-4517-84a9-2d7240fd799a",
+      "idempotencyKey": "gh-2166-validation-fetch-clean-record-retire-v1",
+      "operationType": "feature_mechanization_rail_retire",
+      "actor": "codex",
+      "railId": "local#GH-2166-STORED-PLAN-AUTHORITY#query#fetchplanforvalidation",
+      "sourcePath": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+      "sourceContentSha256": "1c740da0098f2dffb4906f6f41d3814c6aa6fa54ddb41a445e0e6db0211270c4",
+      "expectedRevision": 3,
+      "previousRevision": 3,
+      "resultingRevision": 4,
+      "payload": {
+        "railId": "local#GH-2166-STORED-PLAN-AUTHORITY#query#fetchplanforvalidation",
+        "reason": "Recreate the validation read declaration without obsolete contract and engine prohibitions.",
+        "designId": "GH-2166-VALIDATION-FETCH-RAIL-CLEAN-RECORD-20260813",
+        "railName": "FetchPlanForValidation",
+        "railType": "query",
+        "featureId": "GH-2166-STORED-PLAN-AUTHORITY",
+        "sourceRef": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+        "expectedRevision": 3,
+        "normalizedRailName": "fetchplanforvalidation",
+        "sourceContentSha256": "1c740da0098f2dffb4906f6f41d3814c6aa6fa54ddb41a445e0e6db0211270c4"
+      },
+      "createdAt": "2026-08-13T03:46:52.392Z"
+    },
+    {
+      "operationId": "cc3a2148-d865-4195-bded-ed190688830d",
+      "idempotencyKey": "gh-2166-validation-fetch-clean-record-v1",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#GH-2166-STORED-PLAN-AUTHORITY#query#fetchplanforvalidation",
+      "sourcePath": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+      "sourceContentSha256": "1c740da0098f2dffb4906f6f41d3814c6aa6fa54ddb41a445e0e6db0211270c4",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/StoredExecutablePlanResolver.test.ts",
+        "dddOwner": "Stored executable plan materializer",
+        "railName": "FetchPlanForValidation",
+        "railType": "query",
+        "featureId": "GH-2166-STORED-PLAN-AUTHORITY",
+        "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/StoredExecutablePlanResolver.test.ts",
+        "sourceRef": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+        "unitTests": [
+          "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts",
+          "apps/api/test/application/services/storedPlanExecutabilityValidator/fetchAndAlignment.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2166"],
+        "cypressFlows": [
+          "N/A - API application authority with no new UI behavior"
+        ],
+        "domainObjects": ["Stored executable plan"],
+        "fowlerSignals": [
+          "Duplicated validation materialization converges behind one explicit read-mode strategy."
+        ],
+        "negativeTests": [
+          "hash and reference mismatches fail closed",
+          "unsupported URI schemes fail closed",
+          "validation mode uses the validation reader"
+        ],
+        "patchSurfaces": [
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+          "apps/api/src/application/services/StoredPlanExecutabilityValidator.ts"
+        ],
+        "adapterSurface": "PostgresPlanStore",
+        "completionGate": [
+          "pnpm --filter dvt-api test:unit",
+          "pnpm --filter dvt-api test:integration:ci",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "IStoredPlanArtifactReader.fetchStoredPlanArtifactForValidation",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Validation could accept divergent bytes, hashes, reference metadata or URI schemes.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": ["https://github.com/dunay2/dvt/issues/2166"],
+        "architectureGuards": ["pnpm arch:deps"],
+        "authorizationScope": "tenant/project/environment",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2166",
+        "implementationRefs": [
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts#StoredExecutablePlanResolver",
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts#MaterializedStoredExecutablePlan",
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts#STORED_PLAN_MATERIALIZATION_MODE",
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts#StoredPlanMaterializationError",
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts#StoredPlanMaterializationFailureCode",
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts#StoredPlanMaterializationMode",
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts#assertSupportedPlanRefScheme",
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts#parseMaterializationPlanRef",
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts#parseMaterializedExecutablePlan",
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts#readUriScheme",
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts#toErrorMessage"
+        ],
+        "normalizedRailName": "fetchplanforvalidation",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "1c740da0098f2dffb4906f6f41d3814c6aa6fa54ddb41a445e0e6db0211270c4",
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+          "apps/api/src/application/services/StoredPlanExecutabilityValidator.ts",
+          "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts",
+          "apps/api/test/application/services/storedPlanExecutabilityValidator/**",
+          "docs/planning/status/system-governance-unit-index.units.yaml"
+        ],
+        "forbiddenImplementationSurfaces": ["packages/@dvt/adapter-temporal/**"]
+      },
+      "createdAt": "2026-08-13T03:47:14.927Z"
     }
   ],
   "governanceComponentDefinitions": [
