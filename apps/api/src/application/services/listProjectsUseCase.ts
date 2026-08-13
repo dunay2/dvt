@@ -17,21 +17,20 @@ export class ListProjectsUseCase {
 
   public async execute(principal: AuthenticatedPrincipal): Promise<ProjectOnboardingCatalog> {
     const catalog = await this.repository.listGrantedProjects(principal);
-    const createDecisions = await Promise.all(
-      catalog.tenantIds.map(async (tenantId) => ({
-        tenantId,
-        canCreateProject: (
-          await this.accessDecisions.decide(principal, {
-            resource: 'tenant',
-            tenantId: TenantId.unsafe(tenantId),
-            action: PROJECT_ONBOARDING_POLICY.createAction,
-          })
-        ).ok,
+    const createDecisions = await this.accessDecisions.decideMany(
+      principal,
+      catalog.tenantIds.map((tenantId) => ({
+        resource: 'tenant' as const,
+        tenantId: TenantId.unsafe(tenantId),
+        action: PROJECT_ONBOARDING_POLICY.createAction,
       }))
     );
 
     return {
-      tenants: createDecisions,
+      tenants: catalog.tenantIds.map((tenantId, index) => ({
+        tenantId,
+        canCreateProject: createDecisions[index]?.ok === true,
+      })),
       projects: catalog.projects,
       integrityFindings: catalog.integrityFindings,
     };
