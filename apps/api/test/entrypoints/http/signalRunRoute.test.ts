@@ -34,9 +34,7 @@ function httpError(
 function createDeps(): {
   authenticator: { authenticateBearerToken: ReturnType<typeof vi.fn> };
   authorizer: { authorize: ReturnType<typeof vi.fn> };
-  cancelUseCase: { execute: ReturnType<typeof vi.fn> };
   useCase: { execute: ReturnType<typeof vi.fn> };
-  compatibilityPolicy: { allowCancelSignalType: boolean };
 } {
   return {
     authenticator: {
@@ -67,26 +65,14 @@ function createDeps(): {
         },
       }),
     },
-    cancelUseCase: {
-      execute: vi.fn().mockResolvedValue({
-        contractVersion: 'v1',
-        runId: 'run-1',
-        signalType: 'CANCEL',
-        accepted: true,
-        disposition: 'requested',
-      }),
-    },
     useCase: {
-      execute: vi.fn().mockResolvedValue({ runId: 'run-1', signalType: 'CANCEL', accepted: true }),
-    },
-    compatibilityPolicy: {
-      allowCancelSignalType: true,
+      execute: vi.fn().mockResolvedValue({ runId: 'run-1', signalType: 'PAUSE', accepted: true }),
     },
   };
 }
 
 describe('signalRunRoute', () => {
-  it('routes compatibility CANCEL through the canonical cancel command', async () => {
+  it('rejects CANCEL before authentication because cancellation has a dedicated route', async () => {
     const deps = createDeps();
     const reply = createReply();
 
@@ -101,49 +87,12 @@ describe('signalRunRoute', () => {
       deps as never
     );
 
-    expect(deps.cancelUseCase.execute).toHaveBeenCalledWith(
-      { runId: 'run-1', signalType: 'CANCEL' },
-      expect.anything()
-    );
-    expect(deps.useCase.execute).not.toHaveBeenCalled();
-    expect(deps.authorizer.authorize).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({
-        action: { kind: 'command', name: RUN_COMMAND_ACTION.CANCEL },
-      }),
-      'req-1'
-    );
-    expect(reply.code).toHaveBeenCalledWith(HTTP_STATUS_CODE.accepted);
-    expect(reply.send).toHaveBeenCalledWith({
-      contractVersion: 'v1',
-      runId: 'run-1',
-      signalType: 'CANCEL',
-      accepted: true,
-      disposition: 'requested',
-    });
-  });
-
-  it('rejects compatibility CANCEL reasons before authorization or execution', async () => {
-    const deps = createDeps();
-    const reply = createReply();
-
-    await signalRunRoute(
-      {
-        id: 'req-cancel-reason',
-        headers: {},
-        params: { runId: 'run-1' },
-        body: { tenantId: 'tenant-a', signalType: 'CANCEL', reason: 'operator cancel' },
-      } as never,
-      reply as never,
-      deps as never
-    );
-
     expect(reply.code).toHaveBeenCalledWith(HTTP_STATUS_CODE.badRequest);
     expect(reply.send).toHaveBeenCalledWith(
-      httpError('bad_request', HTTP_ERROR_REASON.cancelReasonNotSupported, 'reason')
+      httpError('bad_request', HTTP_ERROR_REASON.invalidSignalType, 'signalType')
     );
+    expect(deps.authenticator.authenticateBearerToken).not.toHaveBeenCalled();
     expect(deps.authorizer.authorize).not.toHaveBeenCalled();
-    expect(deps.cancelUseCase.execute).not.toHaveBeenCalled();
     expect(deps.useCase.execute).not.toHaveBeenCalled();
   });
 
@@ -170,37 +119,6 @@ describe('signalRunRoute', () => {
       'req-1b'
     );
     expect(reply.code).toHaveBeenCalledWith(HTTP_STATUS_CODE.accepted);
-  });
-
-  it('returns 403 and does not execute when CANCEL authorization is denied', async () => {
-    const deps = createDeps();
-    deps.authorizer.authorize.mockResolvedValueOnce({
-      ok: false,
-      reason: 'ACTION_NOT_GRANTED',
-    });
-    const reply = createReply();
-
-    await signalRunRoute(
-      {
-        id: 'req-1c',
-        headers: {},
-        params: { runId: 'run-1' },
-        body: { tenantId: 'tenant-a', signalType: 'CANCEL' },
-      } as never,
-      reply as never,
-      deps as never
-    );
-
-    expect(deps.authorizer.authorize).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({
-        action: { kind: 'command', name: RUN_COMMAND_ACTION.CANCEL },
-      }),
-      'req-1c'
-    );
-    expect(reply.code).toHaveBeenCalledWith(403);
-    expect(reply.send).toHaveBeenCalledWith(httpError('forbidden', 'action_not_granted'));
-    expect(deps.useCase.execute).not.toHaveBeenCalled();
   });
 
   it('returns 403 and does not execute when PAUSE authorization is denied', async () => {
@@ -255,29 +173,6 @@ describe('signalRunRoute', () => {
     );
   });
 
-  it('returns 400 for CANCEL when compatibility policy disables it', async () => {
-    const deps = createDeps();
-    deps.compatibilityPolicy.allowCancelSignalType = false;
-    const reply = createReply();
-
-    await signalRunRoute(
-      {
-        id: 'req-2b',
-        headers: {},
-        params: { runId: 'run-1' },
-        body: { tenantId: 'tenant-a', signalType: 'CANCEL' },
-      } as never,
-      reply as never,
-      deps as never
-    );
-
-    expect(reply.code).toHaveBeenCalledWith(400);
-    expect(reply.send).toHaveBeenCalledWith(
-      httpError('bad_request', 'invalid_signal_type', 'signalType')
-    );
-    expect(deps.useCase.execute).not.toHaveBeenCalled();
-  });
-
   it('returns 403 when tenantId is missing', async () => {
     const deps = createDeps();
     const reply = createReply();
@@ -287,7 +182,7 @@ describe('signalRunRoute', () => {
         id: 'req-3',
         headers: {},
         params: { runId: 'run-1' },
-        body: { signalType: 'CANCEL' },
+        body: { signalType: 'PAUSE' },
       } as never,
       reply as never,
       deps as never
@@ -308,7 +203,7 @@ describe('signalRunRoute', () => {
         id: 'req-3b',
         headers: {},
         params: { runId: 'run-1' },
-        body: { tenantId: '   ', signalType: 'CANCEL' },
+        body: { tenantId: '   ', signalType: 'PAUSE' },
       } as never,
       reply as never,
       deps as never
@@ -329,7 +224,7 @@ describe('signalRunRoute', () => {
         id: 'req-3c',
         headers: {},
         params: { runId: 'run-1' },
-        body: { tenantId: 123, signalType: 'CANCEL' },
+        body: { tenantId: 123, signalType: 'PAUSE' },
       } as never,
       reply as never,
       deps as never
@@ -368,7 +263,7 @@ describe('signalRunRoute', () => {
         id: 'req-5',
         headers: { authorization: 'Bearer     ' },
         params: { runId: 'run-1' },
-        body: { tenantId: 'tenant-a', signalType: 'CANCEL' },
+        body: { tenantId: 'tenant-a', signalType: 'PAUSE' },
       } as never,
       reply as never,
       deps as never

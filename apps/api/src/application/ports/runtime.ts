@@ -17,7 +17,7 @@ import type { AuthorizedCommandExecutionContext, AuthorizedExecutionContext } fr
 
 export type AuthorizedQueryExecutionContext = AuthorizedExecutionContext<QueryAuthorizationAction>;
 
-export type SupportedSignalType = 'PAUSE' | 'RESUME' | 'CANCEL';
+export type SupportedSignalType = 'PAUSE' | 'RESUME';
 
 export interface GetRunStatusQuery {
   readonly runId: string;
@@ -260,9 +260,11 @@ export type CancelRunDisposition = 'requested' | 'already_requested' | 'already_
 
 export const RUN_CONTROL_RESULT_CONTRACT_VERSION = 'v1' as const;
 
-export interface CancelRunResult extends SignalRunResult {
+export interface CancelRunResult {
   readonly contractVersion: typeof RUN_CONTROL_RESULT_CONTRACT_VERSION;
+  readonly runId: string;
   readonly signalType: 'CANCEL';
+  readonly accepted: boolean;
   readonly disposition: CancelRunDisposition;
 }
 

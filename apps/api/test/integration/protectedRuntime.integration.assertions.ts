@@ -20,7 +20,7 @@ export type CommandQueryFlowResult = {
   readonly actualRunId: string;
   readonly listResponse: JsonResponse;
   readonly getRunResponse: JsonResponse;
-  readonly signalResponse: JsonResponse;
+  readonly cancelResponse: JsonResponse;
   readonly eventsResponse: JsonResponse;
 };
 
@@ -74,8 +74,8 @@ export function expectCommandQueryFlowSucceeded(flow: CommandQueryFlowResult): v
     enriched: false,
   });
 
-  expect(flow.signalResponse.statusCode).toBe(202);
-  expect(flow.signalResponse.json()).toEqual({
+  expect(flow.cancelResponse.statusCode).toBe(202);
+  expect(flow.cancelResponse.json()).toEqual({
     runId: flow.actualRunId,
     signalType: 'CANCEL',
     accepted: true,

@@ -4,14 +4,11 @@ import { HTTP_ERROR_REASON } from '../../../src/entrypoints/http/httpErrorReason
 import { RUN_COMMAND_ACTION } from '../../../src/entrypoints/http/runCommandRoute.constants.js';
 import { parseSignalRunRequest } from '../../../src/entrypoints/http/signalRunRouteParser.js';
 
-const ALLOW_CANCEL_SIGNAL_POLICY = { allowCancelSignalType: true } as const;
-
 describe('parseSignalRunRequest', () => {
-  it('rejects CANCEL signal when compatibility policy disables it', () => {
+  it('rejects CANCEL because cancellation has a dedicated command route', () => {
     const parsed = parseSignalRunRequest({
       runId: 'run-1',
       body: { tenantId: 'tenant-a', signalType: 'CANCEL' },
-      compatibilityPolicy: { allowCancelSignalType: false },
     });
 
     expect(parsed).toEqual({
@@ -24,50 +21,10 @@ describe('parseSignalRunRequest', () => {
     });
   });
 
-  it('maps CANCEL to run:cancel authorization action', () => {
-    const parsed = parseSignalRunRequest({
-      runId: ' run-1 ',
-      body: { tenantId: ' tenant-a ', signalType: ' cancel ' },
-      compatibilityPolicy: ALLOW_CANCEL_SIGNAL_POLICY,
-    });
-
-    expect(parsed).toEqual({
-      ok: true,
-      value: {
-        command: {
-          runId: 'run-1',
-          signalType: 'CANCEL',
-        },
-        authorization: {
-          tenantId: { value: 'tenant-a' },
-          actionName: RUN_COMMAND_ACTION.CANCEL,
-        },
-      },
-    });
-  });
-
-  it('rejects a reason on compatibility CANCEL exactly like the canonical route', () => {
-    const parsed = parseSignalRunRequest({
-      runId: 'run-1',
-      body: { tenantId: 'tenant-a', signalType: 'CANCEL', reason: 'operator' },
-      compatibilityPolicy: ALLOW_CANCEL_SIGNAL_POLICY,
-    });
-
-    expect(parsed).toEqual({
-      ok: false,
-      issue: {
-        type: 'bad_request',
-        reason: HTTP_ERROR_REASON.cancelReasonNotSupported,
-        target: 'reason',
-      },
-    });
-  });
-
   it('maps PAUSE to run:signal authorization action', () => {
     const parsed = parseSignalRunRequest({
-      runId: 'run-1',
-      body: { tenantId: 'tenant-a', signalType: 'PAUSE' },
-      compatibilityPolicy: ALLOW_CANCEL_SIGNAL_POLICY,
+      runId: ' run-1 ',
+      body: { tenantId: ' tenant-a ', signalType: ' pause ' },
     });
 
     expect(parsed).toEqual({
@@ -85,11 +42,32 @@ describe('parseSignalRunRequest', () => {
     });
   });
 
+  it('accepts an optional reason for RESUME', () => {
+    const parsed = parseSignalRunRequest({
+      runId: 'run-1',
+      body: { tenantId: 'tenant-a', signalType: 'RESUME', reason: 'operator' },
+    });
+
+    expect(parsed).toEqual({
+      ok: true,
+      value: {
+        command: {
+          runId: 'run-1',
+          signalType: 'RESUME',
+          reason: 'operator',
+        },
+        authorization: {
+          tenantId: { value: 'tenant-a' },
+          actionName: RUN_COMMAND_ACTION.SIGNAL,
+        },
+      },
+    });
+  });
+
   it('rejects missing tenant scope', () => {
     const parsed = parseSignalRunRequest({
       runId: 'run-1',
-      body: { signalType: 'CANCEL' },
-      compatibilityPolicy: ALLOW_CANCEL_SIGNAL_POLICY,
+      body: { signalType: 'PAUSE' },
     });
 
     expect(parsed).toEqual({
@@ -105,8 +83,7 @@ describe('parseSignalRunRequest', () => {
   it('rejects an invalid tenant id payload as bad request', () => {
     const parsed = parseSignalRunRequest({
       runId: 'run-1',
-      body: { tenantId: '   ', signalType: 'CANCEL' },
-      compatibilityPolicy: ALLOW_CANCEL_SIGNAL_POLICY,
+      body: { tenantId: '   ', signalType: 'PAUSE' },
     });
 
     expect(parsed).toEqual({
@@ -122,8 +99,7 @@ describe('parseSignalRunRequest', () => {
   it('rejects tenantId with invalid type as bad request', () => {
     const parsed = parseSignalRunRequest({
       runId: 'run-1',
-      body: { tenantId: 123, signalType: 'CANCEL' },
-      compatibilityPolicy: ALLOW_CANCEL_SIGNAL_POLICY,
+      body: { tenantId: 123, signalType: 'PAUSE' },
     });
 
     expect(parsed).toEqual({
@@ -139,8 +115,7 @@ describe('parseSignalRunRequest', () => {
   it('rejects missing runId', () => {
     const parsed = parseSignalRunRequest({
       runId: '   ',
-      body: { tenantId: 'tenant-a', signalType: 'CANCEL' },
-      compatibilityPolicy: ALLOW_CANCEL_SIGNAL_POLICY,
+      body: { tenantId: 'tenant-a', signalType: 'PAUSE' },
     });
 
     expect(parsed).toEqual({
@@ -157,7 +132,6 @@ describe('parseSignalRunRequest', () => {
     const parsed = parseSignalRunRequest({
       runId: 'run-1',
       body: 'retry',
-      compatibilityPolicy: ALLOW_CANCEL_SIGNAL_POLICY,
     });
 
     expect(parsed).toEqual({
@@ -173,7 +147,6 @@ describe('parseSignalRunRequest', () => {
     const parsed = parseSignalRunRequest({
       runId: 'run-1',
       body: { tenantId: 'tenant-a', signalType: 'FAST_FORWARD' },
-      compatibilityPolicy: ALLOW_CANCEL_SIGNAL_POLICY,
     });
 
     expect(parsed).toEqual({

@@ -47,25 +47,22 @@ describe('buildApp protected route mounting', () => {
     );
   });
 
-  it('wires DVT_SIGNAL_ROUTE_ALLOW_CANCEL into /runs/:runId/signal parsing', async () => {
-    await withProtectedRuntimeApp(
-      async ({ app }) => {
-        const response = await app.inject({
-          method: 'POST',
-          url: '/runs/run-1/signal',
-          payload: {
-            tenantId: 'tenant-a',
-            signalType: 'CANCEL',
-          },
-        });
+  it('rejects CANCEL on /runs/:runId/signal unconditionally', async () => {
+    await withProtectedRuntimeApp(async ({ app }) => {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/runs/run-1/signal',
+        payload: {
+          tenantId: 'tenant-a',
+          signalType: 'CANCEL',
+        },
+      });
 
-        expect(response.statusCode).toBe(400);
-        expect(response.json()).toEqual(
-          httpError('bad_request', 'invalid_signal_type', 'signalType')
-        );
-      },
-      { env: { DVT_SIGNAL_ROUTE_ALLOW_CANCEL: 'false' } }
-    );
+      expect(response.statusCode).toBe(400);
+      expect(response.json()).toEqual(
+        httpError('bad_request', 'invalid_signal_type', 'signalType')
+      );
+    });
   });
 
   it('mounts /plans/preview only behind protected runtime auth and returns typed missing token', async () => {
