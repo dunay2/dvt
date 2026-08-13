@@ -19,6 +19,12 @@ export const ROOT_CI_POLICY_INPUTS = Object.freeze([
   'vitest.config.ts',
 ]);
 
+export const KNOWN_CI_CONFIGURATION_INPUTS = Object.freeze([
+  'tools/ci/jsconfig.json',
+  'tools/ci/policy/adapter-postgres-relevance.json',
+  'tools/ci/policy/workflow-scope.json',
+]);
+
 const PLANNING_DB_DOCUMENTS = new Set([
   'docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md',
 ]);
@@ -157,6 +163,10 @@ function commandClassForPath(filePath) {
   return isRepositoryCommandFile(filePath) ? classifyScriptFilePath(filePath) : undefined;
 }
 
+function isCiConfigurationInput(filePath) {
+  return filePath.startsWith('tools/ci/') && /\.(?:json|ya?ml|toml)$/u.test(filePath);
+}
+
 export function classifyRepositoryFileScope(filePath, options = {}) {
   const normalizedPath = normalizeRepositoryPath(filePath);
   const commandClass = commandClassForPath(normalizedPath);
@@ -164,6 +174,9 @@ export function classifyRepositoryFileScope(filePath, options = {}) {
   const rootBuildInput = isRootBuildInput(normalizedPath);
   const rootCiPolicyInput = isRootCiPolicyInput(normalizedPath);
   const workflowPolicyInput = isWorkflowPolicyInput(normalizedPath);
+  const ciConfigurationInput = isCiConfigurationInput(normalizedPath);
+  const knownCiConfigurationInput = KNOWN_CI_CONFIGURATION_INPUTS.includes(normalizedPath);
+  const uncataloguedCiConfigurationInput = ciConfigurationInput && !knownCiConfigurationInput;
   const runtimeSource =
     normalizedPath.startsWith('apps/') || normalizedPath.startsWith('packages/');
   const planningDbInventoryRelevant =
@@ -192,9 +205,11 @@ export function classifyRepositoryFileScope(filePath, options = {}) {
     runtimeSource ||
     rootBuildInput ||
     rootCiPolicyInput ||
+    uncataloguedCiConfigurationInput ||
     CODE_VALIDATION_COMMAND_DOMAINS.has(commandClass?.domain);
   const runtimeWorkspaceFanout =
     rootBuildInput ||
+    uncataloguedCiConfigurationInput ||
     commandClass?.runtimeFanout === true ||
     commandClass?.domain === 'runtime-capability' ||
     commandClass?.domain === 'unknown';
@@ -211,6 +226,9 @@ export function classifyRepositoryFileScope(filePath, options = {}) {
     rootBuildInput,
     rootCiPolicyInput,
     workflowPolicyInput,
+    ciConfigurationInput,
+    knownCiConfigurationInput,
+    uncataloguedCiConfigurationInput,
     planningDbInventoryRelevant,
     governanceGlobalRelevant,
     featureMechanizationRelevant,

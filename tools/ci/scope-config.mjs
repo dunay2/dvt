@@ -262,7 +262,6 @@ const TEST_ROOT_BUILD_PATTERNS = [
   'tsconfig*.json',
   ...SHARED_CI_ACTION_PATTERNS,
   '.github/scripts/**',
-  'tools/ci/**',
   'scripts/skip-pretest-if-ci.cjs',
   'scripts/skip-prebuild-if-orchestrated.cjs',
   'scripts/build-workspace-runtime-deps.cjs',
@@ -296,7 +295,6 @@ const PR_QUALITY_ROOT_BUILD_PATTERNS = [
   ...ROOT_CONFIG_PATTERNS,
   'vitest.config.ts',
   'tsconfig*.json',
-  'tools/ci/**',
   ...SHARED_CI_ACTION_PATTERNS,
   '.github/scripts/**',
   'scripts/build-workspace-runtime-deps.cjs',
@@ -420,7 +418,6 @@ export const PR_QUALITY_SCOPE_PATTERNS = {
     'packages/@dvt/engine/**',
     'packages/@dvt/contracts/**',
     'scripts/build-workspace-runtime-deps.cjs',
-    'tools/ci/**',
     ...ROOT_CONFIG_PATTERNS,
   ],
   temporal_transformation_changed: [
@@ -435,7 +432,6 @@ export const PR_QUALITY_SCOPE_PATTERNS = {
     'packages/@dvt/engine/**',
     'packages/@dvt/contracts/**',
     'scripts/build-workspace-runtime-deps.cjs',
-    'tools/ci/**',
     ...ROOT_CONFIG_PATTERNS,
   ],
   temporal_postgres_changed: [
@@ -453,7 +449,6 @@ export const PR_QUALITY_SCOPE_PATTERNS = {
     'packages/@dvt/contracts/**',
     'packages/@dvt/temporal-object-file-postgres-plugin/**',
     'scripts/build-workspace-runtime-deps.cjs',
-    'tools/ci/**',
     ...ROOT_CONFIG_PATTERNS,
   ],
   adapter_postgres_changed: ADAPTER_POSTGRES_RELEVANT_PATTERNS,
@@ -635,6 +630,7 @@ function computeRepositoryValidationScope(changedFiles, scopeContext = {}) {
     feature_mechanization_relevant: fileScopes.some((scope) => scope.featureMechanizationRelevant),
     traceability_adr0_relevant: fileScopes.some((scope) => scope.traceabilityRelevant),
     code_validation_relevant: fileScopes.some((scope) => scope.codeValidationRelevant),
+    runtimeWorkspaceFanout: fileScopes.some((scope) => scope.runtimeWorkspaceFanout),
   };
 }
 
@@ -663,7 +659,10 @@ export function computeWorkflowModeScopeOutputs(mode, changedFiles, scopeContext
   }
 
   const scope = computeBooleanScope(changedFiles, scopePatterns, scopeContext);
-  const repositoryValidationScope = computeRepositoryValidationScope(changedFiles, scopeContext);
+  const { runtimeWorkspaceFanout, ...repositoryValidationScope } = computeRepositoryValidationScope(
+    changedFiles,
+    scopeContext
+  );
   const packageJsonChange = scopeContext.packageJsonChange;
 
   if (mode === 'contracts') {
@@ -689,8 +688,15 @@ export function computeWorkflowModeScopeOutputs(mode, changedFiles, scopeContext
     return {
       ...scope,
       ...repositoryValidationScope,
+      temporal_changed: Boolean(scope.temporal_changed || runtimeWorkspaceFanout),
+      temporal_transformation_changed: Boolean(
+        scope.temporal_transformation_changed || runtimeWorkspaceFanout
+      ),
+      temporal_postgres_changed: Boolean(scope.temporal_postgres_changed || runtimeWorkspaceFanout),
       root_build_sensitive: Boolean(
-        scope.root_build_sensitive || packageJsonChange?.rootBuildSensitive
+        scope.root_build_sensitive ||
+        runtimeWorkspaceFanout ||
+        packageJsonChange?.rootBuildSensitive
       ),
       ci_tooling_changed: Boolean(
         scope.ci_tooling_changed || packageJsonChange?.ciToolingSensitive
@@ -702,12 +708,14 @@ export function computeWorkflowModeScopeOutputs(mode, changedFiles, scopeContext
         scope.temporal_changed ||
         scope.temporal_transformation_changed ||
         scope.temporal_postgres_changed ||
+        runtimeWorkspaceFanout ||
         packageJsonChange?.temporalCapabilitySensitive
       ),
       postgres_capability_changed: Boolean(
         scope.postgres_capability_changed ||
         scope.adapter_postgres_changed ||
         scope.temporal_postgres_changed ||
+        runtimeWorkspaceFanout ||
         packageJsonChange?.postgresCapabilitySensitive
       ),
     };
@@ -717,7 +725,10 @@ export function computeWorkflowModeScopeOutputs(mode, changedFiles, scopeContext
     return {
       ...scope,
       root_build_sensitive: Boolean(
-        scope.root_build_sensitive || scope.root_config || packageJsonChange?.rootBuildSensitive
+        scope.root_build_sensitive ||
+        scope.root_config ||
+        runtimeWorkspaceFanout ||
+        packageJsonChange?.rootBuildSensitive
       ),
       postgres_capability_changed: Boolean(
         scope.postgres_capability_changed || packageJsonChange?.postgresCapabilitySensitive
