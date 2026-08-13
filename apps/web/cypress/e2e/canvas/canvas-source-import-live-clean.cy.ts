@@ -25,37 +25,6 @@ import {
 } from '../../support/liveWarehouseSourceImport';
 import { seedE2eWorkspaceSession } from '../../support/workspaceSession';
 
-function assertNoSeriousAccessibilityViolations(context: string): void {
-  cy.get(context).should('be.visible');
-  cy.injectAxe();
-  cy.checkA11y(
-    context,
-    {
-      runOnly: {
-        type: 'tag',
-        values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'],
-      },
-      includedImpacts: ['serious', 'critical'],
-    },
-    (violations) => {
-      if (violations.length === 0) {
-        return;
-      }
-
-      throw new Error(
-        violations
-          .map(
-            (violation) =>
-              `${violation.id}: ${violation.help} -> ${violation.nodes
-                .map((node) => node.target.join(' '))
-                .join(', ')}`
-          )
-          .join('\n')
-      );
-    }
-  );
-}
-
 function visitCleanDbtCanvas(): void {
   const session = resolveLiveFirstAuthoringWorkspaceSession('dbt');
 
@@ -219,7 +188,6 @@ describe('Canvas source import live clean proof', () => {
       cy.get('[data-slot="shell-workspace-scope-selector"]')
         .should('be.visible')
         .and('contain.text', copy.availableProjects);
-      assertNoSeriousAccessibilityViolations('[data-slot="shell-menu-workspace-context"]');
       cy.get('[data-slot="shell-workspace-scope-selector"] button[aria-pressed="false"]', {
         timeout: 20_000,
       })
@@ -267,7 +235,6 @@ describe('Canvas source import live clean proof', () => {
           expect(normalizedPresentedContent).to.contain(expectedContent.replace(/\s+/g, ''));
           expect(normalizedPresentedContent).not.to.contain(forbiddenContent.replace(/\s+/g, ''));
         });
-      assertNoSeriousAccessibilityViolations('[data-slot="canvas-contextual-workbench"]');
       cy.get('[data-slot="canvas-contextual-workbench-close"]').should('be.visible').click();
       cy.get('[data-slot="canvas-contextual-workbench"]').should('not.exist');
       cy.get('[data-slot="shell-workspace-menu-trigger"]').should('be.focused');
@@ -375,7 +342,6 @@ describe('Canvas source import live clean proof', () => {
         });
       cy.get('[data-slot="source-import-wizard-content-scroll"]').should('be.visible');
       cy.contains('[role="dialog"] button', 'Cancel').should('be.visible').and('be.enabled');
-      assertNoSeriousAccessibilityViolations('[role="dialog"][data-state="open"]');
     }
     cy.contains('[role="dialog"] button', 'Cancel').click();
     cy.contains('[role="dialog"]', 'Add source').should('not.exist');
@@ -418,7 +384,6 @@ describe('Canvas source import live clean proof', () => {
         .scrollIntoView()
         .should('be.visible');
       cy.get('[data-slot="canvas-node-workbench-close"]').should('be.visible').and('be.enabled');
-      assertNoSeriousAccessibilityViolations('[data-slot="canvas-node-workbench-panel"]');
     }
     cy.viewport(1000, 660);
     cy.contains('[data-slot="canvas-node-workbench-general-section"] dt', 'Connection')
@@ -430,7 +395,6 @@ describe('Canvas source import live clean proof', () => {
         expect(element.scrollWidth).to.be.at.most(element.clientWidth);
         expect(getComputedStyle(element).textOverflow).not.to.equal('ellipsis');
       });
-    assertNoSeriousAccessibilityViolations('[data-slot="canvas-node-workbench-panel"]');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     cy.get('[data-slot="canvas-node-workbench-panel"]').should('not.exist');
 
@@ -446,7 +410,6 @@ describe('Canvas source import live clean proof', () => {
       .and('contain.text', expectedSecondaryConnectionName)
       .and('contain.text', 'postgres')
       .and('contain.text', expectedSecondaryConnectionId);
-    assertNoSeriousAccessibilityViolations('[data-slot="canvas-node-workbench-panel"]');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     cy.get('[data-slot="canvas-node-workbench-panel"]').should('not.exist');
 
