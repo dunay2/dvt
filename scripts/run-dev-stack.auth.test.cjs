@@ -93,7 +93,7 @@ test('startLocalProtectedRuntimeAuth provides OIDC env and a bearer token for th
   }
 });
 
-test('startLocalProtectedRuntimeAuth issues a bounded local dev bearer token by default', async () => {
+test('startLocalProtectedRuntimeAuth issues a tenant-bound grant-governed token by default', async () => {
   const bootstrap = await startLocalProtectedRuntimeAuth();
 
   try {
@@ -101,6 +101,8 @@ test('startLocalProtectedRuntimeAuth issues a bounded local dev bearer token by 
     assert.equal(typeof payload.iat, 'number');
     assert.equal(typeof payload.exp, 'number');
     assert.equal(payload.exp - payload.iat, 24 * 60 * 60);
+    assert.deepEqual(payload.tenant_ids, ['tenant']);
+    assert.deepEqual(payload.project_ids, []);
   } finally {
     await bootstrap.close();
   }
@@ -149,14 +151,14 @@ test('startLocalProtectedRuntimeAuth can assert additional live-proof project id
   }
 });
 
-test('startLocalProtectedRuntimeAuth can omit project assertions for governed project creation', async () => {
+test('startLocalProtectedRuntimeAuth preserves an explicit project assertion upper bound', async () => {
   const bootstrap = await startLocalProtectedRuntimeAuth({
-    assertedProjectIds: [],
+    assertedProjectIds: ['project-explicit'],
   });
 
   try {
     const payload = decodeJwtPayload(bootstrap.webEnv.VITE_API_BEARER_TOKEN);
-    assert.deepEqual(payload.project_ids, []);
+    assert.deepEqual(payload.project_ids, ['project-explicit']);
   } finally {
     await bootstrap.close();
   }
