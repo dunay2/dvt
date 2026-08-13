@@ -150242,6 +150242,2076 @@
       "createdAt": "2026-08-01T12:12:11.979Z"
     },
     {
+      "railId": "local#MVP-2170-PROJECT-WORKSPACE-AUTHORITY#command#createproject",
+      "featureId": "MVP-2170-PROJECT-WORKSPACE-AUTHORITY",
+      "mechanizationStatus": "implemented",
+      "railName": "CreateProject",
+      "normalizedRailName": "createproject",
+      "railType": "command",
+      "dddOwner": "Project aggregate",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "apps/api/src/application/ports/projectOnboarding.ts#GrantedProjectCatalog",
+        "apps/api/src/application/ports/projectOnboarding.ts#PersistProjectCreationCommand",
+        "apps/api/src/application/services/authorizeCommandScopeService.ts#AuthorizationResult",
+        "apps/api/src/application/services/projectOnboardingPolicy.ts#PROJECT_ONBOARDING_POLICY",
+        "apps/api/src/infrastructure/auth/embeddedProjectOnboardingRepository.ts#ProjectReference",
+        "apps/api/src/infrastructure/auth/embeddedProjectOnboardingRepository.ts#addProjectGrant",
+        "apps/api/src/infrastructure/auth/embeddedProjectOnboardingRepository.ts#projectKey",
+        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#CreateProjectRequest",
+        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#CreateProjectRequestSchema",
+        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#CreateProjectResponse",
+        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#CreateProjectResponseSchema",
+        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#PROJECT_ONBOARDING_DEFAULT_ENVIRONMENT_ID",
+        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#ProjectOnboardingCatalog",
+        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#ProjectOnboardingCatalogSchema",
+        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#ProjectOnboardingTenant",
+        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#ProjectOnboardingTenantSchema"
+      ],
+      "implementationRefs": [
+        "apps/api/src/application/ports/projectOnboarding.ts#GrantedProjectCatalog",
+        "apps/api/src/application/ports/projectOnboarding.ts#PersistProjectCreationCommand",
+        "apps/api/src/application/services/authorizeCommandScopeService.ts#AuthorizationResult",
+        "apps/api/src/application/services/projectOnboardingPolicy.ts#PROJECT_ONBOARDING_POLICY",
+        "apps/api/src/infrastructure/auth/embeddedProjectOnboardingRepository.ts#ProjectReference",
+        "apps/api/src/infrastructure/auth/embeddedProjectOnboardingRepository.ts#addProjectGrant",
+        "apps/api/src/infrastructure/auth/embeddedProjectOnboardingRepository.ts#projectKey",
+        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#CreateProjectRequest",
+        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#CreateProjectRequestSchema",
+        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#CreateProjectResponse",
+        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#CreateProjectResponseSchema",
+        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#PROJECT_ONBOARDING_DEFAULT_ENVIRONMENT_ID",
+        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#ProjectOnboardingCatalog",
+        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#ProjectOnboardingCatalogSchema",
+        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#ProjectOnboardingTenant",
+        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#ProjectOnboardingTenantSchema"
+      ],
+      "documentationRefs": [
+        "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+        "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "apps/api/src/application/**",
+        "apps/api/src/entrypoints/http/**",
+        "apps/api/src/infrastructure/auth/**",
+        "apps/api/src/modules/**",
+        "apps/api/test/**",
+        "apps/web/src/app/**",
+        "apps/web/src/testing/**",
+        "apps/web/cypress/**",
+        "packages/@dvt/contracts/**",
+        "scripts/run-canvas-source-import-live-proof*",
+        "scripts/run-dev-stack.auth*",
+        "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+        "docs/architecture/components/web/appshell/**",
+        "docs/architecture/components/web/graph/**",
+        "docs/architecture/components/planner/workspace-authoring-draft-aggregate.md",
+        "docs/contracts/planner/workspace-graph-draft-persistence-v1.md",
+        "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md",
+        "docs/risk-register/quality/R-20260813-PROJECT-WORKSPACE-GRAPH-AUTHORITY.yaml",
+        "tools/planning-db/state/canonical-state.json",
+        "apps/api/**"
+      ],
+      "architectureGuards": [
+        "Creation is idempotent and grant persistence is atomic.",
+        "The retained rail has independent product value and no duplicate adapter."
+      ],
+      "completionGate": ["pnpm verify:prepush"],
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2170",
+      "sourceContentSha256": "2734e8293bcd3b8e90791e8c1371ad2825714b11d6efe11b9e8715924658767e",
+      "rawRail": {
+        "name": "CreateProject",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "Project aggregate",
+        "negativeTests": [
+          "apps/api/test/application/services/createProjectUseCase.test.ts",
+          "apps/api/test/entrypoints/http/projectOnboardingRoutes.test.ts"
+        ],
+        "adapterSurface": "POST /projects",
+        "applicationPort": "IProjectOnboardingRepository",
+        "authorizationScope": "Authenticated tenant actor with project:create authority."
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "GrantedProjectCatalog",
+            "path": "apps/api/src/application/ports/projectOnboarding.ts",
+            "cqRails": ["CreateProject"],
+            "dddOwner": "Project aggregate",
+            "unitTests": [
+              "apps/api/test/infrastructure/auth/embeddedProjectOnboardingRepository.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/project-onboarding.cy.ts",
+            "architectureGuard": "Creation is idempotent and grant persistence is atomic."
+          },
+          {
+            "name": "PersistProjectCreationCommand",
+            "path": "apps/api/src/application/ports/projectOnboarding.ts",
+            "cqRails": ["CreateProject"],
+            "dddOwner": "Project aggregate",
+            "unitTests": [
+              "apps/api/test/infrastructure/auth/embeddedProjectOnboardingRepository.test.ts",
+              "apps/api/test/application/services/listProjectsUseCase.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent.",
+              "Replace parallel authority paths with one rail and one interpreter."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+            "architectureGuard": "The retained rail has independent product value and no duplicate adapter."
+          },
+          {
+            "name": "AuthorizationResult",
+            "path": "apps/api/src/application/services/authorizeCommandScopeService.ts",
+            "cqRails": ["CreateProject"],
+            "dddOwner": "Project aggregate",
+            "unitTests": [
+              "apps/api/test/infrastructure/auth/embeddedProjectOnboardingRepository.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/project-onboarding.cy.ts",
+            "architectureGuard": "Creation is idempotent and grant persistence is atomic."
+          },
+          {
+            "name": "PROJECT_ONBOARDING_POLICY",
+            "path": "apps/api/src/application/services/projectOnboardingPolicy.ts",
+            "cqRails": ["CreateProject"],
+            "dddOwner": "Project aggregate",
+            "unitTests": [
+              "apps/api/test/infrastructure/auth/embeddedProjectOnboardingRepository.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/project-onboarding.cy.ts",
+            "architectureGuard": "Creation is idempotent and grant persistence is atomic."
+          },
+          {
+            "name": "ProjectReference",
+            "path": "apps/api/src/infrastructure/auth/embeddedProjectOnboardingRepository.ts",
+            "cqRails": ["CreateProject"],
+            "dddOwner": "Project aggregate",
+            "unitTests": [
+              "apps/api/test/infrastructure/auth/embeddedProjectOnboardingRepository.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/project-onboarding.cy.ts",
+            "architectureGuard": "Creation is idempotent and grant persistence is atomic."
+          },
+          {
+            "name": "addProjectGrant",
+            "path": "apps/api/src/infrastructure/auth/embeddedProjectOnboardingRepository.ts",
+            "cqRails": ["CreateProject"],
+            "dddOwner": "Project aggregate",
+            "unitTests": [
+              "apps/api/test/infrastructure/auth/embeddedProjectOnboardingRepository.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/project-onboarding.cy.ts",
+            "architectureGuard": "Creation is idempotent and grant persistence is atomic."
+          },
+          {
+            "name": "projectKey",
+            "path": "apps/api/src/infrastructure/auth/embeddedProjectOnboardingRepository.ts",
+            "cqRails": ["CreateProject"],
+            "dddOwner": "Project aggregate",
+            "unitTests": [
+              "apps/api/test/infrastructure/auth/embeddedProjectOnboardingRepository.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/project-onboarding.cy.ts",
+            "architectureGuard": "Creation is idempotent and grant persistence is atomic."
+          },
+          {
+            "name": "CreateProjectRequest",
+            "path": "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts",
+            "cqRails": ["CreateProject"],
+            "dddOwner": "Project aggregate",
+            "unitTests": [
+              "apps/api/test/infrastructure/auth/embeddedProjectOnboardingRepository.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/project-onboarding.cy.ts",
+            "architectureGuard": "Creation is idempotent and grant persistence is atomic."
+          },
+          {
+            "name": "CreateProjectRequestSchema",
+            "path": "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts",
+            "cqRails": ["CreateProject"],
+            "dddOwner": "Project aggregate",
+            "unitTests": [
+              "apps/api/test/infrastructure/auth/embeddedProjectOnboardingRepository.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/project-onboarding.cy.ts",
+            "architectureGuard": "Creation is idempotent and grant persistence is atomic."
+          },
+          {
+            "name": "CreateProjectResponse",
+            "path": "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts",
+            "cqRails": ["CreateProject"],
+            "dddOwner": "Project aggregate",
+            "unitTests": [
+              "apps/api/test/infrastructure/auth/embeddedProjectOnboardingRepository.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/project-onboarding.cy.ts",
+            "architectureGuard": "Creation is idempotent and grant persistence is atomic."
+          },
+          {
+            "name": "CreateProjectResponseSchema",
+            "path": "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts",
+            "cqRails": ["CreateProject"],
+            "dddOwner": "Project aggregate",
+            "unitTests": [
+              "apps/api/test/infrastructure/auth/embeddedProjectOnboardingRepository.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/project-onboarding.cy.ts",
+            "architectureGuard": "Creation is idempotent and grant persistence is atomic."
+          },
+          {
+            "name": "PROJECT_ONBOARDING_DEFAULT_ENVIRONMENT_ID",
+            "path": "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts",
+            "cqRails": ["CreateProject"],
+            "dddOwner": "Project aggregate",
+            "unitTests": [
+              "apps/api/test/infrastructure/auth/embeddedProjectOnboardingRepository.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/project-onboarding.cy.ts",
+            "architectureGuard": "Creation is idempotent and grant persistence is atomic."
+          },
+          {
+            "name": "ProjectOnboardingCatalog",
+            "path": "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts",
+            "cqRails": ["CreateProject"],
+            "dddOwner": "Project aggregate",
+            "unitTests": [
+              "apps/api/test/infrastructure/auth/embeddedProjectOnboardingRepository.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/project-onboarding.cy.ts",
+            "architectureGuard": "Creation is idempotent and grant persistence is atomic."
+          },
+          {
+            "name": "ProjectOnboardingCatalogSchema",
+            "path": "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts",
+            "cqRails": ["CreateProject"],
+            "dddOwner": "Project aggregate",
+            "unitTests": [
+              "apps/api/test/infrastructure/auth/embeddedProjectOnboardingRepository.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/project-onboarding.cy.ts",
+            "architectureGuard": "Creation is idempotent and grant persistence is atomic."
+          },
+          {
+            "name": "ProjectOnboardingTenant",
+            "path": "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts",
+            "cqRails": ["CreateProject"],
+            "dddOwner": "Project aggregate",
+            "unitTests": [
+              "apps/api/test/infrastructure/auth/embeddedProjectOnboardingRepository.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/project-onboarding.cy.ts",
+            "architectureGuard": "Creation is idempotent and grant persistence is atomic."
+          },
+          {
+            "name": "ProjectOnboardingTenantSchema",
+            "path": "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts",
+            "cqRails": ["CreateProject"],
+            "dddOwner": "Project aggregate",
+            "unitTests": [
+              "apps/api/test/infrastructure/auth/embeddedProjectOnboardingRepository.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/project-onboarding.cy.ts",
+            "architectureGuard": "Creation is idempotent and grant persistence is atomic."
+          }
+        ],
+        "version": 1,
+        "featureId": "MVP-2170-PROJECT-WORKSPACE-AUTHORITY",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2170"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/shell/project-onboarding.cy.ts",
+          "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts"
+        ],
+        "domainObjects": ["ProjectWorkspaceAuthority"],
+        "fowlerSignals": [
+          "One authoritative rail and one stored grant interpretation per product intent.",
+          "Replace parallel authority paths with one rail and one interpreter."
+        ],
+        "completionGate": ["pnpm verify:prepush"],
+        "redGreenCycles": [
+          {
+            "id": "createproject-record",
+            "redTest": "The pre-push gate rejects a feature without Fowler opportunity governance.",
+            "greenTest": "The Planning DB feature cites Fowler governance and the mechanization gate passes.",
+            "patchSurfaces": [
+              "apps/api/src/application/**",
+              "apps/api/src/entrypoints/http/**",
+              "apps/api/src/infrastructure/auth/**",
+              "apps/api/src/modules/**",
+              "apps/api/test/**",
+              "apps/web/src/app/**",
+              "apps/web/src/testing/**",
+              "apps/web/cypress/**",
+              "packages/@dvt/contracts/**",
+              "scripts/run-canvas-source-import-live-proof*",
+              "scripts/run-dev-stack.auth*",
+              "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+              "docs/architecture/components/web/appshell/**",
+              "docs/architecture/components/web/graph/**",
+              "docs/architecture/components/planner/workspace-authoring-draft-aggregate.md",
+              "docs/contracts/planner/workspace-graph-draft-persistence-v1.md",
+              "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md",
+              "docs/risk-register/quality/R-20260813-PROJECT-WORKSPACE-GRAPH-AUTHORITY.yaml",
+              "tools/planning-db/state/canonical-state.json",
+              "apps/api/**"
+            ],
+            "expectedFailure": "The #2170 mechanization omits the canonical Fowler opportunity source."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/components/web/appshell/effective-workspace-context-component.md"
+        ],
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "CreateProject",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "Project aggregate",
+            "negativeTests": [
+              "apps/api/test/application/services/createProjectUseCase.test.ts",
+              "apps/api/test/entrypoints/http/projectOnboardingRoutes.test.ts"
+            ],
+            "adapterSurface": "POST /projects",
+            "applicationPort": "IProjectOnboardingRepository",
+            "authorizationScope": "Authenticated tenant actor with project:create authority."
+          }
+        ],
+        "architectureGuards": [
+          "Creation is idempotent and grant persistence is atomic.",
+          "The retained rail has independent product value and no duplicate adapter."
+        ],
+        "implementationPlan": "Converge project admission, workspace selection, grants, and graph-draft authority through existing rails.",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/**",
+          "apps/api/src/entrypoints/http/**",
+          "apps/api/src/infrastructure/auth/**",
+          "apps/api/src/modules/**",
+          "apps/api/test/**",
+          "apps/web/src/app/**",
+          "apps/web/src/testing/**",
+          "apps/web/cypress/**",
+          "packages/@dvt/contracts/**",
+          "scripts/run-canvas-source-import-live-proof*",
+          "scripts/run-dev-stack.auth*",
+          "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+          "docs/architecture/components/web/appshell/**",
+          "docs/architecture/components/web/graph/**",
+          "docs/architecture/components/planner/workspace-authoring-draft-aggregate.md",
+          "docs/contracts/planner/workspace-graph-draft-persistence-v1.md",
+          "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md",
+          "docs/risk-register/quality/R-20260813-PROJECT-WORKSPACE-GRAPH-AUTHORITY.yaml",
+          "tools/planning-db/state/canonical-state.json",
+          "apps/api/**"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/projectOnboardingRouteGroup.ts",
+          "apps/api/src/entrypoints/http/protectedRuntimeWorkspaceContextRouteGroup.ts",
+          "apps/api/src/entrypoints/http/protectedRuntimeWorkspaceGraphDraftRouteGroup.ts",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftFixtureBoundaries.architecture.test.ts",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftProtocol.ts",
+          "docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-component.md",
+          "docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-user-stories.md"
+        ]
+      },
+      "revision": 1,
+      "createdBy": "codex-agent",
+      "createdAt": "2026-08-13T19:09:29.297Z"
+    },
+    {
+      "railId": "local#MVP-2170-PROJECT-WORKSPACE-AUTHORITY#command#saveworkspacegraphdraft",
+      "featureId": "MVP-2170-PROJECT-WORKSPACE-AUTHORITY",
+      "mechanizationStatus": "implemented",
+      "railName": "SaveWorkspaceGraphDraft",
+      "normalizedRailName": "saveworkspacegraphdraft",
+      "railType": "command",
+      "dddOwner": "Workspace authoring aggregate",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "apps/api/src/application/services/saveWorkspaceGraphDraftUseCase.ts#SaveWorkspaceGraphDraftUseCaseResult",
+        "apps/web/src/app/ports/workspaceGraphDraftAuthoring.ts#WorkspaceGraphDraftAuthoringSaveResult",
+        "apps/web/src/app/services/workspace/workspaceGraphDraftProtocol.test.fixtures.ts#buildDraftSaveIdempotencyMismatchResponse",
+        "apps/web/src/app/services/workspace/workspaceGraphDraftProtocol.test.fixtures.ts#buildDraftSaveUnsupportedSchemaResponse",
+        "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts#WorkspaceGraphDraftSaveAuthoringAuthorityConflict",
+        "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts#WorkspaceGraphDraftSaveAuthoringAuthorityConflictSchema",
+        "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts#WorkspaceGraphDraftSaveIdempotencyMismatch",
+        "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts#WorkspaceGraphDraftSaveIdempotencyMismatchSchema",
+        "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts#WorkspaceGraphDraftSaveUnsupportedSchemaVersion",
+        "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts#WorkspaceGraphDraftSaveUnsupportedSchemaVersionSchema"
+      ],
+      "implementationRefs": [
+        "apps/api/src/application/services/saveWorkspaceGraphDraftUseCase.ts#SaveWorkspaceGraphDraftUseCaseResult",
+        "apps/web/src/app/ports/workspaceGraphDraftAuthoring.ts#WorkspaceGraphDraftAuthoringSaveResult",
+        "apps/web/src/app/services/workspace/workspaceGraphDraftProtocol.test.fixtures.ts#buildDraftSaveIdempotencyMismatchResponse",
+        "apps/web/src/app/services/workspace/workspaceGraphDraftProtocol.test.fixtures.ts#buildDraftSaveUnsupportedSchemaResponse",
+        "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts#WorkspaceGraphDraftSaveAuthoringAuthorityConflict",
+        "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts#WorkspaceGraphDraftSaveAuthoringAuthorityConflictSchema",
+        "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts#WorkspaceGraphDraftSaveIdempotencyMismatch",
+        "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts#WorkspaceGraphDraftSaveIdempotencyMismatchSchema",
+        "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts#WorkspaceGraphDraftSaveUnsupportedSchemaVersion",
+        "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts#WorkspaceGraphDraftSaveUnsupportedSchemaVersionSchema"
+      ],
+      "documentationRefs": [
+        "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+        "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "apps/api/src/application/**",
+        "apps/api/src/entrypoints/http/**",
+        "apps/api/src/infrastructure/auth/**",
+        "apps/api/src/modules/**",
+        "apps/api/test/**",
+        "apps/web/src/app/**",
+        "apps/web/src/testing/**",
+        "apps/web/cypress/**",
+        "packages/@dvt/contracts/**",
+        "scripts/run-canvas-source-import-live-proof*",
+        "scripts/run-dev-stack.auth*",
+        "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+        "docs/architecture/components/web/appshell/**",
+        "docs/architecture/components/web/graph/**",
+        "docs/architecture/components/planner/workspace-authoring-draft-aggregate.md",
+        "docs/contracts/planner/workspace-graph-draft-persistence-v1.md",
+        "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md",
+        "docs/risk-register/quality/R-20260813-PROJECT-WORKSPACE-GRAPH-AUTHORITY.yaml",
+        "tools/planning-db/state/canonical-state.json",
+        "apps/api/**"
+      ],
+      "architectureGuards": [
+        "JCS SHA-256 hashing and revisions make replay deterministic.",
+        "The retained rail has independent product value and no duplicate adapter."
+      ],
+      "completionGate": ["pnpm verify:prepush"],
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2170",
+      "sourceContentSha256": "2734e8293bcd3b8e90791e8c1371ad2825714b11d6efe11b9e8715924658767e",
+      "rawRail": {
+        "name": "SaveWorkspaceGraphDraft",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "Workspace authoring aggregate",
+        "negativeTests": [
+          "apps/api/test/application/services/saveWorkspaceGraphDraftUseCase.test.ts",
+          "apps/api/test/entrypoints/http/projectOnboardingRoutes.test.ts"
+        ],
+        "adapterSurface": "PUT /workspace/graph/draft",
+        "applicationPort": "IWorkspaceGraphDraftStore",
+        "authorizationScope": "Authenticated author with exact write scope and authoring authority."
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "SaveWorkspaceGraphDraftUseCaseResult",
+            "path": "apps/api/src/application/services/saveWorkspaceGraphDraftUseCase.ts",
+            "cqRails": ["SaveWorkspaceGraphDraft"],
+            "dddOwner": "Workspace authoring aggregate",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasDraftRepository.conflict.test.ts",
+              "apps/api/test/application/services/listProjectsUseCase.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent.",
+              "Replace parallel authority paths with one rail and one interpreter."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+            "architectureGuard": "The retained rail has independent product value and no duplicate adapter."
+          },
+          {
+            "name": "WorkspaceGraphDraftAuthoringSaveResult",
+            "path": "apps/web/src/app/ports/workspaceGraphDraftAuthoring.ts",
+            "cqRails": ["SaveWorkspaceGraphDraft"],
+            "dddOwner": "Workspace authoring aggregate",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasDraftRepository.conflict.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+            "architectureGuard": "JCS SHA-256 hashing and revisions make replay deterministic."
+          },
+          {
+            "name": "buildDraftSaveIdempotencyMismatchResponse",
+            "path": "apps/web/src/app/services/workspace/workspaceGraphDraftProtocol.test.fixtures.ts",
+            "cqRails": ["SaveWorkspaceGraphDraft"],
+            "dddOwner": "Workspace authoring aggregate",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasDraftRepository.conflict.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+            "architectureGuard": "JCS SHA-256 hashing and revisions make replay deterministic."
+          },
+          {
+            "name": "buildDraftSaveUnsupportedSchemaResponse",
+            "path": "apps/web/src/app/services/workspace/workspaceGraphDraftProtocol.test.fixtures.ts",
+            "cqRails": ["SaveWorkspaceGraphDraft"],
+            "dddOwner": "Workspace authoring aggregate",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasDraftRepository.conflict.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+            "architectureGuard": "JCS SHA-256 hashing and revisions make replay deterministic."
+          },
+          {
+            "name": "WorkspaceGraphDraftSaveAuthoringAuthorityConflict",
+            "path": "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts",
+            "cqRails": ["SaveWorkspaceGraphDraft"],
+            "dddOwner": "Workspace authoring aggregate",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasDraftRepository.conflict.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+            "architectureGuard": "JCS SHA-256 hashing and revisions make replay deterministic."
+          },
+          {
+            "name": "WorkspaceGraphDraftSaveAuthoringAuthorityConflictSchema",
+            "path": "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts",
+            "cqRails": ["SaveWorkspaceGraphDraft"],
+            "dddOwner": "Workspace authoring aggregate",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasDraftRepository.conflict.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+            "architectureGuard": "JCS SHA-256 hashing and revisions make replay deterministic."
+          },
+          {
+            "name": "WorkspaceGraphDraftSaveIdempotencyMismatch",
+            "path": "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts",
+            "cqRails": ["SaveWorkspaceGraphDraft"],
+            "dddOwner": "Workspace authoring aggregate",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasDraftRepository.conflict.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+            "architectureGuard": "JCS SHA-256 hashing and revisions make replay deterministic."
+          },
+          {
+            "name": "WorkspaceGraphDraftSaveIdempotencyMismatchSchema",
+            "path": "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts",
+            "cqRails": ["SaveWorkspaceGraphDraft"],
+            "dddOwner": "Workspace authoring aggregate",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasDraftRepository.conflict.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+            "architectureGuard": "JCS SHA-256 hashing and revisions make replay deterministic."
+          },
+          {
+            "name": "WorkspaceGraphDraftSaveUnsupportedSchemaVersion",
+            "path": "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts",
+            "cqRails": ["SaveWorkspaceGraphDraft"],
+            "dddOwner": "Workspace authoring aggregate",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasDraftRepository.conflict.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+            "architectureGuard": "JCS SHA-256 hashing and revisions make replay deterministic."
+          },
+          {
+            "name": "WorkspaceGraphDraftSaveUnsupportedSchemaVersionSchema",
+            "path": "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts",
+            "cqRails": ["SaveWorkspaceGraphDraft"],
+            "dddOwner": "Workspace authoring aggregate",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasDraftRepository.conflict.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+            "architectureGuard": "JCS SHA-256 hashing and revisions make replay deterministic."
+          }
+        ],
+        "version": 1,
+        "featureId": "MVP-2170-PROJECT-WORKSPACE-AUTHORITY",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2170"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+          "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts"
+        ],
+        "domainObjects": ["ProjectWorkspaceAuthority"],
+        "fowlerSignals": [
+          "One authoritative rail and one stored grant interpretation per product intent.",
+          "Replace parallel authority paths with one rail and one interpreter."
+        ],
+        "completionGate": ["pnpm verify:prepush"],
+        "redGreenCycles": [
+          {
+            "id": "saveworkspacegraphdraft-record",
+            "redTest": "The pre-push gate rejects a feature without Fowler opportunity governance.",
+            "greenTest": "The Planning DB feature cites Fowler governance and the mechanization gate passes.",
+            "patchSurfaces": [
+              "apps/api/src/application/**",
+              "apps/api/src/entrypoints/http/**",
+              "apps/api/src/infrastructure/auth/**",
+              "apps/api/src/modules/**",
+              "apps/api/test/**",
+              "apps/web/src/app/**",
+              "apps/web/src/testing/**",
+              "apps/web/cypress/**",
+              "packages/@dvt/contracts/**",
+              "scripts/run-canvas-source-import-live-proof*",
+              "scripts/run-dev-stack.auth*",
+              "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+              "docs/architecture/components/web/appshell/**",
+              "docs/architecture/components/web/graph/**",
+              "docs/architecture/components/planner/workspace-authoring-draft-aggregate.md",
+              "docs/contracts/planner/workspace-graph-draft-persistence-v1.md",
+              "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md",
+              "docs/risk-register/quality/R-20260813-PROJECT-WORKSPACE-GRAPH-AUTHORITY.yaml",
+              "tools/planning-db/state/canonical-state.json",
+              "apps/api/**"
+            ],
+            "expectedFailure": "The #2170 mechanization omits the canonical Fowler opportunity source."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/components/web/appshell/effective-workspace-context-component.md"
+        ],
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "SaveWorkspaceGraphDraft",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "Workspace authoring aggregate",
+            "negativeTests": [
+              "apps/api/test/application/services/saveWorkspaceGraphDraftUseCase.test.ts",
+              "apps/api/test/entrypoints/http/projectOnboardingRoutes.test.ts"
+            ],
+            "adapterSurface": "PUT /workspace/graph/draft",
+            "applicationPort": "IWorkspaceGraphDraftStore",
+            "authorizationScope": "Authenticated author with exact write scope and authoring authority."
+          }
+        ],
+        "architectureGuards": [
+          "JCS SHA-256 hashing and revisions make replay deterministic.",
+          "The retained rail has independent product value and no duplicate adapter."
+        ],
+        "implementationPlan": "Converge project admission, workspace selection, grants, and graph-draft authority through existing rails.",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/**",
+          "apps/api/src/entrypoints/http/**",
+          "apps/api/src/infrastructure/auth/**",
+          "apps/api/src/modules/**",
+          "apps/api/test/**",
+          "apps/web/src/app/**",
+          "apps/web/src/testing/**",
+          "apps/web/cypress/**",
+          "packages/@dvt/contracts/**",
+          "scripts/run-canvas-source-import-live-proof*",
+          "scripts/run-dev-stack.auth*",
+          "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+          "docs/architecture/components/web/appshell/**",
+          "docs/architecture/components/web/graph/**",
+          "docs/architecture/components/planner/workspace-authoring-draft-aggregate.md",
+          "docs/contracts/planner/workspace-graph-draft-persistence-v1.md",
+          "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md",
+          "docs/risk-register/quality/R-20260813-PROJECT-WORKSPACE-GRAPH-AUTHORITY.yaml",
+          "tools/planning-db/state/canonical-state.json",
+          "apps/api/**"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/projectOnboardingRouteGroup.ts",
+          "apps/api/src/entrypoints/http/protectedRuntimeWorkspaceContextRouteGroup.ts",
+          "apps/api/src/entrypoints/http/protectedRuntimeWorkspaceGraphDraftRouteGroup.ts",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftFixtureBoundaries.architecture.test.ts",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftProtocol.ts",
+          "docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-component.md",
+          "docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-user-stories.md"
+        ]
+      },
+      "revision": 1,
+      "createdBy": "codex-agent",
+      "createdAt": "2026-08-13T19:09:35.494Z"
+    },
+    {
+      "railId": "local#MVP-2170-PROJECT-WORKSPACE-AUTHORITY#query#geteffectiveworkspacecontext",
+      "featureId": "MVP-2170-PROJECT-WORKSPACE-AUTHORITY",
+      "mechanizationStatus": "implemented",
+      "railName": "GetEffectiveWorkspaceContext",
+      "normalizedRailName": "geteffectiveworkspacecontext",
+      "railType": "query",
+      "dddOwner": "EffectiveWorkspaceContext read model",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "apps/api/src/application/ports/principalGrantRepository.ts#EnvironmentGrant",
+        "apps/api/src/application/ports/principalGrantRepository.ts#IPrincipalGrantRepository",
+        "apps/api/src/application/ports/principalGrantRepository.ts#PrincipalGrantSnapshot",
+        "apps/api/src/application/ports/principalGrantRepository.ts#ProjectGrant",
+        "apps/api/src/application/ports/principalGrantRepository.ts#TenantGrant",
+        "apps/api/src/infrastructure/auth/embeddedAccessDecisionService.ts#decideFromSnapshot",
+        "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#EmbeddedPrincipalGrantRepository",
+        "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#EnvironmentGrantJson",
+        "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#InvalidPrincipalGrantError",
+        "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#PrincipalAccessRow",
+        "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#ProjectGrantJson",
+        "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#Queryable",
+        "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#TenantGrantJson",
+        "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#normalizeStrings",
+        "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#normalizeTenantAccess",
+        "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#parseEnvironmentGrant",
+        "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#parseProjectGrant",
+        "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#parseTenantAccess",
+        "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#quoteIdentifier",
+        "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#readArray",
+        "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#readNonBlankString",
+        "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#readRecord",
+        "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#readStringArray",
+        "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts#ALTERNATE_PROJECT_WORKSPACE",
+        "apps/web/cypress/support/workspaceSession.ts#E2E_PROJECT_WORKSPACE",
+        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#NonBlankStringSchema",
+        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#PROJECT_WORKSPACE_CONTRACT_VERSION",
+        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#ProjectWorkspaceDescriptor",
+        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#ProjectWorkspaceDescriptorSchema",
+        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#WorkspaceContextResponse",
+        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#WorkspaceContextResponseSchema"
+      ],
+      "implementationRefs": [
+        "apps/api/src/application/ports/principalGrantRepository.ts#EnvironmentGrant",
+        "apps/api/src/application/ports/principalGrantRepository.ts#IPrincipalGrantRepository",
+        "apps/api/src/application/ports/principalGrantRepository.ts#PrincipalGrantSnapshot",
+        "apps/api/src/application/ports/principalGrantRepository.ts#ProjectGrant",
+        "apps/api/src/application/ports/principalGrantRepository.ts#TenantGrant",
+        "apps/api/src/infrastructure/auth/embeddedAccessDecisionService.ts#decideFromSnapshot",
+        "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#EmbeddedPrincipalGrantRepository",
+        "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#EnvironmentGrantJson",
+        "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#InvalidPrincipalGrantError",
+        "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#PrincipalAccessRow",
+        "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#ProjectGrantJson",
+        "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#Queryable",
+        "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#TenantGrantJson",
+        "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#normalizeStrings",
+        "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#normalizeTenantAccess",
+        "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#parseEnvironmentGrant",
+        "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#parseProjectGrant",
+        "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#parseTenantAccess",
+        "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#quoteIdentifier",
+        "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#readArray",
+        "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#readNonBlankString",
+        "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#readRecord",
+        "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#readStringArray",
+        "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts#ALTERNATE_PROJECT_WORKSPACE",
+        "apps/web/cypress/support/workspaceSession.ts#E2E_PROJECT_WORKSPACE",
+        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#NonBlankStringSchema",
+        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#PROJECT_WORKSPACE_CONTRACT_VERSION",
+        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#ProjectWorkspaceDescriptor",
+        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#ProjectWorkspaceDescriptorSchema",
+        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#WorkspaceContextResponse",
+        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#WorkspaceContextResponseSchema"
+      ],
+      "documentationRefs": [
+        "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+        "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "apps/api/src/application/**",
+        "apps/api/src/entrypoints/http/**",
+        "apps/api/src/infrastructure/auth/**",
+        "apps/api/src/modules/**",
+        "apps/api/test/**",
+        "apps/web/src/app/**",
+        "apps/web/src/testing/**",
+        "apps/web/cypress/**",
+        "packages/@dvt/contracts/**",
+        "scripts/run-canvas-source-import-live-proof*",
+        "scripts/run-dev-stack.auth*",
+        "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+        "docs/architecture/components/web/appshell/**",
+        "docs/architecture/components/web/graph/**",
+        "docs/architecture/components/planner/workspace-authoring-draft-aggregate.md",
+        "docs/contracts/planner/workspace-graph-draft-persistence-v1.md",
+        "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md",
+        "docs/risk-register/quality/R-20260813-PROJECT-WORKSPACE-GRAPH-AUTHORITY.yaml",
+        "tools/planning-db/state/canonical-state.json",
+        "apps/api/**"
+      ],
+      "architectureGuards": [
+        "Browser workspace state is a projection of server authority.",
+        "The retained rail has independent product value and no duplicate adapter."
+      ],
+      "completionGate": ["pnpm verify:prepush"],
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2170",
+      "sourceContentSha256": "2734e8293bcd3b8e90791e8c1371ad2825714b11d6efe11b9e8715924658767e",
+      "rawRail": {
+        "name": "GetEffectiveWorkspaceContext",
+        "type": "query",
+        "status": "implemented",
+        "dddOwner": "EffectiveWorkspaceContext read model",
+        "negativeTests": [
+          "apps/api/test/entrypoints/http/workspaceContextRoute.test.ts",
+          "apps/api/test/entrypoints/http/projectOnboardingRoutes.test.ts"
+        ],
+        "adapterSurface": "GET /workspace/context",
+        "applicationPort": "IWorkspaceContextQuery",
+        "authorizationScope": "Authenticated principal receives one deterministic granted workspace."
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "EnvironmentGrant",
+            "path": "apps/api/src/application/ports/principalGrantRepository.ts",
+            "cqRails": ["GetEffectiveWorkspaceContext"],
+            "dddOwner": "EffectiveWorkspaceContext read model",
+            "unitTests": [
+              "apps/web/src/app/services/session/workspaceScopeSelectionPort.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+            "architectureGuard": "Browser workspace state is a projection of server authority."
+          },
+          {
+            "name": "IPrincipalGrantRepository",
+            "path": "apps/api/src/application/ports/principalGrantRepository.ts",
+            "cqRails": ["GetEffectiveWorkspaceContext"],
+            "dddOwner": "EffectiveWorkspaceContext read model",
+            "unitTests": [
+              "apps/web/src/app/services/session/workspaceScopeSelectionPort.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+            "architectureGuard": "Browser workspace state is a projection of server authority."
+          },
+          {
+            "name": "PrincipalGrantSnapshot",
+            "path": "apps/api/src/application/ports/principalGrantRepository.ts",
+            "cqRails": ["GetEffectiveWorkspaceContext"],
+            "dddOwner": "EffectiveWorkspaceContext read model",
+            "unitTests": [
+              "apps/web/src/app/services/session/workspaceScopeSelectionPort.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+            "architectureGuard": "Browser workspace state is a projection of server authority."
+          },
+          {
+            "name": "ProjectGrant",
+            "path": "apps/api/src/application/ports/principalGrantRepository.ts",
+            "cqRails": ["GetEffectiveWorkspaceContext"],
+            "dddOwner": "EffectiveWorkspaceContext read model",
+            "unitTests": [
+              "apps/web/src/app/services/session/workspaceScopeSelectionPort.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+            "architectureGuard": "Browser workspace state is a projection of server authority."
+          },
+          {
+            "name": "TenantGrant",
+            "path": "apps/api/src/application/ports/principalGrantRepository.ts",
+            "cqRails": ["GetEffectiveWorkspaceContext"],
+            "dddOwner": "EffectiveWorkspaceContext read model",
+            "unitTests": [
+              "apps/web/src/app/services/session/workspaceScopeSelectionPort.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+            "architectureGuard": "Browser workspace state is a projection of server authority."
+          },
+          {
+            "name": "decideFromSnapshot",
+            "path": "apps/api/src/infrastructure/auth/embeddedAccessDecisionService.ts",
+            "cqRails": ["GetEffectiveWorkspaceContext"],
+            "dddOwner": "EffectiveWorkspaceContext read model",
+            "unitTests": [
+              "apps/web/src/app/services/session/workspaceScopeSelectionPort.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+            "architectureGuard": "Browser workspace state is a projection of server authority."
+          },
+          {
+            "name": "EmbeddedPrincipalGrantRepository",
+            "path": "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts",
+            "cqRails": ["GetEffectiveWorkspaceContext"],
+            "dddOwner": "EffectiveWorkspaceContext read model",
+            "unitTests": [
+              "apps/web/src/app/services/session/workspaceScopeSelectionPort.test.ts",
+              "apps/api/test/application/services/listProjectsUseCase.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent.",
+              "Replace parallel authority paths with one rail and one interpreter."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+            "architectureGuard": "The retained rail has independent product value and no duplicate adapter."
+          },
+          {
+            "name": "EnvironmentGrantJson",
+            "path": "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts",
+            "cqRails": ["GetEffectiveWorkspaceContext"],
+            "dddOwner": "EffectiveWorkspaceContext read model",
+            "unitTests": [
+              "apps/web/src/app/services/session/workspaceScopeSelectionPort.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+            "architectureGuard": "Browser workspace state is a projection of server authority."
+          },
+          {
+            "name": "InvalidPrincipalGrantError",
+            "path": "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts",
+            "cqRails": ["GetEffectiveWorkspaceContext"],
+            "dddOwner": "EffectiveWorkspaceContext read model",
+            "unitTests": [
+              "apps/web/src/app/services/session/workspaceScopeSelectionPort.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+            "architectureGuard": "Browser workspace state is a projection of server authority."
+          },
+          {
+            "name": "PrincipalAccessRow",
+            "path": "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts",
+            "cqRails": ["GetEffectiveWorkspaceContext"],
+            "dddOwner": "EffectiveWorkspaceContext read model",
+            "unitTests": [
+              "apps/web/src/app/services/session/workspaceScopeSelectionPort.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+            "architectureGuard": "Browser workspace state is a projection of server authority."
+          },
+          {
+            "name": "ProjectGrantJson",
+            "path": "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts",
+            "cqRails": ["GetEffectiveWorkspaceContext"],
+            "dddOwner": "EffectiveWorkspaceContext read model",
+            "unitTests": [
+              "apps/web/src/app/services/session/workspaceScopeSelectionPort.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+            "architectureGuard": "Browser workspace state is a projection of server authority."
+          },
+          {
+            "name": "Queryable",
+            "path": "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts",
+            "cqRails": ["GetEffectiveWorkspaceContext"],
+            "dddOwner": "EffectiveWorkspaceContext read model",
+            "unitTests": [
+              "apps/web/src/app/services/session/workspaceScopeSelectionPort.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+            "architectureGuard": "Browser workspace state is a projection of server authority."
+          },
+          {
+            "name": "TenantGrantJson",
+            "path": "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts",
+            "cqRails": ["GetEffectiveWorkspaceContext"],
+            "dddOwner": "EffectiveWorkspaceContext read model",
+            "unitTests": [
+              "apps/web/src/app/services/session/workspaceScopeSelectionPort.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+            "architectureGuard": "Browser workspace state is a projection of server authority."
+          },
+          {
+            "name": "normalizeStrings",
+            "path": "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts",
+            "cqRails": ["GetEffectiveWorkspaceContext"],
+            "dddOwner": "EffectiveWorkspaceContext read model",
+            "unitTests": [
+              "apps/web/src/app/services/session/workspaceScopeSelectionPort.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+            "architectureGuard": "Browser workspace state is a projection of server authority."
+          },
+          {
+            "name": "normalizeTenantAccess",
+            "path": "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts",
+            "cqRails": ["GetEffectiveWorkspaceContext"],
+            "dddOwner": "EffectiveWorkspaceContext read model",
+            "unitTests": [
+              "apps/web/src/app/services/session/workspaceScopeSelectionPort.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+            "architectureGuard": "Browser workspace state is a projection of server authority."
+          },
+          {
+            "name": "parseEnvironmentGrant",
+            "path": "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts",
+            "cqRails": ["GetEffectiveWorkspaceContext"],
+            "dddOwner": "EffectiveWorkspaceContext read model",
+            "unitTests": [
+              "apps/web/src/app/services/session/workspaceScopeSelectionPort.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+            "architectureGuard": "Browser workspace state is a projection of server authority."
+          },
+          {
+            "name": "parseProjectGrant",
+            "path": "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts",
+            "cqRails": ["GetEffectiveWorkspaceContext"],
+            "dddOwner": "EffectiveWorkspaceContext read model",
+            "unitTests": [
+              "apps/web/src/app/services/session/workspaceScopeSelectionPort.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+            "architectureGuard": "Browser workspace state is a projection of server authority."
+          },
+          {
+            "name": "parseTenantAccess",
+            "path": "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts",
+            "cqRails": ["GetEffectiveWorkspaceContext"],
+            "dddOwner": "EffectiveWorkspaceContext read model",
+            "unitTests": [
+              "apps/web/src/app/services/session/workspaceScopeSelectionPort.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+            "architectureGuard": "Browser workspace state is a projection of server authority."
+          },
+          {
+            "name": "quoteIdentifier",
+            "path": "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts",
+            "cqRails": ["GetEffectiveWorkspaceContext"],
+            "dddOwner": "EffectiveWorkspaceContext read model",
+            "unitTests": [
+              "apps/web/src/app/services/session/workspaceScopeSelectionPort.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+            "architectureGuard": "Browser workspace state is a projection of server authority."
+          },
+          {
+            "name": "readArray",
+            "path": "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts",
+            "cqRails": ["GetEffectiveWorkspaceContext"],
+            "dddOwner": "EffectiveWorkspaceContext read model",
+            "unitTests": [
+              "apps/web/src/app/services/session/workspaceScopeSelectionPort.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+            "architectureGuard": "Browser workspace state is a projection of server authority."
+          },
+          {
+            "name": "readNonBlankString",
+            "path": "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts",
+            "cqRails": ["GetEffectiveWorkspaceContext"],
+            "dddOwner": "EffectiveWorkspaceContext read model",
+            "unitTests": [
+              "apps/web/src/app/services/session/workspaceScopeSelectionPort.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+            "architectureGuard": "Browser workspace state is a projection of server authority."
+          },
+          {
+            "name": "readRecord",
+            "path": "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts",
+            "cqRails": ["GetEffectiveWorkspaceContext"],
+            "dddOwner": "EffectiveWorkspaceContext read model",
+            "unitTests": [
+              "apps/web/src/app/services/session/workspaceScopeSelectionPort.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+            "architectureGuard": "Browser workspace state is a projection of server authority."
+          },
+          {
+            "name": "readStringArray",
+            "path": "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts",
+            "cqRails": ["GetEffectiveWorkspaceContext"],
+            "dddOwner": "EffectiveWorkspaceContext read model",
+            "unitTests": [
+              "apps/web/src/app/services/session/workspaceScopeSelectionPort.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+            "architectureGuard": "Browser workspace state is a projection of server authority."
+          },
+          {
+            "name": "ALTERNATE_PROJECT_WORKSPACE",
+            "path": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+            "cqRails": ["GetEffectiveWorkspaceContext"],
+            "dddOwner": "EffectiveWorkspaceContext read model",
+            "unitTests": [
+              "apps/web/src/app/services/session/workspaceScopeSelectionPort.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+            "architectureGuard": "Browser workspace state is a projection of server authority."
+          },
+          {
+            "name": "E2E_PROJECT_WORKSPACE",
+            "path": "apps/web/cypress/support/workspaceSession.ts",
+            "cqRails": ["GetEffectiveWorkspaceContext"],
+            "dddOwner": "EffectiveWorkspaceContext read model",
+            "unitTests": [
+              "apps/web/src/app/services/session/workspaceScopeSelectionPort.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+            "architectureGuard": "Browser workspace state is a projection of server authority."
+          },
+          {
+            "name": "NonBlankStringSchema",
+            "path": "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts",
+            "cqRails": ["GetEffectiveWorkspaceContext"],
+            "dddOwner": "EffectiveWorkspaceContext read model",
+            "unitTests": [
+              "apps/web/src/app/services/session/workspaceScopeSelectionPort.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+            "architectureGuard": "Browser workspace state is a projection of server authority."
+          },
+          {
+            "name": "PROJECT_WORKSPACE_CONTRACT_VERSION",
+            "path": "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts",
+            "cqRails": ["GetEffectiveWorkspaceContext"],
+            "dddOwner": "EffectiveWorkspaceContext read model",
+            "unitTests": [
+              "apps/web/src/app/services/session/workspaceScopeSelectionPort.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+            "architectureGuard": "Browser workspace state is a projection of server authority."
+          },
+          {
+            "name": "ProjectWorkspaceDescriptor",
+            "path": "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts",
+            "cqRails": ["GetEffectiveWorkspaceContext"],
+            "dddOwner": "EffectiveWorkspaceContext read model",
+            "unitTests": [
+              "apps/web/src/app/services/session/workspaceScopeSelectionPort.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+            "architectureGuard": "Browser workspace state is a projection of server authority."
+          },
+          {
+            "name": "ProjectWorkspaceDescriptorSchema",
+            "path": "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts",
+            "cqRails": ["GetEffectiveWorkspaceContext"],
+            "dddOwner": "EffectiveWorkspaceContext read model",
+            "unitTests": [
+              "apps/web/src/app/services/session/workspaceScopeSelectionPort.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+            "architectureGuard": "Browser workspace state is a projection of server authority."
+          },
+          {
+            "name": "WorkspaceContextResponse",
+            "path": "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts",
+            "cqRails": ["GetEffectiveWorkspaceContext"],
+            "dddOwner": "EffectiveWorkspaceContext read model",
+            "unitTests": [
+              "apps/web/src/app/services/session/workspaceScopeSelectionPort.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+            "architectureGuard": "Browser workspace state is a projection of server authority."
+          },
+          {
+            "name": "WorkspaceContextResponseSchema",
+            "path": "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts",
+            "cqRails": ["GetEffectiveWorkspaceContext"],
+            "dddOwner": "EffectiveWorkspaceContext read model",
+            "unitTests": [
+              "apps/web/src/app/services/session/workspaceScopeSelectionPort.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+            "architectureGuard": "Browser workspace state is a projection of server authority."
+          }
+        ],
+        "version": 1,
+        "featureId": "MVP-2170-PROJECT-WORKSPACE-AUTHORITY",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2170"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts"
+        ],
+        "domainObjects": ["ProjectWorkspaceAuthority"],
+        "fowlerSignals": [
+          "One authoritative rail and one stored grant interpretation per product intent.",
+          "Replace parallel authority paths with one rail and one interpreter."
+        ],
+        "completionGate": ["pnpm verify:prepush"],
+        "redGreenCycles": [
+          {
+            "id": "geteffectiveworkspacecontext-record",
+            "redTest": "The pre-push gate rejects a feature without Fowler opportunity governance.",
+            "greenTest": "The Planning DB feature cites Fowler governance and the mechanization gate passes.",
+            "patchSurfaces": [
+              "apps/api/src/application/**",
+              "apps/api/src/entrypoints/http/**",
+              "apps/api/src/infrastructure/auth/**",
+              "apps/api/src/modules/**",
+              "apps/api/test/**",
+              "apps/web/src/app/**",
+              "apps/web/src/testing/**",
+              "apps/web/cypress/**",
+              "packages/@dvt/contracts/**",
+              "scripts/run-canvas-source-import-live-proof*",
+              "scripts/run-dev-stack.auth*",
+              "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+              "docs/architecture/components/web/appshell/**",
+              "docs/architecture/components/web/graph/**",
+              "docs/architecture/components/planner/workspace-authoring-draft-aggregate.md",
+              "docs/contracts/planner/workspace-graph-draft-persistence-v1.md",
+              "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md",
+              "docs/risk-register/quality/R-20260813-PROJECT-WORKSPACE-GRAPH-AUTHORITY.yaml",
+              "tools/planning-db/state/canonical-state.json",
+              "apps/api/**"
+            ],
+            "expectedFailure": "The #2170 mechanization omits the canonical Fowler opportunity source."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/components/web/appshell/effective-workspace-context-component.md"
+        ],
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "GetEffectiveWorkspaceContext",
+            "type": "query",
+            "status": "implemented",
+            "dddOwner": "EffectiveWorkspaceContext read model",
+            "negativeTests": [
+              "apps/api/test/entrypoints/http/workspaceContextRoute.test.ts",
+              "apps/api/test/entrypoints/http/projectOnboardingRoutes.test.ts"
+            ],
+            "adapterSurface": "GET /workspace/context",
+            "applicationPort": "IWorkspaceContextQuery",
+            "authorizationScope": "Authenticated principal receives one deterministic granted workspace."
+          }
+        ],
+        "architectureGuards": [
+          "Browser workspace state is a projection of server authority.",
+          "The retained rail has independent product value and no duplicate adapter."
+        ],
+        "implementationPlan": "Converge project admission, workspace selection, grants, and graph-draft authority through existing rails.",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/**",
+          "apps/api/src/entrypoints/http/**",
+          "apps/api/src/infrastructure/auth/**",
+          "apps/api/src/modules/**",
+          "apps/api/test/**",
+          "apps/web/src/app/**",
+          "apps/web/src/testing/**",
+          "apps/web/cypress/**",
+          "packages/@dvt/contracts/**",
+          "scripts/run-canvas-source-import-live-proof*",
+          "scripts/run-dev-stack.auth*",
+          "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+          "docs/architecture/components/web/appshell/**",
+          "docs/architecture/components/web/graph/**",
+          "docs/architecture/components/planner/workspace-authoring-draft-aggregate.md",
+          "docs/contracts/planner/workspace-graph-draft-persistence-v1.md",
+          "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md",
+          "docs/risk-register/quality/R-20260813-PROJECT-WORKSPACE-GRAPH-AUTHORITY.yaml",
+          "tools/planning-db/state/canonical-state.json",
+          "apps/api/**"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/projectOnboardingRouteGroup.ts",
+          "apps/api/src/entrypoints/http/protectedRuntimeWorkspaceContextRouteGroup.ts",
+          "apps/api/src/entrypoints/http/protectedRuntimeWorkspaceGraphDraftRouteGroup.ts",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftFixtureBoundaries.architecture.test.ts",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftProtocol.ts",
+          "docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-component.md",
+          "docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-user-stories.md"
+        ]
+      },
+      "revision": 1,
+      "createdBy": "codex-agent",
+      "createdAt": "2026-08-13T19:09:32.410Z"
+    },
+    {
+      "railId": "local#MVP-2170-PROJECT-WORKSPACE-AUTHORITY#query#getworkspacegraphdraft",
+      "featureId": "MVP-2170-PROJECT-WORKSPACE-AUTHORITY",
+      "mechanizationStatus": "implemented",
+      "railName": "GetWorkspaceGraphDraft",
+      "normalizedRailName": "getworkspacegraphdraft",
+      "railType": "query",
+      "dddOwner": "CanvasAuthoringAuthority",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "apps/api/src/application/services/getWorkspaceGraphDraftUseCase.ts#GetWorkspaceGraphDraftUseCaseResult",
+        "apps/web/src/app/ports/workspaceGraphDraftAuthoring.ts#WorkspaceGraphDraftAuthoringReadResult",
+        "apps/web/src/app/services/workspace/workspaceGraphDraftProtocol.test.fixtures.ts#buildDraftReadNotFoundResponse",
+        "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts#WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION",
+        "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts#WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION",
+        "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts#WorkspaceGraphDraftReadNotFound",
+        "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts#WorkspaceGraphDraftReadNotFoundSchema",
+        "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts#resolveWorkspaceGraphDraftCanvasIds"
+      ],
+      "implementationRefs": [
+        "apps/api/src/application/services/getWorkspaceGraphDraftUseCase.ts#GetWorkspaceGraphDraftUseCaseResult",
+        "apps/web/src/app/ports/workspaceGraphDraftAuthoring.ts#WorkspaceGraphDraftAuthoringReadResult",
+        "apps/web/src/app/services/workspace/workspaceGraphDraftProtocol.test.fixtures.ts#buildDraftReadNotFoundResponse",
+        "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts#WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION",
+        "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts#WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION",
+        "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts#WorkspaceGraphDraftReadNotFound",
+        "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts#WorkspaceGraphDraftReadNotFoundSchema",
+        "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts#resolveWorkspaceGraphDraftCanvasIds"
+      ],
+      "documentationRefs": [
+        "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+        "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "apps/api/src/application/**",
+        "apps/api/src/entrypoints/http/**",
+        "apps/api/src/infrastructure/auth/**",
+        "apps/api/src/modules/**",
+        "apps/api/test/**",
+        "apps/web/src/app/**",
+        "apps/web/src/testing/**",
+        "apps/web/cypress/**",
+        "packages/@dvt/contracts/**",
+        "scripts/run-canvas-source-import-live-proof*",
+        "scripts/run-dev-stack.auth*",
+        "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+        "docs/architecture/components/web/appshell/**",
+        "docs/architecture/components/web/graph/**",
+        "docs/architecture/components/planner/workspace-authoring-draft-aggregate.md",
+        "docs/contracts/planner/workspace-graph-draft-persistence-v1.md",
+        "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md",
+        "docs/risk-register/quality/R-20260813-PROJECT-WORKSPACE-GRAPH-AUTHORITY.yaml",
+        "tools/planning-db/state/canonical-state.json",
+        "apps/api/**"
+      ],
+      "architectureGuards": [
+        "Reads use one grant snapshot and one shared schema vocabulary.",
+        "The retained rail has independent product value and no duplicate adapter."
+      ],
+      "completionGate": ["pnpm verify:prepush"],
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2170",
+      "sourceContentSha256": "2734e8293bcd3b8e90791e8c1371ad2825714b11d6efe11b9e8715924658767e",
+      "rawRail": {
+        "name": "GetWorkspaceGraphDraft",
+        "type": "query",
+        "status": "implemented",
+        "dddOwner": "CanvasAuthoringAuthority",
+        "negativeTests": [
+          "apps/api/test/entrypoints/http/workspaceGraphDraftRoutes.test.ts",
+          "apps/api/test/entrypoints/http/projectOnboardingRoutes.test.ts"
+        ],
+        "adapterSurface": "GET /workspace/graph/draft",
+        "applicationPort": "IWorkspaceGraphDraftStore",
+        "authorizationScope": "Authenticate once and authorize the exact read scope."
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "GetWorkspaceGraphDraftUseCaseResult",
+            "path": "apps/api/src/application/services/getWorkspaceGraphDraftUseCase.ts",
+            "cqRails": ["GetWorkspaceGraphDraft"],
+            "dddOwner": "CanvasAuthoringAuthority",
+            "unitTests": [
+              "apps/api/test/application/services/authorizeWorkspaceGraphDraftCapabilityService.test.ts",
+              "apps/api/test/application/services/listProjectsUseCase.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent.",
+              "Replace parallel authority paths with one rail and one interpreter."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+            "architectureGuard": "The retained rail has independent product value and no duplicate adapter."
+          },
+          {
+            "name": "WorkspaceGraphDraftAuthoringReadResult",
+            "path": "apps/web/src/app/ports/workspaceGraphDraftAuthoring.ts",
+            "cqRails": ["GetWorkspaceGraphDraft"],
+            "dddOwner": "CanvasAuthoringAuthority",
+            "unitTests": [
+              "apps/api/test/application/services/authorizeWorkspaceGraphDraftCapabilityService.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+            "architectureGuard": "Reads use one grant snapshot and one shared schema vocabulary."
+          },
+          {
+            "name": "buildDraftReadNotFoundResponse",
+            "path": "apps/web/src/app/services/workspace/workspaceGraphDraftProtocol.test.fixtures.ts",
+            "cqRails": ["GetWorkspaceGraphDraft"],
+            "dddOwner": "CanvasAuthoringAuthority",
+            "unitTests": [
+              "apps/api/test/application/services/authorizeWorkspaceGraphDraftCapabilityService.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+            "architectureGuard": "Reads use one grant snapshot and one shared schema vocabulary."
+          },
+          {
+            "name": "WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION",
+            "path": "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts",
+            "cqRails": ["GetWorkspaceGraphDraft"],
+            "dddOwner": "CanvasAuthoringAuthority",
+            "unitTests": [
+              "apps/api/test/application/services/authorizeWorkspaceGraphDraftCapabilityService.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+            "architectureGuard": "Reads use one grant snapshot and one shared schema vocabulary."
+          },
+          {
+            "name": "WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION",
+            "path": "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts",
+            "cqRails": ["GetWorkspaceGraphDraft"],
+            "dddOwner": "CanvasAuthoringAuthority",
+            "unitTests": [
+              "apps/api/test/application/services/authorizeWorkspaceGraphDraftCapabilityService.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+            "architectureGuard": "Reads use one grant snapshot and one shared schema vocabulary."
+          },
+          {
+            "name": "WorkspaceGraphDraftReadNotFound",
+            "path": "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts",
+            "cqRails": ["GetWorkspaceGraphDraft"],
+            "dddOwner": "CanvasAuthoringAuthority",
+            "unitTests": [
+              "apps/api/test/application/services/authorizeWorkspaceGraphDraftCapabilityService.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+            "architectureGuard": "Reads use one grant snapshot and one shared schema vocabulary."
+          },
+          {
+            "name": "WorkspaceGraphDraftReadNotFoundSchema",
+            "path": "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts",
+            "cqRails": ["GetWorkspaceGraphDraft"],
+            "dddOwner": "CanvasAuthoringAuthority",
+            "unitTests": [
+              "apps/api/test/application/services/authorizeWorkspaceGraphDraftCapabilityService.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+            "architectureGuard": "Reads use one grant snapshot and one shared schema vocabulary."
+          },
+          {
+            "name": "resolveWorkspaceGraphDraftCanvasIds",
+            "path": "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts",
+            "cqRails": ["GetWorkspaceGraphDraft"],
+            "dddOwner": "CanvasAuthoringAuthority",
+            "unitTests": [
+              "apps/api/test/application/services/authorizeWorkspaceGraphDraftCapabilityService.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+            "architectureGuard": "Reads use one grant snapshot and one shared schema vocabulary."
+          }
+        ],
+        "version": 1,
+        "featureId": "MVP-2170-PROJECT-WORKSPACE-AUTHORITY",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2170"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+          "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts"
+        ],
+        "domainObjects": ["ProjectWorkspaceAuthority"],
+        "fowlerSignals": [
+          "One authoritative rail and one stored grant interpretation per product intent.",
+          "Replace parallel authority paths with one rail and one interpreter."
+        ],
+        "completionGate": ["pnpm verify:prepush"],
+        "redGreenCycles": [
+          {
+            "id": "getworkspacegraphdraft-record",
+            "redTest": "The pre-push gate rejects a feature without Fowler opportunity governance.",
+            "greenTest": "The Planning DB feature cites Fowler governance and the mechanization gate passes.",
+            "patchSurfaces": [
+              "apps/api/src/application/**",
+              "apps/api/src/entrypoints/http/**",
+              "apps/api/src/infrastructure/auth/**",
+              "apps/api/src/modules/**",
+              "apps/api/test/**",
+              "apps/web/src/app/**",
+              "apps/web/src/testing/**",
+              "apps/web/cypress/**",
+              "packages/@dvt/contracts/**",
+              "scripts/run-canvas-source-import-live-proof*",
+              "scripts/run-dev-stack.auth*",
+              "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+              "docs/architecture/components/web/appshell/**",
+              "docs/architecture/components/web/graph/**",
+              "docs/architecture/components/planner/workspace-authoring-draft-aggregate.md",
+              "docs/contracts/planner/workspace-graph-draft-persistence-v1.md",
+              "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md",
+              "docs/risk-register/quality/R-20260813-PROJECT-WORKSPACE-GRAPH-AUTHORITY.yaml",
+              "tools/planning-db/state/canonical-state.json",
+              "apps/api/**"
+            ],
+            "expectedFailure": "The #2170 mechanization omits the canonical Fowler opportunity source."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/components/web/appshell/effective-workspace-context-component.md"
+        ],
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "GetWorkspaceGraphDraft",
+            "type": "query",
+            "status": "implemented",
+            "dddOwner": "CanvasAuthoringAuthority",
+            "negativeTests": [
+              "apps/api/test/entrypoints/http/workspaceGraphDraftRoutes.test.ts",
+              "apps/api/test/entrypoints/http/projectOnboardingRoutes.test.ts"
+            ],
+            "adapterSurface": "GET /workspace/graph/draft",
+            "applicationPort": "IWorkspaceGraphDraftStore",
+            "authorizationScope": "Authenticate once and authorize the exact read scope."
+          }
+        ],
+        "architectureGuards": [
+          "Reads use one grant snapshot and one shared schema vocabulary.",
+          "The retained rail has independent product value and no duplicate adapter."
+        ],
+        "implementationPlan": "Converge project admission, workspace selection, grants, and graph-draft authority through existing rails.",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/**",
+          "apps/api/src/entrypoints/http/**",
+          "apps/api/src/infrastructure/auth/**",
+          "apps/api/src/modules/**",
+          "apps/api/test/**",
+          "apps/web/src/app/**",
+          "apps/web/src/testing/**",
+          "apps/web/cypress/**",
+          "packages/@dvt/contracts/**",
+          "scripts/run-canvas-source-import-live-proof*",
+          "scripts/run-dev-stack.auth*",
+          "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+          "docs/architecture/components/web/appshell/**",
+          "docs/architecture/components/web/graph/**",
+          "docs/architecture/components/planner/workspace-authoring-draft-aggregate.md",
+          "docs/contracts/planner/workspace-graph-draft-persistence-v1.md",
+          "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md",
+          "docs/risk-register/quality/R-20260813-PROJECT-WORKSPACE-GRAPH-AUTHORITY.yaml",
+          "tools/planning-db/state/canonical-state.json",
+          "apps/api/**"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/projectOnboardingRouteGroup.ts",
+          "apps/api/src/entrypoints/http/protectedRuntimeWorkspaceContextRouteGroup.ts",
+          "apps/api/src/entrypoints/http/protectedRuntimeWorkspaceGraphDraftRouteGroup.ts",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftFixtureBoundaries.architecture.test.ts",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftProtocol.ts",
+          "docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-component.md",
+          "docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-user-stories.md"
+        ]
+      },
+      "revision": 1,
+      "createdBy": "codex-agent",
+      "createdAt": "2026-08-13T19:09:33.950Z"
+    },
+    {
+      "railId": "local#MVP-2170-PROJECT-WORKSPACE-AUTHORITY#query#listprojects",
+      "featureId": "MVP-2170-PROJECT-WORKSPACE-AUTHORITY",
+      "mechanizationStatus": "implemented",
+      "railName": "ListProjects",
+      "normalizedRailName": "listprojects",
+      "railType": "query",
+      "dddOwner": "ProjectDescriptor read model",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "apps/api/src/infrastructure/auth/embeddedWorkspaceContextQuery.ts#ProjectNameRow",
+        "apps/api/src/infrastructure/auth/embeddedWorkspaceContextQuery.ts#projectKey",
+        "apps/api/src/infrastructure/auth/embeddedWorkspaceContextQuery.ts#projectWorkspaceRefs",
+        "apps/api/src/infrastructure/auth/embeddedWorkspaceContextQuery.ts#quoteIdentifier",
+        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#ProjectCatalogIntegrityFinding",
+        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#ProjectCatalogIntegrityFindingSchema",
+        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#ProjectDescriptor",
+        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#ProjectDescriptorSchema",
+        "apps/api/src/application/services/listProjectsUseCase.ts#ListProjectsUseCase"
+      ],
+      "implementationRefs": [
+        "apps/api/src/infrastructure/auth/embeddedWorkspaceContextQuery.ts#ProjectNameRow",
+        "apps/api/src/infrastructure/auth/embeddedWorkspaceContextQuery.ts#projectKey",
+        "apps/api/src/infrastructure/auth/embeddedWorkspaceContextQuery.ts#projectWorkspaceRefs",
+        "apps/api/src/infrastructure/auth/embeddedWorkspaceContextQuery.ts#quoteIdentifier",
+        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#ProjectCatalogIntegrityFinding",
+        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#ProjectCatalogIntegrityFindingSchema",
+        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#ProjectDescriptor",
+        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#ProjectDescriptorSchema",
+        "apps/api/src/application/services/listProjectsUseCase.ts#ListProjectsUseCase"
+      ],
+      "documentationRefs": [
+        "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+        "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "apps/api/src/application/**",
+        "apps/api/src/entrypoints/http/**",
+        "apps/api/src/infrastructure/auth/**",
+        "apps/api/src/modules/**",
+        "apps/api/test/**",
+        "apps/web/src/app/**",
+        "apps/web/src/testing/**",
+        "apps/web/cypress/**",
+        "packages/@dvt/contracts/**",
+        "scripts/run-canvas-source-import-live-proof*",
+        "scripts/run-dev-stack.auth*",
+        "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+        "docs/architecture/components/web/appshell/**",
+        "docs/architecture/components/web/graph/**",
+        "docs/architecture/components/planner/workspace-authoring-draft-aggregate.md",
+        "docs/contracts/planner/workspace-graph-draft-persistence-v1.md",
+        "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md",
+        "docs/risk-register/quality/R-20260813-PROJECT-WORKSPACE-GRAPH-AUTHORITY.yaml",
+        "tools/planning-db/state/canonical-state.json",
+        "apps/api/**"
+      ],
+      "architectureGuards": [
+        "Listing uses set-based reads and reports integrity findings.",
+        "The retained rail has independent product value and no duplicate adapter."
+      ],
+      "completionGate": ["pnpm verify:prepush"],
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2170",
+      "sourceContentSha256": "2734e8293bcd3b8e90791e8c1371ad2825714b11d6efe11b9e8715924658767e",
+      "rawRail": {
+        "name": "ListProjects",
+        "type": "query",
+        "status": "implemented",
+        "dddOwner": "ProjectDescriptor read model",
+        "negativeTests": [
+          "apps/api/test/application/services/listProjectsUseCase.test.ts",
+          "apps/api/test/entrypoints/http/projectOnboardingRoutes.test.ts"
+        ],
+        "adapterSurface": "GET /projects",
+        "applicationPort": "IWorkspaceContextQuery",
+        "authorizationScope": "Authenticated principal sees only stored grants."
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "ProjectNameRow",
+            "path": "apps/api/src/infrastructure/auth/embeddedWorkspaceContextQuery.ts",
+            "cqRails": ["ListProjects"],
+            "dddOwner": "ProjectDescriptor read model",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/projectOnboardingRoutes.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+            "architectureGuard": "Listing uses set-based reads and reports integrity findings."
+          },
+          {
+            "name": "projectKey",
+            "path": "apps/api/src/infrastructure/auth/embeddedWorkspaceContextQuery.ts",
+            "cqRails": ["ListProjects"],
+            "dddOwner": "ProjectDescriptor read model",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/projectOnboardingRoutes.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+            "architectureGuard": "Listing uses set-based reads and reports integrity findings."
+          },
+          {
+            "name": "projectWorkspaceRefs",
+            "path": "apps/api/src/infrastructure/auth/embeddedWorkspaceContextQuery.ts",
+            "cqRails": ["ListProjects"],
+            "dddOwner": "ProjectDescriptor read model",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/projectOnboardingRoutes.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+            "architectureGuard": "Listing uses set-based reads and reports integrity findings."
+          },
+          {
+            "name": "quoteIdentifier",
+            "path": "apps/api/src/infrastructure/auth/embeddedWorkspaceContextQuery.ts",
+            "cqRails": ["ListProjects"],
+            "dddOwner": "ProjectDescriptor read model",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/projectOnboardingRoutes.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+            "architectureGuard": "Listing uses set-based reads and reports integrity findings."
+          },
+          {
+            "name": "ProjectCatalogIntegrityFinding",
+            "path": "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts",
+            "cqRails": ["ListProjects"],
+            "dddOwner": "ProjectDescriptor read model",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/projectOnboardingRoutes.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+            "architectureGuard": "Listing uses set-based reads and reports integrity findings."
+          },
+          {
+            "name": "ProjectCatalogIntegrityFindingSchema",
+            "path": "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts",
+            "cqRails": ["ListProjects"],
+            "dddOwner": "ProjectDescriptor read model",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/projectOnboardingRoutes.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+            "architectureGuard": "Listing uses set-based reads and reports integrity findings."
+          },
+          {
+            "name": "ProjectDescriptor",
+            "path": "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts",
+            "cqRails": ["ListProjects"],
+            "dddOwner": "ProjectDescriptor read model",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/projectOnboardingRoutes.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+            "architectureGuard": "Listing uses set-based reads and reports integrity findings."
+          },
+          {
+            "name": "ProjectDescriptorSchema",
+            "path": "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts",
+            "cqRails": ["ListProjects"],
+            "dddOwner": "ProjectDescriptor read model",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/projectOnboardingRoutes.test.ts"
+            ],
+            "fowlerSignals": [
+              "One authoritative rail and one stored grant interpretation per product intent."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+            "architectureGuard": "Listing uses set-based reads and reports integrity findings."
+          },
+          {
+            "name": "ListProjectsUseCase",
+            "path": "apps/api/src/application/services/listProjectsUseCase.ts",
+            "cqRails": ["ListProjects"],
+            "dddOwner": "ProjectDescriptor read model",
+            "unitTests": [
+              "apps/api/test/application/services/listProjectsUseCase.test.ts"
+            ],
+            "fowlerSignals": [
+              "Replace parallel authority paths with one rail and one interpreter."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+            "architectureGuard": "The retained rail has independent product value and no duplicate adapter."
+          }
+        ],
+        "version": 1,
+        "featureId": "MVP-2170-PROJECT-WORKSPACE-AUTHORITY",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2170"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts"
+        ],
+        "domainObjects": ["ProjectWorkspaceAuthority"],
+        "fowlerSignals": [
+          "One authoritative rail and one stored grant interpretation per product intent.",
+          "Replace parallel authority paths with one rail and one interpreter."
+        ],
+        "completionGate": ["pnpm verify:prepush"],
+        "redGreenCycles": [
+          {
+            "id": "listprojects-record",
+            "redTest": "The pre-push gate rejects a feature without Fowler opportunity governance.",
+            "greenTest": "The Planning DB feature cites Fowler governance and the mechanization gate passes.",
+            "patchSurfaces": [
+              "apps/api/src/application/**",
+              "apps/api/src/entrypoints/http/**",
+              "apps/api/src/infrastructure/auth/**",
+              "apps/api/src/modules/**",
+              "apps/api/test/**",
+              "apps/web/src/app/**",
+              "apps/web/src/testing/**",
+              "apps/web/cypress/**",
+              "packages/@dvt/contracts/**",
+              "scripts/run-canvas-source-import-live-proof*",
+              "scripts/run-dev-stack.auth*",
+              "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+              "docs/architecture/components/web/appshell/**",
+              "docs/architecture/components/web/graph/**",
+              "docs/architecture/components/planner/workspace-authoring-draft-aggregate.md",
+              "docs/contracts/planner/workspace-graph-draft-persistence-v1.md",
+              "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md",
+              "docs/risk-register/quality/R-20260813-PROJECT-WORKSPACE-GRAPH-AUTHORITY.yaml",
+              "tools/planning-db/state/canonical-state.json",
+              "apps/api/**"
+            ],
+            "expectedFailure": "The #2170 mechanization omits the canonical Fowler opportunity source."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/components/web/appshell/effective-workspace-context-component.md"
+        ],
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ListProjects",
+            "type": "query",
+            "status": "implemented",
+            "dddOwner": "ProjectDescriptor read model",
+            "negativeTests": [
+              "apps/api/test/application/services/listProjectsUseCase.test.ts",
+              "apps/api/test/entrypoints/http/projectOnboardingRoutes.test.ts"
+            ],
+            "adapterSurface": "GET /projects",
+            "applicationPort": "IWorkspaceContextQuery",
+            "authorizationScope": "Authenticated principal sees only stored grants."
+          }
+        ],
+        "architectureGuards": [
+          "Listing uses set-based reads and reports integrity findings.",
+          "The retained rail has independent product value and no duplicate adapter."
+        ],
+        "implementationPlan": "Converge project admission, workspace selection, grants, and graph-draft authority through existing rails.",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/**",
+          "apps/api/src/entrypoints/http/**",
+          "apps/api/src/infrastructure/auth/**",
+          "apps/api/src/modules/**",
+          "apps/api/test/**",
+          "apps/web/src/app/**",
+          "apps/web/src/testing/**",
+          "apps/web/cypress/**",
+          "packages/@dvt/contracts/**",
+          "scripts/run-canvas-source-import-live-proof*",
+          "scripts/run-dev-stack.auth*",
+          "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+          "docs/architecture/components/web/appshell/**",
+          "docs/architecture/components/web/graph/**",
+          "docs/architecture/components/planner/workspace-authoring-draft-aggregate.md",
+          "docs/contracts/planner/workspace-graph-draft-persistence-v1.md",
+          "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md",
+          "docs/risk-register/quality/R-20260813-PROJECT-WORKSPACE-GRAPH-AUTHORITY.yaml",
+          "tools/planning-db/state/canonical-state.json",
+          "apps/api/**"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/projectOnboardingRouteGroup.ts",
+          "apps/api/src/entrypoints/http/protectedRuntimeWorkspaceContextRouteGroup.ts",
+          "apps/api/src/entrypoints/http/protectedRuntimeWorkspaceGraphDraftRouteGroup.ts",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftFixtureBoundaries.architecture.test.ts",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftProtocol.ts",
+          "docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-component.md",
+          "docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-user-stories.md"
+        ]
+      },
+      "revision": 1,
+      "createdBy": "codex-agent",
+      "createdAt": "2026-08-13T19:09:30.916Z"
+    },
+    {
       "railId": "local#MVP-2211-DYNAMIC-PLUGIN-LIFECYCLE#query#getcostattributionsummary",
       "featureId": "MVP-2211-DYNAMIC-PLUGIN-LIFECYCLE",
       "mechanizationStatus": "implemented",
@@ -189294,6 +191364,897 @@
         ]
       },
       "createdAt": "2026-08-13T13:53:53.330Z"
+    },
+    {
+      "operationId": "e6c16abc-a37f-4bff-b830-f4e3cb1fd1b4",
+      "idempotencyKey": "feature_mechanization_rail_record:codex-agent:MVP-2170-PROJECT-WORKSPACE-AUTHORITY:command:createproject:latest:8997373d255abda6",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex-agent",
+      "railId": "local#MVP-2170-PROJECT-WORKSPACE-AUTHORITY#command#createproject",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2170",
+      "sourceContentSha256": "2734e8293bcd3b8e90791e8c1371ad2825714b11d6efe11b9e8715924658767e",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "The pre-push gate rejects undeclared #2170 implementation symbols.",
+        "dddOwner": "Project aggregate",
+        "railName": "CreateProject",
+        "railType": "command",
+        "featureId": "MVP-2170-PROJECT-WORKSPACE-AUTHORITY",
+        "greenTest": "Planning DB declares every retained implementation symbol and the pre-push gate passes.",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2170",
+        "unitTests": [
+          "apps/api/test/infrastructure/auth/embeddedProjectOnboardingRepository.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2170"],
+        "cypressFlows": ["apps/web/cypress/e2e/shell/project-onboarding.cy.ts"],
+        "domainObjects": ["ProjectWorkspaceAuthority"],
+        "fowlerSignals": [
+          "One authoritative rail and one stored grant interpretation per product intent."
+        ],
+        "negativeTests": [
+          "apps/api/test/application/services/createProjectUseCase.test.ts"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "POST /projects",
+        "completionGate": ["pnpm verify:prepush"],
+        "applicationPort": "IProjectOnboardingRepository",
+        "componentGuides": [
+          "docs/architecture/components/web/appshell/effective-workspace-context-component.md"
+        ],
+        "expectedFailure": "Project-workspace and graph-authority symbols are absent from Planning DB mechanization.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/adr/ADR-0062-server-owned-effective-workspace-context.md"
+        ],
+        "documentationRefs": [
+          "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+          "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md"
+        ],
+        "architectureGuards": [
+          "Creation is idempotent and grant persistence is atomic."
+        ],
+        "authorizationScope": "Authenticated tenant actor with project:create authority.",
+        "implementationPlan": "Converge project admission, workspace selection, grants, and graph-draft authority through existing rails.",
+        "implementationRefs": [
+          "apps/api/src/application/ports/projectOnboarding.ts#GrantedProjectCatalog",
+          "apps/api/src/application/ports/projectOnboarding.ts#PersistProjectCreationCommand",
+          "apps/api/src/application/services/authorizeCommandScopeService.ts#AuthorizationResult",
+          "apps/api/src/application/services/projectOnboardingPolicy.ts#PROJECT_ONBOARDING_POLICY",
+          "apps/api/src/infrastructure/auth/embeddedProjectOnboardingRepository.ts#ProjectReference",
+          "apps/api/src/infrastructure/auth/embeddedProjectOnboardingRepository.ts#addProjectGrant",
+          "apps/api/src/infrastructure/auth/embeddedProjectOnboardingRepository.ts#projectKey",
+          "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#CreateProjectRequest",
+          "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#CreateProjectRequestSchema",
+          "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#CreateProjectResponse",
+          "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#CreateProjectResponseSchema",
+          "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#PROJECT_ONBOARDING_DEFAULT_ENVIRONMENT_ID",
+          "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#ProjectOnboardingCatalog",
+          "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#ProjectOnboardingCatalogSchema",
+          "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#ProjectOnboardingTenant",
+          "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#ProjectOnboardingTenantSchema"
+        ],
+        "normalizedRailName": "createproject",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "2734e8293bcd3b8e90791e8c1371ad2825714b11d6efe11b9e8715924658767e",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/**",
+          "apps/api/src/entrypoints/http/**",
+          "apps/api/src/infrastructure/auth/**",
+          "apps/api/src/modules/**",
+          "apps/api/test/**",
+          "apps/web/src/app/**",
+          "apps/web/src/testing/**",
+          "apps/web/cypress/**",
+          "packages/@dvt/contracts/**",
+          "scripts/run-canvas-source-import-live-proof*",
+          "scripts/run-dev-stack.auth*",
+          "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+          "docs/architecture/components/web/appshell/**",
+          "docs/architecture/components/web/graph/**",
+          "docs/architecture/components/planner/workspace-authoring-draft-aggregate.md",
+          "docs/contracts/planner/workspace-graph-draft-persistence-v1.md",
+          "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md",
+          "docs/risk-register/quality/R-20260813-PROJECT-WORKSPACE-GRAPH-AUTHORITY.yaml",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/projectOnboardingRouteGroup.ts",
+          "apps/api/src/entrypoints/http/protectedRuntimeWorkspaceContextRouteGroup.ts",
+          "apps/api/src/entrypoints/http/protectedRuntimeWorkspaceGraphDraftRouteGroup.ts",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftFixtureBoundaries.architecture.test.ts",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftProtocol.ts",
+          "docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-component.md",
+          "docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-user-stories.md"
+        ]
+      },
+      "createdAt": "2026-08-13T19:09:29.297Z"
+    },
+    {
+      "operationId": "07c87a54-b065-4773-b467-d9216daefdb2",
+      "idempotencyKey": "feature_mechanization_rail_record:codex-agent:MVP-2170-PROJECT-WORKSPACE-AUTHORITY:query:listprojects:latest:f7a4c15f3461a349",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex-agent",
+      "railId": "local#MVP-2170-PROJECT-WORKSPACE-AUTHORITY#query#listprojects",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2170",
+      "sourceContentSha256": "2734e8293bcd3b8e90791e8c1371ad2825714b11d6efe11b9e8715924658767e",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "The pre-push gate rejects undeclared #2170 implementation symbols.",
+        "dddOwner": "ProjectDescriptor read model",
+        "railName": "ListProjects",
+        "railType": "query",
+        "featureId": "MVP-2170-PROJECT-WORKSPACE-AUTHORITY",
+        "greenTest": "Planning DB declares every retained implementation symbol and the pre-push gate passes.",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2170",
+        "unitTests": [
+          "apps/api/test/entrypoints/http/projectOnboardingRoutes.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2170"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts"
+        ],
+        "domainObjects": ["ProjectWorkspaceAuthority"],
+        "fowlerSignals": [
+          "One authoritative rail and one stored grant interpretation per product intent."
+        ],
+        "negativeTests": [
+          "apps/api/test/application/services/listProjectsUseCase.test.ts"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "GET /projects",
+        "completionGate": ["pnpm verify:prepush"],
+        "applicationPort": "IWorkspaceContextQuery",
+        "componentGuides": [
+          "docs/architecture/components/web/appshell/effective-workspace-context-component.md"
+        ],
+        "expectedFailure": "Project-workspace and graph-authority symbols are absent from Planning DB mechanization.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/adr/ADR-0062-server-owned-effective-workspace-context.md"
+        ],
+        "documentationRefs": [
+          "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+          "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md"
+        ],
+        "architectureGuards": [
+          "Listing uses set-based reads and reports integrity findings."
+        ],
+        "authorizationScope": "Authenticated principal sees only stored grants.",
+        "implementationPlan": "Converge project admission, workspace selection, grants, and graph-draft authority through existing rails.",
+        "implementationRefs": [
+          "apps/api/src/infrastructure/auth/embeddedWorkspaceContextQuery.ts#ProjectNameRow",
+          "apps/api/src/infrastructure/auth/embeddedWorkspaceContextQuery.ts#projectKey",
+          "apps/api/src/infrastructure/auth/embeddedWorkspaceContextQuery.ts#projectWorkspaceRefs",
+          "apps/api/src/infrastructure/auth/embeddedWorkspaceContextQuery.ts#quoteIdentifier",
+          "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#ProjectCatalogIntegrityFinding",
+          "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#ProjectCatalogIntegrityFindingSchema",
+          "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#ProjectDescriptor",
+          "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#ProjectDescriptorSchema"
+        ],
+        "normalizedRailName": "listprojects",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "2734e8293bcd3b8e90791e8c1371ad2825714b11d6efe11b9e8715924658767e",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/**",
+          "apps/api/src/entrypoints/http/**",
+          "apps/api/src/infrastructure/auth/**",
+          "apps/api/src/modules/**",
+          "apps/api/test/**",
+          "apps/web/src/app/**",
+          "apps/web/src/testing/**",
+          "apps/web/cypress/**",
+          "packages/@dvt/contracts/**",
+          "scripts/run-canvas-source-import-live-proof*",
+          "scripts/run-dev-stack.auth*",
+          "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+          "docs/architecture/components/web/appshell/**",
+          "docs/architecture/components/web/graph/**",
+          "docs/architecture/components/planner/workspace-authoring-draft-aggregate.md",
+          "docs/contracts/planner/workspace-graph-draft-persistence-v1.md",
+          "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md",
+          "docs/risk-register/quality/R-20260813-PROJECT-WORKSPACE-GRAPH-AUTHORITY.yaml",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/projectOnboardingRouteGroup.ts",
+          "apps/api/src/entrypoints/http/protectedRuntimeWorkspaceContextRouteGroup.ts",
+          "apps/api/src/entrypoints/http/protectedRuntimeWorkspaceGraphDraftRouteGroup.ts",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftFixtureBoundaries.architecture.test.ts",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftProtocol.ts",
+          "docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-component.md",
+          "docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-user-stories.md"
+        ]
+      },
+      "createdAt": "2026-08-13T19:09:30.916Z"
+    },
+    {
+      "operationId": "5fe88b36-03f4-4e5e-bd08-320b79ad2b6e",
+      "idempotencyKey": "feature_mechanization_rail_record:codex-agent:MVP-2170-PROJECT-WORKSPACE-AUTHORITY:query:geteffectiveworkspacecontext:latest:4b25d51abd9504ca",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex-agent",
+      "railId": "local#MVP-2170-PROJECT-WORKSPACE-AUTHORITY#query#geteffectiveworkspacecontext",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2170",
+      "sourceContentSha256": "2734e8293bcd3b8e90791e8c1371ad2825714b11d6efe11b9e8715924658767e",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "The pre-push gate rejects undeclared #2170 implementation symbols.",
+        "dddOwner": "EffectiveWorkspaceContext read model",
+        "railName": "GetEffectiveWorkspaceContext",
+        "railType": "query",
+        "featureId": "MVP-2170-PROJECT-WORKSPACE-AUTHORITY",
+        "greenTest": "Planning DB declares every retained implementation symbol and the pre-push gate passes.",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2170",
+        "unitTests": [
+          "apps/web/src/app/services/session/workspaceScopeSelectionPort.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2170"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts"
+        ],
+        "domainObjects": ["ProjectWorkspaceAuthority"],
+        "fowlerSignals": [
+          "One authoritative rail and one stored grant interpretation per product intent."
+        ],
+        "negativeTests": [
+          "apps/api/test/entrypoints/http/workspaceContextRoute.test.ts"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "GET /workspace/context",
+        "completionGate": ["pnpm verify:prepush"],
+        "applicationPort": "IWorkspaceContextQuery",
+        "componentGuides": [
+          "docs/architecture/components/web/appshell/effective-workspace-context-component.md"
+        ],
+        "expectedFailure": "Project-workspace and graph-authority symbols are absent from Planning DB mechanization.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/adr/ADR-0062-server-owned-effective-workspace-context.md"
+        ],
+        "documentationRefs": [
+          "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+          "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md"
+        ],
+        "architectureGuards": [
+          "Browser workspace state is a projection of server authority."
+        ],
+        "authorizationScope": "Authenticated principal receives one deterministic granted workspace.",
+        "implementationPlan": "Converge project admission, workspace selection, grants, and graph-draft authority through existing rails.",
+        "implementationRefs": [
+          "apps/api/src/application/ports/principalGrantRepository.ts#EnvironmentGrant",
+          "apps/api/src/application/ports/principalGrantRepository.ts#IPrincipalGrantRepository",
+          "apps/api/src/application/ports/principalGrantRepository.ts#PrincipalGrantSnapshot",
+          "apps/api/src/application/ports/principalGrantRepository.ts#ProjectGrant",
+          "apps/api/src/application/ports/principalGrantRepository.ts#TenantGrant",
+          "apps/api/src/infrastructure/auth/embeddedAccessDecisionService.ts#decideFromSnapshot",
+          "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#EmbeddedPrincipalGrantRepository",
+          "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#EnvironmentGrantJson",
+          "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#InvalidPrincipalGrantError",
+          "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#PrincipalAccessRow",
+          "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#ProjectGrantJson",
+          "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#Queryable",
+          "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#TenantGrantJson",
+          "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#normalizeStrings",
+          "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#normalizeTenantAccess",
+          "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#parseEnvironmentGrant",
+          "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#parseProjectGrant",
+          "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#parseTenantAccess",
+          "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#quoteIdentifier",
+          "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#readArray",
+          "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#readNonBlankString",
+          "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#readRecord",
+          "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#readStringArray",
+          "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts#ALTERNATE_PROJECT_WORKSPACE",
+          "apps/web/cypress/support/workspaceSession.ts#E2E_PROJECT_WORKSPACE",
+          "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#NonBlankStringSchema",
+          "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#PROJECT_WORKSPACE_CONTRACT_VERSION",
+          "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#ProjectWorkspaceDescriptor",
+          "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#ProjectWorkspaceDescriptorSchema",
+          "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#WorkspaceContextResponse",
+          "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#WorkspaceContextResponseSchema"
+        ],
+        "normalizedRailName": "geteffectiveworkspacecontext",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "2734e8293bcd3b8e90791e8c1371ad2825714b11d6efe11b9e8715924658767e",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/**",
+          "apps/api/src/entrypoints/http/**",
+          "apps/api/src/infrastructure/auth/**",
+          "apps/api/src/modules/**",
+          "apps/api/test/**",
+          "apps/web/src/app/**",
+          "apps/web/src/testing/**",
+          "apps/web/cypress/**",
+          "packages/@dvt/contracts/**",
+          "scripts/run-canvas-source-import-live-proof*",
+          "scripts/run-dev-stack.auth*",
+          "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+          "docs/architecture/components/web/appshell/**",
+          "docs/architecture/components/web/graph/**",
+          "docs/architecture/components/planner/workspace-authoring-draft-aggregate.md",
+          "docs/contracts/planner/workspace-graph-draft-persistence-v1.md",
+          "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md",
+          "docs/risk-register/quality/R-20260813-PROJECT-WORKSPACE-GRAPH-AUTHORITY.yaml",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/projectOnboardingRouteGroup.ts",
+          "apps/api/src/entrypoints/http/protectedRuntimeWorkspaceContextRouteGroup.ts",
+          "apps/api/src/entrypoints/http/protectedRuntimeWorkspaceGraphDraftRouteGroup.ts",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftFixtureBoundaries.architecture.test.ts",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftProtocol.ts",
+          "docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-component.md",
+          "docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-user-stories.md"
+        ]
+      },
+      "createdAt": "2026-08-13T19:09:32.410Z"
+    },
+    {
+      "operationId": "e54c298b-2b64-45cd-bbc1-966531443f2e",
+      "idempotencyKey": "feature_mechanization_rail_record:codex-agent:MVP-2170-PROJECT-WORKSPACE-AUTHORITY:query:getworkspacegraphdraft:latest:00e4dbb7cc671182",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex-agent",
+      "railId": "local#MVP-2170-PROJECT-WORKSPACE-AUTHORITY#query#getworkspacegraphdraft",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2170",
+      "sourceContentSha256": "2734e8293bcd3b8e90791e8c1371ad2825714b11d6efe11b9e8715924658767e",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "The pre-push gate rejects undeclared #2170 implementation symbols.",
+        "dddOwner": "CanvasAuthoringAuthority",
+        "railName": "GetWorkspaceGraphDraft",
+        "railType": "query",
+        "featureId": "MVP-2170-PROJECT-WORKSPACE-AUTHORITY",
+        "greenTest": "Planning DB declares every retained implementation symbol and the pre-push gate passes.",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2170",
+        "unitTests": [
+          "apps/api/test/application/services/authorizeWorkspaceGraphDraftCapabilityService.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2170"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts"
+        ],
+        "domainObjects": ["ProjectWorkspaceAuthority"],
+        "fowlerSignals": [
+          "One authoritative rail and one stored grant interpretation per product intent."
+        ],
+        "negativeTests": [
+          "apps/api/test/entrypoints/http/workspaceGraphDraftRoutes.test.ts"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "GET /workspace/graph/draft",
+        "completionGate": ["pnpm verify:prepush"],
+        "applicationPort": "IWorkspaceGraphDraftStore",
+        "componentGuides": [
+          "docs/architecture/components/web/appshell/effective-workspace-context-component.md"
+        ],
+        "expectedFailure": "Project-workspace and graph-authority symbols are absent from Planning DB mechanization.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/adr/ADR-0062-server-owned-effective-workspace-context.md"
+        ],
+        "documentationRefs": [
+          "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+          "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md"
+        ],
+        "architectureGuards": [
+          "Reads use one grant snapshot and one shared schema vocabulary."
+        ],
+        "authorizationScope": "Authenticate once and authorize the exact read scope.",
+        "implementationPlan": "Converge project admission, workspace selection, grants, and graph-draft authority through existing rails.",
+        "implementationRefs": [
+          "apps/api/src/application/services/getWorkspaceGraphDraftUseCase.ts#GetWorkspaceGraphDraftUseCaseResult",
+          "apps/web/src/app/ports/workspaceGraphDraftAuthoring.ts#WorkspaceGraphDraftAuthoringReadResult",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftProtocol.test.fixtures.ts#buildDraftReadNotFoundResponse",
+          "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts#WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION",
+          "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts#WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION",
+          "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts#WorkspaceGraphDraftReadNotFound",
+          "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts#WorkspaceGraphDraftReadNotFoundSchema",
+          "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts#resolveWorkspaceGraphDraftCanvasIds"
+        ],
+        "normalizedRailName": "getworkspacegraphdraft",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "2734e8293bcd3b8e90791e8c1371ad2825714b11d6efe11b9e8715924658767e",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/**",
+          "apps/api/src/entrypoints/http/**",
+          "apps/api/src/infrastructure/auth/**",
+          "apps/api/src/modules/**",
+          "apps/api/test/**",
+          "apps/web/src/app/**",
+          "apps/web/src/testing/**",
+          "apps/web/cypress/**",
+          "packages/@dvt/contracts/**",
+          "scripts/run-canvas-source-import-live-proof*",
+          "scripts/run-dev-stack.auth*",
+          "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+          "docs/architecture/components/web/appshell/**",
+          "docs/architecture/components/web/graph/**",
+          "docs/architecture/components/planner/workspace-authoring-draft-aggregate.md",
+          "docs/contracts/planner/workspace-graph-draft-persistence-v1.md",
+          "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md",
+          "docs/risk-register/quality/R-20260813-PROJECT-WORKSPACE-GRAPH-AUTHORITY.yaml",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/projectOnboardingRouteGroup.ts",
+          "apps/api/src/entrypoints/http/protectedRuntimeWorkspaceContextRouteGroup.ts",
+          "apps/api/src/entrypoints/http/protectedRuntimeWorkspaceGraphDraftRouteGroup.ts",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftFixtureBoundaries.architecture.test.ts",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftProtocol.ts",
+          "docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-component.md",
+          "docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-user-stories.md"
+        ]
+      },
+      "createdAt": "2026-08-13T19:09:33.950Z"
+    },
+    {
+      "operationId": "fd5ad2eb-379d-4377-bd9c-858238a6913b",
+      "idempotencyKey": "feature_mechanization_rail_record:codex-agent:MVP-2170-PROJECT-WORKSPACE-AUTHORITY:command:saveworkspacegraphdraft:latest:1adf061643457bc2",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex-agent",
+      "railId": "local#MVP-2170-PROJECT-WORKSPACE-AUTHORITY#command#saveworkspacegraphdraft",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2170",
+      "sourceContentSha256": "2734e8293bcd3b8e90791e8c1371ad2825714b11d6efe11b9e8715924658767e",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "The pre-push gate rejects undeclared #2170 implementation symbols.",
+        "dddOwner": "Workspace authoring aggregate",
+        "railName": "SaveWorkspaceGraphDraft",
+        "railType": "command",
+        "featureId": "MVP-2170-PROJECT-WORKSPACE-AUTHORITY",
+        "greenTest": "Planning DB declares every retained implementation symbol and the pre-push gate passes.",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2170",
+        "unitTests": [
+          "apps/web/src/app/views/canvas/canvasDraftRepository.conflict.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2170"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts"
+        ],
+        "domainObjects": ["ProjectWorkspaceAuthority"],
+        "fowlerSignals": [
+          "One authoritative rail and one stored grant interpretation per product intent."
+        ],
+        "negativeTests": [
+          "apps/api/test/application/services/saveWorkspaceGraphDraftUseCase.test.ts"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "PUT /workspace/graph/draft",
+        "completionGate": ["pnpm verify:prepush"],
+        "applicationPort": "IWorkspaceGraphDraftStore",
+        "componentGuides": [
+          "docs/architecture/components/web/appshell/effective-workspace-context-component.md"
+        ],
+        "expectedFailure": "Project-workspace and graph-authority symbols are absent from Planning DB mechanization.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/adr/ADR-0062-server-owned-effective-workspace-context.md"
+        ],
+        "documentationRefs": [
+          "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+          "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md"
+        ],
+        "architectureGuards": [
+          "JCS SHA-256 hashing and revisions make replay deterministic."
+        ],
+        "authorizationScope": "Authenticated author with exact write scope and authoring authority.",
+        "implementationPlan": "Converge project admission, workspace selection, grants, and graph-draft authority through existing rails.",
+        "implementationRefs": [
+          "apps/api/src/application/services/saveWorkspaceGraphDraftUseCase.ts#SaveWorkspaceGraphDraftUseCaseResult",
+          "apps/web/src/app/ports/workspaceGraphDraftAuthoring.ts#WorkspaceGraphDraftAuthoringSaveResult",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftProtocol.test.fixtures.ts#buildDraftSaveIdempotencyMismatchResponse",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftProtocol.test.fixtures.ts#buildDraftSaveUnsupportedSchemaResponse",
+          "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts#WorkspaceGraphDraftSaveAuthoringAuthorityConflict",
+          "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts#WorkspaceGraphDraftSaveAuthoringAuthorityConflictSchema",
+          "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts#WorkspaceGraphDraftSaveIdempotencyMismatch",
+          "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts#WorkspaceGraphDraftSaveIdempotencyMismatchSchema",
+          "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts#WorkspaceGraphDraftSaveUnsupportedSchemaVersion",
+          "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts#WorkspaceGraphDraftSaveUnsupportedSchemaVersionSchema"
+        ],
+        "normalizedRailName": "saveworkspacegraphdraft",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "2734e8293bcd3b8e90791e8c1371ad2825714b11d6efe11b9e8715924658767e",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/**",
+          "apps/api/src/entrypoints/http/**",
+          "apps/api/src/infrastructure/auth/**",
+          "apps/api/src/modules/**",
+          "apps/api/test/**",
+          "apps/web/src/app/**",
+          "apps/web/src/testing/**",
+          "apps/web/cypress/**",
+          "packages/@dvt/contracts/**",
+          "scripts/run-canvas-source-import-live-proof*",
+          "scripts/run-dev-stack.auth*",
+          "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+          "docs/architecture/components/web/appshell/**",
+          "docs/architecture/components/web/graph/**",
+          "docs/architecture/components/planner/workspace-authoring-draft-aggregate.md",
+          "docs/contracts/planner/workspace-graph-draft-persistence-v1.md",
+          "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md",
+          "docs/risk-register/quality/R-20260813-PROJECT-WORKSPACE-GRAPH-AUTHORITY.yaml",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/projectOnboardingRouteGroup.ts",
+          "apps/api/src/entrypoints/http/protectedRuntimeWorkspaceContextRouteGroup.ts",
+          "apps/api/src/entrypoints/http/protectedRuntimeWorkspaceGraphDraftRouteGroup.ts",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftFixtureBoundaries.architecture.test.ts",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftProtocol.ts",
+          "docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-component.md",
+          "docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-user-stories.md"
+        ]
+      },
+      "createdAt": "2026-08-13T19:09:35.494Z"
+    },
+    {
+      "operationId": "57a343ac-ae5a-484a-98c7-39497923d651",
+      "idempotencyKey": "feature_mechanization_rail_record:codex-agent:MVP-2170-PROJECT-WORKSPACE-AUTHORITY:command:createproject:0:e3450c5b8a74e3b4",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex-agent",
+      "railId": "local#MVP-2170-PROJECT-WORKSPACE-AUTHORITY#command#createproject",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2170",
+      "sourceContentSha256": "2734e8293bcd3b8e90791e8c1371ad2825714b11d6efe11b9e8715924658767e",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "The pre-push gate rejects a feature without Fowler opportunity governance.",
+        "dddOwner": "Project aggregate",
+        "railName": "CreateProject",
+        "railType": "command",
+        "featureId": "MVP-2170-PROJECT-WORKSPACE-AUTHORITY",
+        "greenTest": "The Planning DB feature cites Fowler governance and the mechanization gate passes.",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2170",
+        "unitTests": [
+          "apps/api/test/application/services/listProjectsUseCase.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2170"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts"
+        ],
+        "domainObjects": ["ProjectWorkspaceAuthority"],
+        "fowlerSignals": [
+          "Replace parallel authority paths with one rail and one interpreter."
+        ],
+        "negativeTests": [
+          "apps/api/test/entrypoints/http/projectOnboardingRoutes.test.ts"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "POST /projects",
+        "completionGate": ["pnpm verify:prepush"],
+        "applicationPort": "IProjectOnboardingRepository",
+        "componentGuides": [
+          "docs/architecture/components/web/appshell/effective-workspace-context-component.md"
+        ],
+        "expectedFailure": "The #2170 mechanization omits the canonical Fowler opportunity source.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md"
+        ],
+        "architectureGuards": [
+          "The retained rail has independent product value and no duplicate adapter."
+        ],
+        "authorizationScope": "Authenticated tenant actor with project:create authority.",
+        "implementationPlan": "Converge project admission, workspace selection, grants, and graph-draft authority through existing rails.",
+        "implementationRefs": [
+          "apps/api/src/application/ports/projectOnboarding.ts#PersistProjectCreationCommand"
+        ],
+        "normalizedRailName": "createproject",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "2734e8293bcd3b8e90791e8c1371ad2825714b11d6efe11b9e8715924658767e",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": ["apps/api/**"],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/projectOnboardingRouteGroup.ts"
+        ]
+      },
+      "createdAt": "2026-08-13T19:17:07.560Z"
+    },
+    {
+      "operationId": "c51b54f1-b193-4dad-abc5-ee0215171115",
+      "idempotencyKey": "feature_mechanization_rail_record:codex-agent:MVP-2170-PROJECT-WORKSPACE-AUTHORITY:query:listprojects:0:7537a85dbfb94b50",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex-agent",
+      "railId": "local#MVP-2170-PROJECT-WORKSPACE-AUTHORITY#query#listprojects",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2170",
+      "sourceContentSha256": "2734e8293bcd3b8e90791e8c1371ad2825714b11d6efe11b9e8715924658767e",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "The pre-push gate rejects a feature without Fowler opportunity governance.",
+        "dddOwner": "ProjectDescriptor read model",
+        "railName": "ListProjects",
+        "railType": "query",
+        "featureId": "MVP-2170-PROJECT-WORKSPACE-AUTHORITY",
+        "greenTest": "The Planning DB feature cites Fowler governance and the mechanization gate passes.",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2170",
+        "unitTests": [
+          "apps/api/test/application/services/listProjectsUseCase.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2170"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts"
+        ],
+        "domainObjects": ["ProjectWorkspaceAuthority"],
+        "fowlerSignals": [
+          "Replace parallel authority paths with one rail and one interpreter."
+        ],
+        "negativeTests": [
+          "apps/api/test/entrypoints/http/projectOnboardingRoutes.test.ts"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "GET /projects",
+        "completionGate": ["pnpm verify:prepush"],
+        "applicationPort": "IWorkspaceContextQuery",
+        "componentGuides": [
+          "docs/architecture/components/web/appshell/effective-workspace-context-component.md"
+        ],
+        "expectedFailure": "The #2170 mechanization omits the canonical Fowler opportunity source.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md"
+        ],
+        "architectureGuards": [
+          "The retained rail has independent product value and no duplicate adapter."
+        ],
+        "authorizationScope": "Authenticated principal sees only stored grants.",
+        "implementationPlan": "Converge project admission, workspace selection, grants, and graph-draft authority through existing rails.",
+        "implementationRefs": [
+          "apps/api/src/application/services/listProjectsUseCase.ts#ListProjectsUseCase"
+        ],
+        "normalizedRailName": "listprojects",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "2734e8293bcd3b8e90791e8c1371ad2825714b11d6efe11b9e8715924658767e",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": ["apps/api/**"],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/projectOnboardingRouteGroup.ts"
+        ]
+      },
+      "createdAt": "2026-08-13T19:17:09.144Z"
+    },
+    {
+      "operationId": "9e22a498-d77c-43da-9455-0849244fe346",
+      "idempotencyKey": "feature_mechanization_rail_record:codex-agent:MVP-2170-PROJECT-WORKSPACE-AUTHORITY:query:geteffectiveworkspacecontext:0:c80c1f373db1d7db",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex-agent",
+      "railId": "local#MVP-2170-PROJECT-WORKSPACE-AUTHORITY#query#geteffectiveworkspacecontext",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2170",
+      "sourceContentSha256": "2734e8293bcd3b8e90791e8c1371ad2825714b11d6efe11b9e8715924658767e",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "The pre-push gate rejects a feature without Fowler opportunity governance.",
+        "dddOwner": "EffectiveWorkspaceContext read model",
+        "railName": "GetEffectiveWorkspaceContext",
+        "railType": "query",
+        "featureId": "MVP-2170-PROJECT-WORKSPACE-AUTHORITY",
+        "greenTest": "The Planning DB feature cites Fowler governance and the mechanization gate passes.",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2170",
+        "unitTests": [
+          "apps/api/test/application/services/listProjectsUseCase.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2170"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts"
+        ],
+        "domainObjects": ["ProjectWorkspaceAuthority"],
+        "fowlerSignals": [
+          "Replace parallel authority paths with one rail and one interpreter."
+        ],
+        "negativeTests": [
+          "apps/api/test/entrypoints/http/projectOnboardingRoutes.test.ts"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "GET /workspace/context",
+        "completionGate": ["pnpm verify:prepush"],
+        "applicationPort": "IWorkspaceContextQuery",
+        "componentGuides": [
+          "docs/architecture/components/web/appshell/effective-workspace-context-component.md"
+        ],
+        "expectedFailure": "The #2170 mechanization omits the canonical Fowler opportunity source.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md"
+        ],
+        "architectureGuards": [
+          "The retained rail has independent product value and no duplicate adapter."
+        ],
+        "authorizationScope": "Authenticated principal receives one deterministic granted workspace.",
+        "implementationPlan": "Converge project admission, workspace selection, grants, and graph-draft authority through existing rails.",
+        "implementationRefs": [
+          "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#EmbeddedPrincipalGrantRepository"
+        ],
+        "normalizedRailName": "geteffectiveworkspacecontext",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "2734e8293bcd3b8e90791e8c1371ad2825714b11d6efe11b9e8715924658767e",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": ["apps/api/**"],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/projectOnboardingRouteGroup.ts"
+        ]
+      },
+      "createdAt": "2026-08-13T19:17:10.605Z"
+    },
+    {
+      "operationId": "5294f549-585c-46e7-ad5e-1d21de7a63c6",
+      "idempotencyKey": "feature_mechanization_rail_record:codex-agent:MVP-2170-PROJECT-WORKSPACE-AUTHORITY:query:getworkspacegraphdraft:0:f59265157284041a",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex-agent",
+      "railId": "local#MVP-2170-PROJECT-WORKSPACE-AUTHORITY#query#getworkspacegraphdraft",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2170",
+      "sourceContentSha256": "2734e8293bcd3b8e90791e8c1371ad2825714b11d6efe11b9e8715924658767e",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "The pre-push gate rejects a feature without Fowler opportunity governance.",
+        "dddOwner": "CanvasAuthoringAuthority",
+        "railName": "GetWorkspaceGraphDraft",
+        "railType": "query",
+        "featureId": "MVP-2170-PROJECT-WORKSPACE-AUTHORITY",
+        "greenTest": "The Planning DB feature cites Fowler governance and the mechanization gate passes.",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2170",
+        "unitTests": [
+          "apps/api/test/application/services/listProjectsUseCase.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2170"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts"
+        ],
+        "domainObjects": ["ProjectWorkspaceAuthority"],
+        "fowlerSignals": [
+          "Replace parallel authority paths with one rail and one interpreter."
+        ],
+        "negativeTests": [
+          "apps/api/test/entrypoints/http/projectOnboardingRoutes.test.ts"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "GET /workspace/graph/draft",
+        "completionGate": ["pnpm verify:prepush"],
+        "applicationPort": "IWorkspaceGraphDraftStore",
+        "componentGuides": [
+          "docs/architecture/components/web/appshell/effective-workspace-context-component.md"
+        ],
+        "expectedFailure": "The #2170 mechanization omits the canonical Fowler opportunity source.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md"
+        ],
+        "architectureGuards": [
+          "The retained rail has independent product value and no duplicate adapter."
+        ],
+        "authorizationScope": "Authenticate once and authorize the exact read scope.",
+        "implementationPlan": "Converge project admission, workspace selection, grants, and graph-draft authority through existing rails.",
+        "implementationRefs": [
+          "apps/api/src/application/services/getWorkspaceGraphDraftUseCase.ts#GetWorkspaceGraphDraftUseCaseResult"
+        ],
+        "normalizedRailName": "getworkspacegraphdraft",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "2734e8293bcd3b8e90791e8c1371ad2825714b11d6efe11b9e8715924658767e",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": ["apps/api/**"],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/projectOnboardingRouteGroup.ts"
+        ]
+      },
+      "createdAt": "2026-08-13T19:17:12.126Z"
+    },
+    {
+      "operationId": "087313ef-6e0a-49fd-8533-2cd38493270d",
+      "idempotencyKey": "feature_mechanization_rail_record:codex-agent:MVP-2170-PROJECT-WORKSPACE-AUTHORITY:command:saveworkspacegraphdraft:0:48975e00b974176c",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex-agent",
+      "railId": "local#MVP-2170-PROJECT-WORKSPACE-AUTHORITY#command#saveworkspacegraphdraft",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2170",
+      "sourceContentSha256": "2734e8293bcd3b8e90791e8c1371ad2825714b11d6efe11b9e8715924658767e",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "The pre-push gate rejects a feature without Fowler opportunity governance.",
+        "dddOwner": "Workspace authoring aggregate",
+        "railName": "SaveWorkspaceGraphDraft",
+        "railType": "command",
+        "featureId": "MVP-2170-PROJECT-WORKSPACE-AUTHORITY",
+        "greenTest": "The Planning DB feature cites Fowler governance and the mechanization gate passes.",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2170",
+        "unitTests": [
+          "apps/api/test/application/services/listProjectsUseCase.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2170"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts"
+        ],
+        "domainObjects": ["ProjectWorkspaceAuthority"],
+        "fowlerSignals": [
+          "Replace parallel authority paths with one rail and one interpreter."
+        ],
+        "negativeTests": [
+          "apps/api/test/entrypoints/http/projectOnboardingRoutes.test.ts"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "PUT /workspace/graph/draft",
+        "completionGate": ["pnpm verify:prepush"],
+        "applicationPort": "IWorkspaceGraphDraftStore",
+        "componentGuides": [
+          "docs/architecture/components/web/appshell/effective-workspace-context-component.md"
+        ],
+        "expectedFailure": "The #2170 mechanization omits the canonical Fowler opportunity source.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md"
+        ],
+        "architectureGuards": [
+          "The retained rail has independent product value and no duplicate adapter."
+        ],
+        "authorizationScope": "Authenticated author with exact write scope and authoring authority.",
+        "implementationPlan": "Converge project admission, workspace selection, grants, and graph-draft authority through existing rails.",
+        "implementationRefs": [
+          "apps/api/src/application/services/saveWorkspaceGraphDraftUseCase.ts#SaveWorkspaceGraphDraftUseCaseResult"
+        ],
+        "normalizedRailName": "saveworkspacegraphdraft",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "2734e8293bcd3b8e90791e8c1371ad2825714b11d6efe11b9e8715924658767e",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": ["apps/api/**"],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/projectOnboardingRouteGroup.ts"
+        ]
+      },
+      "createdAt": "2026-08-13T19:17:13.574Z"
     }
   ],
   "governanceComponentDefinitions": [
