@@ -152,6 +152,7 @@ export function buildWorkflowEngine(config: EngineConfig): BuiltWorkflowEngineRu
   });
   const runCommandService = buildRunCommandService({
     stateStoreRead: config.persistence.stateStoreRead,
+    idempotency,
     policy,
     adapters: protectedAdapters,
     observability: config.infrastructure.observability,

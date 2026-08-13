@@ -47,6 +47,34 @@ describe('WorkflowEngineCoreService', () => {
     ]);
   });
 
+  it('rejects cancellation of a completed run before provider dispatch', async () => {
+    const cancelRun = vi.fn(async () => {});
+    const { core, store } = createWorkflowEngineCoreFixture({
+      adapterOverrides: { cancelRun },
+    });
+    await bootstrapQueuedRun(store, 'core-cancel-completed-1');
+    await appendRunStarted(store, 'core-cancel-completed-1');
+    await appendRunEvent(store, 'core-cancel-completed-1', 'RunCompleted');
+
+    await expect(core.cancel(makeRunRef('core-cancel-completed-1'))).rejects.toBeInstanceOf(
+      InvalidStateTransitionError
+    );
+    expect(cancelRun).not.toHaveBeenCalled();
+  });
+
+  it('treats an already requested cancellation as idempotent', async () => {
+    const cancelRun = vi.fn(async () => {});
+    const { core, store } = createWorkflowEngineCoreFixture({
+      adapterOverrides: { cancelRun },
+    });
+    await bootstrapQueuedRun(store, 'core-cancel-requested-1');
+    await appendRunStarted(store, 'core-cancel-requested-1');
+    await appendRunEvent(store, 'core-cancel-requested-1', 'RunCancelRequested');
+
+    await expect(core.cancel(makeRunRef('core-cancel-requested-1'))).resolves.toBeUndefined();
+    expect(cancelRun).not.toHaveBeenCalled();
+  });
+
   it('signal(CANCEL) delegates to adapter without appending RunCancelRequested', async () => {
     const signal = vi.fn(async () => {});
     const { core, store } = createWorkflowEngineCoreFixture({
@@ -249,3 +277,27 @@ describe('WorkflowEngineCoreService', () => {
     ).toEqual(['RunQueued', 'RunStarted']);
   });
 });
+
+async function appendRunEvent(
+  store: InMemoryTxStore,
+  runId: string,
+  eventType: 'RunCancelRequested' | 'RunCompleted'
+): Promise<void> {
+  await store.appendAndEnqueueTx(runId, [
+    {
+      eventId: `${runId}:${eventType}`,
+      eventType,
+      runId,
+      tenantId: 't',
+      projectId: 'p',
+      environmentId: 'dev',
+      planId: 'plan-1',
+      planVersion: '1.0',
+      logicalAttemptId: 1,
+      engineAttemptId: 1,
+      payloadVersion: 1,
+      emittedAt: '2026-03-26T00:00:02.000Z',
+      idempotencyKey: `${runId}:${eventType}`,
+    },
+  ]);
+}

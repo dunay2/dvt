@@ -87,6 +87,10 @@ export class SignalTransitionGuard {
     events: readonly EventEnvelope[],
     req: SignalRequest
   ): boolean {
+    if (req.type === 'CANCEL') {
+      return snapshot.status === 'CANCELLED' || snapshot.cancelling;
+    }
+
     const lastPauseResumeEvent = this.lastPauseResumeEventType(events);
 
     if (req.type === 'PAUSE') {
@@ -115,6 +119,10 @@ export class SignalTransitionGuard {
   }
 
   private isAlreadyAppliedFromSnapshot(snapshot: WorkflowSnapshot, req: SignalRequest): boolean {
+    if (req.type === 'CANCEL') {
+      return snapshot.status === 'CANCELLED' || snapshot.cancelling;
+    }
+
     if (req.type === 'PAUSE') {
       return snapshot.status === 'PAUSED' || snapshot.paused;
     }

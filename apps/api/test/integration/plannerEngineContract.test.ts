@@ -184,6 +184,7 @@ function createStack(
   });
   const runCommandService = buildRunCommandService({
     stateStoreRead: store,
+    idempotency,
     policy,
     adapters,
     observability: createNoopObservability(),
