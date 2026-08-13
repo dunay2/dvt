@@ -7,25 +7,27 @@ import {
   okResult,
   VALID_BODY,
   VALID_GENERATED_RUN_ID,
-  VALID_GENERATED_RUN_ID_ALT,
   VALID_PLAN_REF,
 } from './startRunRoute.test.support.js';
 
 describe('startRunRoute auth, success, and transport failure outcomes', () => {
   it('contains unexpected infrastructure failures behind the stable HTTP error envelope', async () => {
     const infrastructureMessage = 'connect ETIMEDOUT postgres.internal:5432';
+    const recordStartRunLatency = vi.fn();
 
     const { reply } = await invokeStartRunRoute({
-      facade: {
+      useCase: {
         async execute() {
           throw new Error(infrastructureMessage);
         },
       },
+      telemetry: { recordStartRunLatency },
     });
 
     expect(reply.statusCode).toBe(500);
     expect(reply.payload).toEqual(httpError('internal_server_error', 'internal_error'));
     expect(JSON.stringify(reply.payload)).not.toContain(infrastructureMessage);
+    expect(recordStartRunLatency).toHaveBeenCalledWith(expect.any(Number), 'exception');
   });
 
   it('accepts a StartRun request with explicitly injected disabled observability', async () => {
@@ -75,12 +77,9 @@ describe('startRunRoute auth, success, and transport failure outcomes', () => {
     const span = createTrackingSpan();
 
     const { reply } = await invokeStartRunRoute({
-      facade: {
-        async execute() {
-          return okResult({
-            kind: 'unauthorized' as const,
-            reason: 'TENANT_NOT_GRANTED' as const,
-          });
+      authorizer: {
+        async authorize() {
+          return { ok: false as const, reason: 'TENANT_NOT_GRANTED' as const };
         },
       },
       observability: {
@@ -101,10 +100,12 @@ describe('startRunRoute auth, success, and transport failure outcomes', () => {
   });
 
   it('passes normalized command and requested scope', async () => {
-    let received: Record<string, unknown> | undefined;
-    const facade = {
-      async execute(input: Record<string, unknown>) {
-        received = input;
+    let receivedCommand: Record<string, unknown> | undefined;
+    let receivedContext: unknown;
+    const useCase = {
+      async execute(command: Record<string, unknown>, context: unknown) {
+        receivedCommand = command;
+        receivedContext = context;
         return okResult({
           kind: 'accepted' as const,
           runId: VALID_GENERATED_RUN_ID,
@@ -123,43 +124,35 @@ describe('startRunRoute auth, success, and transport failure outcomes', () => {
           planRef: VALID_PLAN_REF,
         },
       },
-      facade,
+      useCase,
       runIdGenerator: () => VALID_GENERATED_RUN_ID,
     });
 
     expect(reply.statusCode).toBe(202);
     expect(reply.payload).toEqual({ runId: VALID_GENERATED_RUN_ID, accepted: true });
-    expect(received).toEqual({
-      token: 'token',
-      requestId: 'req-normalized',
-      command: {
-        planRef: VALID_PLAN_REF,
-        runId: VALID_GENERATED_RUN_ID,
-        targetAdapter: 'temporal',
-        selection: { mode: 'explicit', nodeIds: ['model_a'] },
-      },
-      requestedScope: {
+    expect(receivedCommand).toEqual({
+      planRef: VALID_PLAN_REF,
+      runId: VALID_GENERATED_RUN_ID,
+      targetAdapter: 'temporal',
+      selection: { mode: 'explicit', nodeIds: ['model_a'] },
+    });
+    expect(receivedContext).toMatchObject({
+      scope: {
         resource: 'environment',
         tenantId: expect.objectContaining({ value: 't1' }),
         projectId: expect.objectContaining({ value: 'p1' }),
         environmentId: expect.objectContaining({ value: 'e1' }),
-        action: { kind: 'command', name: 'run:start' },
       },
+      action: { kind: 'command', name: 'run:start' },
+      requestId: 'req-normalized',
     });
   });
 
   it('accepts lowercase bearer scheme', async () => {
-    let received: Record<string, unknown> | undefined;
-    const facade = {
-      async execute(input: Record<string, unknown>) {
-        received = input;
-        return okResult({
-          kind: 'accepted' as const,
-          runId: VALID_GENERATED_RUN_ID_ALT,
-          accepted: true,
-        });
-      },
-    };
+    const authenticateBearerToken = vi.fn().mockResolvedValue({
+      ok: false as const,
+      code: 'INVALID_TOKEN' as const,
+    });
 
     const { reply } = await invokeStartRunRoute({
       request: {
@@ -167,44 +160,43 @@ describe('startRunRoute auth, success, and transport failure outcomes', () => {
         headers: { authorization: 'bearer token' },
         body: VALID_BODY,
       },
-      facade,
+      authenticator: { authenticateBearerToken },
     });
 
-    expect(reply.statusCode).toBe(202);
-    expect(reply.payload).toEqual({ runId: VALID_GENERATED_RUN_ID_ALT, accepted: true });
-    expect(received?.token).toBe('token');
+    expect(reply.statusCode).toBe(401);
+    expect(authenticateBearerToken).toHaveBeenCalledWith('token');
   });
 
-  it('returns 401 when facade returns ok=true unauthenticated', async () => {
+  it('returns 401 when shared authentication rejects the request', async () => {
+    const recordStartRunLatency = vi.fn();
     const { reply } = await invokeStartRunRoute({
       request: {
         id: 'req-unauthenticated',
         body: VALID_BODY,
       },
-      facade: {
-        async execute() {
-          return okResult({ kind: 'unauthenticated' as const, code: 'MISSING_TOKEN' as const });
+      authenticator: {
+        async authenticateBearerToken() {
+          return { ok: false as const, code: 'MISSING_TOKEN' as const };
         },
       },
+      telemetry: { recordStartRunLatency },
     });
 
     expect(reply.statusCode).toBe(401);
     expect(reply.payload).toEqual(httpError('unauthorized', 'missing_token'));
+    expect(recordStartRunLatency).toHaveBeenCalledWith(expect.any(Number), 'unauthenticated');
   });
 
-  it('returns 403 when facade returns ok=true unauthorized', async () => {
+  it('returns 403 when shared authorization rejects the request', async () => {
     const { reply } = await invokeStartRunRoute({
       request: {
         id: 'req-unauthorized',
         headers: { authorization: 'Bearer token' },
         body: VALID_BODY,
       },
-      facade: {
-        async execute() {
-          return okResult({
-            kind: 'unauthorized' as const,
-            reason: 'TENANT_NOT_GRANTED' as const,
-          });
+      authorizer: {
+        async authorize() {
+          return { ok: false as const, reason: 'TENANT_NOT_GRANTED' as const };
         },
       },
     });
@@ -214,13 +206,14 @@ describe('startRunRoute auth, success, and transport failure outcomes', () => {
   });
 
   it('returns 202 for duplicate idempotent retry', async () => {
+    const recordStartRunLatency = vi.fn();
     const { reply } = await invokeStartRunRoute({
       request: {
         id: 'req-duplicate',
         headers: { authorization: 'Bearer token' },
         body: VALID_BODY,
       },
-      facade: {
+      useCase: {
         async execute() {
           return okResult({
             kind: 'duplicate' as const,
@@ -230,6 +223,7 @@ describe('startRunRoute auth, success, and transport failure outcomes', () => {
           });
         },
       },
+      telemetry: { recordStartRunLatency },
     });
 
     expect(reply.statusCode).toBe(202);
@@ -239,6 +233,7 @@ describe('startRunRoute auth, success, and transport failure outcomes', () => {
       duplicate: true,
       duplicateOf: 'intent',
     });
+    expect(recordStartRunLatency).toHaveBeenCalledWith(expect.any(Number), 'duplicate');
   });
 });
 

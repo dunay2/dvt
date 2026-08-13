@@ -22,6 +22,8 @@ import type { IStartRunTargetAdapterRegistry } from '../application/ports/IStart
 import type { IRunControlCommandCoordinator } from '../application/ports/runControlCommandCoordinator.js';
 import type { IRunExecutionContextInheritanceWriter } from '../application/ports/runExecutionContextInheritanceWriter.js';
 import type { IRunExecutionContextReferenceReader } from '../application/ports/runExecutionContextReferenceReader.js';
+import type { IStartRunLatencyTelemetry } from '../application/ports/StartRunSlaTelemetry.js';
+import type { IStartRunUseCase } from '../application/ports/startRunUseCasePort.js';
 import type { IWorkspaceContextQuery } from '../application/ports/workspaceContext.js';
 import type { IWorkspaceGraphDraftStore } from '../application/ports/workspaceGraphDraft.js';
 import type { AuthorizeCommandScopeService } from '../application/services/authorizeCommandScopeService.js';
@@ -32,14 +34,14 @@ import type { GetWorkspaceGraphDraftUseCase } from '../application/services/getW
 import type { ListProjectsUseCase } from '../application/services/listProjectsUseCase.js';
 import type { ListWorkspacePluginsUseCase } from '../application/services/listWorkspacePluginsUseCase.js';
 import type { SaveWorkspaceGraphDraftUseCase } from '../application/services/saveWorkspaceGraphDraftUseCase.js';
-import type { StartRunAuthorizedFacade } from '../application/services/startRunAuthorizedFacade.js';
 import type { StoredPlanExecutabilityValidator } from '../application/services/StoredPlanExecutabilityValidator.js';
 
 import type { DbtProjectImportRuntime } from './dbtProjectImport/buildDbtProjectImportRuntime.js';
 import type { StateStoreRoleBindings } from './stateStoreRoles.js';
 
 export interface ProtectedRuntimeModule {
-  facade: StartRunAuthorizedFacade;
+  startRunUseCase: IStartRunUseCase;
+  startRunTelemetry: IStartRunLatencyTelemetry;
   authenticator: IAuthenticator;
   authorizer: AuthorizeCommandScopeService;
   workspaceContextQuery: IWorkspaceContextQuery;

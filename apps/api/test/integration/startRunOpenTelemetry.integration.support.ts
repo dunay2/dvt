@@ -36,7 +36,6 @@ import { DbtRunExecutionContextBindingUseCase } from '../../src/application/serv
 import { EngineStartRunUseCase } from '../../src/application/services/engineStartRunUseCase.js';
 import { PlannerBackedStartRunUseCase } from '../../src/application/services/PlannerBackedStartRunUseCase.js';
 import { ResolveAuthorizedExecutableSubgraphService } from '../../src/application/services/resolveAuthorizedExecutableSubgraph.js';
-import { StartRunAuthorizedFacade } from '../../src/application/services/startRunAuthorizedFacade.js';
 import { createStartRunTargetAdapterRegistryFromValues } from '../../src/application/services/startRunTargetAdapterRegistry.js';
 import { StoredExecutablePlanResolver } from '../../src/application/services/StoredExecutablePlanResolver.js';
 import { StoredPlanExecutabilityValidator } from '../../src/application/services/StoredPlanExecutabilityValidator.js';
@@ -186,18 +185,16 @@ export async function createStartRunOpenTelemetryProof(
       workspaceGraphDraftStore: createUnusedWorkspaceGraphDraftStore(),
     }),
   });
-  const facade = new StartRunAuthorizedFacade(
-    createAuthenticator(),
-    createAuthorizer(authorized),
-    plannerBackedStartRun,
-    startRunSlaTelemetry
-  );
   const app = Fastify({ logger: false });
   app.post('/runs/start', async (request, reply) =>
-    startRunRoute(request as never, reply, facade, {
+    startRunRoute(request as never, reply, {
       adapterRegistry: createStartRunTargetAdapterRegistryFromValues(['temporal']),
+      authenticator: createAuthenticator(),
+      authorizer: createAuthorizer(authorized),
       observability,
       runIdGenerator: () => RUN_ID,
+      telemetry: startRunSlaTelemetry,
+      useCase: plannerBackedStartRun,
     })
   );
   await app.ready();

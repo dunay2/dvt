@@ -76,7 +76,7 @@ Alertmanager routing, or backwards-compatible metric aliases.
 
 ```mermaid
 flowchart LR
-  Facade["startRunAuthorizedFacade"] --> Port["StartRunSlaTelemetry"]
+  Route["startRunRoute"] --> Port["StartRunSlaTelemetry"]
   Planner["PlannerBackedStartRunUseCase"] --> Port
   Port --> ApiAdapter["ObservabilityStartRunSlaTelemetry"]
   ApiAdapter --> ApiHist["dvt_api_*_latency_seconds histograms"]

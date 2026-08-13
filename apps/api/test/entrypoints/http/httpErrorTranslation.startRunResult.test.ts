@@ -9,35 +9,11 @@ import { httpErrorTranslation } from '../../../src/entrypoints/http/httpErrorTra
 
 import {
   expectCanonicalErrorResponse,
-  expectSystemBackpressureFacadeResult,
+  expectSystemBackpressureResult,
 } from './httpErrorTranslation.test.support.js';
 
-describe('httpErrorTranslation start-run facade results', () => {
+describe('httpErrorTranslation start-run results', () => {
   const canonicalFacadeErrorCases = [
-    {
-      description: 'unauthenticated -> 401',
-      input: {
-        kind: 'unauthenticated' as const,
-        code: 'MISSING_TOKEN' as const,
-      },
-      expected: {
-        status: 401,
-        type: 'unauthorized',
-        reason: 'missing_token',
-      },
-    },
-    {
-      description: 'unauthorized -> 403',
-      input: {
-        kind: 'unauthorized' as const,
-        reason: 'TENANT_NOT_GRANTED' as const,
-      },
-      expected: {
-        status: 403,
-        type: 'forbidden',
-        reason: 'tenant_not_granted',
-      },
-    },
     {
       description: 'tenant_backpressure -> 429 with Retry-After',
       input: {
@@ -129,33 +105,33 @@ describe('httpErrorTranslation start-run facade results', () => {
   ];
 
   it.each(canonicalFacadeErrorCases)('$description', ({ input, expected }) => {
-    expectCanonicalErrorResponse(httpErrorTranslation.startRun.facadeResult(input), expected);
+    expectCanonicalErrorResponse(httpErrorTranslation.startRun.result(input), expected);
   });
 
   it.each(successFacadeCases)('$description', ({ input, expected }) => {
-    expect(httpErrorTranslation.startRun.facadeResult(input)).toEqual(expected);
+    expect(httpErrorTranslation.startRun.result(input)).toEqual(expected);
   });
 
   it('system_backpressure -> 503 with Retry-After', () => {
-    const result = httpErrorTranslation.startRun.facadeResult({
+    const result = httpErrorTranslation.startRun.result({
       kind: 'system_backpressure',
       accepted: false,
       code: 'BACKPRESSURE_SNAPSHOT_UNAVAILABLE',
       retryAfterSeconds: 45,
     });
-    expectSystemBackpressureFacadeResult(result, 'backpressure_snapshot_unavailable', 45);
+    expectSystemBackpressureResult(result, 'backpressure_snapshot_unavailable', 45);
   });
 
   it.each(executionCapacitySystemBackpressureCases)(
     'execution-capacity system_backpressure preserves reason for code=%s',
     ({ code, expectedReason, retryAfterSeconds }) => {
-      const result = httpErrorTranslation.startRun.facadeResult({
+      const result = httpErrorTranslation.startRun.result({
         kind: 'system_backpressure',
         accepted: false,
         code,
         retryAfterSeconds,
       });
-      expectSystemBackpressureFacadeResult(result, expectedReason, retryAfterSeconds);
+      expectSystemBackpressureResult(result, expectedReason, retryAfterSeconds);
     }
   );
 
@@ -172,24 +148,27 @@ describe('httpErrorTranslation start-run facade results', () => {
       reason: 'Adapter-specific rejection',
       cause: 'adapter',
     },
-  ])('plan_rejected preserves stable reason for $code', ({ code, expectedReason, reason, cause }) => {
-    expectCanonicalErrorResponse(
-      httpErrorTranslation.startRun.facadeResult({
-        kind: 'plan_rejected',
-        accepted: false,
-        code,
-        reason,
-        cause,
-      }),
-      {
-        status: 422,
-        type: 'unprocessable',
-        reason: expectedReason,
-        details: {
-          message: reason,
+  ])(
+    'plan_rejected preserves stable reason for $code',
+    ({ code, expectedReason, reason, cause }) => {
+      expectCanonicalErrorResponse(
+        httpErrorTranslation.startRun.result({
+          kind: 'plan_rejected',
+          accepted: false,
+          code,
+          reason,
           cause,
-        },
-      }
-    );
-  });
+        }),
+        {
+          status: 422,
+          type: 'unprocessable',
+          reason: expectedReason,
+          details: {
+            message: reason,
+            cause,
+          },
+        }
+      );
+    }
+  );
 });

@@ -19,7 +19,7 @@ import {
   mapAuthorizationFailure,
   mapRouteParseIssue,
   mapStartRunEngineError,
-  mapStartRunFacadeResult,
+  mapStartRunResult,
 } from './httpErrorMapper.js';
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 
@@ -48,7 +48,7 @@ export const httpErrorTranslation = {
     unauthorized: mapAuthorizationFailure,
   },
   startRun: {
-    facadeResult: mapStartRunFacadeResult,
+    result: mapStartRunResult,
     engineError: mapStartRunEngineError,
     internalError(): HttpResponseModel {
       return createHttpErrorResponse({

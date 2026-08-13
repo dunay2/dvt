@@ -43,7 +43,7 @@ flowchart TB
 | Module/Class                                                      | Responsibility                                           | Must not do                     |
 | ----------------------------------------------------------------- | -------------------------------------------------------- | ------------------------------- |
 | `startRunRoute.ts`                                                | parse/validate transport input and map response envelope | domain mutation logic           |
-| `StartRunAuthorizedFacade`                                        | orchestrate authz + admission + command dispatch         | direct DB or adapter calls      |
+| `startRunRoute`                                                   | shared authz, telemetry, and admission dispatch          | direct DB or adapter calls      |
 | `BackpressureAwareStartRunUseCase`                                | apply admission and backpressure policy                  | HTTP mapping                    |
 | `EngineStartRunUseCase`                                           | call engine command boundary                             | token parsing                   |
 | `listRunsUseCase` / `getRunStatusUseCase` / `getRunEventsUseCase` | CQRS query path with authz-first posture                 | mutate run state                |

@@ -24,7 +24,7 @@ describe('startRunRoute engine error translation', () => {
           targetAdapter: 'temporal',
         },
       },
-      facade: {
+      useCase: {
         async execute() {
           return errorResult({ kind: 'adapter_not_registered' as const, adapter: 'temporal' });
         },
@@ -47,7 +47,7 @@ describe('startRunRoute engine error translation', () => {
           targetAdapter: 'temporal',
         },
       },
-      facade: {
+      useCase: {
         async execute() {
           throw new Error('should not be called');
         },
@@ -70,7 +70,7 @@ describe('startRunRoute engine error translation', () => {
           ...VALID_BODY,
         },
       },
-      facade: {
+      useCase: {
         async execute() {
           return errorResult({
             kind: 'command_invalid' as const,
@@ -101,7 +101,7 @@ describe('startRunRoute engine error translation', () => {
           ...VALID_BODY,
         },
       },
-      facade: {
+      useCase: {
         async execute() {
           return errorResult({
             kind: 'unsupported_plan_version' as const,

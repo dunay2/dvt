@@ -10,11 +10,10 @@ type IsOptional<ObjectType, Key extends keyof ObjectType> =
   {} extends Pick<ObjectType, Key> ? true : false;
 
 type StartRunRouteParameters = Parameters<typeof startRunRoute>;
-type StartRunRouteDependencies = NonNullable<StartRunRouteParameters[3]>;
+type StartRunRouteDependencies = NonNullable<StartRunRouteParameters[2]>;
 type StartRunRouteWithoutDependencies = (
   request: StartRunRouteParameters[0],
-  reply: StartRunRouteParameters[1],
-  facade: StartRunRouteParameters[2]
+  reply: StartRunRouteParameters[1]
 ) => ReturnType<typeof startRunRoute>;
 
 export type StartRunRouteRequiresDependenciesArgument = AssertFalse<
