@@ -5,17 +5,31 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
 import type { ImportPlanUseCase } from '../../application/services/ImportPlanUseCase.js';
+import { PLAN_ROUTE_POLICY_CATALOG } from '../../application/services/planRoutePolicyCatalog.js';
 
 import { createPlanRouteHandler } from './executePlanRouteFacade.js';
 import {
-  resolveImportPlanRouteRequest,
-  type ImportPlanRouteRequestResolverDeps,
-} from './importPlanRouteRequestResolver.js';
+  parseImportPlanRouteInput,
+  type ParsedImportPlanRouteInput,
+} from './importPlanRouteParser.js';
+import {
+  createAuthorizedPlanRouteRequestResolver,
+  type PlanRouteAuthorizationResolverDeps,
+} from './planRouteRequestResolver.js';
 import { planRouteResponseTranslation } from './planRouteResponseTranslation.js';
 
-type ImportPlanRouteDeps = ImportPlanRouteRequestResolverDeps & {
+type ImportPlanRouteDeps = PlanRouteAuthorizationResolverDeps & {
   readonly useCase: Pick<ImportPlanUseCase, 'execute'>;
 };
+
+const resolveImportPlanRouteRequest = createAuthorizedPlanRouteRequestResolver<
+  ImportPlanRouteDeps,
+  ParsedImportPlanRouteInput
+>({
+  parseRequestBody: parseImportPlanRouteInput,
+  selectRequestedScope: (parsedRequest) => parsedRequest.routeContext,
+  action: PLAN_ROUTE_POLICY_CATALOG.IMPORT.authorization,
+});
 
 export const importPlanRoute = createPlanRouteHandler({
   logMessage: 'plan import failed',

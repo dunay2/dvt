@@ -5,17 +5,31 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
 import type { CompilePlanUseCase } from '../../application/services/CompilePlanUseCase.js';
+import { PLAN_ROUTE_POLICY_CATALOG } from '../../application/services/planRoutePolicyCatalog.js';
 
-import {
-  resolveCompilePlanRouteRequest,
-  type CompilePlanRouteRequestResolverDeps,
-} from './compilePlanRouteRequestResolver.js';
 import { createPlanRouteHandler } from './executePlanRouteFacade.js';
+import {
+  parsePlanCompileRouteInput,
+  type ParsedPlanCompileRouteInput,
+} from './planCompileRouteInputParser.js';
+import {
+  createAuthorizedPlanRouteRequestResolver,
+  type PlanRouteAuthorizationResolverDeps,
+} from './planRouteRequestResolver.js';
 import { planRouteResponseTranslation } from './planRouteResponseTranslation.js';
 
-type CompilePlanRouteDeps = CompilePlanRouteRequestResolverDeps & {
+type CompilePlanRouteDeps = PlanRouteAuthorizationResolverDeps & {
   readonly useCase: Pick<CompilePlanUseCase, 'execute'>;
 };
+
+const resolveCompilePlanRouteRequest = createAuthorizedPlanRouteRequestResolver<
+  CompilePlanRouteDeps,
+  ParsedPlanCompileRouteInput
+>({
+  parseRequestBody: parsePlanCompileRouteInput,
+  selectRequestedScope: (parsedRequest) => parsedRequest.requestedScope,
+  action: PLAN_ROUTE_POLICY_CATALOG.COMPILE.authorization,
+});
 
 export const compilePlanRoute = createPlanRouteHandler({
   logMessage: 'plan compile failed',
