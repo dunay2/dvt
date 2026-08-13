@@ -276,7 +276,7 @@ test('feature mechanization rail planner extends existing evidence without resto
         status: 'implemented',
         decorator: 'apps/web/src/retiredProjection.ts',
       },
-      forbiddenImplementationSurfaces: ['apps/web/cypress/e2e/canvas/**'],
+      forbiddenImplementationSurfaces: ['apps/web/cypress/e2e/canvas/** legacy direct-write ban'],
       redGreenCycles: [
         {
           id: 'existing-cycle',
@@ -331,7 +331,7 @@ test('feature mechanization rail planner extends existing evidence without resto
   );
   assert.equal(
     planned.rail.rawManifest.forbiddenImplementationSurfaces.includes(
-      'apps/web/cypress/e2e/canvas/**'
+      'apps/web/cypress/e2e/canvas/** legacy direct-write ban'
     ),
     false
   );

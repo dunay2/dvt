@@ -4974,13 +4974,21 @@ function mergeFeatureMechanizationObjectsByKey(existing, incoming, keyOf) {
   return [...merged.values()];
 }
 
+function featureMechanizationSurfacePath(value) {
+  return String(value || '')
+    .trim()
+    .split(/\s+/, 1)[0];
+}
+
 function surfaceMatchesPattern(surface, pattern) {
-  if (surface === pattern) {
+  const normalizedSurface = featureMechanizationSurfacePath(surface);
+  const normalizedPattern = featureMechanizationSurfacePath(pattern);
+  if (normalizedSurface === normalizedPattern) {
     return true;
   }
-  if (pattern.endsWith('/**')) {
-    const prefix = pattern.slice(0, -3);
-    return surface === prefix || surface.startsWith(`${prefix}/`);
+  if (normalizedPattern.endsWith('/**')) {
+    const prefix = normalizedPattern.slice(0, -3);
+    return normalizedSurface === prefix || normalizedSurface.startsWith(`${prefix}/`);
   }
   return false;
 }
