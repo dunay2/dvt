@@ -258,29 +258,50 @@ export class RecoverRunApplicationService implements IRunRecoveryService {
     if (this.deps.stateStoreWrite.bootstrapRecoveryRunTx === undefined) {
       throw new Error('stateStoreWrite.bootstrapRecoveryRunTx is required for recoverRun');
     }
-    const prepared = await this.deps.stateStoreWrite.bootstrapRecoveryRunTx(
-      context.tenantId,
-      sourceMetadata.runId,
-      (reservation) => {
-        const resolvedContext: ResolvedRunContext = {
-          ...context,
-          logicalAttemptId: reservation.logicalAttemptId,
-          parentRunId: asNonBlankString(reservation.parentRunId),
-          originRunId: asNonBlankString(reservation.originRunId),
-        };
-        const runRef = estimateRunRef(resolvedContext);
-        const metadata = this.eventFactory.buildRunMetadata(
-          resolvedContext,
-          planRef,
-          runRef,
-          this.deps.clock.nowIsoUtc()
-        );
-        return {
-          metadata,
-          firstEvents: [this.eventFactory.buildRunEvent(metadata, 'RunQueued')],
-        };
+    let prepared: Awaited<ReturnType<NonNullable<IRunStateStoreWrite['bootstrapRecoveryRunTx']>>>;
+    try {
+      prepared = await this.deps.stateStoreWrite.bootstrapRecoveryRunTx(
+        context.tenantId,
+        sourceMetadata.runId,
+        (reservation) => {
+          const resolvedContext: ResolvedRunContext = {
+            ...context,
+            logicalAttemptId: reservation.logicalAttemptId,
+            parentRunId: asNonBlankString(reservation.parentRunId),
+            originRunId: asNonBlankString(reservation.originRunId),
+          };
+          const runRef = estimateRunRef(resolvedContext);
+          const metadata = this.eventFactory.buildRunMetadata(
+            resolvedContext,
+            planRef,
+            runRef,
+            this.deps.clock.nowIsoUtc()
+          );
+          return {
+            metadata,
+            firstEvents: [this.eventFactory.buildRunEvent(metadata, 'RunQueued')],
+          };
+        }
+      );
+    } catch (error) {
+      if (!(error instanceof RunAlreadyExistsError)) throw error;
+      const concurrentRecovery = await this.deps.stateStoreRead.getRunMetadataByRunId(
+        context.tenantId,
+        context.runId
+      );
+      if (concurrentRecovery === null || !isRecoveryChildOf(concurrentRecovery, sourceMetadata)) {
+        throw error;
       }
-    );
+      return {
+        context: {
+          ...context,
+          logicalAttemptId: concurrentRecovery.logicalAttemptId,
+          parentRunId: asNonBlankString(concurrentRecovery.parentRunId),
+          originRunId: asNonBlankString(concurrentRecovery.originRunId),
+        },
+        runRef: concurrentRecovery.providerRef,
+      };
+    }
     return {
       context: {
         ...context,

@@ -651,6 +651,25 @@ describe('WorkflowEngine (basic failure modes)', () => {
     expect(recovery?.originRunId).toBe(sourceRunId);
   });
 
+  it('reuses one prepared recovery for concurrent deliveries of the same identity', async () => {
+    const { engine, store } = createEngine({ adapters: makeRecoverableAdapters() });
+    const sourceRunId = 'recover-concurrent-source-1';
+    const recoveryRunId = 'recover-concurrent-target-1';
+
+    await engine.startRun(makePlanRef(), makeContext(sourceRunId));
+    await appendRunCompleted(store, sourceRunId);
+
+    const results = await Promise.all([
+      engine.recoverRun(sourceRunId, makePlanRef(), makeContext(recoveryRunId)),
+      engine.recoverRun(sourceRunId, makePlanRef(), makeContext(recoveryRunId)),
+    ]);
+
+    expect(results[0]).toEqual(results[1]);
+    const recovery = await store.getRunMetadataByRunId('t', recoveryRunId);
+    expect(recovery?.logicalAttemptId).toBe(2);
+    expect(recovery?.parentRunId).toBe(sourceRunId);
+  });
+
   it('recoverRun rejects when sourceRunId equals recovery runId', async () => {
     const { engine, store } = createEngine({ adapters: makeRecoverableAdapters() });
     const runId = 'recover-same-id-1';

@@ -102,10 +102,14 @@ async function testMarkDispatchedIdempotency(store: PostgresStartRunIntentStore)
     createdAt: '2026-03-04T00:00:00.000Z',
   });
   await store.markDispatched({ tenantId: 't1', intentId: 'intent-idem' }, dispatchTestData);
+  await store.markResolved({ tenantId: 't1', intentId: 'intent-idem' });
 
   await expect(
     store.markDispatched({ tenantId: 't1', intentId: 'intent-idem' }, dispatchTestData)
   ).resolves.toBeUndefined();
+  await expect(store.getIntent({ tenantId: 't1', intentId: 'intent-idem' })).resolves.toMatchObject(
+    { status: 'RESOLVED' }
+  );
 }
 
 async function testMarkDispatchedConflict(store: PostgresStartRunIntentStore): Promise<void> {
