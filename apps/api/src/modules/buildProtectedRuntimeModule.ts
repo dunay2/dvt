@@ -5,7 +5,6 @@
  */
 import { randomUUID } from 'node:crypto';
 
-import { createObservedPostgresPool } from '@dvt/adapter-postgres';
 import type { IObservability } from '@dvt/observability';
 import type { FastifyInstance } from 'fastify';
 import type { Logger } from 'pino';
@@ -17,7 +16,6 @@ import { FileRunExecutionContextInheritanceWriter } from '../infrastructure/dbt/
 import { FileRunExecutionContextReferenceReader } from '../infrastructure/dbt/FileRunExecutionContextReferenceReader.js';
 import { LocalDbtProjectImportInspector } from '../infrastructure/dbt/LocalDbtProjectImportInspector.js';
 import { PostgresDbtProjectImportProcessStore } from '../infrastructure/dbt/PostgresDbtProjectImportProcessStore.js';
-import { PostgresRunControlCommandCoordinator } from '../infrastructure/runControl/PostgresRunControlCommandCoordinator.js';
 import type { Env } from '../plugins/env.js';
 
 import { buildCanvasAuthoringAuthorityRuntime } from './canvasAuthoringAuthority/buildCanvasAuthoringAuthorityRuntime.js';
@@ -32,7 +30,6 @@ import type { ProtectedRuntimeModule } from './types.js';
 import { buildWorkspaceGraphDraftRuntime } from './workspaceGraphDraft/buildWorkspaceGraphDraftRuntime.js';
 
 const MINIMUM_DBT_PROJECT_IMPORT_OPERATION_LEASE_MS = 300_000;
-const RUN_CONTROL_LOCK_POOL_SIZE = 2;
 
 async function closeAllClosers(closers: Array<() => Promise<void>>): Promise<void> {
   const results = await Promise.allSettled(closers.map((closer) => closer()));
@@ -169,17 +166,6 @@ export async function buildProtectedRuntimeModule(
     dbtBundleStore: storageRuntime.dbtBundleStore,
     dbtExecutionTargetResolver,
   });
-  const runControlLockPool = createObservedPostgresPool({
-    connectionString: databaseUrl,
-    max: RUN_CONTROL_LOCK_POOL_SIZE,
-    idleTimeoutMillis: 30_000,
-    connectionTimeoutMillis: 5_000,
-  });
-  const runControlCommandCoordinator = new PostgresRunControlCommandCoordinator(
-    runControlLockPool,
-    RUN_CONTROL_LOCK_POOL_SIZE
-  );
-
   return {
     startRunUseCase: startRunRuntime.startRunUseCase,
     startRunTelemetry: startRunRuntime.startRunTelemetry,
@@ -207,7 +193,6 @@ export async function buildProtectedRuntimeModule(
     runExecutionContextInheritanceWriter: new FileRunExecutionContextInheritanceWriter(
       storageRuntime.dbtBundleStore
     ),
-    runControlCommandCoordinator,
     systemClock: storageRuntime.systemClock,
     runExecutionContextBindingPolicy: storageRuntime.runExecutionContextBindingPolicy,
     planValidator: startRunRuntime.planValidator,
@@ -244,7 +229,6 @@ export async function buildProtectedRuntimeModule(
         () => dbtProjectImportProcessStore.close(),
         () => storageRuntime.stateStore.close(),
         () => storageRuntime.intentStore.close(),
-        () => runControlLockPool.end(),
         () => pool.end(),
       ]);
     },

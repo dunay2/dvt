@@ -3,7 +3,6 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { AuthorizedCommandExecutionContext } from '../../../src/application/ports/auth.js';
 import type { IRunCancellationReceiptStore } from '../../../src/application/ports/runCancellationReceiptStore.js';
-import type { IRunControlCommandCoordinator } from '../../../src/application/ports/runControlCommandCoordinator.js';
 import { CancelRunUseCase } from '../../../src/application/services/cancelRunUseCase.js';
 import { TenantId } from '../../../src/domain/auth/types.js';
 
@@ -51,28 +50,6 @@ function createStateStore(): { getRunMetadataByRunId: ReturnType<typeof vi.fn> }
   };
 }
 
-function createSerialCoordinator(): IRunControlCommandCoordinator {
-  const tails = new Map<string, Promise<void>>();
-  return {
-    async executeExclusive<T>(
-      key: { action: 'cancel' | 'recover'; tenantId: string; runId: string },
-      operation: () => Promise<T>
-    ): Promise<T> {
-      const lockKey = `${key.action}:${key.tenantId}:${key.runId}`;
-      const previous = tails.get(lockKey) ?? Promise.resolve();
-      const gate = deferred();
-      tails.set(lockKey, gate.promise);
-      await previous;
-      try {
-        return await operation();
-      } finally {
-        gate.resolve();
-        if (tails.get(lockKey) === gate.promise) tails.delete(lockKey);
-      }
-    },
-  };
-}
-
 function createUseCase(
   engine: unknown,
   stateStore: unknown,
@@ -82,7 +59,6 @@ function createUseCase(
   return new CancelRunUseCase(
     engine as never,
     stateStore as never,
-    createSerialCoordinator(),
     cancellationReceipts,
     startDispatchResolver as never
   );
@@ -136,11 +112,16 @@ describe('CancelRunUseCase', () => {
     });
   });
 
-  it('dispatches one provider cancellation for concurrent deliveries of the same command', async () => {
+  it('delegates concurrent cancellation idempotency to the canonical engine command', async () => {
     const providerGate = deferred();
+    const cancelledRuns = new Set<string>();
+    const applyCancellation = vi.fn();
     const engine = {
-      cancelRun: vi.fn(async () => {
+      cancelRun: vi.fn(async (runRef: { runId: string }) => {
         await providerGate.promise;
+        if (cancelledRuns.has(runRef.runId)) return;
+        cancelledRuns.add(runRef.runId);
+        applyCancellation();
       }),
       getRunStatus: vi.fn().mockResolvedValue({ runId: 'run-1', status: 'RUNNING' }),
     };
@@ -154,9 +135,10 @@ describe('CancelRunUseCase', () => {
 
     await expect(Promise.all([first, second])).resolves.toEqual([
       expect.objectContaining({ disposition: 'requested' }),
-      expect.objectContaining({ disposition: 'already_requested' }),
+      expect.objectContaining({ disposition: 'requested' }),
     ]);
-    expect(engine.cancelRun).toHaveBeenCalledOnce();
+    expect(engine.cancelRun).toHaveBeenCalledTimes(2);
+    expect(applyCancellation).toHaveBeenCalledOnce();
   });
 
   it('reuses the provider-idempotent cancel command after receipt persistence fails', async () => {
