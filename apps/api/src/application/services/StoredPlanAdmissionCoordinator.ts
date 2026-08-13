@@ -34,12 +34,16 @@ export type StoredPlanAdmissionResult =
       readonly planRef: ScopedPlanRef['planRef'];
       readonly scopedPlanRef: ScopedPlanRef;
       readonly materialized?: MaterializedStoredExecutablePlan;
-      readonly planRecord: PlanRecord;
+      readonly planRecord?: PlanRecord;
       readonly validation: Extract<ExecutabilityValidationResult, { readonly status: 'ERROR' }>;
-      readonly validationRecord: StoredPlanArtifactValidationRecord & {
+      readonly validationRecord?: StoredPlanArtifactValidationRecord & {
         readonly state: 'VALID' | 'INVALID';
       };
     };
+
+export type StoredPlanCreationAdmissionResult = StoredPlanAdmissionResult & {
+  readonly planRecord: PlanRecord;
+};
 
 export class StoredPlanAdmissionCoordinator {
   public constructor(
@@ -54,13 +58,22 @@ export class StoredPlanAdmissionCoordinator {
   public async admit(
     buildResult: PlannerBuildResultV1,
     adapterId: string
-  ): Promise<StoredPlanAdmissionResult> {
+  ): Promise<StoredPlanCreationAdmissionResult> {
     const planRef = await this.deps.planStore.storePlanArtifact({ buildResult });
     const scopedPlanRef = createScopedPlanRef({
       scope: buildResult.plan.metadata.ownership,
       planRef,
     });
-    return this.admitStored(scopedPlanRef, adapterId);
+    const admission = await this.admitStored(scopedPlanRef, adapterId);
+    if (admission.planRecord !== undefined) {
+      return { ...admission, planRecord: admission.planRecord };
+    }
+
+    const planRecord = await this.deps.planStore.getPlanRecordByRef(scopedPlanRef);
+    if (planRecord === undefined) {
+      throw new Error(`PLAN_RECORD_NOT_FOUND: ${planRef.planId}`);
+    }
+    return { ...admission, planRecord };
   }
 
   public async admitStored(
@@ -68,11 +81,37 @@ export class StoredPlanAdmissionCoordinator {
     adapterId: string
   ): Promise<StoredPlanAdmissionResult> {
     const planRef = scopedPlanRef.planRef;
-    const planRecord = await this.deps.planStore.getPlanRecordByRef(scopedPlanRef);
-    if (planRecord === undefined) {
-      throw new Error(`PLAN_RECORD_NOT_FOUND: ${planRef.planId}`);
-    }
     const currentValidationRecord = await this.readValidationRecord(scopedPlanRef);
+    if (currentValidationRecord === undefined) {
+      const validated = await this.deps.validator.materializeAndValidatePlan({
+        ...scopedPlanRef,
+        adapterId,
+      });
+      if (!validated.accepted) {
+        return {
+          accepted: false,
+          planRef,
+          scopedPlanRef,
+          ...(validated.materialized === undefined ? {} : { materialized: validated.materialized }),
+          validation: validated.validation,
+        };
+      }
+      return {
+        accepted: false,
+        planRef,
+        scopedPlanRef,
+        materialized: validated.materialized,
+        validation: {
+          status: 'ERROR',
+          planId: planRef.planId,
+          adapterId,
+          code: 'REJECTED',
+          degradable: false,
+          reason: `PLAN_VALIDATION_RECORD_NOT_FOUND: ${planRef.planId}`,
+          cause: 'plan_validation_record',
+        },
+      };
+    }
     if (currentValidationRecord.state === 'INVALID') {
       if (currentValidationRecord.rejectionReport === undefined) {
         throw new Error(`PLAN_VALIDATION_REPORT_NOT_FOUND: ${planRef.planId}`);
@@ -81,7 +120,6 @@ export class StoredPlanAdmissionCoordinator {
         accepted: false,
         planRef,
         scopedPlanRef,
-        planRecord,
         validation: currentValidationRecord.rejectionReport,
         validationRecord: { ...currentValidationRecord, state: 'INVALID' },
       };
@@ -91,11 +129,71 @@ export class StoredPlanAdmissionCoordinator {
       ...scopedPlanRef,
       adapterId,
     });
+    if (!validated.accepted) {
+      const validationRecord =
+        currentValidationRecord.state === 'PENDING_VALIDATION'
+          ? await this.closePendingValidation(scopedPlanRef, validated.validation)
+          : currentValidationRecord;
+      if (validationRecord.state === 'INVALID') {
+        if (validationRecord.rejectionReport === undefined) {
+          throw new Error(`PLAN_VALIDATION_REPORT_NOT_FOUND: ${planRef.planId}`);
+        }
+        return {
+          accepted: false,
+          planRef,
+          scopedPlanRef,
+          ...(validated.materialized === undefined ? {} : { materialized: validated.materialized }),
+          validation: validationRecord.rejectionReport,
+          validationRecord: { ...validationRecord, state: 'INVALID' },
+        };
+      }
+      return {
+        accepted: false,
+        planRef,
+        scopedPlanRef,
+        ...(validated.materialized === undefined ? {} : { materialized: validated.materialized }),
+        validation: validated.validation,
+        validationRecord: { ...validationRecord, state: 'VALID' },
+      };
+    }
+
+    let planRecord: PlanRecord;
+    try {
+      const storedPlanRecord = await this.deps.planStore.getPlanRecordByRef(scopedPlanRef);
+      if (storedPlanRecord === undefined) {
+        throw new Error(`PLAN_RECORD_NOT_FOUND: ${planRef.planId}`);
+      }
+      planRecord = storedPlanRecord;
+    } catch (error) {
+      return {
+        accepted: false,
+        planRef,
+        scopedPlanRef,
+        materialized: validated.materialized,
+        validation: {
+          status: 'ERROR',
+          planId: planRef.planId,
+          adapterId,
+          code: 'REJECTED',
+          degradable: false,
+          reason:
+            error instanceof Error
+              ? error.message
+              : typeof error === 'string'
+                ? error
+                : 'Unknown plan record lookup error',
+          cause: 'plan_record',
+        },
+        ...(currentValidationRecord.state === 'VALID'
+          ? { validationRecord: { ...currentValidationRecord, state: 'VALID' as const } }
+          : {}),
+      };
+    }
+
     const validationRecord =
       currentValidationRecord.state === 'PENDING_VALIDATION'
         ? await this.closePendingValidation(scopedPlanRef, validated.validation)
         : currentValidationRecord;
-
     if (validationRecord.state === 'INVALID') {
       if (validationRecord.rejectionReport === undefined) {
         throw new Error(`PLAN_VALIDATION_REPORT_NOT_FOUND: ${planRef.planId}`);
@@ -104,22 +202,10 @@ export class StoredPlanAdmissionCoordinator {
         accepted: false,
         planRef,
         scopedPlanRef,
-        ...(validated.materialized === undefined ? {} : { materialized: validated.materialized }),
+        materialized: validated.materialized,
         planRecord,
         validation: validationRecord.rejectionReport,
         validationRecord: { ...validationRecord, state: 'INVALID' },
-      };
-    }
-
-    if (!validated.accepted) {
-      return {
-        accepted: false,
-        planRef,
-        scopedPlanRef,
-        ...(validated.materialized === undefined ? {} : { materialized: validated.materialized }),
-        planRecord,
-        validation: validated.validation,
-        validationRecord: { ...validationRecord, state: 'VALID' },
       };
     }
 
@@ -149,25 +235,27 @@ export class StoredPlanAdmissionCoordinator {
       }
     } catch (transitionError) {
       const winningRecord = await this.readValidationRecord(scopedPlanRef);
-      if (winningRecord.state === 'PENDING_VALIDATION') throw transitionError;
+      if (winningRecord === undefined || winningRecord.state === 'PENDING_VALIDATION') {
+        throw transitionError;
+      }
       return winningRecord;
     }
 
-    return this.readValidationRecord(scopedPlanRef);
+    const closedRecord = await this.readValidationRecord(scopedPlanRef);
+    if (closedRecord === undefined) {
+      throw new Error(`PLAN_VALIDATION_RECORD_NOT_FOUND: ${scopedPlanRef.planRef.planId}`);
+    }
+    return closedRecord;
   }
 
   private async readValidationRecord(
     scopedPlanRef: ScopedPlanRef
-  ): Promise<StoredPlanArtifactValidationRecord> {
-    const validationRecord = await this.deps.planStore.getStoredPlanValidationRecord({
+  ): Promise<StoredPlanArtifactValidationRecord | undefined> {
+    return this.deps.planStore.getStoredPlanValidationRecord({
       tenantId: scopedPlanRef.tenantId,
       projectId: scopedPlanRef.projectId,
       environmentId: scopedPlanRef.environmentId,
       planId: scopedPlanRef.planRef.planId,
     });
-    if (validationRecord === undefined) {
-      throw new Error(`PLAN_VALIDATION_RECORD_NOT_FOUND: ${scopedPlanRef.planRef.planId}`);
-    }
-    return validationRecord;
   }
 }

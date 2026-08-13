@@ -170,12 +170,56 @@ describe('StoredPlanAdmissionCoordinator', () => {
     expect(harness.planStore.getStoredPlanValidationRecord).toHaveBeenCalledTimes(2);
   });
 
-  it('fails closed when the stored validation record is missing', async () => {
+  it('rejects a missing plan record instead of throwing after validation', async () => {
+    const harness = createHarness('PENDING_VALIDATION', OK_VALIDATION, undefined, null);
+
+    await expect(
+      harness.coordinator.admitStored(SCOPED_PLAN_REF, 'temporal')
+    ).resolves.toMatchObject({
+      accepted: false,
+      validation: {
+        status: 'ERROR',
+        code: 'REJECTED',
+        reason: `PLAN_RECORD_NOT_FOUND: ${PLAN_REF.planId}`,
+        cause: 'plan_record',
+      },
+    });
+    expect(harness.planStore.markStoredPlanArtifactValid).not.toHaveBeenCalled();
+  });
+
+  it('maps plan record metadata mismatches to the same rejection boundary', async () => {
+    const harness = createHarness(
+      'VALID',
+      OK_VALIDATION,
+      undefined,
+      new Error('PLAN_REF_METADATA_MISMATCH: schemaVersion')
+    );
+
+    await expect(
+      harness.coordinator.admitStored(SCOPED_PLAN_REF, 'temporal')
+    ).resolves.toMatchObject({
+      accepted: false,
+      validation: {
+        status: 'ERROR',
+        code: 'REJECTED',
+        reason: 'PLAN_REF_METADATA_MISMATCH: schemaVersion',
+        cause: 'plan_record',
+      },
+    });
+  });
+
+  it('rejects when the stored validation record is missing', async () => {
     const harness = createHarness(undefined, OK_VALIDATION);
 
-    await expect(harness.coordinator.admit(BUILD_RESULT, 'temporal')).rejects.toThrow(
-      `PLAN_VALIDATION_RECORD_NOT_FOUND: ${PLAN_REF.planId}`
-    );
+    await expect(harness.coordinator.admit(BUILD_RESULT, 'temporal')).resolves.toMatchObject({
+      accepted: false,
+      validation: {
+        status: 'ERROR',
+        code: 'REJECTED',
+        reason: `PLAN_VALIDATION_RECORD_NOT_FOUND: ${PLAN_REF.planId}`,
+        cause: 'plan_validation_record',
+      },
+    });
     expect(harness.planStore.markStoredPlanArtifactValid).not.toHaveBeenCalled();
   });
 });
@@ -183,7 +227,8 @@ describe('StoredPlanAdmissionCoordinator', () => {
 function createHarness(
   state: 'PENDING_VALIDATION' | 'VALID' | 'INVALID' | undefined,
   validation: typeof OK_VALIDATION | typeof ERROR_VALIDATION,
-  concurrentWinner?: 'VALID' | 'INVALID'
+  concurrentWinner?: 'VALID' | 'INVALID',
+  planRecordResult: typeof PLAN_RECORD | Error | null = PLAN_RECORD
 ): {
   coordinator: StoredPlanAdmissionCoordinator;
   planStore: {
@@ -214,7 +259,10 @@ function createHarness(
     markStoredPlanArtifactInvalid: vi.fn(async (input: { report: typeof ERROR_VALIDATION }) => {
       await applyTransition('INVALID', input.report);
     }),
-    getPlanRecordByRef: vi.fn(async () => PLAN_RECORD),
+    getPlanRecordByRef: vi.fn(async () => {
+      if (planRecordResult instanceof Error) throw planRecordResult;
+      return planRecordResult ?? undefined;
+    }),
   };
   const validator = {
     materializeAndValidatePlan: vi.fn(async () =>

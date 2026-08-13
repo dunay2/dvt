@@ -523,6 +523,43 @@ describe('PlannerBackedStartRunUseCase', () => {
     });
   });
 
+  it('returns plan_rejected when an existing planRef has no stored plan record', async () => {
+    const delegate = {
+      execute: vi.fn(),
+      executeAdmitted: vi.fn(),
+    };
+    const useCase = new PlannerBackedStartRunUseCase({
+      planner: { buildPlan: vi.fn() } as never,
+      planStore: {
+        storePlanArtifact: vi.fn(),
+        getStoredPlanValidationRecord: vi.fn(async () => PENDING_VALIDATION_RECORD),
+        getPlanRecordByRef: vi.fn(async () => undefined),
+        markStoredPlanArtifactValid: vi.fn(async () => {}),
+        markStoredPlanArtifactInvalid: vi.fn(async () => {}),
+      } as never,
+      validator: {
+        materializeAndValidatePlan: vi.fn(async () => acceptedValidation()),
+      } as never,
+      delegate: delegate as never,
+      compileTelemetry: TEST_PLAN_COMPILE_TELEMETRY,
+      executableSubgraphResolver: EXECUTABLE_SUBGRAPH_RESOLVER as never,
+    });
+
+    await expect(
+      useCase.execute({ ...PLANNER_COMMAND, planRef: STORED_PLAN_REF }, AUTHORIZED_CONTEXT)
+    ).resolves.toEqual({
+      ok: true,
+      value: {
+        kind: 'plan_rejected',
+        accepted: false,
+        code: 'REJECTED',
+        reason: `PLAN_RECORD_NOT_FOUND: ${STORED_PLAN_REF.planId}`,
+        cause: 'plan_record',
+      },
+    });
+    expect(delegate.executeAdmitted).not.toHaveBeenCalled();
+  });
+
   it('rethrows unexpected planner errors', async () => {
     const compileTelemetry = { recordPlanCompileLatency: vi.fn() };
     const useCase = new PlannerBackedStartRunUseCase({
