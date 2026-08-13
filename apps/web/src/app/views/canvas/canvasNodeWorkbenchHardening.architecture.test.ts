@@ -156,7 +156,7 @@ describe('Canvas Node Workbench W4 hardening contracts', () => {
     expect(CanvasShellPanelsBuilderSource).not.toContain('inspectorNodeSelectedForExecution');
   });
 
-  it('routes DVT transform column presentation through canonical localized role copy without losing input meaning', () => {
+  it('routes read-only DVT transform columns through canonical localized role copy', () => {
     for (const visibleLiteral of [
       'Input columns',
       '} selected',
@@ -168,7 +168,6 @@ describe('Canvas Node Workbench W4 hardening contracts', () => {
 
     for (const copyKey of [
       'nodePresentationColumnsLabel',
-      'dvtFlowGuideColumnsLabel',
       'dvtFlowGuideRequiredLabel',
       'dvtFlowGuideColumnsMissingMessage',
     ]) {
@@ -177,6 +176,7 @@ describe('Canvas Node Workbench W4 hardening contracts', () => {
 
     expect(DvtSqlTransformAuthoringSectionSource).toContain('buildCanvasNodePresentationCopy');
     expect(DvtSqlTransformAuthoringSectionSource).toContain('valueLabels?.input');
+    expect(DvtSqlTransformAuthoringSectionSource).not.toContain('name="dvt-transform-column"');
     expect(CanvasNodePresentationCopySource).toContain("input: 'Input'");
     expect(CanvasNodePresentationCopySource).toContain("input: 'Entrada'");
   });
