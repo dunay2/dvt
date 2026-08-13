@@ -157,8 +157,7 @@ function mapContractPlanToUi(
   const tags = contractPlan.observability?.tags ?? {};
   const extra = contractPlan.observability?.extra ?? {};
   const adapter = asString(tags.adapter) ?? 'unknown';
-  const target =
-    asString(tags['dvt.scope.environmentId']) ?? asString(tags.environmentId) ?? 'default';
+  const target = contractPlan.metadata.ownership?.environmentId ?? 'default';
   const estimatedCost =
     asNumber((extra as Record<string, unknown>)?.estimatedCost) ??
     asNumber((extra as Record<string, unknown>)?.costUsd);
