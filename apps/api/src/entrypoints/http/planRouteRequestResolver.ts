@@ -1,6 +1,6 @@
 /**
  * Owned concern: resolve protected plan-route requests through shared parsing,
- * authorization, and optional post-authorization validation.
+ * authorization.
  */
 import type { FastifyRequest } from 'fastify';
 
@@ -41,25 +41,10 @@ export interface PlanRouteAuthorizationRequestOptions<TParsedRequest> {
   readonly selectRequestedScope: (parsedRequest: TParsedRequest) => ParsedPlanRouteScope;
 }
 
-type ResolvedAuthorizedPlanRouteRequestOk<TParsedRequest> = Extract<
-  ResolvedAuthorizedPlanRouteRequest<TParsedRequest>,
-  { readonly ok: true }
->;
-
-type AuthorizedPlanRouteRequestValidator<
-  TDeps extends PlanRouteAuthorizationResolverDeps,
-  TParsedRequest,
-> = (
-  resolvedRequest: ResolvedAuthorizedPlanRouteRequestOk<TParsedRequest>,
-  deps: TDeps
-) => HttpResponseModel | null | Promise<HttpResponseModel | null>;
-
 export interface AuthorizedPlanRouteRequestResolverOptions<
-  TDeps extends PlanRouteAuthorizationResolverDeps,
   TParsedRequest,
 > extends PlanRouteAuthorizationRequestOptions<TParsedRequest> {
   readonly parseRequestBody: (body: unknown) => RouteParseResult<TParsedRequest>;
-  readonly validateAuthorizedRequest?: AuthorizedPlanRouteRequestValidator<TDeps, TParsedRequest>;
 }
 
 export async function resolveAuthorizedPlanRouteRequest<TParsedRequest>(
@@ -108,7 +93,7 @@ export function createAuthorizedPlanRouteRequestResolver<
   TDeps extends PlanRouteAuthorizationResolverDeps,
   TParsedRequest,
 >(
-  options: AuthorizedPlanRouteRequestResolverOptions<TDeps, TParsedRequest>
+  options: AuthorizedPlanRouteRequestResolverOptions<TParsedRequest>
 ): (
   request: FastifyRequest<{ Body: unknown }>,
   deps: TDeps
@@ -117,7 +102,7 @@ export function createAuthorizedPlanRouteRequestResolver<
     request: FastifyRequest<{ Body: unknown }>,
     deps: TDeps
   ): Promise<ResolvedAuthorizedPlanRouteRequest<TParsedRequest>> => {
-    const resolvedRequest = await resolveAuthorizedPlanRouteRequest(
+    return resolveAuthorizedPlanRouteRequest(
       request,
       deps,
       options.parseRequestBody(request.body),
@@ -125,20 +110,5 @@ export function createAuthorizedPlanRouteRequestResolver<
         selectRequestedScope: options.selectRequestedScope,
       }
     );
-    if (!resolvedRequest.ok) {
-      return resolvedRequest;
-    }
-
-    const validationResponse = options.validateAuthorizedRequest
-      ? await options.validateAuthorizedRequest(resolvedRequest, deps)
-      : null;
-    if (validationResponse !== null) {
-      return {
-        ok: false,
-        response: validationResponse,
-      };
-    }
-
-    return resolvedRequest;
   };
 }

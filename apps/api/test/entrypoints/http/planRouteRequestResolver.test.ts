@@ -1,10 +1,7 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { EnvironmentId, ProjectId, TenantId } from '../../../src/domain/auth/types.js';
-import {
-  createAuthorizedPlanRouteRequestResolver,
-  resolveAuthorizedPlanRouteRequest,
-} from '../../../src/entrypoints/http/planRouteRequestResolver.js';
+import { resolveAuthorizedPlanRouteRequest } from '../../../src/entrypoints/http/planRouteRequestResolver.js';
 import { badRequestResult } from '../../../src/entrypoints/http/routeParseIssue.js';
 
 import { createPreviewRequest, okAuthDeps } from './planRouteHttpTestSupport.js';
@@ -118,44 +115,6 @@ describe('resolveAuthorizedPlanRouteRequest', () => {
         status: 403,
         body: {
           error: { type: 'forbidden', reason: 'action_not_granted' },
-        },
-      },
-    });
-  });
-
-  it('builds declarative resolvers that run an optional post-authorization guard', async () => {
-    const deps = okAuthDeps();
-    const request = createPreviewRequest({ id: 'req-plan-route-builder-guard' });
-    const parsedRequest = buildParsedRequest();
-    const validateAuthorizedRequest = vi.fn(async () => ({
-      status: 422 as const,
-      body: {
-        error: { type: 'unprocessable', reason: 'guard_failed' },
-      },
-    }));
-    const resolver = createAuthorizedPlanRouteRequestResolver({
-      parseRequestBody: () => ({ ok: true, value: parsedRequest }),
-      selectRequestedScope: (value) => value.routeContext,
-      validateAuthorizedRequest,
-    });
-
-    const result = await resolver(request as never, deps as never);
-
-    expect(validateAuthorizedRequest).toHaveBeenCalledWith(
-      expect.objectContaining({
-        parsedRequest,
-        context: expect.objectContaining({
-          principal: { principalId: 'principal-1' },
-        }),
-      }),
-      deps
-    );
-    expect(result).toEqual({
-      ok: false,
-      response: {
-        status: 422,
-        body: {
-          error: { type: 'unprocessable', reason: 'guard_failed' },
         },
       },
     });
