@@ -1,5 +1,5 @@
-import type { IStoredPlanArtifactReader, StoredPlanArtifact } from '@dvt/artifacts';
 import type {
+  ExecutionPlan,
   IStepTypeRegistry,
   PlanRefSchemaT,
   PlanOwnership,
@@ -10,6 +10,12 @@ import type {
 import { CURRENT_SIGNAL_SEMANTICS_VERSION, asNonBlankString } from '@dvt/contracts';
 import type { IProviderAdapter } from '@dvt/engine';
 import type { PlanExecutabilityValidationInput } from '@dvt/planner';
+import { vi } from 'vitest';
+
+import type {
+  MaterializedStoredExecutablePlan,
+  StoredExecutablePlanResolver,
+} from '../../../../src/application/services/StoredExecutablePlanResolver.js';
 
 /**
  * Shared test harness for `StoredPlanExecutabilityValidator`.
@@ -40,13 +46,21 @@ export function validationInput(adapterId = 'temporal'): PlanExecutabilityValida
   };
 }
 
-export function makeValidationReader(
-  artifact: () => StoredPlanArtifact | Promise<StoredPlanArtifact>
-): IStoredPlanArtifactReader {
+export function makeMaterializer(
+  materialized: () => MaterializedStoredExecutablePlan | Promise<MaterializedStoredExecutablePlan>
+): Pick<StoredExecutablePlanResolver, 'materialize'> {
   return {
-    getStoredPlanValidationRecord: async () => undefined,
-    fetchStoredPlanArtifact: async () => artifact(),
-    fetchStoredPlanArtifactForValidation: async () => artifact(),
+    materialize: vi.fn(async () => materialized()),
+  };
+}
+
+export function materializedPlan(
+  overrides?: Parameters<typeof storedPlanArtifact>[0]
+): MaterializedStoredExecutablePlan {
+  const artifact = storedPlanArtifact(overrides);
+  return {
+    executionPolicy: artifact.executionPolicy,
+    plan: JSON.parse(Buffer.from(artifact.bytes).toString('utf8')) as ExecutionPlan,
   };
 }
 

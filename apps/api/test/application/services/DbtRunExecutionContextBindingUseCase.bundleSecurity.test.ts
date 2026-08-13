@@ -1,5 +1,6 @@
 import {
   parseExecutionSelection,
+  parseExecutionPlan,
   parsePlanRef,
   parseRunExecutionContextRef,
   type StartRunCommand,
@@ -17,10 +18,10 @@ describe('DBT runtime binding security boundary', () => {
     const bundleBuilder = { build: vi.fn() };
     const useCase = new DbtRunExecutionContextBindingUseCase({
       delegate,
-      planStore: {
-        fetchStoredPlanArtifactForValidation: vi.fn(async () => ({
+      planMaterializer: {
+        materialize: vi.fn(async () => ({
           executionPolicy: {},
-          bytes: buildDbtPlanBytes(),
+          plan: buildDbtPlan(),
         })),
       },
       bundleBuilder,
@@ -61,21 +62,18 @@ describe('DBT runtime binding security boundary', () => {
   });
 });
 
-function buildDbtPlanBytes(): Buffer {
-  return Buffer.from(
-    JSON.stringify({
-      metadata: {
-        planId: '9'.repeat(64),
-        planVersion: '1.0',
-        schemaVersion: '1.0',
-        contractVersion: '1.0.0',
-        inputHashSha256: '1'.repeat(64),
-        createdAtIso: '2026-07-15T00:00:00.000Z',
-      },
-      steps: [{ stepId: 'model.analytics.orders', kind: 'DBT_MODEL', dependsOn: [] }],
-    }),
-    'utf8'
-  );
+function buildDbtPlan(): ReturnType<typeof parseExecutionPlan> {
+  return parseExecutionPlan({
+    metadata: {
+      planId: '9'.repeat(64),
+      planVersion: '1.0',
+      schemaVersion: '1.0',
+      contractVersion: '1.0.0',
+      inputHashSha256: '1'.repeat(64),
+      createdAtIso: '2026-07-15T00:00:00.000Z',
+    },
+    steps: [{ stepId: 'model.analytics.orders', kind: 'DBT_MODEL', dependsOn: [] }],
+  });
 }
 
 function buildCommand(): StartRunCommand {

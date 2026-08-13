@@ -37,6 +37,7 @@ import { PlannerBackedStartRunUseCase } from '../../src/application/services/Pla
 import { ResolveAuthorizedExecutableSubgraphService } from '../../src/application/services/resolveAuthorizedExecutableSubgraph.js';
 import { StartRunAuthorizedFacade } from '../../src/application/services/startRunAuthorizedFacade.js';
 import { createStartRunTargetAdapterRegistryFromValues } from '../../src/application/services/startRunTargetAdapterRegistry.js';
+import { StoredExecutablePlanResolver } from '../../src/application/services/StoredExecutablePlanResolver.js';
 import { StoredPlanExecutabilityValidator } from '../../src/application/services/StoredPlanExecutabilityValidator.js';
 import { buildWorkflowEngine } from '../../src/application/services/WorkflowEngineFactory.js';
 import { startRunRoute } from '../../src/entrypoints/http/startRunRoute.js';
@@ -95,7 +96,7 @@ export async function createStartRunOpenTelemetryProof(
   });
   const planBytes = Buffer.from(JSON.stringify(plan), 'utf8');
   const planRef = parsePlanRef({
-    uri: `https://plans.example.com/${PLAN_PATH_SENTINEL}.json`,
+    uri: `dvt-plan://proof/${PLAN_PATH_SENTINEL}`,
     sha256: createHash('sha256').update(planBytes).digest('hex'),
     schemaVersion: plan.metadata.schemaVersion,
     planId: plan.metadata.planId,
@@ -103,6 +104,11 @@ export async function createStartRunOpenTelemetryProof(
     sizeBytes: planBytes.byteLength,
   });
   const planStore = createControlledPlanStore(planBytes);
+  const stepTypeRegistry = createDefaultStepTypeRegistry();
+  const planMaterializer = new StoredExecutablePlanResolver({
+    fetcher: planStore,
+    stepTypeRegistry,
+  });
   const temporalSubmissions: unknown[] = [];
   const temporalConfig = loadTemporalAdapterConfig({
     TEMPORAL_ADDRESS: 'temporal-proof.invalid:7233',
@@ -133,7 +139,7 @@ export async function createStartRunOpenTelemetryProof(
   const engineRuntime = buildWorkflowEngine({
     security: {
       authorizer: new AllowAllAuthorizer(),
-      planRefAllowedSchemes: ['https'],
+      planRefAllowedSchemes: ['dvt-plan'],
     },
     persistence: {
       stateStoreRead: stateStore,
@@ -151,9 +157,9 @@ export async function createStartRunOpenTelemetryProof(
     planStore,
     compileTelemetry: startRunSlaTelemetry,
     validator: new StoredPlanExecutabilityValidator({
-      fetcher: planStore,
+      materializer: planMaterializer,
       adapters,
-      stepTypeRegistry: createDefaultStepTypeRegistry(),
+      stepTypeRegistry,
     }),
     delegate: new EngineStartRunUseCase(engineRuntime.engine),
     executableSubgraphResolver: new ResolveAuthorizedExecutableSubgraphService({

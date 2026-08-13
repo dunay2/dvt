@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
+import { StoredPlanMaterializationError } from '../../../../src/application/services/StoredExecutablePlanResolver.js';
 import { StoredPlanExecutabilityValidator } from '../../../../src/application/services/StoredPlanExecutabilityValidator.js';
 
 import {
   makeAdapter,
-  makeValidationReader,
+  makeMaterializer,
   makeRegistryForKind,
-  storedPlanArtifact,
+  materializedPlan,
   validationInput,
 } from './harness.js';
 
@@ -17,8 +18,8 @@ function describeStoredPlanExecutabilityValidatorRegistryCases(): void {
   describe('StoredPlanExecutabilityValidator step-registry checks', () => {
     it('accepts custom step kinds when an explicit stepTypeRegistry is injected', async () => {
       const validator = new StoredPlanExecutabilityValidator({
-        fetcher: makeValidationReader(() =>
-          storedPlanArtifact({
+        materializer: makeMaterializer(() =>
+          materializedPlan({
             stepKind: 'SPARK_SQL',
           })
         ),
@@ -37,8 +38,8 @@ function describeStoredPlanExecutabilityValidatorRegistryCases(): void {
 
     it('rejects when a step kind is not executable on the selected adapter', async () => {
       const validator = new StoredPlanExecutabilityValidator({
-        fetcher: makeValidationReader(() =>
-          storedPlanArtifact({
+        materializer: makeMaterializer(() =>
+          materializedPlan({
             stepKind: 'SPARK_SQL',
           })
         ),
@@ -64,8 +65,8 @@ function describeStoredPlanExecutabilityValidatorRegistryCases(): void {
 
     it('derives required capabilities from step-kind registry profiles', async () => {
       const validator = new StoredPlanExecutabilityValidator({
-        fetcher: makeValidationReader(() =>
-          storedPlanArtifact({
+        materializer: makeMaterializer(() =>
+          materializedPlan({
             stepKind: 'SPARK_SQL',
           })
         ),
@@ -91,11 +92,9 @@ function describeStoredPlanExecutabilityValidatorRegistryCases(): void {
 
     it('rejects unknown step kinds when no custom stepTypeRegistry is injected', async () => {
       const validator = new StoredPlanExecutabilityValidator({
-        fetcher: makeValidationReader(() =>
-          storedPlanArtifact({
-            stepKind: 'SPARK_SQL',
-          })
-        ),
+        materializer: makeMaterializer(() => {
+          throw new StoredPlanMaterializationError('plan_parse', 'INVALID_STEP_KIND: SPARK_SQL');
+        }),
         adapters: new Map([['temporal', makeAdapter(['basic-execution'])]]),
       });
 
@@ -108,7 +107,7 @@ function describeStoredPlanExecutabilityValidatorRegistryCases(): void {
         code: 'REJECTED',
         degradable: false,
         reason: expect.stringContaining('INVALID_STEP_KIND'),
-        cause: 'plan_fetch',
+        cause: 'plan_parse',
       });
     });
   });

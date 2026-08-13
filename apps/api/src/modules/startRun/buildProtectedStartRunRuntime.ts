@@ -23,6 +23,7 @@ import { EngineStartRunUseCase } from '../../application/services/engineStartRun
 import { PlannerBackedStartRunUseCase } from '../../application/services/PlannerBackedStartRunUseCase.js';
 import { ResolveAuthorizedExecutableSubgraphService } from '../../application/services/resolveAuthorizedExecutableSubgraph.js';
 import { StartRunAuthorizedFacade } from '../../application/services/startRunAuthorizedFacade.js';
+import type { StoredExecutablePlanResolver } from '../../application/services/StoredExecutablePlanResolver.js';
 import { StoredPlanExecutabilityValidator } from '../../application/services/StoredPlanExecutabilityValidator.js';
 import { ObservabilityAdmissionTelemetry } from '../../infrastructure/admissionTelemetry/ObservabilityAdmissionTelemetry.js';
 import { DbtProjectBundleBuilder } from '../../infrastructure/dbt/DbtProjectBundleBuilder.js';
@@ -43,6 +44,7 @@ export type BuildProtectedStartRunRuntimeDeps = {
   readonly engine: IWorkflowEngine;
   readonly adapters: ReadonlyMap<EngineRunRef['provider'], IProviderAdapter>;
   readonly planStore: IStoredPlanArtifactStore;
+  readonly planMaterializer: StoredExecutablePlanResolver;
   readonly stepTypeRegistry: IStepTypeRegistry;
   readonly workspaceGraphDraftStore: IWorkspaceGraphDraftStore;
   readonly workspaceRoot: string;
@@ -67,7 +69,7 @@ export function buildProtectedStartRunRuntime(
   const planner = new PlannerFacade();
   const planCompilePlanner = buildPlanCompilePlanner();
   const planValidator = new StoredPlanExecutabilityValidator({
-    fetcher: deps.planStore,
+    materializer: deps.planMaterializer,
     adapters: deps.adapters,
     stepTypeRegistry: deps.stepTypeRegistry,
   });
@@ -78,7 +80,7 @@ export function buildProtectedStartRunRuntime(
   const engineStartRunUseCase = new EngineStartRunUseCase(deps.engine);
   const dbtRunExecutionContextBindingUseCase = new DbtRunExecutionContextBindingUseCase({
     delegate: engineStartRunUseCase,
-    planStore: deps.planStore,
+    planMaterializer: deps.planMaterializer,
     bundleBuilder: new DbtProjectBundleBuilder({
       workspaceFilesRoot: deps.workspaceRoot,
       bundleStore: deps.dbtBundleStore,

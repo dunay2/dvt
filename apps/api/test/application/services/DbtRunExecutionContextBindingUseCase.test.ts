@@ -1,5 +1,6 @@
 import {
   parseExecutionSelection,
+  parseExecutionPlan,
   parsePlanRef,
   parseRunExecutionContextRef,
   type StartRunCommand,
@@ -57,7 +58,7 @@ describe('DbtRunExecutionContextBindingUseCase', () => {
     };
     const useCase = new DbtRunExecutionContextBindingUseCase({
       delegate,
-      planStore: makePlanStore('DBT_MODEL', DBT_PROVENANCE),
+      planMaterializer: makePlanMaterializer('DBT_MODEL', DBT_PROVENANCE),
       bundleBuilder,
       contextWriter,
       executionTargetResolver: { resolve: () => TARGET },
@@ -94,7 +95,7 @@ describe('DbtRunExecutionContextBindingUseCase', () => {
     const contextWriter = { write: vi.fn() };
     const useCase = new DbtRunExecutionContextBindingUseCase({
       delegate,
-      planStore: makePlanStore('DBT_MODEL', DBT_PROVENANCE),
+      planMaterializer: makePlanMaterializer('DBT_MODEL', DBT_PROVENANCE),
       bundleBuilder: {
         build: vi.fn(async () => ({
           ok: false as const,
@@ -128,7 +129,7 @@ describe('DbtRunExecutionContextBindingUseCase', () => {
     const context = buildContext();
     const useCase = new DbtRunExecutionContextBindingUseCase({
       delegate,
-      planStore: makePlanStore(undefined, undefined),
+      planMaterializer: makePlanMaterializer(undefined, undefined),
       bundleBuilder,
       contextWriter: { write: vi.fn() },
       executionTargetResolver: { resolve: () => TARGET },
@@ -144,7 +145,7 @@ describe('DbtRunExecutionContextBindingUseCase', () => {
     const delegate = makeDelegate();
     const useCase = new DbtRunExecutionContextBindingUseCase({
       delegate,
-      planStore: makePlanStore('DBT_MODEL', DBT_PROVENANCE),
+      planMaterializer: makePlanMaterializer('DBT_MODEL', DBT_PROVENANCE),
       bundleBuilder: {
         build: vi.fn(async () => ({
           ok: false as const,
@@ -184,40 +185,37 @@ function makeDelegate(): BindingDependencies['delegate'] {
   };
 }
 
-function makePlanStore(
+function makePlanMaterializer(
   stepKind: string | undefined,
   provenance: unknown
-): BindingDependencies['planStore'] {
+): BindingDependencies['planMaterializer'] {
   return {
-    fetchStoredPlanArtifactForValidation: vi.fn(async () => ({
+    materialize: vi.fn(async () => ({
       executionPolicy: {},
-      bytes: Buffer.from(
-        JSON.stringify({
-          metadata: {
-            planId: PLAN_ID,
-            planVersion: '1.0',
-            schemaVersion: '1.0',
-            contractVersion: '1.0.0',
-            inputHashSha256: '5'.repeat(64),
-            createdAtIso: '2026-07-15T00:00:00.000Z',
-          },
-          steps:
-            stepKind === undefined
-              ? []
-              : [
-                  {
-                    stepId: 'model.analytics.orders',
-                    kind: stepKind,
-                    dependsOn: [],
-                    stepTypeConfig: {},
-                  },
-                ],
-          ...(provenance === undefined
-            ? {}
-            : { observability: { extra: { planPreviewProvenance: provenance } } }),
-        }),
-        'utf8'
-      ),
+      plan: parseExecutionPlan({
+        metadata: {
+          planId: PLAN_ID,
+          planVersion: '1.0',
+          schemaVersion: '1.0',
+          contractVersion: '1.0.0',
+          inputHashSha256: '5'.repeat(64),
+          createdAtIso: '2026-07-15T00:00:00.000Z',
+        },
+        steps:
+          stepKind === undefined
+            ? []
+            : [
+                {
+                  stepId: 'model.analytics.orders',
+                  kind: stepKind,
+                  dependsOn: [],
+                  stepTypeConfig: {},
+                },
+              ],
+        ...(provenance === undefined
+          ? {}
+          : { observability: { extra: { planPreviewProvenance: provenance } } }),
+      }),
     })),
   };
 }

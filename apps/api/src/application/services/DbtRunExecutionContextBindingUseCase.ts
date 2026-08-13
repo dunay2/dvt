@@ -8,8 +8,6 @@ import {
   type DbtProjectBundleRef,
   type ExecutionPlan,
   type RunExecutionContext,
-  type RunExecutionPolicy,
-  type ScopedPlanRef,
   type StartRunCommand,
   parseRunExecutionContext,
 } from '@dvt/contracts';
@@ -29,15 +27,11 @@ import type { IStartRunUseCase, StartRunUseCaseResult } from '../ports/startRunU
 import type { WorkspaceStorageScope } from '../ports/workspaceFiles.js';
 
 import { resolveDbtPlanExecutionBinding } from './dbtPlanExecutionBinding.js';
-import { parseStoredExecutablePlan } from './storedExecutablePlan.js';
+import {
+  STORED_PLAN_MATERIALIZATION_MODE,
+  type StoredExecutablePlanResolver,
+} from './StoredExecutablePlanResolver.js';
 import { createScopedPlanRef } from './storedPlanScope.js';
-
-type StoredPlanArtifactReader = {
-  fetchStoredPlanArtifactForValidation(input: ScopedPlanRef): Promise<{
-    readonly bytes: Uint8Array;
-    readonly executionPolicy?: RunExecutionPolicy;
-  }>;
-};
 
 const DBT_EXECUTABLE_STEP_KINDS = new Set<string>(TEMPORAL_DBT_PLUGIN_EXECUTABLE_STEP_KINDS);
 const CALLER_CONTEXT_REJECTION =
@@ -47,7 +41,7 @@ export class DbtRunExecutionContextBindingUseCase implements IStartRunUseCase {
   public constructor(
     private readonly deps: {
       readonly delegate: IStartRunUseCase;
-      readonly planStore: StoredPlanArtifactReader;
+      readonly planMaterializer: Pick<StoredExecutablePlanResolver, 'materialize'>;
       readonly bundleBuilder: IDbtProjectBundleBuilder;
       readonly contextWriter: IDbtRunExecutionContextWriter;
       readonly executionTargetResolver: IDbtExecutionTargetResolver;
@@ -69,19 +63,21 @@ export class DbtRunExecutionContextBindingUseCase implements IStartRunUseCase {
       },
       planRef: commandWithPlanRef.planRef,
     });
-    const artifact = await this.deps.planStore.fetchStoredPlanArtifactForValidation(scopedPlanRef);
-    const plan = parseStoredExecutablePlan(artifact.bytes, { rejectUnknownStepKinds: false });
+    const materialized = await this.deps.planMaterializer.materialize(
+      scopedPlanRef,
+      STORED_PLAN_MATERIALIZATION_MODE.validation
+    );
+    const { plan } = materialized;
     if (!isDbtPlan(plan)) return this.deps.delegate.execute(command, context);
     if (command.runExecutionContextRef !== undefined) {
       return rejectRunExecutionContext(CALLER_CONTEXT_REJECTION);
     }
 
-    const scope = toWorkspaceStorageScope(context);
-    if (scope === null) {
-      return rejectRunExecutionContext(
-        'DBT project execution requires tenant, project, and environment scope.'
-      );
-    }
+    const scope: WorkspaceStorageScope = {
+      tenantId: scopedPlanRef.tenantId,
+      projectId: scopedPlanRef.projectId,
+      environmentId: scopedPlanRef.environmentId,
+    };
     const sourceBinding = resolveDbtPlanExecutionBinding({
       plan,
       targetAdapter: commandWithPlanRef.targetAdapter,
@@ -101,13 +97,15 @@ export class DbtRunExecutionContextBindingUseCase implements IStartRunUseCase {
     const runExecutionContext = buildRunExecutionContext({
       command: commandWithPlanRef,
       context,
+      scope,
       projectBundleRef: bundle.projectBundleRef,
       targetProfile: sourceBinding.targetProfile,
       credentialRef: sourceBinding.credentialRef,
-      ...(artifact.executionPolicy?.pluginCompatibilityFingerprint === undefined
+      ...(materialized.executionPolicy.pluginCompatibilityFingerprint === undefined
         ? {}
         : {
-            pluginCompatibilityFingerprint: artifact.executionPolicy.pluginCompatibilityFingerprint,
+            pluginCompatibilityFingerprint:
+              materialized.executionPolicy.pluginCompatibilityFingerprint,
           }),
     });
     const writtenContext = await this.deps.contextWriter.write({
@@ -125,15 +123,6 @@ export class DbtRunExecutionContextBindingUseCase implements IStartRunUseCase {
   }
 }
 
-function toWorkspaceStorageScope(
-  context: AuthorizedCommandExecutionContext
-): WorkspaceStorageScope | null {
-  const projectId = context.scope.projectId?.value;
-  const environmentId = context.scope.environmentId?.value;
-  if (projectId === undefined || environmentId === undefined) return null;
-  return { tenantId: context.scope.tenantId.value, projectId, environmentId };
-}
-
 function isDbtPlan(plan: ExecutionPlan): boolean {
   return plan.steps.some((step) => DBT_EXECUTABLE_STEP_KINDS.has(step.kind));
 }
@@ -141,6 +130,7 @@ function isDbtPlan(plan: ExecutionPlan): boolean {
 function buildRunExecutionContext(input: {
   readonly command: StartRunCommand & { readonly planRef: NonNullable<StartRunCommand['planRef']> };
   readonly context: AuthorizedCommandExecutionContext;
+  readonly scope: WorkspaceStorageScope;
   readonly projectBundleRef: DbtProjectBundleRef;
   readonly targetProfile: string;
   readonly credentialRef: string;
@@ -154,9 +144,9 @@ function buildRunExecutionContext(input: {
     ...(input.pluginCompatibilityFingerprint === undefined
       ? {}
       : { pluginCompatibilityFingerprint: input.pluginCompatibilityFingerprint }),
-    tenantId: input.context.scope.tenantId.value,
-    projectId: input.context.scope.projectId?.value ?? '',
-    environmentId: input.context.scope.environmentId?.value ?? '',
+    tenantId: input.scope.tenantId,
+    projectId: input.scope.projectId,
+    environmentId: input.scope.environmentId,
     targetAdapter: input.command.targetAdapter,
     createdAtIso: input.context.authorizedAt.toISOString(),
     createdBy: input.context.principal.principalId,

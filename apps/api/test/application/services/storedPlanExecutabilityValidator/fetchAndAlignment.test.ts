@@ -1,26 +1,20 @@
 import { describe, expect, it } from 'vitest';
 
+import { StoredPlanMaterializationError } from '../../../../src/application/services/StoredExecutablePlanResolver.js';
 import { StoredPlanExecutabilityValidator } from '../../../../src/application/services/StoredPlanExecutabilityValidator.js';
 
-import {
-  makeAdapter,
-  makeValidationReader,
-  storedPlanArtifact,
-  validationInput,
-} from './harness.js';
+import { makeAdapter, makeMaterializer, validationInput } from './harness.js';
 
 /**
  * Plan-fetch and ref-alignment cases for `StoredPlanExecutabilityValidator`.
  */
 function describeStoredPlanExecutabilityValidatorFetchAndAlignmentCases(): void {
   describe('StoredPlanExecutabilityValidator fetch and alignment checks', () => {
-    it('rejects when the persisted executable plan metadata no longer matches the ref', async () => {
+    it('maps a typed plan-reference materialization failure', async () => {
       const validator = new StoredPlanExecutabilityValidator({
-        fetcher: makeValidationReader(() =>
-          storedPlanArtifact({
-            planId: 'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc',
-          })
-        ),
+        materializer: makeMaterializer(() => {
+          throw new StoredPlanMaterializationError('plan_ref', 'PLAN_REF_MISMATCH: planId');
+        }),
         adapters: new Map([['temporal', makeAdapter(['basic-execution'])]]),
       });
 
@@ -39,8 +33,8 @@ function describeStoredPlanExecutabilityValidatorFetchAndAlignmentCases(): void 
 
     it('rejects when fetching the persisted executable plan fails', async () => {
       const validator = new StoredPlanExecutabilityValidator({
-        fetcher: makeValidationReader(() => {
-          throw new Error('PLAN_NOT_FOUND: plan-1');
+        materializer: makeMaterializer(() => {
+          throw new StoredPlanMaterializationError('artifact_fetch', 'PLAN_NOT_FOUND: plan-1');
         }),
         adapters: new Map([['temporal', makeAdapter(['basic-execution'])]]),
       });
@@ -54,7 +48,7 @@ function describeStoredPlanExecutabilityValidatorFetchAndAlignmentCases(): void 
         code: 'REJECTED',
         degradable: false,
         reason: 'PLAN_NOT_FOUND: plan-1',
-        cause: 'plan_fetch',
+        cause: 'artifact_fetch',
       });
     });
   });
