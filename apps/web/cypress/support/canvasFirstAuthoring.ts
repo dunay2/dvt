@@ -71,6 +71,7 @@ export function resolveLiveFirstAuthoringWorkspaceSession(
   variant: FirstAuthoringVariant = 'transformation'
 ): E2eWorkspaceSession {
   const session = resolveLiveWorkspaceSession();
+  const configuredProjectId = Cypress.env('firstAuthoringProjectId');
   const configuredRunId = Cypress.env('firstAuthoringRunId');
   const runId =
     typeof configuredRunId === 'string' && configuredRunId.trim().length > 0
@@ -81,7 +82,10 @@ export function resolveLiveFirstAuthoringWorkspaceSession(
 
   return {
     tenantId: session.tenantId,
-    projectId: `${session.projectId}-tf-e2-m-c-first-authoring-${variant}-${runId}`,
+    projectId:
+      typeof configuredProjectId === 'string' && configuredProjectId.trim().length > 0
+        ? configuredProjectId.trim()
+        : `${session.projectId}-tf-e2-m-c-first-authoring-${variant}-${runId}`,
     environmentId: session.environmentId,
   };
 }
