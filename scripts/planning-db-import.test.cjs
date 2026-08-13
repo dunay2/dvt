@@ -460,6 +460,38 @@ test('command/query rail snapshot joins documented rails with source implementat
   assert.equal(archiveWidget.documentationRefs.length, 1);
 });
 
+test('command/query rail snapshot trusts the explicit Rail cell over verb heuristics and notes', () => {
+  const referenceDocuments = [
+    {
+      path: 'docs/architecture/components/widgets/widget-rail-catalog.md',
+      content: [
+        '| Rail | Type | Status | Owner | Notes |',
+        '| --- | --- | --- | --- | --- |',
+        '| `TestWarehouseConnection` | command | implemented | WarehouseConnection | Retires `ValidateLegacyConnection` |',
+      ].join('\n'),
+    },
+  ];
+
+  const snapshot = buildCommandQueryRailSnapshot({
+    docs: [
+      {
+        path: 'docs/planning/proposals/mandatory/widgets.md',
+        content: '',
+      },
+    ],
+    referenceDocuments,
+    sourceFiles: [],
+  });
+
+  assert.deepEqual(
+    snapshot.rails.map((rail) => rail.railName),
+    ['TestWarehouseConnection']
+  );
+  assert.equal(snapshot.rails[0].railType, 'command');
+  assert.equal(snapshot.rails[0].railStatus, 'implemented');
+  assert.equal(snapshot.rails[0].dddOwner, 'WarehouseConnection');
+});
+
 test('command/query rail snapshot excludes archived documents from current rail authority', () => {
   const docs = [
     {

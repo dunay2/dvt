@@ -176,9 +176,14 @@ function createCommandQueryRailDocumentationComponent(deps = {}) {
           continue;
         }
 
-        const rawRailName = cells
-          .flatMap(extractSpecificRailNamesFromText)
-          .find((name) => normalizeRailName(name) !== normalizeRailName(explicitType));
+        const declaredRailName = cleanRailNameCandidate(
+          cellByHeader(cells, tableHeaders, ['rail', 'name', 'rail-name'])
+        );
+        const rawRailName =
+          declaredRailName ||
+          cells
+            .flatMap(extractSpecificRailNamesFromText)
+            .find((name) => normalizeRailName(name) !== normalizeRailName(explicitType));
         const railName = canonicalizeRailName(rawRailName);
         if (!railName) {
           continue;
