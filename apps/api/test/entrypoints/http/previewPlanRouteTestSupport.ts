@@ -12,8 +12,9 @@ export type PreviewRouteTestDeps = TestAuthDeps & {
     markStoredPlanArtifactValid: ReturnType<typeof vi.fn>;
     markStoredPlanArtifactInvalid: ReturnType<typeof vi.fn>;
     getStoredPlanValidationRecord: ReturnType<typeof vi.fn>;
+    getPlanRecordByRef: ReturnType<typeof vi.fn>;
   };
-  planValidator: { validatePlan: ReturnType<typeof vi.fn> };
+  planValidator: { materializeAndValidatePlan: ReturnType<typeof vi.fn> };
   previewSelectionResolver: { execute: ReturnType<typeof vi.fn> };
   useCase: Pick<PreviewPlanUseCase, 'execute'>;
 };
@@ -33,15 +34,58 @@ export function createPreviewDeps(overrides: PreviewRouteTestOverrides = {}): Pr
     deriveExecutableSubgraph: vi.fn(),
     ...overrides.planner,
   };
+  let validationState: 'PENDING_VALIDATION' | 'VALID' | 'INVALID' = 'PENDING_VALIDATION';
+  let rejectionReport: unknown;
   const planStore = {
     storePlanArtifact: vi.fn(),
-    markStoredPlanArtifactValid: vi.fn(),
-    markStoredPlanArtifactInvalid: vi.fn(),
-    getStoredPlanValidationRecord: vi.fn(async () => ({ state: 'PENDING_VALIDATION' })),
+    markStoredPlanArtifactValid: vi.fn(async () => {
+      validationState = 'VALID';
+    }),
+    markStoredPlanArtifactInvalid: vi.fn(async (input: { report: unknown }) => {
+      validationState = 'INVALID';
+      rejectionReport = input.report;
+    }),
+    getStoredPlanValidationRecord: vi.fn(async (input: { planId: string }) => ({
+      planId: input.planId,
+      state: validationState,
+      storedAtIso: '2026-05-26T00:00:00.000Z',
+      updatedAtIso: '2026-05-26T00:00:00.000Z',
+      ...(rejectionReport === undefined ? {} : { rejectionReport }),
+    })),
+    getPlanRecordByRef: vi.fn(async (input: { planRef: { planId: string; uri: string } }) => ({
+      tenantId: 'tenant-1',
+      projectId: 'project-1',
+      environmentId: 'env-1',
+      planId: input.planRef.planId,
+      canonicalPlanJson: '{}',
+      canonicalHash: 'c'.repeat(64),
+      planVersion: '1.0',
+      schemaVersion: '1.0',
+      contractVersion: '1.0.0',
+      sourceRef: input.planRef.uri,
+      createdAtIso: '2026-05-26T00:00:00.000Z',
+      updatedAtIso: '2026-05-26T00:00:00.000Z',
+      state: 'ACTIVE' as const,
+    })),
     ...overrides.planStore,
   };
   const planValidator = {
-    validatePlan: vi.fn(async () => ({ status: 'OK' })),
+    materializeAndValidatePlan: vi.fn(async (input: { planRef: { planId: string } }) => {
+      const buildResult = await (planner.buildPlan as ReturnType<typeof vi.fn>).mock.results.at(-1)
+        ?.value;
+      return {
+        accepted: true as const,
+        materialized: {
+          plan: buildResult.plan,
+          executionPolicy: buildResult.executionPolicy,
+        },
+        validation: {
+          status: 'OK' as const,
+          planId: input.planRef.planId,
+          adapterId: 'temporal',
+        },
+      };
+    }),
     ...overrides.planValidator,
   };
   const previewSelectionResolver = {

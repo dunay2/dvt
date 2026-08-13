@@ -3,12 +3,17 @@
  * through planner-owned selected-closure resolution without widening to the
  * whole protected draft.
  */
-import type { IStoredPlanArtifactReader, IStoredPlanArtifactWriter } from '@dvt/artifacts';
+import type {
+  IPlanStoreReader,
+  IStoredPlanArtifactReader,
+  IStoredPlanArtifactWriter,
+} from '@dvt/artifacts';
 import type {
   ExecutionPlan,
   ExecutionSelection,
   GenericGraphSourceV1,
   IPlanner,
+  PlanRecord,
   PlanRef,
   PlannerPolicyClassSet,
   PlannerSelection,
@@ -16,7 +21,6 @@ import type {
   PlanPreviewSelectionRejection,
   StartRunPlannerEnvironmentInput,
 } from '@dvt/contracts';
-import type { IPlanExecutabilityValidator } from '@dvt/planner';
 
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
 
@@ -24,8 +28,11 @@ import { PLAN_ROUTE_POLICY_CATALOG } from './planRoutePolicyCatalog.js';
 import { resolveAuthorizedPlannerInputEnvelope } from './resolveAuthorizedPlannerInputEnvelope.js';
 import { ResolveAuthorizedPreviewSelectionService } from './resolveAuthorizedPreviewSelection.js';
 import { StoredPlanAdmissionCoordinator } from './StoredPlanAdmissionCoordinator.js';
+import type { StoredPlanExecutabilityValidator } from './StoredPlanExecutabilityValidator.js';
 
-type PreviewPlanValidationResult = Awaited<ReturnType<IPlanExecutabilityValidator['validatePlan']>>;
+type PreviewPlanValidationResult = Awaited<
+  ReturnType<StoredPlanExecutabilityValidator['validatePlan']>
+>;
 
 export interface PreviewPlanCommand {
   readonly targetAdapter: string;
@@ -48,6 +55,7 @@ export type PreviewPlanUseCaseResult =
       readonly kind: typeof PREVIEW_PLAN_RESULT_KIND.accepted;
       readonly plan: ExecutionPlan;
       readonly planRef: PlanRef;
+      readonly planRecord: PlanRecord;
     }
   | {
       readonly kind: typeof PREVIEW_PLAN_RESULT_KIND.selectionRejected;
@@ -57,6 +65,7 @@ export type PreviewPlanUseCaseResult =
       readonly kind: typeof PREVIEW_PLAN_RESULT_KIND.planInvalid;
       readonly plan: ExecutionPlan;
       readonly planRef: PlanRef;
+      readonly planRecord: PlanRecord;
       readonly validation: Extract<PreviewPlanValidationResult, { readonly status: 'ERROR' }>;
     };
 
@@ -67,8 +76,9 @@ export class PreviewPlanUseCase {
     private readonly deps: {
       readonly planner: IPlanner;
       readonly planStore: IStoredPlanArtifactWriter &
-        Pick<IStoredPlanArtifactReader, 'getStoredPlanValidationRecord'>;
-      readonly planValidator: IPlanExecutabilityValidator;
+        Pick<IStoredPlanArtifactReader, 'getStoredPlanValidationRecord'> &
+        Pick<IPlanStoreReader, 'getPlanRecordByRef'>;
+      readonly planValidator: Pick<StoredPlanExecutabilityValidator, 'materializeAndValidatePlan'>;
       readonly previewSelectionResolver: ResolveAuthorizedPreviewSelectionService;
     }
   ) {
@@ -118,24 +128,23 @@ export class PreviewPlanUseCase {
     );
 
     const buildResult = await this.deps.planner.buildPlan(plannerInput);
-    const { planRef, validation } = await this.planAdmission.admit(
-      buildResult,
-      command.targetAdapter
-    );
+    const admission = await this.planAdmission.admit(buildResult, command.targetAdapter);
 
-    if (validation.status === 'ERROR') {
+    if (!admission.accepted) {
       return {
         kind: PREVIEW_PLAN_RESULT_KIND.planInvalid,
-        plan: buildResult.plan,
-        planRef,
-        validation,
+        plan: admission.materialized?.plan ?? buildResult.plan,
+        planRef: admission.planRef,
+        planRecord: admission.planRecord,
+        validation: admission.validation,
       };
     }
 
     return {
       kind: PREVIEW_PLAN_RESULT_KIND.accepted,
-      plan: buildResult.plan,
-      planRef,
+      plan: admission.materialized.plan,
+      planRef: admission.planRef,
+      planRecord: admission.planRecord,
     };
   }
 }

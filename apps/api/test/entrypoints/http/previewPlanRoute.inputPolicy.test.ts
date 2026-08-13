@@ -199,7 +199,7 @@ describe('previewPlanRoute input policy', () => {
       },
     });
     expect(deps.planStore.storePlanArtifact).not.toHaveBeenCalled();
-    expect(deps.planValidator.validatePlan).not.toHaveBeenCalled();
+    expect(deps.planValidator.materializeAndValidatePlan).not.toHaveBeenCalled();
   });
 
   it('returns stable contract issue details when transformation preview uses the wrong graph family', async () => {

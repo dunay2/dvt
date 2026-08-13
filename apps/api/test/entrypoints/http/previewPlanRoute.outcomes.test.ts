@@ -1,4 +1,3 @@
-import { jcsCanonicalize, sha256HexUtf8 } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import { previewPlanRoute } from '../../../src/entrypoints/http/previewPlanRoute.js';
@@ -34,11 +33,22 @@ function createAcceptedPreviewDeps(
       markStoredPlanArtifactInvalid: vi.fn(async () => undefined),
     },
     planValidator: {
-      validatePlan: vi.fn(async () => ({
-        status: 'OK',
-        planId: VALID_PLAN_REF.planId,
-        adapterId: 'temporal',
-      })),
+      materializeAndValidatePlan: vi.fn(async () => {
+        const storedBuild = buildPlan.mock.results.at(-1);
+        if (storedBuild === undefined) throw new Error('Expected a stored planner result');
+        return {
+          accepted: true,
+          materialized: {
+            plan: (await storedBuild.value).plan,
+            executionPolicy: {},
+          },
+          validation: {
+            status: 'OK',
+            planId: VALID_PLAN_REF.planId,
+            adapterId: 'temporal',
+          },
+        };
+      }),
     },
   });
 }
@@ -89,7 +99,7 @@ describe('previewPlanRoute outcomes', () => {
       canonicalPlanCoreJson: '{}',
     }));
     const deps = createAcceptedPreviewDeps(buildPlan);
-    const validatePlan = deps.planValidator.validatePlan;
+    const materializeAndValidatePlan = deps.planValidator.materializeAndValidatePlan;
 
     await executePreviewRequest(reply, deps, { id: 'req-preview-ok' });
 
@@ -100,7 +110,7 @@ describe('previewPlanRoute outcomes', () => {
       planRef: VALID_PLAN_REF,
       persisted: {
         planRecordId: VALID_PLAN_REF.planId,
-        canonicalPlanSha256: sha256HexUtf8(jcsCanonicalize(plan)),
+        canonicalPlanSha256: 'c'.repeat(64),
       },
       validation: { valid: true, warnings: [] },
     });
@@ -113,7 +123,7 @@ describe('previewPlanRoute outcomes', () => {
         },
       })
     );
-    expect(validatePlan).toHaveBeenCalledWith({
+    expect(materializeAndValidatePlan).toHaveBeenCalledWith({
       ...SCOPED_VALID_PLAN_REF,
       adapterId: 'temporal',
     });
@@ -143,10 +153,14 @@ describe('previewPlanRoute outcomes', () => {
         })),
       },
       planValidator: {
-        validatePlan: vi.fn(async () => ({
-          status: 'OK',
-          planId: VALID_PLAN_REF.planId,
-          adapterId: 'temporal',
+        materializeAndValidatePlan: vi.fn(async () => ({
+          accepted: true,
+          materialized: { plan, executionPolicy: {} },
+          validation: {
+            status: 'OK',
+            planId: VALID_PLAN_REF.planId,
+            adapterId: 'temporal',
+          },
         })),
       },
     });
@@ -189,7 +203,11 @@ describe('previewPlanRoute outcomes', () => {
         markStoredPlanArtifactInvalid: vi.fn(async () => undefined),
       },
       planValidator: {
-        validatePlan: vi.fn(async () => validation),
+        materializeAndValidatePlan: vi.fn(async () => ({
+          accepted: false,
+          materialized: { plan, executionPolicy: {} },
+          validation,
+        })),
       },
     });
 
@@ -212,7 +230,7 @@ describe('previewPlanRoute outcomes', () => {
           planRef: VALID_PLAN_REF,
           persisted: {
             planRecordId: VALID_PLAN_REF.planId,
-            canonicalPlanSha256: sha256HexUtf8(jcsCanonicalize(plan)),
+            canonicalPlanSha256: 'c'.repeat(64),
           },
           validation,
         },

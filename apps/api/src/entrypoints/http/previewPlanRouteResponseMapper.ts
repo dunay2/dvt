@@ -51,6 +51,7 @@ export function mapPreviewPlanUseCaseResult(
     payload: buildPreviewResponse(
       result.plan,
       normalizePlanRef(result.planRef),
+      result.planRecord,
       parsedRequest.contractRequest.provenance,
       parsedRequest.previewProfile
     ),
@@ -72,6 +73,7 @@ function buildRejectedOutcome(
   const { validation: _acceptedValidation, ...preview } = buildPreviewResponse(
     result.plan,
     normalizePlanRef(result.planRef),
+    result.planRecord,
     parsedRequest.contractRequest.provenance,
     parsedRequest.previewProfile
   );
