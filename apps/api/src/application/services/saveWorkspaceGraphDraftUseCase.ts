@@ -5,14 +5,19 @@
  * The use case persists editable authoring truth only. It does not compile the
  * draft, invent compatibility payloads, or translate HTTP responses.
  */
-import { createHash, randomUUID } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 
 import {
   WORKSPACE_GRAPH_DRAFT_AUDIT_ACTION,
   WORKSPACE_GRAPH_DRAFT_AUDIT_OUTCOME,
   WORKSPACE_GRAPH_DRAFT_CAPABILITY_MODE,
   WORKSPACE_GRAPH_DRAFT_MIGRATION_STATE,
+  jcsCanonicalize,
   parseWorkspaceGraphDraftSaveResponse,
+  resolveWorkspaceGraphDraftCanvasIds,
+  sha256HexUtf8,
+  WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
+  WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION,
   type WorkspaceGraphDraftAuditOutcome,
   type WorkspaceGraphDraftAuditRef,
   type WorkspaceGraphDraftSaveRequest,
@@ -24,28 +29,12 @@ import type {
   IWorkspaceGraphDraftStore,
   WorkspaceGraphDraftDecisionContext,
 } from '../ports/workspaceGraphDraft.js';
-import {
-  resolveWorkspaceGraphDraftCanvasIds,
-  WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
-  WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION,
-} from '../ports/workspaceGraphDraft.js';
 
-export type SaveWorkspaceGraphDraftUseCaseResult =
-  | {
-      readonly kind: 'response';
-      readonly httpStatus: 200 | 401 | 403 | 409;
-      readonly response: WorkspaceGraphDraftSaveResponse;
-    }
-  | {
-      readonly kind: 'unsupported_schema_version';
-    }
-  | {
-      readonly kind: 'idempotency_mismatch';
-    }
-  | {
-      readonly kind: 'authoring_authority_conflict';
-      readonly canvasIds: readonly string[];
-    };
+export type SaveWorkspaceGraphDraftUseCaseResult = {
+  readonly kind: 'response';
+  readonly httpStatus: 200 | 401 | 403 | 409 | 422;
+  readonly response: WorkspaceGraphDraftSaveResponse;
+};
 
 export class SaveWorkspaceGraphDraftUseCase {
   public constructor(
@@ -82,6 +71,13 @@ export class SaveWorkspaceGraphDraftUseCase {
     }
 
     if (request.schemaVersion !== WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION) {
+      const unsupported = parseWorkspaceGraphDraftSaveResponse({
+        kind: 'unsupported_schema_version',
+        capability: decision.capability,
+        auditRef: buildAuditRef(decision, WORKSPACE_GRAPH_DRAFT_AUDIT_OUTCOME.allowed),
+        expectedSchemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
+        requestedSchemaVersion: request.schemaVersion,
+      });
       await this.audit.record({
         action: WORKSPACE_GRAPH_DRAFT_AUDIT_ACTION.draftWrite,
         outcome: WORKSPACE_GRAPH_DRAFT_AUDIT_OUTCOME.allowed,
@@ -92,7 +88,7 @@ export class SaveWorkspaceGraphDraftUseCase {
           expectedSchemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
         },
       });
-      return { kind: 'unsupported_schema_version' };
+      return { kind: 'response', httpStatus: 422, response: unsupported };
     }
 
     const saveResult = await this.store.save({
@@ -108,6 +104,12 @@ export class SaveWorkspaceGraphDraftUseCase {
     });
 
     if (saveResult.kind === 'authoring_authority_conflict') {
+      const authorityConflict = parseWorkspaceGraphDraftSaveResponse({
+        kind: 'authoring_authority_conflict',
+        capability: decision.capability,
+        auditRef: buildAuditRef(decision, WORKSPACE_GRAPH_DRAFT_AUDIT_OUTCOME.conflict),
+        canvasIds: saveResult.canvasIds,
+      });
       await this.audit.record({
         action: WORKSPACE_GRAPH_DRAFT_AUDIT_ACTION.draftWrite,
         outcome: WORKSPACE_GRAPH_DRAFT_AUDIT_OUTCOME.conflict,
@@ -118,12 +120,18 @@ export class SaveWorkspaceGraphDraftUseCase {
         },
       });
       return {
-        kind: 'authoring_authority_conflict',
-        canvasIds: saveResult.canvasIds,
+        kind: 'response',
+        httpStatus: 409,
+        response: authorityConflict,
       };
     }
 
     if (saveResult.kind === 'idempotency_mismatch') {
+      const idempotencyMismatch = parseWorkspaceGraphDraftSaveResponse({
+        kind: 'idempotency_mismatch',
+        capability: decision.capability,
+        auditRef: buildAuditRef(decision, WORKSPACE_GRAPH_DRAFT_AUDIT_OUTCOME.conflict),
+      });
       await this.audit.record({
         action: WORKSPACE_GRAPH_DRAFT_AUDIT_ACTION.draftWrite,
         outcome: WORKSPACE_GRAPH_DRAFT_AUDIT_OUTCOME.conflict,
@@ -133,7 +141,7 @@ export class SaveWorkspaceGraphDraftUseCase {
           idempotencyKey: request.idempotencyKey,
         },
       });
-      return { kind: 'idempotency_mismatch' };
+      return { kind: 'response', httpStatus: 409, response: idempotencyMismatch };
     }
 
     if (saveResult.kind === 'conflict') {
@@ -199,16 +207,14 @@ export class SaveWorkspaceGraphDraftUseCase {
 }
 
 function createSaveRequestHash(request: WorkspaceGraphDraftSaveRequest): string {
-  return createHash('sha256')
-    .update(
-      JSON.stringify({
-        scope: request.scope,
-        schemaVersion: request.schemaVersion,
-        expectedRevision: request.expectedRevision,
-        draft: request.draft,
-      })
-    )
-    .digest('hex');
+  return sha256HexUtf8(
+    jcsCanonicalize({
+      scope: request.scope,
+      schemaVersion: request.schemaVersion,
+      expectedRevision: request.expectedRevision,
+      draft: request.draft,
+    })
+  );
 }
 
 function buildAuditRef(

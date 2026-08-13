@@ -1,11 +1,13 @@
 /** Owned concern: verify the governed Canvas entry screen chrome in browser e2e. */
-import { buildProtectedDraftRecord } from '../../../src/app/services/workspace/workspaceGraphDraftAuthoring.test.fixtures';
 import {
   WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
   WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION,
-} from '../../../src/app/services/workspace/workspaceGraphDraftProtocol';
+} from '@dvt/contracts';
+
+import { buildProtectedDraftRecord } from '../../../src/app/services/workspace/workspaceGraphDraftAuthoring.test.fixtures';
 import {
   buildDraftReadOkResponse,
+  buildDraftReadNotFoundResponse,
   buildDraftSaveSavedResponse,
 } from '../../../src/app/services/workspace/workspaceGraphDraftProtocol.test.fixtures';
 import { buildCanvasAuthoringDraft } from '../../support/canvasDraftAuthoring';
@@ -324,12 +326,7 @@ describe('Canvas workbench screen composition', () => {
       if (persistedDraft == null) {
         return {
           statusCode: 404,
-          body: {
-            error: {
-              type: 'not_found',
-              reason: 'workspace_graph_draft_not_found',
-            },
-          },
+          body: buildDraftReadNotFoundResponse(E2E_WORKSPACE_SESSION),
         };
       }
 

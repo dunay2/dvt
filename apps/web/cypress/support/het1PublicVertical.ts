@@ -190,9 +190,7 @@ export function assertLiveDraftScopeIsClean(session: E2eWorkspaceSession): Cypre
       );
     }
 
-    expect((response.body as { error?: { reason?: string } }).error?.reason).to.equal(
-      'workspace_graph_draft_not_found'
-    );
+    expect((response.body as { kind?: string }).kind).to.equal('not_found');
   });
 }
 

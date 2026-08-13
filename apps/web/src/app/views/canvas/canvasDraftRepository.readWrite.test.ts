@@ -5,6 +5,11 @@ import type {
   WorkspaceGraphDraftAuthoringSaveResult,
 } from '../../ports/workspaceGraphDraftAuthoring';
 import { projectWorkspaceGraphAuthoringDraftSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
+import {
+  buildDraftReadNotFoundResponse,
+  buildDraftSaveIdempotencyMismatchResponse,
+  buildDraftSaveUnsupportedSchemaResponse,
+} from '../../services/workspace/workspaceGraphDraftProtocol.test.fixtures';
 import { createCanvasDraftRepository } from './canvasDraftRepository';
 import {
   buildAuthoringDraft,
@@ -242,28 +247,21 @@ describe('canvasDraftRepository read/write', () => {
 
   it('fails closed when authoring rejects the schema version', async () => {
     await expectSaveGraphDraftToFailClosed(
-      {
-        kind: 'unsupported_schema_version',
-        expectedSchemaVersion: 'workspace-graph-draft.v2',
-      },
-      'Workspace graph draft authoring rejected schema version; expected workspace-graph-draft.v2.'
+      buildDraftSaveUnsupportedSchemaResponse(WORKSPACE_SCOPE),
+      'Workspace graph draft authoring rejected schema version; expected workspace-graph-draft.v1.'
     );
   });
 
   it('fails closed when authoring rejects the idempotency key for a different payload', async () => {
     await expectSaveGraphDraftToFailClosed(
-      {
-        kind: 'idempotency_mismatch',
-      },
+      buildDraftSaveIdempotencyMismatchResponse(WORKSPACE_SCOPE),
       'Workspace graph draft authoring rejected the idempotency key for a different payload.'
     );
   });
 
   it('fails closed when the canonical reload does not confirm the saved revision', async () => {
     const authoringPort = buildAuthoringPort({
-      readGraphDraft: vi.fn(async () => ({
-        kind: 'not_found' as const,
-      })),
+      readGraphDraft: vi.fn(async () => buildDraftReadNotFoundResponse(WORKSPACE_SCOPE)),
     });
     const repository = createCanvasDraftRepository(authoringPort);
 

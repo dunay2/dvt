@@ -224,7 +224,7 @@ describe('canvas startup bootstrap publication architecture', () => {
     expect(cypressHelperSource).toContain('skipWhenFirstAuthoringLiveEnvIsMissing');
     expect(cypressHelperSource).toContain("Cypress.env('firstAuthoringRunId'");
     expect(cypressHelperSource).toContain("method: 'GET'");
-    expect(cypressHelperSource).toContain('workspace_graph_draft_not_found');
+    expect(cypressHelperSource).toContain("kind?: string }).kind).to.equal('not_found')");
     expect(cypressHelperSource).toContain('dvt-web-canvas-interaction');
     expect(cypressHelperSource).toContain('waitForLiveFirstAuthoringLayoutPositionChange');
     expect(cypressSpecSource).toContain('dragFirstAuthoringNodeFromCardBody');

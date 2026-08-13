@@ -388,9 +388,7 @@ export function assertLiveFirstAuthoringDraftScopeIsClean(
 
   return cy.request(buildDraftReadRequest(session)).then((response) => {
     if (response.status === 404) {
-      expect((response.body as { error?: { reason?: string } }).error?.reason).to.equal(
-        'workspace_graph_draft_not_found'
-      );
+      expect((response.body as { kind?: string }).kind).to.equal('not_found');
       return;
     }
 

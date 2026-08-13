@@ -5,8 +5,6 @@
  */
 import type { FastifyReply } from 'fastify';
 
-import { WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION } from '../../application/ports/workspaceGraphDraft.js';
-
 import { mapRuntimeDomainError } from './httpDomainErrorClassifier.js';
 import {
   createHttpErrorResponse,
@@ -22,11 +20,6 @@ import {
   mapStartRunResult,
 } from './httpErrorMapper.js';
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
-
-type DecisionTrace = {
-  readonly correlationId: string;
-  readonly decisionId: string;
-};
 
 export const httpErrorTranslation = {
   respond(reply: FastifyReply, response: HttpResponseModel): void {
@@ -55,55 +48,6 @@ export const httpErrorTranslation = {
         type: HTTP_ERROR_TYPE.internalServerError,
         reason: HTTP_ERROR_REASON.internalError,
       });
-    },
-  },
-  workspaceGraphDraft: {
-    read: {
-      notFound(trace: DecisionTrace): HttpResponseModel {
-        return createHttpErrorResponse({
-          type: HTTP_ERROR_TYPE.notFound,
-          reason: HTTP_ERROR_REASON.workspaceGraphDraftNotFound,
-          details: {
-            correlationId: trace.correlationId,
-            decisionId: trace.decisionId,
-          },
-        });
-      },
-    },
-    write: {
-      unsupportedSchemaVersion(): HttpResponseModel {
-        return createHttpErrorResponse({
-          type: HTTP_ERROR_TYPE.unprocessable,
-          reason: HTTP_ERROR_REASON.workspaceGraphDraftUnsupportedSchemaVersion,
-          details: {
-            expectedSchemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
-          },
-        });
-      },
-      idempotencyMismatch(trace: DecisionTrace): HttpResponseModel {
-        return createHttpErrorResponse({
-          type: HTTP_ERROR_TYPE.conflict,
-          reason: HTTP_ERROR_REASON.workspaceGraphDraftIdempotencyKeyReused,
-          details: {
-            correlationId: trace.correlationId,
-            decisionId: trace.decisionId,
-          },
-        });
-      },
-      authoringAuthorityConflict(
-        trace: DecisionTrace,
-        canvasIds: readonly string[]
-      ): HttpResponseModel {
-        return createHttpErrorResponse({
-          type: HTTP_ERROR_TYPE.conflict,
-          reason: HTTP_ERROR_REASON.workspaceGraphDraftAuthoringAuthorityConflict,
-          details: {
-            correlationId: trace.correlationId,
-            decisionId: trace.decisionId,
-            canvasIds,
-          },
-        });
-      },
     },
   },
   workspaceFiles: {

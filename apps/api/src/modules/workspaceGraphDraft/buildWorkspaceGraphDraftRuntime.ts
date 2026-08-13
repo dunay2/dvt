@@ -9,7 +9,6 @@ import { AuthorizeWorkspaceGraphDraftCapabilityService } from '../../application
 import { GetWorkspaceGraphDraftUseCase } from '../../application/services/getWorkspaceGraphDraftUseCase.js';
 import { SaveWorkspaceGraphDraftUseCase } from '../../application/services/saveWorkspaceGraphDraftUseCase.js';
 import { getPgPool } from '../../db/pool.js';
-import type { OidcAuthenticator } from '../../infrastructure/auth/oidcAuthenticator.js';
 import { PostgresWorkspaceGraphDraftStore } from '../../infrastructure/workspaceGraphDraft/PostgresWorkspaceGraphDraftStore.js';
 import { StructuredWorkspaceGraphDraftAuditLogger } from '../../infrastructure/workspaceGraphDraft/StructuredWorkspaceGraphDraftAuditLogger.js';
 import type { Env } from '../../plugins/env.js';
@@ -19,7 +18,6 @@ type WorkspaceGraphDraftRuntimePool = ReturnType<typeof getPgPool>;
 
 export type BuildWorkspaceGraphDraftRuntimeDeps = {
   readonly appLogger: Logger;
-  readonly authenticator: OidcAuthenticator;
   readonly commandAuthorizer: AuthorizeCommandScopeService;
   readonly env: Env;
   readonly pool: WorkspaceGraphDraftRuntimePool;
@@ -36,7 +34,6 @@ export function buildWorkspaceGraphDraftRuntime(deps: BuildWorkspaceGraphDraftRu
   });
   const workspaceGraphDraftAudit = new StructuredWorkspaceGraphDraftAuditLogger(deps.appLogger);
   const workspaceGraphDraftCapabilityService = new AuthorizeWorkspaceGraphDraftCapabilityService(
-    deps.authenticator,
     deps.commandAuthorizer,
     () => new Date()
   );

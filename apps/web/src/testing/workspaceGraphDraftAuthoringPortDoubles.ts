@@ -8,10 +8,10 @@ import type {
   WorkspaceGraphDraftFormatMeta,
   WorkspaceGraphDraftScope,
 } from '@dvt/contracts';
+import { WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION } from '@dvt/contracts';
 
 import type { SessionContextPort } from '../app/ports/sessionContext';
 import type { IWorkspaceGraphDraftAuthoringPort } from '../app/ports/workspaceGraphDraftAuthoring';
-import { WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION } from '../app/services/workspace/workspaceGraphDraftProtocol';
 import {
   cloneWorkspaceGraphAuthoringDraft,
   createDraftRequestSignature,
@@ -79,11 +79,15 @@ export function createMockWorkspaceGraphDraftAuthoringPort({
 
   return {
     async readGraphDraft() {
+      const scope = readWorkspaceGraphDraftScope(sessionContext);
       if (store.currentRecord == null) {
-        return { kind: 'not_found' };
+        return {
+          kind: 'not_found',
+          capability: buildCapability(scope, 'writable', 'authorized'),
+          auditRef: buildAuditRef('draft_read', 'allowed'),
+        };
       }
 
-      const scope = readWorkspaceGraphDraftScope(sessionContext);
       const canvasId =
         store.currentRecord.draft.activeCanvasId ?? store.currentRecord.draft.canvas.id ?? null;
 
@@ -120,7 +124,11 @@ export function createMockWorkspaceGraphDraftAuthoringPort({
 
       if (existingIdempotencyEntry) {
         if (existingIdempotencyEntry.requestSignature !== requestSignature) {
-          return { kind: 'idempotency_mismatch' };
+          return {
+            kind: 'idempotency_mismatch',
+            capability: buildCapability(scope, 'writable', 'authorized'),
+            auditRef: buildAuditRef('draft_write', 'conflict'),
+          };
         }
 
         if (existingIdempotencyEntry.outcome === 'saved') {

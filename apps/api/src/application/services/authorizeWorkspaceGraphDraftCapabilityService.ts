@@ -7,11 +7,13 @@
  */
 import { randomUUID } from 'node:crypto';
 
-import type { WorkspaceGraphDraftCapabilityOutcome, WorkspaceGraphDraftScope } from '@dvt/contracts';
+import type {
+  WorkspaceGraphDraftCapabilityOutcome,
+  WorkspaceGraphDraftScope,
+} from '@dvt/contracts';
 
 import type { AuthenticatedPrincipal } from '../../domain/auth/types.js';
 import { buildWorkspaceGraphDraftAccessScope } from '../ports/accessDecision.js';
-import type { IAuthenticator } from '../ports/auth.js';
 import {
   WORKSPACE_GRAPH_DRAFT_ACTION,
   type WorkspaceGraphDraftDecisionContext,
@@ -32,25 +34,19 @@ type WorkspaceGraphDraftDecisionBase = Pick<
 
 export class AuthorizeWorkspaceGraphDraftCapabilityService {
   public constructor(
-    private readonly authenticator: IAuthenticator,
     private readonly authorizer: AuthorizeCommandScopeService,
     private readonly clock: () => Date
   ) {}
 
   public async authorize(input: {
-    readonly token: string | undefined;
+    readonly principal: AuthenticatedPrincipal;
     readonly requestId: string;
     readonly requestedScope: WorkspaceGraphDraftRequestedScope;
   }): Promise<WorkspaceGraphDraftDecisionContext> {
     const base = buildDecisionBase(input, this.clock);
 
-    const authentication = await this.authenticator.authenticateBearerToken(input.token);
-    if (!authentication.ok) {
-      return buildUnauthenticatedDecision(base);
-    }
-
     return this.authorizeAuthenticatedPrincipal(
-      authentication.principal,
+      input.principal,
       base,
       input.requestedScope,
       input.requestId
@@ -144,19 +140,6 @@ function buildDecisionBase(
     recordedAt: clock().toISOString(),
     requestedScope: input.requestedScope,
     scope: toContractScope(input.requestedScope),
-  };
-}
-
-function buildUnauthenticatedDecision(
-  base: WorkspaceGraphDraftDecisionBase
-): WorkspaceGraphDraftDecisionContext {
-  return {
-    authentication: 'unauthenticated',
-    ...base,
-    capability: buildWorkspaceGraphDraftCapabilityFromPolicy(
-      base.scope,
-      WORKSPACE_GRAPH_DRAFT_CAPABILITY_POLICY.unauthenticated
-    ),
   };
 }
 

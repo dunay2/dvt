@@ -7,6 +7,7 @@ import type {
   WorkspaceGraphDraftAuthoringSaveResult,
 } from '../../ports/workspaceGraphDraftAuthoring';
 import { createCanvasDraftRepository } from './canvasDraftRepository';
+import { buildDraftReadNotFoundResponse } from '../../services/workspace/workspaceGraphDraftProtocol.test.fixtures';
 import {
   buildAuthoringPort,
   buildSaveInput,
@@ -253,9 +254,9 @@ describe('canvasDraftRepository conflict handling', () => {
       saveGraphDraft: vi.fn(async (): Promise<WorkspaceGraphDraftAuthoringSaveResult> =>
         buildConflictSaveResult()
       ) as IWorkspaceGraphDraftAuthoringPort['saveGraphDraft'],
-      readGraphDraft: vi.fn(async (): Promise<WorkspaceGraphDraftAuthoringReadResult> => ({
-        kind: 'not_found',
-      })) as IWorkspaceGraphDraftAuthoringPort['readGraphDraft'],
+      readGraphDraft: vi.fn(async (): Promise<WorkspaceGraphDraftAuthoringReadResult> =>
+        buildDraftReadNotFoundResponse(WORKSPACE_SCOPE)
+      ) as IWorkspaceGraphDraftAuthoringPort['readGraphDraft'],
     });
     const repository = createCanvasDraftRepository(authoringPort);
 

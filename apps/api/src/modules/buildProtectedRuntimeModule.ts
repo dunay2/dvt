@@ -92,7 +92,6 @@ export async function buildProtectedRuntimeModule(
   });
   const workspaceGraphDraftRuntime = buildWorkspaceGraphDraftRuntime({
     appLogger,
-    authenticator: securityRuntime.authenticator,
     commandAuthorizer: securityRuntime.commandAuthorizer,
     env,
     pool,

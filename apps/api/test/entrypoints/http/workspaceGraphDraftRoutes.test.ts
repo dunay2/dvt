@@ -1,14 +1,18 @@
+import {
+  WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
+  type WorkspaceGraphDraftAuditRef,
+} from '@dvt/contracts';
 import { createNoopObservability } from '@dvt/observability';
 import rateLimit from '@fastify/rate-limit';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { describe, expect, it, vi } from 'vitest';
 
-import { WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION } from '../../../src/application/ports/workspaceGraphDraft.js';
 import { registerWorkspaceGraphDraftRoutes } from '../../../src/entrypoints/http/workspaceGraphDraftRoutes.js';
 import { buildWorkspaceGraphDraftSaveRequest } from '../../fixtures/workspaceGraphDraftFixture.js';
 
 interface TestAppContext {
   readonly app: FastifyInstance;
+  readonly authenticator: { readonly authenticateBearerToken: ReturnType<typeof vi.fn> };
   readonly capabilityService: {
     readonly authorize: ReturnType<typeof vi.fn>;
   };
@@ -21,6 +25,33 @@ interface TestAppContext {
   readonly telemetry: {
     readonly recordRead: ReturnType<typeof vi.fn>;
     readonly recordWrite: ReturnType<typeof vi.fn>;
+  };
+}
+
+const TEST_SCOPE = {
+  tenantId: 'tenant-api-it',
+  projectId: 'project-api-it',
+  environmentId: 'env-api-it',
+} as const;
+
+const WRITABLE_CAPABILITY = {
+  scope: TEST_SCOPE,
+  mode: 'writable',
+  canRead: true,
+  canWrite: true,
+  reason: 'authorized',
+} as const;
+
+function auditRef(
+  action: 'draft_read' | 'draft_write',
+  outcome: 'allowed' | 'conflict'
+): WorkspaceGraphDraftAuditRef {
+  return {
+    correlationId: 'req-1',
+    decisionId: 'dec-1',
+    action,
+    outcome,
+    recordedAt: '2026-04-16T00:00:00.000Z',
   };
 }
 
@@ -44,33 +75,38 @@ function createApp(options?: {
         projectId: { value: 'project-api-it' },
         environmentId: { value: 'env-api-it' },
       },
-      scope: {
-        tenantId: 'tenant-api-it',
-        projectId: 'project-api-it',
-        environmentId: 'env-api-it',
-      },
-      capability: {
-        scope: {
-          tenantId: 'tenant-api-it',
-          projectId: 'project-api-it',
-          environmentId: 'env-api-it',
-        },
-        mode: 'writable',
-        canRead: true,
-        canWrite: true,
-        reason: 'authorized',
-      },
+      scope: TEST_SCOPE,
+      capability: WRITABLE_CAPABILITY,
       ...(options?.decision ?? {}),
     })),
   };
   const getUseCase = {
-    execute: vi.fn(async () => options?.readResult ?? { kind: 'not_found' }),
+    execute: vi.fn(
+      async () =>
+        options?.readResult ?? {
+          kind: 'response',
+          httpStatus: 404,
+          response: {
+            kind: 'not_found',
+            capability: WRITABLE_CAPABILITY,
+            auditRef: auditRef('draft_read', 'allowed'),
+          },
+        }
+    ),
   };
   const saveUseCase = {
     execute: vi.fn(
       async () =>
         options?.saveResult ?? {
-          kind: 'unsupported_schema_version',
+          kind: 'response',
+          httpStatus: 422,
+          response: {
+            kind: 'unsupported_schema_version',
+            capability: WRITABLE_CAPABILITY,
+            auditRef: auditRef('draft_write', 'allowed'),
+            expectedSchemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
+            requestedSchemaVersion: 'workspace-graph-draft.v0',
+          },
         }
     ),
   };
@@ -79,7 +115,24 @@ function createApp(options?: {
     recordWrite: vi.fn(),
   };
 
+  const authenticator = {
+    authenticateBearerToken: vi.fn(async () => ({
+      ok: true as const,
+      principal: {
+        principalId: 'user-1',
+        subjectId: 'user-1',
+        issuer: 'issuer',
+        audience: 'audience',
+        principalType: 'user' as const,
+        expiresAt: new Date('2030-01-01T00:00:00.000Z'),
+        rawScopes: [],
+        assertedTenantIds: [TEST_SCOPE.tenantId],
+        assertedProjectIds: [TEST_SCOPE.projectId],
+      },
+    })),
+  };
   registerWorkspaceGraphDraftRoutes(app, {
+    authenticator,
     capabilityService: capabilityService as never,
     getUseCase: getUseCase as never,
     saveUseCase: saveUseCase as never,
@@ -88,10 +141,34 @@ function createApp(options?: {
     rateLimit: options?.rateLimit ?? { max: 100, timeWindow: 60_000 },
   });
 
-  return { app, capabilityService, getUseCase, saveUseCase, telemetry };
+  return { app, authenticator, capabilityService, getUseCase, saveUseCase, telemetry };
 }
 
 describe('workspaceGraphDraftRoutes', () => {
+  it('stops at the shared authentication boundary', async () => {
+    const context = createApp();
+    context.authenticator.authenticateBearerToken.mockResolvedValueOnce({
+      ok: false,
+      code: 'missing_token',
+    });
+
+    try {
+      const response = await context.app.inject({
+        method: 'GET',
+        url: '/workspace/graph/draft?tenantId=tenant-api-it&projectId=project-api-it&environmentId=env-api-it',
+      });
+
+      expect(response.statusCode).toBe(401);
+      expect(response.json()).toEqual({
+        error: { type: 'unauthorized', reason: 'authentication_failed' },
+      });
+      expect(context.capabilityService.authorize).not.toHaveBeenCalled();
+      expect(context.getUseCase.execute).not.toHaveBeenCalled();
+    } finally {
+      await context.app.close();
+    }
+  });
+
   it('rejects missing workspace scope in the read route', async () => {
     const { app } = createApp();
 
@@ -114,8 +191,8 @@ describe('workspaceGraphDraftRoutes', () => {
     }
   });
 
-  it('maps missing persisted draft to a 404 envelope with correlation keys', async () => {
-    const { app, telemetry } = createApp();
+  it('preserves the governed not-found read outcome', async () => {
+    const { app, authenticator, capabilityService, telemetry } = createApp();
 
     try {
       const response = await app.inject({
@@ -125,26 +202,27 @@ describe('workspaceGraphDraftRoutes', () => {
 
       expect(response.statusCode).toBe(404);
       expect(response.json()).toEqual({
-        error: {
-          type: 'not_found',
-          reason: 'workspace_graph_draft_not_found',
-          details: {
-            correlationId: 'req-1',
-            decisionId: 'dec-1',
-          },
-        },
+        kind: 'not_found',
+        capability: WRITABLE_CAPABILITY,
+        auditRef: auditRef('draft_read', 'allowed'),
       });
       expect(telemetry.recordRead).toHaveBeenCalledWith(
         'not_found',
         'writable',
         expect.any(Number)
       );
+      expect(authenticator.authenticateBearerToken).toHaveBeenCalledOnce();
+      expect(capabilityService.authorize).toHaveBeenCalledWith(
+        expect.objectContaining({
+          principal: expect.objectContaining({ principalId: 'user-1' }),
+        })
+      );
     } finally {
       await app.close();
     }
   });
 
-  it('maps unsupported schema versions on save to a 422 envelope', async () => {
+  it('preserves the governed unsupported-schema save outcome', async () => {
     const { app, telemetry } = createApp();
 
     try {
@@ -159,13 +237,11 @@ describe('workspaceGraphDraftRoutes', () => {
 
       expect(response.statusCode).toBe(422);
       expect(response.json()).toEqual({
-        error: {
-          type: 'unprocessable',
-          reason: 'workspace_graph_draft_unsupported_schema_version',
-          details: {
-            expectedSchemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
-          },
-        },
+        kind: 'unsupported_schema_version',
+        capability: WRITABLE_CAPABILITY,
+        auditRef: auditRef('draft_write', 'allowed'),
+        expectedSchemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
+        requestedSchemaVersion: 'workspace-graph-draft.v0',
       });
       expect(telemetry.recordWrite).toHaveBeenCalledWith('denied', 'writable', expect.any(Number));
     } finally {
@@ -173,11 +249,17 @@ describe('workspaceGraphDraftRoutes', () => {
     }
   });
 
-  it('maps file-authority conflicts on save to an actionable 409 envelope', async () => {
+  it('preserves the governed file-authority conflict outcome', async () => {
     const { app, telemetry } = createApp({
       saveResult: {
-        kind: 'authoring_authority_conflict',
-        canvasIds: ['orders-canvas'],
+        kind: 'response',
+        httpStatus: 409,
+        response: {
+          kind: 'authoring_authority_conflict',
+          capability: WRITABLE_CAPABILITY,
+          auditRef: auditRef('draft_write', 'conflict'),
+          canvasIds: ['orders-canvas'],
+        },
       },
     });
 
@@ -190,15 +272,10 @@ describe('workspaceGraphDraftRoutes', () => {
 
       expect(response.statusCode).toBe(409);
       expect(response.json()).toEqual({
-        error: {
-          type: 'conflict',
-          reason: 'workspace_graph_draft_authoring_authority_conflict',
-          details: {
-            correlationId: 'req-1',
-            decisionId: 'dec-1',
-            canvasIds: ['orders-canvas'],
-          },
-        },
+        kind: 'authoring_authority_conflict',
+        capability: WRITABLE_CAPABILITY,
+        auditRef: auditRef('draft_write', 'conflict'),
+        canvasIds: ['orders-canvas'],
       });
       expect(telemetry.recordWrite).toHaveBeenCalledWith(
         'conflict',

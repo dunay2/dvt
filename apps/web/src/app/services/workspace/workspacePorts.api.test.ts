@@ -9,16 +9,16 @@ import {
 } from '../../../testing/sourceImportTestFixtures';
 import { ApiError } from '../api/createApiClient';
 import { WorkspaceFileRevisionConflictError } from './workspaceErrors';
-import { buildDraftReadOkResponse } from './workspaceGraphDraftProtocol.test.fixtures';
+import {
+  buildDraftReadNotFoundResponse,
+  buildDraftReadOkResponse,
+} from './workspaceGraphDraftProtocol.test.fixtures';
 import {
   buildWorkspaceDiffChangesEndpoint,
   WORKSPACE_DIFF_CHANGES_ENDPOINT,
 } from './workspaceDiffChangesHttp';
 import { buildWorkspaceFileHistoryEndpoint } from './workspaceFileHistoryHttp';
-import {
-  buildWorkspaceGraphDraftEndpoint,
-  WORKSPACE_GRAPH_DRAFT_HTTP_ERROR_REASON,
-} from './workspaceGraphDraftHttp';
+import { buildWorkspaceGraphDraftEndpoint } from './workspaceGraphDraftHttp';
 import { buildWorkspacePluginsEndpoint } from './workspacePluginsHttp';
 import { createApiWorkspacePortHarness } from './workspacePortsApi.test.harness';
 import {
@@ -97,12 +97,7 @@ describe('workspace ports api graph snapshot', () => {
       getJson: async (endpoint) => {
         throw new Error(`Retired graph endpoint reached: ${endpoint}`);
       },
-      requestRaw: async () =>
-        httpErrorResponse({
-          type: 'not_found',
-          reason: WORKSPACE_GRAPH_DRAFT_HTTP_ERROR_REASON.notFound,
-          status: 404,
-        }),
+      requestRaw: async () => jsonResponse(buildDraftReadNotFoundResponse(scope), 404),
     });
 
     await expect(workspaceGraphSnapshotQuery.getGraphSnapshot()).resolves.toEqual({

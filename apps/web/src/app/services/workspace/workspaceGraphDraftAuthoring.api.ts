@@ -2,6 +2,8 @@
 import {
   parseWorkspaceGraphDraftReadResponse,
   parseWorkspaceGraphDraftSaveResponse,
+  WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
+  WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION,
 } from '@dvt/contracts';
 
 import type {
@@ -14,72 +16,29 @@ import type { ApiClient } from '../api/createApiClient';
 import {
   buildWorkspaceGraphDraftEndpoint,
   createRequestFailedApiError,
-  isWorkspaceGraphDraftNotFoundResponse,
-  matchWorkspaceGraphDraftHttpError,
   parseJsonResponse,
   readWorkspaceGraphDraftScope,
   WORKSPACE_GRAPH_DRAFT_ENDPOINT,
-  WORKSPACE_GRAPH_DRAFT_HTTP_ERROR_REASON,
 } from './workspaceGraphDraftHttp';
-import {
-  WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
-  WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION,
-} from './workspaceGraphDraftProtocol';
 
 function isProtectedDraftReadResponseStatus(statusCode: number): boolean {
-  return statusCode === 200 || statusCode === 401 || statusCode === 403 || statusCode === 422;
+  return (
+    statusCode === 200 ||
+    statusCode === 401 ||
+    statusCode === 403 ||
+    statusCode === 404 ||
+    statusCode === 422
+  );
 }
 
 function isProtectedDraftSaveResponseStatus(statusCode: number): boolean {
-  return statusCode === 200 || statusCode === 401 || statusCode === 403 || statusCode === 409;
-}
-
-function readWorkspaceGraphDraftExpectedSchemaVersion(responseBody: {
-  error: { details?: Record<string, unknown> };
-}): string {
-  const expectedSchemaVersion = responseBody.error.details?.expectedSchemaVersion;
-  return typeof expectedSchemaVersion === 'string'
-    ? expectedSchemaVersion
-    : WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION;
-}
-
-function resolveUnsupportedSchemaVersionOutcome(
-  statusCode: number,
-  responseBody: unknown
-): WorkspaceGraphDraftAuthoringSaveResult | null {
-  const matchedError = matchWorkspaceGraphDraftHttpError({
-    statusCode,
-    responseBody,
-    expectedStatusCode: 422,
-    expectedReason: WORKSPACE_GRAPH_DRAFT_HTTP_ERROR_REASON.unsupportedSchemaVersion,
-  });
-  if (matchedError === null) {
-    return null;
-  }
-
-  return {
-    kind: 'unsupported_schema_version',
-    expectedSchemaVersion: readWorkspaceGraphDraftExpectedSchemaVersion(matchedError),
-  };
-}
-
-function resolveIdempotencyMismatchOutcome(
-  statusCode: number,
-  responseBody: unknown
-): WorkspaceGraphDraftAuthoringSaveResult | null {
-  const matchedError = matchWorkspaceGraphDraftHttpError({
-    statusCode,
-    responseBody,
-    expectedStatusCode: 409,
-    expectedReason: WORKSPACE_GRAPH_DRAFT_HTTP_ERROR_REASON.idempotencyKeyReused,
-  });
-  if (matchedError === null) {
-    return null;
-  }
-
-  return {
-    kind: 'idempotency_mismatch',
-  };
+  return (
+    statusCode === 200 ||
+    statusCode === 401 ||
+    statusCode === 403 ||
+    statusCode === 409 ||
+    statusCode === 422
+  );
 }
 
 function buildWorkspaceGraphDraftSaveRequestBody(input: SaveWorkspaceGraphDraftAuthoringInput) {
@@ -103,10 +62,6 @@ export function createApiWorkspaceGraphDraftAuthoringPort(
       });
       const responseBody = await parseJsonResponse(response);
 
-      if (isWorkspaceGraphDraftNotFoundResponse({ statusCode: response.status, responseBody })) {
-        return { kind: 'not_found' };
-      }
-
       if (!isProtectedDraftReadResponseStatus(response.status)) {
         throw createRequestFailedApiError(endpoint, response.status, responseBody);
       }
@@ -122,19 +77,6 @@ export function createApiWorkspaceGraphDraftAuthoringPort(
         jsonBody: buildWorkspaceGraphDraftSaveRequestBody(input),
       });
       const responseBody = await parseJsonResponse(response);
-
-      const unsupportedSchemaVersion = resolveUnsupportedSchemaVersionOutcome(
-        response.status,
-        responseBody
-      );
-      if (unsupportedSchemaVersion) {
-        return unsupportedSchemaVersion;
-      }
-
-      const idempotencyMismatch = resolveIdempotencyMismatchOutcome(response.status, responseBody);
-      if (idempotencyMismatch) {
-        return idempotencyMismatch;
-      }
 
       if (!isProtectedDraftSaveResponseStatus(response.status)) {
         throw createRequestFailedApiError(

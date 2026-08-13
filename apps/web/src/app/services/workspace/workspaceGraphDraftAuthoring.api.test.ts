@@ -4,17 +4,16 @@ import { createApiWorkspaceGraphDraftAuthoringPort } from './workspaceGraphDraft
 import { buildProtectedDraftRecord } from './workspaceGraphDraftAuthoring.test.fixtures';
 import {
   buildDraftReadDeniedResponse,
+  buildDraftReadNotFoundResponse,
   buildDraftReadOkResponse,
   buildDraftSaveConflictResponse,
   buildDraftSaveDeniedResponse,
+  buildDraftSaveIdempotencyMismatchResponse,
   buildDraftSaveSavedResponse,
+  buildDraftSaveUnsupportedSchemaResponse,
 } from './workspaceGraphDraftProtocol.test.fixtures';
 import { buildWorkspaceGraphDraftEndpoint } from './workspaceGraphDraftHttp';
-import {
-  createApiClientHarness,
-  httpErrorResponse,
-  jsonResponse,
-} from './workspaceApiClient.test.harness';
+import { createApiClientHarness, jsonResponse } from './workspaceApiClient.test.harness';
 import {
   buildWorkspaceScope,
   installWorkspaceScopeHarness,
@@ -76,33 +75,6 @@ async function expectPreservedSaveEnvelope(args: {
   ).resolves.toEqual(args.expectedResponse);
 }
 
-async function expectSpecialSaveOutcome(args: {
-  scope: WorkspaceScope;
-  requestRaw: NonNullable<Parameters<typeof createApiClientHarness>[0]>['requestRaw'];
-  expectedOutcome:
-    | {
-        kind: 'unsupported_schema_version';
-        expectedSchemaVersion: string;
-      }
-    | {
-        kind: 'idempotency_mismatch';
-      };
-  idempotencyKey: string;
-}): Promise<void> {
-  setWorkspaceScope(args.scope);
-  const { port } = createAuthoringPortHarness({
-    requestRaw: args.requestRaw,
-  });
-
-  await expect(
-    port.saveGraphDraft(
-      buildAuthoringSaveInput(args.scope, {
-        idempotencyKey: args.idempotencyKey,
-      })
-    )
-  ).resolves.toEqual(args.expectedOutcome);
-}
-
 describe('workspaceGraphDraftAuthoring api port', () => {
   it('preserves canonical read envelopes for successful reads', async () => {
     const scope = buildWorkspaceScope();
@@ -134,20 +106,12 @@ describe('workspaceGraphDraftAuthoring api port', () => {
   it('maps governed 404 not-found into an explicit authoring outcome', async () => {
     const scope = buildWorkspaceScope();
     setWorkspaceScope(scope);
+    const responseBody = buildDraftReadNotFoundResponse(scope);
     const { port } = createAuthoringPortHarness({
-      requestRaw: async () =>
-        httpErrorResponse({
-          type: 'not_found',
-          reason: 'workspace_graph_draft_not_found',
-          status: 404,
-          details: {
-            correlationId: 'corr-404',
-            decisionId: 'dec-404',
-          },
-        }),
+      requestRaw: async () => jsonResponse(responseBody, 404),
     });
 
-    await expect(port.readGraphDraft()).resolves.toEqual({ kind: 'not_found' });
+    await expect(port.readGraphDraft()).resolves.toEqual(responseBody);
   });
 
   it('sends canonical save requests with structural design-graph payloads', async () => {
@@ -203,39 +167,25 @@ describe('workspaceGraphDraftAuthoring api port', () => {
 
   it('maps unsupported schema failures into an explicit port outcome', async () => {
     const scope = buildWorkspaceScope();
-    await expectSpecialSaveOutcome({
-      scope,
-      idempotencyKey: 'idem-authoring-4',
-      requestRaw: async () =>
-        httpErrorResponse({
-          type: 'unprocessable',
-          reason: 'workspace_graph_draft_unsupported_schema_version',
-          status: 422,
-          details: {
-            expectedSchemaVersion: 'workspace-graph-draft.v1',
-          },
-        }),
-      expectedOutcome: {
-        kind: 'unsupported_schema_version',
-        expectedSchemaVersion: 'workspace-graph-draft.v1',
-      },
+    setWorkspaceScope(scope);
+    const responseBody = buildDraftSaveUnsupportedSchemaResponse(scope);
+    const { port } = createAuthoringPortHarness({
+      requestRaw: async () => jsonResponse(responseBody, 422),
     });
+    await expect(
+      port.saveGraphDraft(buildAuthoringSaveInput(scope, { idempotencyKey: 'idem-authoring-4' }))
+    ).resolves.toEqual(responseBody);
   });
 
   it('maps idempotency mismatches into an explicit port outcome', async () => {
     const scope = buildWorkspaceScope();
-    await expectSpecialSaveOutcome({
-      scope,
-      idempotencyKey: 'idem-authoring-5',
-      requestRaw: async () =>
-        httpErrorResponse({
-          type: 'conflict',
-          reason: 'workspace_graph_draft_idempotency_key_reused',
-          status: 409,
-        }),
-      expectedOutcome: {
-        kind: 'idempotency_mismatch',
-      },
+    setWorkspaceScope(scope);
+    const responseBody = buildDraftSaveIdempotencyMismatchResponse(scope);
+    const { port } = createAuthoringPortHarness({
+      requestRaw: async () => jsonResponse(responseBody, 409),
     });
+    await expect(
+      port.saveGraphDraft(buildAuthoringSaveInput(scope, { idempotencyKey: 'idem-authoring-5' }))
+    ).resolves.toEqual(responseBody);
   });
 });

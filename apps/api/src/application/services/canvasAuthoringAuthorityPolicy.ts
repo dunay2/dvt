@@ -1,5 +1,6 @@
 import {
   WorkspaceGraphAuthoringDraftSchema,
+  resolveWorkspaceGraphDraftCanvasIds,
   type CanvasAuthoringAuthorityBinding,
   type CanvasAuthoringAuthorityResolution,
   type GraphDbtWorkspaceArtifactPublicationAuthorityRefused,
@@ -127,7 +128,7 @@ export class CanvasAuthoringAuthorityPolicy {
     let graphOwnsCanvas = false;
     if (graphDraftRecord !== null) {
       const graphDraft = WorkspaceGraphAuthoringDraftSchema.parse(graphDraftRecord.draftPayload);
-      graphOwnsCanvas = (graphDraft.activeCanvasId ?? graphDraft.canvas.id) === key.canvasId;
+      graphOwnsCanvas = resolveWorkspaceGraphDraftCanvasIds(graphDraft).includes(key.canvasId);
     }
 
     if (stored && graphOwnsCanvas) {

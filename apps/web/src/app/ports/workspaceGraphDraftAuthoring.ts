@@ -12,11 +12,7 @@ import type {
   WorkspaceGraphDraftSaveResponse,
 } from '@dvt/contracts';
 
-export type WorkspaceGraphDraftAuthoringReadResult =
-  | WorkspaceGraphDraftReadResponse
-  | {
-      readonly kind: 'not_found';
-    };
+export type WorkspaceGraphDraftAuthoringReadResult = WorkspaceGraphDraftReadResponse;
 
 export type SaveWorkspaceGraphDraftAuthoringInput = {
   readonly expectedRevision: string | null;
@@ -24,15 +20,7 @@ export type SaveWorkspaceGraphDraftAuthoringInput = {
   readonly draft: WorkspaceGraphAuthoringDraft;
 };
 
-export type WorkspaceGraphDraftAuthoringSaveResult =
-  | WorkspaceGraphDraftSaveResponse
-  | {
-      readonly kind: 'unsupported_schema_version';
-      readonly expectedSchemaVersion: string;
-    }
-  | {
-      readonly kind: 'idempotency_mismatch';
-    };
+export type WorkspaceGraphDraftAuthoringSaveResult = WorkspaceGraphDraftSaveResponse;
 
 export interface IWorkspaceGraphDraftAuthoringPort {
   readGraphDraft: () => Promise<WorkspaceGraphDraftAuthoringReadResult>;

@@ -4,12 +4,6 @@ import { readGrantedWorkspaceScope } from '../session/workspaceScopeSelectionPor
 
 export const WORKSPACE_GRAPH_DRAFT_ENDPOINT = '/workspace/graph/draft';
 
-export const WORKSPACE_GRAPH_DRAFT_HTTP_ERROR_REASON = Object.freeze({
-  notFound: 'workspace_graph_draft_not_found',
-  unsupportedSchemaVersion: 'workspace_graph_draft_unsupported_schema_version',
-  idempotencyKeyReused: 'workspace_graph_draft_idempotency_key_reused',
-} as const);
-
 export function isWorkspaceHttpErrorEnvelope(
   value: unknown
 ): value is { error: { type: string; reason: string; details?: Record<string, unknown> } } {
@@ -28,36 +22,6 @@ export function isWorkspaceHttpErrorEnvelope(
     details?: unknown;
   };
   return typeof errorRecord.type === 'string' && typeof errorRecord.reason === 'string';
-}
-
-export function matchWorkspaceGraphDraftHttpError(args: {
-  statusCode: number;
-  responseBody: unknown;
-  expectedStatusCode: number;
-  expectedReason: string;
-}): { error: { type: string; reason: string; details?: Record<string, unknown> } } | null {
-  if (
-    args.statusCode === args.expectedStatusCode &&
-    isWorkspaceHttpErrorEnvelope(args.responseBody) &&
-    args.responseBody.error.reason === args.expectedReason
-  ) {
-    return args.responseBody;
-  }
-
-  return null;
-}
-
-export function isWorkspaceGraphDraftNotFoundResponse(args: {
-  statusCode: number;
-  responseBody: unknown;
-}): boolean {
-  return (
-    matchWorkspaceGraphDraftHttpError({
-      ...args,
-      expectedStatusCode: 404,
-      expectedReason: WORKSPACE_GRAPH_DRAFT_HTTP_ERROR_REASON.notFound,
-    }) !== null
-  );
 }
 
 export function readWorkspaceGraphDraftScope(): {

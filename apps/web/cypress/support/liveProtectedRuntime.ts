@@ -107,7 +107,7 @@ export function seedLiveSelectedClosureDraft(
         expectedRevision = readResponse.body.record.revision as string;
       } else {
         expect(readResponse.status).to.equal(404);
-        expect(readResponse.body.error.reason).to.equal('workspace_graph_draft_not_found');
+        expect(readResponse.body.kind).to.equal('not_found');
       }
 
       return cy.request({

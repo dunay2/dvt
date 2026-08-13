@@ -179,7 +179,7 @@ describe('CanvasAuthoringAuthorityPolicy', () => {
     });
   });
 
-  it('refuses a stale Canvas after another retained Canvas becomes active', async () => {
+  it('keeps every retained Canvas under graph-draft authority', async () => {
     const graphShape = buildWorkspaceGraphDraft();
     const staleCanvas = {
       canvas: {
@@ -211,9 +211,9 @@ describe('CanvasAuthoringAuthorityPolicy', () => {
       )
     );
 
-    await expect(policy.authorizeGraphArtifactPublication(KEY, '.')).resolves.toEqual({
-      kind: 'refused',
-      reason: 'missing_authority',
+    await expect(policy.authorizeGraphArtifactPublication(KEY, '.')).resolves.toMatchObject({
+      kind: 'allowed',
+      binding: { canvasId: KEY.canvasId, authority: { kind: 'graph-draft' } },
     });
   });
 

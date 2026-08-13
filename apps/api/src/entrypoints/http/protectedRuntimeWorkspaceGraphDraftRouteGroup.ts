@@ -20,6 +20,7 @@ export function registerProtectedWorkspaceGraphDraftRouteGroup(
   }
 ): void {
   registerWorkspaceGraphDraftRoutes(app, {
+    authenticator: options.dependencies.runtimeAuth.authenticator,
     capabilityService: options.protectedModule.workspaceGraphDraftCapabilityService,
     getUseCase: options.protectedModule.getWorkspaceGraphDraftUseCase,
     saveUseCase: options.protectedModule.saveWorkspaceGraphDraftUseCase,

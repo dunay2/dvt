@@ -50,11 +50,6 @@ export const HTTP_ERROR_REASON = Object.freeze({
   tenantAccessDenied: 'tenant_access_denied',
   unsupportedWarehouseAdapter: 'unsupported_warehouse_adapter',
   unsupportedPlanVersion: 'unsupported_plan_version',
-  workspaceGraphDraftIdempotencyKeyReused: 'workspace_graph_draft_idempotency_key_reused',
-  workspaceGraphDraftAuthoringAuthorityConflict:
-    'workspace_graph_draft_authoring_authority_conflict',
-  workspaceGraphDraftNotFound: 'workspace_graph_draft_not_found',
-  workspaceGraphDraftUnsupportedSchemaVersion: 'workspace_graph_draft_unsupported_schema_version',
   workspaceFileNotFound: 'workspace_file_not_found',
   workspaceFileRevisionConflict: 'workspace_file_revision_conflict',
   workspaceSourceImportCanvasNotFound: 'workspace_source_import_canvas_not_found',
