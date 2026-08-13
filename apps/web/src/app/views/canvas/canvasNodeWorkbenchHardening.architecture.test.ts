@@ -4,6 +4,7 @@ import DbtNodeComponentSource from '../../components/canvas/DbtNodeComponent.tsx
 import CanvasNodeShellSource from '../../components/canvas/CanvasNodeShell.tsx?raw';
 import CanvasNodeContextMenuModelSource from '../../components/canvas/canvasNodeContextMenuModel.ts?raw';
 import NodePropertySectionViewSource from '../../components/inspector/NodePropertySectionView.tsx?raw';
+import NodePropertiesReadModelSource from '../../components/inspector/nodePropertiesReadModel.ts?raw';
 import GraphNodeCardViewSource from '../../plugins/graph/GraphNodeCardView.tsx?raw';
 import CanvasInspectorAuthoringContractSource from './canvasInspectorAuthoring.types.ts?raw';
 import CanvasInspectorAuthoringSectionSource from './CanvasInspectorAuthoringSection.tsx?raw';
@@ -156,7 +157,7 @@ describe('Canvas Node Workbench W4 hardening contracts', () => {
     expect(CanvasShellPanelsBuilderSource).not.toContain('inspectorNodeSelectedForExecution');
   });
 
-  it('routes read-only DVT transform columns through canonical localized role copy', () => {
+  it('routes read-only DVT transform columns through the canonical properties read model', () => {
     for (const visibleLiteral of [
       'Input columns',
       '} selected',
@@ -166,17 +167,21 @@ describe('Canvas Node Workbench W4 hardening contracts', () => {
       expect(DvtSqlTransformAuthoringSectionSource).not.toContain(visibleLiteral);
     }
 
-    for (const copyKey of [
+    for (const retiredAuthoringFact of [
+      'buildDvtTransformColumnOptions',
       'nodePresentationColumnsLabel',
       'dvtFlowGuideRequiredLabel',
       'dvtFlowGuideColumnsMissingMessage',
+      'selectedColumnRefs',
     ]) {
-      expect(DvtSqlTransformAuthoringSectionSource).toContain(`canvasViewCopy.${copyKey}`);
+      expect(DvtSqlTransformAuthoringSectionSource).not.toContain(retiredAuthoringFact);
     }
 
-    expect(DvtSqlTransformAuthoringSectionSource).toContain('buildCanvasNodePresentationCopy');
-    expect(DvtSqlTransformAuthoringSectionSource).toContain('valueLabels?.input');
     expect(DvtSqlTransformAuthoringSectionSource).not.toContain('name="dvt-transform-column"');
+    expect(NodePropertiesReadModelSource).toContain('buildInheritedColumnRows');
+    expect(NodePropertiesReadModelSource).toContain('presentationTruth.columns.inherited');
+    expect(NodePropertiesReadModelSource).toContain('source: column.sourceNodeName');
+    expect(NodePropertiesReadModelSource).toContain('localizePropertyTableRows');
     expect(CanvasNodePresentationCopySource).toContain("input: 'Input'");
     expect(CanvasNodePresentationCopySource).toContain("input: 'Entrada'");
   });
