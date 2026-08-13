@@ -9,6 +9,7 @@ type MonacoCodeEditorProps = Readonly<{
   loadingLabel: string;
   onChange: (value: string) => void;
   path?: string;
+  readOnly?: boolean;
   value: string;
 }>;
 
@@ -19,6 +20,7 @@ export function MonacoCodeEditor({
   loadingLabel,
   onChange,
   path,
+  readOnly = false,
   value,
 }: MonacoCodeEditorProps) {
   const MonacoCodeSurface = useMonacoCodeSurface();
@@ -33,7 +35,7 @@ export function MonacoCodeEditor({
       language={language}
       onChange={onChange}
       path={path}
-      readOnly={false}
+      readOnly={readOnly}
       value={value}
     />
   );

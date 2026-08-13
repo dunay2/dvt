@@ -2,7 +2,7 @@
 title: Canvas Inspector Authoring Component
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-26
+last_reviewed: 2026-08-13
 planning_type: architecture
 ---
 
@@ -70,6 +70,7 @@ write surface lives one level up in the route-owned wrapper.
 | `CanvasInspectorPanel`                           | route-owned composition of passive Inspector plus authoring section        |
 | `DbtAuthoringFields`                             | dbt plugin authoring controls and generated model SQL preview              |
 | `DvtAuthoringFields`                             | DVT plugin authoring controls for sources, transforms, and sinks           |
+| `MonacoCodeEditor`                               | shared lazy SQL editor used by the DVT transform presentation leaf         |
 | `serializeCanvasDraftAuthoringSignature`         | semantic dirty-check signature for persisted authoring payloads            |
 | `serializeCanvasDraftAuthoringBaselineSignature` | remote-draft baseline signature policy used by bootstrap and reload        |
 | `toCanvasAuthoringMetadata`                      | JSON-compatible metadata DTO boundary for signatures and persistence       |
@@ -99,6 +100,12 @@ write surface lives one level up in the route-owned wrapper.
 - DVT transformation configuration that changes preview semantics belongs to
   the route-owned Inspector DTO and is applied to `metadata.config` or
   `metadata.sql`, not to plugin-owned passive panels.
+- The DVT SQL transform presentation leaf reuses `MonacoCodeEditor`. Canvas
+  must not import Monaco directly, create a second SQL buffer, or move file
+  persistence authority into the Inspector.
+- DVT authoring exposes only fields consumed by current preview or persistence
+  semantics. Historical unconsumed config is preserved when supported fields
+  change, but it is not presented as editable product truth.
 - DBT model origin selection must use connected dbt source or model nodes from
   the visible graph; it must not synthesize database catalog authority or
   hidden edges.
@@ -158,6 +165,7 @@ write surface lives one level up in the route-owned wrapper.
 | `CanvasInspectorAuthoringSection.tsx`        | route-owned edit orchestration and base node fields                 | plugin semantics or transport ownership |
 | `DbtAuthoringFields.tsx`                     | dbt plugin authoring fields and generated SQL preview               | generic Canvas readiness policy         |
 | `DvtAuthoringFields.tsx`                     | DVT source, SQL transform, and sink field rendering                 | dbt adapter mapping or graph strategy   |
+| `DvtSqlTransformAuthoringSection.tsx`        | shared Monaco composition and read-only upstream column projection  | direct Monaco imports or persistence    |
 | `CanvasInspectorPanel.tsx`                   | route-owned composition wrapper                                     | validation rules or aggregate policy    |
 | `components/InspectorPanel.tsx`              | passive details and plugin read-only panels                         | route mutation semantics                |
 | `canvasDraftAuthoring.ts`                    | authoring payload projection and semantic signature policy          | aggregate state machine ownership       |
@@ -292,6 +300,9 @@ sequenceDiagram
 - requiring explicit dbt SQL from generic Canvas plan readiness or graph
   projection instead of from the dbt plugin's artifact projection
 - moving DVT SQL transform validation into dbt authoring fields
+- reintroducing editable DVT fields without a real preview or persistence
+  consumer
+- importing Monaco directly into Canvas or creating a parallel SQL editor
 - using the Inspector form as a second persistence model
 - using a structural-only dirty signature that cannot see node name,
   description, metadata, or edge semantics

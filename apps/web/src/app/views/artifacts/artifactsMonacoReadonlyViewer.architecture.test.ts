@@ -90,7 +90,7 @@ describe('Artifacts Monaco read-only viewer architecture', () => {
     expect(implementationPlan).toContain('artifactsMonacoReadonlyViewer.architecture.test.ts');
   });
 
-  it('keeps Monaco as a lazy read-only Artifacts panel primitive instead of route, shell, or Canvas authority', () => {
+  it('keeps Monaco behind shared leaves instead of route or shell authority', () => {
     const artifactsView = readAppSource('views/ArtifactsView.tsx');
     const workspaceQueries = readAppSource('queries/workspaceQueries.ts');
     const workspaceArtifactPolicy = readAppSource('queries/workspaceArtifactPolicy.ts');
@@ -151,7 +151,8 @@ describe('Artifacts Monaco read-only viewer architecture', () => {
     expect(monacoViewer).toContain('useMonacoCodeSurface()');
     expect(monacoViewer).toContain('readOnly={true}');
     expect(monacoEditor).toContain('useMonacoCodeSurface()');
-    expect(monacoEditor).toContain('readOnly={false}');
+    expect(monacoEditor).toContain('readOnly = false');
+    expect(monacoEditor).toContain('readOnly={readOnly}');
     expect(monacoEditor).toContain('onChange');
     expect(monacoLoader).toContain("import('./MonacoCodeSurface')");
     expect(monacoLoader).toContain('if (active)');
@@ -169,8 +170,12 @@ describe('Artifacts Monaco read-only viewer architecture', () => {
       const source = readFileSync(canvasModule, 'utf8');
       expect(source, canvasModule).not.toContain('@monaco-editor/react');
       expect(source, canvasModule).not.toContain('MonacoCodeViewer');
-      expect(source, canvasModule).not.toContain('MonacoCodeEditor');
       expect(source, canvasModule).not.toContain('MonacoDiffViewer');
+      if (canvasModule.endsWith('DvtSqlTransformAuthoringSection.tsx')) {
+        expect(source, canvasModule).toContain('MonacoCodeEditor');
+      } else {
+        expect(source, canvasModule).not.toContain('MonacoCodeEditor');
+      }
     }
   });
 });
