@@ -11475,6 +11475,34 @@
         "updated_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
+        "design_id": "GH-2166-RECORD-PLAN-EXECUTABILITY-DUPLICATE-RETIREMENT-20260813",
+        "work_item_id": "GH-2166",
+        "title": "Retire duplicate RecordPlanExecutability declaration",
+        "owner": "API / Plan Store",
+        "status": "superseded",
+        "rationale": "The existing MVP-F6-2A rail now includes the coordinator symbols, so the GH-2166 duplicate declaration must be removed through the audited retirement command.",
+        "fowler_signal": "none",
+        "rail_ref": "RetireFeatureMechanizationRail",
+        "approved_at": "2026-08-13T01:35:25.961+00:00",
+        "supersedes_id": null,
+        "created_at": "2026-08-13T01:35:16.11+00:00",
+        "updated_at": "2026-08-13T01:36:03.542+00:00"
+      },
+      {
+        "design_id": "GH-2166-RECORD-PLAN-EXECUTABILITY-DUPLICATE-RETIREMENT-V2-20260813",
+        "work_item_id": "GH-2166",
+        "title": "Retire duplicate RecordPlanExecutability declaration during review",
+        "owner": "API / Plan Store",
+        "status": "implemented",
+        "rationale": "Retirement commands require review-state authority; this correction supersedes the prematurely transitioned design and preserves the exact may-delete target.",
+        "fowler_signal": "none",
+        "rail_ref": "RetireFeatureMechanizationRail",
+        "approved_at": "2026-08-13T01:36:24.149+00:00",
+        "supersedes_id": "GH-2166-RECORD-PLAN-EXECUTABILITY-DUPLICATE-RETIREMENT-20260813",
+        "created_at": "2026-08-13T01:36:02.305+00:00",
+        "updated_at": "2026-08-13T01:36:26.626+00:00"
+      },
+      {
         "design_id": "PLANNING-DB-API-APPLICATION-SERVICE-TEST-LEAF-COMPONENTS-20260619",
         "work_item_id": "PLANNING-DB-COMPONENT-INTEGRITY-VOCABULARY-RAIL-20260612",
         "title": "API application service test evidence leaf mapping",
@@ -67389,6 +67417,22 @@
         "created_at": "2026-08-10T17:19:38.904+00:00"
       },
       {
+        "design_id": "GH-2166-RECORD-PLAN-EXECUTABILITY-DUPLICATE-RETIREMENT-20260813",
+        "subject_kind": "decision",
+        "subject_id": "local#GH-2166-STORED-PLAN-AUTHORITY#command#recordplanexecutability",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-13T01:35:16.11+00:00"
+      },
+      {
+        "design_id": "GH-2166-RECORD-PLAN-EXECUTABILITY-DUPLICATE-RETIREMENT-V2-20260813",
+        "subject_kind": "decision",
+        "subject_id": "local#GH-2166-STORED-PLAN-AUTHORITY#command#recordplanexecutability",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-13T01:36:02.305+00:00"
+      },
+      {
         "design_id": "PLANNING-DB-API-APPLICATION-SERVICE-TEST-LEAF-COMPONENTS-20260619",
         "subject_kind": "component",
         "subject_id": "SYS-API-APPLICATION-PORTS",
@@ -90451,6 +90495,27 @@
         "created_at": "2026-08-11T12:25:41.783+00:00"
       },
       {
+        "operation_id": "278a928a-baff-4251-a555-517f3d1b796a",
+        "idempotency_key": "gh-2166-record-plan-duplicate-retirement-approved-v1",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2166-RECORD-PLAN-EXECUTABILITY-DUPLICATE-RETIREMENT-20260813",
+        "source_ref": "GH-2166",
+        "source_content_sha256": "45bf878ab2adee3163836bc159d75b55bc8251fc2c6e0b27e223481af67f1eac",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The canonical RecordPlanExecutability row now owns both validation findings and the shared admission coordinator symbols.",
+          "designId": "GH-2166-RECORD-PLAN-EXECUTABILITY-DUPLICATE-RETIREMENT-20260813",
+          "toStatus": "approved",
+          "sourceRef": "GH-2166",
+          "fromStatus": "review",
+          "sourceContentSha256": "45bf878ab2adee3163836bc159d75b55bc8251fc2c6e0b27e223481af67f1eac"
+        },
+        "created_at": "2026-08-13T01:35:25.961+00:00"
+      },
+      {
         "operation_id": "283ed0e9-fb08-4fcc-ade0-c941d5b96333",
         "idempotency_key": "gh-2167-update-test-sys-api-infra-runtime-telemetry-3-v1",
         "operation_type": "architecture_test_record",
@@ -91657,6 +91722,27 @@
           "sourceContentSha256": "89d19f7206c5ae8e990fb82afd59aafe1f3771131b381b827fe37c5b3738dcd3"
         },
         "created_at": "2026-08-10T21:04:20.062+00:00"
+      },
+      {
+        "operation_id": "3eeefba0-432d-4354-bc4c-21b4a550319b",
+        "idempotency_key": "gh-2166-record-plan-duplicate-retirement-superseded-v1",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2166-RECORD-PLAN-EXECUTABILITY-DUPLICATE-RETIREMENT-20260813",
+        "source_ref": "GH-2166",
+        "source_content_sha256": "45bf878ab2adee3163836bc159d75b55bc8251fc2c6e0b27e223481af67f1eac",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Superseded by the V2 review-state retirement design because the audited delete rail only permits proposed or review state.",
+          "designId": "GH-2166-RECORD-PLAN-EXECUTABILITY-DUPLICATE-RETIREMENT-20260813",
+          "toStatus": "superseded",
+          "sourceRef": "GH-2166",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "45bf878ab2adee3163836bc159d75b55bc8251fc2c6e0b27e223481af67f1eac"
+        },
+        "created_at": "2026-08-13T01:36:03.542+00:00"
       },
       {
         "operation_id": "3fa0e6bb-0c9b-4e47-a82c-b335598e49e8",
@@ -93590,6 +93676,27 @@
         "created_at": "2026-08-11T12:53:29.414+00:00"
       },
       {
+        "operation_id": "5d82136b-76cd-4142-8d2c-2593deab86f8",
+        "idempotency_key": "gh-2166-record-plan-duplicate-retirement-implementing-v1",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2166-RECORD-PLAN-EXECUTABILITY-DUPLICATE-RETIREMENT-20260813",
+        "source_ref": "GH-2166",
+        "source_content_sha256": "45bf878ab2adee3163836bc159d75b55bc8251fc2c6e0b27e223481af67f1eac",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Retire the exact redundant local declaration with compare-and-set revision protection.",
+          "designId": "GH-2166-RECORD-PLAN-EXECUTABILITY-DUPLICATE-RETIREMENT-20260813",
+          "toStatus": "implementing",
+          "sourceRef": "GH-2166",
+          "fromStatus": "approved",
+          "sourceContentSha256": "45bf878ab2adee3163836bc159d75b55bc8251fc2c6e0b27e223481af67f1eac"
+        },
+        "created_at": "2026-08-13T01:35:27.229+00:00"
+      },
+      {
         "operation_id": "5e446b5a-e3c1-4348-a0c4-3dee78cc5289",
         "idempotency_key": "gh-2167-update-test-sys-api-http-entrypoints-primary-v1",
         "operation_type": "architecture_test_record",
@@ -93892,6 +93999,27 @@
           "sourceContentSha256": "bdf20dae616bfda993737a4ffe143a28189db1cbb51ca4654faa3247328756e3"
         },
         "created_at": "2026-08-11T07:37:45.821+00:00"
+      },
+      {
+        "operation_id": "62816e68-9211-46b6-ab7d-356150df86fd",
+        "idempotency_key": "gh-2166-record-plan-duplicate-retirement-v2-implementing",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2166-RECORD-PLAN-EXECUTABILITY-DUPLICATE-RETIREMENT-V2-20260813",
+        "source_ref": "GH-2166",
+        "source_content_sha256": "45bf878ab2adee3163836bc159d75b55bc8251fc2c6e0b27e223481af67f1eac",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Validate the retired duplicate and surviving canonical rail through integrity and pre-push gates.",
+          "designId": "GH-2166-RECORD-PLAN-EXECUTABILITY-DUPLICATE-RETIREMENT-V2-20260813",
+          "toStatus": "implementing",
+          "sourceRef": "GH-2166",
+          "fromStatus": "approved",
+          "sourceContentSha256": "45bf878ab2adee3163836bc159d75b55bc8251fc2c6e0b27e223481af67f1eac"
+        },
+        "created_at": "2026-08-13T01:36:25.371+00:00"
       },
       {
         "operation_id": "628acc6f-92dd-44c9-a678-1630b27df6ae",
@@ -95061,6 +95189,27 @@
         "created_at": "2026-08-11T02:26:48.234+00:00"
       },
       {
+        "operation_id": "77c7c7c4-5fa1-40d6-acb8-c099044eb4f7",
+        "idempotency_key": "gh-2166-record-plan-duplicate-retirement-v2-implemented",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2166-RECORD-PLAN-EXECUTABILITY-DUPLICATE-RETIREMENT-V2-20260813",
+        "source_ref": "GH-2166",
+        "source_content_sha256": "45bf878ab2adee3163836bc159d75b55bc8251fc2c6e0b27e223481af67f1eac",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The redundant rail is absent and the canonical RecordPlanExecutability declaration retains the coordinator symbols.",
+          "designId": "GH-2166-RECORD-PLAN-EXECUTABILITY-DUPLICATE-RETIREMENT-V2-20260813",
+          "toStatus": "implemented",
+          "sourceRef": "GH-2166",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "45bf878ab2adee3163836bc159d75b55bc8251fc2c6e0b27e223481af67f1eac"
+        },
+        "created_at": "2026-08-13T01:36:26.626+00:00"
+      },
+      {
         "operation_id": "783c9751-6774-4990-9de9-8888cfad0374",
         "idempotency_key": "issue-2274-ev-pth14-v3-generate",
         "operation_type": "architecture_evidence_record",
@@ -95528,6 +95677,40 @@
           "expectedStorageObject": "docs/planning/status/generated-db-surface-inventory.md"
         },
         "created_at": "2026-08-10T15:49:23.515+00:00"
+      },
+      {
+        "operation_id": "824ae22d-3e56-4296-936f-ed81161352bd",
+        "idempotency_key": "gh-2166-record-plan-duplicate-retirement-design-v2",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "GH-2166-RECORD-PLAN-EXECUTABILITY-DUPLICATE-RETIREMENT-V2-20260813",
+        "source_ref": "GH-2166",
+        "source_content_sha256": "45bf878ab2adee3163836bc159d75b55bc8251fc2c6e0b27e223481af67f1eac",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "API / Plan Store",
+          "title": "Retire duplicate RecordPlanExecutability declaration during review",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "local#GH-2166-STORED-PLAN-AUTHORITY#command#recordplanexecutability",
+              "subjectKind": "decision"
+            }
+          ],
+          "status": "review",
+          "railRef": "RetireFeatureMechanizationRail",
+          "designId": "GH-2166-RECORD-PLAN-EXECUTABILITY-DUPLICATE-RETIREMENT-V2-20260813",
+          "rationale": "Retirement commands require review-state authority; this correction supersedes the prematurely transitioned design and preserves the exact may-delete target.",
+          "sourceRef": "GH-2166",
+          "workItemId": "GH-2166",
+          "fowlerSignal": "none",
+          "supersedesId": "GH-2166-RECORD-PLAN-EXECUTABILITY-DUPLICATE-RETIREMENT-20260813",
+          "sourceContentSha256": "45bf878ab2adee3163836bc159d75b55bc8251fc2c6e0b27e223481af67f1eac"
+        },
+        "created_at": "2026-08-13T01:36:02.305+00:00"
       },
       {
         "operation_id": "832a4453-f1e4-49a3-a56c-2d4eae2d0241",
@@ -97525,6 +97708,40 @@
         "created_at": "2026-08-10T20:09:38.42+00:00"
       },
       {
+        "operation_id": "a300bdf8-9f28-4473-a554-a71533fd9d19",
+        "idempotency_key": "gh-2166-record-plan-duplicate-retirement-design-v1",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "GH-2166-RECORD-PLAN-EXECUTABILITY-DUPLICATE-RETIREMENT-20260813",
+        "source_ref": "GH-2166",
+        "source_content_sha256": "45bf878ab2adee3163836bc159d75b55bc8251fc2c6e0b27e223481af67f1eac",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "API / Plan Store",
+          "title": "Retire duplicate RecordPlanExecutability declaration",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "local#GH-2166-STORED-PLAN-AUTHORITY#command#recordplanexecutability",
+              "subjectKind": "decision"
+            }
+          ],
+          "status": "review",
+          "railRef": "RetireFeatureMechanizationRail",
+          "designId": "GH-2166-RECORD-PLAN-EXECUTABILITY-DUPLICATE-RETIREMENT-20260813",
+          "rationale": "The existing MVP-F6-2A rail now includes the coordinator symbols, so the GH-2166 duplicate declaration must be removed through the audited retirement command.",
+          "sourceRef": "GH-2166",
+          "workItemId": "GH-2166",
+          "fowlerSignal": "none",
+          "supersedesId": null,
+          "sourceContentSha256": "45bf878ab2adee3163836bc159d75b55bc8251fc2c6e0b27e223481af67f1eac"
+        },
+        "created_at": "2026-08-13T01:35:16.11+00:00"
+      },
+      {
         "operation_id": "a3aa677f-0b69-4d48-b346-3650ec98dd9c",
         "idempotency_key": "codex-api-h2-2-reachability-v3-evidence-drift",
         "operation_type": "architecture_design_transition",
@@ -98679,6 +98896,27 @@
           "sourceContentSha256": "9ea6002bce50a36b35513d00ad8164f9a542bd898aa8101e4294f0b68e17566a"
         },
         "created_at": "2026-08-11T10:32:59.473+00:00"
+      },
+      {
+        "operation_id": "b4bace15-b871-47a1-ae0b-2b0618bfcb33",
+        "idempotency_key": "gh-2166-record-plan-duplicate-retirement-v2-approved",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2166-RECORD-PLAN-EXECUTABILITY-DUPLICATE-RETIREMENT-V2-20260813",
+        "source_ref": "GH-2166",
+        "source_content_sha256": "45bf878ab2adee3163836bc159d75b55bc8251fc2c6e0b27e223481af67f1eac",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The exact duplicate row was retired under its review-state may-delete authority and the surviving rail owns all affected symbols.",
+          "designId": "GH-2166-RECORD-PLAN-EXECUTABILITY-DUPLICATE-RETIREMENT-V2-20260813",
+          "toStatus": "approved",
+          "sourceRef": "GH-2166",
+          "fromStatus": "review",
+          "sourceContentSha256": "45bf878ab2adee3163836bc159d75b55bc8251fc2c6e0b27e223481af67f1eac"
+        },
+        "created_at": "2026-08-13T01:36:24.149+00:00"
       },
       {
         "operation_id": "b4d0f121-ccd7-455c-abd6-26a7ab161893",
@@ -130783,8 +131021,8 @@
         "pnpm --filter dvt-api typecheck",
         "pnpm verify:prepush"
       ],
-      "sourcePath": "https://github.com/dunay2/dvt/issues/2166",
-      "sourceContentSha256": "45bf878ab2adee3163836bc159d75b55bc8251fc2c6e0b27e223481af67f1eac",
+      "sourcePath": "apps/api/src/application/services/storedPlanScope.ts",
+      "sourceContentSha256": "83f1b5be6b76a084129efefd10f6c32054c66a4a994cb9abd2270b39b1ee1390",
       "rawRail": {
         "name": "CreateStoredPlan",
         "type": "command",
@@ -130917,152 +131155,9 @@
           "packages/@dvt/engine/**"
         ]
       },
-      "revision": 0,
+      "revision": 1,
       "createdBy": "codex",
       "createdAt": "2026-08-13T01:27:19.674Z"
-    },
-    {
-      "railId": "local#GH-2166-STORED-PLAN-AUTHORITY#command#recordplanexecutability",
-      "featureId": "GH-2166-STORED-PLAN-AUTHORITY",
-      "mechanizationStatus": "implemented",
-      "railName": "RecordPlanExecutability",
-      "normalizedRailName": "recordplanexecutability",
-      "railType": "command",
-      "dddOwner": "Stored plan admission coordinator",
-      "railStatus": "implemented",
-      "symbolRefs": [
-        "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#StoredPlanAdmissionCoordinator",
-        "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#StoredPlanAdmissionResult"
-      ],
-      "implementationRefs": [
-        "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#StoredPlanAdmissionCoordinator",
-        "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#StoredPlanAdmissionResult"
-      ],
-      "documentationRefs": ["https://github.com/dunay2/dvt/issues/2166"],
-      "governingSources": [
-        "docs/architecture/command-query-rail-governance.md",
-        "docs/architecture/fowler-opportunity-planning-governance.md"
-      ],
-      "allowedImplementationSurfaces": [
-        "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts"
-      ],
-      "architectureGuards": ["pnpm arch:deps"],
-      "completionGate": [
-        "pnpm --filter dvt-api test:unit",
-        "pnpm --filter dvt-api test:integration:ci",
-        "pnpm verify:prepush"
-      ],
-      "sourcePath": "https://github.com/dunay2/dvt/issues/2166",
-      "sourceContentSha256": "45bf878ab2adee3163836bc159d75b55bc8251fc2c6e0b27e223481af67f1eac",
-      "rawRail": {
-        "name": "RecordPlanExecutability",
-        "type": "command",
-        "status": "implemented",
-        "dddOwner": "Stored plan admission coordinator",
-        "negativeTests": [
-          "invalid plans are marked invalid and never dispatched",
-          "already valid plans are not rewritten",
-          "missing validation records fail closed"
-        ],
-        "adapterSurface": "PostgresPlanStore",
-        "applicationPort": "IPlanExecutabilityValidator.validatePlan",
-        "authorizationScope": "tenant/project/environment"
-      },
-      "rawManifest": {
-        "symbols": [
-          {
-            "name": "StoredPlanAdmissionCoordinator",
-            "path": "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
-            "cqRails": ["RecordPlanExecutability"],
-            "dddOwner": "Stored plan admission coordinator",
-            "unitTests": [
-              "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts"
-            ],
-            "fowlerSignals": [
-              "Duplicated preview and start-run algorithms converged behind one coordinator."
-            ],
-            "cypressCoverage": "N/A - API application authority with no new UI behavior",
-            "architectureGuard": "pnpm arch:deps"
-          },
-          {
-            "name": "StoredPlanAdmissionResult",
-            "path": "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
-            "cqRails": ["RecordPlanExecutability"],
-            "dddOwner": "Stored plan admission coordinator",
-            "unitTests": [
-              "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts"
-            ],
-            "fowlerSignals": [
-              "Duplicated preview and start-run algorithms converged behind one coordinator."
-            ],
-            "cypressCoverage": "N/A - API application authority with no new UI behavior",
-            "architectureGuard": "pnpm arch:deps"
-          }
-        ],
-        "version": 1,
-        "featureId": "GH-2166-STORED-PLAN-AUTHORITY",
-        "userStories": ["https://github.com/dunay2/dvt/issues/2166"],
-        "cypressFlows": [
-          "N/A - API application authority with no new UI behavior"
-        ],
-        "domainObjects": ["PlanRecord admission lifecycle"],
-        "fowlerSignals": [
-          "Duplicated preview and start-run algorithms converged behind one coordinator."
-        ],
-        "completionGate": [
-          "pnpm --filter dvt-api test:unit",
-          "pnpm --filter dvt-api test:integration:ci",
-          "pnpm verify:prepush"
-        ],
-        "redGreenCycles": [
-          {
-            "id": "recordplanexecutability-record",
-            "redTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/StoredPlanAdmissionCoordinator.test.ts",
-            "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/StoredPlanAdmissionCoordinator.test.ts",
-            "patchSurfaces": [
-              "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts"
-            ],
-            "expectedFailure": "Preview and Start Run could store and transition equivalent plans through divergent lifecycle algorithms."
-          }
-        ],
-        "componentGuides": [
-          "docs/architecture/command-query-rail-governance.md"
-        ],
-        "governingSources": [
-          "docs/architecture/command-query-rail-governance.md",
-          "docs/architecture/fowler-opportunity-planning-governance.md"
-        ],
-        "commandQueryRails": [
-          {
-            "name": "RecordPlanExecutability",
-            "type": "command",
-            "status": "implemented",
-            "dddOwner": "Stored plan admission coordinator",
-            "negativeTests": [
-              "invalid plans are marked invalid and never dispatched",
-              "already valid plans are not rewritten",
-              "missing validation records fail closed"
-            ],
-            "adapterSurface": "PostgresPlanStore",
-            "applicationPort": "IPlanExecutabilityValidator.validatePlan",
-            "authorizationScope": "tenant/project/environment"
-          }
-        ],
-        "architectureGuards": ["pnpm arch:deps"],
-        "implementationPlan": "https://github.com/dunay2/dvt/issues/2166",
-        "mechanizationStatus": "implemented",
-        "noHumanDecisionsRemaining": true,
-        "allowedImplementationSurfaces": [
-          "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts"
-        ],
-        "forbiddenImplementationSurfaces": [
-          "packages/@dvt/contracts/**",
-          "packages/@dvt/engine/**"
-        ]
-      },
-      "revision": 0,
-      "createdBy": "codex",
-      "createdAt": "2026-08-13T01:27:56.048Z"
     },
     {
       "railId": "local#GH-2166-STORED-PLAN-AUTHORITY#query#fetchplanforvalidation",
@@ -131111,8 +131206,8 @@
         "pnpm --filter dvt-api test:integration:ci",
         "pnpm verify:prepush"
       ],
-      "sourcePath": "https://github.com/dunay2/dvt/issues/2166",
-      "sourceContentSha256": "45bf878ab2adee3163836bc159d75b55bc8251fc2c6e0b27e223481af67f1eac",
+      "sourcePath": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+      "sourceContentSha256": "1c740da0098f2dffb4906f6f41d3814c6aa6fa54ddb41a445e0e6db0211270c4",
       "rawRail": {
         "name": "FetchPlanForValidation",
         "type": "query",
@@ -131331,7 +131426,7 @@
           "packages/@dvt/engine/**"
         ]
       },
-      "revision": 0,
+      "revision": 1,
       "createdBy": "codex",
       "createdAt": "2026-08-13T01:27:38.775Z"
     },
@@ -142809,16 +142904,21 @@
         "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanExecutabilityFinding",
         "packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts#ExecutabilityValidationResult",
         "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanExecutabilityFindingSchema",
-        "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanExecutabilityFindingSchemaT"
+        "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanExecutabilityFindingSchemaT",
+        "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#StoredPlanAdmissionCoordinator",
+        "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#StoredPlanAdmissionResult"
       ],
       "implementationRefs": [
         "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanExecutabilityFinding",
         "packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts#ExecutabilityValidationResult",
         "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanExecutabilityFindingSchema",
-        "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanExecutabilityFindingSchemaT"
+        "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanExecutabilityFindingSchemaT",
+        "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#StoredPlanAdmissionCoordinator",
+        "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#StoredPlanAdmissionResult"
       ],
       "documentationRefs": [
-        "docs/evidence/ED-20260731-plan-admission-findings.md"
+        "docs/evidence/ED-20260731-plan-admission-findings.md",
+        "https://github.com/dunay2/dvt/issues/2166"
       ],
       "governingSources": [
         "docs/architecture/command-query-rail-governance.md",
@@ -142827,15 +142927,18 @@
       "allowedImplementationSurfaces": [
         "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts",
-        "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts"
+        "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts",
+        "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts"
       ],
       "architectureGuards": [
-        "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+        "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts",
+        "pnpm arch:deps"
       ],
       "completionGate": [
         "pnpm --filter @dvt/contracts test",
         "pnpm --filter @dvt/contracts typecheck",
-        "pnpm verify:prepush"
+        "pnpm verify:prepush",
+        "pnpm --filter dvt-api test:unit"
       ],
       "sourcePath": "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
       "sourceContentSha256": "dc10810f42262c5bb84b49cae96bc0d78273a4cf13828f67100c4b7c030cdbe6",
@@ -142843,7 +142946,15 @@
         "name": "RecordPlanExecutability",
         "type": "command",
         "status": "implemented",
-        "dddOwner": "StoredPlanExecutabilityValidator"
+        "dddOwner": "StoredPlanExecutabilityValidator",
+        "negativeTests": [
+          "invalid plans never dispatch",
+          "already valid records are not rewritten",
+          "missing validation records fail closed"
+        ],
+        "adapterSurface": "PostgresPlanStore",
+        "applicationPort": "IPlanExecutabilityValidator.validatePlan",
+        "authorizationScope": "tenant/project/environment"
       },
       "rawManifest": {
         "symbols": [
@@ -142854,12 +142965,14 @@
             "dddOwner": "StoredPlanExecutabilityValidator",
             "unitTests": [
               "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
-              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts",
+              "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts"
             ],
             "fowlerSignals": [
-              "The stored-plan validator remains the single executability authority and exposes one canonical fail-fast finding."
+              "The stored-plan validator remains the single executability authority and exposes one canonical fail-fast finding.",
+              "Preview and Start Run reuse one admission coordinator rather than duplicating transitions."
             ],
-            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "cypressCoverage": "N/A - canonical contract and API application slice with no UI behavior",
             "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
           },
           {
@@ -142869,12 +142982,14 @@
             "dddOwner": "StoredPlanExecutabilityValidator",
             "unitTests": [
               "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
-              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts",
+              "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts"
             ],
             "fowlerSignals": [
-              "The stored-plan validator remains the single executability authority and exposes one canonical fail-fast finding."
+              "The stored-plan validator remains the single executability authority and exposes one canonical fail-fast finding.",
+              "Preview and Start Run reuse one admission coordinator rather than duplicating transitions."
             ],
-            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "cypressCoverage": "N/A - canonical contract and API application slice with no UI behavior",
             "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
           },
           {
@@ -142884,12 +142999,14 @@
             "dddOwner": "StoredPlanExecutabilityValidator",
             "unitTests": [
               "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
-              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts",
+              "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts"
             ],
             "fowlerSignals": [
-              "The stored-plan validator remains the single executability authority and exposes one canonical fail-fast finding."
+              "The stored-plan validator remains the single executability authority and exposes one canonical fail-fast finding.",
+              "Preview and Start Run reuse one admission coordinator rather than duplicating transitions."
             ],
-            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "cypressCoverage": "N/A - canonical contract and API application slice with no UI behavior",
             "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
           },
           {
@@ -142899,27 +143016,75 @@
             "dddOwner": "StoredPlanExecutabilityValidator",
             "unitTests": [
               "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
-              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts",
+              "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts"
             ],
             "fowlerSignals": [
-              "The stored-plan validator remains the single executability authority and exposes one canonical fail-fast finding."
+              "The stored-plan validator remains the single executability authority and exposes one canonical fail-fast finding.",
+              "Preview and Start Run reuse one admission coordinator rather than duplicating transitions."
             ],
-            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "cypressCoverage": "N/A - canonical contract and API application slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "StoredPlanAdmissionCoordinator",
+            "path": "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+            "cqRails": ["RecordPlanExecutability"],
+            "dddOwner": "StoredPlanExecutabilityValidator",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts",
+              "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts"
+            ],
+            "fowlerSignals": [
+              "The stored-plan validator remains the single executability authority and exposes one canonical fail-fast finding.",
+              "Preview and Start Run reuse one admission coordinator rather than duplicating transitions."
+            ],
+            "cypressCoverage": "N/A - canonical contract and API application slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "StoredPlanAdmissionResult",
+            "path": "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+            "cqRails": ["RecordPlanExecutability"],
+            "dddOwner": "StoredPlanExecutabilityValidator",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts",
+              "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts"
+            ],
+            "fowlerSignals": [
+              "The stored-plan validator remains the single executability authority and exposes one canonical fail-fast finding.",
+              "Preview and Start Run reuse one admission coordinator rather than duplicating transitions."
+            ],
+            "cypressCoverage": "N/A - canonical contract and API application slice with no UI behavior",
             "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
           }
         ],
         "version": 1,
         "featureId": "MVP-F6-2A-PLAN-ADMISSION-FINDINGS",
-        "userStories": ["https://github.com/dunay2/dvt/issues/2077"],
-        "cypressFlows": ["N/A - canonical contract slice with no UI behavior"],
-        "domainObjects": ["PlanExecutabilityFinding", "PlanAdmissionFinding"],
+        "userStories": [
+          "https://github.com/dunay2/dvt/issues/2077",
+          "https://github.com/dunay2/dvt/issues/2166"
+        ],
+        "cypressFlows": [
+          "N/A - canonical contract slice with no UI behavior",
+          "N/A - canonical contract and API application slice with no UI behavior"
+        ],
+        "domainObjects": [
+          "PlanExecutabilityFinding",
+          "PlanAdmissionFinding",
+          "PlanRecord admission lifecycle"
+        ],
         "fowlerSignals": [
-          "The stored-plan validator remains the single executability authority and exposes one canonical fail-fast finding."
+          "The stored-plan validator remains the single executability authority and exposes one canonical fail-fast finding.",
+          "Preview and Start Run reuse one admission coordinator rather than duplicating transitions."
         ],
         "completionGate": [
           "pnpm --filter @dvt/contracts test",
           "pnpm --filter @dvt/contracts typecheck",
-          "pnpm verify:prepush"
+          "pnpm verify:prepush",
+          "pnpm --filter dvt-api test:unit"
         ],
         "redGreenCycles": [
           {
@@ -142929,7 +143094,8 @@
             "patchSurfaces": [
               "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
               "packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts",
-              "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts"
+              "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts",
+              "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts"
             ],
             "expectedFailure": "The canonical executability finding contract did not preserve exact plan and adapter identity."
           }
@@ -142946,11 +143112,20 @@
             "name": "RecordPlanExecutability",
             "type": "command",
             "status": "implemented",
-            "dddOwner": "StoredPlanExecutabilityValidator"
+            "dddOwner": "StoredPlanExecutabilityValidator",
+            "negativeTests": [
+              "invalid plans never dispatch",
+              "already valid records are not rewritten",
+              "missing validation records fail closed"
+            ],
+            "adapterSurface": "PostgresPlanStore",
+            "applicationPort": "IPlanExecutabilityValidator.validatePlan",
+            "authorizationScope": "tenant/project/environment"
           }
         ],
         "architectureGuards": [
-          "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts",
+          "pnpm arch:deps"
         ],
         "implementationPlan": "https://github.com/dunay2/dvt/issues/2077",
         "mechanizationStatus": "implemented",
@@ -142958,7 +143133,8 @@
         "allowedImplementationSurfaces": [
           "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
           "packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts",
-          "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts"
+          "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts",
+          "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts"
         ],
         "forbiddenImplementationSurfaces": [
           "tools/planning-db/schema.sql",
@@ -142966,7 +143142,7 @@
           "apps/web/**"
         ]
       },
-      "revision": 3,
+      "revision": 4,
       "createdBy": "codex",
       "createdAt": "2026-07-31T22:19:13.431Z"
     },
@@ -175252,6 +175428,359 @@
         ]
       },
       "createdAt": "2026-08-13T01:27:56.048Z"
+    },
+    {
+      "operationId": "34753338-476f-4e6b-abdf-9c4dc821f7d7",
+      "idempotencyKey": "gh-2166-create-stored-plan-mechanization-source-v2",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#GH-2166-STORED-PLAN-AUTHORITY#command#createstoredplan",
+      "sourcePath": "apps/api/src/application/services/storedPlanScope.ts",
+      "sourceContentSha256": "83f1b5be6b76a084129efefd10f6c32054c66a4a994cb9abd2270b39b1ee1390",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/storedPlanScope.test.ts",
+        "dddOwner": "Stored plan admission coordinator",
+        "railName": "CreateStoredPlan",
+        "railType": "command",
+        "featureId": "GH-2166-STORED-PLAN-AUTHORITY",
+        "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/storedPlanScope.test.ts",
+        "sourceRef": "apps/api/src/application/services/storedPlanScope.ts",
+        "unitTests": [
+          "apps/api/test/application/services/storedPlanScope.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2166"],
+        "cypressFlows": [
+          "N/A - API application authority with no new UI behavior"
+        ],
+        "domainObjects": ["ScopedPlanRef"],
+        "fowlerSignals": [
+          "Divergent scope defaults converged behind one assertion policy."
+        ],
+        "negativeTests": [
+          "blank project scope is rejected",
+          "missing environment scope is rejected"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "PostgresPlanStore",
+        "completionGate": [
+          "pnpm --filter dvt-api test:unit",
+          "pnpm --filter dvt-api typecheck",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "IStoredPlanArtifactWriter.storePlanArtifact",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Missing or blank plan-store scope could be normalized into an invalid scoped reference.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": ["https://github.com/dunay2/dvt/issues/2166"],
+        "architectureGuards": ["pnpm arch:deps"],
+        "authorizationScope": "tenant/project/environment",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2166",
+        "implementationRefs": [
+          "apps/api/src/application/services/storedPlanScope.ts#IncompletePlanStoreScope",
+          "apps/api/src/application/services/storedPlanScope.ts#StoredPlanScopeInput",
+          "apps/api/src/application/services/storedPlanScope.ts#createScopedPlanRef",
+          "apps/api/src/application/services/storedPlanScope.ts#requireScopeIdentifier"
+        ],
+        "normalizedRailName": "createstoredplan",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "83f1b5be6b76a084129efefd10f6c32054c66a4a994cb9abd2270b39b1ee1390",
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/services/storedPlanScope.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "packages/@dvt/contracts/**",
+          "packages/@dvt/engine/**"
+        ]
+      },
+      "createdAt": "2026-08-13T01:32:31.721Z"
+    },
+    {
+      "operationId": "d4865ef1-2f89-4b70-9f9f-2f43386d9929",
+      "idempotencyKey": "gh-2166-fetch-plan-validation-mechanization-source-v2",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#GH-2166-STORED-PLAN-AUTHORITY#query#fetchplanforvalidation",
+      "sourcePath": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+      "sourceContentSha256": "1c740da0098f2dffb4906f6f41d3814c6aa6fa54ddb41a445e0e6db0211270c4",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/StoredExecutablePlanResolver.test.ts",
+        "dddOwner": "Stored executable plan materializer",
+        "railName": "FetchPlanForValidation",
+        "railType": "query",
+        "featureId": "GH-2166-STORED-PLAN-AUTHORITY",
+        "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/StoredExecutablePlanResolver.test.ts",
+        "sourceRef": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+        "unitTests": [
+          "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2166"],
+        "cypressFlows": [
+          "N/A - API application authority with no new UI behavior"
+        ],
+        "domainObjects": ["Stored executable plan"],
+        "fowlerSignals": [
+          "Duplicated materialization converged behind one explicit read-mode strategy."
+        ],
+        "negativeTests": [
+          "hash and reference mismatches fail closed",
+          "unsupported URI schemes fail closed",
+          "validation mode uses the validation reader"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "PostgresPlanStore",
+        "completionGate": [
+          "pnpm --filter dvt-api test:unit",
+          "pnpm --filter dvt-api test:integration:ci",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "IStoredPlanArtifactReader.fetchStoredPlanArtifactForValidation",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Stored bytes, reference metadata, hash, schema, or scheme could be accepted by divergent loaders.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": ["https://github.com/dunay2/dvt/issues/2166"],
+        "architectureGuards": ["pnpm arch:deps"],
+        "authorizationScope": "tenant/project/environment",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2166",
+        "implementationRefs": [
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts#MaterializedStoredExecutablePlan",
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts#STORED_PLAN_MATERIALIZATION_MODE",
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts#StoredPlanMaterializationError",
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts#StoredPlanMaterializationFailureCode",
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts#StoredPlanMaterializationMode",
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts#assertSupportedPlanRefScheme",
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts#parseMaterializationPlanRef",
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts#parseMaterializedExecutablePlan",
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts#readUriScheme",
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts#toErrorMessage"
+        ],
+        "normalizedRailName": "fetchplanforvalidation",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "1c740da0098f2dffb4906f6f41d3814c6aa6fa54ddb41a445e0e6db0211270c4",
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "packages/@dvt/contracts/**",
+          "packages/@dvt/engine/**"
+        ]
+      },
+      "createdAt": "2026-08-13T01:32:53.730Z"
+    },
+    {
+      "operationId": "22eb0640-191f-4213-bfbe-73fabc75ced2",
+      "idempotencyKey": "gh-2166-record-plan-executability-mechanization-source-v2",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#GH-2166-STORED-PLAN-AUTHORITY#command#recordplanexecutability",
+      "sourcePath": "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+      "sourceContentSha256": "004b0a0556d9dc73bda003d06d2d51768eff7a6ee96ab09fed987cf0a0acc0ff",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/StoredPlanAdmissionCoordinator.test.ts",
+        "dddOwner": "Stored plan admission coordinator",
+        "railName": "RecordPlanExecutability",
+        "railType": "command",
+        "featureId": "GH-2166-STORED-PLAN-AUTHORITY",
+        "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/StoredPlanAdmissionCoordinator.test.ts",
+        "sourceRef": "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+        "unitTests": [
+          "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2166"],
+        "cypressFlows": [
+          "N/A - API application authority with no new UI behavior"
+        ],
+        "domainObjects": ["PlanRecord admission lifecycle"],
+        "fowlerSignals": [
+          "Duplicated preview and start-run algorithms converged behind one coordinator."
+        ],
+        "negativeTests": [
+          "invalid plans are marked invalid and never dispatched",
+          "already valid plans are not rewritten",
+          "missing validation records fail closed"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "PostgresPlanStore",
+        "completionGate": [
+          "pnpm --filter dvt-api test:unit",
+          "pnpm --filter dvt-api test:integration:ci",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "IPlanExecutabilityValidator.validatePlan",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Preview and Start Run could store and transition equivalent plans through divergent lifecycle algorithms.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": ["https://github.com/dunay2/dvt/issues/2166"],
+        "architectureGuards": ["pnpm arch:deps"],
+        "authorizationScope": "tenant/project/environment",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2166",
+        "implementationRefs": [
+          "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#StoredPlanAdmissionCoordinator",
+          "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#StoredPlanAdmissionResult"
+        ],
+        "normalizedRailName": "recordplanexecutability",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "004b0a0556d9dc73bda003d06d2d51768eff7a6ee96ab09fed987cf0a0acc0ff",
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "packages/@dvt/contracts/**",
+          "packages/@dvt/engine/**"
+        ]
+      },
+      "createdAt": "2026-08-13T01:33:09.335Z"
+    },
+    {
+      "operationId": "cf7360ea-4295-4466-a819-250401b13e81",
+      "idempotencyKey": "gh-2166-extend-canonical-record-plan-executability-v1",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-F6-2A-PLAN-ADMISSION-FINDINGS#command#recordplanexecutability",
+      "sourcePath": "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+      "sourceContentSha256": "2e5ff8f7bb76ee283be965e19fea01f606af0688b3326dc4912b6374165487f5",
+      "expectedRevision": 3,
+      "previousRevision": 3,
+      "resultingRevision": 4,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/contracts test -- plan-admission-finding.contract.test.ts",
+        "dddOwner": "StoredPlanExecutabilityValidator",
+        "railName": "RecordPlanExecutability",
+        "railType": "command",
+        "featureId": "MVP-F6-2A-PLAN-ADMISSION-FINDINGS",
+        "greenTest": "pnpm --filter @dvt/contracts test -- plan-admission-finding.contract.test.ts plan-admission-finding.architecture.test.ts",
+        "sourceRef": "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+        "unitTests": [
+          "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+          "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts",
+          "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2166"],
+        "cypressFlows": [
+          "N/A - canonical contract and API application slice with no UI behavior"
+        ],
+        "domainObjects": [
+          "PlanExecutabilityFinding",
+          "PlanAdmissionFinding",
+          "PlanRecord admission lifecycle"
+        ],
+        "fowlerSignals": [
+          "The stored-plan validator remains the single executability authority and exposes one canonical fail-fast finding.",
+          "Preview and Start Run reuse one admission coordinator rather than duplicating transitions."
+        ],
+        "negativeTests": [
+          "invalid plans never dispatch",
+          "already valid records are not rewritten",
+          "missing validation records fail closed"
+        ],
+        "patchSurfaces": [
+          "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+          "packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts",
+          "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts",
+          "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts"
+        ],
+        "adapterSurface": "PostgresPlanStore",
+        "completionGate": [
+          "pnpm --filter @dvt/contracts test",
+          "pnpm --filter @dvt/contracts typecheck",
+          "pnpm --filter dvt-api test:unit",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "IPlanExecutabilityValidator.validatePlan",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "The canonical executability finding contract did not preserve exact plan and adapter identity.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260731-plan-admission-findings.md",
+          "https://github.com/dunay2/dvt/issues/2166"
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts",
+          "pnpm arch:deps"
+        ],
+        "authorizationScope": "tenant/project/environment",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2077",
+        "implementationRefs": [
+          "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanExecutabilityFinding",
+          "packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts#ExecutabilityValidationResult",
+          "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanExecutabilityFindingSchema",
+          "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanExecutabilityFindingSchemaT",
+          "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#StoredPlanAdmissionCoordinator",
+          "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#StoredPlanAdmissionResult"
+        ],
+        "normalizedRailName": "recordplanexecutability",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "2e5ff8f7bb76ee283be965e19fea01f606af0688b3326dc4912b6374165487f5",
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+          "packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts",
+          "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts",
+          "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "tools/planning-db/schema.sql",
+          "apps/api/src/entrypoints/http/**",
+          "apps/web/**"
+        ]
+      },
+      "createdAt": "2026-08-13T01:35:01.276Z"
+    },
+    {
+      "operationId": "09206eb0-1fc0-471e-941d-4b0e252928ee",
+      "idempotencyKey": "gh-2166-retire-duplicate-record-plan-executability-v2",
+      "operationType": "feature_mechanization_rail_retire",
+      "actor": "codex",
+      "railId": "local#GH-2166-STORED-PLAN-AUTHORITY#command#recordplanexecutability",
+      "sourcePath": "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+      "sourceContentSha256": "004b0a0556d9dc73bda003d06d2d51768eff7a6ee96ab09fed987cf0a0acc0ff",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "railId": "local#GH-2166-STORED-PLAN-AUTHORITY#command#recordplanexecutability",
+        "reason": "Reuse the existing MVP-F6-2A RecordPlanExecutability authority, now extended with the shared admission coordinator symbols.",
+        "designId": "GH-2166-RECORD-PLAN-EXECUTABILITY-DUPLICATE-RETIREMENT-V2-20260813",
+        "railName": "RecordPlanExecutability",
+        "railType": "command",
+        "featureId": "GH-2166-STORED-PLAN-AUTHORITY",
+        "sourceRef": "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+        "expectedRevision": 1,
+        "normalizedRailName": "recordplanexecutability",
+        "sourceContentSha256": "004b0a0556d9dc73bda003d06d2d51768eff7a6ee96ab09fed987cf0a0acc0ff"
+      },
+      "createdAt": "2026-08-13T01:36:12.038Z"
     }
   ],
   "governanceComponentDefinitions": [
