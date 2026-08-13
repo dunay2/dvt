@@ -131317,15 +131317,17 @@
       "railName": "ImportPlan",
       "normalizedRailName": "importplan",
       "railType": "command",
-      "dddOwner": "Plan import HTTP boundary",
+      "dddOwner": "Plan import policy",
       "railStatus": "implemented",
       "symbolRefs": [
-        "apps/api/src/entrypoints/http/planRefHttpMapper.ts#toContractPlanRef",
-        "apps/api/src/entrypoints/http/importPlanRouteParser.ts#toPlanOwnership"
+        "apps/api/src/entrypoints/http/importPlanRouteParser.ts#toPlanOwnership",
+        "apps/api/src/application/services/ImportPlanUseCase.ts#ImportPlanUseCase",
+        "apps/api/src/application/services/ImportPlanUseCase.ts#isPlanOwnedByScope"
       ],
       "implementationRefs": [
-        "apps/api/src/entrypoints/http/planRefHttpMapper.ts#toContractPlanRef",
-        "apps/api/src/entrypoints/http/importPlanRouteParser.ts#toPlanOwnership"
+        "apps/api/src/entrypoints/http/importPlanRouteParser.ts#toPlanOwnership",
+        "apps/api/src/application/services/ImportPlanUseCase.ts#ImportPlanUseCase",
+        "apps/api/src/application/services/ImportPlanUseCase.ts#isPlanOwnedByScope"
       ],
       "documentationRefs": ["https://github.com/dunay2/dvt/issues/2166"],
       "governingSources": [
@@ -131333,8 +131335,8 @@
         "docs/architecture/fowler-opportunity-planning-governance.md"
       ],
       "allowedImplementationSurfaces": [
-        "apps/api/src/entrypoints/http/planRefHttpMapper.ts",
-        "apps/api/src/entrypoints/http/importPlanRouteParser.ts"
+        "apps/api/src/entrypoints/http/importPlanRouteParser.ts",
+        "apps/api/src/application/services/ImportPlanUseCase.ts"
       ],
       "architectureGuards": ["pnpm arch:deps"],
       "completionGate": [
@@ -131342,16 +131344,17 @@
         "pnpm --filter dvt-api test:integration:ci",
         "pnpm verify:prepush"
       ],
-      "sourcePath": "apps/api/src/entrypoints/http/planRefHttpMapper.ts",
-      "sourceContentSha256": "a7133cbf4c23782d1c164176cd818c6e8dc8c5b448488ebff09af420bc732483",
+      "sourcePath": "apps/api/src/application/services/ImportPlanUseCase.ts",
+      "sourceContentSha256": "13bfd5c84fa801aaeb58b68c06d25443899aa4a45852bb0b5e7acd889990713e",
       "rawRail": {
         "name": "ImportPlan",
         "type": "command",
         "status": "implemented",
-        "dddOwner": "Plan import HTTP boundary",
+        "dddOwner": "Plan import policy",
         "negativeTests": [
           "malformed or non-canonical SHA-256 digest is rejected",
-          "ownership is derived from the authorized route scope"
+          "ownership is derived from the authorized route scope",
+          "ownership mismatch is rejected"
         ],
         "adapterSurface": "parseImportPlanRouteInput",
         "applicationPort": "ImportPlanUseCase.execute",
@@ -131360,10 +131363,10 @@
       "rawManifest": {
         "symbols": [
           {
-            "name": "toContractPlanRef",
-            "path": "apps/api/src/entrypoints/http/planRefHttpMapper.ts",
+            "name": "toPlanOwnership",
+            "path": "apps/api/src/entrypoints/http/importPlanRouteParser.ts",
             "cqRails": ["ImportPlan"],
-            "dddOwner": "Plan import HTTP boundary",
+            "dddOwner": "Plan import policy",
             "unitTests": [
               "apps/api/test/entrypoints/http/planRouteParserHelpers.test.ts",
               "apps/api/test/entrypoints/http/planRouteResponseTranslation.test.ts",
@@ -131371,23 +131374,39 @@
             ],
             "fowlerSignals": [
               "Parallel PlanRef coercion rules converge on the canonical contract parser.",
+              "Import ownership remains derived from one authorized route scope.",
+              "Duplicate PlanRef parsing removed after canonical boundary validation."
+            ],
+            "cypressCoverage": "N/A - API contract boundary with no new UI behavior",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "ImportPlanUseCase",
+            "path": "apps/api/src/application/services/ImportPlanUseCase.ts",
+            "cqRails": ["ImportPlan"],
+            "dddOwner": "Plan import policy",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/planRouteParserHelpers.test.ts",
+              "apps/api/test/entrypoints/http/importPlanRoute.test.ts"
+            ],
+            "fowlerSignals": [
+              "Duplicate PlanRef parsing removed after canonical boundary validation.",
               "Import ownership remains derived from one authorized route scope."
             ],
             "cypressCoverage": "N/A - API contract boundary with no new UI behavior",
             "architectureGuard": "pnpm arch:deps"
           },
           {
-            "name": "toPlanOwnership",
-            "path": "apps/api/src/entrypoints/http/importPlanRouteParser.ts",
+            "name": "isPlanOwnedByScope",
+            "path": "apps/api/src/application/services/ImportPlanUseCase.ts",
             "cqRails": ["ImportPlan"],
-            "dddOwner": "Plan import HTTP boundary",
+            "dddOwner": "Plan import policy",
             "unitTests": [
               "apps/api/test/entrypoints/http/planRouteParserHelpers.test.ts",
-              "apps/api/test/entrypoints/http/planRouteResponseTranslation.test.ts",
               "apps/api/test/entrypoints/http/importPlanRoute.test.ts"
             ],
             "fowlerSignals": [
-              "Parallel PlanRef coercion rules converge on the canonical contract parser.",
+              "Duplicate PlanRef parsing removed after canonical boundary validation.",
               "Import ownership remains derived from one authorized route scope."
             ],
             "cypressCoverage": "N/A - API contract boundary with no new UI behavior",
@@ -131401,7 +131420,8 @@
         "domainObjects": ["PlanRef", "PlanOwnership"],
         "fowlerSignals": [
           "Parallel PlanRef coercion rules converge on the canonical contract parser.",
-          "Import ownership remains derived from one authorized route scope."
+          "Import ownership remains derived from one authorized route scope.",
+          "Duplicate PlanRef parsing removed after canonical boundary validation."
         ],
         "completionGate": [
           "pnpm --filter dvt-api test:unit",
@@ -131411,13 +131431,13 @@
         "redGreenCycles": [
           {
             "id": "importplan-record",
-            "redTest": "pnpm --filter dvt-api build",
-            "greenTest": "pnpm --filter dvt-api build",
+            "redTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/entrypoints/http/planRouteParserHelpers.test.ts",
+            "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/entrypoints/http/planRouteParserHelpers.test.ts",
             "patchSurfaces": [
-              "apps/api/src/entrypoints/http/planRefHttpMapper.ts",
-              "apps/api/src/entrypoints/http/importPlanRouteParser.ts"
+              "apps/api/src/entrypoints/http/importPlanRouteParser.ts",
+              "apps/api/src/application/services/ImportPlanUseCase.ts"
             ],
-            "expectedFailure": "The HTTP boundary can weaken PlanRef digest semantics or detach ownership from the authorized route scope."
+            "expectedFailure": "A validated PlanRef could be reparsed by a second boundary authority."
           }
         ],
         "componentGuides": [
@@ -131432,10 +131452,11 @@
             "name": "ImportPlan",
             "type": "command",
             "status": "implemented",
-            "dddOwner": "Plan import HTTP boundary",
+            "dddOwner": "Plan import policy",
             "negativeTests": [
               "malformed or non-canonical SHA-256 digest is rejected",
-              "ownership is derived from the authorized route scope"
+              "ownership is derived from the authorized route scope",
+              "ownership mismatch is rejected"
             ],
             "adapterSurface": "parseImportPlanRouteInput",
             "applicationPort": "ImportPlanUseCase.execute",
@@ -131447,12 +131468,15 @@
         "mechanizationStatus": "implemented",
         "noHumanDecisionsRemaining": true,
         "allowedImplementationSurfaces": [
-          "apps/api/src/entrypoints/http/planRefHttpMapper.ts",
-          "apps/api/src/entrypoints/http/importPlanRouteParser.ts"
+          "apps/api/src/entrypoints/http/importPlanRouteParser.ts",
+          "apps/api/src/application/services/ImportPlanUseCase.ts"
         ],
-        "forbiddenImplementationSurfaces": ["packages/@dvt/engine/**"]
+        "forbiddenImplementationSurfaces": [
+          "packages/@dvt/engine/**",
+          "apps/api/src/entrypoints/http/planRefHttpMapper.ts"
+        ]
       },
-      "revision": 1,
+      "revision": 3,
       "createdBy": "codex",
       "createdAt": "2026-08-13T02:49:00.665Z"
     },
@@ -176995,6 +177019,156 @@
         "forbiddenImplementationSurfaces": ["packages/@dvt/engine/**"]
       },
       "createdAt": "2026-08-13T02:49:57.617Z"
+    },
+    {
+      "operationId": "30404430-f3c9-4c45-b3f2-c1b2d7af85a4",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:GH-2166-STORED-PLAN-AUTHORITY:command:importplan:1:3f033c9e284b36b1",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#GH-2166-STORED-PLAN-AUTHORITY#command#importplan",
+      "sourcePath": "apps/api/src/application/services/ImportPlanUseCase.ts",
+      "sourceContentSha256": "102fc43f4c6143c773b99d05a5ad5dec5b3ddce39bf09fd0af60668fc94e332e",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/entrypoints/http/planRouteParserHelpers.test.ts",
+        "dddOwner": "Plan import policy",
+        "railName": "ImportPlan",
+        "railType": "command",
+        "featureId": "GH-2166-STORED-PLAN-AUTHORITY",
+        "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/entrypoints/http/planRouteParserHelpers.test.ts",
+        "sourceRef": "apps/api/src/application/services/ImportPlanUseCase.ts",
+        "unitTests": [
+          "apps/api/test/entrypoints/http/planRouteParserHelpers.test.ts",
+          "apps/api/test/entrypoints/http/importPlanRoute.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2166"],
+        "cypressFlows": ["N/A - API contract boundary with no new UI behavior"],
+        "domainObjects": ["PlanRef", "PlanOwnership"],
+        "fowlerSignals": [
+          "Duplicate PlanRef parsing removed after canonical boundary validation."
+        ],
+        "negativeTests": [
+          "malformed or non-canonical SHA-256 digest is rejected",
+          "ownership mismatch is rejected"
+        ],
+        "patchSurfaces": [
+          "apps/api/src/application/services/ImportPlanUseCase.ts",
+          "apps/api/src/entrypoints/http/importPlanRouteParser.ts"
+        ],
+        "adapterSurface": "parseImportPlanRouteInput",
+        "completionGate": [
+          "pnpm --filter dvt-api test:unit",
+          "pnpm --filter dvt-api test:integration:ci",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "ImportPlanUseCase.execute",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "A validated PlanRef could be reparsed by a second boundary authority.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": ["https://github.com/dunay2/dvt/issues/2166"],
+        "architectureGuards": ["pnpm arch:deps"],
+        "authorizationScope": "tenant/project/environment",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2166",
+        "implementationRefs": [
+          "apps/api/src/application/services/ImportPlanUseCase.ts#ImportPlanUseCase",
+          "apps/api/src/application/services/ImportPlanUseCase.ts#isPlanOwnedByScope"
+        ],
+        "normalizedRailName": "importplan",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "102fc43f4c6143c773b99d05a5ad5dec5b3ddce39bf09fd0af60668fc94e332e",
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/services/ImportPlanUseCase.ts",
+          "apps/api/src/entrypoints/http/importPlanRouteParser.ts"
+        ],
+        "forbiddenImplementationSurfaces": ["packages/@dvt/engine/**"]
+      },
+      "createdAt": "2026-08-13T03:24:11.782Z"
+    },
+    {
+      "operationId": "73d6e559-1e3e-4898-9b67-b5bab11175a2",
+      "idempotencyKey": "gh-2166-prune-retired-planref-mapper-v1",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#GH-2166-STORED-PLAN-AUTHORITY#command#importplan",
+      "sourcePath": "apps/api/src/application/services/ImportPlanUseCase.ts",
+      "sourceContentSha256": "13bfd5c84fa801aaeb58b68c06d25443899aa4a45852bb0b5e7acd889990713e",
+      "expectedRevision": 2,
+      "previousRevision": 2,
+      "resultingRevision": 3,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/entrypoints/http/planRouteParserHelpers.test.ts",
+        "dddOwner": "Plan import policy",
+        "railName": "ImportPlan",
+        "railType": "command",
+        "featureId": "GH-2166-STORED-PLAN-AUTHORITY",
+        "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/entrypoints/http/planRouteParserHelpers.test.ts",
+        "sourceRef": "apps/api/src/application/services/ImportPlanUseCase.ts",
+        "unitTests": [
+          "apps/api/test/entrypoints/http/planRouteParserHelpers.test.ts",
+          "apps/api/test/entrypoints/http/importPlanRoute.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2166"],
+        "cypressFlows": ["N/A - API contract boundary with no new UI behavior"],
+        "domainObjects": ["PlanRef", "PlanOwnership"],
+        "fowlerSignals": [
+          "Duplicate PlanRef parsing removed after canonical boundary validation.",
+          "Import ownership remains derived from one authorized route scope."
+        ],
+        "negativeTests": [
+          "malformed or non-canonical SHA-256 digest is rejected",
+          "ownership is derived from the authorized route scope",
+          "ownership mismatch is rejected"
+        ],
+        "patchSurfaces": [
+          "apps/api/src/application/services/ImportPlanUseCase.ts",
+          "apps/api/src/entrypoints/http/importPlanRouteParser.ts"
+        ],
+        "adapterSurface": "parseImportPlanRouteInput",
+        "completionGate": [
+          "pnpm --filter dvt-api test:unit",
+          "pnpm --filter dvt-api test:integration:ci",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "ImportPlanUseCase.execute",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "A validated PlanRef could be reparsed by a second boundary authority.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": ["https://github.com/dunay2/dvt/issues/2166"],
+        "architectureGuards": ["pnpm arch:deps"],
+        "authorizationScope": "tenant/project/environment",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2166",
+        "implementationRefs": [
+          "apps/api/src/application/services/ImportPlanUseCase.ts#ImportPlanUseCase",
+          "apps/api/src/application/services/ImportPlanUseCase.ts#isPlanOwnedByScope",
+          "apps/api/src/entrypoints/http/importPlanRouteParser.ts#toPlanOwnership"
+        ],
+        "normalizedRailName": "importplan",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "13bfd5c84fa801aaeb58b68c06d25443899aa4a45852bb0b5e7acd889990713e",
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/services/ImportPlanUseCase.ts",
+          "apps/api/src/entrypoints/http/importPlanRouteParser.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/planRefHttpMapper.ts",
+          "packages/@dvt/engine/**"
+        ]
+      },
+      "createdAt": "2026-08-13T03:28:59.727Z"
     }
   ],
   "governanceComponentDefinitions": [
