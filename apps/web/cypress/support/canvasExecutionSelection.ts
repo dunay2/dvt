@@ -79,7 +79,9 @@ export function clickCanvasContextMenuAction(action: string): void {
     .should(($item) => {
       expect($item.attr('data-disabled')).to.be.undefined;
     })
-    .click();
+    .then(($item) => {
+      ($item.get(0) as HTMLElement).click();
+    });
 }
 
 export function clickCanvasAddCatalogAction(action: string, registrationKind?: string): void {
