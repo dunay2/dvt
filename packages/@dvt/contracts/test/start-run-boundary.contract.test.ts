@@ -6,6 +6,7 @@ import {
   parseStartRunResult,
   START_RUN_BACKPRESSURE_CODE,
 } from '../src/index.js';
+import type { StartRunCommand } from '../src/index.js';
 
 import {
   VALID_START_RUN_PLAN_REF_COMMAND_FIXTURE,
@@ -21,7 +22,7 @@ const EXECUTION_CAPACITY_SYSTEM_BACKPRESSURE_CODES = [
 
 describe('contracts: StartRun boundary', () => {
   it('parses the plan-ref startRun command shape', () => {
-    const command = parseStartRunCommand(VALID_START_RUN_PLAN_REF_COMMAND_FIXTURE);
+    const command: StartRunCommand = parseStartRunCommand(VALID_START_RUN_PLAN_REF_COMMAND_FIXTURE);
 
     expect(command.planRef?.uri).toBe('s3://plans/plan-1.json');
     expect(command.targetAdapter).toBe('temporal');
