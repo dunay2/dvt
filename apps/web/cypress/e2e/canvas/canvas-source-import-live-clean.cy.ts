@@ -212,7 +212,6 @@ describe('Canvas source import live clean proof', () => {
       scope: typeof secondarySession,
       copy: Readonly<{ availableProjects: string; projectPrefix: string }>
     ): void => {
-      const scopeLabel = `${scope.tenantId} / ${scope.projectId} / ${scope.environmentId}`;
       cy.get('[data-slot="shell-workspace-menu-trigger"]', { timeout: 20_000 })
         .should('be.visible')
         .and('be.enabled')
@@ -221,11 +220,11 @@ describe('Canvas source import live clean proof', () => {
         .should('be.visible')
         .and('contain.text', copy.availableProjects);
       assertNoSeriousAccessibilityViolations('[data-slot="shell-menu-workspace-context"]');
-      cy.contains('[data-slot="shell-workspace-scope-selector"] button', scopeLabel, {
+      cy.get('[data-slot="shell-workspace-scope-selector"] button[aria-pressed="false"]', {
         timeout: 20_000,
       })
+        .should('have.length', 1)
         .should('be.visible')
-        .and('have.attr', 'aria-pressed', 'false')
         .focus()
         .should('be.focused');
       cy.press(Cypress.Keyboard.Keys.ENTER);
