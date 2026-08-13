@@ -17,7 +17,6 @@ import {
 } from './httpErrorContract.js';
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 import { buildPreviewResponse } from './planPreviewResponseMapper.js';
-import { normalizePlanRef } from './planRefHttpMapper.js';
 import type { ParsedPreviewPlanRequest } from './previewPlanRouteParser.js';
 
 export type PreviewPlanRouteResultResponse =
@@ -50,7 +49,7 @@ export function mapPreviewPlanUseCaseResult(
     kind: 'accepted',
     payload: buildPreviewResponse(
       result.plan,
-      normalizePlanRef(result.planRef),
+      result.planRef,
       result.planRecord,
       parsedRequest.contractRequest.provenance,
       parsedRequest.previewProfile
@@ -72,7 +71,7 @@ function buildRejectedOutcome(
 
   const { validation: _acceptedValidation, ...preview } = buildPreviewResponse(
     result.plan,
-    normalizePlanRef(result.planRef),
+    result.planRef,
     result.planRecord,
     parsedRequest.contractRequest.provenance,
     parsedRequest.previewProfile
