@@ -11741,6 +11741,20 @@
         "updated_at": "2026-08-13T08:15:10.564+00:00"
       },
       {
+        "design_id": "MVP-2169-START-RUN-FEATURE-OWNERSHIP-CORRECTION-20260813",
+        "work_item_id": "https://github.com/dunay2/dvt/issues/2169",
+        "title": "Restore canonical StartRun feature ownership",
+        "owner": "Architecture",
+        "status": "approved",
+        "rationale": "US-F4-3-RUN-CONTROLS must reference the existing StartRun rail without claiming a second implemented mechanization authority.",
+        "fowler_signal": "hidden_authority",
+        "rail_ref": "RecordFeatureMechanizationRail",
+        "approved_at": "2026-08-13T12:33:54.432+00:00",
+        "supersedes_id": null,
+        "created_at": "2026-08-13T12:33:52+00:00",
+        "updated_at": "2026-08-13T12:33:54.432+00:00"
+      },
+      {
         "design_id": "PLANNING-DB-API-APPLICATION-SERVICE-TEST-LEAF-COMPONENTS-20260619",
         "work_item_id": "PLANNING-DB-COMPONENT-INTEGRITY-VOCABULARY-RAIL-20260612",
         "title": "API application service test evidence leaf mapping",
@@ -68622,6 +68636,14 @@
         "created_at": "2026-08-13T08:15:05.472+00:00"
       },
       {
+        "design_id": "MVP-2169-START-RUN-FEATURE-OWNERSHIP-CORRECTION-20260813",
+        "subject_kind": "decision",
+        "subject_id": "local#US-F4-3-RUN-CONTROLS#command#startrun",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-13T12:33:52+00:00"
+      },
+      {
         "design_id": "PLANNING-DB-API-APPLICATION-SERVICE-TEST-LEAF-COMPONENTS-20260619",
         "subject_kind": "component",
         "subject_id": "SYS-API-APPLICATION-PORTS",
@@ -91339,6 +91361,40 @@
         "created_at": "2026-08-11T11:55:45.266+00:00"
       },
       {
+        "operation_id": "1869526d-56b4-4860-bdca-d6b1a99761a6",
+        "idempotency_key": "issue-2169-start-run-ownership-design-v1",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "MVP-2169-START-RUN-FEATURE-OWNERSHIP-CORRECTION-20260813",
+        "source_ref": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "source_content_sha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "Architecture",
+          "title": "Restore canonical StartRun feature ownership",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "local#US-F4-3-RUN-CONTROLS#command#startrun",
+              "subjectKind": "decision"
+            }
+          ],
+          "status": "review",
+          "railRef": "RecordFeatureMechanizationRail",
+          "designId": "MVP-2169-START-RUN-FEATURE-OWNERSHIP-CORRECTION-20260813",
+          "rationale": "US-F4-3-RUN-CONTROLS must reference the existing StartRun rail without claiming a second implemented mechanization authority.",
+          "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+          "workItemId": "https://github.com/dunay2/dvt/issues/2169",
+          "fowlerSignal": "hidden_authority",
+          "supersedesId": null,
+          "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95"
+        },
+        "created_at": "2026-08-13T12:33:52+00:00"
+      },
+      {
         "operation_id": "1878ae5f-127a-4e6f-b3e6-8bd33f2b085c",
         "idempotency_key": "codex-api-h2-2-reachability-v5-implemented",
         "operation_type": "architecture_design_transition",
@@ -93692,6 +93748,27 @@
           "sourceContentSha256": "445d0a77a2208b4198a706920223128ba7051884116b3ec95250a2c30232d691"
         },
         "created_at": "2026-08-11T03:58:11.264+00:00"
+      },
+      {
+        "operation_id": "3bd37c9d-ff51-4fb8-a08e-1c30540437ff",
+        "idempotency_key": "issue-2169-approve-start-run-ownership-v1",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "MVP-2169-START-RUN-FEATURE-OWNERSHIP-CORRECTION-20260813",
+        "source_ref": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "source_content_sha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The duplicate local StartRun feature rail was removed and the canonical owner remains unchanged.",
+          "designId": "MVP-2169-START-RUN-FEATURE-OWNERSHIP-CORRECTION-20260813",
+          "toStatus": "approved",
+          "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+          "fromStatus": "review",
+          "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95"
+        },
+        "created_at": "2026-08-13T12:33:54.432+00:00"
       },
       {
         "operation_id": "3bf1743f-1b99-4a28-a84c-a2653bdb0129",
@@ -154735,49 +154812,20 @@
       "dddOwner": "RunCommandApplicationService",
       "railStatus": "implemented",
       "symbolRefs": [
-        "apps/api/src/application/errors/runControlErrors.ts#RunControlUnavailableError",
-        "apps/api/src/application/ports/runtime.ts#CancelRunDisposition",
-        "apps/api/src/application/ports/runtime.ts#CancelRunResult",
-        "apps/api/src/application/ports/runtime.ts#RUN_CONTROL_RESULT_CONTRACT_VERSION",
-        "apps/api/src/application/services/runControlPolicy.ts#CancelRunDecision",
+        "apps/api/src/application/services/cancelRunUseCase.ts#CancelRunUseCase",
+        "apps/api/src/entrypoints/http/cancelRunRouteParser.ts#parseCancelRunRequest",
         "apps/api/src/application/services/runControlPolicy.ts#decideCancelRun",
-        "apps/web/src/app/ports/runs.ts#CancelRunReceipt",
-        "apps/web/src/app/services/runs/runControlCommandModel.ts#RunControlCommandAction",
-        "apps/web/src/app/services/runs/runControlCommandModel.ts#RunControlCommandFailure",
-        "apps/web/src/app/services/runs/runControlCommandModel.ts#RunControlCommandOutcome",
-        "apps/web/src/app/services/runs/runControlCommandModel.ts#RunControlCommandRequest",
-        "apps/web/src/app/services/runs/runsApiControlReceipts.ts#CANCEL_DISPOSITIONS",
-        "apps/web/src/app/services/runs/runsApiControlReceipts.ts#invalidReceipt",
-        "apps/web/src/app/services/runs/runsApiControlReceipts.ts#isNonBlankString",
-        "apps/web/src/app/services/runs/runsApiControlReceipts.ts#parseCancelRunReceipt",
-        "apps/web/src/app/views/runs/useRunControlCommands.ts#RunControlCommandController",
-        "apps/web/src/app/views/runs/useRunControlCommands.ts#UseRunControlCommandsOptions",
-        "apps/web/src/app/views/runs/useRunControlCommands.ts#toError",
-        "apps/web/src/app/views/runs/useRunControlCommands.ts#useRunControlCommands"
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#parseCancelRunReceipt"
       ],
       "implementationRefs": [
-        "apps/api/src/application/errors/runControlErrors.ts#RunControlUnavailableError",
-        "apps/api/src/application/ports/runtime.ts#CancelRunDisposition",
-        "apps/api/src/application/ports/runtime.ts#CancelRunResult",
-        "apps/api/src/application/ports/runtime.ts#RUN_CONTROL_RESULT_CONTRACT_VERSION",
-        "apps/api/src/application/services/runControlPolicy.ts#CancelRunDecision",
+        "apps/api/src/application/services/cancelRunUseCase.ts#CancelRunUseCase",
+        "apps/api/src/entrypoints/http/cancelRunRouteParser.ts#parseCancelRunRequest",
         "apps/api/src/application/services/runControlPolicy.ts#decideCancelRun",
-        "apps/web/src/app/ports/runs.ts#CancelRunReceipt",
-        "apps/web/src/app/services/runs/runControlCommandModel.ts#RunControlCommandAction",
-        "apps/web/src/app/services/runs/runControlCommandModel.ts#RunControlCommandFailure",
-        "apps/web/src/app/services/runs/runControlCommandModel.ts#RunControlCommandOutcome",
-        "apps/web/src/app/services/runs/runControlCommandModel.ts#RunControlCommandRequest",
-        "apps/web/src/app/services/runs/runsApiControlReceipts.ts#CANCEL_DISPOSITIONS",
-        "apps/web/src/app/services/runs/runsApiControlReceipts.ts#invalidReceipt",
-        "apps/web/src/app/services/runs/runsApiControlReceipts.ts#isNonBlankString",
-        "apps/web/src/app/services/runs/runsApiControlReceipts.ts#parseCancelRunReceipt",
-        "apps/web/src/app/views/runs/useRunControlCommands.ts#RunControlCommandController",
-        "apps/web/src/app/views/runs/useRunControlCommands.ts#UseRunControlCommandsOptions",
-        "apps/web/src/app/views/runs/useRunControlCommands.ts#toError",
-        "apps/web/src/app/views/runs/useRunControlCommands.ts#useRunControlCommands"
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#parseCancelRunReceipt"
       ],
       "documentationRefs": [
-        "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md"
+        "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
+        "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md"
       ],
       "governingSources": [
         "docs/architecture/command-query-rail-governance.md",
@@ -154789,8 +154837,10 @@
         "apps/api/src/application/services/runControlPolicy.ts",
         "apps/web/src/app/ports/runs.ts",
         "apps/web/src/app/services/runs/runControlCommandModel.ts",
-        "apps/web/src/app/services/runs/runsApiControlReceipts.ts",
-        "apps/web/src/app/views/runs/useRunControlCommands.ts"
+        "apps/web/src/app/views/runs/useRunControlCommands.ts",
+        "apps/api/src/application/services/cancelRunUseCase.ts",
+        "apps/api/src/entrypoints/http/cancelRunRouteParser.ts",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts"
       ],
       "architectureGuards": [
         "apps/api/test/application/services/cancelRunUseCase.test.ts"
@@ -154800,84 +154850,48 @@
         "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
         "pnpm verify:prepush"
       ],
-      "sourcePath": "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
-      "sourceContentSha256": "140d82fb7e216bf94f209aa8d5f7b50aa632aee42106e1adc7b92ef7c78edf62",
+      "sourcePath": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+      "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
       "rawRail": {
         "name": "CancelRun",
         "type": "command",
         "status": "implemented",
-        "dddOwner": "RunCommandApplicationService"
+        "dddOwner": "RunCommandApplicationService",
+        "negativeTests": [
+          "reject cross-tenant access, malformed receipts and cancellation outside canonical transitions"
+        ],
+        "adapterSurface": "POST /api/v1/runs/:runId/cancel",
+        "applicationPort": "IWorkflowEngine.cancelRun",
+        "authorizationScope": "authenticated tenant plus persisted run tenant equality"
       },
       "rawManifest": {
         "symbols": [
           {
-            "name": "RunControlUnavailableError",
-            "path": "apps/api/src/application/errors/runControlErrors.ts",
+            "name": "CancelRunUseCase",
+            "path": "apps/api/src/application/services/cancelRunUseCase.ts",
             "cqRails": ["CancelRun"],
             "dddOwner": "RunCommandApplicationService",
             "unitTests": [
               "apps/api/test/application/services/cancelRunUseCase.test.ts"
             ],
             "fowlerSignals": [
-              "Cancellation is idempotent and server-owned; Web renders receipts without mutating lifecycle truth."
+              "One cancellation command reaches one engine transition authority and one public receipt contract."
             ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
             "architectureGuard": "apps/api/test/application/services/cancelRunUseCase.test.ts"
           },
           {
-            "name": "CancelRunDisposition",
-            "path": "apps/api/src/application/ports/runtime.ts",
+            "name": "parseCancelRunRequest",
+            "path": "apps/api/src/entrypoints/http/cancelRunRouteParser.ts",
             "cqRails": ["CancelRun"],
             "dddOwner": "RunCommandApplicationService",
             "unitTests": [
               "apps/api/test/application/services/cancelRunUseCase.test.ts"
             ],
             "fowlerSignals": [
-              "Cancellation is idempotent and server-owned; Web renders receipts without mutating lifecycle truth."
+              "One cancellation command reaches one engine transition authority and one public receipt contract."
             ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "apps/api/test/application/services/cancelRunUseCase.test.ts"
-          },
-          {
-            "name": "CancelRunResult",
-            "path": "apps/api/src/application/ports/runtime.ts",
-            "cqRails": ["CancelRun"],
-            "dddOwner": "RunCommandApplicationService",
-            "unitTests": [
-              "apps/api/test/application/services/cancelRunUseCase.test.ts"
-            ],
-            "fowlerSignals": [
-              "Cancellation is idempotent and server-owned; Web renders receipts without mutating lifecycle truth."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "apps/api/test/application/services/cancelRunUseCase.test.ts"
-          },
-          {
-            "name": "RUN_CONTROL_RESULT_CONTRACT_VERSION",
-            "path": "apps/api/src/application/ports/runtime.ts",
-            "cqRails": ["CancelRun"],
-            "dddOwner": "RunCommandApplicationService",
-            "unitTests": [
-              "apps/api/test/application/services/cancelRunUseCase.test.ts"
-            ],
-            "fowlerSignals": [
-              "Cancellation is idempotent and server-owned; Web renders receipts without mutating lifecycle truth."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "apps/api/test/application/services/cancelRunUseCase.test.ts"
-          },
-          {
-            "name": "CancelRunDecision",
-            "path": "apps/api/src/application/services/runControlPolicy.ts",
-            "cqRails": ["CancelRun"],
-            "dddOwner": "RunCommandApplicationService",
-            "unitTests": [
-              "apps/api/test/application/services/cancelRunUseCase.test.ts"
-            ],
-            "fowlerSignals": [
-              "Cancellation is idempotent and server-owned; Web renders receipts without mutating lifecycle truth."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
             "architectureGuard": "apps/api/test/application/services/cancelRunUseCase.test.ts"
           },
           {
@@ -154889,201 +154903,40 @@
               "apps/api/test/application/services/cancelRunUseCase.test.ts"
             ],
             "fowlerSignals": [
-              "Cancellation is idempotent and server-owned; Web renders receipts without mutating lifecycle truth."
+              "One cancellation command reaches one engine transition authority and one public receipt contract."
             ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "apps/api/test/application/services/cancelRunUseCase.test.ts"
-          },
-          {
-            "name": "CancelRunReceipt",
-            "path": "apps/web/src/app/ports/runs.ts",
-            "cqRails": ["CancelRun"],
-            "dddOwner": "RunCommandApplicationService",
-            "unitTests": [
-              "apps/api/test/application/services/cancelRunUseCase.test.ts"
-            ],
-            "fowlerSignals": [
-              "Cancellation is idempotent and server-owned; Web renders receipts without mutating lifecycle truth."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "apps/api/test/application/services/cancelRunUseCase.test.ts"
-          },
-          {
-            "name": "RunControlCommandAction",
-            "path": "apps/web/src/app/services/runs/runControlCommandModel.ts",
-            "cqRails": ["CancelRun"],
-            "dddOwner": "RunCommandApplicationService",
-            "unitTests": [
-              "apps/api/test/application/services/cancelRunUseCase.test.ts"
-            ],
-            "fowlerSignals": [
-              "Cancellation is idempotent and server-owned; Web renders receipts without mutating lifecycle truth."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "apps/api/test/application/services/cancelRunUseCase.test.ts"
-          },
-          {
-            "name": "RunControlCommandFailure",
-            "path": "apps/web/src/app/services/runs/runControlCommandModel.ts",
-            "cqRails": ["CancelRun"],
-            "dddOwner": "RunCommandApplicationService",
-            "unitTests": [
-              "apps/api/test/application/services/cancelRunUseCase.test.ts"
-            ],
-            "fowlerSignals": [
-              "Cancellation is idempotent and server-owned; Web renders receipts without mutating lifecycle truth."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "apps/api/test/application/services/cancelRunUseCase.test.ts"
-          },
-          {
-            "name": "RunControlCommandOutcome",
-            "path": "apps/web/src/app/services/runs/runControlCommandModel.ts",
-            "cqRails": ["CancelRun"],
-            "dddOwner": "RunCommandApplicationService",
-            "unitTests": [
-              "apps/api/test/application/services/cancelRunUseCase.test.ts"
-            ],
-            "fowlerSignals": [
-              "Cancellation is idempotent and server-owned; Web renders receipts without mutating lifecycle truth."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "apps/api/test/application/services/cancelRunUseCase.test.ts"
-          },
-          {
-            "name": "RunControlCommandRequest",
-            "path": "apps/web/src/app/services/runs/runControlCommandModel.ts",
-            "cqRails": ["CancelRun"],
-            "dddOwner": "RunCommandApplicationService",
-            "unitTests": [
-              "apps/api/test/application/services/cancelRunUseCase.test.ts"
-            ],
-            "fowlerSignals": [
-              "Cancellation is idempotent and server-owned; Web renders receipts without mutating lifecycle truth."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "apps/api/test/application/services/cancelRunUseCase.test.ts"
-          },
-          {
-            "name": "CANCEL_DISPOSITIONS",
-            "path": "apps/web/src/app/services/runs/runsApiControlReceipts.ts",
-            "cqRails": ["CancelRun"],
-            "dddOwner": "RunCommandApplicationService",
-            "unitTests": [
-              "apps/api/test/application/services/cancelRunUseCase.test.ts"
-            ],
-            "fowlerSignals": [
-              "Cancellation is idempotent and server-owned; Web renders receipts without mutating lifecycle truth."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "apps/api/test/application/services/cancelRunUseCase.test.ts"
-          },
-          {
-            "name": "invalidReceipt",
-            "path": "apps/web/src/app/services/runs/runsApiControlReceipts.ts",
-            "cqRails": ["CancelRun"],
-            "dddOwner": "RunCommandApplicationService",
-            "unitTests": [
-              "apps/api/test/application/services/cancelRunUseCase.test.ts"
-            ],
-            "fowlerSignals": [
-              "Cancellation is idempotent and server-owned; Web renders receipts without mutating lifecycle truth."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "apps/api/test/application/services/cancelRunUseCase.test.ts"
-          },
-          {
-            "name": "isNonBlankString",
-            "path": "apps/web/src/app/services/runs/runsApiControlReceipts.ts",
-            "cqRails": ["CancelRun"],
-            "dddOwner": "RunCommandApplicationService",
-            "unitTests": [
-              "apps/api/test/application/services/cancelRunUseCase.test.ts"
-            ],
-            "fowlerSignals": [
-              "Cancellation is idempotent and server-owned; Web renders receipts without mutating lifecycle truth."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
             "architectureGuard": "apps/api/test/application/services/cancelRunUseCase.test.ts"
           },
           {
             "name": "parseCancelRunReceipt",
-            "path": "apps/web/src/app/services/runs/runsApiControlReceipts.ts",
+            "path": "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts",
             "cqRails": ["CancelRun"],
             "dddOwner": "RunCommandApplicationService",
             "unitTests": [
               "apps/api/test/application/services/cancelRunUseCase.test.ts"
             ],
             "fowlerSignals": [
-              "Cancellation is idempotent and server-owned; Web renders receipts without mutating lifecycle truth."
+              "One cancellation command reaches one engine transition authority and one public receipt contract."
             ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "apps/api/test/application/services/cancelRunUseCase.test.ts"
-          },
-          {
-            "name": "RunControlCommandController",
-            "path": "apps/web/src/app/views/runs/useRunControlCommands.ts",
-            "cqRails": ["CancelRun"],
-            "dddOwner": "RunCommandApplicationService",
-            "unitTests": [
-              "apps/api/test/application/services/cancelRunUseCase.test.ts"
-            ],
-            "fowlerSignals": [
-              "Cancellation is idempotent and server-owned; Web renders receipts without mutating lifecycle truth."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "apps/api/test/application/services/cancelRunUseCase.test.ts"
-          },
-          {
-            "name": "UseRunControlCommandsOptions",
-            "path": "apps/web/src/app/views/runs/useRunControlCommands.ts",
-            "cqRails": ["CancelRun"],
-            "dddOwner": "RunCommandApplicationService",
-            "unitTests": [
-              "apps/api/test/application/services/cancelRunUseCase.test.ts"
-            ],
-            "fowlerSignals": [
-              "Cancellation is idempotent and server-owned; Web renders receipts without mutating lifecycle truth."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "apps/api/test/application/services/cancelRunUseCase.test.ts"
-          },
-          {
-            "name": "toError",
-            "path": "apps/web/src/app/views/runs/useRunControlCommands.ts",
-            "cqRails": ["CancelRun"],
-            "dddOwner": "RunCommandApplicationService",
-            "unitTests": [
-              "apps/api/test/application/services/cancelRunUseCase.test.ts"
-            ],
-            "fowlerSignals": [
-              "Cancellation is idempotent and server-owned; Web renders receipts without mutating lifecycle truth."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "apps/api/test/application/services/cancelRunUseCase.test.ts"
-          },
-          {
-            "name": "useRunControlCommands",
-            "path": "apps/web/src/app/views/runs/useRunControlCommands.ts",
-            "cqRails": ["CancelRun"],
-            "dddOwner": "RunCommandApplicationService",
-            "unitTests": [
-              "apps/api/test/application/services/cancelRunUseCase.test.ts"
-            ],
-            "fowlerSignals": [
-              "Cancellation is idempotent and server-owned; Web renders receipts without mutating lifecycle truth."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
             "architectureGuard": "apps/api/test/application/services/cancelRunUseCase.test.ts"
           }
         ],
         "version": 1,
         "featureId": "US-F4-3-RUN-CONTROLS",
-        "userStories": ["https://github.com/dunay2/dvt/issues/2103"],
-        "cypressFlows": ["apps/web/cypress/e2e/runs/run-controls-live.cy.ts"],
+        "userStories": [
+          "https://github.com/dunay2/dvt/issues/2103",
+          "https://github.com/dunay2/dvt/issues/2169"
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
+          "apps/api/test/integration/protectedRuntime.integration.test.ts"
+        ],
         "domainObjects": ["RunCancellationIntent"],
         "fowlerSignals": [
-          "Cancellation is idempotent and server-owned; Web renders receipts without mutating lifecycle truth."
+          "Cancellation is idempotent and server-owned; Web renders receipts without mutating lifecycle truth.",
+          "One cancellation command reaches one engine transition authority and one public receipt contract."
         ],
         "completionGate": [
           "pnpm docs:feature-mechanization:implementation",
@@ -155101,10 +154954,12 @@
               "apps/api/src/application/services/runControlPolicy.ts",
               "apps/web/src/app/ports/runs.ts",
               "apps/web/src/app/services/runs/runControlCommandModel.ts",
-              "apps/web/src/app/services/runs/runsApiControlReceipts.ts",
-              "apps/web/src/app/views/runs/useRunControlCommands.ts"
+              "apps/web/src/app/views/runs/useRunControlCommands.ts",
+              "apps/api/src/application/services/cancelRunUseCase.ts",
+              "apps/api/src/entrypoints/http/cancelRunRouteParser.ts",
+              "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts"
             ],
-            "expectedFailure": "Repeated cancellation redispatches or terminal runs report false cancellation."
+            "expectedFailure": "The feature manifest references deleted coordinator or local receipt symbols."
           }
         ],
         "componentGuides": [
@@ -155119,13 +154974,19 @@
             "name": "CancelRun",
             "type": "command",
             "status": "implemented",
-            "dddOwner": "RunCommandApplicationService"
+            "dddOwner": "RunCommandApplicationService",
+            "negativeTests": [
+              "reject cross-tenant access, malformed receipts and cancellation outside canonical transitions"
+            ],
+            "adapterSurface": "POST /api/v1/runs/:runId/cancel",
+            "applicationPort": "IWorkflowEngine.cancelRun",
+            "authorizationScope": "authenticated tenant plus persisted run tenant equality"
           }
         ],
         "architectureGuards": [
           "apps/api/test/application/services/cancelRunUseCase.test.ts"
         ],
-        "implementationPlan": "https://github.com/dunay2/dvt/issues/2103#issuecomment-5157653363",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2169#issuecomment-5279182370",
         "mechanizationStatus": "implemented",
         "noHumanDecisionsRemaining": true,
         "allowedImplementationSurfaces": [
@@ -155134,12 +154995,19 @@
           "apps/api/src/application/services/runControlPolicy.ts",
           "apps/web/src/app/ports/runs.ts",
           "apps/web/src/app/services/runs/runControlCommandModel.ts",
-          "apps/web/src/app/services/runs/runsApiControlReceipts.ts",
-          "apps/web/src/app/views/runs/useRunControlCommands.ts"
+          "apps/web/src/app/views/runs/useRunControlCommands.ts",
+          "apps/api/src/application/services/cancelRunUseCase.ts",
+          "apps/api/src/entrypoints/http/cancelRunRouteParser.ts",
+          "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts"
         ],
-        "forbiddenImplementationSurfaces": ["tools/planning-db/schema.sql"]
+        "forbiddenImplementationSurfaces": [
+          "tools/planning-db/schema.sql",
+          "apps/api/src/application/ports/runControlCommandCoordinator.ts",
+          "apps/api/src/infrastructure/runControl/PostgresRunControlCommandCoordinator.ts",
+          "apps/web/src/app/services/runs/runsApiControlReceipts.ts"
+        ]
       },
-      "revision": 1,
+      "revision": 2,
       "createdBy": "codex",
       "createdAt": "2026-08-02T14:27:22.409Z"
     },
@@ -155153,77 +155021,24 @@
       "dddOwner": "RunRecoveryApplicationService",
       "railStatus": "implemented",
       "symbolRefs": [
-        "apps/api/src/application/errors/runControlErrors.ts#RunRecoveryUnavailableError",
-        "apps/api/src/application/errors/runControlErrors.ts#RunRecoveryUnavailableReason",
-        "apps/api/src/application/ports/runExecutionContextReferenceReader.ts#IRunExecutionContextReferenceReader",
-        "apps/api/src/application/ports/runExecutionContextReferenceReader.ts#RunExecutionContextReferenceQuery",
-        "apps/api/src/application/services/recoverRunUseCase.ts#RecoverRunUseCaseDependencies",
-        "apps/api/src/entrypoints/http/recoverRunRouteParser.ts#RECOVER_RUN_BODY_FIELDS",
-        "apps/api/src/infrastructure/dbt/FileRunExecutionContextReferenceReader.ts#FileRunExecutionContextReferenceReader",
-        "apps/api/src/infrastructure/dbt/FileRunExecutionContextReferenceReader.ts#isNotFoundError",
-        "apps/api/src/infrastructure/dbt/FileRunExecutionContextReferenceReader.ts#readOptionalFile",
-        "apps/api/src/infrastructure/dbt/runExecutionContextArtifactPath.ts#resolveRunExecutionContextArtifactPath",
-        "apps/web/src/app/ports/runs.ts#RecoverRunReceipt",
-        "apps/web/src/app/services/runs/runsApiControlReceipts.ts#parseRecoverRunReceipt",
-        "packages/@dvt/adapter-postgres/src/PostgresPlanStore.mappers.ts#buildPlanRefFromStoredRow",
-        "packages/@dvt/artifacts/src/ports/IStoredPlanArtifactStore.ts#IStoredPlanRefReader",
-        "apps/api/src/application/services/runControlPolicy.ts#RecoverRunDecision",
-        "apps/api/src/application/services/runControlPolicy.ts#decideRecoverRun",
-        "apps/api/src/infrastructure/dbt/FileDbtRunExecutionContextWriter.ts#FileDbtRunExecutionContextWriter",
-        "apps/api/src/infrastructure/dbt/runExecutionContextArtifactPath.ts#resolveRunExecutionContextReferenceArtifactPath",
-        "apps/api/src/application/ports/runExecutionContextReferenceReader.ts#RunExecutionContextReferenceReadResult",
-        "apps/api/src/application/services/runRecoveryContextTrust.ts#resolveRunRecoveryContextTrust",
-        "apps/api/src/infrastructure/dbt/FileRunExecutionContextReferenceReader.ts#parseStoredReference",
-        "apps/api/src/application/ports/runExecutionContextInheritanceWriter.ts#IRunExecutionContextInheritanceWriter",
-        "apps/api/src/application/services/recoverRunUseCase.ts#isRecoveryChildOf",
-        "apps/api/src/entrypoints/http/recoverRunIdentity.ts#deriveRecoveryRunId",
+        "apps/api/src/application/services/recoverRunUseCase.ts#RecoverRunUseCase",
         "apps/api/src/entrypoints/http/recoverRunRouteParser.ts#parseRecoverRunRequest",
-        "apps/api/src/infrastructure/dbt/FileRunExecutionContextInheritanceWriter.ts#FileRunExecutionContextInheritanceWriter",
-        "apps/api/src/infrastructure/dbt/immutableFileArtifactWriter.ts#writeImmutableFileArtifact",
-        "apps/web/src/app/services/runs/runsService.api.ts#createBrowserIdempotencyKey",
-        "apps/api/src/application/ports/runRecoveryCommandCoordinator.ts#IRunRecoveryCommandCoordinator",
-        "apps/api/src/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.ts#PostgresRunRecoveryCommandCoordinator",
-        "apps/api/src/application/ports/runExecutionContextRequirementResolver.ts#IRunExecutionContextRequirementResolver",
-        "apps/api/src/application/services/StoredPlanRunExecutionContextRequirementResolver.ts#StoredPlanRunExecutionContextRequirementResolver",
-        "packages/@dvt/engine/src/services/startRun/runExecutionContextRequirements.ts#selectRunExecutionContextPluginRequirements"
+        "apps/api/src/entrypoints/http/recoverRunIdentity.ts#deriveRecoveryRunId",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#parseRecoverRunReceipt",
+        "packages/@dvt/adapter-postgres/src/PostgresStartRunIntentStore.ts#PostgresStartRunIntentStore",
+        "packages/@dvt/engine/src/state/InMemoryStartRunIntentStore.ts#InMemoryStartRunIntentStore"
       ],
       "implementationRefs": [
-        "apps/api/src/application/errors/runControlErrors.ts#RunRecoveryUnavailableError",
-        "apps/api/src/application/errors/runControlErrors.ts#RunRecoveryUnavailableReason",
-        "apps/api/src/application/ports/runExecutionContextReferenceReader.ts#IRunExecutionContextReferenceReader",
-        "apps/api/src/application/ports/runExecutionContextReferenceReader.ts#RunExecutionContextReferenceQuery",
-        "apps/api/src/application/services/recoverRunUseCase.ts#RecoverRunUseCaseDependencies",
-        "apps/api/src/entrypoints/http/recoverRunRouteParser.ts#RECOVER_RUN_BODY_FIELDS",
-        "apps/api/src/infrastructure/dbt/FileRunExecutionContextReferenceReader.ts#FileRunExecutionContextReferenceReader",
-        "apps/api/src/infrastructure/dbt/FileRunExecutionContextReferenceReader.ts#isNotFoundError",
-        "apps/api/src/infrastructure/dbt/FileRunExecutionContextReferenceReader.ts#readOptionalFile",
-        "apps/api/src/infrastructure/dbt/runExecutionContextArtifactPath.ts#resolveRunExecutionContextArtifactPath",
-        "apps/web/src/app/ports/runs.ts#RecoverRunReceipt",
-        "apps/web/src/app/services/runs/runsApiControlReceipts.ts#parseRecoverRunReceipt",
-        "packages/@dvt/adapter-postgres/src/PostgresPlanStore.mappers.ts#buildPlanRefFromStoredRow",
-        "packages/@dvt/artifacts/src/ports/IStoredPlanArtifactStore.ts#IStoredPlanRefReader",
-        "apps/api/src/application/services/runControlPolicy.ts#RecoverRunDecision",
-        "apps/api/src/application/services/runControlPolicy.ts#decideRecoverRun",
-        "apps/api/src/infrastructure/dbt/FileDbtRunExecutionContextWriter.ts#FileDbtRunExecutionContextWriter",
-        "apps/api/src/infrastructure/dbt/runExecutionContextArtifactPath.ts#resolveRunExecutionContextReferenceArtifactPath",
-        "apps/api/src/application/ports/runExecutionContextReferenceReader.ts#RunExecutionContextReferenceReadResult",
-        "apps/api/src/application/services/runRecoveryContextTrust.ts#resolveRunRecoveryContextTrust",
-        "apps/api/src/infrastructure/dbt/FileRunExecutionContextReferenceReader.ts#parseStoredReference",
-        "apps/api/src/application/ports/runExecutionContextInheritanceWriter.ts#IRunExecutionContextInheritanceWriter",
-        "apps/api/src/application/services/recoverRunUseCase.ts#isRecoveryChildOf",
-        "apps/api/src/entrypoints/http/recoverRunIdentity.ts#deriveRecoveryRunId",
+        "apps/api/src/application/services/recoverRunUseCase.ts#RecoverRunUseCase",
         "apps/api/src/entrypoints/http/recoverRunRouteParser.ts#parseRecoverRunRequest",
-        "apps/api/src/infrastructure/dbt/FileRunExecutionContextInheritanceWriter.ts#FileRunExecutionContextInheritanceWriter",
-        "apps/api/src/infrastructure/dbt/immutableFileArtifactWriter.ts#writeImmutableFileArtifact",
-        "apps/web/src/app/services/runs/runsService.api.ts#createBrowserIdempotencyKey",
-        "apps/api/src/application/ports/runRecoveryCommandCoordinator.ts#IRunRecoveryCommandCoordinator",
-        "apps/api/src/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.ts#PostgresRunRecoveryCommandCoordinator",
-        "apps/api/src/application/ports/runExecutionContextRequirementResolver.ts#IRunExecutionContextRequirementResolver",
-        "apps/api/src/application/services/StoredPlanRunExecutionContextRequirementResolver.ts#StoredPlanRunExecutionContextRequirementResolver",
-        "packages/@dvt/engine/src/services/startRun/runExecutionContextRequirements.ts#selectRunExecutionContextPluginRequirements"
+        "apps/api/src/entrypoints/http/recoverRunIdentity.ts#deriveRecoveryRunId",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#parseRecoverRunReceipt",
+        "packages/@dvt/adapter-postgres/src/PostgresStartRunIntentStore.ts#PostgresStartRunIntentStore",
+        "packages/@dvt/engine/src/state/InMemoryStartRunIntentStore.ts#InMemoryStartRunIntentStore"
       ],
       "documentationRefs": [
-        "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md"
+        "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
+        "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md"
       ],
       "governingSources": [
         "docs/architecture/command-query-rail-governance.md",
@@ -155262,503 +155077,51 @@
         "apps/api/test/modules/registerOperationalHooks.cases.ts",
         "apps/web/src/app/services/runs/runsService.api.ts",
         "apps/web/src/app/services/runs/runsService.test.ts",
-        "apps/api/src/application/ports/runRecoveryCommandCoordinator.ts",
-        "apps/api/src/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.ts",
         "apps/api/src/application/ports/runExecutionContextRequirementResolver.ts",
         "apps/api/src/application/services/StoredPlanRunExecutionContextRequirementResolver.ts",
         "packages/@dvt/engine/src/services/startRun/runExecutionContextRequirements.ts",
         "apps/api/test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts",
         "apps/api/test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts",
-        "apps/api/test/infrastructure/dbt/immutableFileArtifactWriter.test.ts"
+        "apps/api/test/infrastructure/dbt/immutableFileArtifactWriter.test.ts",
+        "packages/@dvt/adapter-postgres/src/PostgresStartRunIntentStore.ts"
       ],
       "architectureGuards": [
-        "packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts",
-        "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
-        "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/entrypoints/http/recoverRunRoute.test.ts test/entrypoints/http/recoverRunRouteParser.test.ts test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
-        "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts test/infrastructure/dbt/immutableFileArtifactWriter.test.ts"
+        "packages/@dvt/engine/test/core/WorkflowEngine.test.ts"
       ],
       "completionGate": [
         "pnpm docs:feature-mechanization:implementation",
         "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
         "pnpm verify:prepush"
       ],
-      "sourcePath": "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
-      "sourceContentSha256": "140d82fb7e216bf94f209aa8d5f7b50aa632aee42106e1adc7b92ef7c78edf62",
+      "sourcePath": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+      "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
       "rawRail": {
         "name": "RecoverRun",
         "type": "command",
         "status": "implemented",
-        "dddOwner": "RunRecoveryApplicationService"
+        "dddOwner": "RunRecoveryApplicationService",
+        "negativeTests": [
+          "reject nonterminal recovery, cross-tenant source, plan-reference drift and duplicate child identity"
+        ],
+        "adapterSurface": "POST /api/v1/runs/:runId/recover",
+        "applicationPort": "IWorkflowEngine.recoverRun",
+        "authorizationScope": "authenticated tenant plus persisted source-run tenant equality and immutable plan evidence"
       },
       "rawManifest": {
         "symbols": [
           {
-            "name": "RunRecoveryUnavailableError",
-            "path": "apps/api/src/application/errors/runControlErrors.ts",
-            "cqRails": ["RecoverRun"],
-            "dddOwner": "RunRecoveryApplicationService",
-            "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts",
-              "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
-              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
-              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
-              "apps/api/test/application/services/listRunsUseCase.test.ts"
-            ],
-            "fowlerSignals": [
-              "Recovery derives a new run from the exact immutable stored PlanRef and server-owned execution context.",
-              "Recovery availability fails closed when the original execution-context integrity cannot be proven."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts"
-          },
-          {
-            "name": "RunRecoveryUnavailableReason",
-            "path": "apps/api/src/application/errors/runControlErrors.ts",
-            "cqRails": ["RecoverRun"],
-            "dddOwner": "RunRecoveryApplicationService",
-            "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts",
-              "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
-              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
-              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
-              "apps/api/test/application/services/listRunsUseCase.test.ts"
-            ],
-            "fowlerSignals": [
-              "Recovery derives a new run from the exact immutable stored PlanRef and server-owned execution context.",
-              "Recovery availability fails closed when the original execution-context integrity cannot be proven."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts"
-          },
-          {
-            "name": "IRunExecutionContextReferenceReader",
-            "path": "apps/api/src/application/ports/runExecutionContextReferenceReader.ts",
-            "cqRails": ["RecoverRun"],
-            "dddOwner": "RunRecoveryApplicationService",
-            "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts",
-              "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
-              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
-              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
-              "apps/api/test/application/services/listRunsUseCase.test.ts"
-            ],
-            "fowlerSignals": [
-              "Recovery derives a new run from the exact immutable stored PlanRef and server-owned execution context.",
-              "Recovery availability fails closed when the original execution-context integrity cannot be proven."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts"
-          },
-          {
-            "name": "RunExecutionContextReferenceQuery",
-            "path": "apps/api/src/application/ports/runExecutionContextReferenceReader.ts",
-            "cqRails": ["RecoverRun"],
-            "dddOwner": "RunRecoveryApplicationService",
-            "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts",
-              "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
-              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
-              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
-              "apps/api/test/application/services/listRunsUseCase.test.ts"
-            ],
-            "fowlerSignals": [
-              "Recovery derives a new run from the exact immutable stored PlanRef and server-owned execution context.",
-              "Recovery availability fails closed when the original execution-context integrity cannot be proven."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts"
-          },
-          {
-            "name": "RecoverRunUseCaseDependencies",
+            "name": "RecoverRunUseCase",
             "path": "apps/api/src/application/services/recoverRunUseCase.ts",
             "cqRails": ["RecoverRun"],
             "dddOwner": "RunRecoveryApplicationService",
             "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts",
-              "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
-              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
-              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
-              "apps/api/test/application/services/listRunsUseCase.test.ts"
+              "apps/api/test/application/services/recoverRunUseCase.test.ts"
             ],
             "fowlerSignals": [
-              "Recovery derives a new run from the exact immutable stored PlanRef and server-owned execution context.",
-              "Recovery availability fails closed when the original execution-context integrity cannot be proven."
+              "Recovery eligibility and deterministic child identity are decided once by the engine and its intent store."
             ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts"
-          },
-          {
-            "name": "RECOVER_RUN_BODY_FIELDS",
-            "path": "apps/api/src/entrypoints/http/recoverRunRouteParser.ts",
-            "cqRails": ["RecoverRun"],
-            "dddOwner": "RunRecoveryApplicationService",
-            "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts",
-              "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
-              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
-              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
-              "apps/api/test/application/services/listRunsUseCase.test.ts"
-            ],
-            "fowlerSignals": [
-              "Recovery derives a new run from the exact immutable stored PlanRef and server-owned execution context.",
-              "Recovery availability fails closed when the original execution-context integrity cannot be proven."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts"
-          },
-          {
-            "name": "FileRunExecutionContextReferenceReader",
-            "path": "apps/api/src/infrastructure/dbt/FileRunExecutionContextReferenceReader.ts",
-            "cqRails": ["RecoverRun"],
-            "dddOwner": "RunRecoveryApplicationService",
-            "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts",
-              "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
-              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
-              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
-              "apps/api/test/application/services/listRunsUseCase.test.ts"
-            ],
-            "fowlerSignals": [
-              "Recovery derives a new run from the exact immutable stored PlanRef and server-owned execution context.",
-              "Recovery availability fails closed when the original execution-context integrity cannot be proven."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts"
-          },
-          {
-            "name": "isNotFoundError",
-            "path": "apps/api/src/infrastructure/dbt/FileRunExecutionContextReferenceReader.ts",
-            "cqRails": ["RecoverRun"],
-            "dddOwner": "RunRecoveryApplicationService",
-            "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts",
-              "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
-              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
-              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
-              "apps/api/test/application/services/listRunsUseCase.test.ts"
-            ],
-            "fowlerSignals": [
-              "Recovery derives a new run from the exact immutable stored PlanRef and server-owned execution context.",
-              "Recovery availability fails closed when the original execution-context integrity cannot be proven."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts"
-          },
-          {
-            "name": "readOptionalFile",
-            "path": "apps/api/src/infrastructure/dbt/FileRunExecutionContextReferenceReader.ts",
-            "cqRails": ["RecoverRun"],
-            "dddOwner": "RunRecoveryApplicationService",
-            "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts",
-              "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
-              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
-              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
-              "apps/api/test/application/services/listRunsUseCase.test.ts"
-            ],
-            "fowlerSignals": [
-              "Recovery derives a new run from the exact immutable stored PlanRef and server-owned execution context.",
-              "Recovery availability fails closed when the original execution-context integrity cannot be proven."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts"
-          },
-          {
-            "name": "resolveRunExecutionContextArtifactPath",
-            "path": "apps/api/src/infrastructure/dbt/runExecutionContextArtifactPath.ts",
-            "cqRails": ["RecoverRun"],
-            "dddOwner": "RunRecoveryApplicationService",
-            "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts",
-              "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
-              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
-              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
-              "apps/api/test/application/services/listRunsUseCase.test.ts"
-            ],
-            "fowlerSignals": [
-              "Recovery derives a new run from the exact immutable stored PlanRef and server-owned execution context.",
-              "Recovery availability fails closed when the original execution-context integrity cannot be proven."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts"
-          },
-          {
-            "name": "RecoverRunReceipt",
-            "path": "apps/web/src/app/ports/runs.ts",
-            "cqRails": ["RecoverRun"],
-            "dddOwner": "RunRecoveryApplicationService",
-            "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts",
-              "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
-              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
-              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
-              "apps/api/test/application/services/listRunsUseCase.test.ts"
-            ],
-            "fowlerSignals": [
-              "Recovery derives a new run from the exact immutable stored PlanRef and server-owned execution context.",
-              "Recovery availability fails closed when the original execution-context integrity cannot be proven."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts"
-          },
-          {
-            "name": "parseRecoverRunReceipt",
-            "path": "apps/web/src/app/services/runs/runsApiControlReceipts.ts",
-            "cqRails": ["RecoverRun"],
-            "dddOwner": "RunRecoveryApplicationService",
-            "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts",
-              "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
-              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
-              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
-              "apps/api/test/application/services/listRunsUseCase.test.ts"
-            ],
-            "fowlerSignals": [
-              "Recovery derives a new run from the exact immutable stored PlanRef and server-owned execution context.",
-              "Recovery availability fails closed when the original execution-context integrity cannot be proven."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts"
-          },
-          {
-            "name": "buildPlanRefFromStoredRow",
-            "path": "packages/@dvt/adapter-postgres/src/PostgresPlanStore.mappers.ts",
-            "cqRails": ["RecoverRun"],
-            "dddOwner": "RunRecoveryApplicationService",
-            "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts",
-              "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
-              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
-              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
-              "apps/api/test/application/services/listRunsUseCase.test.ts"
-            ],
-            "fowlerSignals": [
-              "Recovery derives a new run from the exact immutable stored PlanRef and server-owned execution context.",
-              "Recovery availability fails closed when the original execution-context integrity cannot be proven."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts"
-          },
-          {
-            "name": "IStoredPlanRefReader",
-            "path": "packages/@dvt/artifacts/src/ports/IStoredPlanArtifactStore.ts",
-            "cqRails": ["RecoverRun"],
-            "dddOwner": "RunRecoveryApplicationService",
-            "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts",
-              "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
-              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
-              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
-              "apps/api/test/application/services/listRunsUseCase.test.ts"
-            ],
-            "fowlerSignals": [
-              "Recovery derives a new run from the exact immutable stored PlanRef and server-owned execution context.",
-              "Recovery availability fails closed when the original execution-context integrity cannot be proven."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts"
-          },
-          {
-            "name": "RecoverRunDecision",
-            "path": "apps/api/src/application/services/runControlPolicy.ts",
-            "cqRails": ["RecoverRun"],
-            "dddOwner": "RunRecoveryApplicationService",
-            "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts",
-              "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
-              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
-              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
-              "apps/api/test/application/services/listRunsUseCase.test.ts"
-            ],
-            "fowlerSignals": [
-              "Recovery derives a new run from the exact immutable stored PlanRef and server-owned execution context.",
-              "Recovery availability fails closed when the original execution-context integrity cannot be proven."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts"
-          },
-          {
-            "name": "decideRecoverRun",
-            "path": "apps/api/src/application/services/runControlPolicy.ts",
-            "cqRails": ["RecoverRun"],
-            "dddOwner": "RunRecoveryApplicationService",
-            "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts",
-              "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
-              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
-              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
-              "apps/api/test/application/services/listRunsUseCase.test.ts"
-            ],
-            "fowlerSignals": [
-              "Recovery derives a new run from the exact immutable stored PlanRef and server-owned execution context.",
-              "Recovery availability fails closed when the original execution-context integrity cannot be proven."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts"
-          },
-          {
-            "name": "FileDbtRunExecutionContextWriter",
-            "path": "apps/api/src/infrastructure/dbt/FileDbtRunExecutionContextWriter.ts",
-            "cqRails": ["RecoverRun"],
-            "dddOwner": "RunRecoveryApplicationService",
-            "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts",
-              "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
-              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
-              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
-              "apps/api/test/application/services/listRunsUseCase.test.ts"
-            ],
-            "fowlerSignals": [
-              "Recovery derives a new run from the exact immutable stored PlanRef and server-owned execution context.",
-              "Recovery availability fails closed when the original execution-context integrity cannot be proven."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts"
-          },
-          {
-            "name": "resolveRunExecutionContextReferenceArtifactPath",
-            "path": "apps/api/src/infrastructure/dbt/runExecutionContextArtifactPath.ts",
-            "cqRails": ["RecoverRun"],
-            "dddOwner": "RunRecoveryApplicationService",
-            "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts",
-              "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
-              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
-              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
-              "apps/api/test/application/services/listRunsUseCase.test.ts"
-            ],
-            "fowlerSignals": [
-              "Recovery derives a new run from the exact immutable stored PlanRef and server-owned execution context.",
-              "Recovery availability fails closed when the original execution-context integrity cannot be proven."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts"
-          },
-          {
-            "name": "RunExecutionContextReferenceReadResult",
-            "path": "apps/api/src/application/ports/runExecutionContextReferenceReader.ts",
-            "cqRails": ["RecoverRun"],
-            "dddOwner": "RunRecoveryApplicationService",
-            "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts",
-              "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
-              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
-              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
-              "apps/api/test/application/services/listRunsUseCase.test.ts"
-            ],
-            "fowlerSignals": [
-              "Recovery derives a new run from the exact immutable stored PlanRef and server-owned execution context.",
-              "Recovery availability fails closed when the original execution-context integrity cannot be proven."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts"
-          },
-          {
-            "name": "resolveRunRecoveryContextTrust",
-            "path": "apps/api/src/application/services/runRecoveryContextTrust.ts",
-            "cqRails": ["RecoverRun"],
-            "dddOwner": "RunRecoveryApplicationService",
-            "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts",
-              "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
-              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
-              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
-              "apps/api/test/application/services/listRunsUseCase.test.ts",
-              "apps/api/test/entrypoints/http/recoverRunRoute.test.ts",
-              "apps/api/test/entrypoints/http/recoverRunRouteParser.test.ts",
-              "apps/web/src/app/services/runs/runsService.test.ts"
-            ],
-            "fowlerSignals": [
-              "Recovery derives a new run from the exact immutable stored PlanRef and server-owned execution context.",
-              "Recovery availability fails closed when the original execution-context integrity cannot be proven.",
-              "Recovery request identity is deterministic per tenant, source run, and required Idempotency-Key; replay returns the original receipt without a second dispatch.",
-              "A recovery descendant receives its own immutable execution-context artifact after source-reference and digest verification.",
-              "Execution-context storage failures disable recovery without breaking ListRuns or GetRunStatus read models."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/entrypoints/http/recoverRunRoute.test.ts test/entrypoints/http/recoverRunRouteParser.test.ts test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
-          },
-          {
-            "name": "parseStoredReference",
-            "path": "apps/api/src/infrastructure/dbt/FileRunExecutionContextReferenceReader.ts",
-            "cqRails": ["RecoverRun"],
-            "dddOwner": "RunRecoveryApplicationService",
-            "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts",
-              "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
-              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
-              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
-              "apps/api/test/application/services/listRunsUseCase.test.ts"
-            ],
-            "fowlerSignals": [
-              "Recovery derives a new run from the exact immutable stored PlanRef and server-owned execution context.",
-              "Recovery availability fails closed when the original execution-context integrity cannot be proven."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts"
-          },
-          {
-            "name": "IRunExecutionContextInheritanceWriter",
-            "path": "apps/api/src/application/ports/runExecutionContextInheritanceWriter.ts",
-            "cqRails": ["RecoverRun"],
-            "dddOwner": "RunRecoveryApplicationService",
-            "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts",
-              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
-              "apps/api/test/entrypoints/http/recoverRunRoute.test.ts",
-              "apps/api/test/entrypoints/http/recoverRunRouteParser.test.ts",
-              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
-              "apps/web/src/app/services/runs/runsService.test.ts"
-            ],
-            "fowlerSignals": [
-              "Recovery request identity is deterministic per tenant, source run, and required Idempotency-Key; replay returns the original receipt without a second dispatch.",
-              "A recovery descendant receives its own immutable execution-context artifact after source-reference and digest verification.",
-              "Execution-context storage failures disable recovery without breaking ListRuns or GetRunStatus read models."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/entrypoints/http/recoverRunRoute.test.ts test/entrypoints/http/recoverRunRouteParser.test.ts test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
-          },
-          {
-            "name": "isRecoveryChildOf",
-            "path": "apps/api/src/application/services/recoverRunUseCase.ts",
-            "cqRails": ["RecoverRun"],
-            "dddOwner": "RunRecoveryApplicationService",
-            "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts",
-              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
-              "apps/api/test/entrypoints/http/recoverRunRoute.test.ts",
-              "apps/api/test/entrypoints/http/recoverRunRouteParser.test.ts",
-              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
-              "apps/web/src/app/services/runs/runsService.test.ts"
-            ],
-            "fowlerSignals": [
-              "Recovery request identity is deterministic per tenant, source run, and required Idempotency-Key; replay returns the original receipt without a second dispatch.",
-              "A recovery descendant receives its own immutable execution-context artifact after source-reference and digest verification.",
-              "Execution-context storage failures disable recovery without breaking ListRuns or GetRunStatus read models."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/entrypoints/http/recoverRunRoute.test.ts test/entrypoints/http/recoverRunRouteParser.test.ts test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
-          },
-          {
-            "name": "deriveRecoveryRunId",
-            "path": "apps/api/src/entrypoints/http/recoverRunIdentity.ts",
-            "cqRails": ["RecoverRun"],
-            "dddOwner": "RunRecoveryApplicationService",
-            "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts",
-              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
-              "apps/api/test/entrypoints/http/recoverRunRoute.test.ts",
-              "apps/api/test/entrypoints/http/recoverRunRouteParser.test.ts",
-              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
-              "apps/web/src/app/services/runs/runsService.test.ts"
-            ],
-            "fowlerSignals": [
-              "Recovery request identity is deterministic per tenant, source run, and required Idempotency-Key; replay returns the original receipt without a second dispatch.",
-              "A recovery descendant receives its own immutable execution-context artifact after source-reference and digest verification.",
-              "Execution-context storage failures disable recovery without breaking ListRuns or GetRunStatus read models."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/entrypoints/http/recoverRunRoute.test.ts test/entrypoints/http/recoverRunRouteParser.test.ts test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "packages/@dvt/engine/test/core/WorkflowEngine.test.ts"
           },
           {
             "name": "parseRecoverRunRequest",
@@ -155766,195 +155129,81 @@
             "cqRails": ["RecoverRun"],
             "dddOwner": "RunRecoveryApplicationService",
             "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts",
-              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
-              "apps/api/test/entrypoints/http/recoverRunRoute.test.ts",
-              "apps/api/test/entrypoints/http/recoverRunRouteParser.test.ts",
-              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
-              "apps/web/src/app/services/runs/runsService.test.ts"
+              "apps/api/test/application/services/recoverRunUseCase.test.ts"
             ],
             "fowlerSignals": [
-              "Recovery request identity is deterministic per tenant, source run, and required Idempotency-Key; replay returns the original receipt without a second dispatch.",
-              "A recovery descendant receives its own immutable execution-context artifact after source-reference and digest verification.",
-              "Execution-context storage failures disable recovery without breaking ListRuns or GetRunStatus read models."
+              "Recovery eligibility and deterministic child identity are decided once by the engine and its intent store."
             ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/entrypoints/http/recoverRunRoute.test.ts test/entrypoints/http/recoverRunRouteParser.test.ts test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "packages/@dvt/engine/test/core/WorkflowEngine.test.ts"
           },
           {
-            "name": "FileRunExecutionContextInheritanceWriter",
-            "path": "apps/api/src/infrastructure/dbt/FileRunExecutionContextInheritanceWriter.ts",
+            "name": "deriveRecoveryRunId",
+            "path": "apps/api/src/entrypoints/http/recoverRunIdentity.ts",
             "cqRails": ["RecoverRun"],
             "dddOwner": "RunRecoveryApplicationService",
             "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts",
-              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
-              "apps/api/test/entrypoints/http/recoverRunRoute.test.ts",
-              "apps/api/test/entrypoints/http/recoverRunRouteParser.test.ts",
-              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
-              "apps/web/src/app/services/runs/runsService.test.ts"
+              "apps/api/test/application/services/recoverRunUseCase.test.ts"
             ],
             "fowlerSignals": [
-              "Recovery request identity is deterministic per tenant, source run, and required Idempotency-Key; replay returns the original receipt without a second dispatch.",
-              "A recovery descendant receives its own immutable execution-context artifact after source-reference and digest verification.",
-              "Execution-context storage failures disable recovery without breaking ListRuns or GetRunStatus read models."
+              "Recovery eligibility and deterministic child identity are decided once by the engine and its intent store."
             ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/entrypoints/http/recoverRunRoute.test.ts test/entrypoints/http/recoverRunRouteParser.test.ts test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "packages/@dvt/engine/test/core/WorkflowEngine.test.ts"
           },
           {
-            "name": "writeImmutableFileArtifact",
-            "path": "apps/api/src/infrastructure/dbt/immutableFileArtifactWriter.ts",
+            "name": "parseRecoverRunReceipt",
+            "path": "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts",
             "cqRails": ["RecoverRun"],
             "dddOwner": "RunRecoveryApplicationService",
             "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts",
-              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
-              "apps/api/test/entrypoints/http/recoverRunRoute.test.ts",
-              "apps/api/test/entrypoints/http/recoverRunRouteParser.test.ts",
-              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
-              "apps/web/src/app/services/runs/runsService.test.ts",
-              "apps/api/test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts",
-              "apps/api/test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts",
-              "apps/api/test/infrastructure/dbt/immutableFileArtifactWriter.test.ts"
+              "apps/api/test/application/services/recoverRunUseCase.test.ts"
             ],
             "fowlerSignals": [
-              "Recovery request identity is deterministic per tenant, source run, and required Idempotency-Key; replay returns the original receipt without a second dispatch.",
-              "A recovery descendant receives its own immutable execution-context artifact after source-reference and digest verification.",
-              "Execution-context storage failures disable recovery without breaking ListRuns or GetRunStatus read models.",
-              "Recovery identities are serialized across API instances before retry-attempt reservation.",
-              "Execution-context absence is evaluated against canonical plugin requirements from the immutable stored plan.",
-              "Failed immutable writes remove only the incomplete destination created by that invocation before retry."
+              "Recovery eligibility and deterministic child identity are decided once by the engine and its intent store."
             ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts test/infrastructure/dbt/immutableFileArtifactWriter.test.ts"
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "packages/@dvt/engine/test/core/WorkflowEngine.test.ts"
           },
           {
-            "name": "createBrowserIdempotencyKey",
-            "path": "apps/web/src/app/services/runs/runsService.api.ts",
+            "name": "PostgresStartRunIntentStore",
+            "path": "packages/@dvt/adapter-postgres/src/PostgresStartRunIntentStore.ts",
             "cqRails": ["RecoverRun"],
             "dddOwner": "RunRecoveryApplicationService",
             "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts",
-              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
-              "apps/api/test/entrypoints/http/recoverRunRoute.test.ts",
-              "apps/api/test/entrypoints/http/recoverRunRouteParser.test.ts",
-              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
-              "apps/web/src/app/services/runs/runsService.test.ts"
+              "apps/api/test/application/services/recoverRunUseCase.test.ts"
             ],
             "fowlerSignals": [
-              "Recovery request identity is deterministic per tenant, source run, and required Idempotency-Key; replay returns the original receipt without a second dispatch.",
-              "A recovery descendant receives its own immutable execution-context artifact after source-reference and digest verification.",
-              "Execution-context storage failures disable recovery without breaking ListRuns or GetRunStatus read models."
+              "Recovery eligibility and deterministic child identity are decided once by the engine and its intent store."
             ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/entrypoints/http/recoverRunRoute.test.ts test/entrypoints/http/recoverRunRouteParser.test.ts test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "packages/@dvt/engine/test/core/WorkflowEngine.test.ts"
           },
           {
-            "name": "IRunRecoveryCommandCoordinator",
-            "path": "apps/api/src/application/ports/runRecoveryCommandCoordinator.ts",
+            "name": "InMemoryStartRunIntentStore",
+            "path": "packages/@dvt/engine/src/state/InMemoryStartRunIntentStore.ts",
             "cqRails": ["RecoverRun"],
             "dddOwner": "RunRecoveryApplicationService",
             "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts",
-              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
-              "apps/api/test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts",
-              "apps/api/test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts",
-              "apps/api/test/infrastructure/dbt/immutableFileArtifactWriter.test.ts"
+              "apps/api/test/application/services/recoverRunUseCase.test.ts"
             ],
             "fowlerSignals": [
-              "Recovery identities are serialized across API instances before retry-attempt reservation.",
-              "Execution-context absence is evaluated against canonical plugin requirements from the immutable stored plan.",
-              "Failed immutable writes remove only the incomplete destination created by that invocation before retry."
+              "Recovery eligibility and deterministic child identity are decided once by the engine and its intent store."
             ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts test/infrastructure/dbt/immutableFileArtifactWriter.test.ts"
-          },
-          {
-            "name": "PostgresRunRecoveryCommandCoordinator",
-            "path": "apps/api/src/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.ts",
-            "cqRails": ["RecoverRun"],
-            "dddOwner": "RunRecoveryApplicationService",
-            "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts",
-              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
-              "apps/api/test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts",
-              "apps/api/test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts",
-              "apps/api/test/infrastructure/dbt/immutableFileArtifactWriter.test.ts"
-            ],
-            "fowlerSignals": [
-              "Recovery identities are serialized across API instances before retry-attempt reservation.",
-              "Execution-context absence is evaluated against canonical plugin requirements from the immutable stored plan.",
-              "Failed immutable writes remove only the incomplete destination created by that invocation before retry."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts test/infrastructure/dbt/immutableFileArtifactWriter.test.ts"
-          },
-          {
-            "name": "IRunExecutionContextRequirementResolver",
-            "path": "apps/api/src/application/ports/runExecutionContextRequirementResolver.ts",
-            "cqRails": ["RecoverRun"],
-            "dddOwner": "RunRecoveryApplicationService",
-            "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts",
-              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
-              "apps/api/test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts",
-              "apps/api/test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts",
-              "apps/api/test/infrastructure/dbt/immutableFileArtifactWriter.test.ts"
-            ],
-            "fowlerSignals": [
-              "Recovery identities are serialized across API instances before retry-attempt reservation.",
-              "Execution-context absence is evaluated against canonical plugin requirements from the immutable stored plan.",
-              "Failed immutable writes remove only the incomplete destination created by that invocation before retry."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts test/infrastructure/dbt/immutableFileArtifactWriter.test.ts"
-          },
-          {
-            "name": "StoredPlanRunExecutionContextRequirementResolver",
-            "path": "apps/api/src/application/services/StoredPlanRunExecutionContextRequirementResolver.ts",
-            "cqRails": ["RecoverRun"],
-            "dddOwner": "RunRecoveryApplicationService",
-            "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts",
-              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
-              "apps/api/test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts",
-              "apps/api/test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts",
-              "apps/api/test/infrastructure/dbt/immutableFileArtifactWriter.test.ts"
-            ],
-            "fowlerSignals": [
-              "Recovery identities are serialized across API instances before retry-attempt reservation.",
-              "Execution-context absence is evaluated against canonical plugin requirements from the immutable stored plan.",
-              "Failed immutable writes remove only the incomplete destination created by that invocation before retry."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts test/infrastructure/dbt/immutableFileArtifactWriter.test.ts"
-          },
-          {
-            "name": "selectRunExecutionContextPluginRequirements",
-            "path": "packages/@dvt/engine/src/services/startRun/runExecutionContextRequirements.ts",
-            "cqRails": ["RecoverRun"],
-            "dddOwner": "RunRecoveryApplicationService",
-            "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts",
-              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
-              "apps/api/test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts",
-              "apps/api/test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts",
-              "apps/api/test/infrastructure/dbt/immutableFileArtifactWriter.test.ts"
-            ],
-            "fowlerSignals": [
-              "Recovery identities are serialized across API instances before retry-attempt reservation.",
-              "Execution-context absence is evaluated against canonical plugin requirements from the immutable stored plan.",
-              "Failed immutable writes remove only the incomplete destination created by that invocation before retry."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts test/infrastructure/dbt/immutableFileArtifactWriter.test.ts"
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "packages/@dvt/engine/test/core/WorkflowEngine.test.ts"
           }
         ],
         "version": 1,
         "featureId": "US-F4-3-RUN-CONTROLS",
-        "userStories": ["https://github.com/dunay2/dvt/issues/2103"],
-        "cypressFlows": ["apps/web/cypress/e2e/runs/run-controls-live.cy.ts"],
+        "userStories": [
+          "https://github.com/dunay2/dvt/issues/2103",
+          "https://github.com/dunay2/dvt/issues/2169"
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
+          "apps/api/test/integration/protectedRuntime.integration.test.ts"
+        ],
         "domainObjects": ["RunRecoveryIntent"],
         "fowlerSignals": [
           "Recovery derives a new run from the exact immutable stored PlanRef and server-owned execution context.",
@@ -155964,7 +155213,8 @@
           "Execution-context storage failures disable recovery without breaking ListRuns or GetRunStatus read models.",
           "Recovery identities are serialized across API instances before retry-attempt reservation.",
           "Execution-context absence is evaluated against canonical plugin requirements from the immutable stored plan.",
-          "Failed immutable writes remove only the incomplete destination created by that invocation before retry."
+          "Failed immutable writes remove only the incomplete destination created by that invocation before retry.",
+          "Recovery eligibility and deterministic child identity are decided once by the engine and its intent store."
         ],
         "completionGate": [
           "pnpm docs:feature-mechanization:implementation",
@@ -155974,8 +155224,8 @@
         "redGreenCycles": [
           {
             "id": "recoverrun-record",
-            "redTest": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts test/infrastructure/dbt/immutableFileArtifactWriter.test.ts",
-            "greenTest": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts test/infrastructure/dbt/immutableFileArtifactWriter.test.ts",
+            "redTest": "pnpm --filter @dvt/engine test -- WorkflowEngine.test.ts",
+            "greenTest": "pnpm --filter @dvt/engine test -- WorkflowEngine.test.ts",
             "patchSurfaces": [
               "apps/api/src/application/errors/runControlErrors.ts",
               "apps/api/src/application/ports/runExecutionContextReferenceReader.ts",
@@ -156009,16 +155259,15 @@
               "apps/api/test/modules/registerOperationalHooks.cases.ts",
               "apps/web/src/app/services/runs/runsService.api.ts",
               "apps/web/src/app/services/runs/runsService.test.ts",
-              "apps/api/src/application/ports/runRecoveryCommandCoordinator.ts",
-              "apps/api/src/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.ts",
               "apps/api/src/application/ports/runExecutionContextRequirementResolver.ts",
               "apps/api/src/application/services/StoredPlanRunExecutionContextRequirementResolver.ts",
               "packages/@dvt/engine/src/services/startRun/runExecutionContextRequirements.ts",
               "apps/api/test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts",
               "apps/api/test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts",
-              "apps/api/test/infrastructure/dbt/immutableFileArtifactWriter.test.ts"
+              "apps/api/test/infrastructure/dbt/immutableFileArtifactWriter.test.ts",
+              "packages/@dvt/adapter-postgres/src/PostgresStartRunIntentStore.ts"
             ],
-            "expectedFailure": "Concurrent recovery delivery consumes another logical attempt, a required absent context is advertised as recoverable, or a failed immutable write leaves a poisoned destination."
+            "expectedFailure": "Concurrent recovery can dispatch a second child or API policy can diverge from engine lifecycle truth."
           }
         ],
         "componentGuides": [
@@ -156033,16 +155282,19 @@
             "name": "RecoverRun",
             "type": "command",
             "status": "implemented",
-            "dddOwner": "RunRecoveryApplicationService"
+            "dddOwner": "RunRecoveryApplicationService",
+            "negativeTests": [
+              "reject nonterminal recovery, cross-tenant source, plan-reference drift and duplicate child identity"
+            ],
+            "adapterSurface": "POST /api/v1/runs/:runId/recover",
+            "applicationPort": "IWorkflowEngine.recoverRun",
+            "authorizationScope": "authenticated tenant plus persisted source-run tenant equality and immutable plan evidence"
           }
         ],
         "architectureGuards": [
-          "packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts",
-          "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
-          "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/entrypoints/http/recoverRunRoute.test.ts test/entrypoints/http/recoverRunRouteParser.test.ts test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
-          "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts test/infrastructure/dbt/immutableFileArtifactWriter.test.ts"
+          "packages/@dvt/engine/test/core/WorkflowEngine.test.ts"
         ],
-        "implementationPlan": "https://github.com/dunay2/dvt/issues/2103#issuecomment-5157653363",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2169#issuecomment-5279182370",
         "mechanizationStatus": "implemented",
         "noHumanDecisionsRemaining": true,
         "allowedImplementationSurfaces": [
@@ -156078,20 +155330,196 @@
           "apps/api/test/modules/registerOperationalHooks.cases.ts",
           "apps/web/src/app/services/runs/runsService.api.ts",
           "apps/web/src/app/services/runs/runsService.test.ts",
-          "apps/api/src/application/ports/runRecoveryCommandCoordinator.ts",
-          "apps/api/src/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.ts",
           "apps/api/src/application/ports/runExecutionContextRequirementResolver.ts",
           "apps/api/src/application/services/StoredPlanRunExecutionContextRequirementResolver.ts",
           "packages/@dvt/engine/src/services/startRun/runExecutionContextRequirements.ts",
           "apps/api/test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts",
           "apps/api/test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts",
-          "apps/api/test/infrastructure/dbt/immutableFileArtifactWriter.test.ts"
+          "apps/api/test/infrastructure/dbt/immutableFileArtifactWriter.test.ts",
+          "packages/@dvt/adapter-postgres/src/PostgresStartRunIntentStore.ts"
         ],
-        "forbiddenImplementationSurfaces": ["tools/planning-db/schema.sql"]
+        "forbiddenImplementationSurfaces": [
+          "tools/planning-db/schema.sql",
+          "apps/api/src/application/ports/runRecoveryCommandCoordinator.ts",
+          "apps/api/src/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.ts"
+        ]
       },
-      "revision": 5,
+      "revision": 6,
       "createdBy": "codex",
       "createdAt": "2026-08-02T14:27:24.648Z"
+    },
+    {
+      "railId": "local#US-F4-3-RUN-CONTROLS#command#signalrun",
+      "featureId": "US-F4-3-RUN-CONTROLS",
+      "mechanizationStatus": "implemented",
+      "railName": "SignalRun",
+      "normalizedRailName": "signalrun",
+      "railType": "command",
+      "dddOwner": "RunCommandApplicationService",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "apps/api/src/application/services/signalRunUseCase.ts#SignalRunUseCase",
+        "apps/api/src/entrypoints/http/signalRunRouteParser.ts#parseSignalRunRequest",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#parseSignalRunCommand",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#SUPPORTED_RUN_SIGNAL_TYPES"
+      ],
+      "implementationRefs": [
+        "apps/api/src/application/services/signalRunUseCase.ts#SignalRunUseCase",
+        "apps/api/src/entrypoints/http/signalRunRouteParser.ts#parseSignalRunRequest",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#parseSignalRunCommand",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#SUPPORTED_RUN_SIGNAL_TYPES"
+      ],
+      "documentationRefs": [
+        "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "apps/api/src/application/services/signalRunUseCase.ts",
+        "apps/api/src/entrypoints/http/signalRunRouteParser.ts",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts"
+      ],
+      "architectureGuards": [
+        "apps/api/test/application/services/signalRunUseCase.test.ts"
+      ],
+      "completionGate": ["pnpm verify:prepush"],
+      "sourcePath": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+      "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+      "rawRail": {
+        "name": "SignalRun",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "RunCommandApplicationService",
+        "negativeTests": [
+          "reject CANCEL and every signal outside the PAUSE and RESUME public vocabulary"
+        ],
+        "adapterSurface": "POST /api/v1/runs/:runId/signal",
+        "applicationPort": "ISignalRunUseCase",
+        "authorizationScope": "authenticated tenant plus persisted run tenant equality"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "SignalRunUseCase",
+            "path": "apps/api/src/application/services/signalRunUseCase.ts",
+            "cqRails": ["SignalRun"],
+            "dddOwner": "RunCommandApplicationService",
+            "unitTests": [
+              "apps/api/test/application/services/signalRunUseCase.test.ts"
+            ],
+            "fowlerSignals": [
+              "SignalRun carries only PAUSE or RESUME; cancellation remains a separate engine command."
+            ],
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "apps/api/test/application/services/signalRunUseCase.test.ts"
+          },
+          {
+            "name": "parseSignalRunRequest",
+            "path": "apps/api/src/entrypoints/http/signalRunRouteParser.ts",
+            "cqRails": ["SignalRun"],
+            "dddOwner": "RunCommandApplicationService",
+            "unitTests": [
+              "apps/api/test/application/services/signalRunUseCase.test.ts"
+            ],
+            "fowlerSignals": [
+              "SignalRun carries only PAUSE or RESUME; cancellation remains a separate engine command."
+            ],
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "apps/api/test/application/services/signalRunUseCase.test.ts"
+          },
+          {
+            "name": "parseSignalRunCommand",
+            "path": "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts",
+            "cqRails": ["SignalRun"],
+            "dddOwner": "RunCommandApplicationService",
+            "unitTests": [
+              "apps/api/test/application/services/signalRunUseCase.test.ts"
+            ],
+            "fowlerSignals": [
+              "SignalRun carries only PAUSE or RESUME; cancellation remains a separate engine command."
+            ],
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "apps/api/test/application/services/signalRunUseCase.test.ts"
+          },
+          {
+            "name": "SUPPORTED_RUN_SIGNAL_TYPES",
+            "path": "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts",
+            "cqRails": ["SignalRun"],
+            "dddOwner": "RunCommandApplicationService",
+            "unitTests": [
+              "apps/api/test/application/services/signalRunUseCase.test.ts"
+            ],
+            "fowlerSignals": [
+              "SignalRun carries only PAUSE or RESUME; cancellation remains a separate engine command."
+            ],
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "apps/api/test/application/services/signalRunUseCase.test.ts"
+          }
+        ],
+        "version": 1,
+        "featureId": "US-F4-3-RUN-CONTROLS",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2169"],
+        "cypressFlows": [
+          "apps/api/test/integration/protectedRuntime.integration.test.ts"
+        ],
+        "domainObjects": ["RunSignalCommand"],
+        "fowlerSignals": [
+          "SignalRun carries only PAUSE or RESUME; cancellation remains a separate engine command."
+        ],
+        "completionGate": ["pnpm verify:prepush"],
+        "redGreenCycles": [
+          {
+            "id": "signalrun-record",
+            "redTest": "pnpm --filter dvt-api exec vitest run test/application/services/signalRunUseCase.test.ts",
+            "greenTest": "pnpm --filter dvt-api exec vitest run test/application/services/signalRunUseCase.test.ts",
+            "patchSurfaces": [
+              "apps/api/src/application/services/signalRunUseCase.ts",
+              "apps/api/src/entrypoints/http/signalRunRouteParser.ts",
+              "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts"
+            ],
+            "expectedFailure": "Generic cancellation is accepted through the signal route or vocabulary diverges by adapter."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "SignalRun",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "RunCommandApplicationService",
+            "negativeTests": [
+              "reject CANCEL and every signal outside the PAUSE and RESUME public vocabulary"
+            ],
+            "adapterSurface": "POST /api/v1/runs/:runId/signal",
+            "applicationPort": "ISignalRunUseCase",
+            "authorizationScope": "authenticated tenant plus persisted run tenant equality"
+          }
+        ],
+        "architectureGuards": [
+          "apps/api/test/application/services/signalRunUseCase.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2169#issuecomment-5279182370",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/services/signalRunUseCase.ts",
+          "apps/api/src/entrypoints/http/signalRunRouteParser.ts",
+          "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/signalRunAuthorization.constants.ts",
+          "apps/api/src/entrypoints/http/signalRunValidation.constants.ts"
+        ]
+      },
+      "revision": 0,
+      "createdBy": "codex",
+      "createdAt": "2026-08-13T12:28:09.265Z"
     },
     {
       "railId": "local#US-F4-3-RUN-CONTROLS#query#getrunstatus",
@@ -156103,53 +155531,18 @@
       "dddOwner": "RunOperationalReadModel",
       "railStatus": "implemented",
       "symbolRefs": [
-        "apps/api/src/application/ports/runtime.ts#RunControlActionAvailabilityDto",
-        "apps/api/src/application/ports/runtime.ts#RunControlAvailabilityDto",
-        "apps/api/src/application/ports/runtime.ts#RunControlUnavailableReason",
+        "apps/api/src/application/services/getRunUseCase.ts#GetRunUseCase",
         "apps/api/src/application/services/runControlPolicy.ts#projectRunControlAvailability",
-        "apps/web/src/app/components/runs/RunControlActions.tsx#RunControlActions",
-        "apps/web/src/app/components/runs/RunControlActions.tsx#RunControlActionsProps",
-        "apps/web/src/app/components/runs/RunControlActions.tsx#describeOutcome",
-        "apps/web/src/app/components/runs/runControlCopy.ts#EN_COPY",
-        "apps/web/src/app/components/runs/runControlCopy.ts#ES_COPY",
-        "apps/web/src/app/components/runs/runControlCopy.ts#RunControlCopy",
-        "apps/web/src/app/components/runs/runControlCopy.ts#detectRunControlLocale",
-        "apps/web/src/app/components/runs/runControlCopy.ts#resolveRunControlCopy",
-        "apps/web/src/app/components/shell/OperationalDrawerPanelPrimitives.tsx#OperationalDrawerRunLayout",
-        "apps/web/src/app/components/shell/operationalDrawerContributionStore.ts#OperationalDrawerRunControls",
-        "apps/web/src/app/ports/runs.ts#RunControlActionAvailability",
-        "apps/web/src/app/ports/runs.ts#RunControlAvailability",
-        "apps/web/src/app/ports/runs.ts#RunControlUnavailableReason",
-        "apps/web/src/app/services/runs/runsApiDecoders.ts#RUN_CONTROL_UNAVAILABLE_REASONS",
-        "apps/web/src/app/services/runs/runsApiDecoders.ts#parseRunControlAction",
-        "apps/web/src/app/services/runs/runsApiDecoders.ts#parseRunControlAvailability",
-        "apps/web/src/app/views/canvas/useCanvasRunControlSurface.ts#useCanvasRunControlSurface"
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#RunControlAvailability"
       ],
       "implementationRefs": [
-        "apps/api/src/application/ports/runtime.ts#RunControlActionAvailabilityDto",
-        "apps/api/src/application/ports/runtime.ts#RunControlAvailabilityDto",
-        "apps/api/src/application/ports/runtime.ts#RunControlUnavailableReason",
+        "apps/api/src/application/services/getRunUseCase.ts#GetRunUseCase",
         "apps/api/src/application/services/runControlPolicy.ts#projectRunControlAvailability",
-        "apps/web/src/app/components/runs/RunControlActions.tsx#RunControlActions",
-        "apps/web/src/app/components/runs/RunControlActions.tsx#RunControlActionsProps",
-        "apps/web/src/app/components/runs/RunControlActions.tsx#describeOutcome",
-        "apps/web/src/app/components/runs/runControlCopy.ts#EN_COPY",
-        "apps/web/src/app/components/runs/runControlCopy.ts#ES_COPY",
-        "apps/web/src/app/components/runs/runControlCopy.ts#RunControlCopy",
-        "apps/web/src/app/components/runs/runControlCopy.ts#detectRunControlLocale",
-        "apps/web/src/app/components/runs/runControlCopy.ts#resolveRunControlCopy",
-        "apps/web/src/app/components/shell/OperationalDrawerPanelPrimitives.tsx#OperationalDrawerRunLayout",
-        "apps/web/src/app/components/shell/operationalDrawerContributionStore.ts#OperationalDrawerRunControls",
-        "apps/web/src/app/ports/runs.ts#RunControlActionAvailability",
-        "apps/web/src/app/ports/runs.ts#RunControlAvailability",
-        "apps/web/src/app/ports/runs.ts#RunControlUnavailableReason",
-        "apps/web/src/app/services/runs/runsApiDecoders.ts#RUN_CONTROL_UNAVAILABLE_REASONS",
-        "apps/web/src/app/services/runs/runsApiDecoders.ts#parseRunControlAction",
-        "apps/web/src/app/services/runs/runsApiDecoders.ts#parseRunControlAvailability",
-        "apps/web/src/app/views/canvas/useCanvasRunControlSurface.ts#useCanvasRunControlSurface"
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#RunControlAvailability"
       ],
       "documentationRefs": [
-        "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md"
+        "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
+        "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md"
       ],
       "governingSources": [
         "docs/architecture/command-query-rail-governance.md",
@@ -156164,67 +155557,47 @@
         "apps/web/src/app/components/shell/operationalDrawerContributionStore.ts",
         "apps/web/src/app/ports/runs.ts",
         "apps/web/src/app/services/runs/runsApiDecoders.ts",
-        "apps/web/src/app/views/canvas/useCanvasRunControlSurface.ts"
+        "apps/web/src/app/views/canvas/useCanvasRunControlSurface.ts",
+        "apps/api/src/application/services/getRunUseCase.ts",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts"
       ],
       "architectureGuards": [
-        "apps/web/src/app/queries/queryKeyPolicy.architecture.test.ts"
+        "apps/api/test/application/services/getRunUseCase.test.ts"
       ],
       "completionGate": [
         "pnpm docs:feature-mechanization:implementation",
         "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
         "pnpm verify:prepush"
       ],
-      "sourcePath": "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
-      "sourceContentSha256": "140d82fb7e216bf94f209aa8d5f7b50aa632aee42106e1adc7b92ef7c78edf62",
+      "sourcePath": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+      "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
       "rawRail": {
         "name": "GetRunStatus",
         "type": "query",
         "status": "implemented",
-        "dddOwner": "RunOperationalReadModel"
+        "dddOwner": "RunOperationalReadModel",
+        "negativeTests": [
+          "reject cross-tenant access and propagate unexpected persistence failures without synthetic snapshots"
+        ],
+        "adapterSurface": "GET /api/v1/runs/:runId",
+        "applicationPort": "IWorkflowEngine.getRunStatus and IGetRunUseCase",
+        "authorizationScope": "authenticated tenant plus persisted run tenant equality"
       },
       "rawManifest": {
         "symbols": [
           {
-            "name": "RunControlActionAvailabilityDto",
-            "path": "apps/api/src/application/ports/runtime.ts",
+            "name": "GetRunUseCase",
+            "path": "apps/api/src/application/services/getRunUseCase.ts",
             "cqRails": ["GetRunStatus"],
             "dddOwner": "RunOperationalReadModel",
             "unitTests": [
-              "apps/web/src/app/services/runs/runsApiSnapshotMapper.test.ts"
+              "apps/api/test/application/services/getRunUseCase.test.ts"
             ],
             "fowlerSignals": [
-              "All control availability is projected from canonical backend status and decoded once for every Web surface."
+              "The read model exposes persisted lifecycle truth and fails closed when recovery evidence is unavailable."
             ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "apps/web/src/app/queries/queryKeyPolicy.architecture.test.ts"
-          },
-          {
-            "name": "RunControlAvailabilityDto",
-            "path": "apps/api/src/application/ports/runtime.ts",
-            "cqRails": ["GetRunStatus"],
-            "dddOwner": "RunOperationalReadModel",
-            "unitTests": [
-              "apps/web/src/app/services/runs/runsApiSnapshotMapper.test.ts"
-            ],
-            "fowlerSignals": [
-              "All control availability is projected from canonical backend status and decoded once for every Web surface."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "apps/web/src/app/queries/queryKeyPolicy.architecture.test.ts"
-          },
-          {
-            "name": "RunControlUnavailableReason",
-            "path": "apps/api/src/application/ports/runtime.ts",
-            "cqRails": ["GetRunStatus"],
-            "dddOwner": "RunOperationalReadModel",
-            "unitTests": [
-              "apps/web/src/app/services/runs/runsApiSnapshotMapper.test.ts"
-            ],
-            "fowlerSignals": [
-              "All control availability is projected from canonical backend status and decoded once for every Web surface."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "apps/web/src/app/queries/queryKeyPolicy.architecture.test.ts"
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "apps/api/test/application/services/getRunUseCase.test.ts"
           },
           {
             "name": "projectRunControlAvailability",
@@ -156232,260 +155605,43 @@
             "cqRails": ["GetRunStatus"],
             "dddOwner": "RunOperationalReadModel",
             "unitTests": [
-              "apps/web/src/app/services/runs/runsApiSnapshotMapper.test.ts"
+              "apps/api/test/application/services/getRunUseCase.test.ts"
             ],
             "fowlerSignals": [
-              "All control availability is projected from canonical backend status and decoded once for every Web surface."
+              "The read model exposes persisted lifecycle truth and fails closed when recovery evidence is unavailable."
             ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "apps/web/src/app/queries/queryKeyPolicy.architecture.test.ts"
-          },
-          {
-            "name": "RunControlActions",
-            "path": "apps/web/src/app/components/runs/RunControlActions.tsx",
-            "cqRails": ["GetRunStatus"],
-            "dddOwner": "RunOperationalReadModel",
-            "unitTests": [
-              "apps/web/src/app/services/runs/runsApiSnapshotMapper.test.ts"
-            ],
-            "fowlerSignals": [
-              "All control availability is projected from canonical backend status and decoded once for every Web surface."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "apps/web/src/app/queries/queryKeyPolicy.architecture.test.ts"
-          },
-          {
-            "name": "RunControlActionsProps",
-            "path": "apps/web/src/app/components/runs/RunControlActions.tsx",
-            "cqRails": ["GetRunStatus"],
-            "dddOwner": "RunOperationalReadModel",
-            "unitTests": [
-              "apps/web/src/app/services/runs/runsApiSnapshotMapper.test.ts"
-            ],
-            "fowlerSignals": [
-              "All control availability is projected from canonical backend status and decoded once for every Web surface."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "apps/web/src/app/queries/queryKeyPolicy.architecture.test.ts"
-          },
-          {
-            "name": "describeOutcome",
-            "path": "apps/web/src/app/components/runs/RunControlActions.tsx",
-            "cqRails": ["GetRunStatus"],
-            "dddOwner": "RunOperationalReadModel",
-            "unitTests": [
-              "apps/web/src/app/services/runs/runsApiSnapshotMapper.test.ts"
-            ],
-            "fowlerSignals": [
-              "All control availability is projected from canonical backend status and decoded once for every Web surface."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "apps/web/src/app/queries/queryKeyPolicy.architecture.test.ts"
-          },
-          {
-            "name": "EN_COPY",
-            "path": "apps/web/src/app/components/runs/runControlCopy.ts",
-            "cqRails": ["GetRunStatus"],
-            "dddOwner": "RunOperationalReadModel",
-            "unitTests": [
-              "apps/web/src/app/services/runs/runsApiSnapshotMapper.test.ts"
-            ],
-            "fowlerSignals": [
-              "All control availability is projected from canonical backend status and decoded once for every Web surface."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "apps/web/src/app/queries/queryKeyPolicy.architecture.test.ts"
-          },
-          {
-            "name": "ES_COPY",
-            "path": "apps/web/src/app/components/runs/runControlCopy.ts",
-            "cqRails": ["GetRunStatus"],
-            "dddOwner": "RunOperationalReadModel",
-            "unitTests": [
-              "apps/web/src/app/services/runs/runsApiSnapshotMapper.test.ts"
-            ],
-            "fowlerSignals": [
-              "All control availability is projected from canonical backend status and decoded once for every Web surface."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "apps/web/src/app/queries/queryKeyPolicy.architecture.test.ts"
-          },
-          {
-            "name": "RunControlCopy",
-            "path": "apps/web/src/app/components/runs/runControlCopy.ts",
-            "cqRails": ["GetRunStatus"],
-            "dddOwner": "RunOperationalReadModel",
-            "unitTests": [
-              "apps/web/src/app/services/runs/runsApiSnapshotMapper.test.ts"
-            ],
-            "fowlerSignals": [
-              "All control availability is projected from canonical backend status and decoded once for every Web surface."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "apps/web/src/app/queries/queryKeyPolicy.architecture.test.ts"
-          },
-          {
-            "name": "detectRunControlLocale",
-            "path": "apps/web/src/app/components/runs/runControlCopy.ts",
-            "cqRails": ["GetRunStatus"],
-            "dddOwner": "RunOperationalReadModel",
-            "unitTests": [
-              "apps/web/src/app/services/runs/runsApiSnapshotMapper.test.ts"
-            ],
-            "fowlerSignals": [
-              "All control availability is projected from canonical backend status and decoded once for every Web surface."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "apps/web/src/app/queries/queryKeyPolicy.architecture.test.ts"
-          },
-          {
-            "name": "resolveRunControlCopy",
-            "path": "apps/web/src/app/components/runs/runControlCopy.ts",
-            "cqRails": ["GetRunStatus"],
-            "dddOwner": "RunOperationalReadModel",
-            "unitTests": [
-              "apps/web/src/app/services/runs/runsApiSnapshotMapper.test.ts"
-            ],
-            "fowlerSignals": [
-              "All control availability is projected from canonical backend status and decoded once for every Web surface."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "apps/web/src/app/queries/queryKeyPolicy.architecture.test.ts"
-          },
-          {
-            "name": "OperationalDrawerRunLayout",
-            "path": "apps/web/src/app/components/shell/OperationalDrawerPanelPrimitives.tsx",
-            "cqRails": ["GetRunStatus"],
-            "dddOwner": "RunOperationalReadModel",
-            "unitTests": [
-              "apps/web/src/app/services/runs/runsApiSnapshotMapper.test.ts"
-            ],
-            "fowlerSignals": [
-              "All control availability is projected from canonical backend status and decoded once for every Web surface."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "apps/web/src/app/queries/queryKeyPolicy.architecture.test.ts"
-          },
-          {
-            "name": "OperationalDrawerRunControls",
-            "path": "apps/web/src/app/components/shell/operationalDrawerContributionStore.ts",
-            "cqRails": ["GetRunStatus"],
-            "dddOwner": "RunOperationalReadModel",
-            "unitTests": [
-              "apps/web/src/app/services/runs/runsApiSnapshotMapper.test.ts"
-            ],
-            "fowlerSignals": [
-              "All control availability is projected from canonical backend status and decoded once for every Web surface."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "apps/web/src/app/queries/queryKeyPolicy.architecture.test.ts"
-          },
-          {
-            "name": "RunControlActionAvailability",
-            "path": "apps/web/src/app/ports/runs.ts",
-            "cqRails": ["GetRunStatus"],
-            "dddOwner": "RunOperationalReadModel",
-            "unitTests": [
-              "apps/web/src/app/services/runs/runsApiSnapshotMapper.test.ts"
-            ],
-            "fowlerSignals": [
-              "All control availability is projected from canonical backend status and decoded once for every Web surface."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "apps/web/src/app/queries/queryKeyPolicy.architecture.test.ts"
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "apps/api/test/application/services/getRunUseCase.test.ts"
           },
           {
             "name": "RunControlAvailability",
-            "path": "apps/web/src/app/ports/runs.ts",
+            "path": "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts",
             "cqRails": ["GetRunStatus"],
             "dddOwner": "RunOperationalReadModel",
             "unitTests": [
-              "apps/web/src/app/services/runs/runsApiSnapshotMapper.test.ts"
+              "apps/api/test/application/services/getRunUseCase.test.ts"
             ],
             "fowlerSignals": [
-              "All control availability is projected from canonical backend status and decoded once for every Web surface."
+              "The read model exposes persisted lifecycle truth and fails closed when recovery evidence is unavailable."
             ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "apps/web/src/app/queries/queryKeyPolicy.architecture.test.ts"
-          },
-          {
-            "name": "RunControlUnavailableReason",
-            "path": "apps/web/src/app/ports/runs.ts",
-            "cqRails": ["GetRunStatus"],
-            "dddOwner": "RunOperationalReadModel",
-            "unitTests": [
-              "apps/web/src/app/services/runs/runsApiSnapshotMapper.test.ts"
-            ],
-            "fowlerSignals": [
-              "All control availability is projected from canonical backend status and decoded once for every Web surface."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "apps/web/src/app/queries/queryKeyPolicy.architecture.test.ts"
-          },
-          {
-            "name": "RUN_CONTROL_UNAVAILABLE_REASONS",
-            "path": "apps/web/src/app/services/runs/runsApiDecoders.ts",
-            "cqRails": ["GetRunStatus"],
-            "dddOwner": "RunOperationalReadModel",
-            "unitTests": [
-              "apps/web/src/app/services/runs/runsApiSnapshotMapper.test.ts"
-            ],
-            "fowlerSignals": [
-              "All control availability is projected from canonical backend status and decoded once for every Web surface."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "apps/web/src/app/queries/queryKeyPolicy.architecture.test.ts"
-          },
-          {
-            "name": "parseRunControlAction",
-            "path": "apps/web/src/app/services/runs/runsApiDecoders.ts",
-            "cqRails": ["GetRunStatus"],
-            "dddOwner": "RunOperationalReadModel",
-            "unitTests": [
-              "apps/web/src/app/services/runs/runsApiSnapshotMapper.test.ts"
-            ],
-            "fowlerSignals": [
-              "All control availability is projected from canonical backend status and decoded once for every Web surface."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "apps/web/src/app/queries/queryKeyPolicy.architecture.test.ts"
-          },
-          {
-            "name": "parseRunControlAvailability",
-            "path": "apps/web/src/app/services/runs/runsApiDecoders.ts",
-            "cqRails": ["GetRunStatus"],
-            "dddOwner": "RunOperationalReadModel",
-            "unitTests": [
-              "apps/web/src/app/services/runs/runsApiSnapshotMapper.test.ts"
-            ],
-            "fowlerSignals": [
-              "All control availability is projected from canonical backend status and decoded once for every Web surface."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "apps/web/src/app/queries/queryKeyPolicy.architecture.test.ts"
-          },
-          {
-            "name": "useCanvasRunControlSurface",
-            "path": "apps/web/src/app/views/canvas/useCanvasRunControlSurface.ts",
-            "cqRails": ["GetRunStatus"],
-            "dddOwner": "RunOperationalReadModel",
-            "unitTests": [
-              "apps/web/src/app/services/runs/runsApiSnapshotMapper.test.ts"
-            ],
-            "fowlerSignals": [
-              "All control availability is projected from canonical backend status and decoded once for every Web surface."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "apps/web/src/app/queries/queryKeyPolicy.architecture.test.ts"
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "apps/api/test/application/services/getRunUseCase.test.ts"
           }
         ],
         "version": 1,
         "featureId": "US-F4-3-RUN-CONTROLS",
-        "userStories": ["https://github.com/dunay2/dvt/issues/2103"],
-        "cypressFlows": ["apps/web/cypress/e2e/runs/run-controls-live.cy.ts"],
-        "domainObjects": ["RunControlAvailability"],
+        "userStories": [
+          "https://github.com/dunay2/dvt/issues/2103",
+          "https://github.com/dunay2/dvt/issues/2169"
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
+          "apps/api/test/integration/protectedRuntime.integration.test.ts"
+        ],
+        "domainObjects": ["RunControlAvailability", "RunOperationalSnapshot"],
         "fowlerSignals": [
-          "All control availability is projected from canonical backend status and decoded once for every Web surface."
+          "All control availability is projected from canonical backend status and decoded once for every Web surface.",
+          "The read model exposes persisted lifecycle truth and fails closed when recovery evidence is unavailable."
         ],
         "completionGate": [
           "pnpm docs:feature-mechanization:implementation",
@@ -156495,8 +155651,8 @@
         "redGreenCycles": [
           {
             "id": "getrunstatus-record",
-            "redTest": "pnpm --filter @dvt/web exec vitest run src/app/services/runs/runsApiSnapshotMapper.test.ts --config vitest.unit.config.ts",
-            "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/services/runs/runsApiSnapshotMapper.test.ts --config vitest.unit.config.ts",
+            "redTest": "pnpm --filter dvt-api exec vitest run test/application/services/getRunUseCase.test.ts",
+            "greenTest": "pnpm --filter dvt-api exec vitest run test/application/services/getRunUseCase.test.ts",
             "patchSurfaces": [
               "apps/api/src/application/ports/runtime.ts",
               "apps/api/src/application/services/runControlPolicy.ts",
@@ -156506,9 +155662,11 @@
               "apps/web/src/app/components/shell/operationalDrawerContributionStore.ts",
               "apps/web/src/app/ports/runs.ts",
               "apps/web/src/app/services/runs/runsApiDecoders.ts",
-              "apps/web/src/app/views/canvas/useCanvasRunControlSurface.ts"
+              "apps/web/src/app/views/canvas/useCanvasRunControlSurface.ts",
+              "apps/api/src/application/services/getRunUseCase.ts",
+              "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts"
             ],
-            "expectedFailure": "Web infers control availability or presentation owns query policy."
+            "expectedFailure": "Unexpected persistence errors are hidden by a synthetic or incomplete run snapshot."
           }
         ],
         "componentGuides": [
@@ -156523,13 +155681,19 @@
             "name": "GetRunStatus",
             "type": "query",
             "status": "implemented",
-            "dddOwner": "RunOperationalReadModel"
+            "dddOwner": "RunOperationalReadModel",
+            "negativeTests": [
+              "reject cross-tenant access and propagate unexpected persistence failures without synthetic snapshots"
+            ],
+            "adapterSurface": "GET /api/v1/runs/:runId",
+            "applicationPort": "IWorkflowEngine.getRunStatus and IGetRunUseCase",
+            "authorizationScope": "authenticated tenant plus persisted run tenant equality"
           }
         ],
         "architectureGuards": [
-          "apps/web/src/app/queries/queryKeyPolicy.architecture.test.ts"
+          "apps/api/test/application/services/getRunUseCase.test.ts"
         ],
-        "implementationPlan": "https://github.com/dunay2/dvt/issues/2103#issuecomment-5157653363",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2169#issuecomment-5279182370",
         "mechanizationStatus": "implemented",
         "noHumanDecisionsRemaining": true,
         "allowedImplementationSurfaces": [
@@ -156541,13 +155705,172 @@
           "apps/web/src/app/components/shell/operationalDrawerContributionStore.ts",
           "apps/web/src/app/ports/runs.ts",
           "apps/web/src/app/services/runs/runsApiDecoders.ts",
-          "apps/web/src/app/views/canvas/useCanvasRunControlSurface.ts"
+          "apps/web/src/app/views/canvas/useCanvasRunControlSurface.ts",
+          "apps/api/src/application/services/getRunUseCase.ts",
+          "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts"
         ],
-        "forbiddenImplementationSurfaces": ["tools/planning-db/schema.sql"]
+        "forbiddenImplementationSurfaces": [
+          "tools/planning-db/schema.sql",
+          "apps/api/src/application/ports/runControlCommandCoordinator.ts",
+          "apps/web/src/app/services/runs/runsApiControlReceipts.ts"
+        ]
       },
-      "revision": 1,
+      "revision": 2,
       "createdBy": "codex",
       "createdAt": "2026-08-02T14:27:26.844Z"
+    },
+    {
+      "railId": "local#US-F4-3-RUN-CONTROLS#query#listrunevents",
+      "featureId": "US-F4-3-RUN-CONTROLS",
+      "mechanizationStatus": "implemented",
+      "railName": "ListRunEvents",
+      "normalizedRailName": "listrunevents",
+      "railType": "query",
+      "dddOwner": "RunEventFeedReadModel",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "apps/api/src/application/services/getRunEventsUseCase.ts#GetRunEventsUseCase",
+        "apps/api/src/entrypoints/http/getRunEventsRouteParser.ts#parseGetRunEventsRequest",
+        "apps/api/src/entrypoints/http/getRunEventsRouteParser.constants.ts#GET_RUN_EVENTS_LIMIT"
+      ],
+      "implementationRefs": [
+        "apps/api/src/application/services/getRunEventsUseCase.ts#GetRunEventsUseCase",
+        "apps/api/src/entrypoints/http/getRunEventsRouteParser.ts#parseGetRunEventsRequest",
+        "apps/api/src/entrypoints/http/getRunEventsRouteParser.constants.ts#GET_RUN_EVENTS_LIMIT"
+      ],
+      "documentationRefs": [
+        "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "apps/api/src/application/services/getRunEventsUseCase.ts",
+        "apps/api/src/entrypoints/http/getRunEventsRouteParser.ts"
+      ],
+      "architectureGuards": [
+        "apps/api/test/application/services/getRunEventsUseCase.test.ts"
+      ],
+      "completionGate": ["pnpm verify:prepush"],
+      "sourcePath": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+      "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+      "rawRail": {
+        "name": "ListRunEvents",
+        "type": "query",
+        "status": "implemented",
+        "dddOwner": "RunEventFeedReadModel",
+        "negativeTests": [
+          "reject cross-tenant event reads, malformed cursors and out-of-range limits"
+        ],
+        "adapterSurface": "GET /api/v1/runs/:runId/events",
+        "applicationPort": "IGetRunEventsUseCase",
+        "authorizationScope": "authenticated tenant plus persisted run tenant equality with bounded cursor pagination"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "GetRunEventsUseCase",
+            "path": "apps/api/src/application/services/getRunEventsUseCase.ts",
+            "cqRails": ["ListRunEvents"],
+            "dddOwner": "RunEventFeedReadModel",
+            "unitTests": [
+              "apps/api/test/application/services/getRunEventsUseCase.test.ts"
+            ],
+            "fowlerSignals": [
+              "One cursor-backed event query exposes durable lifecycle evidence without a parallel feed command."
+            ],
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "apps/api/test/application/services/getRunEventsUseCase.test.ts"
+          },
+          {
+            "name": "parseGetRunEventsRequest",
+            "path": "apps/api/src/entrypoints/http/getRunEventsRouteParser.ts",
+            "cqRails": ["ListRunEvents"],
+            "dddOwner": "RunEventFeedReadModel",
+            "unitTests": [
+              "apps/api/test/application/services/getRunEventsUseCase.test.ts"
+            ],
+            "fowlerSignals": [
+              "One cursor-backed event query exposes durable lifecycle evidence without a parallel feed command."
+            ],
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "apps/api/test/application/services/getRunEventsUseCase.test.ts"
+          },
+          {
+            "name": "GET_RUN_EVENTS_LIMIT",
+            "path": "apps/api/src/entrypoints/http/getRunEventsRouteParser.constants.ts",
+            "cqRails": ["ListRunEvents"],
+            "dddOwner": "RunEventFeedReadModel",
+            "unitTests": [
+              "apps/api/test/application/services/getRunEventsUseCase.test.ts"
+            ],
+            "fowlerSignals": [
+              "One cursor-backed event query exposes durable lifecycle evidence without a parallel feed command."
+            ],
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "apps/api/test/application/services/getRunEventsUseCase.test.ts"
+          }
+        ],
+        "version": 1,
+        "featureId": "US-F4-3-RUN-CONTROLS",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2169"],
+        "cypressFlows": [
+          "apps/api/test/integration/protectedRuntime.integration.test.ts"
+        ],
+        "domainObjects": ["RunLifecycleEventFeed"],
+        "fowlerSignals": [
+          "One cursor-backed event query exposes durable lifecycle evidence without a parallel feed command."
+        ],
+        "completionGate": ["pnpm verify:prepush"],
+        "redGreenCycles": [
+          {
+            "id": "listrunevents-record",
+            "redTest": "pnpm --filter dvt-api exec vitest run test/application/services/getRunEventsUseCase.test.ts",
+            "greenTest": "pnpm --filter dvt-api exec vitest run test/application/services/getRunEventsUseCase.test.ts",
+            "patchSurfaces": [
+              "apps/api/src/application/services/getRunEventsUseCase.ts",
+              "apps/api/src/entrypoints/http/getRunEventsRouteParser.ts"
+            ],
+            "expectedFailure": "Event reads bypass tenant scope or expose an unbounded or parallel pagination model."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ListRunEvents",
+            "type": "query",
+            "status": "implemented",
+            "dddOwner": "RunEventFeedReadModel",
+            "negativeTests": [
+              "reject cross-tenant event reads, malformed cursors and out-of-range limits"
+            ],
+            "adapterSurface": "GET /api/v1/runs/:runId/events",
+            "applicationPort": "IGetRunEventsUseCase",
+            "authorizationScope": "authenticated tenant plus persisted run tenant equality with bounded cursor pagination"
+          }
+        ],
+        "architectureGuards": [
+          "apps/api/test/application/services/getRunEventsUseCase.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2169#issuecomment-5279182370",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/services/getRunEventsUseCase.ts",
+          "apps/api/src/entrypoints/http/getRunEventsRouteParser.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/web/src/app/services/runs/runsApiControlReceipts.ts"
+        ]
+      },
+      "revision": 0,
+      "createdBy": "codex",
+      "createdAt": "2026-08-13T12:28:10.491Z"
     },
     {
       "railId": "local#US-F4-3-RUN-CONTROLS#query#listruns",
@@ -156557,63 +155880,95 @@
       "normalizedRailName": "listruns",
       "railType": "query",
       "dddOwner": "RunOperationalReadModel",
-      "railStatus": "deprecated",
+      "railStatus": "implemented",
       "symbolRefs": [
-        "apps/web/src/app/views/runs/RunListStateView.tsx#RunListStateView"
+        "apps/api/src/application/services/listRunsUseCase.ts#ListRunsUseCase",
+        "apps/api/src/entrypoints/http/listRunsRouteParser.ts#parseListRunsRequest"
       ],
       "implementationRefs": [
-        "apps/web/src/app/views/runs/RunListStateView.tsx#RunListStateView"
+        "apps/api/src/application/services/listRunsUseCase.ts#ListRunsUseCase",
+        "apps/api/src/entrypoints/http/listRunsRouteParser.ts#parseListRunsRequest"
       ],
       "documentationRefs": [
-        "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md"
+        "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
+        "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md"
       ],
       "governingSources": [
         "docs/architecture/command-query-rail-governance.md",
         "docs/architecture/fowler-opportunity-planning-governance.md"
       ],
       "allowedImplementationSurfaces": [
-        "apps/web/src/app/views/runs/RunListStateView.tsx"
+        "apps/web/src/app/views/runs/RunListStateView.tsx",
+        "apps/api/src/application/services/listRunsUseCase.ts",
+        "apps/api/src/entrypoints/http/listRunsRouteParser.ts"
       ],
       "architectureGuards": [
-        "apps/web/src/app/views/runs/runsDomainBoundary.architecture.test.ts"
+        "apps/api/test/application/services/listRunsUseCase.test.ts"
       ],
       "completionGate": [
         "pnpm docs:feature-mechanization:implementation",
         "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
         "pnpm verify:prepush"
       ],
-      "sourcePath": "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
-      "sourceContentSha256": "140d82fb7e216bf94f209aa8d5f7b50aa632aee42106e1adc7b92ef7c78edf62",
+      "sourcePath": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+      "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
       "rawRail": {
         "name": "ListRuns",
         "type": "query",
-        "status": "deprecated",
-        "dddOwner": "RunOperationalReadModel"
+        "status": "implemented",
+        "dddOwner": "RunOperationalReadModel",
+        "negativeTests": [
+          "exclude other project and environment rows before limiting and reject empty scope identifiers"
+        ],
+        "adapterSurface": "GET /api/v1/runs",
+        "applicationPort": "IListRunsUseCase",
+        "authorizationScope": "authenticated tenant with project and environment scope applied by storage before limit"
       },
       "rawManifest": {
         "symbols": [
           {
-            "name": "RunListStateView",
-            "path": "apps/web/src/app/views/runs/RunListStateView.tsx",
+            "name": "ListRunsUseCase",
+            "path": "apps/api/src/application/services/listRunsUseCase.ts",
             "cqRails": ["ListRuns"],
             "dddOwner": "RunOperationalReadModel",
             "unitTests": [
-              "apps/web/src/app/views/runs/RunListStateView.test.tsx"
+              "apps/api/test/application/services/listRunsUseCase.test.ts"
             ],
             "fowlerSignals": [
-              "Run list actions consume the same authoritative control projection as detail and Canvas."
+              "Storage applies scope before the caller limit and the API performs no per-run enrichment queries."
             ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "apps/web/src/app/views/runs/runsDomainBoundary.architecture.test.ts"
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "apps/api/test/application/services/listRunsUseCase.test.ts"
+          },
+          {
+            "name": "parseListRunsRequest",
+            "path": "apps/api/src/entrypoints/http/listRunsRouteParser.ts",
+            "cqRails": ["ListRuns"],
+            "dddOwner": "RunOperationalReadModel",
+            "unitTests": [
+              "apps/api/test/application/services/listRunsUseCase.test.ts"
+            ],
+            "fowlerSignals": [
+              "Storage applies scope before the caller limit and the API performs no per-run enrichment queries."
+            ],
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "apps/api/test/application/services/listRunsUseCase.test.ts"
           }
         ],
         "version": 1,
         "featureId": "US-F4-3-RUN-CONTROLS",
-        "userStories": ["https://github.com/dunay2/dvt/issues/2103"],
-        "cypressFlows": ["apps/web/cypress/e2e/runs/run-controls-live.cy.ts"],
+        "userStories": [
+          "https://github.com/dunay2/dvt/issues/2103",
+          "https://github.com/dunay2/dvt/issues/2169"
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
+          "apps/api/test/integration/protectedRuntime.integration.test.ts"
+        ],
         "domainObjects": ["RunSummaryCollection"],
         "fowlerSignals": [
-          "Run list actions consume the same authoritative control projection as detail and Canvas."
+          "Run list actions consume the same authoritative control projection as detail and Canvas.",
+          "Storage applies scope before the caller limit and the API performs no per-run enrichment queries."
         ],
         "completionGate": [
           "pnpm docs:feature-mechanization:implementation",
@@ -156623,12 +155978,14 @@
         "redGreenCycles": [
           {
             "id": "listruns-record",
-            "redTest": "pnpm --filter @dvt/web exec vitest run src/app/views/runs/RunListStateView.test.tsx --config vitest.presentation.config.ts",
-            "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/views/runs/RunListStateView.test.tsx --config vitest.presentation.config.ts",
+            "redTest": "pnpm --filter dvt-api exec vitest run test/application/services/listRunsUseCase.test.ts",
+            "greenTest": "pnpm --filter dvt-api exec vitest run test/application/services/listRunsUseCase.test.ts",
             "patchSurfaces": [
-              "apps/web/src/app/views/runs/RunListStateView.tsx"
+              "apps/web/src/app/views/runs/RunListStateView.tsx",
+              "apps/api/src/application/services/listRunsUseCase.ts",
+              "apps/api/src/entrypoints/http/listRunsRouteParser.ts"
             ],
-            "expectedFailure": "Run list diverges from detail or Canvas control semantics."
+            "expectedFailure": "Post-limit filtering can leak capacity across scopes or return fewer scoped rows than requested."
           }
         ],
         "componentGuides": [
@@ -156642,22 +155999,34 @@
           {
             "name": "ListRuns",
             "type": "query",
-            "status": "deprecated",
-            "dddOwner": "RunOperationalReadModel"
+            "status": "implemented",
+            "dddOwner": "RunOperationalReadModel",
+            "negativeTests": [
+              "exclude other project and environment rows before limiting and reject empty scope identifiers"
+            ],
+            "adapterSurface": "GET /api/v1/runs",
+            "applicationPort": "IListRunsUseCase",
+            "authorizationScope": "authenticated tenant with project and environment scope applied by storage before limit"
           }
         ],
         "architectureGuards": [
-          "apps/web/src/app/views/runs/runsDomainBoundary.architecture.test.ts"
+          "apps/api/test/application/services/listRunsUseCase.test.ts"
         ],
-        "implementationPlan": "https://github.com/dunay2/dvt/issues/2103#issuecomment-5157653363",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2169#issuecomment-5279182370",
         "mechanizationStatus": "implemented",
         "noHumanDecisionsRemaining": true,
         "allowedImplementationSurfaces": [
-          "apps/web/src/app/views/runs/RunListStateView.tsx"
+          "apps/web/src/app/views/runs/RunListStateView.tsx",
+          "apps/api/src/application/services/listRunsUseCase.ts",
+          "apps/api/src/entrypoints/http/listRunsRouteParser.ts"
         ],
-        "forbiddenImplementationSurfaces": ["tools/planning-db/schema.sql"]
+        "forbiddenImplementationSurfaces": [
+          "tools/planning-db/schema.sql",
+          "apps/api/src/application/ports/runControlCommandCoordinator.ts",
+          "packages/@dvt/state-store/src/InMemoryRunStateStore.ts"
+        ]
       },
-      "revision": 1,
+      "revision": 2,
       "createdBy": "codex",
       "createdAt": "2026-08-02T14:27:29.025Z"
     },
@@ -156669,27 +156038,16 @@
       "normalizedRailName": "runeventfeed",
       "railType": "query",
       "dddOwner": "RunEventFeedReadModel",
-      "railStatus": "implemented",
+      "railStatus": "retired",
       "symbolRefs": [
-        "apps/web/cypress/e2e/runs/run-controls-live.cy.ts#LONG_RUNNING_SQL",
-        "apps/web/cypress/e2e/runs/run-controls-live.cy.ts#LiveRunEventResponse",
-        "apps/web/cypress/e2e/runs/run-controls-live.cy.ts#LiveRunSnapshot",
-        "apps/web/cypress/e2e/runs/run-controls-live.cy.ts#authorLongRunningTransform",
-        "apps/web/cypress/e2e/runs/run-controls-live.cy.ts#readEventTypes",
-        "apps/web/cypress/e2e/runs/run-controls-live.cy.ts#waitForPersistedTransformSql",
-        "apps/web/cypress/e2e/runs/run-controls-live.cy.ts#waitForRunStatus"
+        "apps/web/cypress/e2e/runs/run-controls-live.cy.ts#readEventTypes"
       ],
       "implementationRefs": [
-        "apps/web/cypress/e2e/runs/run-controls-live.cy.ts#LONG_RUNNING_SQL",
-        "apps/web/cypress/e2e/runs/run-controls-live.cy.ts#LiveRunEventResponse",
-        "apps/web/cypress/e2e/runs/run-controls-live.cy.ts#LiveRunSnapshot",
-        "apps/web/cypress/e2e/runs/run-controls-live.cy.ts#authorLongRunningTransform",
-        "apps/web/cypress/e2e/runs/run-controls-live.cy.ts#readEventTypes",
-        "apps/web/cypress/e2e/runs/run-controls-live.cy.ts#waitForPersistedTransformSql",
-        "apps/web/cypress/e2e/runs/run-controls-live.cy.ts#waitForRunStatus"
+        "apps/web/cypress/e2e/runs/run-controls-live.cy.ts#readEventTypes"
       ],
       "documentationRefs": [
-        "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md"
+        "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
+        "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md"
       ],
       "governingSources": [
         "docs/architecture/command-query-rail-governance.md",
@@ -156699,129 +156057,58 @@
         "apps/web/cypress/e2e/runs/run-controls-live.cy.ts"
       ],
       "architectureGuards": [
-        "apps/web/src/app/queries/runEventFeedQuery.test.tsx"
+        "apps/api/test/application/services/getRunEventsUseCase.test.ts"
       ],
       "completionGate": [
         "pnpm docs:feature-mechanization:implementation",
         "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
         "pnpm verify:prepush"
       ],
-      "sourcePath": "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
-      "sourceContentSha256": "140d82fb7e216bf94f209aa8d5f7b50aa632aee42106e1adc7b92ef7c78edf62",
+      "sourcePath": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+      "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
       "rawRail": {
         "name": "RunEventFeed",
         "type": "query",
-        "status": "implemented",
-        "dddOwner": "RunEventFeedReadModel"
+        "status": "retired",
+        "dddOwner": "RunEventFeedReadModel",
+        "negativeTests": [
+          "do not register or implement a second RunEventFeed route"
+        ],
+        "adapterSurface": "retired alias; use GET /api/v1/runs/:runId/events",
+        "applicationPort": "retired alias; use ListRunEvents",
+        "authorizationScope": "no new calls; retained only as audited historical vocabulary"
       },
       "rawManifest": {
         "symbols": [
-          {
-            "name": "LONG_RUNNING_SQL",
-            "path": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "cqRails": ["RunEventFeed"],
-            "dddOwner": "RunEventFeedReadModel",
-            "unitTests": [
-              "apps/web/src/app/queries/runEventFeedQuery.test.tsx"
-            ],
-            "fowlerSignals": [
-              "Requested and terminal cancellation evidence converges through the existing cursor-backed event feed."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "apps/web/src/app/queries/runEventFeedQuery.test.tsx"
-          },
-          {
-            "name": "LiveRunEventResponse",
-            "path": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "cqRails": ["RunEventFeed"],
-            "dddOwner": "RunEventFeedReadModel",
-            "unitTests": [
-              "apps/web/src/app/queries/runEventFeedQuery.test.tsx"
-            ],
-            "fowlerSignals": [
-              "Requested and terminal cancellation evidence converges through the existing cursor-backed event feed."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "apps/web/src/app/queries/runEventFeedQuery.test.tsx"
-          },
-          {
-            "name": "LiveRunSnapshot",
-            "path": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "cqRails": ["RunEventFeed"],
-            "dddOwner": "RunEventFeedReadModel",
-            "unitTests": [
-              "apps/web/src/app/queries/runEventFeedQuery.test.tsx"
-            ],
-            "fowlerSignals": [
-              "Requested and terminal cancellation evidence converges through the existing cursor-backed event feed."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "apps/web/src/app/queries/runEventFeedQuery.test.tsx"
-          },
-          {
-            "name": "authorLongRunningTransform",
-            "path": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "cqRails": ["RunEventFeed"],
-            "dddOwner": "RunEventFeedReadModel",
-            "unitTests": [
-              "apps/web/src/app/queries/runEventFeedQuery.test.tsx"
-            ],
-            "fowlerSignals": [
-              "Requested and terminal cancellation evidence converges through the existing cursor-backed event feed."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "apps/web/src/app/queries/runEventFeedQuery.test.tsx"
-          },
           {
             "name": "readEventTypes",
             "path": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
             "cqRails": ["RunEventFeed"],
             "dddOwner": "RunEventFeedReadModel",
             "unitTests": [
-              "apps/web/src/app/queries/runEventFeedQuery.test.tsx"
+              "apps/api/test/application/services/getRunEventsUseCase.test.ts"
             ],
             "fowlerSignals": [
-              "Requested and terminal cancellation evidence converges through the existing cursor-backed event feed."
+              "The RunEventFeed alias is retired; ListRunEvents is the sole current query rail."
             ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "apps/web/src/app/queries/runEventFeedQuery.test.tsx"
-          },
-          {
-            "name": "waitForPersistedTransformSql",
-            "path": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "cqRails": ["RunEventFeed"],
-            "dddOwner": "RunEventFeedReadModel",
-            "unitTests": [
-              "apps/web/src/app/queries/runEventFeedQuery.test.tsx"
-            ],
-            "fowlerSignals": [
-              "Requested and terminal cancellation evidence converges through the existing cursor-backed event feed."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "apps/web/src/app/queries/runEventFeedQuery.test.tsx"
-          },
-          {
-            "name": "waitForRunStatus",
-            "path": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "cqRails": ["RunEventFeed"],
-            "dddOwner": "RunEventFeedReadModel",
-            "unitTests": [
-              "apps/web/src/app/queries/runEventFeedQuery.test.tsx"
-            ],
-            "fowlerSignals": [
-              "Requested and terminal cancellation evidence converges through the existing cursor-backed event feed."
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "apps/web/src/app/queries/runEventFeedQuery.test.tsx"
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "apps/api/test/application/services/getRunEventsUseCase.test.ts"
           }
         ],
         "version": 1,
         "featureId": "US-F4-3-RUN-CONTROLS",
-        "userStories": ["https://github.com/dunay2/dvt/issues/2103"],
-        "cypressFlows": ["apps/web/cypress/e2e/runs/run-controls-live.cy.ts"],
+        "userStories": [
+          "https://github.com/dunay2/dvt/issues/2103",
+          "https://github.com/dunay2/dvt/issues/2169"
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
+          "apps/api/test/integration/protectedRuntime.integration.test.ts"
+        ],
         "domainObjects": ["RunLifecycleEventFeed"],
         "fowlerSignals": [
-          "Requested and terminal cancellation evidence converges through the existing cursor-backed event feed."
+          "Requested and terminal cancellation evidence converges through the existing cursor-backed event feed.",
+          "The RunEventFeed alias is retired; ListRunEvents is the sole current query rail."
         ],
         "completionGate": [
           "pnpm docs:feature-mechanization:implementation",
@@ -156831,12 +156118,12 @@
         "redGreenCycles": [
           {
             "id": "runeventfeed-record",
-            "redTest": "pnpm --filter @dvt/web exec vitest run src/app/queries/runEventFeedQuery.test.tsx --config vitest.presentation.config.ts",
-            "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/queries/runEventFeedQuery.test.tsx --config vitest.presentation.config.ts",
+            "redTest": "pnpm planning:db:query command-query-rails",
+            "greenTest": "pnpm planning:db:query command-query-rails",
             "patchSurfaces": [
               "apps/web/cypress/e2e/runs/run-controls-live.cy.ts"
             ],
-            "expectedFailure": "Cancelled runs keep polling or durable cancellation evidence is absent from the browser flow."
+            "expectedFailure": "Two active query names describe the same event feed intent."
           }
         ],
         "componentGuides": [
@@ -156850,22 +156137,31 @@
           {
             "name": "RunEventFeed",
             "type": "query",
-            "status": "implemented",
-            "dddOwner": "RunEventFeedReadModel"
+            "status": "retired",
+            "dddOwner": "RunEventFeedReadModel",
+            "negativeTests": [
+              "do not register or implement a second RunEventFeed route"
+            ],
+            "adapterSurface": "retired alias; use GET /api/v1/runs/:runId/events",
+            "applicationPort": "retired alias; use ListRunEvents",
+            "authorizationScope": "no new calls; retained only as audited historical vocabulary"
           }
         ],
         "architectureGuards": [
-          "apps/web/src/app/queries/runEventFeedQuery.test.tsx"
+          "apps/api/test/application/services/getRunEventsUseCase.test.ts"
         ],
-        "implementationPlan": "https://github.com/dunay2/dvt/issues/2103#issuecomment-5157653363",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2169#issuecomment-5279182370",
         "mechanizationStatus": "implemented",
         "noHumanDecisionsRemaining": true,
         "allowedImplementationSurfaces": [
           "apps/web/cypress/e2e/runs/run-controls-live.cy.ts"
         ],
-        "forbiddenImplementationSurfaces": ["tools/planning-db/schema.sql"]
+        "forbiddenImplementationSurfaces": [
+          "tools/planning-db/schema.sql",
+          "apps/api/src/entrypoints/http/RunEventFeedRoute.ts"
+        ]
       },
-      "revision": 1,
+      "revision": 2,
       "createdBy": "codex",
       "createdAt": "2026-08-02T14:27:31.157Z"
     },
@@ -186984,6 +186280,628 @@
         ]
       },
       "createdAt": "2026-08-13T10:07:46.174Z"
+    },
+    {
+      "operationId": "03562628-1b6b-4330-86ed-ed7382f327ac",
+      "idempotencyKey": "issue-2169-cancelrun-hardcut-final",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#US-F4-3-RUN-CONTROLS#command#cancelrun",
+      "sourcePath": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+      "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api exec vitest run test/application/services/cancelRunUseCase.test.ts",
+        "dddOwner": "RunCommandApplicationService",
+        "railName": "CancelRun",
+        "railType": "command",
+        "featureId": "US-F4-3-RUN-CONTROLS",
+        "greenTest": "pnpm --filter dvt-api exec vitest run test/application/services/cancelRunUseCase.test.ts",
+        "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "unitTests": [
+          "apps/api/test/application/services/cancelRunUseCase.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2169"],
+        "cypressFlows": [
+          "apps/api/test/integration/protectedRuntime.integration.test.ts"
+        ],
+        "domainObjects": ["RunCancellationIntent"],
+        "fowlerSignals": [
+          "One cancellation command reaches one engine transition authority and one public receipt contract."
+        ],
+        "negativeTests": [
+          "reject cross-tenant access, malformed receipts and cancellation outside canonical transitions"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "POST /api/v1/runs/:runId/cancel",
+        "completionGate": ["pnpm verify:prepush"],
+        "applicationPort": "IWorkflowEngine.cancelRun",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "The feature manifest references deleted coordinator or local receipt symbols.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md"
+        ],
+        "architectureGuards": [
+          "apps/api/test/application/services/cancelRunUseCase.test.ts"
+        ],
+        "authorizationScope": "authenticated tenant plus persisted run tenant equality",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2169#issuecomment-5279182370",
+        "implementationRefs": [
+          "apps/api/src/application/services/cancelRunUseCase.ts#CancelRunUseCase",
+          "apps/api/src/entrypoints/http/cancelRunRouteParser.ts#parseCancelRunRequest",
+          "apps/api/src/application/services/runControlPolicy.ts#decideCancelRun",
+          "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#parseCancelRunReceipt"
+        ],
+        "normalizedRailName": "cancelrun",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "replaceArchitectureGuards": true,
+        "replaceImplementationRefs": true,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/services/cancelRunUseCase.ts",
+          "apps/api/src/entrypoints/http/cancelRunRouteParser.ts",
+          "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/application/ports/runControlCommandCoordinator.ts",
+          "apps/api/src/infrastructure/runControl/PostgresRunControlCommandCoordinator.ts",
+          "apps/web/src/app/services/runs/runsApiControlReceipts.ts"
+        ]
+      },
+      "createdAt": "2026-08-13T12:28:02.996Z"
+    },
+    {
+      "operationId": "5ea39975-81f9-46bf-a0c4-7e6790ae0cde",
+      "idempotencyKey": "issue-2169-recoverrun-hardcut-final",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#US-F4-3-RUN-CONTROLS#command#recoverrun",
+      "sourcePath": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+      "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+      "expectedRevision": 5,
+      "previousRevision": 5,
+      "resultingRevision": 6,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/engine test -- WorkflowEngine.test.ts",
+        "dddOwner": "RunRecoveryApplicationService",
+        "railName": "RecoverRun",
+        "railType": "command",
+        "featureId": "US-F4-3-RUN-CONTROLS",
+        "greenTest": "pnpm --filter @dvt/engine test -- WorkflowEngine.test.ts",
+        "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "unitTests": [
+          "apps/api/test/application/services/recoverRunUseCase.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2169"],
+        "cypressFlows": [
+          "apps/api/test/integration/protectedRuntime.integration.test.ts"
+        ],
+        "domainObjects": ["RunRecoveryIntent"],
+        "fowlerSignals": [
+          "Recovery eligibility and deterministic child identity are decided once by the engine and its intent store."
+        ],
+        "negativeTests": [
+          "reject nonterminal recovery, cross-tenant source, plan-reference drift and duplicate child identity"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "POST /api/v1/runs/:runId/recover",
+        "completionGate": ["pnpm verify:prepush"],
+        "applicationPort": "IWorkflowEngine.recoverRun",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Concurrent recovery can dispatch a second child or API policy can diverge from engine lifecycle truth.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md"
+        ],
+        "architectureGuards": [
+          "packages/@dvt/engine/test/core/WorkflowEngine.test.ts"
+        ],
+        "authorizationScope": "authenticated tenant plus persisted source-run tenant equality and immutable plan evidence",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2169#issuecomment-5279182370",
+        "implementationRefs": [
+          "apps/api/src/application/services/recoverRunUseCase.ts#RecoverRunUseCase",
+          "apps/api/src/entrypoints/http/recoverRunRouteParser.ts#parseRecoverRunRequest",
+          "apps/api/src/entrypoints/http/recoverRunIdentity.ts#deriveRecoveryRunId",
+          "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#parseRecoverRunReceipt",
+          "packages/@dvt/adapter-postgres/src/PostgresStartRunIntentStore.ts#PostgresStartRunIntentStore",
+          "packages/@dvt/engine/src/state/InMemoryStartRunIntentStore.ts#InMemoryStartRunIntentStore"
+        ],
+        "normalizedRailName": "recoverrun",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "replaceArchitectureGuards": true,
+        "replaceImplementationRefs": true,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/services/recoverRunUseCase.ts",
+          "apps/api/src/entrypoints/http/recoverRunRouteParser.ts",
+          "packages/@dvt/adapter-postgres/src/PostgresStartRunIntentStore.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/application/ports/runRecoveryCommandCoordinator.ts",
+          "apps/api/src/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.ts"
+        ]
+      },
+      "createdAt": "2026-08-13T12:28:04.275Z"
+    },
+    {
+      "operationId": "052bf1c9-4cc5-4591-87c8-60154310701d",
+      "idempotencyKey": "issue-2169-getrunstatus-hardcut-final",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#US-F4-3-RUN-CONTROLS#query#getrunstatus",
+      "sourcePath": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+      "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api exec vitest run test/application/services/getRunUseCase.test.ts",
+        "dddOwner": "RunOperationalReadModel",
+        "railName": "GetRunStatus",
+        "railType": "query",
+        "featureId": "US-F4-3-RUN-CONTROLS",
+        "greenTest": "pnpm --filter dvt-api exec vitest run test/application/services/getRunUseCase.test.ts",
+        "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "unitTests": [
+          "apps/api/test/application/services/getRunUseCase.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2169"],
+        "cypressFlows": [
+          "apps/api/test/integration/protectedRuntime.integration.test.ts"
+        ],
+        "domainObjects": ["RunOperationalSnapshot"],
+        "fowlerSignals": [
+          "The read model exposes persisted lifecycle truth and fails closed when recovery evidence is unavailable."
+        ],
+        "negativeTests": [
+          "reject cross-tenant access and propagate unexpected persistence failures without synthetic snapshots"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "GET /api/v1/runs/:runId",
+        "completionGate": ["pnpm verify:prepush"],
+        "applicationPort": "IWorkflowEngine.getRunStatus and IGetRunUseCase",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Unexpected persistence errors are hidden by a synthetic or incomplete run snapshot.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md"
+        ],
+        "architectureGuards": [
+          "apps/api/test/application/services/getRunUseCase.test.ts"
+        ],
+        "authorizationScope": "authenticated tenant plus persisted run tenant equality",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2169#issuecomment-5279182370",
+        "implementationRefs": [
+          "apps/api/src/application/services/getRunUseCase.ts#GetRunUseCase",
+          "apps/api/src/application/services/runControlPolicy.ts#projectRunControlAvailability",
+          "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#RunControlAvailability"
+        ],
+        "normalizedRailName": "getrunstatus",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "replaceArchitectureGuards": true,
+        "replaceImplementationRefs": true,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/services/getRunUseCase.ts",
+          "apps/api/src/application/services/runControlPolicy.ts",
+          "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/application/ports/runControlCommandCoordinator.ts",
+          "apps/web/src/app/services/runs/runsApiControlReceipts.ts"
+        ]
+      },
+      "createdAt": "2026-08-13T12:28:05.558Z"
+    },
+    {
+      "operationId": "ca4d3df3-7482-4e32-a46c-3c9859a81aa9",
+      "idempotencyKey": "issue-2169-listruns-hardcut-final",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#US-F4-3-RUN-CONTROLS#query#listruns",
+      "sourcePath": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+      "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api exec vitest run test/application/services/listRunsUseCase.test.ts",
+        "dddOwner": "RunOperationalReadModel",
+        "railName": "ListRuns",
+        "railType": "query",
+        "featureId": "US-F4-3-RUN-CONTROLS",
+        "greenTest": "pnpm --filter dvt-api exec vitest run test/application/services/listRunsUseCase.test.ts",
+        "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "unitTests": [
+          "apps/api/test/application/services/listRunsUseCase.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2169"],
+        "cypressFlows": [
+          "apps/api/test/integration/protectedRuntime.integration.test.ts"
+        ],
+        "domainObjects": ["RunSummaryCollection"],
+        "fowlerSignals": [
+          "Storage applies scope before the caller limit and the API performs no per-run enrichment queries."
+        ],
+        "negativeTests": [
+          "exclude other project and environment rows before limiting and reject empty scope identifiers"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "GET /api/v1/runs",
+        "completionGate": ["pnpm verify:prepush"],
+        "applicationPort": "IListRunsUseCase",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Post-limit filtering can leak capacity across scopes or return fewer scoped rows than requested.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md"
+        ],
+        "architectureGuards": [
+          "apps/api/test/application/services/listRunsUseCase.test.ts"
+        ],
+        "authorizationScope": "authenticated tenant with project and environment scope applied by storage before limit",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2169#issuecomment-5279182370",
+        "implementationRefs": [
+          "apps/api/src/application/services/listRunsUseCase.ts#ListRunsUseCase",
+          "apps/api/src/entrypoints/http/listRunsRouteParser.ts#parseListRunsRequest"
+        ],
+        "normalizedRailName": "listruns",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "replaceArchitectureGuards": true,
+        "replaceImplementationRefs": true,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/services/listRunsUseCase.ts",
+          "apps/api/src/entrypoints/http/listRunsRouteParser.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/application/ports/runControlCommandCoordinator.ts",
+          "packages/@dvt/state-store/src/InMemoryRunStateStore.ts"
+        ]
+      },
+      "createdAt": "2026-08-13T12:28:06.771Z"
+    },
+    {
+      "operationId": "a0af44b0-8791-44d7-b5e3-cefd3831cdfd",
+      "idempotencyKey": "issue-2169-startrun-hardcut-final",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#US-F4-3-RUN-CONTROLS#command#startrun",
+      "sourcePath": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+      "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api exec vitest run test/application/services/PlannerBackedStartRunUseCase.test.ts",
+        "dddOwner": "RunCommandApplicationService",
+        "railName": "StartRun",
+        "railType": "command",
+        "featureId": "US-F4-3-RUN-CONTROLS",
+        "greenTest": "pnpm --filter dvt-api exec vitest run test/application/services/PlannerBackedStartRunUseCase.test.ts",
+        "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "unitTests": [
+          "apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2169"],
+        "cypressFlows": [
+          "apps/api/test/integration/protectedRuntime.integration.test.ts"
+        ],
+        "domainObjects": ["StartRunCommand"],
+        "fowlerSignals": [
+          "Protected starts use one authorization path and the canonical compile planner before dispatch."
+        ],
+        "negativeTests": [
+          "reject incomplete scope, unauthorized scope and unmaterializable plans before engine dispatch"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "POST /api/v1/runs",
+        "completionGate": ["pnpm verify:prepush"],
+        "applicationPort": "IStartRunUseCase",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Protected starts bypass canonical planner compilation or accept incomplete scope.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md"
+        ],
+        "architectureGuards": [
+          "apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts"
+        ],
+        "authorizationScope": "authenticated nonempty tenant, project and environment scope with canonical planner admission",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2169#issuecomment-5279182370",
+        "implementationRefs": [
+          "apps/api/src/application/services/PlannerBackedStartRunUseCase.ts#PlannerBackedStartRunUseCase",
+          "apps/api/src/entrypoints/http/startRunRouteCommandBuilder.ts#parseStartRunCommand",
+          "apps/api/src/entrypoints/http/startRunRouteParser.ts#parseStartRunBody"
+        ],
+        "normalizedRailName": "startrun",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "replaceArchitectureGuards": true,
+        "replaceImplementationRefs": true,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/services/PlannerBackedStartRunUseCase.ts",
+          "apps/api/src/entrypoints/http/startRunRouteCommandBuilder.ts",
+          "apps/api/src/entrypoints/http/startRunRouteParser.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/application/ports/startRunFacadePort.ts",
+          "apps/api/src/application/services/startRunAuthorizedFacade.ts"
+        ]
+      },
+      "createdAt": "2026-08-13T12:28:08.028Z"
+    },
+    {
+      "operationId": "4daad07a-3fb5-4fae-a3b8-706253f178cb",
+      "idempotencyKey": "issue-2169-signalrun-hardcut-final",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#US-F4-3-RUN-CONTROLS#command#signalrun",
+      "sourcePath": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+      "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api exec vitest run test/application/services/signalRunUseCase.test.ts",
+        "dddOwner": "RunCommandApplicationService",
+        "railName": "SignalRun",
+        "railType": "command",
+        "featureId": "US-F4-3-RUN-CONTROLS",
+        "greenTest": "pnpm --filter dvt-api exec vitest run test/application/services/signalRunUseCase.test.ts",
+        "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "unitTests": [
+          "apps/api/test/application/services/signalRunUseCase.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2169"],
+        "cypressFlows": [
+          "apps/api/test/integration/protectedRuntime.integration.test.ts"
+        ],
+        "domainObjects": ["RunSignalCommand"],
+        "fowlerSignals": [
+          "SignalRun carries only PAUSE or RESUME; cancellation remains a separate engine command."
+        ],
+        "negativeTests": [
+          "reject CANCEL and every signal outside the PAUSE and RESUME public vocabulary"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "POST /api/v1/runs/:runId/signal",
+        "completionGate": ["pnpm verify:prepush"],
+        "applicationPort": "ISignalRunUseCase",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Generic cancellation is accepted through the signal route or vocabulary diverges by adapter.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md"
+        ],
+        "architectureGuards": [
+          "apps/api/test/application/services/signalRunUseCase.test.ts"
+        ],
+        "authorizationScope": "authenticated tenant plus persisted run tenant equality",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2169#issuecomment-5279182370",
+        "implementationRefs": [
+          "apps/api/src/application/services/signalRunUseCase.ts#SignalRunUseCase",
+          "apps/api/src/entrypoints/http/signalRunRouteParser.ts#parseSignalRunRequest",
+          "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#parseSignalRunCommand",
+          "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#SUPPORTED_RUN_SIGNAL_TYPES"
+        ],
+        "normalizedRailName": "signalrun",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "replaceArchitectureGuards": true,
+        "replaceImplementationRefs": true,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/services/signalRunUseCase.ts",
+          "apps/api/src/entrypoints/http/signalRunRouteParser.ts",
+          "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/signalRunAuthorization.constants.ts",
+          "apps/api/src/entrypoints/http/signalRunValidation.constants.ts"
+        ]
+      },
+      "createdAt": "2026-08-13T12:28:09.265Z"
+    },
+    {
+      "operationId": "7cf9da20-1fd7-4409-b55e-981c23da7928",
+      "idempotencyKey": "issue-2169-listrunevents-hardcut-final",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#US-F4-3-RUN-CONTROLS#query#listrunevents",
+      "sourcePath": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+      "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api exec vitest run test/application/services/getRunEventsUseCase.test.ts",
+        "dddOwner": "RunEventFeedReadModel",
+        "railName": "ListRunEvents",
+        "railType": "query",
+        "featureId": "US-F4-3-RUN-CONTROLS",
+        "greenTest": "pnpm --filter dvt-api exec vitest run test/application/services/getRunEventsUseCase.test.ts",
+        "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "unitTests": [
+          "apps/api/test/application/services/getRunEventsUseCase.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2169"],
+        "cypressFlows": [
+          "apps/api/test/integration/protectedRuntime.integration.test.ts"
+        ],
+        "domainObjects": ["RunLifecycleEventFeed"],
+        "fowlerSignals": [
+          "One cursor-backed event query exposes durable lifecycle evidence without a parallel feed command."
+        ],
+        "negativeTests": [
+          "reject cross-tenant event reads, malformed cursors and out-of-range limits"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "GET /api/v1/runs/:runId/events",
+        "completionGate": ["pnpm verify:prepush"],
+        "applicationPort": "IGetRunEventsUseCase",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Event reads bypass tenant scope or expose an unbounded or parallel pagination model.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md"
+        ],
+        "architectureGuards": [
+          "apps/api/test/application/services/getRunEventsUseCase.test.ts"
+        ],
+        "authorizationScope": "authenticated tenant plus persisted run tenant equality with bounded cursor pagination",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2169#issuecomment-5279182370",
+        "implementationRefs": [
+          "apps/api/src/application/services/getRunEventsUseCase.ts#GetRunEventsUseCase",
+          "apps/api/src/entrypoints/http/getRunEventsRouteParser.ts#parseGetRunEventsRequest",
+          "apps/api/src/entrypoints/http/getRunEventsRouteParser.constants.ts#GET_RUN_EVENTS_LIMIT"
+        ],
+        "normalizedRailName": "listrunevents",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "replaceArchitectureGuards": true,
+        "replaceImplementationRefs": true,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/services/getRunEventsUseCase.ts",
+          "apps/api/src/entrypoints/http/getRunEventsRouteParser.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/web/src/app/services/runs/runsApiControlReceipts.ts"
+        ]
+      },
+      "createdAt": "2026-08-13T12:28:10.491Z"
+    },
+    {
+      "operationId": "7fba39cc-35a4-43fc-aa29-119e2bcc62f4",
+      "idempotencyKey": "issue-2169-runeventfeed-retire-final",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#US-F4-3-RUN-CONTROLS#query#runeventfeed",
+      "sourcePath": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+      "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "pnpm planning:db:query command-query-rails",
+        "dddOwner": "RunEventFeedReadModel",
+        "railName": "RunEventFeed",
+        "railType": "query",
+        "featureId": "US-F4-3-RUN-CONTROLS",
+        "greenTest": "pnpm planning:db:query command-query-rails",
+        "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "unitTests": [
+          "apps/api/test/application/services/getRunEventsUseCase.test.ts"
+        ],
+        "railStatus": "retired",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2169"],
+        "cypressFlows": [
+          "apps/api/test/integration/protectedRuntime.integration.test.ts"
+        ],
+        "domainObjects": ["RunLifecycleEventFeed"],
+        "fowlerSignals": [
+          "The RunEventFeed alias is retired; ListRunEvents is the sole current query rail."
+        ],
+        "negativeTests": [
+          "do not register or implement a second RunEventFeed route"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "retired alias; use GET /api/v1/runs/:runId/events",
+        "completionGate": ["pnpm verify:prepush"],
+        "applicationPort": "retired alias; use ListRunEvents",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Two active query names describe the same event feed intent.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md"
+        ],
+        "architectureGuards": [
+          "apps/api/test/application/services/getRunEventsUseCase.test.ts"
+        ],
+        "authorizationScope": "no new calls; retained only as audited historical vocabulary",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2169#issuecomment-5279182370",
+        "implementationRefs": [
+          "apps/web/cypress/e2e/runs/run-controls-live.cy.ts#readEventTypes"
+        ],
+        "normalizedRailName": "runeventfeed",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "replaceArchitectureGuards": true,
+        "replaceImplementationRefs": true,
+        "allowedImplementationSurfaces": [
+          "apps/web/cypress/e2e/runs/run-controls-live.cy.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/RunEventFeedRoute.ts"
+        ]
+      },
+      "createdAt": "2026-08-13T12:28:11.760Z"
+    },
+    {
+      "operationId": "3427fada-355f-4be4-9ffc-7135f3e51977",
+      "idempotencyKey": "issue-2169-retire-duplicate-startrun-v1",
+      "operationType": "feature_mechanization_rail_retire",
+      "actor": "codex",
+      "railId": "local#US-F4-3-RUN-CONTROLS#command#startrun",
+      "sourcePath": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+      "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "railId": "local#US-F4-3-RUN-CONTROLS#command#startrun",
+        "reason": "StartRun remains owned by the existing DBT round-trip and documented command rail; this duplicate feature claim caused mechanization drift.",
+        "designId": "MVP-2169-START-RUN-FEATURE-OWNERSHIP-CORRECTION-20260813",
+        "railName": "StartRun",
+        "railType": "command",
+        "featureId": "US-F4-3-RUN-CONTROLS",
+        "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "expectedRevision": 0,
+        "normalizedRailName": "startrun",
+        "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95"
+      },
+      "createdAt": "2026-08-13T12:33:53.223Z"
     }
   ],
   "governanceComponentDefinitions": [
