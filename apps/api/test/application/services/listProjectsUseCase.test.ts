@@ -16,9 +16,15 @@ const PRINCIPAL = {
 };
 
 describe('ListProjectsUseCase', () => {
-  it('authorizes every tenant through one set-based access decision', async () => {
+  it('derives catalog visibility and create capability from the same grant snapshot', async () => {
+    const grantSnapshot = {
+      principal: PRINCIPAL,
+      suspended: false,
+      tenantAccess: [],
+    };
     const repository = {
       listGrantedProjects: vi.fn(async () => ({
+        grantSnapshot,
         tenantIds: ['tenant-a', 'tenant-b', 'tenant-c'],
         projects: [],
         integrityFindings: [],
@@ -27,7 +33,10 @@ describe('ListProjectsUseCase', () => {
     const decide = vi.fn(() => {
       throw new Error('ListProjects must not authorize tenants one by one.');
     });
-    const decideMany = vi.fn(async (_principal, requestedScopes) =>
+    const decideMany = vi.fn(() => {
+      throw new Error('ListProjects must not load a second grant snapshot.');
+    });
+    const decideManyFromSnapshot = vi.fn(async (_principal, _snapshot, requestedScopes) =>
       requestedScopes.map((requestedScope: { readonly tenantId: { readonly value: string } }) =>
         requestedScope.tenantId.value === 'tenant-b'
           ? ({ ok: false, reason: 'ACTION_NOT_GRANTED' } as const)
@@ -45,6 +54,7 @@ describe('ListProjectsUseCase', () => {
       {
         decide,
         decideMany,
+        decideManyFromSnapshot,
       } as never
     );
 
@@ -59,9 +69,11 @@ describe('ListProjectsUseCase', () => {
     });
     expect(repository.listGrantedProjects).toHaveBeenCalledOnce();
     expect(decide).not.toHaveBeenCalled();
-    expect(decideMany).toHaveBeenCalledOnce();
-    expect(decideMany).toHaveBeenCalledWith(
+    expect(decideMany).not.toHaveBeenCalled();
+    expect(decideManyFromSnapshot).toHaveBeenCalledOnce();
+    expect(decideManyFromSnapshot).toHaveBeenCalledWith(
       PRINCIPAL,
+      grantSnapshot,
       expect.arrayContaining([
         expect.objectContaining({
           resource: 'tenant',
