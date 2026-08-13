@@ -102,9 +102,9 @@ function createCancellationReceiptStore(): IRunCancellationReceiptStore {
 }
 
 describe('CancelRunUseCase', () => {
-  it('maps cancel commands to a stable canonical cancellation signal', async () => {
+  it('dispatches cancel commands through the dedicated engine command', async () => {
     const engine = {
-      signal: vi.fn().mockResolvedValue(undefined),
+      cancelRun: vi.fn().mockResolvedValue(undefined),
       getRunStatus: vi.fn().mockResolvedValue({ runId: 'run-1', status: 'RUNNING' }),
     };
     const stateStore = createStateStore();
@@ -127,25 +127,19 @@ describe('CancelRunUseCase', () => {
       disposition: 'requested',
     });
 
-    expect(engine.signal).toHaveBeenCalledWith(
-      {
-        provider: 'temporal',
-        tenantId: 'tenant-a',
-        namespace: 'default',
-        workflowId: 'wf-1',
-        runId: 'provider-run-1',
-      },
-      {
-        signalId: 'cancel:tenant-a:run-1:1',
-        type: 'CANCEL',
-      }
-    );
+    expect(engine.cancelRun).toHaveBeenCalledWith({
+      provider: 'temporal',
+      tenantId: 'tenant-a',
+      namespace: 'default',
+      workflowId: 'wf-1',
+      runId: 'provider-run-1',
+    });
   });
 
   it('dispatches one provider cancellation for concurrent deliveries of the same command', async () => {
     const providerGate = deferred();
     const engine = {
-      signal: vi.fn(async () => {
+      cancelRun: vi.fn(async () => {
         await providerGate.promise;
       }),
       getRunStatus: vi.fn().mockResolvedValue({ runId: 'run-1', status: 'RUNNING' }),
@@ -155,23 +149,23 @@ describe('CancelRunUseCase', () => {
 
     const first = useCase.execute(command, commandContext);
     const second = useCase.execute(command, commandContext);
-    await vi.waitFor(() => expect(engine.signal).toHaveBeenCalled());
+    await vi.waitFor(() => expect(engine.cancelRun).toHaveBeenCalled());
     providerGate.resolve();
 
     await expect(Promise.all([first, second])).resolves.toEqual([
       expect.objectContaining({ disposition: 'requested' }),
       expect.objectContaining({ disposition: 'already_requested' }),
     ]);
-    expect(engine.signal).toHaveBeenCalledOnce();
+    expect(engine.cancelRun).toHaveBeenCalledOnce();
   });
 
-  it('reuses the provider-deduplicated signal after accepted-receipt persistence fails', async () => {
-    const appliedSignalIds = new Set<string>();
+  it('reuses the provider-idempotent cancel command after receipt persistence fails', async () => {
+    const cancelledRuns = new Set<string>();
     const applyCancellation = vi.fn();
     const engine = {
-      signal: vi.fn(async (_runRef, request: { signalId: string }) => {
-        if (appliedSignalIds.has(request.signalId)) return;
-        appliedSignalIds.add(request.signalId);
+      cancelRun: vi.fn(async (runRef: { runId: string }) => {
+        if (cancelledRuns.has(runRef.runId)) return;
+        cancelledRuns.add(runRef.runId);
         applyCancellation();
       }),
       getRunStatus: vi.fn().mockResolvedValue({ runId: 'run-1', status: 'RUNNING' }),
@@ -193,8 +187,8 @@ describe('CancelRunUseCase', () => {
       disposition: 'requested',
     });
 
-    expect(engine.signal).toHaveBeenCalledTimes(2);
-    expect(engine.signal.mock.calls[0]?.[1]).toEqual(engine.signal.mock.calls[1]?.[1]);
+    expect(engine.cancelRun).toHaveBeenCalledTimes(2);
+    expect(engine.cancelRun.mock.calls[0]?.[0]).toEqual(engine.cancelRun.mock.calls[1]?.[0]);
     expect(applyCancellation).toHaveBeenCalledOnce();
   });
 
@@ -205,7 +199,7 @@ describe('CancelRunUseCase', () => {
       runId: 'actual-provider-run',
     };
     const engine = {
-      signal: vi.fn().mockResolvedValue(undefined),
+      cancelRun: vi.fn().mockResolvedValue(undefined),
       getRunStatus: vi.fn().mockResolvedValue({ runId: 'run-1', status: 'PENDING' }),
     };
     const dispatchResolver = {
@@ -216,10 +210,7 @@ describe('CancelRunUseCase', () => {
     await expect(
       useCase.execute({ runId: 'run-1', signalType: 'CANCEL' }, commandContext)
     ).resolves.toMatchObject({ accepted: true, disposition: 'requested' });
-    expect(engine.signal).toHaveBeenCalledWith(
-      dispatchedRunRef,
-      expect.objectContaining({ signalId: 'cancel:tenant-a:run-1:1', type: 'CANCEL' })
-    );
+    expect(engine.cancelRun).toHaveBeenCalledWith(dispatchedRunRef);
   });
 
   it.each([
@@ -229,7 +220,7 @@ describe('CancelRunUseCase', () => {
     'does not redispatch cancellation for %s/%s',
     async (status, substatus, disposition) => {
       const engine = {
-        signal: vi.fn(),
+        cancelRun: vi.fn(),
         getRunStatus: vi.fn().mockResolvedValue({
           runId: 'run-1',
           status,
@@ -243,14 +234,14 @@ describe('CancelRunUseCase', () => {
       await expect(
         useCase.execute({ runId: 'run-1', signalType: 'CANCEL' }, commandContext)
       ).resolves.toMatchObject({ accepted: true, disposition });
-      expect(engine.signal).not.toHaveBeenCalled();
+      expect(engine.cancelRun).not.toHaveBeenCalled();
     }
   );
 
   it('reconciles a terminal race when the provider rejects cancellation', async () => {
     const providerFailure = new Error('workflow is already closed');
     const engine = {
-      signal: vi.fn().mockRejectedValue(providerFailure),
+      cancelRun: vi.fn().mockRejectedValue(providerFailure),
       getRunStatus: vi
         .fn()
         .mockResolvedValueOnce({ runId: 'run-1', status: 'RUNNING' })
@@ -272,7 +263,7 @@ describe('CancelRunUseCase', () => {
 
   it('returns the settled receipt when cancellation wins the provider race', async () => {
     const engine = {
-      signal: vi.fn().mockRejectedValue(new Error('workflow is already closed')),
+      cancelRun: vi.fn().mockRejectedValue(new Error('workflow is already closed')),
       getRunStatus: vi
         .fn()
         .mockResolvedValueOnce({ runId: 'run-1', status: 'RUNNING' })
@@ -291,7 +282,7 @@ describe('CancelRunUseCase', () => {
     async (reconciledStatus) => {
       const providerFailure = new Error('temporal transport unavailable');
       const engine = {
-        signal: vi.fn().mockRejectedValue(providerFailure),
+        cancelRun: vi.fn().mockRejectedValue(providerFailure),
         getRunStatus: vi
           .fn()
           .mockResolvedValueOnce({ runId: 'run-1', status: 'RUNNING' })
@@ -314,7 +305,7 @@ describe('CancelRunUseCase', () => {
     'rejects cancellation for unavailable %s/%s runs without dispatch',
     async (status, substatus, reason) => {
       const engine = {
-        signal: vi.fn(),
+        cancelRun: vi.fn(),
         getRunStatus: vi.fn().mockResolvedValue({
           runId: 'run-1',
           status,
@@ -332,13 +323,13 @@ describe('CancelRunUseCase', () => {
         status,
         reason,
       });
-      expect(engine.signal).not.toHaveBeenCalled();
+      expect(engine.cancelRun).not.toHaveBeenCalled();
     }
   );
 
   it('throws when the run metadata is missing', async () => {
     const engine = {
-      signal: vi.fn().mockResolvedValue(undefined),
+      cancelRun: vi.fn().mockResolvedValue(undefined),
     };
     const stateStore = {
       async getRunMetadataByRunId() {
@@ -358,7 +349,7 @@ describe('CancelRunUseCase', () => {
       )
     ).rejects.toBeInstanceOf(RunMetadataNotFoundError);
 
-    expect(engine.signal).not.toHaveBeenCalled();
+    expect(engine.cancelRun).not.toHaveBeenCalled();
   });
 });
 
