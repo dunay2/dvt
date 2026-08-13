@@ -11,7 +11,7 @@ import { topAppBarClasses } from './chrome';
 import type { ShellTopBarCopy } from './copy';
 
 function formatWorkspaceScope(scope: WorkspaceScopeIdentity): string {
-  return `${scope.tenantId} / ${scope.projectId} / ${scope.environmentId}`;
+  return `${scope.projectName ?? scope.projectId} / ${scope.environmentId}`;
 }
 
 export function ShellWorkspaceScopeSelector({

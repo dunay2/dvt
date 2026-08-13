@@ -77,8 +77,18 @@ describe('ShellWorkspaceScopeSelector', () => {
   ])(
     'selects an explicitly listed server-granted project with $interaction',
     async ({ activate }) => {
-      const projectA = { tenantId: 'tenant', projectId: 'project-a', environmentId: 'dev' };
-      const projectB = { tenantId: 'tenant', projectId: 'project-b', environmentId: 'stage' };
+      const projectA = {
+        tenantId: 'tenant',
+        projectId: 'project-a',
+        projectName: 'Orders',
+        environmentId: 'dev',
+      };
+      const projectB = {
+        tenantId: 'tenant',
+        projectId: 'project-b',
+        projectName: 'Analytics',
+        environmentId: 'stage',
+      };
       let snapshot = createSelectionSnapshot(projectA, [projectA, projectB]);
       const subscribers = new Set<() => void>();
       const selectWorkspaceScope = vi.fn((scope: WorkspaceScopeIdentity) => {
@@ -110,9 +120,10 @@ describe('ShellWorkspaceScopeSelector', () => {
       });
 
       const projectBButton = [...container.querySelectorAll<HTMLButtonElement>('button')].find(
-        (button) => button.textContent?.includes('project-b')
+        (button) => button.textContent?.includes('Analytics')
       );
       expect(projectBButton).toBeDefined();
+      expect(container.textContent).not.toContain('project-b');
 
       await act(async () => {
         activate(projectBButton!);

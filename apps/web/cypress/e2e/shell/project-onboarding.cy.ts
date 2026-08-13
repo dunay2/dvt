@@ -35,7 +35,7 @@ function stubFirstUseProjectOnboardingApis(): void {
 
     return {
       body: {
-        effectiveWorkspace: E2E_WORKSPACE_SESSION,
+        defaultWorkspace: E2E_WORKSPACE_SESSION,
         availableWorkspaces: [E2E_WORKSPACE_SESSION],
         deploymentScope: {
           targetAdapter: 'temporal',
@@ -49,11 +49,11 @@ function stubFirstUseProjectOnboardingApis(): void {
     tenants: [
       {
         tenantId: E2E_WORKSPACE_SESSION.tenantId,
-        displayName: 'E2E Tenant',
         canCreateProject: true,
       },
     ],
     projects: [],
+    integrityFindings: [],
   });
 
   stubE2eApi('POST', '/projects', ({ body, headers }) => {
@@ -73,7 +73,7 @@ function stubFirstUseProjectOnboardingApis(): void {
           name: 'Orders workspace',
           environmentIds: [E2E_WORKSPACE_SESSION.environmentId],
         },
-        effectiveWorkspace: E2E_WORKSPACE_SESSION,
+        defaultWorkspace: E2E_WORKSPACE_SESSION,
       },
     };
   });
@@ -109,7 +109,7 @@ describe('Project onboarding first-use flow', () => {
 
     cy.contains(/Create a project|Crear un proyecto/, { timeout: 20_000 }).should('be.visible');
     cy.get('[data-slot="project-onboarding-form"]').within(() => {
-      cy.contains('E2E Tenant').should('be.visible');
+      cy.contains(E2E_WORKSPACE_SESSION.tenantId).should('be.visible');
       cy.get('input[name="projectName"]').type('Orders workspace');
       cy.contains('button', /Create project|Crear proyecto/).click();
     });

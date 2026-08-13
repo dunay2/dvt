@@ -66,8 +66,8 @@ export const WorkspaceContextResponseSchema = z
     availableWorkspaces: z.array(ProjectWorkspaceDescriptorSchema).readonly(),
     deploymentScope: z
       .object({
-        targetAdapter: NonBlankStringSchema,
-        availableTargetAdapters: z.array(NonBlankStringSchema).readonly(),
+        targetAdapter: z.literal('temporal'),
+        availableTargetAdapters: z.array(z.literal('temporal')).readonly(),
       })
       .strict(),
   })

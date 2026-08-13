@@ -14,15 +14,10 @@ import { useSessionStore } from '../stores/sessionStore';
 import ProjectOnboardingView from '../views/ProjectOnboardingView';
 
 type AuthGateState =
-  | { kind: 'checking' }
-  | { kind: 'allowed' }
-  | { kind: 'denied'; reason: AuthGateDeniedReason };
+  { kind: 'checking' } | { kind: 'allowed' } | { kind: 'denied'; reason: AuthGateDeniedReason };
 
 type AuthGateDeniedReason =
-  | 'unauthenticated'
-  | 'workspace_context_not_granted'
-  | 'runtime_unavailable'
-  | 'transport_error';
+  'unauthenticated' | 'workspace_context_not_granted' | 'runtime_unavailable' | 'transport_error';
 
 const sessionApiClient = createApiClient();
 
@@ -75,9 +70,9 @@ export default function AuthRouteGate({
 
   async function handleProjectCreated(response: CreateProjectResponse): Promise<void> {
     useSessionStore.getState().setSessionContext({
-      tenantId: asNonBlankString(response.effectiveWorkspace.tenantId),
-      projectId: asNonBlankString(response.effectiveWorkspace.projectId),
-      environmentId: asNonBlankString(response.effectiveWorkspace.environmentId),
+      tenantId: asNonBlankString(response.defaultWorkspace.tenantId),
+      projectId: asNonBlankString(response.defaultWorkspace.projectId),
+      environmentId: asNonBlankString(response.defaultWorkspace.environmentId),
     });
     await recoverProtectedRouteSession();
   }

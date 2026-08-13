@@ -40,7 +40,7 @@ function stubRuntimeCapabilities(): void {
     scopes: ['workspace:graph-draft:view', 'workspace:graph-draft:save', 'run:start'],
   });
   stubE2eJsonApi('GET', '/workspace/context', {
-    effectiveWorkspace: E2E_WORKSPACE_SESSION,
+    defaultWorkspace: E2E_WORKSPACE_SESSION,
     availableWorkspaces: [E2E_WORKSPACE_SESSION],
   });
   stubE2eJsonApi('GET', '/capabilities', {

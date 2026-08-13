@@ -1,7 +1,9 @@
 /** Owned concern: resolve protected route session and server-owned workspace context. */
-import { asNonBlankString } from '@dvt/contracts';
+import { WorkspaceContextResponseSchema, asNonBlankString } from '@dvt/contracts';
+import type { ProjectWorkspaceDescriptor, WorkspaceContextResponse } from '@dvt/contracts';
 
 import type { ApiClient } from '../api/createApiClient';
+import type { WorkspaceScopeIdentity } from '../../ports/workspaceScopeSelection';
 import {
   DEFAULT_USER_PERMISSIONS,
   useAuthorizationStore,
@@ -12,7 +14,6 @@ import {
   resolveSelectedWorkspaceScope,
   sameWorkspaceScopeIdentity,
 } from './workspaceScopeSelectionPort';
-import type { RunContext } from '../../types/engine';
 
 type SessionResponse = {
   readonly permissions?: Partial<UserPermissions>;
@@ -21,29 +22,14 @@ type SessionResponse = {
   };
 };
 
-type EffectiveWorkspaceContext = {
-  readonly tenantId: string;
-  readonly projectId: string;
-  readonly environmentId: string;
-};
-
-type EffectiveWorkspaceContextResponse = {
-  readonly effectiveWorkspace: EffectiveWorkspaceContext;
-  readonly availableWorkspaces: readonly EffectiveWorkspaceContext[];
-  readonly deploymentScope: {
-    readonly targetAdapter: RunContext['targetAdapter'];
-    readonly availableTargetAdapters: readonly RunContext['targetAdapter'][];
-  };
-};
-
 function resolveRouteWorkspaceContext(
-  currentContext: EffectiveWorkspaceContext,
-  workspaceContext: EffectiveWorkspaceContextResponse
-): EffectiveWorkspaceContext {
+  currentContext: WorkspaceScopeIdentity,
+  workspaceContext: WorkspaceContextResponse
+): ProjectWorkspaceDescriptor {
   return (
     workspaceContext.availableWorkspaces.find((workspace) =>
       sameWorkspaceScopeIdentity(workspace, currentContext)
-    ) ?? workspaceContext.effectiveWorkspace
+    ) ?? workspaceContext.defaultWorkspace
   );
 }
 
@@ -88,11 +74,10 @@ export async function resolveProtectedRouteSessionContext(apiClient: Pick<ApiCli
     includeSessionHeaders: false,
   });
 
-  const workspaceContext = await apiClient.getJson<EffectiveWorkspaceContextResponse>(
-    '/workspace/context',
-    {
+  const workspaceContext = WorkspaceContextResponseSchema.parse(
+    await apiClient.getJson<unknown>('/workspace/context', {
       includeSessionHeaders: false,
-    }
+    })
   );
 
   const selectedWorkspaceContext = resolveRouteWorkspaceContext(
@@ -101,7 +86,7 @@ export async function resolveProtectedRouteSessionContext(apiClient: Pick<ApiCli
   );
   const resolvedWorkspaceContext = resolveSelectedWorkspaceScope({
     currentScope: selectedWorkspaceContext,
-    effectiveWorkspace: workspaceContext.effectiveWorkspace,
+    defaultWorkspace: workspaceContext.defaultWorkspace,
     availableWorkspaces: workspaceContext.availableWorkspaces,
   });
 
@@ -112,6 +97,7 @@ export async function resolveProtectedRouteSessionContext(apiClient: Pick<ApiCli
     selectedScope: {
       tenantId: asNonBlankString(resolvedWorkspaceContext.selectedScope.tenantId),
       projectId: asNonBlankString(resolvedWorkspaceContext.selectedScope.projectId),
+      projectName: resolvedWorkspaceContext.selectedScope.projectName,
       environmentId: asNonBlankString(resolvedWorkspaceContext.selectedScope.environmentId),
     },
     targetAdapter: workspaceContext.deploymentScope.targetAdapter,
@@ -119,6 +105,7 @@ export async function resolveProtectedRouteSessionContext(apiClient: Pick<ApiCli
     availableWorkspaces: resolvedWorkspaceContext.availableWorkspaces.map((workspace) => ({
       tenantId: asNonBlankString(workspace.tenantId),
       projectId: asNonBlankString(workspace.projectId),
+      projectName: workspace.projectName,
       environmentId: asNonBlankString(workspace.environmentId),
     })),
   });

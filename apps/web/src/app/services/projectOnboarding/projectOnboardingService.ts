@@ -1,44 +1,26 @@
 /** Owned concern: adapt first-use project onboarding to protected runtime project rails. */
+import {
+  CreateProjectResponseSchema,
+  ProjectOnboardingCatalogSchema,
+  type CreateProjectRequest,
+  type CreateProjectResponse,
+  type ProjectDescriptor,
+  type ProjectOnboardingCatalog,
+  type ProjectWorkspaceDescriptor,
+} from '@dvt/contracts';
+
 import { type ApiClient, createApiClient } from '../api/createApiClient';
 
-export type ProjectOnboardingTenant = {
-  readonly tenantId: string;
-  readonly displayName?: string;
-  readonly canCreateProject: boolean;
-};
-
-export type ProjectDescriptor = {
-  readonly tenantId: string;
-  readonly projectId: string;
-  readonly name: string;
-  readonly environmentIds: readonly string[];
-  readonly createdAt?: string;
-};
-
-export type ProjectOnboardingCatalog = {
-  readonly tenants: readonly ProjectOnboardingTenant[];
-  readonly projects: readonly ProjectDescriptor[];
-};
-
-export type EffectiveProjectWorkspaceContext = {
-  readonly tenantId: string;
-  readonly projectId: string;
-  readonly environmentId: string;
-};
-
-export type CreateProjectCommand = {
-  readonly tenantId: string;
-  readonly name: string;
-};
-
-export type CreateProjectResponse = {
-  readonly project: ProjectDescriptor;
-  readonly effectiveWorkspace: EffectiveProjectWorkspaceContext;
+export type {
+  CreateProjectResponse,
+  ProjectDescriptor,
+  ProjectOnboardingCatalog,
+  ProjectWorkspaceDescriptor as EffectiveProjectWorkspaceContext,
 };
 
 export type ProjectOnboardingService = {
   listProjects: () => Promise<ProjectOnboardingCatalog>;
-  createProject: (command: CreateProjectCommand) => Promise<CreateProjectResponse>;
+  createProject: (command: CreateProjectRequest) => Promise<CreateProjectResponse>;
 };
 
 type ProjectOnboardingServiceDeps = {
@@ -47,11 +29,7 @@ type ProjectOnboardingServiceDeps = {
 
 function createBrowserIdempotencyKey(): string {
   const randomUuid = globalThis.crypto?.randomUUID?.();
-  if (randomUuid) {
-    return randomUuid;
-  }
-
-  return `project-${Date.now().toString(36)}`;
+  return randomUuid ?? `project-${Date.now().toString(36)}`;
 }
 
 export function createProjectOnboardingService(
@@ -61,21 +39,25 @@ export function createProjectOnboardingService(
   const createIdempotencyKey = deps.createIdempotencyKey ?? createBrowserIdempotencyKey;
 
   return {
-    listProjects: () =>
-      apiClient.getJson<ProjectOnboardingCatalog>('/projects', {
-        includeSessionHeaders: false,
-      }),
-    createProject: (command) =>
-      apiClient.postJson<CreateProjectCommand, CreateProjectResponse>(
-        '/projects',
-        {
-          tenantId: command.tenantId,
-          name: command.name.trim(),
-        },
-        {
-          headers: { 'Idempotency-Key': createIdempotencyKey() },
+    listProjects: async () =>
+      ProjectOnboardingCatalogSchema.parse(
+        await apiClient.getJson<unknown>('/projects', {
           includeSessionHeaders: false,
-        }
+        })
+      ),
+    createProject: async (command) =>
+      CreateProjectResponseSchema.parse(
+        await apiClient.postJson<CreateProjectRequest, unknown>(
+          '/projects',
+          {
+            tenantId: command.tenantId,
+            name: command.name.trim(),
+          },
+          {
+            headers: { 'Idempotency-Key': createIdempotencyKey() },
+            includeSessionHeaders: false,
+          }
+        )
       ),
   };
 }

@@ -194,7 +194,7 @@ describe('Canvas workbench screen composition', () => {
       },
     });
     stubE2eJsonApi('GET', '/workspace/context', {
-      effectiveWorkspace: E2E_WORKSPACE_SESSION,
+      defaultWorkspace: E2E_WORKSPACE_SESSION,
       availableWorkspaces: [E2E_WORKSPACE_SESSION, ALTERNATE_WORKSPACE_SESSION],
     });
     stubE2eApi('GET', '/workspace/files', ({ headers }) => ({

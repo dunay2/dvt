@@ -6,8 +6,9 @@ import { createProjectOnboardingService } from './projectOnboardingService';
 describe('createProjectOnboardingService', () => {
   it('loads the project catalog without requiring an existing workspace context', async () => {
     const catalog = {
-      tenants: [{ tenantId: 'tenant-1', displayName: 'Tenant 1', canCreateProject: true }],
+      tenants: [{ tenantId: 'tenant-1', canCreateProject: true }],
       projects: [],
+      integrityFindings: [],
     };
     const { apiClient, getJson } = createApiClientHarness({
       getJson: async <TResponse>() => catalog as TResponse,
@@ -31,9 +32,10 @@ describe('createProjectOnboardingService', () => {
         name: 'Orders',
         environmentIds: ['dev'],
       },
-      effectiveWorkspace: {
+      defaultWorkspace: {
         tenantId: 'tenant-1',
         projectId: 'orders',
+        projectName: 'Orders',
         environmentId: 'dev',
       },
     };

@@ -24,7 +24,7 @@ function stubRuntimeCapabilities(): void {
 
 function stubWorkspaceContext(): void {
   stubE2eJsonApi('GET', '/workspace/context', {
-    effectiveWorkspace: E2E_WORKSPACE_SESSION,
+    defaultWorkspace: E2E_WORKSPACE_SESSION,
     availableWorkspaces: [E2E_WORKSPACE_SESSION],
   });
 }
