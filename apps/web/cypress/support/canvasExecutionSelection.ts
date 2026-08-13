@@ -89,13 +89,14 @@ export function clickCanvasAddCatalogAction(action: string, registrationKind?: s
     ? `[data-slot="canvas-context-menu-add-catalog-item"][data-menu-action="${action}"][data-registration-kind="${registrationKind}"]`
     : `[data-slot="canvas-context-menu-add-catalog-item"][data-menu-action="${action}"]`;
 
-  cy.get(selector).then(($item) => {
-    const item = $item.get(0) as HTMLButtonElement;
-    item.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-    expect(Cypress.dom.isVisible(item)).to.equal(true);
-    expect(item.disabled).to.equal(false);
-    item.click();
-  });
+  cy.get(selector).scrollIntoView().should('be.visible');
+  cy.get(selector)
+    .filter(':visible')
+    .then(($item) => {
+      const item = $item.get(0) as HTMLButtonElement;
+      expect(item.disabled).to.equal(false);
+      item.click();
+    });
 }
 
 export function revealOperationalDrawer(): void {
