@@ -11605,42 +11605,42 @@
         "work_item_id": "GH-2168",
         "title": "Reconcile plan application component authority",
         "owner": "API / Planner",
-        "status": "implementing",
+        "status": "implemented",
         "rationale": "Replace stale policy-catalog ownership language with the three surviving CompilePlan, PreviewPlan, and ImportPlan application intents.",
         "fowler_signal": "feature_envy",
         "rail_ref": "CompilePlan;PreviewPlan;ImportPlan",
         "approved_at": "2026-08-13T07:07:16.619+00:00",
         "supersedes_id": null,
         "created_at": "2026-08-13T06:54:34.554+00:00",
-        "updated_at": "2026-08-13T07:07:17.804+00:00"
+        "updated_at": "2026-08-13T07:55:04.035+00:00"
       },
       {
         "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
         "work_item_id": "GH-2168",
         "title": "Collapse plan lifecycle rail to canonical endpoints",
         "owner": "API / Planner / Contracts",
-        "status": "implementing",
+        "status": "implemented",
         "rationale": "Retain the three distinct public plan intents while removing route-only wrappers, duplicated validation and translation, unused policy variants, misplaced session/start registration and topology-only CI. Canonical contracts own request shapes, API owns transport errors, and GH-2166 owns persisted-plan admission and materialization.",
         "fowler_signal": "feature_envy",
         "rail_ref": "CompilePlan;PreviewPlan;ImportPlan",
         "approved_at": "2026-08-13T07:07:14.167+00:00",
         "supersedes_id": null,
         "created_at": "2026-08-13T06:15:43.826+00:00",
-        "updated_at": "2026-08-13T07:07:15.398+00:00"
+        "updated_at": "2026-08-13T07:55:02.765+00:00"
       },
       {
         "design_id": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
         "work_item_id": "GH-2168",
         "title": "Reconcile plan lifecycle behavior evidence",
         "owner": "API / Architecture",
-        "status": "implementing",
+        "status": "implemented",
         "rationale": "Retire duplicate and deleted topology evidence, and bind the surviving plan lifecycle components only to behavior-focused endpoint and use-case tests.",
         "fowler_signal": "responsibility_overload",
         "rail_ref": "CompilePlan;PreviewPlan;ImportPlan",
         "approved_at": "2026-08-13T07:07:19.046+00:00",
         "supersedes_id": null,
         "created_at": "2026-08-13T06:55:55.601+00:00",
-        "updated_at": "2026-08-13T07:07:20.272+00:00"
+        "updated_at": "2026-08-13T07:55:05.285+00:00"
       },
       {
         "design_id": "PLANNING-DB-API-APPLICATION-SERVICE-TEST-LEAF-COMPONENTS-20260619",
@@ -14071,6 +14071,20 @@
         "implementation_content_sha256": null
       },
       {
+        "evidence_id": "EV-GH2168-COMPILEPLAN-CURRENT",
+        "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+        "subject_kind": "command",
+        "subject_id": "CompilePlan",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/entrypoints/http/compilePlanRoute.test.ts test/entrypoints/http/executePlanRouteFacade.test.ts test/entrypoints/http/importPlanRoute.test.ts test/entrypoints/http/planRoutePlanSourcePolicy.test.ts test/entrypoints/http/planRouteRequestResolver.test.ts test/entrypoints/http/previewPlanRoute.auth.test.ts test/entrypoints/http/previewPlanRoute.inputPolicy.test.ts test/entrypoints/http/previewPlanRoute.outcomes.test.ts",
+        "source_path": "apps/api/test/entrypoints/http/compilePlanRoute.test.ts",
+        "result_state": "pass",
+        "recorded_at": "2026-08-13T07:54:49.713+00:00",
+        "source_content_sha256": "fd675a672fd740540223bd66d7fb7521289ce1b52c06fea236c2d33cf3ee2984",
+        "implementation_content_sha256": "bd1756cf06573e2d65cdcc4ddc9c8575dbc413c933d6438816fa5ef94401ea67"
+      },
+      {
         "evidence_id": "EV-GH2168-COMPILEPLAN-LOCAL",
         "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
         "subject_kind": "command",
@@ -14085,6 +14099,20 @@
         "implementation_content_sha256": "1871c04e66642eb03e4b594566a097cdcbb3b0281ec7a9dc3d9d7f3b477ca254"
       },
       {
+        "evidence_id": "EV-GH2168-IMPORTPLAN-CURRENT",
+        "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+        "subject_kind": "command",
+        "subject_id": "ImportPlan",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/entrypoints/http/compilePlanRoute.test.ts test/entrypoints/http/executePlanRouteFacade.test.ts test/entrypoints/http/importPlanRoute.test.ts test/entrypoints/http/planRoutePlanSourcePolicy.test.ts test/entrypoints/http/planRouteRequestResolver.test.ts test/entrypoints/http/previewPlanRoute.auth.test.ts test/entrypoints/http/previewPlanRoute.inputPolicy.test.ts test/entrypoints/http/previewPlanRoute.outcomes.test.ts",
+        "source_path": "apps/api/test/entrypoints/http/importPlanRoute.test.ts",
+        "result_state": "pass",
+        "recorded_at": "2026-08-13T07:54:51.069+00:00",
+        "source_content_sha256": "c475731dfe762c9706ac211b26758cd0b0f611e78dd245e8aa1a22ed70b6b551",
+        "implementation_content_sha256": "a547d1bf36bb4642ef8bf58311ef547a67c3ad955bd67c87136c6b8457082150"
+      },
+      {
         "evidence_id": "EV-GH2168-IMPORTPLAN-LOCAL",
         "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
         "subject_kind": "command",
@@ -14097,6 +14125,20 @@
         "recorded_at": "2026-08-13T07:18:23.141+00:00",
         "source_content_sha256": "c475731dfe762c9706ac211b26758cd0b0f611e78dd245e8aa1a22ed70b6b551",
         "implementation_content_sha256": "761996d891827415f67209c503e8299b04e99db3d4230ffcf0d7e1b1d70f19bc"
+      },
+      {
+        "evidence_id": "EV-GH2168-PREVIEWPLAN-CURRENT",
+        "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+        "subject_kind": "command",
+        "subject_id": "PreviewPlan",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/entrypoints/http/compilePlanRoute.test.ts test/entrypoints/http/executePlanRouteFacade.test.ts test/entrypoints/http/importPlanRoute.test.ts test/entrypoints/http/planRoutePlanSourcePolicy.test.ts test/entrypoints/http/planRouteRequestResolver.test.ts test/entrypoints/http/previewPlanRoute.auth.test.ts test/entrypoints/http/previewPlanRoute.inputPolicy.test.ts test/entrypoints/http/previewPlanRoute.outcomes.test.ts",
+        "source_path": "apps/api/test/entrypoints/http/previewPlanRoute.outcomes.test.ts",
+        "result_state": "pass",
+        "recorded_at": "2026-08-13T07:54:52.385+00:00",
+        "source_content_sha256": "a5966c3629f080bed5fccbe227fa1c7f39a4c42fba7fca397aebeb6aa2232035",
+        "implementation_content_sha256": "de1c8182a87c15e83803ca08fef188018aa80af2e0790473a6975eb9b6849d57"
       },
       {
         "evidence_id": "EV-GH2168-PREVIEWPLAN-LOCAL",
@@ -89772,6 +89814,27 @@
         "created_at": "2026-08-11T13:28:08.205+00:00"
       },
       {
+        "operation_id": "0c5aa837-ddb6-429f-be64-a0468e7c8462",
+        "idempotency_key": "gh-2168-plan-test-evidence-reconciliation-20260813-implemented-v2",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+        "source_ref": "git:commit:dc973d2a9ed20e188cc46245ea854247ca2b25a1",
+        "source_content_sha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Implementation, current focused behavior evidence, DB mechanization, and documentation gates are complete.",
+          "designId": "GH-2168-PLAN-TEST-EVIDENCE-RECONCILIATION-20260813",
+          "toStatus": "implemented",
+          "sourceRef": "git:commit:dc973d2a9ed20e188cc46245ea854247ca2b25a1",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5"
+        },
+        "created_at": "2026-08-13T07:55:05.285+00:00"
+      },
+      {
         "operation_id": "0dec3df5-80b3-4338-a403-0d279bd5577e",
         "idempotency_key": "architecture_evidence_record:codex:API-H2-4-CI-EVIDENCE-AUTHENTICITY-V2-20260811:EVIDENCE-API-H2-4-CI-EVIDENCE-AUTHENTICITY-REVIEW:fc296fb3fdcd5917",
         "operation_type": "architecture_evidence_record",
@@ -90906,6 +90969,27 @@
           "sourceContentSha256": "1c740da0098f2dffb4906f6f41d3814c6aa6fa54ddb41a445e0e6db0211270c4"
         },
         "created_at": "2026-08-13T03:44:12.646+00:00"
+      },
+      {
+        "operation_id": "1f44a3fc-c45c-432c-a216-097198be459f",
+        "idempotency_key": "gh-2168-app-plan-component-reconciliation-20260813-implemented-v2",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2168-APP-PLAN-COMPONENT-RECONCILIATION-20260813",
+        "source_ref": "git:commit:dc973d2a9ed20e188cc46245ea854247ca2b25a1",
+        "source_content_sha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Implementation, current focused behavior evidence, DB mechanization, and documentation gates are complete.",
+          "designId": "GH-2168-APP-PLAN-COMPONENT-RECONCILIATION-20260813",
+          "toStatus": "implemented",
+          "sourceRef": "git:commit:dc973d2a9ed20e188cc46245ea854247ca2b25a1",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5"
+        },
+        "created_at": "2026-08-13T07:55:04.035+00:00"
       },
       {
         "operation_id": "2015258b-5d7a-448a-8717-f865e2efe9c1",
@@ -92584,6 +92668,31 @@
         "created_at": "2026-08-10T20:06:19.745+00:00"
       },
       {
+        "operation_id": "3ac7fa15-a6c0-4b03-a539-197a8c903fac",
+        "idempotency_key": "ev-gh2168-previewplan-current-v1",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+        "source_ref": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/entrypoints/http/compilePlanRoute.test.ts test/entrypoints/http/executePlanRouteFacade.test.ts test/entrypoints/http/importPlanRoute.test.ts test/entrypoints/http/planRoutePlanSourcePolicy.test.ts test/entrypoints/http/planRouteRequestResolver.test.ts test/entrypoints/http/previewPlanRoute.auth.test.ts test/entrypoints/http/previewPlanRoute.inputPolicy.test.ts test/entrypoints/http/previewPlanRoute.outcomes.test.ts",
+        "source_content_sha256": "a5966c3629f080bed5fccbe227fa1c7f39a4c42fba7fca397aebeb6aa2232035",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+          "sourceRef": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/entrypoints/http/compilePlanRoute.test.ts test/entrypoints/http/executePlanRouteFacade.test.ts test/entrypoints/http/importPlanRoute.test.ts test/entrypoints/http/planRoutePlanSourcePolicy.test.ts test/entrypoints/http/planRouteRequestResolver.test.ts test/entrypoints/http/previewPlanRoute.auth.test.ts test/entrypoints/http/previewPlanRoute.inputPolicy.test.ts test/entrypoints/http/previewPlanRoute.outcomes.test.ts",
+          "subjectId": "PreviewPlan",
+          "evidenceId": "EV-GH2168-PREVIEWPLAN-CURRENT",
+          "sourcePath": "apps/api/test/entrypoints/http/previewPlanRoute.outcomes.test.ts",
+          "resultState": "pass",
+          "subjectKind": "command",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "a5966c3629f080bed5fccbe227fa1c7f39a4c42fba7fca397aebeb6aa2232035"
+        },
+        "created_at": "2026-08-13T07:54:52.385+00:00"
+      },
+      {
         "operation_id": "3b6a6ed9-40c6-48f6-aadd-03b754498d4b",
         "idempotency_key": "codex-api-h2-2-reachability-v10-approve",
         "operation_type": "architecture_design_transition",
@@ -93087,6 +93196,27 @@
           "sourceContentSha256": "0972a4db45cbfbac69c27ba6b80080ce608e71e0416eb4b27ad009c26796e0a1"
         },
         "created_at": "2026-08-11T07:05:27.974+00:00"
+      },
+      {
+        "operation_id": "418e82d1-57e4-4678-bd51-df86772c394f",
+        "idempotency_key": "gh-2168-lifecycle-evidence-review-v1",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+        "source_ref": "git:commit:dc973d2a9ed20e188cc46245ea854247ca2b25a1",
+        "source_content_sha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Reopen review to attach fresh immutable execution evidence for the current implementation.",
+          "designId": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+          "toStatus": "review",
+          "sourceRef": "git:commit:dc973d2a9ed20e188cc46245ea854247ca2b25a1",
+          "fromStatus": "drift",
+          "sourceContentSha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5"
+        },
+        "created_at": "2026-08-13T07:54:10.219+00:00"
       },
       {
         "operation_id": "42730b84-fb28-4432-86f5-bbfd5d1607a3",
@@ -95086,6 +95216,27 @@
         "created_at": "2026-08-11T11:55:38.371+00:00"
       },
       {
+        "operation_id": "60104143-12dc-4c0a-bcac-cecdd8ba66a2",
+        "idempotency_key": "gh-2168-plan-lifecycle-hardcut-20260813-implemented-v2",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+        "source_ref": "git:commit:dc973d2a9ed20e188cc46245ea854247ca2b25a1",
+        "source_content_sha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Implementation, current focused behavior evidence, DB mechanization, and documentation gates are complete.",
+          "designId": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+          "toStatus": "implemented",
+          "sourceRef": "git:commit:dc973d2a9ed20e188cc46245ea854247ca2b25a1",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5"
+        },
+        "created_at": "2026-08-13T07:55:02.765+00:00"
+      },
+      {
         "operation_id": "6018cc18-ca23-4207-a4ad-0ad826426eb3",
         "idempotency_key": "architecture_design_transition:codex:GH-2166-PLAN-REJECTION-CLASSIFICATION-20260813:1ee7e77c457e692a",
         "operation_type": "architecture_design_transition",
@@ -96914,6 +97065,31 @@
           "sourceContentSha256": "445d0a77a2208b4198a706920223128ba7051884116b3ec95250a2c30232d691"
         },
         "created_at": "2026-08-11T03:26:04.938+00:00"
+      },
+      {
+        "operation_id": "7d43da73-e94b-4fb3-97ab-b63d972aab3c",
+        "idempotency_key": "ev-gh2168-compileplan-current-v1",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+        "source_ref": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/entrypoints/http/compilePlanRoute.test.ts test/entrypoints/http/executePlanRouteFacade.test.ts test/entrypoints/http/importPlanRoute.test.ts test/entrypoints/http/planRoutePlanSourcePolicy.test.ts test/entrypoints/http/planRouteRequestResolver.test.ts test/entrypoints/http/previewPlanRoute.auth.test.ts test/entrypoints/http/previewPlanRoute.inputPolicy.test.ts test/entrypoints/http/previewPlanRoute.outcomes.test.ts",
+        "source_content_sha256": "fd675a672fd740540223bd66d7fb7521289ce1b52c06fea236c2d33cf3ee2984",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+          "sourceRef": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/entrypoints/http/compilePlanRoute.test.ts test/entrypoints/http/executePlanRouteFacade.test.ts test/entrypoints/http/importPlanRoute.test.ts test/entrypoints/http/planRoutePlanSourcePolicy.test.ts test/entrypoints/http/planRouteRequestResolver.test.ts test/entrypoints/http/previewPlanRoute.auth.test.ts test/entrypoints/http/previewPlanRoute.inputPolicy.test.ts test/entrypoints/http/previewPlanRoute.outcomes.test.ts",
+          "subjectId": "CompilePlan",
+          "evidenceId": "EV-GH2168-COMPILEPLAN-CURRENT",
+          "sourcePath": "apps/api/test/entrypoints/http/compilePlanRoute.test.ts",
+          "resultState": "pass",
+          "subjectKind": "command",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "fd675a672fd740540223bd66d7fb7521289ce1b52c06fea236c2d33cf3ee2984"
+        },
+        "created_at": "2026-08-13T07:54:49.713+00:00"
       },
       {
         "operation_id": "7dac553a-03ee-4cc3-bd51-da28bc3cdef7",
@@ -102514,6 +102690,27 @@
         "created_at": "2026-08-10T21:06:37.342+00:00"
       },
       {
+        "operation_id": "c6246cea-2962-4597-b23a-841928bc24b2",
+        "idempotency_key": "gh-2168-lifecycle-evidence-approved-v1",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+        "source_ref": "git:commit:dc973d2a9ed20e188cc46245ea854247ca2b25a1",
+        "source_content_sha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Current implementation and replacement evidence plan reviewed against the bounded rail.",
+          "designId": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+          "toStatus": "approved",
+          "sourceRef": "git:commit:dc973d2a9ed20e188cc46245ea854247ca2b25a1",
+          "fromStatus": "review",
+          "sourceContentSha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5"
+        },
+        "created_at": "2026-08-13T07:54:36.168+00:00"
+      },
+      {
         "operation_id": "c636cb9e-4f34-4c4e-8587-b406f9ef6763",
         "idempotency_key": "architecture_design_create:codex:DOC1-2-LOCAL-RAIL-DUPLICATE-RETIREMENT-20260811:06812835137a51e5",
         "operation_type": "architecture_design_create",
@@ -104214,6 +104411,27 @@
         "created_at": "2026-08-11T12:49:59.113+00:00"
       },
       {
+        "operation_id": "ddc9cdef-b555-4431-b511-d35df709d2e0",
+        "idempotency_key": "gh-2168-lifecycle-evidence-drift-v1",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+        "source_ref": "git:commit:dc973d2a9ed20e188cc46245ea854247ca2b25a1",
+        "source_content_sha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Required local endpoint evidence became stale after the final implementation and mechanization commit.",
+          "designId": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+          "toStatus": "drift",
+          "sourceRef": "git:commit:dc973d2a9ed20e188cc46245ea854247ca2b25a1",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5"
+        },
+        "created_at": "2026-08-13T07:54:08.987+00:00"
+      },
+      {
         "operation_id": "de278682-561d-44b2-8076-aaf505ed3b43",
         "idempotency_key": "architecture_design_create:codex:API-H2-3-INERT-IMPLEMENTATION-DISPOSITION-V2-20260811:6d77efd88a204949",
         "operation_type": "architecture_design_create",
@@ -104551,6 +104769,31 @@
           "sourceContentSha256": "67131f581a98e5f985a3aefea14ab56f396544f5a72d78032902487a8579e2ab"
         },
         "created_at": "2026-08-13T06:58:43.914+00:00"
+      },
+      {
+        "operation_id": "e28e9f38-110f-42f6-aa85-5ae88da3c9de",
+        "idempotency_key": "ev-gh2168-importplan-current-v1",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+        "source_ref": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/entrypoints/http/compilePlanRoute.test.ts test/entrypoints/http/executePlanRouteFacade.test.ts test/entrypoints/http/importPlanRoute.test.ts test/entrypoints/http/planRoutePlanSourcePolicy.test.ts test/entrypoints/http/planRouteRequestResolver.test.ts test/entrypoints/http/previewPlanRoute.auth.test.ts test/entrypoints/http/previewPlanRoute.inputPolicy.test.ts test/entrypoints/http/previewPlanRoute.outcomes.test.ts",
+        "source_content_sha256": "c475731dfe762c9706ac211b26758cd0b0f611e78dd245e8aa1a22ed70b6b551",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+          "sourceRef": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/entrypoints/http/compilePlanRoute.test.ts test/entrypoints/http/executePlanRouteFacade.test.ts test/entrypoints/http/importPlanRoute.test.ts test/entrypoints/http/planRoutePlanSourcePolicy.test.ts test/entrypoints/http/planRouteRequestResolver.test.ts test/entrypoints/http/previewPlanRoute.auth.test.ts test/entrypoints/http/previewPlanRoute.inputPolicy.test.ts test/entrypoints/http/previewPlanRoute.outcomes.test.ts",
+          "subjectId": "ImportPlan",
+          "evidenceId": "EV-GH2168-IMPORTPLAN-CURRENT",
+          "sourcePath": "apps/api/test/entrypoints/http/importPlanRoute.test.ts",
+          "resultState": "pass",
+          "subjectKind": "command",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "c475731dfe762c9706ac211b26758cd0b0f611e78dd245e8aa1a22ed70b6b551"
+        },
+        "created_at": "2026-08-13T07:54:51.069+00:00"
       },
       {
         "operation_id": "e4d18a1c-8f68-4d53-ae94-45597ee2cce0",
@@ -105547,6 +105790,27 @@
           "sourceContentSha256": "1087c0a092799f6099d59adc7e288b51808f9e9da980c80c29d7d1c97206d86a"
         },
         "created_at": "2026-08-10T21:04:14.827+00:00"
+      },
+      {
+        "operation_id": "f3afbca5-7dc5-4c48-ae21-02afe362ae47",
+        "idempotency_key": "gh-2168-lifecycle-evidence-implementing-v2",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+        "source_ref": "git:commit:dc973d2a9ed20e188cc46245ea854247ca2b25a1",
+        "source_content_sha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Resume implementation state solely to attach current immutable execution evidence.",
+          "designId": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+          "toStatus": "implementing",
+          "sourceRef": "git:commit:dc973d2a9ed20e188cc46245ea854247ca2b25a1",
+          "fromStatus": "approved",
+          "sourceContentSha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5"
+        },
+        "created_at": "2026-08-13T07:54:37.414+00:00"
       },
       {
         "operation_id": "f3dee80d-d2e1-47b2-8783-d0ab723aad1b",
