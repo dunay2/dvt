@@ -722,7 +722,7 @@ describe('Canvas source import live clean proof', () => {
     });
 
     cy.viewport(640, 800);
-    openCanvasContextMenuAt(320, 300);
+    openCanvasContextMenuAt(48, 96);
     clickCanvasContextMenuAction('open-add-node-catalog');
     clickCanvasAddCatalogAction('open-source-import', 'dbt:source');
     cy.contains('[role="dialog"]', 'Añadir origen', { timeout: 20_000 })
