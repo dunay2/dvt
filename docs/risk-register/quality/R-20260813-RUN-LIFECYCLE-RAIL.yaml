@@ -1,0 +1,26 @@
+---
+id: R-20260813-RUN-LIFECYCLE-RAIL
+title: Run lifecycle could diverge across API, engine, persistence and public contracts
+status: Closed
+date: 2026-08-13
+owners:
+  - apps/api
+  - packages/@dvt/contracts
+  - packages/@dvt/engine
+  - packages/@dvt/adapter-postgres
+severity: High
+probability: Low
+context: >
+  The protected run surface previously retained duplicate orchestration, cancellation and payload
+  vocabulary around the canonical engine lifecycle.
+risk: >
+  Parallel authorities could authorize or acknowledge a control action that the engine rejects, leak
+  another workspace through post-limit filtering, or report recovery state without durable evidence.
+mitigations:
+  - Protected routes dispatch through the existing StartRun, ListRuns, GetRunStatus, ListRunEvents,
+    SignalRun, CancelRun and RecoverRun rails.
+  - The shared RunControlBoundary parser rejects unsupported signals and malformed receipts.
+  - Engine transition guards own cancellation and recovery lifecycle decisions.
+  - PostgreSQL intent stores preserve deterministic concurrent start and recovery identity.
+  - Unit, contract and real PostgreSQL plus Temporal integration tests exercise the surviving path.
+---
