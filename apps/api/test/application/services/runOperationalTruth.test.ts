@@ -142,7 +142,7 @@ describe('projectRunOperationalTruth', () => {
     ['RUNNING', undefined, true, undefined, false, 'run_active'],
     ['RUNNING', 'CANCELLING', false, 'cancellation_pending', false, 'run_active'],
     ['PAUSED', undefined, true, undefined, false, 'run_active'],
-    ['COMPLETED', undefined, false, 'run_terminal', false, 'run_completed'],
+    ['COMPLETED', undefined, false, 'run_terminal', false, 'recovery_evidence_unknown'],
     ['FAILED', undefined, false, 'run_terminal', false, 'recovery_evidence_unknown'],
     ['FAILED', 'CANCELLING', false, 'run_terminal', false, 'recovery_evidence_unknown'],
     ['CANCELLED', undefined, false, 'run_cancelled', false, 'recovery_evidence_unknown'],

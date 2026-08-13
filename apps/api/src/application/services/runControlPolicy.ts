@@ -47,12 +47,16 @@ export function decideCancelRun(
 }
 
 export function decideRecoverRun(status: CanonicalRunStatus): RecoverRunDecision {
-  if (status.status === 'FAILED' || status.status === 'CANCELLED') {
+  if (
+    status.status === 'COMPLETED' ||
+    status.status === 'FAILED' ||
+    status.status === 'CANCELLED'
+  ) {
     return { kind: 'dispatch' };
   }
   return {
     kind: 'reject',
-    reason: status.status === 'COMPLETED' ? 'run_completed' : 'run_active',
+    reason: 'run_active',
   };
 }
 
