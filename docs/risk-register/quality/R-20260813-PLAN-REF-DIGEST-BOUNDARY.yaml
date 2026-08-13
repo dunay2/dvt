@@ -1,0 +1,22 @@
+---
+id: R-20260813-PLAN-REF-DIGEST-BOUNDARY
+title: Malformed PlanRef digests could cross the public validation boundary
+status: Closed
+date: 2026-08-13
+owners:
+  - packages/@dvt/contracts
+  - apps/api
+severity: High
+probability: Low
+context: >
+  PlanRef.sha256 was typed and parsed as an arbitrary non-blank string even though every stored-plan
+  integrity consumer requires a lowercase 64-character SHA-256 digest.
+risk: >
+  A malformed digest could pass HTTP or contract parsing and fail later during materialization,
+  weakening fail-fast behavior and producing inconsistent rejection surfaces.
+mitigations:
+  - PlanRefSchema reuses the existing Sha256HexStringSchema.
+  - PlanRef.sha256 exposes the existing Sha256HexString type.
+  - Contract tests reject short and uppercase digest representations.
+  - API fixtures use valid lowercase SHA-256 values at the public boundary.
+---

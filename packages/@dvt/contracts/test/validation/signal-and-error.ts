@@ -14,14 +14,26 @@ export function registerValidationSignalAndErrorSuite(): void {
     it('parses PlanRef with valid input', () => {
       const planRef = parsePlanRef({
         uri: 's3://bucket/plan.json',
-        sha256: 'abc123',
+        sha256: 'a'.repeat(64),
         schemaVersion: '1.0.0',
         planId: 'plan-1',
         planVersion: 'v1',
       });
 
       expect(planRef.planId).toBe('plan-1');
-      expect(planRef.sha256).toBe('abc123');
+      expect(planRef.sha256).toBe('a'.repeat(64));
+    });
+
+    it('rejects a PlanRef whose digest is not lowercase SHA-256', () => {
+      expect(() =>
+        parsePlanRef({
+          uri: 's3://bucket/plan.json',
+          sha256: 'ABC123',
+          schemaVersion: '1.0.0',
+          planId: 'plan-1',
+          planVersion: 'v1',
+        })
+      ).toThrow(ContractValidationError);
     });
 
     it('throws ContractValidationError for invalid signal type', () => {

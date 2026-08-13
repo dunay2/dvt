@@ -98,6 +98,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Legacy ExecutionPlanV2 imports can break after canonical naming retirement](R-20260401-EXECUTIONPLANV2-CANONICAL-NAMING-BREAK.yaml)
 - [Lineage stale-claimer concurrency remains timestamp-fenced without lease tokens](R-20260328-RCB5F2-LINEAGE-CLAIM-RACE.md)
 - [Local dev-stack Temporal bootstrap can drift from production runtime assumptions](R-20260427-DEV-STACK-TEMPORAL-BOOTSTRAP.yaml)
+- [Malformed PlanRef digests could cross the public validation boundary](R-20260813-PLAN-REF-DIGEST-BOUNDARY.yaml)
 - [manifestRef runtime composition could regress back to documented-but-unwired behavior](R-20260331-MANIFESTREF-PRODUCTION-PATH.yaml)
 - [Mixed-tenant archive units can delay aggressive tenant retention](R-20260522-AR-D5-TENANT-RETENTION-POLICY.yaml)
 - [Multi-canvas draft compatibility across active-graph consumers](R-20260527-CANVAS-MULTI-WORKSHEET.yaml)

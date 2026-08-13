@@ -131,7 +131,7 @@ export interface TransformationFlowRuntimeBinding {
 
 export interface PlanRef {
   uri: NonBlankString;
-  sha256: NonBlankString;
+  sha256: Sha256HexString;
   schemaVersion: NonBlankString;
   planId: NonBlankString;
   planVersion: NonBlankString;
