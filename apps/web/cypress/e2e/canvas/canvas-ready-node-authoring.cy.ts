@@ -145,6 +145,35 @@ function waitForDraftSaveContainingConfiguredModel(
   });
 }
 
+function findDraftSaveContainingConfiguredDvtTransform(
+  nodeId: string,
+  name: string,
+  sql: string
+): CanvasDraftSaveRequestBody | undefined {
+  return getE2eApiCalls('/workspace/graph/draft', 'PUT')
+    .map((call) => call.body as CanvasDraftSaveRequestBody)
+    .find((body) => {
+      const node = body.draft.nodes.find((candidate) => candidate.id === nodeId);
+      const config = node?.metadata?.config as
+        { sql?: string; selectedColumns?: string[] } | undefined;
+
+      return (
+        node?.name === name &&
+        config?.sql === sql &&
+        config.selectedColumns?.[0] === 'source-1.order_id'
+      );
+    });
+}
+
+function replaceOpenMonacoContent(content: string): void {
+  cy.get('[data-testid="monaco-code-editor"]')
+    .find('.monaco-editor textarea')
+    .first()
+    .focus()
+    .type('{ctrl+a}', { force: true, delay: 0 })
+    .type(content, { force: true, parseSpecialCharSequences: false, delay: 0 });
+}
+
 function assertNoManualSaveCommand(): void {
   cy.contains('button', /^Save$/).should('not.exist');
   cy.contains('button', /^Guardar$/).should('not.exist');
@@ -396,6 +425,87 @@ describe('Canvas ready node authoring', () => {
     cy.focused().type('{esc}');
     cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
     cy.get('.react-flow__node[data-id="orders_model"]').should('have.focus');
+  });
+
+  it('roundtrips only consumer-backed DVT properties through Monaco and full reload', () => {
+    const authoredSql = 'select order_id, total from raw.orders';
+    stubStatefulCanvasDraftAuthoring({
+      authoringGenerated: true,
+      title: 'DVT properties roundtrip',
+    });
+
+    visitReadyCanvas();
+
+    cy.get('.react-flow__node[data-id="source-1"] [data-slot="canvas-node-shell"]').dblclick();
+    cy.get('input[name="dvt-source-schema"]').should('have.value', 'raw');
+    cy.get('input[name="dvt-source-table"]').should('have.value', 'orders');
+    cy.get('input[name="dvt-source-alias"]').should('have.value', 'orders_source');
+    cy.get('input[name="dvt-source-database"]').should('not.exist');
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
+
+    cy.get('.react-flow__node[data-id="sink-1"] [data-slot="canvas-node-shell"]').dblclick();
+    cy.get('[data-slot="canvas-node-workbench-tab-sink"]').click();
+    cy.get('input[name="dvt-sink-table"]').should('have.value', 'orders_daily');
+    cy.get('select[name="dvt-sink-write-mode"]').should('have.value', 'replace');
+    cy.get('input[name="dvt-sink-database"]').should('not.exist');
+    cy.get('input[name="dvt-sink-partition-strategy"]').should('not.exist');
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
+
+    cy.get(
+      '.react-flow__node[data-id="dvt-sql-transform-1"] [data-slot="canvas-node-shell"]'
+    ).dblclick();
+    cy.get('[data-slot="canvas-node-workbench-tab-code"]').should(
+      'have.attr',
+      'aria-selected',
+      'true'
+    );
+    cy.get('[data-testid="monaco-code-editor"]').should('be.visible');
+    cy.get('input[name="dvt-transform-column"]').should('not.exist');
+    replaceOpenMonacoContent(authoredSql);
+    cy.get('[data-slot="canvas-node-workbench-tab-general"]').click();
+    cy.get('input[name="node-name"]').clear().type('Orders enriched');
+    cy.get('input[name="node-tags"]').clear().type('authoring, finance');
+    cy.get('textarea[name="node-description"]').type('Consumer-backed DVT transform');
+    cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^Apply$/).click();
+
+    cy.wrap(null).should(() => {
+      expect(
+        findDraftSaveContainingConfiguredDvtTransform(
+          'dvt-sql-transform-1',
+          'Orders enriched',
+          authoredSql
+        )
+      ).to.not.be.undefined;
+    });
+    cy.get('input[name="node-name"]').clear().type('Unsaved name');
+    cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^Cancel$/).click();
+    cy.get('input[name="node-name"]').should('have.value', 'Orders enriched');
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
+
+    visitReadyCanvas();
+
+    cy.get('.react-flow__node[data-id="dvt-sql-transform-1"]')
+      .should('contain.text', 'Orders Enriched')
+      .find('[data-slot="canvas-node-shell"]')
+      .dblclick();
+    cy.get('[data-testid="monaco-code-editor"] .view-lines').should(($lines) => {
+      expect($lines.text().replace(/\u00a0/g, ' ')).to.contain(authoredSql);
+    });
+    cy.get('[data-slot="canvas-node-workbench-tab-general"]').click();
+    cy.get('input[name="node-name"]').should('have.value', 'Orders enriched');
+    cy.get('input[name="node-tags"]').should('have.value', 'authoring, finance');
+    cy.get('textarea[name="node-description"]').should(
+      'have.value',
+      'Consumer-backed DVT transform'
+    );
+
+    cy.get('[data-slot="shell-menu-trigger"]').click();
+    cy.get('[data-slot="shell-language-option-es"]').click();
+    cy.get('html').should('have.attr', 'lang', 'es');
+    cy.viewport(640, 800);
+    cy.get('[data-slot="canvas-node-workbench-overlay"]').should('be.visible');
+    cy.get('[data-slot="canvas-node-workbench-tab-code"]').should('contain.text', 'Código');
+    assertNoSeriousAccessibilityViolations('[data-slot="canvas-node-workbench-overlay"]');
   });
 
   it('does not present failed draft saves as persisted after reload', () => {

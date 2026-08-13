@@ -34,6 +34,23 @@ const OTHER_MODEL_NODE: CanonicalNode = {
   tags: ['customer'],
 };
 
+const DVT_TRANSFORM_NODE: CanonicalNode = {
+  id: 'transform.orders',
+  name: 'Clean Orders',
+  pluginId: 'dvt',
+  kind: 'dvt:sql_transform',
+  role: 'transform',
+  status: 'idle',
+  tags: ['authoring'],
+  metadata: {
+    config: {
+      dialect: 'postgres',
+      sql: 'select * from raw.orders',
+      selectedColumns: ['source.orders.order_id'],
+    },
+  },
+};
+
 function ControllerHarness({
   node,
   onController,
@@ -207,6 +224,36 @@ describe('useCanvasNodeWorkbenchDraftController', () => {
         selectedSourceId: 'source.orders',
         modelSql: null,
       },
+    });
+  });
+
+  it('reopens submitted DVT SQL from authority without rewriting historical column metadata', async () => {
+    await harness.renderNode(DVT_TRANSFORM_NODE);
+
+    await act(async () => {
+      harness.getController().onDraftChange((currentDraft) => ({
+        ...currentDraft,
+        dvt:
+          currentDraft.dvt?.kind === 'sql_transform'
+            ? { ...currentDraft.dvt, sql: 'select order_id from raw.orders' }
+            : currentDraft.dvt,
+      }));
+    });
+    const submittedDraft = harness.getController().draft;
+    await act(async () => {
+      harness.getController().onDraftSubmitted();
+    });
+    const appliedNode = applyCanvasInspectorNodeDraft(DVT_TRANSFORM_NODE, submittedDraft);
+    await harness.renderNode(appliedNode);
+
+    expect(harness.getController().draft.dvt).toEqual({
+      kind: 'sql_transform',
+      sql: 'select order_id from raw.orders',
+    });
+    expect(appliedNode.metadata?.config).toMatchObject({
+      dialect: 'postgres',
+      sql: 'select order_id from raw.orders',
+      selectedColumns: ['source.orders.order_id'],
     });
   });
 
