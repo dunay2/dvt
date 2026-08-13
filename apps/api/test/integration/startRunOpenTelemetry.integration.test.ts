@@ -78,6 +78,18 @@ describe('protected StartRun OpenTelemetry proof', () => {
     expect(spans.map((span) => span.name)).toEqual(['api.startRun']);
     expect(spans[0]?.attributes).toMatchObject({ outcome: 'rejected' });
   });
+
+  it('rate limits the protected proof route before a repeated execution', async () => {
+    vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    activeProof = await createStartRunOpenTelemetryProof(true);
+
+    const first = await startRunProofRequest(activeProof);
+    const repeated = await startRunProofRequest(activeProof);
+
+    expect(first.statusCode, first.body).toBe(202);
+    expect(repeated.statusCode, repeated.body).toBe(429);
+    expect(activeProof.temporalSubmissions).toHaveLength(1);
+  });
 });
 
 function spanByName(spans: readonly ReadableSpan[], name: string): ReadableSpan {
