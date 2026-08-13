@@ -37,8 +37,6 @@ import {
 import type { StoredPlanExecutabilityValidator } from './StoredPlanExecutabilityValidator.js';
 import { createScopedPlanRef } from './storedPlanScope.js';
 
-type PlanValidationResult = StoredPlanAdmissionResult['validation'];
-
 type PlanCompileResult =
   | {
       readonly kind: 'built';
@@ -144,7 +142,7 @@ export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
   }
 
   private toPlanValidationRejectedResult(
-    validation: Extract<PlanValidationResult, { readonly status: 'ERROR' }>
+    validation: Extract<StoredPlanAdmissionResult['validation'], { readonly status: 'ERROR' }>
   ): StartRunUseCaseResult {
     return {
       ok: true,
@@ -153,7 +151,7 @@ export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
   }
 
   private toPlanRejectedValue(
-    validation: Extract<PlanValidationResult, { readonly status: 'ERROR' }>
+    validation: Extract<StoredPlanAdmissionResult['validation'], { readonly status: 'ERROR' }>
   ): StartRunResult {
     return {
       kind: START_RUN_RESULT_KIND.planRejected,

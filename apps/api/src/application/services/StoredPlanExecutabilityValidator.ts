@@ -26,18 +26,6 @@ import {
 
 type ExecutabilityValidationError = Extract<ExecutabilityValidationResult, { status: 'ERROR' }>;
 
-export type StoredPlanMaterializationValidationResult =
-  | {
-      readonly accepted: false;
-      readonly validation: ExecutabilityValidationError;
-      readonly materialized?: MaterializedStoredExecutablePlan;
-    }
-  | {
-      readonly accepted: true;
-      readonly validation: Extract<ExecutabilityValidationResult, { status: 'OK' }>;
-      readonly materialized: MaterializedStoredExecutablePlan;
-    };
-
 type ExecutabilityValidationContext = {
   readonly adapterId: string;
   readonly scopedPlanRef: ScopedPlanRef;
@@ -59,9 +47,18 @@ export class StoredPlanExecutabilityValidator implements IPlanExecutabilityValid
     return (await this.materializeAndValidatePlan(input)).validation;
   }
 
-  public async materializeAndValidatePlan(
-    input: PlanExecutabilityValidationInput
-  ): Promise<StoredPlanMaterializationValidationResult> {
+  public async materializeAndValidatePlan(input: PlanExecutabilityValidationInput): Promise<
+    | {
+        readonly accepted: false;
+        readonly validation: ExecutabilityValidationError;
+        readonly materialized?: MaterializedStoredExecutablePlan;
+      }
+    | {
+        readonly accepted: true;
+        readonly validation: Extract<ExecutabilityValidationResult, { status: 'OK' }>;
+        readonly materialized: MaterializedStoredExecutablePlan;
+      }
+  > {
     const validationContext: ExecutabilityValidationContext = {
       adapterId: input.adapterId,
       scopedPlanRef: input,

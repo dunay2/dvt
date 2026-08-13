@@ -27,12 +27,11 @@ import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js
 import { PLAN_ROUTE_POLICY_CATALOG } from './planRoutePolicyCatalog.js';
 import { resolveAuthorizedPlannerInputEnvelope } from './resolveAuthorizedPlannerInputEnvelope.js';
 import { ResolveAuthorizedPreviewSelectionService } from './resolveAuthorizedPreviewSelection.js';
-import { StoredPlanAdmissionCoordinator } from './StoredPlanAdmissionCoordinator.js';
+import {
+  StoredPlanAdmissionCoordinator,
+  type StoredPlanAdmissionResult,
+} from './StoredPlanAdmissionCoordinator.js';
 import type { StoredPlanExecutabilityValidator } from './StoredPlanExecutabilityValidator.js';
-
-type PreviewPlanValidationResult = Awaited<
-  ReturnType<StoredPlanExecutabilityValidator['validatePlan']>
->;
 
 export interface PreviewPlanCommand {
   readonly targetAdapter: string;
@@ -66,7 +65,10 @@ export type PreviewPlanUseCaseResult =
       readonly plan: ExecutionPlan;
       readonly planRef: PlanRef;
       readonly planRecord: PlanRecord;
-      readonly validation: Extract<PreviewPlanValidationResult, { readonly status: 'ERROR' }>;
+      readonly validation: Extract<
+        StoredPlanAdmissionResult['validation'],
+        { readonly status: 'ERROR' }
+      >;
     };
 
 export class PreviewPlanUseCase {
