@@ -58,13 +58,16 @@ describe('DbtRunExecutionContextBindingUseCase', () => {
     };
     const useCase = new DbtRunExecutionContextBindingUseCase({
       delegate,
-      planMaterializer: makePlanMaterializer('DBT_MODEL', DBT_PROVENANCE),
       bundleBuilder,
       contextWriter,
       executionTargetResolver: { resolve: () => TARGET },
     });
 
-    const result = await useCase.execute({ ...buildCommand(), planRef: PLAN_REF }, buildContext());
+    const result = await useCase.executeAdmitted(
+      { ...buildCommand(), planRef: PLAN_REF },
+      buildContext(),
+      makeAdmission('DBT_MODEL', DBT_PROVENANCE)
+    );
 
     expect(result).toMatchObject({ ok: true, value: { kind: 'accepted' } });
     expect(bundleBuilder.build).toHaveBeenCalledWith({
@@ -95,7 +98,6 @@ describe('DbtRunExecutionContextBindingUseCase', () => {
     const contextWriter = { write: vi.fn() };
     const useCase = new DbtRunExecutionContextBindingUseCase({
       delegate,
-      planMaterializer: makePlanMaterializer('DBT_MODEL', DBT_PROVENANCE),
       bundleBuilder: {
         build: vi.fn(async () => ({
           ok: false as const,
@@ -108,7 +110,11 @@ describe('DbtRunExecutionContextBindingUseCase', () => {
       executionTargetResolver: { resolve: () => TARGET },
     });
 
-    const result = await useCase.execute({ ...buildCommand(), planRef: PLAN_REF }, buildContext());
+    const result = await useCase.executeAdmitted(
+      { ...buildCommand(), planRef: PLAN_REF },
+      buildContext(),
+      makeAdmission('DBT_MODEL', DBT_PROVENANCE)
+    );
 
     expect(result).toMatchObject({
       ok: true,
@@ -129,13 +135,12 @@ describe('DbtRunExecutionContextBindingUseCase', () => {
     const context = buildContext();
     const useCase = new DbtRunExecutionContextBindingUseCase({
       delegate,
-      planMaterializer: makePlanMaterializer(undefined, undefined),
       bundleBuilder,
       contextWriter: { write: vi.fn() },
       executionTargetResolver: { resolve: () => TARGET },
     });
 
-    await useCase.execute(command, context);
+    await useCase.executeAdmitted(command, context, makeAdmission(undefined, undefined));
 
     expect(delegate.execute).toHaveBeenCalledWith(command, context);
     expect(bundleBuilder.build).not.toHaveBeenCalled();
@@ -145,7 +150,6 @@ describe('DbtRunExecutionContextBindingUseCase', () => {
     const delegate = makeDelegate();
     const useCase = new DbtRunExecutionContextBindingUseCase({
       delegate,
-      planMaterializer: makePlanMaterializer('DBT_MODEL', DBT_PROVENANCE),
       bundleBuilder: {
         build: vi.fn(async () => ({
           ok: false as const,
@@ -156,7 +160,11 @@ describe('DbtRunExecutionContextBindingUseCase', () => {
       executionTargetResolver: { resolve: () => TARGET },
     });
 
-    const result = await useCase.execute({ ...buildCommand(), planRef: PLAN_REF }, buildContext());
+    const result = await useCase.executeAdmitted(
+      { ...buildCommand(), planRef: PLAN_REF },
+      buildContext(),
+      makeAdmission('DBT_MODEL', DBT_PROVENANCE)
+    );
 
     expect(result).toMatchObject({
       value: { reason: 'The DBT project bundle artifact store is not configured.' },
@@ -185,38 +193,69 @@ function makeDelegate(): BindingDependencies['delegate'] {
   };
 }
 
-function makePlanMaterializer(
+function makeAdmission(
   stepKind: string | undefined,
   provenance: unknown
-): BindingDependencies['planMaterializer'] {
+): Parameters<DbtRunExecutionContextBindingUseCase['executeAdmitted']>[2] {
+  const plan = parseExecutionPlan({
+    metadata: {
+      planId: PLAN_ID,
+      planVersion: '1.0',
+      schemaVersion: '1.0',
+      contractVersion: '1.0.0',
+      inputHashSha256: '5'.repeat(64),
+      createdAtIso: '2026-07-15T00:00:00.000Z',
+    },
+    steps:
+      stepKind === undefined
+        ? []
+        : [
+            {
+              stepId: 'model.analytics.orders',
+              kind: stepKind,
+              dependsOn: [],
+              stepTypeConfig: {},
+            },
+          ],
+    ...(provenance === undefined
+      ? {}
+      : { observability: { extra: { planPreviewProvenance: provenance } } }),
+  });
   return {
-    materialize: vi.fn(async () => ({
+    accepted: true,
+    planRef: PLAN_REF,
+    scopedPlanRef: {
+      tenantId: 'tenant-1',
+      projectId: 'proj-1',
+      environmentId: 'env-1',
+      planRef: PLAN_REF,
+    },
+    materialized: {
       executionPolicy: {},
-      plan: parseExecutionPlan({
-        metadata: {
-          planId: PLAN_ID,
-          planVersion: '1.0',
-          schemaVersion: '1.0',
-          contractVersion: '1.0.0',
-          inputHashSha256: '5'.repeat(64),
-          createdAtIso: '2026-07-15T00:00:00.000Z',
-        },
-        steps:
-          stepKind === undefined
-            ? []
-            : [
-                {
-                  stepId: 'model.analytics.orders',
-                  kind: stepKind,
-                  dependsOn: [],
-                  stepTypeConfig: {},
-                },
-              ],
-        ...(provenance === undefined
-          ? {}
-          : { observability: { extra: { planPreviewProvenance: provenance } } }),
-      }),
-    })),
+      plan,
+    },
+    planRecord: {
+      tenantId: 'tenant-1',
+      projectId: 'proj-1',
+      environmentId: 'env-1',
+      planId: PLAN_ID,
+      canonicalPlanJson: JSON.stringify(plan),
+      canonicalHash: '6'.repeat(64),
+      planVersion: '1.0',
+      schemaVersion: '1.0',
+      contractVersion: '1.0.0',
+      sourceRef: PLAN_REF.uri,
+      createdAtIso: '2026-07-15T00:00:00.000Z',
+      updatedAtIso: '2026-07-15T00:00:00.000Z',
+      state: 'ACTIVE',
+    },
+    validation: { status: 'OK', planId: PLAN_ID, adapterId: 'temporal' },
+    validationRecord: {
+      planId: PLAN_ID,
+      state: 'VALID',
+      storedAtIso: '2026-07-15T00:00:00.000Z',
+      updatedAtIso: '2026-07-15T00:00:00.000Z',
+    },
   };
 }
 

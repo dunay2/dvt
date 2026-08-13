@@ -62,7 +62,7 @@ const TEST_PLAN_COMPILE_TELEMETRY = {
 
 const STORED_PLAN_REF = parsePlanRef({
   uri: 'dvt-plan://postgres/plan-1',
-  sha256: 'abc123',
+  sha256: 'a'.repeat(64),
   schemaVersion: '1.0',
   planId: 'plan-1',
   planVersion: '1.0',
@@ -76,6 +76,22 @@ const SCOPED_STORED_PLAN_REF = {
 };
 
 const PENDING_VALIDATION_RECORD = { state: 'PENDING_VALIDATION' as const };
+const MATERIALIZED_PLAN = { plan: makeBuildResult('plan-1').plan, executionPolicy: {} };
+const PLAN_RECORD = {
+  tenantId: 'tenant-1',
+  projectId: 'project-1',
+  environmentId: 'env-1',
+  planId: STORED_PLAN_REF.planId,
+  canonicalPlanJson: JSON.stringify(MATERIALIZED_PLAN.plan),
+  canonicalHash: 'c'.repeat(64),
+  planVersion: STORED_PLAN_REF.planVersion,
+  schemaVersion: STORED_PLAN_REF.schemaVersion,
+  contractVersion: '1.0.0',
+  sourceRef: STORED_PLAN_REF.uri,
+  createdAtIso: '2026-03-21T00:00:00.000Z',
+  updatedAtIso: '2026-03-21T00:00:00.000Z',
+  state: 'ACTIVE' as const,
+};
 
 describe('PlannerBackedStartRunUseCase', () => {
   it('keeps policy-first precedence through planner-backed flow', async () => {
@@ -86,6 +102,7 @@ describe('PlannerBackedStartRunUseCase', () => {
         return STORED_PLAN_REF;
       }),
       getStoredPlanValidationRecord: vi.fn(async () => PENDING_VALIDATION_RECORD),
+      getPlanRecordByRef: vi.fn(async () => PLAN_RECORD),
       markStoredPlanArtifactValid: vi.fn(async () => {}),
       markStoredPlanArtifactInvalid: vi.fn(async () => {}),
     };
@@ -95,14 +112,14 @@ describe('PlannerBackedStartRunUseCase', () => {
       planStore: planStore as never,
       compileTelemetry: TEST_PLAN_COMPILE_TELEMETRY,
       validator: {
-        validatePlan: vi.fn(async () => ({
-          status: 'OK' as const,
-          planId: 'plan-1',
-          adapterId: 'temporal',
-        })),
+        materializeAndValidatePlan: vi.fn(async () => acceptedValidation()),
       } as never,
       delegate: {
         execute: vi.fn(async () => ({
+          ok: true as const,
+          value: { kind: 'accepted' as const, runId: 'run-1', accepted: true },
+        })),
+        executeAdmitted: vi.fn(async () => ({
           ok: true as const,
           value: { kind: 'accepted' as const, runId: 'run-1', accepted: true },
         })),
@@ -162,6 +179,7 @@ describe('PlannerBackedStartRunUseCase', () => {
         return STORED_PLAN_REF;
       }),
       getStoredPlanValidationRecord: vi.fn(async () => PENDING_VALIDATION_RECORD),
+      getPlanRecordByRef: vi.fn(async () => PLAN_RECORD),
       markStoredPlanArtifactValid: vi.fn(async () => {}),
       markStoredPlanArtifactInvalid: vi.fn(async () => {}),
     };
@@ -171,14 +189,14 @@ describe('PlannerBackedStartRunUseCase', () => {
       planStore: planStore as never,
       compileTelemetry: TEST_PLAN_COMPILE_TELEMETRY,
       validator: {
-        validatePlan: vi.fn(async () => ({
-          status: 'OK' as const,
-          planId: 'plan-1',
-          adapterId: 'temporal',
-        })),
+        materializeAndValidatePlan: vi.fn(async () => acceptedValidation()),
       } as never,
       delegate: {
         execute: vi.fn(async () => ({
+          ok: true as const,
+          value: { kind: 'accepted' as const, runId: 'run-1', accepted: true },
+        })),
+        executeAdmitted: vi.fn(async () => ({
           ok: true as const,
           value: { kind: 'accepted' as const, runId: 'run-1', accepted: true },
         })),
@@ -234,18 +252,19 @@ describe('PlannerBackedStartRunUseCase', () => {
     const planStore = {
       storePlanArtifact: vi.fn(async () => STORED_PLAN_REF),
       getStoredPlanValidationRecord: vi.fn(async () => PENDING_VALIDATION_RECORD),
+      getPlanRecordByRef: vi.fn(async () => PLAN_RECORD),
       markStoredPlanArtifactValid: vi.fn(async () => {}),
       markStoredPlanArtifactInvalid: vi.fn(async () => {}),
     };
     const validator = {
-      validatePlan: vi.fn(async () => ({
-        status: 'OK' as const,
-        planId: 'plan-1',
-        adapterId: 'temporal',
-      })),
+      materializeAndValidatePlan: vi.fn(async () => acceptedValidation()),
     };
     const delegate = {
       execute: vi.fn(async () => ({
+        ok: true as const,
+        value: { kind: 'accepted' as const, runId: 'run-1', accepted: true },
+      })),
+      executeAdmitted: vi.fn(async () => ({
         ok: true as const,
         value: { kind: 'accepted' as const, runId: 'run-1', accepted: true },
       })),
@@ -279,20 +298,25 @@ describe('PlannerBackedStartRunUseCase', () => {
       })
     );
     expect(planStore.storePlanArtifact).toHaveBeenCalledTimes(1);
-    expect(validator.validatePlan).toHaveBeenCalledWith({
+    expect(validator.materializeAndValidatePlan).toHaveBeenCalledWith({
       ...SCOPED_STORED_PLAN_REF,
       adapterId: 'temporal',
     });
     expect(planStore.markStoredPlanArtifactValid).toHaveBeenCalledWith(SCOPED_STORED_PLAN_REF);
     expect(planStore.markStoredPlanArtifactInvalid).not.toHaveBeenCalled();
-    expect(delegate.execute).toHaveBeenCalledWith(
+    expect(delegate.executeAdmitted).toHaveBeenCalledWith(
       {
         runId: PLANNER_COMMAND.runId,
         targetAdapter: PLANNER_COMMAND.targetAdapter,
         selection: PLANNER_COMMAND.selection,
         planRef: STORED_PLAN_REF,
       },
-      AUTHORIZED_CONTEXT
+      AUTHORIZED_CONTEXT,
+      expect.objectContaining({
+        accepted: true,
+        materialized: MATERIALIZED_PLAN,
+        planRecord: PLAN_RECORD,
+      })
     );
     expect(compileTelemetry.recordPlanCompileLatency).toHaveBeenCalledTimes(1);
     expect(compileTelemetry.recordPlanCompileLatency.mock.calls[0]?.[1]).toBe('built');
@@ -311,11 +335,16 @@ describe('PlannerBackedStartRunUseCase', () => {
     const planStore = {
       storePlanArtifact: vi.fn(async () => STORED_PLAN_REF),
       getStoredPlanValidationRecord: vi.fn(async () => PENDING_VALIDATION_RECORD),
+      getPlanRecordByRef: vi.fn(async () => PLAN_RECORD),
       markStoredPlanArtifactValid: vi.fn(async () => {}),
       markStoredPlanArtifactInvalid: vi.fn(async () => {}),
     };
     const delegate = {
       execute: vi.fn(async () => ({
+        ok: true as const,
+        value: { kind: 'accepted' as const, runId: 'run-1', accepted: true },
+      })),
+      executeAdmitted: vi.fn(async () => ({
         ok: true as const,
         value: { kind: 'accepted' as const, runId: 'run-1', accepted: true },
       })),
@@ -328,7 +357,11 @@ describe('PlannerBackedStartRunUseCase', () => {
       planStore: planStore as never,
       compileTelemetry: TEST_PLAN_COMPILE_TELEMETRY,
       validator: {
-        validatePlan: vi.fn(async () => rejection),
+        materializeAndValidatePlan: vi.fn(async () => ({
+          accepted: false,
+          materialized: MATERIALIZED_PLAN,
+          validation: rejection,
+        })),
       } as never,
       delegate: delegate as never,
       executableSubgraphResolver: EXECUTABLE_SUBGRAPH_RESOLVER as never,
@@ -351,7 +384,7 @@ describe('PlannerBackedStartRunUseCase', () => {
       report: rejection,
     });
     expect(planStore.markStoredPlanArtifactValid).not.toHaveBeenCalled();
-    expect(delegate.execute).not.toHaveBeenCalled();
+    expect(delegate.executeAdmitted).not.toHaveBeenCalled();
   });
 
   it('validates and delegates when the command already carries a planRef', async () => {
@@ -361,16 +394,16 @@ describe('PlannerBackedStartRunUseCase', () => {
         ok: true as const,
         value: { kind: 'accepted' as const, runId: 'run-1', accepted: true },
       })),
+      executeAdmitted: vi.fn(async () => ({
+        ok: true as const,
+        value: { kind: 'accepted' as const, runId: 'run-1', accepted: true },
+      })),
     };
     const planner = {
       buildPlan: vi.fn(async () => makeBuildResult('plan-1')),
     };
     const validator = {
-      validatePlan: vi.fn(async () => ({
-        status: 'OK' as const,
-        planId: 'plan-1',
-        adapterId: 'temporal',
-      })),
+      materializeAndValidatePlan: vi.fn(async () => acceptedValidation()),
     };
 
     const useCase = new PlannerBackedStartRunUseCase({
@@ -378,6 +411,7 @@ describe('PlannerBackedStartRunUseCase', () => {
       planStore: {
         storePlanArtifact: vi.fn(async () => STORED_PLAN_REF),
         getStoredPlanValidationRecord: vi.fn(async () => PENDING_VALIDATION_RECORD),
+        getPlanRecordByRef: vi.fn(async () => PLAN_RECORD),
         markStoredPlanArtifactValid: vi.fn(async () => {}),
         markStoredPlanArtifactInvalid: vi.fn(async () => {}),
       } as never,
@@ -402,11 +436,19 @@ describe('PlannerBackedStartRunUseCase', () => {
       },
     });
     expect(planner.buildPlan).not.toHaveBeenCalled();
-    expect(validator.validatePlan).toHaveBeenCalledWith({
+    expect(validator.materializeAndValidatePlan).toHaveBeenCalledWith({
       ...SCOPED_STORED_PLAN_REF,
       adapterId: 'temporal',
     });
-    expect(delegate.execute).toHaveBeenCalledWith(command, AUTHORIZED_CONTEXT);
+    expect(delegate.executeAdmitted).toHaveBeenCalledWith(
+      command,
+      AUTHORIZED_CONTEXT,
+      expect.objectContaining({
+        accepted: true,
+        materialized: MATERIALIZED_PLAN,
+        validationRecord: { state: 'VALID' },
+      })
+    );
     expect(compileTelemetry.recordPlanCompileLatency).not.toHaveBeenCalled();
   });
 
@@ -423,11 +465,16 @@ describe('PlannerBackedStartRunUseCase', () => {
     const planStore = {
       storePlanArtifact: vi.fn(async () => STORED_PLAN_REF),
       getStoredPlanValidationRecord: vi.fn(async () => PENDING_VALIDATION_RECORD),
+      getPlanRecordByRef: vi.fn(async () => PLAN_RECORD),
       markStoredPlanArtifactValid: vi.fn(async () => {}),
       markStoredPlanArtifactInvalid: vi.fn(async () => {}),
     };
     const delegate = {
       execute: vi.fn(async () => ({
+        ok: true as const,
+        value: { kind: 'accepted' as const, runId: 'run-1', accepted: true },
+      })),
+      executeAdmitted: vi.fn(async () => ({
         ok: true as const,
         value: { kind: 'accepted' as const, runId: 'run-1', accepted: true },
       })),
@@ -440,7 +487,11 @@ describe('PlannerBackedStartRunUseCase', () => {
       planStore: planStore as never,
       compileTelemetry: TEST_PLAN_COMPILE_TELEMETRY,
       validator: {
-        validatePlan: vi.fn(async () => rejection),
+        materializeAndValidatePlan: vi.fn(async () => ({
+          accepted: false,
+          materialized: MATERIALIZED_PLAN,
+          validation: rejection,
+        })),
       } as never,
       delegate: delegate as never,
       executableSubgraphResolver: EXECUTABLE_SUBGRAPH_RESOLVER as never,
@@ -464,9 +515,12 @@ describe('PlannerBackedStartRunUseCase', () => {
         cause: 'executor.dbt',
       },
     });
-    expect(delegate.execute).not.toHaveBeenCalled();
+    expect(delegate.executeAdmitted).not.toHaveBeenCalled();
     expect(planStore.markStoredPlanArtifactValid).not.toHaveBeenCalled();
-    expect(planStore.markStoredPlanArtifactInvalid).not.toHaveBeenCalled();
+    expect(planStore.markStoredPlanArtifactInvalid).toHaveBeenCalledWith({
+      ...SCOPED_STORED_PLAN_REF,
+      report: rejection,
+    });
   });
 
   it('rethrows unexpected planner errors', async () => {
@@ -480,18 +534,19 @@ describe('PlannerBackedStartRunUseCase', () => {
       planStore: {
         storePlanArtifact: vi.fn(async () => STORED_PLAN_REF),
         getStoredPlanValidationRecord: vi.fn(async () => PENDING_VALIDATION_RECORD),
+        getPlanRecordByRef: vi.fn(async () => PLAN_RECORD),
         markStoredPlanArtifactValid: vi.fn(async () => {}),
         markStoredPlanArtifactInvalid: vi.fn(async () => {}),
       } as never,
       validator: {
-        validatePlan: vi.fn(async () => ({
-          status: 'OK' as const,
-          planId: 'plan-1',
-          adapterId: 'temporal',
-        })),
+        materializeAndValidatePlan: vi.fn(async () => acceptedValidation()),
       } as never,
       delegate: {
         execute: vi.fn(async () => ({
+          ok: true as const,
+          value: { kind: 'accepted' as const, runId: 'run-1', accepted: true },
+        })),
+        executeAdmitted: vi.fn(async () => ({
           ok: true as const,
           value: { kind: 'accepted' as const, runId: 'run-1', accepted: true },
         })),
@@ -546,6 +601,26 @@ function makeBuildResult(planId: string): PlannerBuildResultV1 {
         },
       ],
     }),
+  };
+}
+
+function acceptedValidation(): {
+  readonly accepted: true;
+  readonly materialized: typeof MATERIALIZED_PLAN;
+  readonly validation: {
+    readonly status: 'OK';
+    readonly planId: string;
+    readonly adapterId: string;
+  };
+} {
+  return {
+    accepted: true,
+    materialized: MATERIALIZED_PLAN,
+    validation: {
+      status: 'OK',
+      planId: 'plan-1',
+      adapterId: 'temporal',
+    },
   };
 }
 

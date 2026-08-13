@@ -15,7 +15,6 @@ import type {
   IWorkflowEngine,
 } from '@dvt/engine';
 import type { IRunExecutionContextBindingPolicy } from '@dvt/engine';
-import type { IPlanExecutabilityValidator } from '@dvt/planner';
 
 import type { IAuthenticator } from '../application/ports/auth.js';
 import type { ICanvasAuthoringAuthorityStore } from '../application/ports/canvasAuthoringAuthority.js';
@@ -34,6 +33,7 @@ import type { ListProjectsUseCase } from '../application/services/listProjectsUs
 import type { ListWorkspacePluginsUseCase } from '../application/services/listWorkspacePluginsUseCase.js';
 import type { SaveWorkspaceGraphDraftUseCase } from '../application/services/saveWorkspaceGraphDraftUseCase.js';
 import type { StartRunAuthorizedFacade } from '../application/services/startRunAuthorizedFacade.js';
+import type { StoredPlanExecutabilityValidator } from '../application/services/StoredPlanExecutabilityValidator.js';
 
 import type { DbtProjectImportRuntime } from './dbtProjectImport/buildDbtProjectImportRuntime.js';
 import type { StateStoreRoleBindings } from './stateStoreRoles.js';
@@ -63,7 +63,7 @@ export interface ProtectedRuntimeModule {
   runControlCommandCoordinator: IRunControlCommandCoordinator;
   systemClock: { nowIsoUtc(): IsoUtcString };
   runExecutionContextBindingPolicy: IRunExecutionContextBindingPolicy;
-  planValidator: IPlanExecutabilityValidator;
+  planValidator: StoredPlanExecutabilityValidator;
   executablePlanResolver: {
     fetch(input: {
       tenantId: string;

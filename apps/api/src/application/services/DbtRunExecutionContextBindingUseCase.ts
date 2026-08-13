@@ -27,11 +27,7 @@ import type { IStartRunUseCase, StartRunUseCaseResult } from '../ports/startRunU
 import type { WorkspaceStorageScope } from '../ports/workspaceFiles.js';
 
 import { resolveDbtPlanExecutionBinding } from './dbtPlanExecutionBinding.js';
-import {
-  STORED_PLAN_MATERIALIZATION_MODE,
-  type StoredExecutablePlanResolver,
-} from './StoredExecutablePlanResolver.js';
-import { createScopedPlanRef } from './storedPlanScope.js';
+import type { StoredPlanAdmissionResult } from './StoredPlanAdmissionCoordinator.js';
 
 const DBT_EXECUTABLE_STEP_KINDS = new Set<string>(TEMPORAL_DBT_PLUGIN_EXECUTABLE_STEP_KINDS);
 const CALLER_CONTEXT_REJECTION =
@@ -41,7 +37,6 @@ export class DbtRunExecutionContextBindingUseCase implements IStartRunUseCase {
   public constructor(
     private readonly deps: {
       readonly delegate: IStartRunUseCase;
-      readonly planMaterializer: Pick<StoredExecutablePlanResolver, 'materialize'>;
       readonly bundleBuilder: IDbtProjectBundleBuilder;
       readonly contextWriter: IDbtRunExecutionContextWriter;
       readonly executionTargetResolver: IDbtExecutionTargetResolver;
@@ -52,21 +47,16 @@ export class DbtRunExecutionContextBindingUseCase implements IStartRunUseCase {
     command: StartRunCommand,
     context: AuthorizedCommandExecutionContext
   ): Promise<StartRunUseCaseResult> {
-    if (command.planRef === undefined) return this.deps.delegate.execute(command, context);
-    const commandWithPlanRef = { ...command, planRef: command.planRef };
+    return this.deps.delegate.execute(command, context);
+  }
 
-    const scopedPlanRef = createScopedPlanRef({
-      scope: {
-        tenantId: context.scope.tenantId.value,
-        projectId: context.scope.projectId?.value,
-        environmentId: context.scope.environmentId?.value,
-      },
-      planRef: commandWithPlanRef.planRef,
-    });
-    const materialized = await this.deps.planMaterializer.materialize(
-      scopedPlanRef,
-      STORED_PLAN_MATERIALIZATION_MODE.validation
-    );
+  public async executeAdmitted(
+    command: StartRunCommand,
+    context: AuthorizedCommandExecutionContext,
+    admission: Extract<StoredPlanAdmissionResult, { readonly accepted: true }>
+  ): Promise<StartRunUseCaseResult> {
+    const commandWithPlanRef = { ...command, planRef: admission.planRef };
+    const { materialized, scopedPlanRef } = admission;
     const { plan } = materialized;
     if (!isDbtPlan(plan)) return this.deps.delegate.execute(command, context);
     if (command.runExecutionContextRef !== undefined) {

@@ -7,7 +7,6 @@ import type {
   ExecutabilityValidationResult,
   IStepTypeRegistry,
   PlanRefSchemaT,
-  RunExecutionPolicy,
   ScopedPlanRef,
 } from '@dvt/contracts';
 import {
@@ -21,15 +20,23 @@ import type { IPlanExecutabilityValidator, PlanExecutabilityValidationInput } fr
 import {
   STORED_PLAN_MATERIALIZATION_MODE,
   StoredPlanMaterializationError,
+  type MaterializedStoredExecutablePlan,
   type StoredExecutablePlanResolver,
 } from './StoredExecutablePlanResolver.js';
 
 type ExecutabilityValidationError = Extract<ExecutabilityValidationResult, { status: 'ERROR' }>;
 
-type LoadedPlanForValidation = {
-  readonly artifactExecutionPolicy: RunExecutionPolicy | undefined;
-  readonly plan: ExecutionPlan;
-};
+export type StoredPlanMaterializationValidationResult =
+  | {
+      readonly accepted: false;
+      readonly validation: ExecutabilityValidationError;
+      readonly materialized?: MaterializedStoredExecutablePlan;
+    }
+  | {
+      readonly accepted: true;
+      readonly validation: Extract<ExecutabilityValidationResult, { status: 'OK' }>;
+      readonly materialized: MaterializedStoredExecutablePlan;
+    };
 
 type ExecutabilityValidationContext = {
   readonly adapterId: string;
@@ -49,6 +56,12 @@ export class StoredPlanExecutabilityValidator implements IPlanExecutabilityValid
   public async validatePlan(
     input: PlanExecutabilityValidationInput
   ): Promise<ExecutabilityValidationResult> {
+    return (await this.materializeAndValidatePlan(input)).validation;
+  }
+
+  public async materializeAndValidatePlan(
+    input: PlanExecutabilityValidationInput
+  ): Promise<StoredPlanMaterializationValidationResult> {
     const validationContext: ExecutabilityValidationContext = {
       adapterId: input.adapterId,
       scopedPlanRef: input,
@@ -56,12 +69,12 @@ export class StoredPlanExecutabilityValidator implements IPlanExecutabilityValid
     };
     const adapter = resolveAdapter(this.deps.adapters, validationContext);
     if ('status' in adapter) {
-      return adapter;
+      return { accepted: false, validation: adapter };
     }
     const stepTypeRegistry = this.deps.stepTypeRegistry ?? createDefaultStepTypeRegistry();
     const loadedPlan = await loadPlanForValidation(this.deps.materializer, validationContext);
     if ('status' in loadedPlan) {
-      return loadedPlan;
+      return { accepted: false, validation: loadedPlan };
     }
     const unsupportedStepError = findUnsupportedStepError(
       loadedPlan.plan,
@@ -69,7 +82,7 @@ export class StoredPlanExecutabilityValidator implements IPlanExecutabilityValid
       stepTypeRegistry
     );
     if (unsupportedStepError !== undefined) {
-      return unsupportedStepError;
+      return { accepted: false, materialized: loadedPlan, validation: unsupportedStepError };
     }
     const capabilityError = validateRequiredCapabilities(
       loadedPlan,
@@ -78,10 +91,14 @@ export class StoredPlanExecutabilityValidator implements IPlanExecutabilityValid
       stepTypeRegistry
     );
     if (capabilityError !== undefined) {
-      return capabilityError;
+      return { accepted: false, materialized: loadedPlan, validation: capabilityError };
     }
 
-    return buildOkResult(validationContext);
+    return {
+      accepted: true,
+      materialized: loadedPlan,
+      validation: buildOkResult(validationContext),
+    };
   }
 }
 
@@ -105,16 +122,12 @@ function resolveAdapter(
 async function loadPlanForValidation(
   materializer: Pick<StoredExecutablePlanResolver, 'materialize'>,
   validationContext: ExecutabilityValidationContext
-): Promise<LoadedPlanForValidation | ExecutabilityValidationError> {
+): Promise<MaterializedStoredExecutablePlan | ExecutabilityValidationError> {
   try {
-    const materialized = await materializer.materialize(
+    return await materializer.materialize(
       validationContext.scopedPlanRef,
       STORED_PLAN_MATERIALIZATION_MODE.validation
     );
-    return {
-      artifactExecutionPolicy: materialized.executionPolicy,
-      plan: materialized.plan,
-    };
   } catch (error) {
     return buildValidationError(
       validationContext,
@@ -148,14 +161,14 @@ function findUnsupportedStepError(
 }
 
 function validateRequiredCapabilities(
-  loadedPlan: LoadedPlanForValidation,
+  loadedPlan: MaterializedStoredExecutablePlan,
   adapter: IProviderAdapter,
   validationContext: ExecutabilityValidationContext,
   stepTypeRegistry: IStepTypeRegistry
 ): ExecutabilityValidationError | undefined {
   const requiredCapabilities = dedupeCapabilities([
     ...collectRequiredCapabilitiesForSteps(stepTypeRegistry, loadedPlan.plan.steps),
-    ...(loadedPlan.artifactExecutionPolicy?.requiresCapabilities ?? []),
+    ...(loadedPlan.executionPolicy.requiresCapabilities ?? []),
   ]);
   const declaredCapabilities = adapter.capabilities?.();
   if (requiredCapabilities.length > 0 && declaredCapabilities === undefined) {
@@ -184,7 +197,7 @@ function validateRequiredCapabilities(
 
 function buildOkResult(
   validationContext: ExecutabilityValidationContext
-): ExecutabilityValidationResult {
+): Extract<ExecutabilityValidationResult, { status: 'OK' }> {
   return {
     status: 'OK',
     planId: validationContext.validatedRef.planId,

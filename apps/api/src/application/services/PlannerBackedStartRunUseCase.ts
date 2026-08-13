@@ -2,7 +2,11 @@
  * Owned concern: compile planner-backed selected-closure start-run inputs into
  * stored plans and hand validated plan refs to the execution delegate.
  */
-import type { IStoredPlanArtifactReader, IStoredPlanArtifactWriter } from '@dvt/artifacts';
+import type {
+  IPlanStoreReader,
+  IStoredPlanArtifactReader,
+  IStoredPlanArtifactWriter,
+} from '@dvt/artifacts';
 import {
   START_RUN_RESULT_KIND,
   type IPlanner,
@@ -13,7 +17,6 @@ import {
   type StartRunResult,
   type StartRunPlanRef,
 } from '@dvt/contracts';
-import type { IPlanExecutabilityValidator } from '@dvt/planner';
 
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
 import type {
@@ -22,14 +25,19 @@ import type {
 } from '../ports/StartRunSlaTelemetry.js';
 import type { IStartRunUseCase, StartRunUseCaseResult } from '../ports/startRunUseCasePort.js';
 
+import type { DbtRunExecutionContextBindingUseCase } from './DbtRunExecutionContextBindingUseCase.js';
 import { ResolveAuthorizedExecutableSubgraphService } from './resolveAuthorizedExecutableSubgraph.js';
 import type { ExecutableSubgraphSelectionRejection } from './resolveAuthorizedExecutableSubgraph.js';
 import { resolveCanonicalPlannerInputEnvelope } from './resolveCanonicalPlannerInputEnvelope.js';
 import { elapsedSlaSecondsSince } from './slaTiming.js';
-import { StoredPlanAdmissionCoordinator } from './StoredPlanAdmissionCoordinator.js';
+import {
+  StoredPlanAdmissionCoordinator,
+  type StoredPlanAdmissionResult,
+} from './StoredPlanAdmissionCoordinator.js';
+import type { StoredPlanExecutabilityValidator } from './StoredPlanExecutabilityValidator.js';
 import { createScopedPlanRef } from './storedPlanScope.js';
 
-type PlanValidationResult = Awaited<ReturnType<IPlanExecutabilityValidator['validatePlan']>>;
+type PlanValidationResult = StoredPlanAdmissionResult['validation'];
 
 type PlanCompileResult =
   | {
@@ -48,9 +56,11 @@ export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
     private readonly deps: {
       readonly planner: IPlanner;
       readonly planStore: IStoredPlanArtifactWriter &
-        Pick<IStoredPlanArtifactReader, 'getStoredPlanValidationRecord'>;
-      readonly validator: IPlanExecutabilityValidator;
-      readonly delegate: IStartRunUseCase;
+        Pick<IStoredPlanArtifactReader, 'getStoredPlanValidationRecord'> &
+        Pick<IPlanStoreReader, 'getPlanRecordByRef'>;
+      readonly validator: Pick<StoredPlanExecutabilityValidator, 'materializeAndValidatePlan'>;
+      readonly delegate: IStartRunUseCase &
+        Pick<DbtRunExecutionContextBindingUseCase, 'executeAdmitted'>;
       readonly compileTelemetry: IPlanCompileLatencyTelemetry;
       readonly executableSubgraphResolver: ResolveAuthorizedExecutableSubgraphService;
     }
@@ -74,16 +84,12 @@ export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
         },
         planRef: command.planRef,
       });
-      const validation = await this.deps.validator.validatePlan({
-        ...scopedPlanRef,
-        adapterId: command.targetAdapter,
-      });
-
-      if (isValidationError(validation)) {
-        return this.toPlanValidationRejectedResult(validation);
+      const admission = await this.planAdmission.admitStored(scopedPlanRef, command.targetAdapter);
+      if (!admission.accepted) {
+        return this.toPlanValidationRejectedResult(admission.validation);
       }
 
-      return this.deps.delegate.execute(command, context);
+      return this.deps.delegate.executeAdmitted(command, context, admission);
     }
 
     const compileResult = await this.buildPlan(command, context);
@@ -91,16 +97,20 @@ export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
       return compileResult.result;
     }
 
-    const { planRef, validation } = await this.planAdmission.admit(
+    const admission = await this.planAdmission.admit(
       compileResult.buildResult,
       command.targetAdapter
     );
 
-    if (isValidationError(validation)) {
-      return this.toPlanValidationRejectedResult(validation);
+    if (!admission.accepted) {
+      return this.toPlanValidationRejectedResult(admission.validation);
     }
 
-    return this.deps.delegate.execute(toDelegateCommand(command, planRef), context);
+    return this.deps.delegate.executeAdmitted(
+      toDelegateCommand(command, admission.planRef),
+      context,
+      admission
+    );
   }
 
   private async buildPlan(
@@ -273,10 +283,4 @@ function toPlannerGraphSource(
           }),
     })),
   };
-}
-
-function isValidationError(
-  validation: PlanValidationResult
-): validation is Extract<PlanValidationResult, { readonly status: 'ERROR' }> {
-  return validation.status === 'ERROR';
 }

@@ -45,17 +45,43 @@ const ERROR_VALIDATION = {
   reason: 'Missing adapter capability: executor.dbt',
   cause: 'executor.dbt',
 };
+const PLAN_RECORD = {
+  tenantId: 'tenant-a',
+  projectId: 'project-a',
+  environmentId: 'prod',
+  planId: PLAN_REF.planId,
+  canonicalPlanJson: JSON.stringify(PLAN),
+  canonicalHash: 'd'.repeat(64),
+  planVersion: PLAN.metadata.planVersion,
+  schemaVersion: PLAN.metadata.schemaVersion,
+  contractVersion: PLAN.metadata.contractVersion,
+  sourceRef: PLAN_REF.uri,
+  createdAtIso: PLAN.metadata.createdAtIso,
+  updatedAtIso: PLAN.metadata.createdAtIso,
+  state: 'ACTIVE' as const,
+};
+const MATERIALIZED = { plan: PLAN, executionPolicy: {} };
+const SCOPED_PLAN_REF = {
+  tenantId: 'tenant-a',
+  projectId: 'project-a',
+  environmentId: 'prod',
+  planRef: PLAN_REF,
+};
 
 describe('StoredPlanAdmissionCoordinator', () => {
   it('stores, validates and marks a pending plan valid exactly once', async () => {
     const harness = createHarness('PENDING_VALIDATION', OK_VALIDATION);
 
     await expect(harness.coordinator.admit(BUILD_RESULT, 'temporal')).resolves.toMatchObject({
+      accepted: true,
       planRef: PLAN_REF,
+      materialized: MATERIALIZED,
+      planRecord: PLAN_RECORD,
       validation: OK_VALIDATION,
+      validationRecord: { state: 'VALID' },
     });
     expect(harness.planStore.storePlanArtifact).toHaveBeenCalledWith({ buildResult: BUILD_RESULT });
-    expect(harness.validator.validatePlan).toHaveBeenCalledWith({
+    expect(harness.validator.materializeAndValidatePlan).toHaveBeenCalledWith({
       tenantId: 'tenant-a',
       projectId: 'project-a',
       environmentId: 'prod',
@@ -75,11 +101,25 @@ describe('StoredPlanAdmissionCoordinator', () => {
     expect(harness.planStore.markStoredPlanArtifactInvalid).not.toHaveBeenCalled();
   });
 
+  it('uses the same admission seam and closes a pending existing plan before dispatch', async () => {
+    const harness = createHarness('PENDING_VALIDATION', OK_VALIDATION);
+
+    await expect(
+      harness.coordinator.admitStored(SCOPED_PLAN_REF, 'temporal')
+    ).resolves.toMatchObject({ accepted: true, validationRecord: { state: 'VALID' } });
+
+    expect(harness.planStore.storePlanArtifact).not.toHaveBeenCalled();
+    expect(harness.planStore.markStoredPlanArtifactValid).toHaveBeenCalledWith(SCOPED_PLAN_REF);
+    expect(harness.validator.materializeAndValidatePlan).toHaveBeenCalledTimes(1);
+  });
+
   it('marks a pending plan invalid with the exact validation report', async () => {
     const harness = createHarness('PENDING_VALIDATION', ERROR_VALIDATION);
 
     await expect(harness.coordinator.admit(BUILD_RESULT, 'temporal')).resolves.toMatchObject({
+      accepted: false,
       validation: ERROR_VALIDATION,
+      validationRecord: { state: 'INVALID' },
     });
     expect(harness.planStore.markStoredPlanArtifactInvalid).toHaveBeenCalledWith({
       tenantId: 'tenant-a',
@@ -102,7 +142,7 @@ describe('StoredPlanAdmissionCoordinator', () => {
 });
 
 function createHarness(
-  state: 'PENDING_VALIDATION' | 'VALID' | undefined,
+  state: 'PENDING_VALIDATION' | 'VALID' | 'INVALID' | undefined,
   validation: typeof OK_VALIDATION | typeof ERROR_VALIDATION
 ): {
   coordinator: StoredPlanAdmissionCoordinator;
@@ -111,26 +151,40 @@ function createHarness(
     getStoredPlanValidationRecord: ReturnType<typeof vi.fn>;
     markStoredPlanArtifactValid: ReturnType<typeof vi.fn>;
     markStoredPlanArtifactInvalid: ReturnType<typeof vi.fn>;
+    getPlanRecordByRef: ReturnType<typeof vi.fn>;
   };
-  validator: { validatePlan: ReturnType<typeof vi.fn> };
+  validator: { materializeAndValidatePlan: ReturnType<typeof vi.fn> };
 } {
+  let currentState = state;
+  let rejectionReport: typeof ERROR_VALIDATION | undefined;
   const planStore = {
     storePlanArtifact: vi.fn(async () => PLAN_REF),
     getStoredPlanValidationRecord: vi.fn(async () =>
-      state === undefined
+      currentState === undefined
         ? undefined
         : {
             planId: PLAN_REF.planId,
-            state,
+            state: currentState,
             storedAtIso: '2026-08-12T00:00:00.000Z',
             updatedAtIso: '2026-08-12T00:00:00.000Z',
+            ...(rejectionReport === undefined ? {} : { rejectionReport }),
           }
     ),
-    markStoredPlanArtifactValid: vi.fn(async () => undefined),
-    markStoredPlanArtifactInvalid: vi.fn(async () => undefined),
+    markStoredPlanArtifactValid: vi.fn(async () => {
+      currentState = 'VALID';
+    }),
+    markStoredPlanArtifactInvalid: vi.fn(async (input: { report: typeof ERROR_VALIDATION }) => {
+      currentState = 'INVALID';
+      rejectionReport = input.report;
+    }),
+    getPlanRecordByRef: vi.fn(async () => PLAN_RECORD),
   };
   const validator = {
-    validatePlan: vi.fn(async () => validation),
+    materializeAndValidatePlan: vi.fn(async () =>
+      validation.status === 'OK'
+        ? { accepted: true as const, materialized: MATERIALIZED, validation }
+        : { accepted: false as const, materialized: MATERIALIZED, validation }
+    ),
   };
   return {
     coordinator: new StoredPlanAdmissionCoordinator({

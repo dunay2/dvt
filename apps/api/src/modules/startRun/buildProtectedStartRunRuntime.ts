@@ -2,11 +2,15 @@
  * Owned concern: assemble the protected start-run runtime subcomponent for
  * `apps/api` from already-bound abstract dependencies.
  */
-import type { DbtProjectBundleArtifactStore, IStoredPlanArtifactStore } from '@dvt/artifacts';
+import type {
+  DbtProjectBundleArtifactStore,
+  IPlanStoreReader,
+  IStoredPlanArtifactStore,
+} from '@dvt/artifacts';
 import type { IPlanner, IStepTypeRegistry } from '@dvt/contracts';
 import type { EngineRunRef, IProviderAdapter, IWorkflowEngine } from '@dvt/engine';
 import type { IObservability } from '@dvt/observability';
-import { PlannerFacade, type IPlanExecutabilityValidator } from '@dvt/planner';
+import { PlannerFacade } from '@dvt/planner';
 
 import type { IAuthenticator } from '../../application/ports/auth.js';
 import type { IDbtExecutionTargetResolver } from '../../application/ports/dbtExecutionTarget.js';
@@ -43,7 +47,7 @@ export type BuildProtectedStartRunRuntimeDeps = {
   readonly retryAfterSeconds: number;
   readonly engine: IWorkflowEngine;
   readonly adapters: ReadonlyMap<EngineRunRef['provider'], IProviderAdapter>;
-  readonly planStore: IStoredPlanArtifactStore;
+  readonly planStore: IStoredPlanArtifactStore & Pick<IPlanStoreReader, 'getPlanRecordByRef'>;
   readonly planMaterializer: StoredExecutablePlanResolver;
   readonly stepTypeRegistry: IStepTypeRegistry;
   readonly workspaceGraphDraftStore: IWorkspaceGraphDraftStore;
@@ -56,7 +60,7 @@ export type ProtectedStartRunRuntime = {
   readonly facade: StartRunAuthorizedFacade;
   readonly planner: IPlanner;
   readonly planCompilePlanner: IPlanner;
-  readonly planValidator: IPlanExecutabilityValidator;
+  readonly planValidator: StoredPlanExecutabilityValidator;
 };
 
 export function buildProtectedStartRunRuntime(
@@ -80,7 +84,6 @@ export function buildProtectedStartRunRuntime(
   const engineStartRunUseCase = new EngineStartRunUseCase(deps.engine);
   const dbtRunExecutionContextBindingUseCase = new DbtRunExecutionContextBindingUseCase({
     delegate: engineStartRunUseCase,
-    planMaterializer: deps.planMaterializer,
     bundleBuilder: new DbtProjectBundleBuilder({
       workspaceFilesRoot: deps.workspaceRoot,
       bundleStore: deps.dbtBundleStore,

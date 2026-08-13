@@ -6,7 +6,7 @@ import {
   TemporalAdapter,
   loadTemporalAdapterConfig,
 } from '@dvt/adapter-temporal';
-import type { IStoredPlanArtifactStore } from '@dvt/artifacts';
+import type { IPlanStoreReader, IStoredPlanArtifactStore } from '@dvt/artifacts';
 import {
   CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
   CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
@@ -32,6 +32,7 @@ import {
 import type { IAuthenticator } from '../../src/application/ports/auth.js';
 import type { IWorkspaceGraphDraftStore } from '../../src/application/ports/workspaceGraphDraft.js';
 import { AuthorizeCommandScopeService } from '../../src/application/services/authorizeCommandScopeService.js';
+import { DbtRunExecutionContextBindingUseCase } from '../../src/application/services/DbtRunExecutionContextBindingUseCase.js';
 import { EngineStartRunUseCase } from '../../src/application/services/engineStartRunUseCase.js';
 import { PlannerBackedStartRunUseCase } from '../../src/application/services/PlannerBackedStartRunUseCase.js';
 import { ResolveAuthorizedExecutableSubgraphService } from '../../src/application/services/resolveAuthorizedExecutableSubgraph.js';
@@ -103,7 +104,7 @@ export async function createStartRunOpenTelemetryProof(
     planVersion: plan.metadata.planVersion,
     sizeBytes: planBytes.byteLength,
   });
-  const planStore = createControlledPlanStore(planBytes);
+  const planStore = createControlledPlanStore(planBytes, planRef);
   const stepTypeRegistry = createDefaultStepTypeRegistry();
   const planMaterializer = new StoredExecutablePlanResolver({
     fetcher: planStore,
@@ -161,7 +162,24 @@ export async function createStartRunOpenTelemetryProof(
       adapters,
       stepTypeRegistry,
     }),
-    delegate: new EngineStartRunUseCase(engineRuntime.engine),
+    delegate: new DbtRunExecutionContextBindingUseCase({
+      delegate: new EngineStartRunUseCase(engineRuntime.engine),
+      bundleBuilder: {
+        async build() {
+          throw new Error('Unexpected DBT bundle build for an empty plan');
+        },
+      },
+      contextWriter: {
+        async write() {
+          throw new Error('Unexpected DBT context write for an empty plan');
+        },
+      },
+      executionTargetResolver: {
+        resolve() {
+          throw new Error('Unexpected DBT target resolution for an empty plan');
+        },
+      },
+    }),
     executableSubgraphResolver: new ResolveAuthorizedExecutableSubgraphService({
       planner,
       workspaceGraphDraftStore: createUnusedWorkspaceGraphDraftStore(),
@@ -218,11 +236,36 @@ export async function startRunProofRequest(
   });
 }
 
-function createControlledPlanStore(bytes: Uint8Array): IStoredPlanArtifactStore {
+function createControlledPlanStore(
+  bytes: Uint8Array,
+  planRef: PlanRef
+): IStoredPlanArtifactStore & Pick<IPlanStoreReader, 'getPlanRecordByRef'> {
   const artifact = { bytes, executionPolicy: {} };
   return {
     async getStoredPlanValidationRecord() {
-      return undefined;
+      return {
+        planId: planRef.planId,
+        state: 'VALID',
+        storedAtIso: '2026-08-03T00:00:00.000Z',
+        updatedAtIso: '2026-08-03T00:00:00.000Z',
+      };
+    },
+    async getPlanRecordByRef(input) {
+      return {
+        tenantId: input.tenantId,
+        projectId: input.projectId,
+        environmentId: input.environmentId,
+        planId: input.planRef.planId,
+        canonicalPlanJson: Buffer.from(bytes).toString('utf8'),
+        canonicalHash: input.planRef.planId,
+        planVersion: '1.0',
+        schemaVersion: '1.0',
+        contractVersion: '1.0.0',
+        sourceRef: input.planRef.uri,
+        createdAtIso: '2026-08-03T00:00:00.000Z',
+        updatedAtIso: '2026-08-03T00:00:00.000Z',
+        state: 'ACTIVE',
+      };
     },
     async fetchStoredPlanArtifact() {
       return artifact;
