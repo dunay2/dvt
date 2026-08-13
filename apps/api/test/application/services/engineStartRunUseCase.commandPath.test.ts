@@ -1,5 +1,5 @@
 import { parseExecutionSelection, type StartRunCommand } from '@dvt/contracts';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import {
   START_RUN_ENGINE_ERROR_CODE,
@@ -68,6 +68,23 @@ describe('EngineStartRunUseCase command path', () => {
       targetAdapter: 'temporal',
     });
   });
+
+  it.each(['projectId', 'environmentId'] as const)(
+    'rejects an authorized context without %s before dispatching to the engine',
+    async (field) => {
+      const startRun = vi.fn();
+      const context = buildAuthorizedContext();
+      const useCase = new EngineStartRunUseCase({ startRun } as never);
+
+      await expect(
+        useCase.execute(buildStartRunCommand(), {
+          ...context,
+          scope: { ...context.scope, [field]: undefined },
+        } as never)
+      ).rejects.toThrow(`START_RUN_SCOPE_MISSING: ${field}`);
+      expect(startRun).not.toHaveBeenCalled();
+    }
+  );
 
   it('drops non-canonical planRef fields before crossing the engine boundary', async () => {
     let capturedPlanRef: unknown;
