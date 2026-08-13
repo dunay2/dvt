@@ -8,7 +8,10 @@ import {
   type HttpErrorType,
 } from './httpErrorContract.js';
 
-type RouteParseErrorType = typeof HTTP_ERROR_TYPE.badRequest | typeof HTTP_ERROR_TYPE.forbidden;
+type RouteParseErrorType =
+  | typeof HTTP_ERROR_TYPE.badRequest
+  | typeof HTTP_ERROR_TYPE.forbidden
+  | typeof HTTP_ERROR_TYPE.unprocessable;
 
 export interface RouteParseIssue {
   readonly type: RouteParseErrorType;
@@ -29,6 +32,13 @@ export function forbiddenIssue(reason: string, options?: RouteParseIssueOptions)
   return createRouteParseIssue(HTTP_ERROR_TYPE.forbidden, reason, options);
 }
 
+export function unprocessableIssue(
+  reason: string,
+  options?: RouteParseIssueOptions
+): RouteParseIssue {
+  return createRouteParseIssue(HTTP_ERROR_TYPE.unprocessable, reason, options);
+}
+
 export function badRequestResult<T = never>(
   reason: string,
   options?: RouteParseIssueOptions
@@ -41,6 +51,13 @@ export function forbiddenResult<T = never>(
   options?: RouteParseIssueOptions
 ): RouteParseResult<T> {
   return { ok: false, issue: forbiddenIssue(reason, options) };
+}
+
+export function unprocessableResult<T = never>(
+  reason: string,
+  options?: RouteParseIssueOptions
+): RouteParseResult<T> {
+  return { ok: false, issue: unprocessableIssue(reason, options) };
 }
 
 type RouteParseIssueOptions = {

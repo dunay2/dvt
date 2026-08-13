@@ -7,8 +7,6 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { PreviewPlanUseCase } from '../../application/services/PreviewPlanUseCase.js';
 
 import { createPlanRouteHandler } from './executePlanRouteFacade.js';
-import { mapPreviewPlanContractIssue } from './planPreviewContractErrorMapper.js';
-import { validatePreviewProfileContract } from './planPreviewContractGuard.js';
 import {
   createAuthorizedPlanRouteRequestResolver,
   type PlanRouteAuthorizationResolverDeps,
@@ -29,15 +27,6 @@ const resolvePreviewPlanRouteRequest = createAuthorizedPlanRouteRequestResolver<
 >({
   parseRequestBody: parsePreviewPlanBody,
   selectRequestedScope: (parsedRequest) => parsedRequest.routeContext,
-  validateAuthorizedRequest: (resolvedRequest) => {
-    const previewContractViolation = validatePreviewProfileContract(
-      resolvedRequest.parsedRequest.previewProfile,
-      resolvedRequest.parsedRequest.contractRequest
-    );
-    return previewContractViolation === null
-      ? null
-      : mapPreviewPlanContractIssue(previewContractViolation);
-  },
 });
 
 export const previewPlanRoute = createPlanRouteHandler({

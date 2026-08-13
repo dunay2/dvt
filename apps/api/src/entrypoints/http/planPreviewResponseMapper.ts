@@ -1,11 +1,14 @@
-import type { ExecutionPlan, PlanRecord, PlanRef } from '@dvt/contracts';
-import { summarizeTransformationSqlFirstPlan } from '@dvt/contracts';
-
-import type { PreviewProfilePolicy } from './previewProfilePolicy.js';
-import type { PreviewProvenance } from './previewProvenanceParser.js';
+import type {
+  ExecutionPlan,
+  PlanPreviewProvenance,
+  PlanRecord,
+  PlanRef,
+  PreviewProfile,
+} from '@dvt/contracts';
+import { PREVIEW_PROFILE, summarizeTransformationSqlFirstPlan } from '@dvt/contracts';
 
 export type PreviewRouteResponse = {
-  previewProfile: PreviewProfilePolicy['previewProfile'];
+  previewProfile: PreviewProfile;
   plan: ExecutionPlan;
   planRef: PlanRef;
   planSummary?: {
@@ -23,21 +26,23 @@ export type PreviewRouteResponse = {
     valid: true;
     warnings: string[];
   };
-  provenance?: PreviewProvenance;
+  provenance?: PlanPreviewProvenance;
 };
 
 export function buildPreviewResponse(
   plan: ExecutionPlan,
   planRef: PlanRef,
   planRecord: PlanRecord,
-  provenance: PreviewProvenance | undefined,
-  previewProfile: PreviewProfilePolicy
+  provenance: PlanPreviewProvenance | undefined,
+  previewProfile: PreviewProfile
 ): PreviewRouteResponse {
   const planSummary =
-    previewProfile.executor === undefined ? undefined : summarizeTransformationSqlFirstPlan(plan);
+    previewProfile === PREVIEW_PROFILE.transformationSqlFirstV1
+      ? summarizeTransformationSqlFirstPlan(plan)
+      : undefined;
 
   return {
-    previewProfile: previewProfile.previewProfile,
+    previewProfile,
     plan,
     planRef,
     ...(planSummary === undefined ? {} : { planSummary }),

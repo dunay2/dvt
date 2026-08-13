@@ -153,6 +153,7 @@ export function buildPreviewBody(overrides: Record<string, unknown> = {}): Recor
       nodeIds: ['node_1'],
     },
     graphSource: VALID_DBT_GRAPH_SOURCE,
+    persist: true,
     ...overrides,
   };
 }

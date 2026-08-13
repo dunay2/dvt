@@ -1,32 +1,27 @@
-import type { ExecutionSelection } from '@dvt/contracts';
+import {
+  PREVIEW_PROFILE,
+  parsePlanPreviewRequest,
+  toValidationErrorResponse,
+  type ExecutionPlan,
+  type PlanPreviewProvenance,
+  type PreviewProfile,
+} from '@dvt/contracts';
 
 import type { PreviewPlanCommand } from '../../application/services/PreviewPlanUseCase.js';
 
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
-import { bindScopeToPlannerEnvelope } from './planPreviewEnvelopeBinder.js';
 import { parsePlanRouteBodyRecord } from './planRouteBodyParser.js';
-import {
-  parsePlanRoutePlannerEnvelope,
-  type ParsedPlanRoutePlannerEnvelope,
-} from './planRoutePlannerEnvelopeParser.js';
+import { toPlanRouteGraphSource } from './planRoutePlannerEnvelopeParser.js';
 import { evaluatePlanRoutePlanSource } from './planRoutePlanSourcePolicy.js';
-import { type ParsedPlanRouteContext, parsePlanRouteContextRecord } from './planRouteScope.js';
-import { parsePlanRouteSelection } from './planRouteSelectionParser.js';
-import { type PreviewProfilePolicy, parsePreviewProfile } from './previewProfilePolicy.js';
-import { type PreviewProvenance, parsePreviewProvenance } from './previewProvenanceParser.js';
-import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
+import { toParsedPlanRouteContext, type ParsedPlanRouteContext } from './planRouteScope.js';
+import { badRequestResult, type RouteParseResult, unprocessableResult } from './routeParseIssue.js';
 
-export interface PreviewPlanContractRequest {
-  readonly context: unknown;
-  readonly selection: ExecutionSelection;
-  readonly graphSource: NonNullable<PreviewPlanCommand['graphSource']>;
-  readonly provenance: PreviewProvenance | undefined;
-}
+type CanonicalPreviewRequest = ReturnType<typeof parsePlanPreviewRequest>;
 
 export interface ParsedPreviewPlanRequest {
   readonly routeContext: ParsedPlanRouteContext;
-  readonly previewProfile: PreviewProfilePolicy;
-  readonly contractRequest: PreviewPlanContractRequest;
+  readonly previewProfile: PreviewProfile;
+  readonly contractRequest: CanonicalPreviewRequest;
   readonly command: PreviewPlanCommand;
 }
 
@@ -35,53 +30,11 @@ export function parsePreviewPlanBody(body: unknown): RouteParseResult<ParsedPrev
   if (!bodyRecord.ok) {
     return bodyRecord;
   }
-
-  const routeContext = parsePlanRouteContextRecord(bodyRecord.value);
-  if (!routeContext.ok) {
-    return routeContext;
+  if (bodyRecord.value.context === undefined) {
+    return badRequestResult(HTTP_ERROR_REASON.invalidBody);
   }
 
-  const previewProfile = parsePreviewProfile(bodyRecord.value.previewProfile);
-  if (!previewProfile.ok) {
-    return previewProfile;
-  }
-
-  const selection = parsePlanRouteSelection(bodyRecord.value.selection);
-  if (!selection.ok) {
-    return selection;
-  }
-
-  const plannerEnvelope = parsePreviewPlannerEnvelope(bodyRecord.value);
-  if (!plannerEnvelope.ok) {
-    return plannerEnvelope;
-  }
-
-  const provenance = parsePreviewProvenance(bodyRecord.value.provenance);
-  if (!provenance.ok) {
-    return provenance;
-  }
-
-  return {
-    ok: true,
-    value: bindPreviewPlanRequest({
-      record: bodyRecord.value,
-      routeContext: routeContext.value,
-      previewProfile: previewProfile.value,
-      selection: selection.value,
-      plannerEnvelope: plannerEnvelope.value,
-      provenance: provenance.value,
-    }),
-  };
-}
-
-function parsePreviewPlannerEnvelope(
-  record: Record<string, unknown>
-): RouteParseResult<
-  ParsedPlanRoutePlannerEnvelope & {
-    readonly graphSource: NonNullable<PreviewPlanCommand['graphSource']>;
-  }
-> {
-  const sourceDecision = evaluatePlanRoutePlanSource(record);
+  const sourceDecision = evaluatePlanRoutePlanSource(bodyRecord.value);
   if (!sourceDecision.ok) {
     return sourceDecision;
   }
@@ -89,61 +42,137 @@ function parsePreviewPlannerEnvelope(
     return badRequestResult(HTTP_ERROR_REASON.invalidPlanSource);
   }
 
-  const plannerEnvelope = parsePlanRoutePlannerEnvelope(record);
-  if (!plannerEnvelope.ok) {
-    return plannerEnvelope;
+  let contractRequest: CanonicalPreviewRequest;
+  try {
+    contractRequest = parsePlanPreviewRequest(bodyRecord.value);
+  } catch (error) {
+    return mapPreviewContractError(bodyRecord.value, error);
   }
-  if (plannerEnvelope.value.graphSource === undefined) {
-    return badRequestResult(HTTP_ERROR_REASON.invalidPlanSource);
+
+  const routeContext = toParsedPlanRouteContext(contractRequest.context);
+  if (!routeContext.ok) {
+    return routeContext;
   }
+
+  const graphSource = toPlanRouteGraphSource(contractRequest.graphSource);
+  const observability = buildPreviewObservability(
+    routeContext.value,
+    contractRequest.previewProfile,
+    contractRequest.provenance
+  );
 
   return {
     ok: true,
     value: {
-      ...plannerEnvelope.value,
-      graphSource: plannerEnvelope.value.graphSource,
+      routeContext: routeContext.value,
+      previewProfile: contractRequest.previewProfile,
+      contractRequest,
+      command: {
+        targetAdapter: routeContext.value.targetAdapter,
+        graphSource,
+        selection: contractRequest.selection,
+        ...(contractRequest.provenance === undefined
+          ? {}
+          : { provenance: contractRequest.provenance }),
+        observability,
+      },
     },
   };
 }
 
-function bindPreviewPlanRequest(input: {
-  readonly record: Record<string, unknown>;
-  readonly routeContext: ParsedPlanRouteContext;
-  readonly previewProfile: PreviewProfilePolicy;
-  readonly selection: ExecutionSelection;
-  readonly plannerEnvelope: ParsedPlanRoutePlannerEnvelope & {
-    readonly graphSource: NonNullable<PreviewPlanCommand['graphSource']>;
+function mapPreviewContractError(
+  record: Record<string, unknown>,
+  error: unknown
+): RouteParseResult<ParsedPreviewPlanRequest> {
+  const validation = toValidationErrorResponse(error);
+  const issues = deduplicateIssues(validation.details);
+  const roots = new Set(issues.map((issue) => issue.path.split('.')[0]));
+
+  if (roots.has('previewProfile')) {
+    return badRequestResult(HTTP_ERROR_REASON.invalidPreviewProfile, {
+      target: 'previewProfile',
+    });
+  }
+  if (roots.has('context')) {
+    return badRequestResult(HTTP_ERROR_REASON.invalidBody);
+  }
+  if (roots.has('selection')) {
+    return badRequestResult(HTTP_ERROR_REASON.invalidSelection, { target: 'selection' });
+  }
+  if (
+    record.previewProfile === PREVIEW_PROFILE.transformationSqlFirstV1 &&
+    record.provenance === undefined &&
+    roots.has('provenance')
+  ) {
+    return unprocessableResult(HTTP_ERROR_REASON.planRejected, {
+      details: {
+        cause: 'missing_preview_provenance',
+        previewProfile: PREVIEW_PROFILE.transformationSqlFirstV1,
+        requiredArtifacts: ['graphArtifact', 'sqlArtifact'],
+      },
+    });
+  }
+  if (roots.has('provenance')) {
+    return badRequestResult(HTTP_ERROR_REASON.invalidPlanSource);
+  }
+  if (
+    roots.has('graphSource') &&
+    record.previewProfile === PREVIEW_PROFILE.transformationSqlFirstV1
+  ) {
+    return badRequestResult(HTTP_ERROR_REASON.invalidPlanSource, {
+      details: {
+        cause: 'preview_contract_validation_failed',
+        previewProfile: PREVIEW_PROFILE.transformationSqlFirstV1,
+        issues,
+      },
+    });
+  }
+  if (roots.has('graphSource')) {
+    return badRequestResult(HTTP_ERROR_REASON.invalidPlanSource);
+  }
+
+  return badRequestResult(HTTP_ERROR_REASON.invalidBody);
+}
+
+function deduplicateIssues(
+  issues: ReadonlyArray<{ readonly path: string; readonly code: string; readonly message?: string }>
+): ReadonlyArray<{ readonly path: string; readonly code: string }> {
+  const seen = new Set<string>();
+  const uniqueIssues: Array<{ readonly path: string; readonly code: string }> = [];
+  for (const issue of issues) {
+    const key = `${issue.path}:${issue.code}`;
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    uniqueIssues.push({ path: issue.path, code: issue.code });
+  }
+  return uniqueIssues;
+}
+
+function buildPreviewObservability(
+  context: ParsedPlanRouteContext,
+  previewProfile: PreviewProfile,
+  provenance: PlanPreviewProvenance | undefined
+): NonNullable<ExecutionPlan['observability']> {
+  const extra = {
+    ...(previewProfile === PREVIEW_PROFILE.transformationSqlFirstV1
+      ? {
+          transformationFlowRuntime: {
+            previewProfile,
+            executor: 'postgres',
+          },
+        }
+      : {}),
+    ...(provenance === undefined ? {} : { planPreviewProvenance: provenance }),
   };
-  readonly provenance: PreviewProvenance | undefined;
-}): ParsedPreviewPlanRequest {
-  const plannerEnvelope = bindScopeToPlannerEnvelope(
-    input.plannerEnvelope,
-    input.routeContext,
-    input.provenance,
-    input.previewProfile
-  );
 
   return {
-    routeContext: input.routeContext,
-    previewProfile: input.previewProfile,
-    contractRequest: {
-      context: input.record.context,
-      selection: input.selection,
-      graphSource: input.plannerEnvelope.graphSource,
-      provenance: input.provenance,
+    tags: {
+      'dvt.scope.tenantId': context.tenantId.value,
+      'dvt.scope.projectId': context.projectId.value,
+      'dvt.scope.environmentId': context.environmentId.value,
     },
-    command: {
-      targetAdapter: input.routeContext.targetAdapter,
-      graphSource: input.plannerEnvelope.graphSource,
-      selection: input.selection,
-      ...(input.provenance === undefined ? {} : { provenance: input.provenance }),
-      ...(plannerEnvelope.policies === undefined ? {} : { policies: plannerEnvelope.policies }),
-      ...(plannerEnvelope.environment === undefined
-        ? {}
-        : { environment: plannerEnvelope.environment }),
-      ...(plannerEnvelope.observability === undefined
-        ? {}
-        : { observability: plannerEnvelope.observability }),
-    },
+    ...(Object.keys(extra).length === 0 ? {} : { extra }),
   };
 }

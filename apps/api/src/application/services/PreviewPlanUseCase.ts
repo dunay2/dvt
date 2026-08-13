@@ -15,11 +15,9 @@ import type {
   IPlanner,
   PlanRecord,
   PlanRef,
-  PlannerPolicyClassSet,
   PlannerSelection,
   PlanPreviewProvenance,
   PlanPreviewSelectionRejection,
-  StartRunPlannerEnvironmentInput,
 } from '@dvt/contracts';
 
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
@@ -37,8 +35,6 @@ export interface PreviewPlanCommand {
   readonly graphSource: GenericGraphSourceV1;
   readonly selection: ExecutionSelection;
   readonly provenance?: PlanPreviewProvenance;
-  readonly policies?: PlannerPolicyClassSet;
-  readonly environment?: StartRunPlannerEnvironmentInput;
   readonly observability?: ExecutionPlan['observability'];
 }
 
@@ -117,8 +113,6 @@ export class PreviewPlanUseCase {
         nodeIds: previewSelection.value.decisionScopeNodeIds,
         requestedRootNodeIds: previewSelection.value.requestedRootNodeIds,
       },
-      ...(command.policies === undefined ? {} : { policies: command.policies }),
-      ...(command.environment === undefined ? {} : { environment: command.environment }),
       ...(command.observability === undefined ? {} : { observability: command.observability }),
     };
 

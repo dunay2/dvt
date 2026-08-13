@@ -180,6 +180,7 @@ describe('previewPlanRoute input policy', () => {
             sourceVersion: 'manifest-v10',
             nodes: [{ nodeId: 'node_1', stepKind: 'DBT_MODEL', dependsOn: [] }],
           },
+          persist: true,
         },
       }) as never,
       reply as never,
