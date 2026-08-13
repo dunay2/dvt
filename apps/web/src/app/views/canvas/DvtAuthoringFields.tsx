@@ -51,11 +51,7 @@ export function DvtAuthoringFields({
         disabled={disabled}
         draft={draft.dvt}
         errors={errors.dvt}
-        sourceTarget={formatQualifiedTarget([
-          draft.dvt.database,
-          draft.dvt.schema,
-          draft.dvt.table,
-        ])}
+        sourceTarget={formatQualifiedTarget([draft.dvt.schema, draft.dvt.table])}
         onChange={onChange}
       />
     );
@@ -90,11 +86,7 @@ export function DvtAuthoringFields({
       disabled={disabled}
       draft={draft.dvt}
       errors={errors.dvt}
-      destinationTarget={formatQualifiedTarget([
-        draft.dvt.database,
-        draft.dvt.schema,
-        draft.dvt.table,
-      ])}
+      destinationTarget={formatQualifiedTarget([draft.dvt.schema, draft.dvt.table])}
       onChange={onChange}
     />
   );

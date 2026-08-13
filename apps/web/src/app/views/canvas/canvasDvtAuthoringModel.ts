@@ -1,6 +1,5 @@
 /** Owned concern: derive and apply route-owned DVT transformation authoring metadata. */
 import type { CanonicalNode } from '../../types/canonical';
-import { readDvtSelectedColumnRefs } from '../../components/inspector/dvtTransformColumnModel';
 import {
   buildDvtSqlTransformMetadata,
   readTransformationSqlMirrorState,
@@ -9,7 +8,6 @@ import type { CanvasInspectorNodeDraftErrorCode } from './canvasInspectorAuthori
 
 export type DvtSourceAuthoringMetadata = Readonly<{
   kind: 'source';
-  database: string;
   schema: string;
   table: string;
   alias: string;
@@ -18,23 +16,18 @@ export type DvtSourceAuthoringMetadata = Readonly<{
 export type DvtSqlTransformAuthoringMetadata = Readonly<{
   kind: 'sql_transform';
   sql: string;
-  selectedColumns: readonly string[];
 }>;
 
 export type DvtSinkAuthoringMetadata = Readonly<{
   kind: 'sink';
-  database: string;
   schema: string;
   table: string;
   materialization: string;
   writeMode: string;
-  partitionStrategy: string;
 }>;
 
 export type DvtNodeAuthoringMetadata =
-  | DvtSourceAuthoringMetadata
-  | DvtSqlTransformAuthoringMetadata
-  | DvtSinkAuthoringMetadata;
+  DvtSourceAuthoringMetadata | DvtSqlTransformAuthoringMetadata | DvtSinkAuthoringMetadata;
 
 export type DvtNodeAuthoringMetadataErrors = Partial<
   Record<
@@ -57,12 +50,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function readString(value: unknown): string | undefined {
   return typeof value === 'string' && value.trim().length > 0 ? value.trim() : undefined;
-}
-
-function normalizeSelectedColumnRefs(values: readonly string[] | undefined): readonly string[] {
-  return Array.from(
-    new Set((values ?? []).map((value) => value.trim()).filter((value) => value.length > 0))
-  );
 }
 
 function readNodeMetadataRecord(
@@ -95,7 +82,6 @@ function normalizeEnumValue(
 
 function createSourceMetadata(node: CanonicalNode): DvtSourceAuthoringMetadata {
   const config = readNodeMetadataRecord(node, 'config');
-  const importedDatabase = readString(node.metadata?.database);
   const importedSourceName = readString(node.metadata?.sourceName);
   const importedSchema = readString(node.metadata?.schema);
   const importedTableName = readString(node.metadata?.tableName);
@@ -106,7 +92,6 @@ function createSourceMetadata(node: CanonicalNode): DvtSourceAuthoringMetadata {
 
   return {
     kind: 'source',
-    database: readString(config?.database) ?? importedDatabase ?? '',
     schema: readString(config?.schema) ?? importedSchema ?? DEFAULT_SCHEMA_NAME,
     table,
     alias: normalizeIdentifier(readString(config?.alias) ?? importedSourceName ?? table, table),
@@ -119,7 +104,6 @@ function createSqlTransformMetadata(node: CanonicalNode): DvtSqlTransformAuthori
   return {
     kind: 'sql_transform',
     sql: mirrorState.draftSql ?? mirrorState.compiledSql ?? '',
-    selectedColumns: normalizeSelectedColumnRefs(readDvtSelectedColumnRefs(node.metadata)),
   };
 }
 
@@ -128,7 +112,6 @@ function createSinkMetadata(node: CanonicalNode): DvtSinkAuthoringMetadata {
 
   return {
     kind: 'sink',
-    database: readString(config?.database) ?? '',
     schema: readString(config?.schema) ?? DEFAULT_SCHEMA_NAME,
     table: normalizeIdentifier(readString(config?.table) ?? node.name, 'sink_table'),
     materialization: normalizeEnumValue(
@@ -141,7 +124,6 @@ function createSinkMetadata(node: CanonicalNode): DvtSinkAuthoringMetadata {
       DEFAULT_WRITE_MODE,
       VALID_WRITE_MODES
     ),
-    partitionStrategy: readString(config?.partitionStrategy) ?? '',
   };
 }
 
@@ -204,26 +186,6 @@ function readExistingConfig(node: CanonicalNode): Record<string, unknown> {
   return readNodeMetadataRecord(node, 'config') ?? {};
 }
 
-function readConfigFromMetadata(metadata: CanonicalNode['metadata']): Record<string, unknown> {
-  const config = metadata?.config;
-  return isRecord(config) ? config : {};
-}
-
-function optionalConfigString(
-  config: Record<string, unknown>,
-  key: string,
-  value: string
-): Record<string, unknown> {
-  const nextConfig = { ...config };
-  const trimmed = value.trim();
-  if (trimmed.length > 0) {
-    nextConfig[key] = trimmed;
-  } else {
-    delete nextConfig[key];
-  }
-  return nextConfig;
-}
-
 function withConfig(
   node: CanonicalNode,
   config: Record<string, unknown>,
@@ -247,9 +209,8 @@ export function applyDvtNodeAuthoringMetadata(
 
   if (metadata.kind === 'source') {
     const table = normalizeIdentifier(metadata.table, 'source_table');
-    const sourceConfig = optionalConfigString(existingConfig, 'database', metadata.database);
     return withConfig(node, {
-      ...sourceConfig,
+      ...existingConfig,
       schema: metadata.schema.trim() || DEFAULT_SCHEMA_NAME,
       table,
       alias: normalizeIdentifier(metadata.alias, table),
@@ -258,32 +219,14 @@ export function applyDvtNodeAuthoringMetadata(
 
   if (metadata.kind === 'sql_transform') {
     const transformMetadata = buildDvtSqlTransformMetadata(node, metadata.sql);
-    const transformConfig = readConfigFromMetadata(transformMetadata);
-    const selectedColumns = normalizeSelectedColumnRefs(metadata.selectedColumns);
-    const nextConfig = { ...transformConfig };
-    if (selectedColumns.length > 0) {
-      nextConfig.selectedColumns = selectedColumns;
-    } else {
-      delete nextConfig.selectedColumns;
-    }
-
     return {
       ...node,
-      metadata: {
-        ...transformMetadata,
-        config: nextConfig,
-      },
+      metadata: transformMetadata,
     };
   }
 
-  const sinkConfig = optionalConfigString(
-    optionalConfigString(existingConfig, 'database', metadata.database),
-    'partitionStrategy',
-    metadata.partitionStrategy
-  );
-
   return withConfig(node, {
-    ...sinkConfig,
+    ...existingConfig,
     schema: metadata.schema.trim() || DEFAULT_SCHEMA_NAME,
     table: normalizeIdentifier(metadata.table, 'sink_table'),
     materialization: normalizeEnumValue(

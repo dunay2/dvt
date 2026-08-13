@@ -47,27 +47,6 @@ export function DvtSourceAuthoringSection({
       </div>
       <div className="grid grid-cols-1 gap-3">
         <div className="space-y-2">
-          <Label htmlFor={`inspector-dvt-source-database-${node.id}`}>
-            {canvasViewCopy.inspectorDvtDatabaseLabel}
-          </Label>
-          <Input
-            id={`inspector-dvt-source-database-${node.id}`}
-            name="dvt-source-database"
-            value={draft.database}
-            disabled={disabled}
-            onChange={(event) =>
-              onChange((currentDraft) =>
-                currentDraft.dvt?.kind === 'source'
-                  ? {
-                      ...currentDraft,
-                      dvt: { ...currentDraft.dvt, database: event.target.value },
-                    }
-                  : currentDraft
-              )
-            }
-          />
-        </div>
-        <div className="space-y-2">
           <Label htmlFor={`inspector-dvt-source-schema-${node.id}`}>
             {canvasViewCopy.inspectorDvtSchemaLabel}
           </Label>

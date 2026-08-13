@@ -55,27 +55,8 @@ export function DvtSqlTransformAuthoringSection({
     node,
     nodes,
     edges,
-    selectedColumnRefs: draft.selectedColumns,
+    selectedColumnRefs: [],
   });
-  const updateColumnSelection = (columnRef: string, checked: boolean) => {
-    onChange((currentDraft) => {
-      if (currentDraft.dvt?.kind !== 'sql_transform') {
-        return currentDraft;
-      }
-
-      const selectedColumns = checked
-        ? Array.from(new Set([...currentDraft.dvt.selectedColumns, columnRef]))
-        : currentDraft.dvt.selectedColumns.filter((candidate) => candidate !== columnRef);
-
-      return {
-        ...currentDraft,
-        dvt: {
-          ...currentDraft.dvt,
-          selectedColumns,
-        },
-      };
-    });
-  };
 
   return (
     <div className={inspectorVisualClasses.inspectorDbtSection}>
@@ -131,30 +112,14 @@ export function DvtSqlTransformAuthoringSection({
               {canvasViewCopy.nodePresentationColumnsLabel}
               {inputRoleLabel == null ? null : ` (${inputRoleLabel})`}
             </h4>
-            {columnOptions.length > 0 ? (
-              <span className={inspectorVisualClasses.inspectorSubtle}>
-                {draft.selectedColumns.length}/{columnOptions.length}{' '}
-                {canvasViewCopy.dvtFlowGuideColumnsLabel}
-              </span>
-            ) : null}
           </div>
           {columnOptions.length > 0 ? (
             <div className="max-h-48 overflow-auto rounded border border-[color:var(--border-default)]">
               {columnOptions.map((option) => (
-                <label
+                <div
                   key={option.columnRef}
-                  className="grid cursor-pointer grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b border-[color:var(--border-muted)] px-3 py-2 text-xs last:border-b-0"
+                  className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-[color:var(--border-muted)] px-3 py-2 text-xs last:border-b-0"
                 >
-                  <input
-                    type="checkbox"
-                    name="dvt-transform-column"
-                    value={option.columnRef}
-                    checked={option.selected}
-                    disabled={disabled}
-                    onChange={(event) =>
-                      updateColumnSelection(option.columnRef, event.target.checked)
-                    }
-                  />
                   <span className="min-w-0">
                     <span className="block truncate font-mono text-(--text-default)">
                       {option.sourceNodeName}.{option.columnName}
@@ -167,7 +132,7 @@ export function DvtSqlTransformAuthoringSection({
                       ? ` ${canvasViewCopy.dvtFlowGuideRequiredLabel}`
                       : ''}
                   </span>
-                </label>
+                </div>
               ))}
             </div>
           ) : (

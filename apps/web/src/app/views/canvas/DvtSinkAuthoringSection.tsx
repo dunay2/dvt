@@ -57,35 +57,9 @@ export function DvtSinkAuthoringSection({
           <span className="rounded border border-[color:var(--border-default)] px-2 py-1 text-(--text-muted)">
             {draft.writeMode}
           </span>
-          {draft.partitionStrategy.trim().length > 0 ? (
-            <span className="rounded border border-[color:var(--border-default)] px-2 py-1 text-(--text-muted)">
-              {draft.partitionStrategy}
-            </span>
-          ) : null}
         </div>
       </div>
       <div className="grid grid-cols-1 gap-3">
-        <div className="space-y-2">
-          <Label htmlFor={`inspector-dvt-sink-database-${node.id}`}>
-            {canvasViewCopy.inspectorDvtDatabaseLabel}
-          </Label>
-          <Input
-            id={`inspector-dvt-sink-database-${node.id}`}
-            name="dvt-sink-database"
-            value={draft.database}
-            disabled={disabled}
-            onChange={(event) =>
-              onChange((currentDraft) =>
-                currentDraft.dvt?.kind === 'sink'
-                  ? {
-                      ...currentDraft,
-                      dvt: { ...currentDraft.dvt, database: event.target.value },
-                    }
-                  : currentDraft
-              )
-            }
-          />
-        </div>
         <div className="space-y-2">
           <Label htmlFor={`inspector-dvt-sink-schema-${node.id}`}>
             {canvasViewCopy.inspectorDvtSchemaLabel}
@@ -207,27 +181,6 @@ export function DvtSinkAuthoringSection({
               {formatCanvasInspectorNodeDraftError(errors.writeMode, canvasViewCopy)}
             </p>
           ) : null}
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor={`inspector-dvt-sink-partition-strategy-${node.id}`}>
-            {canvasViewCopy.inspectorDvtPartitionStrategyLabel}
-          </Label>
-          <Input
-            id={`inspector-dvt-sink-partition-strategy-${node.id}`}
-            name="dvt-sink-partition-strategy"
-            value={draft.partitionStrategy}
-            disabled={disabled}
-            onChange={(event) =>
-              onChange((currentDraft) =>
-                currentDraft.dvt?.kind === 'sink'
-                  ? {
-                      ...currentDraft,
-                      dvt: { ...currentDraft.dvt, partitionStrategy: event.target.value },
-                    }
-                  : currentDraft
-              )
-            }
-          />
         </div>
       </div>
     </div>
