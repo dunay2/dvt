@@ -20,7 +20,13 @@ export function parseCancelRunReceipt(input: unknown): CancelRunReceipt {
   ) {
     throw invalidReceipt();
   }
-  return candidate as CancelRunReceipt;
+  return {
+    contractVersion: 'v1',
+    runId: candidate.runId as string,
+    signalType: 'CANCEL',
+    accepted: candidate.accepted as boolean,
+    disposition: candidate.disposition as CancelRunReceipt['disposition'],
+  };
 }
 
 export function parseRecoverRunReceipt(input: unknown): RecoverRunReceipt {
@@ -34,7 +40,12 @@ export function parseRecoverRunReceipt(input: unknown): RecoverRunReceipt {
   ) {
     throw invalidReceipt();
   }
-  return candidate as RecoverRunReceipt;
+  return {
+    contractVersion: 'v1',
+    sourceRunId: candidate.sourceRunId as string,
+    recoveryRunId: candidate.recoveryRunId as string,
+    accepted: candidate.accepted as boolean,
+  };
 }
 
 function isNonBlankString(value: unknown): value is string {

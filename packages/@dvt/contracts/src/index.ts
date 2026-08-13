@@ -7,6 +7,7 @@ export * from './contracts/engine/IOutboxStorage.v1.js';
 export * from './contracts/engine/RunExecutionPolicy.v1.js';
 export * from './contracts/engine/RunExecutionContext.v1.js';
 export * from './contracts/engine/StartRunBoundary.v1.js';
+export * from './contracts/engine/RunControlBoundary.v1.js';
 export { CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION } from './contracts/engine/RunStateVocabulary.v1.js';
 export type {
   AppendResult,

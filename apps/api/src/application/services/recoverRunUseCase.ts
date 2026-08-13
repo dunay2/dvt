@@ -18,7 +18,7 @@ import type { IRunExecutionContextInheritanceWriter } from '../ports/runExecutio
 import type { IRunExecutionContextReferenceReader } from '../ports/runExecutionContextReferenceReader.js';
 import type { IRunExecutionContextRequirementResolver } from '../ports/runExecutionContextRequirementResolver.js';
 import {
-  RUN_CONTROL_RESULT_CONTRACT_VERSION,
+  RUN_CONTROL_CONTRACT_VERSION,
   type IRecoverRunUseCase,
   type RecoverRunCommand,
   type RecoverRunResult,
@@ -174,7 +174,7 @@ function isRecoveryChildOf(candidate: RunMetadata, source: RunMetadata): boolean
 
 function acceptedRecovery(command: RecoverRunCommand): RecoverRunResult {
   return {
-    contractVersion: RUN_CONTROL_RESULT_CONTRACT_VERSION,
+    contractVersion: RUN_CONTROL_CONTRACT_VERSION,
     sourceRunId: command.sourceRunId,
     recoveryRunId: command.recoveryRunId,
     accepted: true,
