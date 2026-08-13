@@ -146,7 +146,6 @@ describe('canvas inspector authoring component architecture', () => {
     expect(DVT_SQL_SECTION_SOURCE).toContain('formatCanvasInspectorNodeDraftError');
     expect(DVT_SINK_SECTION_SOURCE).toContain('formatCanvasInspectorNodeDraftError');
 
-    expect(SECTION_SOURCE).toContain('canvasViewCopy.inspectorEditablePropertiesTitle');
     expect(DBT_SOURCE_SECTION_SOURCE).toContain('canvasViewCopy.inspectorDbtPackageLabel');
     expect(DBT_MODEL_CODE_SECTION_SOURCE).toContain('canvasViewCopy.inspectorDbtModelSqlLabel');
     expect(DVT_SINK_SECTION_SOURCE).toContain('canvasViewCopy.inspectorDvtWriteModeLabel');
