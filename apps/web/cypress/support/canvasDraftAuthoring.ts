@@ -233,7 +233,15 @@ export function buildCanvasAuthoringDraft({
           role: 'input',
           status: 'idle',
           tags: ['authoring'],
-          metadata: { typeLabel: 'Source' },
+          metadata: {
+            typeLabel: 'Source',
+            config: {
+              database: 'legacy_warehouse',
+              schema: 'raw',
+              table: 'orders',
+              alias: 'orders_source',
+            },
+          },
         },
         {
           id: 'dvt-sql-transform-1',
@@ -243,7 +251,14 @@ export function buildCanvasAuthoringDraft({
           role: 'transform',
           status: 'idle',
           tags: ['authoring'],
-          metadata: { typeLabel: 'SQL transform' },
+          metadata: {
+            typeLabel: 'SQL transform',
+            config: {
+              dialect: 'postgres',
+              sql: 'select order_id from raw.orders',
+              selectedColumns: ['source-1.order_id'],
+            },
+          },
         },
         {
           id: 'sink-1',
@@ -253,7 +268,17 @@ export function buildCanvasAuthoringDraft({
           role: 'output',
           status: 'idle',
           tags: ['authoring'],
-          metadata: { typeLabel: 'Sink' },
+          metadata: {
+            typeLabel: 'Sink',
+            config: {
+              database: 'legacy_warehouse',
+              schema: 'marts',
+              table: 'orders_daily',
+              materialization: 'table',
+              writeMode: 'replace',
+              partitionStrategy: 'daily_by_order_date',
+            },
+          },
         },
         ...(includeLooseNode
           ? [

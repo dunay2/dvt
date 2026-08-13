@@ -104,7 +104,8 @@ describe('Code Monaco editable access architecture', () => {
     expect(workingTreeStatus).not.toContain('Save');
 
     expect(codeEditor).toContain('useMonacoCodeSurface');
-    expect(codeEditor).toContain('readOnly={false}');
+    expect(codeEditor).toContain('readOnly = false');
+    expect(codeEditor).toContain('readOnly={readOnly}');
     expect(codeEditor).toContain('onChange');
     expect(codeEditor).not.toContain('Cargando');
     expect(codeEditor).not.toContain('Loading Monaco editor');

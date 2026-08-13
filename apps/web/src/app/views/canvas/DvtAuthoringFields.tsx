@@ -1,7 +1,7 @@
 /** Owned concern: render DVT-specific Canvas Inspector authoring fields. */
 import type { Dispatch, SetStateAction } from 'react';
 
-import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import type { CanonicalNode } from '../../types/canonical';
 import {
   createCanvasInspectorNodeDraft,
   validateCanvasInspectorNodeDraft,
@@ -12,12 +12,10 @@ import { DvtSqlTransformAuthoringSection } from './DvtSqlTransformAuthoringSecti
 
 type DvtAuthoringFieldsProps = Readonly<{
   node: CanonicalNode;
-  nodes: readonly CanonicalNode[];
-  edges: readonly CanonicalEdge[];
   disabled: boolean;
   draft: ReturnType<typeof createCanvasInspectorNodeDraft>;
   errors: ReturnType<typeof validateCanvasInspectorNodeDraft>;
-  section?: 'all' | 'general' | 'columns' | 'code';
+  section?: 'all' | 'general' | 'code';
   onChange: Dispatch<SetStateAction<ReturnType<typeof createCanvasInspectorNodeDraft>>>;
 }>;
 
@@ -28,8 +26,6 @@ function formatQualifiedTarget(parts: readonly string[]): string {
 
 export function DvtAuthoringFields({
   node,
-  nodes,
-  edges,
   disabled,
   draft,
   errors,
@@ -51,30 +47,24 @@ export function DvtAuthoringFields({
         disabled={disabled}
         draft={draft.dvt}
         errors={errors.dvt}
-        sourceTarget={formatQualifiedTarget([
-          draft.dvt.database,
-          draft.dvt.schema,
-          draft.dvt.table,
-        ])}
+        sourceTarget={formatQualifiedTarget([draft.dvt.schema, draft.dvt.table])}
         onChange={onChange}
       />
     );
   }
 
   if (draft.dvt.kind === 'sql_transform') {
-    if (section !== 'all' && section !== 'columns' && section !== 'code') {
+    if (section !== 'all' && section !== 'code') {
       return null;
     }
 
     return (
       <DvtSqlTransformAuthoringSection
         node={node}
-        nodes={nodes}
-        edges={edges}
         disabled={disabled}
         draft={draft.dvt}
         errors={errors.dvt}
-        section={section}
+        section={section === 'code' ? 'code' : 'all'}
         onChange={onChange}
       />
     );
@@ -90,11 +80,7 @@ export function DvtAuthoringFields({
       disabled={disabled}
       draft={draft.dvt}
       errors={errors.dvt}
-      destinationTarget={formatQualifiedTarget([
-        draft.dvt.database,
-        draft.dvt.schema,
-        draft.dvt.table,
-      ])}
+      destinationTarget={formatQualifiedTarget([draft.dvt.schema, draft.dvt.table])}
       onChange={onChange}
     />
   );

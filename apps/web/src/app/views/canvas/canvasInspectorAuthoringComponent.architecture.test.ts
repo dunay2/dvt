@@ -123,7 +123,8 @@ describe('canvas inspector authoring component architecture', () => {
     expect(DVT_FIELDS_SOURCE).toContain('DvtSourceAuthoringSection');
     expect(DVT_FIELDS_SOURCE).toContain('DvtSqlTransformAuthoringSection');
     expect(DVT_FIELDS_SOURCE).toContain('DvtSinkAuthoringSection');
-    expect(DVT_SQL_SECTION_SOURCE).toContain('name="dvt-transform-sql"');
+    expect(DVT_SQL_SECTION_SOURCE).toContain('MonacoCodeEditor');
+    expect(DVT_SQL_SECTION_SOURCE).not.toContain('@monaco-editor/react');
     expect(DVT_FIELDS_SOURCE).not.toContain('workspaceService');
 
     expect(NODE_WORKBENCH_PANEL_SOURCE).toContain(
@@ -171,12 +172,15 @@ describe('canvas inspector authoring component architecture', () => {
     expect(DVT_SQL_SECTION_SOURCE).toContain(
       'Owned concern: render DVT SQL transform authoring fields.'
     );
-    expect(DVT_SQL_SECTION_SOURCE).toContain('name="dvt-transform-sql"');
+    expect(DVT_SQL_SECTION_SOURCE).toContain('MonacoCodeEditor');
     expect(DVT_SQL_SECTION_SOURCE).toContain('inspectorDvtSqlLinePluralLabel');
+    expect(DVT_SQL_SECTION_SOURCE).not.toContain('name="dvt-transform-column"');
 
     expect(DVT_SINK_SECTION_SOURCE).toContain('Owned concern: render DVT sink authoring fields.');
     expect(DVT_SINK_SECTION_SOURCE).toContain('name="dvt-sink-write-mode"');
-    expect(DVT_SINK_SECTION_SOURCE).toContain('inspectorDvtPartitionStrategyLabel');
+    expect(DVT_SOURCE_SECTION_SOURCE).not.toContain('name="dvt-source-database"');
+    expect(DVT_SINK_SECTION_SOURCE).not.toContain('name="dvt-sink-database"');
+    expect(DVT_SINK_SECTION_SOURCE).not.toContain('name="dvt-sink-partition-strategy"');
   });
 
   it('keeps dbt source and model authoring in separate presentation leaves', () => {

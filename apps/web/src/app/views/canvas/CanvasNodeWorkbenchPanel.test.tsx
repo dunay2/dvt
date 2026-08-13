@@ -15,6 +15,28 @@ import {
   type CanvasNodeWorkbenchPanelProps,
 } from './CanvasNodeWorkbenchPanel';
 
+vi.mock('../../components/monaco/MonacoCodeEditor', () => ({
+  MonacoCodeEditor: ({
+    language,
+    onChange,
+    path,
+    value,
+  }: {
+    language: string;
+    onChange: (value: string) => void;
+    path?: string;
+    value: string;
+  }) => (
+    <textarea
+      data-language={language}
+      data-path={path}
+      data-testid="dvt-transform-sql-editor"
+      onChange={(event) => onChange(event.currentTarget.value)}
+      value={value}
+    />
+  ),
+}));
+
 const SOURCE_NODE: CanonicalNode = {
   id: 'source.orders',
   name: 'Orders Source',
@@ -492,48 +514,23 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(generalSection?.textContent).toContain('Rows');
   });
 
-  it('renders DVT transform column selection inside the Columns tab', () => {
-    const onApplyNodeDraft = vi.fn();
-
-    renderNodePanel(root, DVT_TRANSFORM_NODE, 'columns', {
-      canEditNode: true,
-      onApplyNodeDraft,
-    });
+  it('renders DVT transform upstream columns as read-only facts inside the Columns tab', () => {
+    renderNodePanel(root, DVT_TRANSFORM_NODE, 'columns');
 
     const columnsSection = container.querySelector(
       '[data-slot="canvas-node-workbench-columns-section"]'
     );
-    const selectedColumn = columnsSection?.querySelector<HTMLInputElement>(
-      `input[name="dvt-transform-column"][value="${SOURCE_NODE.id}.order_id"]`
-    );
-
+    const columnRows = columnsSection?.querySelectorAll('tbody tr');
     expect(columnsSection).not.toBeNull();
-    expect(selectedColumn).not.toBeNull();
-    expect(selectedColumn?.checked).toBe(true);
-    expect(container.querySelector('textarea[name="dvt-transform-sql"]')).toBeNull();
-
-    act(() => {
-      fireEvent.click(selectedColumn!);
-    });
-
-    const applyButton = Array.from(container.querySelectorAll('button')).find(
-      (button) => button.textContent === 'Apply'
-    );
-
-    expect(applyButton).toBeDefined();
-
-    act(() => {
-      fireEvent.click(applyButton!);
-    });
-
-    expect(onApplyNodeDraft).toHaveBeenCalledWith(
-      expect.objectContaining({
-        dvt: expect.objectContaining({
-          kind: 'sql_transform',
-          selectedColumns: [],
-        }),
-      })
-    );
+    expect(columnRows).toHaveLength(2);
+    expect(columnRows?.[0]?.textContent).toContain('Orders Source');
+    expect(columnRows?.[0]?.textContent).toContain('order_id');
+    expect(columnsSection?.textContent).toContain('integer');
+    expect(columnsSection?.querySelector('input[name="dvt-transform-column"]')).toBeNull();
+    expect(
+      columnsSection?.querySelector('[data-slot="canvas-node-workbench-authoring"]')
+    ).toBeNull();
+    expect(container.querySelector('[data-testid="dvt-transform-sql-editor"]')).toBeNull();
   });
 
   it('renders DVT transform SQL editing inside the Code tab', () => {
@@ -541,12 +538,14 @@ describe('CanvasNodeWorkbenchPanel', () => {
 
     const codeSection = container.querySelector('[data-slot="canvas-node-workbench-code-section"]');
     const sqlEditor = codeSection?.querySelector<HTMLTextAreaElement>(
-      'textarea[name="dvt-transform-sql"]'
+      '[data-testid="dvt-transform-sql-editor"]'
     );
 
     expect(codeSection).not.toBeNull();
     expect(sqlEditor).not.toBeNull();
     expect(sqlEditor?.value).toBe('select order_id from source.orders');
+    expect(sqlEditor?.dataset.language).toBe('sql');
+    expect(sqlEditor?.dataset.path).toBe('canvas/transform.orders.sql');
     expect(codeSection?.querySelector('input[name="dvt-transform-column"]')).toBeNull();
   });
 
@@ -663,19 +662,34 @@ describe('CanvasNodeWorkbenchPanel', () => {
   it('preserves one DVT transform authoring draft across workbench section switches', () => {
     const onApplyNodeDraft = vi.fn();
 
-    renderNodePanel(root, DVT_TRANSFORM_NODE, 'columns', {
+    renderNodePanel(root, DVT_TRANSFORM_NODE, 'code', {
       canEditNode: true,
       onApplyNodeDraft,
     });
 
-    const selectedColumn = container.querySelector<HTMLInputElement>(
-      `input[name="dvt-transform-column"][value="${SOURCE_NODE.id}.order_id"]`
+    const sqlEditor = container.querySelector<HTMLTextAreaElement>(
+      '[data-testid="dvt-transform-sql-editor"]'
     );
-    expect(selectedColumn).not.toBeNull();
+    expect(sqlEditor).not.toBeNull();
 
     act(() => {
-      fireEvent.click(selectedColumn!);
+      fireEvent.input(sqlEditor!, {
+        target: { value: 'select customer from source.orders' },
+      });
     });
+
+    renderNodePanel(
+      root,
+      DVT_TRANSFORM_NODE,
+      'columns',
+      {
+        canEditNode: true,
+        onApplyNodeDraft,
+      },
+      2
+    );
+
+    expect(container.querySelector('input[name="dvt-transform-column"]')).toBeNull();
 
     renderNodePanel(
       root,
@@ -685,19 +699,13 @@ describe('CanvasNodeWorkbenchPanel', () => {
         canEditNode: true,
         onApplyNodeDraft,
       },
-      2
+      3
     );
 
-    const sqlEditor = container.querySelector<HTMLTextAreaElement>(
-      'textarea[name="dvt-transform-sql"]'
+    const restoredSqlEditor = container.querySelector<HTMLTextAreaElement>(
+      '[data-testid="dvt-transform-sql-editor"]'
     );
-    expect(sqlEditor).not.toBeNull();
-
-    act(() => {
-      fireEvent.change(sqlEditor!, {
-        target: { value: 'select customer from source.orders' },
-      });
-    });
+    expect(restoredSqlEditor?.value).toBe('select customer from source.orders');
 
     const applyButton = Array.from(container.querySelectorAll('button')).find(
       (button) => button.textContent === 'Apply'
@@ -712,7 +720,6 @@ describe('CanvasNodeWorkbenchPanel', () => {
       expect.objectContaining({
         dvt: expect.objectContaining({
           kind: 'sql_transform',
-          selectedColumns: [],
           sql: 'select customer from source.orders',
         }),
       })
