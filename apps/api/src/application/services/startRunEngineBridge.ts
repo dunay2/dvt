@@ -155,8 +155,8 @@ export function toEngineRunContext(
 ): RunContext {
   const runContext: RunContext = {
     tenantId: asNonBlankString(context.scope.tenantId.value),
-    projectId: asNonBlankString(context.scope.projectId?.value ?? ''),
-    environmentId: asNonBlankString(context.scope.environmentId?.value ?? ''),
+    projectId: requireStartRunScope(context.scope.projectId?.value, 'projectId'),
+    environmentId: requireStartRunScope(context.scope.environmentId?.value, 'environmentId'),
     runId: asNonBlankString(command.runId),
     targetAdapter: command.targetAdapter,
   };
@@ -164,6 +164,17 @@ export function toEngineRunContext(
     runContext.runExecutionContextRef = command.runExecutionContextRef;
   }
   return runContext;
+}
+
+function requireStartRunScope(
+  value: string | undefined,
+  field: 'projectId' | 'environmentId'
+): ReturnType<typeof asNonBlankString> {
+  if (value === undefined || value.trim().length === 0) {
+    throw new Error(`START_RUN_SCOPE_MISSING: ${field}`);
+  }
+
+  return asNonBlankString(value);
 }
 
 function getErrorCode(error: unknown): string | undefined {
