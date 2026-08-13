@@ -3,9 +3,11 @@ import { describe, expect, it, vi } from 'vitest';
 import { previewPlanRoute } from '../../../src/entrypoints/http/previewPlanRoute.js';
 
 import {
-  createPreviewRequest,
-  createReply,
-} from './planRouteHttpTestSupport.js';
+  PREVIEW_PROFILE_TRANSFORMATION,
+  VALID_DBT_GRAPH_SOURCE,
+  VALID_PREVIEW_CONTEXT,
+} from './planRouteFixtures.js';
+import { createPreviewRequest, createReply } from './planRouteHttpTestSupport.js';
 import { createPreviewDeps } from './previewPlanRouteTestSupport.js';
 
 describe('previewPlanRoute auth', () => {
@@ -30,6 +32,38 @@ describe('previewPlanRoute auth', () => {
       error: { type: 'unauthorized', reason: 'missing_bearer_token' },
     });
     expect(authorize).not.toHaveBeenCalled();
+  });
+
+  it('authenticates before exposing semantic preview contract failures', async () => {
+    const reply = createReply();
+    const deps = createPreviewDeps({
+      authenticator: {
+        authenticateBearerToken: vi.fn(async () => ({ ok: false, code: 'missing_bearer_token' })),
+      },
+    });
+
+    await previewPlanRoute(
+      createPreviewRequest({
+        id: 'req-preview-invalid-contract-missing-token',
+        authorization: null,
+        body: {
+          context: VALID_PREVIEW_CONTEXT,
+          previewProfile: PREVIEW_PROFILE_TRANSFORMATION,
+          selection: { mode: 'explicit', nodeIds: ['node_1'] },
+          graphSource: VALID_DBT_GRAPH_SOURCE,
+          persist: true,
+        },
+      }) as never,
+      reply as never,
+      deps as never
+    );
+
+    expect(reply.statusCode).toBe(401);
+    expect(reply.payload).toEqual({
+      error: { type: 'unauthorized', reason: 'missing_bearer_token' },
+    });
+    expect(deps.authorizer.authorize).not.toHaveBeenCalled();
+    expect(deps.planner.buildPlan).not.toHaveBeenCalled();
   });
 
   it('returns 403 when principal is not granted run:start', async () => {

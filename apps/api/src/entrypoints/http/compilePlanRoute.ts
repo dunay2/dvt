@@ -29,7 +29,6 @@ const resolveCompilePlanRouteRequest = createAuthorizedPlanRouteRequestResolver<
   ParsedPlanCompileRouteInput
 >({
   parseRequestBody: parsePlanCompileRouteInput,
-  selectRequestedScope: (parsedRequest) => parsedRequest.requestedScope,
 });
 
 export const compilePlanRoute = createPlanRouteHandler({

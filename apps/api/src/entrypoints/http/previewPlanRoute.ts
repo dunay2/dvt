@@ -26,7 +26,6 @@ const resolvePreviewPlanRouteRequest = createAuthorizedPlanRouteRequestResolver<
   ParsedPreviewPlanRequest
 >({
   parseRequestBody: parsePreviewPlanBody,
-  selectRequestedScope: (parsedRequest) => parsedRequest.routeContext,
 });
 
 export const previewPlanRoute = createPlanRouteHandler({

@@ -18,7 +18,7 @@ import { authorizeExecutionScope } from './authorizeExecutionScope.js';
 import { extractBearerToken } from './extractBearerToken.js';
 import type { HttpResponseModel } from './httpErrorContract.js';
 import { httpErrorTranslation } from './httpErrorTranslation.js';
-import type { ParsedPlanRouteScope } from './planRouteScopeParser.js';
+import { parsePlanRouteRequestedScope } from './planRouteScopeParser.js';
 import type { RouteParseResult } from './routeParseIssue.js';
 
 export interface PlanRouteAuthorizationResolverDeps {
@@ -37,30 +37,23 @@ export type ResolvedAuthorizedPlanRouteRequest<TParsedRequest> =
       readonly response: HttpResponseModel;
     };
 
-export interface PlanRouteAuthorizationRequestOptions<TParsedRequest> {
-  readonly selectRequestedScope: (parsedRequest: TParsedRequest) => ParsedPlanRouteScope;
-}
-
-export interface AuthorizedPlanRouteRequestResolverOptions<
-  TParsedRequest,
-> extends PlanRouteAuthorizationRequestOptions<TParsedRequest> {
+export interface AuthorizedPlanRouteRequestResolverOptions<TParsedRequest> {
   readonly parseRequestBody: (body: unknown) => RouteParseResult<TParsedRequest>;
 }
 
 export async function resolveAuthorizedPlanRouteRequest<TParsedRequest>(
   request: FastifyRequest<{ Body: unknown }>,
   deps: PlanRouteAuthorizationResolverDeps,
-  parsedRequest: RouteParseResult<TParsedRequest>,
-  options: PlanRouteAuthorizationRequestOptions<TParsedRequest>
+  options: AuthorizedPlanRouteRequestResolverOptions<TParsedRequest>
 ): Promise<ResolvedAuthorizedPlanRouteRequest<TParsedRequest>> {
-  if (!parsedRequest.ok) {
+  const requestedScope = parsePlanRouteRequestedScope(request.body);
+  if (!requestedScope.ok) {
     return {
       ok: false,
-      response: httpErrorTranslation.parse.issue(parsedRequest.issue),
+      response: httpErrorTranslation.parse.issue(requestedScope.issue),
     };
   }
 
-  const requestedScope = options.selectRequestedScope(parsedRequest.value);
   const authz = await authorizeExecutionScope({
     authenticator: deps.authenticator,
     authorizer: deps.authorizer,
@@ -68,9 +61,9 @@ export async function resolveAuthorizedPlanRouteRequest<TParsedRequest>(
     requestId: request.id,
     requestedScope: {
       ...buildEnvironmentAccessScope(
-        requestedScope.tenantId,
-        requestedScope.projectId,
-        requestedScope.environmentId
+        requestedScope.value.tenantId,
+        requestedScope.value.projectId,
+        requestedScope.value.environmentId
       ),
       action: AUTHORIZATION_ACTION.runStart,
     },
@@ -79,6 +72,14 @@ export async function resolveAuthorizedPlanRouteRequest<TParsedRequest>(
     return {
       ok: false,
       response: authz.response,
+    };
+  }
+
+  const parsedRequest = options.parseRequestBody(request.body);
+  if (!parsedRequest.ok) {
+    return {
+      ok: false,
+      response: httpErrorTranslation.parse.issue(parsedRequest.issue),
     };
   }
 
@@ -102,13 +103,6 @@ export function createAuthorizedPlanRouteRequestResolver<
     request: FastifyRequest<{ Body: unknown }>,
     deps: TDeps
   ): Promise<ResolvedAuthorizedPlanRouteRequest<TParsedRequest>> => {
-    return resolveAuthorizedPlanRouteRequest(
-      request,
-      deps,
-      options.parseRequestBody(request.body),
-      {
-        selectRequestedScope: options.selectRequestedScope,
-      }
-    );
+    return resolveAuthorizedPlanRouteRequest(request, deps, options);
   };
 }

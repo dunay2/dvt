@@ -29,7 +29,6 @@ const resolveImportPlanRouteRequest = createAuthorizedPlanRouteRequestResolver<
   ParsedImportPlanRouteInput
 >({
   parseRequestBody: parseImportPlanRouteInput,
-  selectRequestedScope: (parsedRequest) => parsedRequest.routeContext,
 });
 
 export const importPlanRoute = createPlanRouteHandler({
