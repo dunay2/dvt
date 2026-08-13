@@ -145,35 +145,6 @@ function waitForDraftSaveContainingConfiguredModel(
   });
 }
 
-function findDraftSaveContainingConfiguredDvtTransform(
-  nodeId: string,
-  name: string,
-  sql: string
-): CanvasDraftSaveRequestBody | undefined {
-  return getE2eApiCalls('/workspace/graph/draft', 'PUT')
-    .map((call) => call.body as CanvasDraftSaveRequestBody)
-    .find((body) => {
-      const node = body.draft.nodes.find((candidate) => candidate.id === nodeId);
-      const config = node?.metadata?.config as
-        { sql?: string; selectedColumns?: string[] } | undefined;
-
-      return (
-        node?.name === name &&
-        config?.sql === sql &&
-        config.selectedColumns?.[0] === 'source-1.order_id'
-      );
-    });
-}
-
-function replaceOpenMonacoContent(content: string): void {
-  cy.get('[data-testid="monaco-code-editor"]')
-    .find('.monaco-editor textarea')
-    .first()
-    .focus()
-    .type('{ctrl+a}', { force: true, delay: 0 })
-    .type(content, { force: true, parseSpecialCharSequences: false, delay: 0 });
-}
-
 function assertNoManualSaveCommand(): void {
   cy.contains('button', /^Save$/).should('not.exist');
   cy.contains('button', /^Guardar$/).should('not.exist');
@@ -461,7 +432,12 @@ describe('Canvas ready node authoring', () => {
     );
     cy.get('[data-testid="monaco-code-editor"]').should('be.visible');
     cy.get('input[name="dvt-transform-column"]').should('not.exist');
-    replaceOpenMonacoContent(authoredSql);
+    cy.get('[data-testid="monaco-code-editor"]')
+      .find('.monaco-editor textarea')
+      .first()
+      .focus()
+      .type('{ctrl+a}', { force: true, delay: 0 })
+      .type(authoredSql, { force: true, parseSpecialCharSequences: false, delay: 0 });
     cy.get('[data-slot="canvas-node-workbench-tab-general"]').click();
     cy.get('input[name="node-name"]').clear().type('Orders enriched');
     cy.get('input[name="node-tags"]').clear().type('authoring, finance');
@@ -469,13 +445,21 @@ describe('Canvas ready node authoring', () => {
     cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^Apply$/).click();
 
     cy.wrap(null).should(() => {
-      expect(
-        findDraftSaveContainingConfiguredDvtTransform(
-          'dvt-sql-transform-1',
-          'Orders enriched',
-          authoredSql
-        )
-      ).to.not.be.undefined;
+      const savedDraft = getE2eApiCalls('/workspace/graph/draft', 'PUT')
+        .map((call) => call.body as CanvasDraftSaveRequestBody)
+        .find((body) => {
+          const node = body.draft.nodes.find((candidate) => candidate.id === 'dvt-sql-transform-1');
+          const config = node?.metadata?.config as
+            { sql?: string; selectedColumns?: string[] } | undefined;
+
+          return (
+            node?.name === 'Orders enriched' &&
+            config?.sql === authoredSql &&
+            config.selectedColumns?.[0] === 'source-1.order_id'
+          );
+        });
+
+      expect(savedDraft).to.not.be.undefined;
     });
     cy.get('input[name="node-name"]').clear().type('Unsaved name');
     cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^Cancel$/).click();
