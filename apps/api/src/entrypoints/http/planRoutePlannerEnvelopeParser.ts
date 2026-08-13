@@ -38,7 +38,7 @@ export function parsePlanRoutePlannerEnvelope(
     const result: PlannerCommandFields = {};
 
     if (record.graphSource !== undefined) {
-      result.graphSource = mapGraphSource(parseGenericGraphSourceV1(record.graphSource));
+      result.graphSource = toPlanRouteGraphSource(parseGenericGraphSourceV1(record.graphSource));
     }
 
     if (record.policies !== undefined) {
@@ -65,7 +65,7 @@ export function parsePlanRoutePlannerEnvelope(
   }
 }
 
-function mapGraphSource(
+export function toPlanRouteGraphSource(
   graphSource: GenericGraphSourceV1SchemaT
 ): GenericGraphSourceV1 {
   const nodes: GenericGraphNodeV1[] = graphSource.nodes.map((node) => {
@@ -128,18 +128,14 @@ function normalizePlannerObservability(
   return normalized;
 }
 
-function parsePlanRoutePlannerEnvironment(
-  raw: unknown
-): PlannerEnvironmentContext {
+function parsePlanRoutePlannerEnvironment(raw: unknown): PlannerEnvironmentContext {
   const canonicalEnvironment = parsePlannerEnvironmentContext(raw);
 
   return {
     ...(canonicalEnvironment.environmentId === undefined
       ? {}
       : { environmentId: canonicalEnvironment.environmentId }),
-    ...(canonicalEnvironment.vars === undefined
-      ? {}
-      : { vars: canonicalEnvironment.vars }),
+    ...(canonicalEnvironment.vars === undefined ? {} : { vars: canonicalEnvironment.vars }),
   };
 }
 
