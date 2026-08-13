@@ -22,23 +22,11 @@ import {
 } from './workspaceGraphDraftHttp';
 
 function isProtectedDraftReadResponseStatus(statusCode: number): boolean {
-  return (
-    statusCode === 200 ||
-    statusCode === 401 ||
-    statusCode === 403 ||
-    statusCode === 404 ||
-    statusCode === 422
-  );
+  return statusCode === 200 || statusCode === 403 || statusCode === 404 || statusCode === 422;
 }
 
 function isProtectedDraftSaveResponseStatus(statusCode: number): boolean {
-  return (
-    statusCode === 200 ||
-    statusCode === 401 ||
-    statusCode === 403 ||
-    statusCode === 409 ||
-    statusCode === 422
-  );
+  return statusCode === 200 || statusCode === 403 || statusCode === 409 || statusCode === 422;
 }
 
 function buildWorkspaceGraphDraftSaveRequestBody(input: SaveWorkspaceGraphDraftAuthoringInput) {
