@@ -1,4 +1,6 @@
 /** Owned concern: parse a retry request without accepting browser-owned execution authority. */
+import { parseRecoverRunRequest as parseCanonicalRecoverRunRequest } from '@dvt/contracts';
+
 import type { RecoverRunCommand } from '../../application/ports/runtime.js';
 import type { TenantId } from '../../domain/auth/types.js';
 
@@ -55,7 +57,7 @@ export function parseRecoverRunRequest(input: {
   return {
     ok: true,
     value: {
-      command: { sourceRunId, recoveryRunId },
+      command: parseCanonicalRecoverRunRequest({ sourceRunId, recoveryRunId }),
       authorization: {
         tenantId: tenantId.value,
         actionName: RUN_COMMAND_ACTION.RETRY,

@@ -18,7 +18,7 @@ import { ApiError, type ApiClient } from '../api/createApiClient';
 import { normalizeProtectedRuntimeRejection } from '../api/protectedRuntimeRejection';
 import { createBrowserIdempotencyKey } from '../idempotency/createBrowserIdempotencyKey';
 import { createSessionContextPort } from '../session/sessionContextPort';
-import { parseCancelRunReceipt, parseRecoverRunReceipt } from './runsApiControlReceipts';
+import { parseCancelRunReceipt, parseRecoverRunReceipt } from '@dvt/contracts';
 import type { RecoveryIdempotencyKeyStore } from './recoveryIdempotencyKeyStore';
 import {
   extractEventsPayload,
