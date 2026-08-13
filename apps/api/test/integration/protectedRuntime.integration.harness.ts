@@ -9,6 +9,8 @@
  */
 import { randomUUID } from 'node:crypto';
 
+import { PostgresStateStoreAdapter, type EventType } from '@dvt/adapter-postgres';
+import { asIsoUtcString, type RunId } from '@dvt/contracts';
 import { afterAll, beforeAll, beforeEach } from 'vitest';
 
 import { signBearerToken } from './protectedRuntime.integration.auth.js';
@@ -27,6 +29,7 @@ import {
   upsertPrincipalGrant,
 } from './protectedRuntime.integration.persistence.js';
 import {
+  DATABASE_URL,
   ENVIRONMENT_ID,
   PRINCIPAL_ID,
   PROJECT_ID,
@@ -47,6 +50,9 @@ export type ProtectedRuntimeHarness = {
   setPrincipalGrant(tenantActions: ReadonlyArray<string>): Promise<void>;
   withPrincipalGrant(tenantActions: ReadonlyArray<string>, run: () => Promise<void>): Promise<void>;
   queryLatestStoredPlan(): ReturnType<typeof queryLatestStoredPlan>;
+  recordRunStarted(runId: string): Promise<void>;
+  recordSignalRealized(runId: string, eventType: 'RunPaused' | 'RunResumed'): Promise<void>;
+  recordTerminalCancellation(runId: string): Promise<void>;
 };
 
 export function createProtectedRuntimeHarness(): ProtectedRuntimeHarness {
@@ -65,7 +71,48 @@ export function createProtectedRuntimeHarness(): ProtectedRuntimeHarness {
     withPrincipalGrant,
     queryLatestStoredPlan: () =>
       queryLatestStoredPlan(requireAdminClient(state.adminClient), schema),
+    recordRunStarted: (runId) => appendWorkerEvents(schema, runId, ['RunStarted']),
+    recordSignalRealized: (runId, eventType) => appendWorkerEvents(schema, runId, [eventType]),
+    recordTerminalCancellation: (runId) =>
+      appendWorkerEvents(schema, runId, ['RunCancelRequested', 'RunCancelled']),
   };
+}
+
+async function appendWorkerEvents(
+  schema: string,
+  runId: string,
+  eventTypes: readonly EventType[]
+): Promise<void> {
+  if (!DATABASE_URL) throw new Error('DATABASE_URL/DVT_PG_URL is required');
+  const stateStore = new PostgresStateStoreAdapter({
+    connectionString: DATABASE_URL,
+    schema,
+    assumeSchemaReady: true,
+  });
+  try {
+    const metadata = await stateStore.getRunMetadataByRunId(TENANT_ID, runId);
+    if (metadata === null) throw new Error(`Run ${runId} is missing from the real state store`);
+    await stateStore.appendAndEnqueueTx(
+      runId as RunId,
+      eventTypes.map((eventType) => ({
+        eventId: `${runId}:integration:${eventType}`,
+        eventType,
+        runId,
+        emittedAt: asIsoUtcString(new Date().toISOString()),
+        tenantId: metadata.tenantId,
+        projectId: metadata.projectId,
+        environmentId: metadata.environmentId,
+        planId: metadata.planId,
+        planVersion: metadata.planVersion,
+        engineAttemptId: 1,
+        logicalAttemptId: metadata.logicalAttemptId,
+        idempotencyKey: `${runId}:integration:${eventType}`,
+        payloadVersion: 1,
+      }))
+    );
+  } finally {
+    await stateStore.close();
+  }
 }
 
 function registerProtectedRuntimeLifecycle(

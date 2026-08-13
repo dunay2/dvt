@@ -30,8 +30,12 @@ export async function exerciseCommandQueryFlow(
   readonly actualRunId: string;
   readonly listResponse: { statusCode: number; json(): unknown };
   readonly getRunResponse: { statusCode: number; json(): unknown };
+  readonly pauseResponse: { statusCode: number; json(): unknown };
+  readonly resumeResponse: { statusCode: number; json(): unknown };
   readonly cancelResponse: { statusCode: number; json(): unknown };
   readonly eventsResponse: { statusCode: number; json(): unknown };
+  readonly recoverResponse: { statusCode: number; json(): unknown };
+  readonly repeatedRecoverResponse: { statusCode: number; json(): unknown };
 }> {
   const token = await runtime.issuePrincipalToken();
   const runtimeApp = runtime.requireApp();
@@ -41,6 +45,7 @@ export async function exerciseCommandQueryFlow(
     graphNodeId: input.graphNodeId,
   });
   const actualRunId = readAcceptedRunId(startResponse.json());
+  await runtime.recordRunStarted(actualRunId);
   const listResponse = await runtimeApp.inject({
     method: 'GET',
     url: `/runs?tenantId=${TENANT_ID}&projectId=${PROJECT_ID}&environmentId=${ENVIRONMENT_ID}&limit=10`,
@@ -51,6 +56,20 @@ export async function exerciseCommandQueryFlow(
     url: `/runs/${actualRunId}?tenantId=${TENANT_ID}`,
     headers: { authorization: `Bearer ${token}` },
   });
+  const pauseResponse = await runtimeApp.inject({
+    method: 'POST',
+    url: `/runs/${actualRunId}/signal`,
+    headers: { authorization: `Bearer ${token}` },
+    payload: { tenantId: TENANT_ID, signalType: 'PAUSE' },
+  });
+  await runtime.recordSignalRealized(actualRunId, 'RunPaused');
+  const resumeResponse = await runtimeApp.inject({
+    method: 'POST',
+    url: `/runs/${actualRunId}/signal`,
+    headers: { authorization: `Bearer ${token}` },
+    payload: { tenantId: TENANT_ID, signalType: 'RESUME' },
+  });
+  await runtime.recordSignalRealized(actualRunId, 'RunResumed');
   const cancelResponse = await runtimeApp.inject({
     method: 'POST',
     url: `/runs/${actualRunId}/cancel`,
@@ -64,14 +83,35 @@ export async function exerciseCommandQueryFlow(
     url: `/runs/${actualRunId}/events?tenantId=${TENANT_ID}&limit=10`,
     headers: { authorization: `Bearer ${token}` },
   });
+  await runtime.recordTerminalCancellation(actualRunId);
+  const recoveryHeaders = {
+    authorization: `Bearer ${token}`,
+    'idempotency-key': `recover-${actualRunId}`,
+  };
+  const recoverResponse = await runtimeApp.inject({
+    method: 'POST',
+    url: `/runs/${actualRunId}/recover`,
+    headers: recoveryHeaders,
+    payload: { tenantId: TENANT_ID },
+  });
+  const repeatedRecoverResponse = await runtimeApp.inject({
+    method: 'POST',
+    url: `/runs/${actualRunId}/recover`,
+    headers: recoveryHeaders,
+    payload: { tenantId: TENANT_ID },
+  });
 
   return {
     startResponse,
     actualRunId,
     listResponse,
     getRunResponse,
+    pauseResponse,
+    resumeResponse,
     cancelResponse,
     eventsResponse,
+    recoverResponse,
+    repeatedRecoverResponse,
   };
 }
 

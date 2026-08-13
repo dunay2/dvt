@@ -20,8 +20,12 @@ export type CommandQueryFlowResult = {
   readonly actualRunId: string;
   readonly listResponse: JsonResponse;
   readonly getRunResponse: JsonResponse;
+  readonly pauseResponse: JsonResponse;
+  readonly resumeResponse: JsonResponse;
   readonly cancelResponse: JsonResponse;
   readonly eventsResponse: JsonResponse;
+  readonly recoverResponse: JsonResponse;
+  readonly repeatedRecoverResponse: JsonResponse;
 };
 
 export type PlannerBackedRunFlowResult = {
@@ -61,7 +65,7 @@ export function expectCommandQueryFlowSucceeded(flow: CommandQueryFlowResult): v
         planId: expect.any(String),
         planVersion: expect.any(String),
         provider: 'temporal',
-        status: 'PENDING',
+        status: 'RUNNING',
       },
     ],
   });
@@ -70,8 +74,21 @@ export function expectCommandQueryFlowSucceeded(flow: CommandQueryFlowResult): v
   expect(flow.getRunResponse.json()).toMatchObject({
     runId: flow.actualRunId,
     tenantId: TENANT_ID,
-    status: 'PENDING',
+    status: 'RUNNING',
     enriched: false,
+  });
+
+  expect(flow.pauseResponse.statusCode).toBe(202);
+  expect(flow.pauseResponse.json()).toEqual({
+    runId: flow.actualRunId,
+    signalType: 'PAUSE',
+    accepted: true,
+  });
+  expect(flow.resumeResponse.statusCode).toBe(202);
+  expect(flow.resumeResponse.json()).toEqual({
+    runId: flow.actualRunId,
+    signalType: 'RESUME',
+    accepted: true,
   });
 
   expect(flow.cancelResponse.statusCode).toBe(202);
@@ -84,7 +101,23 @@ export function expectCommandQueryFlowSucceeded(flow: CommandQueryFlowResult): v
   });
 
   expect(flow.eventsResponse.statusCode).toBe(200);
-  expect(eventTypes(flow.eventsResponse.json())).toEqual(['RunQueued', 'RunCancelSubmitted']);
+  expect(eventTypes(flow.eventsResponse.json())).toEqual([
+    'RunQueued',
+    'RunStarted',
+    'RunPaused',
+    'RunResumed',
+    'RunCancelSubmitted',
+  ]);
+
+  expect(flow.recoverResponse.statusCode).toBe(202);
+  expect(flow.recoverResponse.json()).toEqual({
+    contractVersion: 'v1',
+    sourceRunId: flow.actualRunId,
+    recoveryRunId: expect.stringMatching(/^run_recovery_[a-f0-9]{40}$/),
+    accepted: true,
+  });
+  expect(flow.repeatedRecoverResponse.statusCode).toBe(202);
+  expect(flow.repeatedRecoverResponse.json()).toEqual(flow.recoverResponse.json());
 }
 
 export function expectPlannerBackedRunFlowSucceeded(flow: PlannerBackedRunFlowResult): void {
