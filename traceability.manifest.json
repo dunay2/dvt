@@ -1174,10 +1174,14 @@
     {
       "number": "ADR-0062",
       "decisions": [
-        "Keep effective workspace selection behind a distinct server-owned query port."
+        "Keep effective workspace selection behind a distinct server-owned query port.",
+        "The server owns granted workspace truth through one strict shared contract."
       ],
-      "implemented_by": ["apps/api/src/application/ports/workspaceContext.ts"],
-      "title": "ADR-0062 - Server-Owned Effective Workspace Context"
+      "implemented_by": [
+        "apps/api/src/application/ports/workspaceContext.ts",
+        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts"
+      ],
+      "title": "ADR-0062 - Server-Owned Granted Workspace Context And Default"
     },
     {
       "number": "ADR-0063",

@@ -1,3 +1,12 @@
+/**
+ * Owned concern: version the public project admission, catalog, and effective
+ * workspace context shapes shared by API and browser.
+ *
+ * @baseline ADR-0062: Server-owned granted workspace context and default
+ * @decision The server owns granted workspace truth through one strict shared contract.
+ * @consequence Browser persistence remains a projection and cannot invent project authority.
+ * @version 1.0.0
+ */
 import { z } from 'zod';
 
 const NonBlankStringSchema = z.string().trim().min(1);
