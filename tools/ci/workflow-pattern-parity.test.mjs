@@ -13,6 +13,7 @@ import {
   PR_QUALITY_SCOPE_PATTERNS,
   TEST_SCOPE_PATTERNS,
   WORKFLOW_SCOPE_PATTERNS,
+  computeWorkflowModeScopeOutputs,
   matchesAnyPattern,
 } from './scope-config.mjs';
 
@@ -176,7 +177,15 @@ test('adapter-postgres policy stays wired into the PR quality gate and test work
   assert.ok(matchesAnyPattern('turbo.json', TEST_SCOPE_PATTERNS.root_config));
   assert.ok(matchesAnyPattern('turbo.json', workflowScopePolicy.any_code));
   assert.ok(matchesAnyPattern('turbo.json', workflowScopePolicy.workspace_global));
-  assert.ok(matchesAnyPattern('tools/ci/emit-scope.mjs', TEST_SCOPE_PATTERNS.root_config));
+  assert.equal(
+    computeWorkflowModeScopeOutputs('test', ['tools/ci/emit-scope.mjs']).root_build_sensitive,
+    false
+  );
+  assert.equal(
+    computeWorkflowModeScopeOutputs('test', ['scripts/unclassified-runtime.cjs'])
+      .root_build_sensitive,
+    true
+  );
   assert.ok(
     matchesAnyPattern('scripts/skip-prebuild-if-orchestrated.cjs', TEST_SCOPE_PATTERNS.any_test)
   );

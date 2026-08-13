@@ -161,11 +161,10 @@ test('emit-scope keeps Planning DB changes with a CI contract test out of produc
   assert.equal(qualityScope.temporal_postgres_changed, false);
 });
 
-test('emit-scope fails closed when the semantic scope engine changes', () => {
-  const testScope = computeWorkflowModeScopeOutputs('test', ['tools/ci/scope-config.mjs']);
-  const qualityScope = computeWorkflowModeScopeOutputs('pr-quality', [
-    'tools/ci/policy/workflow-scope.json',
-  ]);
+test('emit-scope fails closed for an unclassified executable', () => {
+  const changedFiles = ['scripts/unclassified-runtime.cjs'];
+  const testScope = computeWorkflowModeScopeOutputs('test', changedFiles);
+  const qualityScope = computeWorkflowModeScopeOutputs('pr-quality', changedFiles);
 
   assert.equal(testScope.root_build_sensitive, true);
   assert.equal(qualityScope.temporal_changed, true);

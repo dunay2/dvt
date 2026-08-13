@@ -42,6 +42,7 @@ test('classifies repository command files through the command catalog', () => {
   const ciToolingTest = classifyRepositoryFileScope('tools/ci/sync-docs-status-policy.test.mjs');
   const ciScopePolicy = classifyRepositoryFileScope('tools/ci/policy/workflow-scope.json');
   const docsTooling = classifyRepositoryFileScope('tools/docs/check-filenames.ts');
+  const unknownExecutable = classifyRepositoryFileScope('scripts/unclassified-runtime.cjs');
 
   assert.equal(planning.commandClass.domain, 'planning-db');
   assert.equal(planning.planningDbInventoryRelevant, true);
@@ -55,13 +56,16 @@ test('classifies repository command files through the command catalog', () => {
   assert.equal(ciTooling.commandClass.domain, 'ci-tooling');
   assert.equal(ciTooling.codeValidationRelevant, true);
   assert.equal(ciTooling.governanceGlobalRelevant, false);
-  assert.equal(ciTooling.runtimeWorkspaceFanout, true);
+  assert.equal(ciTooling.runtimeWorkspaceFanout, false);
 
   assert.equal(ciToolingTest.commandClass.domain, 'test-tooling');
   assert.equal(ciToolingTest.runtimeWorkspaceFanout, false);
 
   assert.equal(ciScopePolicy.repositoryCommandFile, false);
-  assert.equal(ciScopePolicy.runtimeWorkspaceFanout, true);
+  assert.equal(ciScopePolicy.runtimeWorkspaceFanout, false);
+
+  assert.equal(unknownExecutable.commandClass.domain, 'unknown');
+  assert.equal(unknownExecutable.runtimeWorkspaceFanout, true);
 
   assert.equal(docsTooling.commandClass.domain, 'docs-governance');
   assert.equal(docsTooling.governanceGlobalRelevant, true);
