@@ -18,14 +18,14 @@ It does not own provider implementation. Provider implementation remains behind
 
 ## Public API
 
-| Surface                    | Public contract                                                          | Owner                   |
-| -------------------------- | ------------------------------------------------------------------------ | ----------------------- |
-| Runtime provider values    | `RUNTIME_PROVIDER`, `RUNTIME_PROVIDER_VALUES`, `Provider`                | `@dvt/contracts`        |
-| Provider ref validation    | `ProviderSchema`, `EngineRunRefSchema`, `parseEngineRunRef`              | `@dvt/contracts`        |
-| Run context validation     | `RunContext.targetAdapter`, `RunExecutionContext.targetAdapter`          | `@dvt/contracts`        |
-| Engine provider selection  | `resolveEngineProvider`, `buildAdapterOrder`                             | `@dvt/engine`           |
-| API runtime target adapter | `SUPPORTED_RECOVER_RUN_TARGET_ADAPTERS`, `StartRunTargetAdapterRegistry` | `apps/api`              |
-| Provider ref persistence   | `run_metadata.providerRef` JSON mapping                                  | `@dvt/adapter-postgres` |
+| Surface                    | Public contract                                                 | Owner                   |
+| -------------------------- | --------------------------------------------------------------- | ----------------------- |
+| Runtime provider values    | `RUNTIME_PROVIDER`, `RUNTIME_PROVIDER_VALUES`, `Provider`       | `@dvt/contracts`        |
+| Provider ref validation    | `ProviderSchema`, `EngineRunRefSchema`, `parseEngineRunRef`     | `@dvt/contracts`        |
+| Run context validation     | `RunContext.targetAdapter`, `RunExecutionContext.targetAdapter` | `@dvt/contracts`        |
+| Engine provider selection  | `resolveEngineProvider`, `buildAdapterOrder`                    | `@dvt/engine`           |
+| API runtime target adapter | `ProviderSchema`, `StartRunTargetAdapterRegistry`               | contracts + `apps/api`  |
+| Provider ref persistence   | `run_metadata.providerRef` JSON mapping                         | `@dvt/adapter-postgres` |
 
 ## Invariants
 
