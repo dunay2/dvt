@@ -722,7 +722,12 @@ describe('Canvas source import live clean proof', () => {
     });
 
     cy.viewport(640, 800);
-    openCanvasContextMenuAt(48, 96);
+    cy.get('[data-slot="canvas-viewport-context-surface"]')
+      .should('be.visible')
+      .focus()
+      .should('be.focused')
+      .trigger('keydown', { key: 'F10', code: 'F10', shiftKey: true });
+    cy.get('[data-slot="canvas-context-menu"]').should('be.visible');
     clickCanvasContextMenuAction('open-add-node-catalog');
     clickCanvasAddCatalogAction('open-source-import', 'dbt:source');
     cy.contains('[role="dialog"]', 'Añadir origen', { timeout: 20_000 })
