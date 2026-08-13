@@ -14127,6 +14127,20 @@
         "implementation_content_sha256": "1871c04e66642eb03e4b594566a097cdcbb3b0281ec7a9dc3d9d7f3b477ca254"
       },
       {
+        "evidence_id": "EV-GH2168-COMPILEPLAN-QA",
+        "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+        "subject_kind": "command",
+        "subject_id": "CompilePlan",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/entrypoints/http/compilePlanRoute.test.ts",
+        "source_path": "apps/api/test/entrypoints/http/compilePlanRoute.test.ts",
+        "result_state": "pass",
+        "recorded_at": "2026-08-13T08:19:23.083+00:00",
+        "source_content_sha256": "b8dc7c17c00b3ed0247a3534a6194d8d91062455ebe06aa1c06fed0b7fe7a552",
+        "implementation_content_sha256": "bd1756cf06573e2d65cdcc4ddc9c8575dbc413c933d6438816fa5ef94401ea67"
+      },
+      {
         "evidence_id": "EV-GH2168-IMPORTPLAN-CURRENT",
         "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
         "subject_kind": "command",
@@ -94088,6 +94102,31 @@
           "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
         },
         "created_at": "2026-08-10T22:11:11.708+00:00"
+      },
+      {
+        "operation_id": "4ea8249d-517e-45cc-bb6e-f3069e5ebe59",
+        "idempotency_key": "ev-gh2168-compileplan-qa-v1",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+        "source_ref": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/entrypoints/http/compilePlanRoute.test.ts",
+        "source_content_sha256": "b8dc7c17c00b3ed0247a3534a6194d8d91062455ebe06aa1c06fed0b7fe7a552",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+          "sourceRef": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/entrypoints/http/compilePlanRoute.test.ts",
+          "subjectId": "CompilePlan",
+          "evidenceId": "EV-GH2168-COMPILEPLAN-QA",
+          "sourcePath": "apps/api/test/entrypoints/http/compilePlanRoute.test.ts",
+          "resultState": "pass",
+          "subjectKind": "command",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "b8dc7c17c00b3ed0247a3534a6194d8d91062455ebe06aa1c06fed0b7fe7a552"
+        },
+        "created_at": "2026-08-13T08:19:23.083+00:00"
       },
       {
         "operation_id": "4f3783f3-afef-4644-9c75-6b0ca6020050",
