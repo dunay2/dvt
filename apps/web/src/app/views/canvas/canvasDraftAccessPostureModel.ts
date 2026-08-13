@@ -161,13 +161,6 @@ function resolveDraftFormatPostureContent(
     };
   }
 
-  if (draftFormatError.reason === 'migration_failed') {
-    return {
-      title: canvasViewCopy.draftMigrationFailedTitle,
-      message: canvasViewCopy.draftMigrationFailedMessage,
-    };
-  }
-
   return {
     title: canvasViewCopy.draftCorruptPayloadTitle,
     message: canvasViewCopy.draftCorruptPayloadMessage,

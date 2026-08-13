@@ -73,7 +73,6 @@ function buildExpectedAuthoringReadState(): AuthoringReadState {
     formatMeta: {
       schemaVersion: 'workspace-graph-draft.v1',
       storedSchemaVersion: 'workspace-graph-draft.v1',
-      migrationState: 'native',
     },
     record: buildExpectedAuthoringReadRecord(),
     semanticGraph: buildExpectedAuthoringSemanticGraph(),
@@ -137,7 +136,6 @@ describe('canvasDraftRepository read/write', () => {
         formatMeta: {
           schemaVersion: 'workspace-graph-draft.v1',
           storedSchemaVersion: 'workspace-graph-draft.v1',
-          migrationState: 'native',
         },
         record: {
           revision: 'rev-2',
@@ -223,7 +221,6 @@ describe('canvasDraftRepository read/write', () => {
         formatMeta: {
           schemaVersion: 'workspace-graph-draft.v1',
           storedSchemaVersion: 'workspace-graph-draft.v1',
-          migrationState: 'native',
         },
         record: {
           revision: 'rev-2',

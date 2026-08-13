@@ -11,7 +11,6 @@ import {
   WORKSPACE_GRAPH_DRAFT_AUDIT_ACTION,
   WORKSPACE_GRAPH_DRAFT_AUDIT_OUTCOME,
   WORKSPACE_GRAPH_DRAFT_CAPABILITY_MODE,
-  WORKSPACE_GRAPH_DRAFT_MIGRATION_STATE,
   jcsCanonicalize,
   parseWorkspaceGraphDraftSaveResponse,
   resolveWorkspaceGraphDraftCanvasIds,
@@ -152,7 +151,6 @@ export class SaveWorkspaceGraphDraftUseCase {
         formatMeta: {
           schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
           storedSchemaVersion: saveResult.storedSchemaVersion,
-          migrationState: WORKSPACE_GRAPH_DRAFT_MIGRATION_STATE.native,
         },
         currentRevision: saveResult.currentRevision,
       } as const;
@@ -180,7 +178,6 @@ export class SaveWorkspaceGraphDraftUseCase {
       formatMeta: {
         schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
         storedSchemaVersion: saveResult.schemaVersion,
-        migrationState: WORKSPACE_GRAPH_DRAFT_MIGRATION_STATE.native,
       },
       revision: saveResult.revision,
     } as const;

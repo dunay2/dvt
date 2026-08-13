@@ -37,7 +37,6 @@ function buildConflictSaveResult(): WorkspaceGraphDraftAuthoringSaveResult {
     formatMeta: {
       schemaVersion: 'workspace-graph-draft.v1',
       storedSchemaVersion: 'workspace-graph-draft.v1',
-      migrationState: 'native',
     },
     currentRevision: 'rev-remote',
   };
@@ -126,7 +125,6 @@ function buildRemoteReadResult(): WorkspaceGraphDraftAuthoringReadResult {
     formatMeta: {
       schemaVersion: 'workspace-graph-draft.v1',
       storedSchemaVersion: 'workspace-graph-draft.v1',
-      migrationState: 'native',
     },
     authoringAuthority: {
       kind: 'resolved',
@@ -174,7 +172,6 @@ function buildExpectedConflictRemoteDraftState(): ConflictSaveGraphDraftResult['
     formatMeta: {
       schemaVersion: 'workspace-graph-draft.v1',
       storedSchemaVersion: 'workspace-graph-draft.v1',
-      migrationState: 'native',
     },
     record: buildExpectedConflictCurrentRecord(),
     semanticGraph: {

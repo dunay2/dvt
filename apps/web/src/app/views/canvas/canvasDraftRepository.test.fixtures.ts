@@ -131,7 +131,6 @@ const DEFAULT_READ_RESULT = {
   formatMeta: {
     schemaVersion: 'workspace-graph-draft.v1',
     storedSchemaVersion: 'workspace-graph-draft.v1',
-    migrationState: 'native',
   },
   authoringAuthority: {
     kind: 'resolved',
@@ -168,7 +167,6 @@ const DEFAULT_SAVE_RESULT = {
   formatMeta: {
     schemaVersion: 'workspace-graph-draft.v1',
     storedSchemaVersion: 'workspace-graph-draft.v1',
-    migrationState: 'native',
   },
   revision: 'rev-2',
 } as const satisfies WorkspaceGraphDraftAuthoringSaveResult;

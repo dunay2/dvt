@@ -44,7 +44,6 @@ function buildSavedAuthoringResult(revision: string): WorkspaceGraphDraftAuthori
     formatMeta: {
       schemaVersion: 'workspace-graph-draft.v1',
       storedSchemaVersion: 'workspace-graph-draft.v1',
-      migrationState: 'native',
     },
     revision,
   };
@@ -76,7 +75,6 @@ function buildConflictAuthoringResult(
     formatMeta: {
       schemaVersion: 'workspace-graph-draft.v1',
       storedSchemaVersion: 'workspace-graph-draft.v1',
-      migrationState: 'native',
     },
     currentRevision,
   };

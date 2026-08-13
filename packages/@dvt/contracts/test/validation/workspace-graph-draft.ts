@@ -242,7 +242,6 @@ export function registerValidationWorkspaceGraphDraftSuite(): void {
         formatMeta: {
           schemaVersion: 'workspace-graph-draft.v1',
           storedSchemaVersion: 'workspace-graph-draft.v1',
-          migrationState: 'native',
         },
         authoringAuthority: {
           kind: 'resolved',
@@ -271,6 +270,12 @@ export function registerValidationWorkspaceGraphDraftSuite(): void {
           },
         },
       });
+      expect(() =>
+        parseWorkspaceGraphDraftReadResponse({
+          ...response,
+          formatMeta: { ...response.formatMeta, migrationState: 'native' },
+        })
+      ).toThrow(ContractValidationError);
     });
 
     it('rejects an authority binding for a different active Canvas', () => {
@@ -288,7 +293,6 @@ export function registerValidationWorkspaceGraphDraftSuite(): void {
           formatMeta: {
             schemaVersion: 'workspace-graph-draft.v1',
             storedSchemaVersion: 'workspace-graph-draft.v1',
-            migrationState: 'native',
           },
           authoringAuthority: {
             kind: 'resolved',

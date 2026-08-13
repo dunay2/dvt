@@ -11,7 +11,6 @@ import {
   WORKSPACE_GRAPH_DRAFT_AUDIT_OUTCOME,
   WORKSPACE_GRAPH_DRAFT_CAPABILITY_MODE,
   WORKSPACE_GRAPH_DRAFT_FORMAT_ERROR_REASON,
-  WORKSPACE_GRAPH_DRAFT_MIGRATION_STATE,
   WorkspaceGraphAuthoringDraftSchema,
   parseWorkspaceGraphDraftReadResponse,
   type CanvasAuthoringAuthorityResolution,
@@ -140,7 +139,6 @@ export class GetWorkspaceGraphDraftUseCase {
       formatMeta: {
         schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
         storedSchemaVersion: stored.schemaVersion,
-        migrationState: WORKSPACE_GRAPH_DRAFT_MIGRATION_STATE.native,
       },
       authoringAuthority: await resolveGraphDraftAuthoringAuthority(
         this.authorityPolicy,

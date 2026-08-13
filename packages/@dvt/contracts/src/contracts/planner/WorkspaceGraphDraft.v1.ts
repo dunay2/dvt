@@ -65,15 +65,9 @@ export const WORKSPACE_GRAPH_DRAFT_AUDIT_OUTCOME = {
   conflict: 'conflict',
 } as const;
 
-export const WORKSPACE_GRAPH_DRAFT_MIGRATION_STATE = {
-  native: 'native',
-  readMigrated: 'read_migrated',
-} as const;
-
 export const WORKSPACE_GRAPH_DRAFT_FORMAT_ERROR_REASON = {
   unsupportedSchemaVersion: 'unsupported_schema_version',
   corruptPayload: 'corrupt_payload',
-  migrationFailed: 'migration_failed',
 } as const;
 
 export type WorkspaceGraphDraftCapabilityMode =
@@ -84,8 +78,6 @@ export type WorkspaceGraphDraftAuditAction =
   (typeof WORKSPACE_GRAPH_DRAFT_AUDIT_ACTION)[keyof typeof WORKSPACE_GRAPH_DRAFT_AUDIT_ACTION];
 export type WorkspaceGraphDraftAuditOutcome =
   (typeof WORKSPACE_GRAPH_DRAFT_AUDIT_OUTCOME)[keyof typeof WORKSPACE_GRAPH_DRAFT_AUDIT_OUTCOME];
-export type WorkspaceGraphDraftMigrationState =
-  (typeof WORKSPACE_GRAPH_DRAFT_MIGRATION_STATE)[keyof typeof WORKSPACE_GRAPH_DRAFT_MIGRATION_STATE];
 export type WorkspaceGraphDraftFormatErrorReason =
   (typeof WORKSPACE_GRAPH_DRAFT_FORMAT_ERROR_REASON)[keyof typeof WORKSPACE_GRAPH_DRAFT_FORMAT_ERROR_REASON];
 
@@ -114,7 +106,6 @@ export interface WorkspaceGraphDraftAuditRef {
 export interface WorkspaceGraphDraftFormatMeta {
   schemaVersion: string;
   storedSchemaVersion: string;
-  migrationState: WorkspaceGraphDraftMigrationState;
 }
 
 export interface WorkspaceGraphDraftFormatError {
@@ -313,10 +304,6 @@ export const WorkspaceGraphDraftFormatMetaSchema = z
   .object({
     schemaVersion: NonBlankStringSchema,
     storedSchemaVersion: NonBlankStringSchema,
-    migrationState: z.enum([
-      WORKSPACE_GRAPH_DRAFT_MIGRATION_STATE.native,
-      WORKSPACE_GRAPH_DRAFT_MIGRATION_STATE.readMigrated,
-    ]),
   })
   .strict() satisfies z.ZodType<WorkspaceGraphDraftFormatMeta>;
 
@@ -325,7 +312,6 @@ export const WorkspaceGraphDraftFormatErrorSchema = z
     reason: z.enum([
       WORKSPACE_GRAPH_DRAFT_FORMAT_ERROR_REASON.unsupportedSchemaVersion,
       WORKSPACE_GRAPH_DRAFT_FORMAT_ERROR_REASON.corruptPayload,
-      WORKSPACE_GRAPH_DRAFT_FORMAT_ERROR_REASON.migrationFailed,
     ]),
     storedSchemaVersion: NonBlankStringSchema.optional(),
   })

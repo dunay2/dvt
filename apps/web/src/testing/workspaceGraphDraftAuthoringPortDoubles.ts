@@ -67,7 +67,6 @@ function buildFormatMeta(): WorkspaceGraphDraftFormatMeta {
   return {
     schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
     storedSchemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
-    migrationState: 'native',
   };
 }
 

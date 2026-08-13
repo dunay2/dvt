@@ -6,7 +6,6 @@ export {
   WORKSPACE_GRAPH_DRAFT_CAPABILITY_MODE,
   WORKSPACE_GRAPH_DRAFT_CAPABILITY_REASON,
   WORKSPACE_GRAPH_DRAFT_FORMAT_ERROR_REASON,
-  WORKSPACE_GRAPH_DRAFT_MIGRATION_STATE,
   WorkspaceGraphDraftAuditRefSchema,
   WorkspaceGraphDraftCapabilityOutcomeSchema,
   WorkspaceGraphDraftFormatErrorSchema,

@@ -73,7 +73,6 @@ function buildDraftFormatMeta() {
   return {
     schemaVersion: 'workspace-graph-draft.v1',
     storedSchemaVersion: 'workspace-graph-draft.v1',
-    migrationState: 'native' as const,
   };
 }
 

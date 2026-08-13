@@ -43,7 +43,6 @@ function buildDefaultCanvasHarnessSaveResult(): WorkspaceGraphDraftAuthoringSave
     formatMeta: {
       schemaVersion: 'workspace-graph-draft.v1',
       storedSchemaVersion: 'workspace-graph-draft.v1',
-      migrationState: 'native',
     },
     revision: 'rev-1',
   };
