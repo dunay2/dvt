@@ -145,6 +145,22 @@ describe('RunControlActions', () => {
     ).toContain('runtime adapter is not configured');
   });
 
+  it('asks the user to open the run when list recovery evidence is unknown', async () => {
+    await renderActions({
+      locale: 'es',
+      availability: {
+        cancel: { available: false, reason: 'run_terminal' },
+        recover: { available: false, reason: 'recovery_evidence_unknown' },
+      },
+    });
+
+    expect(
+      container
+        ?.querySelector<HTMLButtonElement>('[data-slot="run-recover-action"]')
+        ?.getAttribute('aria-description')
+    ).toContain('Abre la ejecución');
+  });
+
   it('explains when cancellation is waiting for authoritative runtime dispatch', async () => {
     await renderActions({
       availability: {

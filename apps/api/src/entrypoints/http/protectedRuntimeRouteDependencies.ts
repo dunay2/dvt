@@ -115,18 +115,7 @@ export function buildProtectedRuntimeRouteDependencies(
     importPlanUseCase: new ImportPlanUseCase({
       planResolver: protectedModule.executablePlanResolver,
     }),
-    listRunsUseCase: new ListRunsUseCase(
-      protectedModule.stateStore.read,
-      protectedModule.engine,
-      protectedModule.runExecutionContextReferenceReader,
-      executionContextRequirementResolver,
-      protectedModule.planStore,
-      protectedModule.planIntegrityValidator,
-      protectedModule.startRunTargetAdapterRegistry,
-      startDispatchResolver,
-      cancellationReceipts,
-      protectedModule.planValidator
-    ),
+    listRunsUseCase: new ListRunsUseCase(protectedModule.stateStore.read, protectedModule.engine),
     previewPlanUseCase,
     observability,
     recoverRunUseCase: new RecoverRunUseCase({
