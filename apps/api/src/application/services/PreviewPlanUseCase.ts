@@ -10,12 +10,10 @@ import type {
   GenericGraphSourceV1,
   IPlanner,
   PlanRef,
-  PlannerBuildResultV1,
   PlannerPolicyClassSet,
   PlannerSelection,
   PlanPreviewProvenance,
   PlanPreviewSelectionRejection,
-  ScopedPlanRef,
   StartRunPlannerEnvironmentInput,
 } from '@dvt/contracts';
 import type { IPlanExecutabilityValidator } from '@dvt/planner';
@@ -25,6 +23,7 @@ import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js
 import { PLAN_ROUTE_POLICY_CATALOG } from './planRoutePolicyCatalog.js';
 import { resolveAuthorizedPlannerInputEnvelope } from './resolveAuthorizedPlannerInputEnvelope.js';
 import { ResolveAuthorizedPreviewSelectionService } from './resolveAuthorizedPreviewSelection.js';
+import { createScopedPlanRef } from './storedPlanScope.js';
 
 type PreviewPlanValidationResult = Awaited<ReturnType<IPlanExecutabilityValidator['validatePlan']>>;
 
@@ -113,7 +112,10 @@ export class PreviewPlanUseCase {
 
     const buildResult = await this.deps.planner.buildPlan(plannerInput);
     const planRef = await this.deps.planStore.storePlanArtifact({ buildResult });
-    const scopedPlanRef = toScopedPlanRef(buildResult, planRef);
+    const scopedPlanRef = createScopedPlanRef({
+      scope: buildResult.plan.metadata.ownership,
+      planRef,
+    });
     const validation = await this.deps.planValidator.validatePlan({
       ...scopedPlanRef,
       adapterId: command.targetAdapter,
@@ -147,17 +149,4 @@ export class PreviewPlanUseCase {
       planRef,
     };
   }
-}
-
-function toScopedPlanRef(buildResult: PlannerBuildResultV1, planRef: PlanRef): ScopedPlanRef {
-  const ownership = buildResult.plan.metadata.ownership;
-  if (ownership === undefined) {
-    throw new Error('PLAN_STORE_SCOPE_MISSING');
-  }
-  return {
-    tenantId: ownership.tenantId,
-    projectId: ownership.projectId,
-    environmentId: ownership.environmentId,
-    planRef,
-  };
 }

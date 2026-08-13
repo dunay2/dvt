@@ -30,6 +30,7 @@ import type { WorkspaceStorageScope } from '../ports/workspaceFiles.js';
 
 import { resolveDbtPlanExecutionBinding } from './dbtPlanExecutionBinding.js';
 import { parseStoredExecutablePlan } from './storedExecutablePlan.js';
+import { createScopedPlanRef } from './storedPlanScope.js';
 
 type StoredPlanArtifactReader = {
   fetchStoredPlanArtifactForValidation(input: ScopedPlanRef): Promise<{
@@ -60,7 +61,14 @@ export class DbtRunExecutionContextBindingUseCase implements IStartRunUseCase {
     if (command.planRef === undefined) return this.deps.delegate.execute(command, context);
     const commandWithPlanRef = { ...command, planRef: command.planRef };
 
-    const scopedPlanRef = toScopedPlanRef(commandWithPlanRef, context);
+    const scopedPlanRef = createScopedPlanRef({
+      scope: {
+        tenantId: context.scope.tenantId.value,
+        projectId: context.scope.projectId?.value,
+        environmentId: context.scope.environmentId?.value,
+      },
+      planRef: commandWithPlanRef.planRef,
+    });
     const artifact = await this.deps.planStore.fetchStoredPlanArtifactForValidation(scopedPlanRef);
     const plan = parseStoredExecutablePlan(artifact.bytes, { rejectUnknownStepKinds: false });
     if (!isDbtPlan(plan)) return this.deps.delegate.execute(command, context);
@@ -124,18 +132,6 @@ function toWorkspaceStorageScope(
   const environmentId = context.scope.environmentId?.value;
   if (projectId === undefined || environmentId === undefined) return null;
   return { tenantId: context.scope.tenantId.value, projectId, environmentId };
-}
-
-function toScopedPlanRef(
-  command: StartRunCommand & { readonly planRef: NonNullable<StartRunCommand['planRef']> },
-  context: AuthorizedCommandExecutionContext
-): ScopedPlanRef {
-  return {
-    tenantId: context.scope.tenantId.value,
-    projectId: context.scope.projectId?.value ?? '',
-    environmentId: context.scope.environmentId?.value ?? '',
-    planRef: command.planRef,
-  };
 }
 
 function isDbtPlan(plan: ExecutionPlan): boolean {

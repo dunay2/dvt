@@ -27,6 +27,7 @@ import { ResolveAuthorizedExecutableSubgraphService } from './resolveAuthorizedE
 import type { ExecutableSubgraphSelectionRejection } from './resolveAuthorizedExecutableSubgraph.js';
 import { resolveCanonicalPlannerInputEnvelope } from './resolveCanonicalPlannerInputEnvelope.js';
 import { elapsedSlaSecondsSince } from './slaTiming.js';
+import { createScopedPlanRef } from './storedPlanScope.js';
 
 type PlanValidationResult = Awaited<ReturnType<IPlanExecutabilityValidator['validatePlan']>>;
 
@@ -72,10 +73,14 @@ export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
     context: AuthorizedCommandExecutionContext
   ): Promise<StartRunUseCaseResult> {
     if (command.planRef != null) {
-      const scopedPlanRef = this.toCommandScopedPlanRef(
-        { ...command, planRef: command.planRef },
-        context
-      );
+      const scopedPlanRef = createScopedPlanRef({
+        scope: {
+          tenantId: context.scope.tenantId.value,
+          projectId: context.scope.projectId?.value,
+          environmentId: context.scope.environmentId?.value,
+        },
+        planRef: command.planRef,
+      });
       const validation = await this.deps.validator.validatePlan({
         ...scopedPlanRef,
         adapterId: command.targetAdapter,
@@ -122,7 +127,10 @@ export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
       kind: 'stored',
       storedPlan: {
         planRef,
-        scopedPlanRef: toScopedPlanRef(buildResult, planRef),
+        scopedPlanRef: createScopedPlanRef({
+          scope: buildResult.plan.metadata.ownership,
+          planRef,
+        }),
       },
     };
   }
@@ -191,18 +199,6 @@ export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
       ...(validation.cause === undefined ? {} : { cause: validation.cause }),
     };
   }
-
-  private toCommandScopedPlanRef(
-    command: StartRunCommand & { readonly planRef: NonNullable<StartRunCommand['planRef']> },
-    context: AuthorizedCommandExecutionContext
-  ): ScopedPlanRef {
-    return {
-      tenantId: context.scope.tenantId.value,
-      projectId: context.scope.projectId?.value ?? '',
-      environmentId: context.scope.environmentId?.value ?? '',
-      planRef: command.planRef,
-    };
-  }
 }
 
 function toPlanRejectedResult(rejection: ExecutableSubgraphSelectionRejection): PlanCompileResult {
@@ -241,19 +237,6 @@ function toDelegateCommand(command: StartRunCommand, planRef: PlanRef): StartRun
     ...(command.runExecutionContextRef === undefined
       ? {}
       : { runExecutionContextRef: command.runExecutionContextRef }),
-  };
-}
-
-function toScopedPlanRef(buildResult: PlannerBuildResultV1, planRef: PlanRef): ScopedPlanRef {
-  const ownership = buildResult.plan.metadata.ownership;
-  if (ownership === undefined) {
-    throw new Error('PLAN_STORE_SCOPE_MISSING');
-  }
-  return {
-    tenantId: ownership.tenantId,
-    projectId: ownership.projectId,
-    environmentId: ownership.environmentId,
-    planRef,
   };
 }
 
