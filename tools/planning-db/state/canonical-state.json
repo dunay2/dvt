@@ -568,7 +568,7 @@
         "kind": "service",
         "layer": "application",
         "owner": "ApiStartRunAdmissionService",
-        "repo_path": "apps/api/src/application/services/startRunAuthorizedFacade.ts",
+        "repo_path": "apps/api/src/application/services/BackpressureAwareStartRunUseCase.ts",
         "public_contract": "API start-run admission and dispatch service boundary.",
         "runtime": "node",
         "criticality": "critical",
@@ -576,7 +576,7 @@
         "maturity_score": 86,
         "parent_component_id": "SYS-API-APPLICATION-SERVICES",
         "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
+        "updated_at": "2026-08-13T13:21:59.506+00:00"
       },
       {
         "component_id": "SYS-API-APPLICATION-SERVICES-WAREHOUSE-SOURCES",
@@ -1736,7 +1736,7 @@
         "kind": "module",
         "layer": "infra",
         "owner": "ApiStartRunAdmissionTestEvidence",
-        "repo_path": "apps/api/test/application/services/startRunAuthorizedFacade.auth.test.ts",
+        "repo_path": "apps/api/test/application/services/BackpressureAwareStartRunUseCase.admissionModes.test.ts",
         "public_contract": "API start-run admission test evidence boundary.",
         "runtime": "node",
         "criticality": "critical",
@@ -1744,7 +1744,7 @@
         "maturity_score": 86,
         "parent_component_id": "SYS-API-TESTS-APPLICATION-SERVICES",
         "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
+        "updated_at": "2026-08-13T13:22:00.743+00:00"
       },
       {
         "component_id": "SYS-API-TESTS-APPLICATION-SERVICES-WAREHOUSE-SOURCES",
@@ -11739,6 +11739,20 @@
         "supersedes_id": null,
         "created_at": "2026-08-13T08:15:05.472+00:00",
         "updated_at": "2026-08-13T08:15:10.564+00:00"
+      },
+      {
+        "design_id": "MVP-2169-START-RUN-COMPONENT-PATH-CORRECTION-20260813",
+        "work_item_id": "https://github.com/dunay2/dvt/issues/2169",
+        "title": "Remap start-run component authority after facade retirement",
+        "owner": "Architecture",
+        "status": "approved",
+        "rationale": "The run lifecycle hard-cut retired the duplicate startRunAuthorizedFacade; component and test authority must point to the surviving admission boundary and stale evidence must be removed.",
+        "fowler_signal": "hidden_authority",
+        "rail_ref": "RecordArchitectureComponent",
+        "approved_at": "2026-08-13T13:22:35.962+00:00",
+        "supersedes_id": null,
+        "created_at": "2026-08-13T13:21:42.885+00:00",
+        "updated_at": "2026-08-13T13:22:35.962+00:00"
       },
       {
         "design_id": "MVP-2169-START-RUN-FEATURE-OWNERSHIP-CORRECTION-20260813",
@@ -38717,7 +38731,7 @@
         "responsibility_id": "RESP-SYS-API-APPLICATION-SERVICES-START-RUN-ADMISSION",
         "component_id": "SYS-API-APPLICATION-SERVICES-START-RUN-ADMISSION",
         "responsibility": "Authorize, admit, enrich, and dispatch start-run commands from protected runtime routes into planner and engine boundaries.",
-        "reason_to_change": "Start-run admission, backpressure, duplicate detection, execution-context binding, engine bridge, adapter target registry, SLA telemetry, or facade behavior changes.",
+        "reason_to_change": "Start-run admission, backpressure, duplicate detection, execution-context binding, planner dispatch, engine bridge, adapter target registry, or SLA telemetry changes.",
         "ddd_owner": "ApiStartRunAdmissionService",
         "status": "implemented",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
@@ -39122,7 +39136,7 @@
         "responsibility_id": "RESP-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
         "component_id": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
         "responsibility": "Validate admission and dispatch decisions for start-run before protected runtime routes reach planner, engine, and target adapter boundaries.",
-        "reason_to_change": "Backpressure, duplicate run probing, capacity, dbt execution context binding, executable subgraph resolution, start-run facade, engine pass-through, or target adapter registry test changes.",
+        "reason_to_change": "Backpressure, duplicate run probing, capacity, DBT execution context binding, executable subgraph resolution, planner dispatch, engine pass-through, or target adapter registry test changes.",
         "ddd_owner": "ApiStartRunAdmissionTestEvidence",
         "status": "implemented",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
@@ -44969,16 +44983,6 @@
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
-        "test_id": "TEST-SYS-API-APPLICATION-SERVICES-START-RUN-ADMISSION",
-        "component_id": "SYS-API-APPLICATION-SERVICES-START-RUN-ADMISSION",
-        "test_path": "apps/api/test/application/services/startRunAuthorizedFacade.auth.test.ts",
-        "test_kind": "unit",
-        "coverage_level": "flow",
-        "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- apps/api/test/application/services/startRunAuthorizedFacade.auth.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.admissionModes.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.duplicateFlow.test.ts apps/api/test/application/services/engineStartRunUseCase.commandPath.test.ts apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts apps/api/test/application/services/startRunTargetAdapterRegistry.test.ts",
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
         "test_id": "TEST-SYS-API-APPLICATION-SERVICES-WAREHOUSE-SOURCES",
         "component_id": "SYS-API-APPLICATION-SERVICES-WAREHOUSE-SOURCES",
         "test_path": "apps/api/test/application/services/warehouseSourceYaml.test.ts",
@@ -46782,26 +46786,6 @@
         "test_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-16",
         "component_id": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
         "test_path": "apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts",
-        "test_kind": "architecture",
-        "coverage_level": "flow",
-        "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- apps/api/test/application/services/startRunAuthorizedFacade.auth.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.admissionModes.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.duplicateFlow.test.ts apps/api/test/application/services/engineStartRunUseCase.commandPath.test.ts apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts apps/api/test/application/services/startRunTargetAdapterRegistry.test.ts",
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "test_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-17",
-        "component_id": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
-        "test_path": "apps/api/test/application/services/startRunAuthorizedFacade.auth.test.ts",
-        "test_kind": "architecture",
-        "coverage_level": "flow",
-        "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- apps/api/test/application/services/startRunAuthorizedFacade.auth.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.admissionModes.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.duplicateFlow.test.ts apps/api/test/application/services/engineStartRunUseCase.commandPath.test.ts apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts apps/api/test/application/services/startRunTargetAdapterRegistry.test.ts",
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "test_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-18",
-        "component_id": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
-        "test_path": "apps/api/test/application/services/startRunAuthorizedFacade.enginePassThrough.test.ts",
         "test_kind": "architecture",
         "coverage_level": "flow",
         "required": true,
@@ -68634,6 +68618,62 @@
         "scope_kind": "may_update",
         "required": true,
         "created_at": "2026-08-13T08:15:05.472+00:00"
+      },
+      {
+        "design_id": "MVP-2169-START-RUN-COMPONENT-PATH-CORRECTION-20260813",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-APPLICATION-SERVICES-START-RUN-ADMISSION",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-13T13:21:42.885+00:00"
+      },
+      {
+        "design_id": "MVP-2169-START-RUN-COMPONENT-PATH-CORRECTION-20260813",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-APPLICATION-SERVICES-START-RUN-ADMISSION",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T13:21:42.885+00:00"
+      },
+      {
+        "design_id": "MVP-2169-START-RUN-COMPONENT-PATH-CORRECTION-20260813",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-13T13:21:42.885+00:00"
+      },
+      {
+        "design_id": "MVP-2169-START-RUN-COMPONENT-PATH-CORRECTION-20260813",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T13:21:42.885+00:00"
+      },
+      {
+        "design_id": "MVP-2169-START-RUN-COMPONENT-PATH-CORRECTION-20260813",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-APPLICATION-SERVICES-START-RUN-ADMISSION",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-13T13:21:42.885+00:00"
+      },
+      {
+        "design_id": "MVP-2169-START-RUN-COMPONENT-PATH-CORRECTION-20260813",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-17",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-13T13:21:42.885+00:00"
+      },
+      {
+        "design_id": "MVP-2169-START-RUN-COMPONENT-PATH-CORRECTION-20260813",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-18",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-13T13:21:42.885+00:00"
       },
       {
         "design_id": "MVP-2169-START-RUN-FEATURE-OWNERSHIP-CORRECTION-20260813",
@@ -95592,6 +95632,27 @@
         "created_at": "2026-08-13T09:23:21.169+00:00"
       },
       {
+        "operation_id": "55990e1f-6715-48a4-b7ea-90934cabd0ce",
+        "idempotency_key": "issue-2169-retire-start-run-facade-component-test-v1",
+        "operation_type": "architecture_test_retire",
+        "actor": "codex",
+        "design_id": "MVP-2169-START-RUN-COMPONENT-PATH-CORRECTION-20260813",
+        "source_ref": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "source_content_sha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The duplicate startRunAuthorizedFacade authorization test was retired with the facade; surviving admission and route tests cover the canonical rail.",
+          "testId": "TEST-SYS-API-APPLICATION-SERVICES-START-RUN-ADMISSION",
+          "designId": "MVP-2169-START-RUN-COMPONENT-PATH-CORRECTION-20260813",
+          "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+          "componentId": "SYS-API-APPLICATION-SERVICES-START-RUN-ADMISSION",
+          "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95"
+        },
+        "created_at": "2026-08-13T13:22:15.83+00:00"
+      },
+      {
         "operation_id": "56cb4906-f1b0-4953-bb32-2ae4c57c34e8",
         "idempotency_key": "codex-api-h2-2-push-diff-v12-create",
         "operation_type": "architecture_design_create",
@@ -98587,6 +98648,27 @@
         "created_at": "2026-08-10T21:03:55.429+00:00"
       },
       {
+        "operation_id": "7c01f544-2b3f-4a22-967a-52dd49eb11cd",
+        "idempotency_key": "issue-2169-retire-start-run-facade-engine-test-v1",
+        "operation_type": "architecture_test_retire",
+        "actor": "codex",
+        "design_id": "MVP-2169-START-RUN-COMPONENT-PATH-CORRECTION-20260813",
+        "source_ref": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "source_content_sha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The duplicate startRunAuthorizedFacade engine pass-through test was retired with the facade; engine command-path and protected runtime tests cover the canonical rail.",
+          "testId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-18",
+          "designId": "MVP-2169-START-RUN-COMPONENT-PATH-CORRECTION-20260813",
+          "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+          "componentId": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
+          "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95"
+        },
+        "created_at": "2026-08-13T13:22:18.23+00:00"
+      },
+      {
         "operation_id": "7c0bf6f7-0936-4d7c-b87e-eff630327ef0",
         "idempotency_key": "gh-2168-ci-symbol-coverage-create-v1",
         "operation_type": "architecture_design_create",
@@ -100147,6 +100229,76 @@
         "created_at": "2026-08-13T05:03:10.191+00:00"
       },
       {
+        "operation_id": "92c8ffbc-33a4-4f56-9733-3de03f677ee8",
+        "idempotency_key": "issue-2169-start-run-component-path-design-v1",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "MVP-2169-START-RUN-COMPONENT-PATH-CORRECTION-20260813",
+        "source_ref": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "source_content_sha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "Architecture",
+          "title": "Remap start-run component authority after facade retirement",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-API-APPLICATION-SERVICES-START-RUN-ADMISSION",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-API-APPLICATION-SERVICES-START-RUN-ADMISSION",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "TEST-SYS-API-APPLICATION-SERVICES-START-RUN-ADMISSION",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-17",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-18",
+              "subjectKind": "test"
+            }
+          ],
+          "status": "review",
+          "railRef": "RecordArchitectureComponent",
+          "designId": "MVP-2169-START-RUN-COMPONENT-PATH-CORRECTION-20260813",
+          "rationale": "The run lifecycle hard-cut retired the duplicate startRunAuthorizedFacade; component and test authority must point to the surviving admission boundary and stale evidence must be removed.",
+          "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+          "workItemId": "https://github.com/dunay2/dvt/issues/2169",
+          "fowlerSignal": "hidden_authority",
+          "supersedesId": null,
+          "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95"
+        },
+        "created_at": "2026-08-13T13:21:42.885+00:00"
+      },
+      {
         "operation_id": "92e4232f-f560-4369-a861-d0cedfe85ce7",
         "idempotency_key": "gh-2167-update-contract-sys-api-application-services-authorization-api-application-service-v1",
         "operation_type": "architecture_contract_record",
@@ -101193,6 +101345,43 @@
         "created_at": "2026-08-10T21:06:35.382+00:00"
       },
       {
+        "operation_id": "9d8a91da-1fcb-4a06-85a6-b0723eebf725",
+        "idempotency_key": "issue-2169-remap-start-run-test-component-v1",
+        "operation_type": "architecture_component_record",
+        "actor": "codex",
+        "design_id": "MVP-2169-START-RUN-COMPONENT-PATH-CORRECTION-20260813",
+        "source_ref": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "source_content_sha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "kind": "module",
+          "name": "API application start-run admission service tests",
+          "layer": "infra",
+          "owner": "ApiStartRunAdmissionTestEvidence",
+          "status": "review",
+          "runtime": "node",
+          "designId": "MVP-2169-START-RUN-COMPONENT-PATH-CORRECTION-20260813",
+          "repoPath": "apps/api/test/application/services/BackpressureAwareStartRunUseCase.admissionModes.test.ts",
+          "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+          "componentId": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
+          "criticality": "critical",
+          "publicContract": "API start-run admission test evidence boundary.",
+          "responsibilities": [
+            {
+              "dddOwner": "ApiStartRunAdmissionTestEvidence",
+              "reasonToChange": "Backpressure, duplicate run probing, capacity, DBT execution context binding, executable subgraph resolution, planner dispatch, engine pass-through, or target adapter registry test changes.",
+              "responsibility": "Validate admission and dispatch decisions for start-run before protected runtime routes reach planner, engine, and target adapter boundaries.",
+              "responsibilityId": "RESP-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION"
+            }
+          ],
+          "parentComponentId": "SYS-API-TESTS-APPLICATION-SERVICES",
+          "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95"
+        },
+        "created_at": "2026-08-13T13:22:00.743+00:00"
+      },
+      {
         "operation_id": "9dcfeed7-ddd7-4279-8888-42a6f7b2b97e",
         "idempotency_key": "create-api-h2-4-v4-retired-test-authority",
         "operation_type": "architecture_design_create",
@@ -102209,6 +102398,27 @@
         "created_at": "2026-08-10T21:04:30.039+00:00"
       },
       {
+        "operation_id": "aac9b444-0ec3-4536-aac0-7dd73ec7586b",
+        "idempotency_key": "issue-2169-retire-start-run-facade-auth-test-v1",
+        "operation_type": "architecture_test_retire",
+        "actor": "codex",
+        "design_id": "MVP-2169-START-RUN-COMPONENT-PATH-CORRECTION-20260813",
+        "source_ref": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "source_content_sha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The duplicate startRunAuthorizedFacade authorization test was retired with the facade; surviving admission and route tests cover the canonical rail.",
+          "testId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-17",
+          "designId": "MVP-2169-START-RUN-COMPONENT-PATH-CORRECTION-20260813",
+          "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+          "componentId": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
+          "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95"
+        },
+        "created_at": "2026-08-13T13:22:17.039+00:00"
+      },
+      {
         "operation_id": "ab3208bc-dc33-459f-a825-7099081fa6b1",
         "idempotency_key": "gh-2167-validation-test-sys-api-tests-module-composition-3-v1",
         "operation_type": "architecture_test_record",
@@ -102930,6 +103140,27 @@
           "sourceContentSha256": "c770f3d34e90d2ad2f546af24f8f2833870c7df91f1fb1c97e45151de29563b6"
         },
         "created_at": "2026-08-10T21:04:10.294+00:00"
+      },
+      {
+        "operation_id": "b62d268a-6d95-4fdb-8103-f57825e598aa",
+        "idempotency_key": "issue-2169-approve-start-run-component-path-design-v1",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "MVP-2169-START-RUN-COMPONENT-PATH-CORRECTION-20260813",
+        "source_ref": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "source_content_sha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The surviving start-run admission components now map to existing code and all stale facade test evidence has been retired.",
+          "designId": "MVP-2169-START-RUN-COMPONENT-PATH-CORRECTION-20260813",
+          "toStatus": "approved",
+          "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+          "fromStatus": "review",
+          "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95"
+        },
+        "created_at": "2026-08-13T13:22:35.962+00:00"
       },
       {
         "operation_id": "b63d1789-4520-4019-9c3b-7e5595a207a1",
@@ -108293,6 +108524,43 @@
           "sourceContentSha256": "3a49a600239ce389c8316ec4da24f1940e45b58491d4931e066bd810c947cae3"
         },
         "created_at": "2026-08-10T21:04:31.304+00:00"
+      },
+      {
+        "operation_id": "f69baee7-c2c6-4c5e-89fc-31ad1048a04a",
+        "idempotency_key": "issue-2169-remap-start-run-application-component-v1",
+        "operation_type": "architecture_component_record",
+        "actor": "codex",
+        "design_id": "MVP-2169-START-RUN-COMPONENT-PATH-CORRECTION-20260813",
+        "source_ref": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "source_content_sha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "kind": "service",
+          "name": "API application start-run admission services",
+          "layer": "application",
+          "owner": "ApiStartRunAdmissionService",
+          "status": "review",
+          "runtime": "node",
+          "designId": "MVP-2169-START-RUN-COMPONENT-PATH-CORRECTION-20260813",
+          "repoPath": "apps/api/src/application/services/BackpressureAwareStartRunUseCase.ts",
+          "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+          "componentId": "SYS-API-APPLICATION-SERVICES-START-RUN-ADMISSION",
+          "criticality": "critical",
+          "publicContract": "API start-run admission and dispatch service boundary.",
+          "responsibilities": [
+            {
+              "dddOwner": "ApiStartRunAdmissionService",
+              "reasonToChange": "Start-run admission, backpressure, duplicate detection, execution-context binding, planner dispatch, engine bridge, adapter target registry, or SLA telemetry changes.",
+              "responsibility": "Authorize, admit, enrich, and dispatch start-run commands from protected runtime routes into planner and engine boundaries.",
+              "responsibilityId": "RESP-SYS-API-APPLICATION-SERVICES-START-RUN-ADMISSION"
+            }
+          ],
+          "parentComponentId": "SYS-API-APPLICATION-SERVICES",
+          "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95"
+        },
+        "created_at": "2026-08-13T13:21:59.506+00:00"
       },
       {
         "operation_id": "f69fff3d-bdae-4335-aec8-4403c1385e10",
