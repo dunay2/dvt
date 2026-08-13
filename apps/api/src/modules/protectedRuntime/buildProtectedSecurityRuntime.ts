@@ -54,6 +54,7 @@ export function buildProtectedSecurityRuntime(
   );
   const embeddedAccessDecisionService = new EmbeddedAccessDecisionService(principalGrantRepository);
   const workspaceContextQuery = new EmbeddedWorkspaceContextQuery(
+    principalGrantRepository,
     deps.pool,
     deps.env.DVT_PG_SCHEMA
   );
