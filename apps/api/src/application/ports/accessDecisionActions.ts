@@ -4,6 +4,7 @@
  */
 
 export const AUTHORIZATION_ACTION_NAME = {
+  projectCreate: 'project:create',
   runStart: 'run:start',
   runCancel: 'run:cancel',
   runRetry: 'run:retry',
@@ -25,6 +26,7 @@ export const AUTHORIZATION_ACTION_NAME = {
 } as const;
 
 export type CommandAuthorizationActionName =
+  | typeof AUTHORIZATION_ACTION_NAME.projectCreate
   | typeof AUTHORIZATION_ACTION_NAME.runStart
   | typeof AUTHORIZATION_ACTION_NAME.runCancel
   | typeof AUTHORIZATION_ACTION_NAME.runRetry
@@ -61,6 +63,10 @@ export type CommandAuthorizationAction = Extract<AuthorizationAction, { readonly
 export type QueryAuthorizationAction = Extract<AuthorizationAction, { readonly kind: 'query' }>;
 
 export const AUTHORIZATION_ACTION = {
+  projectCreate: {
+    kind: 'command',
+    name: AUTHORIZATION_ACTION_NAME.projectCreate,
+  },
   runStart: {
     kind: 'command',
     name: AUTHORIZATION_ACTION_NAME.runStart,
