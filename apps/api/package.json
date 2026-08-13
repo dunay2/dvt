@@ -27,6 +27,7 @@
     "@dvt/adapter-temporal": "workspace:*",
     "@dvt/artifacts": "workspace:*",
     "@dvt/contracts": "workspace:*",
+    "@dvt/crypto": "workspace:*",
     "@dvt/delivery": "workspace:*",
     "@dvt/engine": "workspace:*",
     "@dvt/observability": "workspace:*",

@@ -3,8 +3,6 @@
  * This resolver validates integrity and metadata before returning a plan to
  * planner-backed runtime consumers.
  */
-import { createHash } from 'node:crypto';
-
 import type { IStoredPlanArtifactReader, StoredPlanArtifact } from '@dvt/artifacts';
 import {
   type IStepTypeRegistry,
@@ -13,6 +11,7 @@ import {
   type RunExecutionPolicy,
   type ScopedPlanRef,
 } from '@dvt/contracts';
+import { sha256Hex } from '@dvt/crypto';
 import type { ExecutionPlan } from '@dvt/engine';
 
 import { parseStoredExecutablePlan } from './storedExecutablePlan.js';
@@ -130,7 +129,7 @@ function parseMaterializedExecutablePlan(
 }
 
 function validateStoredPlanIntegrity(bytes: Uint8Array, planRef: PlanRef): void {
-  const actualSha256 = createHash('sha256').update(bytes).digest('hex');
+  const actualSha256 = sha256Hex(bytes);
   if (actualSha256 !== planRef.sha256) {
     throw new StoredPlanMaterializationError(
       'integrity',
