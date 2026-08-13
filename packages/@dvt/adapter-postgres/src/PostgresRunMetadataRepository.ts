@@ -371,6 +371,17 @@ export class PostgresRunMetadataRepository {
   async listRuns(options: ListRunsOptions): Promise<RunMetadata[]> {
     const limit = Math.min(options.limit ?? 50, 500);
     const params: unknown[] = [limit, options.tenantId];
+    const metadataFilters = ['m.tenant_id = $2'];
+
+    if (options.projectId !== undefined) {
+      params.push(options.projectId);
+      metadataFilters.push(`m.project_id = $${params.length}`);
+    }
+    if (options.environmentId !== undefined) {
+      params.push(options.environmentId);
+      metadataFilters.push(`m.environment_id = $${params.length}`);
+    }
+    const metadataWhere = metadataFilters.join('\n              AND ');
 
     return this.withClient(async (client) => {
       await PostgresSchemaManager.setTenantContext(client, options.tenantId);
@@ -378,9 +389,9 @@ export class PostgresRunMetadataRepository {
         const result = await client.query<RunMetadataRow>(
           `
             SELECT ${RUN_METADATA_COLUMNS}
-            FROM ${quoteIdentifier(this.schema)}.run_metadata
-            WHERE tenant_id = $2
-            ORDER BY created_at DESC
+            FROM ${quoteIdentifier(this.schema)}.run_metadata m
+            WHERE ${metadataWhere}
+            ORDER BY m.created_at DESC
             LIMIT $1
           `,
           params
@@ -411,7 +422,7 @@ export class PostgresRunMetadataRepository {
           INNER JOIN ${quoteIdentifier(this.schema)}.run_snapshots s
             ON s.run_id = m.run_id
             AND s.tenant_id = m.tenant_id
-          WHERE m.tenant_id = $2
+          WHERE ${metadataWhere}
             AND s.snapshot_status = ${statusParam}
           ORDER BY m.created_at DESC
           LIMIT $1

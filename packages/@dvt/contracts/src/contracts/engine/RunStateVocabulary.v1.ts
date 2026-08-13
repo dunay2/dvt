@@ -107,6 +107,8 @@ export interface RunBootstrapInput {
 
 export interface ListRunsOptions {
   tenantId: string;
+  projectId?: string;
+  environmentId?: string;
   limit?: number;
   status?: RunStatus;
 }
