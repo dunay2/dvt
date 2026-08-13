@@ -150322,8 +150322,8 @@
         "The retained rail has independent product value and no duplicate adapter."
       ],
       "completionGate": ["pnpm verify:prepush"],
-      "sourcePath": "https://github.com/dunay2/dvt/issues/2170",
-      "sourceContentSha256": "2734e8293bcd3b8e90791e8c1371ad2825714b11d6efe11b9e8715924658767e",
+      "sourcePath": "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md",
+      "sourceContentSha256": "da6edf23ffe323c55d50da1cf840df2c15823fbbf4a4cda8d0257bf52f84e1a7",
       "rawRail": {
         "name": "CreateProject",
         "type": "command",
@@ -150582,8 +150582,8 @@
         "redGreenCycles": [
           {
             "id": "createproject-record",
-            "redTest": "The pre-push gate rejects a feature without Fowler opportunity governance.",
-            "greenTest": "The Planning DB feature cites Fowler governance and the mechanization gate passes.",
+            "redTest": "Planning DB integrity rejects an external URL as a governed source path.",
+            "greenTest": "The rail cites the ARC evidence file with its exact SHA-256 and integrity passes.",
             "patchSurfaces": [
               "apps/api/src/application/**",
               "apps/api/src/entrypoints/http/**",
@@ -150606,7 +150606,7 @@
               "tools/planning-db/state/canonical-state.json",
               "apps/api/**"
             ],
-            "expectedFailure": "The #2170 mechanization omits the canonical Fowler opportunity source."
+            "expectedFailure": "The #2170 source_ref is not a repository-governed file."
           }
         ],
         "componentGuides": [
@@ -150671,7 +150671,7 @@
           "docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-user-stories.md"
         ]
       },
-      "revision": 1,
+      "revision": 2,
       "createdBy": "codex-agent",
       "createdAt": "2026-08-13T19:09:29.297Z"
     },
@@ -150744,8 +150744,8 @@
         "The retained rail has independent product value and no duplicate adapter."
       ],
       "completionGate": ["pnpm verify:prepush"],
-      "sourcePath": "https://github.com/dunay2/dvt/issues/2170",
-      "sourceContentSha256": "2734e8293bcd3b8e90791e8c1371ad2825714b11d6efe11b9e8715924658767e",
+      "sourcePath": "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md",
+      "sourceContentSha256": "da6edf23ffe323c55d50da1cf840df2c15823fbbf4a4cda8d0257bf52f84e1a7",
       "rawRail": {
         "name": "SaveWorkspaceGraphDraft",
         "type": "command",
@@ -150920,8 +150920,8 @@
         "redGreenCycles": [
           {
             "id": "saveworkspacegraphdraft-record",
-            "redTest": "The pre-push gate rejects a feature without Fowler opportunity governance.",
-            "greenTest": "The Planning DB feature cites Fowler governance and the mechanization gate passes.",
+            "redTest": "Planning DB integrity rejects an external URL as a governed source path.",
+            "greenTest": "The rail cites the ARC evidence file with its exact SHA-256 and integrity passes.",
             "patchSurfaces": [
               "apps/api/src/application/**",
               "apps/api/src/entrypoints/http/**",
@@ -150944,7 +150944,7 @@
               "tools/planning-db/state/canonical-state.json",
               "apps/api/**"
             ],
-            "expectedFailure": "The #2170 mechanization omits the canonical Fowler opportunity source."
+            "expectedFailure": "The #2170 source_ref is not a repository-governed file."
           }
         ],
         "componentGuides": [
@@ -151009,7 +151009,7 @@
           "docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-user-stories.md"
         ]
       },
-      "revision": 1,
+      "revision": 2,
       "createdBy": "codex-agent",
       "createdAt": "2026-08-13T19:09:35.494Z"
     },
@@ -151124,8 +151124,8 @@
         "The retained rail has independent product value and no duplicate adapter."
       ],
       "completionGate": ["pnpm verify:prepush"],
-      "sourcePath": "https://github.com/dunay2/dvt/issues/2170",
-      "sourceContentSha256": "2734e8293bcd3b8e90791e8c1371ad2825714b11d6efe11b9e8715924658767e",
+      "sourcePath": "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md",
+      "sourceContentSha256": "da6edf23ffe323c55d50da1cf840df2c15823fbbf4a4cda8d0257bf52f84e1a7",
       "rawRail": {
         "name": "GetEffectiveWorkspaceContext",
         "type": "query",
@@ -151593,8 +151593,8 @@
         "redGreenCycles": [
           {
             "id": "geteffectiveworkspacecontext-record",
-            "redTest": "The pre-push gate rejects a feature without Fowler opportunity governance.",
-            "greenTest": "The Planning DB feature cites Fowler governance and the mechanization gate passes.",
+            "redTest": "Planning DB integrity rejects an external URL as a governed source path.",
+            "greenTest": "The rail cites the ARC evidence file with its exact SHA-256 and integrity passes.",
             "patchSurfaces": [
               "apps/api/src/application/**",
               "apps/api/src/entrypoints/http/**",
@@ -151617,7 +151617,7 @@
               "tools/planning-db/state/canonical-state.json",
               "apps/api/**"
             ],
-            "expectedFailure": "The #2170 mechanization omits the canonical Fowler opportunity source."
+            "expectedFailure": "The #2170 source_ref is not a repository-governed file."
           }
         ],
         "componentGuides": [
@@ -151682,7 +151682,7 @@
           "docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-user-stories.md"
         ]
       },
-      "revision": 1,
+      "revision": 2,
       "createdBy": "codex-agent",
       "createdAt": "2026-08-13T19:09:32.410Z"
     },
@@ -151751,8 +151751,8 @@
         "The retained rail has independent product value and no duplicate adapter."
       ],
       "completionGate": ["pnpm verify:prepush"],
-      "sourcePath": "https://github.com/dunay2/dvt/issues/2170",
-      "sourceContentSha256": "2734e8293bcd3b8e90791e8c1371ad2825714b11d6efe11b9e8715924658767e",
+      "sourcePath": "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md",
+      "sourceContentSha256": "da6edf23ffe323c55d50da1cf840df2c15823fbbf4a4cda8d0257bf52f84e1a7",
       "rawRail": {
         "name": "GetWorkspaceGraphDraft",
         "type": "query",
@@ -151899,8 +151899,8 @@
         "redGreenCycles": [
           {
             "id": "getworkspacegraphdraft-record",
-            "redTest": "The pre-push gate rejects a feature without Fowler opportunity governance.",
-            "greenTest": "The Planning DB feature cites Fowler governance and the mechanization gate passes.",
+            "redTest": "Planning DB integrity rejects an external URL as a governed source path.",
+            "greenTest": "The rail cites the ARC evidence file with its exact SHA-256 and integrity passes.",
             "patchSurfaces": [
               "apps/api/src/application/**",
               "apps/api/src/entrypoints/http/**",
@@ -151923,7 +151923,7 @@
               "tools/planning-db/state/canonical-state.json",
               "apps/api/**"
             ],
-            "expectedFailure": "The #2170 mechanization omits the canonical Fowler opportunity source."
+            "expectedFailure": "The #2170 source_ref is not a repository-governed file."
           }
         ],
         "componentGuides": [
@@ -151988,7 +151988,7 @@
           "docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-user-stories.md"
         ]
       },
-      "revision": 1,
+      "revision": 2,
       "createdBy": "codex-agent",
       "createdAt": "2026-08-13T19:09:33.950Z"
     },
@@ -152059,8 +152059,8 @@
         "The retained rail has independent product value and no duplicate adapter."
       ],
       "completionGate": ["pnpm verify:prepush"],
-      "sourcePath": "https://github.com/dunay2/dvt/issues/2170",
-      "sourceContentSha256": "2734e8293bcd3b8e90791e8c1371ad2825714b11d6efe11b9e8715924658767e",
+      "sourcePath": "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md",
+      "sourceContentSha256": "da6edf23ffe323c55d50da1cf840df2c15823fbbf4a4cda8d0257bf52f84e1a7",
       "rawRail": {
         "name": "ListProjects",
         "type": "query",
@@ -152218,8 +152218,8 @@
         "redGreenCycles": [
           {
             "id": "listprojects-record",
-            "redTest": "The pre-push gate rejects a feature without Fowler opportunity governance.",
-            "greenTest": "The Planning DB feature cites Fowler governance and the mechanization gate passes.",
+            "redTest": "Planning DB integrity rejects an external URL as a governed source path.",
+            "greenTest": "The rail cites the ARC evidence file with its exact SHA-256 and integrity passes.",
             "patchSurfaces": [
               "apps/api/src/application/**",
               "apps/api/src/entrypoints/http/**",
@@ -152242,7 +152242,7 @@
               "tools/planning-db/state/canonical-state.json",
               "apps/api/**"
             ],
-            "expectedFailure": "The #2170 mechanization omits the canonical Fowler opportunity source."
+            "expectedFailure": "The #2170 source_ref is not a repository-governed file."
           }
         ],
         "componentGuides": [
@@ -152307,7 +152307,7 @@
           "docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-user-stories.md"
         ]
       },
-      "revision": 1,
+      "revision": 2,
       "createdBy": "codex-agent",
       "createdAt": "2026-08-13T19:09:30.916Z"
     },
@@ -192255,6 +192255,351 @@
         ]
       },
       "createdAt": "2026-08-13T19:17:13.574Z"
+    },
+    {
+      "operationId": "a9375a66-a4ed-4aa1-a6a5-194632b923cb",
+      "idempotencyKey": "feature_mechanization_rail_record:codex-agent:MVP-2170-PROJECT-WORKSPACE-AUTHORITY:command:createproject:1:676e2425e5140f68",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex-agent",
+      "railId": "local#MVP-2170-PROJECT-WORKSPACE-AUTHORITY#command#createproject",
+      "sourcePath": "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md",
+      "sourceContentSha256": "da6edf23ffe323c55d50da1cf840df2c15823fbbf4a4cda8d0257bf52f84e1a7",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "Planning DB integrity rejects an external URL as a governed source path.",
+        "dddOwner": "Project aggregate",
+        "railName": "CreateProject",
+        "railType": "command",
+        "featureId": "MVP-2170-PROJECT-WORKSPACE-AUTHORITY",
+        "greenTest": "The rail cites the ARC evidence file with its exact SHA-256 and integrity passes.",
+        "sourceRef": "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md",
+        "unitTests": [
+          "apps/api/test/application/services/listProjectsUseCase.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2170"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts"
+        ],
+        "domainObjects": ["ProjectWorkspaceAuthority"],
+        "fowlerSignals": [
+          "Replace parallel authority paths with one rail and one interpreter."
+        ],
+        "negativeTests": [
+          "apps/api/test/entrypoints/http/projectOnboardingRoutes.test.ts"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "POST /projects",
+        "completionGate": ["pnpm verify:prepush"],
+        "applicationPort": "IProjectOnboardingRepository",
+        "componentGuides": [
+          "docs/architecture/components/web/appshell/effective-workspace-context-component.md"
+        ],
+        "expectedFailure": "The #2170 source_ref is not a repository-governed file.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md"
+        ],
+        "architectureGuards": [
+          "The retained rail has independent product value and no duplicate adapter."
+        ],
+        "authorizationScope": "Authenticated tenant actor with project:create authority.",
+        "implementationPlan": "Converge project admission, workspace selection, grants, and graph-draft authority through existing rails.",
+        "implementationRefs": [
+          "apps/api/src/application/ports/projectOnboarding.ts#PersistProjectCreationCommand"
+        ],
+        "normalizedRailName": "createproject",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "da6edf23ffe323c55d50da1cf840df2c15823fbbf4a4cda8d0257bf52f84e1a7",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": ["apps/api/**"],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/projectOnboardingRouteGroup.ts"
+        ]
+      },
+      "createdAt": "2026-08-13T19:22:11.811Z"
+    },
+    {
+      "operationId": "b5753119-91a2-4eb3-8b40-85d61230a53c",
+      "idempotencyKey": "feature_mechanization_rail_record:codex-agent:MVP-2170-PROJECT-WORKSPACE-AUTHORITY:query:listprojects:1:4f98005f4606ab90",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex-agent",
+      "railId": "local#MVP-2170-PROJECT-WORKSPACE-AUTHORITY#query#listprojects",
+      "sourcePath": "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md",
+      "sourceContentSha256": "da6edf23ffe323c55d50da1cf840df2c15823fbbf4a4cda8d0257bf52f84e1a7",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "Planning DB integrity rejects an external URL as a governed source path.",
+        "dddOwner": "ProjectDescriptor read model",
+        "railName": "ListProjects",
+        "railType": "query",
+        "featureId": "MVP-2170-PROJECT-WORKSPACE-AUTHORITY",
+        "greenTest": "The rail cites the ARC evidence file with its exact SHA-256 and integrity passes.",
+        "sourceRef": "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md",
+        "unitTests": [
+          "apps/api/test/application/services/listProjectsUseCase.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2170"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts"
+        ],
+        "domainObjects": ["ProjectWorkspaceAuthority"],
+        "fowlerSignals": [
+          "Replace parallel authority paths with one rail and one interpreter."
+        ],
+        "negativeTests": [
+          "apps/api/test/entrypoints/http/projectOnboardingRoutes.test.ts"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "GET /projects",
+        "completionGate": ["pnpm verify:prepush"],
+        "applicationPort": "IWorkspaceContextQuery",
+        "componentGuides": [
+          "docs/architecture/components/web/appshell/effective-workspace-context-component.md"
+        ],
+        "expectedFailure": "The #2170 source_ref is not a repository-governed file.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md"
+        ],
+        "architectureGuards": [
+          "The retained rail has independent product value and no duplicate adapter."
+        ],
+        "authorizationScope": "Authenticated principal sees only stored grants.",
+        "implementationPlan": "Converge project admission, workspace selection, grants, and graph-draft authority through existing rails.",
+        "implementationRefs": [
+          "apps/api/src/application/services/listProjectsUseCase.ts#ListProjectsUseCase"
+        ],
+        "normalizedRailName": "listprojects",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "da6edf23ffe323c55d50da1cf840df2c15823fbbf4a4cda8d0257bf52f84e1a7",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": ["apps/api/**"],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/projectOnboardingRouteGroup.ts"
+        ]
+      },
+      "createdAt": "2026-08-13T19:22:14.117Z"
+    },
+    {
+      "operationId": "6b12703f-81da-4762-895f-b4a6a4bdc3cd",
+      "idempotencyKey": "feature_mechanization_rail_record:codex-agent:MVP-2170-PROJECT-WORKSPACE-AUTHORITY:query:geteffectiveworkspacecontext:1:d71a0fa57c344ad3",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex-agent",
+      "railId": "local#MVP-2170-PROJECT-WORKSPACE-AUTHORITY#query#geteffectiveworkspacecontext",
+      "sourcePath": "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md",
+      "sourceContentSha256": "da6edf23ffe323c55d50da1cf840df2c15823fbbf4a4cda8d0257bf52f84e1a7",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "Planning DB integrity rejects an external URL as a governed source path.",
+        "dddOwner": "EffectiveWorkspaceContext read model",
+        "railName": "GetEffectiveWorkspaceContext",
+        "railType": "query",
+        "featureId": "MVP-2170-PROJECT-WORKSPACE-AUTHORITY",
+        "greenTest": "The rail cites the ARC evidence file with its exact SHA-256 and integrity passes.",
+        "sourceRef": "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md",
+        "unitTests": [
+          "apps/api/test/application/services/listProjectsUseCase.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2170"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts"
+        ],
+        "domainObjects": ["ProjectWorkspaceAuthority"],
+        "fowlerSignals": [
+          "Replace parallel authority paths with one rail and one interpreter."
+        ],
+        "negativeTests": [
+          "apps/api/test/entrypoints/http/projectOnboardingRoutes.test.ts"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "GET /workspace/context",
+        "completionGate": ["pnpm verify:prepush"],
+        "applicationPort": "IWorkspaceContextQuery",
+        "componentGuides": [
+          "docs/architecture/components/web/appshell/effective-workspace-context-component.md"
+        ],
+        "expectedFailure": "The #2170 source_ref is not a repository-governed file.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md"
+        ],
+        "architectureGuards": [
+          "The retained rail has independent product value and no duplicate adapter."
+        ],
+        "authorizationScope": "Authenticated principal receives one deterministic granted workspace.",
+        "implementationPlan": "Converge project admission, workspace selection, grants, and graph-draft authority through existing rails.",
+        "implementationRefs": [
+          "apps/api/src/infrastructure/auth/embeddedPrincipalGrantRepository.ts#EmbeddedPrincipalGrantRepository"
+        ],
+        "normalizedRailName": "geteffectiveworkspacecontext",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "da6edf23ffe323c55d50da1cf840df2c15823fbbf4a4cda8d0257bf52f84e1a7",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": ["apps/api/**"],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/projectOnboardingRouteGroup.ts"
+        ]
+      },
+      "createdAt": "2026-08-13T19:22:16.375Z"
+    },
+    {
+      "operationId": "564d39e4-6870-4626-a242-bb06d4010396",
+      "idempotencyKey": "feature_mechanization_rail_record:codex-agent:MVP-2170-PROJECT-WORKSPACE-AUTHORITY:query:getworkspacegraphdraft:1:e88fbc25ef39f210",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex-agent",
+      "railId": "local#MVP-2170-PROJECT-WORKSPACE-AUTHORITY#query#getworkspacegraphdraft",
+      "sourcePath": "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md",
+      "sourceContentSha256": "da6edf23ffe323c55d50da1cf840df2c15823fbbf4a4cda8d0257bf52f84e1a7",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "Planning DB integrity rejects an external URL as a governed source path.",
+        "dddOwner": "CanvasAuthoringAuthority",
+        "railName": "GetWorkspaceGraphDraft",
+        "railType": "query",
+        "featureId": "MVP-2170-PROJECT-WORKSPACE-AUTHORITY",
+        "greenTest": "The rail cites the ARC evidence file with its exact SHA-256 and integrity passes.",
+        "sourceRef": "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md",
+        "unitTests": [
+          "apps/api/test/application/services/listProjectsUseCase.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2170"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts"
+        ],
+        "domainObjects": ["ProjectWorkspaceAuthority"],
+        "fowlerSignals": [
+          "Replace parallel authority paths with one rail and one interpreter."
+        ],
+        "negativeTests": [
+          "apps/api/test/entrypoints/http/projectOnboardingRoutes.test.ts"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "GET /workspace/graph/draft",
+        "completionGate": ["pnpm verify:prepush"],
+        "applicationPort": "IWorkspaceGraphDraftStore",
+        "componentGuides": [
+          "docs/architecture/components/web/appshell/effective-workspace-context-component.md"
+        ],
+        "expectedFailure": "The #2170 source_ref is not a repository-governed file.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md"
+        ],
+        "architectureGuards": [
+          "The retained rail has independent product value and no duplicate adapter."
+        ],
+        "authorizationScope": "Authenticate once and authorize the exact read scope.",
+        "implementationPlan": "Converge project admission, workspace selection, grants, and graph-draft authority through existing rails.",
+        "implementationRefs": [
+          "apps/api/src/application/services/getWorkspaceGraphDraftUseCase.ts#GetWorkspaceGraphDraftUseCaseResult"
+        ],
+        "normalizedRailName": "getworkspacegraphdraft",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "da6edf23ffe323c55d50da1cf840df2c15823fbbf4a4cda8d0257bf52f84e1a7",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": ["apps/api/**"],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/projectOnboardingRouteGroup.ts"
+        ]
+      },
+      "createdAt": "2026-08-13T19:22:18.967Z"
+    },
+    {
+      "operationId": "72fce71b-46b3-4fa0-aa0d-d4575783cf58",
+      "idempotencyKey": "feature_mechanization_rail_record:codex-agent:MVP-2170-PROJECT-WORKSPACE-AUTHORITY:command:saveworkspacegraphdraft:1:d6501e32e4db02b1",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex-agent",
+      "railId": "local#MVP-2170-PROJECT-WORKSPACE-AUTHORITY#command#saveworkspacegraphdraft",
+      "sourcePath": "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md",
+      "sourceContentSha256": "da6edf23ffe323c55d50da1cf840df2c15823fbbf4a4cda8d0257bf52f84e1a7",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "Planning DB integrity rejects an external URL as a governed source path.",
+        "dddOwner": "Workspace authoring aggregate",
+        "railName": "SaveWorkspaceGraphDraft",
+        "railType": "command",
+        "featureId": "MVP-2170-PROJECT-WORKSPACE-AUTHORITY",
+        "greenTest": "The rail cites the ARC evidence file with its exact SHA-256 and integrity passes.",
+        "sourceRef": "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md",
+        "unitTests": [
+          "apps/api/test/application/services/listProjectsUseCase.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2170"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts"
+        ],
+        "domainObjects": ["ProjectWorkspaceAuthority"],
+        "fowlerSignals": [
+          "Replace parallel authority paths with one rail and one interpreter."
+        ],
+        "negativeTests": [
+          "apps/api/test/entrypoints/http/projectOnboardingRoutes.test.ts"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "PUT /workspace/graph/draft",
+        "completionGate": ["pnpm verify:prepush"],
+        "applicationPort": "IWorkspaceGraphDraftStore",
+        "componentGuides": [
+          "docs/architecture/components/web/appshell/effective-workspace-context-component.md"
+        ],
+        "expectedFailure": "The #2170 source_ref is not a repository-governed file.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md"
+        ],
+        "architectureGuards": [
+          "The retained rail has independent product value and no duplicate adapter."
+        ],
+        "authorizationScope": "Authenticated author with exact write scope and authoring authority.",
+        "implementationPlan": "Converge project admission, workspace selection, grants, and graph-draft authority through existing rails.",
+        "implementationRefs": [
+          "apps/api/src/application/services/saveWorkspaceGraphDraftUseCase.ts#SaveWorkspaceGraphDraftUseCaseResult"
+        ],
+        "normalizedRailName": "saveworkspacegraphdraft",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "da6edf23ffe323c55d50da1cf840df2c15823fbbf4a4cda8d0257bf52f84e1a7",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": ["apps/api/**"],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/projectOnboardingRouteGroup.ts"
+        ]
+      },
+      "createdAt": "2026-08-13T19:22:21.150Z"
     }
   ],
   "governanceComponentDefinitions": [
