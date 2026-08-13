@@ -12,6 +12,31 @@ import {
 } from './canvasInspectorAuthoringModel';
 import { DvtAuthoringFields } from './DvtAuthoringFields';
 
+vi.mock('../../components/monaco/MonacoCodeEditor', () => ({
+  MonacoCodeEditor: ({
+    ariaLabel,
+    language,
+    onChange,
+    path,
+    value,
+  }: {
+    ariaLabel: string;
+    language: string;
+    onChange: (value: string) => void;
+    path?: string;
+    value: string;
+  }) => (
+    <textarea
+      aria-label={ariaLabel}
+      data-language={language}
+      data-path={path}
+      data-testid="dvt-transform-sql-editor"
+      onChange={(event) => onChange(event.currentTarget.value)}
+      value={value}
+    />
+  ),
+}));
+
 function buildDvtNode(
   kind: 'dvt:source' | 'dvt:sql_transform' | 'dvt:sink',
   metadata?: Record<string, unknown>
@@ -159,16 +184,19 @@ describe('DvtAuthoringFields', () => {
       })
     );
 
-    const sqlTextarea = container.querySelector(
-      'textarea[name="dvt-transform-sql"]'
+    const sqlEditor = container.querySelector(
+      '[data-testid="dvt-transform-sql-editor"]'
     ) as HTMLTextAreaElement | null;
 
     expect(container.textContent).toContain('DVT SQL transform');
     expect(container.textContent).toContain('1 line');
-    expect(sqlTextarea?.value).toBe('select * from public.orders');
+    expect(sqlEditor).not.toBeNull();
+    expect(sqlEditor?.value).toBe('select * from public.orders');
+    expect(sqlEditor?.dataset.language).toBe('sql');
+    expect(sqlEditor?.dataset.path).toBe('canvas/dvt-sql-transform.sql');
 
     act(() => {
-      fireEvent.input(sqlTextarea!, { target: { value: 'select id from public.orders' } });
+      fireEvent.input(sqlEditor!, { target: { value: 'select id from public.orders' } });
     });
 
     expect(draftJson()).toContain('"sql":"select id from public.orders"');
