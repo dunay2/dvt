@@ -521,9 +521,12 @@ describe('CanvasNodeWorkbenchPanel', () => {
       '[data-slot="canvas-node-workbench-columns-section"]'
     );
     expect(columnsSection).not.toBeNull();
-    expect(columnsSection?.textContent).toContain('Orders Source.order_id');
+    expect(columnsSection?.textContent?.match(/Orders Source\.order_id/g)).toHaveLength(1);
     expect(columnsSection?.textContent).toContain('integer');
     expect(columnsSection?.querySelector('input[name="dvt-transform-column"]')).toBeNull();
+    expect(
+      columnsSection?.querySelector('[data-slot="canvas-node-workbench-authoring"]')
+    ).toBeNull();
     expect(container.querySelector('[data-testid="dvt-transform-sql-editor"]')).toBeNull();
   });
 
