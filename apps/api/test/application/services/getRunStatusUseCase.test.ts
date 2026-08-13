@@ -1634,7 +1634,37 @@ describe('GetRunStatusUseCase', () => {
     expect(stateStore.listEvents).not.toHaveBeenCalled();
   });
 
-  it('keeps status response available when optional evidence sources fail', async () => {
+  it.each(['getSnapshot', 'listEvents'] as const)(
+    'propagates unexpected state-store %s failures',
+    async (operation) => {
+      const engine = {
+        async getRunStatus() {
+          return {
+            runId: 'provider-run-1',
+            status: 'RUNNING' as const,
+          };
+        },
+        async getRunEnrichment() {
+          throw new Error('should not be called');
+        },
+      };
+      const stateStore = createStateStore();
+      const storageFailure = new Error(`${operation} backend unavailable`);
+      stateStore[operation].mockRejectedValue(storageFailure);
+      const useCase = new GetRunStatusUseCase(
+        engine as never,
+        engine as never,
+        stateStore as never,
+        { isSnapshotStale: vi.fn().mockResolvedValue(false) } as never
+      );
+
+      await expect(
+        useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never)
+      ).rejects.toBe(storageFailure);
+    }
+  );
+
+  it('propagates unexpected plan-record failures', async () => {
     const engine = {
       async getRunStatus() {
         return {
@@ -1648,8 +1678,7 @@ describe('GetRunStatusUseCase', () => {
     };
 
     const stateStore = createStateStore();
-    stateStore.getSnapshot.mockRejectedValue(new Error('snapshot backend unavailable'));
-    stateStore.listEvents.mockRejectedValue(new Error('events backend unavailable'));
+    const planStoreFailure = new Error('plan store unavailable');
 
     const useCase = new GetRunStatusUseCase(
       engine as never,
@@ -1660,17 +1689,13 @@ describe('GetRunStatusUseCase', () => {
       } as never,
       undefined,
       {
-        getPlanRecord: vi.fn().mockRejectedValue(new Error('plan store unavailable')),
+        getPlanRecord: vi.fn().mockRejectedValue(planStoreFailure),
       }
     );
 
     await expect(
       useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never)
-    ).resolves.toMatchObject({
-      ...expectedOperationalIdentity,
-      status: 'RUNNING',
-      snapshotStaleness: 'FRESH',
-    });
+    ).rejects.toBe(planStoreFailure);
   });
 
   it('does not advertise recovery when the stored source plan fails integrity validation', async () => {

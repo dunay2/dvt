@@ -196,19 +196,11 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
   }
 
   private async readWorkflowSnapshot(runRef: RunReadRef): Promise<WorkflowSnapshot | null> {
-    try {
-      return await this.stateStore.getSnapshot(runRef.tenantId, runRef.runId);
-    } catch {
-      return null;
-    }
+    return this.stateStore.getSnapshot(runRef.tenantId, runRef.runId);
   }
 
   private async readRunEvents(runRef: RunReadRef): Promise<ReadonlyArray<EventEnvelope>> {
-    try {
-      return await this.stateStore.listEvents(runRef.tenantId, runRef.runId);
-    } catch {
-      return [];
-    }
+    return this.stateStore.listEvents(runRef.tenantId, runRef.runId);
   }
 
   private async readPlanRecord(metadata: PlanRecordMetadata): Promise<PlanRecord | undefined> {
@@ -216,16 +208,12 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
       return undefined;
     }
 
-    try {
-      return await this.planStore.getPlanRecord({
-        tenantId: metadata.tenantId,
-        projectId: metadata.projectId,
-        environmentId: metadata.environmentId,
-        planId: metadata.planId,
-      });
-    } catch {
-      return undefined;
-    }
+    return this.planStore.getPlanRecord({
+      tenantId: metadata.tenantId,
+      projectId: metadata.projectId,
+      environmentId: metadata.environmentId,
+      planId: metadata.planId,
+    });
   }
 
   private shouldReadEvidenceEvents(
