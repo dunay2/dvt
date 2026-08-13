@@ -1,4 +1,4 @@
-import type { PlanRef } from '@dvt/contracts';
+import { parsePlanRef, type PlanRef } from '@dvt/contracts';
 
 export function normalizePlanRef(
   planRef: Pick<
@@ -15,4 +15,14 @@ export function normalizePlanRef(
     ...(planRef.sizeBytes === undefined ? {} : { sizeBytes: planRef.sizeBytes }),
     ...(planRef.expiresAt === undefined ? {} : { expiresAt: planRef.expiresAt }),
   };
+}
+
+export function toContractPlanRef(planRef: {
+  uri: string;
+  sha256: string;
+  schemaVersion: string;
+  planId: string;
+  planVersion: string;
+}): PlanRef {
+  return parsePlanRef(planRef);
 }
