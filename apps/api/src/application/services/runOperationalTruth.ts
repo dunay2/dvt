@@ -53,9 +53,15 @@ export function projectRunOperationalTruth(
     ...(failedStepId === undefined ? {} : { failedStepId }),
     ...(errorReason === undefined ? {} : { errorReason }),
     controls: projectRunControlAvailability(status, {
-      recoveryContextTrusted: input.recoveryContextTrusted ?? true,
-      recoveryPlanAvailable: input.recoveryPlanAvailable ?? true,
-      recoveryAdapterAvailable: input.recoveryAdapterAvailable ?? true,
+      ...(input.recoveryContextTrusted === undefined
+        ? {}
+        : { recoveryContextTrusted: input.recoveryContextTrusted }),
+      ...(input.recoveryPlanAvailable === undefined
+        ? {}
+        : { recoveryPlanAvailable: input.recoveryPlanAvailable }),
+      ...(input.recoveryAdapterAvailable === undefined
+        ? {}
+        : { recoveryAdapterAvailable: input.recoveryAdapterAvailable }),
       cancelDispatchConfirmed: input.cancelDispatchConfirmed ?? false,
       cancellationAccepted: input.cancellationAccepted ?? false,
     }),

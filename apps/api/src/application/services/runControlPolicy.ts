@@ -83,15 +83,26 @@ export function projectRunControlAvailability(
 
   const recoverDecision = decideRecoverRun(status);
   if (recoverDecision.kind === 'dispatch') {
+    let recover: RunControlAvailabilityDto['recover'];
+    if (evidence.recoveryAdapterAvailable === false) {
+      recover = { available: false, reason: 'source_adapter_unavailable' };
+    } else if (evidence.recoveryPlanAvailable === false) {
+      recover = { available: false, reason: 'source_plan_unavailable' };
+    } else if (evidence.recoveryContextTrusted === false) {
+      recover = { available: false, reason: 'source_context_untrusted' };
+    } else if (
+      evidence.recoveryAdapterAvailable === true &&
+      evidence.recoveryPlanAvailable === true &&
+      evidence.recoveryContextTrusted === true
+    ) {
+      recover = { available: true };
+    } else {
+      recover = { available: false, reason: 'recovery_evidence_unknown' };
+    }
+
     return {
       cancel,
-      recover: !(evidence.recoveryAdapterAvailable ?? true)
-        ? { available: false, reason: 'source_adapter_unavailable' }
-        : !(evidence.recoveryPlanAvailable ?? true)
-          ? { available: false, reason: 'source_plan_unavailable' }
-          : (evidence.recoveryContextTrusted ?? true)
-            ? { available: true }
-            : { available: false, reason: 'source_context_untrusted' },
+      recover,
     };
   }
 

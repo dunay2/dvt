@@ -1,18 +1,6 @@
-import type { IStoredPlanArtifactReader, IStoredPlanRefReader } from '@dvt/artifacts';
 import type { TenantId as ContractTenantId } from '@dvt/contracts';
-import type {
-  IPlanIntegrityValidator,
-  IRunStateStoreRead,
-  IWorkflowEngine,
-  RunMetadata,
-} from '@dvt/engine';
-import type { IPlanExecutabilityValidator } from '@dvt/planner';
+import type { IRunStateStoreRead, IWorkflowEngine, RunMetadata } from '@dvt/engine';
 
-import type { IStartRunTargetAdapterRegistry } from '../ports/IStartRunTargetAdapterRegistry.js';
-import type { IRunCancellationReceiptStore } from '../ports/runCancellationReceiptStore.js';
-import { toRunCancellationReceiptKey } from '../ports/runCancellationReceiptStore.js';
-import type { IRunExecutionContextReferenceReader } from '../ports/runExecutionContextReferenceReader.js';
-import type { IRunExecutionContextRequirementResolver } from '../ports/runExecutionContextRequirementResolver.js';
 import type {
   AuthorizedQueryExecutionContext,
   IListRunsUseCase,
@@ -21,29 +9,15 @@ import type {
   RunListItemDto,
 } from '../ports/runtime.js';
 
-import { cancellationReceiptCanAffectAvailability } from './runControlPolicy.js';
 import { runMetadataToEngineRunRef } from './runMetadataToEngineRunRef.js';
 import { projectRunOperationalTruth } from './runOperationalTruth.js';
-import { resolveRunRecoveryContextTrust } from './runRecoveryContextTrust.js';
-import { resolveRunRecoveryPlanEvidence } from './runRecoveryPlanAvailability.js';
-import type { IRunStartDispatchResolver } from './runStartDispatchResolver.js';
 
 const RUN_STATUS_READ_CONCURRENCY = 8;
-const RUN_RECOVERY_PROJECTION_CONCURRENCY = 4;
-type RecoveryPlanReader = IStoredPlanRefReader & IStoredPlanArtifactReader;
 
 export class ListRunsUseCase implements IListRunsUseCase {
   public constructor(
     private readonly stateStore: IRunStateStoreRead,
-    private readonly engine: Pick<IWorkflowEngine, 'getRunStatus'>,
-    private readonly executionContextReader?: IRunExecutionContextReferenceReader,
-    private readonly executionContextRequirementResolver?: IRunExecutionContextRequirementResolver,
-    private readonly planStore?: RecoveryPlanReader,
-    private readonly planIntegrityValidator?: IPlanIntegrityValidator,
-    private readonly targetAdapterRegistry?: IStartRunTargetAdapterRegistry,
-    private readonly startDispatchResolver?: IRunStartDispatchResolver,
-    private readonly cancellationReceipts?: IRunCancellationReceiptStore,
-    private readonly planExecutabilityValidator?: IPlanExecutabilityValidator
+    private readonly engine: Pick<IWorkflowEngine, 'getRunStatus'>
   ) {}
 
   public async execute(
@@ -63,65 +37,21 @@ export class ListRunsUseCase implements IListRunsUseCase {
     const statuses = await this.readCanonicalStatuses(metadata);
 
     return {
-      items: await this.projectListItems(metadata, statuses),
+      items: this.projectListItems(metadata, statuses),
     };
   }
 
-  private async projectListItems(
+  private projectListItems(
     items: ReadonlyArray<RunMetadata>,
     statuses: ReadonlyArray<Awaited<ReturnType<IWorkflowEngine['getRunStatus']>>>
-  ): Promise<RunListItemDto[]> {
-    const projected: RunListItemDto[] = [];
-
-    for (let offset = 0; offset < items.length; offset += RUN_RECOVERY_PROJECTION_CONCURRENCY) {
-      const batch = items.slice(offset, offset + RUN_RECOVERY_PROJECTION_CONCURRENCY);
-      projected.push(
-        ...(await Promise.all(
-          batch.map((item, index) => this.toListItem(item, statuses[offset + index]!))
-        ))
-      );
-    }
-
-    return projected;
-  }
-
-  private async toListItem(
-    item: RunMetadata,
-    status: Awaited<ReturnType<IWorkflowEngine['getRunStatus']>>
-  ): Promise<RunListItemDto> {
-    const recoveryPlan = await resolveRunRecoveryPlanEvidence(
-      this.planStore,
-      this.planIntegrityValidator,
-      item,
-      status,
-      {
-        targetAdapterRegistry: this.targetAdapterRegistry,
-        planExecutabilityValidator: this.planExecutabilityValidator,
-      }
+  ): RunListItemDto[] {
+    return items.map((item, index) =>
+      projectRunOperationalTruth({
+        metadata: item,
+        status: statuses[index]!,
+        cancelDispatchConfirmed: statuses[index]!.status !== 'PENDING',
+      })
     );
-    const [recoveryContextTrusted, startDispatch, cancellationAccepted] = await Promise.all([
-      resolveRunRecoveryContextTrust(
-        this.executionContextReader,
-        this.executionContextRequirementResolver,
-        item,
-        status,
-        recoveryPlan.planRef
-      ),
-      this.startDispatchResolver?.resolve(item, status),
-      this.cancellationReceipts !== undefined && cancellationReceiptCanAffectAvailability(status)
-        ? this.cancellationReceipts.hasAccepted(toRunCancellationReceiptKey(item))
-        : false,
-    ]);
-
-    return projectRunOperationalTruth({
-      metadata: item,
-      status,
-      recoveryContextTrusted,
-      recoveryPlanAvailable: recoveryPlan.available,
-      recoveryAdapterAvailable: recoveryPlan.adapterAvailable,
-      cancelDispatchConfirmed: startDispatch?.kind === 'confirmed' || status.status !== 'PENDING',
-      cancellationAccepted,
-    });
   }
 
   private async readCanonicalStatuses(items: ReadonlyArray<RunMetadata>) {

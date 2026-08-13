@@ -63,7 +63,7 @@ describe('projectRunOperationalTruth', () => {
       errorReason: 'SINK_WRITE_FAILED',
       controls: {
         cancel: { available: false, reason: 'run_terminal' },
-        recover: { available: true },
+        recover: { available: false, reason: 'recovery_evidence_unknown' },
       },
     });
   });
@@ -143,9 +143,9 @@ describe('projectRunOperationalTruth', () => {
     ['RUNNING', 'CANCELLING', false, 'cancellation_pending', false, 'run_active'],
     ['PAUSED', undefined, true, undefined, false, 'run_active'],
     ['COMPLETED', undefined, false, 'run_terminal', false, 'run_completed'],
-    ['FAILED', undefined, false, 'run_terminal', true, undefined],
-    ['FAILED', 'CANCELLING', false, 'run_terminal', true, undefined],
-    ['CANCELLED', undefined, false, 'run_cancelled', true, undefined],
+    ['FAILED', undefined, false, 'run_terminal', false, 'recovery_evidence_unknown'],
+    ['FAILED', 'CANCELLING', false, 'run_terminal', false, 'recovery_evidence_unknown'],
+    ['CANCELLED', undefined, false, 'run_cancelled', false, 'recovery_evidence_unknown'],
   ] as const)(
     'projects server-owned controls for %s/%s',
     (status, substatus, canCancel, cancelReason, canRecover, recoverReason) => {
@@ -186,6 +186,21 @@ describe('projectRunOperationalTruth', () => {
       available: false,
       reason: 'source_plan_unavailable',
     });
+  });
+
+  it('advertises recovery only when all server-owned evidence is verified', () => {
+    const truth = projectRunOperationalTruth({
+      metadata,
+      status: {
+        runId: 'run-provider',
+        status: 'FAILED',
+      },
+      recoveryAdapterAvailable: true,
+      recoveryPlanAvailable: true,
+      recoveryContextTrusted: true,
+    });
+
+    expect(truth.controls.recover).toEqual({ available: true });
   });
 
   it('does not advertise recovery when the source runtime adapter is unavailable', () => {

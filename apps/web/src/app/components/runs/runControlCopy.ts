@@ -26,6 +26,7 @@ const EN_COPY: RunControlCopy = {
     run_cancelled: 'The run is already cancelled.',
     run_completed: 'Completed runs cannot be cancelled or recovered.',
     run_terminal: 'This terminal run cannot be cancelled.',
+    recovery_evidence_unknown: 'Open the run to verify whether recovery is available.',
     source_adapter_unavailable:
       'Recovery is unavailable because the original runtime adapter is not configured.',
     source_plan_unavailable:
@@ -50,6 +51,8 @@ const ES_COPY: RunControlCopy = {
     run_cancelled: 'La ejecución ya está cancelada.',
     run_completed: 'Las ejecuciones completadas no se pueden cancelar ni recuperar.',
     run_terminal: 'Esta ejecución terminal no se puede cancelar.',
+    recovery_evidence_unknown:
+      'Abre la ejecución para comprobar si la recuperación está disponible.',
     source_adapter_unavailable:
       'La recuperación no está disponible porque el adaptador de ejecución original no está configurado.',
     source_plan_unavailable:
