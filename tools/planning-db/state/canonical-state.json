@@ -11507,14 +11507,14 @@
         "work_item_id": "GH-2166",
         "title": "Classify stored-plan lookup failures at the executability boundary",
         "owner": "API / Plan Store",
-        "status": "implemented",
+        "status": "superseded",
         "rationale": "Existing-plan admission must map only absence and canonical PLAN_REF_MISMATCH to plan_rejected while preserving unexpected infrastructure failures without leaking their messages.",
         "fowler_signal": "boundary_drift",
         "rail_ref": "RecordPlanExecutability",
         "approved_at": "2026-08-13T04:38:59.648+00:00",
         "supersedes_id": "GH-2166-MISSING-PLAN-REJECTION-20260813",
         "created_at": "2026-08-13T04:36:32.57+00:00",
-        "updated_at": "2026-08-13T04:39:39.431+00:00"
+        "updated_at": "2026-08-13T05:01:10.757+00:00"
       },
       {
         "design_id": "GH-2166-PLANREF-HTTP-COMPONENT-REMAP-20260813",
@@ -11557,6 +11557,20 @@
         "supersedes_id": "GH-2166-RECORD-PLAN-EXECUTABILITY-DUPLICATE-RETIREMENT-20260813",
         "created_at": "2026-08-13T01:36:02.305+00:00",
         "updated_at": "2026-08-13T01:36:26.626+00:00"
+      },
+      {
+        "design_id": "GH-2166-START-RUN-ERROR-CONTAINMENT-20260813",
+        "work_item_id": "GH-2166",
+        "title": "Contain unexpected StartRun failures at the HTTP boundary",
+        "owner": "SYS-API-HTTP-ENTRYPOINTS",
+        "status": "implementing",
+        "rationale": "The admission layer must preserve unexpected infrastructure errors for observability while the existing StartRun HTTP adapter converts them to the stable internal_server_error/internal_error envelope without exposing exception text.",
+        "fowler_signal": "boundary_drift",
+        "rail_ref": "StartRun",
+        "approved_at": "2026-08-13T05:01:12.003+00:00",
+        "supersedes_id": "GH-2166-PLAN-REJECTION-CLASSIFICATION-20260813",
+        "created_at": "2026-08-13T05:01:09.497+00:00",
+        "updated_at": "2026-08-13T05:01:13.227+00:00"
       },
       {
         "design_id": "GH-2166-VALIDATION-FETCH-RAIL-CLEAN-RECORD-20260813",
@@ -67583,6 +67597,30 @@
         "created_at": "2026-08-13T01:36:02.305+00:00"
       },
       {
+        "design_id": "GH-2166-START-RUN-ERROR-CONTAINMENT-20260813",
+        "subject_kind": "command",
+        "subject_id": "StartRun",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T05:01:09.497+00:00"
+      },
+      {
+        "design_id": "GH-2166-START-RUN-ERROR-CONTAINMENT-20260813",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/entrypoints/http/startRunRoute.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T05:01:09.497+00:00"
+      },
+      {
+        "design_id": "GH-2166-START-RUN-ERROR-CONTAINMENT-20260813",
+        "subject_kind": "test",
+        "subject_id": "apps/api/test/entrypoints/http/startRunRoute.test.ts",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-13T05:01:09.497+00:00"
+      },
+      {
         "design_id": "GH-2166-VALIDATION-FETCH-RAIL-CLEAN-RECORD-20260813",
         "subject_kind": "decision",
         "subject_id": "local#GH-2166-STORED-PLAN-AUTHORITY#query#fetchplanforvalidation",
@@ -91873,6 +91911,27 @@
         "created_at": "2026-08-11T14:09:37.594+00:00"
       },
       {
+        "operation_id": "39915ebe-ac5f-4658-bbaa-01d31a67ca1b",
+        "idempotency_key": "architecture_design_transition:codex:GH-2166-START-RUN-ERROR-CONTAINMENT-20260813:f5105ab714665be9",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2166-START-RUN-ERROR-CONTAINMENT-20260813",
+        "source_ref": "github://dunay2/dvt/issues/2166#fowler-p1-start-run-error-containment",
+        "source_content_sha256": "f02b3bbed26ea4ed1afa57727ccf8ce0097c23d86feeede1309560614d85c537",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Existing StartRun rail and canonical HTTP error envelope are sufficient; no parallel route or contract is required.",
+          "designId": "GH-2166-START-RUN-ERROR-CONTAINMENT-20260813",
+          "toStatus": "approved",
+          "sourceRef": "github://dunay2/dvt/issues/2166#fowler-p1-start-run-error-containment",
+          "fromStatus": "review",
+          "sourceContentSha256": "f02b3bbed26ea4ed1afa57727ccf8ce0097c23d86feeede1309560614d85c537"
+        },
+        "created_at": "2026-08-13T05:01:12.003+00:00"
+      },
+      {
         "operation_id": "39921801-fff9-4f1c-819e-e67fac74a866",
         "idempotency_key": "architecture_test_record:codex:R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810:SYS-API-TESTS-APPLICATION-SERVICES-ARCHITECTURE-HARNESS:b119c8e9c74c7e01",
         "operation_type": "architecture_test_record",
@@ -94423,6 +94482,27 @@
           "sourceContentSha256": "45bf878ab2adee3163836bc159d75b55bc8251fc2c6e0b27e223481af67f1eac"
         },
         "created_at": "2026-08-13T01:09:40.573+00:00"
+      },
+      {
+        "operation_id": "6171260a-ffa6-4b64-80bf-b5e44d3beae6",
+        "idempotency_key": "architecture_design_transition:codex:GH-2166-START-RUN-ERROR-CONTAINMENT-20260813:32fa6f529485cb0e",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2166-START-RUN-ERROR-CONTAINMENT-20260813",
+        "source_ref": "github://dunay2/dvt/issues/2166#fowler-p1-start-run-error-containment",
+        "source_content_sha256": "f02b3bbed26ea4ed1afa57727ccf8ce0097c23d86feeede1309560614d85c537",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Begin TDD at the StartRun HTTP adapter with a negative non-disclosure assertion.",
+          "designId": "GH-2166-START-RUN-ERROR-CONTAINMENT-20260813",
+          "toStatus": "implementing",
+          "sourceRef": "github://dunay2/dvt/issues/2166#fowler-p1-start-run-error-containment",
+          "fromStatus": "approved",
+          "sourceContentSha256": "f02b3bbed26ea4ed1afa57727ccf8ce0097c23d86feeede1309560614d85c537"
+        },
+        "created_at": "2026-08-13T05:01:13.227+00:00"
       },
       {
         "operation_id": "620063ab-2af3-4147-91df-498fabf4d6c7",
@@ -103095,6 +103175,52 @@
         "created_at": "2026-08-10T21:04:10.935+00:00"
       },
       {
+        "operation_id": "e150a402-25a5-4f1b-a2f3-1dc67c467bc7",
+        "idempotency_key": "architecture_design_create:codex:GH-2166-START-RUN-ERROR-CONTAINMENT-20260813:9f94d9f21d987460",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "GH-2166-START-RUN-ERROR-CONTAINMENT-20260813",
+        "source_ref": "github://dunay2/dvt/issues/2166#fowler-p1-start-run-error-containment",
+        "source_content_sha256": "f02b3bbed26ea4ed1afa57727ccf8ce0097c23d86feeede1309560614d85c537",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "SYS-API-HTTP-ENTRYPOINTS",
+          "title": "Contain unexpected StartRun failures at the HTTP boundary",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "StartRun",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/src/entrypoints/http/startRunRoute.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "apps/api/test/entrypoints/http/startRunRoute.test.ts",
+              "subjectKind": "test"
+            }
+          ],
+          "status": "review",
+          "railRef": "StartRun",
+          "designId": "GH-2166-START-RUN-ERROR-CONTAINMENT-20260813",
+          "rationale": "The admission layer must preserve unexpected infrastructure errors for observability while the existing StartRun HTTP adapter converts them to the stable internal_server_error/internal_error envelope without exposing exception text.",
+          "sourceRef": "github://dunay2/dvt/issues/2166#fowler-p1-start-run-error-containment",
+          "workItemId": "GH-2166",
+          "fowlerSignal": "boundary_drift",
+          "supersedesId": "GH-2166-PLAN-REJECTION-CLASSIFICATION-20260813",
+          "sourceContentSha256": "f02b3bbed26ea4ed1afa57727ccf8ce0097c23d86feeede1309560614d85c537"
+        },
+        "created_at": "2026-08-13T05:01:09.497+00:00"
+      },
+      {
         "operation_id": "e155019b-2b3d-489d-933d-6be6c0be742b",
         "idempotency_key": "issue-2274-ev-pth14-v5-generate-review4",
         "operation_type": "architecture_evidence_record",
@@ -104427,6 +104553,27 @@
           "sourceContentSha256": "85c45588da6ec295fbfadbfc02118eb8beca80b2008d636c309be4d7485eb5cc"
         },
         "created_at": "2026-08-10T21:04:20.683+00:00"
+      },
+      {
+        "operation_id": "f793ea10-17d8-4785-bc38-ea1b5f6ed5d2",
+        "idempotency_key": "architecture_design_transition:codex:GH-2166-PLAN-REJECTION-CLASSIFICATION-20260813:8f6fca6879f9a32c",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2166-PLAN-REJECTION-CLASSIFICATION-20260813",
+        "source_ref": "github://dunay2/dvt/pull/2324#fowler-qa-p1",
+        "source_content_sha256": "f02b3bbed26ea4ed1afa57727ccf8ce0097c23d86feeede1309560614d85c537",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Superseded because StartRun transport still exposed the preserved infrastructure exception message.",
+          "designId": "GH-2166-PLAN-REJECTION-CLASSIFICATION-20260813",
+          "toStatus": "superseded",
+          "sourceRef": "github://dunay2/dvt/pull/2324#fowler-qa-p1",
+          "fromStatus": "implemented",
+          "sourceContentSha256": "f02b3bbed26ea4ed1afa57727ccf8ce0097c23d86feeede1309560614d85c537"
+        },
+        "created_at": "2026-08-13T05:01:10.757+00:00"
       },
       {
         "operation_id": "f8822613-fd37-4a5b-848d-54ab7574503e",
