@@ -22,6 +22,7 @@ Execution lifecycle, command, and event contracts for the workflow engine.
 
 - `packages/@dvt/contracts/src/contracts/engine/ExecutionSemantics.v1.ts`
 - `packages/@dvt/contracts/src/contracts/engine/IOutboxStorage.v1.ts`
+- `packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts`
 - `packages/@dvt/contracts/src/contracts/engine/RunEvents.v1.ts`
 - `packages/@dvt/contracts/src/contracts/engine/RunExecutionContext.v1.ts`
 - `packages/@dvt/contracts/src/contracts/engine/RunExecutionPolicy.v1.ts`
