@@ -1,6 +1,7 @@
 import {
   WorkspaceGraphDraftSaveRequestSchema,
   type WorkspaceGraphDraftSaveRequest,
+  type WorkspaceGraphDraftSaveResponse,
   type WorkspaceGraphDraftCapabilityMode,
 } from '@dvt/contracts';
 import type { IObservability, ISpan } from '@dvt/observability';
@@ -360,7 +361,17 @@ function attachDecisionAttributes(
 }
 
 function writeTelemetryOutcome(
-  kind: 'saved' | 'conflict' | 'denied'
-): 'saved' | 'conflict' | 'denied' {
-  return kind;
+  kind: WorkspaceGraphDraftSaveResponse['kind']
+): 'saved' | 'conflict' | 'denied' | 'idempotency_mismatch' {
+  switch (kind) {
+    case 'saved':
+    case 'conflict':
+    case 'denied':
+    case 'idempotency_mismatch':
+      return kind;
+    case 'authoring_authority_conflict':
+      return 'conflict';
+    case 'unsupported_schema_version':
+      return 'denied';
+  }
 }
