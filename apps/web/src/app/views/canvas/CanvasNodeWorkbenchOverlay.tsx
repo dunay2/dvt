@@ -107,6 +107,17 @@ export function CanvasNodeWorkbenchOverlay({
         ?.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]')
         ?.focus({ preventScroll: true });
     });
+
+    return () => {
+      window.cancelAnimationFrame(focusFrame);
+    };
+  }, [inspectorNodeId, positionController.surfaceRef, visible]);
+
+  useEffect(() => {
+    if (!visible) {
+      return;
+    }
+
     const closeOnEscape = (event: KeyboardEvent): void => {
       if (event.key !== 'Escape') {
         return;
@@ -118,10 +129,9 @@ export function CanvasNodeWorkbenchOverlay({
 
     document.addEventListener('keydown', closeOnEscape);
     return () => {
-      window.cancelAnimationFrame(focusFrame);
       document.removeEventListener('keydown', closeOnEscape);
     };
-  }, [hideAndRestoreNodeFocus, positionController.surfaceRef, visible]);
+  }, [hideAndRestoreNodeFocus, visible]);
 
   if (!visible || surfaceStrategy == null || panels.inspectorNode == null) {
     return null;
