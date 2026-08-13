@@ -43,7 +43,6 @@ describe('Runs runtime contract', () => {
               startedAt: '2026-04-07T00:00:00.000Z',
             },
           ],
-          nextCursor: null,
         },
       });
     }).as('listRuns');

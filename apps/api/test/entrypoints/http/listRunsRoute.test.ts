@@ -77,7 +77,6 @@ function createDeps(): {
             status: 'FAILED',
           },
         ],
-        nextCursor: null,
       }),
     },
   };
@@ -157,22 +156,6 @@ describe('listRunsRoute', () => {
     expect(reply.code).toHaveBeenCalledWith(400);
     expect(reply.send).toHaveBeenCalledWith(
       httpError('bad_request', 'limit_out_of_range', 'limit')
-    );
-  });
-
-  it('returns 400 when cursor is supplied before keyset paging is implemented', async () => {
-    const deps = createDeps();
-    const reply = createReply();
-
-    await listRunsRoute(
-      { id: 'req-5', headers: {}, query: { tenantId: 'tenant-a', cursor: 'opaque' } } as never,
-      reply as never,
-      deps as never
-    );
-
-    expect(reply.code).toHaveBeenCalledWith(400);
-    expect(reply.send).toHaveBeenCalledWith(
-      httpError('bad_request', 'unsupported_cursor', 'cursor')
     );
   });
 

@@ -45,9 +45,7 @@ export type WorkspaceGraphDraftFlowResult = {
   readonly firstRevision: string;
 };
 
-export function expectCommandQueryFlowSucceeded(
-  flow: CommandQueryFlowResult
-): void {
+export function expectCommandQueryFlowSucceeded(flow: CommandQueryFlowResult): void {
   expect(flow.actualRunId).toEqual(expect.any(String));
   expect(flow.startResponse.statusCode).toBe(202);
   expect(flow.startResponse.json()).toEqual({ runId: flow.actualRunId, accepted: true });
@@ -66,7 +64,6 @@ export function expectCommandQueryFlowSucceeded(
         status: 'PENDING',
       },
     ],
-    nextCursor: null,
   });
 
   expect(flow.getRunResponse.statusCode).toBe(200);

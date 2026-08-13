@@ -16,7 +16,6 @@ export async function listRunsRoute(
       projectId?: string;
       environmentId?: string;
       limit?: string;
-      cursor?: string;
     };
   }>,
   reply: FastifyReply,
@@ -31,7 +30,6 @@ export async function listRunsRoute(
     projectId: request.query.projectId,
     environmentId: request.query.environmentId,
     limit: request.query.limit,
-    cursor: request.query.cursor,
   });
   if (!parsed.ok) {
     httpErrorTranslation.respond(reply, httpErrorTranslation.parse.issue(parsed.issue));

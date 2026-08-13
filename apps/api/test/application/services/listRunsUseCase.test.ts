@@ -255,7 +255,6 @@ describe('ListRunsUseCase', () => {
           errorReason: 'SINK_WRITE_FAILED',
         },
       ],
-      nextCursor: null,
     });
     expect(engine.getRunStatus).toHaveBeenCalledOnce();
     expect(stateStore.listRuns).toHaveBeenCalledWith({

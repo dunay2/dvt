@@ -40,15 +40,10 @@ export function parseListRunsRequest(input: {
   readonly projectId: string | undefined;
   readonly environmentId: string | undefined;
   readonly limit: string | undefined;
-  readonly cursor: string | undefined;
 }): ParsedListRunsResult {
   const requestedScope = parseListRunsScope(input);
   if (!requestedScope.ok) {
     return requestedScope;
-  }
-
-  if (input.cursor !== undefined) {
-    return badRequestResult(HTTP_ERROR_REASON.unsupportedCursor, { target: 'cursor' });
   }
 
   const limit = parseListRunsLimit(input.limit);
@@ -118,7 +113,9 @@ function parseListRunsTenantId(tenantId: string | undefined): RouteParseResult<T
   return { ok: true, value: tenant.value };
 }
 
-function parseListRunsProjectId(projectId: string | undefined): RouteParseResult<ProjectId | undefined> {
+function parseListRunsProjectId(
+  projectId: string | undefined
+): RouteParseResult<ProjectId | undefined> {
   const project = parseOptionalProjectId(projectId);
   if (project.kind === 'invalid') {
     return badRequestResult(HTTP_ERROR_REASON.invalidProjectId, { target: 'projectId' });
