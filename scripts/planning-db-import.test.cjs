@@ -460,7 +460,7 @@ test('command/query rail snapshot joins documented rails with source implementat
   assert.equal(archiveWidget.documentationRefs.length, 1);
 });
 
-test('command/query rail snapshot trusts the explicit Rail cell over verb heuristics and notes', () => {
+test('command/query rail snapshot recognizes an explicit Test command before aliases in notes', () => {
   const referenceDocuments = [
     {
       path: 'docs/architecture/components/widgets/widget-rail-catalog.md',

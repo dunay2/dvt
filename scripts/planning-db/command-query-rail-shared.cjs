@@ -83,7 +83,7 @@ function createCommandQueryRailSharedComponent(deps = {}) {
 
     return (
       /(Command|Query|Rail)$/.test(candidate) ||
-      /^(Accept|Archive|Cancel|Check|Claim|Compile|Create|Delete|Emit|Export|Get|Import|List|Persist|Preview|Read|Recover|Restore|Run|Save|Select|Signal|Start|Update|Validate)[A-Z]/.test(
+      /^(Accept|Archive|Cancel|Check|Claim|Compile|Create|Delete|Emit|Export|Get|Import|List|Persist|Preview|Read|Recover|Restore|Run|Save|Select|Signal|Start|Test|Update|Validate)[A-Z]/.test(
         candidate
       )
     );
