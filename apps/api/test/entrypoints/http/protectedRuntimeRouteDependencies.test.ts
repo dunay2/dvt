@@ -179,7 +179,7 @@ describe('buildProtectedRuntimeRouteDependencies', () => {
       storePlanArtifact: vi.fn(async () => VALID_PLAN_REF),
       markStoredPlanArtifactValid: vi.fn(async () => undefined),
       markStoredPlanArtifactInvalid: vi.fn(async () => undefined),
-      getStoredPlanValidationRecord: vi.fn(async () => undefined),
+      getStoredPlanValidationRecord: vi.fn(async () => ({ state: 'PENDING_VALIDATION' })),
     };
     const planValidator = {
       validatePlan: vi.fn(async () => ({
@@ -273,7 +273,7 @@ describe('buildProtectedRuntimeRouteDependencies', () => {
       storePlanArtifact: vi.fn(async () => VALID_PLAN_REF),
       markStoredPlanArtifactValid: vi.fn(async () => undefined),
       markStoredPlanArtifactInvalid: vi.fn(async () => undefined),
-      getStoredPlanValidationRecord: vi.fn(async () => undefined),
+      getStoredPlanValidationRecord: vi.fn(async () => ({ state: 'PENDING_VALIDATION' })),
     };
     const planValidator = {
       validatePlan: vi.fn(async () => ({

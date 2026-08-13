@@ -88,7 +88,7 @@ function createUseCase(
     storePlanArtifact: vi.fn(async () => PLAN_REF),
     markStoredPlanArtifactValid: vi.fn(async () => undefined),
     markStoredPlanArtifactInvalid: vi.fn(async () => undefined),
-    getStoredPlanValidationRecord: vi.fn(async () => null),
+    getStoredPlanValidationRecord: vi.fn(async () => ({ state: 'PENDING_VALIDATION' })),
   };
   const planValidator = {
     validatePlan:

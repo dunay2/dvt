@@ -75,6 +75,8 @@ const SCOPED_STORED_PLAN_REF = {
   planRef: STORED_PLAN_REF,
 };
 
+const PENDING_VALIDATION_RECORD = { state: 'PENDING_VALIDATION' as const };
+
 describe('PlannerBackedStartRunUseCase', () => {
   it('keeps policy-first precedence through planner-backed flow', async () => {
     let capturedBuildResult: PlannerBuildResultV1 | undefined;
@@ -83,6 +85,7 @@ describe('PlannerBackedStartRunUseCase', () => {
         capturedBuildResult = buildResult;
         return STORED_PLAN_REF;
       }),
+      getStoredPlanValidationRecord: vi.fn(async () => PENDING_VALIDATION_RECORD),
       markStoredPlanArtifactValid: vi.fn(async () => {}),
       markStoredPlanArtifactInvalid: vi.fn(async () => {}),
     };
@@ -158,6 +161,7 @@ describe('PlannerBackedStartRunUseCase', () => {
         capturedBuildResult = buildResult;
         return STORED_PLAN_REF;
       }),
+      getStoredPlanValidationRecord: vi.fn(async () => PENDING_VALIDATION_RECORD),
       markStoredPlanArtifactValid: vi.fn(async () => {}),
       markStoredPlanArtifactInvalid: vi.fn(async () => {}),
     };
@@ -229,6 +233,7 @@ describe('PlannerBackedStartRunUseCase', () => {
     };
     const planStore = {
       storePlanArtifact: vi.fn(async () => STORED_PLAN_REF),
+      getStoredPlanValidationRecord: vi.fn(async () => PENDING_VALIDATION_RECORD),
       markStoredPlanArtifactValid: vi.fn(async () => {}),
       markStoredPlanArtifactInvalid: vi.fn(async () => {}),
     };
@@ -305,6 +310,7 @@ describe('PlannerBackedStartRunUseCase', () => {
     };
     const planStore = {
       storePlanArtifact: vi.fn(async () => STORED_PLAN_REF),
+      getStoredPlanValidationRecord: vi.fn(async () => PENDING_VALIDATION_RECORD),
       markStoredPlanArtifactValid: vi.fn(async () => {}),
       markStoredPlanArtifactInvalid: vi.fn(async () => {}),
     };
@@ -371,6 +377,7 @@ describe('PlannerBackedStartRunUseCase', () => {
       planner: planner as never,
       planStore: {
         storePlanArtifact: vi.fn(async () => STORED_PLAN_REF),
+        getStoredPlanValidationRecord: vi.fn(async () => PENDING_VALIDATION_RECORD),
         markStoredPlanArtifactValid: vi.fn(async () => {}),
         markStoredPlanArtifactInvalid: vi.fn(async () => {}),
       } as never,
@@ -415,6 +422,7 @@ describe('PlannerBackedStartRunUseCase', () => {
     };
     const planStore = {
       storePlanArtifact: vi.fn(async () => STORED_PLAN_REF),
+      getStoredPlanValidationRecord: vi.fn(async () => PENDING_VALIDATION_RECORD),
       markStoredPlanArtifactValid: vi.fn(async () => {}),
       markStoredPlanArtifactInvalid: vi.fn(async () => {}),
     };
@@ -471,6 +479,7 @@ describe('PlannerBackedStartRunUseCase', () => {
       } as never,
       planStore: {
         storePlanArtifact: vi.fn(async () => STORED_PLAN_REF),
+        getStoredPlanValidationRecord: vi.fn(async () => PENDING_VALIDATION_RECORD),
         markStoredPlanArtifactValid: vi.fn(async () => {}),
         markStoredPlanArtifactInvalid: vi.fn(async () => {}),
       } as never,

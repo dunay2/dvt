@@ -23,7 +23,7 @@ import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js
 import { PLAN_ROUTE_POLICY_CATALOG } from './planRoutePolicyCatalog.js';
 import { resolveAuthorizedPlannerInputEnvelope } from './resolveAuthorizedPlannerInputEnvelope.js';
 import { ResolveAuthorizedPreviewSelectionService } from './resolveAuthorizedPreviewSelection.js';
-import { createScopedPlanRef } from './storedPlanScope.js';
+import { StoredPlanAdmissionCoordinator } from './StoredPlanAdmissionCoordinator.js';
 
 type PreviewPlanValidationResult = Awaited<ReturnType<IPlanExecutabilityValidator['validatePlan']>>;
 
@@ -61,6 +61,8 @@ export type PreviewPlanUseCaseResult =
     };
 
 export class PreviewPlanUseCase {
+  private readonly planAdmission: StoredPlanAdmissionCoordinator;
+
   public constructor(
     private readonly deps: {
       readonly planner: IPlanner;
@@ -69,7 +71,12 @@ export class PreviewPlanUseCase {
       readonly planValidator: IPlanExecutabilityValidator;
       readonly previewSelectionResolver: ResolveAuthorizedPreviewSelectionService;
     }
-  ) {}
+  ) {
+    this.planAdmission = new StoredPlanAdmissionCoordinator({
+      planStore: deps.planStore,
+      validator: deps.planValidator,
+    });
+  }
 
   public async execute(
     command: PreviewPlanCommand,
@@ -111,21 +118,12 @@ export class PreviewPlanUseCase {
     );
 
     const buildResult = await this.deps.planner.buildPlan(plannerInput);
-    const planRef = await this.deps.planStore.storePlanArtifact({ buildResult });
-    const scopedPlanRef = createScopedPlanRef({
-      scope: buildResult.plan.metadata.ownership,
-      planRef,
-    });
-    const validation = await this.deps.planValidator.validatePlan({
-      ...scopedPlanRef,
-      adapterId: command.targetAdapter,
-    });
+    const { planRef, validation } = await this.planAdmission.admit(
+      buildResult,
+      command.targetAdapter
+    );
 
     if (validation.status === 'ERROR') {
-      await this.deps.planStore.markStoredPlanArtifactInvalid({
-        ...scopedPlanRef,
-        report: validation,
-      });
       return {
         kind: PREVIEW_PLAN_RESULT_KIND.planInvalid,
         plan: buildResult.plan,
@@ -134,15 +132,6 @@ export class PreviewPlanUseCase {
       };
     }
 
-    const validationRecord = await this.deps.planStore.getStoredPlanValidationRecord({
-      tenantId: scopedPlanRef.tenantId,
-      projectId: scopedPlanRef.projectId,
-      environmentId: scopedPlanRef.environmentId,
-      planId: scopedPlanRef.planRef.planId,
-    });
-    if (validationRecord?.state !== 'VALID') {
-      await this.deps.planStore.markStoredPlanArtifactValid(scopedPlanRef);
-    }
     return {
       kind: PREVIEW_PLAN_RESULT_KIND.accepted,
       plan: buildResult.plan,

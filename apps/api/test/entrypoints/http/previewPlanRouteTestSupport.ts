@@ -37,7 +37,7 @@ export function createPreviewDeps(overrides: PreviewRouteTestOverrides = {}): Pr
     storePlanArtifact: vi.fn(),
     markStoredPlanArtifactValid: vi.fn(),
     markStoredPlanArtifactInvalid: vi.fn(),
-    getStoredPlanValidationRecord: vi.fn(),
+    getStoredPlanValidationRecord: vi.fn(async () => ({ state: 'PENDING_VALIDATION' })),
     ...overrides.planStore,
   };
   const planValidator = {
