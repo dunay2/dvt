@@ -61,7 +61,7 @@ export class InMemoryStartRunIntentStore implements IStartRunIntentStore {
 
   async markDispatched(ref: StartRunIntentRef, engineRunRef: EngineRunRef): Promise<void> {
     const intent = this.assertExists(ref);
-    if (intent.status === 'DISPATCHED') {
+    if (intent.status === 'DISPATCHED' || intent.status === 'RESOLVED') {
       if (JSON.stringify(intent.engineRunRef) === JSON.stringify(engineRunRef)) return;
       throw new IntentDispatchConflictError(ref.intentId);
     }

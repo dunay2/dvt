@@ -97,6 +97,17 @@ describe('InMemoryStartRunIntentStore', () => {
     expect(intent?.status).toBe('DISPATCHED');
   });
 
+  it('markDispatched is a no-op for a resolved intent with the same engineRunRef', async () => {
+    const store = new InMemoryStartRunIntentStore();
+    const runRef = makeTemporalRunRef();
+    await store.createIntent(makeCreateInput());
+    await store.markDispatched(intentRef(), runRef);
+    await store.markResolved(intentRef());
+
+    await expect(store.markDispatched(intentRef(), runRef)).resolves.toBeUndefined();
+    await expect(store.getIntent(intentRef())).resolves.toMatchObject({ status: 'RESOLVED' });
+  });
+
   it('markDispatched throws IntentDispatchConflictError when called with a different engineRunRef on DISPATCHED intent', async () => {
     const store = new InMemoryStartRunIntentStore();
     await store.createIntent(makeCreateInput());

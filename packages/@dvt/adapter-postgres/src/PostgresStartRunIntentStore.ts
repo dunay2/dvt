@@ -314,9 +314,9 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
               WHEN NOT EXISTS (SELECT 1 FROM existing) THEN 'NOT_FOUND'
               ${
                 isDispatch
-                  ? `WHEN (SELECT status FROM existing) = 'DISPATCHED'
+                  ? `WHEN (SELECT status FROM existing) IN ('DISPATCHED', 'RESOLVED')
                        AND (SELECT engine_run_ref FROM existing) = $3::jsonb THEN 'NO_OP'
-                     WHEN (SELECT status FROM existing) = 'DISPATCHED' THEN 'CONFLICT'`
+                     WHEN (SELECT status FROM existing) IN ('DISPATCHED', 'RESOLVED') THEN 'CONFLICT'`
                   : ''
               }
               ELSE 'INVALID'
