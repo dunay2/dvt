@@ -20,6 +20,10 @@ vi.mock('./CanvasNodeWorkbenchPanel', () => ({
     const dragHandleProps = props.dragHandleProps as Record<string, unknown> | undefined;
     return (
       <div data-testid="canvas-node-workbench-panel">
+        <button role="tab" aria-selected="true">
+          General
+        </button>
+        <input data-testid="node-authoring-input" />
         <div data-testid="canvas-node-workbench-drag-handle" {...dragHandleProps} />
       </div>
     );
@@ -218,6 +222,24 @@ describe('CanvasNodeWorkbenchOverlay', () => {
     expect(onHide).toHaveBeenCalledTimes(1);
     expect(document.activeElement).toBe(graphNode);
     graphNode.remove();
+  });
+
+  it('does not steal authoring focus when parent callbacks rerender', async () => {
+    renderOverlay(root, { onHide: vi.fn() });
+    await act(async () => {
+      await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()));
+    });
+    const authoringInput = container.querySelector<HTMLInputElement>(
+      '[data-testid="node-authoring-input"]'
+    )!;
+    authoringInput.focus();
+
+    renderOverlay(root, { onHide: vi.fn() });
+    await act(async () => {
+      await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()));
+    });
+
+    expect(document.activeElement).toBe(authoringInput);
   });
 
   it('does not mount node workbench chrome when the surface strategy is unavailable', () => {
