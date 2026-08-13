@@ -25,7 +25,7 @@ export async function exerciseCommandQueryFlow(
   readonly actualRunId: string;
   readonly listResponse: { statusCode: number; json(): unknown };
   readonly getRunResponse: { statusCode: number; json(): unknown };
-  readonly signalResponse: { statusCode: number; json(): unknown };
+  readonly cancelResponse: { statusCode: number; json(): unknown };
   readonly eventsResponse: { statusCode: number; json(): unknown };
 }> {
   const token = await runtime.issuePrincipalToken();
@@ -46,7 +46,7 @@ export async function exerciseCommandQueryFlow(
     url: `/runs/${actualRunId}?tenantId=${TENANT_ID}`,
     headers: { authorization: `Bearer ${token}` },
   });
-  const signalResponse = await runtimeApp.inject({
+  const cancelResponse = await runtimeApp.inject({
     method: 'POST',
     url: `/runs/${actualRunId}/cancel`,
     headers: { authorization: `Bearer ${token}` },
@@ -65,7 +65,7 @@ export async function exerciseCommandQueryFlow(
     actualRunId,
     listResponse,
     getRunResponse,
-    signalResponse,
+    cancelResponse,
     eventsResponse,
   };
 }

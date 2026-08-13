@@ -78,19 +78,6 @@ describeIfPg('protected runtime integration', () => {
       },
     },
     {
-      name: 'rejects /runs/:runId/signal for CANCEL when principal lacks run:cancel permission',
-      tenantActions: ['run:start', 'run:list', 'run:view', 'run:logs:view', 'run:signal'],
-      request: {
-        method: 'POST' as const,
-        url: '/runs/non-authorized-cancel-signal/signal',
-        payload: {
-          tenantId: TENANT_ID,
-          signalType: 'CANCEL',
-          reason: 'permission-check',
-        },
-      },
-    },
-    {
       name: 'rejects /runs/:runId/recover when principal lacks run:retry permission',
       tenantActions: [
         'run:start',

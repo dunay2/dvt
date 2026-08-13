@@ -9,17 +9,9 @@ import {
   parseOptionalReason,
   parseTenantId,
 } from './runCommandFieldParsers.js';
-import {
-  SIGNAL_ACTION_BY_TYPE,
-  type SignalCommandActionName,
-} from './signalRunRouteAuthorization.constants.js';
-import {
-  SUPPORTED_SIGNAL_TYPES,
-  type SignalRouteCompatibilityPolicy,
-} from './signalRunRouteValidation.constants.js';
+import { RUN_COMMAND_ACTION } from './runCommandRoute.constants.js';
 
-export type { SignalCommandActionName } from './signalRunRouteAuthorization.constants.js';
-export type { SignalRouteCompatibilityPolicy } from './signalRunRouteValidation.constants.js';
+const SUPPORTED_SIGNAL_TYPES: ReadonlySet<SupportedSignalType> = new Set(['PAUSE', 'RESUME']);
 
 export interface ParsedSignalRunRequest {
   readonly command: {
@@ -29,7 +21,7 @@ export interface ParsedSignalRunRequest {
   };
   readonly authorization: {
     readonly tenantId: TenantId;
-    readonly actionName: SignalCommandActionName;
+    readonly actionName: typeof RUN_COMMAND_ACTION.SIGNAL;
   };
 }
 
@@ -38,7 +30,6 @@ type ParsedSignalRunResult = RouteParseResult<ParsedSignalRunRequest>;
 export function parseSignalRunRequest(input: {
   readonly runId: string | undefined;
   readonly body: unknown;
-  readonly compatibilityPolicy: SignalRouteCompatibilityPolicy;
 }): ParsedSignalRunResult {
   const runId = normalizeRunId(input.runId);
   if (!runId) {
@@ -54,18 +45,12 @@ export function parseSignalRunRequest(input: {
     return tenantIdResult;
   }
 
-  const signalType = parseSignalType(input.body.signalType, input.compatibilityPolicy);
+  const signalType = parseSignalType(input.body.signalType);
   if (!signalType) {
     return badRequestResult(HTTP_ERROR_REASON.invalidSignalType, { target: 'signalType' });
   }
 
   const reason = parseOptionalReason(input.body.reason);
-  if (signalType === 'CANCEL' && reason !== undefined) {
-    return badRequestResult(HTTP_ERROR_REASON.cancelReasonNotSupported, {
-      target: 'reason',
-    });
-  }
-
   return {
     ok: true,
     value: {
@@ -76,20 +61,14 @@ export function parseSignalRunRequest(input: {
       },
       authorization: {
         tenantId: tenantIdResult.value,
-        actionName: SIGNAL_ACTION_BY_TYPE[signalType],
+        actionName: RUN_COMMAND_ACTION.SIGNAL,
       },
     },
   };
 }
 
-function parseSignalType(
-  raw: unknown,
-  compatibilityPolicy: SignalRouteCompatibilityPolicy
-): SupportedSignalType | null {
+function parseSignalType(raw: unknown): SupportedSignalType | null {
   if (typeof raw !== 'string') return null;
   const normalized = raw.trim().toUpperCase() as SupportedSignalType;
-  if (normalized === 'CANCEL' && !compatibilityPolicy.allowCancelSignalType) {
-    return null;
-  }
   return SUPPORTED_SIGNAL_TYPES.has(normalized) ? normalized : null;
 }
