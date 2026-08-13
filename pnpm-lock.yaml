@@ -154,6 +154,9 @@ importers:
       '@dvt/planner':
         specifier: workspace:*
         version: link:../../packages/@dvt/planner
+      '@dvt/run-domain':
+        specifier: workspace:*
+        version: link:../../packages/@dvt/run-domain
       '@dvt/temporal-dbt-plugin':
         specifier: workspace:*
         version: link:../../packages/@dvt/temporal-dbt-plugin

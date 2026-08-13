@@ -156,6 +156,7 @@ export function createWorkflowEngineFixture(
   });
   const runCommandService = buildRunCommandService({
     stateStoreRead,
+    idempotency,
     policy,
     adapters,
     observability,
@@ -331,6 +332,7 @@ export function createWorkflowEngineCoreFixture(input?: {
   const observability = input?.observability ?? createNoopObservability();
   const runCommandService = buildRunCommandService({
     stateStoreRead,
+    idempotency,
     policy,
     adapters,
     observability,

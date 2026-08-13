@@ -104,7 +104,6 @@ describe('WorkflowEngine semantic closure architecture', () => {
 
     expect(commandService).toContain('adapter.cancelRun(validatedRunRef)');
     expect(commandService).not.toContain('adapter.signal(');
-    expect(commandService).not.toContain('SignalTransitionGuard');
 
     expect(signalService).toContain('SignalTransitionGuard');
     expect(signalService).toContain('emitSignalDerivedRunEvent');

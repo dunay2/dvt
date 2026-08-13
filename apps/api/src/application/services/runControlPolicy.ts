@@ -1,5 +1,6 @@
 /** Owned concern: derive run-control decisions from canonical server-owned lifecycle truth. */
 import type { CanonicalRunStatus } from '@dvt/contracts';
+import { RUN_EVENT_ALLOWED_FROM } from '@dvt/run-domain';
 
 import type {
   CancelRunDisposition,
@@ -37,7 +38,7 @@ export function decideCancelRun(
   if (status.status === 'CANCELLED') {
     return { kind: 'settled', disposition: 'already_cancelled' };
   }
-  if (status.status === 'COMPLETED' || status.status === 'FAILED') {
+  if (!RUN_EVENT_ALLOWED_FROM.RunCancelRequested.includes(status.status)) {
     return { kind: 'reject', reason: 'run_terminal' };
   }
   if (status.substatus === 'CANCELLING') {

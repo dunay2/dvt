@@ -5,8 +5,7 @@
  * @decision Isolate cancel adapter dispatch from the combined run-control delegator.
  * @version 1.0.0
  */
-import type { EngineRunRef } from '@dvt/contracts';
-import { parseEngineRunRef } from '@dvt/contracts';
+import { asNonBlankString, parseEngineRunRef, type EngineRunRef } from '@dvt/contracts';
 import type { IObservability } from '@dvt/observability';
 
 import type { IProviderAdapter } from '../../adapters/IProviderAdapter.js';
@@ -14,6 +13,7 @@ import {
   type IEngineProviderResolver,
   MapBackedEngineProviderResolver,
 } from '../../application/providerSelection.js';
+import type { IdempotencyKeyBuilder } from '../../core/idempotency.js';
 import {
   CORE_LOG_MESSAGE,
   CORE_METRIC,
@@ -34,9 +34,11 @@ import type { IRunStateStoreRead } from '../../ports/IRunStateStore.js';
 import type { IRunAccessPolicy } from '../../security/RunAccessPolicy.js';
 import type { IClock } from '../../utils/clock.js';
 import { toErrorMessage } from '../../utils/errorUtils.js';
+import { SignalTransitionGuard } from '../signal/SignalTransitionGuard.js';
 
 export interface RunCommandServiceDeps {
   stateStoreRead: IRunStateStoreRead;
+  idempotency: IdempotencyKeyBuilder;
   policy: IRunAccessPolicy;
   adapters: Map<EngineRunRef['provider'], IProviderAdapter>;
   providerResolver?: IEngineProviderResolver;
@@ -49,10 +51,16 @@ export interface RunCommandServiceDeps {
 
 export class RunCommandService implements IRunCommandService {
   private readonly providerResolver: IEngineProviderResolver;
+  private readonly transitionGuard: SignalTransitionGuard;
 
   constructor(private readonly deps: RunCommandServiceDeps) {
     this.providerResolver =
       deps.providerResolver ?? new MapBackedEngineProviderResolver(deps.adapters);
+    this.transitionGuard = new SignalTransitionGuard({
+      stateStoreRead: deps.stateStoreRead,
+      idempotency: deps.idempotency,
+      clock: deps.clock,
+    });
   }
 
   async cancel(ref: EngineRunRef): Promise<void> {
@@ -60,6 +68,14 @@ export class RunCommandService implements IRunCommandService {
     await this.deps.policy.assertTenantAccess(validatedRunRef.tenantId);
     const meta = await resolveMetaOrThrow(this.deps.stateStoreRead, validatedRunRef);
     const adapter = this.providerResolver.resolveProviderRef(meta.providerRef);
+    const transition = await this.transitionGuard.assertAllowed(
+      meta,
+      { signalId: asNonBlankString(`cancel:${validatedRunRef.runId}`), type: 'CANCEL' },
+      'RunCancelRequested'
+    );
+    if (transition === 'already_applied') {
+      return;
+    }
     const startMs = Date.parse(this.deps.clock.nowIsoUtc());
     const metricTags = buildMetricTags(meta.providerRef.provider, meta.tenantId, {
       operation: CORE_OPERATION.cancelRun,

@@ -40,7 +40,6 @@ describe('WorkflowEngine runtime path decomposition', () => {
     );
     expect(commandService).toContain('adapter.cancelRun(validatedRunRef)');
     expect(commandService).not.toContain('adapter.signal(');
-    expect(commandService).not.toContain('SignalTransitionGuard');
 
     expect(signalService).toContain('export class RunSignalService implements IRunSignalService');
     expect(signalService).toContain('SignalTransitionGuard');
