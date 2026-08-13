@@ -56,3 +56,13 @@ test('workspace matrix emitter fails closed for package json read failure', () =
   assert.equal(matrix.anyChanged, true);
   assert.equal(matrix.include.length, WORKSPACE_ENTRIES.length);
 });
+
+test('workspace matrix emitter fails closed for an uncatalogued CI configuration', () => {
+  const matrix = buildWorkspaceMatrixOutputs(['tools/ci/policy/unknown-policy.json']);
+
+  assert.equal(matrix.anyChanged, true);
+  assert.deepEqual(
+    matrix.include.map(({ pkg }) => pkg).sort(),
+    WORKSPACE_ENTRIES.map(({ pkg }) => pkg).sort()
+  );
+});

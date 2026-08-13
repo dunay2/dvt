@@ -156,6 +156,16 @@ test('test matrix fans out to package tests for root build sensitive changes', (
   );
 });
 
+test('test matrix fails closed for an uncatalogued CI configuration', () => {
+  const matrix = buildTestMatrixOutputs(['tools/ci/policy/unknown-policy.json']);
+
+  assert.equal(matrix.anyTests, true);
+  assert.deepEqual(
+    matrix.include.map(({ pkg }) => pkg).sort(),
+    TEST_PACKAGE_ENTRIES.map(({ pkg }) => pkg).sort()
+  );
+});
+
 test('test matrix omits packages owned by explicit test lanes', () => {
   const matrixPackages = new Set(TEST_PACKAGE_ENTRIES.map(({ pkg }) => pkg));
 

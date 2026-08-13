@@ -40,7 +40,12 @@ test('classifies repository command files through the command catalog', () => {
   const runtimeCapability = classifyRepositoryFileScope('scripts/db-migrate.cjs');
   const ciTooling = classifyRepositoryFileScope('tools/ci/emit-scope.mjs');
   const ciToolingTest = classifyRepositoryFileScope('tools/ci/sync-docs-status-policy.test.mjs');
-  const ciScopePolicy = classifyRepositoryFileScope('tools/ci/policy/workflow-scope.json');
+  const knownCiConfigurations = [
+    'tools/ci/jsconfig.json',
+    'tools/ci/policy/adapter-postgres-relevance.json',
+    'tools/ci/policy/workflow-scope.json',
+  ].map((filePath) => classifyRepositoryFileScope(filePath));
+  const unknownCiConfiguration = classifyRepositoryFileScope('tools/ci/policy/unknown-policy.json');
   const docsTooling = classifyRepositoryFileScope('tools/docs/check-filenames.ts');
   const unknownExecutable = classifyRepositoryFileScope('scripts/unclassified-runtime.cjs');
 
@@ -61,8 +66,15 @@ test('classifies repository command files through the command catalog', () => {
   assert.equal(ciToolingTest.commandClass.domain, 'test-tooling');
   assert.equal(ciToolingTest.runtimeWorkspaceFanout, false);
 
-  assert.equal(ciScopePolicy.repositoryCommandFile, false);
-  assert.equal(ciScopePolicy.runtimeWorkspaceFanout, false);
+  for (const knownCiConfiguration of knownCiConfigurations) {
+    assert.equal(knownCiConfiguration.repositoryCommandFile, false);
+    assert.equal(knownCiConfiguration.uncataloguedCiConfigurationInput, false);
+    assert.equal(knownCiConfiguration.runtimeWorkspaceFanout, false);
+  }
+
+  assert.equal(unknownCiConfiguration.repositoryCommandFile, false);
+  assert.equal(unknownCiConfiguration.uncataloguedCiConfigurationInput, true);
+  assert.equal(unknownCiConfiguration.runtimeWorkspaceFanout, true);
 
   assert.equal(unknownExecutable.commandClass.domain, 'unknown');
   assert.equal(unknownExecutable.runtimeWorkspaceFanout, true);

@@ -172,6 +172,17 @@ test('emit-scope fails closed for an unclassified executable', () => {
   assert.equal(qualityScope.temporal_postgres_changed, true);
 });
 
+test('emit-scope fails closed for an uncatalogued CI configuration', () => {
+  const changedFiles = ['tools/ci/policy/unknown-policy.json'];
+  const testScope = computeWorkflowModeScopeOutputs('test', changedFiles);
+  const qualityScope = computeWorkflowModeScopeOutputs('pr-quality', changedFiles);
+
+  assert.equal(testScope.root_build_sensitive, true);
+  assert.equal(qualityScope.temporal_changed, true);
+  assert.equal(qualityScope.temporal_transformation_changed, true);
+  assert.equal(qualityScope.temporal_postgres_changed, true);
+});
+
 test('emit-scope test mode routes test:determinism script changes to determinism job', () => {
   const scope = computeWorkflowModeScopeOutputs('test', ['package.json'], {
     packageJsonChange: packageJsonScriptChange(
