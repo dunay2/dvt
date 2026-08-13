@@ -5,7 +5,6 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
 import type { CompilePlanUseCase } from '../../application/services/CompilePlanUseCase.js';
-import { PLAN_ROUTE_POLICY_CATALOG } from '../../application/services/planRoutePolicyCatalog.js';
 
 import {
   mapCompilePlanInternalError,
@@ -31,7 +30,6 @@ const resolveCompilePlanRouteRequest = createAuthorizedPlanRouteRequestResolver<
 >({
   parseRequestBody: parsePlanCompileRouteInput,
   selectRequestedScope: (parsedRequest) => parsedRequest.requestedScope,
-  action: PLAN_ROUTE_POLICY_CATALOG.COMPILE.authorization,
 });
 
 export const compilePlanRoute = createPlanRouteHandler({

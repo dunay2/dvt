@@ -5,8 +5,8 @@
 import type { FastifyRequest } from 'fastify';
 
 import {
+  AUTHORIZATION_ACTION,
   buildEnvironmentAccessScope,
-  type CommandAuthorizationAction,
 } from '../../application/ports/accessDecision.js';
 import type {
   AuthorizedCommandExecutionContext,
@@ -39,7 +39,6 @@ export type ResolvedAuthorizedPlanRouteRequest<TParsedRequest> =
 
 export interface PlanRouteAuthorizationRequestOptions<TParsedRequest> {
   readonly selectRequestedScope: (parsedRequest: TParsedRequest) => ParsedPlanRouteScope;
-  readonly action: CommandAuthorizationAction;
 }
 
 type ResolvedAuthorizedPlanRouteRequestOk<TParsedRequest> = Extract<
@@ -88,7 +87,7 @@ export async function resolveAuthorizedPlanRouteRequest<TParsedRequest>(
         requestedScope.projectId,
         requestedScope.environmentId
       ),
-      action: options.action,
+      action: AUTHORIZATION_ACTION.runStart,
     },
   });
   if (!authz.ok) {
@@ -124,7 +123,6 @@ export function createAuthorizedPlanRouteRequestResolver<
       options.parseRequestBody(request.body),
       {
         selectRequestedScope: options.selectRequestedScope,
-        action: options.action,
       }
     );
     if (!resolvedRequest.ok) {

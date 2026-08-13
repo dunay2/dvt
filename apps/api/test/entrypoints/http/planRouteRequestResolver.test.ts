@@ -1,10 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import {
-  EnvironmentId,
-  ProjectId,
-  TenantId,
-} from '../../../src/domain/auth/types.js';
+import { EnvironmentId, ProjectId, TenantId } from '../../../src/domain/auth/types.js';
 import {
   createAuthorizedPlanRouteRequestResolver,
   resolveAuthorizedPlanRouteRequest,
@@ -44,7 +40,6 @@ describe('resolveAuthorizedPlanRouteRequest', () => {
       badRequestResult<ParsedPlanRouteRequest>('invalid_body'),
       {
         selectRequestedScope: (parsedRequest) => parsedRequest.routeContext,
-        action: { kind: 'command', name: 'run:start' },
       }
     );
 
@@ -61,14 +56,14 @@ describe('resolveAuthorizedPlanRouteRequest', () => {
     expect(deps.authorizer.authorize).not.toHaveBeenCalled();
   });
 
-  it('authorizes the requested scope with the action supplied by the route wrapper', async () => {
+  it('authorizes the requested scope with the canonical plan command action', async () => {
     const deps = okAuthDeps();
     const request = createPreviewRequest({
       id: 'req-plan-route-authorized',
       authorization: 'Bearer shared-token',
     });
     const parsedRequest = buildParsedRequest();
-    const action = { kind: 'command', name: 'run:retry' } as const;
+    const action = { kind: 'command', name: 'run:start' } as const;
 
     const result = await resolveAuthorizedPlanRouteRequest(
       request as never,
@@ -76,7 +71,6 @@ describe('resolveAuthorizedPlanRouteRequest', () => {
       { ok: true, value: parsedRequest },
       {
         selectRequestedScope: (value) => value.routeContext,
-        action,
       }
     );
 
@@ -115,7 +109,6 @@ describe('resolveAuthorizedPlanRouteRequest', () => {
       { ok: true, value: buildParsedRequest() },
       {
         selectRequestedScope: (value) => value.routeContext,
-        action: { kind: 'command', name: 'run:start' },
       }
     );
 
@@ -143,7 +136,6 @@ describe('resolveAuthorizedPlanRouteRequest', () => {
     const resolver = createAuthorizedPlanRouteRequestResolver({
       parseRequestBody: () => ({ ok: true, value: parsedRequest }),
       selectRequestedScope: (value) => value.routeContext,
-      action: { kind: 'command', name: 'run:start' },
       validateAuthorizedRequest,
     });
 

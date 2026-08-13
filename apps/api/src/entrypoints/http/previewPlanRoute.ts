@@ -4,7 +4,6 @@
  */
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
-import { PLAN_ROUTE_POLICY_CATALOG } from '../../application/services/planRoutePolicyCatalog.js';
 import type { PreviewPlanUseCase } from '../../application/services/PreviewPlanUseCase.js';
 
 import { createPlanRouteHandler } from './executePlanRouteFacade.js';
@@ -30,7 +29,6 @@ const resolvePreviewPlanRouteRequest = createAuthorizedPlanRouteRequestResolver<
 >({
   parseRequestBody: parsePreviewPlanBody,
   selectRequestedScope: (parsedRequest) => parsedRequest.routeContext,
-  action: PLAN_ROUTE_POLICY_CATALOG.PREVIEW.authorization,
   validateAuthorizedRequest: (resolvedRequest) => {
     const previewContractViolation = validatePreviewProfileContract(
       resolvedRequest.parsedRequest.previewProfile,

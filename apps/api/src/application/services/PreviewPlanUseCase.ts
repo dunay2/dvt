@@ -24,7 +24,6 @@ import type {
 
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
 
-import { PLAN_ROUTE_POLICY_CATALOG } from './planRoutePolicyCatalog.js';
 import { resolveAuthorizedPlannerInputEnvelope } from './resolveAuthorizedPlannerInputEnvelope.js';
 import { ResolveAuthorizedPreviewSelectionService } from './resolveAuthorizedPreviewSelection.js';
 import {
@@ -123,11 +122,7 @@ export class PreviewPlanUseCase {
       ...(command.observability === undefined ? {} : { observability: command.observability }),
     };
 
-    const plannerInput = resolveAuthorizedPlannerInputEnvelope(
-      plannerInputSeed,
-      context,
-      PLAN_ROUTE_POLICY_CATALOG.PREVIEW.plannerInput
-    );
+    const plannerInput = resolveAuthorizedPlannerInputEnvelope(plannerInputSeed, context);
 
     const buildResult = await this.deps.planner.buildPlan(plannerInput);
     const admission = await this.planAdmission.admit(buildResult, command.targetAdapter);

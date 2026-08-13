@@ -2,14 +2,12 @@ import type { PlannerInputEnvelopeV1 } from '@dvt/contracts';
 
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
 
-import type { PlanRoutePlannerInputPolicy } from './planRoutePolicyCatalog.js';
 import { resolveCanonicalPlannerInputEnvelope } from './resolveCanonicalPlannerInputEnvelope.js';
 
 type OptionalPropertyInput<T> = T | undefined;
 
 type PlannerInputPolicies = NonNullable<PlannerInputEnvelopeV1['policies']>;
 type PlannerInputEnvironment = NonNullable<PlannerInputEnvelopeV1['environment']>;
-type PlannerInputOwnership = NonNullable<PlannerInputEnvelopeV1['ownership']>;
 type PlannerInputObservability = NonNullable<PlannerInputEnvelopeV1['observability']>;
 
 interface PlannerInputObservabilityInput {
@@ -29,16 +27,14 @@ export interface AuthorizedPlannerInputSeed {
   readonly decisionScope?: OptionalPropertyInput<PlannerInputEnvelopeV1['decisionScope']>;
   readonly policies?: OptionalPropertyInput<PlannerInputPolicies>;
   readonly environment?: OptionalPropertyInput<PlannerInputEnvironmentInput>;
-  readonly ownership?: OptionalPropertyInput<PlannerInputOwnership>;
   readonly observability?: OptionalPropertyInput<PlannerInputObservabilityInput>;
 }
 
 export function resolveAuthorizedPlannerInputEnvelope(
   seed: AuthorizedPlannerInputSeed,
-  context: AuthorizedCommandExecutionContext,
-  policy: PlanRoutePlannerInputPolicy
+  context: AuthorizedCommandExecutionContext
 ): PlannerInputEnvelopeV1 {
-  const ownership = resolvePlannerInputOwnership(seed, context, policy);
+  const ownership = resolvePlanOwnershipFromAuthorizedScope(context);
 
   return resolveCanonicalPlannerInputEnvelope({
     graphSource: seed.graphSource,
@@ -52,41 +48,18 @@ export function resolveAuthorizedPlannerInputEnvelope(
     ...(seed.observability === undefined
       ? {}
       : { observability: normalizePlannerInputObservability(seed.observability) }),
-    ...resolvePlannerInputRequestMetadata(context, policy),
+    ...resolvePlannerInputRequestMetadata(context),
   });
 }
 
-function resolvePlannerInputOwnership(
-  seed: AuthorizedPlannerInputSeed,
-  context: AuthorizedCommandExecutionContext,
-  policy: PlanRoutePlannerInputPolicy
-): PlannerInputOwnership | undefined {
-  switch (policy.ownershipSource) {
-    case 'authorized-scope':
-      return resolvePlanOwnershipFromAuthorizedScope(context);
-    case 'seed':
-      return seed.ownership;
-    case 'none':
-      return undefined;
-  }
-}
-
 function resolvePlannerInputRequestMetadata(
-  context: AuthorizedCommandExecutionContext,
-  policy: PlanRoutePlannerInputPolicy
-):
-  | Pick<PlannerInputEnvelopeV1, 'requestedBy' | 'requestId' | 'requestedAtIso'>
-  | Record<string, never> {
-  switch (policy.requestMetadataSource) {
-    case 'authorized-context':
-      return {
-        requestedBy: context.principal.principalId,
-        requestId: context.requestId,
-        requestedAtIso: context.authorizedAt.toISOString(),
-      };
-    case 'none':
-      return {};
-  }
+  context: AuthorizedCommandExecutionContext
+): Pick<PlannerInputEnvelopeV1, 'requestedBy' | 'requestId' | 'requestedAtIso'> {
+  return {
+    requestedBy: context.principal.principalId,
+    requestId: context.requestId,
+    requestedAtIso: context.authorizedAt.toISOString(),
+  };
 }
 
 function resolvePlanOwnershipFromAuthorizedScope(

@@ -5,7 +5,6 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
 import type { ImportPlanUseCase } from '../../application/services/ImportPlanUseCase.js';
-import { PLAN_ROUTE_POLICY_CATALOG } from '../../application/services/planRoutePolicyCatalog.js';
 
 import { createPlanRouteHandler } from './executePlanRouteFacade.js';
 import {
@@ -31,7 +30,6 @@ const resolveImportPlanRouteRequest = createAuthorizedPlanRouteRequestResolver<
 >({
   parseRequestBody: parseImportPlanRouteInput,
   selectRequestedScope: (parsedRequest) => parsedRequest.routeContext,
-  action: PLAN_ROUTE_POLICY_CATALOG.IMPORT.authorization,
 });
 
 export const importPlanRoute = createPlanRouteHandler({
