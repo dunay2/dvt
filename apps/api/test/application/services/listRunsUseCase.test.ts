@@ -1,4 +1,3 @@
-import type { RunMetadata } from '@dvt/engine';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { AuthorizedExecutionContext } from '../../../src/application/ports/auth.js';
@@ -28,7 +27,25 @@ const queryContext: AuthorizedExecutionContext<{ kind: 'query'; name: 'run:list'
   authorizedAt: new Date('2026-03-19T00:00:00Z'),
 };
 
-function metadata(index = 1): RunMetadata {
+interface RunMetadataFixture {
+  tenantId: string;
+  projectId: string;
+  environmentId: string;
+  runId: string;
+  planId: string;
+  planVersion: string;
+  logicalAttemptId: number;
+  providerRef: {
+    provider: 'temporal';
+    tenantId: string;
+    namespace: string;
+    workflowId: string;
+    runId: string;
+  };
+  createdAt: string;
+}
+
+function metadata(index = 1): RunMetadataFixture {
   return {
     tenantId: 'tenant-a',
     projectId: 'proj-1',
