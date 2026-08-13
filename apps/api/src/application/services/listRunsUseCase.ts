@@ -64,7 +64,6 @@ export class ListRunsUseCase implements IListRunsUseCase {
 
     return {
       items: await this.projectListItems(metadata, statuses),
-      nextCursor: this.buildNextCursor(metadata, query.limit),
     };
   }
 
@@ -138,18 +137,5 @@ export class ListRunsUseCase implements IListRunsUseCase {
     }
 
     return statuses;
-  }
-
-  private buildNextCursor(items: ReadonlyArray<RunMetadata>, limit: number): string | null {
-    if (items.length < limit) {
-      return null;
-    }
-
-    const last = items.at(-1);
-    if (!last?.createdAt) {
-      return null;
-    }
-
-    return `${last.createdAt}:${last.runId}`;
   }
 }

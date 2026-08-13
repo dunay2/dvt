@@ -158,7 +158,6 @@ export type RunListItemDto = RunOperationalTruthDto;
 
 export interface ListRunsResult {
   readonly items: ReadonlyArray<RunListItemDto>;
-  readonly nextCursor: string | null;
 }
 
 export interface IListRunsUseCase {

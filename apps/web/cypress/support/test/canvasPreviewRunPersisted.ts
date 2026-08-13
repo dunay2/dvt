@@ -122,7 +122,6 @@ export function stubRunWorkspaceApis(runId = 'run_e2e_1'): void {
         },
       },
     ],
-    nextCursor: null,
   });
 
   stubE2eJsonApi('GET', `/runs/${runId}`, {
@@ -239,7 +238,6 @@ export function stubRunWorkspaceApis(runId = 'run_e2e_1'): void {
         },
       },
     ],
-    nextCursor: null,
   });
 }
 

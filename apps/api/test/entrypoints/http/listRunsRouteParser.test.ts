@@ -9,7 +9,6 @@ describe('parseListRunsRequest', () => {
       projectId: undefined,
       environmentId: undefined,
       limit: '25',
-      cursor: undefined,
     });
 
     expect(result).toEqual({
@@ -31,7 +30,6 @@ describe('parseListRunsRequest', () => {
       projectId: 'project-a',
       environmentId: undefined,
       limit: '25',
-      cursor: undefined,
     });
 
     expect(result).toEqual({
@@ -54,7 +52,6 @@ describe('parseListRunsRequest', () => {
       projectId: 'project-a',
       environmentId: 'env-a',
       limit: '25',
-      cursor: undefined,
     });
 
     expect(result).toEqual({
@@ -78,7 +75,6 @@ describe('parseListRunsRequest', () => {
       projectId: undefined,
       environmentId: 'env-a',
       limit: '25',
-      cursor: undefined,
     });
 
     expect(result).toEqual({

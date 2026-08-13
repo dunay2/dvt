@@ -404,7 +404,6 @@ describe('Canvas workbench screen composition', () => {
               completedAt: '2026-08-06T00:00:10.000Z',
             },
           ],
-          nextCursor: null,
         },
       };
     });
