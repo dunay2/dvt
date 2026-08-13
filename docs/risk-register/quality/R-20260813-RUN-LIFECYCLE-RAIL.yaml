@@ -22,5 +22,9 @@ mitigations:
   - The shared RunControlBoundary parser rejects unsupported signals and malformed receipts.
   - Engine transition guards own cancellation and recovery lifecycle decisions.
   - PostgreSQL intent stores preserve deterministic concurrent start and recovery identity.
-  - Unit, contract and real PostgreSQL plus Temporal integration tests exercise the surviving path.
+  - The protected integration exercises all seven real routes, positive PAUSE and RESUME Temporal
+    signals, terminal recovery, and idempotent Recover replay against real PostgreSQL and Temporal.
+closure_evidence:
+  - docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md
+  - apps/api/test/integration/protectedRuntime.integration.test.ts
 ---
