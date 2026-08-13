@@ -1,4 +1,4 @@
-import { asNonBlankString } from '@dvt/contracts';
+import { asNonBlankString, type PlannerBuildResultV1 } from '@dvt/contracts';
 import type { IObservability } from '@dvt/observability';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -18,6 +18,19 @@ import {
   buildStoredPlan,
   buildTransformationStoredPlan,
 } from './planRouteFixtures.js';
+
+type PlanAdmissionDoubles = {
+  readonly planStore: {
+    readonly storePlanArtifact: ReturnType<typeof vi.fn>;
+    readonly getPlanRecordByRef: ReturnType<typeof vi.fn>;
+    readonly markStoredPlanArtifactValid: ReturnType<typeof vi.fn>;
+    readonly markStoredPlanArtifactInvalid: ReturnType<typeof vi.fn>;
+    readonly getStoredPlanValidationRecord: ReturnType<typeof vi.fn>;
+  };
+  readonly planValidator: {
+    readonly materializeAndValidatePlan: ReturnType<typeof vi.fn>;
+  };
+};
 
 describe('buildProtectedRuntimeRouteDependencies', () => {
   const OBSERVABILITY: IObservability = {
@@ -150,8 +163,58 @@ describe('buildProtectedRuntimeRouteDependencies', () => {
     } as unknown as ProtectedRuntimeModule;
   }
 
+  function buildPlanAdmissionDoubles(buildResult: PlannerBuildResultV1): PlanAdmissionDoubles {
+    let validationState: 'PENDING_VALIDATION' | 'VALID' = 'PENDING_VALIDATION';
+    const planStore = {
+      storePlanArtifact: vi.fn(async () => VALID_PLAN_REF),
+      getPlanRecordByRef: vi.fn(async () => ({
+        ...buildResult.plan.metadata.ownership,
+        planId: VALID_PLAN_REF.planId,
+        canonicalPlanJson: JSON.stringify(buildResult.plan),
+        canonicalHash: VALID_PLAN_REF.sha256,
+        planVersion: buildResult.plan.metadata.planVersion,
+        schemaVersion: buildResult.plan.metadata.schemaVersion,
+        contractVersion: buildResult.plan.metadata.contractVersion,
+        sourceRef: VALID_PLAN_REF.uri,
+        createdAtIso: buildResult.plan.metadata.createdAtIso,
+        updatedAtIso: buildResult.plan.metadata.createdAtIso,
+        state: 'ACTIVE' as const,
+      })),
+      markStoredPlanArtifactValid: vi.fn(async () => {
+        validationState = 'VALID';
+      }),
+      markStoredPlanArtifactInvalid: vi.fn(async () => undefined),
+      getStoredPlanValidationRecord: vi.fn(async () => ({
+        planId: VALID_PLAN_REF.planId,
+        state: validationState,
+        storedAtIso: buildResult.plan.metadata.createdAtIso,
+        updatedAtIso: buildResult.plan.metadata.createdAtIso,
+      })),
+    };
+    const planValidator = {
+      materializeAndValidatePlan: vi.fn(async () => ({
+        accepted: true as const,
+        materialized: {
+          plan: buildResult.plan,
+          executionPolicy: buildResult.executionPolicy,
+        },
+        validation: {
+          status: 'OK' as const,
+          planId: VALID_PLAN_REF.planId,
+          adapterId: 'temporal',
+        },
+      })),
+    };
+    return { planStore, planValidator };
+  }
+
   it('builds transformation previews with the compile planner while deriving selection from the runtime planner', async () => {
     const selectedNodeIds = ['source-node', 'transform-node', 'sink-node'].map(asNonBlankString);
+    const buildResult = {
+      plan: buildTransformationStoredPlan(),
+      executionPolicy: {},
+      canonicalPlanCoreJson: '{}',
+    } satisfies PlannerBuildResultV1;
     const runtimePlanner = {
       buildPlan: vi.fn(async () => {
         throw new Error('runtime planner must not compile transformation previews');
@@ -168,26 +231,10 @@ describe('buildProtectedRuntimeRouteDependencies', () => {
       })),
     };
     const compilePlanner = {
-      buildPlan: vi.fn(async () => ({
-        plan: buildTransformationStoredPlan(),
-        executionPolicy: {},
-        canonicalPlanCoreJson: '{}',
-      })),
+      buildPlan: vi.fn(async () => buildResult),
       deriveExecutableSubgraph: vi.fn(),
     };
-    const planStore = {
-      storePlanArtifact: vi.fn(async () => VALID_PLAN_REF),
-      markStoredPlanArtifactValid: vi.fn(async () => undefined),
-      markStoredPlanArtifactInvalid: vi.fn(async () => undefined),
-      getStoredPlanValidationRecord: vi.fn(async () => ({ state: 'PENDING_VALIDATION' })),
-    };
-    const planValidator = {
-      validatePlan: vi.fn(async () => ({
-        status: 'OK' as const,
-        planId: VALID_PLAN_REF.planId,
-        adapterId: 'temporal',
-      })),
-    };
+    const { planStore, planValidator } = buildPlanAdmissionDoubles(buildResult);
     const workspaceGraphDraftStore = {
       read: vi.fn(async () => ({
         schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
@@ -246,12 +293,13 @@ describe('buildProtectedRuntimeRouteDependencies', () => {
 
   it('keeps generic dbt previews on the runtime planner while deriving selection from the runtime planner', async () => {
     const selectedNodeIds = ['node_1'].map(asNonBlankString);
+    const buildResult = {
+      plan: buildStoredPlan(),
+      executionPolicy: {},
+      canonicalPlanCoreJson: '{}',
+    } satisfies PlannerBuildResultV1;
     const runtimePlanner = {
-      buildPlan: vi.fn(async () => ({
-        plan: buildStoredPlan(),
-        executionPolicy: {},
-        canonicalPlanCoreJson: '{}',
-      })),
+      buildPlan: vi.fn(async () => buildResult),
       deriveExecutableSubgraph: vi.fn(() => ({
         selection: {
           mode: 'explicit' as const,
@@ -269,19 +317,7 @@ describe('buildProtectedRuntimeRouteDependencies', () => {
       }),
       deriveExecutableSubgraph: vi.fn(),
     };
-    const planStore = {
-      storePlanArtifact: vi.fn(async () => VALID_PLAN_REF),
-      markStoredPlanArtifactValid: vi.fn(async () => undefined),
-      markStoredPlanArtifactInvalid: vi.fn(async () => undefined),
-      getStoredPlanValidationRecord: vi.fn(async () => ({ state: 'PENDING_VALIDATION' })),
-    };
-    const planValidator = {
-      validatePlan: vi.fn(async () => ({
-        status: 'OK' as const,
-        planId: VALID_PLAN_REF.planId,
-        adapterId: 'temporal',
-      })),
-    };
+    const { planStore, planValidator } = buildPlanAdmissionDoubles(buildResult);
     const workspaceGraphDraftStore = {
       read: vi.fn(async () => ({
         schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
