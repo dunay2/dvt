@@ -15,6 +15,7 @@ import { readAcceptedRunId } from './protectedRuntime.integration.http.js';
 import { ENVIRONMENT_ID, PROJECT_ID, TENANT_ID } from './protectedRuntime.integration.shared.js';
 
 const TRANSFORMATION_PREVIEW_PROVENANCE = {
+  kind: 'transformation-git-artifacts',
   graphArtifact: {
     repo: 'dunay2/dvt',
     ref: 'refs/heads/main',
@@ -105,7 +106,7 @@ export async function expectSelectedClosureGraphSourceMismatchRejected(
         mode: 'upstream',
         nodeIds: ['sink_1'],
       },
-      graphSourceNodeIds: ['source_1', 'transform_1'],
+      graphSource: buildMismatchedTransformationGraphSource(),
     }),
   });
 
@@ -178,7 +179,8 @@ function buildSelectedClosurePreviewPayload(input: {
     mode: 'explicit' | 'upstream';
     nodeIds: readonly string[];
   };
-  graphSourceNodeIds: readonly string[];
+  graphSourceNodeIds?: readonly string[];
+  graphSource?: ReturnType<typeof buildTransformationGraphSource>;
 }): Record<string, unknown> {
   return {
     context: {
@@ -193,8 +195,10 @@ function buildSelectedClosurePreviewPayload(input: {
       mode: input.selection.mode,
       nodeIds: [...input.selection.nodeIds],
     },
-    graphSource: buildTransformationGraphSource(input.graphSourceNodeIds),
+    graphSource:
+      input.graphSource ?? buildTransformationGraphSource(input.graphSourceNodeIds ?? []),
     provenance: TRANSFORMATION_PREVIEW_PROVENANCE,
+    persist: true,
   };
 }
 
@@ -227,9 +231,7 @@ function buildSelectedClosureDraft(): ReturnType<typeof buildWorkspaceGraphDraft
   };
 }
 
-function buildTransformationGraphSource(
-  nodeIds: readonly string[]
-): {
+function buildTransformationGraphSource(nodeIds: readonly string[]): {
   kind: 'generic-graph-v1';
   sourceFamily: 'transformation-design-graph';
   sourceVersion: 'transformation-sql-first-v1';
@@ -284,5 +286,57 @@ function buildTransformationGraphSource(
     sourceFamily: 'transformation-design-graph',
     sourceVersion: 'transformation-sql-first-v1',
     nodes: allNodes.filter((node) => nodeSet.has(node.nodeId as string)),
+  };
+}
+
+function buildMismatchedTransformationGraphSource(): ReturnType<
+  typeof buildTransformationGraphSource
+> {
+  return {
+    kind: 'generic-graph-v1',
+    sourceFamily: 'transformation-design-graph',
+    sourceVersion: 'transformation-sql-first-v1',
+    nodes: [
+      {
+        nodeId: 'alternate_source',
+        stepKind: 'PREPARE_POSTGRES_TRANSFORM',
+        dependsOn: [],
+        stepTypeConfig: {
+          targetSchema: 'analytics',
+          sourceSchema: 'raw',
+          sourceTable: 'orders',
+          sourceAlias: 'orders',
+        },
+      },
+      {
+        nodeId: 'alternate_transform',
+        stepKind: 'POSTGRES_SQL_TRANSFORM',
+        dependsOn: ['alternate_source'],
+        stepTypeConfig: {
+          dialect: 'postgres',
+          entrypoint: 'models/orders.sql',
+          sql: 'select * from raw.orders',
+          sqlArtifact: TRANSFORMATION_PREVIEW_PROVENANCE.sqlArtifact,
+          sourceSchema: 'raw',
+          sourceTable: 'orders',
+          sourceAlias: 'orders',
+          sinkSchema: 'analytics',
+          sinkTable: 'orders_final',
+          materialization: 'table',
+          writeMode: 'replace',
+        },
+      },
+      {
+        nodeId: 'alternate_sink',
+        stepKind: 'CAPTURE_MATERIALIZATION_EVIDENCE',
+        dependsOn: ['alternate_transform'],
+        stepTypeConfig: {
+          sinkSchema: 'analytics',
+          sinkTable: 'orders_final',
+          materialization: 'table',
+          writeMode: 'replace',
+        },
+      },
+    ],
   };
 }

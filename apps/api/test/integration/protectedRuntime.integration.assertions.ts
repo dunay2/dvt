@@ -76,17 +76,15 @@ export function expectCommandQueryFlowSucceeded(flow: CommandQueryFlowResult): v
 
   expect(flow.cancelResponse.statusCode).toBe(202);
   expect(flow.cancelResponse.json()).toEqual({
+    contractVersion: 'v1',
     runId: flow.actualRunId,
     signalType: 'CANCEL',
     accepted: true,
+    disposition: 'requested',
   });
 
   expect(flow.eventsResponse.statusCode).toBe(200);
-  expect(eventTypes(flow.eventsResponse.json())).toEqual([
-    'RunQueued',
-    'RunCancelRequested',
-    'RunCancelled',
-  ]);
+  expect(eventTypes(flow.eventsResponse.json())).toEqual(['RunQueued', 'RunCancelSubmitted']);
 }
 
 export function expectPlannerBackedRunFlowSucceeded(flow: PlannerBackedRunFlowResult): void {
