@@ -1541,6 +1541,7 @@ function operationPayload(command) {
       expectedFailure: command.expectedFailure,
       patchSurfaces: command.patchSurfaces || [],
       greenTest: command.greenTest,
+      replaceImplementationRefs: command.replaceImplementationRefs,
       sourceRef: command.sourceRef,
       sourceContentSha256: command.sourceContentSha256,
     };

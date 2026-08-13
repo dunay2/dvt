@@ -375,6 +375,18 @@ test('feature mechanization rail planner replaces inherited implementation autho
     planned.rail.rawManifest.symbols.map(({ path, name }) => `${path}#${name}`),
     ['apps/api/src/currentRoute.ts#currentRoute']
   );
+  assert.equal(planned.audit.payload.replaceImplementationRefs, true);
+});
+
+test('feature mechanization hard cut has a distinct default idempotency identity', () => {
+  const additive = parseArgs(featureMechanizationRecordArgs());
+  const replacement = parseArgs(
+    featureMechanizationRecordArgs({
+      extraArgs: ['--replace-implementation-refs', 'true'],
+    })
+  );
+
+  assert.notEqual(replacement.idempotencyKey, additive.idempotencyKey);
 });
 
 test('feature mechanization rail writer stores local rails without mutating imports', async () => {
