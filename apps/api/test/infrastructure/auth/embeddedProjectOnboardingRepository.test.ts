@@ -90,6 +90,49 @@ describe('EmbeddedProjectOnboardingRepository', () => {
     );
   });
 
+  it('rejects creation when the canonical action is revoked under the transaction lock', async () => {
+    const events: string[] = [];
+    const revokedGrants: PrincipalGrantSnapshot = {
+      ...GRANTS,
+      tenantAccess: [
+        {
+          ...GRANTS.tenantAccess[0]!,
+          allowedActions: [],
+        },
+      ],
+    };
+    const transactionGrants = {
+      migrate: vi.fn(),
+      load: vi.fn(async () => {
+        events.push('load-grants-for-update');
+        return revokedGrants;
+      }),
+      save: vi.fn(),
+    };
+    const client = createClient(events);
+    const repository = new EmbeddedProjectOnboardingRepository(
+      { connect: vi.fn(async () => client), query: vi.fn() } as never,
+      'dvt',
+      transactionGrants,
+      () => transactionGrants
+    );
+    const revalidateLockedGrants = vi.fn(() => {
+      events.push('revalidate-locked-grants');
+      return false;
+    });
+
+    await expect(repository.createProject(CREATE_COMMAND, revalidateLockedGrants)).resolves.toEqual(
+      { kind: 'action_not_granted' }
+    );
+
+    expect(revalidateLockedGrants).toHaveBeenCalledWith(revokedGrants);
+    expect(events.indexOf('load-grants-for-update')).toBeLessThan(
+      events.indexOf('revalidate-locked-grants')
+    );
+    expect(events).not.toContain('insert-project');
+    expect(transactionGrants.save).not.toHaveBeenCalled();
+  });
+
   it('reports missing project records instead of fabricating names from ids', async () => {
     const query = vi.fn(async (sql: string) =>
       sql.includes('WITH requested')
