@@ -1,6 +1,5 @@
 /**
- * Owned concern: internal import-plan response mapping inside the plan-route
- * response translation component.
+ * Owned concern: map import-plan application results to HTTP responses.
  */
 import {
   IMPORT_PLAN_RESULT_KIND,

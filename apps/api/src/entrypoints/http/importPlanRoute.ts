@@ -13,10 +13,13 @@ import {
   type ParsedImportPlanRouteInput,
 } from './importPlanRouteParser.js';
 import {
+  mapImportPlanInternalError,
+  mapImportPlanUseCaseResult,
+} from './importPlanRouteResponseMapper.js';
+import {
   createAuthorizedPlanRouteRequestResolver,
   type PlanRouteAuthorizationResolverDeps,
 } from './planRouteRequestResolver.js';
-import { planRouteResponseTranslation } from './planRouteResponseTranslation.js';
 
 type ImportPlanRouteDeps = PlanRouteAuthorizationResolverDeps & {
   readonly useCase: Pick<ImportPlanUseCase, 'execute'>;
@@ -36,8 +39,8 @@ export const importPlanRoute = createPlanRouteHandler({
   resolveRequest: resolveImportPlanRouteRequest,
   executeUseCase: (resolvedRequest, deps: ImportPlanRouteDeps) =>
     deps.useCase.execute(resolvedRequest.parsedRequest.command),
-  mapResult: (result) => planRouteResponseTranslation.import.result(result),
-  mapInternalError: () => planRouteResponseTranslation.import.internalError(),
+  mapResult: mapImportPlanUseCaseResult,
+  mapInternalError: mapImportPlanInternalError,
 }) satisfies (
   request: FastifyRequest<{ Body: unknown }>,
   reply: FastifyReply,

@@ -8,13 +8,17 @@ import { PLAN_ROUTE_POLICY_CATALOG } from '../../application/services/planRouteP
 import type { PreviewPlanUseCase } from '../../application/services/PreviewPlanUseCase.js';
 
 import { createPlanRouteHandler } from './executePlanRouteFacade.js';
+import { mapPreviewPlanContractIssue } from './planPreviewContractErrorMapper.js';
 import { validatePreviewProfileContract } from './planPreviewContractGuard.js';
 import {
   createAuthorizedPlanRouteRequestResolver,
   type PlanRouteAuthorizationResolverDeps,
 } from './planRouteRequestResolver.js';
-import { planRouteResponseTranslation } from './planRouteResponseTranslation.js';
 import { parsePreviewPlanBody, type ParsedPreviewPlanRequest } from './previewPlanRouteParser.js';
+import {
+  mapPreviewPlanInternalError,
+  mapPreviewPlanUseCaseResult,
+} from './previewPlanRouteResponseMapper.js';
 
 type PreviewPlanRouteDeps = PlanRouteAuthorizationResolverDeps & {
   readonly useCase: Pick<PreviewPlanUseCase, 'execute'>;
@@ -34,7 +38,7 @@ const resolvePreviewPlanRouteRequest = createAuthorizedPlanRouteRequestResolver<
     );
     return previewContractViolation === null
       ? null
-      : planRouteResponseTranslation.preview.contractIssue(previewContractViolation);
+      : mapPreviewPlanContractIssue(previewContractViolation);
   },
 });
 
@@ -44,8 +48,8 @@ export const previewPlanRoute = createPlanRouteHandler({
   executeUseCase: (resolvedRequest, deps: PreviewPlanRouteDeps) =>
     deps.useCase.execute(resolvedRequest.parsedRequest.command, resolvedRequest.context),
   mapResult: (result, resolvedRequest) =>
-    planRouteResponseTranslation.preview.result(result, resolvedRequest.parsedRequest),
-  mapInternalError: () => planRouteResponseTranslation.preview.internalError(),
+    mapPreviewPlanUseCaseResult(result, resolvedRequest.parsedRequest),
+  mapInternalError: mapPreviewPlanInternalError,
 }) satisfies (
   request: FastifyRequest<{ Body: unknown }>,
   reply: FastifyReply,

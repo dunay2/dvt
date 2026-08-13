@@ -1,6 +1,5 @@
 /**
- * Owned concern: internal compile-plan response mapping inside the plan-route
- * response translation component.
+ * Owned concern: map compile-plan application results to HTTP responses.
  */
 import type { CompilePlanResult } from '../../application/services/CompilePlanUseCase.js';
 

@@ -1,6 +1,5 @@
 /**
- * Owned concern: internal preview-plan use-case response mapping inside the
- * plan-route response translation component.
+ * Owned concern: map preview-plan application results to HTTP responses.
  */
 import {
   PLAN_PREVIEW_REJECTED_OUTCOME_CONTRACT_VERSION,
