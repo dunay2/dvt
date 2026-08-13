@@ -11493,14 +11493,28 @@
         "work_item_id": "GH-2166",
         "title": "Reject missing stored plans at the admission boundary",
         "owner": "API / Plan Store",
-        "status": "implemented",
+        "status": "superseded",
         "rationale": "A syntactically valid reference to a missing or mismatched stored plan must return the existing plan_rejected product outcome instead of escaping as an HTTP 500.",
         "fowler_signal": "boundary_drift",
         "rail_ref": "CreateStoredPlan",
         "approved_at": "2026-08-13T04:12:50.264+00:00",
         "supersedes_id": null,
         "created_at": "2026-08-13T03:58:21.995+00:00",
-        "updated_at": "2026-08-13T04:13:02.743+00:00"
+        "updated_at": "2026-08-13T04:36:33.802+00:00"
+      },
+      {
+        "design_id": "GH-2166-PLAN-REJECTION-CLASSIFICATION-20260813",
+        "work_item_id": "GH-2166",
+        "title": "Classify stored-plan lookup failures at the executability boundary",
+        "owner": "API / Plan Store",
+        "status": "implemented",
+        "rationale": "Existing-plan admission must map only absence and canonical PLAN_REF_MISMATCH to plan_rejected while preserving unexpected infrastructure failures without leaking their messages.",
+        "fowler_signal": "boundary_drift",
+        "rail_ref": "RecordPlanExecutability",
+        "approved_at": "2026-08-13T04:38:59.648+00:00",
+        "supersedes_id": "GH-2166-MISSING-PLAN-REJECTION-20260813",
+        "created_at": "2026-08-13T04:36:32.57+00:00",
+        "updated_at": "2026-08-13T04:39:39.431+00:00"
       },
       {
         "design_id": "GH-2166-PLANREF-HTTP-COMPONENT-REMAP-20260813",
@@ -67513,6 +67527,38 @@
         "created_at": "2026-08-13T03:58:21.995+00:00"
       },
       {
+        "design_id": "GH-2166-PLAN-REJECTION-CLASSIFICATION-20260813",
+        "subject_kind": "command",
+        "subject_id": "RecordPlanExecutability",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T04:36:32.57+00:00"
+      },
+      {
+        "design_id": "GH-2166-PLAN-REJECTION-CLASSIFICATION-20260813",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T04:36:32.57+00:00"
+      },
+      {
+        "design_id": "GH-2166-PLAN-REJECTION-CLASSIFICATION-20260813",
+        "subject_kind": "path",
+        "subject_id": "apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T04:36:32.57+00:00"
+      },
+      {
+        "design_id": "GH-2166-PLAN-REJECTION-CLASSIFICATION-20260813",
+        "subject_kind": "path",
+        "subject_id": "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T04:36:32.57+00:00"
+      },
+      {
         "design_id": "GH-2166-PLANREF-HTTP-COMPONENT-REMAP-20260813",
         "subject_kind": "component",
         "subject_id": "SYS-PLANSTORE-API-PLANREF-HTTP",
@@ -91345,6 +91391,58 @@
         "created_at": "2026-08-11T13:03:21.306+00:00"
       },
       {
+        "operation_id": "3067294d-b20f-455a-b2a6-e0a694ea4895",
+        "idempotency_key": "architecture_design_create:codex:GH-2166-PLAN-REJECTION-CLASSIFICATION-20260813:02ca1820287c2e6a",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "GH-2166-PLAN-REJECTION-CLASSIFICATION-20260813",
+        "source_ref": "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+        "source_content_sha256": "ab941b6eda593b8d9e86594c730b001d7291fd659a14d2287275a5ed214a492c",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "API / Plan Store",
+          "title": "Classify stored-plan lookup failures at the executability boundary",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "RecordPlanExecutability",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts",
+              "subjectKind": "path"
+            }
+          ],
+          "status": "review",
+          "railRef": "RecordPlanExecutability",
+          "designId": "GH-2166-PLAN-REJECTION-CLASSIFICATION-20260813",
+          "rationale": "Existing-plan admission must map only absence and canonical PLAN_REF_MISMATCH to plan_rejected while preserving unexpected infrastructure failures without leaking their messages.",
+          "sourceRef": "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+          "workItemId": "GH-2166",
+          "fowlerSignal": "boundary_drift",
+          "supersedesId": "GH-2166-MISSING-PLAN-REJECTION-20260813",
+          "sourceContentSha256": "ab941b6eda593b8d9e86594c730b001d7291fd659a14d2287275a5ed214a492c"
+        },
+        "created_at": "2026-08-13T04:36:32.57+00:00"
+      },
+      {
         "operation_id": "307469f2-b365-41ae-8647-e7cb3ef8d9d2",
         "idempotency_key": "codex-api-h2-2-reachability-v5-approved",
         "operation_type": "architecture_design_transition",
@@ -94214,6 +94312,27 @@
         "created_at": "2026-08-11T11:55:38.371+00:00"
       },
       {
+        "operation_id": "6018cc18-ca23-4207-a4ad-0ad826426eb3",
+        "idempotency_key": "architecture_design_transition:codex:GH-2166-PLAN-REJECTION-CLASSIFICATION-20260813:1ee7e77c457e692a",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2166-PLAN-REJECTION-CLASSIFICATION-20260813",
+        "source_ref": "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+        "source_content_sha256": "36ce3cefa8d6aa4173fe730a3ea712b7a1cdbcaef5fc4c48cfd30c705574b568",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "API unit suite passes 188 files and 1014 tests; focused classification tests, lint and production/test type checks pass without reclassifying infrastructure failures.",
+          "designId": "GH-2166-PLAN-REJECTION-CLASSIFICATION-20260813",
+          "toStatus": "implemented",
+          "sourceRef": "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "36ce3cefa8d6aa4173fe730a3ea712b7a1cdbcaef5fc4c48cfd30c705574b568"
+        },
+        "created_at": "2026-08-13T04:39:39.431+00:00"
+      },
+      {
         "operation_id": "601dfef4-fc59-481d-b5a0-acc8183462b1",
         "idempotency_key": "codex-api-h2-2-reachability-test-evidence-v5",
         "operation_type": "architecture_test_record",
@@ -96749,6 +96868,27 @@
           "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
         },
         "created_at": "2026-08-10T20:10:10.616+00:00"
+      },
+      {
+        "operation_id": "8adac6ff-c7a7-4eef-9457-6d4a62f4e32e",
+        "idempotency_key": "architecture_design_transition:codex:GH-2166-PLAN-REJECTION-CLASSIFICATION-20260813:60b5efbd7aa0d9fe",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2166-PLAN-REJECTION-CLASSIFICATION-20260813",
+        "source_ref": "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+        "source_content_sha256": "36ce3cefa8d6aa4173fe730a3ea712b7a1cdbcaef5fc4c48cfd30c705574b568",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Fowler review confirmed the correction must distinguish canonical reference mismatch from infrastructure failure.",
+          "designId": "GH-2166-PLAN-REJECTION-CLASSIFICATION-20260813",
+          "toStatus": "approved",
+          "sourceRef": "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+          "fromStatus": "review",
+          "sourceContentSha256": "36ce3cefa8d6aa4173fe730a3ea712b7a1cdbcaef5fc4c48cfd30c705574b568"
+        },
+        "created_at": "2026-08-13T04:38:59.648+00:00"
       },
       {
         "operation_id": "8c54cf60-c401-47a1-8da8-56cfdb64b6ac",
@@ -99640,6 +99780,27 @@
           "sourceContentSha256": "d4ff035dc1fd532fc5c77f7dc835d35138970ca5da2dc586fa80aeb477c44b31"
         },
         "created_at": "2026-08-11T13:27:18.058+00:00"
+      },
+      {
+        "operation_id": "b785b030-1324-450b-9823-e5ebba792973",
+        "idempotency_key": "architecture_design_transition:codex:GH-2166-PLAN-REJECTION-CLASSIFICATION-20260813:983ee210c476be86",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2166-PLAN-REJECTION-CLASSIFICATION-20260813",
+        "source_ref": "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+        "source_content_sha256": "36ce3cefa8d6aa4173fe730a3ea712b7a1cdbcaef5fc4c48cfd30c705574b568",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Red test proves unexpected plan-store errors were reclassified and leaked before the bounded classifier change.",
+          "designId": "GH-2166-PLAN-REJECTION-CLASSIFICATION-20260813",
+          "toStatus": "implementing",
+          "sourceRef": "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+          "fromStatus": "approved",
+          "sourceContentSha256": "36ce3cefa8d6aa4173fe730a3ea712b7a1cdbcaef5fc4c48cfd30c705574b568"
+        },
+        "created_at": "2026-08-13T04:39:00.859+00:00"
       },
       {
         "operation_id": "b7a1c68c-f64e-4710-8757-88da31ac5369",
@@ -103360,6 +103521,27 @@
           "sourceContentSha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a"
         },
         "created_at": "2026-08-11T10:05:25.05+00:00"
+      },
+      {
+        "operation_id": "e9a358b8-dd35-4645-8161-e729d3334039",
+        "idempotency_key": "architecture_design_transition:codex:GH-2166-MISSING-PLAN-REJECTION-20260813:9e83b9758b2716ab",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "GH-2166-MISSING-PLAN-REJECTION-20260813",
+        "source_ref": "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+        "source_content_sha256": "ab941b6eda593b8d9e86594c730b001d7291fd659a14d2287275a5ed214a492c",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Fowler review assigned existing PlanRef admission and its rejection semantics to RecordPlanExecutability rather than CreateStoredPlan.",
+          "designId": "GH-2166-MISSING-PLAN-REJECTION-20260813",
+          "toStatus": "superseded",
+          "sourceRef": "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+          "fromStatus": "implemented",
+          "sourceContentSha256": "ab941b6eda593b8d9e86594c730b001d7291fd659a14d2287275a5ed214a492c"
+        },
+        "created_at": "2026-08-13T04:36:33.802+00:00"
       },
       {
         "operation_id": "e9b2d4cc-02eb-4b32-95a8-22aeb0e07264",
@@ -131691,7 +131873,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
-      "sourceContentSha256": "ab941b6eda593b8d9e86594c730b001d7291fd659a14d2287275a5ed214a492c",
+      "sourceContentSha256": "36ce3cefa8d6aa4173fe730a3ea712b7a1cdbcaef5fc4c48cfd30c705574b568",
       "rawRail": {
         "name": "CreateStoredPlan",
         "type": "command",
@@ -144275,7 +144457,10 @@
         "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanExecutabilityFindingSchema",
         "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanExecutabilityFindingSchemaT",
         "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#StoredPlanAdmissionCoordinator",
-        "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#StoredPlanAdmissionResult"
+        "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#StoredPlanAdmissionResult",
+        "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#PLAN_REF_MISMATCH_ERROR_PREFIX",
+        "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#buildPlanRecordRejection",
+        "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#isPlanRefMismatchError"
       ],
       "implementationRefs": [
         "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanExecutabilityFinding",
@@ -144283,7 +144468,10 @@
         "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanExecutabilityFindingSchema",
         "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanExecutabilityFindingSchemaT",
         "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#StoredPlanAdmissionCoordinator",
-        "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#StoredPlanAdmissionResult"
+        "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#StoredPlanAdmissionResult",
+        "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#PLAN_REF_MISMATCH_ERROR_PREFIX",
+        "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#buildPlanRecordRejection",
+        "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#isPlanRefMismatchError"
       ],
       "documentationRefs": [
         "docs/evidence/ED-20260731-plan-admission-findings.md",
@@ -144297,7 +144485,9 @@
         "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts",
         "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts",
-        "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts"
+        "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+        "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts",
+        "apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts"
       ],
       "architectureGuards": [
         "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts",
@@ -144319,7 +144509,10 @@
         "negativeTests": [
           "invalid plans never dispatch",
           "already valid records are not rewritten",
-          "missing validation records fail closed"
+          "missing validation records fail closed",
+          "missing plan records return plan_rejected",
+          "plan reference mismatches return plan_rejected",
+          "unexpected plan-store failures propagate without product reclassification"
         ],
         "adapterSurface": "PostgresPlanStore",
         "applicationPort": "IPlanExecutabilityValidator.validatePlan",
@@ -144335,11 +144528,13 @@
             "unitTests": [
               "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
               "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts",
-              "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts"
+              "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts",
+              "apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts"
             ],
             "fowlerSignals": [
               "The stored-plan validator remains the single executability authority and exposes one canonical fail-fast finding.",
-              "Preview and Start Run reuse one admission coordinator rather than duplicating transitions."
+              "Preview and Start Run reuse one admission coordinator rather than duplicating transitions.",
+              "Expected plan-reference failures and infrastructure failures retain distinct semantics."
             ],
             "cypressCoverage": "N/A - canonical contract and API application slice with no UI behavior",
             "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
@@ -144352,11 +144547,13 @@
             "unitTests": [
               "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
               "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts",
-              "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts"
+              "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts",
+              "apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts"
             ],
             "fowlerSignals": [
               "The stored-plan validator remains the single executability authority and exposes one canonical fail-fast finding.",
-              "Preview and Start Run reuse one admission coordinator rather than duplicating transitions."
+              "Preview and Start Run reuse one admission coordinator rather than duplicating transitions.",
+              "Expected plan-reference failures and infrastructure failures retain distinct semantics."
             ],
             "cypressCoverage": "N/A - canonical contract and API application slice with no UI behavior",
             "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
@@ -144369,11 +144566,13 @@
             "unitTests": [
               "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
               "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts",
-              "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts"
+              "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts",
+              "apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts"
             ],
             "fowlerSignals": [
               "The stored-plan validator remains the single executability authority and exposes one canonical fail-fast finding.",
-              "Preview and Start Run reuse one admission coordinator rather than duplicating transitions."
+              "Preview and Start Run reuse one admission coordinator rather than duplicating transitions.",
+              "Expected plan-reference failures and infrastructure failures retain distinct semantics."
             ],
             "cypressCoverage": "N/A - canonical contract and API application slice with no UI behavior",
             "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
@@ -144386,11 +144585,13 @@
             "unitTests": [
               "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
               "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts",
-              "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts"
+              "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts",
+              "apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts"
             ],
             "fowlerSignals": [
               "The stored-plan validator remains the single executability authority and exposes one canonical fail-fast finding.",
-              "Preview and Start Run reuse one admission coordinator rather than duplicating transitions."
+              "Preview and Start Run reuse one admission coordinator rather than duplicating transitions.",
+              "Expected plan-reference failures and infrastructure failures retain distinct semantics."
             ],
             "cypressCoverage": "N/A - canonical contract and API application slice with no UI behavior",
             "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
@@ -144403,11 +144604,13 @@
             "unitTests": [
               "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
               "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts",
-              "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts"
+              "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts",
+              "apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts"
             ],
             "fowlerSignals": [
               "The stored-plan validator remains the single executability authority and exposes one canonical fail-fast finding.",
-              "Preview and Start Run reuse one admission coordinator rather than duplicating transitions."
+              "Preview and Start Run reuse one admission coordinator rather than duplicating transitions.",
+              "Expected plan-reference failures and infrastructure failures retain distinct semantics."
             ],
             "cypressCoverage": "N/A - canonical contract and API application slice with no UI behavior",
             "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
@@ -144420,11 +144623,70 @@
             "unitTests": [
               "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
               "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts",
-              "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts"
+              "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts",
+              "apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts"
             ],
             "fowlerSignals": [
               "The stored-plan validator remains the single executability authority and exposes one canonical fail-fast finding.",
-              "Preview and Start Run reuse one admission coordinator rather than duplicating transitions."
+              "Preview and Start Run reuse one admission coordinator rather than duplicating transitions.",
+              "Expected plan-reference failures and infrastructure failures retain distinct semantics."
+            ],
+            "cypressCoverage": "N/A - canonical contract and API application slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "PLAN_REF_MISMATCH_ERROR_PREFIX",
+            "path": "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+            "cqRails": ["RecordPlanExecutability"],
+            "dddOwner": "StoredPlanExecutabilityValidator",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts",
+              "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts",
+              "apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts"
+            ],
+            "fowlerSignals": [
+              "The stored-plan validator remains the single executability authority and exposes one canonical fail-fast finding.",
+              "Preview and Start Run reuse one admission coordinator rather than duplicating transitions.",
+              "Expected plan-reference failures and infrastructure failures retain distinct semantics."
+            ],
+            "cypressCoverage": "N/A - canonical contract and API application slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "buildPlanRecordRejection",
+            "path": "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+            "cqRails": ["RecordPlanExecutability"],
+            "dddOwner": "StoredPlanExecutabilityValidator",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts",
+              "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts",
+              "apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts"
+            ],
+            "fowlerSignals": [
+              "The stored-plan validator remains the single executability authority and exposes one canonical fail-fast finding.",
+              "Preview and Start Run reuse one admission coordinator rather than duplicating transitions.",
+              "Expected plan-reference failures and infrastructure failures retain distinct semantics."
+            ],
+            "cypressCoverage": "N/A - canonical contract and API application slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "isPlanRefMismatchError",
+            "path": "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+            "cqRails": ["RecordPlanExecutability"],
+            "dddOwner": "StoredPlanExecutabilityValidator",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts",
+              "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts",
+              "apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts"
+            ],
+            "fowlerSignals": [
+              "The stored-plan validator remains the single executability authority and exposes one canonical fail-fast finding.",
+              "Preview and Start Run reuse one admission coordinator rather than duplicating transitions.",
+              "Expected plan-reference failures and infrastructure failures retain distinct semantics."
             ],
             "cypressCoverage": "N/A - canonical contract and API application slice with no UI behavior",
             "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
@@ -144447,7 +144709,8 @@
         ],
         "fowlerSignals": [
           "The stored-plan validator remains the single executability authority and exposes one canonical fail-fast finding.",
-          "Preview and Start Run reuse one admission coordinator rather than duplicating transitions."
+          "Preview and Start Run reuse one admission coordinator rather than duplicating transitions.",
+          "Expected plan-reference failures and infrastructure failures retain distinct semantics."
         ],
         "completionGate": [
           "pnpm --filter @dvt/contracts test",
@@ -144458,15 +144721,16 @@
         "redGreenCycles": [
           {
             "id": "recordplanexecutability-record",
-            "redTest": "pnpm --filter @dvt/contracts test -- plan-admission-finding.contract.test.ts",
-            "greenTest": "pnpm --filter @dvt/contracts test -- plan-admission-finding.contract.test.ts plan-admission-finding.architecture.test.ts",
+            "redTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/StoredPlanAdmissionCoordinator.test.ts",
+            "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/StoredPlanAdmissionCoordinator.test.ts test/application/services/PlannerBackedStartRunUseCase.test.ts",
             "patchSurfaces": [
               "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
               "packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts",
               "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts",
-              "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts"
+              "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+              "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts"
             ],
-            "expectedFailure": "The canonical executability finding contract did not preserve exact plan and adapter identity."
+            "expectedFailure": "Unexpected plan-store errors are incorrectly converted to plan_rejected and expose infrastructure detail."
           }
         ],
         "componentGuides": [
@@ -144485,7 +144749,10 @@
             "negativeTests": [
               "invalid plans never dispatch",
               "already valid records are not rewritten",
-              "missing validation records fail closed"
+              "missing validation records fail closed",
+              "missing plan records return plan_rejected",
+              "plan reference mismatches return plan_rejected",
+              "unexpected plan-store failures propagate without product reclassification"
             ],
             "adapterSurface": "PostgresPlanStore",
             "applicationPort": "IPlanExecutabilityValidator.validatePlan",
@@ -144503,7 +144770,9 @@
           "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
           "packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts",
           "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts",
-          "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts"
+          "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+          "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts",
+          "apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts"
         ],
         "forbiddenImplementationSurfaces": [
           "tools/planning-db/schema.sql",
@@ -144511,7 +144780,7 @@
           "apps/web/**"
         ]
       },
-      "revision": 4,
+      "revision": 6,
       "createdBy": "codex",
       "createdAt": "2026-07-31T22:19:13.431Z"
     },
@@ -178399,6 +178668,219 @@
         ]
       },
       "createdAt": "2026-08-13T04:12:52.790Z"
+    },
+    {
+      "operationId": "d7a68c8e-54f0-413e-8da3-4fcca0fe8689",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:MVP-F6-2A-PLAN-ADMISSION-FINDINGS:command:recordplanexecutability:4:92243160ede0e6d1",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-F6-2A-PLAN-ADMISSION-FINDINGS#command#recordplanexecutability",
+      "sourcePath": "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+      "sourceContentSha256": "2e5ff8f7bb76ee283be965e19fea01f606af0688b3326dc4912b6374165487f5",
+      "expectedRevision": 4,
+      "previousRevision": 4,
+      "resultingRevision": 5,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/StoredPlanAdmissionCoordinator.test.ts",
+        "dddOwner": "StoredPlanExecutabilityValidator",
+        "railName": "RecordPlanExecutability",
+        "railType": "command",
+        "featureId": "MVP-F6-2A-PLAN-ADMISSION-FINDINGS",
+        "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/StoredPlanAdmissionCoordinator.test.ts test/application/services/PlannerBackedStartRunUseCase.test.ts",
+        "sourceRef": "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+        "unitTests": [
+          "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+          "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts",
+          "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts",
+          "apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2166"],
+        "cypressFlows": [
+          "N/A - canonical contract and API application slice with no UI behavior"
+        ],
+        "domainObjects": [
+          "PlanExecutabilityFinding",
+          "PlanAdmissionFinding",
+          "PlanRecord admission lifecycle"
+        ],
+        "fowlerSignals": [
+          "The stored-plan validator remains the single executability authority and exposes one canonical fail-fast finding.",
+          "Preview and Start Run reuse one admission coordinator rather than duplicating transitions.",
+          "Expected plan-reference failures and infrastructure failures retain distinct semantics."
+        ],
+        "negativeTests": [
+          "invalid plans never dispatch",
+          "already valid records are not rewritten",
+          "missing validation records fail closed",
+          "missing plan records return plan_rejected",
+          "plan reference mismatches return plan_rejected",
+          "unexpected plan-store failures propagate without product reclassification"
+        ],
+        "patchSurfaces": [
+          "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+          "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts"
+        ],
+        "adapterSurface": "PostgresPlanStore",
+        "completionGate": [
+          "pnpm --filter @dvt/contracts test",
+          "pnpm --filter @dvt/contracts typecheck",
+          "pnpm --filter dvt-api test:unit",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "IPlanExecutabilityValidator.validatePlan",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Unexpected plan-store errors are incorrectly converted to plan_rejected and expose infrastructure detail.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260731-plan-admission-findings.md",
+          "https://github.com/dunay2/dvt/issues/2166"
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts",
+          "pnpm arch:deps"
+        ],
+        "authorizationScope": "tenant/project/environment",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2077",
+        "implementationRefs": [
+          "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanExecutabilityFinding",
+          "packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts#ExecutabilityValidationResult",
+          "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanExecutabilityFindingSchema",
+          "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanExecutabilityFindingSchemaT",
+          "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#StoredPlanAdmissionCoordinator",
+          "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#StoredPlanAdmissionResult"
+        ],
+        "normalizedRailName": "recordplanexecutability",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "2e5ff8f7bb76ee283be965e19fea01f606af0688b3326dc4912b6374165487f5",
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+          "packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts",
+          "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts",
+          "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+          "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts",
+          "apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "tools/planning-db/schema.sql",
+          "apps/api/src/entrypoints/http/**",
+          "apps/web/**"
+        ]
+      },
+      "createdAt": "2026-08-13T04:36:35.061Z"
+    },
+    {
+      "operationId": "83fcb48b-650d-4033-a071-44da57ed448b",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:MVP-F6-2A-PLAN-ADMISSION-FINDINGS:command:recordplanexecutability:5:da39c6151056b18c",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-F6-2A-PLAN-ADMISSION-FINDINGS#command#recordplanexecutability",
+      "sourcePath": "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+      "sourceContentSha256": "2e5ff8f7bb76ee283be965e19fea01f606af0688b3326dc4912b6374165487f5",
+      "expectedRevision": 5,
+      "previousRevision": 5,
+      "resultingRevision": 6,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/StoredPlanAdmissionCoordinator.test.ts",
+        "dddOwner": "StoredPlanExecutabilityValidator",
+        "railName": "RecordPlanExecutability",
+        "railType": "command",
+        "featureId": "MVP-F6-2A-PLAN-ADMISSION-FINDINGS",
+        "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/StoredPlanAdmissionCoordinator.test.ts test/application/services/PlannerBackedStartRunUseCase.test.ts",
+        "sourceRef": "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+        "unitTests": [
+          "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+          "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts",
+          "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts",
+          "apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2166"],
+        "cypressFlows": [
+          "N/A - canonical contract and API application slice with no UI behavior"
+        ],
+        "domainObjects": [
+          "PlanExecutabilityFinding",
+          "PlanAdmissionFinding",
+          "PlanRecord admission lifecycle"
+        ],
+        "fowlerSignals": [
+          "The stored-plan validator remains the single executability authority and exposes one canonical fail-fast finding.",
+          "Preview and Start Run reuse one admission coordinator rather than duplicating transitions.",
+          "Expected plan-reference failures and infrastructure failures retain distinct semantics."
+        ],
+        "negativeTests": [
+          "invalid plans never dispatch",
+          "already valid records are not rewritten",
+          "missing validation records fail closed",
+          "missing plan records return plan_rejected",
+          "plan reference mismatches return plan_rejected",
+          "unexpected plan-store failures propagate without product reclassification"
+        ],
+        "patchSurfaces": [
+          "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+          "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts"
+        ],
+        "adapterSurface": "PostgresPlanStore",
+        "completionGate": [
+          "pnpm --filter @dvt/contracts test",
+          "pnpm --filter @dvt/contracts typecheck",
+          "pnpm --filter dvt-api test:unit",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "IPlanExecutabilityValidator.validatePlan",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Unexpected plan-store errors are incorrectly converted to plan_rejected and expose infrastructure detail.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260731-plan-admission-findings.md",
+          "https://github.com/dunay2/dvt/issues/2166"
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts",
+          "pnpm arch:deps"
+        ],
+        "authorizationScope": "tenant/project/environment",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2077",
+        "implementationRefs": [
+          "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanExecutabilityFinding",
+          "packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts#ExecutabilityValidationResult",
+          "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanExecutabilityFindingSchema",
+          "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanExecutabilityFindingSchemaT",
+          "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#PLAN_REF_MISMATCH_ERROR_PREFIX",
+          "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#StoredPlanAdmissionCoordinator",
+          "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#StoredPlanAdmissionResult",
+          "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#buildPlanRecordRejection",
+          "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#isPlanRefMismatchError"
+        ],
+        "normalizedRailName": "recordplanexecutability",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "2e5ff8f7bb76ee283be965e19fea01f606af0688b3326dc4912b6374165487f5",
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+          "packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts",
+          "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts",
+          "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+          "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts",
+          "apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "tools/planning-db/schema.sql",
+          "apps/api/src/entrypoints/http/**",
+          "apps/web/**"
+        ]
+      },
+      "createdAt": "2026-08-13T04:40:19.470Z"
     }
   ],
   "governanceComponentDefinitions": [
