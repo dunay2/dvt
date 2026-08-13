@@ -14197,6 +14197,20 @@
         "implementation_content_sha256": null
       },
       {
+        "evidence_id": "EV-GH2168-COMPILEPLAN-AUTH-FIRST",
+        "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+        "subject_kind": "command",
+        "subject_id": "CompilePlan",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "pnpm --filter dvt-api exec vitest run plan-route rail (11 files, 71 tests)",
+        "source_path": "apps/api/test/entrypoints/http/compilePlanRoute.test.ts",
+        "result_state": "pass",
+        "recorded_at": "2026-08-13T09:50:50.259+00:00",
+        "source_content_sha256": "b8dc7c17c00b3ed0247a3534a6194d8d91062455ebe06aa1c06fed0b7fe7a552",
+        "implementation_content_sha256": "eaa16e1d8828c7c81de3a82de772e9d2c910c379ee07b0e82dd49a8269498404"
+      },
+      {
         "evidence_id": "EV-GH2168-COMPILEPLAN-CURRENT",
         "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
         "subject_kind": "command",
@@ -14239,6 +14253,20 @@
         "implementation_content_sha256": "bd1756cf06573e2d65cdcc4ddc9c8575dbc413c933d6438816fa5ef94401ea67"
       },
       {
+        "evidence_id": "EV-GH2168-IMPORTPLAN-AUTH-FIRST",
+        "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+        "subject_kind": "command",
+        "subject_id": "ImportPlan",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "pnpm --filter dvt-api exec vitest run plan-route rail (11 files, 71 tests)",
+        "source_path": "apps/api/test/entrypoints/http/importPlanRoute.test.ts",
+        "result_state": "pass",
+        "recorded_at": "2026-08-13T09:50:51.72+00:00",
+        "source_content_sha256": "c475731dfe762c9706ac211b26758cd0b0f611e78dd245e8aa1a22ed70b6b551",
+        "implementation_content_sha256": "efb10ebffdd3122bc3290e3fe1cfc3233caff7870d7ce971140693ebe4a47181"
+      },
+      {
         "evidence_id": "EV-GH2168-IMPORTPLAN-CURRENT",
         "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
         "subject_kind": "command",
@@ -14265,6 +14293,20 @@
         "recorded_at": "2026-08-13T07:18:23.141+00:00",
         "source_content_sha256": "c475731dfe762c9706ac211b26758cd0b0f611e78dd245e8aa1a22ed70b6b551",
         "implementation_content_sha256": "761996d891827415f67209c503e8299b04e99db3d4230ffcf0d7e1b1d70f19bc"
+      },
+      {
+        "evidence_id": "EV-GH2168-PREVIEWPLAN-AUTH-FIRST",
+        "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+        "subject_kind": "command",
+        "subject_id": "PreviewPlan",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "pnpm --filter dvt-api exec vitest run plan-route rail (11 files, 71 tests)",
+        "source_path": "apps/api/test/entrypoints/http/previewPlanRoute.auth.test.ts",
+        "result_state": "pass",
+        "recorded_at": "2026-08-13T09:50:53.163+00:00",
+        "source_content_sha256": "1fcd5e857deec527662a8b7071d0274e35aa4ce9cdeb10f6e201bfbd51fd30c9",
+        "implementation_content_sha256": "34d8ef32403fa3fba11166b3ff80047b738e98cb4978eb06f275e18c5e2f272a"
       },
       {
         "evidence_id": "EV-GH2168-PREVIEWPLAN-CURRENT",
@@ -89840,6 +89882,31 @@
     ],
     "design_operations": [
       {
+        "operation_id": "001a3c5a-2e9f-45db-8262-9e11ea086fe5",
+        "idempotency_key": "architecture_evidence_record:codex-gh-2168-review:GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813:EV-GH2168-PREVIEWPLAN-AUTH-FIRST:dc0a1ef271a6498a",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex-gh-2168-review",
+        "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+        "source_ref": "pnpm --filter dvt-api exec vitest run plan-route rail (11 files, 71 tests)",
+        "source_content_sha256": "1fcd5e857deec527662a8b7071d0274e35aa4ce9cdeb10f6e201bfbd51fd30c9",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+          "sourceRef": "pnpm --filter dvt-api exec vitest run plan-route rail (11 files, 71 tests)",
+          "subjectId": "PreviewPlan",
+          "evidenceId": "EV-GH2168-PREVIEWPLAN-AUTH-FIRST",
+          "sourcePath": "apps/api/test/entrypoints/http/previewPlanRoute.auth.test.ts",
+          "resultState": "pass",
+          "subjectKind": "command",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "1fcd5e857deec527662a8b7071d0274e35aa4ce9cdeb10f6e201bfbd51fd30c9"
+        },
+        "created_at": "2026-08-13T09:50:53.163+00:00"
+      },
+      {
         "operation_id": "0256b04a-b3f5-4b83-8e65-03b66491c7d1",
         "idempotency_key": "architecture_evidence_record:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811:EV-PTH14-V5-TRANSITION:e2d5b79777a7e827",
         "operation_type": "architecture_evidence_record",
@@ -92879,6 +92946,31 @@
           "sourceContentSha256": "1f88b3d23b9ef0a47837a188b7051ee92037204cd9a087cbe53a559243558cef"
         },
         "created_at": "2026-08-10T21:04:47.338+00:00"
+      },
+      {
+        "operation_id": "3147ccf4-8963-49b6-afcb-c7ca71bf54d8",
+        "idempotency_key": "architecture_evidence_record:codex-gh-2168-review:GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813:EV-GH2168-IMPORTPLAN-AUTH-FIRST:da74fbfe172c8998",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex-gh-2168-review",
+        "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+        "source_ref": "pnpm --filter dvt-api exec vitest run plan-route rail (11 files, 71 tests)",
+        "source_content_sha256": "c475731dfe762c9706ac211b26758cd0b0f611e78dd245e8aa1a22ed70b6b551",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+          "sourceRef": "pnpm --filter dvt-api exec vitest run plan-route rail (11 files, 71 tests)",
+          "subjectId": "ImportPlan",
+          "evidenceId": "EV-GH2168-IMPORTPLAN-AUTH-FIRST",
+          "sourcePath": "apps/api/test/entrypoints/http/importPlanRoute.test.ts",
+          "resultState": "pass",
+          "subjectKind": "command",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "c475731dfe762c9706ac211b26758cd0b0f611e78dd245e8aa1a22ed70b6b551"
+        },
+        "created_at": "2026-08-13T09:50:51.72+00:00"
       },
       {
         "operation_id": "329f410d-ee66-492e-a603-69970f82502e",
@@ -104547,6 +104639,31 @@
           "sourceContentSha256": "d4ff035dc1fd532fc5c77f7dc835d35138970ca5da2dc586fa80aeb477c44b31"
         },
         "created_at": "2026-08-11T13:27:14.888+00:00"
+      },
+      {
+        "operation_id": "c65897d5-be2b-4d26-9f8f-1cb9cbad60d5",
+        "idempotency_key": "architecture_evidence_record:codex-gh-2168-review:GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813:EV-GH2168-COMPILEPLAN-AUTH-FIRST:08657df24c6019fa",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex-gh-2168-review",
+        "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+        "source_ref": "pnpm --filter dvt-api exec vitest run plan-route rail (11 files, 71 tests)",
+        "source_content_sha256": "b8dc7c17c00b3ed0247a3534a6194d8d91062455ebe06aa1c06fed0b7fe7a552",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+          "sourceRef": "pnpm --filter dvt-api exec vitest run plan-route rail (11 files, 71 tests)",
+          "subjectId": "CompilePlan",
+          "evidenceId": "EV-GH2168-COMPILEPLAN-AUTH-FIRST",
+          "sourcePath": "apps/api/test/entrypoints/http/compilePlanRoute.test.ts",
+          "resultState": "pass",
+          "subjectKind": "command",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "b8dc7c17c00b3ed0247a3534a6194d8d91062455ebe06aa1c06fed0b7fe7a552"
+        },
+        "created_at": "2026-08-13T09:50:50.259+00:00"
       },
       {
         "operation_id": "c65907df-1331-46a6-a6b0-e6d9f26fd6cd",
@@ -136020,7 +136137,15 @@
         "apps/api/src/entrypoints/http/importPlanRouteResponseMapper.ts#mapImportPlanUseCaseResult",
         "apps/api/src/entrypoints/http/planRoutePlannerEnvelopeParser.ts#parsePlanRoutePlannerEnvironment",
         "apps/api/src/entrypoints/http/planRoutePlannerEnvelopeParser.ts#toPlanRouteGraphSource",
-        "apps/api/src/entrypoints/http/planRouteScope.ts#toParsedPlanRouteContext"
+        "apps/api/src/entrypoints/http/planRouteScope.ts#toParsedPlanRouteContext",
+        "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#PlanRouteAuthorizationResolverDeps",
+        "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#ResolvedAuthorizedPlanRouteRequest",
+        "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#AuthorizedPlanRouteRequestResolverOptions",
+        "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#resolveAuthorizedPlanRouteRequest",
+        "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#createAuthorizedPlanRouteRequestResolver",
+        "apps/api/src/entrypoints/http/planRouteScopeParser.ts#ParsedPlanRouteScope",
+        "apps/api/src/entrypoints/http/planRouteScopeParser.ts#parsePlanRouteRequestedScope",
+        "apps/api/src/entrypoints/http/planRouteScopeParser.ts#parsePlanRouteScope"
       ],
       "implementationRefs": [
         "apps/api/src/application/services/ImportPlanUseCase.ts#ImportPlanUseCase",
@@ -136033,7 +136158,15 @@
         "apps/api/src/entrypoints/http/importPlanRouteResponseMapper.ts#mapImportPlanUseCaseResult",
         "apps/api/src/entrypoints/http/planRoutePlannerEnvelopeParser.ts#parsePlanRoutePlannerEnvironment",
         "apps/api/src/entrypoints/http/planRoutePlannerEnvelopeParser.ts#toPlanRouteGraphSource",
-        "apps/api/src/entrypoints/http/planRouteScope.ts#toParsedPlanRouteContext"
+        "apps/api/src/entrypoints/http/planRouteScope.ts#toParsedPlanRouteContext",
+        "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#PlanRouteAuthorizationResolverDeps",
+        "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#ResolvedAuthorizedPlanRouteRequest",
+        "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#AuthorizedPlanRouteRequestResolverOptions",
+        "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#resolveAuthorizedPlanRouteRequest",
+        "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#createAuthorizedPlanRouteRequestResolver",
+        "apps/api/src/entrypoints/http/planRouteScopeParser.ts#ParsedPlanRouteScope",
+        "apps/api/src/entrypoints/http/planRouteScopeParser.ts#parsePlanRouteRequestedScope",
+        "apps/api/src/entrypoints/http/planRouteScopeParser.ts#parsePlanRouteScope"
       ],
       "documentationRefs": [
         "https://github.com/dunay2/dvt/issues/2168",
@@ -136049,11 +136182,14 @@
         "apps/api/src/entrypoints/http/importPlanRouteParser.ts",
         "apps/api/src/entrypoints/http/importPlanRouteResponseMapper.ts",
         "apps/api/src/entrypoints/http/planRoutePlannerEnvelopeParser.ts",
-        "apps/api/src/entrypoints/http/planRouteScope.ts"
+        "apps/api/src/entrypoints/http/planRouteScope.ts",
+        "apps/api/src/entrypoints/http/planRouteRequestResolver.ts",
+        "apps/api/src/entrypoints/http/planRouteScopeParser.ts"
       ],
       "architectureGuards": [
         "ImportPlan uses canonical ownership and rejects tenant, project, or environment mismatch.",
-        "ImportPlan authorizes canonical scope before persisting exactly once."
+        "ImportPlan authorizes canonical scope before persisting exactly once.",
+        "ImportPlan authenticates and authorizes scope before canonical contract validation."
       ],
       "completionGate": [
         "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/entrypoints/http/importPlanRoute.test.ts",
@@ -136070,7 +136206,8 @@
         "dddOwner": "Plan import application service",
         "negativeTests": [
           "Reject missing authentication, malformed canonical requests, and ownership mismatch.",
-          "Reject missing authentication, cross-scope plans, malformed payloads, and persistence failures."
+          "Reject missing authentication, cross-scope plans, malformed payloads, and persistence failures.",
+          "Reject missing authentication before exposing semantic contract failures."
         ],
         "adapterSurface": "POST /plans/import",
         "applicationPort": "ImportPlanUseCase.execute",
@@ -136242,6 +136379,126 @@
             ],
             "cypressCoverage": "N/A - API route contract",
             "architectureGuard": "ImportPlan authorizes canonical scope before persisting exactly once."
+          },
+          {
+            "name": "PlanRouteAuthorizationResolverDeps",
+            "path": "apps/api/src/entrypoints/http/planRouteRequestResolver.ts",
+            "cqRails": ["ImportPlan"],
+            "dddOwner": "Plan import application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts",
+              "apps/api/test/entrypoints/http/importPlanRoute.test.ts"
+            ],
+            "fowlerSignals": [
+              "One shared authentication boundary precedes endpoint contract validation."
+            ],
+            "cypressCoverage": "N/A - API route contract",
+            "architectureGuard": "ImportPlan authenticates and authorizes scope before canonical contract validation."
+          },
+          {
+            "name": "ResolvedAuthorizedPlanRouteRequest",
+            "path": "apps/api/src/entrypoints/http/planRouteRequestResolver.ts",
+            "cqRails": ["ImportPlan"],
+            "dddOwner": "Plan import application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts",
+              "apps/api/test/entrypoints/http/importPlanRoute.test.ts"
+            ],
+            "fowlerSignals": [
+              "One shared authentication boundary precedes endpoint contract validation."
+            ],
+            "cypressCoverage": "N/A - API route contract",
+            "architectureGuard": "ImportPlan authenticates and authorizes scope before canonical contract validation."
+          },
+          {
+            "name": "AuthorizedPlanRouteRequestResolverOptions",
+            "path": "apps/api/src/entrypoints/http/planRouteRequestResolver.ts",
+            "cqRails": ["ImportPlan"],
+            "dddOwner": "Plan import application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts",
+              "apps/api/test/entrypoints/http/importPlanRoute.test.ts"
+            ],
+            "fowlerSignals": [
+              "One shared authentication boundary precedes endpoint contract validation."
+            ],
+            "cypressCoverage": "N/A - API route contract",
+            "architectureGuard": "ImportPlan authenticates and authorizes scope before canonical contract validation."
+          },
+          {
+            "name": "resolveAuthorizedPlanRouteRequest",
+            "path": "apps/api/src/entrypoints/http/planRouteRequestResolver.ts",
+            "cqRails": ["ImportPlan"],
+            "dddOwner": "Plan import application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts",
+              "apps/api/test/entrypoints/http/importPlanRoute.test.ts"
+            ],
+            "fowlerSignals": [
+              "One shared authentication boundary precedes endpoint contract validation."
+            ],
+            "cypressCoverage": "N/A - API route contract",
+            "architectureGuard": "ImportPlan authenticates and authorizes scope before canonical contract validation."
+          },
+          {
+            "name": "createAuthorizedPlanRouteRequestResolver",
+            "path": "apps/api/src/entrypoints/http/planRouteRequestResolver.ts",
+            "cqRails": ["ImportPlan"],
+            "dddOwner": "Plan import application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts",
+              "apps/api/test/entrypoints/http/importPlanRoute.test.ts"
+            ],
+            "fowlerSignals": [
+              "One shared authentication boundary precedes endpoint contract validation."
+            ],
+            "cypressCoverage": "N/A - API route contract",
+            "architectureGuard": "ImportPlan authenticates and authorizes scope before canonical contract validation."
+          },
+          {
+            "name": "ParsedPlanRouteScope",
+            "path": "apps/api/src/entrypoints/http/planRouteScopeParser.ts",
+            "cqRails": ["ImportPlan"],
+            "dddOwner": "Plan import application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts",
+              "apps/api/test/entrypoints/http/importPlanRoute.test.ts"
+            ],
+            "fowlerSignals": [
+              "One shared authentication boundary precedes endpoint contract validation."
+            ],
+            "cypressCoverage": "N/A - API route contract",
+            "architectureGuard": "ImportPlan authenticates and authorizes scope before canonical contract validation."
+          },
+          {
+            "name": "parsePlanRouteRequestedScope",
+            "path": "apps/api/src/entrypoints/http/planRouteScopeParser.ts",
+            "cqRails": ["ImportPlan"],
+            "dddOwner": "Plan import application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts",
+              "apps/api/test/entrypoints/http/importPlanRoute.test.ts"
+            ],
+            "fowlerSignals": [
+              "One shared authentication boundary precedes endpoint contract validation."
+            ],
+            "cypressCoverage": "N/A - API route contract",
+            "architectureGuard": "ImportPlan authenticates and authorizes scope before canonical contract validation."
+          },
+          {
+            "name": "parsePlanRouteScope",
+            "path": "apps/api/src/entrypoints/http/planRouteScopeParser.ts",
+            "cqRails": ["ImportPlan"],
+            "dddOwner": "Plan import application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts",
+              "apps/api/test/entrypoints/http/importPlanRoute.test.ts"
+            ],
+            "fowlerSignals": [
+              "One shared authentication boundary precedes endpoint contract validation."
+            ],
+            "cypressCoverage": "N/A - API route contract",
+            "architectureGuard": "ImportPlan authenticates and authorizes scope before canonical contract validation."
           }
         ],
         "version": 1,
@@ -136257,7 +136514,8 @@
         "domainObjects": ["PlanRecord", "PlanOwnership", "StoredPlan"],
         "fowlerSignals": [
           "One ImportPlan command owns the canonical use case and HTTP adapter helpers.",
-          "One ImportPlan intent owns scope validation, persistence, and HTTP translation."
+          "One ImportPlan intent owns scope validation, persistence, and HTTP translation.",
+          "One shared authentication boundary precedes endpoint contract validation."
         ],
         "completionGate": [
           "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/entrypoints/http/importPlanRoute.test.ts",
@@ -136276,9 +136534,11 @@
               "apps/api/src/entrypoints/http/importPlanRouteParser.ts",
               "apps/api/src/entrypoints/http/importPlanRouteResponseMapper.ts",
               "apps/api/src/entrypoints/http/planRoutePlannerEnvelopeParser.ts",
-              "apps/api/src/entrypoints/http/planRouteScope.ts"
+              "apps/api/src/entrypoints/http/planRouteScope.ts",
+              "apps/api/src/entrypoints/http/planRouteRequestResolver.ts",
+              "apps/api/src/entrypoints/http/planRouteScopeParser.ts"
             ],
-            "expectedFailure": "ImportPlan current authority retains stale symbols, tests, or noncanonical source identity."
+            "expectedFailure": "Shared plan-route authentication symbols are absent from current rail authority."
           }
         ],
         "componentGuides": [
@@ -136296,7 +136556,8 @@
             "dddOwner": "Plan import application service",
             "negativeTests": [
               "Reject missing authentication, malformed canonical requests, and ownership mismatch.",
-              "Reject missing authentication, cross-scope plans, malformed payloads, and persistence failures."
+              "Reject missing authentication, cross-scope plans, malformed payloads, and persistence failures.",
+              "Reject missing authentication before exposing semantic contract failures."
             ],
             "adapterSurface": "POST /plans/import",
             "applicationPort": "ImportPlanUseCase.execute",
@@ -136305,9 +136566,10 @@
         ],
         "architectureGuards": [
           "ImportPlan uses canonical ownership and rejects tenant, project, or environment mismatch.",
-          "ImportPlan authorizes canonical scope before persisting exactly once."
+          "ImportPlan authorizes canonical scope before persisting exactly once.",
+          "ImportPlan authenticates and authorizes scope before canonical contract validation."
         ],
-        "implementationPlan": "https://github.com/dunay2/dvt/issues/2166",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2168",
         "mechanizationStatus": "implemented",
         "noHumanDecisionsRemaining": true,
         "allowedImplementationSurfaces": [
@@ -136316,7 +136578,9 @@
           "apps/api/src/entrypoints/http/importPlanRouteParser.ts",
           "apps/api/src/entrypoints/http/importPlanRouteResponseMapper.ts",
           "apps/api/src/entrypoints/http/planRoutePlannerEnvelopeParser.ts",
-          "apps/api/src/entrypoints/http/planRouteScope.ts"
+          "apps/api/src/entrypoints/http/planRouteScope.ts",
+          "apps/api/src/entrypoints/http/planRouteRequestResolver.ts",
+          "apps/api/src/entrypoints/http/planRouteScopeParser.ts"
         ],
         "forbiddenImplementationSurfaces": [
           "apps/api/src/entrypoints/http/importPlanRouteRequestResolver.ts",
@@ -136324,7 +136588,7 @@
           "docs/archive/**"
         ]
       },
-      "revision": 1,
+      "revision": 2,
       "createdBy": "codex",
       "createdAt": "2026-08-13T08:58:55.096Z"
     },
@@ -137063,7 +137327,15 @@
         "apps/api/src/entrypoints/http/compilePlanRoute.ts#compilePlanRoute",
         "apps/api/src/entrypoints/http/planCompileRouteInputParser.ts#ParsedPlanCompileRouteInput",
         "apps/api/src/entrypoints/http/planCompileRouteInputParser.ts#parsePlanCompileRouteInput",
-        "apps/api/src/entrypoints/http/compilePlanRouteResponseMapper.ts#mapCompilePlanUseCaseResult"
+        "apps/api/src/entrypoints/http/compilePlanRouteResponseMapper.ts#mapCompilePlanUseCaseResult",
+        "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#PlanRouteAuthorizationResolverDeps",
+        "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#ResolvedAuthorizedPlanRouteRequest",
+        "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#AuthorizedPlanRouteRequestResolverOptions",
+        "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#resolveAuthorizedPlanRouteRequest",
+        "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#createAuthorizedPlanRouteRequestResolver",
+        "apps/api/src/entrypoints/http/planRouteScopeParser.ts#ParsedPlanRouteScope",
+        "apps/api/src/entrypoints/http/planRouteScopeParser.ts#parsePlanRouteRequestedScope",
+        "apps/api/src/entrypoints/http/planRouteScopeParser.ts#parsePlanRouteScope"
       ],
       "implementationRefs": [
         "apps/api/src/application/services/CompilePlanUseCase.ts#CompilePlanCommand",
@@ -137074,7 +137346,15 @@
         "apps/api/src/entrypoints/http/compilePlanRoute.ts#compilePlanRoute",
         "apps/api/src/entrypoints/http/planCompileRouteInputParser.ts#ParsedPlanCompileRouteInput",
         "apps/api/src/entrypoints/http/planCompileRouteInputParser.ts#parsePlanCompileRouteInput",
-        "apps/api/src/entrypoints/http/compilePlanRouteResponseMapper.ts#mapCompilePlanUseCaseResult"
+        "apps/api/src/entrypoints/http/compilePlanRouteResponseMapper.ts#mapCompilePlanUseCaseResult",
+        "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#PlanRouteAuthorizationResolverDeps",
+        "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#ResolvedAuthorizedPlanRouteRequest",
+        "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#AuthorizedPlanRouteRequestResolverOptions",
+        "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#resolveAuthorizedPlanRouteRequest",
+        "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#createAuthorizedPlanRouteRequestResolver",
+        "apps/api/src/entrypoints/http/planRouteScopeParser.ts#ParsedPlanRouteScope",
+        "apps/api/src/entrypoints/http/planRouteScopeParser.ts#parsePlanRouteRequestedScope",
+        "apps/api/src/entrypoints/http/planRouteScopeParser.ts#parsePlanRouteScope"
       ],
       "documentationRefs": ["https://github.com/dunay2/dvt/issues/2168"],
       "governingSources": [
@@ -137085,14 +137365,18 @@
         "apps/api/src/application/services/CompilePlanUseCase.ts",
         "apps/api/src/entrypoints/http/compilePlanRoute.ts",
         "apps/api/src/entrypoints/http/planCompileRouteInputParser.ts",
-        "apps/api/src/entrypoints/http/compilePlanRouteResponseMapper.ts"
+        "apps/api/src/entrypoints/http/compilePlanRouteResponseMapper.ts",
+        "apps/api/src/entrypoints/http/planRouteRequestResolver.ts",
+        "apps/api/src/entrypoints/http/planRouteScopeParser.ts"
       ],
       "architectureGuards": [
-        "CompilePlan validates authentication and the canonical compile request without persistence."
+        "CompilePlan validates authentication and the canonical compile request without persistence.",
+        "CompilePlan authenticates and authorizes scope before canonical contract validation."
       ],
       "completionGate": [
         "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/entrypoints/http/compilePlanRoute.test.ts test/application/services/CompilePlanUseCase.test.ts",
-        "pnpm verify:prepush"
+        "pnpm verify:prepush",
+        "pnpm docs:feature-mechanization:implementation"
       ],
       "sourcePath": "apps/api/src/application/services/CompilePlanUseCase.ts",
       "sourceContentSha256": "3a67d0deaa3e41d6d274f94e9f9676211d89de7b68caf0110975e448b00d3875",
@@ -137102,7 +137386,8 @@
         "status": "implemented",
         "dddOwner": "Plan compile application service",
         "negativeTests": [
-          "Reject missing authentication and malformed canonical compile requests."
+          "Reject missing authentication and malformed canonical compile requests.",
+          "Reject missing authentication before exposing semantic contract failures."
         ],
         "adapterSurface": "POST /plans/compile",
         "applicationPort": "CompilePlanUseCase.execute",
@@ -137244,6 +137529,126 @@
             ],
             "cypressCoverage": "N/A - supported public API contract with no web consumer.",
             "architectureGuard": "CompilePlan validates authentication and the canonical compile request without persistence."
+          },
+          {
+            "name": "PlanRouteAuthorizationResolverDeps",
+            "path": "apps/api/src/entrypoints/http/planRouteRequestResolver.ts",
+            "cqRails": ["CompilePlan"],
+            "dddOwner": "Plan compile application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/compilePlanRoute.test.ts",
+              "apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts"
+            ],
+            "fowlerSignals": [
+              "One shared authentication boundary precedes endpoint contract validation."
+            ],
+            "cypressCoverage": "N/A - supported public API contract with no web consumer.",
+            "architectureGuard": "CompilePlan authenticates and authorizes scope before canonical contract validation."
+          },
+          {
+            "name": "ResolvedAuthorizedPlanRouteRequest",
+            "path": "apps/api/src/entrypoints/http/planRouteRequestResolver.ts",
+            "cqRails": ["CompilePlan"],
+            "dddOwner": "Plan compile application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/compilePlanRoute.test.ts",
+              "apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts"
+            ],
+            "fowlerSignals": [
+              "One shared authentication boundary precedes endpoint contract validation."
+            ],
+            "cypressCoverage": "N/A - supported public API contract with no web consumer.",
+            "architectureGuard": "CompilePlan authenticates and authorizes scope before canonical contract validation."
+          },
+          {
+            "name": "AuthorizedPlanRouteRequestResolverOptions",
+            "path": "apps/api/src/entrypoints/http/planRouteRequestResolver.ts",
+            "cqRails": ["CompilePlan"],
+            "dddOwner": "Plan compile application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/compilePlanRoute.test.ts",
+              "apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts"
+            ],
+            "fowlerSignals": [
+              "One shared authentication boundary precedes endpoint contract validation."
+            ],
+            "cypressCoverage": "N/A - supported public API contract with no web consumer.",
+            "architectureGuard": "CompilePlan authenticates and authorizes scope before canonical contract validation."
+          },
+          {
+            "name": "resolveAuthorizedPlanRouteRequest",
+            "path": "apps/api/src/entrypoints/http/planRouteRequestResolver.ts",
+            "cqRails": ["CompilePlan"],
+            "dddOwner": "Plan compile application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/compilePlanRoute.test.ts",
+              "apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts"
+            ],
+            "fowlerSignals": [
+              "One shared authentication boundary precedes endpoint contract validation."
+            ],
+            "cypressCoverage": "N/A - supported public API contract with no web consumer.",
+            "architectureGuard": "CompilePlan authenticates and authorizes scope before canonical contract validation."
+          },
+          {
+            "name": "createAuthorizedPlanRouteRequestResolver",
+            "path": "apps/api/src/entrypoints/http/planRouteRequestResolver.ts",
+            "cqRails": ["CompilePlan"],
+            "dddOwner": "Plan compile application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/compilePlanRoute.test.ts",
+              "apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts"
+            ],
+            "fowlerSignals": [
+              "One shared authentication boundary precedes endpoint contract validation."
+            ],
+            "cypressCoverage": "N/A - supported public API contract with no web consumer.",
+            "architectureGuard": "CompilePlan authenticates and authorizes scope before canonical contract validation."
+          },
+          {
+            "name": "ParsedPlanRouteScope",
+            "path": "apps/api/src/entrypoints/http/planRouteScopeParser.ts",
+            "cqRails": ["CompilePlan"],
+            "dddOwner": "Plan compile application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/compilePlanRoute.test.ts",
+              "apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts"
+            ],
+            "fowlerSignals": [
+              "One shared authentication boundary precedes endpoint contract validation."
+            ],
+            "cypressCoverage": "N/A - supported public API contract with no web consumer.",
+            "architectureGuard": "CompilePlan authenticates and authorizes scope before canonical contract validation."
+          },
+          {
+            "name": "parsePlanRouteRequestedScope",
+            "path": "apps/api/src/entrypoints/http/planRouteScopeParser.ts",
+            "cqRails": ["CompilePlan"],
+            "dddOwner": "Plan compile application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/compilePlanRoute.test.ts",
+              "apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts"
+            ],
+            "fowlerSignals": [
+              "One shared authentication boundary precedes endpoint contract validation."
+            ],
+            "cypressCoverage": "N/A - supported public API contract with no web consumer.",
+            "architectureGuard": "CompilePlan authenticates and authorizes scope before canonical contract validation."
+          },
+          {
+            "name": "parsePlanRouteScope",
+            "path": "apps/api/src/entrypoints/http/planRouteScopeParser.ts",
+            "cqRails": ["CompilePlan"],
+            "dddOwner": "Plan compile application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/compilePlanRoute.test.ts",
+              "apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts"
+            ],
+            "fowlerSignals": [
+              "One shared authentication boundary precedes endpoint contract validation."
+            ],
+            "cypressCoverage": "N/A - supported public API contract with no web consumer.",
+            "architectureGuard": "CompilePlan authenticates and authorizes scope before canonical contract validation."
           }
         ],
         "version": 1,
@@ -137254,11 +137659,13 @@
         ],
         "domainObjects": ["CompilePlanRequestV1"],
         "fowlerSignals": [
-          "One CompilePlan command owns canonical parsing, use-case execution, and response mapping."
+          "One CompilePlan command owns canonical parsing, use-case execution, and response mapping.",
+          "One shared authentication boundary precedes endpoint contract validation."
         ],
         "completionGate": [
           "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/entrypoints/http/compilePlanRoute.test.ts test/application/services/CompilePlanUseCase.test.ts",
-          "pnpm verify:prepush"
+          "pnpm verify:prepush",
+          "pnpm docs:feature-mechanization:implementation"
         ],
         "redGreenCycles": [
           {
@@ -137267,9 +137674,11 @@
             "greenTest": "pnpm docs:feature-mechanization:implementation",
             "patchSurfaces": [
               "apps/api/src/application/services/CompilePlanUseCase.ts",
-              "apps/api/src/entrypoints/http/compilePlanRoute.ts"
+              "apps/api/src/entrypoints/http/compilePlanRoute.ts",
+              "apps/api/src/entrypoints/http/planRouteRequestResolver.ts",
+              "apps/api/src/entrypoints/http/planRouteScopeParser.ts"
             ],
-            "expectedFailure": "CompilePlan current authority contains an absent route or response-mapper symbol."
+            "expectedFailure": "Shared plan-route authentication symbols are absent from current rail authority."
           }
         ],
         "componentGuides": [
@@ -137286,7 +137695,8 @@
             "status": "implemented",
             "dddOwner": "Plan compile application service",
             "negativeTests": [
-              "Reject missing authentication and malformed canonical compile requests."
+              "Reject missing authentication and malformed canonical compile requests.",
+              "Reject missing authentication before exposing semantic contract failures."
             ],
             "adapterSurface": "POST /plans/compile",
             "applicationPort": "CompilePlanUseCase.execute",
@@ -137294,7 +137704,8 @@
           }
         ],
         "architectureGuards": [
-          "CompilePlan validates authentication and the canonical compile request without persistence."
+          "CompilePlan validates authentication and the canonical compile request without persistence.",
+          "CompilePlan authenticates and authorizes scope before canonical contract validation."
         ],
         "implementationPlan": "https://github.com/dunay2/dvt/issues/2168",
         "mechanizationStatus": "implemented",
@@ -137303,14 +137714,16 @@
           "apps/api/src/application/services/CompilePlanUseCase.ts",
           "apps/api/src/entrypoints/http/compilePlanRoute.ts",
           "apps/api/src/entrypoints/http/planCompileRouteInputParser.ts",
-          "apps/api/src/entrypoints/http/compilePlanRouteResponseMapper.ts"
+          "apps/api/src/entrypoints/http/compilePlanRouteResponseMapper.ts",
+          "apps/api/src/entrypoints/http/planRouteRequestResolver.ts",
+          "apps/api/src/entrypoints/http/planRouteScopeParser.ts"
         ],
         "forbiddenImplementationSurfaces": [
           "apps/api/src/entrypoints/http/compilePlanRouteRequestResolver.ts",
           "apps/api/src/entrypoints/http/planRouteResponseTranslation.ts"
         ]
       },
-      "revision": 0,
+      "revision": 1,
       "createdBy": "codex",
       "createdAt": "2026-08-13T08:59:20.982Z"
     },
@@ -153039,7 +153452,15 @@
         "apps/api/src/entrypoints/http/previewPlanRouteResponseMapper.ts#buildPreviewResponse",
         "apps/api/src/entrypoints/http/routeParseIssue.ts#RouteParseErrorType",
         "apps/api/src/entrypoints/http/routeParseIssue.ts#unprocessableIssue",
-        "apps/api/src/entrypoints/http/routeParseIssue.ts#unprocessableResult"
+        "apps/api/src/entrypoints/http/routeParseIssue.ts#unprocessableResult",
+        "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#PlanRouteAuthorizationResolverDeps",
+        "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#ResolvedAuthorizedPlanRouteRequest",
+        "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#AuthorizedPlanRouteRequestResolverOptions",
+        "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#resolveAuthorizedPlanRouteRequest",
+        "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#createAuthorizedPlanRouteRequestResolver",
+        "apps/api/src/entrypoints/http/planRouteScopeParser.ts#ParsedPlanRouteScope",
+        "apps/api/src/entrypoints/http/planRouteScopeParser.ts#parsePlanRouteRequestedScope",
+        "apps/api/src/entrypoints/http/planRouteScopeParser.ts#parsePlanRouteScope"
       ],
       "implementationRefs": [
         "packages/@dvt/contracts/src/contracts/planner/PlanExecutionDecision.v1.ts#PlanExecutionDecision",
@@ -153062,7 +153483,15 @@
         "apps/api/src/entrypoints/http/previewPlanRouteResponseMapper.ts#buildPreviewResponse",
         "apps/api/src/entrypoints/http/routeParseIssue.ts#RouteParseErrorType",
         "apps/api/src/entrypoints/http/routeParseIssue.ts#unprocessableIssue",
-        "apps/api/src/entrypoints/http/routeParseIssue.ts#unprocessableResult"
+        "apps/api/src/entrypoints/http/routeParseIssue.ts#unprocessableResult",
+        "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#PlanRouteAuthorizationResolverDeps",
+        "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#ResolvedAuthorizedPlanRouteRequest",
+        "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#AuthorizedPlanRouteRequestResolverOptions",
+        "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#resolveAuthorizedPlanRouteRequest",
+        "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#createAuthorizedPlanRouteRequestResolver",
+        "apps/api/src/entrypoints/http/planRouteScopeParser.ts#ParsedPlanRouteScope",
+        "apps/api/src/entrypoints/http/planRouteScopeParser.ts#parsePlanRouteRequestedScope",
+        "apps/api/src/entrypoints/http/planRouteScopeParser.ts#parsePlanRouteScope"
       ],
       "documentationRefs": [
         {
@@ -153322,12 +153751,15 @@
         "apps/api/src/entrypoints/http/previewPlanRouteResponseMapper.ts",
         "apps/api/src/entrypoints/http/routeParseIssue.ts",
         "apps/web/src/app/components/PlanExecutionDecisionView.tsx",
-        "apps/web/src/app/components/PlanPreviewModal.tsx"
+        "apps/web/src/app/components/PlanPreviewModal.tsx",
+        "apps/api/src/entrypoints/http/planRouteRequestResolver.ts",
+        "apps/api/src/entrypoints/http/planRouteScopeParser.ts"
       ],
       "architectureGuards": [
         "[object Object]",
         "PreviewPlan parses the canonical contract and persists and validates exactly once.",
-        "pnpm exec vitest run packages/@dvt/contracts/test/planner.contract.test.ts packages/@dvt/planner/test/unit/planner-facade.test.ts"
+        "pnpm exec vitest run packages/@dvt/contracts/test/planner.contract.test.ts packages/@dvt/planner/test/unit/planner-facade.test.ts",
+        "PreviewPlan authenticates and authorizes scope before canonical contract validation."
       ],
       "completionGate": [
         "node --test tools/ci/run-web-cypress-native.test.mjs",
@@ -153351,7 +153783,8 @@
         "status": "implemented",
         "dddOwner": "Plan preview application service",
         "negativeTests": [
-          "Reject missing authentication, malformed canonical requests, and persistence or validation failures."
+          "Reject missing authentication, malformed canonical requests, and persistence or validation failures.",
+          "Reject missing authentication before exposing semantic contract failures."
         ],
         "adapterSurface": "POST /plans/preview",
         "applicationPort": "PreviewPlanUseCase.execute",
@@ -153778,6 +154211,126 @@
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts",
             "architectureGuard": "PreviewPlan parses the canonical contract and persists and validates exactly once."
+          },
+          {
+            "name": "PlanRouteAuthorizationResolverDeps",
+            "path": "apps/api/src/entrypoints/http/planRouteRequestResolver.ts",
+            "cqRails": ["PreviewPlan"],
+            "dddOwner": "Plan preview application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts",
+              "apps/api/test/entrypoints/http/previewPlanRoute.auth.test.ts"
+            ],
+            "fowlerSignals": [
+              "One shared authentication boundary precedes endpoint contract validation."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts",
+            "architectureGuard": "PreviewPlan authenticates and authorizes scope before canonical contract validation."
+          },
+          {
+            "name": "ResolvedAuthorizedPlanRouteRequest",
+            "path": "apps/api/src/entrypoints/http/planRouteRequestResolver.ts",
+            "cqRails": ["PreviewPlan"],
+            "dddOwner": "Plan preview application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts",
+              "apps/api/test/entrypoints/http/previewPlanRoute.auth.test.ts"
+            ],
+            "fowlerSignals": [
+              "One shared authentication boundary precedes endpoint contract validation."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts",
+            "architectureGuard": "PreviewPlan authenticates and authorizes scope before canonical contract validation."
+          },
+          {
+            "name": "AuthorizedPlanRouteRequestResolverOptions",
+            "path": "apps/api/src/entrypoints/http/planRouteRequestResolver.ts",
+            "cqRails": ["PreviewPlan"],
+            "dddOwner": "Plan preview application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts",
+              "apps/api/test/entrypoints/http/previewPlanRoute.auth.test.ts"
+            ],
+            "fowlerSignals": [
+              "One shared authentication boundary precedes endpoint contract validation."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts",
+            "architectureGuard": "PreviewPlan authenticates and authorizes scope before canonical contract validation."
+          },
+          {
+            "name": "resolveAuthorizedPlanRouteRequest",
+            "path": "apps/api/src/entrypoints/http/planRouteRequestResolver.ts",
+            "cqRails": ["PreviewPlan"],
+            "dddOwner": "Plan preview application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts",
+              "apps/api/test/entrypoints/http/previewPlanRoute.auth.test.ts"
+            ],
+            "fowlerSignals": [
+              "One shared authentication boundary precedes endpoint contract validation."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts",
+            "architectureGuard": "PreviewPlan authenticates and authorizes scope before canonical contract validation."
+          },
+          {
+            "name": "createAuthorizedPlanRouteRequestResolver",
+            "path": "apps/api/src/entrypoints/http/planRouteRequestResolver.ts",
+            "cqRails": ["PreviewPlan"],
+            "dddOwner": "Plan preview application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts",
+              "apps/api/test/entrypoints/http/previewPlanRoute.auth.test.ts"
+            ],
+            "fowlerSignals": [
+              "One shared authentication boundary precedes endpoint contract validation."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts",
+            "architectureGuard": "PreviewPlan authenticates and authorizes scope before canonical contract validation."
+          },
+          {
+            "name": "ParsedPlanRouteScope",
+            "path": "apps/api/src/entrypoints/http/planRouteScopeParser.ts",
+            "cqRails": ["PreviewPlan"],
+            "dddOwner": "Plan preview application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts",
+              "apps/api/test/entrypoints/http/previewPlanRoute.auth.test.ts"
+            ],
+            "fowlerSignals": [
+              "One shared authentication boundary precedes endpoint contract validation."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts",
+            "architectureGuard": "PreviewPlan authenticates and authorizes scope before canonical contract validation."
+          },
+          {
+            "name": "parsePlanRouteRequestedScope",
+            "path": "apps/api/src/entrypoints/http/planRouteScopeParser.ts",
+            "cqRails": ["PreviewPlan"],
+            "dddOwner": "Plan preview application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts",
+              "apps/api/test/entrypoints/http/previewPlanRoute.auth.test.ts"
+            ],
+            "fowlerSignals": [
+              "One shared authentication boundary precedes endpoint contract validation."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts",
+            "architectureGuard": "PreviewPlan authenticates and authorizes scope before canonical contract validation."
+          },
+          {
+            "name": "parsePlanRouteScope",
+            "path": "apps/api/src/entrypoints/http/planRouteScopeParser.ts",
+            "cqRails": ["PreviewPlan"],
+            "dddOwner": "Plan preview application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts",
+              "apps/api/test/entrypoints/http/previewPlanRoute.auth.test.ts"
+            ],
+            "fowlerSignals": [
+              "One shared authentication boundary precedes endpoint contract validation."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts",
+            "architectureGuard": "PreviewPlan authenticates and authorizes scope before canonical contract validation."
           }
         ],
         "version": 1,
@@ -153836,7 +154389,8 @@
           "test-only confidence",
           "documentation drift",
           "hidden environment coupling",
-          "One PreviewPlan intent owns parsing, persistence, validation, projection, and presentation."
+          "One PreviewPlan intent owns parsing, persistence, validation, projection, and presentation.",
+          "One shared authentication boundary precedes endpoint contract validation."
         ],
         "completionGate": [
           "node --test tools/ci/run-web-cypress-native.test.mjs",
@@ -153970,9 +154524,11 @@
               "apps/api/src/entrypoints/http/previewPlanRouteResponseMapper.ts",
               "apps/api/src/entrypoints/http/routeParseIssue.ts",
               "apps/web/src/app/components/PlanExecutionDecisionView.tsx",
-              "apps/web/src/app/components/PlanPreviewModal.tsx"
+              "apps/web/src/app/components/PlanPreviewModal.tsx",
+              "apps/api/src/entrypoints/http/planRouteRequestResolver.ts",
+              "apps/api/src/entrypoints/http/planRouteScopeParser.ts"
             ],
-            "expectedFailure": "PreviewPlan authority retains inherited symbols that do not exist in the current implementation."
+            "expectedFailure": "Shared plan-route authentication symbols are absent from current rail authority."
           }
         ],
         "componentGuides": [
@@ -154029,7 +154585,8 @@
             "status": "implemented",
             "dddOwner": "Plan preview application service",
             "negativeTests": [
-              "Reject missing authentication, malformed canonical requests, and persistence or validation failures."
+              "Reject missing authentication, malformed canonical requests, and persistence or validation failures.",
+              "Reject missing authentication before exposing semantic contract failures."
             ],
             "adapterSurface": "POST /plans/preview",
             "applicationPort": "PreviewPlanUseCase.execute",
@@ -154052,7 +154609,8 @@
             "command": "pnpm --filter @dvt/web test -- canvasStartupAndDraftRecovery.architecture.test.ts"
           },
           "PreviewPlan parses the canonical contract and persists and validates exactly once.",
-          "pnpm exec vitest run packages/@dvt/contracts/test/planner.contract.test.ts packages/@dvt/planner/test/unit/planner-facade.test.ts"
+          "pnpm exec vitest run packages/@dvt/contracts/test/planner.contract.test.ts packages/@dvt/planner/test/unit/planner-facade.test.ts",
+          "PreviewPlan authenticates and authorizes scope before canonical contract validation."
         ],
         "implementationPlan": "https://github.com/dunay2/dvt/issues/2168",
         "mechanizationStatus": "implemented",
@@ -154113,15 +154671,18 @@
           "apps/api/src/entrypoints/http/previewPlanRouteResponseMapper.ts",
           "apps/api/src/entrypoints/http/routeParseIssue.ts",
           "apps/web/src/app/components/PlanExecutionDecisionView.tsx",
-          "apps/web/src/app/components/PlanPreviewModal.tsx"
+          "apps/web/src/app/components/PlanPreviewModal.tsx",
+          "apps/api/src/entrypoints/http/planRouteRequestResolver.ts",
+          "apps/api/src/entrypoints/http/planRouteScopeParser.ts"
         ],
         "forbiddenImplementationSurfaces": [
           "apps/web/src/app/services/api/** token refresh behavior",
           "apps/web/src/app/services/api/** JWT decoding",
-          "docs/archive/**"
+          "docs/archive/**",
+          "apps/api/src/entrypoints/http/previewPlanRouteRequestResolver.ts"
         ]
       },
-      "revision": 2,
+      "revision": 3,
       "createdBy": "codex",
       "createdAt": "2026-08-13T08:52:44.193Z"
     },
@@ -185989,6 +186550,250 @@
         ]
       },
       "createdAt": "2026-08-13T09:35:05.973Z"
+    },
+    {
+      "operationId": "3b24c647-a63c-4f8a-8ec1-96ce2c0a8adb",
+      "idempotencyKey": "feature_mechanization_rail_record:codex-gh-2168-review:GH-2168-PLAN-LIFECYCLE-HARDCUT:command:compileplan:0:147f8b79ce8295e7",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex-gh-2168-review",
+      "railId": "local#GH-2168-PLAN-LIFECYCLE-HARDCUT#command#compileplan",
+      "sourcePath": "apps/api/src/application/services/CompilePlanUseCase.ts",
+      "sourceContentSha256": "3a67d0deaa3e41d6d274f94e9f9676211d89de7b68caf0110975e448b00d3875",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "pnpm docs:feature-mechanization:implementation",
+        "dddOwner": "Plan compile application service",
+        "railName": "CompilePlan",
+        "railType": "command",
+        "featureId": "GH-2168-PLAN-LIFECYCLE-HARDCUT",
+        "greenTest": "pnpm docs:feature-mechanization:implementation",
+        "sourceRef": "apps/api/src/application/services/CompilePlanUseCase.ts",
+        "unitTests": [
+          "apps/api/test/entrypoints/http/compilePlanRoute.test.ts",
+          "apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2168"],
+        "cypressFlows": [
+          "N/A - supported public API contract with no web consumer."
+        ],
+        "domainObjects": ["CompilePlanRequestV1"],
+        "fowlerSignals": [
+          "One shared authentication boundary precedes endpoint contract validation."
+        ],
+        "negativeTests": [
+          "Reject missing authentication before exposing semantic contract failures."
+        ],
+        "patchSurfaces": [
+          "apps/api/src/entrypoints/http/planRouteRequestResolver.ts",
+          "apps/api/src/entrypoints/http/planRouteScopeParser.ts"
+        ],
+        "adapterSurface": "POST /plans/compile",
+        "completionGate": [
+          "pnpm verify:prepush",
+          "pnpm docs:feature-mechanization:implementation"
+        ],
+        "applicationPort": "CompilePlanUseCase.execute",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Shared plan-route authentication symbols are absent from current rail authority.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": ["https://github.com/dunay2/dvt/issues/2168"],
+        "architectureGuards": [
+          "CompilePlan authenticates and authorizes scope before canonical contract validation."
+        ],
+        "authorizationScope": "Authenticated run:start permission within canonical tenant/project/environment scope.",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2168",
+        "implementationRefs": [
+          "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#PlanRouteAuthorizationResolverDeps",
+          "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#ResolvedAuthorizedPlanRouteRequest",
+          "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#AuthorizedPlanRouteRequestResolverOptions",
+          "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#resolveAuthorizedPlanRouteRequest",
+          "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#createAuthorizedPlanRouteRequestResolver",
+          "apps/api/src/entrypoints/http/planRouteScopeParser.ts#ParsedPlanRouteScope",
+          "apps/api/src/entrypoints/http/planRouteScopeParser.ts#parsePlanRouteRequestedScope",
+          "apps/api/src/entrypoints/http/planRouteScopeParser.ts#parsePlanRouteScope"
+        ],
+        "normalizedRailName": "compileplan",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "3a67d0deaa3e41d6d274f94e9f9676211d89de7b68caf0110975e448b00d3875",
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/planRouteRequestResolver.ts",
+          "apps/api/src/entrypoints/http/planRouteScopeParser.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/compilePlanRouteRequestResolver.ts"
+        ]
+      },
+      "createdAt": "2026-08-13T09:53:43.451Z"
+    },
+    {
+      "operationId": "8f275cc0-3fc4-4069-8ee3-c88ec4b6bd75",
+      "idempotencyKey": "feature_mechanization_rail_record:codex-gh-2168-review:GH-2166-STORED-PLAN-AUTHORITY:command:importplan:1:e269ffbe202efd58",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex-gh-2168-review",
+      "railId": "local#GH-2166-STORED-PLAN-AUTHORITY#command#importplan",
+      "sourcePath": "apps/api/src/application/services/ImportPlanUseCase.ts",
+      "sourceContentSha256": "13bfd5c84fa801aaeb58b68c06d25443899aa4a45852bb0b5e7acd889990713e",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "pnpm docs:feature-mechanization:implementation",
+        "dddOwner": "Plan import application service",
+        "railName": "ImportPlan",
+        "railType": "command",
+        "featureId": "GH-2166-STORED-PLAN-AUTHORITY",
+        "greenTest": "pnpm docs:feature-mechanization:implementation",
+        "sourceRef": "apps/api/src/application/services/ImportPlanUseCase.ts",
+        "unitTests": [
+          "apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts",
+          "apps/api/test/entrypoints/http/importPlanRoute.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2168"],
+        "cypressFlows": ["N/A - API route contract"],
+        "domainObjects": ["PlanRecord"],
+        "fowlerSignals": [
+          "One shared authentication boundary precedes endpoint contract validation."
+        ],
+        "negativeTests": [
+          "Reject missing authentication before exposing semantic contract failures."
+        ],
+        "patchSurfaces": [
+          "apps/api/src/entrypoints/http/planRouteRequestResolver.ts",
+          "apps/api/src/entrypoints/http/planRouteScopeParser.ts"
+        ],
+        "adapterSurface": "POST /plans/import",
+        "completionGate": [
+          "pnpm verify:prepush",
+          "pnpm docs:feature-mechanization:implementation"
+        ],
+        "applicationPort": "ImportPlanUseCase.execute",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Shared plan-route authentication symbols are absent from current rail authority.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": ["https://github.com/dunay2/dvt/issues/2168"],
+        "architectureGuards": [
+          "ImportPlan authenticates and authorizes scope before canonical contract validation."
+        ],
+        "authorizationScope": "Authenticated run:start permission within canonical tenant/project/environment scope.",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2168",
+        "implementationRefs": [
+          "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#PlanRouteAuthorizationResolverDeps",
+          "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#ResolvedAuthorizedPlanRouteRequest",
+          "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#AuthorizedPlanRouteRequestResolverOptions",
+          "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#resolveAuthorizedPlanRouteRequest",
+          "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#createAuthorizedPlanRouteRequestResolver",
+          "apps/api/src/entrypoints/http/planRouteScopeParser.ts#ParsedPlanRouteScope",
+          "apps/api/src/entrypoints/http/planRouteScopeParser.ts#parsePlanRouteRequestedScope",
+          "apps/api/src/entrypoints/http/planRouteScopeParser.ts#parsePlanRouteScope"
+        ],
+        "normalizedRailName": "importplan",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "13bfd5c84fa801aaeb58b68c06d25443899aa4a45852bb0b5e7acd889990713e",
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/planRouteRequestResolver.ts",
+          "apps/api/src/entrypoints/http/planRouteScopeParser.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/importPlanRouteRequestResolver.ts"
+        ]
+      },
+      "createdAt": "2026-08-13T09:54:11.225Z"
+    },
+    {
+      "operationId": "8ad635a6-ed6d-4aff-8d05-97d3debec5dd",
+      "idempotencyKey": "feature_mechanization_rail_record:codex-gh-2168-review:TF-E2-M-B:command:previewplan:2:3b9436fc71950dc6",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex-gh-2168-review",
+      "railId": "local#TF-E2-M-B#command#previewplan",
+      "sourcePath": "apps/api/src/application/services/PreviewPlanUseCase.ts",
+      "sourceContentSha256": "a7ddd9fade1c7fadba394f4779c98a14b3893a739283142bafad38990b86a7b4",
+      "expectedRevision": 2,
+      "previousRevision": 2,
+      "resultingRevision": 3,
+      "payload": {
+        "redTest": "pnpm docs:feature-mechanization:implementation",
+        "dddOwner": "Plan preview application service",
+        "railName": "PreviewPlan",
+        "railType": "command",
+        "featureId": "TF-E2-M-B",
+        "greenTest": "pnpm docs:feature-mechanization:implementation",
+        "sourceRef": "apps/api/src/application/services/PreviewPlanUseCase.ts",
+        "unitTests": [
+          "apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts",
+          "apps/api/test/entrypoints/http/previewPlanRoute.auth.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2168"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts"
+        ],
+        "domainObjects": ["PlanExecutionDecision"],
+        "fowlerSignals": [
+          "One shared authentication boundary precedes endpoint contract validation."
+        ],
+        "negativeTests": [
+          "Reject missing authentication before exposing semantic contract failures."
+        ],
+        "patchSurfaces": [
+          "apps/api/src/entrypoints/http/planRouteRequestResolver.ts",
+          "apps/api/src/entrypoints/http/planRouteScopeParser.ts"
+        ],
+        "adapterSurface": "POST /plans/preview",
+        "completionGate": [
+          "pnpm verify:prepush",
+          "pnpm docs:feature-mechanization:implementation"
+        ],
+        "applicationPort": "PreviewPlanUseCase.execute",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Shared plan-route authentication symbols are absent from current rail authority.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": ["https://github.com/dunay2/dvt/issues/2168"],
+        "architectureGuards": [
+          "PreviewPlan authenticates and authorizes scope before canonical contract validation."
+        ],
+        "authorizationScope": "Authenticated run:start permission within canonical tenant/project/environment scope.",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2168",
+        "implementationRefs": [
+          "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#PlanRouteAuthorizationResolverDeps",
+          "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#ResolvedAuthorizedPlanRouteRequest",
+          "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#AuthorizedPlanRouteRequestResolverOptions",
+          "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#resolveAuthorizedPlanRouteRequest",
+          "apps/api/src/entrypoints/http/planRouteRequestResolver.ts#createAuthorizedPlanRouteRequestResolver",
+          "apps/api/src/entrypoints/http/planRouteScopeParser.ts#ParsedPlanRouteScope",
+          "apps/api/src/entrypoints/http/planRouteScopeParser.ts#parsePlanRouteRequestedScope",
+          "apps/api/src/entrypoints/http/planRouteScopeParser.ts#parsePlanRouteScope"
+        ],
+        "normalizedRailName": "previewplan",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "a7ddd9fade1c7fadba394f4779c98a14b3893a739283142bafad38990b86a7b4",
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/planRouteRequestResolver.ts",
+          "apps/api/src/entrypoints/http/planRouteScopeParser.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/previewPlanRouteRequestResolver.ts"
+        ]
+      },
+      "createdAt": "2026-08-13T09:54:12.601Z"
     }
   ],
   "governanceComponentDefinitions": [
