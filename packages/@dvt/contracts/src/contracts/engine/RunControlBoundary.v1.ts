@@ -1,4 +1,15 @@
-/** Canonical serialized vocabulary for the public run-control rail. */
+/**
+ * @file packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts
+ * @baseline ADR-0005: Contract Formalization Tooling
+ * @baseline ADR-0006: Contract Tooling Governance
+ * @baseline ADR-0007: Run Cancellation Semantics and Event Ownership
+ * @baseline ADR-0040: Retry Ownership and Attempt Authority
+ * @baseline ADR-0049: RETRY_RUN is a separate recovery use case
+ * @decision Publish one run-control boundary without exposing adapter-owned lifecycle authority
+ * @consequence API and web consumers share vocabulary while the engine owns behavior
+ * @version 1.0.0
+ * @date 2026-08-13
+ */
 import type { SignalType } from '../../types/contracts.js';
 
 export const RUN_CONTROL_CONTRACT_VERSION = 'v1' as const;
