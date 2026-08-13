@@ -190,4 +190,24 @@ describe('PostgresRunMetadataRepository upsertWithClient', () => {
 
     await expect(repo.getByRunId('tenant-a', 'run-a')).rejects.toThrow('RUN_METADATA_ROW_INVALID');
   });
+
+  it('applies project and environment scope before limiting run metadata', async () => {
+    const client = new RecordingClient();
+    const repo = new PostgresRunMetadataRepository('dvt', async (fn) => fn(client as never));
+
+    await repo.listRuns({
+      tenantId: 'tenant-a',
+      projectId: 'project-a',
+      environmentId: 'env-a',
+      limit: 1,
+    });
+
+    const query = client.queries.at(-1);
+    expect(query?.sql).toContain('project_id = $3');
+    expect(query?.sql).toContain('environment_id = $4');
+    expect(query?.sql.indexOf('project_id = $3')).toBeLessThan(
+      query?.sql.indexOf('LIMIT $1') ?? -1
+    );
+    expect(query?.params).toEqual([1, 'tenant-a', 'project-a', 'env-a']);
+  });
 });

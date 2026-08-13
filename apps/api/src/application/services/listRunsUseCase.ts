@@ -52,26 +52,19 @@ export class ListRunsUseCase implements IListRunsUseCase {
   ): Promise<ListRunsResult> {
     const metadata = await this.stateStore.listRuns({
       tenantId: context.scope.tenantId.value as ContractTenantId,
+      ...(context.scope.projectId === undefined
+        ? {}
+        : { projectId: context.scope.projectId.value }),
+      ...(context.scope.environmentId === undefined
+        ? {}
+        : { environmentId: context.scope.environmentId.value }),
       limit: query.limit,
     });
-
-    const filtered = metadata.filter((item) => {
-      if (context.scope.projectId && item.projectId !== context.scope.projectId.value) {
-        return false;
-      }
-
-      if (context.scope.environmentId && item.environmentId !== context.scope.environmentId.value) {
-        return false;
-      }
-
-      return true;
-    });
-
-    const statuses = await this.readCanonicalStatuses(filtered);
+    const statuses = await this.readCanonicalStatuses(metadata);
 
     return {
-      items: await this.projectListItems(filtered, statuses),
-      nextCursor: this.buildNextCursor(filtered, query.limit),
+      items: await this.projectListItems(metadata, statuses),
+      nextCursor: this.buildNextCursor(metadata, query.limit),
     };
   }
 

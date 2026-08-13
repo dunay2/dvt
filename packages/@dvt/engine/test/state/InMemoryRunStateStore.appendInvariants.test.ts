@@ -342,4 +342,69 @@ describe('InMemoryRunStateStore append invariants', () => {
     expect(events).toHaveLength(1);
     expect(events[0]?.eventType).toBe('RunQueued');
   });
+
+  it('filters project and environment before applying the run limit', async () => {
+    const store = new InMemoryRunStateStore();
+
+    await bootstrapQueuedRun(store, {
+      runId: 'run-in-scope',
+      projectId: 'project-a',
+      environmentId: 'env-a',
+    });
+    await bootstrapQueuedRun(store, {
+      runId: 'run-newer-out-of-scope',
+      projectId: 'project-b',
+      environmentId: 'env-b',
+    });
+
+    await expect(
+      store.listRuns({
+        tenantId: 'tenant-a',
+        projectId: 'project-a',
+        environmentId: 'env-a',
+        limit: 1,
+      })
+    ).resolves.toMatchObject([{ runId: 'run-in-scope' }]);
+  });
 });
+
+async function bootstrapQueuedRun(
+  store: InMemoryRunStateStore,
+  input: { readonly runId: string; readonly projectId: string; readonly environmentId: string }
+): Promise<void> {
+  await store.bootstrapRunTx({
+    metadata: {
+      tenantId: 'tenant-a',
+      projectId: input.projectId,
+      environmentId: input.environmentId,
+      runId: input.runId,
+      planId: `plan-${input.runId}`,
+      planVersion: '1.0.0',
+      logicalAttemptId: 1,
+      providerRef: {
+        provider: 'temporal',
+        tenantId: 'tenant-a',
+        namespace: 'default',
+        workflowId: `workflow-${input.runId}`,
+        runId: input.runId,
+      },
+    },
+    firstEvents: [
+      {
+        eventId: `event-${input.runId}`,
+        eventType: 'RunQueued',
+        runId: input.runId,
+        tenantId: 'tenant-a',
+        projectId: input.projectId,
+        environmentId: input.environmentId,
+        planId: `plan-${input.runId}`,
+        planVersion: '1.0.0',
+        logicalAttemptId: 1,
+        engineAttemptId: 1,
+        emittedAt: '2026-08-13T00:00:00.000Z',
+        idempotencyKey: `queued-${input.runId}`,
+        payloadVersion: 1,
+      },
+    ],
+  });
+}

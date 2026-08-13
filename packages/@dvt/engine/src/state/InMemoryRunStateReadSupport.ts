@@ -42,17 +42,20 @@ export function listInMemoryRunEvents(
 
 export function listInMemoryRuns(
   backing: InMemoryRunStateReadBacking,
-  tenantId: string,
-  status?: ListRunsOptions['status'],
-  limit = 50
+  options: ListRunsOptions
 ): RunMetadata[] {
   const all = Array.from(backing.metadataByRunId.values());
-  const byTenant = all.filter((metadata) => metadata.tenantId === tenantId);
+  const byScope = all.filter(
+    (metadata) =>
+      metadata.tenantId === options.tenantId &&
+      (options.projectId === undefined || metadata.projectId === options.projectId) &&
+      (options.environmentId === undefined || metadata.environmentId === options.environmentId)
+  );
   const byStatus =
-    status === undefined
-      ? byTenant
-      : byTenant.filter(
-          (metadata) => backing.snapshotByRunId.get(metadata.runId)?.status === status
+    options.status === undefined
+      ? byScope
+      : byScope.filter(
+          (metadata) => backing.snapshotByRunId.get(metadata.runId)?.status === options.status
         );
-  return byStatus.slice(-limit).reverse();
+  return byStatus.slice(-(options.limit ?? 50)).reverse();
 }

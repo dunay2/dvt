@@ -208,7 +208,7 @@ export class InMemoryRunStateCore implements IRunStateStore, IRunSnapshotStalene
   }
 
   async listRuns(options: ListRunsOptions): Promise<RunMetadata[]> {
-    return listInMemoryRuns(this, options.tenantId, options.status, options.limit);
+    return listInMemoryRuns(this, options);
   }
 
   async getSnapshot(tenantId: string, runId: string): Promise<WorkflowSnapshot | null> {

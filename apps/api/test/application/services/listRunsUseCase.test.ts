@@ -147,9 +147,9 @@ describe('ListRunsUseCase', () => {
     });
   });
 
-  it('filters by authorized scope and projects the same canonical operational truth as detail', async () => {
+  it('passes authorized scope to storage before projecting canonical operational truth', async () => {
     const stateStore = {
-      async listRuns() {
+      listRuns: vi.fn(async () => {
         return [
           {
             tenantId: 'tenant-a',
@@ -168,24 +168,8 @@ describe('ListRunsUseCase', () => {
             },
             createdAt: '2026-03-19T00:00:00Z',
           },
-          {
-            tenantId: 'tenant-a',
-            projectId: 'proj-2',
-            environmentId: 'env-1',
-            runId: 'run-2',
-            planId: 'plan-2',
-            planVersion: '1.0',
-            logicalAttemptId: 1,
-            providerRef: {
-              provider: 'temporal' as const,
-              tenantId: 'tenant-a',
-              namespace: 'default',
-              workflowId: 'wf-2',
-              runId: 'provider-run-2',
-            },
-          },
         ];
-      },
+      }),
     };
     const engine = {
       getRunStatus: vi.fn(async () => ({
@@ -274,6 +258,12 @@ describe('ListRunsUseCase', () => {
       nextCursor: null,
     });
     expect(engine.getRunStatus).toHaveBeenCalledOnce();
+    expect(stateStore.listRuns).toHaveBeenCalledWith({
+      tenantId: 'tenant-a',
+      projectId: 'proj-1',
+      environmentId: 'env-1',
+      limit: 25,
+    });
     expect(executionContextReader.read).toHaveBeenCalledWith({
       tenantId: 'tenant-a',
       runId: 'run-1',

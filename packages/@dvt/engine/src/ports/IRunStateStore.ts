@@ -5,6 +5,7 @@
 import type {
   EngineRunRef,
   IsoUtcString,
+  ListRunsOptions,
   Provider,
   RunExecutionEvidence,
   RunStatus,
@@ -117,17 +118,7 @@ export interface RunBootstrapInput {
   firstEvents: EventInput[];
 }
 
-export interface ListRunsOptions {
-  /** Tenant scope is mandatory to prevent cross-tenant leaks. */
-  tenantId: string;
-  /** Maximum records to return (default: 50). */
-  limit?: number;
-  /**
-   * Filter by snapshot status. Only returns runs whose materialized snapshot
-   * matches this status. Implementations without snapshot access may ignore this field.
-   */
-  status?: RunStatus;
-}
+export type { ListRunsOptions } from '@dvt/contracts';
 
 export interface ListEventsOptions {
   /**
