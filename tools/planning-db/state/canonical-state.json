@@ -13183,6 +13183,20 @@
         "updated_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
+        "design_id": "R1-1C-STORED-PLAN-AUTHORITY-20260812",
+        "work_item_id": "GH-2166",
+        "title": "Converge stored plan materialization and admission",
+        "owner": "API / Plan Store",
+        "status": "implemented",
+        "rationale": "Remove duplicated plan materialization, scoped-reference, and admission lifecycle algorithms while preserving the existing artifact reader modes and runtime boundaries.",
+        "fowler_signal": "responsibility_overload",
+        "rail_ref": "CreateStoredPlan;FetchPlanForValidation;FetchPlanForEngineDispatch;RecordPlanExecutability;PreviewExecutionPlan;StartRun",
+        "approved_at": "2026-08-13T01:09:41.829+00:00",
+        "supersedes_id": null,
+        "created_at": "2026-08-13T01:09:40.573+00:00",
+        "updated_at": "2026-08-13T01:22:42.156+00:00"
+      },
+      {
         "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
         "work_item_id": "GH-2167",
         "title": "API governance DB cleanup",
@@ -85911,6 +85925,30 @@
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
+        "design_id": "R1-1C-STORED-PLAN-AUTHORITY-20260812",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-APPLICATION-SERVICES",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T01:09:40.573+00:00"
+      },
+      {
+        "design_id": "R1-1C-STORED-PLAN-AUTHORITY-20260812",
+        "subject_kind": "component",
+        "subject_id": "SYS-PLANSTORE-API-COMPOSITION",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T01:09:40.573+00:00"
+      },
+      {
+        "design_id": "R1-1C-STORED-PLAN-AUTHORITY-20260812",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/application/services",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-13T01:09:40.573+00:00"
+      },
+      {
         "design_id": "R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810",
         "subject_kind": "component",
         "subject_id": "SYS-API-DOCS",
@@ -93746,6 +93784,52 @@
         "created_at": "2026-08-11T12:57:20.872+00:00"
       },
       {
+        "operation_id": "6146b757-dd4f-4f43-adb5-c753c7d03aa5",
+        "idempotency_key": "gh-2166-stored-plan-authority-create-v1",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "R1-1C-STORED-PLAN-AUTHORITY-20260812",
+        "source_ref": "GH-2166",
+        "source_content_sha256": "45bf878ab2adee3163836bc159d75b55bc8251fc2c6e0b27e223481af67f1eac",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "API / Plan Store",
+          "title": "Converge stored plan materialization and admission",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-PLANSTORE-API-COMPOSITION",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-API-APPLICATION-SERVICES",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/src/application/services",
+              "subjectKind": "path"
+            }
+          ],
+          "status": "review",
+          "railRef": "CreateStoredPlan;FetchPlanForValidation;FetchPlanForEngineDispatch;RecordPlanExecutability;PreviewExecutionPlan;StartRun",
+          "designId": "R1-1C-STORED-PLAN-AUTHORITY-20260812",
+          "rationale": "Remove duplicated plan materialization, scoped-reference, and admission lifecycle algorithms while preserving the existing artifact reader modes and runtime boundaries.",
+          "sourceRef": "GH-2166",
+          "workItemId": "GH-2166",
+          "fowlerSignal": "responsibility_overload",
+          "supersedesId": null,
+          "sourceContentSha256": "45bf878ab2adee3163836bc159d75b55bc8251fc2c6e0b27e223481af67f1eac"
+        },
+        "created_at": "2026-08-13T01:09:40.573+00:00"
+      },
+      {
         "operation_id": "620063ab-2af3-4147-91df-498fabf4d6c7",
         "idempotency_key": "codex-api-h2-2-push-base-v13-create",
         "operation_type": "architecture_design_create",
@@ -94227,6 +94311,27 @@
           "sourceContentSha256": "b077b5b8c2ffb478f82cb06988a069f54226d6a3af0a8caaca44d32a199195f0"
         },
         "created_at": "2026-08-10T22:05:42.795+00:00"
+      },
+      {
+        "operation_id": "6d5e00b8-4e27-4007-a0a1-fee22d98081a",
+        "idempotency_key": "gh-2166-stored-plan-authority-approve-v1",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "R1-1C-STORED-PLAN-AUTHORITY-20260812",
+        "source_ref": "GH-2166",
+        "source_content_sha256": "45bf878ab2adee3163836bc159d75b55bc8251fc2c6e0b27e223481af67f1eac",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The refreshed DoR, current and target diagrams, reused rails, negative boundaries, Fowler matrix, and demanding-user proof are complete in GitHub issue 2166.",
+          "designId": "R1-1C-STORED-PLAN-AUTHORITY-20260812",
+          "toStatus": "approved",
+          "sourceRef": "GH-2166",
+          "fromStatus": "review",
+          "sourceContentSha256": "45bf878ab2adee3163836bc159d75b55bc8251fc2c6e0b27e223481af67f1eac"
+        },
+        "created_at": "2026-08-13T01:09:41.829+00:00"
       },
       {
         "operation_id": "6d74b452-df0f-44ad-aa05-43874455ebe0",
@@ -95848,6 +95953,27 @@
         "created_at": "2026-08-11T12:53:30.885+00:00"
       },
       {
+        "operation_id": "88e0e8ab-b11b-4727-9912-a731ef16f567",
+        "idempotency_key": "gh-2166-stored-plan-authority-implement-v1",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "R1-1C-STORED-PLAN-AUTHORITY-20260812",
+        "source_ref": "GH-2166",
+        "source_content_sha256": "45bf878ab2adee3163836bc159d75b55bc8251fc2c6e0b27e223481af67f1eac",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Implementation proceeds through the existing Plan Store API composition and application-service owners.",
+          "designId": "R1-1C-STORED-PLAN-AUTHORITY-20260812",
+          "toStatus": "implementing",
+          "sourceRef": "GH-2166",
+          "fromStatus": "approved",
+          "sourceContentSha256": "45bf878ab2adee3163836bc159d75b55bc8251fc2c6e0b27e223481af67f1eac"
+        },
+        "created_at": "2026-08-13T01:09:43.11+00:00"
+      },
+      {
         "operation_id": "88ec101a-4fac-41c9-826c-f67d382cb697",
         "idempotency_key": "gh-2167-update-rel-api-tests-application-services-contains-architecture-harness-v1",
         "operation_type": "architecture_relation_record",
@@ -97302,6 +97428,27 @@
           "sourceContentSha256": "6c5f33b38721adaba3c72965b07754a823ca97cf460a191196abe08f7a7b78d9"
         },
         "created_at": "2026-08-10T21:04:39.13+00:00"
+      },
+      {
+        "operation_id": "9e40761e-421c-44ba-a0a6-37266ede3ac8",
+        "idempotency_key": "gh-2166-stored-plan-authority-implemented-v1",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "R1-1C-STORED-PLAN-AUTHORITY-20260812",
+        "source_ref": "GH-2166",
+        "source_content_sha256": "45bf878ab2adee3163836bc159d75b55bc8251fc2c6e0b27e223481af67f1eac",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "One materializer, one scoped-reference policy, and one admission coordinator now govern the affected API flows; unit, integration, build, type, lint, and architecture checks pass.",
+          "designId": "R1-1C-STORED-PLAN-AUTHORITY-20260812",
+          "toStatus": "implemented",
+          "sourceRef": "GH-2166",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "45bf878ab2adee3163836bc159d75b55bc8251fc2c6e0b27e223481af67f1eac"
+        },
+        "created_at": "2026-08-13T01:22:42.156+00:00"
       },
       {
         "operation_id": "9eb028e7-d830-4512-a7c1-0d9ed783e265",
@@ -132491,1240 +132638,6 @@
       "createdAt": "2026-08-01T20:49:48.279Z"
     },
     {
-      "railId": "local#MVP-18-SUPPORTED-RUNTIME-RECOVERY#command#provesupportedruntimerecovery",
-      "featureId": "MVP-18-SUPPORTED-RUNTIME-RECOVERY",
-      "mechanizationStatus": "implemented",
-      "railName": "ProveSupportedRuntimeRecovery",
-      "normalizedRailName": "provesupportedruntimerecovery",
-      "railType": "command",
-      "dddOwner": "RuntimeProofHarness",
-      "railStatus": "implemented",
-      "symbolRefs": [
-        "packages/@dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts#PostgresPoolFailure",
-        "packages/@dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts#PostgresPoolFailureReporter",
-        "packages/@dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts#createObservedPostgresPool",
-        "packages/@dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts#readPostgresErrorCode",
-        "packages/@dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts#reportPostgresPoolFailure",
-        "scripts/run-supported-runtime-proof.cjs#fs",
-        "scripts/run-supported-runtime-proof.cjs#main",
-        "scripts/run-supported-runtime-proof.cjs#parseArgs",
-        "scripts/run-supported-runtime-proof.cjs#path",
-        "scripts/run-supported-runtime-proof.cjs#writeArtifact",
-        "scripts/run-temporal-postgres-proof.cjs#resetPostgresProofStack",
-        "scripts/run-temporal-postgres-proof.cjs#startPostgresContainer",
-        "scripts/run-temporal-postgres-proof.cjs#stopPostgresContainer",
-        "scripts/supported-runtime-proof/runtime-proof-event-sink.cjs#handleDelivery",
-        "scripts/supported-runtime-proof/runtime-proof-event-sink.cjs#readBody",
-        "scripts/supported-runtime-proof/runtime-proof-event-sink.cjs#startRuntimeProofEventSink",
-        "scripts/supported-runtime-proof/runtime-proof-event-sink.cjs#writeJson",
-        "scripts/supported-runtime-proof/runtime-proof-http.cjs#createRuntimeProofApiClient",
-        "scripts/supported-runtime-proof/runtime-proof-http.cjs#parseJson",
-        "scripts/supported-runtime-proof/runtime-proof-http.cjs#requestJson",
-        "scripts/supported-runtime-proof/runtime-proof-invariants.cjs#INVARIANT_ORDER",
-        "scripts/supported-runtime-proof/runtime-proof-invariants.cjs#calculateRatePerSecond",
-        "scripts/supported-runtime-proof/runtime-proof-invariants.cjs#evaluateRuntimeProof",
-        "scripts/supported-runtime-proof/runtime-proof-invariants.cjs#isDeliveryOrderPreserved",
-        "scripts/supported-runtime-proof/runtime-proof-invariants.cjs#percentile",
-        "scripts/supported-runtime-proof/runtime-proof-lifecycle.cjs#POLL_INTERVAL_MS",
-        "scripts/supported-runtime-proof/runtime-proof-lifecycle.cjs#READY_TIMEOUT_MS",
-        "scripts/supported-runtime-proof/runtime-proof-lifecycle.cjs#allocateRuntimePorts",
-        "scripts/supported-runtime-proof/runtime-proof-lifecycle.cjs#buildRuntimeProofOutboxEnv",
-        "scripts/supported-runtime-proof/runtime-proof-lifecycle.cjs#buildRuntimeProofProjectorEnv",
-        "scripts/supported-runtime-proof/runtime-proof-lifecycle.cjs#buildScopeEnv",
-        "scripts/supported-runtime-proof/runtime-proof-lifecycle.cjs#startSupportedRuntimeProofLifecycle",
-        "scripts/supported-runtime-proof/runtime-proof-postgres.cjs#createRuntimeProofPostgresProbe",
-        "scripts/supported-runtime-proof/runtime-proof-postgres.cjs#hasContiguousRunSequence",
-        "scripts/supported-runtime-proof/runtime-proof-postgres.cjs#quoteIdentifier",
-        "scripts/supported-runtime-proof/runtime-proof-postgres.cjs#snapshotsMatch",
-        "scripts/supported-runtime-proof/runtime-proof-profile.cjs#SUPPORTED_RUNTIME_PROOF_PROFILE",
-        "scripts/supported-runtime-proof/runtime-proof-profile.cjs#deepFreeze",
-        "scripts/supported-runtime-proof/runtime-proof-profile.cjs#isPositiveInteger",
-        "scripts/supported-runtime-proof/runtime-proof-profile.cjs#validateSupportedRuntimeProofProfile",
-        "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs#collectRunEvidence",
-        "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs#executeRuntimeProofIteration",
-        "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs#preparePersistedPlan",
-        "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs#recoverPostgresRuntime",
-        "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs#sleep",
-        "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs#startAndWaitForCompletion",
-        "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs#summarizeDurations",
-        "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs#waitForCondition",
-        "scripts/supported-runtime-proof/runtime-proof-snapshot.cjs#calculateProjectionFreshnessMs",
-        "scripts/supported-runtime-proof/runtime-proof-snapshot.cjs#canonicalDependencies",
-        "scripts/supported-runtime-proof/runtime-proof-snapshot.cjs#loadCanonicalDependencies",
-        "scripts/supported-runtime-proof/runtime-proof-snapshot.cjs#projectCanonicalSnapshot",
-        "scripts/supported-runtime-proof/runtime-proof-workload.cjs#GRAPH_SHA",
-        "scripts/supported-runtime-proof/runtime-proof-workload.cjs#SQL_SHA",
-        "scripts/supported-runtime-proof/runtime-proof-workload.cjs#buildArtifact",
-        "scripts/supported-runtime-proof/runtime-proof-workload.cjs#buildDraftNode",
-        "scripts/supported-runtime-proof/runtime-proof-workload.cjs#buildRuntimeProofDraftSaveRequest",
-        "scripts/supported-runtime-proof/runtime-proof-workload.cjs#buildRuntimeProofPreviewRequest",
-        "scripts/supported-runtime-proof/runtime-proof-workload.cjs#buildRuntimeProofStartRequest",
-        "scripts/run-dev-stack.cjs#PROCESS_TERMINATION_TIMEOUT_MS",
-        "scripts/run-dev-stack.cjs#hasProcessExited",
-        "scripts/run-dev-stack.cjs#runTaskkill",
-        "scripts/run-dev-stack.cjs#terminateProcess",
-        "scripts/run-dev-stack.cjs#waitForProcessExit"
-      ],
-      "implementationRefs": [
-        "packages/@dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts#PostgresPoolFailure",
-        "packages/@dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts#PostgresPoolFailureReporter",
-        "packages/@dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts#createObservedPostgresPool",
-        "packages/@dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts#readPostgresErrorCode",
-        "packages/@dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts#reportPostgresPoolFailure",
-        "scripts/run-supported-runtime-proof.cjs#fs",
-        "scripts/run-supported-runtime-proof.cjs#main",
-        "scripts/run-supported-runtime-proof.cjs#parseArgs",
-        "scripts/run-supported-runtime-proof.cjs#path",
-        "scripts/run-supported-runtime-proof.cjs#writeArtifact",
-        "scripts/run-temporal-postgres-proof.cjs#resetPostgresProofStack",
-        "scripts/run-temporal-postgres-proof.cjs#startPostgresContainer",
-        "scripts/run-temporal-postgres-proof.cjs#stopPostgresContainer",
-        "scripts/supported-runtime-proof/runtime-proof-event-sink.cjs#handleDelivery",
-        "scripts/supported-runtime-proof/runtime-proof-event-sink.cjs#readBody",
-        "scripts/supported-runtime-proof/runtime-proof-event-sink.cjs#startRuntimeProofEventSink",
-        "scripts/supported-runtime-proof/runtime-proof-event-sink.cjs#writeJson",
-        "scripts/supported-runtime-proof/runtime-proof-http.cjs#createRuntimeProofApiClient",
-        "scripts/supported-runtime-proof/runtime-proof-http.cjs#parseJson",
-        "scripts/supported-runtime-proof/runtime-proof-http.cjs#requestJson",
-        "scripts/supported-runtime-proof/runtime-proof-invariants.cjs#INVARIANT_ORDER",
-        "scripts/supported-runtime-proof/runtime-proof-invariants.cjs#calculateRatePerSecond",
-        "scripts/supported-runtime-proof/runtime-proof-invariants.cjs#evaluateRuntimeProof",
-        "scripts/supported-runtime-proof/runtime-proof-invariants.cjs#isDeliveryOrderPreserved",
-        "scripts/supported-runtime-proof/runtime-proof-invariants.cjs#percentile",
-        "scripts/supported-runtime-proof/runtime-proof-lifecycle.cjs#POLL_INTERVAL_MS",
-        "scripts/supported-runtime-proof/runtime-proof-lifecycle.cjs#READY_TIMEOUT_MS",
-        "scripts/supported-runtime-proof/runtime-proof-lifecycle.cjs#allocateRuntimePorts",
-        "scripts/supported-runtime-proof/runtime-proof-lifecycle.cjs#buildRuntimeProofOutboxEnv",
-        "scripts/supported-runtime-proof/runtime-proof-lifecycle.cjs#buildRuntimeProofProjectorEnv",
-        "scripts/supported-runtime-proof/runtime-proof-lifecycle.cjs#buildScopeEnv",
-        "scripts/supported-runtime-proof/runtime-proof-lifecycle.cjs#startSupportedRuntimeProofLifecycle",
-        "scripts/supported-runtime-proof/runtime-proof-postgres.cjs#createRuntimeProofPostgresProbe",
-        "scripts/supported-runtime-proof/runtime-proof-postgres.cjs#hasContiguousRunSequence",
-        "scripts/supported-runtime-proof/runtime-proof-postgres.cjs#quoteIdentifier",
-        "scripts/supported-runtime-proof/runtime-proof-postgres.cjs#snapshotsMatch",
-        "scripts/supported-runtime-proof/runtime-proof-profile.cjs#SUPPORTED_RUNTIME_PROOF_PROFILE",
-        "scripts/supported-runtime-proof/runtime-proof-profile.cjs#deepFreeze",
-        "scripts/supported-runtime-proof/runtime-proof-profile.cjs#isPositiveInteger",
-        "scripts/supported-runtime-proof/runtime-proof-profile.cjs#validateSupportedRuntimeProofProfile",
-        "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs#collectRunEvidence",
-        "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs#executeRuntimeProofIteration",
-        "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs#preparePersistedPlan",
-        "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs#recoverPostgresRuntime",
-        "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs#sleep",
-        "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs#startAndWaitForCompletion",
-        "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs#summarizeDurations",
-        "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs#waitForCondition",
-        "scripts/supported-runtime-proof/runtime-proof-snapshot.cjs#calculateProjectionFreshnessMs",
-        "scripts/supported-runtime-proof/runtime-proof-snapshot.cjs#canonicalDependencies",
-        "scripts/supported-runtime-proof/runtime-proof-snapshot.cjs#loadCanonicalDependencies",
-        "scripts/supported-runtime-proof/runtime-proof-snapshot.cjs#projectCanonicalSnapshot",
-        "scripts/supported-runtime-proof/runtime-proof-workload.cjs#GRAPH_SHA",
-        "scripts/supported-runtime-proof/runtime-proof-workload.cjs#SQL_SHA",
-        "scripts/supported-runtime-proof/runtime-proof-workload.cjs#buildArtifact",
-        "scripts/supported-runtime-proof/runtime-proof-workload.cjs#buildDraftNode",
-        "scripts/supported-runtime-proof/runtime-proof-workload.cjs#buildRuntimeProofDraftSaveRequest",
-        "scripts/supported-runtime-proof/runtime-proof-workload.cjs#buildRuntimeProofPreviewRequest",
-        "scripts/supported-runtime-proof/runtime-proof-workload.cjs#buildRuntimeProofStartRequest",
-        "scripts/run-dev-stack.cjs#PROCESS_TERMINATION_TIMEOUT_MS",
-        "scripts/run-dev-stack.cjs#hasProcessExited",
-        "scripts/run-dev-stack.cjs#runTaskkill",
-        "scripts/run-dev-stack.cjs#terminateProcess",
-        "scripts/run-dev-stack.cjs#waitForProcessExit"
-      ],
-      "documentationRefs": [
-        "docs/evidence/ED-20260803-supported-runtime-recovery.md",
-        "docs/runbooks/temporal-postgres-proof-environment.md"
-      ],
-      "governingSources": [
-        "docs/architecture/command-query-rail-governance.md",
-        "docs/architecture/fowler-opportunity-planning-governance.md"
-      ],
-      "allowedImplementationSurfaces": [
-        "package.json",
-        "apps/api/src/db/pool.ts",
-        "apps/api/src/modules/buildProtectedRuntimeModule.ts",
-        "apps/outbox-worker/src/db/pool.ts",
-        "apps/outbox-worker/src/ownership/PgShardOwnershipGate.ts",
-        "apps/outbox-worker/test/ownership/PgShardOwnershipGate.test.ts",
-        "packages/@dvt/adapter-postgres/src/Postgres*.ts",
-        "packages/@dvt/adapter-postgres/src/index.ts",
-        "packages/@dvt/adapter-postgres/test/PostgresPoolErrorPolicy.test.ts",
-        "scripts/run-dev-stack.cjs",
-        "scripts/run-supported-runtime-proof.cjs",
-        "scripts/run-supported-runtime-proof.test.cjs",
-        "scripts/run-temporal-postgres-proof.cjs",
-        "scripts/run-temporal-postgres-proof.test.cjs",
-        "scripts/supported-runtime-proof/**"
-      ],
-      "architectureGuards": [
-        "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs",
-        "pnpm test:supported-runtime-proof",
-        "node --test scripts/supported-runtime-proof/runtime-proof-lifecycle.test.cjs scripts/run-dev-stack.test.cjs"
-      ],
-      "completionGate": [
-        "pnpm proof:supported-runtime",
-        "pnpm docs:feature-mechanization:implementation",
-        "pnpm verify:prepush"
-      ],
-      "sourcePath": "scripts/run-supported-runtime-proof.cjs",
-      "sourceContentSha256": "cee97b8f6a70db8a2416267b710748f6304a8f879ec1ad9a4842878d88c417d1",
-      "rawRail": {
-        "name": "ProveSupportedRuntimeRecovery",
-        "type": "command",
-        "status": "implemented",
-        "dddOwner": "RuntimeProofHarness"
-      },
-      "rawManifest": {
-        "symbols": [
-          {
-            "name": "PostgresPoolFailure",
-            "path": "packages/@dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "PostgresPoolFailureReporter",
-            "path": "packages/@dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "createObservedPostgresPool",
-            "path": "packages/@dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "readPostgresErrorCode",
-            "path": "packages/@dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "reportPostgresPoolFailure",
-            "path": "packages/@dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "fs",
-            "path": "scripts/run-supported-runtime-proof.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "main",
-            "path": "scripts/run-supported-runtime-proof.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "parseArgs",
-            "path": "scripts/run-supported-runtime-proof.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "path",
-            "path": "scripts/run-supported-runtime-proof.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "writeArtifact",
-            "path": "scripts/run-supported-runtime-proof.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "resetPostgresProofStack",
-            "path": "scripts/run-temporal-postgres-proof.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "startPostgresContainer",
-            "path": "scripts/run-temporal-postgres-proof.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "stopPostgresContainer",
-            "path": "scripts/run-temporal-postgres-proof.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "handleDelivery",
-            "path": "scripts/supported-runtime-proof/runtime-proof-event-sink.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "readBody",
-            "path": "scripts/supported-runtime-proof/runtime-proof-event-sink.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "startRuntimeProofEventSink",
-            "path": "scripts/supported-runtime-proof/runtime-proof-event-sink.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "writeJson",
-            "path": "scripts/supported-runtime-proof/runtime-proof-event-sink.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "createRuntimeProofApiClient",
-            "path": "scripts/supported-runtime-proof/runtime-proof-http.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "parseJson",
-            "path": "scripts/supported-runtime-proof/runtime-proof-http.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "requestJson",
-            "path": "scripts/supported-runtime-proof/runtime-proof-http.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "INVARIANT_ORDER",
-            "path": "scripts/supported-runtime-proof/runtime-proof-invariants.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "calculateRatePerSecond",
-            "path": "scripts/supported-runtime-proof/runtime-proof-invariants.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "evaluateRuntimeProof",
-            "path": "scripts/supported-runtime-proof/runtime-proof-invariants.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "isDeliveryOrderPreserved",
-            "path": "scripts/supported-runtime-proof/runtime-proof-invariants.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "percentile",
-            "path": "scripts/supported-runtime-proof/runtime-proof-invariants.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "POLL_INTERVAL_MS",
-            "path": "scripts/supported-runtime-proof/runtime-proof-lifecycle.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "READY_TIMEOUT_MS",
-            "path": "scripts/supported-runtime-proof/runtime-proof-lifecycle.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "allocateRuntimePorts",
-            "path": "scripts/supported-runtime-proof/runtime-proof-lifecycle.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "buildRuntimeProofOutboxEnv",
-            "path": "scripts/supported-runtime-proof/runtime-proof-lifecycle.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "buildRuntimeProofProjectorEnv",
-            "path": "scripts/supported-runtime-proof/runtime-proof-lifecycle.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "buildScopeEnv",
-            "path": "scripts/supported-runtime-proof/runtime-proof-lifecycle.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "startSupportedRuntimeProofLifecycle",
-            "path": "scripts/supported-runtime-proof/runtime-proof-lifecycle.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "createRuntimeProofPostgresProbe",
-            "path": "scripts/supported-runtime-proof/runtime-proof-postgres.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "hasContiguousRunSequence",
-            "path": "scripts/supported-runtime-proof/runtime-proof-postgres.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "quoteIdentifier",
-            "path": "scripts/supported-runtime-proof/runtime-proof-postgres.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "snapshotsMatch",
-            "path": "scripts/supported-runtime-proof/runtime-proof-postgres.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "SUPPORTED_RUNTIME_PROOF_PROFILE",
-            "path": "scripts/supported-runtime-proof/runtime-proof-profile.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "deepFreeze",
-            "path": "scripts/supported-runtime-proof/runtime-proof-profile.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "isPositiveInteger",
-            "path": "scripts/supported-runtime-proof/runtime-proof-profile.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "validateSupportedRuntimeProofProfile",
-            "path": "scripts/supported-runtime-proof/runtime-proof-profile.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "collectRunEvidence",
-            "path": "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "executeRuntimeProofIteration",
-            "path": "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "preparePersistedPlan",
-            "path": "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "recoverPostgresRuntime",
-            "path": "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "sleep",
-            "path": "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "startAndWaitForCompletion",
-            "path": "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "summarizeDurations",
-            "path": "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "waitForCondition",
-            "path": "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
-          },
-          {
-            "name": "calculateProjectionFreshnessMs",
-            "path": "scripts/supported-runtime-proof/runtime-proof-snapshot.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "pnpm test:supported-runtime-proof"
-          },
-          {
-            "name": "canonicalDependencies",
-            "path": "scripts/supported-runtime-proof/runtime-proof-snapshot.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "pnpm test:supported-runtime-proof"
-          },
-          {
-            "name": "loadCanonicalDependencies",
-            "path": "scripts/supported-runtime-proof/runtime-proof-snapshot.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "pnpm test:supported-runtime-proof"
-          },
-          {
-            "name": "projectCanonicalSnapshot",
-            "path": "scripts/supported-runtime-proof/runtime-proof-snapshot.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "pnpm test:supported-runtime-proof"
-          },
-          {
-            "name": "GRAPH_SHA",
-            "path": "scripts/supported-runtime-proof/runtime-proof-workload.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "pnpm test:supported-runtime-proof"
-          },
-          {
-            "name": "SQL_SHA",
-            "path": "scripts/supported-runtime-proof/runtime-proof-workload.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "pnpm test:supported-runtime-proof"
-          },
-          {
-            "name": "buildArtifact",
-            "path": "scripts/supported-runtime-proof/runtime-proof-workload.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "pnpm test:supported-runtime-proof"
-          },
-          {
-            "name": "buildDraftNode",
-            "path": "scripts/supported-runtime-proof/runtime-proof-workload.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "pnpm test:supported-runtime-proof"
-          },
-          {
-            "name": "buildRuntimeProofDraftSaveRequest",
-            "path": "scripts/supported-runtime-proof/runtime-proof-workload.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "pnpm test:supported-runtime-proof"
-          },
-          {
-            "name": "buildRuntimeProofPreviewRequest",
-            "path": "scripts/supported-runtime-proof/runtime-proof-workload.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "pnpm test:supported-runtime-proof"
-          },
-          {
-            "name": "buildRuntimeProofStartRequest",
-            "path": "scripts/supported-runtime-proof/runtime-proof-workload.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "pnpm test:supported-runtime-proof"
-          },
-          {
-            "name": "PROCESS_TERMINATION_TIMEOUT_MS",
-            "path": "scripts/run-dev-stack.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/supported-runtime-proof/runtime-proof-lifecycle.test.cjs",
-              "scripts/run-dev-stack.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/supported-runtime-proof/runtime-proof-lifecycle.test.cjs scripts/run-dev-stack.test.cjs"
-          },
-          {
-            "name": "hasProcessExited",
-            "path": "scripts/run-dev-stack.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/supported-runtime-proof/runtime-proof-lifecycle.test.cjs",
-              "scripts/run-dev-stack.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/supported-runtime-proof/runtime-proof-lifecycle.test.cjs scripts/run-dev-stack.test.cjs"
-          },
-          {
-            "name": "runTaskkill",
-            "path": "scripts/run-dev-stack.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/supported-runtime-proof/runtime-proof-lifecycle.test.cjs",
-              "scripts/run-dev-stack.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/supported-runtime-proof/runtime-proof-lifecycle.test.cjs scripts/run-dev-stack.test.cjs"
-          },
-          {
-            "name": "terminateProcess",
-            "path": "scripts/run-dev-stack.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/supported-runtime-proof/runtime-proof-lifecycle.test.cjs",
-              "scripts/run-dev-stack.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/supported-runtime-proof/runtime-proof-lifecycle.test.cjs scripts/run-dev-stack.test.cjs"
-          },
-          {
-            "name": "waitForProcessExit",
-            "path": "scripts/run-dev-stack.cjs",
-            "cqRails": ["ProveSupportedRuntimeRecovery"],
-            "dddOwner": "RuntimeProofHarness",
-            "unitTests": [
-              "scripts/supported-runtime-proof/runtime-proof-lifecycle.test.cjs",
-              "scripts/run-dev-stack.test.cjs"
-            ],
-            "fowlerSignals": [
-              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-            ],
-            "cypressCoverage": "N/A - protected backend runtime proof",
-            "architectureGuard": "node --test scripts/supported-runtime-proof/runtime-proof-lifecycle.test.cjs scripts/run-dev-stack.test.cjs"
-          }
-        ],
-        "version": 1,
-        "featureId": "MVP-18-SUPPORTED-RUNTIME-RECOVERY",
-        "userStories": ["https://github.com/dunay2/dvt/issues/18"],
-        "cypressFlows": ["N/A - protected backend runtime proof"],
-        "domainObjects": [
-          "SupportedRuntimeProofProfile",
-          "PostgresConnectionResilience"
-        ],
-        "fowlerSignals": [
-          "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
-        ],
-        "completionGate": [
-          "pnpm proof:supported-runtime",
-          "pnpm docs:feature-mechanization:implementation",
-          "pnpm verify:prepush"
-        ],
-        "redGreenCycles": [
-          {
-            "id": "provesupportedruntimerecovery-record",
-            "redTest": "node --test scripts/supported-runtime-proof/runtime-proof-lifecycle.test.cjs",
-            "greenTest": "pnpm test:supported-runtime-proof",
-            "patchSurfaces": [
-              "package.json",
-              "apps/api/src/db/pool.ts",
-              "apps/api/src/modules/buildProtectedRuntimeModule.ts",
-              "apps/outbox-worker/src/db/pool.ts",
-              "apps/outbox-worker/src/ownership/PgShardOwnershipGate.ts",
-              "apps/outbox-worker/test/ownership/PgShardOwnershipGate.test.ts",
-              "packages/@dvt/adapter-postgres/src/Postgres*.ts",
-              "packages/@dvt/adapter-postgres/src/index.ts",
-              "packages/@dvt/adapter-postgres/test/PostgresPoolErrorPolicy.test.ts",
-              "scripts/run-dev-stack.cjs",
-              "scripts/run-supported-runtime-proof.cjs",
-              "scripts/run-supported-runtime-proof.test.cjs",
-              "scripts/run-temporal-postgres-proof.cjs",
-              "scripts/run-temporal-postgres-proof.test.cjs",
-              "scripts/supported-runtime-proof/**"
-            ],
-            "expectedFailure": "Worker replacement starts before the previous process exits or lacks a bounded forced-kill fallback."
-          }
-        ],
-        "componentGuides": [
-          "docs/runbooks/temporal-postgres-proof-environment.md"
-        ],
-        "governingSources": [
-          "docs/architecture/command-query-rail-governance.md",
-          "docs/architecture/fowler-opportunity-planning-governance.md"
-        ],
-        "commandQueryRails": [
-          {
-            "name": "ProveSupportedRuntimeRecovery",
-            "type": "command",
-            "status": "implemented",
-            "dddOwner": "RuntimeProofHarness"
-          }
-        ],
-        "architectureGuards": [
-          "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs",
-          "pnpm test:supported-runtime-proof",
-          "node --test scripts/supported-runtime-proof/runtime-proof-lifecycle.test.cjs scripts/run-dev-stack.test.cjs"
-        ],
-        "implementationPlan": "https://github.com/dunay2/dvt/issues/18",
-        "mechanizationStatus": "implemented",
-        "noHumanDecisionsRemaining": true,
-        "allowedImplementationSurfaces": [
-          "package.json",
-          "apps/api/src/db/pool.ts",
-          "apps/api/src/modules/buildProtectedRuntimeModule.ts",
-          "apps/outbox-worker/src/db/pool.ts",
-          "apps/outbox-worker/src/ownership/PgShardOwnershipGate.ts",
-          "apps/outbox-worker/test/ownership/PgShardOwnershipGate.test.ts",
-          "packages/@dvt/adapter-postgres/src/Postgres*.ts",
-          "packages/@dvt/adapter-postgres/src/index.ts",
-          "packages/@dvt/adapter-postgres/test/PostgresPoolErrorPolicy.test.ts",
-          "scripts/run-dev-stack.cjs",
-          "scripts/run-supported-runtime-proof.cjs",
-          "scripts/run-supported-runtime-proof.test.cjs",
-          "scripts/run-temporal-postgres-proof.cjs",
-          "scripts/run-temporal-postgres-proof.test.cjs",
-          "scripts/supported-runtime-proof/**"
-        ],
-        "forbiddenImplementationSurfaces": ["docs/archive/**"]
-      },
-      "revision": 6,
-      "createdBy": "codex",
-      "createdAt": "2026-08-03T15:47:32.794Z"
-    },
-    {
       "railId": "local#MVP-186-FRONTEND-OPERABILITY-TELEMETRY#command#recordfrontendoperabilityevent",
       "featureId": "MVP-186-FRONTEND-OPERABILITY-TELEMETRY",
       "mechanizationStatus": "implemented",
@@ -135109,6 +134022,1240 @@
       "revision": 4,
       "createdBy": "codex",
       "createdAt": "2026-08-02T07:41:35.171Z"
+    },
+    {
+      "railId": "local#MVP-18-SUPPORTED-RUNTIME-RECOVERY#command#provesupportedruntimerecovery",
+      "featureId": "MVP-18-SUPPORTED-RUNTIME-RECOVERY",
+      "mechanizationStatus": "implemented",
+      "railName": "ProveSupportedRuntimeRecovery",
+      "normalizedRailName": "provesupportedruntimerecovery",
+      "railType": "command",
+      "dddOwner": "RuntimeProofHarness",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "packages/@dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts#PostgresPoolFailure",
+        "packages/@dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts#PostgresPoolFailureReporter",
+        "packages/@dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts#createObservedPostgresPool",
+        "packages/@dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts#readPostgresErrorCode",
+        "packages/@dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts#reportPostgresPoolFailure",
+        "scripts/run-supported-runtime-proof.cjs#fs",
+        "scripts/run-supported-runtime-proof.cjs#main",
+        "scripts/run-supported-runtime-proof.cjs#parseArgs",
+        "scripts/run-supported-runtime-proof.cjs#path",
+        "scripts/run-supported-runtime-proof.cjs#writeArtifact",
+        "scripts/run-temporal-postgres-proof.cjs#resetPostgresProofStack",
+        "scripts/run-temporal-postgres-proof.cjs#startPostgresContainer",
+        "scripts/run-temporal-postgres-proof.cjs#stopPostgresContainer",
+        "scripts/supported-runtime-proof/runtime-proof-event-sink.cjs#handleDelivery",
+        "scripts/supported-runtime-proof/runtime-proof-event-sink.cjs#readBody",
+        "scripts/supported-runtime-proof/runtime-proof-event-sink.cjs#startRuntimeProofEventSink",
+        "scripts/supported-runtime-proof/runtime-proof-event-sink.cjs#writeJson",
+        "scripts/supported-runtime-proof/runtime-proof-http.cjs#createRuntimeProofApiClient",
+        "scripts/supported-runtime-proof/runtime-proof-http.cjs#parseJson",
+        "scripts/supported-runtime-proof/runtime-proof-http.cjs#requestJson",
+        "scripts/supported-runtime-proof/runtime-proof-invariants.cjs#INVARIANT_ORDER",
+        "scripts/supported-runtime-proof/runtime-proof-invariants.cjs#calculateRatePerSecond",
+        "scripts/supported-runtime-proof/runtime-proof-invariants.cjs#evaluateRuntimeProof",
+        "scripts/supported-runtime-proof/runtime-proof-invariants.cjs#isDeliveryOrderPreserved",
+        "scripts/supported-runtime-proof/runtime-proof-invariants.cjs#percentile",
+        "scripts/supported-runtime-proof/runtime-proof-lifecycle.cjs#POLL_INTERVAL_MS",
+        "scripts/supported-runtime-proof/runtime-proof-lifecycle.cjs#READY_TIMEOUT_MS",
+        "scripts/supported-runtime-proof/runtime-proof-lifecycle.cjs#allocateRuntimePorts",
+        "scripts/supported-runtime-proof/runtime-proof-lifecycle.cjs#buildRuntimeProofOutboxEnv",
+        "scripts/supported-runtime-proof/runtime-proof-lifecycle.cjs#buildRuntimeProofProjectorEnv",
+        "scripts/supported-runtime-proof/runtime-proof-lifecycle.cjs#buildScopeEnv",
+        "scripts/supported-runtime-proof/runtime-proof-lifecycle.cjs#startSupportedRuntimeProofLifecycle",
+        "scripts/supported-runtime-proof/runtime-proof-postgres.cjs#createRuntimeProofPostgresProbe",
+        "scripts/supported-runtime-proof/runtime-proof-postgres.cjs#hasContiguousRunSequence",
+        "scripts/supported-runtime-proof/runtime-proof-postgres.cjs#quoteIdentifier",
+        "scripts/supported-runtime-proof/runtime-proof-postgres.cjs#snapshotsMatch",
+        "scripts/supported-runtime-proof/runtime-proof-profile.cjs#SUPPORTED_RUNTIME_PROOF_PROFILE",
+        "scripts/supported-runtime-proof/runtime-proof-profile.cjs#deepFreeze",
+        "scripts/supported-runtime-proof/runtime-proof-profile.cjs#isPositiveInteger",
+        "scripts/supported-runtime-proof/runtime-proof-profile.cjs#validateSupportedRuntimeProofProfile",
+        "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs#collectRunEvidence",
+        "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs#executeRuntimeProofIteration",
+        "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs#preparePersistedPlan",
+        "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs#recoverPostgresRuntime",
+        "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs#sleep",
+        "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs#startAndWaitForCompletion",
+        "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs#summarizeDurations",
+        "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs#waitForCondition",
+        "scripts/supported-runtime-proof/runtime-proof-snapshot.cjs#calculateProjectionFreshnessMs",
+        "scripts/supported-runtime-proof/runtime-proof-snapshot.cjs#canonicalDependencies",
+        "scripts/supported-runtime-proof/runtime-proof-snapshot.cjs#loadCanonicalDependencies",
+        "scripts/supported-runtime-proof/runtime-proof-snapshot.cjs#projectCanonicalSnapshot",
+        "scripts/supported-runtime-proof/runtime-proof-workload.cjs#GRAPH_SHA",
+        "scripts/supported-runtime-proof/runtime-proof-workload.cjs#SQL_SHA",
+        "scripts/supported-runtime-proof/runtime-proof-workload.cjs#buildArtifact",
+        "scripts/supported-runtime-proof/runtime-proof-workload.cjs#buildDraftNode",
+        "scripts/supported-runtime-proof/runtime-proof-workload.cjs#buildRuntimeProofDraftSaveRequest",
+        "scripts/supported-runtime-proof/runtime-proof-workload.cjs#buildRuntimeProofPreviewRequest",
+        "scripts/supported-runtime-proof/runtime-proof-workload.cjs#buildRuntimeProofStartRequest",
+        "scripts/run-dev-stack.cjs#PROCESS_TERMINATION_TIMEOUT_MS",
+        "scripts/run-dev-stack.cjs#hasProcessExited",
+        "scripts/run-dev-stack.cjs#runTaskkill",
+        "scripts/run-dev-stack.cjs#terminateProcess",
+        "scripts/run-dev-stack.cjs#waitForProcessExit"
+      ],
+      "implementationRefs": [
+        "packages/@dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts#PostgresPoolFailure",
+        "packages/@dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts#PostgresPoolFailureReporter",
+        "packages/@dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts#createObservedPostgresPool",
+        "packages/@dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts#readPostgresErrorCode",
+        "packages/@dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts#reportPostgresPoolFailure",
+        "scripts/run-supported-runtime-proof.cjs#fs",
+        "scripts/run-supported-runtime-proof.cjs#main",
+        "scripts/run-supported-runtime-proof.cjs#parseArgs",
+        "scripts/run-supported-runtime-proof.cjs#path",
+        "scripts/run-supported-runtime-proof.cjs#writeArtifact",
+        "scripts/run-temporal-postgres-proof.cjs#resetPostgresProofStack",
+        "scripts/run-temporal-postgres-proof.cjs#startPostgresContainer",
+        "scripts/run-temporal-postgres-proof.cjs#stopPostgresContainer",
+        "scripts/supported-runtime-proof/runtime-proof-event-sink.cjs#handleDelivery",
+        "scripts/supported-runtime-proof/runtime-proof-event-sink.cjs#readBody",
+        "scripts/supported-runtime-proof/runtime-proof-event-sink.cjs#startRuntimeProofEventSink",
+        "scripts/supported-runtime-proof/runtime-proof-event-sink.cjs#writeJson",
+        "scripts/supported-runtime-proof/runtime-proof-http.cjs#createRuntimeProofApiClient",
+        "scripts/supported-runtime-proof/runtime-proof-http.cjs#parseJson",
+        "scripts/supported-runtime-proof/runtime-proof-http.cjs#requestJson",
+        "scripts/supported-runtime-proof/runtime-proof-invariants.cjs#INVARIANT_ORDER",
+        "scripts/supported-runtime-proof/runtime-proof-invariants.cjs#calculateRatePerSecond",
+        "scripts/supported-runtime-proof/runtime-proof-invariants.cjs#evaluateRuntimeProof",
+        "scripts/supported-runtime-proof/runtime-proof-invariants.cjs#isDeliveryOrderPreserved",
+        "scripts/supported-runtime-proof/runtime-proof-invariants.cjs#percentile",
+        "scripts/supported-runtime-proof/runtime-proof-lifecycle.cjs#POLL_INTERVAL_MS",
+        "scripts/supported-runtime-proof/runtime-proof-lifecycle.cjs#READY_TIMEOUT_MS",
+        "scripts/supported-runtime-proof/runtime-proof-lifecycle.cjs#allocateRuntimePorts",
+        "scripts/supported-runtime-proof/runtime-proof-lifecycle.cjs#buildRuntimeProofOutboxEnv",
+        "scripts/supported-runtime-proof/runtime-proof-lifecycle.cjs#buildRuntimeProofProjectorEnv",
+        "scripts/supported-runtime-proof/runtime-proof-lifecycle.cjs#buildScopeEnv",
+        "scripts/supported-runtime-proof/runtime-proof-lifecycle.cjs#startSupportedRuntimeProofLifecycle",
+        "scripts/supported-runtime-proof/runtime-proof-postgres.cjs#createRuntimeProofPostgresProbe",
+        "scripts/supported-runtime-proof/runtime-proof-postgres.cjs#hasContiguousRunSequence",
+        "scripts/supported-runtime-proof/runtime-proof-postgres.cjs#quoteIdentifier",
+        "scripts/supported-runtime-proof/runtime-proof-postgres.cjs#snapshotsMatch",
+        "scripts/supported-runtime-proof/runtime-proof-profile.cjs#SUPPORTED_RUNTIME_PROOF_PROFILE",
+        "scripts/supported-runtime-proof/runtime-proof-profile.cjs#deepFreeze",
+        "scripts/supported-runtime-proof/runtime-proof-profile.cjs#isPositiveInteger",
+        "scripts/supported-runtime-proof/runtime-proof-profile.cjs#validateSupportedRuntimeProofProfile",
+        "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs#collectRunEvidence",
+        "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs#executeRuntimeProofIteration",
+        "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs#preparePersistedPlan",
+        "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs#recoverPostgresRuntime",
+        "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs#sleep",
+        "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs#startAndWaitForCompletion",
+        "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs#summarizeDurations",
+        "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs#waitForCondition",
+        "scripts/supported-runtime-proof/runtime-proof-snapshot.cjs#calculateProjectionFreshnessMs",
+        "scripts/supported-runtime-proof/runtime-proof-snapshot.cjs#canonicalDependencies",
+        "scripts/supported-runtime-proof/runtime-proof-snapshot.cjs#loadCanonicalDependencies",
+        "scripts/supported-runtime-proof/runtime-proof-snapshot.cjs#projectCanonicalSnapshot",
+        "scripts/supported-runtime-proof/runtime-proof-workload.cjs#GRAPH_SHA",
+        "scripts/supported-runtime-proof/runtime-proof-workload.cjs#SQL_SHA",
+        "scripts/supported-runtime-proof/runtime-proof-workload.cjs#buildArtifact",
+        "scripts/supported-runtime-proof/runtime-proof-workload.cjs#buildDraftNode",
+        "scripts/supported-runtime-proof/runtime-proof-workload.cjs#buildRuntimeProofDraftSaveRequest",
+        "scripts/supported-runtime-proof/runtime-proof-workload.cjs#buildRuntimeProofPreviewRequest",
+        "scripts/supported-runtime-proof/runtime-proof-workload.cjs#buildRuntimeProofStartRequest",
+        "scripts/run-dev-stack.cjs#PROCESS_TERMINATION_TIMEOUT_MS",
+        "scripts/run-dev-stack.cjs#hasProcessExited",
+        "scripts/run-dev-stack.cjs#runTaskkill",
+        "scripts/run-dev-stack.cjs#terminateProcess",
+        "scripts/run-dev-stack.cjs#waitForProcessExit"
+      ],
+      "documentationRefs": [
+        "docs/evidence/ED-20260803-supported-runtime-recovery.md",
+        "docs/runbooks/temporal-postgres-proof-environment.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "package.json",
+        "apps/api/src/db/pool.ts",
+        "apps/api/src/modules/buildProtectedRuntimeModule.ts",
+        "apps/outbox-worker/src/db/pool.ts",
+        "apps/outbox-worker/src/ownership/PgShardOwnershipGate.ts",
+        "apps/outbox-worker/test/ownership/PgShardOwnershipGate.test.ts",
+        "packages/@dvt/adapter-postgres/src/Postgres*.ts",
+        "packages/@dvt/adapter-postgres/src/index.ts",
+        "packages/@dvt/adapter-postgres/test/PostgresPoolErrorPolicy.test.ts",
+        "scripts/run-dev-stack.cjs",
+        "scripts/run-supported-runtime-proof.cjs",
+        "scripts/run-supported-runtime-proof.test.cjs",
+        "scripts/run-temporal-postgres-proof.cjs",
+        "scripts/run-temporal-postgres-proof.test.cjs",
+        "scripts/supported-runtime-proof/**"
+      ],
+      "architectureGuards": [
+        "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs",
+        "pnpm test:supported-runtime-proof",
+        "node --test scripts/supported-runtime-proof/runtime-proof-lifecycle.test.cjs scripts/run-dev-stack.test.cjs"
+      ],
+      "completionGate": [
+        "pnpm proof:supported-runtime",
+        "pnpm docs:feature-mechanization:implementation",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "scripts/run-supported-runtime-proof.cjs",
+      "sourceContentSha256": "cee97b8f6a70db8a2416267b710748f6304a8f879ec1ad9a4842878d88c417d1",
+      "rawRail": {
+        "name": "ProveSupportedRuntimeRecovery",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "RuntimeProofHarness"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "PostgresPoolFailure",
+            "path": "packages/@dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "PostgresPoolFailureReporter",
+            "path": "packages/@dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "createObservedPostgresPool",
+            "path": "packages/@dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "readPostgresErrorCode",
+            "path": "packages/@dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "reportPostgresPoolFailure",
+            "path": "packages/@dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "fs",
+            "path": "scripts/run-supported-runtime-proof.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "main",
+            "path": "scripts/run-supported-runtime-proof.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "parseArgs",
+            "path": "scripts/run-supported-runtime-proof.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "path",
+            "path": "scripts/run-supported-runtime-proof.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "writeArtifact",
+            "path": "scripts/run-supported-runtime-proof.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "resetPostgresProofStack",
+            "path": "scripts/run-temporal-postgres-proof.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "startPostgresContainer",
+            "path": "scripts/run-temporal-postgres-proof.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "stopPostgresContainer",
+            "path": "scripts/run-temporal-postgres-proof.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "handleDelivery",
+            "path": "scripts/supported-runtime-proof/runtime-proof-event-sink.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "readBody",
+            "path": "scripts/supported-runtime-proof/runtime-proof-event-sink.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "startRuntimeProofEventSink",
+            "path": "scripts/supported-runtime-proof/runtime-proof-event-sink.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "writeJson",
+            "path": "scripts/supported-runtime-proof/runtime-proof-event-sink.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "createRuntimeProofApiClient",
+            "path": "scripts/supported-runtime-proof/runtime-proof-http.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "parseJson",
+            "path": "scripts/supported-runtime-proof/runtime-proof-http.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "requestJson",
+            "path": "scripts/supported-runtime-proof/runtime-proof-http.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "INVARIANT_ORDER",
+            "path": "scripts/supported-runtime-proof/runtime-proof-invariants.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "calculateRatePerSecond",
+            "path": "scripts/supported-runtime-proof/runtime-proof-invariants.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "evaluateRuntimeProof",
+            "path": "scripts/supported-runtime-proof/runtime-proof-invariants.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "isDeliveryOrderPreserved",
+            "path": "scripts/supported-runtime-proof/runtime-proof-invariants.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "percentile",
+            "path": "scripts/supported-runtime-proof/runtime-proof-invariants.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "POLL_INTERVAL_MS",
+            "path": "scripts/supported-runtime-proof/runtime-proof-lifecycle.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "READY_TIMEOUT_MS",
+            "path": "scripts/supported-runtime-proof/runtime-proof-lifecycle.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "allocateRuntimePorts",
+            "path": "scripts/supported-runtime-proof/runtime-proof-lifecycle.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "buildRuntimeProofOutboxEnv",
+            "path": "scripts/supported-runtime-proof/runtime-proof-lifecycle.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "buildRuntimeProofProjectorEnv",
+            "path": "scripts/supported-runtime-proof/runtime-proof-lifecycle.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "buildScopeEnv",
+            "path": "scripts/supported-runtime-proof/runtime-proof-lifecycle.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "startSupportedRuntimeProofLifecycle",
+            "path": "scripts/supported-runtime-proof/runtime-proof-lifecycle.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "createRuntimeProofPostgresProbe",
+            "path": "scripts/supported-runtime-proof/runtime-proof-postgres.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "hasContiguousRunSequence",
+            "path": "scripts/supported-runtime-proof/runtime-proof-postgres.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "quoteIdentifier",
+            "path": "scripts/supported-runtime-proof/runtime-proof-postgres.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "snapshotsMatch",
+            "path": "scripts/supported-runtime-proof/runtime-proof-postgres.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "SUPPORTED_RUNTIME_PROOF_PROFILE",
+            "path": "scripts/supported-runtime-proof/runtime-proof-profile.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "deepFreeze",
+            "path": "scripts/supported-runtime-proof/runtime-proof-profile.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "isPositiveInteger",
+            "path": "scripts/supported-runtime-proof/runtime-proof-profile.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "validateSupportedRuntimeProofProfile",
+            "path": "scripts/supported-runtime-proof/runtime-proof-profile.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "collectRunEvidence",
+            "path": "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "executeRuntimeProofIteration",
+            "path": "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "preparePersistedPlan",
+            "path": "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "recoverPostgresRuntime",
+            "path": "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "sleep",
+            "path": "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "startAndWaitForCompletion",
+            "path": "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "summarizeDurations",
+            "path": "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "waitForCondition",
+            "path": "scripts/supported-runtime-proof/runtime-proof-scenarios.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs"
+          },
+          {
+            "name": "calculateProjectionFreshnessMs",
+            "path": "scripts/supported-runtime-proof/runtime-proof-snapshot.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "pnpm test:supported-runtime-proof"
+          },
+          {
+            "name": "canonicalDependencies",
+            "path": "scripts/supported-runtime-proof/runtime-proof-snapshot.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "pnpm test:supported-runtime-proof"
+          },
+          {
+            "name": "loadCanonicalDependencies",
+            "path": "scripts/supported-runtime-proof/runtime-proof-snapshot.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "pnpm test:supported-runtime-proof"
+          },
+          {
+            "name": "projectCanonicalSnapshot",
+            "path": "scripts/supported-runtime-proof/runtime-proof-snapshot.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "pnpm test:supported-runtime-proof"
+          },
+          {
+            "name": "GRAPH_SHA",
+            "path": "scripts/supported-runtime-proof/runtime-proof-workload.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "pnpm test:supported-runtime-proof"
+          },
+          {
+            "name": "SQL_SHA",
+            "path": "scripts/supported-runtime-proof/runtime-proof-workload.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "pnpm test:supported-runtime-proof"
+          },
+          {
+            "name": "buildArtifact",
+            "path": "scripts/supported-runtime-proof/runtime-proof-workload.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "pnpm test:supported-runtime-proof"
+          },
+          {
+            "name": "buildDraftNode",
+            "path": "scripts/supported-runtime-proof/runtime-proof-workload.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "pnpm test:supported-runtime-proof"
+          },
+          {
+            "name": "buildRuntimeProofDraftSaveRequest",
+            "path": "scripts/supported-runtime-proof/runtime-proof-workload.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "pnpm test:supported-runtime-proof"
+          },
+          {
+            "name": "buildRuntimeProofPreviewRequest",
+            "path": "scripts/supported-runtime-proof/runtime-proof-workload.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "pnpm test:supported-runtime-proof"
+          },
+          {
+            "name": "buildRuntimeProofStartRequest",
+            "path": "scripts/supported-runtime-proof/runtime-proof-workload.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/supported-runtime-proof/runtime-proof-scenarios.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "pnpm test:supported-runtime-proof"
+          },
+          {
+            "name": "PROCESS_TERMINATION_TIMEOUT_MS",
+            "path": "scripts/run-dev-stack.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/supported-runtime-proof/runtime-proof-lifecycle.test.cjs",
+              "scripts/run-dev-stack.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/supported-runtime-proof/runtime-proof-lifecycle.test.cjs scripts/run-dev-stack.test.cjs"
+          },
+          {
+            "name": "hasProcessExited",
+            "path": "scripts/run-dev-stack.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/supported-runtime-proof/runtime-proof-lifecycle.test.cjs",
+              "scripts/run-dev-stack.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/supported-runtime-proof/runtime-proof-lifecycle.test.cjs scripts/run-dev-stack.test.cjs"
+          },
+          {
+            "name": "runTaskkill",
+            "path": "scripts/run-dev-stack.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/supported-runtime-proof/runtime-proof-lifecycle.test.cjs",
+              "scripts/run-dev-stack.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/supported-runtime-proof/runtime-proof-lifecycle.test.cjs scripts/run-dev-stack.test.cjs"
+          },
+          {
+            "name": "terminateProcess",
+            "path": "scripts/run-dev-stack.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/supported-runtime-proof/runtime-proof-lifecycle.test.cjs",
+              "scripts/run-dev-stack.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/supported-runtime-proof/runtime-proof-lifecycle.test.cjs scripts/run-dev-stack.test.cjs"
+          },
+          {
+            "name": "waitForProcessExit",
+            "path": "scripts/run-dev-stack.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/supported-runtime-proof/runtime-proof-lifecycle.test.cjs",
+              "scripts/run-dev-stack.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/supported-runtime-proof/runtime-proof-lifecycle.test.cjs scripts/run-dev-stack.test.cjs"
+          }
+        ],
+        "version": 1,
+        "featureId": "MVP-18-SUPPORTED-RUNTIME-RECOVERY",
+        "userStories": ["https://github.com/dunay2/dvt/issues/18"],
+        "cypressFlows": ["N/A - protected backend runtime proof"],
+        "domainObjects": [
+          "SupportedRuntimeProofProfile",
+          "PostgresConnectionResilience"
+        ],
+        "fowlerSignals": [
+          "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+        ],
+        "completionGate": [
+          "pnpm proof:supported-runtime",
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "provesupportedruntimerecovery-record",
+            "redTest": "node --test scripts/supported-runtime-proof/runtime-proof-lifecycle.test.cjs",
+            "greenTest": "pnpm test:supported-runtime-proof",
+            "patchSurfaces": [
+              "package.json",
+              "apps/api/src/db/pool.ts",
+              "apps/api/src/modules/buildProtectedRuntimeModule.ts",
+              "apps/outbox-worker/src/db/pool.ts",
+              "apps/outbox-worker/src/ownership/PgShardOwnershipGate.ts",
+              "apps/outbox-worker/test/ownership/PgShardOwnershipGate.test.ts",
+              "packages/@dvt/adapter-postgres/src/Postgres*.ts",
+              "packages/@dvt/adapter-postgres/src/index.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresPoolErrorPolicy.test.ts",
+              "scripts/run-dev-stack.cjs",
+              "scripts/run-supported-runtime-proof.cjs",
+              "scripts/run-supported-runtime-proof.test.cjs",
+              "scripts/run-temporal-postgres-proof.cjs",
+              "scripts/run-temporal-postgres-proof.test.cjs",
+              "scripts/supported-runtime-proof/**"
+            ],
+            "expectedFailure": "Worker replacement starts before the previous process exits or lacks a bounded forced-kill fallback."
+          }
+        ],
+        "componentGuides": [
+          "docs/runbooks/temporal-postgres-proof-environment.md"
+        ],
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ProveSupportedRuntimeRecovery",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "RuntimeProofHarness"
+          }
+        ],
+        "architectureGuards": [
+          "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs",
+          "pnpm test:supported-runtime-proof",
+          "node --test scripts/supported-runtime-proof/runtime-proof-lifecycle.test.cjs scripts/run-dev-stack.test.cjs"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/18",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "package.json",
+          "apps/api/src/db/pool.ts",
+          "apps/api/src/modules/buildProtectedRuntimeModule.ts",
+          "apps/outbox-worker/src/db/pool.ts",
+          "apps/outbox-worker/src/ownership/PgShardOwnershipGate.ts",
+          "apps/outbox-worker/test/ownership/PgShardOwnershipGate.test.ts",
+          "packages/@dvt/adapter-postgres/src/Postgres*.ts",
+          "packages/@dvt/adapter-postgres/src/index.ts",
+          "packages/@dvt/adapter-postgres/test/PostgresPoolErrorPolicy.test.ts",
+          "scripts/run-dev-stack.cjs",
+          "scripts/run-supported-runtime-proof.cjs",
+          "scripts/run-supported-runtime-proof.test.cjs",
+          "scripts/run-temporal-postgres-proof.cjs",
+          "scripts/run-temporal-postgres-proof.test.cjs",
+          "scripts/supported-runtime-proof/**"
+        ],
+        "forbiddenImplementationSurfaces": ["docs/archive/**"]
+      },
+      "revision": 6,
+      "createdBy": "codex",
+      "createdAt": "2026-08-03T15:47:32.794Z"
     },
     {
       "railId": "local#MVP-2072-RUN-EVENT-FEED#query#listrunevents",
