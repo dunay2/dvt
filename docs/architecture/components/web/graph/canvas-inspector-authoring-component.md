@@ -150,33 +150,34 @@ write surface lives one level up in the route-owned wrapper.
 
 <!-- markdownlint-disable MD060 -->
 
-| File                                         | Owns                                                                | Must not own                            |
-| -------------------------------------------- | ------------------------------------------------------------------- | --------------------------------------- |
-| `canvasInspectorAuthoring.types.ts`          | semantic DTO and route-owned authoring contract                     | React state or aggregate mutation       |
-| `canvasInspectorAuthoringErrorCodes.ts`      | locale-neutral authoring validation error code vocabulary           | presentation copy or validation logic   |
-| `canvasInspectorAuthoringModel.ts`           | draft projection, validation, dirty-state comparison, normalization | React hooks, services, or persistence   |
-| `canvasCopyCatalog.authoring.ts`             | English fallback copy for Canvas authoring surfaces                 | node semantics or persisted names       |
-| `canvasCopyCatalog.authoring.es.ts`          | Spanish copy for Canvas authoring surfaces                          | node semantics or persisted names       |
-| `canvasCopyFormatting.ts`                    | copy-backed formatting for authoring errors and Canvas messages     | validation rules                        |
-| `canvasDbtAuthoringModel.ts`                 | dbt card metadata value object and origin-selection policy          | React hooks, services, or persistence   |
-| `canvasDvtAuthoringModel.ts`                 | DVT source, SQL transform, and sink config value object             | React hooks, services, or persistence   |
-| `canvasInspectorAuthoringCommand.ts`         | aggregate mutation from validated Inspector draft                   | UI state or passive panel composition   |
-| `useCanvasInspectorCommands.ts`              | route callback bridge into the aggregate                            | validation rules or persistence timing  |
-| `CanvasInspectorAuthoringSection.tsx`        | route-owned edit orchestration and base node fields                 | plugin semantics or transport ownership |
-| `DbtAuthoringFields.tsx`                     | dbt plugin authoring fields and generated SQL preview               | generic Canvas readiness policy         |
-| `DvtAuthoringFields.tsx`                     | DVT source, SQL transform, and sink field rendering                 | dbt adapter mapping or graph strategy   |
-| `DvtSqlTransformAuthoringSection.tsx`        | shared Monaco composition and read-only upstream column projection  | direct Monaco imports or persistence    |
-| `CanvasInspectorPanel.tsx`                   | route-owned composition wrapper                                     | validation rules or aggregate policy    |
-| `components/InspectorPanel.tsx`              | passive details and plugin read-only panels                         | route mutation semantics                |
-| `canvasDraftAuthoring.ts`                    | authoring payload projection and semantic signature policy          | aggregate state machine ownership       |
-| `canvasAuthoringMetadata.ts`                 | deterministic JSON-compatible metadata DTO projection               | plugin-specific metadata semantics      |
-| `canvasDraftStructuralSignature.ts`          | fallback structural signature for draft baselines                   | semantic node or edge detail policy     |
-| `useCanvasDraftInitialBootstrap.ts`          | initial saved-signature assignment from shared baseline policy      | hook-local signature rules              |
-| `useCanvasDraftReloadHydration.ts`           | reload saved-signature assignment from shared baseline policy       | hook-local signature rules              |
-| `types/canonicalGuards.ts`                   | runtime guards for canonical graph primitives                       | Canvas route state or plugin mapping    |
-| `plugins/graphStrategyContracts.ts`          | plugin-neutral graph strategy contract                              | DBT mapping implementation              |
-| `plugins/dvt/transformationGraphStrategy.ts` | DVT-owned transformation graph strategy and canonical guards        | DBT adapter mapping or Canvas posture   |
-| `views/lineage/useLineageViewData.ts`        | DBT snapshot read model and explicit DBT strategy resolution        | Canvas authoring default ownership      |
+| File                                         | Owns                                                                | Must not own                                        |
+| -------------------------------------------- | ------------------------------------------------------------------- | --------------------------------------------------- |
+| `canvasInspectorAuthoring.types.ts`          | semantic DTO and route-owned authoring contract                     | React state or aggregate mutation                   |
+| `canvasInspectorAuthoringErrorCodes.ts`      | locale-neutral authoring validation error code vocabulary           | presentation copy or validation logic               |
+| `canvasInspectorAuthoringModel.ts`           | draft projection, validation, dirty-state comparison, normalization | React hooks, services, or persistence               |
+| `canvasCopyCatalog.authoring.ts`             | English fallback copy for Canvas authoring surfaces                 | node semantics or persisted names                   |
+| `canvasCopyCatalog.authoring.es.ts`          | Spanish copy for Canvas authoring surfaces                          | node semantics or persisted names                   |
+| `canvasCopyFormatting.ts`                    | copy-backed formatting for authoring errors and Canvas messages     | validation rules                                    |
+| `canvasDbtAuthoringModel.ts`                 | dbt card metadata value object and origin-selection policy          | React hooks, services, or persistence               |
+| `canvasDvtAuthoringModel.ts`                 | DVT source, SQL transform, and sink config value object             | React hooks, services, or persistence               |
+| `canvasInspectorAuthoringCommand.ts`         | aggregate mutation from validated Inspector draft                   | UI state or passive panel composition               |
+| `useCanvasInspectorCommands.ts`              | route callback bridge into the aggregate                            | validation rules or persistence timing              |
+| `CanvasInspectorAuthoringSection.tsx`        | route-owned edit orchestration and base node fields                 | plugin semantics or transport ownership             |
+| `DbtAuthoringFields.tsx`                     | dbt plugin authoring fields and generated SQL preview               | generic Canvas readiness policy                     |
+| `DvtAuthoringFields.tsx`                     | DVT source, SQL transform, and sink field rendering                 | dbt adapter mapping or graph strategy               |
+| `DvtSqlTransformAuthoringSection.tsx`        | shared Monaco composition for DVT SQL authoring                     | column facts, direct Monaco imports, or persistence |
+| `nodePropertiesReadModel.ts`                 | single canonical projection of read-only upstream column facts      | DVT authoring or persistence                        |
+| `CanvasInspectorPanel.tsx`                   | route-owned composition wrapper                                     | validation rules or aggregate policy                |
+| `components/InspectorPanel.tsx`              | passive details and plugin read-only panels                         | route mutation semantics                            |
+| `canvasDraftAuthoring.ts`                    | authoring payload projection and semantic signature policy          | aggregate state machine ownership                   |
+| `canvasAuthoringMetadata.ts`                 | deterministic JSON-compatible metadata DTO projection               | plugin-specific metadata semantics                  |
+| `canvasDraftStructuralSignature.ts`          | fallback structural signature for draft baselines                   | semantic node or edge detail policy                 |
+| `useCanvasDraftInitialBootstrap.ts`          | initial saved-signature assignment from shared baseline policy      | hook-local signature rules                          |
+| `useCanvasDraftReloadHydration.ts`           | reload saved-signature assignment from shared baseline policy       | hook-local signature rules                          |
+| `types/canonicalGuards.ts`                   | runtime guards for canonical graph primitives                       | Canvas route state or plugin mapping                |
+| `plugins/graphStrategyContracts.ts`          | plugin-neutral graph strategy contract                              | DBT mapping implementation                          |
+| `plugins/dvt/transformationGraphStrategy.ts` | DVT-owned transformation graph strategy and canonical guards        | DBT adapter mapping or Canvas posture               |
+| `views/lineage/useLineageViewData.ts`        | DBT snapshot read model and explicit DBT strategy resolution        | Canvas authoring default ownership                  |
 
 <!-- markdownlint-enable MD060 -->
 

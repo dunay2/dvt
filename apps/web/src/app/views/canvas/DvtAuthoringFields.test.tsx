@@ -5,7 +5,7 @@ import React, { act, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import type { CanonicalNode } from '../../types/canonical';
 import {
   createCanvasInspectorNodeDraft,
   validateCanvasInspectorNodeDraft,
@@ -74,24 +74,7 @@ function buildImportedWarehouseSourceNode(): CanonicalNode {
   };
 }
 
-function buildEdge(sourceId: string, targetId: string): CanonicalEdge {
-  return {
-    id: `${sourceId}-${targetId}`,
-    sourceId,
-    targetId,
-    relation: 'lineage',
-  };
-}
-
-function DvtAuthoringFieldsHarness({
-  node,
-  nodes = [node],
-  edges = [],
-}: Readonly<{
-  node: CanonicalNode;
-  nodes?: readonly CanonicalNode[];
-  edges?: readonly CanonicalEdge[];
-}>): JSX.Element {
+function DvtAuthoringFieldsHarness({ node }: Readonly<{ node: CanonicalNode }>): JSX.Element {
   const [draft, setDraft] = useState(() => createCanvasInspectorNodeDraft(node));
   const errors = validateCanvasInspectorNodeDraft(draft);
 
@@ -99,8 +82,6 @@ function DvtAuthoringFieldsHarness({
     <>
       <DvtAuthoringFields
         node={node}
-        nodes={nodes}
-        edges={edges}
         disabled={false}
         draft={draft}
         errors={errors}
@@ -132,14 +113,9 @@ describe('DvtAuthoringFields', () => {
     vi.clearAllMocks();
   });
 
-  function renderFields(
-    node: CanonicalNode,
-    graph?: Readonly<{ nodes: readonly CanonicalNode[]; edges: readonly CanonicalEdge[] }>
-  ): void {
+  function renderFields(node: CanonicalNode): void {
     act(() => {
-      root.render(
-        <DvtAuthoringFieldsHarness node={node} nodes={graph?.nodes} edges={graph?.edges} />
-      );
+      root.render(<DvtAuthoringFieldsHarness node={node} />);
     });
   }
 
@@ -211,10 +187,7 @@ describe('DvtAuthoringFields', () => {
       },
     });
 
-    renderFields(transform, {
-      nodes: [source, transform],
-      edges: [buildEdge(source.id, transform.id)],
-    });
+    renderFields(transform);
 
     expect(container.querySelector('input[name="dvt-transform-column"]')).toBeNull();
     expect(draftJson()).not.toContain('selectedColumns');

@@ -520,8 +520,11 @@ describe('CanvasNodeWorkbenchPanel', () => {
     const columnsSection = container.querySelector(
       '[data-slot="canvas-node-workbench-columns-section"]'
     );
+    const columnRows = columnsSection?.querySelectorAll('tbody tr');
     expect(columnsSection).not.toBeNull();
-    expect(columnsSection?.textContent?.match(/Orders Source\.order_id/g)).toHaveLength(1);
+    expect(columnRows).toHaveLength(2);
+    expect(columnRows?.[0]?.textContent).toContain('Orders Source');
+    expect(columnRows?.[0]?.textContent).toContain('order_id');
     expect(columnsSection?.textContent).toContain('integer');
     expect(columnsSection?.querySelector('input[name="dvt-transform-column"]')).toBeNull();
     expect(

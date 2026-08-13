@@ -2,23 +2,18 @@
 import type { Dispatch, SetStateAction } from 'react';
 
 import { MonacoCodeEditor } from '../../components/monaco/MonacoCodeEditor';
-import { buildDvtTransformColumnOptions } from '../../components/inspector/dvtTransformColumnModel';
 import { inspectorVisualClasses } from '../../components/inspector/inspectorVisualTokens';
-import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import type { CanonicalNode } from '../../types/canonical';
 import type { DvtSqlTransformAuthoringMetadata } from './canvasDvtAuthoringModel';
 import { formatCanvasInspectorNodeDraftError } from './canvasCopyFormatting';
-import { detectCanvasViewLocale } from './canvasCopyCatalog';
 import type {
   CanvasInspectorNodeDraft,
   CanvasInspectorNodeDraftErrors,
 } from './canvasInspectorAuthoring.types';
-import { buildCanvasNodePresentationCopy } from './canvasNodePresentationCopy';
 import { canvasViewCopy } from './copy';
 
 export function DvtSqlTransformAuthoringSection({
   node,
-  nodes,
-  edges,
   disabled,
   draft,
   errors,
@@ -26,16 +21,13 @@ export function DvtSqlTransformAuthoringSection({
   onChange,
 }: Readonly<{
   node: CanonicalNode;
-  nodes: readonly CanonicalNode[];
-  edges: readonly CanonicalEdge[];
   disabled: boolean;
   draft: DvtSqlTransformAuthoringMetadata;
   errors: CanvasInspectorNodeDraftErrors['dvt'];
-  section?: 'all' | 'columns' | 'code';
+  section?: 'all' | 'code';
   onChange: Dispatch<SetStateAction<CanvasInspectorNodeDraft>>;
 }>): JSX.Element {
   const showCode = section === 'all' || section === 'code';
-  const showColumns = section === 'all' || section === 'columns';
   const normalizedSqlLines = draft.sql
     .split(/\r?\n/)
     .map((line) => line.trim())
@@ -45,17 +37,6 @@ export function DvtSqlTransformAuthoringSection({
     sqlLineCount === 1
       ? canvasViewCopy.inspectorDvtSqlLineSingularLabel
       : canvasViewCopy.inspectorDvtSqlLinePluralLabel;
-  const nodePresentationCopy = buildCanvasNodePresentationCopy(
-    canvasViewCopy,
-    detectCanvasViewLocale()
-  );
-  const inputRoleLabel = nodePresentationCopy.valueLabels?.input;
-  const columnOptions = buildDvtTransformColumnOptions({
-    node,
-    nodes,
-    edges,
-    selectedColumnRefs: [],
-  });
 
   return (
     <div className={inspectorVisualClasses.inspectorDbtSection}>
@@ -103,43 +84,6 @@ export function DvtSqlTransformAuthoringSection({
               </p>
             ) : null}
           </div>
-        </div>
-      ) : null}
-      {showColumns ? (
-        <div className={showCode ? 'mt-4 space-y-2' : 'space-y-2'}>
-          <div className="flex items-center justify-between gap-3">
-            <h4 className={inspectorVisualClasses.contextPanelSectionTitle}>
-              {canvasViewCopy.nodePresentationColumnsLabel}
-              {inputRoleLabel == null ? null : ` (${inputRoleLabel})`}
-            </h4>
-          </div>
-          {columnOptions.length > 0 ? (
-            <div className="max-h-48 overflow-auto rounded border border-[color:var(--border-default)]">
-              {columnOptions.map((option) => (
-                <div
-                  key={option.columnRef}
-                  className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-[color:var(--border-muted)] px-3 py-2 text-xs last:border-b-0"
-                >
-                  <span className="min-w-0">
-                    <span className="block truncate font-mono text-(--text-default)">
-                      {option.sourceNodeName}.{option.columnName}
-                    </span>
-                    <span className="block truncate text-(--text-muted)">{option.columnRef}</span>
-                  </span>
-                  <span className="rounded border border-[color:var(--border-default)] px-2 py-1 font-mono text-(--text-muted)">
-                    {option.dataType}
-                    {option.nullable === false
-                      ? ` ${canvasViewCopy.dvtFlowGuideRequiredLabel}`
-                      : ''}
-                  </span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className={inspectorVisualClasses.inspectorBody}>
-              {canvasViewCopy.dvtFlowGuideColumnsMissingMessage}
-            </p>
-          )}
         </div>
       ) : null}
     </div>

@@ -53,7 +53,6 @@ export function CanvasInspectorAuthoringSection({
     draft.dvt != null &&
     (section === 'all' ||
       (section === 'general' && draft.dvt.kind === 'source') ||
-      (section === 'columns' && draft.dvt.kind === 'sql_transform') ||
       (section === 'code' && draft.dvt.kind === 'sql_transform') ||
       (section === 'sink' && draft.dvt.kind === 'sink'));
   const showDbtAuthoring =
@@ -141,8 +140,6 @@ export function CanvasInspectorAuthoringSection({
         {showDvtAuthoring ? (
           <DvtAuthoringFields
             node={node}
-            nodes={nodes}
-            edges={edges}
             disabled={!authoring.canEditNode}
             draft={draft}
             errors={errors}
