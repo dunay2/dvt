@@ -144,6 +144,7 @@ export async function invokeStartRunRoute(args: InvokeRouteArgs = {}): Promise<{
       id: args.request?.id ?? 'req-1',
       headers: args.request?.headers ?? {},
       body: hasBodyOverride ? args.request?.body : VALID_BODY,
+      log: { error() {} },
     } as never,
     reply as never,
     facade as never,

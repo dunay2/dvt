@@ -50,6 +50,12 @@ export const httpErrorTranslation = {
   startRun: {
     facadeResult: mapStartRunFacadeResult,
     engineError: mapStartRunEngineError,
+    internalError(): HttpResponseModel {
+      return createHttpErrorResponse({
+        type: HTTP_ERROR_TYPE.internalServerError,
+        reason: HTTP_ERROR_REASON.internalError,
+      });
+    },
   },
   workspaceGraphDraft: {
     read: {
