@@ -16,60 +16,22 @@ test('source import live proof starts the API without the package predev lifecyc
   ]);
 });
 
-test('source import live proof grants two workspace scopes for one tenant', () => {
+test('source import live proof starts with tenant project-creation authority and no phantom projects', () => {
   const runner = new CanvasSourceImportLiveProofRunner({});
 
-  assert.deepEqual(
-    runner.buildProtectedRuntimeTenantAccess(
-      [
-        {
-          tenantId: 'tenant-a',
-          projectId: 'project-a',
-          environmentId: 'dev',
-        },
-        {
-          tenantId: 'tenant-a',
-          projectId: 'project-b',
-          environmentId: 'test',
-        },
-      ],
-      ['workspace:graph-draft:view']
-    ),
-    [
-      {
-        tenantId: 'tenant-a',
-        allowedActions: ['workspace:graph-draft:view'],
-        projectAccess: [
-          {
-            projectId: 'project-a',
-            allowedActions: [],
-            environmentAccess: [{ environmentId: 'dev', allowedActions: [] }],
-          },
-          {
-            projectId: 'project-b',
-            allowedActions: [],
-            environmentAccess: [{ environmentId: 'test', allowedActions: [] }],
-          },
-        ],
-      },
-    ]
-  );
+  assert.deepEqual(runner.buildInitialTenantAccess('tenant-a', ['project:create']), [
+    {
+      tenantId: 'tenant-a',
+      allowedActions: ['project:create'],
+      projectAccess: [],
+    },
+  ]);
 });
 
-test('source import live proof rejects cross-tenant grant fixtures', () => {
+test('source import live proof rejects an empty tenant id for its initial grant', () => {
   const runner = new CanvasSourceImportLiveProofRunner({});
 
-  assert.throws(
-    () =>
-      runner.buildProtectedRuntimeTenantAccess(
-        [
-          { tenantId: 'tenant-a', projectId: 'project-a', environmentId: 'dev' },
-          { tenantId: 'tenant-b', projectId: 'project-b', environmentId: 'dev' },
-        ],
-        ['workspace:graph-draft:view']
-      ),
-    /requires all workspace scopes in one tenant/
-  );
+  assert.throws(() => runner.buildInitialTenantAccess('', ['project:create']), /tenant id/);
 });
 
 test('source import live proof exposes each workspace option once', () => {
@@ -97,7 +59,6 @@ test('source import live proof uses locally resolvable Cypress dependencies on W
       apiPort: 3300,
       webPort: 4174,
       apiBearerToken: 'test-token',
-      baseWorkspaceScope: { projectId: 'base-project' },
       workspaceScope: {
         tenantId: 'tenant-a',
         projectId: 'proof-project',
@@ -118,7 +79,8 @@ test('source import live proof uses locally resolvable Cypress dependencies on W
   assert.deepEqual(invocation.args.slice(0, 4), ['exec', 'cypress', 'run', '--config-file']);
   assert.equal(invocation.options.env.CYPRESS_baseUrl, 'http://127.0.0.1:4174');
   assert.equal(invocation.options.env.CYPRESS_apiBaseUrl, 'http://127.0.0.1:3300');
-  assert.equal(invocation.options.env.CYPRESS_workspaceProjectId, 'base-project');
+  assert.equal(invocation.options.env.CYPRESS_workspaceProjectId, 'proof-project');
+  assert.equal(invocation.options.env.CYPRESS_firstAuthoringProjectId, 'proof-project');
   assert.equal(invocation.options.env.CYPRESS_secondaryWorkspaceTenantId, 'tenant-a');
   assert.equal(invocation.options.env.CYPRESS_secondaryWorkspaceProjectId, 'proof-project-b');
   assert.equal(invocation.options.env.CYPRESS_secondaryWorkspaceEnvironmentId, 'test');
@@ -134,7 +96,6 @@ test('source import live proof retains the isolated Docker Cypress lane on POSIX
       apiPort: 3300,
       webPort: 4174,
       apiBearerToken: 'test-token',
-      baseWorkspaceScope: { projectId: 'base-project' },
       workspaceScope: {
         tenantId: 'tenant-a',
         projectId: 'proof-project',
@@ -152,6 +113,8 @@ test('source import live proof retains the isolated Docker Cypress lane on POSIX
 
   assert.equal(invocation.command, 'docker');
   assert.ok(invocation.args.includes('CYPRESS_baseUrl=http://host.docker.internal:4174'));
+  assert.ok(invocation.args.includes('CYPRESS_workspaceProjectId=proof-project'));
+  assert.ok(invocation.args.includes('CYPRESS_firstAuthoringProjectId=proof-project'));
   assert.ok(invocation.args.includes('CYPRESS_secondaryWorkspaceTenantId=tenant-a'));
   assert.ok(invocation.args.includes('CYPRESS_secondaryWorkspaceProjectId=proof-project-b'));
   assert.ok(invocation.args.includes('CYPRESS_secondaryWorkspaceEnvironmentId=test'));
