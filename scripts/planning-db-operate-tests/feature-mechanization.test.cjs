@@ -389,6 +389,47 @@ test('feature mechanization hard cut has a distinct default idempotency identity
   assert.notEqual(replacement.idempotencyKey, additive.idempotencyKey);
 });
 
+test('feature mechanization rail planner replaces inherited architecture guards on explicit hard cut', () => {
+  const command = parseArgs(
+    featureMechanizationRecordArgs({
+      extraArgs: ['--replace-architecture-guards', 'true'],
+    })
+  );
+  const existingRail = {
+    rail_id: command.railId,
+    revision: 3,
+    created_at: '2026-06-01T12:00:00.000Z',
+    architecture_guards: ['[object Object]', 'retired topology guard'],
+    raw_rail: { name: command.railName, type: command.railType },
+    raw_manifest: {
+      architectureGuards: [{ name: 'legacy guard' }, 'retired topology guard'],
+      symbols: [],
+    },
+  };
+
+  const planned = planFeatureMechanizationRailRecordOperation({
+    command,
+    existingRail,
+    operationId: 'op-feature-mechanization-guard-hard-cut',
+    now: new Date('2026-06-05T18:00:00.000Z'),
+  });
+
+  assert.deepEqual(planned.rail.architectureGuards, command.architectureGuards);
+  assert.deepEqual(planned.rail.rawManifest.architectureGuards, command.architectureGuards);
+  assert.equal(planned.audit.payload.replaceArchitectureGuards, true);
+});
+
+test('feature mechanization architecture-guard hard cut has a distinct idempotency identity', () => {
+  const additive = parseArgs(featureMechanizationRecordArgs());
+  const replacement = parseArgs(
+    featureMechanizationRecordArgs({
+      extraArgs: ['--replace-architecture-guards', 'true'],
+    })
+  );
+
+  assert.notEqual(replacement.idempotencyKey, additive.idempotencyKey);
+});
+
 test('feature mechanization rail writer stores local rails without mutating imports', async () => {
   const command = parseArgs(
     featureMechanizationRecordArgs({

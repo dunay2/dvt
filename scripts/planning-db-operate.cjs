@@ -432,6 +432,7 @@ const operationHelp = Object.freeze({
       'pnpm planning:db:operate feature-mechanization <record|retire> --feature <FEATURE-ID> --rail <RailName> --type <command|query> --actor <actor>',
     details: [
       'RecordFeatureMechanizationRail stores a database command/query rail declaration and a valid feature-mechanization manifest projection without editing Markdown manifests.',
+      'Explicit replace flags hard-cut inherited implementation refs or architecture guards with audited idempotency.',
       'Requires --ddd-owner, --implementation-plan, --source-ref, --source-content-sha256, governance/doc/surface/validation fields, and at least one --implementation-ref in path#symbol form.',
       'RetireFeatureMechanizationRail deletes one stale local rail under exact may-delete design scope, expected revision, and audited provenance.',
     ],
@@ -1542,6 +1543,7 @@ function operationPayload(command) {
       patchSurfaces: command.patchSurfaces || [],
       greenTest: command.greenTest,
       replaceImplementationRefs: command.replaceImplementationRefs,
+      replaceArchitectureGuards: command.replaceArchitectureGuards,
       sourceRef: command.sourceRef,
       sourceContentSha256: command.sourceContentSha256,
     };
@@ -3231,6 +3233,8 @@ function parseFeatureMechanizationCommand(action, args) {
     greenTest: requireOption(options, 'greenTest'),
     replaceImplementationRefs:
       parseBooleanOption(options.replaceImplementationRefs, 'replace-implementation-refs') ?? false,
+    replaceArchitectureGuards:
+      parseBooleanOption(options.replaceArchitectureGuards, 'replace-architecture-guards') ?? false,
     sourceRef: requireOption(options, 'sourceRef'),
     sourceContentSha256: validateSha256(
       requireOption(options, 'sourceContentSha256'),
@@ -5021,7 +5025,9 @@ function pruneForbiddenFeatureMechanizationReferences(value, patterns) {
 }
 
 function mergeFeatureMechanizationManifest(existingManifest, incomingManifest, command) {
-  const existing = existingManifest || {};
+  const existing = command.replaceArchitectureGuards
+    ? { ...(existingManifest || {}), architectureGuards: [] }
+    : existingManifest || {};
   const merged = pruneForbiddenFeatureMechanizationReferences(
     mergeFeatureMechanizationValue(existing, incomingManifest),
     command.forbiddenImplementationSurfaces
@@ -5194,7 +5200,10 @@ function planFeatureMechanizationRailRecordOperation({ command, existingRail, op
         command.allowedImplementationSurfaces
       )
     ),
-    architectureGuards: mergeUniqueValues(previous?.architectureGuards, command.architectureGuards),
+    architectureGuards: mergeUniqueValues(
+      command.replaceArchitectureGuards ? [] : previous?.architectureGuards,
+      command.architectureGuards
+    ),
     completionGate: mergeUniqueValues(previous?.completionGate, command.completionGate),
     sourcePath: command.sourceRef,
     sourceContentSha256: command.sourceContentSha256,
