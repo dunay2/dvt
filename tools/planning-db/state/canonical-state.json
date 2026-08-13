@@ -134511,20 +134511,25 @@
         "apps/api/src/application/services/CompilePlanUseCase.ts#CompilePlanUseCase",
         "apps/api/src/entrypoints/http/compilePlanRoute.ts#registerCompilePlanRoute",
         "apps/api/src/entrypoints/http/planCompileRouteInputParser.ts#parsePlanCompileRouteInput",
-        "apps/api/src/entrypoints/http/compilePlanRouteResponseMapper.ts#mapCompilePlanUseCaseResult"
+        "apps/api/src/entrypoints/http/compilePlanRouteResponseMapper.ts#mapCompilePlanUseCaseResult",
+        "apps/api/src/entrypoints/http/compilePlanRoute.ts#CompilePlanRouteDeps",
+        "apps/api/src/entrypoints/http/compilePlanRoute.ts#resolveCompilePlanRouteRequest"
       ],
       "implementationRefs": [
         "apps/api/src/application/services/CompilePlanUseCase.ts#CompilePlanUseCase",
         "apps/api/src/entrypoints/http/compilePlanRoute.ts#registerCompilePlanRoute",
         "apps/api/src/entrypoints/http/planCompileRouteInputParser.ts#parsePlanCompileRouteInput",
-        "apps/api/src/entrypoints/http/compilePlanRouteResponseMapper.ts#mapCompilePlanUseCaseResult"
+        "apps/api/src/entrypoints/http/compilePlanRouteResponseMapper.ts#mapCompilePlanUseCaseResult",
+        "apps/api/src/entrypoints/http/compilePlanRoute.ts#CompilePlanRouteDeps",
+        "apps/api/src/entrypoints/http/compilePlanRoute.ts#resolveCompilePlanRouteRequest"
       ],
       "documentationRefs": [
         "docs/architecture/command-query-rail-governance.md"
       ],
       "governingSources": [
         "docs/architecture/command-query-rail-governance.md",
-        "https://github.com/dunay2/dvt/issues/2168"
+        "https://github.com/dunay2/dvt/issues/2168",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
       ],
       "allowedImplementationSurfaces": [
         "apps/api/src/application/services/CompilePlanUseCase.ts",
@@ -134604,6 +134609,32 @@
             "fowlerSignals": ["feature_envy"],
             "cypressCoverage": "Supported public API contract; no web Cypress consumer by explicit product decision.",
             "architectureGuard": "CompilePlan derives a plan without persistence or executability validation."
+          },
+          {
+            "name": "CompilePlanRouteDeps",
+            "path": "apps/api/src/entrypoints/http/compilePlanRoute.ts",
+            "cqRails": ["CompilePlan"],
+            "dddOwner": "Plan compile application service",
+            "unitTests": [
+              "apps/api/test/application/services/CompilePlanUseCase.test.ts",
+              "apps/api/test/entrypoints/http/compilePlanRoute.test.ts"
+            ],
+            "fowlerSignals": ["feature_envy"],
+            "cypressCoverage": "Supported public API contract; no web Cypress consumer by explicit product decision.",
+            "architectureGuard": "CompilePlan derives a plan without persistence or executability validation."
+          },
+          {
+            "name": "resolveCompilePlanRouteRequest",
+            "path": "apps/api/src/entrypoints/http/compilePlanRoute.ts",
+            "cqRails": ["CompilePlan"],
+            "dddOwner": "Plan compile application service",
+            "unitTests": [
+              "apps/api/test/application/services/CompilePlanUseCase.test.ts",
+              "apps/api/test/entrypoints/http/compilePlanRoute.test.ts"
+            ],
+            "fowlerSignals": ["feature_envy"],
+            "cypressCoverage": "Supported public API contract; no web Cypress consumer by explicit product decision.",
+            "architectureGuard": "CompilePlan derives a plan without persistence or executability validation."
           }
         ],
         "version": 1,
@@ -134635,7 +134666,8 @@
         ],
         "governingSources": [
           "docs/architecture/command-query-rail-governance.md",
-          "https://github.com/dunay2/dvt/issues/2168"
+          "https://github.com/dunay2/dvt/issues/2168",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
         ],
         "commandQueryRails": [
           {
@@ -134665,9 +134697,646 @@
           "Plan Store persistence or executability validation"
         ]
       },
-      "revision": 0,
+      "revision": 1,
       "createdBy": "codex",
       "createdAt": "2026-08-13T07:17:49.305Z"
+    },
+    {
+      "railId": "local#GH-2168-PLAN-LIFECYCLE-HARDCUT#command#importplan",
+      "featureId": "GH-2168-PLAN-LIFECYCLE-HARDCUT",
+      "mechanizationStatus": "implemented",
+      "railName": "ImportPlan",
+      "normalizedRailName": "importplan",
+      "railType": "command",
+      "dddOwner": "Plan import application service",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "apps/api/src/application/services/ImportPlanUseCase.ts#ImportPlanUseCase",
+        "apps/api/src/entrypoints/http/importPlanRoute.ts#ImportPlanRouteDeps",
+        "apps/api/src/entrypoints/http/importPlanRoute.ts#resolveImportPlanRouteRequest",
+        "apps/api/src/entrypoints/http/importPlanRoute.ts#registerImportPlanRoute",
+        "apps/api/src/entrypoints/http/importPlanRouteParser.ts#toPlanOwnership",
+        "apps/api/src/entrypoints/http/importPlanRouteResponseMapper.ts#ImportPlanRouteResponse",
+        "apps/api/src/entrypoints/http/importPlanRouteResponseMapper.ts#mapImportPlanUseCaseResult",
+        "apps/api/src/entrypoints/http/planRoutePlannerEnvelopeParser.ts#parsePlanRoutePlannerEnvironment",
+        "apps/api/src/entrypoints/http/planRoutePlannerEnvelopeParser.ts#toPlanRouteGraphSource",
+        "apps/api/src/entrypoints/http/planRouteScope.ts#toParsedPlanRouteContext"
+      ],
+      "implementationRefs": [
+        "apps/api/src/application/services/ImportPlanUseCase.ts#ImportPlanUseCase",
+        "apps/api/src/entrypoints/http/importPlanRoute.ts#ImportPlanRouteDeps",
+        "apps/api/src/entrypoints/http/importPlanRoute.ts#resolveImportPlanRouteRequest",
+        "apps/api/src/entrypoints/http/importPlanRoute.ts#registerImportPlanRoute",
+        "apps/api/src/entrypoints/http/importPlanRouteParser.ts#toPlanOwnership",
+        "apps/api/src/entrypoints/http/importPlanRouteResponseMapper.ts#ImportPlanRouteResponse",
+        "apps/api/src/entrypoints/http/importPlanRouteResponseMapper.ts#mapImportPlanUseCaseResult",
+        "apps/api/src/entrypoints/http/planRoutePlannerEnvelopeParser.ts#parsePlanRoutePlannerEnvironment",
+        "apps/api/src/entrypoints/http/planRoutePlannerEnvelopeParser.ts#toPlanRouteGraphSource",
+        "apps/api/src/entrypoints/http/planRouteScope.ts#toParsedPlanRouteContext"
+      ],
+      "documentationRefs": ["apps/api/README.md"],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md",
+        "https://github.com/dunay2/dvt/issues/2168"
+      ],
+      "allowedImplementationSurfaces": [
+        "apps/api/src/application/services/ImportPlanUseCase.ts",
+        "apps/api/src/entrypoints/http/importPlanRoute.ts",
+        "apps/api/src/entrypoints/http/importPlanRouteParser.ts",
+        "apps/api/src/entrypoints/http/importPlanRouteResponseMapper.ts",
+        "apps/api/src/entrypoints/http/planRoutePlannerEnvelopeParser.ts",
+        "apps/api/src/entrypoints/http/planRouteScope.ts"
+      ],
+      "architectureGuards": [
+        "ImportPlan uses canonical ownership and rejects any tenant, project, or environment mismatch."
+      ],
+      "completionGate": [
+        "pnpm --filter dvt-api test -- importPlanRoute.test.ts",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2168",
+      "sourceContentSha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5",
+      "rawRail": {
+        "name": "ImportPlan",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "Plan import application service",
+        "negativeTests": [
+          "importPlanRoute rejects missing authentication, malformed canonical requests, and ownership mismatch."
+        ],
+        "adapterSurface": "POST /plans/import",
+        "applicationPort": "ImportPlanUseCase",
+        "authorizationScope": "Authenticated run:start permission within canonical tenant/project/environment scope."
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "ImportPlanUseCase",
+            "path": "apps/api/src/application/services/ImportPlanUseCase.ts",
+            "cqRails": ["ImportPlan"],
+            "dddOwner": "Plan import application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/importPlanRoute.test.ts",
+              "apps/api/test/application/services/ImportPlanUseCase.test.ts",
+              "apps/web/src/lib/plansService.test.ts"
+            ],
+            "fowlerSignals": ["feature_envy"],
+            "cypressCoverage": "apps/web/src/lib/plansService.test.ts importPlan flow",
+            "architectureGuard": "ImportPlan uses canonical ownership and rejects any tenant, project, or environment mismatch."
+          },
+          {
+            "name": "ImportPlanRouteDeps",
+            "path": "apps/api/src/entrypoints/http/importPlanRoute.ts",
+            "cqRails": ["ImportPlan"],
+            "dddOwner": "Plan import application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/importPlanRoute.test.ts",
+              "apps/api/test/application/services/ImportPlanUseCase.test.ts",
+              "apps/web/src/lib/plansService.test.ts"
+            ],
+            "fowlerSignals": ["feature_envy"],
+            "cypressCoverage": "apps/web/src/lib/plansService.test.ts importPlan flow",
+            "architectureGuard": "ImportPlan uses canonical ownership and rejects any tenant, project, or environment mismatch."
+          },
+          {
+            "name": "resolveImportPlanRouteRequest",
+            "path": "apps/api/src/entrypoints/http/importPlanRoute.ts",
+            "cqRails": ["ImportPlan"],
+            "dddOwner": "Plan import application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/importPlanRoute.test.ts",
+              "apps/api/test/application/services/ImportPlanUseCase.test.ts",
+              "apps/web/src/lib/plansService.test.ts"
+            ],
+            "fowlerSignals": ["feature_envy"],
+            "cypressCoverage": "apps/web/src/lib/plansService.test.ts importPlan flow",
+            "architectureGuard": "ImportPlan uses canonical ownership and rejects any tenant, project, or environment mismatch."
+          },
+          {
+            "name": "registerImportPlanRoute",
+            "path": "apps/api/src/entrypoints/http/importPlanRoute.ts",
+            "cqRails": ["ImportPlan"],
+            "dddOwner": "Plan import application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/importPlanRoute.test.ts",
+              "apps/api/test/application/services/ImportPlanUseCase.test.ts",
+              "apps/web/src/lib/plansService.test.ts"
+            ],
+            "fowlerSignals": ["feature_envy"],
+            "cypressCoverage": "apps/web/src/lib/plansService.test.ts importPlan flow",
+            "architectureGuard": "ImportPlan uses canonical ownership and rejects any tenant, project, or environment mismatch."
+          },
+          {
+            "name": "toPlanOwnership",
+            "path": "apps/api/src/entrypoints/http/importPlanRouteParser.ts",
+            "cqRails": ["ImportPlan"],
+            "dddOwner": "Plan import application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/importPlanRoute.test.ts",
+              "apps/api/test/application/services/ImportPlanUseCase.test.ts",
+              "apps/web/src/lib/plansService.test.ts"
+            ],
+            "fowlerSignals": ["feature_envy"],
+            "cypressCoverage": "apps/web/src/lib/plansService.test.ts importPlan flow",
+            "architectureGuard": "ImportPlan uses canonical ownership and rejects any tenant, project, or environment mismatch."
+          },
+          {
+            "name": "ImportPlanRouteResponse",
+            "path": "apps/api/src/entrypoints/http/importPlanRouteResponseMapper.ts",
+            "cqRails": ["ImportPlan"],
+            "dddOwner": "Plan import application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/importPlanRoute.test.ts",
+              "apps/api/test/application/services/ImportPlanUseCase.test.ts",
+              "apps/web/src/lib/plansService.test.ts"
+            ],
+            "fowlerSignals": ["feature_envy"],
+            "cypressCoverage": "apps/web/src/lib/plansService.test.ts importPlan flow",
+            "architectureGuard": "ImportPlan uses canonical ownership and rejects any tenant, project, or environment mismatch."
+          },
+          {
+            "name": "mapImportPlanUseCaseResult",
+            "path": "apps/api/src/entrypoints/http/importPlanRouteResponseMapper.ts",
+            "cqRails": ["ImportPlan"],
+            "dddOwner": "Plan import application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/importPlanRoute.test.ts",
+              "apps/api/test/application/services/ImportPlanUseCase.test.ts",
+              "apps/web/src/lib/plansService.test.ts"
+            ],
+            "fowlerSignals": ["feature_envy"],
+            "cypressCoverage": "apps/web/src/lib/plansService.test.ts importPlan flow",
+            "architectureGuard": "ImportPlan uses canonical ownership and rejects any tenant, project, or environment mismatch."
+          },
+          {
+            "name": "parsePlanRoutePlannerEnvironment",
+            "path": "apps/api/src/entrypoints/http/planRoutePlannerEnvelopeParser.ts",
+            "cqRails": ["ImportPlan"],
+            "dddOwner": "Plan import application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/importPlanRoute.test.ts",
+              "apps/api/test/application/services/ImportPlanUseCase.test.ts",
+              "apps/web/src/lib/plansService.test.ts"
+            ],
+            "fowlerSignals": ["feature_envy"],
+            "cypressCoverage": "apps/web/src/lib/plansService.test.ts importPlan flow",
+            "architectureGuard": "ImportPlan uses canonical ownership and rejects any tenant, project, or environment mismatch."
+          },
+          {
+            "name": "toPlanRouteGraphSource",
+            "path": "apps/api/src/entrypoints/http/planRoutePlannerEnvelopeParser.ts",
+            "cqRails": ["ImportPlan"],
+            "dddOwner": "Plan import application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/importPlanRoute.test.ts",
+              "apps/api/test/application/services/ImportPlanUseCase.test.ts",
+              "apps/web/src/lib/plansService.test.ts"
+            ],
+            "fowlerSignals": ["feature_envy"],
+            "cypressCoverage": "apps/web/src/lib/plansService.test.ts importPlan flow",
+            "architectureGuard": "ImportPlan uses canonical ownership and rejects any tenant, project, or environment mismatch."
+          },
+          {
+            "name": "toParsedPlanRouteContext",
+            "path": "apps/api/src/entrypoints/http/planRouteScope.ts",
+            "cqRails": ["ImportPlan"],
+            "dddOwner": "Plan import application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/importPlanRoute.test.ts",
+              "apps/api/test/application/services/ImportPlanUseCase.test.ts",
+              "apps/web/src/lib/plansService.test.ts"
+            ],
+            "fowlerSignals": ["feature_envy"],
+            "cypressCoverage": "apps/web/src/lib/plansService.test.ts importPlan flow",
+            "architectureGuard": "ImportPlan uses canonical ownership and rejects any tenant, project, or environment mismatch."
+          }
+        ],
+        "version": 1,
+        "featureId": "GH-2168-PLAN-LIFECYCLE-HARDCUT",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2168"],
+        "cypressFlows": [
+          "apps/web/src/lib/plansService.test.ts importPlan flow"
+        ],
+        "domainObjects": ["PlanRef"],
+        "fowlerSignals": ["feature_envy"],
+        "completionGate": [
+          "pnpm --filter dvt-api test -- importPlanRoute.test.ts",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "importplan-record",
+            "redTest": "POST /plans/import rejects unauthorized, malformed, or cross-workspace ownership requests.",
+            "greenTest": "POST /plans/import stores and returns the plan only inside the authenticated canonical workspace.",
+            "patchSurfaces": [
+              "apps/api/src/application/services/ImportPlanUseCase.ts",
+              "apps/api/src/entrypoints/http/importPlanRoute.ts"
+            ],
+            "expectedFailure": "401 for missing bearer context, 400/422 for invalid input, and 403 for ownership mismatch."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "https://github.com/dunay2/dvt/issues/2168"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ImportPlan",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "Plan import application service",
+            "negativeTests": [
+              "importPlanRoute rejects missing authentication, malformed canonical requests, and ownership mismatch."
+            ],
+            "adapterSurface": "POST /plans/import",
+            "applicationPort": "ImportPlanUseCase",
+            "authorizationScope": "Authenticated run:start permission within canonical tenant/project/environment scope."
+          }
+        ],
+        "architectureGuards": [
+          "ImportPlan uses canonical ownership and rejects any tenant, project, or environment mismatch."
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2168",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/services/ImportPlanUseCase.ts",
+          "apps/api/src/entrypoints/http/importPlanRoute.ts",
+          "apps/api/src/entrypoints/http/importPlanRouteParser.ts",
+          "apps/api/src/entrypoints/http/importPlanRouteResponseMapper.ts",
+          "apps/api/src/entrypoints/http/planRoutePlannerEnvelopeParser.ts",
+          "apps/api/src/entrypoints/http/planRouteScope.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "Parallel import ownership policies, response facades, or workspace fallback semantics"
+        ]
+      },
+      "revision": 0,
+      "createdBy": "codex",
+      "createdAt": "2026-08-13T07:44:25.441Z"
+    },
+    {
+      "railId": "local#GH-2168-PLAN-LIFECYCLE-HARDCUT#command#previewplan",
+      "featureId": "GH-2168-PLAN-LIFECYCLE-HARDCUT",
+      "mechanizationStatus": "implemented",
+      "railName": "PreviewPlan",
+      "normalizedRailName": "previewplan",
+      "railType": "command",
+      "dddOwner": "Plan preview application service",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "apps/api/src/application/services/PreviewPlanUseCase.ts#PreviewPlanUseCase",
+        "apps/api/src/entrypoints/http/previewPlanRoute.ts#PreviewPlanRouteDeps",
+        "apps/api/src/entrypoints/http/previewPlanRoute.ts#resolvePreviewPlanRouteRequest",
+        "apps/api/src/entrypoints/http/previewPlanRoute.ts#registerPreviewPlanRoute",
+        "apps/api/src/entrypoints/http/previewPlanRouteParser.ts#CanonicalPreviewRequest",
+        "apps/api/src/entrypoints/http/previewPlanRouteParser.ts#ParsedPreviewPlanRequest",
+        "apps/api/src/entrypoints/http/previewPlanRouteParser.ts#buildPreviewObservability",
+        "apps/api/src/entrypoints/http/previewPlanRouteParser.ts#deduplicateIssues",
+        "apps/api/src/entrypoints/http/previewPlanRouteParser.ts#mapPreviewContractError",
+        "apps/api/src/entrypoints/http/previewPlanRouteParser.ts#parsePreviewPlanRequest",
+        "apps/api/src/entrypoints/http/previewPlanRouteResponseMapper.ts#PreviewRouteResponse",
+        "apps/api/src/entrypoints/http/previewPlanRouteResponseMapper.ts#buildPreviewResponse",
+        "apps/api/src/entrypoints/http/previewPlanRouteResponseMapper.ts#mapPreviewPlanUseCaseResult",
+        "apps/api/src/entrypoints/http/routeParseIssue.ts#RouteParseErrorType",
+        "apps/api/src/entrypoints/http/routeParseIssue.ts#unprocessableIssue",
+        "apps/api/src/entrypoints/http/routeParseIssue.ts#unprocessableResult"
+      ],
+      "implementationRefs": [
+        "apps/api/src/application/services/PreviewPlanUseCase.ts#PreviewPlanUseCase",
+        "apps/api/src/entrypoints/http/previewPlanRoute.ts#PreviewPlanRouteDeps",
+        "apps/api/src/entrypoints/http/previewPlanRoute.ts#resolvePreviewPlanRouteRequest",
+        "apps/api/src/entrypoints/http/previewPlanRoute.ts#registerPreviewPlanRoute",
+        "apps/api/src/entrypoints/http/previewPlanRouteParser.ts#CanonicalPreviewRequest",
+        "apps/api/src/entrypoints/http/previewPlanRouteParser.ts#ParsedPreviewPlanRequest",
+        "apps/api/src/entrypoints/http/previewPlanRouteParser.ts#buildPreviewObservability",
+        "apps/api/src/entrypoints/http/previewPlanRouteParser.ts#deduplicateIssues",
+        "apps/api/src/entrypoints/http/previewPlanRouteParser.ts#mapPreviewContractError",
+        "apps/api/src/entrypoints/http/previewPlanRouteParser.ts#parsePreviewPlanRequest",
+        "apps/api/src/entrypoints/http/previewPlanRouteResponseMapper.ts#PreviewRouteResponse",
+        "apps/api/src/entrypoints/http/previewPlanRouteResponseMapper.ts#buildPreviewResponse",
+        "apps/api/src/entrypoints/http/previewPlanRouteResponseMapper.ts#mapPreviewPlanUseCaseResult",
+        "apps/api/src/entrypoints/http/routeParseIssue.ts#RouteParseErrorType",
+        "apps/api/src/entrypoints/http/routeParseIssue.ts#unprocessableIssue",
+        "apps/api/src/entrypoints/http/routeParseIssue.ts#unprocessableResult"
+      ],
+      "documentationRefs": ["apps/api/README.md"],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md",
+        "https://github.com/dunay2/dvt/issues/2168"
+      ],
+      "allowedImplementationSurfaces": [
+        "apps/api/src/application/services/PreviewPlanUseCase.ts",
+        "apps/api/src/entrypoints/http/previewPlanRoute.ts",
+        "apps/api/src/entrypoints/http/previewPlanRouteParser.ts",
+        "apps/api/src/entrypoints/http/previewPlanRouteResponseMapper.ts",
+        "apps/api/src/entrypoints/http/routeParseIssue.ts"
+      ],
+      "architectureGuards": [
+        "PreviewPlan parses the canonical preview contract and persists and validates exactly once."
+      ],
+      "completionGate": [
+        "pnpm --filter dvt-api test -- previewPlanRoute.test.ts",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2168",
+      "sourceContentSha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5",
+      "rawRail": {
+        "name": "PreviewPlan",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "Plan preview application service",
+        "negativeTests": [
+          "previewPlanRoute rejects missing authentication, malformed canonical requests, and preview persistence failures."
+        ],
+        "adapterSurface": "POST /plans/preview",
+        "applicationPort": "PreviewPlanUseCase",
+        "authorizationScope": "Authenticated run:start permission within canonical tenant/project/environment scope."
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "PreviewPlanUseCase",
+            "path": "apps/api/src/application/services/PreviewPlanUseCase.ts",
+            "cqRails": ["PreviewPlan"],
+            "dddOwner": "Plan preview application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/previewPlanRoute.test.ts",
+              "apps/api/test/application/services/PreviewPlanUseCase.test.ts"
+            ],
+            "fowlerSignals": ["feature_envy"],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas-preview-run-persisted.cy.ts",
+            "architectureGuard": "PreviewPlan parses the canonical preview contract and persists and validates exactly once."
+          },
+          {
+            "name": "PreviewPlanRouteDeps",
+            "path": "apps/api/src/entrypoints/http/previewPlanRoute.ts",
+            "cqRails": ["PreviewPlan"],
+            "dddOwner": "Plan preview application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/previewPlanRoute.test.ts",
+              "apps/api/test/application/services/PreviewPlanUseCase.test.ts"
+            ],
+            "fowlerSignals": ["feature_envy"],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas-preview-run-persisted.cy.ts",
+            "architectureGuard": "PreviewPlan parses the canonical preview contract and persists and validates exactly once."
+          },
+          {
+            "name": "resolvePreviewPlanRouteRequest",
+            "path": "apps/api/src/entrypoints/http/previewPlanRoute.ts",
+            "cqRails": ["PreviewPlan"],
+            "dddOwner": "Plan preview application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/previewPlanRoute.test.ts",
+              "apps/api/test/application/services/PreviewPlanUseCase.test.ts"
+            ],
+            "fowlerSignals": ["feature_envy"],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas-preview-run-persisted.cy.ts",
+            "architectureGuard": "PreviewPlan parses the canonical preview contract and persists and validates exactly once."
+          },
+          {
+            "name": "registerPreviewPlanRoute",
+            "path": "apps/api/src/entrypoints/http/previewPlanRoute.ts",
+            "cqRails": ["PreviewPlan"],
+            "dddOwner": "Plan preview application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/previewPlanRoute.test.ts",
+              "apps/api/test/application/services/PreviewPlanUseCase.test.ts"
+            ],
+            "fowlerSignals": ["feature_envy"],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas-preview-run-persisted.cy.ts",
+            "architectureGuard": "PreviewPlan parses the canonical preview contract and persists and validates exactly once."
+          },
+          {
+            "name": "CanonicalPreviewRequest",
+            "path": "apps/api/src/entrypoints/http/previewPlanRouteParser.ts",
+            "cqRails": ["PreviewPlan"],
+            "dddOwner": "Plan preview application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/previewPlanRoute.test.ts",
+              "apps/api/test/application/services/PreviewPlanUseCase.test.ts"
+            ],
+            "fowlerSignals": ["feature_envy"],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas-preview-run-persisted.cy.ts",
+            "architectureGuard": "PreviewPlan parses the canonical preview contract and persists and validates exactly once."
+          },
+          {
+            "name": "ParsedPreviewPlanRequest",
+            "path": "apps/api/src/entrypoints/http/previewPlanRouteParser.ts",
+            "cqRails": ["PreviewPlan"],
+            "dddOwner": "Plan preview application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/previewPlanRoute.test.ts",
+              "apps/api/test/application/services/PreviewPlanUseCase.test.ts"
+            ],
+            "fowlerSignals": ["feature_envy"],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas-preview-run-persisted.cy.ts",
+            "architectureGuard": "PreviewPlan parses the canonical preview contract and persists and validates exactly once."
+          },
+          {
+            "name": "buildPreviewObservability",
+            "path": "apps/api/src/entrypoints/http/previewPlanRouteParser.ts",
+            "cqRails": ["PreviewPlan"],
+            "dddOwner": "Plan preview application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/previewPlanRoute.test.ts",
+              "apps/api/test/application/services/PreviewPlanUseCase.test.ts"
+            ],
+            "fowlerSignals": ["feature_envy"],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas-preview-run-persisted.cy.ts",
+            "architectureGuard": "PreviewPlan parses the canonical preview contract and persists and validates exactly once."
+          },
+          {
+            "name": "deduplicateIssues",
+            "path": "apps/api/src/entrypoints/http/previewPlanRouteParser.ts",
+            "cqRails": ["PreviewPlan"],
+            "dddOwner": "Plan preview application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/previewPlanRoute.test.ts",
+              "apps/api/test/application/services/PreviewPlanUseCase.test.ts"
+            ],
+            "fowlerSignals": ["feature_envy"],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas-preview-run-persisted.cy.ts",
+            "architectureGuard": "PreviewPlan parses the canonical preview contract and persists and validates exactly once."
+          },
+          {
+            "name": "mapPreviewContractError",
+            "path": "apps/api/src/entrypoints/http/previewPlanRouteParser.ts",
+            "cqRails": ["PreviewPlan"],
+            "dddOwner": "Plan preview application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/previewPlanRoute.test.ts",
+              "apps/api/test/application/services/PreviewPlanUseCase.test.ts"
+            ],
+            "fowlerSignals": ["feature_envy"],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas-preview-run-persisted.cy.ts",
+            "architectureGuard": "PreviewPlan parses the canonical preview contract and persists and validates exactly once."
+          },
+          {
+            "name": "parsePreviewPlanRequest",
+            "path": "apps/api/src/entrypoints/http/previewPlanRouteParser.ts",
+            "cqRails": ["PreviewPlan"],
+            "dddOwner": "Plan preview application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/previewPlanRoute.test.ts",
+              "apps/api/test/application/services/PreviewPlanUseCase.test.ts"
+            ],
+            "fowlerSignals": ["feature_envy"],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas-preview-run-persisted.cy.ts",
+            "architectureGuard": "PreviewPlan parses the canonical preview contract and persists and validates exactly once."
+          },
+          {
+            "name": "PreviewRouteResponse",
+            "path": "apps/api/src/entrypoints/http/previewPlanRouteResponseMapper.ts",
+            "cqRails": ["PreviewPlan"],
+            "dddOwner": "Plan preview application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/previewPlanRoute.test.ts",
+              "apps/api/test/application/services/PreviewPlanUseCase.test.ts"
+            ],
+            "fowlerSignals": ["feature_envy"],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas-preview-run-persisted.cy.ts",
+            "architectureGuard": "PreviewPlan parses the canonical preview contract and persists and validates exactly once."
+          },
+          {
+            "name": "buildPreviewResponse",
+            "path": "apps/api/src/entrypoints/http/previewPlanRouteResponseMapper.ts",
+            "cqRails": ["PreviewPlan"],
+            "dddOwner": "Plan preview application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/previewPlanRoute.test.ts",
+              "apps/api/test/application/services/PreviewPlanUseCase.test.ts"
+            ],
+            "fowlerSignals": ["feature_envy"],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas-preview-run-persisted.cy.ts",
+            "architectureGuard": "PreviewPlan parses the canonical preview contract and persists and validates exactly once."
+          },
+          {
+            "name": "mapPreviewPlanUseCaseResult",
+            "path": "apps/api/src/entrypoints/http/previewPlanRouteResponseMapper.ts",
+            "cqRails": ["PreviewPlan"],
+            "dddOwner": "Plan preview application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/previewPlanRoute.test.ts",
+              "apps/api/test/application/services/PreviewPlanUseCase.test.ts"
+            ],
+            "fowlerSignals": ["feature_envy"],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas-preview-run-persisted.cy.ts",
+            "architectureGuard": "PreviewPlan parses the canonical preview contract and persists and validates exactly once."
+          },
+          {
+            "name": "RouteParseErrorType",
+            "path": "apps/api/src/entrypoints/http/routeParseIssue.ts",
+            "cqRails": ["PreviewPlan"],
+            "dddOwner": "Plan preview application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/previewPlanRoute.test.ts",
+              "apps/api/test/application/services/PreviewPlanUseCase.test.ts"
+            ],
+            "fowlerSignals": ["feature_envy"],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas-preview-run-persisted.cy.ts",
+            "architectureGuard": "PreviewPlan parses the canonical preview contract and persists and validates exactly once."
+          },
+          {
+            "name": "unprocessableIssue",
+            "path": "apps/api/src/entrypoints/http/routeParseIssue.ts",
+            "cqRails": ["PreviewPlan"],
+            "dddOwner": "Plan preview application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/previewPlanRoute.test.ts",
+              "apps/api/test/application/services/PreviewPlanUseCase.test.ts"
+            ],
+            "fowlerSignals": ["feature_envy"],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas-preview-run-persisted.cy.ts",
+            "architectureGuard": "PreviewPlan parses the canonical preview contract and persists and validates exactly once."
+          },
+          {
+            "name": "unprocessableResult",
+            "path": "apps/api/src/entrypoints/http/routeParseIssue.ts",
+            "cqRails": ["PreviewPlan"],
+            "dddOwner": "Plan preview application service",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/previewPlanRoute.test.ts",
+              "apps/api/test/application/services/PreviewPlanUseCase.test.ts"
+            ],
+            "fowlerSignals": ["feature_envy"],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas-preview-run-persisted.cy.ts",
+            "architectureGuard": "PreviewPlan parses the canonical preview contract and persists and validates exactly once."
+          }
+        ],
+        "version": 1,
+        "featureId": "GH-2168-PLAN-LIFECYCLE-HARDCUT",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2168"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas-preview-run-persisted.cy.ts",
+          "apps/web/cypress/e2e/canvas-preview-run-rejections.cy.ts"
+        ],
+        "domainObjects": ["PlanRecord"],
+        "fowlerSignals": ["feature_envy"],
+        "completionGate": [
+          "pnpm --filter dvt-api test -- previewPlanRoute.test.ts",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "previewplan-record",
+            "redTest": "POST /plans/preview rejects unauthorized, malformed, or unpersistable canonical requests.",
+            "greenTest": "POST /plans/preview returns the canonical persisted PlanRecord hash after exactly one store and validation cycle.",
+            "patchSurfaces": [
+              "apps/api/src/application/services/PreviewPlanUseCase.ts",
+              "apps/api/src/entrypoints/http/previewPlanRoute.ts"
+            ],
+            "expectedFailure": "401 for missing bearer context, 400/422 for invalid input, and an explicit persistence failure."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "https://github.com/dunay2/dvt/issues/2168"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "PreviewPlan",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "Plan preview application service",
+            "negativeTests": [
+              "previewPlanRoute rejects missing authentication, malformed canonical requests, and preview persistence failures."
+            ],
+            "adapterSurface": "POST /plans/preview",
+            "applicationPort": "PreviewPlanUseCase",
+            "authorizationScope": "Authenticated run:start permission within canonical tenant/project/environment scope."
+          }
+        ],
+        "architectureGuards": [
+          "PreviewPlan parses the canonical preview contract and persists and validates exactly once."
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2168",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/services/PreviewPlanUseCase.ts",
+          "apps/api/src/entrypoints/http/previewPlanRoute.ts",
+          "apps/api/src/entrypoints/http/previewPlanRouteParser.ts",
+          "apps/api/src/entrypoints/http/previewPlanRouteResponseMapper.ts",
+          "apps/api/src/entrypoints/http/routeParseIssue.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "Parallel preview request contracts, response facades, or duplicate persistence calls"
+        ]
+      },
+      "revision": 0,
+      "createdBy": "codex",
+      "createdAt": "2026-08-13T07:44:01.610Z"
     },
     {
       "railId": "local#MVP-144-PROTECTED-START-RUN-OTEL#command#exportobservabilitytoopentelemetry",
@@ -148025,10 +148694,12 @@
       "dddOwner": "ProtectedRuntimeRouteRegistry",
       "railStatus": "implemented",
       "symbolRefs": [
-        "apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts#registerProtectedRuntimeRoutes"
+        "apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts#registerProtectedRuntimeRoutes",
+        "apps/api/src/entrypoints/http/protectedRuntimeSessionRoutes.ts#registerProtectedSessionRoutes"
       ],
       "implementationRefs": [
-        "apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts#registerProtectedRuntimeRoutes"
+        "apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts#registerProtectedRuntimeRoutes",
+        "apps/api/src/entrypoints/http/protectedRuntimeSessionRoutes.ts#registerProtectedSessionRoutes"
       ],
       "documentationRefs": [
         "apps/api/README.md",
@@ -148053,11 +148724,15 @@
         "docs/adr/**",
         "docs/planning/status/**",
         "docs/.manifest.json",
-        "tools/planning-db/state/canonical-state.json"
+        "tools/planning-db/state/canonical-state.json",
+        "apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts",
+        "apps/api/src/entrypoints/http/protectedRuntimeSessionRoutes.ts",
+        "apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts"
       ],
       "architectureGuards": [
         "pnpm --filter dvt-api test:arch",
-        "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/architecture/stateStoreRoleBoundary.architecture.test.ts test/testExecutionManifest.test.ts"
+        "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/architecture/stateStoreRoleBoundary.architecture.test.ts test/testExecutionManifest.test.ts",
+        "Protected runtime route groups own one coherent endpoint family without duplicate registration."
       ],
       "completionGate": [
         "pnpm --filter dvt-api test",
@@ -148069,13 +148744,19 @@
         "pnpm planning:db:export:check",
         "pnpm verify:prepush"
       ],
-      "sourcePath": "apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts",
-      "sourceContentSha256": "f2a684c9867bbde19cf5c2b6fff8469ec9cb5e24d01e1e76f30154923b7a9f76",
+      "sourcePath": "apps/api/src/entrypoints/http/protectedRuntimeSessionRoutes.ts",
+      "sourceContentSha256": "c0ce0395eaf09a27a6f5c12e2f1539d309ce3dbc8e02ab24251690df53f18e5c",
       "rawRail": {
         "name": "ClassifyProtectedRuntimeRouteRails",
         "type": "query",
         "status": "implemented",
-        "dddOwner": "ProtectedRuntimeRouteRegistry"
+        "dddOwner": "ProtectedRuntimeRouteRegistry",
+        "negativeTests": [
+          "registerProtectedRuntimeRoutes tests reject duplicated route ownership and misplaced session routes."
+        ],
+        "adapterSurface": "registerProtectedRuntimeRoutes",
+        "applicationPort": "ProtectedRuntimeRouteRegistry",
+        "authorizationScope": "Route registration only; endpoint handlers retain canonical authorization."
       },
       "rawManifest": {
         "symbols": [
@@ -148086,23 +148767,38 @@
             "dddOwner": "ProtectedRuntimeRouteRegistry",
             "unitTests": [
               "apps/api/test/testExecutionManifest.test.ts",
-              "apps/api/test/architecture/stateStoreRoleBoundary.architecture.test.ts"
+              "apps/api/test/architecture/stateStoreRoleBoundary.architecture.test.ts",
+              "apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts"
             ],
             "fowlerSignals": [
               "Duplicate architecture authority compiled into product code",
               "Topology tests coupled to comments filenames and documents",
               "Duplicate unit and integration execution",
-              "Hand-maintained source and test inventories"
+              "Hand-maintained source and test inventories",
+              "responsibility_overload"
             ],
-            "cypressCoverage": "N/A - API governance and verification-manifest hard cut",
-            "architectureGuard": "pnpm --filter dvt-api test:arch"
+            "cypressCoverage": "N/A - API route ownership governance has no direct browser surface.",
+            "architectureGuard": "Protected runtime route groups own one coherent endpoint family without duplicate registration."
+          },
+          {
+            "name": "registerProtectedSessionRoutes",
+            "path": "apps/api/src/entrypoints/http/protectedRuntimeSessionRoutes.ts",
+            "cqRails": ["ClassifyProtectedRuntimeRouteRails"],
+            "dddOwner": "ProtectedRuntimeRouteRegistry",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts"
+            ],
+            "fowlerSignals": ["responsibility_overload"],
+            "cypressCoverage": "N/A - API route ownership governance has no direct browser surface.",
+            "architectureGuard": "Protected runtime route groups own one coherent endpoint family without duplicate registration."
           }
         ],
         "version": 1,
         "featureId": "R1-1D-API-GOVERNANCE-HARDCUT",
         "userStories": ["https://github.com/dunay2/dvt/issues/2167"],
         "cypressFlows": [
-          "N/A - API governance and verification-manifest hard cut"
+          "N/A - API governance and verification-manifest hard cut",
+          "N/A - API route ownership governance has no direct browser surface."
         ],
         "domainObjects": [
           "ProtectedRuntimeRouteRegistry",
@@ -148114,7 +148810,8 @@
           "Duplicate architecture authority compiled into product code",
           "Topology tests coupled to comments filenames and documents",
           "Duplicate unit and integration execution",
-          "Hand-maintained source and test inventories"
+          "Hand-maintained source and test inventories",
+          "responsibility_overload"
         ],
         "completionGate": [
           "pnpm --filter dvt-api test",
@@ -148129,16 +148826,18 @@
         "redGreenCycles": [
           {
             "id": "classifyprotectedruntimerouterails-record",
-            "redTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/testExecutionManifest.test.ts",
-            "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/testExecutionManifest.test.ts",
+            "redTest": "Runtime registration topology detects session endpoints inside unrelated plan or run groups.",
+            "greenTest": "registerProtectedRuntimeRoutes delegates session endpoints exactly once to registerProtectedSessionRoutes.",
             "patchSurfaces": [
               "apps/api/vitest.config.ts",
               "apps/api/test/testExecutionManifest.test.ts",
               "apps/api/test/**",
               "docs/architecture/components/api/index.md",
-              "apps/api/src/entrypoints/http/signalRunRoute*"
+              "apps/api/src/entrypoints/http/signalRunRoute*",
+              "apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts",
+              "apps/api/src/entrypoints/http/protectedRuntimeSessionRoutes.ts"
             ],
-            "expectedFailure": "The default API test manifest still selects integration suites owned by the integration configuration."
+            "expectedFailure": "The route registry fails when one endpoint is duplicated or assigned to an unrelated bounded route group."
           }
         ],
         "componentGuides": ["docs/architecture/components/api/index.md"],
@@ -148155,12 +148854,19 @@
             "name": "ClassifyProtectedRuntimeRouteRails",
             "type": "query",
             "status": "implemented",
-            "dddOwner": "ProtectedRuntimeRouteRegistry"
+            "dddOwner": "ProtectedRuntimeRouteRegistry",
+            "negativeTests": [
+              "registerProtectedRuntimeRoutes tests reject duplicated route ownership and misplaced session routes."
+            ],
+            "adapterSurface": "registerProtectedRuntimeRoutes",
+            "applicationPort": "ProtectedRuntimeRouteRegistry",
+            "authorizationScope": "Route registration only; endpoint handlers retain canonical authorization."
           }
         ],
         "architectureGuards": [
           "pnpm --filter dvt-api test:arch",
-          "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/architecture/stateStoreRoleBoundary.architecture.test.ts test/testExecutionManifest.test.ts"
+          "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/architecture/stateStoreRoleBoundary.architecture.test.ts test/testExecutionManifest.test.ts",
+          "Protected runtime route groups own one coherent endpoint family without duplicate registration."
         ],
         "implementationPlan": "https://github.com/dunay2/dvt/issues/2167",
         "mechanizationStatus": "implemented",
@@ -148176,7 +148882,10 @@
           "docs/adr/**",
           "docs/planning/status/**",
           "docs/.manifest.json",
-          "tools/planning-db/state/canonical-state.json"
+          "tools/planning-db/state/canonical-state.json",
+          "apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts",
+          "apps/api/src/entrypoints/http/protectedRuntimeSessionRoutes.ts",
+          "apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts"
         ],
         "forbiddenImplementationSurfaces": [
           "packages/@dvt/contracts/src/**",
@@ -148192,10 +148901,11 @@
           "apps/api/src/application/ports/protectedRuntimeWorkspaceCommandQueryRails.ts",
           "apps/api/src/entrypoints/http/signalRunRouteParser.constants.ts",
           "apps/api/src/application/ports/protectedRuntime*",
-          "apps/api/docs/**"
+          "apps/api/docs/**",
+          "Contract, engine, and adapter packages outside API route ownership"
         ]
       },
-      "revision": 1,
+      "revision": 2,
       "createdBy": "codex",
       "createdAt": "2026-08-10T19:37:45.721Z"
     },
@@ -180647,6 +181357,342 @@
         ]
       },
       "createdAt": "2026-08-13T07:17:49.305Z"
+    },
+    {
+      "operationId": "4abd8a36-71a6-41c4-843f-69f43cc075c1",
+      "idempotencyKey": "gh-2168-compile-plan-rail-v2",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#GH-2168-PLAN-LIFECYCLE-HARDCUT#command#compileplan",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2168",
+      "sourceContentSha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "POST /plans/compile rejects unauthorized or malformed requests.",
+        "dddOwner": "Plan compile application service",
+        "railName": "CompilePlan",
+        "railType": "command",
+        "featureId": "GH-2168-PLAN-LIFECYCLE-HARDCUT",
+        "greenTest": "POST /plans/compile returns the canonical derived plan without storage writes.",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2168",
+        "unitTests": [
+          "apps/api/test/application/services/CompilePlanUseCase.test.ts",
+          "apps/api/test/entrypoints/http/compilePlanRoute.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2168"],
+        "cypressFlows": [
+          "Supported public API contract; no web Cypress consumer by explicit product decision."
+        ],
+        "domainObjects": ["ExecutionPlan"],
+        "fowlerSignals": ["feature_envy"],
+        "negativeTests": [
+          "compilePlanRoute rejects missing authentication and malformed canonical requests."
+        ],
+        "patchSurfaces": [
+          "apps/api/src/application/services/CompilePlanUseCase.ts",
+          "apps/api/src/entrypoints/http/compilePlanRoute.ts"
+        ],
+        "adapterSurface": "POST /plans/compile",
+        "completionGate": [
+          "pnpm --filter dvt-api test -- compilePlanRoute.test.ts",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "CompilePlanUseCase",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "401 for missing bearer context and 400/422 for invalid canonical input.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "https://github.com/dunay2/dvt/issues/2168"
+        ],
+        "documentationRefs": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "architectureGuards": [
+          "CompilePlan derives a plan without persistence or executability validation."
+        ],
+        "authorizationScope": "Authenticated run:start permission within canonical tenant/project/environment scope.",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2168",
+        "implementationRefs": [
+          "apps/api/src/application/services/CompilePlanUseCase.ts#CompilePlanUseCase",
+          "apps/api/src/entrypoints/http/compilePlanRoute.ts#CompilePlanRouteDeps",
+          "apps/api/src/entrypoints/http/compilePlanRoute.ts#resolveCompilePlanRouteRequest",
+          "apps/api/src/entrypoints/http/compilePlanRoute.ts#registerCompilePlanRoute",
+          "apps/api/src/entrypoints/http/planCompileRouteInputParser.ts#parsePlanCompileRouteInput",
+          "apps/api/src/entrypoints/http/compilePlanRouteResponseMapper.ts#mapCompilePlanUseCaseResult"
+        ],
+        "normalizedRailName": "compileplan",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5",
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/services/CompilePlanUseCase.ts",
+          "apps/api/src/entrypoints/http/compilePlanRoute.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "Plan Store persistence or executability validation"
+        ]
+      },
+      "createdAt": "2026-08-13T07:40:35.748Z"
+    },
+    {
+      "operationId": "14385ef9-dd1f-42c9-861f-d0e6fa835b69",
+      "idempotencyKey": "gh-2168-preview-plan-rail-v1",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#GH-2168-PLAN-LIFECYCLE-HARDCUT#command#previewplan",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2168",
+      "sourceContentSha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "POST /plans/preview rejects unauthorized, malformed, or unpersistable canonical requests.",
+        "dddOwner": "Plan preview application service",
+        "railName": "PreviewPlan",
+        "railType": "command",
+        "featureId": "GH-2168-PLAN-LIFECYCLE-HARDCUT",
+        "greenTest": "POST /plans/preview returns the canonical persisted PlanRecord hash after exactly one store and validation cycle.",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2168",
+        "unitTests": [
+          "apps/api/test/entrypoints/http/previewPlanRoute.test.ts",
+          "apps/api/test/application/services/PreviewPlanUseCase.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2168"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas-preview-run-persisted.cy.ts",
+          "apps/web/cypress/e2e/canvas-preview-run-rejections.cy.ts"
+        ],
+        "domainObjects": ["PlanRecord"],
+        "fowlerSignals": ["feature_envy"],
+        "negativeTests": [
+          "previewPlanRoute rejects missing authentication, malformed canonical requests, and preview persistence failures."
+        ],
+        "patchSurfaces": [
+          "apps/api/src/application/services/PreviewPlanUseCase.ts",
+          "apps/api/src/entrypoints/http/previewPlanRoute.ts"
+        ],
+        "adapterSurface": "POST /plans/preview",
+        "completionGate": [
+          "pnpm --filter dvt-api test -- previewPlanRoute.test.ts",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "PreviewPlanUseCase",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "401 for missing bearer context, 400/422 for invalid input, and an explicit persistence failure.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "https://github.com/dunay2/dvt/issues/2168"
+        ],
+        "documentationRefs": ["apps/api/README.md"],
+        "architectureGuards": [
+          "PreviewPlan parses the canonical preview contract and persists and validates exactly once."
+        ],
+        "authorizationScope": "Authenticated run:start permission within canonical tenant/project/environment scope.",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2168",
+        "implementationRefs": [
+          "apps/api/src/application/services/PreviewPlanUseCase.ts#PreviewPlanUseCase",
+          "apps/api/src/entrypoints/http/previewPlanRoute.ts#PreviewPlanRouteDeps",
+          "apps/api/src/entrypoints/http/previewPlanRoute.ts#resolvePreviewPlanRouteRequest",
+          "apps/api/src/entrypoints/http/previewPlanRoute.ts#registerPreviewPlanRoute",
+          "apps/api/src/entrypoints/http/previewPlanRouteParser.ts#CanonicalPreviewRequest",
+          "apps/api/src/entrypoints/http/previewPlanRouteParser.ts#ParsedPreviewPlanRequest",
+          "apps/api/src/entrypoints/http/previewPlanRouteParser.ts#buildPreviewObservability",
+          "apps/api/src/entrypoints/http/previewPlanRouteParser.ts#deduplicateIssues",
+          "apps/api/src/entrypoints/http/previewPlanRouteParser.ts#mapPreviewContractError",
+          "apps/api/src/entrypoints/http/previewPlanRouteParser.ts#parsePreviewPlanRequest",
+          "apps/api/src/entrypoints/http/previewPlanRouteResponseMapper.ts#PreviewRouteResponse",
+          "apps/api/src/entrypoints/http/previewPlanRouteResponseMapper.ts#buildPreviewResponse",
+          "apps/api/src/entrypoints/http/previewPlanRouteResponseMapper.ts#mapPreviewPlanUseCaseResult",
+          "apps/api/src/entrypoints/http/routeParseIssue.ts#RouteParseErrorType",
+          "apps/api/src/entrypoints/http/routeParseIssue.ts#unprocessableIssue",
+          "apps/api/src/entrypoints/http/routeParseIssue.ts#unprocessableResult"
+        ],
+        "normalizedRailName": "previewplan",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5",
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/services/PreviewPlanUseCase.ts",
+          "apps/api/src/entrypoints/http/previewPlanRoute.ts",
+          "apps/api/src/entrypoints/http/previewPlanRouteParser.ts",
+          "apps/api/src/entrypoints/http/previewPlanRouteResponseMapper.ts",
+          "apps/api/src/entrypoints/http/routeParseIssue.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "Parallel preview request contracts, response facades, or duplicate persistence calls"
+        ]
+      },
+      "createdAt": "2026-08-13T07:44:01.610Z"
+    },
+    {
+      "operationId": "70e8c1ac-3a1d-4d77-9c1f-99184840e756",
+      "idempotencyKey": "gh-2168-import-plan-rail-v1",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#GH-2168-PLAN-LIFECYCLE-HARDCUT#command#importplan",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2168",
+      "sourceContentSha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "POST /plans/import rejects unauthorized, malformed, or cross-workspace ownership requests.",
+        "dddOwner": "Plan import application service",
+        "railName": "ImportPlan",
+        "railType": "command",
+        "featureId": "GH-2168-PLAN-LIFECYCLE-HARDCUT",
+        "greenTest": "POST /plans/import stores and returns the plan only inside the authenticated canonical workspace.",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2168",
+        "unitTests": [
+          "apps/api/test/entrypoints/http/importPlanRoute.test.ts",
+          "apps/api/test/application/services/ImportPlanUseCase.test.ts",
+          "apps/web/src/lib/plansService.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2168"],
+        "cypressFlows": [
+          "apps/web/src/lib/plansService.test.ts importPlan flow"
+        ],
+        "domainObjects": ["PlanRef"],
+        "fowlerSignals": ["feature_envy"],
+        "negativeTests": [
+          "importPlanRoute rejects missing authentication, malformed canonical requests, and ownership mismatch."
+        ],
+        "patchSurfaces": [
+          "apps/api/src/application/services/ImportPlanUseCase.ts",
+          "apps/api/src/entrypoints/http/importPlanRoute.ts"
+        ],
+        "adapterSurface": "POST /plans/import",
+        "completionGate": [
+          "pnpm --filter dvt-api test -- importPlanRoute.test.ts",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "ImportPlanUseCase",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "401 for missing bearer context, 400/422 for invalid input, and 403 for ownership mismatch.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "https://github.com/dunay2/dvt/issues/2168"
+        ],
+        "documentationRefs": ["apps/api/README.md"],
+        "architectureGuards": [
+          "ImportPlan uses canonical ownership and rejects any tenant, project, or environment mismatch."
+        ],
+        "authorizationScope": "Authenticated run:start permission within canonical tenant/project/environment scope.",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2168",
+        "implementationRefs": [
+          "apps/api/src/application/services/ImportPlanUseCase.ts#ImportPlanUseCase",
+          "apps/api/src/entrypoints/http/importPlanRoute.ts#ImportPlanRouteDeps",
+          "apps/api/src/entrypoints/http/importPlanRoute.ts#resolveImportPlanRouteRequest",
+          "apps/api/src/entrypoints/http/importPlanRoute.ts#registerImportPlanRoute",
+          "apps/api/src/entrypoints/http/importPlanRouteParser.ts#toPlanOwnership",
+          "apps/api/src/entrypoints/http/importPlanRouteResponseMapper.ts#ImportPlanRouteResponse",
+          "apps/api/src/entrypoints/http/importPlanRouteResponseMapper.ts#mapImportPlanUseCaseResult",
+          "apps/api/src/entrypoints/http/planRoutePlannerEnvelopeParser.ts#parsePlanRoutePlannerEnvironment",
+          "apps/api/src/entrypoints/http/planRoutePlannerEnvelopeParser.ts#toPlanRouteGraphSource",
+          "apps/api/src/entrypoints/http/planRouteScope.ts#toParsedPlanRouteContext"
+        ],
+        "normalizedRailName": "importplan",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5",
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/services/ImportPlanUseCase.ts",
+          "apps/api/src/entrypoints/http/importPlanRoute.ts",
+          "apps/api/src/entrypoints/http/importPlanRouteParser.ts",
+          "apps/api/src/entrypoints/http/importPlanRouteResponseMapper.ts",
+          "apps/api/src/entrypoints/http/planRoutePlannerEnvelopeParser.ts",
+          "apps/api/src/entrypoints/http/planRouteScope.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "Parallel import ownership policies, response facades, or workspace fallback semantics"
+        ]
+      },
+      "createdAt": "2026-08-13T07:44:25.441Z"
+    },
+    {
+      "operationId": "a6b44895-1eda-4d59-8dfb-15017703689e",
+      "idempotencyKey": "r1-1d-protected-session-routes-v2",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#R1-1D-API-GOVERNANCE-HARDCUT#query#classifyprotectedruntimerouterails",
+      "sourcePath": "apps/api/src/entrypoints/http/protectedRuntimeSessionRoutes.ts",
+      "sourceContentSha256": "c0ce0395eaf09a27a6f5c12e2f1539d309ce3dbc8e02ab24251690df53f18e5c",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "Runtime registration topology detects session endpoints inside unrelated plan or run groups.",
+        "dddOwner": "ProtectedRuntimeRouteRegistry",
+        "railName": "ClassifyProtectedRuntimeRouteRails",
+        "railType": "query",
+        "featureId": "R1-1D-API-GOVERNANCE-HARDCUT",
+        "greenTest": "registerProtectedRuntimeRoutes delegates session endpoints exactly once to registerProtectedSessionRoutes.",
+        "sourceRef": "apps/api/src/entrypoints/http/protectedRuntimeSessionRoutes.ts",
+        "unitTests": [
+          "apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2167"],
+        "cypressFlows": [
+          "N/A - API route ownership governance has no direct browser surface."
+        ],
+        "domainObjects": ["ProtectedRuntimeRouteRegistry"],
+        "fowlerSignals": ["responsibility_overload"],
+        "negativeTests": [
+          "registerProtectedRuntimeRoutes tests reject duplicated route ownership and misplaced session routes."
+        ],
+        "patchSurfaces": [
+          "apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts",
+          "apps/api/src/entrypoints/http/protectedRuntimeSessionRoutes.ts"
+        ],
+        "adapterSurface": "registerProtectedRuntimeRoutes",
+        "completionGate": ["pnpm --filter dvt-api test", "pnpm verify:prepush"],
+        "applicationPort": "ProtectedRuntimeRouteRegistry",
+        "componentGuides": ["docs/architecture/components/api/index.md"],
+        "expectedFailure": "The route registry fails when one endpoint is duplicated or assigned to an unrelated bounded route group.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "apps/api/README.md",
+          "docs/architecture/components/api/index.md"
+        ],
+        "architectureGuards": [
+          "Protected runtime route groups own one coherent endpoint family without duplicate registration."
+        ],
+        "authorizationScope": "Route registration only; endpoint handlers retain canonical authorization.",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2167",
+        "implementationRefs": [
+          "apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts#registerProtectedRuntimeRoutes",
+          "apps/api/src/entrypoints/http/protectedRuntimeSessionRoutes.ts#registerProtectedSessionRoutes"
+        ],
+        "normalizedRailName": "classifyprotectedruntimerouterails",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "c0ce0395eaf09a27a6f5c12e2f1539d309ce3dbc8e02ab24251690df53f18e5c",
+        "allowedImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts",
+          "apps/api/src/entrypoints/http/protectedRuntimeSessionRoutes.ts",
+          "apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "Contract, engine, and adapter packages outside API route ownership"
+        ]
+      },
+      "createdAt": "2026-08-13T07:44:56.070Z"
     }
   ],
   "governanceComponentDefinitions": [
