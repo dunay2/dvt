@@ -9,7 +9,7 @@ import {
 } from '../ports/runCancellationReceiptStore.js';
 import type { IRunControlCommandCoordinator } from '../ports/runControlCommandCoordinator.js';
 import {
-  RUN_CONTROL_RESULT_CONTRACT_VERSION,
+  RUN_CONTROL_CONTRACT_VERSION,
   type CancelRunCommand,
   type CancelRunResult,
   type ICancelRunUseCase,
@@ -134,7 +134,7 @@ function acceptedCancellation(
   disposition: CancelRunResult['disposition']
 ): CancelRunResult {
   return {
-    contractVersion: RUN_CONTROL_RESULT_CONTRACT_VERSION,
+    contractVersion: RUN_CONTROL_CONTRACT_VERSION,
     runId: command.runId,
     signalType: 'CANCEL',
     accepted: true,

@@ -1,4 +1,5 @@
-import type { SupportedSignalType } from '../../application/ports/runtime.js';
+import { SUPPORTED_RUN_SIGNAL_TYPES, type SupportedRunSignalType } from '@dvt/contracts';
+
 import type { TenantId } from '../../domain/auth/types.js';
 
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
@@ -11,12 +12,14 @@ import {
 } from './runCommandFieldParsers.js';
 import { RUN_COMMAND_ACTION } from './runCommandRoute.constants.js';
 
-const SUPPORTED_SIGNAL_TYPES: ReadonlySet<SupportedSignalType> = new Set(['PAUSE', 'RESUME']);
+const SUPPORTED_SIGNAL_TYPES: ReadonlySet<SupportedRunSignalType> = new Set(
+  SUPPORTED_RUN_SIGNAL_TYPES
+);
 
 export interface ParsedSignalRunRequest {
   readonly command: {
     readonly runId: string;
-    readonly signalType: SupportedSignalType;
+    readonly signalType: SupportedRunSignalType;
     readonly reason?: string;
   };
   readonly authorization: {
@@ -67,8 +70,8 @@ export function parseSignalRunRequest(input: {
   };
 }
 
-function parseSignalType(raw: unknown): SupportedSignalType | null {
+function parseSignalType(raw: unknown): SupportedRunSignalType | null {
   if (typeof raw !== 'string') return null;
-  const normalized = raw.trim().toUpperCase() as SupportedSignalType;
+  const normalized = raw.trim().toUpperCase() as SupportedRunSignalType;
   return SUPPORTED_SIGNAL_TYPES.has(normalized) ? normalized : null;
 }

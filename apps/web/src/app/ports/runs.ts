@@ -2,7 +2,13 @@
  * Owned concern: define the presentation-facing runs port and DTO vocabulary
  * consumed by views without exposing runtime-owned execution internals.
  */
-import type { ExecutionSelection } from '@dvt/contracts';
+import type {
+  CancelRunReceipt,
+  ExecutionSelection,
+  RecoverRunReceipt,
+  RunControlAvailability,
+  RunControlUnavailableReason,
+} from '@dvt/contracts';
 import type { PlanRef, RunEvent } from '../types/engine';
 import type { WorkspaceScope } from './sessionContext';
 
@@ -26,41 +32,15 @@ export type RunStartReceipt = {
 export type UiRunStatus = 'unknown' | 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
 export type RunExecutor = 'postgres' | 'dbt';
 
-export type RunControlUnavailableReason =
-  | 'cancellation_pending'
-  | 'dispatch_pending'
-  | 'run_active'
-  | 'run_cancelled'
-  | 'run_completed'
-  | 'run_terminal'
-  | 'recovery_evidence_unknown'
-  | 'source_adapter_unavailable'
-  | 'source_plan_unavailable'
-  | 'source_context_untrusted';
+export type { RunControlUnavailableReason } from '@dvt/contracts';
 
 export type RunControlActionAvailability =
   | { readonly available: true }
   | { readonly available: false; readonly reason: RunControlUnavailableReason };
 
-export type RunControlAvailability = {
-  readonly cancel: RunControlActionAvailability;
-  readonly recover: RunControlActionAvailability;
-};
+export type { RunControlAvailability } from '@dvt/contracts';
 
-export type CancelRunReceipt = {
-  readonly contractVersion: 'v1';
-  readonly runId: string;
-  readonly signalType: 'CANCEL';
-  readonly accepted: boolean;
-  readonly disposition: 'requested' | 'already_requested' | 'already_cancelled';
-};
-
-export type RecoverRunReceipt = {
-  readonly contractVersion: 'v1';
-  readonly sourceRunId: string;
-  readonly recoveryRunId: string;
-  readonly accepted: boolean;
-};
+export type { CancelRunReceipt, RecoverRunReceipt } from '@dvt/contracts';
 
 export type MaterializationEvidence = {
   executor: RunExecutor;

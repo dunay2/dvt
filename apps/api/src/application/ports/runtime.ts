@@ -10,14 +10,32 @@ import type {
   ProviderRunStatusView,
   TransformationExecutor,
   TransformationSqlFirstPlanSummary,
+  CancelRunCommand,
+  CancelRunReceipt,
+  RecoverRunReceipt,
+  RecoverRunRequest,
+  RunControlActionAvailability,
+  RunControlAvailability,
+  SignalRunCommand,
+  SignalRunResult,
+} from '@dvt/contracts';
+export {
+  RUN_CONTROL_CONTRACT_VERSION,
+  type CancelRunCommand,
+  type CancelRunDisposition,
+  type CancelRunReceipt as CancelRunResult,
+  type RecoverRunReceipt as RecoverRunResult,
+  type RecoverRunRequest as RecoverRunCommand,
+  type RunControlUnavailableReason,
+  type SignalRunCommand,
+  type SignalRunResult,
+  type SupportedRunSignalType as SupportedSignalType,
 } from '@dvt/contracts';
 
 import type { QueryAuthorizationAction } from './accessDecision.js';
 import type { AuthorizedCommandExecutionContext, AuthorizedExecutionContext } from './auth.js';
 
 export type AuthorizedQueryExecutionContext = AuthorizedExecutionContext<QueryAuthorizationAction>;
-
-export type SupportedSignalType = 'PAUSE' | 'RESUME';
 
 export interface GetRunStatusQuery {
   readonly runId: string;
@@ -112,26 +130,8 @@ export interface RunOperationalTruthDto {
   readonly controls: RunControlAvailabilityDto;
 }
 
-export type RunControlUnavailableReason =
-  | 'cancellation_pending'
-  | 'dispatch_pending'
-  | 'run_active'
-  | 'run_cancelled'
-  | 'run_completed'
-  | 'run_terminal'
-  | 'recovery_evidence_unknown'
-  | 'source_adapter_unavailable'
-  | 'source_plan_unavailable'
-  | 'source_context_untrusted';
-
-export type RunControlActionAvailabilityDto =
-  | Readonly<{ available: true }>
-  | Readonly<{ available: false; reason: RunControlUnavailableReason }>;
-
-export interface RunControlAvailabilityDto {
-  readonly cancel: RunControlActionAvailabilityDto;
-  readonly recover: RunControlActionAvailabilityDto;
-}
+export type RunControlActionAvailabilityDto = RunControlActionAvailability;
+export type RunControlAvailabilityDto = RunControlAvailability;
 
 export type GetRunStatusResult = RunOperationalTruthDto & {
   readonly enriched: boolean;
@@ -239,35 +239,6 @@ export interface IGetRunEventsUseCase {
   ): Promise<GetRunEventsResult>;
 }
 
-export interface SignalRunCommand {
-  readonly runId: string;
-  readonly signalType: SupportedSignalType;
-  readonly reason?: string;
-}
-
-export interface CancelRunCommand {
-  readonly runId: string;
-  readonly signalType: 'CANCEL';
-}
-
-export interface SignalRunResult {
-  readonly runId: string;
-  readonly signalType: SupportedSignalType;
-  readonly accepted: boolean;
-}
-
-export type CancelRunDisposition = 'requested' | 'already_requested' | 'already_cancelled';
-
-export const RUN_CONTROL_RESULT_CONTRACT_VERSION = 'v1' as const;
-
-export interface CancelRunResult {
-  readonly contractVersion: typeof RUN_CONTROL_RESULT_CONTRACT_VERSION;
-  readonly runId: string;
-  readonly signalType: 'CANCEL';
-  readonly accepted: boolean;
-  readonly disposition: CancelRunDisposition;
-}
-
 export interface ISignalRunUseCase {
   execute(
     command: SignalRunCommand,
@@ -279,24 +250,12 @@ export interface ICancelRunUseCase {
   execute(
     command: CancelRunCommand,
     context: AuthorizedCommandExecutionContext
-  ): Promise<CancelRunResult>;
-}
-
-export interface RecoverRunCommand {
-  readonly sourceRunId: string;
-  readonly recoveryRunId: string;
-}
-
-export interface RecoverRunResult {
-  readonly contractVersion: typeof RUN_CONTROL_RESULT_CONTRACT_VERSION;
-  readonly sourceRunId: string;
-  readonly recoveryRunId: string;
-  readonly accepted: boolean;
+  ): Promise<CancelRunReceipt>;
 }
 
 export interface IRecoverRunUseCase {
   execute(
-    command: RecoverRunCommand,
+    command: RecoverRunRequest,
     context: AuthorizedCommandExecutionContext
-  ): Promise<RecoverRunResult>;
+  ): Promise<RecoverRunReceipt>;
 }
