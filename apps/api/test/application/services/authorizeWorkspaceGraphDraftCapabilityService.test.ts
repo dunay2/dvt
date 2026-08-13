@@ -23,12 +23,12 @@ const REQUESTED_SCOPE = {
 
 describe('AuthorizeWorkspaceGraphDraftCapabilityService', () => {
   it('returns read_only when read is granted but save is denied', async () => {
-    const authorize = vi
-      .fn()
-      .mockResolvedValueOnce({ ok: true, context: { requestId: 'req-2' } })
-      .mockResolvedValueOnce({ ok: false, reason: 'ACTION_NOT_GRANTED' });
+    const authorizeMany = vi.fn(async () => [
+      { ok: true as const, context: { requestId: 'req-2' } },
+      { ok: false as const, reason: 'ACTION_NOT_GRANTED' as const },
+    ]);
     const service = new AuthorizeWorkspaceGraphDraftCapabilityService(
-      { authorize } as never,
+      { authorizeMany } as never,
       () => new Date('2026-04-16T00:00:00.000Z')
     );
 
@@ -45,24 +45,21 @@ describe('AuthorizeWorkspaceGraphDraftCapabilityService', () => {
       canWrite: false,
       reason: 'write_denied',
     });
-    expect(authorize).toHaveBeenNthCalledWith(
-      1,
+    expect(authorizeMany).toHaveBeenCalledOnce();
+    expect(authorizeMany).toHaveBeenCalledWith(
       PRINCIPAL,
-      {
-        resource: 'workspace-graph-draft',
-        ...REQUESTED_SCOPE,
-        action: { kind: 'query', name: 'workspace:graph-draft:view' },
-      },
-      'req-2'
-    );
-    expect(authorize).toHaveBeenNthCalledWith(
-      2,
-      PRINCIPAL,
-      {
-        resource: 'workspace-graph-draft',
-        ...REQUESTED_SCOPE,
-        action: { kind: 'command', name: 'workspace:graph-draft:save' },
-      },
+      [
+        {
+          resource: 'workspace-graph-draft',
+          ...REQUESTED_SCOPE,
+          action: { kind: 'query', name: 'workspace:graph-draft:view' },
+        },
+        {
+          resource: 'workspace-graph-draft',
+          ...REQUESTED_SCOPE,
+          action: { kind: 'command', name: 'workspace:graph-draft:save' },
+        },
+      ],
       'req-2'
     );
   });
@@ -70,10 +67,10 @@ describe('AuthorizeWorkspaceGraphDraftCapabilityService', () => {
   it('maps token assertion conflicts from the shared authorizer to tenant_mismatch', async () => {
     const service = new AuthorizeWorkspaceGraphDraftCapabilityService(
       {
-        authorize: vi.fn(async () => ({
-          ok: false as const,
-          reason: 'TOKEN_ASSERTION_CONFLICT' as const,
-        })),
+        authorizeMany: vi.fn(async () => [
+          { ok: false as const, reason: 'TOKEN_ASSERTION_CONFLICT' as const },
+          { ok: false as const, reason: 'TOKEN_ASSERTION_CONFLICT' as const },
+        ]),
       } as never,
       () => new Date('2026-04-16T00:00:00.000Z')
     );

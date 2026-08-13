@@ -16,6 +16,9 @@ describe('AuthorizeCommandScopeService', () => {
           },
         };
       },
+      async decideMany() {
+        return [];
+      },
     };
 
     const auditEvents: AuthAuditEvent[] = [];
@@ -74,6 +77,9 @@ describe('AuthorizeCommandScopeService', () => {
           ok: false as const,
           reason: 'TOKEN_ASSERTION_CONFLICT' as const,
         };
+      },
+      async decideMany() {
+        return [];
       },
     };
 

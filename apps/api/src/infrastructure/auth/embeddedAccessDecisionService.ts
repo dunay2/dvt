@@ -8,13 +8,17 @@
  */
 import { ACCESS_SCOPE_RESOURCE, toExecutionScope } from '../../application/ports/accessDecision.js';
 import type {
+  AccessDecision,
   AuthorizationAction,
   DeniedReason,
   ExecutionScope,
   IAccessDecisionService,
   RequestedScope,
 } from '../../application/ports/accessDecision.js';
-import type { IPrincipalGrantRepository } from '../../application/ports/principalGrantRepository.js';
+import type {
+  IPrincipalGrantRepository,
+  PrincipalGrantSnapshot,
+} from '../../application/ports/principalGrantRepository.js';
 import type { AuthenticatedPrincipal } from '../../domain/auth/types.js';
 
 export class EmbeddedAccessDecisionService implements IAccessDecisionService {
@@ -29,81 +33,101 @@ export class EmbeddedAccessDecisionService implements IAccessDecisionService {
   public async decide<TAction extends AuthorizationAction>(
     principal: AuthenticatedPrincipal,
     requestedScope: RequestedScope<TAction>
-  ): Promise<
-    | { readonly ok: true; readonly approvedScope: ExecutionScope }
-    | { readonly ok: false; readonly reason: DeniedReason }
-  > {
+  ): Promise<AccessDecision<TAction>> {
+    const outcomes = await this.decideMany(principal, [requestedScope]);
+    return outcomes[0]!;
+  }
+
+  public async decideMany(
+    principal: AuthenticatedPrincipal,
+    requestedScopes: readonly RequestedScope[]
+  ): Promise<readonly AccessDecision[]> {
     const effectiveAccess = await this.principalGrants.load({
       principalId: principal.principalId,
       principalType: principal.principalType,
     });
 
     if (effectiveAccess === null) {
-      return { ok: false, reason: 'TENANT_NOT_GRANTED' };
+      return requestedScopes.map(() => ({ ok: false, reason: 'TENANT_NOT_GRANTED' }));
     }
 
     if (effectiveAccess.suspended) {
-      return { ok: false, reason: 'PRINCIPAL_SUSPENDED' };
+      return requestedScopes.map(() => ({ ok: false, reason: 'PRINCIPAL_SUSPENDED' }));
     }
 
-    const tenantGrant = effectiveAccess.tenantAccess.find(
-      (tenant) => tenant.tenantId === requestedScope.tenantId.value
+    return requestedScopes.map((requestedScope) =>
+      decideFromSnapshot(principal, effectiveAccess, requestedScope)
     );
-    if (!tenantGrant) {
-      return { ok: false, reason: 'TENANT_NOT_GRANTED' };
-    }
+  }
+}
 
-    if (
-      principal.assertedTenantIds.length > 0 &&
-      !principal.assertedTenantIds.includes(requestedScope.tenantId.value)
-    ) {
-      return { ok: false, reason: 'TOKEN_ASSERTION_CONFLICT' };
-    }
+function decideFromSnapshot(
+  principal: AuthenticatedPrincipal,
+  effectiveAccess: PrincipalGrantSnapshot,
+  requestedScope: RequestedScope
+): AccessDecision {
+  const tenantGrant = effectiveAccess.tenantAccess.find(
+    (tenant) => tenant.tenantId === requestedScope.tenantId.value
+  );
+  if (!tenantGrant) {
+    return { ok: false, reason: 'TENANT_NOT_GRANTED' };
+  }
 
-    const actionName = requestedScope.action.name;
-    switch (requestedScope.resource) {
-      case ACCESS_SCOPE_RESOURCE.tenant:
-        return buildAllowedDecision(
-          requestedScope,
+  if (
+    principal.assertedTenantIds.length > 0 &&
+    !principal.assertedTenantIds.includes(requestedScope.tenantId.value)
+  ) {
+    return { ok: false, reason: 'TOKEN_ASSERTION_CONFLICT' };
+  }
+
+  if (
+    requestedScope.resource !== ACCESS_SCOPE_RESOURCE.tenant &&
+    principal.assertedProjectIds.length > 0 &&
+    !principal.assertedProjectIds.includes(requestedScope.projectId.value)
+  ) {
+    return { ok: false, reason: 'TOKEN_ASSERTION_CONFLICT' };
+  }
+
+  const actionName = requestedScope.action.name;
+  switch (requestedScope.resource) {
+    case ACCESS_SCOPE_RESOURCE.tenant:
+      return buildAllowedDecision(requestedScope, tenantGrant.allowedActions.includes(actionName));
+    case ACCESS_SCOPE_RESOURCE.project: {
+      const projectGrant = tenantGrant.projectAccess.find(
+        (project) => project.projectId === requestedScope.projectId.value
+      );
+      if (!projectGrant) {
+        return { ok: false, reason: 'PROJECT_NOT_GRANTED' };
+      }
+
+      return buildAllowedDecision(
+        requestedScope,
+        projectGrant.allowedActions.includes(actionName) ||
           tenantGrant.allowedActions.includes(actionName)
-        );
-      case ACCESS_SCOPE_RESOURCE.project: {
-        const projectGrant = tenantGrant.projectAccess.find(
-          (project) => project.projectId === requestedScope.projectId.value
-        );
-        if (!projectGrant) {
-          return { ok: false, reason: 'PROJECT_NOT_GRANTED' };
-        }
+      );
+    }
+    case ACCESS_SCOPE_RESOURCE.environment:
+    case ACCESS_SCOPE_RESOURCE.workspaceGraphDraft: {
+      const projectGrant = tenantGrant.projectAccess.find(
+        (project) => project.projectId === requestedScope.projectId.value
+      );
+      if (!projectGrant) {
+        return { ok: false, reason: 'PROJECT_NOT_GRANTED' };
+      }
 
-        return buildAllowedDecision(
-          requestedScope,
+      const environmentGrant = projectGrant.environmentAccess.find(
+        (environment) => environment.environmentId === requestedScope.environmentId.value
+      );
+      if (!environmentGrant) {
+        return { ok: false, reason: 'ENVIRONMENT_NOT_GRANTED' };
+      }
+
+      return buildAllowedDecision(
+        requestedScope,
+        environmentGrant.allowedActions.includes(actionName) ||
           projectGrant.allowedActions.includes(actionName) ||
-            tenantGrant.allowedActions.includes(actionName)
-        );
-      }
-      case ACCESS_SCOPE_RESOURCE.environment:
-      case ACCESS_SCOPE_RESOURCE.workspaceGraphDraft: {
-        const projectGrant = tenantGrant.projectAccess.find(
-          (project) => project.projectId === requestedScope.projectId.value
-        );
-        if (!projectGrant) {
-          return { ok: false, reason: 'PROJECT_NOT_GRANTED' };
-        }
-
-        const environmentGrant = projectGrant.environmentAccess.find(
-          (environment) => environment.environmentId === requestedScope.environmentId.value
-        );
-        if (!environmentGrant) {
-          return { ok: false, reason: 'ENVIRONMENT_NOT_GRANTED' };
-        }
-
-        return buildAllowedDecision(
-          requestedScope,
-          environmentGrant.allowedActions.includes(actionName) ||
-            projectGrant.allowedActions.includes(actionName) ||
-            tenantGrant.allowedActions.includes(actionName)
-        );
-      }
+          tenantGrant.allowedActions.includes(actionName)
+      );
     }
   }
 }

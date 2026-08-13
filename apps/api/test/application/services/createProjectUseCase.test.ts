@@ -20,6 +20,7 @@ describe('CreateProjectUseCase', () => {
     const repository = { createProject: vi.fn() };
     const accessDecisions = {
       decide: vi.fn(async () => ({ ok: false as const, reason: 'ACTION_NOT_GRANTED' as const })),
+      decideMany: vi.fn(async () => []),
     };
     const useCase = new CreateProjectUseCase(repository as never, accessDecisions);
 
@@ -47,6 +48,7 @@ describe('CreateProjectUseCase', () => {
         ok: true as const,
         approvedScope: { resource: 'tenant' as const, tenantId: { value: 'tenant-a' } as never },
       })),
+      decideMany: vi.fn(async () => []),
     });
 
     await useCase.execute(PRINCIPAL, {

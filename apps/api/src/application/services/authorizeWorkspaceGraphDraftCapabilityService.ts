@@ -53,38 +53,37 @@ export class AuthorizeWorkspaceGraphDraftCapabilityService {
     );
   }
 
-  private async authorizeWorkspaceGraphDraftAction(
-    principal: AuthenticatedPrincipal,
-    requestedScope: WorkspaceGraphDraftRequestedScope,
-    action: typeof WORKSPACE_GRAPH_DRAFT_ACTION.view | typeof WORKSPACE_GRAPH_DRAFT_ACTION.save,
-    requestId: string
-  ) {
-    return this.authorizer.authorize(
-      principal,
-      {
-        ...buildWorkspaceGraphDraftAccessScope(
-          requestedScope.tenantId,
-          requestedScope.projectId,
-          requestedScope.environmentId
-        ),
-        action,
-      },
-      requestId
-    );
-  }
-
   private async authorizeAuthenticatedPrincipal(
     principal: AuthenticatedPrincipal,
     base: WorkspaceGraphDraftDecisionBase,
     requestedScope: WorkspaceGraphDraftRequestedScope,
     requestId: string
   ): Promise<WorkspaceGraphDraftDecisionContext> {
-    const readAuthorization = await this.authorizeWorkspaceGraphDraftAction(
+    const [readAuthorization, writeAuthorization] = await this.authorizer.authorizeMany(
       principal,
-      requestedScope,
-      WORKSPACE_GRAPH_DRAFT_ACTION.view,
+      [
+        {
+          ...buildWorkspaceGraphDraftAccessScope(
+            requestedScope.tenantId,
+            requestedScope.projectId,
+            requestedScope.environmentId
+          ),
+          action: WORKSPACE_GRAPH_DRAFT_ACTION.view,
+        },
+        {
+          ...buildWorkspaceGraphDraftAccessScope(
+            requestedScope.tenantId,
+            requestedScope.projectId,
+            requestedScope.environmentId
+          ),
+          action: WORKSPACE_GRAPH_DRAFT_ACTION.save,
+        },
+      ],
       requestId
     );
+    if (readAuthorization === undefined || writeAuthorization === undefined) {
+      throw new Error('Workspace graph draft capability decisions are incomplete');
+    }
     if (!readAuthorization.ok) {
       return buildAuthenticatedDecision(
         base,
@@ -97,12 +96,6 @@ export class AuthorizeWorkspaceGraphDraftCapabilityService {
       );
     }
 
-    const writeAuthorization = await this.authorizeWorkspaceGraphDraftAction(
-      principal,
-      requestedScope,
-      WORKSPACE_GRAPH_DRAFT_ACTION.save,
-      requestId
-    );
     if (!writeAuthorization.ok) {
       return buildAuthenticatedDecision(
         base,

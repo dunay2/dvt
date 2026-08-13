@@ -70,4 +70,8 @@ export interface IAccessDecisionService {
     principal: AuthenticatedPrincipal,
     requestedScope: RequestedScope<TAction>
   ): Promise<AccessDecision<TAction>>;
+  decideMany(
+    principal: AuthenticatedPrincipal,
+    requestedScopes: readonly RequestedScope[]
+  ): Promise<readonly AccessDecision[]>;
 }
