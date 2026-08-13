@@ -49,18 +49,17 @@ export async function resolveRunRecoveryPlanEvidence(
     projectId: metadata.projectId,
     environmentId: metadata.environmentId,
   };
-  let planRef: PlanRef;
-  try {
-    const storedPlanRef = await reader.getStoredPlanRef({ ...scope, planId: metadata.planId });
-    if (storedPlanRef === undefined) {
-      return { available: false, adapterAvailable: adapterRegistered };
-    }
+  const storedPlanRef = await reader.getStoredPlanRef({ ...scope, planId: metadata.planId });
+  if (storedPlanRef === undefined) {
+    return { available: false, adapterAvailable: adapterRegistered };
+  }
 
+  try {
     await validator.fetchAndValidate({ ...scope, planRef: storedPlanRef }, reader);
-    planRef = storedPlanRef;
   } catch {
     return { available: false, adapterAvailable: adapterRegistered };
   }
+  const planRef: PlanRef = storedPlanRef;
 
   if (!adapterRegistered || admission.planExecutabilityValidator === undefined) {
     return { available: true, adapterAvailable: false, planRef };

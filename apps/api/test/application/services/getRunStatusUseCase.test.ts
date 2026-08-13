@@ -1698,6 +1698,40 @@ describe('GetRunStatusUseCase', () => {
     ).rejects.toBe(planStoreFailure);
   });
 
+  it('propagates unexpected stored-plan reference failures', async () => {
+    const engine = {
+      getRunStatus: vi.fn().mockResolvedValue({
+        runId: 'provider-run-1',
+        status: 'FAILED' as const,
+      }),
+      getRunEnrichment: vi.fn(),
+    };
+    const planStoreFailure = new Error('stored plan reference unavailable');
+    const planStore = {
+      getPlanRecord: vi.fn().mockResolvedValue(undefined),
+      getStoredPlanRef: vi.fn().mockRejectedValue(planStoreFailure),
+      getStoredPlanValidationRecord: vi.fn(),
+      fetchStoredPlanArtifact: vi.fn(),
+      fetchStoredPlanArtifactForValidation: vi.fn(),
+    };
+    const useCase = new GetRunStatusUseCase(
+      engine as never,
+      engine as never,
+      createStateStore() as never,
+      { isSnapshotStale: vi.fn().mockResolvedValue(false) } as never,
+      undefined,
+      planStore as never,
+      undefined,
+      undefined,
+      { fetchAndValidate: vi.fn().mockResolvedValue({}) } as never,
+      registeredTargetAdapterRegistry as never
+    );
+
+    await expect(
+      useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never)
+    ).rejects.toBe(planStoreFailure);
+  });
+
   it('does not advertise recovery when the stored source plan fails integrity validation', async () => {
     const engine = {
       getRunStatus: vi.fn().mockResolvedValue({
