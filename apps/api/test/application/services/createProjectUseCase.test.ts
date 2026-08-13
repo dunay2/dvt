@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { AUTHORIZATION_ACTION } from '../../../src/application/ports/accessDecision.js';
+import type { PrincipalGrantSnapshot } from '../../../src/application/ports/principalGrantRepository.js';
 import { CreateProjectUseCase } from '../../../src/application/services/createProjectUseCase.js';
 
 const PRINCIPAL = {
@@ -20,6 +21,9 @@ describe('CreateProjectUseCase', () => {
     const repository = { createProject: vi.fn() };
     const accessDecisions = {
       decide: vi.fn(async () => ({ ok: false as const, reason: 'ACTION_NOT_GRANTED' as const })),
+      decideFromSnapshot: vi.fn(() => {
+        throw new Error('Denied commands must not reach locked grant revalidation.');
+      }),
     };
     const useCase = new CreateProjectUseCase(repository as never, accessDecisions);
 
@@ -36,17 +40,28 @@ describe('CreateProjectUseCase', () => {
       expect.objectContaining({ resource: 'tenant', action: AUTHORIZATION_ACTION.projectCreate })
     );
     expect(repository.createProject).not.toHaveBeenCalled();
+    expect(accessDecisions.decideFromSnapshot).not.toHaveBeenCalled();
   });
 
   it('passes only an authorized persistence intent and the exact initial workspace profile', async () => {
     const repository = {
-      createProject: vi.fn(async () => ({ kind: 'duplicate_project_name' as const })),
+      createProject: vi.fn(
+        async (
+          _command: unknown,
+          _revalidateLockedGrants: (snapshot: PrincipalGrantSnapshot) => boolean
+        ) => ({ kind: 'duplicate_project_name' as const })
+      ),
     };
+    const decideFromSnapshot = vi.fn(() => ({
+      ok: true as const,
+      approvedScope: { resource: 'tenant' as const, tenantId: { value: 'tenant-a' } as never },
+    }));
     const useCase = new CreateProjectUseCase(repository as never, {
       decide: vi.fn(async () => ({
         ok: true as const,
         approvedScope: { resource: 'tenant' as const, tenantId: { value: 'tenant-a' } as never },
       })),
+      decideFromSnapshot,
     });
 
     await useCase.execute(PRINCIPAL, {
@@ -70,7 +85,20 @@ describe('CreateProjectUseCase', () => {
           'workspace:source-import:import',
           'workspace:plugins:view',
         ]),
-      })
+      }),
+      expect.any(Function)
+    );
+    const revalidateLockedGrants = repository.createProject.mock.calls[0]![1];
+    const lockedSnapshot = {
+      principal: PRINCIPAL,
+      suspended: false,
+      tenantAccess: [],
+    };
+    expect(revalidateLockedGrants(lockedSnapshot)).toBe(true);
+    expect(decideFromSnapshot).toHaveBeenCalledWith(
+      PRINCIPAL,
+      lockedSnapshot,
+      expect.objectContaining({ action: AUTHORIZATION_ACTION.projectCreate })
     );
   });
 });

@@ -14,18 +14,19 @@ import { PROJECT_ONBOARDING_POLICY } from './projectOnboardingPolicy.js';
 export class CreateProjectUseCase {
   public constructor(
     private readonly repository: IProjectOnboardingRepository,
-    private readonly accessDecisions: Pick<IAccessDecisionService, 'decide'>
+    private readonly accessDecisions: Pick<IAccessDecisionService, 'decide' | 'decideFromSnapshot'>
   ) {}
 
   public async execute(
     principal: AuthenticatedPrincipal,
     command: CreateProjectCommand
   ): Promise<CreateProjectOutcome> {
-    const decision = await this.accessDecisions.decide(principal, {
+    const requestedScope = {
       resource: 'tenant',
       tenantId: TenantId.unsafe(command.tenantId),
       action: PROJECT_ONBOARDING_POLICY.createAction,
-    });
+    } as const;
+    const decision = await this.accessDecisions.decide(principal, requestedScope);
     if (!decision.ok) {
       return {
         kind:
@@ -37,11 +38,15 @@ export class CreateProjectUseCase {
       };
     }
 
-    return this.repository.createProject({
-      ...command,
-      principal,
-      defaultEnvironmentId: PROJECT_ONBOARDING_POLICY.defaultEnvironmentId,
-      creatorWorkspaceActions: PROJECT_ONBOARDING_POLICY.creatorWorkspaceActions,
-    });
+    return this.repository.createProject(
+      {
+        ...command,
+        principal,
+        defaultEnvironmentId: PROJECT_ONBOARDING_POLICY.defaultEnvironmentId,
+        creatorWorkspaceActions: PROJECT_ONBOARDING_POLICY.creatorWorkspaceActions,
+      },
+      (effectiveAccess) =>
+        this.accessDecisions.decideFromSnapshot(principal, effectiveAccess, requestedScope).ok
+    );
   }
 }

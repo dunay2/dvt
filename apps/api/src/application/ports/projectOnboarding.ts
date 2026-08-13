@@ -45,5 +45,8 @@ export interface GrantedProjectCatalog {
 export interface IProjectOnboardingRepository {
   migrate(): Promise<void>;
   listGrantedProjects(principal: AuthenticatedPrincipal): Promise<GrantedProjectCatalog>;
-  createProject(command: PersistProjectCreationCommand): Promise<CreateProjectOutcome>;
+  createProject(
+    command: PersistProjectCreationCommand,
+    revalidateLockedGrants: (effectiveAccess: PrincipalGrantSnapshot) => boolean
+  ): Promise<CreateProjectOutcome>;
 }

@@ -52,7 +52,7 @@ describe('EmbeddedProjectOnboardingRepository', () => {
       () => transactionGrants
     );
 
-    const outcome = await repository.createProject(CREATE_COMMAND);
+    const outcome = await repository.createProject(CREATE_COMMAND, () => true);
 
     expect(outcome).toEqual({
       kind: 'created',
@@ -242,20 +242,29 @@ describeWithPostgres('EmbeddedProjectOnboardingRepository concurrency', () => {
   it('replays concurrent equal commands and rejects a changed payload for the same key', async () => {
     const command = integrationCommand('Analytics', 'same-key');
     const outcomes = await Promise.all([
-      integrationRepository.createProject(command),
-      integrationRepository.createProject(command),
+      integrationRepository.createProject(command, canCreateProject),
+      integrationRepository.createProject(command, canCreateProject),
     ]);
 
     expect(outcomes.map((outcome) => outcome.kind).sort()).toEqual(['created', 'replayed']);
     await expect(
-      integrationRepository.createProject(integrationCommand('Changed analytics', 'same-key'))
+      integrationRepository.createProject(
+        integrationCommand('Changed analytics', 'same-key'),
+        canCreateProject
+      )
     ).resolves.toEqual({ kind: 'idempotency_conflict' });
   });
 
   it('maps a concurrent duplicate name to the typed outcome', async () => {
     const outcomes = await Promise.all([
-      integrationRepository.createProject(integrationCommand('Shared name', 'name-a')),
-      integrationRepository.createProject(integrationCommand('Shared name', 'name-b')),
+      integrationRepository.createProject(
+        integrationCommand('Shared name', 'name-a'),
+        canCreateProject
+      ),
+      integrationRepository.createProject(
+        integrationCommand('Shared name', 'name-b'),
+        canCreateProject
+      ),
     ]);
 
     expect(outcomes.map((outcome) => outcome.kind).sort()).toEqual([
@@ -266,8 +275,14 @@ describeWithPostgres('EmbeddedProjectOnboardingRepository concurrency', () => {
 
   it('preserves both grants when different projects are created concurrently', async () => {
     const outcomes = await Promise.all([
-      integrationRepository.createProject(integrationCommand('Analytics', 'project-a')),
-      integrationRepository.createProject(integrationCommand('Finance', 'project-b')),
+      integrationRepository.createProject(
+        integrationCommand('Analytics', 'project-a'),
+        canCreateProject
+      ),
+      integrationRepository.createProject(
+        integrationCommand('Finance', 'project-b'),
+        canCreateProject
+      ),
     ]);
 
     expect(outcomes.map((outcome) => outcome.kind)).toEqual(['created', 'created']);
@@ -309,6 +324,10 @@ function integrationCommand(name: string, idempotencyKey: string): typeof CREATE
     name,
     idempotencyKey,
   };
+}
+
+function canCreateProject(snapshot: PrincipalGrantSnapshot): boolean {
+  return snapshot.tenantAccess.some((tenant) => tenant.allowedActions.includes('project:create'));
 }
 
 function createClient(events: string[]): PoolClient {

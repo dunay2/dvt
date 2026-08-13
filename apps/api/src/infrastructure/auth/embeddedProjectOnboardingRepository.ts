@@ -145,12 +145,17 @@ export class EmbeddedProjectOnboardingRepository implements IProjectOnboardingRe
   }
 
   public async createProject(
-    command: PersistProjectCreationCommand
+    command: PersistProjectCreationCommand,
+    revalidateLockedGrants: (effectiveAccess: PrincipalGrantSnapshot) => boolean
   ): Promise<CreateProjectOutcome> {
     const client = await this.pool.connect();
     try {
       await client.query('BEGIN');
-      const outcome = await this.createProjectInTransaction(client, command);
+      const outcome = await this.createProjectInTransaction(
+        client,
+        command,
+        revalidateLockedGrants
+      );
       await client.query('COMMIT');
       return outcome;
     } catch (error) {
@@ -163,11 +168,25 @@ export class EmbeddedProjectOnboardingRepository implements IProjectOnboardingRe
 
   private async createProjectInTransaction(
     client: PoolClient,
-    command: PersistProjectCreationCommand
+    command: PersistProjectCreationCommand,
+    revalidateLockedGrants: (effectiveAccess: PrincipalGrantSnapshot) => boolean
   ): Promise<CreateProjectOutcome> {
     await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1, 0))', [
       `${command.principal.principalType}:${command.principal.principalId}:${command.idempotencyKey}`,
     ]);
+    const transactionGrants = this.buildTransactionGrants(client);
+    const grants = await transactionGrants.load(command.principal, { forUpdate: true });
+    if (grants === null || grants.suspended) {
+      return { kind: 'tenant_not_granted' };
+    }
+    const tenant = grants.tenantAccess.find((grant) => grant.tenantId === command.tenantId);
+    if (tenant === undefined) {
+      return { kind: 'tenant_not_granted' };
+    }
+    if (!revalidateLockedGrants(grants)) {
+      return { kind: 'action_not_granted' };
+    }
+
     const requestHash = hashCreateProjectRequest(command);
     const replay = await loadIdempotency(
       client,
@@ -183,16 +202,6 @@ export class EmbeddedProjectOnboardingRepository implements IProjectOnboardingRe
             defaultWorkspace: replay.response_json.defaultWorkspace,
           }
         : { kind: 'idempotency_conflict' };
-    }
-
-    const transactionGrants = this.buildTransactionGrants(client);
-    const grants = await transactionGrants.load(command.principal, { forUpdate: true });
-    if (grants === null || grants.suspended) {
-      return { kind: 'tenant_not_granted' };
-    }
-    const tenant = grants.tenantAccess.find((grant) => grant.tenantId === command.tenantId);
-    if (tenant === undefined) {
-      return { kind: 'tenant_not_granted' };
     }
 
     const project: ProjectDescriptor = {
