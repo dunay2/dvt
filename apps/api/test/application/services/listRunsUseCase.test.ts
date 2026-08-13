@@ -1,3 +1,4 @@
+import type { RunMetadata } from '@dvt/engine';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { AuthorizedExecutionContext } from '../../../src/application/ports/auth.js';
@@ -27,7 +28,7 @@ const queryContext: AuthorizedExecutionContext<{ kind: 'query'; name: 'run:list'
   authorizedAt: new Date('2026-03-19T00:00:00Z'),
 };
 
-function metadata(index = 1) {
+function metadata(index = 1): RunMetadata {
   return {
     tenantId: 'tenant-a',
     projectId: 'proj-1',
