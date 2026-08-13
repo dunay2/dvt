@@ -238,5 +238,7 @@ export function projectWorkspaceGraphDraftReadResponseSnapshot(
       );
     case 'format_error':
       throw new Error(`Workspace graph snapshot read failed with ${response.formatError.reason}.`);
+    case 'not_found':
+      throw new Error('Workspace graph snapshot read found no persisted draft.');
   }
 }
