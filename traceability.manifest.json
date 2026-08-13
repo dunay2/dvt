@@ -1,7 +1,7 @@
 {
   "component": "@dvt/traceability-service",
   "version": "0.1.0",
-  "generated": "2026-08-08",
+  "generated": "2026-08-13",
   "repo": {
     "sha": "local"
   },
@@ -408,6 +408,7 @@
       "decisions": [
         "Contract-level error types are centralized for deterministic cross-module semantics",
         "Define plan-compile step-type configuration schemas as explicit planner contract surface",
+        "Publish one run-control boundary without exposing adapter-owned lifecycle authority",
         "Publish plan-compile request and response schemas as a bounded planner contract pack",
         "Section 2 - Runtime schemas are formalized as canonical validation contracts",
         "Section 2 — Artifact and step output contracts are centralized for execution result interoperability",
@@ -420,6 +421,7 @@
         "Signal-to-event derivation semantics are versioned as a contract shared by engine and adapters"
       ],
       "implemented_by": [
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts",
         "packages/@dvt/contracts/src/contracts/engine/SignalSemantics.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/PlanCompileStepTypeConfigs.v1.ts",
         "packages/@dvt/contracts/src/errorContract.ts",
@@ -439,6 +441,7 @@
       "number": "ADR-0006",
       "decisions": [
         "Contract-level error types are centralized for deterministic cross-module semantics",
+        "Publish one run-control boundary without exposing adapter-owned lifecycle authority",
         "Section 2 - Runtime schemas are formalized as canonical validation contracts",
         "Section 2 — Artifact and step output contracts are centralized for execution result interoperability",
         "Section 2 — Canonical core contract primitives (tenant/run/provider/status) are versioned in a single type module",
@@ -450,6 +453,7 @@
         "Signal-to-event derivation semantics are versioned as a contract shared by engine and adapters"
       ],
       "implemented_by": [
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts",
         "packages/@dvt/contracts/src/contracts/engine/SignalSemantics.v1.ts",
         "packages/@dvt/contracts/src/errorContract.ts",
         "packages/@dvt/contracts/src/errors.ts",
@@ -469,6 +473,7 @@
         "Apply pause, resume, and cancel signals idempotently against runtime-owned workflow state",
         "Finalize pause, resume, and cancellation transitions through canonical run events emitted from workflow lifecycle control",
         "Mock Temporal workflow handles through the adapter read/control boundary",
+        "Publish one run-control boundary without exposing adapter-owned lifecycle authority",
         "Route facade cancellation requests through the canonical run-control service.",
         "The snapshot projection is derived exclusively from events for deterministic state reads",
         "Validate adapter control operations against canonical signal and cancellation semantics",
@@ -482,6 +487,7 @@
         "packages/@dvt/adapter-temporal/test/helpers/lookupRunRefHarness.ts",
         "packages/@dvt/adapter-temporal/test/runPlanWorkflow.cancellation.test.ts",
         "packages/@dvt/adapter-temporal/test/runPlanWorkflow.signals.test.ts",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts",
         "packages/@dvt/engine/src/application/workflow-engine-use-cases/WorkflowCancelRunUseCase.ts",
         "packages/@dvt/engine/src/core/SnapshotProjector.ts"
       ],
@@ -943,12 +949,14 @@
         "Emit StepStarted artifact references before executing DVT-owned step activities with explicit retry handling",
         "Extract plugin-agnostic artifact references and retry policy before event emission",
         "Keep provider-ref and retry-attempt administration behind DVT-owned in-memory run-state support",
-        "Keep workflow side effects behind Temporal activities and await activity cleanup before terminal cancellation"
+        "Keep workflow side effects behind Temporal activities and await activity cleanup before terminal cancellation",
+        "Publish one run-control boundary without exposing adapter-owned lifecycle authority"
       ],
       "implemented_by": [
         "packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.activities.ts",
         "packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.stepExecution.ts",
         "packages/@dvt/adapter-temporal/src/workflows/workflowArtifactHelpers.ts",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts",
         "packages/@dvt/engine/src/state/InMemoryRunStateAdminSupport.ts"
       ],
       "title": "ADR-0040 - Retry Ownership and Attempt Authority"
@@ -1040,9 +1048,11 @@
     {
       "number": "ADR-0049",
       "decisions": [
-        "Delegate recover-run facade input to the recovery application service."
+        "Delegate recover-run facade input to the recovery application service.",
+        "Publish one run-control boundary without exposing adapter-owned lifecycle authority"
       ],
       "implemented_by": [
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts",
         "packages/@dvt/engine/src/application/workflow-engine-use-cases/WorkflowRecoverRunUseCase.ts"
       ],
       "title": "ADR-0049 - RETRY_RUN is a separate recovery use case, not a canonical signal"
@@ -1105,11 +1115,13 @@
         "Define warehouse connection discovery queries and source import command DTOs.",
         "Keep protected source discovery and import request/response DTOs in one canonical contract component.",
         "Keep source import scope bound to protected runtime workspace authorization.",
+        "Persist one strict, versioned ConnectedSourceRef instead of parallel loose connection and object identifiers.",
         "Re-export only source-object catalog and source-import operation contracts from this barrel.",
         "Represent discoverable inputs as source objects instead of relational-table-only DTOs."
       ],
       "implemented_by": [
         "apps/api/src/application/ports/warehouseSourceImport.ts",
+        "packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts",
         "packages/@dvt/contracts/src/contracts/source-import/SourceImportOperations.v1.ts",
         "packages/@dvt/contracts/src/contracts/source-import/SourceObjectCatalog.v1.ts",
         "packages/@dvt/contracts/src/contracts/source-import/index.ts"
