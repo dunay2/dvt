@@ -54,12 +54,20 @@ async function executeStartRunRoute(
   }
   span.setAttribute('provider', parsed.value.command.targetAdapter);
 
-  const facadeResult = await facade.execute({
-    token: extractBearerToken(request.headers.authorization),
-    requestId: request.id,
-    command: parsed.value.command,
-    requestedScope: parsed.value.requestedScope,
-  });
+  let facadeResult: Awaited<ReturnType<StartRunAuthorizedFacade['execute']>>;
+  try {
+    facadeResult = await facade.execute({
+      token: extractBearerToken(request.headers.authorization),
+      requestId: request.id,
+      command: parsed.value.command,
+      requestedScope: parsed.value.requestedScope,
+    });
+  } catch (error) {
+    request.log.error({ err: error }, 'Start Run request failed unexpectedly');
+    span.recordException(error);
+    respondAndObserve(span, reply, httpErrorTranslation.startRun.internalError());
+    return;
+  }
 
   const mapped = facadeResult.ok
     ? httpErrorTranslation.startRun.facadeResult(facadeResult.value)

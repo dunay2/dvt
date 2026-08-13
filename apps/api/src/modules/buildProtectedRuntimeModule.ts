@@ -164,6 +164,7 @@ export async function buildProtectedRuntimeModule(
     engine: executionRuntime.engine,
     adapters: executionRuntime.adapters,
     planStore: storageRuntime.planStore,
+    planMaterializer: storageRuntime.executablePlanResolver,
     stepTypeRegistry: storageRuntime.stepTypeRegistry,
     workspaceGraphDraftStore: workspaceGraphDraftRuntime.workspaceGraphDraftStore,
     workspaceRoot: storageRuntime.workspaceFilesRoot,

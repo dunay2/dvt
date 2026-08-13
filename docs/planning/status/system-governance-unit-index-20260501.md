@@ -2,7 +2,7 @@
 title: System Governance Unit Index
 status: Review
 owner: Architecture / Docs / Delivery
-last_reviewed: 2026-08-11
+last_reviewed: 2026-08-13
 planning_type: status
 ---
 

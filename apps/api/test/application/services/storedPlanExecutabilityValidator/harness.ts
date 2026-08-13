@@ -1,5 +1,5 @@
-import type { IStoredPlanArtifactReader, StoredPlanArtifact } from '@dvt/artifacts';
 import type {
+  ExecutionPlan,
   IStepTypeRegistry,
   PlanRefSchemaT,
   PlanOwnership,
@@ -7,9 +7,19 @@ import type {
   ScopedPlanRef,
   StepKindExecutionProfile,
 } from '@dvt/contracts';
-import { CURRENT_SIGNAL_SEMANTICS_VERSION, asNonBlankString } from '@dvt/contracts';
+import {
+  CURRENT_SIGNAL_SEMANTICS_VERSION,
+  asNonBlankString,
+  asSha256HexString,
+} from '@dvt/contracts';
 import type { IProviderAdapter } from '@dvt/engine';
 import type { PlanExecutabilityValidationInput } from '@dvt/planner';
+import { vi } from 'vitest';
+
+import type {
+  MaterializedStoredExecutablePlan,
+  StoredExecutablePlanResolver,
+} from '../../../../src/application/services/StoredExecutablePlanResolver.js';
 
 /**
  * Shared test harness for `StoredPlanExecutabilityValidator`.
@@ -20,7 +30,7 @@ export const PLAN_REF: PlanRefSchemaT = {
   uri: asNonBlankString(
     'dvt-plan://postgres/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
   ),
-  sha256: asNonBlankString('abc123'),
+  sha256: asSha256HexString('a'.repeat(64)),
   schemaVersion: asNonBlankString('1.0'),
   planId: asNonBlankString('bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'),
   planVersion: asNonBlankString('1.0'),
@@ -40,13 +50,21 @@ export function validationInput(adapterId = 'temporal'): PlanExecutabilityValida
   };
 }
 
-export function makeValidationReader(
-  artifact: () => StoredPlanArtifact | Promise<StoredPlanArtifact>
-): IStoredPlanArtifactReader {
+export function makeMaterializer(
+  materialized: () => MaterializedStoredExecutablePlan | Promise<MaterializedStoredExecutablePlan>
+): Pick<StoredExecutablePlanResolver, 'materialize'> {
   return {
-    getStoredPlanValidationRecord: async () => undefined,
-    fetchStoredPlanArtifact: async () => artifact(),
-    fetchStoredPlanArtifactForValidation: async () => artifact(),
+    materialize: vi.fn(async () => materialized()),
+  };
+}
+
+export function materializedPlan(
+  overrides?: Parameters<typeof storedPlanArtifact>[0]
+): MaterializedStoredExecutablePlan {
+  const artifact = storedPlanArtifact(overrides);
+  return {
+    executionPolicy: artifact.executionPolicy,
+    plan: JSON.parse(Buffer.from(artifact.bytes).toString('utf8')) as ExecutionPlan,
   };
 }
 

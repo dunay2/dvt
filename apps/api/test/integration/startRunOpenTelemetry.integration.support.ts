@@ -6,7 +6,7 @@ import {
   TemporalAdapter,
   loadTemporalAdapterConfig,
 } from '@dvt/adapter-temporal';
-import type { IStoredPlanArtifactStore } from '@dvt/artifacts';
+import type { IPlanStoreReader, IStoredPlanArtifactStore } from '@dvt/artifacts';
 import {
   CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
   CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
@@ -32,11 +32,13 @@ import {
 import type { IAuthenticator } from '../../src/application/ports/auth.js';
 import type { IWorkspaceGraphDraftStore } from '../../src/application/ports/workspaceGraphDraft.js';
 import { AuthorizeCommandScopeService } from '../../src/application/services/authorizeCommandScopeService.js';
+import { DbtRunExecutionContextBindingUseCase } from '../../src/application/services/DbtRunExecutionContextBindingUseCase.js';
 import { EngineStartRunUseCase } from '../../src/application/services/engineStartRunUseCase.js';
 import { PlannerBackedStartRunUseCase } from '../../src/application/services/PlannerBackedStartRunUseCase.js';
 import { ResolveAuthorizedExecutableSubgraphService } from '../../src/application/services/resolveAuthorizedExecutableSubgraph.js';
 import { StartRunAuthorizedFacade } from '../../src/application/services/startRunAuthorizedFacade.js';
 import { createStartRunTargetAdapterRegistryFromValues } from '../../src/application/services/startRunTargetAdapterRegistry.js';
+import { StoredExecutablePlanResolver } from '../../src/application/services/StoredExecutablePlanResolver.js';
 import { StoredPlanExecutabilityValidator } from '../../src/application/services/StoredPlanExecutabilityValidator.js';
 import { buildWorkflowEngine } from '../../src/application/services/WorkflowEngineFactory.js';
 import { startRunRoute } from '../../src/entrypoints/http/startRunRoute.js';
@@ -95,14 +97,19 @@ export async function createStartRunOpenTelemetryProof(
   });
   const planBytes = Buffer.from(JSON.stringify(plan), 'utf8');
   const planRef = parsePlanRef({
-    uri: `https://plans.example.com/${PLAN_PATH_SENTINEL}.json`,
+    uri: `dvt-plan://proof/${PLAN_PATH_SENTINEL}`,
     sha256: createHash('sha256').update(planBytes).digest('hex'),
     schemaVersion: plan.metadata.schemaVersion,
     planId: plan.metadata.planId,
     planVersion: plan.metadata.planVersion,
     sizeBytes: planBytes.byteLength,
   });
-  const planStore = createControlledPlanStore(planBytes);
+  const planStore = createControlledPlanStore(planBytes, planRef);
+  const stepTypeRegistry = createDefaultStepTypeRegistry();
+  const planMaterializer = new StoredExecutablePlanResolver({
+    fetcher: planStore,
+    stepTypeRegistry,
+  });
   const temporalSubmissions: unknown[] = [];
   const temporalConfig = loadTemporalAdapterConfig({
     TEMPORAL_ADDRESS: 'temporal-proof.invalid:7233',
@@ -133,7 +140,7 @@ export async function createStartRunOpenTelemetryProof(
   const engineRuntime = buildWorkflowEngine({
     security: {
       authorizer: new AllowAllAuthorizer(),
-      planRefAllowedSchemes: ['https'],
+      planRefAllowedSchemes: ['dvt-plan'],
     },
     persistence: {
       stateStoreRead: stateStore,
@@ -151,11 +158,29 @@ export async function createStartRunOpenTelemetryProof(
     planStore,
     compileTelemetry: startRunSlaTelemetry,
     validator: new StoredPlanExecutabilityValidator({
-      fetcher: planStore,
+      materializer: planMaterializer,
       adapters,
-      stepTypeRegistry: createDefaultStepTypeRegistry(),
+      stepTypeRegistry,
     }),
-    delegate: new EngineStartRunUseCase(engineRuntime.engine),
+    delegate: new DbtRunExecutionContextBindingUseCase({
+      delegate: new EngineStartRunUseCase(engineRuntime.engine),
+      bundleBuilder: {
+        async build() {
+          throw new Error('Unexpected DBT bundle build for an empty plan');
+        },
+      },
+      contextWriter: {
+        async write() {
+          throw new Error('Unexpected DBT context write for an empty plan');
+        },
+      },
+      executionTargetResolver: {
+        resolve() {
+          throw new Error('Unexpected DBT target resolution for an empty plan');
+        },
+      },
+      stepTypeRegistry,
+    }),
     executableSubgraphResolver: new ResolveAuthorizedExecutableSubgraphService({
       planner,
       workspaceGraphDraftStore: createUnusedWorkspaceGraphDraftStore(),
@@ -212,11 +237,36 @@ export async function startRunProofRequest(
   });
 }
 
-function createControlledPlanStore(bytes: Uint8Array): IStoredPlanArtifactStore {
+function createControlledPlanStore(
+  bytes: Uint8Array,
+  planRef: PlanRef
+): IStoredPlanArtifactStore & Pick<IPlanStoreReader, 'getPlanRecordByRef'> {
   const artifact = { bytes, executionPolicy: {} };
   return {
     async getStoredPlanValidationRecord() {
-      return undefined;
+      return {
+        planId: planRef.planId,
+        state: 'VALID',
+        storedAtIso: '2026-08-03T00:00:00.000Z',
+        updatedAtIso: '2026-08-03T00:00:00.000Z',
+      };
+    },
+    async getPlanRecordByRef(input) {
+      return {
+        tenantId: input.tenantId,
+        projectId: input.projectId,
+        environmentId: input.environmentId,
+        planId: input.planRef.planId,
+        canonicalPlanJson: Buffer.from(bytes).toString('utf8'),
+        canonicalHash: input.planRef.planId,
+        planVersion: '1.0',
+        schemaVersion: '1.0',
+        contractVersion: '1.0.0',
+        sourceRef: input.planRef.uri,
+        createdAtIso: '2026-08-03T00:00:00.000Z',
+        updatedAtIso: '2026-08-03T00:00:00.000Z',
+        state: 'ACTIVE',
+      };
     },
     async fetchStoredPlanArtifact() {
       return artifact;

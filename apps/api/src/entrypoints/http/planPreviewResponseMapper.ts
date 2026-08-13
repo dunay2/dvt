@@ -1,9 +1,5 @@
-import type { ExecutionPlan, PlanRef } from '@dvt/contracts';
-import {
-  jcsCanonicalize,
-  summarizeTransformationSqlFirstPlan,
-  sha256HexUtf8,
-} from '@dvt/contracts';
+import type { ExecutionPlan, PlanRecord, PlanRef } from '@dvt/contracts';
+import { summarizeTransformationSqlFirstPlan } from '@dvt/contracts';
 
 import type { PreviewProfilePolicy } from './previewProfilePolicy.js';
 import type { PreviewProvenance } from './previewProvenanceParser.js';
@@ -33,14 +29,12 @@ export type PreviewRouteResponse = {
 export function buildPreviewResponse(
   plan: ExecutionPlan,
   planRef: PlanRef,
+  planRecord: PlanRecord,
   provenance: PreviewProvenance | undefined,
   previewProfile: PreviewProfilePolicy
 ): PreviewRouteResponse {
-  const canonicalPlanJson = jcsCanonicalize(plan);
   const planSummary =
-    previewProfile.executor === undefined
-      ? undefined
-      : summarizeTransformationSqlFirstPlan(plan);
+    previewProfile.executor === undefined ? undefined : summarizeTransformationSqlFirstPlan(plan);
 
   return {
     previewProfile: previewProfile.previewProfile,
@@ -48,8 +42,8 @@ export function buildPreviewResponse(
     planRef,
     ...(planSummary === undefined ? {} : { planSummary }),
     persisted: {
-      planRecordId: planRef.planId,
-      canonicalPlanSha256: sha256HexUtf8(canonicalPlanJson),
+      planRecordId: planRecord.planId,
+      canonicalPlanSha256: planRecord.canonicalHash,
     },
     validation: {
       valid: true,

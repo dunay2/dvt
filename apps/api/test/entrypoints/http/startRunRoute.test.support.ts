@@ -5,7 +5,7 @@ import { startRunRoute } from '../../../src/entrypoints/http/startRunRoute.js';
 
 export const VALID_PLAN_REF = {
   uri: 'https://plans.example.com/plan-1.json',
-  sha256: 'abc123',
+  sha256: 'a'.repeat(64),
   schemaVersion: '1.0.0',
   planId: 'plan-1',
   planVersion: '2.0',
@@ -144,6 +144,7 @@ export async function invokeStartRunRoute(args: InvokeRouteArgs = {}): Promise<{
       id: args.request?.id ?? 'req-1',
       headers: args.request?.headers ?? {},
       body: hasBodyOverride ? args.request?.body : VALID_BODY,
+      log: { error() {} },
     } as never,
     reply as never,
     facade as never,

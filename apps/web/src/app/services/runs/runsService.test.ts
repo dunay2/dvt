@@ -21,7 +21,7 @@ function createStartRunInput(): StartRunInput {
   return {
     planRef: makePlanRef({
       uri: 's3://plans/plan.json',
-      sha256: 'abc123',
+      sha256: 'a'.repeat(64),
       schemaVersion: '1.0.0',
       planId: 'plan_123',
       planVersion: '1.0.0',
@@ -114,7 +114,7 @@ describe('runsService runtime contract', () => {
       },
       planRef: {
         uri: 's3://plans/plan.json',
-        sha256: 'abc123',
+        sha256: 'a'.repeat(64),
         schemaVersion: '1.0.0',
         planId: 'plan_123',
         planVersion: '1.0.0',

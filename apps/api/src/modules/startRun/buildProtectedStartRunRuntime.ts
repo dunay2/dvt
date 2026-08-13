@@ -2,11 +2,15 @@
  * Owned concern: assemble the protected start-run runtime subcomponent for
  * `apps/api` from already-bound abstract dependencies.
  */
-import type { DbtProjectBundleArtifactStore, IStoredPlanArtifactStore } from '@dvt/artifacts';
+import type {
+  DbtProjectBundleArtifactStore,
+  IPlanStoreReader,
+  IStoredPlanArtifactStore,
+} from '@dvt/artifacts';
 import type { IPlanner, IStepTypeRegistry } from '@dvt/contracts';
 import type { EngineRunRef, IProviderAdapter, IWorkflowEngine } from '@dvt/engine';
 import type { IObservability } from '@dvt/observability';
-import { PlannerFacade, type IPlanExecutabilityValidator } from '@dvt/planner';
+import { PlannerFacade } from '@dvt/planner';
 
 import type { IAuthenticator } from '../../application/ports/auth.js';
 import type { IDbtExecutionTargetResolver } from '../../application/ports/dbtExecutionTarget.js';
@@ -23,6 +27,7 @@ import { EngineStartRunUseCase } from '../../application/services/engineStartRun
 import { PlannerBackedStartRunUseCase } from '../../application/services/PlannerBackedStartRunUseCase.js';
 import { ResolveAuthorizedExecutableSubgraphService } from '../../application/services/resolveAuthorizedExecutableSubgraph.js';
 import { StartRunAuthorizedFacade } from '../../application/services/startRunAuthorizedFacade.js';
+import type { StoredExecutablePlanResolver } from '../../application/services/StoredExecutablePlanResolver.js';
 import { StoredPlanExecutabilityValidator } from '../../application/services/StoredPlanExecutabilityValidator.js';
 import { ObservabilityAdmissionTelemetry } from '../../infrastructure/admissionTelemetry/ObservabilityAdmissionTelemetry.js';
 import { DbtProjectBundleBuilder } from '../../infrastructure/dbt/DbtProjectBundleBuilder.js';
@@ -42,7 +47,8 @@ export type BuildProtectedStartRunRuntimeDeps = {
   readonly retryAfterSeconds: number;
   readonly engine: IWorkflowEngine;
   readonly adapters: ReadonlyMap<EngineRunRef['provider'], IProviderAdapter>;
-  readonly planStore: IStoredPlanArtifactStore;
+  readonly planStore: IStoredPlanArtifactStore & Pick<IPlanStoreReader, 'getPlanRecordByRef'>;
+  readonly planMaterializer: StoredExecutablePlanResolver;
   readonly stepTypeRegistry: IStepTypeRegistry;
   readonly workspaceGraphDraftStore: IWorkspaceGraphDraftStore;
   readonly workspaceRoot: string;
@@ -54,7 +60,7 @@ export type ProtectedStartRunRuntime = {
   readonly facade: StartRunAuthorizedFacade;
   readonly planner: IPlanner;
   readonly planCompilePlanner: IPlanner;
-  readonly planValidator: IPlanExecutabilityValidator;
+  readonly planValidator: StoredPlanExecutabilityValidator;
 };
 
 export function buildProtectedStartRunRuntime(
@@ -67,7 +73,7 @@ export function buildProtectedStartRunRuntime(
   const planner = new PlannerFacade();
   const planCompilePlanner = buildPlanCompilePlanner();
   const planValidator = new StoredPlanExecutabilityValidator({
-    fetcher: deps.planStore,
+    materializer: deps.planMaterializer,
     adapters: deps.adapters,
     stepTypeRegistry: deps.stepTypeRegistry,
   });
@@ -78,7 +84,6 @@ export function buildProtectedStartRunRuntime(
   const engineStartRunUseCase = new EngineStartRunUseCase(deps.engine);
   const dbtRunExecutionContextBindingUseCase = new DbtRunExecutionContextBindingUseCase({
     delegate: engineStartRunUseCase,
-    planStore: deps.planStore,
     bundleBuilder: new DbtProjectBundleBuilder({
       workspaceFilesRoot: deps.workspaceRoot,
       bundleStore: deps.dbtBundleStore,
@@ -86,6 +91,7 @@ export function buildProtectedStartRunRuntime(
     }),
     contextWriter: new FileDbtRunExecutionContextWriter(deps.dbtBundleStore),
     executionTargetResolver: deps.dbtExecutionTargetResolver,
+    stepTypeRegistry: deps.stepTypeRegistry,
   });
   const plannerBackedUseCase = new PlannerBackedStartRunUseCase({
     planner,

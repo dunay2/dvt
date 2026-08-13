@@ -28,6 +28,10 @@ const API_STORED_PLAN_VALIDATOR = join(
   REPO_ROOT,
   'apps/api/src/application/services/StoredPlanExecutabilityValidator.ts'
 );
+const API_STORED_PLAN_MATERIALIZER = join(
+  REPO_ROOT,
+  'apps/api/src/application/services/StoredExecutablePlanResolver.ts'
+);
 
 describe('WorkflowEngine boundary ownership architecture', () => {
   it('keeps plan artifact materialization canonical in artifacts and separate from run-state persistence', () => {
@@ -125,8 +129,11 @@ describe('WorkflowEngine boundary ownership architecture', () => {
     expect(existsSync(API_STORED_PLAN_PORT)).toBe(false);
 
     const validator = readFileSync(API_STORED_PLAN_VALIDATOR, 'utf8');
-    expect(validator).toContain("from '@dvt/artifacts'");
+    const materializer = readFileSync(API_STORED_PLAN_MATERIALIZER, 'utf8');
+    expect(materializer).toContain("from '@dvt/artifacts'");
+    expect(validator).toContain("from './StoredExecutablePlanResolver.js'");
     expect(validator).not.toContain('export interface StoredPlanArtifact');
+    expect(materializer).not.toContain('export interface StoredPlanArtifact');
   });
 });
 

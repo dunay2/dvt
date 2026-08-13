@@ -1,6 +1,5 @@
 import type { ImportPlanCommand } from '../../application/services/ImportPlanUseCase.js';
 
-import { toContractPlanRef } from './planRefHttpMapper.js';
 import { parsePlanRouteBodyRecord } from './planRouteBodyParser.js';
 import { parsePlanRoutePlanRef } from './planRoutePlanRefParser.js';
 import { type ParsedPlanRouteContext, parsePlanRouteContextRecord } from './planRouteScope.js';
@@ -34,16 +33,14 @@ export function parseImportPlanRouteInput(
     value: {
       routeContext: routeContext.value,
       command: {
-        planRef: toContractPlanRef(planRef.value),
+        planRef: planRef.value,
         ownership: toPlanOwnership(routeContext.value),
       },
     },
   };
 }
 
-function toPlanOwnership(
-  routeContext: ParsedPlanRouteContext
-): ImportPlanCommand['ownership'] {
+function toPlanOwnership(routeContext: ParsedPlanRouteContext): ImportPlanCommand['ownership'] {
   return {
     tenantId: routeContext.tenantId.value,
     projectId: routeContext.projectId.value,

@@ -25,7 +25,7 @@ import { EnvironmentId, ProjectId, TenantId } from '../../../src/domain/auth/typ
 export const COMMAND = {
   planRef: parsePlanRef({
     uri: 'https://plans.example.com/plan.json',
-    sha256: 'deadbeef',
+    sha256: 'd'.repeat(64),
     schemaVersion: '1.0.0',
     planId: 'plan-1',
     planVersion: '2.0',
@@ -68,7 +68,9 @@ export const ACCEPTED_RESULT = {
 } satisfies StartRunAcceptedResult;
 
 export type StartRunUseCaseDeps = ConstructorParameters<typeof BackpressureAwareStartRunUseCase>[0];
-export type StartRunExecutionResult = Awaited<ReturnType<BackpressureAwareStartRunUseCase['execute']>>;
+export type StartRunExecutionResult = Awaited<
+  ReturnType<BackpressureAwareStartRunUseCase['execute']>
+>;
 export type DelegateSpy = IStartRunUseCase & {
   readonly execute: ReturnType<typeof vi.fn>;
 };

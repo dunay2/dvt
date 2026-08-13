@@ -133,6 +133,9 @@ importers:
       '@dvt/contracts':
         specifier: workspace:*
         version: link:../../packages/@dvt/contracts
+      '@dvt/crypto':
+        specifier: workspace:*
+        version: link:../../packages/@dvt/canonical
       '@dvt/delivery':
         specifier: workspace:*
         version: link:../../packages/@dvt/delivery

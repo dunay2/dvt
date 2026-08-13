@@ -1,0 +1,24 @@
+---
+id: R-20260813-STORED-PLAN-BOUNDARY-ASSERTION-DRIFT
+title: Structural architecture assertions could preserve a superseded stored-plan dependency
+status: Closed
+date: 2026-08-13
+owners:
+  - packages/@dvt/engine
+  - apps/api
+severity: Medium
+probability: Low
+context: >
+  The engine boundary test required StoredPlanExecutabilityValidator to import the artifacts package
+  directly even after stored-plan byte and reference materialization moved to the canonical API
+  materializer.
+risk: >
+  Retaining the source-string assertion would either block the intended authority convergence or
+  encourage a dead import that falsely represents the runtime dependency graph.
+mitigations:
+  - The architecture test verifies that StoredExecutablePlanResolver owns the artifacts port.
+  - The validator must depend on StoredExecutablePlanResolver and cannot redefine the artifact
+    shape.
+  - API unit and integration tests prove explicit execution and validation reader modes.
+  - The root architecture dependency guard proves the production dependency graph.
+---

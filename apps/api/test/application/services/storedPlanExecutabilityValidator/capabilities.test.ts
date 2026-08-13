@@ -2,14 +2,10 @@ import { LOAD_OBJECT_FILE_TO_POSTGRES_STEP_KIND, asNonBlankString } from '@dvt/c
 import type { IProviderAdapter } from '@dvt/engine';
 import { describe, expect, it, vi } from 'vitest';
 
+import { StoredPlanMaterializationError } from '../../../../src/application/services/StoredExecutablePlanResolver.js';
 import { StoredPlanExecutabilityValidator } from '../../../../src/application/services/StoredPlanExecutabilityValidator.js';
 
-import {
-  makeAdapter,
-  makeValidationReader,
-  storedPlanArtifact,
-  validationInput,
-} from './harness.js';
+import { makeAdapter, makeMaterializer, materializedPlan, validationInput } from './harness.js';
 
 /**
  * Capability-oriented cases for `StoredPlanExecutabilityValidator`.
@@ -19,8 +15,8 @@ function describeStoredPlanExecutabilityValidatorCapabilitiesCases(): void {
     it('rejects object-file loading until the runtime executor capability is registered', async () => {
       const sha256 = 'a'.repeat(64);
       const validator = new StoredPlanExecutabilityValidator({
-        fetcher: makeValidationReader(() =>
-          storedPlanArtifact({
+        materializer: makeMaterializer(() =>
+          materializedPlan({
             stepKind: LOAD_OBJECT_FILE_TO_POSTGRES_STEP_KIND,
             ownership: {
               tenantId: 'tenant-a',
@@ -78,8 +74,9 @@ function describeStoredPlanExecutabilityValidatorCapabilitiesCases(): void {
     });
 
     it('returns OK when the stored executable plan matches the ref and capabilities', async () => {
+      const materializer = makeMaterializer(() => materializedPlan());
       const validator = new StoredPlanExecutabilityValidator({
-        fetcher: makeValidationReader(() => storedPlanArtifact()),
+        materializer,
         adapters: new Map([
           ['temporal', makeAdapter(['basic-execution', 'workflow.fan.parallel', 'executor.dbt'])],
         ]),
@@ -92,12 +89,13 @@ function describeStoredPlanExecutabilityValidatorCapabilitiesCases(): void {
         planId: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
         adapterId: 'temporal',
       });
+      expect(materializer.materialize).toHaveBeenCalledWith(validationInput(), 'validation');
     });
 
     it('rejects when the adapter lacks a required capability', async () => {
       const validator = new StoredPlanExecutabilityValidator({
-        fetcher: makeValidationReader(() =>
-          storedPlanArtifact({
+        materializer: makeMaterializer(() =>
+          materializedPlan({
             executionPolicy: { requiresCapabilities: [asNonBlankString('workflow.pause')] },
           })
         ),
@@ -119,8 +117,8 @@ function describeStoredPlanExecutabilityValidatorCapabilitiesCases(): void {
 
     it('rejects when the plan requires capabilities but the adapter does not declare any', async () => {
       const validator = new StoredPlanExecutabilityValidator({
-        fetcher: makeValidationReader(() =>
-          storedPlanArtifact({
+        materializer: makeMaterializer(() =>
+          materializedPlan({
             executionPolicy: { requiresCapabilities: [asNonBlankString('workflow.pause')] },
           })
         ),
@@ -165,16 +163,12 @@ function describeStoredPlanExecutabilityValidatorCapabilitiesCases(): void {
     it('rejects invalid stepTypeConfig before capability checks', async () => {
       const capabilitiesSpy = vi.fn(() => ['basic-execution']);
       const validator = new StoredPlanExecutabilityValidator({
-        fetcher: makeValidationReader(() =>
-          storedPlanArtifact({
-            stepTypeConfig: {
-              retries: {
-                maxAttempts: 3,
-                backoffMs: 'invalid-backoff-ms',
-              },
-            },
-          })
-        ),
+        materializer: makeMaterializer(() => {
+          throw new StoredPlanMaterializationError(
+            'plan_parse',
+            'INVALID_STEP_TYPE_CONFIG: invalid backoff'
+          );
+        }),
         adapters: new Map([
           [
             'temporal',
@@ -195,7 +189,7 @@ function describeStoredPlanExecutabilityValidatorCapabilitiesCases(): void {
         code: 'REJECTED',
         degradable: false,
         reason: expect.stringContaining('INVALID_STEP_TYPE_CONFIG'),
-        cause: 'plan_fetch',
+        cause: 'plan_parse',
       });
       expect(capabilitiesSpy).not.toHaveBeenCalled();
     });

@@ -28,6 +28,22 @@ const PLAN = {
   steps: [],
 } satisfies ExecutionPlan;
 
+const PLAN_RECORD = {
+  tenantId: 'tenant-1',
+  projectId: 'project-1',
+  environmentId: 'env-1',
+  planId: PLAN_REF.planId,
+  canonicalPlanJson: JSON.stringify(PLAN),
+  canonicalHash: 'c'.repeat(64),
+  planVersion: PLAN.metadata.planVersion,
+  schemaVersion: PLAN.metadata.schemaVersion,
+  contractVersion: PLAN.metadata.contractVersion,
+  sourceRef: PLAN_REF.uri,
+  createdAtIso: PLAN.metadata.createdAtIso,
+  updatedAtIso: PLAN.metadata.createdAtIso,
+  state: 'ACTIVE' as const,
+};
+
 const CONTEXT = {
   principal: {
     principalId: 'principal-1',
@@ -65,7 +81,7 @@ const COMMAND = {
 function createUseCase(
   overrides: {
     previewSelectionResolver?: { execute: ReturnType<typeof vi.fn> };
-    validatePlan?: ReturnType<typeof vi.fn>;
+    materializeAndValidatePlan?: ReturnType<typeof vi.fn>;
   } = {}
 ): {
   readonly useCase: PreviewPlanUseCase;
@@ -75,6 +91,7 @@ function createUseCase(
     readonly markStoredPlanArtifactValid: ReturnType<typeof vi.fn>;
     readonly markStoredPlanArtifactInvalid: ReturnType<typeof vi.fn>;
     readonly getStoredPlanValidationRecord: ReturnType<typeof vi.fn>;
+    readonly getPlanRecordByRef: ReturnType<typeof vi.fn>;
   };
 } {
   const planner = {
@@ -84,19 +101,37 @@ function createUseCase(
       canonicalPlanCoreJson: '{}',
     })),
   };
+  let validationState: 'PENDING_VALIDATION' | 'VALID' | 'INVALID' = 'PENDING_VALIDATION';
+  let rejectionReport: unknown;
   const planStore = {
     storePlanArtifact: vi.fn(async () => PLAN_REF),
-    markStoredPlanArtifactValid: vi.fn(async () => undefined),
-    markStoredPlanArtifactInvalid: vi.fn(async () => undefined),
-    getStoredPlanValidationRecord: vi.fn(async () => null),
+    markStoredPlanArtifactValid: vi.fn(async () => {
+      validationState = 'VALID';
+    }),
+    markStoredPlanArtifactInvalid: vi.fn(async (input: { report: unknown }) => {
+      validationState = 'INVALID';
+      rejectionReport = input.report;
+    }),
+    getStoredPlanValidationRecord: vi.fn(async () => ({
+      planId: PLAN_REF.planId,
+      state: validationState,
+      storedAtIso: PLAN.metadata.createdAtIso,
+      updatedAtIso: PLAN.metadata.createdAtIso,
+      ...(rejectionReport === undefined ? {} : { rejectionReport }),
+    })),
+    getPlanRecordByRef: vi.fn(async () => PLAN_RECORD),
   };
   const planValidator = {
-    validatePlan:
-      overrides.validatePlan ??
+    materializeAndValidatePlan:
+      overrides.materializeAndValidatePlan ??
       vi.fn(async () => ({
-        status: 'OK' as const,
-        planId: PLAN_REF.planId,
-        adapterId: 'temporal',
+        accepted: true as const,
+        materialized: { plan: PLAN, executionPolicy: {} },
+        validation: {
+          status: 'OK' as const,
+          planId: PLAN_REF.planId,
+          adapterId: 'temporal',
+        },
       })),
   };
   const previewSelectionResolver =
@@ -172,12 +207,22 @@ describe('PreviewPlanUseCase outcomes', () => {
       cause: 'executor.dbt',
     };
     const { useCase, planStore } = createUseCase({
-      validatePlan: vi.fn(async () => validation),
+      materializeAndValidatePlan: vi.fn(async () => ({
+        accepted: false,
+        materialized: { plan: PLAN, executionPolicy: {} },
+        validation,
+      })),
     });
 
     const result = await useCase.execute(COMMAND, CONTEXT);
 
-    expect(result).toEqual({ kind: 'plan-invalid', plan: PLAN, planRef: PLAN_REF, validation });
+    expect(result).toEqual({
+      kind: 'plan-invalid',
+      plan: PLAN,
+      planRef: PLAN_REF,
+      planRecord: PLAN_RECORD,
+      validation,
+    });
     expect(planStore.markStoredPlanArtifactInvalid).toHaveBeenCalledWith(
       expect.objectContaining({ planRef: PLAN_REF, report: validation })
     );

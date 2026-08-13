@@ -75,7 +75,7 @@ export const StepIdSchema = NonBlankStringSchema.brand<'StepId'>();
 export const PlanRefSchema = z
   .object({
     uri: NonBlankStringSchema,
-    sha256: NonBlankStringSchema,
+    sha256: Sha256HexStringSchema,
     schemaVersion: NonBlankStringSchema,
     planId: NonBlankStringSchema,
     planVersion: NonBlankStringSchema,

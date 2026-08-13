@@ -2,19 +2,21 @@
  * Owned concern: compile planner-backed selected-closure start-run inputs into
  * stored plans and hand validated plan refs to the execution delegate.
  */
-import type { IStoredPlanArtifactWriter } from '@dvt/artifacts';
+import type {
+  IPlanStoreReader,
+  IStoredPlanArtifactReader,
+  IStoredPlanArtifactWriter,
+} from '@dvt/artifacts';
 import {
   START_RUN_RESULT_KIND,
   type IPlanner,
   type PlannerInputEnvelopeV1,
   type PlannerBuildResultV1,
   type PlanRef,
-  type ScopedPlanRef,
   type StartRunCommand,
   type StartRunResult,
   type StartRunPlanRef,
 } from '@dvt/contracts';
-import type { IPlanExecutabilityValidator } from '@dvt/planner';
 
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
 import type {
@@ -23,17 +25,17 @@ import type {
 } from '../ports/StartRunSlaTelemetry.js';
 import type { IStartRunUseCase, StartRunUseCaseResult } from '../ports/startRunUseCasePort.js';
 
+import type { DbtRunExecutionContextBindingUseCase } from './DbtRunExecutionContextBindingUseCase.js';
 import { ResolveAuthorizedExecutableSubgraphService } from './resolveAuthorizedExecutableSubgraph.js';
 import type { ExecutableSubgraphSelectionRejection } from './resolveAuthorizedExecutableSubgraph.js';
 import { resolveCanonicalPlannerInputEnvelope } from './resolveCanonicalPlannerInputEnvelope.js';
 import { elapsedSlaSecondsSince } from './slaTiming.js';
-
-type PlanValidationResult = Awaited<ReturnType<IPlanExecutabilityValidator['validatePlan']>>;
-
-interface StoredPlannerArtifact {
-  readonly planRef: PlanRef;
-  readonly scopedPlanRef: ScopedPlanRef;
-}
+import {
+  StoredPlanAdmissionCoordinator,
+  type StoredPlanAdmissionResult,
+} from './StoredPlanAdmissionCoordinator.js';
+import type { StoredPlanExecutabilityValidator } from './StoredPlanExecutabilityValidator.js';
+import { createScopedPlanRef } from './storedPlanScope.js';
 
 type PlanCompileResult =
   | {
@@ -45,86 +47,68 @@ type PlanCompileResult =
       readonly result: StartRunUseCaseResult;
     };
 
-type StoredPlannerArtifactResult =
-  | {
-      readonly kind: 'stored';
-      readonly storedPlan: StoredPlannerArtifact;
-    }
-  | {
-      readonly kind: 'rejected';
-      readonly result: StartRunUseCaseResult;
-    };
-
 export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
+  private readonly planAdmission: StoredPlanAdmissionCoordinator;
+
   public constructor(
     private readonly deps: {
       readonly planner: IPlanner;
-      readonly planStore: IStoredPlanArtifactWriter;
-      readonly validator: IPlanExecutabilityValidator;
-      readonly delegate: IStartRunUseCase;
+      readonly planStore: IStoredPlanArtifactWriter &
+        Pick<IStoredPlanArtifactReader, 'getStoredPlanValidationRecord'> &
+        Pick<IPlanStoreReader, 'getPlanRecordByRef'>;
+      readonly validator: Pick<StoredPlanExecutabilityValidator, 'materializeAndValidatePlan'>;
+      readonly delegate: IStartRunUseCase &
+        Pick<DbtRunExecutionContextBindingUseCase, 'executeAdmitted'>;
       readonly compileTelemetry: IPlanCompileLatencyTelemetry;
       readonly executableSubgraphResolver: ResolveAuthorizedExecutableSubgraphService;
     }
-  ) {}
+  ) {
+    this.planAdmission = new StoredPlanAdmissionCoordinator({
+      planStore: deps.planStore,
+      validator: deps.validator,
+    });
+  }
 
   public async execute(
     command: StartRunCommand,
     context: AuthorizedCommandExecutionContext
   ): Promise<StartRunUseCaseResult> {
     if (command.planRef != null) {
-      const scopedPlanRef = this.toCommandScopedPlanRef(
-        { ...command, planRef: command.planRef },
-        context
-      );
-      const validation = await this.deps.validator.validatePlan({
-        ...scopedPlanRef,
-        adapterId: command.targetAdapter,
+      const scopedPlanRef = createScopedPlanRef({
+        scope: {
+          tenantId: context.scope.tenantId.value,
+          projectId: context.scope.projectId?.value,
+          environmentId: context.scope.environmentId?.value,
+        },
+        planRef: command.planRef,
       });
-
-      if (isValidationError(validation)) {
-        return this.toPlanValidationRejectedResult(validation);
+      const admission = await this.planAdmission.admitStored(scopedPlanRef, command.targetAdapter);
+      if (!admission.accepted) {
+        return this.toPlanValidationRejectedResult(admission.validation);
       }
 
-      return this.deps.delegate.execute(command, context);
+      return this.deps.delegate.executeAdmitted(command, context, admission);
     }
 
-    const compileResult = await this.compileAndStorePlan(command, context);
+    const compileResult = await this.buildPlan(command, context);
     if (compileResult.kind === 'rejected') {
       return compileResult.result;
     }
 
-    const { storedPlan } = compileResult;
-    const validation = await this.deps.validator.validatePlan({
-      ...storedPlan.scopedPlanRef,
-      adapterId: command.targetAdapter,
-    });
+    const admission = await this.planAdmission.admit(
+      compileResult.buildResult,
+      command.targetAdapter
+    );
 
-    if (isValidationError(validation)) {
-      return this.rejectStoredPlan(storedPlan.scopedPlanRef, validation);
+    if (!admission.accepted) {
+      return this.toPlanValidationRejectedResult(admission.validation);
     }
 
-    await this.deps.planStore.markStoredPlanArtifactValid(storedPlan.scopedPlanRef);
-    return this.deps.delegate.execute(toDelegateCommand(command, storedPlan.planRef), context);
-  }
-
-  private async compileAndStorePlan(
-    command: StartRunCommand,
-    context: AuthorizedCommandExecutionContext
-  ): Promise<StoredPlannerArtifactResult> {
-    const planCompile = await this.buildPlan(command, context);
-    if (planCompile.kind === 'rejected') {
-      return planCompile;
-    }
-
-    const { buildResult } = planCompile;
-    const planRef = await this.deps.planStore.storePlanArtifact({ buildResult });
-    return {
-      kind: 'stored',
-      storedPlan: {
-        planRef,
-        scopedPlanRef: toScopedPlanRef(buildResult, planRef),
-      },
-    };
+    return this.deps.delegate.executeAdmitted(
+      toDelegateCommand(command, admission.planRef),
+      context,
+      admission
+    );
   }
 
   private async buildPlan(
@@ -157,22 +141,8 @@ export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
     }
   }
 
-  private async rejectStoredPlan(
-    scopedPlanRef: ScopedPlanRef,
-    validation: Extract<PlanValidationResult, { readonly status: 'ERROR' }>
-  ): Promise<StartRunUseCaseResult> {
-    await this.deps.planStore.markStoredPlanArtifactInvalid({
-      ...scopedPlanRef,
-      report: validation,
-    });
-    return {
-      ok: true,
-      value: this.toPlanRejectedValue(validation),
-    };
-  }
-
   private toPlanValidationRejectedResult(
-    validation: Extract<PlanValidationResult, { readonly status: 'ERROR' }>
+    validation: Extract<StoredPlanAdmissionResult['validation'], { readonly status: 'ERROR' }>
   ): StartRunUseCaseResult {
     return {
       ok: true,
@@ -181,7 +151,7 @@ export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
   }
 
   private toPlanRejectedValue(
-    validation: Extract<PlanValidationResult, { readonly status: 'ERROR' }>
+    validation: Extract<StoredPlanAdmissionResult['validation'], { readonly status: 'ERROR' }>
   ): StartRunResult {
     return {
       kind: START_RUN_RESULT_KIND.planRejected,
@@ -189,18 +159,6 @@ export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
       code: validation.code,
       reason: validation.reason,
       ...(validation.cause === undefined ? {} : { cause: validation.cause }),
-    };
-  }
-
-  private toCommandScopedPlanRef(
-    command: StartRunCommand & { readonly planRef: NonNullable<StartRunCommand['planRef']> },
-    context: AuthorizedCommandExecutionContext
-  ): ScopedPlanRef {
-    return {
-      tenantId: context.scope.tenantId.value,
-      projectId: context.scope.projectId?.value ?? '',
-      environmentId: context.scope.environmentId?.value ?? '',
-      planRef: command.planRef,
     };
   }
 }
@@ -241,19 +199,6 @@ function toDelegateCommand(command: StartRunCommand, planRef: PlanRef): StartRun
     ...(command.runExecutionContextRef === undefined
       ? {}
       : { runExecutionContextRef: command.runExecutionContextRef }),
-  };
-}
-
-function toScopedPlanRef(buildResult: PlannerBuildResultV1, planRef: PlanRef): ScopedPlanRef {
-  const ownership = buildResult.plan.metadata.ownership;
-  if (ownership === undefined) {
-    throw new Error('PLAN_STORE_SCOPE_MISSING');
-  }
-  return {
-    tenantId: ownership.tenantId,
-    projectId: ownership.projectId,
-    environmentId: ownership.environmentId,
-    planRef,
   };
 }
 
@@ -336,10 +281,4 @@ function toPlannerGraphSource(
           }),
     })),
   };
-}
-
-function isValidationError(
-  validation: PlanValidationResult
-): validation is Extract<PlanValidationResult, { readonly status: 'ERROR' }> {
-  return validation.status === 'ERROR';
 }

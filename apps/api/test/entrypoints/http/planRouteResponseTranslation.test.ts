@@ -1,7 +1,6 @@
-import { PREVIEW_PROFILE } from '@dvt/contracts';
+import { PREVIEW_PROFILE, parsePlanRef } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
-import { toContractPlanRef } from '../../../src/entrypoints/http/planRefHttpMapper.js';
 import { planRouteResponseTranslation } from '../../../src/entrypoints/http/planRouteResponseTranslation.js';
 
 import {
@@ -40,7 +39,7 @@ describe('planRouteResponseTranslation', () => {
 
   it('maps import success through the public facade as an accepted response payload', () => {
     const plan = buildImportedPlan();
-    const planRef = toContractPlanRef(VALID_PLAN_REF);
+    const planRef = parsePlanRef(VALID_PLAN_REF);
 
     expect(
       planRouteResponseTranslation.import.result({

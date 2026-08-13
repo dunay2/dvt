@@ -1,5 +1,5 @@
 import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
-import { sha256HexUtf8 } from '@dvt/contracts';
+import { asSha256HexString, sha256HexUtf8 } from '@dvt/contracts';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { vi } from 'vitest';
@@ -539,7 +539,7 @@ export function buildRunnableExecutionPlan(sha: string = 'c'.repeat(64)): PlanVi
     ...mockExecutionPlan,
     planRef: {
       ...requireMockExecutionPlanRef(),
-      sha256: nb(sha),
+      sha256: asSha256HexString(sha),
     },
   };
 }

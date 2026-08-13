@@ -11,7 +11,7 @@ import { VALID_GENERATED_RUN_ID } from './startRunRoute.test.support.js';
 
 const VALID_PLAN_REF = {
   uri: 'https://plans.example.com/p.json',
-  sha256: 'abc123',
+  sha256: 'a'.repeat(64),
   schemaVersion: '1.0.0',
   planId: 'p1',
   planVersion: '1.0',
