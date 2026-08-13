@@ -42,7 +42,9 @@ export function readAcceptedRunId(payload: unknown): string {
 
   const runId = (payload as { runId?: unknown }).runId;
   if (typeof runId !== 'string' || runId.trim().length === 0) {
-    throw new TypeError('Accepted start-run payload did not include a non-empty runId');
+    throw new TypeError(
+      `Accepted start-run payload did not include a non-empty runId: ${JSON.stringify(payload)}`
+    );
   }
 
   return runId;

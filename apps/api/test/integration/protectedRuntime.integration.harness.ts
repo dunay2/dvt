@@ -9,7 +9,7 @@
  */
 import { randomUUID } from 'node:crypto';
 
-import { afterAll, beforeAll } from 'vitest';
+import { afterAll, beforeAll, beforeEach } from 'vitest';
 
 import { signBearerToken } from './protectedRuntime.integration.auth.js';
 import {
@@ -21,7 +21,11 @@ import {
   requireSigningKey,
   teardownProtectedRuntimeState,
 } from './protectedRuntime.integration.bootstrap.js';
-import { queryLatestStoredPlan, upsertPrincipalGrant } from './protectedRuntime.integration.persistence.js';
+import {
+  queryLatestStoredPlan,
+  resetWorkspaceGraphDrafts,
+  upsertPrincipalGrant,
+} from './protectedRuntime.integration.persistence.js';
 import {
   ENVIRONMENT_ID,
   PRINCIPAL_ID,
@@ -59,7 +63,8 @@ export function createProtectedRuntimeHarness(): ProtectedRuntimeHarness {
     issuePrincipalToken,
     setPrincipalGrant,
     withPrincipalGrant,
-    queryLatestStoredPlan: () => queryLatestStoredPlan(requireAdminClient(state.adminClient), schema),
+    queryLatestStoredPlan: () =>
+      queryLatestStoredPlan(requireAdminClient(state.adminClient), schema),
   };
 }
 
@@ -69,6 +74,10 @@ function registerProtectedRuntimeLifecycle(
 ): void {
   beforeAll(async () => {
     await bootstrapProtectedRuntimeState(state, schema);
+  });
+
+  beforeEach(async () => {
+    await resetWorkspaceGraphDrafts(requireAdminClient(state.adminClient), schema);
   });
 
   afterAll(async () => {

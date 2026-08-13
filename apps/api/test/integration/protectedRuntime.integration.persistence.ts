@@ -54,6 +54,13 @@ export async function upsertPrincipalGrant(
   );
 }
 
+export async function resetWorkspaceGraphDrafts(client: Client, schema: string): Promise<void> {
+  await client.query(
+    `TRUNCATE TABLE ${quoteIdentifier(schema)}.workspace_graph_draft_idempotency,
+                    ${quoteIdentifier(schema)}.workspace_graph_drafts CASCADE`
+  );
+}
+
 export async function queryLatestStoredPlan(
   client: Client,
   schema: string
