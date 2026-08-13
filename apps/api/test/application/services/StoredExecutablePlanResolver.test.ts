@@ -135,6 +135,43 @@ describe('StoredExecutablePlanResolver', () => {
     });
   });
 
+  it.each([
+    ['planVersion', { planVersion: asNonBlankString('2.0') }],
+    ['schemaVersion', { schemaVersion: asNonBlankString('2.0') }],
+  ])('rejects stored dvt-plan refs when %s does not match the ref', async (field, mismatch) => {
+    const fetcher = {
+      fetchStoredPlanArtifact: vi.fn(async () => ({
+        bytes: Buffer.from(EXECUTABLE_PLAN_TEXT, 'utf8'),
+        executionPolicy: {},
+      })),
+    };
+    const resolver = new StoredExecutablePlanResolver({ fetcher: fetcher as never });
+
+    await expect(
+      resolver.fetch({
+        ...SCOPED_PLAN_REF,
+        planRef: { ...PLAN_REF, ...mismatch },
+      })
+    ).rejects.toMatchObject({
+      code: 'plan_ref',
+      message: `PLAN_REF_MISMATCH: ${field}`,
+    });
+  });
+
+  it('classifies a missing stored artifact as a fetch failure', async () => {
+    const fetcher = {
+      fetchStoredPlanArtifact: vi.fn(async () => {
+        throw new Error('PLAN_NOT_FOUND: plan-1');
+      }),
+    };
+    const resolver = new StoredExecutablePlanResolver({ fetcher: fetcher as never });
+
+    await expect(resolver.fetch(SCOPED_PLAN_REF)).rejects.toMatchObject({
+      code: 'artifact_fetch',
+      message: 'PLAN_NOT_FOUND: plan-1',
+    });
+  });
+
   it('classifies malformed stored bytes as a parse failure', async () => {
     const malformedText = '{"metadata":';
     const fetcher = {
@@ -179,6 +216,31 @@ describe('StoredExecutablePlanResolver', () => {
 
     await expect(resolver.fetch({ ...SCOPED_PLAN_REF, planRef })).resolves.toMatchObject({
       steps: [{ stepId: 'step-1', kind: 'SPARK_SQL', dependsOn: [] }],
+    });
+  });
+
+  it('rejects unknown step kinds with the default registry', async () => {
+    const executablePlanText = JSON.stringify({
+      metadata: {
+        ...JSON.parse(EXECUTABLE_PLAN_TEXT).metadata,
+      },
+      steps: [{ stepId: 'step-1', kind: 'SPARK_SQL', dependsOn: [] }],
+    });
+    const fetcher = {
+      fetchStoredPlanArtifact: vi.fn(async () => ({
+        bytes: Buffer.from(executablePlanText, 'utf8'),
+        executionPolicy: {},
+      })),
+    };
+    const resolver = new StoredExecutablePlanResolver({ fetcher: fetcher as never });
+    const planRef = {
+      ...PLAN_REF,
+      sha256: asNonBlankString(createHash('sha256').update(executablePlanText).digest('hex')),
+    };
+
+    await expect(resolver.fetch({ ...SCOPED_PLAN_REF, planRef })).rejects.toMatchObject({
+      code: 'plan_parse',
+      message: expect.stringContaining('INVALID_STEP_KIND'),
     });
   });
 
