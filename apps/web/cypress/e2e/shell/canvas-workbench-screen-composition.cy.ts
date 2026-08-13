@@ -774,9 +774,14 @@ describe('Canvas workbench screen composition', () => {
       .focus()
       .type('{leftarrow}');
     cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="runs"]')
-      .should('be.focused')
-      .and('have.attr', 'aria-selected', 'true')
+      .should('have.attr', 'aria-selected', 'true')
+      .and('have.attr', 'tabindex', '0')
       .and('have.attr', 'aria-controls', 'bottom-operational-drawer-panel-runs');
+    cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="preview"]').should(
+      'have.attr',
+      'tabindex',
+      '-1'
+    );
     cy.get('#bottom-operational-drawer-panel-runs')
       .should('be.visible')
       .and('have.attr', 'role', 'tabpanel')
