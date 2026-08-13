@@ -91,6 +91,7 @@ export function clickCanvasAddCatalogAction(action: string, registrationKind?: s
 
   cy.get(selector).then(($item) => {
     const item = $item.get(0) as HTMLButtonElement;
+    item.scrollIntoView({ block: 'nearest', inline: 'nearest' });
     expect(Cypress.dom.isVisible(item)).to.equal(true);
     expect(item.disabled).to.equal(false);
     item.click();
