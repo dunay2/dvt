@@ -1,33 +1,14 @@
 /**
- * Owned concern: define authenticated project onboarding read and write rails.
+ * Owned concern: define persistence inputs behind the ListProjects query and
+ * CreateProject command. Public HTTP shapes live in @dvt/contracts.
  */
-import type { AuthenticatedPrincipal } from '../../domain/auth/types.js';
+import type {
+  ProjectCatalogIntegrityFinding,
+  ProjectDescriptor,
+  ProjectWorkspaceDescriptor,
+} from '@dvt/contracts';
 
-export const PROJECT_ONBOARDING_CREATE_SCOPE = 'project:create';
-export const PROJECT_ONBOARDING_DEFAULT_ENVIRONMENT_ID = 'dev';
-
-export interface ProjectOnboardingTenant {
-  readonly tenantId: string;
-  readonly canCreateProject: boolean;
-}
-
-export interface ProjectDescriptor {
-  readonly tenantId: string;
-  readonly projectId: string;
-  readonly name: string;
-  readonly environmentIds: readonly string[];
-}
-
-export interface ProjectOnboardingCatalog {
-  readonly tenants: readonly ProjectOnboardingTenant[];
-  readonly projects: readonly ProjectDescriptor[];
-}
-
-export interface EffectiveProjectWorkspaceContext {
-  readonly tenantId: string;
-  readonly projectId: string;
-  readonly environmentId: string;
-}
+import type { AuthenticatedPrincipal, PrincipalRef } from '../../domain/auth/types.js';
 
 export interface CreateProjectCommand {
   readonly tenantId: string;
@@ -35,22 +16,31 @@ export interface CreateProjectCommand {
   readonly idempotencyKey: string;
 }
 
+export interface PersistProjectCreationCommand extends CreateProjectCommand {
+  readonly principal: PrincipalRef;
+  readonly defaultEnvironmentId: string;
+  readonly creatorWorkspaceActions: readonly string[];
+}
+
 export type CreateProjectOutcome =
   | {
       readonly kind: 'created' | 'replayed';
       readonly project: ProjectDescriptor;
-      readonly effectiveWorkspace: EffectiveProjectWorkspaceContext;
+      readonly defaultWorkspace: ProjectWorkspaceDescriptor;
     }
   | { readonly kind: 'tenant_not_granted' }
   | { readonly kind: 'action_not_granted' }
   | { readonly kind: 'duplicate_project_name' }
   | { readonly kind: 'idempotency_conflict' };
 
+export interface GrantedProjectCatalog {
+  readonly tenantIds: readonly string[];
+  readonly projects: readonly ProjectDescriptor[];
+  readonly integrityFindings: readonly ProjectCatalogIntegrityFinding[];
+}
+
 export interface IProjectOnboardingRepository {
   migrate(): Promise<void>;
-  listProjects(principal: AuthenticatedPrincipal): Promise<ProjectOnboardingCatalog>;
-  createProject(
-    principal: AuthenticatedPrincipal,
-    command: CreateProjectCommand
-  ): Promise<CreateProjectOutcome>;
+  listGrantedProjects(principal: AuthenticatedPrincipal): Promise<GrantedProjectCatalog>;
+  createProject(command: PersistProjectCreationCommand): Promise<CreateProjectOutcome>;
 }

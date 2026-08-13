@@ -1,48 +1,28 @@
 /**
- * Owned concern: persist embedded project onboarding state behind API ports.
+ * Owned concern: persist projects and project-creation idempotency after the
+ * application boundary has authorized the command.
  */
-import { createHash } from 'node:crypto';
-
+import {
+  jcsCanonicalize,
+  sha256HexUtf8,
+  type ProjectDescriptor,
+  type ProjectWorkspaceDescriptor,
+} from '@dvt/contracts';
 import type { Pool, PoolClient } from 'pg';
 
-import { AUTHORIZATION_ACTION_NAME } from '../../application/ports/accessDecision.js';
-import {
-  PROJECT_ONBOARDING_CREATE_SCOPE,
-  PROJECT_ONBOARDING_DEFAULT_ENVIRONMENT_ID,
-  type CreateProjectCommand,
-  type CreateProjectOutcome,
-  type EffectiveProjectWorkspaceContext,
-  type IProjectOnboardingRepository,
-  type ProjectDescriptor,
-  type ProjectOnboardingCatalog,
+import type {
+  IPrincipalGrantRepository,
+  PrincipalGrantSnapshot,
+} from '../../application/ports/principalGrantRepository.js';
+import type {
+  CreateProjectOutcome,
+  GrantedProjectCatalog,
+  IProjectOnboardingRepository,
+  PersistProjectCreationCommand,
 } from '../../application/ports/projectOnboarding.js';
 import type { AuthenticatedPrincipal, PrincipalRef } from '../../domain/auth/types.js';
 
-type Queryable = Pick<Pool | PoolClient, 'query'>;
-
-interface EnvironmentGrantJson {
-  readonly environmentId: string;
-  readonly allowedActions?: readonly string[];
-}
-
-interface ProjectGrantJson {
-  readonly projectId: string;
-  readonly allowedActions?: readonly string[];
-  readonly environmentAccess?: readonly EnvironmentGrantJson[];
-}
-
-interface TenantGrantJson {
-  readonly tenantId: string;
-  readonly allowedActions?: readonly string[];
-  readonly projectAccess?: readonly ProjectGrantJson[];
-}
-
-interface PrincipalAccessRow {
-  principal_id: string;
-  principal_type: PrincipalRef['principalType'];
-  suspended: boolean;
-  tenant_access: readonly TenantGrantJson[];
-}
+import { EmbeddedPrincipalGrantRepository } from './embeddedPrincipalGrantRepository.js';
 
 interface ProjectRow {
   tenant_id: string;
@@ -54,15 +34,32 @@ interface IdempotencyRow {
   request_hash: string;
   response_json: {
     readonly project: ProjectDescriptor;
-    readonly effectiveWorkspace: EffectiveProjectWorkspaceContext;
+    readonly defaultWorkspace: ProjectWorkspaceDescriptor;
   };
 }
 
+type ProjectReference = Readonly<{
+  tenantId: string;
+  projectId: string;
+  environmentIds: readonly string[];
+}>;
+
 export class EmbeddedProjectOnboardingRepository implements IProjectOnboardingRepository {
+  private readonly principalGrants: IPrincipalGrantRepository;
+  private readonly buildTransactionGrants: (client: PoolClient) => IPrincipalGrantRepository;
+
   public constructor(
     private readonly pool: Pick<Pool, 'query' | 'connect'>,
-    private readonly schema: string = 'dvt'
-  ) {}
+    private readonly schema: string = 'dvt',
+    principalGrants?: IPrincipalGrantRepository,
+    buildTransactionGrants?: (client: PoolClient) => IPrincipalGrantRepository
+  ) {
+    this.principalGrants =
+      principalGrants ?? new EmbeddedPrincipalGrantRepository(this.pool, this.schema);
+    this.buildTransactionGrants =
+      buildTransactionGrants ??
+      ((client) => new EmbeddedPrincipalGrantRepository(client, this.schema));
+  }
 
   public async migrate(): Promise<void> {
     await this.pool.query(`CREATE SCHEMA IF NOT EXISTS ${quoteIdentifier(this.schema)};`);
@@ -70,7 +67,7 @@ export class EmbeddedProjectOnboardingRepository implements IProjectOnboardingRe
       CREATE TABLE IF NOT EXISTS ${quoteIdentifier(this.schema)}.projects (
         tenant_id       TEXT        NOT NULL,
         project_id      TEXT        NOT NULL,
-        name            TEXT        NOT NULL,
+        name             TEXT        NOT NULL,
         created_by_id   TEXT        NOT NULL,
         created_by_type TEXT        NOT NULL,
         created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -94,44 +91,65 @@ export class EmbeddedProjectOnboardingRepository implements IProjectOnboardingRe
     `);
   }
 
-  public async listProjects(principal: AuthenticatedPrincipal): Promise<ProjectOnboardingCatalog> {
-    const access = await loadPrincipalAccess(this.pool, this.schema, principal);
-    if (access === null || access.suspended) {
-      return { tenants: [], projects: [] };
+  public async listGrantedProjects(
+    principal: AuthenticatedPrincipal
+  ): Promise<GrantedProjectCatalog> {
+    const grants = await this.principalGrants.load(principal);
+    if (grants === null || grants.suspended) {
+      return { tenantIds: [], projects: [], integrityFindings: [] };
     }
 
-    const tenants = access.tenant_access
-      .filter((tenant) => isAssertedValueAllowed(principal.assertedTenantIds, tenant.tenantId))
-      .map((tenant) => ({
-        tenantId: tenant.tenantId,
-        canCreateProject: canCreateProject(principal, tenant),
-      }));
-    const projectRefs = tenants.flatMap((tenant) =>
-      normalizeProjects(findTenant(access.tenant_access, tenant.tenantId).projectAccess).map(
-        (project) => ({
+    const visibleTenants = grants.tenantAccess.filter((tenant) =>
+      isAssertedValueAllowed(principal.assertedTenantIds, tenant.tenantId)
+    );
+    const references = visibleTenants.flatMap((tenant) =>
+      tenant.projectAccess
+        .filter((project) =>
+          isAssertedValueAllowed(principal.assertedProjectIds, project.projectId)
+        )
+        .map((project) => ({
           tenantId: tenant.tenantId,
           projectId: project.projectId,
-          environmentIds: normalizeEnvironments(project.environmentAccess).map(
-            (environment) => environment.environmentId
-          ),
-        })
-      )
+          environmentIds: project.environmentAccess.map((environment) => environment.environmentId),
+        }))
     );
+    const rows = await this.loadProjectRows(references);
+    const rowByProject = new Map(rows.map((row) => [projectKey(row), row]));
+    const projects: ProjectDescriptor[] = [];
+    const integrityFindings: GrantedProjectCatalog['integrityFindings'][number][] = [];
+
+    for (const reference of references) {
+      const row = rowByProject.get(projectKey(reference));
+      if (row === undefined) {
+        integrityFindings.push({
+          kind: 'missing_project_record',
+          tenantId: reference.tenantId,
+          projectId: reference.projectId,
+        });
+        continue;
+      }
+      projects.push({
+        tenantId: reference.tenantId,
+        projectId: reference.projectId,
+        name: row.name,
+        environmentIds: [...reference.environmentIds].sort(),
+      });
+    }
 
     return {
-      tenants,
-      projects: await loadProjectDescriptors(this.pool, this.schema, projectRefs),
+      tenantIds: visibleTenants.map((tenant) => tenant.tenantId),
+      projects,
+      integrityFindings,
     };
   }
 
   public async createProject(
-    principal: AuthenticatedPrincipal,
-    command: CreateProjectCommand
+    command: PersistProjectCreationCommand
   ): Promise<CreateProjectOutcome> {
     const client = await this.pool.connect();
     try {
       await client.query('BEGIN');
-      const outcome = await this.createProjectInTransaction(client, principal, command);
+      const outcome = await this.createProjectInTransaction(client, command);
       await client.query('COMMIT');
       return outcome;
     } catch (error) {
@@ -144,138 +162,115 @@ export class EmbeddedProjectOnboardingRepository implements IProjectOnboardingRe
 
   private async createProjectInTransaction(
     client: PoolClient,
-    principal: AuthenticatedPrincipal,
-    command: CreateProjectCommand
+    command: PersistProjectCreationCommand
   ): Promise<CreateProjectOutcome> {
+    await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1, 0))', [
+      `${command.principal.principalType}:${command.principal.principalId}:${command.idempotencyKey}`,
+    ]);
     const requestHash = hashCreateProjectRequest(command);
-    const replay = await loadIdempotency(client, this.schema, principal, command.idempotencyKey);
-    if (replay !== null) {
-      if (replay.request_hash !== requestHash) {
-        return { kind: 'idempotency_conflict' };
-      }
-
-      return {
-        kind: 'replayed',
-        project: replay.response_json.project,
-        effectiveWorkspace: replay.response_json.effectiveWorkspace,
-      };
-    }
-
-    const access = await loadPrincipalAccess(client, this.schema, principal);
-    if (access === null || access.suspended) {
-      return { kind: 'tenant_not_granted' };
-    }
-
-    const tenant = findTenant(access.tenant_access, command.tenantId);
-    if (tenant.tenantId.length === 0) {
-      return { kind: 'tenant_not_granted' };
-    }
-
-    if (!canCreateProject(principal, tenant)) {
-      return { kind: 'action_not_granted' };
-    }
-
-    const duplicate = await client.query<ProjectRow>(
-      `SELECT tenant_id, project_id, name
-         FROM ${quoteIdentifier(this.schema)}.projects
-        WHERE tenant_id = $1
-          AND lower(name) = lower($2)
-        LIMIT 1`,
-      [command.tenantId, command.name]
+    const replay = await loadIdempotency(
+      client,
+      this.schema,
+      command.principal,
+      command.idempotencyKey
     );
-    if (duplicate.rows.length > 0) {
-      return { kind: 'duplicate_project_name' };
+    if (replay !== null) {
+      return replay.request_hash === requestHash
+        ? {
+            kind: 'replayed',
+            project: replay.response_json.project,
+            defaultWorkspace: replay.response_json.defaultWorkspace,
+          }
+        : { kind: 'idempotency_conflict' };
     }
 
-    const project = {
+    const transactionGrants = this.buildTransactionGrants(client);
+    const grants = await transactionGrants.load(command.principal, { forUpdate: true });
+    if (grants === null || grants.suspended) {
+      return { kind: 'tenant_not_granted' };
+    }
+    const tenant = grants.tenantAccess.find((grant) => grant.tenantId === command.tenantId);
+    if (tenant === undefined) {
+      return { kind: 'tenant_not_granted' };
+    }
+
+    const project: ProjectDescriptor = {
       tenantId: command.tenantId,
       projectId: buildProjectId(command),
       name: command.name,
-      environmentIds: [PROJECT_ONBOARDING_DEFAULT_ENVIRONMENT_ID],
+      environmentIds: [command.defaultEnvironmentId],
     };
-    const effectiveWorkspace = {
-      tenantId: project.tenantId,
-      projectId: project.projectId,
-      environmentId: PROJECT_ONBOARDING_DEFAULT_ENVIRONMENT_ID,
-    };
-
-    await client.query(
+    const inserted = await client.query<{ project_id: string }>(
       `INSERT INTO ${quoteIdentifier(this.schema)}.projects
         (tenant_id, project_id, name, created_by_id, created_by_type)
-       VALUES ($1, $2, $3, $4, $5)`,
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT DO NOTHING
+       RETURNING project_id`,
       [
         project.tenantId,
         project.projectId,
         project.name,
-        principal.principalId,
-        principal.principalType,
+        command.principal.principalId,
+        command.principal.principalType,
       ]
     );
-    await saveProjectGrant(client, this.schema, principal, access.tenant_access, project);
-    await saveIdempotency(client, this.schema, principal, command.idempotencyKey, requestHash, {
-      project,
-      effectiveWorkspace,
-    });
+    if (inserted.rows.length === 0) {
+      return { kind: 'duplicate_project_name' };
+    }
 
-    return { kind: 'created', project, effectiveWorkspace };
-  }
-}
-
-async function loadPrincipalAccess(
-  queryable: Queryable,
-  schema: string,
-  principal: PrincipalRef
-): Promise<PrincipalAccessRow | null> {
-  const result = await queryable.query<PrincipalAccessRow>(
-    `SELECT principal_id, principal_type, suspended, tenant_access
-       FROM ${quoteIdentifier(schema)}.principal_grants
-      WHERE principal_id = $1
-        AND principal_type = $2
-      LIMIT 1`,
-    [principal.principalId, principal.principalType]
-  );
-
-  return result.rows[0] ?? null;
-}
-
-async function loadProjectDescriptors(
-  queryable: Queryable,
-  schema: string,
-  projectRefs: readonly {
-    readonly tenantId: string;
-    readonly projectId: string;
-    readonly environmentIds: readonly string[];
-  }[]
-): Promise<readonly ProjectDescriptor[]> {
-  const projects: ProjectDescriptor[] = [];
-  for (const ref of projectRefs) {
-    const result = await queryable.query<ProjectRow>(
-      `SELECT tenant_id, project_id, name
-         FROM ${quoteIdentifier(schema)}.projects
-        WHERE tenant_id = $1
-          AND project_id = $2
-        LIMIT 1`,
-      [ref.tenantId, ref.projectId]
+    const defaultWorkspace: ProjectWorkspaceDescriptor = {
+      tenantId: project.tenantId,
+      projectId: project.projectId,
+      projectName: project.name,
+      environmentId: command.defaultEnvironmentId,
+    };
+    await transactionGrants.save(addProjectGrant(grants, command, project));
+    await saveIdempotency(
+      client,
+      this.schema,
+      command.principal,
+      command.idempotencyKey,
+      requestHash,
+      {
+        project,
+        defaultWorkspace,
+      }
     );
-    const row = result.rows[0];
-    projects.push({
-      tenantId: ref.tenantId,
-      projectId: ref.projectId,
-      name: row?.name ?? ref.projectId,
-      environmentIds: ref.environmentIds,
-    });
+
+    return { kind: 'created', project, defaultWorkspace };
   }
 
-  return projects;
+  private async loadProjectRows(
+    references: readonly ProjectReference[]
+  ): Promise<readonly ProjectRow[]> {
+    if (references.length === 0) {
+      return [];
+    }
+    const result = await this.pool.query<ProjectRow>(
+      `WITH requested(tenant_id, project_id) AS (
+         SELECT * FROM UNNEST($1::text[], $2::text[])
+       )
+       SELECT project.tenant_id, project.project_id, project.name
+         FROM ${quoteIdentifier(this.schema)}.projects AS project
+         JOIN requested
+           ON requested.tenant_id = project.tenant_id
+          AND requested.project_id = project.project_id`,
+      [
+        references.map((reference) => reference.tenantId),
+        references.map((reference) => reference.projectId),
+      ]
+    );
+    return result.rows;
+  }
 }
 
 async function loadIdempotency(
-  queryable: Queryable,
+  client: PoolClient,
   schema: string,
   principal: PrincipalRef,
   idempotencyKey: string
 ): Promise<IdempotencyRow | null> {
-  const result = await queryable.query<IdempotencyRow>(
+  const result = await client.query<IdempotencyRow>(
     `SELECT request_hash, response_json
        FROM ${quoteIdentifier(schema)}.project_creation_idempotency
       WHERE principal_id = $1
@@ -284,67 +279,18 @@ async function loadIdempotency(
       LIMIT 1`,
     [principal.principalId, principal.principalType, idempotencyKey]
   );
-
   return result.rows[0] ?? null;
 }
 
-async function saveProjectGrant(
-  queryable: Queryable,
-  schema: string,
-  principal: PrincipalRef,
-  tenantAccess: readonly TenantGrantJson[],
-  project: ProjectDescriptor
-): Promise<void> {
-  const workspaceProjectActions = [
-    AUTHORIZATION_ACTION_NAME.workspaceGraphDraftView,
-    AUTHORIZATION_ACTION_NAME.workspaceGraphDraftSave,
-    AUTHORIZATION_ACTION_NAME.workspaceFilesView,
-    AUTHORIZATION_ACTION_NAME.workspaceSourceImportView,
-    AUTHORIZATION_ACTION_NAME.workspaceSourceConnectionCreate,
-    AUTHORIZATION_ACTION_NAME.workspaceSourceConnectionTest,
-    AUTHORIZATION_ACTION_NAME.workspaceSourceImportImport,
-    AUTHORIZATION_ACTION_NAME.workspacePluginsView,
-  ];
-  const updatedTenants = tenantAccess.map((tenant) =>
-    tenant.tenantId === project.tenantId
-      ? {
-          ...tenant,
-          projectAccess: [
-            ...normalizeProjects(tenant.projectAccess),
-            {
-              projectId: project.projectId,
-              allowedActions: workspaceProjectActions,
-              environmentAccess: [
-                {
-                  environmentId: PROJECT_ONBOARDING_DEFAULT_ENVIRONMENT_ID,
-                  allowedActions: workspaceProjectActions,
-                },
-              ],
-            },
-          ],
-        }
-      : tenant
-  );
-
-  await queryable.query(
-    `UPDATE ${quoteIdentifier(schema)}.principal_grants
-        SET tenant_access = $3::jsonb,
-            updated_at = NOW()
-      WHERE principal_id = $1
-        AND principal_type = $2`,
-    [principal.principalId, principal.principalType, JSON.stringify(updatedTenants)]
-  );
-}
-
 async function saveIdempotency(
-  queryable: Queryable,
+  client: PoolClient,
   schema: string,
   principal: PrincipalRef,
   idempotencyKey: string,
   requestHash: string,
   response: IdempotencyRow['response_json']
 ): Promise<void> {
-  await queryable.query(
+  await client.query(
     `INSERT INTO ${quoteIdentifier(schema)}.project_creation_idempotency
       (principal_id, principal_type, idempotency_key, request_hash, response_json)
      VALUES ($1, $2, $3, $4, $5::jsonb)`,
@@ -358,57 +304,69 @@ async function saveIdempotency(
   );
 }
 
-function findTenant(tenantAccess: readonly TenantGrantJson[], tenantId: string): TenantGrantJson {
-  return (
-    tenantAccess.find((tenant) => tenant.tenantId === tenantId) ?? {
-      tenantId: '',
-      allowedActions: [],
-      projectAccess: [],
-    }
-  );
+function addProjectGrant(
+  snapshot: PrincipalGrantSnapshot,
+  command: PersistProjectCreationCommand,
+  project: ProjectDescriptor
+): PrincipalGrantSnapshot {
+  return {
+    ...snapshot,
+    tenantAccess: snapshot.tenantAccess.map((tenant) =>
+      tenant.tenantId === project.tenantId
+        ? {
+            ...tenant,
+            projectAccess: [
+              ...tenant.projectAccess,
+              {
+                projectId: project.projectId,
+                allowedActions: command.creatorWorkspaceActions,
+                environmentAccess: [
+                  {
+                    environmentId: command.defaultEnvironmentId,
+                    allowedActions: command.creatorWorkspaceActions,
+                  },
+                ],
+              },
+            ],
+          }
+        : tenant
+    ),
+  };
 }
 
-function canCreateProject(principal: AuthenticatedPrincipal, tenant: TenantGrantJson): boolean {
-  return (
-    normalizeStrings(tenant.allowedActions).includes(PROJECT_ONBOARDING_CREATE_SCOPE) ||
-    principal.rawScopes.includes(PROJECT_ONBOARDING_CREATE_SCOPE)
-  );
-}
-
-function buildProjectId(command: CreateProjectCommand): string {
+function buildProjectId(command: PersistProjectCreationCommand): string {
   const slug = command.name
     .toLowerCase()
     .replaceAll(/[^a-z0-9]+/g, '-')
     .replaceAll(/^-|-$/g, '')
     .slice(0, 32);
-  const suffix = createHash('sha256')
-    .update(`${command.tenantId}:${command.name}:${command.idempotencyKey}`)
-    .digest('hex')
-    .slice(0, 8);
-
+  const suffix = sha256HexUtf8(
+    jcsCanonicalize({
+      tenantId: command.tenantId,
+      name: command.name,
+      idempotencyKey: command.idempotencyKey,
+    })
+  ).slice(0, 8);
   return `${slug || 'project'}-${suffix}`;
 }
 
-function hashCreateProjectRequest(command: CreateProjectCommand): string {
-  return createHash('sha256')
-    .update(JSON.stringify({ tenantId: command.tenantId, name: command.name }))
-    .digest('hex');
+function hashCreateProjectRequest(command: PersistProjectCreationCommand): string {
+  return sha256HexUtf8(jcsCanonicalize({ tenantId: command.tenantId, name: command.name }));
 }
 
 function isAssertedValueAllowed(assertedValues: readonly string[], value: string): boolean {
   return assertedValues.length === 0 || assertedValues.includes(value);
 }
 
-function normalizeProjects(value: readonly ProjectGrantJson[] | undefined) {
-  return value ?? [];
-}
-
-function normalizeEnvironments(value: readonly EnvironmentGrantJson[] | undefined) {
-  return value ?? [];
-}
-
-function normalizeStrings(value: readonly string[] | undefined): readonly string[] {
-  return value ?? [];
+function projectKey(
+  value: Readonly<{
+    tenant_id?: string;
+    project_id?: string;
+    tenantId?: string;
+    projectId?: string;
+  }>
+): string {
+  return `${value.tenant_id ?? value.tenantId}\u0000${value.project_id ?? value.projectId}`;
 }
 
 function quoteIdentifier(value: string): string {

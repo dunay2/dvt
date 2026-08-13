@@ -60,13 +60,13 @@ export function registerProjectOnboardingRoutes(
         case 'created':
           reply.code(201).send({
             project: outcome.project,
-            effectiveWorkspace: outcome.effectiveWorkspace,
+            defaultWorkspace: outcome.defaultWorkspace,
           });
           return;
         case 'replayed':
           reply.code(200).send({
             project: outcome.project,
-            effectiveWorkspace: outcome.effectiveWorkspace,
+            defaultWorkspace: outcome.defaultWorkspace,
           });
           return;
         case 'tenant_not_granted':

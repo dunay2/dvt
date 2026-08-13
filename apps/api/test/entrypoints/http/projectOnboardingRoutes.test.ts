@@ -27,6 +27,7 @@ function createDeps(
       execute: vi.fn(async () => ({
         tenants: [{ tenantId: 'tenant-a', canCreateProject: true }],
         projects: [],
+        integrityFindings: [],
       })),
     },
     createProjectUseCase: {
@@ -38,9 +39,10 @@ function createDeps(
           name: 'Analytics',
           environmentIds: ['dev'],
         },
-        effectiveWorkspace: {
+        defaultWorkspace: {
           tenantId: 'tenant-a',
           projectId: 'analytics-12345678',
+          projectName: 'Analytics',
           environmentId: 'dev',
         },
       })),
@@ -89,6 +91,7 @@ describe('projectOnboardingRoutes', () => {
     expect(response.json()).toEqual({
       tenants: [{ tenantId: 'tenant-a', canCreateProject: true }],
       projects: [],
+      integrityFindings: [],
     });
     expect(deps.authenticator.authenticateBearerToken).toHaveBeenCalledWith('token-123');
   });
@@ -117,9 +120,10 @@ describe('projectOnboardingRoutes', () => {
         name: 'Analytics',
         environmentIds: ['dev'],
       },
-      effectiveWorkspace: {
+      defaultWorkspace: {
         tenantId: 'tenant-a',
         projectId: 'analytics-12345678',
+        projectName: 'Analytics',
         environmentId: 'dev',
       },
     });

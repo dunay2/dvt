@@ -60,7 +60,8 @@ export function buildProtectedSecurityRuntime(
   );
   const projectOnboardingRepository = new EmbeddedProjectOnboardingRepository(
     deps.pool,
-    deps.env.DVT_PG_SCHEMA
+    deps.env.DVT_PG_SCHEMA,
+    principalGrantRepository
   );
   const workspacePluginCatalogRepository = new EmbeddedWorkspacePluginCatalogRepository(
     deps.pool,
@@ -88,8 +89,14 @@ export function buildProtectedSecurityRuntime(
   return {
     accessDecisionService: embeddedAccessDecisionService,
     workspaceContextQuery,
-    listProjectsUseCase: new ListProjectsUseCase(projectOnboardingRepository),
-    createProjectUseCase: new CreateProjectUseCase(projectOnboardingRepository),
+    listProjectsUseCase: new ListProjectsUseCase(
+      projectOnboardingRepository,
+      embeddedAccessDecisionService
+    ),
+    createProjectUseCase: new CreateProjectUseCase(
+      projectOnboardingRepository,
+      embeddedAccessDecisionService
+    ),
     listWorkspacePluginsUseCase: new ListWorkspacePluginsUseCase(workspacePluginCatalogRepository),
     migrateAccessDecisionService: () => embeddedAccessDecisionService.migrate(),
     migrateProjectOnboardingRepository: () => projectOnboardingRepository.migrate(),
