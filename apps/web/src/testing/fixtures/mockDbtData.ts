@@ -1,5 +1,5 @@
 /** Owned concern: provide deterministic frontend fixture data for test doubles. */
-import { asNonBlankString } from '@dvt/contracts';
+import { asNonBlankString, asSha256HexString } from '@dvt/contracts';
 
 import {
   DbtNode,
@@ -209,7 +209,7 @@ export const mockExecutionPlan: ExecutionPlan = {
   planVersion: '1.0.0',
   planRef: {
     uri: asNonBlankString('mock://plans/plan_abc123'),
-    sha256: asNonBlankString('c'.repeat(64)),
+    sha256: asSha256HexString('c'.repeat(64)),
     schemaVersion: asNonBlankString('mock-v1'),
     planId: asNonBlankString('plan_abc123'),
     planVersion: asNonBlankString('1.0.0'),
