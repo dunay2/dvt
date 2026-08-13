@@ -64,7 +64,7 @@ export function CanvasInspectorAuthoringSection({
     draft.objectFilePostgres != null && (section === 'all' || section === 'general');
   const showHttpJsonArtifactAuthoring =
     draft.httpJsonArtifact != null && (section === 'all' || section === 'general');
-  const dvtAuthoringSection = section === 'sink' ? 'general' : section;
+  const dvtAuthoringSection = section === 'code' ? 'code' : section === 'all' ? 'all' : 'general';
 
   if (
     !showGeneral &&

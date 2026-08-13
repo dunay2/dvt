@@ -15,7 +15,7 @@ type DvtAuthoringFieldsProps = Readonly<{
   disabled: boolean;
   draft: ReturnType<typeof createCanvasInspectorNodeDraft>;
   errors: ReturnType<typeof validateCanvasInspectorNodeDraft>;
-  section?: 'all' | 'general' | 'columns' | 'code';
+  section?: 'all' | 'general' | 'code';
   onChange: Dispatch<SetStateAction<ReturnType<typeof createCanvasInspectorNodeDraft>>>;
 }>;
 
