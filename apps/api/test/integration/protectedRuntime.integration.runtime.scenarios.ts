@@ -5,6 +5,11 @@
  * @decision Keep protected runtime route and admin route integration flows separate from workspace-draft scenarios while matching the canonical hard-cut start-run boundary
  * @date 2026-04-18
  */
+import {
+  buildWorkspaceGraphDraft,
+  buildWorkspaceGraphDraftSaveRequest,
+} from '../fixtures/workspaceGraphDraftFixture.js';
+
 import type { ProtectedRuntimeHarness } from './protectedRuntime.integration.harness.js';
 import { readAcceptedRunId } from './protectedRuntime.integration.http.js';
 import {
@@ -308,6 +313,21 @@ async function startTemporalRun(
     graphNodeId: string;
   }
 ): Promise<{ statusCode: number; json(): unknown }> {
+  const draftResponse = await runtimeApp.inject({
+    method: 'PUT',
+    url: '/workspace/graph/draft',
+    headers: { authorization: `Bearer ${token}` },
+    payload: buildWorkspaceGraphDraftSaveRequest({
+      idempotencyKey: `start-run-draft-${input.graphNodeId}`,
+      draft: buildSingleNodeDraft(input.graphNodeId),
+    }),
+  });
+  if (draftResponse.statusCode !== 200) {
+    throw new TypeError(
+      `Start-run draft setup failed with ${draftResponse.statusCode}: ${JSON.stringify(draftResponse.json())}`
+    );
+  }
+
   return runtimeApp.inject({
     method: 'POST',
     url: '/runs/start',
@@ -322,11 +342,53 @@ async function startTemporalRun(
       },
       graphSource: {
         kind: 'generic-graph-v1',
-        sourceFamily: 'dbt',
-        sourceVersion: 'manifest-v10',
-        nodes: [{ nodeId: input.graphNodeId, stepKind: 'DBT_MODEL', dependsOn: [] }],
+        sourceFamily: 'transformation-design-graph',
+        sourceVersion: 'transformation-sql-first-v1',
+        nodes: [
+          {
+            nodeId: input.graphNodeId,
+            stepKind: 'PREPARE_POSTGRES_TRANSFORM',
+            dependsOn: [],
+            stepTypeConfig: {
+              targetSchema: 'analytics',
+              sourceSchema: 'raw',
+              sourceTable: 'orders',
+              sourceAlias: 'orders',
+            },
+          },
+        ],
       },
       targetAdapter: 'temporal',
     },
+  });
+}
+
+function buildSingleNodeDraft(graphNodeId: string): ReturnType<typeof buildWorkspaceGraphDraft> {
+  return buildWorkspaceGraphDraft({
+    nodeIds: [graphNodeId],
+    nodePositions: { [graphNodeId]: { x: 0, y: 0 } },
+    nodes: [
+      {
+        id: graphNodeId,
+        name: graphNodeId,
+        pluginId: 'dbt',
+        kind: 'sql_transform',
+        role: 'transform',
+        status: 'idle',
+        tags: [],
+        path: `models/${graphNodeId}.sql`,
+        metadata: {
+          dialect: 'postgres',
+          sqlArtifact: {
+            repo: 'github.com/dunay2/dvt',
+            path: `models/${graphNodeId}.sql`,
+            ref: 'refs/heads/main',
+            commitSha: 'commit-integration-start-run',
+            contentSha256: '3'.repeat(64),
+          },
+        },
+      },
+    ],
+    edges: [],
   });
 }

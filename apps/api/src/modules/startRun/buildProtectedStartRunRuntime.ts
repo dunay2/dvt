@@ -92,7 +92,7 @@ export function buildProtectedStartRunRuntime(
     stepTypeRegistry: deps.stepTypeRegistry,
   });
   const plannerBackedUseCase = new PlannerBackedStartRunUseCase({
-    planner,
+    planner: planCompilePlanner,
     planStore: deps.planStore,
     validator: planValidator,
     compileTelemetry: startRunSlaTelemetry,
