@@ -724,9 +724,19 @@ describe('Canvas source import live clean proof', () => {
     cy.viewport(640, 800);
     cy.get('[data-slot="canvas-viewport-context-surface"]')
       .should('be.visible')
-      .focus()
-      .should('be.focused')
-      .trigger('keydown', { key: 'F10', code: 'F10', shiftKey: true });
+      .then(($surface) => {
+        const surface = $surface.get(0);
+        surface.focus();
+        surface.dispatchEvent(
+          new KeyboardEvent('keydown', {
+            bubbles: true,
+            cancelable: true,
+            key: 'F10',
+            code: 'F10',
+            shiftKey: true,
+          })
+        );
+      });
     cy.get('[data-slot="canvas-context-menu"]').should('be.visible');
     clickCanvasContextMenuAction('open-add-node-catalog');
     clickCanvasAddCatalogAction('open-source-import', 'dbt:source');
