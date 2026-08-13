@@ -1,6 +1,8 @@
 /**
  * Owned concern: map import-plan application results to HTTP responses.
  */
+import type { ExecutionPlan, PlanRef } from '@dvt/contracts';
+
 import {
   IMPORT_PLAN_RESULT_KIND,
   type ImportPlanUseCaseResult,
@@ -13,11 +15,15 @@ import {
   type HttpResponseModel,
 } from './httpErrorContract.js';
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
-import { buildImportPlanResponse } from './planImportResponseMapper.js';
+
+export interface ImportPlanRouteResponse {
+  readonly plan: ExecutionPlan;
+  readonly planRef: PlanRef;
+}
 
 export function mapImportPlanUseCaseResult(
   result: ImportPlanUseCaseResult
-): PlanRouteFacadeResponse<ReturnType<typeof buildImportPlanResponse>> {
+): PlanRouteFacadeResponse<ImportPlanRouteResponse> {
   if (result.kind === IMPORT_PLAN_RESULT_KIND.scopeMismatch) {
     return {
       kind: 'rejected',
@@ -31,7 +37,10 @@ export function mapImportPlanUseCaseResult(
 
   return {
     kind: 'accepted',
-    payload: buildImportPlanResponse(result.plan, result.planRef),
+    payload: {
+      plan: result.plan,
+      planRef: result.planRef,
+    },
   };
 }
 

@@ -4,7 +4,14 @@
 import {
   PLAN_PREVIEW_REJECTED_OUTCOME_CONTRACT_VERSION,
   PLAN_PREVIEW_REJECTED_OUTCOME_KIND,
+  PREVIEW_PROFILE,
+  summarizeTransformationSqlFirstPlan,
+  type ExecutionPlan,
+  type PlanPreviewProvenance,
   type PlanPreviewRejectedOutcome,
+  type PlanRecord,
+  type PlanRef,
+  type PreviewProfile,
 } from '@dvt/contracts';
 
 import type { PreviewPlanUseCaseResult } from '../../application/services/PreviewPlanUseCase.js';
@@ -15,13 +22,34 @@ import {
   type HttpResponseModel,
 } from './httpErrorContract.js';
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
-import { buildPreviewResponse } from './planPreviewResponseMapper.js';
 import type { ParsedPreviewPlanRequest } from './previewPlanRouteParser.js';
+
+export type PreviewRouteResponse = {
+  previewProfile: PreviewProfile;
+  plan: ExecutionPlan;
+  planRef: PlanRef;
+  planSummary?: {
+    executor: 'postgres' | 'dbt';
+    nodeCount: number;
+    stepCount: number;
+    sourceTables: readonly string[];
+    sinkTables: readonly string[];
+  };
+  persisted: {
+    planRecordId: string;
+    canonicalPlanSha256: string;
+  };
+  validation: {
+    valid: true;
+    warnings: string[];
+  };
+  provenance?: PlanPreviewProvenance;
+};
 
 export type PreviewPlanRouteResultResponse =
   | {
       readonly kind: 'accepted';
-      readonly payload: ReturnType<typeof buildPreviewResponse>;
+      readonly payload: PreviewRouteResponse;
     }
   | {
       readonly kind: 'rejected';
@@ -88,4 +116,33 @@ export function mapPreviewPlanInternalError(): HttpResponseModel {
     type: HTTP_ERROR_TYPE.internalServerError,
     reason: HTTP_ERROR_REASON.internalError,
   });
+}
+
+function buildPreviewResponse(
+  plan: ExecutionPlan,
+  planRef: PlanRef,
+  planRecord: PlanRecord,
+  provenance: PlanPreviewProvenance | undefined,
+  previewProfile: PreviewProfile
+): PreviewRouteResponse {
+  const planSummary =
+    previewProfile === PREVIEW_PROFILE.transformationSqlFirstV1
+      ? summarizeTransformationSqlFirstPlan(plan)
+      : undefined;
+
+  return {
+    previewProfile,
+    plan,
+    planRef,
+    ...(planSummary === undefined ? {} : { planSummary }),
+    persisted: {
+      planRecordId: planRecord.planId,
+      canonicalPlanSha256: planRecord.canonicalHash,
+    },
+    validation: {
+      valid: true,
+      warnings: [],
+    },
+    ...(provenance === undefined ? {} : { provenance }),
+  };
 }
