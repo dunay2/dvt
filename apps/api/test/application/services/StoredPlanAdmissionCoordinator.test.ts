@@ -192,7 +192,7 @@ describe('StoredPlanAdmissionCoordinator', () => {
       'VALID',
       OK_VALIDATION,
       undefined,
-      new Error('PLAN_REF_METADATA_MISMATCH: schemaVersion')
+      new Error(`PLAN_REF_MISMATCH: ${PLAN_REF.planId}:schemaVersion`)
     );
 
     await expect(
@@ -202,10 +202,19 @@ describe('StoredPlanAdmissionCoordinator', () => {
       validation: {
         status: 'ERROR',
         code: 'REJECTED',
-        reason: 'PLAN_REF_METADATA_MISMATCH: schemaVersion',
+        reason: `PLAN_REF_MISMATCH: ${PLAN_REF.planId}:schemaVersion`,
         cause: 'plan_record',
       },
     });
+  });
+
+  it('rethrows unexpected plan-store failures without classifying them as plan rejection', async () => {
+    const infrastructureFailure = new Error('connect ETIMEDOUT postgres.internal:5432');
+    const harness = createHarness('VALID', OK_VALIDATION, undefined, infrastructureFailure);
+
+    await expect(harness.coordinator.admitStored(SCOPED_PLAN_REF, 'temporal')).rejects.toBe(
+      infrastructureFailure
+    );
   });
 
   it('rejects when the stored validation record is missing', async () => {

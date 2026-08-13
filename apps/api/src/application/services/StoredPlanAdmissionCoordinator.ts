@@ -19,6 +19,8 @@ import type { MaterializedStoredExecutablePlan } from './StoredExecutablePlanRes
 import type { StoredPlanExecutabilityValidator } from './StoredPlanExecutabilityValidator.js';
 import { createScopedPlanRef } from './storedPlanScope.js';
 
+const PLAN_REF_MISMATCH_ERROR_PREFIX = 'PLAN_REF_MISMATCH:';
+
 export type StoredPlanAdmissionResult =
   | {
       readonly accepted: true;
@@ -161,29 +163,36 @@ export class StoredPlanAdmissionCoordinator {
     try {
       const storedPlanRecord = await this.deps.planStore.getPlanRecordByRef(scopedPlanRef);
       if (storedPlanRecord === undefined) {
-        throw new Error(`PLAN_RECORD_NOT_FOUND: ${planRef.planId}`);
+        return {
+          accepted: false,
+          planRef,
+          scopedPlanRef,
+          materialized: validated.materialized,
+          validation: buildPlanRecordRejection({
+            planId: planRef.planId,
+            adapterId,
+            reason: `PLAN_RECORD_NOT_FOUND: ${planRef.planId}`,
+          }),
+          ...(currentValidationRecord.state === 'VALID'
+            ? { validationRecord: { ...currentValidationRecord, state: 'VALID' as const } }
+            : {}),
+        };
       }
       planRecord = storedPlanRecord;
     } catch (error) {
+      if (!isPlanRefMismatchError(error)) {
+        throw error;
+      }
       return {
         accepted: false,
         planRef,
         scopedPlanRef,
         materialized: validated.materialized,
-        validation: {
-          status: 'ERROR',
+        validation: buildPlanRecordRejection({
           planId: planRef.planId,
           adapterId,
-          code: 'REJECTED',
-          degradable: false,
-          reason:
-            error instanceof Error
-              ? error.message
-              : typeof error === 'string'
-                ? error
-                : 'Unknown plan record lookup error',
-          cause: 'plan_record',
-        },
+          reason: error.message,
+        }),
         ...(currentValidationRecord.state === 'VALID'
           ? { validationRecord: { ...currentValidationRecord, state: 'VALID' as const } }
           : {}),
@@ -258,4 +267,24 @@ export class StoredPlanAdmissionCoordinator {
       planId: scopedPlanRef.planRef.planId,
     });
   }
+}
+
+function isPlanRefMismatchError(error: unknown): error is Error {
+  return error instanceof Error && error.message.startsWith(PLAN_REF_MISMATCH_ERROR_PREFIX);
+}
+
+function buildPlanRecordRejection(input: {
+  readonly planId: string;
+  readonly adapterId: string;
+  readonly reason: string;
+}): Extract<ExecutabilityValidationResult, { readonly status: 'ERROR' }> {
+  return {
+    status: 'ERROR',
+    planId: input.planId,
+    adapterId: input.adapterId,
+    code: 'REJECTED',
+    degradable: false,
+    reason: input.reason,
+    cause: 'plan_record',
+  };
 }
