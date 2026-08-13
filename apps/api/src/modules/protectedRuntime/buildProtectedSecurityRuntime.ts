@@ -15,6 +15,7 @@ import {
 } from '../../infrastructure/audit/PostgresAuthAuditAdapter.js';
 import { StructuredAuditLogger } from '../../infrastructure/audit/structuredAuditLogger.js';
 import { EmbeddedAccessDecisionService } from '../../infrastructure/auth/embeddedAccessDecisionService.js';
+import { EmbeddedPrincipalGrantRepository } from '../../infrastructure/auth/embeddedPrincipalGrantRepository.js';
 import { EmbeddedProjectOnboardingRepository } from '../../infrastructure/auth/embeddedProjectOnboardingRepository.js';
 import { EmbeddedWorkspaceContextQuery } from '../../infrastructure/auth/embeddedWorkspaceContextQuery.js';
 import { JwksJwtVerifier } from '../../infrastructure/auth/jwksJwtVerifier.js';
@@ -47,10 +48,11 @@ export type ProtectedSecurityRuntime = {
 export function buildProtectedSecurityRuntime(
   deps: BuildProtectedSecurityRuntimeDeps
 ): ProtectedSecurityRuntime {
-  const embeddedAccessDecisionService = new EmbeddedAccessDecisionService(
+  const principalGrantRepository = new EmbeddedPrincipalGrantRepository(
     deps.pool,
     deps.env.DVT_PG_SCHEMA
   );
+  const embeddedAccessDecisionService = new EmbeddedAccessDecisionService(principalGrantRepository);
   const workspaceContextQuery = new EmbeddedWorkspaceContextQuery(
     deps.pool,
     deps.env.DVT_PG_SCHEMA

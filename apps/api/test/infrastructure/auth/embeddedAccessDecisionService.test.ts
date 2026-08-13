@@ -3,57 +3,47 @@ import { describe, expect, it } from 'vitest';
 import { ProjectId, TenantId } from '../../../src/domain/auth/types.js';
 import { EmbeddedAccessDecisionService } from '../../../src/infrastructure/auth/embeddedAccessDecisionService.js';
 
-function normalizeSql(sql: string): string {
-  return sql.replaceAll(/\s+/g, ' ').trim();
-}
-
 describe('EmbeddedAccessDecisionService', () => {
   it('creates the schema before the grants table', async () => {
     const queries: string[] = [];
-    const pool = {
-      async query(sql: string) {
-        queries.push(sql);
-        return { rows: [] };
+    const grants = {
+      async migrate() {
+        queries.push('migrate');
+      },
+      async load() {
+        return null;
       },
     };
 
-    const service = new EmbeddedAccessDecisionService(pool as never, 'authz');
+    const service = new EmbeddedAccessDecisionService(grants);
     await service.migrate();
 
-    expect(queries.length).toBe(2);
-    expect(normalizeSql(queries[0]!)).toMatch(/^CREATE SCHEMA IF NOT EXISTS authz;$/i);
-    expect(normalizeSql(queries[1]!)).toMatch(
-      /^CREATE TABLE IF NOT EXISTS authz\.principal_grants \(/i
-    );
+    expect(queries).toEqual(['migrate']);
   });
 
   it('allows project grant', async () => {
     const service = new EmbeddedAccessDecisionService({
-      async query() {
+      async migrate() {},
+      async load() {
         return {
-          rows: [
+          principal: { principalId: 'u1', principalType: 'user' as const },
+          suspended: false,
+          tenantAccess: [
             {
-              principal_id: 'u1',
-              principal_type: 'user',
-              suspended: false,
-              tenant_access: [
+              tenantId: 't1',
+              allowedActions: [],
+              projectAccess: [
                 {
-                  tenantId: 't1',
-                  allowedActions: [],
-                  projectAccess: [
-                    {
-                      projectId: 'p1',
-                      allowedActions: ['run:start'],
-                      environmentAccess: [],
-                    },
-                  ],
+                  projectId: 'p1',
+                  allowedActions: ['run:start'],
+                  environmentAccess: [],
                 },
               ],
             },
           ],
         };
       },
-    } as never);
+    });
 
     const outcome = await service.decide(
       {
@@ -87,25 +77,21 @@ describe('EmbeddedAccessDecisionService', () => {
 
   it('denies assertion conflict', async () => {
     const service = new EmbeddedAccessDecisionService({
-      async query() {
+      async migrate() {},
+      async load() {
         return {
-          rows: [
+          principal: { principalId: 'u1', principalType: 'user' as const },
+          suspended: false,
+          tenantAccess: [
             {
-              principal_id: 'u1',
-              principal_type: 'user',
-              suspended: false,
-              tenant_access: [
-                {
-                  tenantId: 't1',
-                  allowedActions: ['run:start'],
-                  projectAccess: [],
-                },
-              ],
+              tenantId: 't1',
+              allowedActions: ['run:start'],
+              projectAccess: [],
             },
           ],
         };
       },
-    } as never);
+    });
 
     const outcome = await service.decide(
       {
