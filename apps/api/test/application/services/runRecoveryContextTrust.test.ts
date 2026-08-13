@@ -95,7 +95,7 @@ describe('resolveRunRecoveryContextTrust', () => {
     const reader = { read: vi.fn() };
 
     await expect(
-      resolveRunRecoveryContextTrust(reader as never, undefined, metadata, statusFor('COMPLETED'))
+      resolveRunRecoveryContextTrust(reader as never, undefined, metadata, statusFor('PENDING'))
     ).resolves.toBe(true);
     expect(reader.read).not.toHaveBeenCalled();
   });
