@@ -14169,6 +14169,20 @@
         "implementation_content_sha256": null
       },
       {
+        "evidence_id": "EV-GH-2168-HARDCUT-AUDIT-IDENTITY",
+        "design_id": "GH-2168-LEGACY-SURFACE-NORMALIZATION-20260813",
+        "subject_kind": "check",
+        "subject_id": "legacy-surface-normalization",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "local://node-test/feature-mechanization-hardcut-audit",
+        "source_path": "scripts/planning-db-operate-tests/feature-mechanization.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-13T09:35:07.288+00:00",
+        "source_content_sha256": "83ef679169778f6b893ea97a933b9fd4b0897777977b9da14e5f995e6498a070",
+        "implementation_content_sha256": null
+      },
+      {
         "evidence_id": "EV-GH-2168-LEGACY-SURFACE-NORMALIZATION",
         "design_id": "GH-2168-LEGACY-SURFACE-NORMALIZATION-20260813",
         "subject_kind": "check",
@@ -92332,6 +92346,31 @@
         "created_at": "2026-08-11T10:05:26.359+00:00"
       },
       {
+        "operation_id": "2a392d13-8954-4024-8e24-3690fcb587aa",
+        "idempotency_key": "gh-2168-hardcut-audit-evidence-v1",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "GH-2168-LEGACY-SURFACE-NORMALIZATION-20260813",
+        "source_ref": "local://node-test/feature-mechanization-hardcut-audit",
+        "source_content_sha256": "83ef679169778f6b893ea97a933b9fd4b0897777977b9da14e5f995e6498a070",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "GH-2168-LEGACY-SURFACE-NORMALIZATION-20260813",
+          "sourceRef": "local://node-test/feature-mechanization-hardcut-audit",
+          "subjectId": "legacy-surface-normalization",
+          "evidenceId": "EV-GH-2168-HARDCUT-AUDIT-IDENTITY",
+          "sourcePath": "scripts/planning-db-operate-tests/feature-mechanization.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "check",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "83ef679169778f6b893ea97a933b9fd4b0897777977b9da14e5f995e6498a070"
+        },
+        "created_at": "2026-08-13T09:35:07.288+00:00"
+      },
+      {
         "operation_id": "2a3acbc4-748d-484e-bae7-cfeae53b97a3",
         "idempotency_key": "architecture_evidence_record:codex:API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811:EV-PTH14-REF-CLASSIFY-REVIEW3:6ae410c2dd29b04b",
         "operation_type": "architecture_evidence_record",
@@ -111690,7 +111729,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "28357e568bb791bc1c511ff6996ae77c76325f442695aa8ec8cf8241236367a4",
+      "sourceContentSha256": "e0d5d5a865a291ecdd5b228f78e1b84482c11a13e6c202bab704bb6b7e62c2ec",
       "rawRail": {
         "name": "RecordArchitectureComponent",
         "type": "command",
@@ -111900,7 +111939,7 @@
         "node --test scripts/planning-db-operate-tests/architecture-plan.test.cjs scripts/planning-db-operate-tests/architecture-parse.test.cjs"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "28357e568bb791bc1c511ff6996ae77c76325f442695aa8ec8cf8241236367a4",
+      "sourceContentSha256": "e0d5d5a865a291ecdd5b228f78e1b84482c11a13e6c202bab704bb6b7e62c2ec",
       "rawRail": {
         "name": "RecordArchitectureEvidenceExecution",
         "type": "command",
@@ -112474,7 +112513,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "28357e568bb791bc1c511ff6996ae77c76325f442695aa8ec8cf8241236367a4",
+      "sourceContentSha256": "e0d5d5a865a291ecdd5b228f78e1b84482c11a13e6c202bab704bb6b7e62c2ec",
       "rawRail": {
         "name": "RecordArchitectureObservabilityEvidence",
         "type": "command",
@@ -112705,7 +112744,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "28357e568bb791bc1c511ff6996ae77c76325f442695aa8ec8cf8241236367a4",
+      "sourceContentSha256": "e0d5d5a865a291ecdd5b228f78e1b84482c11a13e6c202bab704bb6b7e62c2ec",
       "rawRail": {
         "name": "RetireArchitectureEvidenceExecution",
         "type": "command",
@@ -112867,7 +112906,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "28357e568bb791bc1c511ff6996ae77c76325f442695aa8ec8cf8241236367a4",
+      "sourceContentSha256": "e0d5d5a865a291ecdd5b228f78e1b84482c11a13e6c202bab704bb6b7e62c2ec",
       "rawRail": {
         "name": "RetireArchitectureTestEvidence",
         "type": "command",
@@ -113029,7 +113068,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "28357e568bb791bc1c511ff6996ae77c76325f442695aa8ec8cf8241236367a4",
+      "sourceContentSha256": "e0d5d5a865a291ecdd5b228f78e1b84482c11a13e6c202bab704bb6b7e62c2ec",
       "rawRail": {
         "name": "RetireFeatureMechanizationRail",
         "type": "command",
@@ -113191,7 +113230,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "28357e568bb791bc1c511ff6996ae77c76325f442695aa8ec8cf8241236367a4",
+      "sourceContentSha256": "e0d5d5a865a291ecdd5b228f78e1b84482c11a13e6c202bab704bb6b7e62c2ec",
       "rawRail": {
         "name": "TransitionArchitectureDesign",
         "type": "command",
@@ -122279,7 +122318,7 @@
         "pnpm docs:feature-mechanization:implementation"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "28357e568bb791bc1c511ff6996ae77c76325f442695aa8ec8cf8241236367a4",
+      "sourceContentSha256": "e0d5d5a865a291ecdd5b228f78e1b84482c11a13e6c202bab704bb6b7e62c2ec",
       "rawRail": {
         "name": "RecordArchitectureStorageIo",
         "type": "command",
@@ -135044,7 +135083,8 @@
         "scripts/planning-db-operate.cjs#excludesFeatureMechanizationSurface",
         "scripts/planning-db-operate.cjs#pruneForbiddenFeatureMechanizationReferences",
         "scripts/planning-db-operate.cjs#mergeFeatureMechanizationManifest",
-        "scripts/planning-db-operate.cjs#featureMechanizationSurfacePath"
+        "scripts/planning-db-operate.cjs#featureMechanizationSurfacePath",
+        "scripts/planning-db-operate.cjs#operationPayload"
       ],
       "implementationRefs": [
         "scripts/planning-db-operate.cjs#allowedFeatureMechanizationRailStatuses",
@@ -135078,7 +135118,8 @@
         "scripts/planning-db-operate.cjs#excludesFeatureMechanizationSurface",
         "scripts/planning-db-operate.cjs#pruneForbiddenFeatureMechanizationReferences",
         "scripts/planning-db-operate.cjs#mergeFeatureMechanizationManifest",
-        "scripts/planning-db-operate.cjs#featureMechanizationSurfacePath"
+        "scripts/planning-db-operate.cjs#featureMechanizationSurfacePath",
+        "scripts/planning-db-operate.cjs#operationPayload"
       ],
       "documentationRefs": [
         "docs/planning/proposals/mandatory/governance-and-docs/feature-mechanization-db-first-read-model-plan-20260605.md",
@@ -135116,14 +135157,15 @@
         "node --test scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "28357e568bb791bc1c511ff6996ae77c76325f442695aa8ec8cf8241236367a4",
+      "sourceContentSha256": "e0d5d5a865a291ecdd5b228f78e1b84482c11a13e6c202bab704bb6b7e62c2ec",
       "rawRail": {
         "name": "RecordFeatureMechanizationRail",
         "type": "command",
         "status": "implemented",
         "dddOwner": "Planning DB governance writer",
         "negativeTests": [
-          "Reject stale expected revisions and invalid feature rail metadata."
+          "Reject stale expected revisions and invalid feature rail metadata.",
+          "Reject stale expected revisions and audit hard cuts distinctly from additive updates."
         ],
         "adapterSurface": "pnpm planning:db:operate feature-mechanization record",
         "applicationPort": "RecordFeatureMechanizationRail application command",
@@ -135286,7 +135328,8 @@
             ],
             "fowlerSignals": [
               "CLI input is normalized into a single command shape.",
-              "Explicit hard cuts replace obsolete implementation refs while the default record path remains additive."
+              "Explicit hard cuts replace obsolete implementation refs while the default record path remains additive.",
+              "Hard-cut mode is part of the audited payload and default idempotency identity."
             ],
             "cypressCoverage": "N/A - repository governance CLI gate",
             "architectureGuard": "node --test scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
@@ -135326,7 +135369,8 @@
             ],
             "fowlerSignals": [
               "Planning separates command validation from DB mutation.",
-              "Explicit hard cuts replace obsolete implementation refs while the default record path remains additive."
+              "Explicit hard cuts replace obsolete implementation refs while the default record path remains additive.",
+              "Hard-cut mode is part of the audited payload and default idempotency identity."
             ],
             "cypressCoverage": "N/A - repository governance CLI gate",
             "architectureGuard": "node --test scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
@@ -135527,7 +135571,22 @@
             ],
             "fowlerSignals": [
               "Legacy explanatory surface patterns reconcile by path token without broadening the allowed scope.",
-              "Explicit hard cuts replace obsolete implementation refs while the default record path remains additive."
+              "Explicit hard cuts replace obsolete implementation refs while the default record path remains additive.",
+              "Hard-cut mode is part of the audited payload and default idempotency identity."
+            ],
+            "cypressCoverage": "N/A - repository governance CLI gate",
+            "architectureGuard": "node --test scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
+          },
+          {
+            "name": "operationPayload",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
+            ],
+            "fowlerSignals": [
+              "Hard-cut mode is part of the audited payload and default idempotency identity."
             ],
             "cypressCoverage": "N/A - repository governance CLI gate",
             "architectureGuard": "node --test scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
@@ -135564,7 +135623,8 @@
           "A local rail writer can produce invalid raw manifests unless the command owns the complete manifest projection contract.",
           "Rail updates extend effective evidence instead of replacing accumulated manifests.",
           "Legacy explanatory surface patterns reconcile by path token without broadening the allowed scope.",
-          "Explicit hard cuts replace obsolete implementation refs while the default record path remains additive."
+          "Explicit hard cuts replace obsolete implementation refs while the default record path remains additive.",
+          "Hard-cut mode is part of the audited payload and default idempotency identity."
         ],
         "completionGate": [
           "node --test scripts/planning-db-operate.test.cjs scripts/check-feature-mechanization.test.cjs scripts/planning-db-schema.test.cjs",
@@ -135605,7 +135665,7 @@
               "scripts/planning-db-operate.cjs",
               "scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
             ],
-            "expectedFailure": "An explicit hard cut retains obsolete implementation symbols."
+            "expectedFailure": "Additive and destructive feature writes share the same audit payload or idempotency identity."
           }
         ],
         "componentGuides": [
@@ -135626,7 +135686,8 @@
             "status": "implemented",
             "dddOwner": "Planning DB governance writer",
             "negativeTests": [
-              "Reject stale expected revisions and invalid feature rail metadata."
+              "Reject stale expected revisions and invalid feature rail metadata.",
+              "Reject stale expected revisions and audit hard cuts distinctly from additive updates."
             ],
             "adapterSurface": "pnpm planning:db:operate feature-mechanization record",
             "applicationPort": "RecordFeatureMechanizationRail application command",
@@ -135669,7 +135730,7 @@
           "tools/planning-db/schema.sql"
         ]
       },
-      "revision": 2,
+      "revision": 3,
       "createdBy": "codex",
       "createdAt": "2026-08-02T09:32:58.301Z"
     },
@@ -185839,6 +185900,95 @@
         "forbiddenImplementationSurfaces": ["docs/archive/**"]
       },
       "createdAt": "2026-08-13T09:21:46.989Z"
+    },
+    {
+      "operationId": "b8f9256a-b17f-463c-bcd3-2ef5e499756c",
+      "idempotencyKey": "gh-2168-record-hardcut-audit-identity-v1",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#FEATURE-MECHANIZATION-DB-FIRST-WRITER-20260605#command#recordfeaturemechanizationrail",
+      "sourcePath": "scripts/planning-db-operate.cjs",
+      "sourceContentSha256": "e0d5d5a865a291ecdd5b228f78e1b84482c11a13e6c202bab704bb6b7e62c2ec",
+      "expectedRevision": 2,
+      "previousRevision": 2,
+      "resultingRevision": 3,
+      "payload": {
+        "redTest": "node --test scripts/planning-db-operate-tests/feature-mechanization.test.cjs",
+        "dddOwner": "Planning DB governance writer",
+        "railName": "RecordFeatureMechanizationRail",
+        "railType": "command",
+        "featureId": "FEATURE-MECHANIZATION-DB-FIRST-WRITER-20260605",
+        "greenTest": "node --test scripts/planning-db-operate-tests/feature-mechanization.test.cjs",
+        "sourceRef": "scripts/planning-db-operate.cjs",
+        "unitTests": [
+          "scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
+        ],
+        "railStatus": "implemented",
+        "userStories": [
+          "docs/architecture/components/ci-governance/component-engineering-record-user-stories.md"
+        ],
+        "cypressFlows": ["N/A - repository governance CLI gate"],
+        "domainObjects": [
+          "FeatureMechanizationLocalRail",
+          "FeatureMechanizationEffectiveRailProjection"
+        ],
+        "fowlerSignals": [
+          "Hard-cut mode is part of the audited payload and default idempotency identity."
+        ],
+        "negativeTests": [
+          "Reject stale expected revisions and audit hard cuts distinctly from additive updates."
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "pnpm planning:db:operate feature-mechanization record",
+        "completionGate": [
+          "node --test scripts/planning-db-operate-tests/feature-mechanization.test.cjs",
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "RecordFeatureMechanizationRail application command",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Additive and destructive feature writes share the same audit payload or idempotency identity.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/adr/adr-0055-planning-db-canonical-operational-source.md",
+          "docs/guides/ai-work-protocol.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "architectureGuards": [
+          "node --test scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
+        ],
+        "authorizationScope": "Repository-local governance writer with explicit actor and compare-and-set revision.",
+        "implementationPlan": "docs/planning/proposals/mandatory/governance-and-docs/feature-mechanization-db-first-read-model-plan-20260605.md",
+        "implementationRefs": [
+          "scripts/planning-db-operate.cjs#featureMechanizationSurfacePath",
+          "scripts/planning-db-operate.cjs#operationPayload",
+          "scripts/planning-db-operate.cjs#parseFeatureMechanizationCommand",
+          "scripts/planning-db-operate.cjs#planFeatureMechanizationRailRecordOperation"
+        ],
+        "normalizedRailName": "recordfeaturemechanizationrail",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "e0d5d5a865a291ecdd5b228f78e1b84482c11a13e6c202bab704bb6b7e62c2ec",
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-operate.cjs",
+          "scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/**",
+          "packages/**",
+          "specs/contracts/**",
+          "docs/archive/**",
+          "tools/planning-db/schema.sql"
+        ]
+      },
+      "createdAt": "2026-08-13T09:35:05.973Z"
     }
   ],
   "governanceComponentDefinitions": [
