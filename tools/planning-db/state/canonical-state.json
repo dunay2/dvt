@@ -139383,7 +139383,11 @@
         "packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.activities.ts#createStepActivities",
         "packages/@dvt/adapter-temporal/src/activities/activityFactory.ts#ActivityHeartbeat",
         "packages/@dvt/adapter-temporal/src/activities/activityFactory.ts#STEP_ACTIVITY_HEARTBEAT_INTERVAL_MS",
-        "packages/@dvt/adapter-temporal/src/activities/activityFactory.ts#executeWithHeartbeat"
+        "packages/@dvt/adapter-temporal/src/activities/activityFactory.ts#executeWithHeartbeat",
+        "apps/api/src/application/services/startRunEngineBridge.ts#requireStartRunScope",
+        "apps/api/src/entrypoints/http/httpErrorMapper.ts#mapStartRunResult",
+        "apps/api/src/entrypoints/http/startRunRoute.ts#mapStartRunOutcome",
+        "packages/@dvt/contracts/src/validation/runtime.ts#parseStartRunCommand"
       ],
       "implementationRefs": [
         "apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts#ENV_NAME_PATTERN",
@@ -139404,11 +139408,16 @@
         "packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.activities.ts#createStepActivities",
         "packages/@dvt/adapter-temporal/src/activities/activityFactory.ts#ActivityHeartbeat",
         "packages/@dvt/adapter-temporal/src/activities/activityFactory.ts#STEP_ACTIVITY_HEARTBEAT_INTERVAL_MS",
-        "packages/@dvt/adapter-temporal/src/activities/activityFactory.ts#executeWithHeartbeat"
+        "packages/@dvt/adapter-temporal/src/activities/activityFactory.ts#executeWithHeartbeat",
+        "apps/api/src/application/services/startRunEngineBridge.ts#requireStartRunScope",
+        "apps/api/src/entrypoints/http/httpErrorMapper.ts#mapStartRunResult",
+        "apps/api/src/entrypoints/http/startRunRoute.ts#mapStartRunOutcome",
+        "packages/@dvt/contracts/src/validation/runtime.ts#parseStartRunCommand"
       ],
       "documentationRefs": [
         "docs/evidence/ED-20260803-dbt-runtime-credential-resolution.md",
-        "docs/risk-register/quality/R-20260803-DBT-RUNTIME-CREDENTIALS.yaml"
+        "docs/risk-register/quality/R-20260803-DBT-RUNTIME-CREDENTIALS.yaml",
+        "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md"
       ],
       "governingSources": [
         "docs/architecture/command-query-rail-governance.md",
@@ -139418,23 +139427,34 @@
       "allowedImplementationSurfaces": [
         "apps/temporal-worker/**",
         "packages/@dvt/temporal-dbt-plugin/**",
-        "packages/@dvt/adapter-temporal/**"
+        "packages/@dvt/adapter-temporal/**",
+        "apps/api/src/application/services/startRunEngineBridge.ts",
+        "apps/api/src/entrypoints/http/httpErrorMapper.ts",
+        "apps/api/src/entrypoints/http/startRunRoute.ts",
+        "packages/@dvt/contracts/src/validation/runtime.ts"
       ],
       "architectureGuards": [
         "pnpm --filter dvt-temporal-worker test && pnpm --filter @dvt/temporal-dbt-plugin test && pnpm --filter @dvt/adapter-temporal test",
-        "pnpm --filter @dvt/adapter-temporal test && pnpm --filter @dvt/adapter-temporal test:integration"
+        "pnpm --filter @dvt/adapter-temporal test && pnpm --filter @dvt/adapter-temporal test:integration",
+        "apps/api/test/entrypoints/http/startRunRoute.validation.test.ts"
       ],
       "completionGate": [
         "pnpm docs:feature-mechanization:implementation",
         "pnpm verify:prepush"
       ],
-      "sourcePath": "docs/evidence/ED-20260803-dbt-runtime-credential-resolution.md",
-      "sourceContentSha256": "42293e5e786b9c371f9823c9199a4a99ce095f0d706eb18ab867e48c95a78d80",
+      "sourcePath": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+      "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
       "rawRail": {
         "name": "WorkflowEngine.startRun",
         "type": "command",
         "status": "implemented",
-        "dddOwner": "engine start-run lifecycle"
+        "dddOwner": "engine start-run lifecycle",
+        "negativeTests": [
+          "reject incomplete scope, malformed commands, unauthorized starts and unsupported runtime capabilities"
+        ],
+        "adapterSurface": "POST /api/v1/runs/start",
+        "applicationPort": "IWorkflowEngine.startRun",
+        "authorizationScope": "authenticated tenant plus complete project and environment scope"
       },
       "rawManifest": {
         "symbols": [
@@ -139741,18 +139761,79 @@
             ],
             "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
             "architectureGuard": "pnpm --filter @dvt/adapter-temporal test && pnpm --filter @dvt/adapter-temporal test:integration"
+          },
+          {
+            "name": "requireStartRunScope",
+            "path": "apps/api/src/application/services/startRunEngineBridge.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/startRunRoute.validation.test.ts"
+            ],
+            "fowlerSignals": [
+              "Every public lifecycle symbol is attached to its existing canonical command or query rail."
+            ],
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/startRunRoute.validation.test.ts"
+          },
+          {
+            "name": "mapStartRunResult",
+            "path": "apps/api/src/entrypoints/http/httpErrorMapper.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/startRunRoute.validation.test.ts"
+            ],
+            "fowlerSignals": [
+              "Every public lifecycle symbol is attached to its existing canonical command or query rail."
+            ],
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/startRunRoute.validation.test.ts"
+          },
+          {
+            "name": "mapStartRunOutcome",
+            "path": "apps/api/src/entrypoints/http/startRunRoute.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/startRunRoute.validation.test.ts"
+            ],
+            "fowlerSignals": [
+              "Every public lifecycle symbol is attached to its existing canonical command or query rail."
+            ],
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/startRunRoute.validation.test.ts"
+          },
+          {
+            "name": "parseStartRunCommand",
+            "path": "packages/@dvt/contracts/src/validation/runtime.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/startRunRoute.validation.test.ts"
+            ],
+            "fowlerSignals": [
+              "Every public lifecycle symbol is attached to its existing canonical command or query rail."
+            ],
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/startRunRoute.validation.test.ts"
           }
         ],
         "version": 1,
         "featureId": "MVP-152-DBT-RUNTIME-SECRETS",
-        "userStories": ["https://github.com/dunay2/dvt/issues/152"],
-        "cypressFlows": [
-          "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts"
+        "userStories": [
+          "https://github.com/dunay2/dvt/issues/152",
+          "https://github.com/dunay2/dvt/issues/2169"
         ],
-        "domainObjects": ["DbtRuntimeProfile"],
+        "cypressFlows": [
+          "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+          "apps/api/test/integration/protectedRuntime.integration.test.ts"
+        ],
+        "domainObjects": ["DbtRuntimeProfile", "StartRunCommand"],
         "fowlerSignals": [
           "The worker resolves DBT credentials at the last responsible moment and cancellation waits for secret cleanup.",
-          "Temporal activity heartbeats deliver cancellation before runtime credential cleanup becomes terminal."
+          "Temporal activity heartbeats deliver cancellation before runtime credential cleanup becomes terminal.",
+          "Every public lifecycle symbol is attached to its existing canonical command or query rail."
         ],
         "completionGate": [
           "pnpm docs:feature-mechanization:implementation",
@@ -139761,14 +139842,18 @@
         "redGreenCycles": [
           {
             "id": "workflowengine.startrun-record",
-            "redTest": "pnpm --filter @dvt/adapter-temporal test:integration",
-            "greenTest": "pnpm --filter @dvt/adapter-temporal test:integration",
+            "redTest": "pnpm --filter dvt-api test -- apps/api/test/entrypoints/http/startRunRoute.validation.test.ts",
+            "greenTest": "pnpm --filter dvt-api test -- apps/api/test/entrypoints/http/startRunRoute.validation.test.ts",
             "patchSurfaces": [
               "apps/temporal-worker/**",
               "packages/@dvt/temporal-dbt-plugin/**",
-              "packages/@dvt/adapter-temporal/**"
+              "packages/@dvt/adapter-temporal/**",
+              "apps/api/src/application/services/startRunEngineBridge.ts",
+              "apps/api/src/entrypoints/http/httpErrorMapper.ts",
+              "apps/api/src/entrypoints/http/startRunRoute.ts",
+              "packages/@dvt/contracts/src/validation/runtime.ts"
             ],
-            "expectedFailure": "Temporal cancellation waits forever because active step activities do not heartbeat."
+            "expectedFailure": "A public lifecycle symbol is absent from the canonical feature mechanization rail."
           }
         ],
         "componentGuides": [
@@ -139784,27 +139869,39 @@
             "name": "WorkflowEngine.startRun",
             "type": "command",
             "status": "implemented",
-            "dddOwner": "engine start-run lifecycle"
+            "dddOwner": "engine start-run lifecycle",
+            "negativeTests": [
+              "reject incomplete scope, malformed commands, unauthorized starts and unsupported runtime capabilities"
+            ],
+            "adapterSurface": "POST /api/v1/runs/start",
+            "applicationPort": "IWorkflowEngine.startRun",
+            "authorizationScope": "authenticated tenant plus complete project and environment scope"
           }
         ],
         "architectureGuards": [
           "pnpm --filter dvt-temporal-worker test && pnpm --filter @dvt/temporal-dbt-plugin test && pnpm --filter @dvt/adapter-temporal test",
-          "pnpm --filter @dvt/adapter-temporal test && pnpm --filter @dvt/adapter-temporal test:integration"
+          "pnpm --filter @dvt/adapter-temporal test && pnpm --filter @dvt/adapter-temporal test:integration",
+          "apps/api/test/entrypoints/http/startRunRoute.validation.test.ts"
         ],
-        "implementationPlan": "https://github.com/dunay2/dvt/issues/152",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2169#issuecomment-5279182370",
         "mechanizationStatus": "implemented",
         "noHumanDecisionsRemaining": true,
         "allowedImplementationSurfaces": [
           "apps/temporal-worker/**",
           "packages/@dvt/temporal-dbt-plugin/**",
-          "packages/@dvt/adapter-temporal/**"
+          "packages/@dvt/adapter-temporal/**",
+          "apps/api/src/application/services/startRunEngineBridge.ts",
+          "apps/api/src/entrypoints/http/httpErrorMapper.ts",
+          "apps/api/src/entrypoints/http/startRunRoute.ts",
+          "packages/@dvt/contracts/src/validation/runtime.ts"
         ],
         "forbiddenImplementationSurfaces": [
           "apps/web/**",
-          "tools/planning-db/schema.sql"
+          "tools/planning-db/schema.sql",
+          "apps/api/src/application/ports/runControlCommandCoordinator.ts"
         ]
       },
-      "revision": 1,
+      "revision": 2,
       "createdBy": "codex",
       "createdAt": "2026-08-03T09:20:16.818Z"
     },
@@ -155083,13 +155180,29 @@
         "apps/api/src/application/services/cancelRunUseCase.ts#CancelRunUseCase",
         "apps/api/src/entrypoints/http/cancelRunRouteParser.ts#parseCancelRunRequest",
         "apps/api/src/application/services/runControlPolicy.ts#decideCancelRun",
-        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#parseCancelRunReceipt"
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#parseCancelRunReceipt",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#CancelRunCommand",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#CancelRunDisposition",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#CancelRunReceipt",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#invalidRunControlPayload",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#isCancelRunDisposition",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#parseCancelRunCommand",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#requireNonBlankString",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#requireRecord"
       ],
       "implementationRefs": [
         "apps/api/src/application/services/cancelRunUseCase.ts#CancelRunUseCase",
         "apps/api/src/entrypoints/http/cancelRunRouteParser.ts#parseCancelRunRequest",
         "apps/api/src/application/services/runControlPolicy.ts#decideCancelRun",
-        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#parseCancelRunReceipt"
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#parseCancelRunReceipt",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#CancelRunCommand",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#CancelRunDisposition",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#CancelRunReceipt",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#invalidRunControlPayload",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#isCancelRunDisposition",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#parseCancelRunCommand",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#requireNonBlankString",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#requireRecord"
       ],
       "documentationRefs": [
         "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
@@ -155189,6 +155302,118 @@
             ],
             "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
             "architectureGuard": "apps/api/test/application/services/cancelRunUseCase.test.ts"
+          },
+          {
+            "name": "CancelRunCommand",
+            "path": "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts",
+            "cqRails": ["CancelRun"],
+            "dddOwner": "RunCommandApplicationService",
+            "unitTests": [
+              "apps/api/test/application/services/cancelRunUseCase.test.ts"
+            ],
+            "fowlerSignals": [
+              "Every public lifecycle symbol is attached to its existing canonical command or query rail."
+            ],
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "apps/api/test/application/services/cancelRunUseCase.test.ts"
+          },
+          {
+            "name": "CancelRunDisposition",
+            "path": "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts",
+            "cqRails": ["CancelRun"],
+            "dddOwner": "RunCommandApplicationService",
+            "unitTests": [
+              "apps/api/test/application/services/cancelRunUseCase.test.ts"
+            ],
+            "fowlerSignals": [
+              "Every public lifecycle symbol is attached to its existing canonical command or query rail."
+            ],
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "apps/api/test/application/services/cancelRunUseCase.test.ts"
+          },
+          {
+            "name": "CancelRunReceipt",
+            "path": "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts",
+            "cqRails": ["CancelRun"],
+            "dddOwner": "RunCommandApplicationService",
+            "unitTests": [
+              "apps/api/test/application/services/cancelRunUseCase.test.ts"
+            ],
+            "fowlerSignals": [
+              "Every public lifecycle symbol is attached to its existing canonical command or query rail."
+            ],
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "apps/api/test/application/services/cancelRunUseCase.test.ts"
+          },
+          {
+            "name": "invalidRunControlPayload",
+            "path": "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts",
+            "cqRails": ["CancelRun"],
+            "dddOwner": "RunCommandApplicationService",
+            "unitTests": [
+              "apps/api/test/application/services/cancelRunUseCase.test.ts"
+            ],
+            "fowlerSignals": [
+              "Every public lifecycle symbol is attached to its existing canonical command or query rail."
+            ],
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "apps/api/test/application/services/cancelRunUseCase.test.ts"
+          },
+          {
+            "name": "isCancelRunDisposition",
+            "path": "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts",
+            "cqRails": ["CancelRun"],
+            "dddOwner": "RunCommandApplicationService",
+            "unitTests": [
+              "apps/api/test/application/services/cancelRunUseCase.test.ts"
+            ],
+            "fowlerSignals": [
+              "Every public lifecycle symbol is attached to its existing canonical command or query rail."
+            ],
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "apps/api/test/application/services/cancelRunUseCase.test.ts"
+          },
+          {
+            "name": "parseCancelRunCommand",
+            "path": "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts",
+            "cqRails": ["CancelRun"],
+            "dddOwner": "RunCommandApplicationService",
+            "unitTests": [
+              "apps/api/test/application/services/cancelRunUseCase.test.ts"
+            ],
+            "fowlerSignals": [
+              "Every public lifecycle symbol is attached to its existing canonical command or query rail."
+            ],
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "apps/api/test/application/services/cancelRunUseCase.test.ts"
+          },
+          {
+            "name": "requireNonBlankString",
+            "path": "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts",
+            "cqRails": ["CancelRun"],
+            "dddOwner": "RunCommandApplicationService",
+            "unitTests": [
+              "apps/api/test/application/services/cancelRunUseCase.test.ts"
+            ],
+            "fowlerSignals": [
+              "Every public lifecycle symbol is attached to its existing canonical command or query rail."
+            ],
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "apps/api/test/application/services/cancelRunUseCase.test.ts"
+          },
+          {
+            "name": "requireRecord",
+            "path": "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts",
+            "cqRails": ["CancelRun"],
+            "dddOwner": "RunCommandApplicationService",
+            "unitTests": [
+              "apps/api/test/application/services/cancelRunUseCase.test.ts"
+            ],
+            "fowlerSignals": [
+              "Every public lifecycle symbol is attached to its existing canonical command or query rail."
+            ],
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "apps/api/test/application/services/cancelRunUseCase.test.ts"
           }
         ],
         "version": 1,
@@ -155204,7 +155429,8 @@
         "domainObjects": ["RunCancellationIntent"],
         "fowlerSignals": [
           "Cancellation is idempotent and server-owned; Web renders receipts without mutating lifecycle truth.",
-          "One cancellation command reaches one engine transition authority and one public receipt contract."
+          "One cancellation command reaches one engine transition authority and one public receipt contract.",
+          "Every public lifecycle symbol is attached to its existing canonical command or query rail."
         ],
         "completionGate": [
           "pnpm docs:feature-mechanization:implementation",
@@ -155214,8 +155440,8 @@
         "redGreenCycles": [
           {
             "id": "cancelrun-record",
-            "redTest": "pnpm --filter dvt-api exec vitest run test/application/services/cancelRunUseCase.test.ts",
-            "greenTest": "pnpm --filter dvt-api exec vitest run test/application/services/cancelRunUseCase.test.ts",
+            "redTest": "pnpm --filter dvt-api test -- apps/api/test/application/services/cancelRunUseCase.test.ts",
+            "greenTest": "pnpm --filter dvt-api test -- apps/api/test/application/services/cancelRunUseCase.test.ts",
             "patchSurfaces": [
               "apps/api/src/application/errors/runControlErrors.ts",
               "apps/api/src/application/ports/runtime.ts",
@@ -155227,7 +155453,7 @@
               "apps/api/src/entrypoints/http/cancelRunRouteParser.ts",
               "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts"
             ],
-            "expectedFailure": "The feature manifest references deleted coordinator or local receipt symbols."
+            "expectedFailure": "A public lifecycle symbol is absent from the canonical feature mechanization rail."
           }
         ],
         "componentGuides": [
@@ -155275,7 +155501,7 @@
           "apps/web/src/app/services/runs/runsApiControlReceipts.ts"
         ]
       },
-      "revision": 2,
+      "revision": 3,
       "createdBy": "codex",
       "createdAt": "2026-08-02T14:27:22.409Z"
     },
@@ -155294,7 +155520,10 @@
         "apps/api/src/entrypoints/http/recoverRunIdentity.ts#deriveRecoveryRunId",
         "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#parseRecoverRunReceipt",
         "packages/@dvt/adapter-postgres/src/PostgresStartRunIntentStore.ts#PostgresStartRunIntentStore",
-        "packages/@dvt/engine/src/state/InMemoryStartRunIntentStore.ts#InMemoryStartRunIntentStore"
+        "packages/@dvt/engine/src/state/InMemoryStartRunIntentStore.ts#InMemoryStartRunIntentStore",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#RecoverRunReceipt",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#RecoverRunRequest",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#parseRecoverRunRequest"
       ],
       "implementationRefs": [
         "apps/api/src/application/services/recoverRunUseCase.ts#RecoverRunUseCase",
@@ -155302,7 +155531,10 @@
         "apps/api/src/entrypoints/http/recoverRunIdentity.ts#deriveRecoveryRunId",
         "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#parseRecoverRunReceipt",
         "packages/@dvt/adapter-postgres/src/PostgresStartRunIntentStore.ts#PostgresStartRunIntentStore",
-        "packages/@dvt/engine/src/state/InMemoryStartRunIntentStore.ts#InMemoryStartRunIntentStore"
+        "packages/@dvt/engine/src/state/InMemoryStartRunIntentStore.ts#InMemoryStartRunIntentStore",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#RecoverRunReceipt",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#RecoverRunRequest",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#parseRecoverRunRequest"
       ],
       "documentationRefs": [
         "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
@@ -155351,7 +155583,8 @@
         "apps/api/test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts",
         "apps/api/test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts",
         "apps/api/test/infrastructure/dbt/immutableFileArtifactWriter.test.ts",
-        "packages/@dvt/adapter-postgres/src/PostgresStartRunIntentStore.ts"
+        "packages/@dvt/adapter-postgres/src/PostgresStartRunIntentStore.ts",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts"
       ],
       "architectureGuards": [
         "packages/@dvt/engine/test/core/WorkflowEngine.test.ts"
@@ -155460,6 +155693,48 @@
             ],
             "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
             "architectureGuard": "packages/@dvt/engine/test/core/WorkflowEngine.test.ts"
+          },
+          {
+            "name": "RecoverRunReceipt",
+            "path": "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts",
+            "cqRails": ["RecoverRun"],
+            "dddOwner": "RunRecoveryApplicationService",
+            "unitTests": [
+              "apps/api/test/application/services/recoverRunUseCase.test.ts"
+            ],
+            "fowlerSignals": [
+              "Every public lifecycle symbol is attached to its existing canonical command or query rail."
+            ],
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "packages/@dvt/engine/test/core/WorkflowEngine.test.ts"
+          },
+          {
+            "name": "RecoverRunRequest",
+            "path": "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts",
+            "cqRails": ["RecoverRun"],
+            "dddOwner": "RunRecoveryApplicationService",
+            "unitTests": [
+              "apps/api/test/application/services/recoverRunUseCase.test.ts"
+            ],
+            "fowlerSignals": [
+              "Every public lifecycle symbol is attached to its existing canonical command or query rail."
+            ],
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "packages/@dvt/engine/test/core/WorkflowEngine.test.ts"
+          },
+          {
+            "name": "parseRecoverRunRequest",
+            "path": "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts",
+            "cqRails": ["RecoverRun"],
+            "dddOwner": "RunRecoveryApplicationService",
+            "unitTests": [
+              "apps/api/test/application/services/recoverRunUseCase.test.ts"
+            ],
+            "fowlerSignals": [
+              "Every public lifecycle symbol is attached to its existing canonical command or query rail."
+            ],
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "packages/@dvt/engine/test/core/WorkflowEngine.test.ts"
           }
         ],
         "version": 1,
@@ -155482,7 +155757,8 @@
           "Recovery identities are serialized across API instances before retry-attempt reservation.",
           "Execution-context absence is evaluated against canonical plugin requirements from the immutable stored plan.",
           "Failed immutable writes remove only the incomplete destination created by that invocation before retry.",
-          "Recovery eligibility and deterministic child identity are decided once by the engine and its intent store."
+          "Recovery eligibility and deterministic child identity are decided once by the engine and its intent store.",
+          "Every public lifecycle symbol is attached to its existing canonical command or query rail."
         ],
         "completionGate": [
           "pnpm docs:feature-mechanization:implementation",
@@ -155492,8 +155768,8 @@
         "redGreenCycles": [
           {
             "id": "recoverrun-record",
-            "redTest": "pnpm --filter @dvt/engine test -- WorkflowEngine.test.ts",
-            "greenTest": "pnpm --filter @dvt/engine test -- WorkflowEngine.test.ts",
+            "redTest": "pnpm --filter dvt-api test -- apps/api/test/application/services/recoverRunUseCase.test.ts",
+            "greenTest": "pnpm --filter dvt-api test -- apps/api/test/application/services/recoverRunUseCase.test.ts",
             "patchSurfaces": [
               "apps/api/src/application/errors/runControlErrors.ts",
               "apps/api/src/application/ports/runExecutionContextReferenceReader.ts",
@@ -155533,9 +155809,10 @@
               "apps/api/test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts",
               "apps/api/test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts",
               "apps/api/test/infrastructure/dbt/immutableFileArtifactWriter.test.ts",
-              "packages/@dvt/adapter-postgres/src/PostgresStartRunIntentStore.ts"
+              "packages/@dvt/adapter-postgres/src/PostgresStartRunIntentStore.ts",
+              "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts"
             ],
-            "expectedFailure": "Concurrent recovery can dispatch a second child or API policy can diverge from engine lifecycle truth."
+            "expectedFailure": "A public lifecycle symbol is absent from the canonical feature mechanization rail."
           }
         ],
         "componentGuides": [
@@ -155604,15 +155881,17 @@
           "apps/api/test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts",
           "apps/api/test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts",
           "apps/api/test/infrastructure/dbt/immutableFileArtifactWriter.test.ts",
-          "packages/@dvt/adapter-postgres/src/PostgresStartRunIntentStore.ts"
+          "packages/@dvt/adapter-postgres/src/PostgresStartRunIntentStore.ts",
+          "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts"
         ],
         "forbiddenImplementationSurfaces": [
           "tools/planning-db/schema.sql",
           "apps/api/src/application/ports/runRecoveryCommandCoordinator.ts",
-          "apps/api/src/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.ts"
+          "apps/api/src/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.ts",
+          "apps/api/src/application/ports/runControlCommandCoordinator.ts"
         ]
       },
-      "revision": 6,
+      "revision": 7,
       "createdBy": "codex",
       "createdAt": "2026-08-02T14:27:24.648Z"
     },
@@ -155629,19 +155908,32 @@
         "apps/api/src/application/services/signalRunUseCase.ts#SignalRunUseCase",
         "apps/api/src/entrypoints/http/signalRunRouteParser.ts#parseSignalRunRequest",
         "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#parseSignalRunCommand",
-        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#SUPPORTED_RUN_SIGNAL_TYPES"
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#SUPPORTED_RUN_SIGNAL_TYPES",
+        "apps/api/src/entrypoints/http/signalRunRouteParser.ts#SUPPORTED_SIGNAL_TYPES",
+        "apps/api/src/entrypoints/http/signalRunRouteParser.ts#parseSignalType",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#SignalRunCommand",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#SignalRunResult",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#SupportedRunSignalType",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#isSupportedRunSignalType"
       ],
       "implementationRefs": [
         "apps/api/src/application/services/signalRunUseCase.ts#SignalRunUseCase",
         "apps/api/src/entrypoints/http/signalRunRouteParser.ts#parseSignalRunRequest",
         "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#parseSignalRunCommand",
-        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#SUPPORTED_RUN_SIGNAL_TYPES"
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#SUPPORTED_RUN_SIGNAL_TYPES",
+        "apps/api/src/entrypoints/http/signalRunRouteParser.ts#SUPPORTED_SIGNAL_TYPES",
+        "apps/api/src/entrypoints/http/signalRunRouteParser.ts#parseSignalType",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#SignalRunCommand",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#SignalRunResult",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#SupportedRunSignalType",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#isSupportedRunSignalType"
       ],
       "documentationRefs": [
         "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md"
       ],
       "governingSources": [
-        "docs/architecture/command-query-rail-governance.md"
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
       ],
       "allowedImplementationSurfaces": [
         "apps/api/src/application/services/signalRunUseCase.ts",
@@ -155651,7 +155943,10 @@
       "architectureGuards": [
         "apps/api/test/application/services/signalRunUseCase.test.ts"
       ],
-      "completionGate": ["pnpm verify:prepush"],
+      "completionGate": [
+        "pnpm verify:prepush",
+        "pnpm docs:feature-mechanization:implementation"
+      ],
       "sourcePath": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
       "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
       "rawRail": {
@@ -155723,6 +156018,90 @@
             ],
             "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
             "architectureGuard": "apps/api/test/application/services/signalRunUseCase.test.ts"
+          },
+          {
+            "name": "SUPPORTED_SIGNAL_TYPES",
+            "path": "apps/api/src/entrypoints/http/signalRunRouteParser.ts",
+            "cqRails": ["SignalRun"],
+            "dddOwner": "RunCommandApplicationService",
+            "unitTests": [
+              "apps/api/test/application/services/signalRunUseCase.test.ts"
+            ],
+            "fowlerSignals": [
+              "Every public lifecycle symbol is attached to its existing canonical command or query rail."
+            ],
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "apps/api/test/application/services/signalRunUseCase.test.ts"
+          },
+          {
+            "name": "parseSignalType",
+            "path": "apps/api/src/entrypoints/http/signalRunRouteParser.ts",
+            "cqRails": ["SignalRun"],
+            "dddOwner": "RunCommandApplicationService",
+            "unitTests": [
+              "apps/api/test/application/services/signalRunUseCase.test.ts"
+            ],
+            "fowlerSignals": [
+              "Every public lifecycle symbol is attached to its existing canonical command or query rail."
+            ],
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "apps/api/test/application/services/signalRunUseCase.test.ts"
+          },
+          {
+            "name": "SignalRunCommand",
+            "path": "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts",
+            "cqRails": ["SignalRun"],
+            "dddOwner": "RunCommandApplicationService",
+            "unitTests": [
+              "apps/api/test/application/services/signalRunUseCase.test.ts"
+            ],
+            "fowlerSignals": [
+              "Every public lifecycle symbol is attached to its existing canonical command or query rail."
+            ],
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "apps/api/test/application/services/signalRunUseCase.test.ts"
+          },
+          {
+            "name": "SignalRunResult",
+            "path": "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts",
+            "cqRails": ["SignalRun"],
+            "dddOwner": "RunCommandApplicationService",
+            "unitTests": [
+              "apps/api/test/application/services/signalRunUseCase.test.ts"
+            ],
+            "fowlerSignals": [
+              "Every public lifecycle symbol is attached to its existing canonical command or query rail."
+            ],
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "apps/api/test/application/services/signalRunUseCase.test.ts"
+          },
+          {
+            "name": "SupportedRunSignalType",
+            "path": "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts",
+            "cqRails": ["SignalRun"],
+            "dddOwner": "RunCommandApplicationService",
+            "unitTests": [
+              "apps/api/test/application/services/signalRunUseCase.test.ts"
+            ],
+            "fowlerSignals": [
+              "Every public lifecycle symbol is attached to its existing canonical command or query rail."
+            ],
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "apps/api/test/application/services/signalRunUseCase.test.ts"
+          },
+          {
+            "name": "isSupportedRunSignalType",
+            "path": "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts",
+            "cqRails": ["SignalRun"],
+            "dddOwner": "RunCommandApplicationService",
+            "unitTests": [
+              "apps/api/test/application/services/signalRunUseCase.test.ts"
+            ],
+            "fowlerSignals": [
+              "Every public lifecycle symbol is attached to its existing canonical command or query rail."
+            ],
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "apps/api/test/application/services/signalRunUseCase.test.ts"
           }
         ],
         "version": 1,
@@ -155733,27 +156112,32 @@
         ],
         "domainObjects": ["RunSignalCommand"],
         "fowlerSignals": [
-          "SignalRun carries only PAUSE or RESUME; cancellation remains a separate engine command."
+          "SignalRun carries only PAUSE or RESUME; cancellation remains a separate engine command.",
+          "Every public lifecycle symbol is attached to its existing canonical command or query rail."
         ],
-        "completionGate": ["pnpm verify:prepush"],
+        "completionGate": [
+          "pnpm verify:prepush",
+          "pnpm docs:feature-mechanization:implementation"
+        ],
         "redGreenCycles": [
           {
             "id": "signalrun-record",
-            "redTest": "pnpm --filter dvt-api exec vitest run test/application/services/signalRunUseCase.test.ts",
-            "greenTest": "pnpm --filter dvt-api exec vitest run test/application/services/signalRunUseCase.test.ts",
+            "redTest": "pnpm --filter dvt-api test -- apps/api/test/application/services/signalRunUseCase.test.ts",
+            "greenTest": "pnpm --filter dvt-api test -- apps/api/test/application/services/signalRunUseCase.test.ts",
             "patchSurfaces": [
               "apps/api/src/application/services/signalRunUseCase.ts",
               "apps/api/src/entrypoints/http/signalRunRouteParser.ts",
               "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts"
             ],
-            "expectedFailure": "Generic cancellation is accepted through the signal route or vocabulary diverges by adapter."
+            "expectedFailure": "A public lifecycle symbol is absent from the canonical feature mechanization rail."
           }
         ],
         "componentGuides": [
           "docs/architecture/command-query-rail-governance.md"
         ],
         "governingSources": [
-          "docs/architecture/command-query-rail-governance.md"
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
         ],
         "commandQueryRails": [
           {
@@ -155782,10 +156166,11 @@
         ],
         "forbiddenImplementationSurfaces": [
           "apps/api/src/entrypoints/http/signalRunAuthorization.constants.ts",
-          "apps/api/src/entrypoints/http/signalRunValidation.constants.ts"
+          "apps/api/src/entrypoints/http/signalRunValidation.constants.ts",
+          "apps/api/src/application/ports/runControlCommandCoordinator.ts"
         ]
       },
-      "revision": 0,
+      "revision": 1,
       "createdBy": "codex",
       "createdAt": "2026-08-13T12:28:09.265Z"
     },
@@ -155801,12 +156186,24 @@
       "symbolRefs": [
         "apps/api/src/application/services/getRunUseCase.ts#GetRunUseCase",
         "apps/api/src/application/services/runControlPolicy.ts#projectRunControlAvailability",
-        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#RunControlAvailability"
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#RunControlAvailability",
+        "apps/api/src/application/ports/runtime.ts#RunControlActionAvailabilityDto",
+        "apps/api/src/application/ports/runtime.ts#RunControlAvailabilityDto",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#RUN_CONTROL_CONTRACT_VERSION",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#RunControlActionAvailability",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#RunControlUnavailableReason",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#parseRunControlResponse"
       ],
       "implementationRefs": [
         "apps/api/src/application/services/getRunUseCase.ts#GetRunUseCase",
         "apps/api/src/application/services/runControlPolicy.ts#projectRunControlAvailability",
-        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#RunControlAvailability"
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#RunControlAvailability",
+        "apps/api/src/application/ports/runtime.ts#RunControlActionAvailabilityDto",
+        "apps/api/src/application/ports/runtime.ts#RunControlAvailabilityDto",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#RUN_CONTROL_CONTRACT_VERSION",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#RunControlActionAvailability",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#RunControlUnavailableReason",
+        "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#parseRunControlResponse"
       ],
       "documentationRefs": [
         "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
@@ -155894,6 +156291,90 @@
             ],
             "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
             "architectureGuard": "apps/api/test/application/services/getRunUseCase.test.ts"
+          },
+          {
+            "name": "RunControlActionAvailabilityDto",
+            "path": "apps/api/src/application/ports/runtime.ts",
+            "cqRails": ["GetRunStatus"],
+            "dddOwner": "RunOperationalReadModel",
+            "unitTests": [
+              "apps/api/test/application/services/getRunStatusUseCase.test.ts"
+            ],
+            "fowlerSignals": [
+              "Every public lifecycle symbol is attached to its existing canonical command or query rail."
+            ],
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "apps/api/test/application/services/getRunUseCase.test.ts"
+          },
+          {
+            "name": "RunControlAvailabilityDto",
+            "path": "apps/api/src/application/ports/runtime.ts",
+            "cqRails": ["GetRunStatus"],
+            "dddOwner": "RunOperationalReadModel",
+            "unitTests": [
+              "apps/api/test/application/services/getRunStatusUseCase.test.ts"
+            ],
+            "fowlerSignals": [
+              "Every public lifecycle symbol is attached to its existing canonical command or query rail."
+            ],
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "apps/api/test/application/services/getRunUseCase.test.ts"
+          },
+          {
+            "name": "RUN_CONTROL_CONTRACT_VERSION",
+            "path": "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts",
+            "cqRails": ["GetRunStatus"],
+            "dddOwner": "RunOperationalReadModel",
+            "unitTests": [
+              "apps/api/test/application/services/getRunStatusUseCase.test.ts"
+            ],
+            "fowlerSignals": [
+              "Every public lifecycle symbol is attached to its existing canonical command or query rail."
+            ],
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "apps/api/test/application/services/getRunUseCase.test.ts"
+          },
+          {
+            "name": "RunControlActionAvailability",
+            "path": "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts",
+            "cqRails": ["GetRunStatus"],
+            "dddOwner": "RunOperationalReadModel",
+            "unitTests": [
+              "apps/api/test/application/services/getRunStatusUseCase.test.ts"
+            ],
+            "fowlerSignals": [
+              "Every public lifecycle symbol is attached to its existing canonical command or query rail."
+            ],
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "apps/api/test/application/services/getRunUseCase.test.ts"
+          },
+          {
+            "name": "RunControlUnavailableReason",
+            "path": "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts",
+            "cqRails": ["GetRunStatus"],
+            "dddOwner": "RunOperationalReadModel",
+            "unitTests": [
+              "apps/api/test/application/services/getRunStatusUseCase.test.ts"
+            ],
+            "fowlerSignals": [
+              "Every public lifecycle symbol is attached to its existing canonical command or query rail."
+            ],
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "apps/api/test/application/services/getRunUseCase.test.ts"
+          },
+          {
+            "name": "parseRunControlResponse",
+            "path": "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts",
+            "cqRails": ["GetRunStatus"],
+            "dddOwner": "RunOperationalReadModel",
+            "unitTests": [
+              "apps/api/test/application/services/getRunStatusUseCase.test.ts"
+            ],
+            "fowlerSignals": [
+              "Every public lifecycle symbol is attached to its existing canonical command or query rail."
+            ],
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "apps/api/test/application/services/getRunUseCase.test.ts"
           }
         ],
         "version": 1,
@@ -155909,7 +156390,8 @@
         "domainObjects": ["RunControlAvailability", "RunOperationalSnapshot"],
         "fowlerSignals": [
           "All control availability is projected from canonical backend status and decoded once for every Web surface.",
-          "The read model exposes persisted lifecycle truth and fails closed when recovery evidence is unavailable."
+          "The read model exposes persisted lifecycle truth and fails closed when recovery evidence is unavailable.",
+          "Every public lifecycle symbol is attached to its existing canonical command or query rail."
         ],
         "completionGate": [
           "pnpm docs:feature-mechanization:implementation",
@@ -155919,8 +156401,8 @@
         "redGreenCycles": [
           {
             "id": "getrunstatus-record",
-            "redTest": "pnpm --filter dvt-api exec vitest run test/application/services/getRunUseCase.test.ts",
-            "greenTest": "pnpm --filter dvt-api exec vitest run test/application/services/getRunUseCase.test.ts",
+            "redTest": "pnpm --filter dvt-api test -- apps/api/test/application/services/getRunStatusUseCase.test.ts",
+            "greenTest": "pnpm --filter dvt-api test -- apps/api/test/application/services/getRunStatusUseCase.test.ts",
             "patchSurfaces": [
               "apps/api/src/application/ports/runtime.ts",
               "apps/api/src/application/services/runControlPolicy.ts",
@@ -155934,7 +156416,7 @@
               "apps/api/src/application/services/getRunUseCase.ts",
               "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts"
             ],
-            "expectedFailure": "Unexpected persistence errors are hidden by a synthetic or incomplete run snapshot."
+            "expectedFailure": "A public lifecycle symbol is absent from the canonical feature mechanization rail."
           }
         ],
         "componentGuides": [
@@ -155983,7 +156465,7 @@
           "apps/web/src/app/services/runs/runsApiControlReceipts.ts"
         ]
       },
-      "revision": 2,
+      "revision": 3,
       "createdBy": "codex",
       "createdAt": "2026-08-02T14:27:26.844Z"
     },
@@ -156151,11 +156633,13 @@
       "railStatus": "implemented",
       "symbolRefs": [
         "apps/api/src/application/services/listRunsUseCase.ts#ListRunsUseCase",
-        "apps/api/src/entrypoints/http/listRunsRouteParser.ts#parseListRunsRequest"
+        "apps/api/src/entrypoints/http/listRunsRouteParser.ts#parseListRunsRequest",
+        "apps/api/src/entrypoints/http/listRunsRouteParser.ts#parseListRunsProjectId"
       ],
       "implementationRefs": [
         "apps/api/src/application/services/listRunsUseCase.ts#ListRunsUseCase",
-        "apps/api/src/entrypoints/http/listRunsRouteParser.ts#parseListRunsRequest"
+        "apps/api/src/entrypoints/http/listRunsRouteParser.ts#parseListRunsRequest",
+        "apps/api/src/entrypoints/http/listRunsRouteParser.ts#parseListRunsProjectId"
       ],
       "documentationRefs": [
         "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
@@ -156221,6 +156705,20 @@
             ],
             "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
             "architectureGuard": "apps/api/test/application/services/listRunsUseCase.test.ts"
+          },
+          {
+            "name": "parseListRunsProjectId",
+            "path": "apps/api/src/entrypoints/http/listRunsRouteParser.ts",
+            "cqRails": ["ListRuns"],
+            "dddOwner": "RunOperationalReadModel",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/listRunsRouteParser.test.ts"
+            ],
+            "fowlerSignals": [
+              "Every public lifecycle symbol is attached to its existing canonical command or query rail."
+            ],
+            "cypressCoverage": "apps/api/test/integration/protectedRuntime.integration.test.ts",
+            "architectureGuard": "apps/api/test/application/services/listRunsUseCase.test.ts"
           }
         ],
         "version": 1,
@@ -156236,7 +156734,8 @@
         "domainObjects": ["RunSummaryCollection"],
         "fowlerSignals": [
           "Run list actions consume the same authoritative control projection as detail and Canvas.",
-          "Storage applies scope before the caller limit and the API performs no per-run enrichment queries."
+          "Storage applies scope before the caller limit and the API performs no per-run enrichment queries.",
+          "Every public lifecycle symbol is attached to its existing canonical command or query rail."
         ],
         "completionGate": [
           "pnpm docs:feature-mechanization:implementation",
@@ -156246,14 +156745,14 @@
         "redGreenCycles": [
           {
             "id": "listruns-record",
-            "redTest": "pnpm --filter dvt-api exec vitest run test/application/services/listRunsUseCase.test.ts",
-            "greenTest": "pnpm --filter dvt-api exec vitest run test/application/services/listRunsUseCase.test.ts",
+            "redTest": "pnpm --filter dvt-api test -- apps/api/test/entrypoints/http/listRunsRouteParser.test.ts",
+            "greenTest": "pnpm --filter dvt-api test -- apps/api/test/entrypoints/http/listRunsRouteParser.test.ts",
             "patchSurfaces": [
               "apps/web/src/app/views/runs/RunListStateView.tsx",
               "apps/api/src/application/services/listRunsUseCase.ts",
               "apps/api/src/entrypoints/http/listRunsRouteParser.ts"
             ],
-            "expectedFailure": "Post-limit filtering can leak capacity across scopes or return fewer scoped rows than requested."
+            "expectedFailure": "A public lifecycle symbol is absent from the canonical feature mechanization rail."
           }
         ],
         "componentGuides": [
@@ -156294,7 +156793,7 @@
           "packages/@dvt/state-store/src/InMemoryRunStateStore.ts"
         ]
       },
-      "revision": 2,
+      "revision": 3,
       "createdBy": "codex",
       "createdAt": "2026-08-02T14:27:29.025Z"
     },
@@ -187170,6 +187669,477 @@
         "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95"
       },
       "createdAt": "2026-08-13T12:33:53.223Z"
+    },
+    {
+      "operationId": "5471ad89-736c-4002-9f9e-e517dec1310a",
+      "idempotencyKey": "issue-2169-cancel-symbol-traceability-v1",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#US-F4-3-RUN-CONTROLS#command#cancelrun",
+      "sourcePath": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+      "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+      "expectedRevision": 2,
+      "previousRevision": 2,
+      "resultingRevision": 3,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api test -- apps/api/test/application/services/cancelRunUseCase.test.ts",
+        "dddOwner": "RunCommandApplicationService",
+        "railName": "CancelRun",
+        "railType": "command",
+        "featureId": "US-F4-3-RUN-CONTROLS",
+        "greenTest": "pnpm --filter dvt-api test -- apps/api/test/application/services/cancelRunUseCase.test.ts",
+        "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "unitTests": [
+          "apps/api/test/application/services/cancelRunUseCase.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2169"],
+        "cypressFlows": [
+          "apps/api/test/integration/protectedRuntime.integration.test.ts"
+        ],
+        "domainObjects": ["RunCancellationIntent"],
+        "fowlerSignals": [
+          "Every public lifecycle symbol is attached to its existing canonical command or query rail."
+        ],
+        "negativeTests": [
+          "reject cross-tenant access, malformed receipts and cancellation outside canonical transitions"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "POST /api/v1/runs/:runId/cancel",
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "IWorkflowEngine.cancelRun",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "A public lifecycle symbol is absent from the canonical feature mechanization rail.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md"
+        ],
+        "architectureGuards": [
+          "apps/api/test/application/services/cancelRunUseCase.test.ts"
+        ],
+        "authorizationScope": "authenticated tenant plus persisted run tenant equality",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2169#issuecomment-5279182370",
+        "implementationRefs": [
+          "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#CancelRunCommand",
+          "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#CancelRunDisposition",
+          "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#CancelRunReceipt",
+          "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#invalidRunControlPayload",
+          "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#isCancelRunDisposition",
+          "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#parseCancelRunCommand",
+          "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#requireNonBlankString",
+          "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#requireRecord"
+        ],
+        "normalizedRailName": "cancelrun",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/application/ports/runControlCommandCoordinator.ts"
+        ]
+      },
+      "createdAt": "2026-08-13T13:33:09.690Z"
+    },
+    {
+      "operationId": "344abb0a-403a-40a6-99d0-c9b3eb500c89",
+      "idempotencyKey": "issue-2169-recover-symbol-traceability-v1",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#US-F4-3-RUN-CONTROLS#command#recoverrun",
+      "sourcePath": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+      "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+      "expectedRevision": 6,
+      "previousRevision": 6,
+      "resultingRevision": 7,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api test -- apps/api/test/application/services/recoverRunUseCase.test.ts",
+        "dddOwner": "RunRecoveryApplicationService",
+        "railName": "RecoverRun",
+        "railType": "command",
+        "featureId": "US-F4-3-RUN-CONTROLS",
+        "greenTest": "pnpm --filter dvt-api test -- apps/api/test/application/services/recoverRunUseCase.test.ts",
+        "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "unitTests": [
+          "apps/api/test/application/services/recoverRunUseCase.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2169"],
+        "cypressFlows": [
+          "apps/api/test/integration/protectedRuntime.integration.test.ts"
+        ],
+        "domainObjects": ["RunRecoveryIntent"],
+        "fowlerSignals": [
+          "Every public lifecycle symbol is attached to its existing canonical command or query rail."
+        ],
+        "negativeTests": [
+          "reject nonterminal recovery, cross-tenant source, plan-reference drift and duplicate child identity"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "POST /api/v1/runs/:runId/recover",
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "IWorkflowEngine.recoverRun",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "A public lifecycle symbol is absent from the canonical feature mechanization rail.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md"
+        ],
+        "architectureGuards": [
+          "packages/@dvt/engine/test/core/WorkflowEngine.test.ts"
+        ],
+        "authorizationScope": "authenticated tenant plus persisted source-run tenant equality and immutable plan evidence",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2169#issuecomment-5279182370",
+        "implementationRefs": [
+          "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#RecoverRunReceipt",
+          "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#RecoverRunRequest",
+          "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#parseRecoverRunRequest"
+        ],
+        "normalizedRailName": "recoverrun",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/application/ports/runControlCommandCoordinator.ts"
+        ]
+      },
+      "createdAt": "2026-08-13T13:33:10.944Z"
+    },
+    {
+      "operationId": "f70f74ee-6116-4d3e-a7c1-3e267e919a9a",
+      "idempotencyKey": "issue-2169-signal-symbol-traceability-v1",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#US-F4-3-RUN-CONTROLS#command#signalrun",
+      "sourcePath": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+      "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api test -- apps/api/test/application/services/signalRunUseCase.test.ts",
+        "dddOwner": "RunCommandApplicationService",
+        "railName": "SignalRun",
+        "railType": "command",
+        "featureId": "US-F4-3-RUN-CONTROLS",
+        "greenTest": "pnpm --filter dvt-api test -- apps/api/test/application/services/signalRunUseCase.test.ts",
+        "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "unitTests": [
+          "apps/api/test/application/services/signalRunUseCase.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2169"],
+        "cypressFlows": [
+          "apps/api/test/integration/protectedRuntime.integration.test.ts"
+        ],
+        "domainObjects": ["RunSignalCommand"],
+        "fowlerSignals": [
+          "Every public lifecycle symbol is attached to its existing canonical command or query rail."
+        ],
+        "negativeTests": [
+          "reject CANCEL and every signal outside the PAUSE and RESUME public vocabulary"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "POST /api/v1/runs/:runId/signal",
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "ISignalRunUseCase",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "A public lifecycle symbol is absent from the canonical feature mechanization rail.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md"
+        ],
+        "architectureGuards": [
+          "apps/api/test/application/services/signalRunUseCase.test.ts"
+        ],
+        "authorizationScope": "authenticated tenant plus persisted run tenant equality",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2169#issuecomment-5279182370",
+        "implementationRefs": [
+          "apps/api/src/entrypoints/http/signalRunRouteParser.ts#SUPPORTED_SIGNAL_TYPES",
+          "apps/api/src/entrypoints/http/signalRunRouteParser.ts#parseSignalType",
+          "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#SignalRunCommand",
+          "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#SignalRunResult",
+          "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#SupportedRunSignalType",
+          "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#isSupportedRunSignalType"
+        ],
+        "normalizedRailName": "signalrun",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/signalRunRouteParser.ts",
+          "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/application/ports/runControlCommandCoordinator.ts"
+        ]
+      },
+      "createdAt": "2026-08-13T13:33:12.242Z"
+    },
+    {
+      "operationId": "190c0974-8f4f-4694-afb5-0c259264a07a",
+      "idempotencyKey": "issue-2169-get-run-symbol-traceability-v1",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#US-F4-3-RUN-CONTROLS#query#getrunstatus",
+      "sourcePath": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+      "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+      "expectedRevision": 2,
+      "previousRevision": 2,
+      "resultingRevision": 3,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api test -- apps/api/test/application/services/getRunStatusUseCase.test.ts",
+        "dddOwner": "RunOperationalReadModel",
+        "railName": "GetRunStatus",
+        "railType": "query",
+        "featureId": "US-F4-3-RUN-CONTROLS",
+        "greenTest": "pnpm --filter dvt-api test -- apps/api/test/application/services/getRunStatusUseCase.test.ts",
+        "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "unitTests": [
+          "apps/api/test/application/services/getRunStatusUseCase.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2169"],
+        "cypressFlows": [
+          "apps/api/test/integration/protectedRuntime.integration.test.ts"
+        ],
+        "domainObjects": ["RunOperationalSnapshot"],
+        "fowlerSignals": [
+          "Every public lifecycle symbol is attached to its existing canonical command or query rail."
+        ],
+        "negativeTests": [
+          "reject cross-tenant access and propagate unexpected persistence failures without synthetic snapshots"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "GET /api/v1/runs/:runId",
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "IWorkflowEngine.getRunStatus and IGetRunUseCase",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "A public lifecycle symbol is absent from the canonical feature mechanization rail.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md"
+        ],
+        "architectureGuards": [
+          "apps/api/test/application/services/getRunUseCase.test.ts"
+        ],
+        "authorizationScope": "authenticated tenant plus persisted run tenant equality",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2169#issuecomment-5279182370",
+        "implementationRefs": [
+          "apps/api/src/application/ports/runtime.ts#RunControlActionAvailabilityDto",
+          "apps/api/src/application/ports/runtime.ts#RunControlAvailabilityDto",
+          "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#RUN_CONTROL_CONTRACT_VERSION",
+          "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#RunControlActionAvailability",
+          "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#RunControlUnavailableReason",
+          "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts#parseRunControlResponse"
+        ],
+        "normalizedRailName": "getrunstatus",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/ports/runtime.ts",
+          "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/application/ports/runControlCommandCoordinator.ts"
+        ]
+      },
+      "createdAt": "2026-08-13T13:33:13.486Z"
+    },
+    {
+      "operationId": "23c86df5-b170-496e-9815-0e7e36196f1d",
+      "idempotencyKey": "issue-2169-list-runs-symbol-traceability-v1",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#US-F4-3-RUN-CONTROLS#query#listruns",
+      "sourcePath": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+      "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+      "expectedRevision": 2,
+      "previousRevision": 2,
+      "resultingRevision": 3,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api test -- apps/api/test/entrypoints/http/listRunsRouteParser.test.ts",
+        "dddOwner": "RunOperationalReadModel",
+        "railName": "ListRuns",
+        "railType": "query",
+        "featureId": "US-F4-3-RUN-CONTROLS",
+        "greenTest": "pnpm --filter dvt-api test -- apps/api/test/entrypoints/http/listRunsRouteParser.test.ts",
+        "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "unitTests": [
+          "apps/api/test/entrypoints/http/listRunsRouteParser.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2169"],
+        "cypressFlows": [
+          "apps/api/test/integration/protectedRuntime.integration.test.ts"
+        ],
+        "domainObjects": ["RunSummaryCollection"],
+        "fowlerSignals": [
+          "Every public lifecycle symbol is attached to its existing canonical command or query rail."
+        ],
+        "negativeTests": [
+          "exclude other project and environment rows before limiting and reject empty scope identifiers"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "GET /api/v1/runs",
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "IListRunsUseCase",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "A public lifecycle symbol is absent from the canonical feature mechanization rail.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md"
+        ],
+        "architectureGuards": [
+          "apps/api/test/application/services/listRunsUseCase.test.ts"
+        ],
+        "authorizationScope": "authenticated tenant with project and environment scope applied by storage before limit",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2169#issuecomment-5279182370",
+        "implementationRefs": [
+          "apps/api/src/entrypoints/http/listRunsRouteParser.ts#parseListRunsProjectId"
+        ],
+        "normalizedRailName": "listruns",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/listRunsRouteParser.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/application/ports/runControlCommandCoordinator.ts"
+        ]
+      },
+      "createdAt": "2026-08-13T13:33:14.712Z"
+    },
+    {
+      "operationId": "85987a9d-6337-4c8d-8db5-fa6420296663",
+      "idempotencyKey": "issue-2169-start-run-symbol-traceability-v1",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-152-DBT-RUNTIME-SECRETS#command#workflowengine.startrun",
+      "sourcePath": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+      "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api test -- apps/api/test/entrypoints/http/startRunRoute.validation.test.ts",
+        "dddOwner": "engine start-run lifecycle",
+        "railName": "WorkflowEngine.startRun",
+        "railType": "command",
+        "featureId": "MVP-152-DBT-RUNTIME-SECRETS",
+        "greenTest": "pnpm --filter dvt-api test -- apps/api/test/entrypoints/http/startRunRoute.validation.test.ts",
+        "sourceRef": "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md",
+        "unitTests": [
+          "apps/api/test/entrypoints/http/startRunRoute.validation.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2169"],
+        "cypressFlows": [
+          "apps/api/test/integration/protectedRuntime.integration.test.ts"
+        ],
+        "domainObjects": ["StartRunCommand"],
+        "fowlerSignals": [
+          "Every public lifecycle symbol is attached to its existing canonical command or query rail."
+        ],
+        "negativeTests": [
+          "reject incomplete scope, malformed commands, unauthorized starts and unsupported runtime capabilities"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "POST /api/v1/runs/start",
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "IWorkflowEngine.startRun",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "A public lifecycle symbol is absent from the canonical feature mechanization rail.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-run-lifecycle-rail-hardcut.md"
+        ],
+        "architectureGuards": [
+          "apps/api/test/entrypoints/http/startRunRoute.validation.test.ts"
+        ],
+        "authorizationScope": "authenticated tenant plus complete project and environment scope",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2169#issuecomment-5279182370",
+        "implementationRefs": [
+          "apps/api/src/application/services/startRunEngineBridge.ts#requireStartRunScope",
+          "apps/api/src/entrypoints/http/httpErrorMapper.ts#mapStartRunResult",
+          "apps/api/src/entrypoints/http/startRunRoute.ts#mapStartRunOutcome",
+          "packages/@dvt/contracts/src/validation/runtime.ts#parseStartRunCommand"
+        ],
+        "normalizedRailName": "workflowengine.startrun",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/services/startRunEngineBridge.ts",
+          "apps/api/src/entrypoints/http/httpErrorMapper.ts",
+          "apps/api/src/entrypoints/http/startRunRoute.ts",
+          "packages/@dvt/contracts/src/validation/runtime.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/application/ports/runControlCommandCoordinator.ts"
+        ]
+      },
+      "createdAt": "2026-08-13T13:33:15.922Z"
     }
   ],
   "governanceComponentDefinitions": [
