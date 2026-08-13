@@ -2,6 +2,8 @@
  * Owned concern: parse protected cancel-run requests into a canonical cancel
  * command plus the tenant-scoped authorization envelope.
  */
+import { parseCancelRunCommand } from '@dvt/contracts';
+
 import type { TenantId } from '../../domain/auth/types.js';
 
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
@@ -57,10 +59,7 @@ export function parseCancelRunRequest(input: {
   return {
     ok: true,
     value: {
-      command: {
-        runId,
-        signalType: CANCEL_SIGNAL_TYPE,
-      },
+      command: parseCancelRunCommand({ runId, signalType: CANCEL_SIGNAL_TYPE }),
       authorization: {
         tenantId: tenantIdResult.value,
         actionName: RUN_COMMAND_ACTION.CANCEL,

@@ -1,4 +1,8 @@
-import { SUPPORTED_RUN_SIGNAL_TYPES, type SupportedRunSignalType } from '@dvt/contracts';
+import {
+  parseSignalRunCommand,
+  SUPPORTED_RUN_SIGNAL_TYPES,
+  type SupportedRunSignalType,
+} from '@dvt/contracts';
 
 import type { TenantId } from '../../domain/auth/types.js';
 
@@ -57,11 +61,11 @@ export function parseSignalRunRequest(input: {
   return {
     ok: true,
     value: {
-      command: {
+      command: parseSignalRunCommand({
         runId,
         signalType,
         ...(reason ? { reason } : {}),
-      },
+      }),
       authorization: {
         tenantId: tenantIdResult.value,
         actionName: RUN_COMMAND_ACTION.SIGNAL,

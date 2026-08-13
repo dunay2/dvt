@@ -69,3 +69,123 @@ export interface RunControlAvailability {
   readonly cancel: RunControlActionAvailability;
   readonly recover: RunControlActionAvailability;
 }
+
+export function parseSignalRunCommand(input: unknown): SignalRunCommand {
+  const record = requireRecord(input, ['runId', 'signalType', 'reason']);
+  const signalType = record['signalType'];
+  if (!isSupportedRunSignalType(signalType)) throw invalidRunControlPayload();
+  const reason = record['reason'];
+  if (reason !== undefined && typeof reason !== 'string') throw invalidRunControlPayload();
+  return {
+    runId: requireNonBlankString(record['runId']),
+    signalType,
+    ...(reason === undefined ? {} : { reason }),
+  };
+}
+
+export function parseCancelRunCommand(input: unknown): CancelRunCommand {
+  const record = requireRecord(input, ['runId', 'signalType']);
+  if (record['signalType'] !== 'CANCEL') throw invalidRunControlPayload();
+  return {
+    runId: requireNonBlankString(record['runId']),
+    signalType: 'CANCEL',
+  };
+}
+
+export function parseRecoverRunRequest(input: unknown): RecoverRunRequest {
+  const record = requireRecord(input, ['sourceRunId', 'recoveryRunId']);
+  const sourceRunId = requireNonBlankString(record['sourceRunId']);
+  const recoveryRunId = requireNonBlankString(record['recoveryRunId']);
+  if (sourceRunId === recoveryRunId) throw invalidRunControlPayload();
+  return { sourceRunId, recoveryRunId };
+}
+
+export function parseCancelRunReceipt(input: unknown): CancelRunReceipt {
+  return parseRunControlResponse(() => {
+    const record = requireRecord(input, [
+      'contractVersion',
+      'runId',
+      'signalType',
+      'accepted',
+      'disposition',
+    ]);
+    if (
+      record['contractVersion'] !== RUN_CONTROL_CONTRACT_VERSION ||
+      record['signalType'] !== 'CANCEL' ||
+      record['accepted'] !== true ||
+      !isCancelRunDisposition(record['disposition'])
+    ) {
+      throw invalidRunControlPayload();
+    }
+    return {
+      contractVersion: RUN_CONTROL_CONTRACT_VERSION,
+      runId: requireNonBlankString(record['runId']),
+      signalType: 'CANCEL',
+      accepted: true,
+      disposition: record['disposition'],
+    };
+  });
+}
+
+export function parseRecoverRunReceipt(input: unknown): RecoverRunReceipt {
+  return parseRunControlResponse(() => {
+    const record = requireRecord(input, [
+      'contractVersion',
+      'sourceRunId',
+      'recoveryRunId',
+      'accepted',
+    ]);
+    if (record['contractVersion'] !== RUN_CONTROL_CONTRACT_VERSION || record['accepted'] !== true) {
+      throw invalidRunControlPayload();
+    }
+    const request = parseRecoverRunRequest({
+      sourceRunId: record['sourceRunId'],
+      recoveryRunId: record['recoveryRunId'],
+    });
+    return {
+      contractVersion: RUN_CONTROL_CONTRACT_VERSION,
+      ...request,
+      accepted: true,
+    };
+  });
+}
+
+function isSupportedRunSignalType(value: unknown): value is SupportedRunSignalType {
+  return (
+    typeof value === 'string' && (SUPPORTED_RUN_SIGNAL_TYPES as readonly string[]).includes(value)
+  );
+}
+
+function isCancelRunDisposition(value: unknown): value is CancelRunDisposition {
+  return value === 'requested' || value === 'already_requested' || value === 'already_cancelled';
+}
+
+function requireRecord(input: unknown, allowedFields: readonly string[]): Record<string, unknown> {
+  if (input === null || typeof input !== 'object' || Array.isArray(input)) {
+    throw invalidRunControlPayload();
+  }
+  const record = input as Record<string, unknown>;
+  if (Object.keys(record).some((field) => !allowedFields.includes(field))) {
+    throw invalidRunControlPayload();
+  }
+  return record;
+}
+
+function requireNonBlankString(value: unknown): string {
+  if (typeof value !== 'string' || value.trim().length === 0) {
+    throw invalidRunControlPayload();
+  }
+  return value;
+}
+
+function invalidRunControlPayload(): Error {
+  return new Error('INVALID_RUN_CONTROL_PAYLOAD');
+}
+
+function parseRunControlResponse<T>(parser: () => T): T {
+  try {
+    return parser();
+  } catch {
+    throw new Error('RUN_CONTROL_RESPONSE_INVALID');
+  }
+}
