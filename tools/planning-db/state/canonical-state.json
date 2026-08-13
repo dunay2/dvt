@@ -130749,6 +130749,593 @@
       "createdAt": "2026-08-02T09:32:58.301Z"
     },
     {
+      "railId": "local#GH-2166-STORED-PLAN-AUTHORITY#command#createstoredplan",
+      "featureId": "GH-2166-STORED-PLAN-AUTHORITY",
+      "mechanizationStatus": "implemented",
+      "railName": "CreateStoredPlan",
+      "normalizedRailName": "createstoredplan",
+      "railType": "command",
+      "dddOwner": "Stored plan admission coordinator",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "apps/api/src/application/services/storedPlanScope.ts#IncompletePlanStoreScope",
+        "apps/api/src/application/services/storedPlanScope.ts#StoredPlanScopeInput",
+        "apps/api/src/application/services/storedPlanScope.ts#createScopedPlanRef",
+        "apps/api/src/application/services/storedPlanScope.ts#requireScopeIdentifier"
+      ],
+      "implementationRefs": [
+        "apps/api/src/application/services/storedPlanScope.ts#IncompletePlanStoreScope",
+        "apps/api/src/application/services/storedPlanScope.ts#StoredPlanScopeInput",
+        "apps/api/src/application/services/storedPlanScope.ts#createScopedPlanRef",
+        "apps/api/src/application/services/storedPlanScope.ts#requireScopeIdentifier"
+      ],
+      "documentationRefs": ["https://github.com/dunay2/dvt/issues/2166"],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "apps/api/src/application/services/storedPlanScope.ts"
+      ],
+      "architectureGuards": ["pnpm arch:deps"],
+      "completionGate": [
+        "pnpm --filter dvt-api test:unit",
+        "pnpm --filter dvt-api typecheck",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2166",
+      "sourceContentSha256": "45bf878ab2adee3163836bc159d75b55bc8251fc2c6e0b27e223481af67f1eac",
+      "rawRail": {
+        "name": "CreateStoredPlan",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "Stored plan admission coordinator",
+        "negativeTests": [
+          "blank project scope is rejected",
+          "missing environment scope is rejected"
+        ],
+        "adapterSurface": "PostgresPlanStore",
+        "applicationPort": "IStoredPlanArtifactWriter.storePlanArtifact",
+        "authorizationScope": "tenant/project/environment"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "IncompletePlanStoreScope",
+            "path": "apps/api/src/application/services/storedPlanScope.ts",
+            "cqRails": ["CreateStoredPlan"],
+            "dddOwner": "Stored plan admission coordinator",
+            "unitTests": [
+              "apps/api/test/application/services/storedPlanScope.test.ts"
+            ],
+            "fowlerSignals": [
+              "Divergent scope defaults converged behind one assertion policy."
+            ],
+            "cypressCoverage": "N/A - API application authority with no new UI behavior",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "StoredPlanScopeInput",
+            "path": "apps/api/src/application/services/storedPlanScope.ts",
+            "cqRails": ["CreateStoredPlan"],
+            "dddOwner": "Stored plan admission coordinator",
+            "unitTests": [
+              "apps/api/test/application/services/storedPlanScope.test.ts"
+            ],
+            "fowlerSignals": [
+              "Divergent scope defaults converged behind one assertion policy."
+            ],
+            "cypressCoverage": "N/A - API application authority with no new UI behavior",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "createScopedPlanRef",
+            "path": "apps/api/src/application/services/storedPlanScope.ts",
+            "cqRails": ["CreateStoredPlan"],
+            "dddOwner": "Stored plan admission coordinator",
+            "unitTests": [
+              "apps/api/test/application/services/storedPlanScope.test.ts"
+            ],
+            "fowlerSignals": [
+              "Divergent scope defaults converged behind one assertion policy."
+            ],
+            "cypressCoverage": "N/A - API application authority with no new UI behavior",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "requireScopeIdentifier",
+            "path": "apps/api/src/application/services/storedPlanScope.ts",
+            "cqRails": ["CreateStoredPlan"],
+            "dddOwner": "Stored plan admission coordinator",
+            "unitTests": [
+              "apps/api/test/application/services/storedPlanScope.test.ts"
+            ],
+            "fowlerSignals": [
+              "Divergent scope defaults converged behind one assertion policy."
+            ],
+            "cypressCoverage": "N/A - API application authority with no new UI behavior",
+            "architectureGuard": "pnpm arch:deps"
+          }
+        ],
+        "version": 1,
+        "featureId": "GH-2166-STORED-PLAN-AUTHORITY",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2166"],
+        "cypressFlows": [
+          "N/A - API application authority with no new UI behavior"
+        ],
+        "domainObjects": ["ScopedPlanRef"],
+        "fowlerSignals": [
+          "Divergent scope defaults converged behind one assertion policy."
+        ],
+        "completionGate": [
+          "pnpm --filter dvt-api test:unit",
+          "pnpm --filter dvt-api typecheck",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "createstoredplan-record",
+            "redTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/storedPlanScope.test.ts",
+            "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/storedPlanScope.test.ts",
+            "patchSurfaces": [
+              "apps/api/src/application/services/storedPlanScope.ts"
+            ],
+            "expectedFailure": "Missing or blank plan-store scope could be normalized into an invalid scoped reference."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "CreateStoredPlan",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "Stored plan admission coordinator",
+            "negativeTests": [
+              "blank project scope is rejected",
+              "missing environment scope is rejected"
+            ],
+            "adapterSurface": "PostgresPlanStore",
+            "applicationPort": "IStoredPlanArtifactWriter.storePlanArtifact",
+            "authorizationScope": "tenant/project/environment"
+          }
+        ],
+        "architectureGuards": ["pnpm arch:deps"],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2166",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/services/storedPlanScope.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "packages/@dvt/contracts/**",
+          "packages/@dvt/engine/**"
+        ]
+      },
+      "revision": 0,
+      "createdBy": "codex",
+      "createdAt": "2026-08-13T01:27:19.674Z"
+    },
+    {
+      "railId": "local#GH-2166-STORED-PLAN-AUTHORITY#command#recordplanexecutability",
+      "featureId": "GH-2166-STORED-PLAN-AUTHORITY",
+      "mechanizationStatus": "implemented",
+      "railName": "RecordPlanExecutability",
+      "normalizedRailName": "recordplanexecutability",
+      "railType": "command",
+      "dddOwner": "Stored plan admission coordinator",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#StoredPlanAdmissionCoordinator",
+        "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#StoredPlanAdmissionResult"
+      ],
+      "implementationRefs": [
+        "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#StoredPlanAdmissionCoordinator",
+        "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#StoredPlanAdmissionResult"
+      ],
+      "documentationRefs": ["https://github.com/dunay2/dvt/issues/2166"],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts"
+      ],
+      "architectureGuards": ["pnpm arch:deps"],
+      "completionGate": [
+        "pnpm --filter dvt-api test:unit",
+        "pnpm --filter dvt-api test:integration:ci",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2166",
+      "sourceContentSha256": "45bf878ab2adee3163836bc159d75b55bc8251fc2c6e0b27e223481af67f1eac",
+      "rawRail": {
+        "name": "RecordPlanExecutability",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "Stored plan admission coordinator",
+        "negativeTests": [
+          "invalid plans are marked invalid and never dispatched",
+          "already valid plans are not rewritten",
+          "missing validation records fail closed"
+        ],
+        "adapterSurface": "PostgresPlanStore",
+        "applicationPort": "IPlanExecutabilityValidator.validatePlan",
+        "authorizationScope": "tenant/project/environment"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "StoredPlanAdmissionCoordinator",
+            "path": "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+            "cqRails": ["RecordPlanExecutability"],
+            "dddOwner": "Stored plan admission coordinator",
+            "unitTests": [
+              "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts"
+            ],
+            "fowlerSignals": [
+              "Duplicated preview and start-run algorithms converged behind one coordinator."
+            ],
+            "cypressCoverage": "N/A - API application authority with no new UI behavior",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "StoredPlanAdmissionResult",
+            "path": "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts",
+            "cqRails": ["RecordPlanExecutability"],
+            "dddOwner": "Stored plan admission coordinator",
+            "unitTests": [
+              "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts"
+            ],
+            "fowlerSignals": [
+              "Duplicated preview and start-run algorithms converged behind one coordinator."
+            ],
+            "cypressCoverage": "N/A - API application authority with no new UI behavior",
+            "architectureGuard": "pnpm arch:deps"
+          }
+        ],
+        "version": 1,
+        "featureId": "GH-2166-STORED-PLAN-AUTHORITY",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2166"],
+        "cypressFlows": [
+          "N/A - API application authority with no new UI behavior"
+        ],
+        "domainObjects": ["PlanRecord admission lifecycle"],
+        "fowlerSignals": [
+          "Duplicated preview and start-run algorithms converged behind one coordinator."
+        ],
+        "completionGate": [
+          "pnpm --filter dvt-api test:unit",
+          "pnpm --filter dvt-api test:integration:ci",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "recordplanexecutability-record",
+            "redTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/StoredPlanAdmissionCoordinator.test.ts",
+            "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/StoredPlanAdmissionCoordinator.test.ts",
+            "patchSurfaces": [
+              "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts"
+            ],
+            "expectedFailure": "Preview and Start Run could store and transition equivalent plans through divergent lifecycle algorithms."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "RecordPlanExecutability",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "Stored plan admission coordinator",
+            "negativeTests": [
+              "invalid plans are marked invalid and never dispatched",
+              "already valid plans are not rewritten",
+              "missing validation records fail closed"
+            ],
+            "adapterSurface": "PostgresPlanStore",
+            "applicationPort": "IPlanExecutabilityValidator.validatePlan",
+            "authorizationScope": "tenant/project/environment"
+          }
+        ],
+        "architectureGuards": ["pnpm arch:deps"],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2166",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "packages/@dvt/contracts/**",
+          "packages/@dvt/engine/**"
+        ]
+      },
+      "revision": 0,
+      "createdBy": "codex",
+      "createdAt": "2026-08-13T01:27:56.048Z"
+    },
+    {
+      "railId": "local#GH-2166-STORED-PLAN-AUTHORITY#query#fetchplanforvalidation",
+      "featureId": "GH-2166-STORED-PLAN-AUTHORITY",
+      "mechanizationStatus": "implemented",
+      "railName": "FetchPlanForValidation",
+      "normalizedRailName": "fetchplanforvalidation",
+      "railType": "query",
+      "dddOwner": "Stored executable plan materializer",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "apps/api/src/application/services/StoredExecutablePlanResolver.ts#MaterializedStoredExecutablePlan",
+        "apps/api/src/application/services/StoredExecutablePlanResolver.ts#STORED_PLAN_MATERIALIZATION_MODE",
+        "apps/api/src/application/services/StoredExecutablePlanResolver.ts#StoredPlanMaterializationError",
+        "apps/api/src/application/services/StoredExecutablePlanResolver.ts#StoredPlanMaterializationFailureCode",
+        "apps/api/src/application/services/StoredExecutablePlanResolver.ts#StoredPlanMaterializationMode",
+        "apps/api/src/application/services/StoredExecutablePlanResolver.ts#assertSupportedPlanRefScheme",
+        "apps/api/src/application/services/StoredExecutablePlanResolver.ts#parseMaterializationPlanRef",
+        "apps/api/src/application/services/StoredExecutablePlanResolver.ts#parseMaterializedExecutablePlan",
+        "apps/api/src/application/services/StoredExecutablePlanResolver.ts#readUriScheme",
+        "apps/api/src/application/services/StoredExecutablePlanResolver.ts#toErrorMessage"
+      ],
+      "implementationRefs": [
+        "apps/api/src/application/services/StoredExecutablePlanResolver.ts#MaterializedStoredExecutablePlan",
+        "apps/api/src/application/services/StoredExecutablePlanResolver.ts#STORED_PLAN_MATERIALIZATION_MODE",
+        "apps/api/src/application/services/StoredExecutablePlanResolver.ts#StoredPlanMaterializationError",
+        "apps/api/src/application/services/StoredExecutablePlanResolver.ts#StoredPlanMaterializationFailureCode",
+        "apps/api/src/application/services/StoredExecutablePlanResolver.ts#StoredPlanMaterializationMode",
+        "apps/api/src/application/services/StoredExecutablePlanResolver.ts#assertSupportedPlanRefScheme",
+        "apps/api/src/application/services/StoredExecutablePlanResolver.ts#parseMaterializationPlanRef",
+        "apps/api/src/application/services/StoredExecutablePlanResolver.ts#parseMaterializedExecutablePlan",
+        "apps/api/src/application/services/StoredExecutablePlanResolver.ts#readUriScheme",
+        "apps/api/src/application/services/StoredExecutablePlanResolver.ts#toErrorMessage"
+      ],
+      "documentationRefs": ["https://github.com/dunay2/dvt/issues/2166"],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "apps/api/src/application/services/StoredExecutablePlanResolver.ts"
+      ],
+      "architectureGuards": ["pnpm arch:deps"],
+      "completionGate": [
+        "pnpm --filter dvt-api test:unit",
+        "pnpm --filter dvt-api test:integration:ci",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2166",
+      "sourceContentSha256": "45bf878ab2adee3163836bc159d75b55bc8251fc2c6e0b27e223481af67f1eac",
+      "rawRail": {
+        "name": "FetchPlanForValidation",
+        "type": "query",
+        "status": "implemented",
+        "dddOwner": "Stored executable plan materializer",
+        "negativeTests": [
+          "hash and reference mismatches fail closed",
+          "unsupported URI schemes fail closed",
+          "validation mode uses the validation reader"
+        ],
+        "adapterSurface": "PostgresPlanStore",
+        "applicationPort": "IStoredPlanArtifactReader.fetchStoredPlanArtifactForValidation",
+        "authorizationScope": "tenant/project/environment"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "MaterializedStoredExecutablePlan",
+            "path": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+            "cqRails": ["FetchPlanForValidation"],
+            "dddOwner": "Stored executable plan materializer",
+            "unitTests": [
+              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts"
+            ],
+            "fowlerSignals": [
+              "Duplicated materialization converged behind one explicit read-mode strategy."
+            ],
+            "cypressCoverage": "N/A - API application authority with no new UI behavior",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "STORED_PLAN_MATERIALIZATION_MODE",
+            "path": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+            "cqRails": ["FetchPlanForValidation"],
+            "dddOwner": "Stored executable plan materializer",
+            "unitTests": [
+              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts"
+            ],
+            "fowlerSignals": [
+              "Duplicated materialization converged behind one explicit read-mode strategy."
+            ],
+            "cypressCoverage": "N/A - API application authority with no new UI behavior",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "StoredPlanMaterializationError",
+            "path": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+            "cqRails": ["FetchPlanForValidation"],
+            "dddOwner": "Stored executable plan materializer",
+            "unitTests": [
+              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts"
+            ],
+            "fowlerSignals": [
+              "Duplicated materialization converged behind one explicit read-mode strategy."
+            ],
+            "cypressCoverage": "N/A - API application authority with no new UI behavior",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "StoredPlanMaterializationFailureCode",
+            "path": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+            "cqRails": ["FetchPlanForValidation"],
+            "dddOwner": "Stored executable plan materializer",
+            "unitTests": [
+              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts"
+            ],
+            "fowlerSignals": [
+              "Duplicated materialization converged behind one explicit read-mode strategy."
+            ],
+            "cypressCoverage": "N/A - API application authority with no new UI behavior",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "StoredPlanMaterializationMode",
+            "path": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+            "cqRails": ["FetchPlanForValidation"],
+            "dddOwner": "Stored executable plan materializer",
+            "unitTests": [
+              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts"
+            ],
+            "fowlerSignals": [
+              "Duplicated materialization converged behind one explicit read-mode strategy."
+            ],
+            "cypressCoverage": "N/A - API application authority with no new UI behavior",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "assertSupportedPlanRefScheme",
+            "path": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+            "cqRails": ["FetchPlanForValidation"],
+            "dddOwner": "Stored executable plan materializer",
+            "unitTests": [
+              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts"
+            ],
+            "fowlerSignals": [
+              "Duplicated materialization converged behind one explicit read-mode strategy."
+            ],
+            "cypressCoverage": "N/A - API application authority with no new UI behavior",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "parseMaterializationPlanRef",
+            "path": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+            "cqRails": ["FetchPlanForValidation"],
+            "dddOwner": "Stored executable plan materializer",
+            "unitTests": [
+              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts"
+            ],
+            "fowlerSignals": [
+              "Duplicated materialization converged behind one explicit read-mode strategy."
+            ],
+            "cypressCoverage": "N/A - API application authority with no new UI behavior",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "parseMaterializedExecutablePlan",
+            "path": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+            "cqRails": ["FetchPlanForValidation"],
+            "dddOwner": "Stored executable plan materializer",
+            "unitTests": [
+              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts"
+            ],
+            "fowlerSignals": [
+              "Duplicated materialization converged behind one explicit read-mode strategy."
+            ],
+            "cypressCoverage": "N/A - API application authority with no new UI behavior",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "readUriScheme",
+            "path": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+            "cqRails": ["FetchPlanForValidation"],
+            "dddOwner": "Stored executable plan materializer",
+            "unitTests": [
+              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts"
+            ],
+            "fowlerSignals": [
+              "Duplicated materialization converged behind one explicit read-mode strategy."
+            ],
+            "cypressCoverage": "N/A - API application authority with no new UI behavior",
+            "architectureGuard": "pnpm arch:deps"
+          },
+          {
+            "name": "toErrorMessage",
+            "path": "apps/api/src/application/services/StoredExecutablePlanResolver.ts",
+            "cqRails": ["FetchPlanForValidation"],
+            "dddOwner": "Stored executable plan materializer",
+            "unitTests": [
+              "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts"
+            ],
+            "fowlerSignals": [
+              "Duplicated materialization converged behind one explicit read-mode strategy."
+            ],
+            "cypressCoverage": "N/A - API application authority with no new UI behavior",
+            "architectureGuard": "pnpm arch:deps"
+          }
+        ],
+        "version": 1,
+        "featureId": "GH-2166-STORED-PLAN-AUTHORITY",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2166"],
+        "cypressFlows": [
+          "N/A - API application authority with no new UI behavior"
+        ],
+        "domainObjects": ["Stored executable plan"],
+        "fowlerSignals": [
+          "Duplicated materialization converged behind one explicit read-mode strategy."
+        ],
+        "completionGate": [
+          "pnpm --filter dvt-api test:unit",
+          "pnpm --filter dvt-api test:integration:ci",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "fetchplanforvalidation-record",
+            "redTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/StoredExecutablePlanResolver.test.ts",
+            "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/StoredExecutablePlanResolver.test.ts",
+            "patchSurfaces": [
+              "apps/api/src/application/services/StoredExecutablePlanResolver.ts"
+            ],
+            "expectedFailure": "Stored bytes, reference metadata, hash, schema, or scheme could be accepted by divergent loaders."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "FetchPlanForValidation",
+            "type": "query",
+            "status": "implemented",
+            "dddOwner": "Stored executable plan materializer",
+            "negativeTests": [
+              "hash and reference mismatches fail closed",
+              "unsupported URI schemes fail closed",
+              "validation mode uses the validation reader"
+            ],
+            "adapterSurface": "PostgresPlanStore",
+            "applicationPort": "IStoredPlanArtifactReader.fetchStoredPlanArtifactForValidation",
+            "authorizationScope": "tenant/project/environment"
+          }
+        ],
+        "architectureGuards": ["pnpm arch:deps"],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2166",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "packages/@dvt/contracts/**",
+          "packages/@dvt/engine/**"
+        ]
+      },
+      "revision": 0,
+      "createdBy": "codex",
+      "createdAt": "2026-08-13T01:27:38.775Z"
+    },
+    {
       "railId": "local#MVP-144-PROTECTED-START-RUN-OTEL#command#exportobservabilitytoopentelemetry",
       "featureId": "MVP-144-PROTECTED-START-RUN-OTEL",
       "mechanizationStatus": "implemented",
@@ -174437,6 +175024,234 @@
         "forbiddenImplementationSurfaces": ["apps/**", "packages/**"]
       },
       "createdAt": "2026-08-13T00:28:24.973Z"
+    },
+    {
+      "operationId": "b01be320-3b12-40fa-8fee-0b5cec9436ec",
+      "idempotencyKey": "gh-2166-create-stored-plan-mechanization-v1",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#GH-2166-STORED-PLAN-AUTHORITY#command#createstoredplan",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2166",
+      "sourceContentSha256": "45bf878ab2adee3163836bc159d75b55bc8251fc2c6e0b27e223481af67f1eac",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/storedPlanScope.test.ts",
+        "dddOwner": "Stored plan admission coordinator",
+        "railName": "CreateStoredPlan",
+        "railType": "command",
+        "featureId": "GH-2166-STORED-PLAN-AUTHORITY",
+        "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/storedPlanScope.test.ts",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2166",
+        "unitTests": [
+          "apps/api/test/application/services/storedPlanScope.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2166"],
+        "cypressFlows": [
+          "N/A - API application authority with no new UI behavior"
+        ],
+        "domainObjects": ["ScopedPlanRef"],
+        "fowlerSignals": [
+          "Divergent scope defaults converged behind one assertion policy."
+        ],
+        "negativeTests": [
+          "blank project scope is rejected",
+          "missing environment scope is rejected"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "PostgresPlanStore",
+        "completionGate": [
+          "pnpm --filter dvt-api test:unit",
+          "pnpm --filter dvt-api typecheck",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "IStoredPlanArtifactWriter.storePlanArtifact",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Missing or blank plan-store scope could be normalized into an invalid scoped reference.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": ["https://github.com/dunay2/dvt/issues/2166"],
+        "architectureGuards": ["pnpm arch:deps"],
+        "authorizationScope": "tenant/project/environment",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2166",
+        "implementationRefs": [
+          "apps/api/src/application/services/storedPlanScope.ts#IncompletePlanStoreScope",
+          "apps/api/src/application/services/storedPlanScope.ts#StoredPlanScopeInput",
+          "apps/api/src/application/services/storedPlanScope.ts#createScopedPlanRef",
+          "apps/api/src/application/services/storedPlanScope.ts#requireScopeIdentifier"
+        ],
+        "normalizedRailName": "createstoredplan",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "45bf878ab2adee3163836bc159d75b55bc8251fc2c6e0b27e223481af67f1eac",
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/services/storedPlanScope.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "packages/@dvt/contracts/**",
+          "packages/@dvt/engine/**"
+        ]
+      },
+      "createdAt": "2026-08-13T01:27:19.674Z"
+    },
+    {
+      "operationId": "4bc06521-9788-4db3-8784-e599adf0ae98",
+      "idempotencyKey": "gh-2166-fetch-plan-validation-mechanization-v1",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#GH-2166-STORED-PLAN-AUTHORITY#query#fetchplanforvalidation",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2166",
+      "sourceContentSha256": "45bf878ab2adee3163836bc159d75b55bc8251fc2c6e0b27e223481af67f1eac",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/StoredExecutablePlanResolver.test.ts",
+        "dddOwner": "Stored executable plan materializer",
+        "railName": "FetchPlanForValidation",
+        "railType": "query",
+        "featureId": "GH-2166-STORED-PLAN-AUTHORITY",
+        "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/StoredExecutablePlanResolver.test.ts",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2166",
+        "unitTests": [
+          "apps/api/test/application/services/StoredExecutablePlanResolver.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2166"],
+        "cypressFlows": [
+          "N/A - API application authority with no new UI behavior"
+        ],
+        "domainObjects": ["Stored executable plan"],
+        "fowlerSignals": [
+          "Duplicated materialization converged behind one explicit read-mode strategy."
+        ],
+        "negativeTests": [
+          "hash and reference mismatches fail closed",
+          "unsupported URI schemes fail closed",
+          "validation mode uses the validation reader"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "PostgresPlanStore",
+        "completionGate": [
+          "pnpm --filter dvt-api test:unit",
+          "pnpm --filter dvt-api test:integration:ci",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "IStoredPlanArtifactReader.fetchStoredPlanArtifactForValidation",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Stored bytes, reference metadata, hash, schema, or scheme could be accepted by divergent loaders.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": ["https://github.com/dunay2/dvt/issues/2166"],
+        "architectureGuards": ["pnpm arch:deps"],
+        "authorizationScope": "tenant/project/environment",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2166",
+        "implementationRefs": [
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts#MaterializedStoredExecutablePlan",
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts#STORED_PLAN_MATERIALIZATION_MODE",
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts#StoredPlanMaterializationError",
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts#StoredPlanMaterializationFailureCode",
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts#StoredPlanMaterializationMode",
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts#assertSupportedPlanRefScheme",
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts#parseMaterializationPlanRef",
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts#parseMaterializedExecutablePlan",
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts#readUriScheme",
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts#toErrorMessage"
+        ],
+        "normalizedRailName": "fetchplanforvalidation",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "45bf878ab2adee3163836bc159d75b55bc8251fc2c6e0b27e223481af67f1eac",
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/services/StoredExecutablePlanResolver.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "packages/@dvt/contracts/**",
+          "packages/@dvt/engine/**"
+        ]
+      },
+      "createdAt": "2026-08-13T01:27:38.775Z"
+    },
+    {
+      "operationId": "bbb4d06e-64fe-43ba-8993-68ab0f044ccb",
+      "idempotencyKey": "gh-2166-record-plan-executability-mechanization-v1",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#GH-2166-STORED-PLAN-AUTHORITY#command#recordplanexecutability",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2166",
+      "sourceContentSha256": "45bf878ab2adee3163836bc159d75b55bc8251fc2c6e0b27e223481af67f1eac",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/StoredPlanAdmissionCoordinator.test.ts",
+        "dddOwner": "Stored plan admission coordinator",
+        "railName": "RecordPlanExecutability",
+        "railType": "command",
+        "featureId": "GH-2166-STORED-PLAN-AUTHORITY",
+        "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/StoredPlanAdmissionCoordinator.test.ts",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2166",
+        "unitTests": [
+          "apps/api/test/application/services/StoredPlanAdmissionCoordinator.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2166"],
+        "cypressFlows": [
+          "N/A - API application authority with no new UI behavior"
+        ],
+        "domainObjects": ["PlanRecord admission lifecycle"],
+        "fowlerSignals": [
+          "Duplicated preview and start-run algorithms converged behind one coordinator."
+        ],
+        "negativeTests": [
+          "invalid plans are marked invalid and never dispatched",
+          "already valid plans are not rewritten",
+          "missing validation records fail closed"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "PostgresPlanStore",
+        "completionGate": [
+          "pnpm --filter dvt-api test:unit",
+          "pnpm --filter dvt-api test:integration:ci",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "IPlanExecutabilityValidator.validatePlan",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Preview and Start Run could store and transition equivalent plans through divergent lifecycle algorithms.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": ["https://github.com/dunay2/dvt/issues/2166"],
+        "architectureGuards": ["pnpm arch:deps"],
+        "authorizationScope": "tenant/project/environment",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2166",
+        "implementationRefs": [
+          "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#StoredPlanAdmissionCoordinator",
+          "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts#StoredPlanAdmissionResult"
+        ],
+        "normalizedRailName": "recordplanexecutability",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "45bf878ab2adee3163836bc159d75b55bc8251fc2c6e0b27e223481af67f1eac",
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/services/StoredPlanAdmissionCoordinator.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "packages/@dvt/contracts/**",
+          "packages/@dvt/engine/**"
+        ]
+      },
+      "createdAt": "2026-08-13T01:27:56.048Z"
     }
   ],
   "governanceComponentDefinitions": [
