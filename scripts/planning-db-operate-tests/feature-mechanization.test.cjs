@@ -338,6 +338,45 @@ test('feature mechanization rail planner extends existing evidence without resto
   assert.deepEqual(planned.rail.rawManifest.redGreenCycles[0].patchSurfaces, []);
 });
 
+test('feature mechanization rail planner replaces inherited implementation authority on explicit hard cut', () => {
+  const command = parseArgs(
+    featureMechanizationRecordArgs({
+      implementationRefs: ['apps/api/src/currentRoute.ts#currentRoute'],
+      extraArgs: ['--replace-implementation-refs', 'true'],
+    })
+  );
+  const existingRail = {
+    rail_id: command.railId,
+    revision: 2,
+    created_at: '2026-06-01T12:00:00.000Z',
+    symbol_refs: ['apps/api/src/retiredRoute.ts#retiredRoute'],
+    implementation_refs: ['apps/api/src/retiredRoute.ts#retiredRoute'],
+    raw_rail: { name: command.railName, type: command.railType },
+    raw_manifest: {
+      symbols: [
+        {
+          name: 'retiredRoute',
+          path: 'apps/api/src/retiredRoute.ts',
+        },
+      ],
+    },
+  };
+
+  const planned = planFeatureMechanizationRailRecordOperation({
+    command,
+    existingRail,
+    operationId: 'op-feature-mechanization-hard-cut',
+    now: new Date('2026-06-05T18:00:00.000Z'),
+  });
+
+  assert.deepEqual(planned.rail.symbolRefs, ['apps/api/src/currentRoute.ts#currentRoute']);
+  assert.deepEqual(planned.rail.implementationRefs, ['apps/api/src/currentRoute.ts#currentRoute']);
+  assert.deepEqual(
+    planned.rail.rawManifest.symbols.map(({ path, name }) => `${path}#${name}`),
+    ['apps/api/src/currentRoute.ts#currentRoute']
+  );
+});
+
 test('feature mechanization rail writer stores local rails without mutating imports', async () => {
   const command = parseArgs(
     featureMechanizationRecordArgs({

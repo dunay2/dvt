@@ -3228,6 +3228,8 @@ function parseFeatureMechanizationCommand(action, args) {
     expectedFailure: requireOption(options, 'expectedFailure'),
     patchSurfaces: normalizeListOption(options.patchSurface),
     greenTest: requireOption(options, 'greenTest'),
+    replaceImplementationRefs:
+      parseBooleanOption(options.replaceImplementationRefs, 'replace-implementation-refs') ?? false,
     sourceRef: requireOption(options, 'sourceRef'),
     sourceContentSha256: validateSha256(
       requireOption(options, 'sourceContentSha256'),
@@ -5034,7 +5036,7 @@ function mergeFeatureMechanizationManifest(existingManifest, incomingManifest, c
     command.forbiddenImplementationSurfaces
   );
   const symbols = mergeFeatureMechanizationObjectsByKey(
-    (existing.symbols || []).filter(
+    (command.replaceImplementationRefs ? [] : existing.symbols || []).filter(
       (symbol) =>
         !excludesFeatureMechanizationSurface(
           `${symbol.path}#${symbol.name}`,
@@ -5166,6 +5168,10 @@ function planFeatureMechanizationRailRecordOperation({ command, existingRail, op
       (value) =>
         !excludesFeatureMechanizationSurface(value, command.forbiddenImplementationSurfaces)
     );
+  const previousSymbolRefs = command.replaceImplementationRefs ? [] : previous?.symbolRefs;
+  const previousImplementationRefs = command.replaceImplementationRefs
+    ? []
+    : previous?.implementationRefs;
   const rail = {
     railId: command.railId,
     featureId: command.featureId,
@@ -5175,9 +5181,9 @@ function planFeatureMechanizationRailRecordOperation({ command, existingRail, op
     railType: command.railType,
     dddOwner: command.dddOwner,
     railStatus: command.railStatus,
-    symbolRefs: retained(mergeUniqueValues(previous?.symbolRefs, command.implementationRefs)),
+    symbolRefs: retained(mergeUniqueValues(previousSymbolRefs, command.implementationRefs)),
     implementationRefs: retained(
-      mergeUniqueValues(previous?.implementationRefs, command.implementationRefs)
+      mergeUniqueValues(previousImplementationRefs, command.implementationRefs)
     ),
     documentationRefs: mergeUniqueValues(previous?.documentationRefs, command.documentationRefs),
     governingSources: mergeUniqueValues(previous?.governingSources, command.governingSources),
