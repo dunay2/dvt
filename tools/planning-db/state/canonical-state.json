@@ -14295,6 +14295,20 @@
         "implementation_content_sha256": "761996d891827415f67209c503e8299b04e99db3d4230ffcf0d7e1b1d70f19bc"
       },
       {
+        "evidence_id": "EV-GH2168-PREVIEW-GUARD-HARDCUT",
+        "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+        "subject_kind": "command",
+        "subject_id": "PreviewPlan",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/planning-db-operate-tests/feature-mechanization.test.cjs",
+        "source_path": "scripts/planning-db-operate-tests/feature-mechanization.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-13T10:07:59.071+00:00",
+        "source_content_sha256": "7c01451822dd12e57bc4c579b3abd31fa9ebabda2ea93a74b7eb6b04a602bd59",
+        "implementation_content_sha256": "b8ca84722675cdf2ba5b1038e6916ec57d17054f1cbb72de8b3b9fd8539f50c1"
+      },
+      {
         "evidence_id": "EV-GH2168-PREVIEWPLAN-AUTH-FIRST",
         "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
         "subject_kind": "command",
@@ -99690,6 +99704,31 @@
         "created_at": "2026-08-11T18:22:17.053+00:00"
       },
       {
+        "operation_id": "8e276218-78df-4e9c-957b-e47854ba6073",
+        "idempotency_key": "architecture_evidence_record:codex-gh-2168-qa:GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813:EV-GH2168-PREVIEW-GUARD-HARDCUT:628b4cb2fd59f5b9",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex-gh-2168-qa",
+        "design_id": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+        "source_ref": "node --test scripts/planning-db-operate-tests/feature-mechanization.test.cjs",
+        "source_content_sha256": "7c01451822dd12e57bc4c579b3abd31fa9ebabda2ea93a74b7eb6b04a602bd59",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813",
+          "sourceRef": "node --test scripts/planning-db-operate-tests/feature-mechanization.test.cjs",
+          "subjectId": "PreviewPlan",
+          "evidenceId": "EV-GH2168-PREVIEW-GUARD-HARDCUT",
+          "sourcePath": "scripts/planning-db-operate-tests/feature-mechanization.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "command",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "7c01451822dd12e57bc4c579b3abd31fa9ebabda2ea93a74b7eb6b04a602bd59"
+        },
+        "created_at": "2026-08-13T10:07:59.071+00:00"
+      },
+      {
         "operation_id": "8e436241-43f0-4a49-a9f2-02119269ec76",
         "idempotency_key": "architecture_design_create:codex-issue-2312:CI-PR-WORKFLOW-RAIL-REFERENCE-REPLACEMENT-2312-20260812:e7a5a98c386a54a4",
         "operation_type": "architecture_design_create",
@@ -111846,7 +111885,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "e0d5d5a865a291ecdd5b228f78e1b84482c11a13e6c202bab704bb6b7e62c2ec",
+      "sourceContentSha256": "5dfcbf003bcedf8724d44bf554c9bc20ab23871f962465baa7568cf626c4e218",
       "rawRail": {
         "name": "RecordArchitectureComponent",
         "type": "command",
@@ -112056,7 +112095,7 @@
         "node --test scripts/planning-db-operate-tests/architecture-plan.test.cjs scripts/planning-db-operate-tests/architecture-parse.test.cjs"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "e0d5d5a865a291ecdd5b228f78e1b84482c11a13e6c202bab704bb6b7e62c2ec",
+      "sourceContentSha256": "5dfcbf003bcedf8724d44bf554c9bc20ab23871f962465baa7568cf626c4e218",
       "rawRail": {
         "name": "RecordArchitectureEvidenceExecution",
         "type": "command",
@@ -112630,7 +112669,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "e0d5d5a865a291ecdd5b228f78e1b84482c11a13e6c202bab704bb6b7e62c2ec",
+      "sourceContentSha256": "5dfcbf003bcedf8724d44bf554c9bc20ab23871f962465baa7568cf626c4e218",
       "rawRail": {
         "name": "RecordArchitectureObservabilityEvidence",
         "type": "command",
@@ -112861,7 +112900,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "e0d5d5a865a291ecdd5b228f78e1b84482c11a13e6c202bab704bb6b7e62c2ec",
+      "sourceContentSha256": "5dfcbf003bcedf8724d44bf554c9bc20ab23871f962465baa7568cf626c4e218",
       "rawRail": {
         "name": "RetireArchitectureEvidenceExecution",
         "type": "command",
@@ -113023,7 +113062,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "e0d5d5a865a291ecdd5b228f78e1b84482c11a13e6c202bab704bb6b7e62c2ec",
+      "sourceContentSha256": "5dfcbf003bcedf8724d44bf554c9bc20ab23871f962465baa7568cf626c4e218",
       "rawRail": {
         "name": "RetireArchitectureTestEvidence",
         "type": "command",
@@ -113185,7 +113224,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "e0d5d5a865a291ecdd5b228f78e1b84482c11a13e6c202bab704bb6b7e62c2ec",
+      "sourceContentSha256": "5dfcbf003bcedf8724d44bf554c9bc20ab23871f962465baa7568cf626c4e218",
       "rawRail": {
         "name": "RetireFeatureMechanizationRail",
         "type": "command",
@@ -113347,7 +113386,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "e0d5d5a865a291ecdd5b228f78e1b84482c11a13e6c202bab704bb6b7e62c2ec",
+      "sourceContentSha256": "5dfcbf003bcedf8724d44bf554c9bc20ab23871f962465baa7568cf626c4e218",
       "rawRail": {
         "name": "TransitionArchitectureDesign",
         "type": "command",
@@ -122435,7 +122474,7 @@
         "pnpm docs:feature-mechanization:implementation"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "e0d5d5a865a291ecdd5b228f78e1b84482c11a13e6c202bab704bb6b7e62c2ec",
+      "sourceContentSha256": "5dfcbf003bcedf8724d44bf554c9bc20ab23871f962465baa7568cf626c4e218",
       "rawRail": {
         "name": "RecordArchitectureStorageIo",
         "type": "command",
@@ -135274,7 +135313,7 @@
         "node --test scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "e0d5d5a865a291ecdd5b228f78e1b84482c11a13e6c202bab704bb6b7e62c2ec",
+      "sourceContentSha256": "5dfcbf003bcedf8724d44bf554c9bc20ab23871f962465baa7568cf626c4e218",
       "rawRail": {
         "name": "RecordFeatureMechanizationRail",
         "type": "command",
@@ -135282,7 +135321,8 @@
         "dddOwner": "Planning DB governance writer",
         "negativeTests": [
           "Reject stale expected revisions and invalid feature rail metadata.",
-          "Reject stale expected revisions and audit hard cuts distinctly from additive updates."
+          "Reject stale expected revisions and audit hard cuts distinctly from additive updates.",
+          "Reject stale expected revisions and audit architecture-guard hard cuts distinctly from additive updates."
         ],
         "adapterSurface": "pnpm planning:db:operate feature-mechanization record",
         "applicationPort": "RecordFeatureMechanizationRail application command",
@@ -135487,7 +135527,8 @@
             "fowlerSignals": [
               "Planning separates command validation from DB mutation.",
               "Explicit hard cuts replace obsolete implementation refs while the default record path remains additive.",
-              "Hard-cut mode is part of the audited payload and default idempotency identity."
+              "Hard-cut mode is part of the audited payload and default idempotency identity.",
+              "Explicit guard hard cuts remove invalid inherited authority while additive updates remain the default."
             ],
             "cypressCoverage": "N/A - repository governance CLI gate",
             "architectureGuard": "node --test scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
@@ -135673,10 +135714,11 @@
               "scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
             ],
             "fowlerSignals": [
-              "Rail updates extend effective evidence instead of replacing accumulated manifests."
+              "Rail updates extend effective evidence instead of replacing accumulated manifests.",
+              "Explicit guard hard cuts remove invalid inherited authority while additive updates remain the default."
             ],
             "cypressCoverage": "N/A - repository governance CLI gate",
-            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+            "architectureGuard": "node --test scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
           },
           {
             "name": "featureMechanizationSurfacePath",
@@ -135703,7 +135745,8 @@
               "scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
             ],
             "fowlerSignals": [
-              "Hard-cut mode is part of the audited payload and default idempotency identity."
+              "Hard-cut mode is part of the audited payload and default idempotency identity.",
+              "Explicit guard hard cuts remove invalid inherited authority while additive updates remain the default."
             ],
             "cypressCoverage": "N/A - repository governance CLI gate",
             "architectureGuard": "node --test scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
@@ -135741,7 +135784,8 @@
           "Rail updates extend effective evidence instead of replacing accumulated manifests.",
           "Legacy explanatory surface patterns reconcile by path token without broadening the allowed scope.",
           "Explicit hard cuts replace obsolete implementation refs while the default record path remains additive.",
-          "Hard-cut mode is part of the audited payload and default idempotency identity."
+          "Hard-cut mode is part of the audited payload and default idempotency identity.",
+          "Explicit guard hard cuts remove invalid inherited authority while additive updates remain the default."
         ],
         "completionGate": [
           "node --test scripts/planning-db-operate.test.cjs scripts/check-feature-mechanization.test.cjs scripts/planning-db-schema.test.cjs",
@@ -135782,7 +135826,7 @@
               "scripts/planning-db-operate.cjs",
               "scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
             ],
-            "expectedFailure": "Additive and destructive feature writes share the same audit payload or idempotency identity."
+            "expectedFailure": "Architecture-guard replacement retains inherited invalid values or reuses additive idempotency."
           }
         ],
         "componentGuides": [
@@ -135804,7 +135848,8 @@
             "dddOwner": "Planning DB governance writer",
             "negativeTests": [
               "Reject stale expected revisions and invalid feature rail metadata.",
-              "Reject stale expected revisions and audit hard cuts distinctly from additive updates."
+              "Reject stale expected revisions and audit hard cuts distinctly from additive updates.",
+              "Reject stale expected revisions and audit architecture-guard hard cuts distinctly from additive updates."
             ],
             "adapterSurface": "pnpm planning:db:operate feature-mechanization record",
             "applicationPort": "RecordFeatureMechanizationRail application command",
@@ -135847,7 +135892,7 @@
           "tools/planning-db/schema.sql"
         ]
       },
-      "revision": 3,
+      "revision": 4,
       "createdBy": "codex",
       "createdAt": "2026-08-02T09:32:58.301Z"
     },
@@ -153756,10 +153801,8 @@
         "apps/api/src/entrypoints/http/planRouteScopeParser.ts"
       ],
       "architectureGuards": [
-        "[object Object]",
-        "PreviewPlan parses the canonical contract and persists and validates exactly once.",
-        "pnpm exec vitest run packages/@dvt/contracts/test/planner.contract.test.ts packages/@dvt/planner/test/unit/planner-facade.test.ts",
-        "PreviewPlan authenticates and authorizes scope before canonical contract validation."
+        "PreviewPlan authenticates and authorizes scope before canonical contract validation.",
+        "PreviewPlan persists and validates exactly once."
       ],
       "completionGate": [
         "node --test tools/ci/run-web-cypress-native.test.mjs",
@@ -153967,10 +154010,11 @@
               "apps/api/test/entrypoints/http/previewPlanRoute.outcomes.test.ts"
             ],
             "fowlerSignals": [
-              "One PreviewPlan intent owns parsing, persistence, validation, projection, and presentation."
+              "One PreviewPlan intent owns parsing, persistence, validation, projection, and presentation.",
+              "One shared authentication boundary precedes endpoint contract validation."
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts",
-            "architectureGuard": "PreviewPlan parses the canonical contract and persists and validates exactly once."
+            "architectureGuard": "PreviewPlan authenticates and authorizes scope before canonical contract validation."
           },
           {
             "name": "CanonicalPreviewRequest",
@@ -154528,7 +154572,7 @@
               "apps/api/src/entrypoints/http/planRouteRequestResolver.ts",
               "apps/api/src/entrypoints/http/planRouteScopeParser.ts"
             ],
-            "expectedFailure": "Shared plan-route authentication symbols are absent from current rail authority."
+            "expectedFailure": "PreviewPlan retains a non-semantic inherited architecture guard."
           }
         ],
         "componentGuides": [
@@ -154604,13 +154648,8 @@
           }
         ],
         "architectureGuards": [
-          {
-            "name": "canvasStartupAndDraftRecovery.architecture.test.ts",
-            "command": "pnpm --filter @dvt/web test -- canvasStartupAndDraftRecovery.architecture.test.ts"
-          },
-          "PreviewPlan parses the canonical contract and persists and validates exactly once.",
-          "pnpm exec vitest run packages/@dvt/contracts/test/planner.contract.test.ts packages/@dvt/planner/test/unit/planner-facade.test.ts",
-          "PreviewPlan authenticates and authorizes scope before canonical contract validation."
+          "PreviewPlan authenticates and authorizes scope before canonical contract validation.",
+          "PreviewPlan persists and validates exactly once."
         ],
         "implementationPlan": "https://github.com/dunay2/dvt/issues/2168",
         "mechanizationStatus": "implemented",
@@ -154682,7 +154721,7 @@
           "apps/api/src/entrypoints/http/previewPlanRouteRequestResolver.ts"
         ]
       },
-      "revision": 3,
+      "revision": 4,
       "createdBy": "codex",
       "createdAt": "2026-08-13T08:52:44.193Z"
     },
@@ -186794,6 +186833,157 @@
         ]
       },
       "createdAt": "2026-08-13T09:54:12.601Z"
+    },
+    {
+      "operationId": "eb0704c0-72d1-47a1-bead-966baaa1d243",
+      "idempotencyKey": "feature_mechanization_rail_record:codex-gh-2168-qa:FEATURE-MECHANIZATION-DB-FIRST-WRITER-20260605:command:recordfeaturemechanizationrail:3:c1f5b71844120907",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex-gh-2168-qa",
+      "railId": "local#FEATURE-MECHANIZATION-DB-FIRST-WRITER-20260605#command#recordfeaturemechanizationrail",
+      "sourcePath": "scripts/planning-db-operate.cjs",
+      "sourceContentSha256": "5dfcbf003bcedf8724d44bf554c9bc20ab23871f962465baa7568cf626c4e218",
+      "expectedRevision": 3,
+      "previousRevision": 3,
+      "resultingRevision": 4,
+      "payload": {
+        "redTest": "node --test scripts/planning-db-operate-tests/feature-mechanization.test.cjs",
+        "dddOwner": "Planning DB governance writer",
+        "railName": "RecordFeatureMechanizationRail",
+        "railType": "command",
+        "featureId": "FEATURE-MECHANIZATION-DB-FIRST-WRITER-20260605",
+        "greenTest": "node --test scripts/planning-db-operate-tests/feature-mechanization.test.cjs",
+        "sourceRef": "scripts/planning-db-operate.cjs",
+        "unitTests": [
+          "scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
+        ],
+        "railStatus": "implemented",
+        "userStories": [
+          "docs/architecture/components/ci-governance/component-engineering-record-user-stories.md"
+        ],
+        "cypressFlows": ["N/A - repository governance CLI gate"],
+        "domainObjects": ["FeatureMechanizationLocalRail"],
+        "fowlerSignals": [
+          "Explicit guard hard cuts remove invalid inherited authority while additive updates remain the default."
+        ],
+        "negativeTests": [
+          "Reject stale expected revisions and audit architecture-guard hard cuts distinctly from additive updates."
+        ],
+        "patchSurfaces": [
+          "scripts/planning-db-operate.cjs",
+          "scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
+        ],
+        "adapterSurface": "pnpm planning:db:operate feature-mechanization record",
+        "completionGate": [
+          "node --test scripts/planning-db-operate-tests/feature-mechanization.test.cjs",
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "RecordFeatureMechanizationRail application command",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Architecture-guard replacement retains inherited invalid values or reuses additive idempotency.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "architectureGuards": [
+          "node --test scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
+        ],
+        "authorizationScope": "Repository-local governance writer with explicit actor and compare-and-set revision.",
+        "implementationPlan": "docs/planning/proposals/mandatory/governance-and-docs/feature-mechanization-db-first-read-model-plan-20260605.md",
+        "implementationRefs": [
+          "scripts/planning-db-operate.cjs#operationPayload",
+          "scripts/planning-db-operate.cjs#mergeFeatureMechanizationManifest",
+          "scripts/planning-db-operate.cjs#planFeatureMechanizationRailRecordOperation"
+        ],
+        "normalizedRailName": "recordfeaturemechanizationrail",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "5dfcbf003bcedf8724d44bf554c9bc20ab23871f962465baa7568cf626c4e218",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-operate.cjs",
+          "scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
+        ],
+        "forbiddenImplementationSurfaces": ["docs/archive/**"]
+      },
+      "createdAt": "2026-08-13T10:07:23.706Z"
+    },
+    {
+      "operationId": "7c934b6a-bb29-4c40-96b5-4b505b59f3a9",
+      "idempotencyKey": "feature_mechanization_rail_record:codex-gh-2168-qa:TF-E2-M-B:command:previewplan:3:84f1f959d00a13ce",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex-gh-2168-qa",
+      "railId": "local#TF-E2-M-B#command#previewplan",
+      "sourcePath": "apps/api/src/application/services/PreviewPlanUseCase.ts",
+      "sourceContentSha256": "a7ddd9fade1c7fadba394f4779c98a14b3893a739283142bafad38990b86a7b4",
+      "expectedRevision": 3,
+      "previousRevision": 3,
+      "resultingRevision": 4,
+      "payload": {
+        "redTest": "pnpm docs:feature-mechanization:implementation",
+        "dddOwner": "Plan preview application service",
+        "railName": "PreviewPlan",
+        "railType": "command",
+        "featureId": "TF-E2-M-B",
+        "greenTest": "pnpm docs:feature-mechanization:implementation",
+        "sourceRef": "apps/api/src/application/services/PreviewPlanUseCase.ts",
+        "unitTests": [
+          "apps/api/test/entrypoints/http/previewPlanRoute.auth.test.ts",
+          "apps/api/test/entrypoints/http/previewPlanRoute.outcomes.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2168"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts"
+        ],
+        "domainObjects": ["PlanExecutionDecision"],
+        "fowlerSignals": [
+          "One shared authentication boundary precedes endpoint contract validation."
+        ],
+        "negativeTests": [
+          "Reject missing authentication before exposing semantic contract failures."
+        ],
+        "patchSurfaces": ["apps/api/src/entrypoints/http/previewPlanRoute.ts"],
+        "adapterSurface": "POST /plans/preview",
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "PreviewPlanUseCase.execute",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "PreviewPlan retains a non-semantic inherited architecture guard.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": ["https://github.com/dunay2/dvt/issues/2168"],
+        "architectureGuards": [
+          "PreviewPlan authenticates and authorizes scope before canonical contract validation.",
+          "PreviewPlan persists and validates exactly once."
+        ],
+        "authorizationScope": "Authenticated run:start permission within canonical tenant/project/environment scope.",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2168",
+        "implementationRefs": [
+          "apps/api/src/entrypoints/http/previewPlanRoute.ts#previewPlanRoute"
+        ],
+        "normalizedRailName": "previewplan",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "a7ddd9fade1c7fadba394f4779c98a14b3893a739283142bafad38990b86a7b4",
+        "replaceArchitectureGuards": true,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/previewPlanRoute.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/previewPlanRouteRequestResolver.ts"
+        ]
+      },
+      "createdAt": "2026-08-13T10:07:46.174Z"
     }
   ],
   "governanceComponentDefinitions": [
