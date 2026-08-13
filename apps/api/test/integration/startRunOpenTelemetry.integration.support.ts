@@ -179,6 +179,7 @@ export async function createStartRunOpenTelemetryProof(
           throw new Error('Unexpected DBT target resolution for an empty plan');
         },
       },
+      stepTypeRegistry,
     }),
     executableSubgraphResolver: new ResolveAuthorizedExecutableSubgraphService({
       planner,

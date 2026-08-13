@@ -1,8 +1,11 @@
 import {
+  DBT_STEP_REQUIRED_CAPABILITY,
+  createDefaultStepTypeRegistry,
   parseExecutionSelection,
   parseExecutionPlan,
   parsePlanRef,
   parseRunExecutionContextRef,
+  type IStepTypeRegistry,
   type StartRunCommand,
 } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
@@ -37,6 +40,7 @@ const RUN_CONTEXT_REF = parseRunExecutionContextRef({
   planId: PLAN_ID,
   planVersion: '1.0',
 });
+const STEP_TYPE_REGISTRY = createDefaultStepTypeRegistry();
 
 describe('DbtRunExecutionContextBindingUseCase', () => {
   it('orchestrates a revision-bound bundle and server-owned run context before dispatch', async () => {
@@ -61,6 +65,7 @@ describe('DbtRunExecutionContextBindingUseCase', () => {
       bundleBuilder,
       contextWriter,
       executionTargetResolver: { resolve: () => TARGET },
+      stepTypeRegistry: STEP_TYPE_REGISTRY,
     });
 
     const result = await useCase.executeAdmitted(
@@ -108,6 +113,7 @@ describe('DbtRunExecutionContextBindingUseCase', () => {
       },
       contextWriter,
       executionTargetResolver: { resolve: () => TARGET },
+      stepTypeRegistry: STEP_TYPE_REGISTRY,
     });
 
     const result = await useCase.executeAdmitted(
@@ -138,12 +144,43 @@ describe('DbtRunExecutionContextBindingUseCase', () => {
       bundleBuilder,
       contextWriter: { write: vi.fn() },
       executionTargetResolver: { resolve: () => TARGET },
+      stepTypeRegistry: STEP_TYPE_REGISTRY,
     });
 
     await useCase.executeAdmitted(command, context, makeAdmission(undefined, undefined));
 
     expect(delegate.execute).toHaveBeenCalledWith(command, context);
     expect(bundleBuilder.build).not.toHaveBeenCalled();
+  });
+
+  it('binds DBT context for extension steps declared through the canonical capability registry', async () => {
+    const delegate = makeDelegate();
+    const bundleBuilder = {
+      build: vi.fn(async () => ({
+        ok: false as const,
+        reason: 'artifact_store_unavailable' as const,
+      })),
+    };
+    const stepTypeRegistry = createDbtExtensionRegistry();
+    const useCase = new DbtRunExecutionContextBindingUseCase({
+      delegate,
+      bundleBuilder,
+      contextWriter: { write: vi.fn() },
+      executionTargetResolver: { resolve: () => TARGET },
+      stepTypeRegistry,
+    });
+
+    const result = await useCase.executeAdmitted(
+      { ...buildCommand(), planRef: PLAN_REF },
+      buildContext(),
+      makeAdmission('CUSTOM_DBT_OPERATION', undefined)
+    );
+
+    expect(result).toMatchObject({
+      value: { reason: 'The DBT project bundle artifact store is not configured.' },
+    });
+    expect(bundleBuilder.build).toHaveBeenCalledOnce();
+    expect(delegate.execute).not.toHaveBeenCalled();
   });
 
   it('reports an unavailable bundle store without dispatching', async () => {
@@ -158,6 +195,7 @@ describe('DbtRunExecutionContextBindingUseCase', () => {
       },
       contextWriter: { write: vi.fn() },
       executionTargetResolver: { resolve: () => TARGET },
+      stepTypeRegistry: STEP_TYPE_REGISTRY,
     });
 
     const result = await useCase.executeAdmitted(
@@ -190,6 +228,21 @@ function makeDelegate(): BindingDependencies['delegate'] {
       ok: true as const,
       value: { kind: 'accepted' as const, runId: 'run-test-1', accepted: true as const },
     })),
+  };
+}
+
+function createDbtExtensionRegistry(): IStepTypeRegistry {
+  return {
+    validate: (...args) => STEP_TYPE_REGISTRY.validate(...args),
+    isKnown: (kind) => kind === 'CUSTOM_DBT_OPERATION' || STEP_TYPE_REGISTRY.isKnown(kind),
+    getKinds: () => [...STEP_TYPE_REGISTRY.getKinds(), 'CUSTOM_DBT_OPERATION'],
+    getExecutionProfile: (kind) =>
+      kind === 'CUSTOM_DBT_OPERATION'
+        ? {
+            supportedAdapters: ['temporal'],
+            requiredCapabilities: [DBT_STEP_REQUIRED_CAPABILITY],
+          }
+        : STEP_TYPE_REGISTRY.getExecutionProfile?.(kind),
   };
 }
 

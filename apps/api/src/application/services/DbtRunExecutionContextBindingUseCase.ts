@@ -3,15 +3,17 @@
  * for an already persisted executable plan.
  */
 import {
+  DBT_STEP_REQUIRED_CAPABILITY,
   START_RUN_PLAN_REJECTION_CODE,
   START_RUN_RESULT_KIND,
+  collectRequiredCapabilitiesForSteps,
   type DbtProjectBundleRef,
   type ExecutionPlan,
+  type IStepTypeRegistry,
   type RunExecutionContext,
   type StartRunCommand,
   parseRunExecutionContext,
 } from '@dvt/contracts';
-import { TEMPORAL_DBT_PLUGIN_EXECUTABLE_STEP_KINDS } from '@dvt/temporal-dbt-plugin';
 
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
 import type { IDbtExecutionTargetResolver } from '../ports/dbtExecutionTarget.js';
@@ -29,7 +31,6 @@ import type { WorkspaceStorageScope } from '../ports/workspaceFiles.js';
 import { resolveDbtPlanExecutionBinding } from './dbtPlanExecutionBinding.js';
 import type { StoredPlanAdmissionResult } from './StoredPlanAdmissionCoordinator.js';
 
-const DBT_EXECUTABLE_STEP_KINDS = new Set<string>(TEMPORAL_DBT_PLUGIN_EXECUTABLE_STEP_KINDS);
 const CALLER_CONTEXT_REJECTION =
   'Caller-provided run execution context references are not accepted for DBT execution.';
 
@@ -40,6 +41,7 @@ export class DbtRunExecutionContextBindingUseCase implements IStartRunUseCase {
       readonly bundleBuilder: IDbtProjectBundleBuilder;
       readonly contextWriter: IDbtRunExecutionContextWriter;
       readonly executionTargetResolver: IDbtExecutionTargetResolver;
+      readonly stepTypeRegistry: IStepTypeRegistry;
     }
   ) {}
 
@@ -58,7 +60,9 @@ export class DbtRunExecutionContextBindingUseCase implements IStartRunUseCase {
     const commandWithPlanRef = { ...command, planRef: admission.planRef };
     const { materialized, scopedPlanRef } = admission;
     const { plan } = materialized;
-    if (!isDbtPlan(plan)) return this.deps.delegate.execute(command, context);
+    if (!isDbtPlan(plan, this.deps.stepTypeRegistry)) {
+      return this.deps.delegate.execute(command, context);
+    }
     if (command.runExecutionContextRef !== undefined) {
       return rejectRunExecutionContext(CALLER_CONTEXT_REJECTION);
     }
@@ -113,8 +117,10 @@ export class DbtRunExecutionContextBindingUseCase implements IStartRunUseCase {
   }
 }
 
-function isDbtPlan(plan: ExecutionPlan): boolean {
-  return plan.steps.some((step) => DBT_EXECUTABLE_STEP_KINDS.has(step.kind));
+function isDbtPlan(plan: ExecutionPlan, stepTypeRegistry: IStepTypeRegistry): boolean {
+  return collectRequiredCapabilitiesForSteps(stepTypeRegistry, plan.steps).includes(
+    DBT_STEP_REQUIRED_CAPABILITY
+  );
 }
 
 function buildRunExecutionContext(input: {

@@ -1,4 +1,5 @@
 import {
+  createDefaultStepTypeRegistry,
   parseExecutionSelection,
   parseExecutionPlan,
   parsePlanRef,
@@ -36,6 +37,7 @@ describe('DBT runtime binding security boundary', () => {
           credentialRef: 'vault:dbt/production',
         }),
       },
+      stepTypeRegistry: createDefaultStepTypeRegistry(),
     });
 
     const result = await useCase.executeAdmitted(

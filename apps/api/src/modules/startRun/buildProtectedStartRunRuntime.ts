@@ -91,6 +91,7 @@ export function buildProtectedStartRunRuntime(
     }),
     contextWriter: new FileDbtRunExecutionContextWriter(deps.dbtBundleStore),
     executionTargetResolver: deps.dbtExecutionTargetResolver,
+    stepTypeRegistry: deps.stepTypeRegistry,
   });
   const plannerBackedUseCase = new PlannerBackedStartRunUseCase({
     planner,
