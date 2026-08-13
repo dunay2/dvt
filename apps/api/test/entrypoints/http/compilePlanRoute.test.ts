@@ -2,10 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { compilePlanRoute } from '../../../src/entrypoints/http/compilePlanRoute.js';
 
-import {
-  buildCompileBody,
-  buildTransformationStoredPlan,
-} from './planRouteFixtures.js';
+import { buildCompileBody, buildTransformationStoredPlan } from './planRouteFixtures.js';
 import { createCompileRequest, createReply, okAuthDeps } from './planRouteHttpTestSupport.js';
 
 describe('compilePlanRoute', () => {
@@ -62,5 +59,27 @@ describe('compilePlanRoute', () => {
       error: { type: 'bad_request', reason: 'invalid_plan_source' },
     });
     expect(useCase.execute).not.toHaveBeenCalled();
+  });
+
+  it('contains unexpected compile failures behind the canonical 500 envelope', async () => {
+    const reply = createReply();
+    const logError = vi.fn();
+    const useCase = {
+      execute: vi.fn(async () => {
+        throw new Error('planner unavailable');
+      }),
+    };
+
+    await compilePlanRoute(
+      createCompileRequest({ id: 'req-compile-failure', logError }) as never,
+      reply as never,
+      { ...okAuthDeps(), useCase } as never
+    );
+
+    expect(reply.statusCode).toBe(500);
+    expect(reply.payload).toEqual({
+      error: { type: 'internal_server_error', reason: 'internal_error' },
+    });
+    expect(logError).toHaveBeenCalledTimes(1);
   });
 });

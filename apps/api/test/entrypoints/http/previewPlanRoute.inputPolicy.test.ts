@@ -34,6 +34,25 @@ describe('previewPlanRoute input policy', () => {
     expect(reply.payload).toEqual({ error: { type: 'bad_request', reason: 'invalid_body' } });
   });
 
+  it('rejects preview requests that omit the canonical persistence intent', async () => {
+    const reply = createReply();
+    const deps = createPreviewDeps();
+    const { persist: _persist, ...body } = buildPreviewBody();
+
+    await previewPlanRoute(
+      createPreviewRequest({ id: 'req-preview-missing-persist', body }) as never,
+      reply as never,
+      deps as never
+    );
+
+    expect(reply.statusCode).toBe(400);
+    expect(reply.payload).toEqual({
+      error: { type: 'bad_request', reason: 'invalid_body' },
+    });
+    expect(deps.planner.buildPlan).not.toHaveBeenCalled();
+    expect(deps.planStore.storePlanArtifact).not.toHaveBeenCalled();
+  });
+
   it.each([
     {
       name: 'generic preview receives forbidden manifestRef input',
