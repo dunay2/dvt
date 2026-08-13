@@ -2,6 +2,7 @@ import {
   DbtPluginContextSchema,
   type DbtPluginContextSchemaT,
 } from '../contracts/engine/RunExecutionContext.v1.js';
+import type { StartRunCommand } from '../contracts/engine/StartRunBoundary.v1.js';
 import {
   CanonicalRunStatusSchema,
   type CanonicalRunStatusSchemaT,
@@ -28,7 +29,6 @@ import {
   SignalRequestSchema,
   type SignalRequestSchemaT,
   StartRunCommandSchema,
-  type StartRunCommandSchemaT,
   StartRunResultSchema,
   type StartRunResultSchemaT,
   StepOutputSchema,
@@ -39,8 +39,8 @@ import {
 
 import { parseWithSchema } from './core.js';
 
-export function parseStartRunCommand(input: unknown): StartRunCommandSchemaT {
-  return parseWithSchema(StartRunCommandSchema, input);
+export function parseStartRunCommand(input: unknown): StartRunCommand {
+  return parseWithSchema(StartRunCommandSchema, input) as StartRunCommand;
 }
 
 export function parseStartRunResult(input: unknown): StartRunResultSchemaT {

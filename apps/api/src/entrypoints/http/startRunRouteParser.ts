@@ -2,7 +2,10 @@
  * Owned concern: parse the start-run HTTP body into a canonical command plus
  * requested authorization scope for the route seam.
  */
-import type { StartRunCommand } from '@dvt/contracts';
+import {
+  parseStartRunCommand as parseCanonicalStartRunCommand,
+  type StartRunCommand,
+} from '@dvt/contracts';
 
 import {
   AUTHORIZATION_ACTION,
@@ -12,9 +15,10 @@ import {
 } from '../../application/ports/accessDecision.js';
 import type { IStartRunTargetAdapterRegistry } from '../../application/ports/IStartRunTargetAdapterRegistry.js';
 
+import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 import { parsePlanRouteBodyRecord } from './planRouteBodyParser.js';
 import { parsePlanRouteScope } from './planRouteScopeParser.js';
-import type { RouteParseResult } from './routeParseIssue.js';
+import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
 import type { StartRunRunIdGenerator } from './startRunIdentity.js';
 import { parseStartRunCommand } from './startRunRouteCommandBuilder.js';
 
@@ -45,10 +49,17 @@ export function parseStartRunBody(
     return command;
   }
 
+  let canonicalCommand: StartRunCommand;
+  try {
+    canonicalCommand = parseCanonicalStartRunCommand(command.value);
+  } catch {
+    return badRequestResult(HTTP_ERROR_REASON.invalidBody);
+  }
+
   return {
     ok: true,
     value: {
-      command: command.value,
+      command: canonicalCommand,
       requestedScope: {
         ...buildEnvironmentAccessScope(
           scope.value.tenantId,
