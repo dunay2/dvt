@@ -3981,7 +3981,9 @@ function planArchitectureComponentRecordOperation({
   const responsibilities = command.responsibilities.map((responsibility) => ({
     ...responsibility,
     componentId: command.componentId,
-    status: 'proposed',
+    status: ['approved', 'implemented', 'drift'].includes(command.status)
+      ? command.status
+      : 'proposed',
     createdAt,
   }));
   const audit = architectureScopedAudit({ command, operationId, now });

@@ -10691,6 +10691,20 @@
         "updated_at": "2026-08-14T07:46:36.358+00:00"
       },
       {
+        "design_id": "API-H2-6-RESPONSIBILITY-LIFECYCLE-20260814",
+        "work_item_id": "GH-2343",
+        "title": "Align architecture responsibility lifecycle with component state",
+        "owner": "Architecture / Planning DB",
+        "status": "implemented",
+        "rationale": "Reuse RecordArchitectureComponent so newly inserted responsibilities inherit the governed component lifecycle without parallel authority or compatibility state.",
+        "fowler_signal": "hidden_authority",
+        "rail_ref": "RecordArchitectureComponent",
+        "approved_at": "2026-08-14T08:14:24.555+00:00",
+        "supersedes_id": null,
+        "created_at": "2026-08-14T08:14:12.27+00:00",
+        "updated_at": "2026-08-14T08:15:18.3+00:00"
+      },
+      {
         "design_id": "CANVAS-BACKLOG-INTEGRITY-READINESS-20260626",
         "work_item_id": "E-CANVAS-UXDB-COMPONENT-SLICES-1",
         "title": "Canvas backlog component integrity readiness projection",
@@ -15497,6 +15511,20 @@
         "recorded_at": "2026-08-14T07:46:34.272+00:00",
         "source_content_sha256": "0b7738bf4790cb51425a335acb2516cb21707164420cd1a77c8423162dd43f1a",
         "implementation_content_sha256": "c0ebb5149e755944ac44ab72669fbeb6a0716d0e21b2ee97d387377e1862289c"
+      },
+      {
+        "evidence_id": "EVIDENCE-API-H2-6-RESPONSIBILITY-LIFECYCLE-LOCAL",
+        "design_id": "API-H2-6-RESPONSIBILITY-LIFECYCLE-20260814",
+        "subject_kind": "command",
+        "subject_id": "RecordArchitectureComponent",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+        "source_path": "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-14T08:15:16.733+00:00",
+        "source_content_sha256": "2c352329345cf70e6e072ca276662a990f8b9a230c4bfd31f184b84b28022ce4",
+        "implementation_content_sha256": "2391de2a683b2e1e04dfd4f0e98ea9a2f05d9a26b539b78958c0b9fe389494b2"
       },
       {
         "evidence_id": "EVIDENCE-CODE-WORKING-TREE-POST-SAVE-CONSUMER",
@@ -64684,6 +64712,54 @@
         "created_at": "2026-08-14T07:45:59.374+00:00"
       },
       {
+        "design_id": "API-H2-6-RESPONSIBILITY-LIFECYCLE-20260814",
+        "subject_kind": "command",
+        "subject_id": "RecordArchitectureComponent",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T08:14:12.27+00:00"
+      },
+      {
+        "design_id": "API-H2-6-RESPONSIBILITY-LIFECYCLE-20260814",
+        "subject_kind": "command",
+        "subject_id": "RecordArchitectureComponent",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-14T08:14:12.27+00:00"
+      },
+      {
+        "design_id": "API-H2-6-RESPONSIBILITY-LIFECYCLE-20260814",
+        "subject_kind": "component",
+        "subject_id": "SYS-CI-GOVERNANCE-ROOT",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-14T08:14:12.27+00:00"
+      },
+      {
+        "design_id": "API-H2-6-RESPONSIBILITY-LIFECYCLE-20260814",
+        "subject_kind": "evidence",
+        "subject_id": "EVIDENCE-API-H2-6-RESPONSIBILITY-LIFECYCLE-LOCAL",
+        "scope_kind": "may_create",
+        "required": true,
+        "created_at": "2026-08-14T08:14:12.27+00:00"
+      },
+      {
+        "design_id": "API-H2-6-RESPONSIBILITY-LIFECYCLE-20260814",
+        "subject_kind": "path",
+        "subject_id": "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T08:14:12.27+00:00"
+      },
+      {
+        "design_id": "API-H2-6-RESPONSIBILITY-LIFECYCLE-20260814",
+        "subject_kind": "path",
+        "subject_id": "scripts/planning-db-operate.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T08:14:12.27+00:00"
+      },
+      {
         "design_id": "CANVAS-BOTTOM-DRAWER-ACTIONABLE-READ-MODEL-20260626",
         "subject_kind": "component",
         "subject_id": "web.component.shell.BottomOperationalDrawer",
@@ -94991,6 +95067,27 @@
         "created_at": "2026-08-11T13:02:45.726+00:00"
       },
       {
+        "operation_id": "35555eee-b7c2-4b88-a790-9f8fd3d4b9d9",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-6-RESPONSIBILITY-LIFECYCLE-20260814:cbc6890d08353c8c",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-6-RESPONSIBILITY-LIFECYCLE-20260814",
+        "source_ref": "scripts/planning-db-operate.cjs",
+        "source_content_sha256": "12afd4d0dfd344919f1490c2ff2bf1448fb35f4afefa516bb15058f9e9054728",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The merged red-green implementation is now present on the product branch.",
+          "designId": "API-H2-6-RESPONSIBILITY-LIFECYCLE-20260814",
+          "toStatus": "implementing",
+          "sourceRef": "scripts/planning-db-operate.cjs",
+          "fromStatus": "approved",
+          "sourceContentSha256": "12afd4d0dfd344919f1490c2ff2bf1448fb35f4afefa516bb15058f9e9054728"
+        },
+        "created_at": "2026-08-14T08:14:25.842+00:00"
+      },
+      {
         "operation_id": "361dbaf8-64c8-434e-ba79-7288cce5a920",
         "idempotency_key": "gh-2167-validation-contract-sys-api-http-error-translation-surface-v1",
         "operation_type": "architecture_contract_record",
@@ -99649,6 +99746,91 @@
           "sourceContentSha256": "12b0520908e076692c1860c5b0efdd8176e709386f95f6f22cf85616831b214c"
         },
         "created_at": "2026-08-11T18:22:11.783+00:00"
+      },
+      {
+        "operation_id": "6b1eae66-a172-4034-bb3b-b9709c244ec7",
+        "idempotency_key": "architecture_design_create:codex:API-H2-6-RESPONSIBILITY-LIFECYCLE-20260814:266c592fad243e1f",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "API-H2-6-RESPONSIBILITY-LIFECYCLE-20260814",
+        "source_ref": "scripts/planning-db-operate.cjs",
+        "source_content_sha256": "12afd4d0dfd344919f1490c2ff2bf1448fb35f4afefa516bb15058f9e9054728",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "Architecture / Planning DB",
+          "title": "Align architecture responsibility lifecycle with component state",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-CI-GOVERNANCE-ROOT",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/planning-db-operate.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "RecordArchitectureComponent",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "RecordArchitectureComponent",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_create",
+              "subjectId": "EVIDENCE-API-H2-6-RESPONSIBILITY-LIFECYCLE-LOCAL",
+              "subjectKind": "evidence"
+            }
+          ],
+          "status": "review",
+          "railRef": "RecordArchitectureComponent",
+          "designId": "API-H2-6-RESPONSIBILITY-LIFECYCLE-20260814",
+          "rationale": "Reuse RecordArchitectureComponent so newly inserted responsibilities inherit the governed component lifecycle without parallel authority or compatibility state.",
+          "sourceRef": "scripts/planning-db-operate.cjs",
+          "workItemId": "GH-2343",
+          "fowlerSignal": "hidden_authority",
+          "supersedesId": null,
+          "sourceContentSha256": "12afd4d0dfd344919f1490c2ff2bf1448fb35f4afefa516bb15058f9e9054728"
+        },
+        "created_at": "2026-08-14T08:14:12.27+00:00"
+      },
+      {
+        "operation_id": "6b74e1e0-668e-4cb0-b94e-c1ed68c20c57",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-6-RESPONSIBILITY-LIFECYCLE-20260814:cd6c2af16c166d33",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-6-RESPONSIBILITY-LIFECYCLE-20260814",
+        "source_ref": "scripts/planning-db-operate.cjs",
+        "source_content_sha256": "12afd4d0dfd344919f1490c2ff2bf1448fb35f4afefa516bb15058f9e9054728",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The merged red-green test and exact execution evidence prove lifecycle-aligned responsibility creation.",
+          "designId": "API-H2-6-RESPONSIBILITY-LIFECYCLE-20260814",
+          "toStatus": "implemented",
+          "sourceRef": "scripts/planning-db-operate.cjs",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "12afd4d0dfd344919f1490c2ff2bf1448fb35f4afefa516bb15058f9e9054728"
+        },
+        "created_at": "2026-08-14T08:15:18.3+00:00"
       },
       {
         "operation_id": "6c8d7a89-2683-4333-9662-508b6a5b9bc7",
@@ -107922,6 +108104,31 @@
         "created_at": "2026-08-11T04:57:05.155+00:00"
       },
       {
+        "operation_id": "c7683a99-992e-4015-9368-8e9c6d7c6465",
+        "idempotency_key": "architecture_evidence_record:codex:API-H2-6-RESPONSIBILITY-LIFECYCLE-20260814:EVIDENCE-API-H2-6-RESPONSIBILITY-LIFECYCLE-LOCAL:432355045f0afbe9",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-6-RESPONSIBILITY-LIFECYCLE-20260814",
+        "source_ref": "node --test scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+        "source_content_sha256": "2c352329345cf70e6e072ca276662a990f8b9a230c4bfd31f184b84b28022ce4",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-6-RESPONSIBILITY-LIFECYCLE-20260814",
+          "sourceRef": "node --test scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+          "subjectId": "RecordArchitectureComponent",
+          "evidenceId": "EVIDENCE-API-H2-6-RESPONSIBILITY-LIFECYCLE-LOCAL",
+          "sourcePath": "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "command",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "2c352329345cf70e6e072ca276662a990f8b9a230c4bfd31f184b84b28022ce4"
+        },
+        "created_at": "2026-08-14T08:15:16.733+00:00"
+      },
+      {
         "operation_id": "c7a1240a-1bb7-4c25-80db-ffa1a7b653be",
         "idempotency_key": "gh-2167-update-test-sys-api-application-services-authorization-v1",
         "operation_type": "architecture_test_record",
@@ -112498,6 +112705,27 @@
         "created_at": "2026-08-11T04:42:58.369+00:00"
       },
       {
+        "operation_id": "ff4fce58-a8ef-4782-9138-5e9450673ee1",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-6-RESPONSIBILITY-LIFECYCLE-20260814:8a84b9890856f645",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-6-RESPONSIBILITY-LIFECYCLE-20260814",
+        "source_ref": "scripts/planning-db-operate.cjs",
+        "source_content_sha256": "12afd4d0dfd344919f1490c2ff2bf1448fb35f4afefa516bb15058f9e9054728",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Issue #2343 DoR and the existing RecordArchitectureComponent rail authorize the bounded lifecycle correction.",
+          "designId": "API-H2-6-RESPONSIBILITY-LIFECYCLE-20260814",
+          "toStatus": "approved",
+          "sourceRef": "scripts/planning-db-operate.cjs",
+          "fromStatus": "review",
+          "sourceContentSha256": "12afd4d0dfd344919f1490c2ff2bf1448fb35f4afefa516bb15058f9e9054728"
+        },
+        "created_at": "2026-08-14T08:14:24.555+00:00"
+      },
+      {
         "operation_id": "ff54d54f-87a3-4275-8509-caac5f6a8311",
         "idempotency_key": "codex-api-h2-2-reachability-v5-review",
         "operation_type": "architecture_design_transition",
@@ -115475,23 +115703,33 @@
       ],
       "allowedImplementationSurfaces": [
         "scripts/planning-db-operate.cjs",
-        "tools/planning-db/state/canonical-state.json"
+        "tools/planning-db/state/canonical-state.json",
+        "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
       ],
       "architectureGuards": [
-        "node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+        "node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+        "New responsibilities inherit approved, implemented, or drift component lifecycle state; existing responsibility status is preserved on update."
       ],
       "completionGate": [
         "node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs",
         "pnpm planning:db:export --check",
-        "pnpm verify:prepush"
+        "pnpm verify:prepush",
+        "pnpm planning:db:export:check",
+        "pnpm docs:feature-mechanization:implementation"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "f02733115e7e20cbc1acce1cc653cc745c4876a447842bd3505b33b3c1a8081f",
+      "sourceContentSha256": "12afd4d0dfd344919f1490c2ff2bf1448fb35f4afefa516bb15058f9e9054728",
       "rawRail": {
         "name": "RecordArchitectureComponent",
         "type": "command",
         "status": "implemented",
-        "dddOwner": "ArchitectureCatalog"
+        "dddOwner": "ArchitectureCatalog",
+        "negativeTests": [
+          "reject missing design scope, stale revision, unknown component, or cross-design mutation"
+        ],
+        "adapterSurface": "pnpm planning:db:operate architecture-component record",
+        "applicationPort": "RecordArchitectureComponent planning command",
+        "authorizationScope": "exact design-scoped component may_update grant with actor and compare-and-set revision"
       },
       "rawManifest": {
         "symbols": [
@@ -115504,9 +115742,12 @@
               "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
               "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
             ],
-            "fowlerSignals": ["explicit command/query rail"],
+            "fowlerSignals": [
+              "explicit command/query rail",
+              "hidden authority"
+            ],
             "cypressCoverage": "N/A - repository governance CLI",
-            "architectureGuard": "node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            "architectureGuard": "New responsibilities inherit approved, implemented, or drift component lifecycle state; existing responsibility status is preserved on update."
           },
           {
             "name": "planArchitectureComponentRecordOperation",
@@ -115517,9 +115758,12 @@
               "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
               "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
             ],
-            "fowlerSignals": ["explicit command/query rail"],
+            "fowlerSignals": [
+              "explicit command/query rail",
+              "hidden authority"
+            ],
             "cypressCoverage": "N/A - repository governance CLI",
-            "architectureGuard": "node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            "architectureGuard": "New responsibilities inherit approved, implemented, or drift component lifecycle state; existing responsibility status is preserved on update."
           },
           {
             "name": "writePlannedArchitectureComponentRecordOperation",
@@ -115530,9 +115774,12 @@
               "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
               "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
             ],
-            "fowlerSignals": ["explicit command/query rail"],
+            "fowlerSignals": [
+              "explicit command/query rail",
+              "hidden authority"
+            ],
             "cypressCoverage": "N/A - repository governance CLI",
-            "architectureGuard": "node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            "architectureGuard": "New responsibilities inherit approved, implemented, or drift component lifecycle state; existing responsibility status is preserved on update."
           },
           {
             "name": "applyArchitectureComponentRecordOperation",
@@ -115543,32 +115790,41 @@
               "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
               "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
             ],
-            "fowlerSignals": ["explicit command/query rail"],
+            "fowlerSignals": [
+              "explicit command/query rail",
+              "hidden authority"
+            ],
             "cypressCoverage": "N/A - repository governance CLI",
-            "architectureGuard": "node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            "architectureGuard": "New responsibilities inherit approved, implemented, or drift component lifecycle state; existing responsibility status is preserved on update."
           }
         ],
         "version": 1,
         "featureId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE",
-        "userStories": ["https://github.com/dunay2/dvt/issues/2274"],
+        "userStories": [
+          "https://github.com/dunay2/dvt/issues/2274",
+          "https://github.com/dunay2/dvt/issues/2343"
+        ],
         "cypressFlows": ["N/A - repository governance CLI"],
         "domainObjects": ["ArchitectureComponent"],
-        "fowlerSignals": ["explicit command/query rail"],
+        "fowlerSignals": ["explicit command/query rail", "hidden authority"],
         "completionGate": [
           "node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs",
           "pnpm planning:db:export --check",
-          "pnpm verify:prepush"
+          "pnpm verify:prepush",
+          "pnpm planning:db:export:check",
+          "pnpm docs:feature-mechanization:implementation"
         ],
         "redGreenCycles": [
           {
             "id": "recordarchitecturecomponent-record",
-            "redTest": "node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs",
-            "greenTest": "node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+            "redTest": "node --test scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+            "greenTest": "node --test scripts/planning-db-operate-tests/architecture-plan.test.cjs",
             "patchSurfaces": [
               "scripts/planning-db-operate.cjs",
-              "tools/planning-db/state/canonical-state.json"
+              "tools/planning-db/state/canonical-state.json",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
             ],
-            "expectedFailure": "The RecordArchitectureComponent product intent has no canonical command/query rail declaration."
+            "expectedFailure": "An approved component inserted its new responsibility as proposed."
           }
         ],
         "componentGuides": [
@@ -115585,24 +115841,34 @@
             "name": "RecordArchitectureComponent",
             "type": "command",
             "status": "implemented",
-            "dddOwner": "ArchitectureCatalog"
+            "dddOwner": "ArchitectureCatalog",
+            "negativeTests": [
+              "reject missing design scope, stale revision, unknown component, or cross-design mutation"
+            ],
+            "adapterSurface": "pnpm planning:db:operate architecture-component record",
+            "applicationPort": "RecordArchitectureComponent planning command",
+            "authorizationScope": "exact design-scoped component may_update grant with actor and compare-and-set revision"
           }
         ],
         "architectureGuards": [
-          "node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+          "node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+          "New responsibilities inherit approved, implemented, or drift component lifecycle state; existing responsibility status is preserved on update."
         ],
-        "implementationPlan": "Issue #2274 declares the existing RecordArchitectureComponent rail as canonical Planning DB architecture truth.",
+        "implementationPlan": "Issue #2343 aligns newly inserted responsibility state with component lifecycle state.",
         "mechanizationStatus": "implemented",
         "noHumanDecisionsRemaining": true,
         "allowedImplementationSurfaces": [
           "scripts/planning-db-operate.cjs",
-          "tools/planning-db/state/canonical-state.json"
+          "tools/planning-db/state/canonical-state.json",
+          "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
         ],
         "forbiddenImplementationSurfaces": [
-          "docs/planning/proposals/mandatory/**"
+          "docs/planning/proposals/mandatory/**",
+          "apps/**",
+          "packages/**"
         ]
       },
-      "revision": 1,
+      "revision": 2,
       "createdBy": "codex",
       "createdAt": "2026-08-11T18:18:58.964Z"
     },
@@ -115696,7 +115962,7 @@
         "node --test scripts/planning-db-operate-tests/architecture-plan.test.cjs scripts/planning-db-operate-tests/architecture-parse.test.cjs"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "f02733115e7e20cbc1acce1cc653cc745c4876a447842bd3505b33b3c1a8081f",
+      "sourceContentSha256": "12afd4d0dfd344919f1490c2ff2bf1448fb35f4afefa516bb15058f9e9054728",
       "rawRail": {
         "name": "RecordArchitectureEvidenceExecution",
         "type": "command",
@@ -116270,7 +116536,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "f02733115e7e20cbc1acce1cc653cc745c4876a447842bd3505b33b3c1a8081f",
+      "sourceContentSha256": "12afd4d0dfd344919f1490c2ff2bf1448fb35f4afefa516bb15058f9e9054728",
       "rawRail": {
         "name": "RecordArchitectureObservabilityEvidence",
         "type": "command",
@@ -116501,7 +116767,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "f02733115e7e20cbc1acce1cc653cc745c4876a447842bd3505b33b3c1a8081f",
+      "sourceContentSha256": "12afd4d0dfd344919f1490c2ff2bf1448fb35f4afefa516bb15058f9e9054728",
       "rawRail": {
         "name": "RetireArchitectureEvidenceExecution",
         "type": "command",
@@ -116663,7 +116929,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "f02733115e7e20cbc1acce1cc653cc745c4876a447842bd3505b33b3c1a8081f",
+      "sourceContentSha256": "12afd4d0dfd344919f1490c2ff2bf1448fb35f4afefa516bb15058f9e9054728",
       "rawRail": {
         "name": "RetireArchitectureTestEvidence",
         "type": "command",
@@ -116825,7 +117091,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "f02733115e7e20cbc1acce1cc653cc745c4876a447842bd3505b33b3c1a8081f",
+      "sourceContentSha256": "12afd4d0dfd344919f1490c2ff2bf1448fb35f4afefa516bb15058f9e9054728",
       "rawRail": {
         "name": "RetireFeatureMechanizationRail",
         "type": "command",
@@ -116987,7 +117253,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "f02733115e7e20cbc1acce1cc653cc745c4876a447842bd3505b33b3c1a8081f",
+      "sourceContentSha256": "12afd4d0dfd344919f1490c2ff2bf1448fb35f4afefa516bb15058f9e9054728",
       "rawRail": {
         "name": "TransitionArchitectureDesign",
         "type": "command",
@@ -117589,7 +117855,7 @@
       ],
       "completionGate": ["pnpm test:planning:db", "pnpm verify:prepush"],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "f02733115e7e20cbc1acce1cc653cc745c4876a447842bd3505b33b3c1a8081f",
+      "sourceContentSha256": "12afd4d0dfd344919f1490c2ff2bf1448fb35f4afefa516bb15058f9e9054728",
       "rawRail": {
         "name": "RetireArchitectureComponentResponsibility",
         "type": "command",
@@ -126296,7 +126562,7 @@
         "pnpm docs:feature-mechanization:implementation"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "f02733115e7e20cbc1acce1cc653cc745c4876a447842bd3505b33b3c1a8081f",
+      "sourceContentSha256": "12afd4d0dfd344919f1490c2ff2bf1448fb35f4afefa516bb15058f9e9054728",
       "rawRail": {
         "name": "RecordArchitectureStorageIo",
         "type": "command",
@@ -139135,7 +139401,7 @@
         "node --test scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "f02733115e7e20cbc1acce1cc653cc745c4876a447842bd3505b33b3c1a8081f",
+      "sourceContentSha256": "12afd4d0dfd344919f1490c2ff2bf1448fb35f4afefa516bb15058f9e9054728",
       "rawRail": {
         "name": "RecordFeatureMechanizationRail",
         "type": "command",
@@ -202353,6 +202619,87 @@
         ]
       },
       "createdAt": "2026-08-14T07:46:21.766Z"
+    },
+    {
+      "operationId": "d861b981-bc59-4b56-894a-3c9a10a96192",
+      "idempotencyKey": "codex-2343-record-architecture-component-lifecycle",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE#command#recordarchitecturecomponent",
+      "sourcePath": "scripts/planning-db-operate.cjs",
+      "sourceContentSha256": "12afd4d0dfd344919f1490c2ff2bf1448fb35f4afefa516bb15058f9e9054728",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "node --test scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+        "dddOwner": "ArchitectureCatalog",
+        "railName": "RecordArchitectureComponent",
+        "railType": "command",
+        "featureId": "API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE",
+        "greenTest": "node --test scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+        "sourceRef": "scripts/planning-db-operate.cjs",
+        "unitTests": [
+          "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2343"],
+        "cypressFlows": ["N/A - repository governance CLI"],
+        "domainObjects": ["ArchitectureComponent"],
+        "fowlerSignals": ["hidden authority"],
+        "negativeTests": [
+          "reject missing design scope, stale revision, unknown component, or cross-design mutation"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "pnpm planning:db:operate architecture-component record",
+        "completionGate": [
+          "node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+          "pnpm planning:db:export:check",
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "RecordArchitectureComponent planning command",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "An approved component inserted its new responsibility as proposed.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "architectureGuards": [
+          "New responsibilities inherit approved, implemented, or drift component lifecycle state; existing responsibility status is preserved on update."
+        ],
+        "authorizationScope": "exact design-scoped component may_update grant with actor and compare-and-set revision",
+        "implementationPlan": "Issue #2343 aligns newly inserted responsibility state with component lifecycle state.",
+        "implementationRefs": [
+          "scripts/planning-db-operate.cjs#parseArchitectureComponentCommand",
+          "scripts/planning-db-operate.cjs#planArchitectureComponentRecordOperation",
+          "scripts/planning-db-operate.cjs#writePlannedArchitectureComponentRecordOperation",
+          "scripts/planning-db-operate.cjs#applyArchitectureComponentRecordOperation"
+        ],
+        "normalizedRailName": "recordarchitecturecomponent",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "12afd4d0dfd344919f1490c2ff2bf1448fb35f4afefa516bb15058f9e9054728",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-operate.cjs",
+          "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/**",
+          "packages/**",
+          "docs/planning/proposals/mandatory/**"
+        ]
+      },
+      "createdAt": "2026-08-14T08:14:59.163Z"
     }
   ],
   "governanceComponentDefinitions": [

@@ -272,6 +272,63 @@ test('architecture component record planner emits component, responsibility, and
   assert.equal(planned.audit.sourceContentSha256, 'e'.repeat(64));
 });
 
+test('new architecture responsibilities inherit the component lifecycle state', () => {
+  const planResponsibilityFor = (status) => {
+    const command = parseArgs([
+      'architecture-component',
+      'record',
+      '--design',
+      'ARCHITECTURE-RESPONSIBILITY-LIFECYCLE-2343',
+      '--component',
+      'SYS-API-INFRA-DBT-RUN-CONTEXT-FILES',
+      '--name',
+      'Run context artifact writer',
+      '--kind',
+      'adapter',
+      '--layer',
+      'adapter',
+      '--owner',
+      'Runtime Admission',
+      '--repo-path',
+      'apps/api/src/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.ts',
+      '--public-contract',
+      'RunExecutionContextWriter',
+      '--status',
+      status,
+      '--responsibility',
+      'RESP-RUN-CONTEXT-ARTIFACT-ADAPTER|Persist one run context in the configured artifact backend.|Artifact persistence changes.|ArtifactBackedRunExecutionContextWriter',
+      '--source-ref',
+      'scripts/planning-db-operate.cjs',
+      '--source-content-sha256',
+      'e'.repeat(64),
+      '--actor',
+      'codex',
+    ]);
+
+    return planArchitectureComponentRecordOperation({
+      command,
+      design: { design_id: command.designId, status: 'review' },
+      designScopes: [
+        {
+          subject_kind: 'component',
+          subject_id: command.componentId,
+          scope_kind: 'may_create',
+        },
+      ],
+      existingComponent: null,
+      parentComponent: null,
+      operationId: `op-responsibility-${status}`,
+      now: new Date('2026-08-14T09:00:00.000Z'),
+    }).responsibilities[0];
+  };
+
+  assert.equal(planResponsibilityFor('proposed').status, 'proposed');
+  assert.equal(planResponsibilityFor('review').status, 'proposed');
+  assert.equal(planResponsibilityFor('approved').status, 'approved');
+  assert.equal(planResponsibilityFor('implemented').status, 'implemented');
+  assert.equal(planResponsibilityFor('drift').status, 'drift');
+});
+
 test('architecture component updates preserve governed maturity and creation time', () => {
   const now = new Date('2026-08-12T12:00:00.000Z');
   const createdAt = '2026-06-19T09:30:00.000Z';
