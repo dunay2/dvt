@@ -13509,28 +13509,28 @@
         "work_item_id": "2329",
         "title": "Bind SQL-first plans to governed PostgreSQL connections",
         "owner": "PTH2 PostgreSQL authority",
-        "status": "implementing",
+        "status": "implemented",
         "rationale": "Replace the hidden global SQL-first destination with one source-owned ConnectionRef propagated through draft, plan, StartRun and worker execution.",
         "fowler_signal": "hidden_authority",
         "rail_ref": "ConfigureCanvasDvtNode;SaveWorkspaceGraphDraft;GetWorkspaceGraphDraft;ListWarehouseConnections;CreateWarehouseConnection;TestWarehouseConnection;PreviewExecutionPlan;CompilePlan;StartRun;ObservePlanRunReadiness",
         "approved_at": "2026-08-14T05:13:27.289+00:00",
         "supersedes_id": null,
         "created_at": "2026-08-14T05:13:25.961+00:00",
-        "updated_at": "2026-08-14T05:13:28.561+00:00"
+        "updated_at": "2026-08-14T05:29:43.29+00:00"
       },
       {
         "design_id": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814",
         "work_item_id": "2329",
         "title": "Align run context architecture paths with the hard cut",
         "owner": "Architecture",
-        "status": "review",
+        "status": "implemented",
         "rationale": "The PTH2 hard rename removed dbt-prefixed implementation paths while three canonical components still referenced those deleted files.",
         "fowler_signal": "boundary_drift",
         "rail_ref": "RecordArchitectureComponent",
-        "approved_at": null,
+        "approved_at": "2026-08-14T05:29:44.546+00:00",
         "supersedes_id": null,
         "created_at": "2026-08-14T04:51:17.737+00:00",
-        "updated_at": "2026-08-14T04:51:17.737+00:00"
+        "updated_at": "2026-08-14T05:29:47.107+00:00"
       },
       {
         "design_id": "R1-1C-STORED-PLAN-AUTHORITY-20260812",
@@ -92151,6 +92151,27 @@
         "created_at": "2026-08-11T11:55:45.266+00:00"
       },
       {
+        "operation_id": "17728b95-8336-4e28-a5a2-58b020605b3c",
+        "idempotency_key": "architecture_design_transition:codex:PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814:453495f3d469471a",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "All three component paths resolve after canonical reimport and independent QA found no blocker, major, or minor.",
+          "designId": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814",
+          "toStatus": "implemented",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T05:29:47.107+00:00"
+      },
+      {
         "operation_id": "1869526d-56b4-4860-bdca-d6b1a99761a6",
         "idempotency_key": "issue-2169-start-run-ownership-design-v1",
         "operation_type": "architecture_design_create",
@@ -95245,6 +95266,27 @@
           "sourceContentSha256": "1751ef18d29fed840acd7ff43f23b3c7fce543c35a396057bd39eb3f80563ba2"
         },
         "created_at": "2026-08-10T21:04:42.319+00:00"
+      },
+      {
+        "operation_id": "457e630d-5674-465a-868a-cc46cac09549",
+        "idempotency_key": "architecture_design_transition:codex:PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814:36dd65bdc52adabd",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The three corrected component paths preserve existing identities, contracts and responsibilities and pass component-integrity checks.",
+          "designId": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814",
+          "toStatus": "approved",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "fromStatus": "review",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T05:29:44.546+00:00"
       },
       {
         "operation_id": "45eff1fe-46b8-4562-aa5f-3c3566bbc669",
@@ -103100,6 +103142,27 @@
         "created_at": "2026-08-11T11:55:50.807+00:00"
       },
       {
+        "operation_id": "a87b99aa-6d08-4477-aea2-8d169b76b5a9",
+        "idempotency_key": "architecture_design_transition:codex:PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814:f317eadeb3500b6b",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Apply the approved hard-cut path correction through the existing architecture component rail.",
+          "designId": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814",
+          "toStatus": "implementing",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "fromStatus": "approved",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T05:29:45.818+00:00"
+      },
+      {
         "operation_id": "a8c070e6-4677-4973-98ab-1c8103ed0a85",
         "idempotency_key": "architecture_design_transition:codex:GH-2166-MISSING-PLAN-REJECTION-20260813:5c88a37beee9a8bf",
         "operation_type": "architecture_design_transition",
@@ -105723,6 +105786,27 @@
           "sourceContentSha256": "1051450cef6fcd4d6e985b5ba34566a54d7c98b7ba7482fbd13345a18c9f10b1"
         },
         "created_at": "2026-08-13T09:08:33.787+00:00"
+      },
+      {
+        "operation_id": "bfb7b861-a400-4b04-abc2-06c78b33954e",
+        "idempotency_key": "architecture_design_transition:codex:PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814:9510653f89007e6f",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Independent Fowler QA returned MERGE with zero blockers, majors, or minors after real A/B, Temporal, browser, ARC, and pre-push proof.",
+          "designId": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814",
+          "toStatus": "implemented",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T05:29:43.29+00:00"
       },
       {
         "operation_id": "bfb875a2-dade-47fc-a757-63874b37e859",
