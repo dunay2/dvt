@@ -62,6 +62,10 @@ export type {
   RuntimeStepExecutionContext,
   RuntimeStepResult,
 } from './PostgresRelationalExecutionCapability.js';
+export type {
+  IPostgresCredentialBindingResolver,
+  PostgresCredentialBindings,
+} from './PostgresCredentialBindingResolver.js';
 
 export { PostgresStateStoreAdapter } from './PostgresStateStoreAdapter.js';
 export { PostgresSchemaRollbackCompatibilityPolicy } from './PostgresSchemaManager.js';
@@ -96,6 +100,11 @@ export { PostgresRunArchiveStore } from './PostgresRunArchiveStore.js';
 export { PostgresArchiveLeaseStore } from './PostgresArchiveLeaseStore.js';
 export { PostgresDeliveryBufferPurgeStore } from './PostgresDeliveryBufferPurgeStore.js';
 export { PostgresRelationalExecutionCapability } from './PostgresRelationalExecutionCapability.js';
+export {
+  InvalidPostgresCredentialBindingsError,
+  PostgresCredentialBindingResolver,
+  parsePostgresCredentialBindings,
+} from './PostgresCredentialBindingResolver.js';
 export {
   PostgresObjectFileLoader,
   resolvePostgresObjectFileScopeSchema,
