@@ -26,19 +26,20 @@ describe('Canvas preview-run authoring guardrails', () => {
     visitCanvasWithSettledBootstrap();
 
     cy.contains('Warehouse dbt').should('be.visible');
-    cy.contains('Start dbt canvas').should('be.visible');
+    cy.get('[data-slot="canvas-empty-state"]').should('be.visible');
     cy.contains('button', 'Add first dbt node').should('not.exist');
     openCanvasContextMenuAt(520, 300);
     cy.get('[data-slot="canvas-context-menu"]').should(($menu) => {
-      expect($menu.text()).to.match(/Add\.\.\.|Anadir\.\.\./);
+      expect($menu.text()).to.match(/Add\.\.\.|Añadir\.\.\./);
     });
     cy.get('[data-slot="canvas-context-menu"]').should('not.contain.text', 'Add source');
-    cy.get('[data-slot="canvas-context-menu"]').should('not.contain.text', 'Anadir origen');
-    clickCanvasContextMenuItem(/Add\.\.\.|Anadir\.\.\./);
-    cy.get('[data-slot="canvas-context-menu"]').should(($menu) => {
-      expect($menu.text()).to.match(/Add source|Anadir origen/);
+    cy.get('[data-slot="canvas-context-menu"]').should('not.contain.text', 'Añadir origen');
+    clickCanvasContextMenuItem(/Add\.\.\.|Añadir\.\.\./);
+    cy.get('[role="dialog"]').should(($dialog) => {
+      expect($dialog.text()).to.match(/Add source|Añadir origen/);
     });
     cy.get('body').type('{esc}', { force: true });
+    cy.get('[role="dialog"]').should('not.exist');
     expectPreviewExecutionPlanUnavailableFromCanvasContextMenu();
     cy.get('[data-slot="canvas-toolbar-run-command"]').should('not.exist');
     cy.then(() => {
@@ -75,13 +76,14 @@ describe('Canvas preview-run authoring guardrails', () => {
     waitForE2eApiCall('/workspace/graph/draft', 'GET');
 
     cy.contains('Warehouse dbt').should('be.visible');
-    cy.contains('Start dbt canvas').should('not.exist');
+    cy.get('[data-slot="canvas-empty-state"]').should('not.exist');
 
-    cy.get('[data-slot="shell-menu-trigger"]').click();
-    cy.contains('[role="menuitem"]', /Canvas properties|Propiedades del canvas/).click();
-    cy.contains('[role="menuitemcheckbox"]', /Empty canvas guide|Guia de canvas vacio/).click();
+    openCanvasContextMenuAt(520, 300);
+    clickCanvasContextMenuItem(/Canvas properties|Propiedades del canvas/);
+    cy.get('[data-slot="canvas-properties-empty-guide"]').click();
+    cy.get('[data-slot="workbench-properties-apply"]').click();
 
-    cy.contains('Start dbt canvas').should('be.visible');
+    cy.get('[data-slot="canvas-empty-state"]').should('be.visible');
     cy.contains('button', 'Add first dbt node').should('not.exist');
   });
 
@@ -94,13 +96,25 @@ describe('Canvas preview-run authoring guardrails', () => {
 
     visitCanvasWithSettledBootstrap();
 
+    cy.get('[data-slot="canvas-empty-guide-preference"]').uncheck();
+    cy.get('[data-slot="canvas-empty-state"]').should('not.exist');
+
     cy.get('[data-slot="app-shell-skip-link"]').focus();
     cy.press(Cypress.Keyboard.Keys.ENTER);
     cy.focused().should('have.attr', 'id', 'app-shell-main-content');
 
     cy.get('[data-slot="canvas-viewport-context-surface"]')
       .focus()
-      .trigger('keydown', { key: 'F10', code: 'F10', shiftKey: true });
+      .then(($surface) => {
+        $surface.get(0)?.dispatchEvent(
+          new KeyboardEvent('keydown', {
+            key: 'ContextMenu',
+            code: 'ContextMenu',
+            bubbles: true,
+            cancelable: true,
+          })
+        );
+      });
 
     cy.get('[data-slot="canvas-context-menu"] [role="menuitem"]').first().should('have.focus');
     cy.press(Cypress.Keyboard.Keys.END);
