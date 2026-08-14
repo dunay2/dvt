@@ -119688,15 +119688,43 @@
       "railStatus": "implemented",
       "symbolRefs": [
         ".github/workflows/pr-quality-gate.yml#jobs.pr-checks.steps",
-        "tools/ci/check-pr-size.mjs#runPrSizeCheck",
+        "tools/ci/check-pr-size.mjs#CANONICAL_RECORD_WARNING_THRESHOLD",
+        "tools/ci/check-pr-size.mjs#CANONICAL_STATE_PATH",
+        "tools/ci/check-pr-size.mjs#LINE_WARNING_THRESHOLD",
+        "tools/ci/check-pr-size.mjs#MAX_CANONICAL_RECORD_CHANGES",
+        "tools/ci/check-pr-size.mjs#MAX_LINE_CHANGES",
+        "tools/ci/check-pr-size.mjs#classifyPullRequestSize",
+        "tools/ci/check-pr-size.mjs#collectCanonicalRecords",
         "tools/ci/check-pr-size.mjs#countCanonicalRecordChanges",
+        "tools/ci/check-pr-size.mjs#hasSizeOverride",
+        "tools/ci/check-pr-size.mjs#parseLabels",
+        "tools/ci/check-pr-size.mjs#parseNonNegativeInteger",
+        "tools/ci/check-pr-size.mjs#readCanonicalDiff",
+        "tools/ci/check-pr-size.mjs#requireRef",
+        "tools/ci/check-pr-size.mjs#runGit",
+        "tools/ci/check-pr-size.mjs#runPrSizeCheck",
+        "tools/ci/check-pr-size.mjs#stableJsonStringify",
         "tools/ci/check-pr-size.test.mjs#classifies canonical raw churn by semantic record changes",
         "tools/ci/check-pr-size.test.mjs#the PR workflow supplies exact base and head refs to the size policy"
       ],
       "implementationRefs": [
         ".github/workflows/pr-quality-gate.yml#jobs.pr-checks.steps",
-        "tools/ci/check-pr-size.mjs#runPrSizeCheck",
+        "tools/ci/check-pr-size.mjs#CANONICAL_RECORD_WARNING_THRESHOLD",
+        "tools/ci/check-pr-size.mjs#CANONICAL_STATE_PATH",
+        "tools/ci/check-pr-size.mjs#LINE_WARNING_THRESHOLD",
+        "tools/ci/check-pr-size.mjs#MAX_CANONICAL_RECORD_CHANGES",
+        "tools/ci/check-pr-size.mjs#MAX_LINE_CHANGES",
+        "tools/ci/check-pr-size.mjs#classifyPullRequestSize",
+        "tools/ci/check-pr-size.mjs#collectCanonicalRecords",
         "tools/ci/check-pr-size.mjs#countCanonicalRecordChanges",
+        "tools/ci/check-pr-size.mjs#hasSizeOverride",
+        "tools/ci/check-pr-size.mjs#parseLabels",
+        "tools/ci/check-pr-size.mjs#parseNonNegativeInteger",
+        "tools/ci/check-pr-size.mjs#readCanonicalDiff",
+        "tools/ci/check-pr-size.mjs#requireRef",
+        "tools/ci/check-pr-size.mjs#runGit",
+        "tools/ci/check-pr-size.mjs#runPrSizeCheck",
+        "tools/ci/check-pr-size.mjs#stableJsonStringify",
         "tools/ci/check-pr-size.test.mjs#classifies canonical raw churn by semantic record changes",
         "tools/ci/check-pr-size.test.mjs#the PR workflow supplies exact base and head refs to the size policy"
       ],
@@ -119779,7 +119807,103 @@
             "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/check-pr-size.test.mjs tools/ci/workflow-pattern-parity.test.mjs"
           },
           {
-            "name": "runPrSizeCheck",
+            "name": "CANONICAL_RECORD_WARNING_THRESHOLD",
+            "path": "tools/ci/check-pr-size.mjs",
+            "cqRails": ["EnforcePullRequestValidationPolicy"],
+            "dddOwner": "PullRequestValidationPolicy",
+            "unitTests": [
+              "tools/ci/check-pr-size.test.mjs",
+              "tools/ci/workflow-pattern-parity.test.mjs"
+            ],
+            "fowlerSignals": [
+              "Remove inert validation and hidden projections while reusing committed-diff and DB query rails.",
+              "Measure generated Planning DB snapshots by semantic records while retaining the ordinary authored-line limit."
+            ],
+            "cypressCoverage": "N/A - repository CI governance command",
+            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/check-pr-size.test.mjs tools/ci/workflow-pattern-parity.test.mjs"
+          },
+          {
+            "name": "CANONICAL_STATE_PATH",
+            "path": "tools/ci/check-pr-size.mjs",
+            "cqRails": ["EnforcePullRequestValidationPolicy"],
+            "dddOwner": "PullRequestValidationPolicy",
+            "unitTests": [
+              "tools/ci/check-pr-size.test.mjs",
+              "tools/ci/workflow-pattern-parity.test.mjs"
+            ],
+            "fowlerSignals": [
+              "Remove inert validation and hidden projections while reusing committed-diff and DB query rails.",
+              "Measure generated Planning DB snapshots by semantic records while retaining the ordinary authored-line limit."
+            ],
+            "cypressCoverage": "N/A - repository CI governance command",
+            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/check-pr-size.test.mjs tools/ci/workflow-pattern-parity.test.mjs"
+          },
+          {
+            "name": "LINE_WARNING_THRESHOLD",
+            "path": "tools/ci/check-pr-size.mjs",
+            "cqRails": ["EnforcePullRequestValidationPolicy"],
+            "dddOwner": "PullRequestValidationPolicy",
+            "unitTests": [
+              "tools/ci/check-pr-size.test.mjs",
+              "tools/ci/workflow-pattern-parity.test.mjs"
+            ],
+            "fowlerSignals": [
+              "Remove inert validation and hidden projections while reusing committed-diff and DB query rails.",
+              "Measure generated Planning DB snapshots by semantic records while retaining the ordinary authored-line limit."
+            ],
+            "cypressCoverage": "N/A - repository CI governance command",
+            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/check-pr-size.test.mjs tools/ci/workflow-pattern-parity.test.mjs"
+          },
+          {
+            "name": "MAX_CANONICAL_RECORD_CHANGES",
+            "path": "tools/ci/check-pr-size.mjs",
+            "cqRails": ["EnforcePullRequestValidationPolicy"],
+            "dddOwner": "PullRequestValidationPolicy",
+            "unitTests": [
+              "tools/ci/check-pr-size.test.mjs",
+              "tools/ci/workflow-pattern-parity.test.mjs"
+            ],
+            "fowlerSignals": [
+              "Remove inert validation and hidden projections while reusing committed-diff and DB query rails.",
+              "Measure generated Planning DB snapshots by semantic records while retaining the ordinary authored-line limit."
+            ],
+            "cypressCoverage": "N/A - repository CI governance command",
+            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/check-pr-size.test.mjs tools/ci/workflow-pattern-parity.test.mjs"
+          },
+          {
+            "name": "MAX_LINE_CHANGES",
+            "path": "tools/ci/check-pr-size.mjs",
+            "cqRails": ["EnforcePullRequestValidationPolicy"],
+            "dddOwner": "PullRequestValidationPolicy",
+            "unitTests": [
+              "tools/ci/check-pr-size.test.mjs",
+              "tools/ci/workflow-pattern-parity.test.mjs"
+            ],
+            "fowlerSignals": [
+              "Remove inert validation and hidden projections while reusing committed-diff and DB query rails.",
+              "Measure generated Planning DB snapshots by semantic records while retaining the ordinary authored-line limit."
+            ],
+            "cypressCoverage": "N/A - repository CI governance command",
+            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/check-pr-size.test.mjs tools/ci/workflow-pattern-parity.test.mjs"
+          },
+          {
+            "name": "classifyPullRequestSize",
+            "path": "tools/ci/check-pr-size.mjs",
+            "cqRails": ["EnforcePullRequestValidationPolicy"],
+            "dddOwner": "PullRequestValidationPolicy",
+            "unitTests": [
+              "tools/ci/check-pr-size.test.mjs",
+              "tools/ci/workflow-pattern-parity.test.mjs"
+            ],
+            "fowlerSignals": [
+              "Remove inert validation and hidden projections while reusing committed-diff and DB query rails.",
+              "Measure generated Planning DB snapshots by semantic records while retaining the ordinary authored-line limit."
+            ],
+            "cypressCoverage": "N/A - repository CI governance command",
+            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/check-pr-size.test.mjs tools/ci/workflow-pattern-parity.test.mjs"
+          },
+          {
+            "name": "collectCanonicalRecords",
             "path": "tools/ci/check-pr-size.mjs",
             "cqRails": ["EnforcePullRequestValidationPolicy"],
             "dddOwner": "PullRequestValidationPolicy",
@@ -119796,6 +119920,134 @@
           },
           {
             "name": "countCanonicalRecordChanges",
+            "path": "tools/ci/check-pr-size.mjs",
+            "cqRails": ["EnforcePullRequestValidationPolicy"],
+            "dddOwner": "PullRequestValidationPolicy",
+            "unitTests": [
+              "tools/ci/check-pr-size.test.mjs",
+              "tools/ci/workflow-pattern-parity.test.mjs"
+            ],
+            "fowlerSignals": [
+              "Remove inert validation and hidden projections while reusing committed-diff and DB query rails.",
+              "Measure generated Planning DB snapshots by semantic records while retaining the ordinary authored-line limit."
+            ],
+            "cypressCoverage": "N/A - repository CI governance command",
+            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/check-pr-size.test.mjs tools/ci/workflow-pattern-parity.test.mjs"
+          },
+          {
+            "name": "hasSizeOverride",
+            "path": "tools/ci/check-pr-size.mjs",
+            "cqRails": ["EnforcePullRequestValidationPolicy"],
+            "dddOwner": "PullRequestValidationPolicy",
+            "unitTests": [
+              "tools/ci/check-pr-size.test.mjs",
+              "tools/ci/workflow-pattern-parity.test.mjs"
+            ],
+            "fowlerSignals": [
+              "Remove inert validation and hidden projections while reusing committed-diff and DB query rails.",
+              "Measure generated Planning DB snapshots by semantic records while retaining the ordinary authored-line limit."
+            ],
+            "cypressCoverage": "N/A - repository CI governance command",
+            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/check-pr-size.test.mjs tools/ci/workflow-pattern-parity.test.mjs"
+          },
+          {
+            "name": "parseLabels",
+            "path": "tools/ci/check-pr-size.mjs",
+            "cqRails": ["EnforcePullRequestValidationPolicy"],
+            "dddOwner": "PullRequestValidationPolicy",
+            "unitTests": [
+              "tools/ci/check-pr-size.test.mjs",
+              "tools/ci/workflow-pattern-parity.test.mjs"
+            ],
+            "fowlerSignals": [
+              "Remove inert validation and hidden projections while reusing committed-diff and DB query rails.",
+              "Measure generated Planning DB snapshots by semantic records while retaining the ordinary authored-line limit."
+            ],
+            "cypressCoverage": "N/A - repository CI governance command",
+            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/check-pr-size.test.mjs tools/ci/workflow-pattern-parity.test.mjs"
+          },
+          {
+            "name": "parseNonNegativeInteger",
+            "path": "tools/ci/check-pr-size.mjs",
+            "cqRails": ["EnforcePullRequestValidationPolicy"],
+            "dddOwner": "PullRequestValidationPolicy",
+            "unitTests": [
+              "tools/ci/check-pr-size.test.mjs",
+              "tools/ci/workflow-pattern-parity.test.mjs"
+            ],
+            "fowlerSignals": [
+              "Remove inert validation and hidden projections while reusing committed-diff and DB query rails.",
+              "Measure generated Planning DB snapshots by semantic records while retaining the ordinary authored-line limit."
+            ],
+            "cypressCoverage": "N/A - repository CI governance command",
+            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/check-pr-size.test.mjs tools/ci/workflow-pattern-parity.test.mjs"
+          },
+          {
+            "name": "readCanonicalDiff",
+            "path": "tools/ci/check-pr-size.mjs",
+            "cqRails": ["EnforcePullRequestValidationPolicy"],
+            "dddOwner": "PullRequestValidationPolicy",
+            "unitTests": [
+              "tools/ci/check-pr-size.test.mjs",
+              "tools/ci/workflow-pattern-parity.test.mjs"
+            ],
+            "fowlerSignals": [
+              "Remove inert validation and hidden projections while reusing committed-diff and DB query rails.",
+              "Measure generated Planning DB snapshots by semantic records while retaining the ordinary authored-line limit."
+            ],
+            "cypressCoverage": "N/A - repository CI governance command",
+            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/check-pr-size.test.mjs tools/ci/workflow-pattern-parity.test.mjs"
+          },
+          {
+            "name": "requireRef",
+            "path": "tools/ci/check-pr-size.mjs",
+            "cqRails": ["EnforcePullRequestValidationPolicy"],
+            "dddOwner": "PullRequestValidationPolicy",
+            "unitTests": [
+              "tools/ci/check-pr-size.test.mjs",
+              "tools/ci/workflow-pattern-parity.test.mjs"
+            ],
+            "fowlerSignals": [
+              "Remove inert validation and hidden projections while reusing committed-diff and DB query rails.",
+              "Measure generated Planning DB snapshots by semantic records while retaining the ordinary authored-line limit."
+            ],
+            "cypressCoverage": "N/A - repository CI governance command",
+            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/check-pr-size.test.mjs tools/ci/workflow-pattern-parity.test.mjs"
+          },
+          {
+            "name": "runGit",
+            "path": "tools/ci/check-pr-size.mjs",
+            "cqRails": ["EnforcePullRequestValidationPolicy"],
+            "dddOwner": "PullRequestValidationPolicy",
+            "unitTests": [
+              "tools/ci/check-pr-size.test.mjs",
+              "tools/ci/workflow-pattern-parity.test.mjs"
+            ],
+            "fowlerSignals": [
+              "Remove inert validation and hidden projections while reusing committed-diff and DB query rails.",
+              "Measure generated Planning DB snapshots by semantic records while retaining the ordinary authored-line limit."
+            ],
+            "cypressCoverage": "N/A - repository CI governance command",
+            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/check-pr-size.test.mjs tools/ci/workflow-pattern-parity.test.mjs"
+          },
+          {
+            "name": "runPrSizeCheck",
+            "path": "tools/ci/check-pr-size.mjs",
+            "cqRails": ["EnforcePullRequestValidationPolicy"],
+            "dddOwner": "PullRequestValidationPolicy",
+            "unitTests": [
+              "tools/ci/check-pr-size.test.mjs",
+              "tools/ci/workflow-pattern-parity.test.mjs"
+            ],
+            "fowlerSignals": [
+              "Remove inert validation and hidden projections while reusing committed-diff and DB query rails.",
+              "Measure generated Planning DB snapshots by semantic records while retaining the ordinary authored-line limit."
+            ],
+            "cypressCoverage": "N/A - repository CI governance command",
+            "architectureGuard": "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/check-pr-size.test.mjs tools/ci/workflow-pattern-parity.test.mjs"
+          },
+          {
+            "name": "stableJsonStringify",
             "path": "tools/ci/check-pr-size.mjs",
             "cqRails": ["EnforcePullRequestValidationPolicy"],
             "dddOwner": "PullRequestValidationPolicy",
@@ -119939,7 +120191,7 @@
         ],
         "forbiddenImplementationSurfaces": [".github/workflows/docs-deploy.yml"]
       },
-      "revision": 2,
+      "revision": 3,
       "createdBy": "codex-issue-2312",
       "createdAt": "2026-08-12T21:37:39.117Z"
     },
@@ -193741,6 +193993,136 @@
         "forbiddenImplementationSurfaces": [".github/workflows/docs-deploy.yml"]
       },
       "createdAt": "2026-08-14T09:37:22.630Z"
+    },
+    {
+      "operationId": "7fb24eb3-6fb3-4921-ae10-471908365865",
+      "idempotencyKey": "issue-2346-semantic-pr-size-policy-symbols-v1",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex-issue-2346",
+      "railId": "local#CI-PR-WORKFLOW-HARD-CUT-2312#command#enforcepullrequestvalidationpolicy",
+      "sourcePath": ".github/workflows/pr-quality-gate.yml",
+      "sourceContentSha256": "9f8c6dec994368622e0fd7984631f7215634be440246713167af3c76d3a699c4",
+      "expectedRevision": 2,
+      "previousRevision": 2,
+      "resultingRevision": 3,
+      "payload": {
+        "redTest": "node --test tools/ci/check-pr-size.test.mjs",
+        "dddOwner": "PullRequestValidationPolicy",
+        "railName": "EnforcePullRequestValidationPolicy",
+        "railType": "command",
+        "featureId": "CI-PR-WORKFLOW-HARD-CUT-2312",
+        "greenTest": "node --test tools/ci/check-pr-size.test.mjs",
+        "sourceRef": ".github/workflows/pr-quality-gate.yml",
+        "unitTests": [
+          "tools/ci/check-pr-size.test.mjs",
+          "tools/ci/workflow-pattern-parity.test.mjs"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2346"],
+        "cypressFlows": ["N/A - repository CI governance command"],
+        "domainObjects": ["PullRequestValidationPolicy"],
+        "fowlerSignals": [
+          "Remove inert validation and hidden projections while reusing committed-diff and DB query rails.",
+          "Measure generated Planning DB snapshots by semantic records while retaining the ordinary authored-line limit."
+        ],
+        "negativeTests": [
+          "ordinary workflows cannot publish or materialize human documentation projections",
+          "ordinary workflow aliases cannot invoke human documentation projection generators",
+          "changed files retain committed-diff lint, format, link, focused-test, and Planning DB validation",
+          "implementation anchors must resolve to current code or workflow symbols",
+          "product, contracts, code quality, and security controls expose stable protected outcomes",
+          "ordinary non-canonical pull requests above 50000 changed lines are rejected",
+          "canonical Planning DB changes above 500 semantic records are rejected",
+          "missing comparison refs and malformed canonical snapshots fail closed"
+        ],
+        "patchSurfaces": [
+          "package.json",
+          ".github/workflows/pr-quality-gate.yml",
+          "scripts/documentation-publication.test.cjs",
+          "tools/ci/workflow-pattern-parity.test.mjs",
+          "tools/planning-db/state/canonical-state.json",
+          ".github/workflows/ci.yml",
+          ".github/workflows/contracts.yml",
+          ".github/workflows/test.yml",
+          "tools/ci/check-pr-size.mjs",
+          "tools/ci/check-pr-size.test.mjs"
+        ],
+        "adapterSurface": "GitHub Actions workflows and root CI command aliases",
+        "completionGate": [
+          "pnpm test:ci-tools:static",
+          "pnpm test:ci-tools:executable",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "ApplyPullRequestValidationPolicy command",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Raw generated Planning DB churn is rejected by line count even when the authored change and semantic record delta remain bounded.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/guides/testing-and-ci-capabilities.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "https://github.com/dunay2/dvt/issues/2312",
+          "https://github.com/dunay2/dvt/issues/2346"
+        ],
+        "architectureGuards": [
+          "node --test scripts/documentation-publication.test.cjs scripts/git-local-changes.test.cjs scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs scripts/verify-prepush.test.cjs tools/ci/check-pr-size.test.mjs tools/ci/workflow-pattern-parity.test.mjs"
+        ],
+        "authorizationScope": "repository pull-request and push workflows with read-only contents and explicit job permissions",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2346",
+        "implementationRefs": [
+          ".github/workflows/pr-quality-gate.yml#jobs.pr-checks.steps",
+          "tools/ci/check-pr-size.mjs#CANONICAL_RECORD_WARNING_THRESHOLD",
+          "tools/ci/check-pr-size.mjs#CANONICAL_STATE_PATH",
+          "tools/ci/check-pr-size.mjs#LINE_WARNING_THRESHOLD",
+          "tools/ci/check-pr-size.mjs#MAX_CANONICAL_RECORD_CHANGES",
+          "tools/ci/check-pr-size.mjs#MAX_LINE_CHANGES",
+          "tools/ci/check-pr-size.mjs#classifyPullRequestSize",
+          "tools/ci/check-pr-size.mjs#collectCanonicalRecords",
+          "tools/ci/check-pr-size.mjs#countCanonicalRecordChanges",
+          "tools/ci/check-pr-size.mjs#hasSizeOverride",
+          "tools/ci/check-pr-size.mjs#parseLabels",
+          "tools/ci/check-pr-size.mjs#parseNonNegativeInteger",
+          "tools/ci/check-pr-size.mjs#readCanonicalDiff",
+          "tools/ci/check-pr-size.mjs#requireRef",
+          "tools/ci/check-pr-size.mjs#runGit",
+          "tools/ci/check-pr-size.mjs#runPrSizeCheck",
+          "tools/ci/check-pr-size.mjs#stableJsonStringify",
+          "tools/ci/check-pr-size.test.mjs#classifies canonical raw churn by semantic record changes",
+          "tools/ci/check-pr-size.test.mjs#the PR workflow supplies exact base and head refs to the size policy"
+        ],
+        "normalizedRailName": "enforcepullrequestvalidationpolicy",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "9f8c6dec994368622e0fd7984631f7215634be440246713167af3c76d3a699c4",
+        "replaceArchitectureGuards": true,
+        "replaceImplementationRefs": true,
+        "allowedImplementationSurfaces": [
+          ".github/workflows/ci.yml",
+          ".github/workflows/pr-quality-gate.yml",
+          "package.json",
+          "scripts/documentation-publication.test.cjs",
+          "scripts/generate-code-status.test.cjs",
+          "scripts/git-local-changes.cjs",
+          "scripts/git-local-changes.test.cjs",
+          "scripts/local-validation-plan.cjs",
+          "scripts/planning-db-knowledge-intake-retirement-guard.test.cjs",
+          "scripts/planning-db/knowledge-intake-retirement-guard.cjs",
+          "scripts/verify-changed.cjs",
+          "scripts/verify-changed.test.cjs",
+          "scripts/verify-prepush.test.cjs",
+          "tools/ci/turbo-workspace-task-contract.test.mjs",
+          "tools/ci/workflow-pattern-parity.test.mjs",
+          "tools/planning-db/state/canonical-state.json",
+          ".github/workflows/contracts.yml",
+          ".github/workflows/test.yml",
+          "tools/ci/check-pr-size.mjs",
+          "tools/ci/check-pr-size.test.mjs"
+        ],
+        "forbiddenImplementationSurfaces": [".github/workflows/docs-deploy.yml"]
+      },
+      "createdAt": "2026-08-14T09:50:14.560Z"
     }
   ],
   "governanceComponentDefinitions": [
