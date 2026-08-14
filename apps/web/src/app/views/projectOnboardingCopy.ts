@@ -10,6 +10,7 @@ export type ProjectOnboardingCopy = Readonly<{
   loadingMessage: string;
   organizationLabel: string;
   projectNameLabel: string;
+  projectNameHelpText: string;
   projectNamePlaceholder: string;
   creationUnavailableMessage: string;
   createProjectLabel: string;
@@ -38,6 +39,7 @@ const COPY_BY_LANGUAGE: Record<ApplicationLanguage, ProjectOnboardingCopy> = {
     loadingMessage: 'Loading project access…',
     organizationLabel: 'Organization',
     projectNameLabel: 'Project name',
+    projectNameHelpText: 'Use a clear, recognizable name.',
     projectNamePlaceholder: 'Orders',
     creationUnavailableMessage: 'Project creation is not granted for this organization.',
     createProjectLabel: 'Create project',
@@ -54,8 +56,7 @@ const COPY_BY_LANGUAGE: Record<ApplicationLanguage, ProjectOnboardingCopy> = {
       'The project was created, but it could not be opened. Refresh projects and open it from the list.',
     newProjectActionLabel: 'New project…',
     newProjectDialogTitle: 'Create a new project',
-    newProjectDialogDescription:
-      'Choose an authorized organization and give the project a recognizable name.',
+    newProjectDialogDescription: 'Start from scratch with an empty governed project.',
     cancelActionLabel: 'Cancel',
     closeProjectDialogLabel: 'Close new project dialog',
   },
@@ -68,6 +69,7 @@ const COPY_BY_LANGUAGE: Record<ApplicationLanguage, ProjectOnboardingCopy> = {
     loadingMessage: 'Cargando acceso a proyectos…',
     organizationLabel: 'Organización',
     projectNameLabel: 'Nombre del proyecto',
+    projectNameHelpText: 'Usa un nombre claro y reconocible.',
     projectNamePlaceholder: 'Pedidos',
     creationUnavailableMessage: 'No tienes permiso para crear proyectos en esta organización.',
     createProjectLabel: 'Crear proyecto',
@@ -84,8 +86,7 @@ const COPY_BY_LANGUAGE: Record<ApplicationLanguage, ProjectOnboardingCopy> = {
       'El proyecto se creó, pero no se pudo abrir. Actualiza los proyectos y ábrelo desde la lista.',
     newProjectActionLabel: 'Nuevo proyecto…',
     newProjectDialogTitle: 'Crea un proyecto',
-    newProjectDialogDescription:
-      'Elige una organización autorizada y asigna al proyecto un nombre reconocible.',
+    newProjectDialogDescription: 'Empieza desde cero con un proyecto vacío y gobernado.',
     cancelActionLabel: 'Cancelar',
     closeProjectDialogLabel: 'Cerrar el diálogo de nuevo proyecto',
   },

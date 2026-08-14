@@ -109,6 +109,7 @@ describe('ProjectCreationDialog', () => {
     );
     const projectNameHelpId = projectNameInput?.getAttribute('aria-describedby');
     const projectNameHelp = projectNameHelpId ? document.getElementById(projectNameHelpId) : null;
+    const submitButton = dialogContent?.querySelector<HTMLButtonElement>('button[type="submit"]');
     expect(dialogContent?.classList).toContain('gap-0');
     expect(dialogContent?.classList).toContain('p-0');
     expect(dialogHeader?.classList).toContain('py-5');
@@ -119,6 +120,8 @@ describe('ProjectCreationDialog', () => {
     expect(formBody?.classList).toContain('py-5');
     expect(projectNameHelp?.textContent).toBe('Usa un nombre claro y reconocible.');
     expect(projectNameHelp?.getAttribute('data-slot')).toBe('project-name-help');
+    expect(submitButton?.classList).toContain('disabled:bg-(--surface-elevated)');
+    expect(submitButton?.disabled).toBe(true);
     expect(dialogFooter?.classList).toContain('border-t');
     expect(dialogFooter?.classList).toContain('py-4');
     expect(dialogContent?.querySelector('[data-slot="label"]')).not.toBeNull();
