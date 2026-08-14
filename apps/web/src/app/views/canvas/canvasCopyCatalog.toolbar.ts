@@ -57,10 +57,6 @@ export const canvasViewToolbarCopyByKey = {
     key: 'canvas.toolbar.snapToGridLabel',
     fallback: 'Snap',
   },
-  toolbarCanvasSettingsLabel: {
-    key: 'canvas.toolbar.canvasSettingsLabel',
-    fallback: 'Canvas settings',
-  },
   canvasGraphSearchLabel: {
     key: 'canvas.graphSearch.label',
     fallback: 'Search graph',
@@ -230,30 +226,6 @@ export const canvasViewToolbarCopyByKey = {
   canvasSettingsCloseLabel: {
     key: 'canvas.settings.closeLabel',
     fallback: 'Close canvas settings',
-  },
-  canvasSettingsEnableLabel: {
-    key: 'canvas.settings.enableLabel',
-    fallback: 'Enable',
-  },
-  canvasSettingsDisableLabel: {
-    key: 'canvas.settings.disableLabel',
-    fallback: 'Disable',
-  },
-  canvasSettingsShowGridLabel: {
-    key: 'canvas.settings.showGridLabel',
-    fallback: 'Show grid',
-  },
-  canvasSettingsHideGridLabel: {
-    key: 'canvas.settings.hideGridLabel',
-    fallback: 'Hide grid',
-  },
-  canvasSettingsEnableSnapLabel: {
-    key: 'canvas.settings.enableSnapLabel',
-    fallback: 'Enable snap',
-  },
-  canvasSettingsDisableSnapLabel: {
-    key: 'canvas.settings.disableSnapLabel',
-    fallback: 'Disable snap',
   },
   canvasSettingsSectionsLabel: {
     key: 'canvas.settings.sectionsLabel',

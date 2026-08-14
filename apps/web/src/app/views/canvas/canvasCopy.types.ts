@@ -77,7 +77,6 @@ export type CanvasViewCopy = {
   readonly toolbarGridLabel: string;
   readonly toolbarGridColorLabel: string;
   readonly toolbarSnapToGridLabel: string;
-  readonly toolbarCanvasSettingsLabel: string;
   readonly canvasGraphSearchLabel: string;
   readonly canvasGraphSearchInputLabel: string;
   readonly canvasGraphSearchPlaceholder: string;
@@ -125,12 +124,6 @@ export type CanvasViewCopy = {
   readonly canvasContextMenuRemoveEdgeLabel: string;
   readonly canvasSettingsDescription: string;
   readonly canvasSettingsCloseLabel: string;
-  readonly canvasSettingsEnableLabel: string;
-  readonly canvasSettingsDisableLabel: string;
-  readonly canvasSettingsShowGridLabel: string;
-  readonly canvasSettingsHideGridLabel: string;
-  readonly canvasSettingsEnableSnapLabel: string;
-  readonly canvasSettingsDisableSnapLabel: string;
   readonly canvasSettingsSectionsLabel: string;
   readonly canvasSettingsAppearanceTabLabel: string;
   readonly canvasSettingsGridTabLabel: string;
