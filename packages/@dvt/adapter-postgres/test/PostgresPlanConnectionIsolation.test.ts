@@ -14,6 +14,24 @@ const CONNECTION_REF_A = {
 const CONNECTION_REF_B = { ...CONNECTION_REF_A, connectionId: 'warehouse-b' } as const;
 
 describe('PostgresRelationalExecutionCapability plan connection isolation', () => {
+  it('fails closed when SQL-first execution has no plan connection resolver', async () => {
+    const globalPool = createPool();
+    const capability = new PostgresRelationalExecutionCapability({
+      pool: globalPool as never,
+    });
+    const transform = capability.stepActivitiesByKind.get('POSTGRES_SQL_TRANSFORM');
+
+    await expect(
+      transform!.execute(transformStep(CONNECTION_REF_A), runtimeContext('run-without-resolver'))
+    ).resolves.toMatchObject({
+      status: 'FAILED',
+      failureReason: 'POSTGRES_PLAN_CONNECTION_RESOLVER_REQUIRED',
+      retriable: false,
+    });
+    expect(globalPool.connect).not.toHaveBeenCalled();
+    await capability.close();
+  });
+
   it('routes homonymous SQL to the connection fixed by each admitted plan', async () => {
     const poolA = createPool();
     const poolB = createPool();
