@@ -104,6 +104,10 @@ test('current schema accepts audited architecture authority retirements', () => 
 
   assert.match(
     schemaSql,
+    /architecture_design_operations_type_check[^\r\n]*'architecture_component_responsibility_retire'::text/u
+  );
+  assert.match(
+    schemaSql,
     /architecture_design_operations_type_check[^\r\n]*'architecture_test_retire'::text/u
   );
   assert.match(

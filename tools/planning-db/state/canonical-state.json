@@ -10691,6 +10691,20 @@
         "updated_at": "2026-08-14T07:46:36.358+00:00"
       },
       {
+        "design_id": "API-H2-5-RESPONSIBILITY-RETIREMENT-SCHEMA-CORRECTION-20260814",
+        "work_item_id": "GH-2341",
+        "title": "Admit responsibility retirement in current Planning DB schema",
+        "owner": "Architecture / Planning DB",
+        "status": "implemented",
+        "rationale": "Align the current declarative schema constraint with the already governed RetireArchitectureComponentResponsibility command, without migration or compatibility state.",
+        "fowler_signal": "hidden_authority",
+        "rail_ref": "RetireArchitectureComponentResponsibility",
+        "approved_at": "2026-08-14T08:40:06.606+00:00",
+        "supersedes_id": null,
+        "created_at": "2026-08-14T08:40:05.266+00:00",
+        "updated_at": "2026-08-14T08:40:53.942+00:00"
+      },
+      {
         "design_id": "API-H2-6-RESPONSIBILITY-LIFECYCLE-20260814",
         "work_item_id": "GH-2343",
         "title": "Align architecture responsibility lifecycle with component state",
@@ -15511,6 +15525,20 @@
         "recorded_at": "2026-08-14T07:46:34.272+00:00",
         "source_content_sha256": "0b7738bf4790cb51425a335acb2516cb21707164420cd1a77c8423162dd43f1a",
         "implementation_content_sha256": "c0ebb5149e755944ac44ab72669fbeb6a0716d0e21b2ee97d387377e1862289c"
+      },
+      {
+        "evidence_id": "EVIDENCE-API-H2-5-RETIREMENT-SCHEMA-LOCAL",
+        "design_id": "API-H2-5-RESPONSIBILITY-RETIREMENT-SCHEMA-CORRECTION-20260814",
+        "subject_kind": "command",
+        "subject_id": "RetireArchitectureComponentResponsibility",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/planning-db-schema.test.cjs and live PostgreSQL retirement proof",
+        "source_path": "scripts/planning-db-schema.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-14T08:40:52.253+00:00",
+        "source_content_sha256": "7a228a7e76fc202ec380a54403e4bc099b09f2f041b9935a508c07f3e68a6147",
+        "implementation_content_sha256": "cc67e136ed587cb13491b9f68b9a8a6b08fbc4b968676ef70da412159a9ba694"
       },
       {
         "evidence_id": "EVIDENCE-API-H2-6-RESPONSIBILITY-LIFECYCLE-LOCAL",
@@ -64712,6 +64740,54 @@
         "created_at": "2026-08-14T07:45:59.374+00:00"
       },
       {
+        "design_id": "API-H2-5-RESPONSIBILITY-RETIREMENT-SCHEMA-CORRECTION-20260814",
+        "subject_kind": "command",
+        "subject_id": "RetireArchitectureComponentResponsibility",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T08:40:05.266+00:00"
+      },
+      {
+        "design_id": "API-H2-5-RESPONSIBILITY-RETIREMENT-SCHEMA-CORRECTION-20260814",
+        "subject_kind": "command",
+        "subject_id": "RetireArchitectureComponentResponsibility",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-14T08:40:05.266+00:00"
+      },
+      {
+        "design_id": "API-H2-5-RESPONSIBILITY-RETIREMENT-SCHEMA-CORRECTION-20260814",
+        "subject_kind": "component",
+        "subject_id": "SYS-CI-GOVERNANCE-ROOT",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-14T08:40:05.266+00:00"
+      },
+      {
+        "design_id": "API-H2-5-RESPONSIBILITY-RETIREMENT-SCHEMA-CORRECTION-20260814",
+        "subject_kind": "evidence",
+        "subject_id": "EVIDENCE-API-H2-5-RETIREMENT-SCHEMA-LOCAL",
+        "scope_kind": "may_create",
+        "required": true,
+        "created_at": "2026-08-14T08:40:05.266+00:00"
+      },
+      {
+        "design_id": "API-H2-5-RESPONSIBILITY-RETIREMENT-SCHEMA-CORRECTION-20260814",
+        "subject_kind": "path",
+        "subject_id": "scripts/planning-db-schema.test.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T08:40:05.266+00:00"
+      },
+      {
+        "design_id": "API-H2-5-RESPONSIBILITY-RETIREMENT-SCHEMA-CORRECTION-20260814",
+        "subject_kind": "path",
+        "subject_id": "tools/planning-db/schema.sql",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T08:40:05.266+00:00"
+      },
+      {
         "design_id": "API-H2-6-RESPONSIBILITY-LIFECYCLE-20260814",
         "subject_kind": "command",
         "subject_id": "RecordArchitectureComponent",
@@ -91958,6 +92034,31 @@
         "created_at": "2026-08-13T07:55:05.285+00:00"
       },
       {
+        "operation_id": "0c8f4198-890d-4ad2-8d39-9f96a9d49c8e",
+        "idempotency_key": "architecture_evidence_record:codex:API-H2-5-RESPONSIBILITY-RETIREMENT-SCHEMA-CORRECTION-20260814:EVIDENCE-API-H2-5-RETIREMENT-SCHEMA-LOCAL:5d2a65a4af9d0e08",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-5-RESPONSIBILITY-RETIREMENT-SCHEMA-CORRECTION-20260814",
+        "source_ref": "node --test scripts/planning-db-schema.test.cjs and live PostgreSQL retirement proof",
+        "source_content_sha256": "7a228a7e76fc202ec380a54403e4bc099b09f2f041b9935a508c07f3e68a6147",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-5-RESPONSIBILITY-RETIREMENT-SCHEMA-CORRECTION-20260814",
+          "sourceRef": "node --test scripts/planning-db-schema.test.cjs and live PostgreSQL retirement proof",
+          "subjectId": "RetireArchitectureComponentResponsibility",
+          "evidenceId": "EVIDENCE-API-H2-5-RETIREMENT-SCHEMA-LOCAL",
+          "sourcePath": "scripts/planning-db-schema.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "command",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "7a228a7e76fc202ec380a54403e4bc099b09f2f041b9935a508c07f3e68a6147"
+        },
+        "created_at": "2026-08-14T08:40:52.253+00:00"
+      },
+      {
         "operation_id": "0dec3df5-80b3-4338-a403-0d279bd5577e",
         "idempotency_key": "architecture_evidence_record:codex:API-H2-4-CI-EVIDENCE-AUTHENTICITY-V2-20260811:EVIDENCE-API-H2-4-CI-EVIDENCE-AUTHENTICITY-REVIEW:fc296fb3fdcd5917",
         "operation_type": "architecture_evidence_record",
@@ -97097,6 +97198,27 @@
         "created_at": "2026-08-13T06:59:03.245+00:00"
       },
       {
+        "operation_id": "5161e9df-ade6-4e58-ba6a-e4bcf9243184",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-5-RESPONSIBILITY-RETIREMENT-SCHEMA-CORRECTION-20260814:ae0d725312dc2a82",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-5-RESPONSIBILITY-RETIREMENT-SCHEMA-CORRECTION-20260814",
+        "source_ref": "tools/planning-db/schema.sql",
+        "source_content_sha256": "d2ad1652a23b834980a7413f5cf0b680aa673b8b4c3442b599ee1b196923bcbf",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The correction adds only the governed operation type to the current declarative constraint.",
+          "designId": "API-H2-5-RESPONSIBILITY-RETIREMENT-SCHEMA-CORRECTION-20260814",
+          "toStatus": "implementing",
+          "sourceRef": "tools/planning-db/schema.sql",
+          "fromStatus": "approved",
+          "sourceContentSha256": "d2ad1652a23b834980a7413f5cf0b680aa673b8b4c3442b599ee1b196923bcbf"
+        },
+        "created_at": "2026-08-14T08:40:07.937+00:00"
+      },
+      {
         "operation_id": "51dc462a-a1f3-4e10-8a2f-0968b073281f",
         "idempotency_key": "gh-2167-validation-test-sys-api-http-runtime-route-registry-2-v1",
         "operation_type": "architecture_test_record",
@@ -98662,6 +98784,27 @@
           "sourceContentSha256": "45bf878ab2adee3163836bc159d75b55bc8251fc2c6e0b27e223481af67f1eac"
         },
         "created_at": "2026-08-13T01:35:27.229+00:00"
+      },
+      {
+        "operation_id": "5e028618-eb3e-42c4-bb9b-11decac5068b",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-5-RESPONSIBILITY-RETIREMENT-SCHEMA-CORRECTION-20260814:4010f2f892673f88",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-5-RESPONSIBILITY-RETIREMENT-SCHEMA-CORRECTION-20260814",
+        "source_ref": "tools/planning-db/schema.sql",
+        "source_content_sha256": "d2ad1652a23b834980a7413f5cf0b680aa673b8b4c3442b599ee1b196923bcbf",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The schema regression passes and the retirement command wrote its audit row successfully against real PostgreSQL.",
+          "designId": "API-H2-5-RESPONSIBILITY-RETIREMENT-SCHEMA-CORRECTION-20260814",
+          "toStatus": "implemented",
+          "sourceRef": "tools/planning-db/schema.sql",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "d2ad1652a23b834980a7413f5cf0b680aa673b8b4c3442b599ee1b196923bcbf"
+        },
+        "created_at": "2026-08-14T08:40:53.942+00:00"
       },
       {
         "operation_id": "5e446b5a-e3c1-4348-a0c4-3dee78cc5289",
@@ -101374,6 +101517,70 @@
         "created_at": "2026-08-10T21:06:22.153+00:00"
       },
       {
+        "operation_id": "803e56c4-4713-4b0b-aaa7-8b6c770658b7",
+        "idempotency_key": "architecture_design_create:codex:API-H2-5-RESPONSIBILITY-RETIREMENT-SCHEMA-CORRECTION-20260814:f652611c7e87ea0a",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "API-H2-5-RESPONSIBILITY-RETIREMENT-SCHEMA-CORRECTION-20260814",
+        "source_ref": "tools/planning-db/schema.sql",
+        "source_content_sha256": "d2ad1652a23b834980a7413f5cf0b680aa673b8b4c3442b599ee1b196923bcbf",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "Architecture / Planning DB",
+          "title": "Admit responsibility retirement in current Planning DB schema",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-CI-GOVERNANCE-ROOT",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "tools/planning-db/schema.sql",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/planning-db-schema.test.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "RetireArchitectureComponentResponsibility",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "RetireArchitectureComponentResponsibility",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_create",
+              "subjectId": "EVIDENCE-API-H2-5-RETIREMENT-SCHEMA-LOCAL",
+              "subjectKind": "evidence"
+            }
+          ],
+          "status": "review",
+          "railRef": "RetireArchitectureComponentResponsibility",
+          "designId": "API-H2-5-RESPONSIBILITY-RETIREMENT-SCHEMA-CORRECTION-20260814",
+          "rationale": "Align the current declarative schema constraint with the already governed RetireArchitectureComponentResponsibility command, without migration or compatibility state.",
+          "sourceRef": "tools/planning-db/schema.sql",
+          "workItemId": "GH-2341",
+          "fowlerSignal": "hidden_authority",
+          "supersedesId": null,
+          "sourceContentSha256": "d2ad1652a23b834980a7413f5cf0b680aa673b8b4c3442b599ee1b196923bcbf"
+        },
+        "created_at": "2026-08-14T08:40:05.266+00:00"
+      },
+      {
         "operation_id": "80adf107-1a71-4209-a74e-cf1b7d4fe0f3",
         "idempotency_key": "architecture_test_record:codex:API-H2-3-ARTIFACT-RESOLUTION-AUTHORITY-V5-20260811:SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS:70cdab1c5657d54b",
         "operation_type": "architecture_test_record",
@@ -103507,6 +103714,27 @@
           "sourceContentSha256": "811025179eb69dbf87ca21306ea93bbd8f6a1b5df2c1d1e1f4cc50181d9123b7"
         },
         "created_at": "2026-08-10T21:06:36.028+00:00"
+      },
+      {
+        "operation_id": "981ddf99-1e97-4006-939a-45bea22ea784",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-5-RESPONSIBILITY-RETIREMENT-SCHEMA-CORRECTION-20260814:dff5c304044f6870",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-5-RESPONSIBILITY-RETIREMENT-SCHEMA-CORRECTION-20260814",
+        "source_ref": "tools/planning-db/schema.sql",
+        "source_content_sha256": "d2ad1652a23b834980a7413f5cf0b680aa673b8b4c3442b599ee1b196923bcbf",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The real PostgreSQL failure and focused red test prove the current-schema mismatch.",
+          "designId": "API-H2-5-RESPONSIBILITY-RETIREMENT-SCHEMA-CORRECTION-20260814",
+          "toStatus": "approved",
+          "sourceRef": "tools/planning-db/schema.sql",
+          "fromStatus": "review",
+          "sourceContentSha256": "d2ad1652a23b834980a7413f5cf0b680aa673b8b4c3442b599ee1b196923bcbf"
+        },
+        "created_at": "2026-08-14T08:40:06.606+00:00"
       },
       {
         "operation_id": "986321c9-f334-4436-9075-a019fd7dde7b",
@@ -117848,12 +118076,19 @@
       "allowedImplementationSurfaces": [
         "scripts/planning-db-operate.cjs",
         "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
-        "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+        "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+        "scripts/planning-db-schema.test.cjs",
+        "tools/planning-db/schema.sql"
       ],
       "architectureGuards": [
-        "Only an implementing design with exact component update scope can retire a responsibility belonging to that component"
+        "Only an implementing design with exact component update scope can retire a responsibility belonging to that component",
+        "Only an implementing design with exact component update scope can retire a responsibility belonging to that component, and the current declarative schema admits its audited operation type."
       ],
-      "completionGate": ["pnpm test:planning:db", "pnpm verify:prepush"],
+      "completionGate": [
+        "pnpm test:planning:db",
+        "pnpm verify:prepush",
+        "node --test scripts/planning-db-schema.test.cjs"
+      ],
       "sourcePath": "scripts/planning-db-operate.cjs",
       "sourceContentSha256": "12afd4d0dfd344919f1490c2ff2bf1448fb35f4afefa516bb15058f9e9054728",
       "rawRail": {
@@ -117880,11 +118115,12 @@
             "dddOwner": "ArchitectureCatalog",
             "unitTests": [
               "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
-              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+              "scripts/planning-db-schema.test.cjs"
             ],
             "fowlerSignals": ["hidden_authority"],
             "cypressCoverage": "N/A - repository governance CLI",
-            "architectureGuard": "Only an implementing design with exact component update scope can retire a responsibility belonging to that component"
+            "architectureGuard": "Only an implementing design with exact component update scope can retire a responsibility belonging to that component, and the current declarative schema admits its audited operation type."
           },
           {
             "name": "validateArchitectureResponsibilityId",
@@ -117893,11 +118129,12 @@
             "dddOwner": "ArchitectureCatalog",
             "unitTests": [
               "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
-              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+              "scripts/planning-db-schema.test.cjs"
             ],
             "fowlerSignals": ["hidden_authority"],
             "cypressCoverage": "N/A - repository governance CLI",
-            "architectureGuard": "Only an implementing design with exact component update scope can retire a responsibility belonging to that component"
+            "architectureGuard": "Only an implementing design with exact component update scope can retire a responsibility belonging to that component, and the current declarative schema admits its audited operation type."
           },
           {
             "name": "assertArchitectureDesignMayImplement",
@@ -117906,11 +118143,12 @@
             "dddOwner": "ArchitectureCatalog",
             "unitTests": [
               "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
-              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+              "scripts/planning-db-schema.test.cjs"
             ],
             "fowlerSignals": ["hidden_authority"],
             "cypressCoverage": "N/A - repository governance CLI",
-            "architectureGuard": "Only an implementing design with exact component update scope can retire a responsibility belonging to that component"
+            "architectureGuard": "Only an implementing design with exact component update scope can retire a responsibility belonging to that component, and the current declarative schema admits its audited operation type."
           },
           {
             "name": "planArchitectureComponentResponsibilityRetireOperation",
@@ -117919,11 +118157,12 @@
             "dddOwner": "ArchitectureCatalog",
             "unitTests": [
               "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
-              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+              "scripts/planning-db-schema.test.cjs"
             ],
             "fowlerSignals": ["hidden_authority"],
             "cypressCoverage": "N/A - repository governance CLI",
-            "architectureGuard": "Only an implementing design with exact component update scope can retire a responsibility belonging to that component"
+            "architectureGuard": "Only an implementing design with exact component update scope can retire a responsibility belonging to that component, and the current declarative schema admits its audited operation type."
           },
           {
             "name": "readArchitectureComponentResponsibility",
@@ -117932,11 +118171,12 @@
             "dddOwner": "ArchitectureCatalog",
             "unitTests": [
               "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
-              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+              "scripts/planning-db-schema.test.cjs"
             ],
             "fowlerSignals": ["hidden_authority"],
             "cypressCoverage": "N/A - repository governance CLI",
-            "architectureGuard": "Only an implementing design with exact component update scope can retire a responsibility belonging to that component"
+            "architectureGuard": "Only an implementing design with exact component update scope can retire a responsibility belonging to that component, and the current declarative schema admits its audited operation type."
           },
           {
             "name": "writePlannedArchitectureComponentResponsibilityRetireOperation",
@@ -117945,11 +118185,12 @@
             "dddOwner": "ArchitectureCatalog",
             "unitTests": [
               "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
-              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+              "scripts/planning-db-schema.test.cjs"
             ],
             "fowlerSignals": ["hidden_authority"],
             "cypressCoverage": "N/A - repository governance CLI",
-            "architectureGuard": "Only an implementing design with exact component update scope can retire a responsibility belonging to that component"
+            "architectureGuard": "Only an implementing design with exact component update scope can retire a responsibility belonging to that component, and the current declarative schema admits its audited operation type."
           },
           {
             "name": "applyArchitectureComponentResponsibilityRetireOperation",
@@ -117958,11 +118199,12 @@
             "dddOwner": "ArchitectureCatalog",
             "unitTests": [
               "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
-              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+              "scripts/planning-db-schema.test.cjs"
             ],
             "fowlerSignals": ["hidden_authority"],
             "cypressCoverage": "N/A - repository governance CLI",
-            "architectureGuard": "Only an implementing design with exact component update scope can retire a responsibility belonging to that component"
+            "architectureGuard": "Only an implementing design with exact component update scope can retire a responsibility belonging to that component, and the current declarative schema admits its audited operation type."
           }
         ],
         "version": 1,
@@ -117971,18 +118213,24 @@
         "cypressFlows": ["N/A - repository governance CLI"],
         "domainObjects": ["ArchitectureCatalog"],
         "fowlerSignals": ["hidden_authority"],
-        "completionGate": ["pnpm test:planning:db", "pnpm verify:prepush"],
+        "completionGate": [
+          "pnpm test:planning:db",
+          "pnpm verify:prepush",
+          "node --test scripts/planning-db-schema.test.cjs"
+        ],
         "redGreenCycles": [
           {
             "id": "retirearchitecturecomponentresponsibility-record",
-            "redTest": "node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs",
-            "greenTest": "node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+            "redTest": "node --test scripts/planning-db-schema.test.cjs",
+            "greenTest": "node --test scripts/planning-db-schema.test.cjs",
             "patchSurfaces": [
               "scripts/planning-db-operate.cjs",
               "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
-              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+              "scripts/planning-db-schema.test.cjs",
+              "tools/planning-db/schema.sql"
             ],
-            "expectedFailure": "The CLI rejects retire-responsibility and exposes no planner or writer for the governed operation"
+            "expectedFailure": "The current PostgreSQL constraint rejects architecture_component_responsibility_retire audit rows."
           }
         ],
         "componentGuides": [
@@ -118012,7 +118260,8 @@
           }
         ],
         "architectureGuards": [
-          "Only an implementing design with exact component update scope can retire a responsibility belonging to that component"
+          "Only an implementing design with exact component update scope can retire a responsibility belonging to that component",
+          "Only an implementing design with exact component update scope can retire a responsibility belonging to that component, and the current declarative schema admits its audited operation type."
         ],
         "implementationPlan": "https://github.com/dunay2/dvt/issues/2341",
         "mechanizationStatus": "implemented",
@@ -118020,7 +118269,9 @@
         "allowedImplementationSurfaces": [
           "scripts/planning-db-operate.cjs",
           "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
-          "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+          "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+          "scripts/planning-db-schema.test.cjs",
+          "tools/planning-db/schema.sql"
         ],
         "forbiddenImplementationSurfaces": [
           "apps/**",
@@ -118028,7 +118279,7 @@
           "docs/planning/proposals/mandatory/**"
         ]
       },
-      "revision": 0,
+      "revision": 1,
       "createdBy": "codex",
       "createdAt": "2026-08-14T07:46:21.766Z"
     },
@@ -202700,6 +202951,94 @@
         ]
       },
       "createdAt": "2026-08-14T08:14:59.163Z"
+    },
+    {
+      "operationId": "6c4e5df2-63f6-40d1-92eb-13198c4add24",
+      "idempotencyKey": "codex-2341-responsibility-retirement-schema",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#API-H2-5-ARCHITECTURE-RESPONSIBILITY-RETIREMENT#command#retirearchitecturecomponentresponsibility",
+      "sourcePath": "scripts/planning-db-operate.cjs",
+      "sourceContentSha256": "12afd4d0dfd344919f1490c2ff2bf1448fb35f4afefa516bb15058f9e9054728",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "node --test scripts/planning-db-schema.test.cjs",
+        "dddOwner": "ArchitectureCatalog",
+        "railName": "RetireArchitectureComponentResponsibility",
+        "railType": "command",
+        "featureId": "API-H2-5-ARCHITECTURE-RESPONSIBILITY-RETIREMENT",
+        "greenTest": "node --test scripts/planning-db-schema.test.cjs",
+        "sourceRef": "scripts/planning-db-operate.cjs",
+        "unitTests": [
+          "scripts/planning-db-schema.test.cjs",
+          "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+          "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2341"],
+        "cypressFlows": ["N/A - repository governance CLI"],
+        "domainObjects": ["ArchitectureCatalog"],
+        "fowlerSignals": ["hidden_authority"],
+        "negativeTests": [
+          "Reject missing component update scope",
+          "Reject a responsibility owned by another component",
+          "Reject an unknown responsibility",
+          "Reject an idempotency replay with different payload or source hash"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "scripts/planning-db-operate.cjs",
+        "completionGate": [
+          "node --test scripts/planning-db-schema.test.cjs",
+          "pnpm test:planning:db",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "planning:db:operate architecture-component retire-responsibility",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "The current PostgreSQL constraint rejects architecture_component_responsibility_retire audit rows.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": ["https://github.com/dunay2/dvt/issues/2341"],
+        "architectureGuards": [
+          "Only an implementing design with exact component update scope can retire a responsibility belonging to that component, and the current declarative schema admits its audited operation type."
+        ],
+        "authorizationScope": "Exact component:<id>:may_update design scope, explicit actor, source hash, and idempotency key",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2341",
+        "implementationRefs": [
+          "scripts/planning-db-operate.cjs#parseArchitectureComponentCommand",
+          "scripts/planning-db-operate.cjs#validateArchitectureResponsibilityId",
+          "scripts/planning-db-operate.cjs#assertArchitectureDesignMayImplement",
+          "scripts/planning-db-operate.cjs#planArchitectureComponentResponsibilityRetireOperation",
+          "scripts/planning-db-operate.cjs#readArchitectureComponentResponsibility",
+          "scripts/planning-db-operate.cjs#writePlannedArchitectureComponentResponsibilityRetireOperation",
+          "scripts/planning-db-operate.cjs#applyArchitectureComponentResponsibilityRetireOperation"
+        ],
+        "normalizedRailName": "retirearchitecturecomponentresponsibility",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "12afd4d0dfd344919f1490c2ff2bf1448fb35f4afefa516bb15058f9e9054728",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-operate.cjs",
+          "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+          "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+          "scripts/planning-db-schema.test.cjs",
+          "tools/planning-db/schema.sql"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/**",
+          "packages/**",
+          "docs/planning/proposals/mandatory/**"
+        ]
+      },
+      "createdAt": "2026-08-14T08:40:39.836Z"
     }
   ],
   "governanceComponentDefinitions": [
