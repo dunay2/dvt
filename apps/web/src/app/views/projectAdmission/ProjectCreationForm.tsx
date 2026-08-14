@@ -253,6 +253,7 @@ export function ProjectCreationForm({
               <select
                 className="h-9 w-full rounded-md border border-(--border-default) bg-(--surface-route) px-3 text-sm text-(--text-default) outline-none focus:border-(--focus-ring)"
                 name="tenantId"
+                disabled={controller.submissionState === 'submitting'}
                 onChange={(event) => controller.setSelectedTenantId(event.target.value)}
                 value={controller.selectedTenantId}
               >
@@ -270,6 +271,7 @@ export function ProjectCreationForm({
               autoFocus={autoFocusProjectName}
               className="h-9 w-full rounded-md border border-(--border-default) bg-(--surface-route) px-3 text-sm text-(--text-default) outline-none placeholder:text-(--text-disabled) focus:border-(--focus-ring)"
               name="projectName"
+              disabled={controller.submissionState === 'submitting'}
               onChange={(event) => controller.setProjectName(event.target.value)}
               placeholder={copy.projectNamePlaceholder}
               value={controller.projectName}
