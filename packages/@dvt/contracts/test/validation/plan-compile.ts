@@ -7,16 +7,23 @@ import {
   parsePlanCompileResponse,
 } from '../../src/validation.js';
 
+const POSTGRES_CONNECTION_REF = {
+  schemaVersion: 'connection-ref.v1',
+  connectionId: 'warehouse-a',
+  provider: 'postgres',
+} as const;
+
 const TRANSFORMATION_GRAPH_SOURCE = {
   kind: 'generic-graph-v1',
   sourceFamily: 'transformation-design-graph',
-  sourceVersion: 'transformation-sql-first-v1',
+  sourceVersion: 'transformation-sql-first-v2',
   nodes: [
     {
       nodeId: 'source-1',
       stepKind: 'PREPARE_POSTGRES_TRANSFORM',
       dependsOn: [],
       stepTypeConfig: {
+        connectionRef: POSTGRES_CONNECTION_REF,
         targetSchema: 'analytics',
         sourceSchema: 'raw',
         sourceTable: 'orders',
@@ -28,6 +35,7 @@ const TRANSFORMATION_GRAPH_SOURCE = {
       stepKind: 'POSTGRES_SQL_TRANSFORM',
       dependsOn: ['source-1'],
       stepTypeConfig: {
+        connectionRef: POSTGRES_CONNECTION_REF,
         dialect: 'postgres',
         entrypoint: 'models/orders.sql',
         sql: 'select * from raw.orders',
@@ -52,6 +60,7 @@ const TRANSFORMATION_GRAPH_SOURCE = {
       stepKind: 'CAPTURE_MATERIALIZATION_EVIDENCE',
       dependsOn: ['transform-1'],
       stepTypeConfig: {
+        connectionRef: POSTGRES_CONNECTION_REF,
         sinkSchema: 'analytics',
         sinkTable: 'orders_daily',
         materialization: 'table',

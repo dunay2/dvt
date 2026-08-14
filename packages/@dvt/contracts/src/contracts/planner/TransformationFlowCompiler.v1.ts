@@ -56,7 +56,7 @@ export type { TransformationStepKind } from './TransformationFlowStepKinds.v1.js
 
 export type TransformationCompilerGraphNodeV1 = GenericGraphNodeV1;
 
-export interface TransformationSqlFirstCompilerGraphSourceV1 extends Omit<
+export interface TransformationSqlFirstCompilerGraphSourceV2 extends Omit<
   GenericGraphSourceV1,
   'sourceFamily' | 'sourceVersion'
 > {
@@ -141,7 +141,7 @@ export const TransformationSqlFirstCompilerGraphSourceSchema = z
         code: z.ZodIssueCode.custom,
         path: ['nodes'],
         message:
-          'transformation-sql-first-v1 requires exactly one prepare, one transform, and one evidence node.',
+          'transformation-sql-first-v2 requires exactly one prepare, one transform, and one evidence node.',
       });
       return;
     }
@@ -149,6 +149,28 @@ export const TransformationSqlFirstCompilerGraphSourceSchema = z
     const prepareConfig = prepareNode.stepTypeConfig;
     const transformConfig = transformNode.stepTypeConfig;
     const captureConfig = captureNode.stepTypeConfig;
+
+    const connectionRefs = [
+      prepareConfig.connectionRef,
+      transformConfig.connectionRef,
+      captureConfig.connectionRef,
+    ];
+    const [connectionRef, ...remainingConnectionRefs] = connectionRefs;
+    if (
+      connectionRef === undefined ||
+      remainingConnectionRefs.some(
+        (candidate) =>
+          candidate.schemaVersion !== connectionRef.schemaVersion ||
+          candidate.connectionId !== connectionRef.connectionId ||
+          candidate.provider !== connectionRef.provider
+      )
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['nodes'],
+        message: 'All SQL-first transformation steps must use the same ConnectionRef.',
+      });
+    }
 
     if (transformNode.dependsOn.length !== 1 || transformNode.dependsOn[0] !== prepareNode.nodeId) {
       ctx.addIssue({

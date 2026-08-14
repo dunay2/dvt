@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { isNonBlankString, NON_BLANK_STRING_MESSAGE } from '../../utils/contractPrimitives.js';
+import { ConnectionRefSchema, type ConnectionRef } from '../source-import/ConnectedSourceRef.v1.js';
 
 import { GitArtifactRefSchema, type GitArtifactRef } from './PlanPreviewProvenance.v1.js';
 
@@ -12,7 +13,16 @@ const NonBlankStringSchema = z
   })
   .brand<'NonBlankString'>();
 
+export const PostgresConnectionRefSchema = ConnectionRefSchema.refine(
+  (connectionRef) => connectionRef.provider === 'postgres',
+  {
+    message: 'SQL-first transformation steps require provider postgres.',
+    path: ['provider'],
+  }
+);
+
 export interface PreparePostgresTransformStepTypeConfig {
+  connectionRef: ConnectionRef;
   targetSchema: string;
   sourceSchema: string;
   sourceTable: string;
@@ -20,6 +30,7 @@ export interface PreparePostgresTransformStepTypeConfig {
 }
 
 export interface PostgresSqlTransformStepTypeConfig {
+  connectionRef: ConnectionRef;
   dialect: 'postgres';
   entrypoint: string;
   sql: string;
@@ -34,6 +45,7 @@ export interface PostgresSqlTransformStepTypeConfig {
 }
 
 export interface CaptureMaterializationEvidenceStepTypeConfig {
+  connectionRef: ConnectionRef;
   sinkSchema: string;
   sinkTable: string;
   materialization: 'table' | 'view';
@@ -42,6 +54,7 @@ export interface CaptureMaterializationEvidenceStepTypeConfig {
 
 export const PreparePostgresTransformStepTypeConfigSchema = z
   .object({
+    connectionRef: PostgresConnectionRefSchema,
     targetSchema: NonBlankStringSchema,
     sourceSchema: NonBlankStringSchema,
     sourceTable: NonBlankStringSchema,
@@ -51,6 +64,7 @@ export const PreparePostgresTransformStepTypeConfigSchema = z
 
 export const PostgresSqlTransformStepTypeConfigSchema = z
   .object({
+    connectionRef: PostgresConnectionRefSchema,
     dialect: z.literal('postgres'),
     entrypoint: NonBlankStringSchema,
     sql: NonBlankStringSchema,
@@ -67,6 +81,7 @@ export const PostgresSqlTransformStepTypeConfigSchema = z
 
 export const CaptureMaterializationEvidenceStepTypeConfigSchema = z
   .object({
+    connectionRef: PostgresConnectionRefSchema,
     sinkSchema: NonBlankStringSchema,
     sinkTable: NonBlankStringSchema,
     materialization: z.enum(['table', 'view']),

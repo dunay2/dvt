@@ -11,6 +11,8 @@ import {
   SHA256_HEX_STRING_MESSAGE,
   STRICT_ISO_UTC_STRING_MESSAGE,
 } from '../../utils/contractPrimitives.js';
+import { ConnectionRefSchema } from '../source-import/ConnectedSourceRef.v1.js';
+import { PostgresCredentialRefSchema } from '../source-import/SourceImportOperations.v1.js';
 
 const NonBlankStringSchema = z
   .string()
@@ -55,7 +57,18 @@ export const DbtProjectBundleRefSchema = z
   })
   .strict();
 
-export const PluginContextValueSchema = z.union([NonBlankStringSchema, DbtProjectBundleRefSchema]);
+const PostgresConnectionRefSchema = ConnectionRefSchema.refine(
+  (connectionRef) => connectionRef.provider === 'postgres',
+  {
+    message: 'PostgreSQL runtime context requires provider postgres.',
+    path: ['provider'],
+  }
+);
+export const PluginContextValueSchema = z.union([
+  NonBlankStringSchema,
+  DbtProjectBundleRefSchema,
+  ConnectionRefSchema,
+]);
 export const GenericPluginContextSchema = z
   .record(z.string().min(1), PluginContextValueSchema)
   .refine((ctx) => Object.keys(ctx).length > 0, 'Plugin context must include at least one key');
@@ -67,6 +80,13 @@ export const DbtPluginContextSchema = z
   })
   .strict();
 export type DbtPluginContextSchemaT = z.infer<typeof DbtPluginContextSchema>;
+export const PostgresPluginContextSchema = z
+  .object({
+    connectionRef: PostgresConnectionRefSchema,
+    credentialRef: PostgresCredentialRefSchema,
+  })
+  .strict();
+export type PostgresPluginContextSchemaT = z.infer<typeof PostgresPluginContextSchema>;
 
 export const RunExecutionContextRefSchema = z
   .object({
@@ -96,24 +116,38 @@ export const RunExecutionContextSchema = z
   })
   .superRefine((input, ctx) => {
     const dbtContext = input.pluginContexts['dbt'];
-    if (dbtContext === undefined) {
-      return;
+    if (dbtContext !== undefined) {
+      addPluginContextIssues('dbt', DbtPluginContextSchema.safeParse(dbtContext), ctx);
     }
 
-    const result = DbtPluginContextSchema.safeParse(dbtContext);
-    if (result.success) {
-      return;
-    }
-
-    for (const issue of result.error.issues) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: issue.message,
-        path: ['pluginContexts', 'dbt', ...issue.path],
-      });
+    const postgresContext = input.pluginContexts['postgres'];
+    if (postgresContext !== undefined) {
+      addPluginContextIssues(
+        'postgres',
+        PostgresPluginContextSchema.safeParse(postgresContext),
+        ctx
+      );
     }
   })
   .strict();
+
+function addPluginContextIssues(
+  contextKey: string,
+  result: z.ZodSafeParseResult<unknown>,
+  ctx: z.RefinementCtx
+): void {
+  if (result.success) {
+    return;
+  }
+
+  for (const issue of result.error.issues) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: issue.message,
+      path: ['pluginContexts', contextKey, ...issue.path],
+    });
+  }
+}
 
 export function getDbtProjectBundleLocatorValidationError(
   uri: string,
