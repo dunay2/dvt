@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
 import {
@@ -116,4 +117,15 @@ test('fails closed for inconsistent metrics and invalid canonical JSON', () => {
     () => countCanonicalRecordChanges(null, canonicalState()),
     /canonical Planning DB state must be an object/
   );
+});
+
+test('the PR workflow supplies exact base and head refs to the size policy', () => {
+  const workflow = readFileSync(
+    new URL('../../.github/workflows/pr-quality-gate.yml', import.meta.url),
+    'utf8'
+  );
+  const sizeStep = workflow.match(/- name: Check PR size[\s\S]*?(?=\n\s+- name:)/u)?.[0] ?? '';
+
+  assert.match(sizeStep, /GIT_BASE: \$\{\{ github\.event\.pull_request\.base\.sha \}\}/u);
+  assert.match(sizeStep, /GIT_HEAD: \$\{\{ github\.event\.pull_request\.head\.sha \}\}/u);
 });
