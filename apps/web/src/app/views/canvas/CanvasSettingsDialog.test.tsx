@@ -43,10 +43,13 @@ describe('CanvasSettingsDialog', () => {
           columnLevelLineageEnabled={false}
           canUseCostOverlay
           costOverlayEnabled={false}
+          gridSize={20}
+          canvasPalette="#101826"
           canvasGridVisible
           canvasGridColor="#101826"
           canvasSnapToGrid={false}
           canvasEmptyStateGuideVisible
+          canAutoLayout={false}
           copy={copy}
           onToggleImpact={vi.fn()}
           onToggleColumns={vi.fn()}
@@ -55,6 +58,9 @@ describe('CanvasSettingsDialog', () => {
           onGridColorChange={vi.fn()}
           onToggleSnapToGrid={vi.fn()}
           onSetCanvasEmptyStateGuideVisible={vi.fn()}
+          onGridSizeChange={vi.fn()}
+          onCanvasPaletteChange={vi.fn()}
+          onAutoLayout={vi.fn()}
           onRestoreFocus={() => focusReturnTarget.focus()}
           onClose={() => {
             onClose();
@@ -69,11 +75,11 @@ describe('CanvasSettingsDialog', () => {
 
     const dialog = document.body.querySelector<HTMLElement>('[data-slot="canvas-settings-dialog"]');
     expect(dialog).not.toBeNull();
-    expect(dialog?.textContent).toContain('Configuración de canvas');
+    expect(dialog?.textContent).toContain('Propiedades del canvas');
     expect(dialog?.textContent).toContain('Preferencias de visualización del grafo');
     expect(
-      dialog?.querySelector('[data-slot="canvas-settings-close-command"]')?.textContent
-    ).toContain('Cerrar configuración de canvas');
+      dialog?.querySelector('[data-slot="workbench-properties-cancel"]')?.textContent
+    ).toContain('Cancelar');
     await waitFor(() => expect(dialog?.contains(document.activeElement)).toBe(true));
 
     await act(async () => {
@@ -84,6 +90,143 @@ describe('CanvasSettingsDialog', () => {
       expect(document.body.querySelector('[data-slot="canvas-settings-dialog"]')).toBeNull();
       expect(document.activeElement).toBe(focusReturnTarget);
     });
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('buffers tabbed Canvas changes and applies only the changed rails', async () => {
+    const onToggleImpact = vi.fn();
+    const onToggleColumns = vi.fn();
+    const onToggleCostOverlay = vi.fn();
+    const onToggleGridVisible = vi.fn();
+    const onGridColorChange = vi.fn();
+    const onToggleSnapToGrid = vi.fn();
+    const onSetCanvasEmptyStateGuideVisible = vi.fn();
+    const onGridSizeChange = vi.fn();
+    const onCanvasPaletteChange = vi.fn();
+    const onAutoLayout = vi.fn();
+    const onClose = vi.fn();
+
+    await act(async () => {
+      root.render(
+        <CanvasSettingsDialog
+          open
+          impactOverlayEnabled={false}
+          columnLevelLineageEnabled={false}
+          canUseCostOverlay
+          costOverlayEnabled={false}
+          gridSize={20}
+          canvasPalette="#101826"
+          canvasGridVisible
+          canvasGridColor="#94a3b8"
+          canvasSnapToGrid={false}
+          canvasEmptyStateGuideVisible
+          canAutoLayout
+          onToggleImpact={onToggleImpact}
+          onToggleColumns={onToggleColumns}
+          onToggleCostOverlay={onToggleCostOverlay}
+          onGridSizeChange={onGridSizeChange}
+          onCanvasPaletteChange={onCanvasPaletteChange}
+          onToggleGridVisible={onToggleGridVisible}
+          onGridColorChange={onGridColorChange}
+          onToggleSnapToGrid={onToggleSnapToGrid}
+          onSetCanvasEmptyStateGuideVisible={onSetCanvasEmptyStateGuideVisible}
+          onAutoLayout={onAutoLayout}
+          onClose={onClose}
+        />
+      );
+    });
+
+    const dialog = document.body.querySelector<HTMLElement>('[data-slot="canvas-settings-dialog"]');
+    expect(dialog?.querySelectorAll('[role="tab"]')).toHaveLength(3);
+
+    const impactSwitch = dialog?.querySelector<HTMLButtonElement>(
+      '[data-slot="canvas-properties-impact"]'
+    );
+    const backgroundInput = dialog?.querySelector<HTMLInputElement>(
+      '[data-slot="canvas-properties-background-input"]'
+    );
+    const layoutTab = [...(dialog?.querySelectorAll<HTMLButtonElement>('[role="tab"]') ?? [])].find(
+      (tab) => tab.textContent === 'Layout'
+    );
+
+    await act(async () => {
+      fireEvent.click(impactSwitch!);
+      fireEvent.change(backgroundInput!, { target: { value: '#223344' } });
+      fireEvent.mouseDown(layoutTab!, { button: 0, ctrlKey: false });
+    });
+
+    const autoLayoutSwitch = dialog?.querySelector<HTMLButtonElement>(
+      '[data-slot="canvas-properties-auto-layout"]'
+    );
+    await act(async () => fireEvent.click(autoLayoutSwitch!));
+    await act(async () =>
+      fireEvent.click(
+        dialog?.querySelector<HTMLButtonElement>('[data-slot="workbench-properties-apply"]')!
+      )
+    );
+
+    expect(onToggleImpact).toHaveBeenCalledTimes(1);
+    expect(onCanvasPaletteChange).toHaveBeenCalledWith('#223344');
+    expect(onAutoLayout).toHaveBeenCalledTimes(1);
+    expect(onToggleColumns).not.toHaveBeenCalled();
+    expect(onToggleCostOverlay).not.toHaveBeenCalled();
+    expect(onToggleGridVisible).not.toHaveBeenCalled();
+    expect(onGridColorChange).not.toHaveBeenCalled();
+    expect(onToggleSnapToGrid).not.toHaveBeenCalled();
+    expect(onSetCanvasEmptyStateGuideVisible).not.toHaveBeenCalled();
+    expect(onGridSizeChange).not.toHaveBeenCalled();
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('discards buffered changes when Cancel closes the properties window', async () => {
+    const onToggleImpact = vi.fn();
+    const onCanvasPaletteChange = vi.fn();
+    const onClose = vi.fn();
+
+    await act(async () => {
+      root.render(
+        <CanvasSettingsDialog
+          open
+          impactOverlayEnabled={false}
+          columnLevelLineageEnabled={false}
+          canUseCostOverlay={false}
+          costOverlayEnabled={false}
+          gridSize={20}
+          canvasPalette="#101826"
+          canvasGridVisible
+          canvasGridColor="#94a3b8"
+          canvasSnapToGrid={false}
+          canvasEmptyStateGuideVisible
+          canAutoLayout={false}
+          onToggleImpact={onToggleImpact}
+          onToggleColumns={vi.fn()}
+          onToggleCostOverlay={vi.fn()}
+          onGridSizeChange={vi.fn()}
+          onCanvasPaletteChange={onCanvasPaletteChange}
+          onToggleGridVisible={vi.fn()}
+          onGridColorChange={vi.fn()}
+          onToggleSnapToGrid={vi.fn()}
+          onSetCanvasEmptyStateGuideVisible={vi.fn()}
+          onAutoLayout={vi.fn()}
+          onClose={onClose}
+        />
+      );
+    });
+
+    const dialog = document.body.querySelector<HTMLElement>('[data-slot="canvas-settings-dialog"]');
+    await act(async () =>
+      fireEvent.click(
+        dialog?.querySelector<HTMLButtonElement>('[data-slot="canvas-properties-impact"]')!
+      )
+    );
+    await act(async () =>
+      fireEvent.click(
+        dialog?.querySelector<HTMLButtonElement>('[data-slot="workbench-properties-cancel"]')!
+      )
+    );
+
+    expect(onToggleImpact).not.toHaveBeenCalled();
+    expect(onCanvasPaletteChange).not.toHaveBeenCalled();
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 });

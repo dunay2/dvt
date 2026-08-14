@@ -183,6 +183,8 @@ function buildCanvasInteractionViewModel(args: CanvasControllerViewModelArgs) {
     handleToggleCostOverlay: overlayModel.handleToggleCostOverlay,
     toggleImpactOverlay: store.toggleImpactOverlay,
     toggleColumnLevelLineage: store.toggleColumnLevelLineage,
+    setGridSize: store.setGridSize,
+    setCanvasPalette: store.setCanvasPalette,
     setCanvasGridVisible: store.setCanvasGridVisible,
     setCanvasGridColor: store.setCanvasGridColor,
     setCanvasSnapToGrid: store.setCanvasSnapToGrid,

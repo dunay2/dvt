@@ -14,6 +14,8 @@ export function buildCanvasShellChromeCommands({
     onToggleCostOverlay: chromeCommands.handleToggleCostOverlay,
     onToggleImpact: chromeCommands.toggleImpactOverlay,
     onToggleColumns: chromeCommands.toggleColumnLevelLineage,
+    onGridSizeChange: chromeCommands.setGridSize,
+    onCanvasPaletteChange: chromeCommands.setCanvasPalette,
     onToggleGridVisible: () => {
       chromeCommands.setCanvasGridVisible(!chromeCommands.canvasGridVisible);
     },

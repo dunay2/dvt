@@ -131,6 +131,17 @@ export type CanvasViewCopy = {
   readonly canvasSettingsHideGridLabel: string;
   readonly canvasSettingsEnableSnapLabel: string;
   readonly canvasSettingsDisableSnapLabel: string;
+  readonly canvasSettingsSectionsLabel: string;
+  readonly canvasSettingsAppearanceTabLabel: string;
+  readonly canvasSettingsGridTabLabel: string;
+  readonly canvasSettingsLayoutTabLabel: string;
+  readonly canvasSettingsBackgroundLabel: string;
+  readonly canvasSettingsBackgroundInputLabel: string;
+  readonly canvasSettingsGridSizeLabel: string;
+  readonly canvasSettingsResetGridLabel: string;
+  readonly canvasSettingsAutoLayoutLabel: string;
+  readonly canvasSettingsCancelLabel: string;
+  readonly canvasSettingsApplyLabel: string;
   readonly canvasNodePortTargetLabel: string;
   readonly canvasNodePortSourceLabel: string;
   readonly canvasNodePortCompatibleWithPrefix: string;

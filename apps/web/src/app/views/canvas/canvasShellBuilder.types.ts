@@ -142,6 +142,8 @@ export type CanvasShellChromeCommandsBuilderArgs = Readonly<{
     | 'handleToggleCostOverlay'
     | 'toggleImpactOverlay'
     | 'toggleColumnLevelLineage'
+    | 'setGridSize'
+    | 'setCanvasPalette'
     | 'canvasGridVisible'
     | 'canvasSnapToGrid'
     | 'setCanvasGridVisible'

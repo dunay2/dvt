@@ -217,7 +217,7 @@ export const canvasViewToolbarCopyByKey = {
   },
   canvasContextMenuCanvasSettingsLabel: {
     key: 'canvas.contextMenu.canvasSettingsLabel',
-    fallback: 'Canvas settings',
+    fallback: 'Canvas properties',
   },
   canvasContextMenuRemoveEdgeLabel: {
     key: 'canvas.contextMenu.removeEdgeLabel',
@@ -254,6 +254,50 @@ export const canvasViewToolbarCopyByKey = {
   canvasSettingsDisableSnapLabel: {
     key: 'canvas.settings.disableSnapLabel',
     fallback: 'Disable snap',
+  },
+  canvasSettingsSectionsLabel: {
+    key: 'canvas.settings.sectionsLabel',
+    fallback: 'Canvas property sections',
+  },
+  canvasSettingsAppearanceTabLabel: {
+    key: 'canvas.settings.appearanceTabLabel',
+    fallback: 'Appearance',
+  },
+  canvasSettingsGridTabLabel: {
+    key: 'canvas.settings.gridTabLabel',
+    fallback: 'Grid',
+  },
+  canvasSettingsLayoutTabLabel: {
+    key: 'canvas.settings.layoutTabLabel',
+    fallback: 'Layout',
+  },
+  canvasSettingsBackgroundLabel: {
+    key: 'canvas.settings.backgroundLabel',
+    fallback: 'Canvas background',
+  },
+  canvasSettingsBackgroundInputLabel: {
+    key: 'canvas.settings.backgroundInputLabel',
+    fallback: 'Canvas background hex value',
+  },
+  canvasSettingsGridSizeLabel: {
+    key: 'canvas.settings.gridSizeLabel',
+    fallback: 'Grid size',
+  },
+  canvasSettingsResetGridLabel: {
+    key: 'canvas.settings.resetGridLabel',
+    fallback: 'Restore grid defaults',
+  },
+  canvasSettingsAutoLayoutLabel: {
+    key: 'canvas.settings.autoLayoutLabel',
+    fallback: 'Apply automatic layout',
+  },
+  canvasSettingsCancelLabel: {
+    key: 'canvas.settings.cancelLabel',
+    fallback: 'Cancel',
+  },
+  canvasSettingsApplyLabel: {
+    key: 'canvas.settings.applyLabel',
+    fallback: 'Apply',
   },
   canvasNodePortTargetLabel: {
     key: 'canvas.nodePort.targetLabel',

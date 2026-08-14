@@ -365,17 +365,23 @@ export default function CanvasShell({
         columnLevelLineageEnabled={chromeState.columnLevelLineageEnabled}
         canUseCostOverlay={chromeState.canUseCostOverlay}
         costOverlayEnabled={chromeState.exclusiveOverlayMode === 'cost'}
+        gridSize={graph.gridSize}
+        canvasPalette={graph.canvasPalette}
         canvasGridVisible={graph.canvasGridVisible}
         canvasGridColor={graph.canvasGridColor}
         canvasSnapToGrid={graph.canvasSnapToGrid}
         canvasEmptyStateGuideVisible={graph.canvasEmptyStateGuideVisible}
+        canAutoLayout={panels.userPermissions.canEditEdges}
         onToggleImpact={chromeCommands.onToggleImpact}
         onToggleColumns={chromeCommands.onToggleColumns}
         onToggleCostOverlay={chromeCommands.onToggleCostOverlay}
+        onGridSizeChange={chromeCommands.onGridSizeChange}
+        onCanvasPaletteChange={chromeCommands.onCanvasPaletteChange}
         onToggleGridVisible={chromeCommands.onToggleGridVisible}
         onGridColorChange={chromeCommands.onGridColorChange}
         onToggleSnapToGrid={chromeCommands.onToggleSnapToGrid}
         onSetCanvasEmptyStateGuideVisible={chromeCommands.onSetCanvasEmptyStateGuideVisible}
+        onAutoLayout={chromeCommands.onAutoLayout}
         onRestoreFocus={contextMenuPresenter.restoreContextMenuOpenerFocus}
         onClose={() => setCanvasSettingsOpen(false)}
       />

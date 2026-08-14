@@ -302,6 +302,8 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
   | 'handleToggleCostOverlay'
   | 'toggleImpactOverlay'
   | 'toggleColumnLevelLineage'
+  | 'setGridSize'
+  | 'setCanvasPalette'
   | 'setCanvasGridVisible'
   | 'setCanvasGridColor'
   | 'setCanvasSnapToGrid'
@@ -345,6 +347,8 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
     handleToggleCostOverlay: vi.fn(),
     toggleImpactOverlay: vi.fn(),
     toggleColumnLevelLineage: vi.fn(),
+    setGridSize: vi.fn(),
+    setCanvasPalette: vi.fn(),
     setCanvasGridVisible: vi.fn(),
     setCanvasGridColor: vi.fn(),
     setCanvasSnapToGrid: vi.fn(),

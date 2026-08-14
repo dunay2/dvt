@@ -28,6 +28,7 @@ type WorkbenchPropertiesWindowProps = Readonly<{
   cancelLabel: string;
   applyLabel: string;
   sections: readonly WorkbenchPropertiesSection[];
+  dataSlot?: string;
   applyDisabled?: boolean;
   onCancel: () => void;
   onApply: () => void;
@@ -43,6 +44,7 @@ export function WorkbenchPropertiesWindow({
   cancelLabel,
   applyLabel,
   sections,
+  dataSlot = 'workbench-properties-window',
   applyDisabled = false,
   onCancel,
   onApply,
@@ -60,7 +62,7 @@ export function WorkbenchPropertiesWindow({
       }}
     >
       <DialogContent
-        data-slot="workbench-properties-window"
+        data-slot={dataSlot}
         closeLabel={closeLabel}
         className="max-h-[min(48rem,calc(100vh-2rem))] max-w-2xl gap-0 overflow-hidden border-(--border-default) bg-(--surface-panel) p-0 text-(--text-default)"
         onCloseAutoFocus={(event) => {
@@ -97,10 +99,7 @@ export function WorkbenchPropertiesWindow({
                 </TabsTrigger>
               ))}
             </TabsList>
-            <div
-              data-slot="workbench-properties-body"
-              className="min-h-0 flex-1 overflow-y-auto"
-            >
+            <div data-slot="workbench-properties-body" className="min-h-0 flex-1 overflow-y-auto">
               {sections.map((section) => (
                 <TabsContent key={section.id} value={section.id} className="m-0 p-5">
                   {section.content}
@@ -115,11 +114,7 @@ export function WorkbenchPropertiesWindow({
           className="shrink-0 border-t border-(--border-muted) bg-(--surface-panel-subtle) px-5 py-3"
         >
           <DialogClose asChild>
-            <Button
-              type="button"
-              data-slot="workbench-properties-cancel"
-              variant="outline"
-            >
+            <Button type="button" data-slot="workbench-properties-cancel" variant="outline">
               {cancelLabel}
             </Button>
           </DialogClose>
