@@ -5,6 +5,7 @@ import {
   RunExecutionContextSchema,
   TransformationSqlFirstCompilerGraphSourceSchema,
   type ConnectionRef,
+  type TransformationSqlFirstCompilerGraphSourceV2,
 } from '../src/index.js';
 
 const connectionA = {
@@ -13,7 +14,9 @@ const connectionA = {
   provider: 'postgres',
 } as const;
 
-function graphSource(connectionRef: ConnectionRef = connectionA) {
+function graphSource(
+  connectionRef: ConnectionRef = connectionA
+): TransformationSqlFirstCompilerGraphSourceV2 {
   return {
     kind: 'generic-graph-v1',
     sourceFamily: 'transformation-design-graph',

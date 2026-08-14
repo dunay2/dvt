@@ -1,9 +1,11 @@
+import type { ExecutionPlan } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
   PostgresPlanConnectionRejectedError,
   PostgresRelationalExecutionCapability,
   type PostgresPlanConnection,
+  type RuntimeStepExecutionContext,
 } from '../src/index.js';
 
 const CONNECTION_REF_A = {
@@ -116,7 +118,9 @@ function createPool(): {
   };
 }
 
-function transformStep(connectionRef: typeof CONNECTION_REF_A | typeof CONNECTION_REF_B) {
+function transformStep(
+  connectionRef: typeof CONNECTION_REF_A | typeof CONNECTION_REF_B
+): ExecutionPlan['steps'][number] {
   return {
     stepId: 'transform-orders',
     kind: 'POSTGRES_SQL_TRANSFORM',
@@ -144,7 +148,7 @@ function transformStep(connectionRef: typeof CONNECTION_REF_A | typeof CONNECTIO
   };
 }
 
-function runtimeContext(runId: string) {
+function runtimeContext(runId: string): RuntimeStepExecutionContext {
   return {
     executionIdentity: { tenantId: 'tenant-a', environmentId: 'prod', runId },
     runContext: {

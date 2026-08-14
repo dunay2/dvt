@@ -1,7 +1,10 @@
 import { Client } from 'pg';
 import { afterAll, describe, expect, it } from 'vitest';
 
-import { PostgresRelationalExecutionCapability } from '../src/index.js';
+import {
+  PostgresRelationalExecutionCapability,
+  type IPostgresPlanConnectionResolver,
+} from '../src/index.js';
 import { quoteIdentifier } from '../src/sqlUtils.js';
 
 const runIntegration = process.env.DVT_PG_INTEGRATION === '1';
@@ -70,7 +73,7 @@ function resolveIntegrationConnectionString(): string {
   return connectionString;
 }
 
-function createIntegrationPlanConnectionResolver() {
+function createIntegrationPlanConnectionResolver(): IPostgresPlanConnectionResolver {
   return {
     async resolveConnection() {
       return {
