@@ -28,6 +28,7 @@ evidence:
     - pnpm --filter @dvt/web lint
     - pnpm --filter @dvt/web typecheck
     - pnpm --filter @dvt/adapter-postgres test
+    - DVT_PG_INTEGRATION=1 DVT_PG_URL=postgresql://dvt:dvt@127.0.0.1:5432/dvt pnpm --filter @dvt/adapter-postgres exec vitest run test/PostgresPlanConnectionIsolation.integration.test.ts --config vitest.config.ts
     - pnpm --filter @dvt/adapter-postgres typecheck
     - pnpm --filter dvt-temporal-worker test
     - pnpm --filter dvt-temporal-worker typecheck
@@ -48,9 +49,18 @@ execution; it remains only on the pre-existing object-file loading seam.
 
 The hard cut upgrades the SQL-first transformation profile to v2 without a
 compatibility union, migration state or dual read. Generic execution plans
-remain at their existing schema version. Tests prove that two connections A/B
-containing homonymous SQL objects route to different pools and that an
-unadmitted alias cannot open a database session.
+remain at their existing schema version. A real PostgreSQL integration test
+creates two independent databases A/B with homonymous `raw.orders` and
+`analytics.orders` relations. Each PlanRef mutates only its admitted database;
+executing the old A plan after the editable selection moves to B still updates
+A and leaves B unchanged. An unadmitted alias cannot open a database session.
+
+The headed browser proof created a new governed project and Warehouse
+Connection, imported `raw.orders`, authored Source -> Transform -> Sink,
+generated preview `a87244bb21f7957f3044098db1767f337bd87b4cedcf21aad7f764565435d9ea`
+and completed run `run_019ffe42-d90d-785f-943f-7057809e9b37` with three rows
+written to `public.pth2_orders`. Its immutable run context retained
+`postgresql-local-gobernado` and `postgres:local-postgres-proof`.
 
 No stub, placeholder, migration layer, duplicate command/query rail or secret
 was added to graph, plan or run-context persistence.
