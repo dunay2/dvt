@@ -317,7 +317,7 @@ function renderContextWriteFailure(
 ): string {
   return failure.reason === 'artifact_store_unavailable'
     ? 'The run-context artifact store is not configured.'
-    : 'The configured run-context store cannot persist execution context.';
+    : failure.reason;
 }
 
 function rejectRunExecutionContext(reason: string): StartRunUseCaseResult {

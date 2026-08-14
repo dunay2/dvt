@@ -31,9 +31,9 @@ import { RunExecutionContextBindingUseCase } from '../../application/services/Ru
 import type { StoredExecutablePlanResolver } from '../../application/services/StoredExecutablePlanResolver.js';
 import { StoredPlanExecutabilityValidator } from '../../application/services/StoredPlanExecutabilityValidator.js';
 import { ObservabilityAdmissionTelemetry } from '../../infrastructure/admissionTelemetry/ObservabilityAdmissionTelemetry.js';
+import { ArtifactBackedRunExecutionContextWriter } from '../../infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.js';
 import { DbtProjectBundleBuilder } from '../../infrastructure/dbt/DbtProjectBundleBuilder.js';
 import { DEFAULT_DBT_PROJECT_SOURCE_LIMITS } from '../../infrastructure/dbt/dbtProjectSourceSnapshot.js';
-import { FileRunExecutionContextWriter } from '../../infrastructure/dbt/FileRunExecutionContextWriter.js';
 import { ObservabilityStartRunSlaTelemetry } from '../../infrastructure/telemetry/ObservabilityStartRunSlaTelemetry.js';
 import { buildPlanCompilePlanner } from '../planCompileBoundary.js';
 
@@ -91,7 +91,7 @@ export function buildProtectedStartRunRuntime(
       bundleStore: deps.dbtBundleStore,
       limits: DEFAULT_DBT_PROJECT_SOURCE_LIMITS,
     }),
-    contextWriter: new FileRunExecutionContextWriter(deps.dbtBundleStore),
+    contextWriter: new ArtifactBackedRunExecutionContextWriter(deps.dbtBundleStore),
     executionTargetResolver: deps.dbtExecutionTargetResolver,
     stepTypeRegistry: deps.stepTypeRegistry,
     warehouseConnectionCatalog: deps.warehouseConnectionCatalog,

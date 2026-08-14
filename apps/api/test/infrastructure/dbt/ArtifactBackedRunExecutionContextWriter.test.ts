@@ -6,11 +6,11 @@ import { URL } from 'node:url';
 import { parseRunExecutionContext, type RunExecutionContext } from '@dvt/contracts';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { FileRunExecutionContextWriter } from '../../../src/infrastructure/dbt/FileRunExecutionContextWriter.js';
+import { ArtifactBackedRunExecutionContextWriter } from '../../../src/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.js';
 
 let root: string | undefined;
 
-describe('FileRunExecutionContextWriter', () => {
+describe('ArtifactBackedRunExecutionContextWriter', () => {
   afterEach(async () => {
     if (root !== undefined) await rm(root, { recursive: true, force: true });
     root = undefined;
@@ -19,7 +19,7 @@ describe('FileRunExecutionContextWriter', () => {
   it('writes an immutable context without exposing the caller run id as a path segment', async () => {
     root = await mkdtemp(path.join(tmpdir(), 'dvt-dbt-run-context-'));
     const context = buildContext();
-    const writer = new FileRunExecutionContextWriter({ kind: 'file', rootPath: root });
+    const writer = new ArtifactBackedRunExecutionContextWriter({ kind: 'file', rootPath: root });
 
     const result = await writer.write({ runId: '../unsafe/run', context });
 
@@ -38,7 +38,7 @@ describe('FileRunExecutionContextWriter', () => {
       sizeBytes: input.sizeBytes,
       mediaType: input.mediaType,
     }));
-    const writer = new FileRunExecutionContextWriter(
+    const writer = new ArtifactBackedRunExecutionContextWriter(
       { kind: 's3', bucket: 'dvt-run-contexts' },
       { publish }
     );

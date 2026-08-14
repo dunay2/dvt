@@ -10,9 +10,9 @@ import type {
   RunExecutionContextExpectedBinding,
   RunExecutionContextReferenceQuery,
 } from '../../../src/application/ports/runExecutionContextReferenceReader.js';
+import { ArtifactBackedRunExecutionContextWriter } from '../../../src/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.js';
 import { FileRunExecutionContextInheritanceWriter } from '../../../src/infrastructure/dbt/FileRunExecutionContextInheritanceWriter.js';
 import { FileRunExecutionContextReferenceReader } from '../../../src/infrastructure/dbt/FileRunExecutionContextReferenceReader.js';
-import { FileRunExecutionContextWriter } from '../../../src/infrastructure/dbt/FileRunExecutionContextWriter.js';
 import {
   resolveRunExecutionContextArtifactPath,
   resolveRunExecutionContextReferenceArtifactPath,
@@ -57,7 +57,7 @@ describe('FileRunExecutionContextReferenceReader', () => {
       pluginCompatibilityFingerprint: 'c'.repeat(64),
       pluginContexts: {},
     });
-    const writer = new FileRunExecutionContextWriter(store);
+    const writer = new ArtifactBackedRunExecutionContextWriter(store);
     const reader = new FileRunExecutionContextReferenceReader(store);
     const written = await writer.write({ runId: 'run-source-1', context });
 
@@ -91,7 +91,7 @@ describe('FileRunExecutionContextReferenceReader', () => {
       createdBy: 'principal-1',
       pluginContexts: {},
     });
-    const writer = new FileRunExecutionContextWriter(store);
+    const writer = new ArtifactBackedRunExecutionContextWriter(store);
     const reader = new FileRunExecutionContextReferenceReader(store);
     const written = await writer.write({ runId: 'run-source-1', context });
     if (!written.ok) throw new Error('Expected an immutable run-context reference.');
@@ -132,7 +132,7 @@ describe('FileRunExecutionContextReferenceReader', () => {
       pluginCompatibilityFingerprint: 'c'.repeat(64),
       pluginContexts: {},
     });
-    const written = await new FileRunExecutionContextWriter(store).write({
+    const written = await new ArtifactBackedRunExecutionContextWriter(store).write({
       runId: 'run-source-1',
       context,
     });
@@ -174,7 +174,7 @@ describe('FileRunExecutionContextReferenceReader', () => {
         createdBy: 'principal-1',
         pluginContexts: {},
       });
-      const written = await new FileRunExecutionContextWriter(store).write({
+      const written = await new ArtifactBackedRunExecutionContextWriter(store).write({
         runId: 'run-source-1',
         context,
       });
@@ -232,7 +232,7 @@ describe('FileRunExecutionContextReferenceReader', () => {
       createdBy: 'principal-1',
       pluginContexts: {},
     });
-    const written = await new FileRunExecutionContextWriter(store).write({
+    const written = await new ArtifactBackedRunExecutionContextWriter(store).write({
       runId: 'run-source-1',
       context,
     });
@@ -260,7 +260,7 @@ describe('FileRunExecutionContextReferenceReader', () => {
       createdBy: 'principal-1',
       pluginContexts: {},
     });
-    const original = await new FileRunExecutionContextWriter(store).write({
+    const original = await new ArtifactBackedRunExecutionContextWriter(store).write({
       runId: 'run-source-1',
       context,
     });
