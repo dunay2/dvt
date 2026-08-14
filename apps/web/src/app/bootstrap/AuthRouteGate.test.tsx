@@ -29,20 +29,22 @@ vi.mock('../views/ProjectOnboardingView', () => ({
     <button
       type="button"
       onClick={() => {
-        void onProjectCreated({
-          project: {
-            tenantId: 'tenant-1',
-            projectId: 'orders',
-            name: 'Orders',
-            environmentIds: ['dev'],
-          },
-          defaultWorkspace: {
-            tenantId: 'tenant-1',
-            projectId: 'orders',
-            projectName: 'Orders',
-            environmentId: 'dev',
-          },
-        });
+        void Promise.resolve(
+          onProjectCreated({
+            project: {
+              tenantId: 'tenant-1',
+              projectId: 'orders',
+              name: 'Orders',
+              environmentIds: ['dev'],
+            },
+            defaultWorkspace: {
+              tenantId: 'tenant-1',
+              projectId: 'orders',
+              projectName: 'Orders',
+              environmentId: 'dev',
+            },
+          })
+        ).catch(() => undefined);
       }}
     >
       Create a project
@@ -155,5 +157,52 @@ describe('AuthRouteGate project onboarding recovery', () => {
         description: 'project onboarding bootstrap release',
       }
     );
+  });
+
+  it('keeps project onboarding mounted while activation is pending and after rejection', async () => {
+    vi.mocked(resolveProtectedRouteSessionContext).mockRejectedValueOnce(
+      workspaceContextDeniedError()
+    );
+    let rejectActivation: (reason: unknown) => void = () => undefined;
+    vi.mocked(activateProjectWorkspace).mockImplementationOnce(
+      () =>
+        new Promise<void>((_resolve, reject) => {
+          rejectActivation = reject;
+        })
+    );
+
+    mounted = await withTestQueryClient(
+      <MemoryRouter initialEntries={['/canvas']}>
+        <AuthRouteGate>
+          <div>Product shell</div>
+        </AuthRouteGate>
+      </MemoryRouter>
+    );
+
+    await waitForReactQuery(
+      () => mounted?.container.textContent?.includes('Create a project') === true,
+      { description: 'project onboarding before activation' }
+    );
+
+    await act(async () => {
+      fireEvent.click(mounted?.container.querySelector('button') as HTMLButtonElement);
+      await Promise.resolve();
+    });
+
+    expect(activateProjectWorkspace).toHaveBeenCalledTimes(1);
+    expect(mounted.container.textContent).toContain('Create a project');
+    expect(mounted.container.textContent).not.toContain('Checking session');
+    expect(mounted.container.textContent).not.toContain('Product shell');
+
+    await act(async () => {
+      rejectActivation(new Error('Workspace activation unavailable.'));
+      await Promise.resolve();
+    });
+
+    await waitForReactQuery(
+      () => mounted?.container.textContent?.includes('Create a project') === true,
+      { description: 'project onboarding after activation rejection' }
+    );
+    expect(mounted.container.textContent).not.toContain('Product shell');
   });
 });

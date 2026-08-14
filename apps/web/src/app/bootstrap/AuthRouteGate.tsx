@@ -58,25 +58,13 @@ export default function AuthRouteGate({
   const [state, setState] = useState<AuthGateState>({ kind: 'checking' });
 
   async function handleProjectCreated(response: CreateProjectResponse): Promise<void> {
-    setState({ kind: 'checking' });
-    try {
-      await activateProjectWorkspace(response.defaultWorkspace, { apiClient: sessionApiClient });
-      setState({ kind: 'allowed' });
-    } catch (error) {
-      setState({ kind: 'denied', reason: classifyProtectedRouteSessionError(error) });
-      throw error;
-    }
+    await activateProjectWorkspace(response.defaultWorkspace, { apiClient: sessionApiClient });
+    setState({ kind: 'allowed' });
   }
 
   async function handleProjectSelected(selection: EffectiveProjectWorkspaceContext): Promise<void> {
-    setState({ kind: 'checking' });
-    try {
-      await activateProjectWorkspace(selection, { apiClient: sessionApiClient });
-      setState({ kind: 'allowed' });
-    } catch (error) {
-      setState({ kind: 'denied', reason: classifyProtectedRouteSessionError(error) });
-      throw error;
-    }
+    await activateProjectWorkspace(selection, { apiClient: sessionApiClient });
+    setState({ kind: 'allowed' });
   }
 
   useEffect(() => {

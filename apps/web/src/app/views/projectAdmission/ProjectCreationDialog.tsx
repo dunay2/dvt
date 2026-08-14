@@ -12,9 +12,11 @@ import {
   DialogClose,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '../../components/ui/dialog';
+import { Button } from '../../components/ui/button';
 import { ProjectCreationForm, useProjectAdmissionController } from './ProjectCreationForm';
 
 type ProjectCreationDialogProps = Readonly<{
@@ -49,7 +51,7 @@ export function ProjectCreationDialog({
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent
-        className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-md"
+        className="max-h-[calc(100dvh-2rem)] gap-0 overflow-y-auto border-(--border-default) bg-(--surface-panel) p-0 text-(--text-default) sm:max-w-md"
         closeLabel={copy.closeProjectDialogLabel}
         data-slot="project-creation-dialog"
         onCloseAutoFocus={(event) => {
@@ -57,24 +59,30 @@ export function ProjectCreationDialog({
           returnFocusRef?.current?.focus();
         }}
       >
-        <DialogHeader>
+        <DialogHeader className="border-b border-(--border-muted) px-6 py-5 pr-14">
           <DialogTitle>{copy.newProjectDialogTitle}</DialogTitle>
-          <DialogDescription>{copy.newProjectDialogDescription}</DialogDescription>
+          <DialogDescription className="sr-only">
+            {copy.newProjectDialogDescription}
+          </DialogDescription>
         </DialogHeader>
         <ProjectCreationForm
           autoFocusProjectName
+          className="grid gap-0"
+          contentClassName="grid gap-4 px-6 py-5"
           controller={controller}
           dataSlot="project-creation-form"
           leadingAction={
             <DialogClose asChild>
-              <button
-                className="inline-flex h-9 items-center justify-center rounded-md border border-(--border-default) px-3 text-sm font-semibold text-(--text-default) hover:bg-(--surface-elevated) focus-visible:outline-2 focus-visible:outline-(--focus-ring)"
-                type="button"
-              >
+              <Button type="button" variant="outline">
                 {copy.cancelActionLabel}
-              </button>
+              </Button>
             </DialogClose>
           }
+          renderActions={(actions) => (
+            <DialogFooter className="border-t border-(--border-muted) bg-(--surface-panel-subtle) px-6 py-4">
+              {actions}
+            </DialogFooter>
+          )}
           showCatalogStatus
           showTitle={false}
         />

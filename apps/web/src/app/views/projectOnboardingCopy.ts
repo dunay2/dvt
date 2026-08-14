@@ -17,6 +17,10 @@ export type ProjectOnboardingCopy = Readonly<{
   openProjectLabel: string;
   noProjectsMessage: string;
   failureMessage: string;
+  duplicateProjectNameMessage: string;
+  projectCreationConflictMessage: string;
+  projectCreationFailureMessage: string;
+  projectActivationFailureMessage: string;
   newProjectActionLabel: string;
   newProjectDialogTitle: string;
   newProjectDialogDescription: string;
@@ -41,6 +45,13 @@ const COPY_BY_LANGUAGE: Record<ApplicationLanguage, ProjectOnboardingCopy> = {
     openProjectLabel: 'Open project',
     noProjectsMessage: 'No projects are available for this account.',
     failureMessage: 'Project onboarding failed.',
+    duplicateProjectNameMessage:
+      'A project with that name already exists in this organization. Choose another name.',
+    projectCreationConflictMessage:
+      'This project creation request can no longer be confirmed. Close the dialog and try again.',
+    projectCreationFailureMessage: 'The project could not be created. Try again.',
+    projectActivationFailureMessage:
+      'The project was created, but it could not be opened. Refresh projects and open it from the list.',
     newProjectActionLabel: 'New project…',
     newProjectDialogTitle: 'Create a new project',
     newProjectDialogDescription:
@@ -64,6 +75,13 @@ const COPY_BY_LANGUAGE: Record<ApplicationLanguage, ProjectOnboardingCopy> = {
     openProjectLabel: 'Abrir proyecto',
     noProjectsMessage: 'No hay proyectos disponibles para esta cuenta.',
     failureMessage: 'No se pudo preparar la selección de proyecto.',
+    duplicateProjectNameMessage:
+      'Ya existe un proyecto con ese nombre en esta organización. Elige otro nombre.',
+    projectCreationConflictMessage:
+      'Ya no se puede confirmar esta solicitud de creación. Cierra el diálogo e inténtalo de nuevo.',
+    projectCreationFailureMessage: 'No se pudo crear el proyecto. Inténtalo de nuevo.',
+    projectActivationFailureMessage:
+      'El proyecto se creó, pero no se pudo abrir. Actualiza los proyectos y ábrelo desde la lista.',
     newProjectActionLabel: 'Nuevo proyecto…',
     newProjectDialogTitle: 'Crea un proyecto',
     newProjectDialogDescription:
