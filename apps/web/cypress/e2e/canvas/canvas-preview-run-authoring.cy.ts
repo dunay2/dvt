@@ -47,7 +47,7 @@ describe('Canvas preview-run authoring guardrails', () => {
     });
   });
 
-  it('honors the empty-guide preference and restores it from Canvas settings', () => {
+  it('honors the empty-guide preference and restores it from Canvas properties', () => {
     stubCanvasRuntimeApis({
       canvasKind: 'dbt',
       emptyCanvas: true,
@@ -78,7 +78,7 @@ describe('Canvas preview-run authoring guardrails', () => {
     cy.contains('Start dbt canvas').should('not.exist');
 
     cy.get('[data-slot="shell-menu-trigger"]').click();
-    cy.contains('[role="menuitem"]', /Canvas settings|Configuracion de canvas/).click();
+    cy.contains('[role="menuitem"]', /Canvas properties|Propiedades del canvas/).click();
     cy.contains('[role="menuitemcheckbox"]', /Empty canvas guide|Guia de canvas vacio/).click();
 
     cy.contains('Start dbt canvas').should('be.visible');

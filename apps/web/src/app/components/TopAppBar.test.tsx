@@ -214,7 +214,7 @@ describe('ShellTopBar workspace context', () => {
       expect(document.body.textContent).not.toContain('Canvas background');
       expect(document.body.textContent).not.toContain('Grid size');
       expect(document.body.textContent).not.toContain('Reset grid');
-      expect(document.body.textContent).not.toContain('Canvas settings');
+      expect(document.body.textContent).not.toContain('Canvas properties');
       expect(document.body.textContent).not.toContain('Layout');
     });
   });
