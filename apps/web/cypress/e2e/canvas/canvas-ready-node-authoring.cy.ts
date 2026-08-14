@@ -51,6 +51,26 @@ function stubRuntimeCapabilities(): void {
       dvt: { available: true },
     },
   });
+  stubE2eJsonApi('GET', '/workspace/warehouse/connections', [
+    {
+      id: 'warehouse-a',
+      name: 'Warehouse A',
+      type: 'postgres',
+      database: 'analytics_a',
+    },
+    {
+      id: 'warehouse-b',
+      name: 'Warehouse B',
+      type: 'postgres',
+      database: 'analytics_b',
+    },
+  ]);
+  stubE2eJsonApi('POST', '/workspace/warehouse/connections/warehouse-b/test', {
+    connectionId: 'warehouse-b',
+    status: 'passed',
+    checkedAt: '2026-08-13T00:00:00.000Z',
+    objectCount: 1,
+  });
 }
 
 function assertNoSeriousAccessibilityViolations(context: string): void {
@@ -409,8 +429,14 @@ describe('Canvas ready node authoring', () => {
 
     cy.get('.react-flow__node[data-id="source-1"] [data-slot="canvas-node-shell"]').dblclick();
     cy.contains('h3', 'DVT source').should('be.visible');
-    cy.contains('label', 'Schema').should('be.visible');
-    cy.contains('label', 'Table').should('be.visible');
+    waitForE2eApiCall('/workspace/warehouse/connections', 'GET');
+    cy.contains('label', 'PostgreSQL connection').scrollIntoView().should('be.visible');
+    cy.get('select[name="dvt-source-connection"]').select('warehouse-b');
+    cy.contains('button', 'Test connection').click();
+    waitForE2eApiCall('/workspace/warehouse/connections/warehouse-b/test', 'POST');
+    cy.contains('Connection available.').should('be.visible');
+    cy.contains('label', 'Schema').scrollIntoView().should('be.visible');
+    cy.contains('label', 'Table').scrollIntoView().should('be.visible');
     cy.contains('label', 'Alias').scrollIntoView().should('be.visible');
     cy.get('input[name="dvt-source-schema"]').should('have.value', 'raw');
     cy.get('input[name="dvt-source-table"]').should('have.value', 'orders');
@@ -449,7 +475,9 @@ describe('Canvas ready node authoring', () => {
             config?.schema === 'curated' &&
             config.table === 'orders_clean' &&
             config.alias === 'orders_curated' &&
-            config.database === 'legacy_warehouse'
+            config.database === 'legacy_warehouse' &&
+            (node?.metadata?.connectionRef as { connectionId?: string } | undefined)
+              ?.connectionId === 'warehouse-b'
           );
         });
 
@@ -463,6 +491,7 @@ describe('Canvas ready node authoring', () => {
     cy.get('input[name="dvt-source-schema"]').should('have.value', 'curated');
     cy.get('input[name="dvt-source-table"]').should('have.value', 'orders_clean');
     cy.get('input[name="dvt-source-alias"]').should('have.value', 'orders_curated');
+    cy.get('select[name="dvt-source-connection"]').should('have.value', 'warehouse-b');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
 
     cy.get('.react-flow__node[data-id="sink-1"] [data-slot="canvas-node-shell"]').dblclick();
@@ -523,6 +552,8 @@ describe('Canvas ready node authoring', () => {
     cy.get(
       '.react-flow__node[data-id="dvt-sql-transform-1"] [data-slot="canvas-node-shell"]'
     ).dblclick();
+    cy.contains('Inherited PostgreSQL connection').should('be.visible');
+    cy.contains('code', 'warehouse-b').should('be.visible');
     cy.get('[data-slot="canvas-node-workbench-tab-code"]').should(
       'have.attr',
       'aria-selected',
@@ -609,6 +640,8 @@ describe('Canvas ready node authoring', () => {
       .should('have.focus')
       .then(() => cy.press(Cypress.Keyboard.Keys.ENTER));
     cy.contains('h3', 'Source DVT').should('be.visible');
+    cy.contains('label', 'Conexión PostgreSQL').scrollIntoView().should('be.visible');
+    cy.get('select[name="dvt-source-connection"]').should('have.value', 'warehouse-b');
     cy.contains('label', 'Esquema').should('be.visible');
     cy.contains('label', 'Tabla').should('be.visible');
     cy.contains('label', 'Alias').should('be.visible');
