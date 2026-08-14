@@ -873,6 +873,22 @@ describe('Canvas workbench screen composition', () => {
     cy.focused().should('contain.text', 'Appearance').and('have.attr', 'aria-selected', 'true');
     assertNoSeriousAccessibilityViolations('[data-slot="canvas-settings-dialog"]');
 
+    cy.contains('[data-slot="canvas-settings-dialog"] [role="tab"]', 'Grid').click();
+    cy.get('[data-slot="canvas-properties-grid-color-input"]')
+      .clear()
+      .type('#12345')
+      .should('have.attr', 'aria-invalid', 'true');
+    cy.get('[data-slot="workbench-properties-apply"]').should('be.disabled');
+    cy.contains('button', 'Restore grid defaults').click();
+    cy.get('[data-slot="canvas-properties-grid-color-input"]')
+      .should('have.value', '#94a3b8')
+      .and('have.attr', 'aria-invalid', 'false');
+    cy.get('[data-slot="canvas-properties-grid-visible"]').click();
+    cy.get('[data-slot="workbench-properties-apply"]').should('be.enabled').click();
+
+    openCanvasContextMenuAt(260, 260);
+    cy.get('[data-menu-action="open-canvas-settings"]').click();
+
     clearBrowserEmulation();
     cy.viewport(1366, 768);
     assertCanvasPropertiesFitsViewport(1366, 768);
