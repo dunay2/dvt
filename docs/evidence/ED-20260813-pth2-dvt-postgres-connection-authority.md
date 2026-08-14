@@ -28,8 +28,10 @@ evidence:
     - pnpm --filter @dvt/web lint
     - pnpm --filter @dvt/web typecheck
     - pnpm --filter @dvt/adapter-postgres test
+    - pnpm --filter @dvt/adapter-postgres exec vitest run test/PostgresPlanConnectionIsolation.test.ts test/PostgresTransformationStepActivities.test.ts --config vitest.config.ts
     - DVT_PG_INTEGRATION=1 DVT_PG_URL=postgresql://dvt:dvt@127.0.0.1:5432/dvt pnpm --filter @dvt/adapter-postgres exec vitest run test/PostgresPlanConnectionIsolation.integration.test.ts --config vitest.config.ts
     - pnpm --filter @dvt/adapter-postgres typecheck
+    - DVT_PG_URL=postgresql://dvt:dvt@127.0.0.1:5432/dvt pnpm --filter @dvt/adapter-temporal exec vitest run test/integration.postgres.time-skipping.test.ts --config vitest.config.ts
     - pnpm --filter dvt-temporal-worker test
     - pnpm --filter dvt-temporal-worker typecheck
     - pnpm verify:prepush
@@ -44,8 +46,11 @@ writes one immutable `RunExecutionContext.v1` for the worker.
 The Temporal worker verifies the context artifact, workspace scope, PlanRef and
 step-level reference before resolving credentials. Each admitted binding owns a
 separate PostgreSQL pool. Missing, malformed, cross-scope or mismatched bindings
-fail before SQL is sent. `DATABASE_URL` is not a fallback for SQL-first DVT
-execution; it remains only on the pre-existing object-file loading seam.
+fail before SQL is sent. The relational capability also rejects SQL-first steps
+when no plan connection resolver was composed, so its object-file pool cannot
+become an implicit execution fallback. `DATABASE_URL` is not a fallback for
+SQL-first DVT execution; it remains only on the pre-existing object-file loading
+seam.
 
 The hard cut upgrades the SQL-first transformation profile to v2 without a
 compatibility union, migration state or dual read. Generic execution plans
@@ -54,6 +59,9 @@ creates two independent databases A/B with homonymous `raw.orders` and
 `analytics.orders` relations. Each PlanRef mutates only its admitted database;
 executing the old A plan after the editable selection moves to B still updates
 A and leaves B unchanged. An unadmitted alias cannot open a database session.
+The Temporal adapter integration fixture now supplies the same complete v2 step
+configs and an explicit plan resolver; its real PostgreSQL workflow reaches
+`RunCompleted` through all three steps.
 
 The headed browser proof created a new governed project and Warehouse
 Connection, imported `raw.orders`, authored Source -> Transform -> Sink,
