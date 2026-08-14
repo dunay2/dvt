@@ -331,6 +331,22 @@ describe('SourceImportWizard', () => {
     expect(testWarehouseConnection).toHaveBeenCalledWith('conn-1');
     expect(document.body.textContent).toContain('Connection passed');
     expect(document.body.textContent).toContain('12 objects reachable');
+
+    const selectedConnection = harness.findConnectionOption('Local Postgres proof');
+    const successStatus = document.body.querySelector<HTMLElement>(
+      '[data-slot="source-import-connection-test-success"]'
+    );
+
+    expect(successStatus).not.toBeNull();
+    expect(successStatus?.getAttribute('role')).toBe('status');
+    expect(successStatus?.getAttribute('aria-live')).toBe('polite');
+    expect(successStatus?.className).toContain('text-xs');
+    expect(successStatus?.closest('[data-slot="card"]')).toBeNull();
+    expect(
+      selectedConnection && successStatus
+        ? selectedConnection.compareDocumentPosition(successStatus) & Node.DOCUMENT_POSITION_FOLLOWING
+        : 0
+    ).not.toBe(0);
   });
 
   it('creates a governed warehouse connection before browsing source tables', async () => {
