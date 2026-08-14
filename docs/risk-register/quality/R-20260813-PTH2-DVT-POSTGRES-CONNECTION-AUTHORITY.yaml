@@ -1,0 +1,34 @@
+---
+id: R-20260813-PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY
+title: SQL-first execution could drift from its governed PostgreSQL connection
+status: Open
+date: 2026-08-13
+owners:
+  - packages/@dvt/contracts
+  - packages/@dvt/adapter-postgres
+  - apps/api
+  - apps/temporal-worker
+  - apps/web
+severity: High
+probability: Low
+context: >
+  PTH2 binds one source-owned PostgreSQL ConnectionRef through Canvas draft, preview, stored plan,
+  StartRun context and Temporal worker execution.
+risk: >
+  A future fallback, inferred transform binding, stale credential alias or incomplete scope check
+  could execute valid SQL against the wrong PostgreSQL connection without being obvious to the user.
+mitigations:
+  - Require the same strict ConnectionRef on every SQL-first step and reject mixed or missing
+    bindings during contract admission.
+  - Resolve the catalog entry and credential alias once at StartRun and persist only secret-free
+    immutable context.
+  - Verify artifact integrity, workspace scope, PlanRef and exact step reference in the worker
+    before resolving a credential or opening a pool.
+  - Keep a separate pool per admitted binding and prove A/B routing with homonymous SQL objects.
+  - Reject missing aliases without falling back to DATABASE_URL.
+residual_risk: >
+  Credential rotation changes the value behind a stable alias for future worker processes. Revoked
+  connection reconciliation and multi-provider SQL-first execution require separate product slices;
+  neither is represented as complete here.
+review_after: 2026-09-13
+---
