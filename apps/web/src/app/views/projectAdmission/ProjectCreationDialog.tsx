@@ -52,7 +52,7 @@ export function ProjectCreationDialog({
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent
-        className="max-h-[calc(100dvh-2rem)] gap-0 overflow-y-auto border-(--border-default) bg-(--surface-panel) p-0 text-(--text-default) sm:max-w-md"
+        className="max-h-[calc(100dvh-2rem)] gap-0 overflow-y-auto border-(--border-default) bg-(--surface-panel) p-0 text-(--text-default) sm:max-w-lg"
         closeLabel={copy.closeProjectDialogLabel}
         data-slot="project-creation-dialog"
         onCloseAutoFocus={(event) => {

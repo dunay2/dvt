@@ -112,6 +112,7 @@ describe('ProjectCreationDialog', () => {
     const submitButton = dialogContent?.querySelector<HTMLButtonElement>('button[type="submit"]');
     expect(dialogContent?.classList).toContain('gap-0');
     expect(dialogContent?.classList).toContain('p-0');
+    expect(dialogContent?.classList).toContain('sm:max-w-lg');
     expect(dialogHeader?.classList).toContain('py-5');
     expect(dialogHeader?.classList).toContain('flex-row');
     expect(dialogHeader?.classList).toContain('gap-3');
