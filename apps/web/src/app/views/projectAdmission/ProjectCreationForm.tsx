@@ -15,6 +15,9 @@ import {
   getApplicationLanguage,
   useApplicationLanguageStore,
 } from '../../stores/applicationLanguageStore';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
 import { resolveProjectOnboardingCopy, type ProjectOnboardingCopy } from '../projectOnboardingCopy';
 
 export type ProjectCatalogState =
@@ -226,6 +229,8 @@ type ProjectCreationFormProps = Readonly<{
   controller: ProjectAdmissionController;
   copy?: ProjectOnboardingCopy;
   className?: string;
+  contentClassName?: string;
+  actionsClassName?: string;
   dataSlot?: string;
   showCatalogStatus?: boolean;
   showTitle?: boolean;
@@ -240,7 +245,9 @@ function resolveTenantDisplayName(tenant: ProjectOnboardingCatalog['tenants'][nu
 export function ProjectCreationForm({
   controller,
   copy = controller.copy,
-  className = 'space-y-4',
+  className,
+  contentClassName = 'space-y-4',
+  actionsClassName = 'mt-4 flex flex-wrap justify-end gap-2',
   dataSlot = 'project-onboarding-form',
   showCatalogStatus = false,
   showTitle = true,
@@ -253,87 +260,87 @@ export function ProjectCreationForm({
       data-slot={dataSlot}
       onSubmit={(event) => void controller.createProject(event)}
     >
-      {showTitle ? (
-        <h2 className="text-sm font-semibold text-(--text-strong)">{copy.createProjectTitle}</h2>
-      ) : null}
-      {showCatalogStatus && controller.catalogState.kind === 'loading' ? (
-        <div className="flex items-center gap-2 text-sm text-(--text-muted)" role="status">
-          <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
-          {copy.loadingMessage}
-        </div>
-      ) : null}
-      {showCatalogStatus && controller.catalogState.kind === 'failed' ? (
-        <div
-          className="rounded-md border border-red-500/40 bg-red-950/30 px-3 py-2 text-sm text-red-100"
-          role="alert"
-        >
-          {controller.catalogState.message}
-        </div>
-      ) : null}
-      {controller.catalogState.kind === 'ready' ? (
-        <>
-          {controller.hasMultipleOrganizations ? (
-            <label className="block space-y-1.5 text-sm font-medium text-(--text-default)">
-              <span>{copy.organizationLabel}</span>
-              <select
-                className="h-9 w-full rounded-md border border-(--border-default) bg-(--surface-route) px-3 text-sm text-(--text-default) outline-none focus:border-(--focus-ring)"
-                name="tenantId"
-                disabled={controller.submissionState === 'submitting'}
-                onChange={(event) => controller.setSelectedTenantId(event.target.value)}
-                value={controller.selectedTenantId}
-              >
-                {controller.catalogState.catalog.tenants.map((tenant) => (
-                  <option key={tenant.tenantId} value={tenant.tenantId}>
-                    {resolveTenantDisplayName(tenant)}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ) : null}
-          <label className="block space-y-1.5 text-sm font-medium text-(--text-default)">
-            <span>{copy.projectNameLabel}</span>
-            <input
-              autoFocus={autoFocusProjectName}
-              className="h-9 w-full rounded-md border border-(--border-default) bg-(--surface-route) px-3 text-sm text-(--text-default) outline-none placeholder:text-(--text-disabled) focus:border-(--focus-ring)"
-              name="projectName"
-              disabled={controller.submissionState === 'submitting'}
-              onChange={(event) => controller.setProjectName(event.target.value)}
-              placeholder={copy.projectNamePlaceholder}
-              value={controller.projectName}
-            />
-          </label>
-          {!controller.canCreateProject ? (
-            <div
-              className="rounded-md border border-amber-500/40 bg-amber-950/30 px-3 py-2 text-sm text-amber-100"
-              role="alert"
-            >
-              {copy.creationUnavailableMessage}
-            </div>
-          ) : null}
-          {controller.formError ? (
-            <div
-              className="rounded-md border border-red-500/40 bg-red-950/30 px-3 py-2 text-sm text-red-100"
-              role="alert"
-            >
-              {controller.formError}
-            </div>
-          ) : null}
-          <div className="flex flex-wrap justify-end gap-2">
-            {leadingAction}
-            <button
-              className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-(--border-strong) bg-(--surface-selected) px-3 text-sm font-semibold text-(--text-strong) transition hover:bg-(--surface-elevated) focus-visible:outline-2 focus-visible:outline-(--focus-ring) disabled:cursor-not-allowed disabled:text-(--text-disabled)"
-              disabled={!controller.canSubmit}
-              type="submit"
-            >
-              {controller.submissionState === 'submitting' ? (
-                <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
-              ) : (
-                <FolderPlus className="size-4" aria-hidden="true" />
-              )}
-              {copy.createProjectLabel}
-            </button>
+      <div className={contentClassName} data-slot="project-creation-fields">
+        {showTitle ? (
+          <h2 className="text-sm font-semibold text-(--text-strong)">{copy.createProjectTitle}</h2>
+        ) : null}
+        {showCatalogStatus && controller.catalogState.kind === 'loading' ? (
+          <div className="flex items-center gap-2 text-sm text-(--text-muted)" role="status">
+            <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
+            {copy.loadingMessage}
           </div>
-        </>
+        ) : null}
+        {showCatalogStatus && controller.catalogState.kind === 'failed' ? (
+          <div
+            className="rounded-md border border-red-500/40 bg-red-950/30 px-3 py-2 text-sm text-red-100"
+            role="alert"
+          >
+            {controller.catalogState.message}
+          </div>
+        ) : null}
+        {controller.catalogState.kind === 'ready' ? (
+          <>
+            {controller.hasMultipleOrganizations ? (
+              <Label className="grid gap-2 text-(--text-default)">
+                <span>{copy.organizationLabel}</span>
+                <select
+                  className="h-9 w-full rounded-md border border-(--border-default) bg-(--surface-route) px-3 text-sm text-(--text-default) outline-none focus:border-(--focus-ring)"
+                  name="tenantId"
+                  disabled={controller.submissionState === 'submitting'}
+                  onChange={(event) => controller.setSelectedTenantId(event.target.value)}
+                  value={controller.selectedTenantId}
+                >
+                  {controller.catalogState.catalog.tenants.map((tenant) => (
+                    <option key={tenant.tenantId} value={tenant.tenantId}>
+                      {resolveTenantDisplayName(tenant)}
+                    </option>
+                  ))}
+                </select>
+              </Label>
+            ) : null}
+            <Label className="grid gap-2 text-(--text-default)">
+              <span>{copy.projectNameLabel}</span>
+              <Input
+                autoFocus={autoFocusProjectName}
+                className="bg-(--surface-route) text-(--text-default) placeholder:text-(--text-disabled)"
+                name="projectName"
+                disabled={controller.submissionState === 'submitting'}
+                onChange={(event) => controller.setProjectName(event.target.value)}
+                placeholder={copy.projectNamePlaceholder}
+                value={controller.projectName}
+              />
+            </Label>
+            {!controller.canCreateProject ? (
+              <div
+                className="rounded-md border border-amber-500/40 bg-amber-950/30 px-3 py-2 text-sm text-amber-100"
+                role="alert"
+              >
+                {copy.creationUnavailableMessage}
+              </div>
+            ) : null}
+            {controller.formError ? (
+              <div
+                className="rounded-md border border-red-500/40 bg-red-950/30 px-3 py-2 text-sm text-red-100"
+                role="alert"
+              >
+                {controller.formError}
+              </div>
+            ) : null}
+          </>
+        ) : null}
+      </div>
+      {controller.catalogState.kind === 'ready' ? (
+        <div className={actionsClassName} data-slot="project-creation-actions">
+          {leadingAction}
+          <Button disabled={!controller.canSubmit} type="submit">
+            {controller.submissionState === 'submitting' ? (
+              <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <FolderPlus className="size-4" aria-hidden="true" />
+            )}
+            {copy.createProjectLabel}
+          </Button>
+        </div>
       ) : null}
     </form>
   );

@@ -101,6 +101,21 @@ describe('ProjectCreationDialog', () => {
       'Elige una organización autorizada y asigna al proyecto un nombre reconocible.'
     );
     expect(description?.classList.contains('sr-only')).toBe(true);
+    const dialogContent = document.body.querySelector('[data-slot="project-creation-dialog"]');
+    const dialogHeader = dialogContent?.querySelector('[data-slot="dialog-header"]');
+    const formBody = dialogContent?.querySelector('[data-slot="project-creation-fields"]');
+    const formActions = dialogContent?.querySelector('[data-slot="project-creation-actions"]');
+    expect(dialogContent?.classList).toContain('gap-0');
+    expect(dialogContent?.classList).toContain('p-0');
+    expect(dialogHeader?.classList).toContain('py-5');
+    expect(formBody?.classList).toContain('gap-4');
+    expect(formBody?.classList).toContain('py-5');
+    expect(formActions?.classList).toContain('border-t');
+    expect(formActions?.classList).toContain('py-4');
+    expect(dialogContent?.querySelector('[data-slot="label"]')).not.toBeNull();
+    expect(dialogContent?.querySelector('[data-slot="input"]')).not.toBeNull();
+    expect(dialogContent?.querySelector('[data-slot="button"]')).not.toBeNull();
+    expect(formActions?.querySelector('[data-slot="dialog-close"]')).not.toBeNull();
     expect(document.activeElement).toBe(document.body.querySelector('input[name="projectName"]'));
 
     await act(async () => {
