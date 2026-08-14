@@ -8,7 +8,7 @@ export type ProjectOnboardingCopy = Readonly<{
   availableProjectsTitle: string;
   createProjectTitle: string;
   loadingMessage: string;
-  tenantLabel: string;
+  organizationLabel: string;
   projectNameLabel: string;
   projectNamePlaceholder: string;
   creationUnavailableMessage: string;
@@ -27,10 +27,10 @@ const COPY_BY_LANGUAGE: Record<ApplicationLanguage, ProjectOnboardingCopy> = {
     availableProjectsTitle: 'Available projects',
     createProjectTitle: 'Create a project',
     loadingMessage: 'Loading project access…',
-    tenantLabel: 'Tenant',
+    organizationLabel: 'Organization',
     projectNameLabel: 'Project name',
     projectNamePlaceholder: 'Orders',
-    creationUnavailableMessage: 'Project creation is not granted for this tenant.',
+    creationUnavailableMessage: 'Project creation is not granted for this organization.',
     createProjectLabel: 'Create project',
     refreshProjectsLabel: 'Refresh projects',
     openProjectLabel: 'Open project',
@@ -44,10 +44,10 @@ const COPY_BY_LANGUAGE: Record<ApplicationLanguage, ProjectOnboardingCopy> = {
     availableProjectsTitle: 'Proyectos disponibles',
     createProjectTitle: 'Crear un proyecto',
     loadingMessage: 'Cargando acceso a proyectos…',
-    tenantLabel: 'Tenant',
+    organizationLabel: 'Organización',
     projectNameLabel: 'Nombre del proyecto',
     projectNamePlaceholder: 'Pedidos',
-    creationUnavailableMessage: 'No tienes permiso para crear proyectos en este tenant.',
+    creationUnavailableMessage: 'No tienes permiso para crear proyectos en esta organización.',
     createProjectLabel: 'Crear proyecto',
     refreshProjectsLabel: 'Actualizar proyectos',
     openProjectLabel: 'Abrir proyecto',
