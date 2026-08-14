@@ -153,6 +153,7 @@ export default function ProjectOnboardingView({
 
   const catalog = catalogState.kind === 'ready' ? catalogState.catalog : null;
   const selectedTenant = catalog?.tenants.find((tenant) => tenant.tenantId === selectedTenantId);
+  const hasMultipleOrganizations = (catalog?.tenants.length ?? 0) > 1;
   const canCreateProject = selectedTenant?.canCreateProject === true;
   const canSubmit =
     catalogState.kind === 'ready' &&
@@ -267,21 +268,23 @@ export default function ProjectOnboardingView({
             </h2>
             {catalogState.kind === 'ready' ? (
               <>
-                <label className="block space-y-1.5 text-sm font-medium text-(--text-default)">
-                  <span>{copy.tenantLabel}</span>
-                  <select
-                    className="h-9 w-full rounded-md border border-(--border-default) bg-(--surface-route) px-3 text-sm text-(--text-default) outline-none focus:border-(--focus-ring)"
-                    name="tenantId"
-                    onChange={(event) => setSelectedTenantId(event.target.value)}
-                    value={selectedTenantId}
-                  >
-                    {catalogState.catalog.tenants.map((tenant) => (
-                      <option key={tenant.tenantId} value={tenant.tenantId}>
-                        {resolveTenantDisplayName(tenant)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                {hasMultipleOrganizations ? (
+                  <label className="block space-y-1.5 text-sm font-medium text-(--text-default)">
+                    <span>{copy.organizationLabel}</span>
+                    <select
+                      className="h-9 w-full rounded-md border border-(--border-default) bg-(--surface-route) px-3 text-sm text-(--text-default) outline-none focus:border-(--focus-ring)"
+                      name="tenantId"
+                      onChange={(event) => setSelectedTenantId(event.target.value)}
+                      value={selectedTenantId}
+                    >
+                      {catalogState.catalog.tenants.map((tenant) => (
+                        <option key={tenant.tenantId} value={tenant.tenantId}>
+                          {resolveTenantDisplayName(tenant)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ) : null}
                 <label className="block space-y-1.5 text-sm font-medium text-(--text-default)">
                   <span>{copy.projectNameLabel}</span>
                   <input
