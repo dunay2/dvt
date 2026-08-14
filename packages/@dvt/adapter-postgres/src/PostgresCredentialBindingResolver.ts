@@ -1,4 +1,10 @@
 /**
+ * @file packages/@dvt/adapter-postgres/src/PostgresCredentialBindingResolver.ts
+ * @baseline ADR-0003: Execution Model
+ * @baseline ADR-0031: Storage Adapter Tenant Isolation Strategy
+ * @decision PostgreSQL credentials are resolved from explicit governed aliases without dynamic environment lookup.
+ * @consequence SQL-first execution fails closed when a scoped credential alias is absent or malformed.
+ * @version 1.0.0
  * @ownedConcern Resolve governed PostgreSQL credential aliases without dynamic environment lookup.
  */
 import { URL } from 'node:url';

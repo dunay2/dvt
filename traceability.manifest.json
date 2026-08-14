@@ -1,7 +1,7 @@
 {
   "component": "@dvt/traceability-service",
   "version": "0.1.0",
-  "generated": "2026-08-13",
+  "generated": "2026-08-14",
   "repo": {
     "sha": "local"
   },
@@ -177,6 +177,8 @@
         "Parse workflow control input into DVT-owned cursor and materialization state before Temporal execution",
         "Parse workflow cursor and control values with deterministic validation before execution",
         "Plans carry only opaque endpoint/credential references and a predeclared content address.",
+        "PostgreSQL credentials are resolved from explicit governed aliases without dynamic environment lookup.",
+        "PostgreSQL execution resolves the connection identity fixed by the admitted PlanRef and scoped run context.",
         "Provide contract-backed Temporal fixtures for tests that exercise DVT-owned run and plan boundaries",
         "Re-export canonical event types from @dvt/contracts without engine-local compatibility aliases.",
         "Re-export canonical types from @dvt/contracts — single source of truth",
@@ -217,7 +219,9 @@
         "reconcileOrphanedIntents detects and cancels orphaned provider workflows per ADR-0030"
       ],
       "implemented_by": [
+        "packages/@dvt/adapter-postgres/src/PostgresCredentialBindingResolver.ts",
         "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts",
+        "packages/@dvt/adapter-postgres/src/PostgresPlanConnectionResolver.ts",
         "packages/@dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts",
         "packages/@dvt/adapter-postgres/src/PostgresRelationalExecutionCapability.ts",
         "packages/@dvt/adapter-postgres/src/PostgresRunStateStoreAdapter.ts",
@@ -736,6 +740,8 @@
         "Keep the authorization role interface in the engine public ports surface.",
         "Map verified execution scope to a deterministic physical schema and replace one relation atomically",
         "Normalize lineage outbox claim, tenant, and query bounds at the PostgreSQL adapter boundary",
+        "PostgreSQL credentials are resolved from explicit governed aliases without dynamic environment lookup.",
+        "PostgreSQL execution resolves the connection identity fixed by the admitted PlanRef and scoped run context.",
         "Run metadata persistence extracted from PostgresStateStoreAdapter",
         "Run-state contract delegation is isolated from snapshot-queue and delivery concerns",
         "Runtime bootstrap may require both core state-store and start-run intent schema migrations",
@@ -751,8 +757,10 @@
         "packages/@dvt/adapter-postgres/src/PostgresAdapterClientSession.ts",
         "packages/@dvt/adapter-postgres/src/PostgresAdapterClientSessionConstants.ts",
         "packages/@dvt/adapter-postgres/src/PostgresAdapterConstants.ts",
+        "packages/@dvt/adapter-postgres/src/PostgresCredentialBindingResolver.ts",
         "packages/@dvt/adapter-postgres/src/PostgresMaintenanceAccess.ts",
         "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts",
+        "packages/@dvt/adapter-postgres/src/PostgresPlanConnectionResolver.ts",
         "packages/@dvt/adapter-postgres/src/PostgresRunMetadataRepository.ts",
         "packages/@dvt/adapter-postgres/src/PostgresRunStateCoordinator.ts",
         "packages/@dvt/adapter-postgres/src/PostgresRunStateStoreAdapter.ts",
