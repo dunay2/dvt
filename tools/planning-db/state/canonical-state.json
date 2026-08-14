@@ -156080,7 +156080,8 @@
         "packages/**",
         "scripts/**",
         "docs/evidence/**",
-        "docs/risk-register/**"
+        "docs/risk-register/**",
+        "tsconfig.json"
       ],
       "architectureGuards": [
         "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
@@ -156433,7 +156434,12 @@
             "id": "startrun-record",
             "redTest": "SQL-first execution previously accepted global PostgreSQL fallback state.",
             "greenTest": "Plan-scoped PostgreSQL resolution passes contract, isolation, Temporal, and browser coverage.",
-            "patchSurfaces": ["apps/**", "packages/**", "scripts/**"],
+            "patchSurfaces": [
+              "apps/**",
+              "packages/**",
+              "scripts/**",
+              "tsconfig.json"
+            ],
             "expectedFailure": "Execution completed despite missing plan-scoped connection authority."
           }
         ],
@@ -156470,11 +156476,12 @@
           "packages/**",
           "scripts/**",
           "docs/evidence/**",
-          "docs/risk-register/**"
+          "docs/risk-register/**",
+          "tsconfig.json"
         ],
         "forbiddenImplementationSurfaces": ["docs/archive/**"]
       },
-      "revision": 5,
+      "revision": 6,
       "createdBy": "codex",
       "createdAt": "2026-08-14T04:16:21.053Z"
     },
@@ -200258,6 +200265,81 @@
         "forbiddenImplementationSurfaces": ["docs/archive/**"]
       },
       "createdAt": "2026-08-14T05:14:02.162Z"
+    },
+    {
+      "operationId": "590795b1-9bd1-42e3-8f93-635f2dee40cf",
+      "idempotencyKey": "pth2-startrun-eslint-source-alias-20260814",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY#command#startrun",
+      "sourcePath": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+      "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+      "expectedRevision": 5,
+      "previousRevision": 5,
+      "resultingRevision": 6,
+      "payload": {
+        "redTest": "SQL-first execution previously accepted global PostgreSQL fallback state.",
+        "dddOwner": "Run command application service",
+        "railName": "StartRun",
+        "railType": "command",
+        "featureId": "PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY",
+        "greenTest": "Plan-scoped PostgreSQL resolution passes contract, isolation, Temporal, and browser coverage.",
+        "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "unitTests": [
+          "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts"
+        ],
+        "railStatus": "retired",
+        "userStories": [
+          "Bind each SQL-first plan to the governed PostgreSQL connection selected by its source node."
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts"
+        ],
+        "domainObjects": ["Immutable run execution context"],
+        "fowlerSignals": [
+          "Separate Query from Modifier",
+          "Explicit connection authority",
+          "Reuse canonical rail without duplicate ownership"
+        ],
+        "negativeTests": [
+          "Reject SQL-first execution without a governed plan connection resolver."
+        ],
+        "patchSurfaces": ["tsconfig.json"],
+        "adapterSurface": "Temporal run execution adapter",
+        "completionGate": [
+          "pnpm verify:prepush",
+          "pnpm docs:feature-mechanization:implementation"
+        ],
+        "applicationPort": "IStartRunUseCase.execute",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Execution completed despite missing plan-scoped connection authority.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/state/github-mvp-issue-workflow.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md"
+        ],
+        "architectureGuards": [
+          "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+        ],
+        "authorizationScope": "Authenticated tenant/project/environment workspace scope",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2329",
+        "implementationRefs": [
+          "apps/api/src/infrastructure/startRun/RunExecutionContextBindingPolicy.ts#RunExecutionContextBindingPolicy"
+        ],
+        "normalizedRailName": "startrun",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": ["tsconfig.json"],
+        "forbiddenImplementationSurfaces": ["docs/archive/**"]
+      },
+      "createdAt": "2026-08-14T05:52:00.176Z"
     }
   ],
   "governanceComponentDefinitions": [
