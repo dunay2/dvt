@@ -54,6 +54,7 @@ describe('WorkbenchPropertiesWindow', () => {
       '[data-slot="workbench-properties-window"]'
     );
     expect(dialog).not.toBeNull();
+    expect(dialog?.classList).toContain('grid-rows-[auto_minmax(0,1fr)_auto]');
     expect(dialog?.querySelector('[data-slot="workbench-properties-header"]')).not.toBeNull();
     expect(dialog?.querySelector('[data-slot="workbench-properties-body"]')).not.toBeNull();
     expect(dialog?.querySelector('[data-slot="workbench-properties-footer"]')).not.toBeNull();

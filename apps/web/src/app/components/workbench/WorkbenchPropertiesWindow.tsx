@@ -64,7 +64,7 @@ export function WorkbenchPropertiesWindow({
       <DialogContent
         data-slot={dataSlot}
         closeLabel={closeLabel}
-        className="max-h-[min(48rem,calc(100vh-2rem))] max-w-2xl gap-0 overflow-hidden border-(--border-default) bg-(--surface-panel) p-0 text-(--text-default)"
+        className="max-h-[min(48rem,calc(100vh-2rem))] max-w-2xl grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden border-(--border-default) bg-(--surface-panel) p-0 text-(--text-default)"
         onCloseAutoFocus={(event) => {
           if (onRestoreFocus) {
             event.preventDefault();
