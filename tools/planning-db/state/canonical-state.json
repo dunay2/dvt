@@ -1300,11 +1300,11 @@
       },
       {
         "component_id": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
-        "name": "File dbt run execution-context writer",
+        "name": "Artifact-backed run execution-context writer",
         "kind": "adapter",
         "layer": "adapter",
-        "owner": "dbt Runtime Admission",
-        "repo_path": "apps/api/src/infrastructure/dbt/FileRunExecutionContextWriter.ts",
+        "owner": "Runtime Admission",
+        "repo_path": "apps/api/src/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.ts",
         "public_contract": "IRunExecutionContextWriter",
         "runtime": "node",
         "criticality": "critical",
@@ -1312,7 +1312,7 @@
         "maturity_score": null,
         "parent_component_id": "SYS-API-INFRASTRUCTURE",
         "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-14T04:51:37.016+00:00"
+        "updated_at": "2026-08-14T06:21:32.873+00:00"
       },
       {
         "component_id": "SYS-API-INFRA-RUNTIME-FOUNDATION",
@@ -13533,6 +13533,62 @@
         "updated_at": "2026-08-14T05:29:47.107+00:00"
       },
       {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-20260814",
+        "work_item_id": "2329",
+        "title": "Generalize run context persistence across configured artifact stores",
+        "owner": "PTH2 runtime admission",
+        "status": "superseded",
+        "rationale": "The mandatory SQL-first run context must use the configured file or S3 artifact backend; the file-only writer rejected the supported S3 runtime before Temporal dispatch.",
+        "fowler_signal": "boundary_drift",
+        "rail_ref": "StartRun",
+        "approved_at": null,
+        "supersedes_id": null,
+        "created_at": "2026-08-14T06:18:56.686+00:00",
+        "updated_at": "2026-08-14T06:20:32.745+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V2-20260814",
+        "work_item_id": "2329",
+        "title": "Generalize run context persistence across configured artifact stores",
+        "owner": "PTH2 runtime admission",
+        "status": "superseded",
+        "rationale": "The mandatory SQL-first run context must use the configured file or S3 artifact backend; the file-only writer rejected the supported S3 runtime before Temporal dispatch.",
+        "fowler_signal": "boundary_drift",
+        "rail_ref": "StartRun",
+        "approved_at": null,
+        "supersedes_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-20260814",
+        "created_at": "2026-08-14T06:20:34.077+00:00",
+        "updated_at": "2026-08-14T06:21:14.007+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V3-20260814",
+        "work_item_id": "2329",
+        "title": "Generalize run context persistence across configured artifact stores",
+        "owner": "PTH2 runtime admission",
+        "status": "superseded",
+        "rationale": "The mandatory SQL-first run context must use the configured file or S3 artifact backend; the file-only writer rejected the supported S3 runtime before Temporal dispatch.",
+        "fowler_signal": "boundary_drift",
+        "rail_ref": "StartRun",
+        "approved_at": "2026-08-14T06:21:49.85+00:00",
+        "supersedes_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V2-20260814",
+        "created_at": "2026-08-14T06:21:15.422+00:00",
+        "updated_at": "2026-08-14T06:28:17.086+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V4-20260814",
+        "work_item_id": "2329",
+        "title": "Prove configured artifact-store run context correction",
+        "owner": "PTH2 runtime admission",
+        "status": "implemented",
+        "rationale": "Close the configured file/S3 persistence correction with separate, auditable proof for the runtime test and the mandatory ARC evidence source.",
+        "fowler_signal": "boundary_drift",
+        "rail_ref": "StartRun",
+        "approved_at": "2026-08-14T06:28:55.088+00:00",
+        "supersedes_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V3-20260814",
+        "created_at": "2026-08-14T06:28:46.418+00:00",
+        "updated_at": "2026-08-14T06:29:38.408+00:00"
+      },
+      {
         "design_id": "R1-1C-STORED-PLAN-AUTHORITY-20260812",
         "work_item_id": "GH-2166",
         "title": "Converge stored plan materialization and admission",
@@ -15720,6 +15776,48 @@
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:52:35.669759+00:00",
         "source_content_sha256": "dcd354679a3263a303c7d8fd9a68f5187ab33595de600d9ca3c2592f3d95c126",
+        "implementation_content_sha256": null
+      },
+      {
+        "evidence_id": "EVIDENCE-PTH2-S3-RUN-CONTEXT-ARC-V4-20260814",
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V4-20260814",
+        "subject_kind": "evidence",
+        "subject_id": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "evidence_kind": "doc",
+        "evidence_origin": "local_execution",
+        "source_ref": "GIT_BASE=origin/main GIT_HEAD=HEAD node tools/ci/arc-check.mjs",
+        "source_path": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "result_state": "pass",
+        "recorded_at": "2026-08-14T06:29:27.417+00:00",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "implementation_content_sha256": null
+      },
+      {
+        "evidence_id": "EVIDENCE-PTH2-S3-RUN-CONTEXT-LOCAL-20260814",
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V3-20260814",
+        "subject_kind": "test",
+        "subject_id": "TEST-PTH2-S3-RUN-CONTEXT-PERSISTENCE",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts",
+        "source_path": "apps/api/test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts",
+        "result_state": "pass",
+        "recorded_at": "2026-08-14T06:26:37.652+00:00",
+        "source_content_sha256": "7f73e7b9f75dfd4313bee36dc8a557bb383464e398bd36f21c7e5c365b3b0906",
+        "implementation_content_sha256": null
+      },
+      {
+        "evidence_id": "EVIDENCE-PTH2-S3-RUN-CONTEXT-TEST-V4-20260814",
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V4-20260814",
+        "subject_kind": "test",
+        "subject_id": "TEST-PTH2-S3-RUN-CONTEXT-PERSISTENCE",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts",
+        "source_path": "apps/api/test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts",
+        "result_state": "pass",
+        "recorded_at": "2026-08-14T06:29:27.391+00:00",
+        "source_content_sha256": "7f73e7b9f75dfd4313bee36dc8a557bb383464e398bd36f21c7e5c365b3b0906",
         "implementation_content_sha256": null
       },
       {
@@ -38502,6 +38600,15 @@
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
+        "responsibility_id": "RESP-RUN-CONTEXT-ARTIFACT-ADAPTER",
+        "component_id": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
+        "responsibility": "Persist one run context immutably in the configured file or S3 artifact backend and return its verified reference.",
+        "reason_to_change": "The artifact-store implementation, immutable-write policy, or content addressing changes.",
+        "ddd_owner": "ArtifactBackedRunExecutionContextWriter",
+        "status": "proposed",
+        "created_at": "2026-08-07T00:49:55.642+00:00"
+      },
+      {
         "responsibility_id": "RESP-SCOPED-WORKSPACE-FILE-STORAGE",
         "component_id": "SYS-API-INFRA-WORKSPACE-FILES",
         "responsibility": "Isolate local workspace files by the authorized tenant/project/environment tuple.",
@@ -44574,6 +44681,16 @@
         "required": true,
         "validation_command": "pnpm --filter dvt-api exec vitest run test/application/services/resolveAuthorizedPreviewSelection.test.ts",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
+      },
+      {
+        "test_id": "TEST-PTH2-S3-RUN-CONTEXT-PERSISTENCE",
+        "component_id": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
+        "test_path": "apps/api/test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts",
+        "test_kind": "unit",
+        "coverage_level": "boundary",
+        "required": true,
+        "validation_command": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts",
+        "created_at": "2026-08-14T06:21:34.249+00:00"
       },
       {
         "test_id": "TEST-SCOPED-WORKSPACE-FILE-STORAGE",
@@ -87675,6 +87792,398 @@
         "created_at": "2026-08-14T04:51:17.737+00:00"
       },
       {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-20260814",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T06:18:56.686+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-20260814",
+        "subject_kind": "evidence",
+        "subject_id": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-14T06:18:56.686+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-20260814",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/application/ports/runExecutionContextWriter.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T06:18:56.686+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-20260814",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T06:18:56.686+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-20260814",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.ts",
+        "scope_kind": "may_create",
+        "required": true,
+        "created_at": "2026-08-14T06:18:56.686+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-20260814",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/infrastructure/dbt/FileRunExecutionContextWriter.ts",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-14T06:18:56.686+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-20260814",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T06:18:56.686+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-20260814",
+        "subject_kind": "path",
+        "subject_id": "apps/api/test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts",
+        "scope_kind": "may_create",
+        "required": true,
+        "created_at": "2026-08-14T06:18:56.686+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-20260814",
+        "subject_kind": "path",
+        "subject_id": "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T06:18:56.686+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-20260814",
+        "subject_kind": "path",
+        "subject_id": "apps/api/test/infrastructure/dbt/FileRunExecutionContextWriter.test.ts",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-14T06:18:56.686+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-20260814",
+        "subject_kind": "path",
+        "subject_id": "packages/@dvt/artifacts/src/contentAddressed/S3ContentAddressedArtifactStore.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T06:18:56.686+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-20260814",
+        "subject_kind": "path",
+        "subject_id": "packages/@dvt/artifacts/src/index.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T06:18:56.686+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-20260814",
+        "subject_kind": "test",
+        "subject_id": "TEST-PTH2-S3-RUN-CONTEXT-PERSISTENCE",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-14T06:18:56.686+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V2-20260814",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T06:20:34.077+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V2-20260814",
+        "subject_kind": "evidence",
+        "subject_id": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-14T06:20:34.077+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V2-20260814",
+        "subject_kind": "evidence",
+        "subject_id": "EVIDENCE-PTH2-S3-RUN-CONTEXT-LOCAL-20260814",
+        "scope_kind": "may_create",
+        "required": true,
+        "created_at": "2026-08-14T06:20:34.077+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V2-20260814",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/application/ports/runExecutionContextWriter.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T06:20:34.077+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V2-20260814",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T06:20:34.077+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V2-20260814",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.ts",
+        "scope_kind": "may_create",
+        "required": true,
+        "created_at": "2026-08-14T06:20:34.077+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V2-20260814",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/infrastructure/dbt/FileRunExecutionContextWriter.ts",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-14T06:20:34.077+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V2-20260814",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T06:20:34.077+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V2-20260814",
+        "subject_kind": "path",
+        "subject_id": "apps/api/test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts",
+        "scope_kind": "may_create",
+        "required": true,
+        "created_at": "2026-08-14T06:20:34.077+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V2-20260814",
+        "subject_kind": "path",
+        "subject_id": "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T06:20:34.077+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V2-20260814",
+        "subject_kind": "path",
+        "subject_id": "apps/api/test/infrastructure/dbt/FileRunExecutionContextWriter.test.ts",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-14T06:20:34.077+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V2-20260814",
+        "subject_kind": "path",
+        "subject_id": "packages/@dvt/artifacts/src/contentAddressed/S3ContentAddressedArtifactStore.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T06:20:34.077+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V2-20260814",
+        "subject_kind": "path",
+        "subject_id": "packages/@dvt/artifacts/src/index.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T06:20:34.077+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V2-20260814",
+        "subject_kind": "test",
+        "subject_id": "TEST-PTH2-S3-RUN-CONTEXT-PERSISTENCE",
+        "scope_kind": "may_create",
+        "required": true,
+        "created_at": "2026-08-14T06:20:34.077+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V2-20260814",
+        "subject_kind": "test",
+        "subject_id": "TEST-PTH2-S3-RUN-CONTEXT-PERSISTENCE",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-14T06:20:34.077+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V3-20260814",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-14T06:21:15.422+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V3-20260814",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T06:21:15.422+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V3-20260814",
+        "subject_kind": "evidence",
+        "subject_id": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-14T06:21:15.422+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V3-20260814",
+        "subject_kind": "evidence",
+        "subject_id": "EVIDENCE-PTH2-S3-RUN-CONTEXT-LOCAL-20260814",
+        "scope_kind": "may_create",
+        "required": true,
+        "created_at": "2026-08-14T06:21:15.422+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V3-20260814",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/application/ports/runExecutionContextWriter.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T06:21:15.422+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V3-20260814",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T06:21:15.422+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V3-20260814",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.ts",
+        "scope_kind": "may_create",
+        "required": true,
+        "created_at": "2026-08-14T06:21:15.422+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V3-20260814",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/infrastructure/dbt/FileRunExecutionContextWriter.ts",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-14T06:21:15.422+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V3-20260814",
+        "subject_kind": "path",
+        "subject_id": "apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T06:21:15.422+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V3-20260814",
+        "subject_kind": "path",
+        "subject_id": "apps/api/test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts",
+        "scope_kind": "may_create",
+        "required": true,
+        "created_at": "2026-08-14T06:21:15.422+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V3-20260814",
+        "subject_kind": "path",
+        "subject_id": "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T06:21:15.422+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V3-20260814",
+        "subject_kind": "path",
+        "subject_id": "apps/api/test/infrastructure/dbt/FileRunExecutionContextWriter.test.ts",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-14T06:21:15.422+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V3-20260814",
+        "subject_kind": "path",
+        "subject_id": "packages/@dvt/artifacts/src/contentAddressed/S3ContentAddressedArtifactStore.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T06:21:15.422+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V3-20260814",
+        "subject_kind": "path",
+        "subject_id": "packages/@dvt/artifacts/src/index.ts",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T06:21:15.422+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V3-20260814",
+        "subject_kind": "test",
+        "subject_id": "TEST-PTH2-S3-RUN-CONTEXT-PERSISTENCE",
+        "scope_kind": "may_create",
+        "required": true,
+        "created_at": "2026-08-14T06:21:15.422+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V3-20260814",
+        "subject_kind": "test",
+        "subject_id": "TEST-PTH2-S3-RUN-CONTEXT-PERSISTENCE",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-14T06:21:15.422+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V4-20260814",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-14T06:28:46.418+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V4-20260814",
+        "subject_kind": "evidence",
+        "subject_id": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-14T06:28:46.418+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V4-20260814",
+        "subject_kind": "evidence",
+        "subject_id": "EVIDENCE-PTH2-S3-RUN-CONTEXT-ARC-V4-20260814",
+        "scope_kind": "may_create",
+        "required": true,
+        "created_at": "2026-08-14T06:28:46.418+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V4-20260814",
+        "subject_kind": "evidence",
+        "subject_id": "EVIDENCE-PTH2-S3-RUN-CONTEXT-TEST-V4-20260814",
+        "scope_kind": "may_create",
+        "required": true,
+        "created_at": "2026-08-14T06:28:46.418+00:00"
+      },
+      {
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V4-20260814",
+        "subject_kind": "test",
+        "subject_id": "TEST-PTH2-S3-RUN-CONTEXT-PERSISTENCE",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-14T06:28:46.418+00:00"
+      },
+      {
         "design_id": "R1-1C-STORED-PLAN-AUTHORITY-20260812",
         "subject_kind": "component",
         "subject_id": "SYS-API-APPLICATION-SERVICES",
@@ -91509,6 +92018,112 @@
         "created_at": "2026-08-10T23:26:23.715+00:00"
       },
       {
+        "operation_id": "10017098-f6c1-47d5-8f38-abbe051d4922",
+        "idempotency_key": "pth2-s3-run-context-writer-design-20260814",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "PTH2 runtime admission",
+          "title": "Generalize run context persistence across configured artifact stores",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "apps/api/src/infrastructure/dbt/FileRunExecutionContextWriter.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_create",
+              "subjectId": "apps/api/src/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "apps/api/test/infrastructure/dbt/FileRunExecutionContextWriter.test.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_create",
+              "subjectId": "apps/api/test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/src/application/ports/runExecutionContextWriter.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "packages/@dvt/artifacts/src/contentAddressed/S3ContentAddressedArtifactStore.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "packages/@dvt/artifacts/src/index.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "TEST-PTH2-S3-RUN-CONTEXT-PERSISTENCE",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+              "subjectKind": "evidence"
+            }
+          ],
+          "status": "review",
+          "railRef": "StartRun",
+          "designId": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-20260814",
+          "rationale": "The mandatory SQL-first run context must use the configured file or S3 artifact backend; the file-only writer rejected the supported S3 runtime before Temporal dispatch.",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "workItemId": "2329",
+          "fowlerSignal": "boundary_drift",
+          "supersedesId": null,
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T06:18:56.686+00:00"
+      },
+      {
         "operation_id": "101733ce-f4cd-4356-8d51-7af00af4b935",
         "idempotency_key": "architecture_observability_record:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811:SYS-OBSERVABILITY-CONTRACTS-NOOP:79693660990bd5d8",
         "operation_type": "architecture_observability_record",
@@ -91906,6 +92521,31 @@
           "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95"
         },
         "created_at": "2026-08-13T13:52:49.016+00:00"
+      },
+      {
+        "operation_id": "146a66d8-c000-4dcc-8aaf-a07ae5d4eb7e",
+        "idempotency_key": "pth2-s3-run-context-test-v3-20260814",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V3-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-PTH2-S3-RUN-CONTEXT-PERSISTENCE",
+          "designId": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V3-20260814",
+          "required": true,
+          "testKind": "unit",
+          "testPath": "apps/api/test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "componentId": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
+          "coverageLevel": "boundary",
+          "validationCommand": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T06:21:34.249+00:00"
       },
       {
         "operation_id": "14921c92-4064-4770-b157-3cb25aa99154",
@@ -92728,6 +93368,27 @@
         "created_at": "2026-08-10T21:06:24.803+00:00"
       },
       {
+        "operation_id": "2333feaa-2351-481b-a416-d5c7b0e77b9e",
+        "idempotency_key": "pth2-s3-run-context-design-superseded-20260814",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The review design omitted explicit may_create scopes for its new test and execution evidence.",
+          "designId": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-20260814",
+          "toStatus": "superseded",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "fromStatus": "review",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T06:20:32.745+00:00"
+      },
+      {
         "operation_id": "2500cddc-df6e-497b-928c-06dcbaccf731",
         "idempotency_key": "architecture_evidence_record:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V5-20260811:EV-PTH14-V5-REC-EVID:1d697f55b5f4ca35",
         "operation_type": "architecture_evidence_record",
@@ -93296,6 +93957,43 @@
           "sourceContentSha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5"
         },
         "created_at": "2026-08-13T08:15:05.472+00:00"
+      },
+      {
+        "operation_id": "2a30aa50-ea53-413c-b1c1-2e16ed26f4fb",
+        "idempotency_key": "pth2-s3-run-context-writer-component-v2-20260814",
+        "operation_type": "architecture_component_record",
+        "actor": "codex",
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V2-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "kind": "adapter",
+          "name": "Artifact-backed run execution-context writer",
+          "layer": "adapter",
+          "owner": "Runtime Admission",
+          "status": "implemented",
+          "runtime": "node",
+          "designId": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V2-20260814",
+          "repoPath": "apps/api/src/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.ts",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "componentId": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
+          "criticality": "critical",
+          "publicContract": "IRunExecutionContextWriter",
+          "responsibilities": [
+            {
+              "dddOwner": "ArtifactBackedRunExecutionContextWriter",
+              "reasonToChange": "The artifact-store implementation, immutable-write policy, or content addressing changes.",
+              "responsibility": "Persist one run context immutably in the configured file or S3 artifact backend and return its verified reference.",
+              "responsibilityId": "RESP-RUN-CONTEXT-ARTIFACT-ADAPTER"
+            }
+          ],
+          "parentComponentId": "SYS-API-INFRASTRUCTURE",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T06:20:50.587+00:00"
       },
       {
         "operation_id": "2a3501f8-a663-493c-afab-6faa321ed737",
@@ -94359,6 +95057,27 @@
         "created_at": "2026-08-13T05:03:08.951+00:00"
       },
       {
+        "operation_id": "3861356b-75fd-4748-acf0-826f59479f58",
+        "idempotency_key": "pth2-s3-run-context-supersede-v3-20260814",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V3-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Superseded by V4 because one execution evidence id cannot prove both the runtime test and the mandatory ARC evidence subject.",
+          "designId": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V3-20260814",
+          "toStatus": "superseded",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T06:28:17.086+00:00"
+      },
+      {
         "operation_id": "3868b0aa-a6ad-4b68-aeca-254e291bff1f",
         "idempotency_key": "architecture_design_transition:codex:API-H2-1-EXPLICIT-ROUTE-DEPENDENCY-INJECTION-20260811:9602185267dc237d",
         "operation_type": "architecture_design_transition",
@@ -95195,6 +95914,43 @@
           "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95"
         },
         "created_at": "2026-08-13T13:58:26.148+00:00"
+      },
+      {
+        "operation_id": "43e8df16-55c9-4b81-a454-1a79934640a7",
+        "idempotency_key": "pth2-s3-run-context-writer-component-v3-20260814",
+        "operation_type": "architecture_component_record",
+        "actor": "codex",
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V3-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "kind": "adapter",
+          "name": "Artifact-backed run execution-context writer",
+          "layer": "adapter",
+          "owner": "Runtime Admission",
+          "status": "implemented",
+          "runtime": "node",
+          "designId": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V3-20260814",
+          "repoPath": "apps/api/src/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.ts",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "componentId": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
+          "criticality": "critical",
+          "publicContract": "IRunExecutionContextWriter",
+          "responsibilities": [
+            {
+              "dddOwner": "ArtifactBackedRunExecutionContextWriter",
+              "reasonToChange": "The artifact-store implementation, immutable-write policy, or content addressing changes.",
+              "responsibility": "Persist one run context immutably in the configured file or S3 artifact backend and return its verified reference.",
+              "responsibilityId": "RESP-RUN-CONTEXT-ARTIFACT-ADAPTER"
+            }
+          ],
+          "parentComponentId": "SYS-API-INFRASTRUCTURE",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T06:21:32.873+00:00"
       },
       {
         "operation_id": "44754dba-e53f-4796-be67-6037bea9b432",
@@ -97286,6 +98042,124 @@
         "created_at": "2026-08-11T13:02:27.272+00:00"
       },
       {
+        "operation_id": "5bae0b26-3e2e-4076-9ebb-17b884705a4b",
+        "idempotency_key": "pth2-s3-run-context-writer-design-v2-20260814",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V2-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "PTH2 runtime admission",
+          "title": "Generalize run context persistence across configured artifact stores",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "apps/api/src/infrastructure/dbt/FileRunExecutionContextWriter.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_create",
+              "subjectId": "apps/api/src/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "apps/api/test/infrastructure/dbt/FileRunExecutionContextWriter.test.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_create",
+              "subjectId": "apps/api/test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/src/application/ports/runExecutionContextWriter.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "packages/@dvt/artifacts/src/contentAddressed/S3ContentAddressedArtifactStore.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "packages/@dvt/artifacts/src/index.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_create",
+              "subjectId": "TEST-PTH2-S3-RUN-CONTEXT-PERSISTENCE",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "TEST-PTH2-S3-RUN-CONTEXT-PERSISTENCE",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_create",
+              "subjectId": "EVIDENCE-PTH2-S3-RUN-CONTEXT-LOCAL-20260814",
+              "subjectKind": "evidence"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+              "subjectKind": "evidence"
+            }
+          ],
+          "status": "review",
+          "railRef": "StartRun",
+          "designId": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V2-20260814",
+          "rationale": "The mandatory SQL-first run context must use the configured file or S3 artifact backend; the file-only writer rejected the supported S3 runtime before Temporal dispatch.",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "workItemId": "2329",
+          "fowlerSignal": "boundary_drift",
+          "supersedesId": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-20260814",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T06:20:34.077+00:00"
+      },
+      {
         "operation_id": "5bae5a45-bea2-440a-aec1-1adec900702b",
         "idempotency_key": "architecture_evidence_record:codex:API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811:EV-PTH14-REF-CLASSIFY:88aebacea68b58c8",
         "operation_type": "architecture_evidence_record",
@@ -98367,6 +99241,31 @@
           "sourceContentSha256": "a1b1c865ff403d57d786adaf61f98d6296967c4923a712414c2135b8cd4392c7"
         },
         "created_at": "2026-08-11T05:06:13.964+00:00"
+      },
+      {
+        "operation_id": "6808e5d2-03e1-4e54-8349-e2a306133b78",
+        "idempotency_key": "pth2-s3-run-context-local-proof-v3-20260814",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V3-20260814",
+        "source_ref": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts",
+        "source_content_sha256": "7f73e7b9f75dfd4313bee36dc8a557bb383464e398bd36f21c7e5c365b3b0906",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V3-20260814",
+          "sourceRef": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts",
+          "subjectId": "TEST-PTH2-S3-RUN-CONTEXT-PERSISTENCE",
+          "evidenceId": "EVIDENCE-PTH2-S3-RUN-CONTEXT-LOCAL-20260814",
+          "sourcePath": "apps/api/test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts",
+          "resultState": "pass",
+          "subjectKind": "test",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "7f73e7b9f75dfd4313bee36dc8a557bb383464e398bd36f21c7e5c365b3b0906"
+        },
+        "created_at": "2026-08-14T06:26:37.652+00:00"
       },
       {
         "operation_id": "687002c7-1395-407e-8d47-c4828a6dd3d2",
@@ -99804,6 +100703,27 @@
         "created_at": "2026-08-13T08:54:03.721+00:00"
       },
       {
+        "operation_id": "7c8ce3c6-f41e-494a-baab-09622b57e9ad",
+        "idempotency_key": "pth2-s3-run-context-design-v2-superseded-20260814",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V2-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The V2 design omitted the component may_reference scope required to attach test evidence.",
+          "designId": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V2-20260814",
+          "toStatus": "superseded",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "fromStatus": "review",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T06:21:14.007+00:00"
+      },
+      {
         "operation_id": "7cdb9bbb-e1f7-4e91-95a1-42cf4c58eb3b",
         "idempotency_key": "codex-api-h2-2-reachability-implementing-v3",
         "operation_type": "architecture_design_transition",
@@ -100169,6 +101089,64 @@
         "created_at": "2026-08-13T01:36:02.305+00:00"
       },
       {
+        "operation_id": "8294c58b-338c-47ed-af7c-77d6b696bd88",
+        "idempotency_key": "pth2-s3-run-context-design-v4-20260814",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V4-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "PTH2 runtime admission",
+          "title": "Prove configured artifact-store run context correction",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "TEST-PTH2-S3-RUN-CONTEXT-PERSISTENCE",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+              "subjectKind": "evidence"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_create",
+              "subjectId": "EVIDENCE-PTH2-S3-RUN-CONTEXT-TEST-V4-20260814",
+              "subjectKind": "evidence"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_create",
+              "subjectId": "EVIDENCE-PTH2-S3-RUN-CONTEXT-ARC-V4-20260814",
+              "subjectKind": "evidence"
+            }
+          ],
+          "status": "review",
+          "railRef": "StartRun",
+          "designId": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V4-20260814",
+          "rationale": "Close the configured file/S3 persistence correction with separate, auditable proof for the runtime test and the mandatory ARC evidence source.",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "workItemId": "2329",
+          "fowlerSignal": "boundary_drift",
+          "supersedesId": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V3-20260814",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T06:28:46.418+00:00"
+      },
+      {
         "operation_id": "83258201-50fe-4c3a-aa27-ebb90bb46647",
         "idempotency_key": "gh-2168-qa-evidence-correction-create-v1",
         "operation_type": "architecture_design_create",
@@ -100300,6 +101278,27 @@
           "sourceContentSha256": "5a630980b35f3732ff605438d1aa374d3b608dd2ea70af18a7bc101803197cf7"
         },
         "created_at": "2026-08-10T21:04:24.973+00:00"
+      },
+      {
+        "operation_id": "833fbb3b-0fd4-44ae-9cb1-46ab7c4f1c58",
+        "idempotency_key": "pth2-s3-run-context-implementing-v4-20260814",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V4-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The correction is committed and its two independent proof executions are ready to be recorded.",
+          "designId": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V4-20260814",
+          "toStatus": "implementing",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "fromStatus": "approved",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T06:29:02.606+00:00"
       },
       {
         "operation_id": "83c3c205-8098-422c-a76b-fd6b77c08d7e",
@@ -102882,6 +103881,27 @@
         "created_at": "2026-08-10T20:09:38.42+00:00"
       },
       {
+        "operation_id": "a221a4d7-b2f6-457e-8363-e9800d1ef1b3",
+        "idempotency_key": "pth2-s3-run-context-approved-v4-20260814",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V4-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The proof-only correction has exact independent runtime and ARC evidence scopes with no new implementation surface.",
+          "designId": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V4-20260814",
+          "toStatus": "approved",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "fromStatus": "review",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T06:28:55.088+00:00"
+      },
+      {
         "operation_id": "a300bdf8-9f28-4473-a554-a71533fd9d19",
         "idempotency_key": "gh-2166-record-plan-duplicate-retirement-design-v1",
         "operation_type": "architecture_design_create",
@@ -103978,6 +104998,27 @@
         "created_at": "2026-08-11T07:39:58.505+00:00"
       },
       {
+        "operation_id": "af42a4c3-5ba4-4b9e-88b3-f61be441eaa9",
+        "idempotency_key": "pth2-s3-run-context-design-v3-implementing-20260814",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V3-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The reviewed hard cut is implemented in committed source and ready for recorded execution evidence.",
+          "designId": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V3-20260814",
+          "toStatus": "implementing",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "fromStatus": "approved",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T06:21:51.169+00:00"
+      },
+      {
         "operation_id": "af45b596-9e90-44be-9f8b-65d024d80155",
         "idempotency_key": "codex-api-h2-2-reachability-v8-final-validation",
         "operation_type": "architecture_design_transition",
@@ -104228,6 +105269,27 @@
           "expectedStorageObject": "docs/planning/status/generated-code-state.md"
         },
         "created_at": "2026-08-10T15:49:38.226+00:00"
+      },
+      {
+        "operation_id": "b3989a41-e0cb-4484-8848-56fd7184e24d",
+        "idempotency_key": "pth2-s3-run-context-design-v3-approved-20260814",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V3-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The component hard cut, S3 publishing boundary, exact paths and negative regression test are fully specified.",
+          "designId": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V3-20260814",
+          "toStatus": "approved",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "fromStatus": "review",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T06:21:49.85+00:00"
       },
       {
         "operation_id": "b423c494-86d9-4d7e-8213-cf73f5d0f2a6",
@@ -104702,6 +105764,130 @@
           "sourceContentSha256": "40394bf597d05b78bd90cb96948d691d711afa9f1aa38c721f54a830ce8b0ca0"
         },
         "created_at": "2026-08-11T08:59:26.064+00:00"
+      },
+      {
+        "operation_id": "b9e37306-e949-4d5f-929f-af5d8b957b32",
+        "idempotency_key": "pth2-s3-run-context-writer-design-v3-20260814",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V3-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "PTH2 runtime admission",
+          "title": "Generalize run context persistence across configured artifact stores",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "apps/api/src/infrastructure/dbt/FileRunExecutionContextWriter.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_create",
+              "subjectId": "apps/api/src/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "apps/api/test/infrastructure/dbt/FileRunExecutionContextWriter.test.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_create",
+              "subjectId": "apps/api/test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/src/application/ports/runExecutionContextWriter.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "packages/@dvt/artifacts/src/contentAddressed/S3ContentAddressedArtifactStore.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "packages/@dvt/artifacts/src/index.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_create",
+              "subjectId": "TEST-PTH2-S3-RUN-CONTEXT-PERSISTENCE",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "TEST-PTH2-S3-RUN-CONTEXT-PERSISTENCE",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_create",
+              "subjectId": "EVIDENCE-PTH2-S3-RUN-CONTEXT-LOCAL-20260814",
+              "subjectKind": "evidence"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+              "subjectKind": "evidence"
+            }
+          ],
+          "status": "review",
+          "railRef": "StartRun",
+          "designId": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V3-20260814",
+          "rationale": "The mandatory SQL-first run context must use the configured file or S3 artifact backend; the file-only writer rejected the supported S3 runtime before Temporal dispatch.",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "workItemId": "2329",
+          "fowlerSignal": "boundary_drift",
+          "supersedesId": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V2-20260814",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T06:21:15.422+00:00"
       },
       {
         "operation_id": "ba0e81b4-7047-4eec-b29c-e13f3ce2b939",
@@ -105786,6 +106972,43 @@
           "sourceContentSha256": "1051450cef6fcd4d6e985b5ba34566a54d7c98b7ba7482fbd13345a18c9f10b1"
         },
         "created_at": "2026-08-13T09:08:33.787+00:00"
+      },
+      {
+        "operation_id": "bec8d4d4-3b15-49e4-8558-02b696826ede",
+        "idempotency_key": "pth2-s3-run-context-writer-component-20260814",
+        "operation_type": "architecture_component_record",
+        "actor": "codex",
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "kind": "adapter",
+          "name": "Artifact-backed run execution-context writer",
+          "layer": "adapter",
+          "owner": "Runtime Admission",
+          "status": "implemented",
+          "runtime": "node",
+          "designId": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-20260814",
+          "repoPath": "apps/api/src/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.ts",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "componentId": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
+          "criticality": "critical",
+          "publicContract": "IRunExecutionContextWriter",
+          "responsibilities": [
+            {
+              "dddOwner": "ArtifactBackedRunExecutionContextWriter",
+              "reasonToChange": "The artifact-store implementation, immutable-write policy, or content addressing changes.",
+              "responsibility": "Persist one run context immutably in the configured file or S3 artifact backend and return its verified reference.",
+              "responsibilityId": "RESP-RUN-CONTEXT-ARTIFACT-ADAPTER"
+            }
+          ],
+          "parentComponentId": "SYS-API-INFRASTRUCTURE",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T06:19:09.381+00:00"
       },
       {
         "operation_id": "bfb7b861-a400-4b04-abc2-06c78b33954e",
@@ -107105,6 +108328,31 @@
           "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95"
         },
         "created_at": "2026-08-13T13:52:50.22+00:00"
+      },
+      {
+        "operation_id": "ce8cdd80-c7f4-4cb7-b3c9-50966a1bb4f4",
+        "idempotency_key": "pth2-s3-run-context-test-proof-v4-20260814",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V4-20260814",
+        "source_ref": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts",
+        "source_content_sha256": "7f73e7b9f75dfd4313bee36dc8a557bb383464e398bd36f21c7e5c365b3b0906",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V4-20260814",
+          "sourceRef": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts",
+          "subjectId": "TEST-PTH2-S3-RUN-CONTEXT-PERSISTENCE",
+          "evidenceId": "EVIDENCE-PTH2-S3-RUN-CONTEXT-TEST-V4-20260814",
+          "sourcePath": "apps/api/test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts",
+          "resultState": "pass",
+          "subjectKind": "test",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "7f73e7b9f75dfd4313bee36dc8a557bb383464e398bd36f21c7e5c365b3b0906"
+        },
+        "created_at": "2026-08-14T06:29:27.391+00:00"
       },
       {
         "operation_id": "ce9466cd-d60b-4712-9c63-b3170e84ed37",
@@ -108712,6 +109960,31 @@
           "sourceContentSha256": "1cb8a3f1c3ff454195e792bf7038211ded617bb5bcee12ea8a502053e84607e7"
         },
         "created_at": "2026-08-11T03:35:51.781+00:00"
+      },
+      {
+        "operation_id": "e6d37232-72e5-48be-b684-47f30b9f8593",
+        "idempotency_key": "pth2-s3-run-context-arc-proof-v4-20260814",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V4-20260814",
+        "source_ref": "GIT_BASE=origin/main GIT_HEAD=HEAD node tools/ci/arc-check.mjs",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V4-20260814",
+          "sourceRef": "GIT_BASE=origin/main GIT_HEAD=HEAD node tools/ci/arc-check.mjs",
+          "subjectId": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "evidenceId": "EVIDENCE-PTH2-S3-RUN-CONTEXT-ARC-V4-20260814",
+          "sourcePath": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "resultState": "pass",
+          "subjectKind": "evidence",
+          "evidenceKind": "doc",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T06:29:27.417+00:00"
       },
       {
         "operation_id": "e78d05ba-7cf4-44da-8360-efd80fe69be5",
@@ -110607,6 +111880,27 @@
           "sourceContentSha256": "3a49a600239ce389c8316ec4da24f1940e45b58491d4931e066bd810c947cae3"
         },
         "created_at": "2026-08-10T21:06:29.78+00:00"
+      },
+      {
+        "operation_id": "fa8ff6a6-5ef6-444c-bcd9-0000cab3c979",
+        "idempotency_key": "pth2-s3-run-context-implemented-v4-20260814",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V4-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The S3/file hard cut has independent passing runtime and ARC evidence with no dual writer or compatibility path.",
+          "designId": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V4-20260814",
+          "toStatus": "implemented",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T06:29:38.408+00:00"
       },
       {
         "operation_id": "fa9784a8-8ee0-4fc9-a6cd-20957471bc16",
@@ -156038,13 +157332,14 @@
         "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts#renderContextWriteFailure",
         "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts#resolvePostgresPlanConnection",
         "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts#sameConnectionRef",
-        "apps/api/src/infrastructure/dbt/FileRunExecutionContextWriter.ts#FileRunExecutionContextWriter",
+        "apps/api/src/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.ts#ArtifactBackedRunExecutionContextWriter",
         "apps/api/src/infrastructure/startRun/RunExecutionContextBindingPolicy.ts#RunExecutionContextBindingPolicy",
         "apps/api/src/infrastructure/startRun/RunExecutionContextBindingPolicy.ts#RunExecutionContextBindingPolicyOptions",
         "apps/temporal-worker/src/runtime/TemporalWorkerPostgresPlanConnectionResolver.ts#TemporalWorkerPostgresPlanConnectionResolver",
         "apps/temporal-worker/src/runtime/TemporalWorkerPostgresPlanConnectionResolver.ts#assertRunExecutionContextAlignment",
         "apps/temporal-worker/src/runtime/TemporalWorkerPostgresPlanConnectionResolver.ts#reject",
-        "apps/temporal-worker/src/runtime/TemporalWorkerPostgresPlanConnectionResolver.ts#resolvePostgresPluginContext"
+        "apps/temporal-worker/src/runtime/TemporalWorkerPostgresPlanConnectionResolver.ts#resolvePostgresPluginContext",
+        "packages/@dvt/artifacts/src/contentAddressed/S3ContentAddressedArtifactStore.ts#createDefaultS3ContentAddressedArtifactStore"
       ],
       "implementationRefs": [
         "apps/api/src/application/ports/runExecutionContextWriter.ts#IRunExecutionContextWriter",
@@ -156059,13 +157354,14 @@
         "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts#renderContextWriteFailure",
         "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts#resolvePostgresPlanConnection",
         "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts#sameConnectionRef",
-        "apps/api/src/infrastructure/dbt/FileRunExecutionContextWriter.ts#FileRunExecutionContextWriter",
+        "apps/api/src/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.ts#ArtifactBackedRunExecutionContextWriter",
         "apps/api/src/infrastructure/startRun/RunExecutionContextBindingPolicy.ts#RunExecutionContextBindingPolicy",
         "apps/api/src/infrastructure/startRun/RunExecutionContextBindingPolicy.ts#RunExecutionContextBindingPolicyOptions",
         "apps/temporal-worker/src/runtime/TemporalWorkerPostgresPlanConnectionResolver.ts#TemporalWorkerPostgresPlanConnectionResolver",
         "apps/temporal-worker/src/runtime/TemporalWorkerPostgresPlanConnectionResolver.ts#assertRunExecutionContextAlignment",
         "apps/temporal-worker/src/runtime/TemporalWorkerPostgresPlanConnectionResolver.ts#reject",
-        "apps/temporal-worker/src/runtime/TemporalWorkerPostgresPlanConnectionResolver.ts#resolvePostgresPluginContext"
+        "apps/temporal-worker/src/runtime/TemporalWorkerPostgresPlanConnectionResolver.ts#resolvePostgresPluginContext",
+        "packages/@dvt/artifacts/src/contentAddressed/S3ContentAddressedArtifactStore.ts#createDefaultS3ContentAddressedArtifactStore"
       ],
       "documentationRefs": [
         "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md"
@@ -156084,7 +157380,8 @@
         "tsconfig.json"
       ],
       "architectureGuards": [
-        "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+        "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814",
+        "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V4-20260814"
       ],
       "completionGate": [
         "pnpm verify:prepush",
@@ -156112,7 +157409,8 @@
             "cqRails": ["StartRun"],
             "dddOwner": "Run command application service",
             "unitTests": [
-              "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts"
+              "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts",
+              "apps/api/test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts"
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
@@ -156120,7 +157418,7 @@
               "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V4-20260814"
           },
           {
             "name": "RunExecutionContextWriteResult",
@@ -156128,7 +157426,8 @@
             "cqRails": ["StartRun"],
             "dddOwner": "Run command application service",
             "unitTests": [
-              "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts"
+              "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts",
+              "apps/api/test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts"
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
@@ -156136,7 +157435,7 @@
               "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V4-20260814"
           },
           {
             "name": "CALLER_CONTEXT_REJECTION",
@@ -156144,7 +157443,8 @@
             "cqRails": ["StartRun"],
             "dddOwner": "Run command application service",
             "unitTests": [
-              "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts"
+              "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts",
+              "apps/api/test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts"
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
@@ -156152,7 +157452,7 @@
               "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V4-20260814"
           },
           {
             "name": "PostgresPlanConnectionResolution",
@@ -156160,7 +157460,8 @@
             "cqRails": ["StartRun"],
             "dddOwner": "Run command application service",
             "unitTests": [
-              "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts"
+              "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts",
+              "apps/api/test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts"
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
@@ -156168,7 +157469,7 @@
               "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V4-20260814"
           },
           {
             "name": "RunExecutionContextBindingUseCase",
@@ -156176,7 +157477,8 @@
             "cqRails": ["StartRun"],
             "dddOwner": "Run command application service",
             "unitTests": [
-              "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts"
+              "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts",
+              "apps/api/test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts"
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
@@ -156184,7 +157486,7 @@
               "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V4-20260814"
           },
           {
             "name": "buildRunExecutionContext",
@@ -156192,7 +157494,8 @@
             "cqRails": ["StartRun"],
             "dddOwner": "Run command application service",
             "unitTests": [
-              "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts"
+              "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts",
+              "apps/api/test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts"
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
@@ -156200,7 +157503,7 @@
               "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V4-20260814"
           },
           {
             "name": "isDbtPlan",
@@ -156208,7 +157511,8 @@
             "cqRails": ["StartRun"],
             "dddOwner": "Run command application service",
             "unitTests": [
-              "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts"
+              "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts",
+              "apps/api/test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts"
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
@@ -156216,7 +157520,7 @@
               "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V4-20260814"
           },
           {
             "name": "rejectRunExecutionContext",
@@ -156224,7 +157528,8 @@
             "cqRails": ["StartRun"],
             "dddOwner": "Run command application service",
             "unitTests": [
-              "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts"
+              "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts",
+              "apps/api/test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts"
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
@@ -156232,7 +157537,7 @@
               "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V4-20260814"
           },
           {
             "name": "renderBundleFailure",
@@ -156240,7 +157545,8 @@
             "cqRails": ["StartRun"],
             "dddOwner": "Run command application service",
             "unitTests": [
-              "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts"
+              "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts",
+              "apps/api/test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts"
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
@@ -156248,7 +157554,7 @@
               "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V4-20260814"
           },
           {
             "name": "renderContextWriteFailure",
@@ -156256,7 +157562,8 @@
             "cqRails": ["StartRun"],
             "dddOwner": "Run command application service",
             "unitTests": [
-              "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts"
+              "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts",
+              "apps/api/test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts"
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
@@ -156264,7 +157571,7 @@
               "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V4-20260814"
           },
           {
             "name": "resolvePostgresPlanConnection",
@@ -156272,7 +157579,8 @@
             "cqRails": ["StartRun"],
             "dddOwner": "Run command application service",
             "unitTests": [
-              "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts"
+              "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts",
+              "apps/api/test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts"
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
@@ -156280,7 +157588,7 @@
               "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V4-20260814"
           },
           {
             "name": "sameConnectionRef",
@@ -156288,7 +157596,8 @@
             "cqRails": ["StartRun"],
             "dddOwner": "Run command application service",
             "unitTests": [
-              "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts"
+              "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts",
+              "apps/api/test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts"
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
@@ -156296,15 +157605,16 @@
               "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V4-20260814"
           },
           {
-            "name": "FileRunExecutionContextWriter",
-            "path": "apps/api/src/infrastructure/dbt/FileRunExecutionContextWriter.ts",
+            "name": "ArtifactBackedRunExecutionContextWriter",
+            "path": "apps/api/src/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.ts",
             "cqRails": ["StartRun"],
             "dddOwner": "Run command application service",
             "unitTests": [
-              "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts"
+              "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts",
+              "apps/api/test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts"
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
@@ -156312,7 +157622,7 @@
               "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V4-20260814"
           },
           {
             "name": "RunExecutionContextBindingPolicy",
@@ -156320,7 +157630,8 @@
             "cqRails": ["StartRun"],
             "dddOwner": "Run command application service",
             "unitTests": [
-              "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts"
+              "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts",
+              "apps/api/test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts"
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
@@ -156328,7 +157639,7 @@
               "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V4-20260814"
           },
           {
             "name": "RunExecutionContextBindingPolicyOptions",
@@ -156336,7 +157647,8 @@
             "cqRails": ["StartRun"],
             "dddOwner": "Run command application service",
             "unitTests": [
-              "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts"
+              "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts",
+              "apps/api/test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts"
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
@@ -156344,7 +157656,7 @@
               "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V4-20260814"
           },
           {
             "name": "TemporalWorkerPostgresPlanConnectionResolver",
@@ -156352,7 +157664,8 @@
             "cqRails": ["StartRun"],
             "dddOwner": "Run command application service",
             "unitTests": [
-              "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts"
+              "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts",
+              "apps/api/test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts"
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
@@ -156360,7 +157673,7 @@
               "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V4-20260814"
           },
           {
             "name": "assertRunExecutionContextAlignment",
@@ -156368,7 +157681,8 @@
             "cqRails": ["StartRun"],
             "dddOwner": "Run command application service",
             "unitTests": [
-              "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts"
+              "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts",
+              "apps/api/test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts"
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
@@ -156376,7 +157690,7 @@
               "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V4-20260814"
           },
           {
             "name": "reject",
@@ -156384,7 +157698,8 @@
             "cqRails": ["StartRun"],
             "dddOwner": "Run command application service",
             "unitTests": [
-              "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts"
+              "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts",
+              "apps/api/test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts"
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
@@ -156392,7 +157707,7 @@
               "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V4-20260814"
           },
           {
             "name": "resolvePostgresPluginContext",
@@ -156400,7 +157715,8 @@
             "cqRails": ["StartRun"],
             "dddOwner": "Run command application service",
             "unitTests": [
-              "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts"
+              "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts",
+              "apps/api/test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts"
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
@@ -156408,7 +157724,24 @@
               "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V4-20260814"
+          },
+          {
+            "name": "createDefaultS3ContentAddressedArtifactStore",
+            "path": "packages/@dvt/artifacts/src/contentAddressed/S3ContentAddressedArtifactStore.ts",
+            "cqRails": ["StartRun"],
+            "dddOwner": "Run command application service",
+            "unitTests": [
+              "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts",
+              "apps/api/test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts"
+            ],
+            "fowlerSignals": [
+              "Separate Query from Modifier",
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
+            "architectureGuard": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V4-20260814"
           }
         ],
         "version": 1,
@@ -156433,7 +157766,7 @@
           {
             "id": "startrun-record",
             "redTest": "SQL-first execution previously accepted global PostgreSQL fallback state.",
-            "greenTest": "Plan-scoped PostgreSQL resolution passes contract, isolation, Temporal, and browser coverage.",
+            "greenTest": "Plan-scoped PostgreSQL resolution and configured artifact persistence pass contract, isolation, Temporal, API, and browser coverage.",
             "patchSurfaces": [
               "apps/**",
               "packages/**",
@@ -156466,7 +157799,8 @@
           }
         ],
         "architectureGuards": [
-          "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+          "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814",
+          "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V4-20260814"
         ],
         "implementationPlan": "https://github.com/dunay2/dvt/issues/2329",
         "mechanizationStatus": "implemented",
@@ -156481,7 +157815,7 @@
         ],
         "forbiddenImplementationSurfaces": ["docs/archive/**"]
       },
-      "revision": 6,
+      "revision": 7,
       "createdBy": "codex",
       "createdAt": "2026-08-14T04:16:21.053Z"
     },
@@ -200340,6 +201674,113 @@
         "forbiddenImplementationSurfaces": ["docs/archive/**"]
       },
       "createdAt": "2026-08-14T05:52:00.176Z"
+    },
+    {
+      "operationId": "04c7998f-a6f8-4215-b826-2be3c43bd4fc",
+      "idempotencyKey": "pth2-startrun-artifact-writer-hard-cut-20260814",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY#command#startrun",
+      "sourcePath": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+      "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+      "expectedRevision": 6,
+      "previousRevision": 6,
+      "resultingRevision": 7,
+      "payload": {
+        "redTest": "SQL-first execution previously accepted global PostgreSQL fallback state.",
+        "dddOwner": "Run command application service",
+        "railName": "StartRun",
+        "railType": "command",
+        "featureId": "PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY",
+        "greenTest": "Plan-scoped PostgreSQL resolution and configured artifact persistence pass contract, isolation, Temporal, API, and browser coverage.",
+        "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "unitTests": [
+          "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts",
+          "apps/api/test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts"
+        ],
+        "railStatus": "retired",
+        "userStories": [
+          "Bind each SQL-first plan to the governed PostgreSQL connection selected by its source node."
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts"
+        ],
+        "domainObjects": ["Immutable run execution context"],
+        "fowlerSignals": [
+          "Separate Query from Modifier",
+          "Explicit connection authority",
+          "Reuse canonical rail without duplicate ownership"
+        ],
+        "negativeTests": [
+          "Reject SQL-first execution without a governed plan connection resolver."
+        ],
+        "patchSurfaces": [
+          "apps/**",
+          "packages/**",
+          "scripts/**",
+          "tsconfig.json"
+        ],
+        "adapterSurface": "Temporal run execution adapter",
+        "completionGate": [
+          "pnpm verify:prepush",
+          "pnpm docs:feature-mechanization:implementation"
+        ],
+        "applicationPort": "IStartRunUseCase.execute",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Execution completed despite missing plan-scoped connection authority.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/state/github-mvp-issue-workflow.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md"
+        ],
+        "architectureGuards": [
+          "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-V4-20260814"
+        ],
+        "authorizationScope": "Authenticated tenant/project/environment workspace scope",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2329",
+        "implementationRefs": [
+          "apps/api/src/application/ports/runExecutionContextWriter.ts#IRunExecutionContextWriter",
+          "apps/api/src/application/ports/runExecutionContextWriter.ts#RunExecutionContextWriteResult",
+          "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts#CALLER_CONTEXT_REJECTION",
+          "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts#PostgresPlanConnectionResolution",
+          "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts#RunExecutionContextBindingUseCase",
+          "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts#buildRunExecutionContext",
+          "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts#isDbtPlan",
+          "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts#rejectRunExecutionContext",
+          "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts#renderBundleFailure",
+          "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts#renderContextWriteFailure",
+          "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts#resolvePostgresPlanConnection",
+          "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts#sameConnectionRef",
+          "apps/api/src/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.ts#ArtifactBackedRunExecutionContextWriter",
+          "apps/api/src/infrastructure/startRun/RunExecutionContextBindingPolicy.ts#RunExecutionContextBindingPolicy",
+          "apps/api/src/infrastructure/startRun/RunExecutionContextBindingPolicy.ts#RunExecutionContextBindingPolicyOptions",
+          "apps/temporal-worker/src/runtime/TemporalWorkerPostgresPlanConnectionResolver.ts#TemporalWorkerPostgresPlanConnectionResolver",
+          "apps/temporal-worker/src/runtime/TemporalWorkerPostgresPlanConnectionResolver.ts#assertRunExecutionContextAlignment",
+          "apps/temporal-worker/src/runtime/TemporalWorkerPostgresPlanConnectionResolver.ts#reject",
+          "apps/temporal-worker/src/runtime/TemporalWorkerPostgresPlanConnectionResolver.ts#resolvePostgresPluginContext",
+          "packages/@dvt/artifacts/src/contentAddressed/S3ContentAddressedArtifactStore.ts#createDefaultS3ContentAddressedArtifactStore"
+        ],
+        "normalizedRailName": "startrun",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": true,
+        "allowedImplementationSurfaces": [
+          "apps/**",
+          "packages/**",
+          "scripts/**",
+          "docs/evidence/**",
+          "docs/risk-register/**",
+          "tsconfig.json"
+        ],
+        "forbiddenImplementationSurfaces": ["docs/archive/**"]
+      },
+      "createdAt": "2026-08-14T06:31:07.642Z"
     }
   ],
   "governanceComponentDefinitions": [
