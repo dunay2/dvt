@@ -13,6 +13,8 @@ import type {
 
 type S3LikeClient = Pick<S3Client, 'send'>;
 
+let defaultS3ContentAddressedArtifactStore: S3ContentAddressedArtifactStore | undefined;
+
 export interface S3ContentAddressedArtifactStoreOptions {
   readonly client: S3LikeClient;
 }
@@ -53,7 +55,10 @@ export class S3ContentAddressedArtifactStore implements IContentAddressedArtifac
 }
 
 export function createDefaultS3ContentAddressedArtifactStore(): S3ContentAddressedArtifactStore {
-  return new S3ContentAddressedArtifactStore({ client: new S3Client({}) });
+  defaultS3ContentAddressedArtifactStore ??= new S3ContentAddressedArtifactStore({
+    client: new S3Client({}),
+  });
+  return defaultS3ContentAddressedArtifactStore;
 }
 
 async function readExistingArtifact(
