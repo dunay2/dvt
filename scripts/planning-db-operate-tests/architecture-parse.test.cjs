@@ -565,6 +565,32 @@ test('parseArgs builds scoped retirement commands for stale architecture evidenc
   assert.notEqual(firstAdmissionTestCommand.idempotencyKey, secondTestCommand.idempotencyKey);
 });
 
+test('parseArgs builds a scoped architecture responsibility retirement command', () => {
+  const command = parseArgs([
+    'architecture-component',
+    'retire-responsibility',
+    '--design',
+    'API-H2-5-ARCHITECTURE-RESPONSIBILITY-RETIREMENT-20260814',
+    '--component',
+    'SYS-API-INFRA-DBT-RUN-CONTEXT-FILES',
+    '--responsibility',
+    'RESP-DBT-RUN-CONTEXT-FILE-ADAPTER',
+    '--reason',
+    'The artifact-backed writer replaced the file-only responsibility.',
+    '--source-ref',
+    'scripts/planning-db-operate.cjs',
+    '--source-content-sha256',
+    'e'.repeat(64),
+    '--actor',
+    'codex',
+  ]);
+
+  assert.equal(command.kind, 'architecture_component_responsibility_retire');
+  assert.equal(command.componentId, 'SYS-API-INFRA-DBT-RUN-CONTEXT-FILES');
+  assert.equal(command.responsibilityId, 'RESP-DBT-RUN-CONTEXT-FILE-ADAPTER');
+  assert.match(command.reason, /artifact-backed/);
+});
+
 test('parseArgs builds an audited feature rail retirement command', () => {
   const command = parseArgs([
     'feature-mechanization',
