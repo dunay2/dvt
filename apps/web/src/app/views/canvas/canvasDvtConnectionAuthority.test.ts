@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import type { GitArtifactRef } from '@dvt/contracts';
+
 import type { CanonicalNode } from '../../types/canonical';
 import {
   applyDvtNodeAuthoringMetadata,
@@ -129,14 +131,14 @@ describe('Canvas DVT PostgreSQL connection authority', () => {
         ref: 'refs/heads/main',
         commitSha: 'commit-sql-1',
         contentSha256: 'a'.repeat(64),
-      },
+      } as unknown as GitArtifactRef,
     });
 
     expect(graph.sourceVersion).toBe('transformation-sql-first-v2');
-    expect(graph.nodes.map((entry) => entry.stepTypeConfig.connectionRef)).toEqual([
-      connectionA,
-      connectionA,
-      connectionA,
-    ]);
+    expect(
+      graph.nodes.map(
+        (entry) => (entry.stepTypeConfig as { connectionRef: typeof connectionA }).connectionRef
+      )
+    ).toEqual([connectionA, connectionA, connectionA]);
   });
 });

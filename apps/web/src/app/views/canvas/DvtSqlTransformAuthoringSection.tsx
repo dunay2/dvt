@@ -1,8 +1,9 @@
 /** Owned concern: render DVT SQL transform authoring fields. */
 import type { Dispatch, SetStateAction } from 'react';
 
-import { MonacoCodeEditor } from '../../components/monaco/MonacoCodeEditor';
 import { inspectorVisualClasses } from '../../components/inspector/inspectorVisualTokens';
+import { Label } from '../../components/ui/label';
+import { Textarea } from '../../components/ui/textarea';
 import type { CanonicalNode } from '../../types/canonical';
 import type { DvtSqlTransformAuthoringMetadata } from './canvasDvtAuthoringModel';
 import { formatCanvasInspectorNodeDraftError } from './canvasCopyFormatting';
@@ -18,6 +19,7 @@ export function DvtSqlTransformAuthoringSection({
   draft,
   errors,
   section = 'all',
+  inheritedConnectionId,
   onChange,
 }: Readonly<{
   node: CanonicalNode;
@@ -25,6 +27,7 @@ export function DvtSqlTransformAuthoringSection({
   draft: DvtSqlTransformAuthoringMetadata;
   errors: CanvasInspectorNodeDraftErrors['dvt'];
   section?: 'all' | 'code';
+  inheritedConnectionId?: string;
   onChange: Dispatch<SetStateAction<CanvasInspectorNodeDraft>>;
 }>): JSX.Element {
   const showCode = section === 'all' || section === 'code';
@@ -46,6 +49,14 @@ export function DvtSqlTransformAuthoringSection({
             {canvasViewCopy.inspectorDvtSqlTransformTitle}
           </h3>
           <div className="rounded border border-[color:var(--border-default)] bg-[var(--surface-elevated)] p-3 text-xs">
+            <span className="block text-(--text-muted)">
+              {canvasViewCopy.inspectorDvtInheritedConnectionLabel}
+            </span>
+            <code className="mt-1 block truncate text-(--text-default)">
+              {inheritedConnectionId ?? '-'}
+            </code>
+          </div>
+          <div className="rounded border border-[color:var(--border-default)] bg-[var(--surface-elevated)] p-3 text-xs">
             <div className="flex items-center justify-between gap-3">
               <span className="text-(--text-muted)">{canvasViewCopy.inspectorDvtSqlBodyLabel}</span>
               <span className="text-(--text-muted)">
@@ -57,26 +68,37 @@ export function DvtSqlTransformAuthoringSection({
             </code>
           </div>
           <div className="space-y-2">
-            <h4 className={inspectorVisualClasses.contextPanelSectionTitle}>
+            <Label htmlFor={`inspector-dvt-transform-sql-${node.id}`}>
               {canvasViewCopy.inspectorDvtSqlLabel}
-            </h4>
-            <MonacoCodeEditor
-              ariaLabel={canvasViewCopy.inspectorDvtSqlLabel}
-              language="sql"
-              loadingLabel={canvasViewCopy.inspectorDvtSqlBodyLabel}
-              onChange={(value) =>
+            </Label>
+            <Textarea
+              id={`inspector-dvt-transform-sql-${node.id}`}
+              name="dvt-transform-sql"
+              value={draft.sql}
+              disabled={disabled}
+              className={`${inspectorVisualClasses.inspectorCodeEditor} nokey`}
+              spellCheck={false}
+              onKeyDown={(event) => {
+                if (event.key === 'Backspace' || event.key === 'Delete') {
+                  event.stopPropagation();
+                }
+              }}
+              onKeyUp={(event) => {
+                if (event.key === 'Backspace' || event.key === 'Delete') {
+                  event.stopPropagation();
+                }
+              }}
+              onChange={(event) => {
+                const sql = event.currentTarget.value;
                 onChange((currentDraft) =>
                   currentDraft.dvt?.kind === 'sql_transform'
                     ? {
                         ...currentDraft,
-                        dvt: { ...currentDraft.dvt, sql: value },
+                        dvt: { ...currentDraft.dvt, sql },
                       }
                     : currentDraft
-                )
-              }
-              path={`canvas/${node.id}.sql`}
-              readOnly={disabled}
-              value={draft.sql}
+                );
+              }}
             />
             {errors?.sql ? (
               <p className={inspectorVisualClasses.inspectorErrorText}>

@@ -17,6 +17,7 @@ import type {
   ValidateTransformationGraphArgs,
 } from './transformationGraphValidation.types';
 import { TRANSFORMATION_REQUIRED_NODE_COUNT } from './transformationGraphValidation.types';
+import { resolveEffectiveDvtConnectionRef } from './canvasDvtAuthoringModel';
 
 export type {
   TransformationGraphValidationResult,
@@ -45,6 +46,16 @@ function validateThreeNodeTransformationContext(
   const edgeOrderResult = validateEdgeOrder(context, nodeRoles.nodeRolesById);
   if (edgeOrderResult) {
     return edgeOrderResult;
+  }
+
+  const sourceNode = context.scopedNodes.find(
+    (node) => nodeRoles.nodeRolesById[node.id] === 'source'
+  );
+  if (
+    sourceNode?.kind === 'dvt:source' &&
+    resolveEffectiveDvtConnectionRef(sourceNode) === undefined
+  ) {
+    return buildContextInvalidResult(context, 'requires_postgres_connection');
   }
 
   return buildValidResult(context, nodeRoles.nodeRolesById);

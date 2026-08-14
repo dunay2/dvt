@@ -1,6 +1,7 @@
 import type { DesignGraphDraft, DesignNodeType, GitArtifactRef } from '@dvt/contracts';
 
 import type { CanonicalNode } from '../../types/canonical';
+import { resolveEffectiveDvtConnectionRef } from './canvasDvtAuthoringModel';
 
 export function resolveScopedTransformationNodes(
   nodes: readonly CanonicalNode[],
@@ -84,10 +85,11 @@ export function requireSourcePayload(
   const table =
     readConfigString(config, 'table') ?? importedTableName ?? readAuthoringDefaultTable(node);
   const alias = readConfigString(config, 'alias') ?? importedSourceName ?? table;
+  const connectionRef = resolveEffectiveDvtConnectionRef(node);
 
-  if (!schema || !table || !alias) {
+  if (!schema || !table || !alias || !connectionRef) {
     throw new Error(
-      `Preview graph artifact requires source node ${node.id} to define metadata.config.schema, table, and alias-compatible source binding.`
+      `Preview graph artifact requires source node ${node.id} to define one PostgreSQL connection, schema, table, and alias-compatible source binding.`
     );
   }
 
@@ -96,6 +98,7 @@ export function requireSourcePayload(
     type: 'source',
     payload: {
       kind: 'postgres_table',
+      connectionRef,
       schema,
       table,
       alias,

@@ -157,7 +157,7 @@ describe('Canvas graph to execution-preview source parity', () => {
     });
 
     stubE2eJsonApi('POST', '/plans/preview', {
-      previewProfile: 'transformation-sql-first-v1',
+      previewProfile: 'transformation-sql-first-v2',
       plan: {
         metadata: {
           planVersion: '1.0',

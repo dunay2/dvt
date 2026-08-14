@@ -106,6 +106,7 @@ describe('canvasInspectorAuthoringModel', () => {
         schema: 'dvt_schema_required',
         table: 'dvt_table_required',
         alias: 'dvt_alias_required',
+        connectionRef: 'dvt_connection_required',
       },
     });
   });

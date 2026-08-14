@@ -1,7 +1,8 @@
-import { jcsCanonicalize } from '@dvt/contracts';
+import { jcsCanonicalize, type ConnectionRef } from '@dvt/contracts';
 
 import { resolvePreviewStepKind } from '../../plugins/nodeTypeRegistry';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import { resolveEffectiveDvtConnectionRef } from './canvasDvtAuthoringModel';
 
 export function buildPreviewGraphSignature(
   nodes: readonly CanonicalNode[],
@@ -18,11 +19,12 @@ function buildPreviewSignatureGraphSource(
 ): {
   kind: 'generic-graph-v1';
   sourceFamily: 'transformation-design-graph';
-  sourceVersion: 'transformation-sql-first-v1';
+  sourceVersion: 'transformation-sql-first-v2';
   nodes: Array<{
     nodeId: string;
     stepKind: string;
     dependsOn: string[];
+    connectionRef?: ConnectionRef;
     metadata: {
       displayName: string;
       sourceRef?: string;
@@ -53,13 +55,16 @@ function buildPreviewSignatureGraphSource(
   return {
     kind: 'generic-graph-v1',
     sourceFamily: 'transformation-design-graph',
-    sourceVersion: 'transformation-sql-first-v1',
+    sourceVersion: 'transformation-sql-first-v2',
     nodes: scopedNodes.map((node) => ({
       nodeId: node.id,
       stepKind: resolvePreviewStepKind(node.kind, node.role),
       dependsOn: [...(dependsOnByNodeId.get(node.id) ?? [])].sort((left, right) =>
         left.localeCompare(right)
       ),
+      ...(node.kind === 'dvt:source'
+        ? { connectionRef: resolveEffectiveDvtConnectionRef(node) }
+        : {}),
       metadata: {
         displayName: node.name,
         ...(node.path ? { sourceRef: node.path } : {}),

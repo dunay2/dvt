@@ -1,5 +1,7 @@
 /** Owned concern: derive and apply route-owned DVT transformation authoring metadata. */
-import type { CanonicalNode } from '../../types/canonical';
+import { ConnectedSourceRefSchema, ConnectionRefSchema, type ConnectionRef } from '@dvt/contracts';
+
+import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {
   buildDvtSqlTransformMetadata,
   readTransformationSqlMirrorState,
@@ -11,6 +13,7 @@ export type DvtSourceAuthoringMetadata = Readonly<{
   schema: string;
   table: string;
   alias: string;
+  connectionRef?: ConnectionRef;
 }>;
 
 export type DvtSqlTransformAuthoringMetadata = Readonly<{
@@ -31,7 +34,7 @@ export type DvtNodeAuthoringMetadata =
 
 export type DvtNodeAuthoringMetadataErrors = Partial<
   Record<
-    'schema' | 'table' | 'alias' | 'sql' | 'materialization' | 'writeMode',
+    'schema' | 'table' | 'alias' | 'connectionRef' | 'sql' | 'materialization' | 'writeMode',
     CanvasInspectorNodeDraftErrorCode
   >
 >;
@@ -95,7 +98,74 @@ function createSourceMetadata(node: CanonicalNode): DvtSourceAuthoringMetadata {
     schema: readString(config?.schema) ?? importedSchema ?? DEFAULT_SCHEMA_NAME,
     table,
     alias: normalizeIdentifier(readString(config?.alias) ?? importedSourceName ?? table, table),
+    connectionRef: resolveEffectiveDvtConnectionRef(node),
   };
+}
+
+function parseManualConnectionRef(value: unknown): ConnectionRef | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  const result = ConnectionRefSchema.safeParse(value);
+  if (!result.success) {
+    throw new Error('DVT source metadata.connectionRef must be a valid ConnectionRef.');
+  }
+  return result.data;
+}
+
+function parseImportedConnectionRef(value: unknown): ConnectionRef | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  const result = ConnectedSourceRefSchema.safeParse(value);
+  if (!result.success) {
+    throw new Error('DVT imported source metadata.connectedSourceRef must be valid.');
+  }
+  return result.data.connectionRef;
+}
+
+export function resolveEffectiveDvtConnectionRef(node: CanonicalNode): ConnectionRef | undefined {
+  const manualConnectionRef = parseManualConnectionRef(node.metadata?.connectionRef);
+  const importedConnectionRef = parseImportedConnectionRef(node.metadata?.connectedSourceRef);
+
+  if (manualConnectionRef && importedConnectionRef) {
+    throw new Error('DVT source nodes must persist exactly one connection authority.');
+  }
+
+  const connectionRef = importedConnectionRef ?? manualConnectionRef;
+  if (connectionRef && connectionRef.provider !== 'postgres') {
+    throw new Error('DVT SQL-first sources require a PostgreSQL ConnectionRef.');
+  }
+  return connectionRef;
+}
+
+export function resolveInheritedDvtConnectionRef(args: {
+  node: CanonicalNode;
+  nodes: readonly CanonicalNode[];
+  edges: readonly CanonicalEdge[];
+}): ConnectionRef | undefined {
+  const nodesById = new Map(args.nodes.map((candidate) => [candidate.id, candidate]));
+  const sourceIdByTargetId = new Map(args.edges.map((edge) => [edge.targetId, edge.sourceId]));
+  const visited = new Set<string>();
+  let current: CanonicalNode | undefined = args.node;
+
+  while (current) {
+    if (visited.has(current.id)) {
+      throw new Error('DVT connection inheritance cannot traverse a cyclic graph.');
+    }
+    visited.add(current.id);
+
+    if (current.kind === 'dvt:source') {
+      return resolveEffectiveDvtConnectionRef(current);
+    }
+
+    const sourceId = sourceIdByTargetId.get(current.id);
+    current = sourceId ? nodesById.get(sourceId) : undefined;
+  }
+
+  return undefined;
 }
 
 function createSqlTransformMetadata(node: CanonicalNode): DvtSqlTransformAuthoringMetadata {
@@ -164,6 +234,9 @@ export function validateDvtNodeAuthoringMetadata(
   if (metadata.kind === 'source' && metadata.alias.trim().length === 0) {
     errors.alias = 'dvt_alias_required';
   }
+  if (metadata.kind === 'source' && metadata.connectionRef === undefined) {
+    errors.connectionRef = 'dvt_connection_required';
+  }
 
   if (
     metadata.kind === 'sink' &&
@@ -209,12 +282,18 @@ export function applyDvtNodeAuthoringMetadata(
 
   if (metadata.kind === 'source') {
     const table = normalizeIdentifier(metadata.table, 'source_table');
-    return withConfig(node, {
-      ...existingConfig,
-      schema: metadata.schema.trim() || DEFAULT_SCHEMA_NAME,
-      table,
-      alias: normalizeIdentifier(metadata.alias, table),
-    });
+    return withConfig(
+      node,
+      {
+        ...existingConfig,
+        schema: metadata.schema.trim() || DEFAULT_SCHEMA_NAME,
+        table,
+        alias: normalizeIdentifier(metadata.alias, table),
+      },
+      node.pluginId === DVT_AUTHORING_PLUGIN_ID
+        ? { connectionRef: metadata.connectionRef }
+        : undefined
+    );
   }
 
   if (metadata.kind === 'sql_transform') {

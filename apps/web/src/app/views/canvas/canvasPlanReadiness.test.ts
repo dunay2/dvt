@@ -175,7 +175,7 @@ describe('canvasPlanReadiness', () => {
       canRun: true,
       executionStrategy: {
         kind: 'transformation_preview',
-        previewProfile: 'transformation-sql-first-v1',
+        previewProfile: 'transformation-sql-first-v2',
       },
       currentPlan: plan,
       lastPlannedDraftSignature: null,

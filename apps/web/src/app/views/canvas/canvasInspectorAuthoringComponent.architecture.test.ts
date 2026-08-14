@@ -123,7 +123,8 @@ describe('canvas inspector authoring component architecture', () => {
     expect(DVT_FIELDS_SOURCE).toContain('DvtSourceAuthoringSection');
     expect(DVT_FIELDS_SOURCE).toContain('DvtSqlTransformAuthoringSection');
     expect(DVT_FIELDS_SOURCE).toContain('DvtSinkAuthoringSection');
-    expect(DVT_SQL_SECTION_SOURCE).toContain('MonacoCodeEditor');
+    expect(DVT_SQL_SECTION_SOURCE).toContain('name="dvt-transform-sql"');
+    expect(DVT_SQL_SECTION_SOURCE).toContain("from '../../components/ui/textarea'");
     expect(DVT_SQL_SECTION_SOURCE).not.toContain('@monaco-editor/react');
     expect(DVT_FIELDS_SOURCE).not.toContain('workspaceService');
 
@@ -172,7 +173,7 @@ describe('canvas inspector authoring component architecture', () => {
     expect(DVT_SQL_SECTION_SOURCE).toContain(
       'Owned concern: render DVT SQL transform authoring fields.'
     );
-    expect(DVT_SQL_SECTION_SOURCE).toContain('MonacoCodeEditor');
+    expect(DVT_SQL_SECTION_SOURCE).toContain('name="dvt-transform-sql"');
     expect(DVT_SQL_SECTION_SOURCE).toContain('inspectorDvtSqlLinePluralLabel');
     expect(DVT_SQL_SECTION_SOURCE).not.toContain('name="dvt-transform-column"');
 

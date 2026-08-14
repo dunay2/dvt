@@ -8,6 +8,7 @@ import {
   buildCanonicalEdges,
   buildCanonicalNodes,
   buildPersistedPreviewPlan,
+  buildTestPostgresConnectionRef,
   createPlansServiceMock,
   createRunsServiceMock,
   renderExecutionActionsHarness,
@@ -99,6 +100,7 @@ describe('useCanvasExecutionActions plan preview selection', () => {
       status: 'idle',
       tags: ['authoring'],
       metadata: {
+        connectionRef: buildTestPostgresConnectionRef('warehouse-copy'),
         config: {
           schema: 'raw',
           table: 'orders_copy',

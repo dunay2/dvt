@@ -30,7 +30,7 @@ describe('resolveCanvasRuntimePolicy', () => {
         kind: 'missing_document',
         executionStrategy: {
           kind: 'transformation_preview',
-          previewProfile: 'transformation-sql-first-v1',
+          previewProfile: 'transformation-sql-first-v2',
         },
         nodeKinds: DVT_AUTHORING_NODE_KINDS,
       },
@@ -162,7 +162,7 @@ describe('resolveCanvasRuntimePolicy', () => {
         canvasKind: 'transformation',
         executionStrategy: {
           kind: 'transformation_preview',
-          previewProfile: 'transformation-sql-first-v1',
+          previewProfile: 'transformation-sql-first-v2',
         },
         nodeKinds: DVT_AUTHORING_NODE_KINDS,
       },
@@ -264,7 +264,7 @@ describe('resolveCanvasRuntimePolicy', () => {
         canvasKind: 'transformation',
         executionStrategy: {
           kind: 'transformation_preview',
-          previewProfile: 'transformation-sql-first-v1',
+          previewProfile: 'transformation-sql-first-v2',
         },
         nodeKinds: DVT_AUTHORING_NODE_KINDS,
       },

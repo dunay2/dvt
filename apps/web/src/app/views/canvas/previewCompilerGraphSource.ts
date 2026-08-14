@@ -1,7 +1,7 @@
 import {
   TRANSFORMATION_STEP_KIND,
   type GitArtifactRef,
-  type TransformationSqlFirstCompilerGraphSourceV1,
+  type TransformationSqlFirstCompilerGraphSourceV2,
 } from '@dvt/contracts';
 
 import type { CanonicalNode } from '../../types/canonical';
@@ -23,7 +23,7 @@ export type PreviewGraphSourceArgs = {
 
 export function buildPreviewGraphSource(
   args: PreviewGraphSourceArgs
-): TransformationSqlFirstCompilerGraphSourceV1 {
+): TransformationSqlFirstCompilerGraphSourceV2 {
   const scopedNodes = resolveScopedTransformationNodes(args.nodes, args.scopedNodeIds);
   const source = requireSourcePayload(scopedNodes.source);
   const transform = requireTransformPayload(scopedNodes.transform, args.sqlArtifact);
@@ -32,13 +32,14 @@ export function buildPreviewGraphSource(
   return {
     kind: 'generic-graph-v1',
     sourceFamily: 'transformation-design-graph',
-    sourceVersion: 'transformation-sql-first-v1',
+    sourceVersion: 'transformation-sql-first-v2',
     nodes: [
       {
         nodeId: source.id,
         stepKind: TRANSFORMATION_STEP_KIND.preparePostgresTransform,
         dependsOn: [],
         stepTypeConfig: {
+          connectionRef: source.payload.connectionRef,
           targetSchema: sink.payload.schema,
           sourceSchema: source.payload.schema,
           sourceTable: source.payload.table,
@@ -51,6 +52,7 @@ export function buildPreviewGraphSource(
         stepKind: TRANSFORMATION_STEP_KIND.postgresSqlTransform,
         dependsOn: [source.id],
         stepTypeConfig: {
+          connectionRef: source.payload.connectionRef,
           dialect: 'postgres',
           entrypoint: transform.payload.entrypoint,
           sql: args.sqlText,
@@ -70,6 +72,7 @@ export function buildPreviewGraphSource(
         stepKind: TRANSFORMATION_STEP_KIND.captureMaterializationEvidence,
         dependsOn: [transform.id],
         stepTypeConfig: {
+          connectionRef: source.payload.connectionRef,
           sinkSchema: sink.payload.schema,
           sinkTable: sink.payload.table,
           materialization: sink.payload.materialization,

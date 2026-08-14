@@ -271,7 +271,7 @@ export function assertPreviewPlanRequest(): void {
 
     expect(previewBody).to.not.equal(undefined);
     expect(previewBody?.persist).to.equal(true);
-    expect(previewBody?.previewProfile).to.equal('transformation-sql-first-v1');
+    expect(previewBody?.previewProfile).to.equal('transformation-sql-first-v2');
     expect(previewBody?.selection).to.deep.equal({
       mode: 'explicit',
       nodeIds: ['src_orders', 'model_orders', 'orders_dashboard'],
@@ -285,7 +285,7 @@ export function assertPreviewPlanRequest(): void {
     expect(previewBody?.graphSource).to.include({
       kind: 'generic-graph-v1',
       sourceFamily: 'transformation-design-graph',
-      sourceVersion: 'transformation-sql-first-v1',
+      sourceVersion: 'transformation-sql-first-v2',
     });
     expect(previewBody?.provenance.graphArtifact).to.deep.include({
       repo: 'dunay2/dvt',
@@ -342,7 +342,7 @@ function buildPlanPreviewResponse({
   const planId = 'b'.repeat(64);
 
   return {
-    previewProfile: 'transformation-sql-first-v1',
+    previewProfile: 'transformation-sql-first-v2',
     plan: {
       metadata: {
         planVersion: '1.0',

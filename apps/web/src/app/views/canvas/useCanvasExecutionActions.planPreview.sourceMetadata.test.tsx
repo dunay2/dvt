@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   buildCanonicalEdges,
   buildCanonicalNodes,
+  buildTestPostgresConnectionRef,
   createPlansServiceMock,
   createRunsServiceMock,
   renderExecutionActionsHarness,
@@ -35,6 +36,11 @@ describe('useCanvasExecutionActions plan preview source metadata', () => {
             tags: ['source', 'erp'],
             path: 'models/sources/src_erp.yml',
             metadata: {
+              connectedSourceRef: {
+                schemaVersion: 'connected-source-ref.v1',
+                connectionRef: buildTestPostgresConnectionRef(),
+                sourceObjectId: 'relation/analytics/erp/orders',
+              },
               sourceName: 'warehouse_prod_analytics_erp',
               tableName: 'orders',
               database: 'analytics',
@@ -63,6 +69,7 @@ describe('useCanvasExecutionActions plan preview source metadata', () => {
             expect.objectContaining({
               nodeId: 'source-node',
               stepTypeConfig: expect.objectContaining({
+                connectionRef: buildTestPostgresConnectionRef(),
                 sourceSchema: 'erp',
                 sourceTable: 'orders',
                 sourceAlias: 'warehouse_prod_analytics_erp',
@@ -115,6 +122,7 @@ describe('useCanvasExecutionActions plan preview source metadata', () => {
         ? {
             ...node,
             metadata: {
+              connectionRef: buildTestPostgresConnectionRef(),
               config: {
                 schema: 'raw',
                 table: 'payments',

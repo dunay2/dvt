@@ -27,7 +27,7 @@ function createLivePostgresConnection(connectionNameSuffix = ''): void {
   cy.get('[data-slot="source-import-create-connection-database"]').clear().type('dvt');
   cy.get('[data-slot="source-import-create-connection-credential-ref"]')
     .clear()
-    .type('env:DVT_LOCAL_POSTGRES_WAREHOUSE_URL');
+    .type('postgres:local-warehouse');
   cy.contains('[role="dialog"] button', 'Create connection').should('be.enabled').click();
   cy.contains('[data-slot="source-import-connection-option"]', connectionName, {
     timeout: 30_000,

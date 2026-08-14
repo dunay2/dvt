@@ -111,6 +111,10 @@ export function useWarehouseSourceImportPort(): IWarehouseSourceImportPort {
   return useRequiredAppServicesContext().warehouseSourceImport;
 }
 
+export function useOptionalWarehouseSourceImportPort(): IWarehouseSourceImportPort | undefined {
+  return useContext(AppServicesContext)?.warehouseSourceImport;
+}
+
 export function useWorkspaceFileContentCommandPort(): IWorkspaceFileContentCommandPort {
   return useRequiredAppServicesContext().workspaceFileContentCommand;
 }
