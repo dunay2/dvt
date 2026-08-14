@@ -7,6 +7,7 @@ import {
   MAX_LINE_CHANGES,
   classifyPullRequestSize,
   countCanonicalRecordChanges,
+  runPrSizeCheck,
 } from './check-pr-size.mjs';
 
 function canonicalState({ components = [], rails = [] } = {}) {
@@ -128,4 +129,67 @@ test('the PR workflow supplies exact base and head refs to the size policy', () 
 
   assert.match(sizeStep, /GIT_BASE: \$\{\{ github\.event\.pull_request\.base\.sha \}\}/u);
   assert.match(sizeStep, /GIT_HEAD: \$\{\{ github\.event\.pull_request\.head\.sha \}\}/u);
+});
+
+test('falls back to exact tree comparison when a shallow checkout has no merge base', () => {
+  const calls = [];
+  const baseSnapshot = canonicalState();
+  const headSnapshot = canonicalState({
+    rails: [{ railId: 'rail-a', status: 'implemented' }],
+  });
+  const execFileSync = (_command, args) => {
+    calls.push(args);
+    if (args[0] === 'diff' && args[2] === 'base...head') {
+      const error = new Error('git diff failed');
+      error.stderr = 'fatal: base...head: no merge base';
+      throw error;
+    }
+    if (args[0] === 'diff') {
+      return '2\t1\ttools/planning-db/state/canonical-state.json\n';
+    }
+    if (args[0] === 'show' && args[1].startsWith('base:')) {
+      return JSON.stringify(baseSnapshot);
+    }
+    if (args[0] === 'show' && args[1].startsWith('head:')) {
+      return JSON.stringify(headSnapshot);
+    }
+    throw new Error(`Unexpected git call: ${args.join(' ')}`);
+  };
+  const messages = [];
+
+  const exitCode = runPrSizeCheck(
+    {
+      GIT_BASE: 'base',
+      GIT_HEAD: 'head',
+      PR_ADDITIONS: '2',
+      PR_DELETIONS: '1',
+      PR_LABELS: '[]',
+    },
+    {
+      execFileSync,
+      logger: {
+        error: (message) => messages.push(message),
+        log: (message) => messages.push(message),
+        warn: (message) => messages.push(message),
+      },
+    }
+  );
+
+  assert.equal(exitCode, 0);
+  assert.deepEqual(calls[0], [
+    'diff',
+    '--numstat',
+    'base...head',
+    '--',
+    'tools/planning-db/state/canonical-state.json',
+  ]);
+  assert.deepEqual(calls[1], [
+    'diff',
+    '--numstat',
+    'base',
+    'head',
+    '--',
+    'tools/planning-db/state/canonical-state.json',
+  ]);
+  assert.match(messages.at(-1), /canonical records: 1/u);
 });
