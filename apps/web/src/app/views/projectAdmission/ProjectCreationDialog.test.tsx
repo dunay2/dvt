@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { waitForReactQuery, withTestQueryClient } from '../../../testing/reactQueryHarness';
 import { AppServicesProvider } from '../../services/AppServicesContext';
+import { ApiError } from '../../services/api/createApiClient';
 import type { ProjectOnboardingService } from '../../services/projectOnboarding/projectOnboardingService';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { createAppServicesTestOverrides } from '../../../testing/appServicesTestDoubles';
@@ -36,6 +37,21 @@ function buildProjectOnboardingService(
     }),
     ...overrides,
   };
+}
+
+function projectCreationApiError(reason: string): ApiError {
+  return new ApiError({
+    message: 'Request to /projects failed (409)',
+    endpoint: '/projects',
+    statusCode: 409,
+    category: 'client',
+    responseBody: {
+      error: {
+        type: 'conflict',
+        reason,
+      },
+    },
+  });
 }
 
 describe('ProjectCreationDialog', () => {
@@ -138,6 +154,72 @@ describe('ProjectCreationDialog', () => {
       (document.body.querySelector('input[name="projectName"]') as HTMLInputElement).value
     ).toBe('Ventas');
   });
+
+  it.each([
+    {
+      language: 'es',
+      reason: 'duplicate_project_name',
+      expectedMessage:
+        'Ya existe un proyecto con ese nombre en esta organización. Elige otro nombre.',
+    },
+    {
+      language: 'en',
+      reason: 'duplicate_project_name',
+      expectedMessage:
+        'A project with that name already exists in this organization. Choose another name.',
+    },
+    {
+      language: 'es',
+      reason: 'idempotency_conflict',
+      expectedMessage:
+        'Ya no se puede confirmar esta solicitud de creación. Cierra el diálogo e inténtalo de nuevo.',
+    },
+    {
+      language: 'es',
+      reason: 'future_conflict',
+      expectedMessage: 'No se pudo crear el proyecto. Inténtalo de nuevo.',
+    },
+  ] as const)(
+    'presents $reason in $language without exposing transport details',
+    async ({ language, reason, expectedMessage }) => {
+      useApplicationLanguageStore.getState().configureApplicationLanguage(language);
+      const onOpenChange = vi.fn();
+      const createProject = vi
+        .fn<ProjectOnboardingService['createProject']>()
+        .mockRejectedValue(projectCreationApiError(reason));
+
+      mounted = await withTestQueryClient(
+        <AppServicesProvider overrides={createAppServicesTestOverrides()}>
+          <ProjectCreationDialog
+            activateCreatedProject={vi.fn()}
+            onOpenChange={onOpenChange}
+            open
+            service={buildProjectOnboardingService({ createProject })}
+          />
+        </AppServicesProvider>
+      );
+
+      await waitForReactQuery(
+        () => document.body.querySelector('input[name="projectName"]') != null,
+        { description: 'new project dialog form' }
+      );
+
+      const input = document.body.querySelector('input[name="projectName"]') as HTMLInputElement;
+      await act(async () => {
+        fireEvent.input(input, { target: { value: 'Prueba' } });
+        fireEvent.submit(document.body.querySelector('[data-slot="project-creation-form"]')!);
+        await Promise.resolve();
+      });
+
+      await waitForReactQuery(() => document.body.textContent?.includes(expectedMessage) === true, {
+        description: 'localized project creation error',
+      });
+      expect(document.body.textContent).not.toContain('/projects');
+      expect(document.body.textContent).not.toContain('409');
+      expect(input.value).toBe('Prueba');
+      expect(onOpenChange).not.toHaveBeenCalledWith(false);
+    }
+  );
 
   it.each([
     {

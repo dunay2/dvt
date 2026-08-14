@@ -10,6 +10,7 @@ import {
   type ProjectOnboardingCatalog,
   type ProjectOnboardingService,
 } from '../../services/projectOnboarding/projectOnboardingService';
+import { ApiError } from '../../services/api/createApiClient';
 import {
   getApplicationLanguage,
   useApplicationLanguageStore,
@@ -35,6 +36,35 @@ function readableErrorMessage(error: unknown, fallback: string): string {
   }
 
   return fallback;
+}
+
+function readProjectCreationErrorReason(error: ApiError): string | null {
+  if (error.responseBody == null || typeof error.responseBody !== 'object') {
+    return null;
+  }
+
+  const envelope = error.responseBody as { readonly error?: unknown };
+  if (envelope.error == null || typeof envelope.error !== 'object') {
+    return null;
+  }
+
+  const reason = (envelope.error as { readonly reason?: unknown }).reason;
+  return typeof reason === 'string' ? reason : null;
+}
+
+function projectCreationErrorMessage(error: unknown, copy: ProjectOnboardingCopy): string {
+  if (error instanceof ApiError) {
+    switch (readProjectCreationErrorReason(error)) {
+      case 'duplicate_project_name':
+        return copy.duplicateProjectNameMessage;
+      case 'idempotency_conflict':
+        return copy.projectCreationConflictMessage;
+      default:
+        return copy.projectCreationFailureMessage;
+    }
+  }
+
+  return readableErrorMessage(error, copy.projectCreationFailureMessage);
 }
 
 function resolveInitialTenantId(catalog: ProjectOnboardingCatalog): string {
@@ -136,7 +166,7 @@ export function useProjectAdmissionController({
       });
       await onProjectCreated(response);
     } catch (error) {
-      setFormError(readableErrorMessage(error, copy.failureMessage));
+      setFormError(projectCreationErrorMessage(error, copy));
     } finally {
       submissionLockedRef.current = false;
       setSubmissionState('idle');
