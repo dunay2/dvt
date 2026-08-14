@@ -1312,7 +1312,7 @@
         "maturity_score": null,
         "parent_component_id": "SYS-API-INFRASTRUCTURE",
         "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-14T06:21:32.873+00:00"
+        "updated_at": "2026-08-14T08:43:13.16+00:00"
       },
       {
         "component_id": "SYS-API-INFRA-RUNTIME-FOUNDATION",
@@ -13561,6 +13561,34 @@
         "updated_at": "2026-08-14T05:29:43.29+00:00"
       },
       {
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-REPLACEMENT-20260814",
+        "work_item_id": "GH-2329",
+        "title": "Publish single run-context component authority",
+        "owner": "PTH2 runtime admission",
+        "status": "implemented",
+        "rationale": "Re-record one implemented artifact-backed responsibility, retire stale test authority, and align observable outcomes with the surviving implementation.",
+        "fowler_signal": "hidden_authority",
+        "rail_ref": "RecordArchitectureComponent;RetireArchitectureTestEvidence;RecordArchitectureObservabilityEvidence",
+        "approved_at": "2026-08-14T08:43:36.593+00:00",
+        "supersedes_id": null,
+        "created_at": "2026-08-14T08:42:39.797+00:00",
+        "updated_at": "2026-08-14T08:43:39.241+00:00"
+      },
+      {
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-RETIREMENT-20260814",
+        "work_item_id": "GH-2329",
+        "title": "Retire duplicate run-context component responsibilities",
+        "owner": "PTH2 runtime admission",
+        "status": "implemented",
+        "rationale": "Hard-cut the stale file-only and proposed duplicate responsibility rows before re-recording the single implemented artifact-backed authority.",
+        "fowler_signal": "hidden_authority",
+        "rail_ref": "RetireArchitectureComponentResponsibility",
+        "approved_at": "2026-08-14T08:42:41.789+00:00",
+        "supersedes_id": null,
+        "created_at": "2026-08-14T08:42:37.801+00:00",
+        "updated_at": "2026-08-14T08:42:58.154+00:00"
+      },
+      {
         "design_id": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814",
         "work_item_id": "2329",
         "title": "Align run context architecture paths with the hard cut",
@@ -13573,6 +13601,20 @@
         "supersedes_id": null,
         "created_at": "2026-08-14T04:51:17.737+00:00",
         "updated_at": "2026-08-14T05:29:47.107+00:00"
+      },
+      {
+        "design_id": "PTH2-RUN-CONTEXT-OBSERVABILITY-HARDCUT-20260814",
+        "work_item_id": "GH-2329",
+        "title": "Align run-context observability with surviving outcomes",
+        "owner": "PTH2 runtime admission",
+        "status": "implemented",
+        "rationale": "Remove the retired unsupported outcome from the existing observability signal without creating a parallel signal.",
+        "fowler_signal": "hidden_authority",
+        "rail_ref": "RecordArchitectureObservabilityEvidence",
+        "approved_at": "2026-08-14T08:45:38.886+00:00",
+        "supersedes_id": null,
+        "created_at": "2026-08-14T08:43:40.529+00:00",
+        "updated_at": "2026-08-14T08:45:41.564+00:00"
       },
       {
         "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-20260814",
@@ -19431,7 +19473,7 @@
       {
         "observability_id": "OBS-DBT-RUN-CONTEXT-WRITE-OUTCOME",
         "component_id": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
-        "signal_name": "Typed unavailable, unsupported, immutable-conflict, and success outcomes remain visible at StartRun admission.",
+        "signal_name": "Typed unavailable, immutable-conflict, and success outcomes remain visible at StartRun admission.",
         "signal_kind": "log",
         "required": true,
         "status": "implemented",
@@ -38414,15 +38456,6 @@
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
-        "responsibility_id": "RESP-DBT-RUN-CONTEXT-FILE-ADAPTER",
-        "component_id": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
-        "responsibility": "Persist one run context once and return a verified file artifact reference.",
-        "reason_to_change": "The artifact-store implementation, immutable-write policy, or file addressing changes.",
-        "ddd_owner": "FileRunExecutionContextWriter",
-        "status": "implemented",
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
         "responsibility_id": "RESP-DBT-RUN-CONTEXT-WRITER-PORT",
         "component_id": "SYS-API-APPLICATION-DBT-RUN-CONTEXT-WRITER",
         "responsibility": "Define immutable persistence of server-created run execution context.",
@@ -38689,7 +38722,7 @@
         "responsibility": "Persist one run context immutably in the configured file or S3 artifact backend and return its verified reference.",
         "reason_to_change": "The artifact-store implementation, immutable-write policy, or content addressing changes.",
         "ddd_owner": "ArtifactBackedRunExecutionContextWriter",
-        "status": "proposed",
+        "status": "implemented",
         "created_at": "2026-08-07T00:49:55.642+00:00"
       },
       {
@@ -44524,16 +44557,6 @@
         "coverage_level": "boundary",
         "required": true,
         "validation_command": "pnpm --filter dvt-api exec vitest run test/application/services/DbtRunExecutionContextBindingUseCase.test.ts",
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "test_id": "TEST-DBT-RUN-CONTEXT-FILE-ADAPTER",
-        "component_id": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
-        "test_path": "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
-        "test_kind": "integration",
-        "coverage_level": "negative",
-        "required": true,
-        "validation_command": "pnpm --filter dvt-api exec vitest run test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -88020,6 +88043,38 @@
         "created_at": "2026-08-14T05:13:25.961+00:00"
       },
       {
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-REPLACEMENT-20260814",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-14T08:42:39.797+00:00"
+      },
+      {
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-REPLACEMENT-20260814",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T08:42:39.797+00:00"
+      },
+      {
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-REPLACEMENT-20260814",
+        "subject_kind": "test",
+        "subject_id": "TEST-DBT-RUN-CONTEXT-FILE-ADAPTER",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-14T08:42:39.797+00:00"
+      },
+      {
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-RETIREMENT-20260814",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T08:42:37.801+00:00"
+      },
+      {
         "design_id": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814",
         "subject_kind": "component",
         "subject_id": "SYS-API-APPLICATION-DBT-RUN-CONTEXT-BINDING",
@@ -88042,6 +88097,22 @@
         "scope_kind": "may_update",
         "required": true,
         "created_at": "2026-08-14T04:51:17.737+00:00"
+      },
+      {
+        "design_id": "PTH2-RUN-CONTEXT-OBSERVABILITY-HARDCUT-20260814",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-14T08:43:40.529+00:00"
+      },
+      {
+        "design_id": "PTH2-RUN-CONTEXT-OBSERVABILITY-HARDCUT-20260814",
+        "subject_kind": "evidence",
+        "subject_id": "OBS-DBT-RUN-CONTEXT-WRITE-OUTCOME",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T08:43:40.529+00:00"
       },
       {
         "design_id": "PTH2-S3-RUN-CONTEXT-WRITER-CORRECTION-20260814",
@@ -91199,6 +91270,52 @@
         "created_at": "2026-08-13T09:50:53.163+00:00"
       },
       {
+        "operation_id": "01e4a4ba-0f89-4524-801b-272de73b5a21",
+        "idempotency_key": "architecture_design_create:codex:PTH2-RUN-CONTEXT-AUTHORITY-REPLACEMENT-20260814:bde4ab931c984dd0",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-REPLACEMENT-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "PTH2 runtime admission",
+          "title": "Publish single run-context component authority",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "TEST-DBT-RUN-CONTEXT-FILE-ADAPTER",
+              "subjectKind": "test"
+            }
+          ],
+          "status": "review",
+          "railRef": "RecordArchitectureComponent;RetireArchitectureTestEvidence;RecordArchitectureObservabilityEvidence",
+          "designId": "PTH2-RUN-CONTEXT-AUTHORITY-REPLACEMENT-20260814",
+          "rationale": "Re-record one implemented artifact-backed responsibility, retire stale test authority, and align observable outcomes with the surviving implementation.",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "workItemId": "GH-2329",
+          "fowlerSignal": "hidden_authority",
+          "supersedesId": null,
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T08:42:39.797+00:00"
+      },
+      {
         "operation_id": "0212ff5e-61b9-49ff-824b-96f8fd40f469",
         "idempotency_key": "issue-2169-retire-duplicate-test-sys-api-tests-application-services-start-run-admission-16-v1",
         "operation_type": "architecture_test_retire",
@@ -93029,6 +93146,27 @@
         "created_at": "2026-08-11T03:26:01.338+00:00"
       },
       {
+        "operation_id": "1698ced7-f200-43bb-b2bc-48d2fc8d7a31",
+        "idempotency_key": "architecture_test_retire:codex:PTH2-RUN-CONTEXT-AUTHORITY-REPLACEMENT-20260814:SYS-API-INFRA-DBT-RUN-CONTEXT-FILES:229d3e84a33b4bf3",
+        "operation_type": "architecture_test_retire",
+        "actor": "codex",
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-REPLACEMENT-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The file-only writer test path was removed by the artifact-backed hard cut.",
+          "testId": "TEST-DBT-RUN-CONTEXT-FILE-ADAPTER",
+          "designId": "PTH2-RUN-CONTEXT-AUTHORITY-REPLACEMENT-20260814",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "componentId": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T08:43:14.463+00:00"
+      },
+      {
         "operation_id": "16f29cb7-2cc6-49a9-91d8-a75188a94c79",
         "idempotency_key": "gh-2167-update-test-sys-api-infra-workspace-local-adapters-1-v1",
         "operation_type": "architecture_test_record",
@@ -93894,6 +94032,30 @@
           "sourceContentSha256": "d8f110d94f644926a8f70a70a1dabdf3fd6ae959bf3b1b570fced229b0c0e470"
         },
         "created_at": "2026-08-13T08:15:06.827+00:00"
+      },
+      {
+        "operation_id": "26967519-d538-44e3-ac07-da55f0a313f6",
+        "idempotency_key": "architecture_observability_record:codex:PTH2-RUN-CONTEXT-OBSERVABILITY-HARDCUT-20260814:SYS-API-INFRA-DBT-RUN-CONTEXT-FILES:9342390f302e9b0b",
+        "operation_type": "architecture_observability_record",
+        "actor": "codex",
+        "design_id": "PTH2-RUN-CONTEXT-OBSERVABILITY-HARDCUT-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "status": "implemented",
+          "designId": "PTH2-RUN-CONTEXT-OBSERVABILITY-HARDCUT-20260814",
+          "required": true,
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "signalKind": "log",
+          "signalName": "Typed unavailable, immutable-conflict, and success outcomes remain visible at StartRun admission.",
+          "componentId": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
+          "observabilityId": "OBS-DBT-RUN-CONTEXT-WRITE-OUTCOME",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T08:45:05.171+00:00"
       },
       {
         "operation_id": "26b019ef-8664-417a-a5b0-7d1dcd590a8b",
@@ -94919,6 +95081,46 @@
           "sourceContentSha256": "753edb16f56b6a048f351042f40b9760b1e07205f7bf28b7e18b54071e50ac04"
         },
         "created_at": "2026-08-10T21:04:28.707+00:00"
+      },
+      {
+        "operation_id": "333be802-682a-4ce2-8965-dffd8fbb5588",
+        "idempotency_key": "architecture_design_create:codex:PTH2-RUN-CONTEXT-OBSERVABILITY-HARDCUT-20260814:a8ac8a3bc0c71656",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "PTH2-RUN-CONTEXT-OBSERVABILITY-HARDCUT-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "PTH2 runtime admission",
+          "title": "Align run-context observability with surviving outcomes",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "OBS-DBT-RUN-CONTEXT-WRITE-OUTCOME",
+              "subjectKind": "evidence"
+            }
+          ],
+          "status": "review",
+          "railRef": "RecordArchitectureObservabilityEvidence",
+          "designId": "PTH2-RUN-CONTEXT-OBSERVABILITY-HARDCUT-20260814",
+          "rationale": "Remove the retired unsupported outcome from the existing observability signal without creating a parallel signal.",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "workItemId": "GH-2329",
+          "fowlerSignal": "hidden_authority",
+          "supersedesId": null,
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T08:43:40.529+00:00"
       },
       {
         "operation_id": "335beb29-6fd9-4b4f-8c95-64e330314cf0",
@@ -99166,6 +99368,27 @@
         "created_at": "2026-08-13T01:09:40.573+00:00"
       },
       {
+        "operation_id": "6153682f-94af-4cca-9fbf-2032e295c5ab",
+        "idempotency_key": "architecture_design_transition:codex:PTH2-RUN-CONTEXT-AUTHORITY-RETIREMENT-20260814:a0c020bd0bafb971",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-RETIREMENT-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The duplicate current responsibility rows are proven by ReadArchitectureComponentProfile.",
+          "designId": "PTH2-RUN-CONTEXT-AUTHORITY-RETIREMENT-20260814",
+          "toStatus": "approved",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "fromStatus": "review",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T08:42:41.789+00:00"
+      },
+      {
         "operation_id": "6171260a-ffa6-4b64-80bf-b5e44d3beae6",
         "idempotency_key": "architecture_design_transition:codex:GH-2166-START-RUN-ERROR-CONTAINMENT-20260813:32fa6f529485cb0e",
         "operation_type": "architecture_design_transition",
@@ -100328,6 +100551,27 @@
         "created_at": "2026-08-11T07:37:49.273+00:00"
       },
       {
+        "operation_id": "6f530694-2f8a-455f-a0b9-b343775b367d",
+        "idempotency_key": "architecture_component_responsibility_retire:codex:PTH2-RUN-CONTEXT-AUTHORITY-RETIREMENT-20260814:RESP-DBT-RUN-CONTEXT-FILE-ADAPTER:198e2ebb9389b62e",
+        "operation_type": "architecture_component_responsibility_retire",
+        "actor": "codex",
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-RETIREMENT-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The file-only writer and its responsibility were hard-cut by the artifact-backed writer.",
+          "designId": "PTH2-RUN-CONTEXT-AUTHORITY-RETIREMENT-20260814",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "componentId": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
+          "responsibilityId": "RESP-DBT-RUN-CONTEXT-FILE-ADAPTER",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T08:42:55.47+00:00"
+      },
+      {
         "operation_id": "6fd03408-1e55-4b03-90fd-c59f86b8a54c",
         "idempotency_key": "architecture_design_transition:codex:API-H2-4-DB-FIRST-DOCUMENT-EVIDENCE-RECONCILIATION-V3-20260811:6816e4fdbec0b43b",
         "operation_type": "architecture_design_transition",
@@ -101342,6 +101586,27 @@
           "sourceContentSha256": "fd675a672fd740540223bd66d7fb7521289ce1b52c06fea236c2d33cf3ee2984"
         },
         "created_at": "2026-08-13T07:54:49.713+00:00"
+      },
+      {
+        "operation_id": "7d78c1ba-6302-468c-bf18-bbb135e55d4e",
+        "idempotency_key": "architecture_design_transition:codex:PTH2-RUN-CONTEXT-AUTHORITY-REPLACEMENT-20260814:23500c1359a50b0e",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-REPLACEMENT-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "One implemented artifact-backed responsibility and one current test remain.",
+          "designId": "PTH2-RUN-CONTEXT-AUTHORITY-REPLACEMENT-20260814",
+          "toStatus": "implemented",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T08:43:39.241+00:00"
       },
       {
         "operation_id": "7dac553a-03ee-4cc3-bd51-da28bc3cdef7",
@@ -104416,6 +104681,27 @@
         "created_at": "2026-08-13T13:58:24.919+00:00"
       },
       {
+        "operation_id": "9f7ffdbe-a203-49d7-8d39-ac0f8b9608a1",
+        "idempotency_key": "architecture_design_transition:codex:PTH2-RUN-CONTEXT-OBSERVABILITY-HARDCUT-20260814:4dedc077a1a26be2",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "PTH2-RUN-CONTEXT-OBSERVABILITY-HARDCUT-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The scoped observability correction has been recorded through its governed command.",
+          "designId": "PTH2-RUN-CONTEXT-OBSERVABILITY-HARDCUT-20260814",
+          "toStatus": "implementing",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "fromStatus": "approved",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T08:45:40.208+00:00"
+      },
+      {
         "operation_id": "9fdf6db8-21c1-41ec-99e4-34a44109ea66",
         "idempotency_key": "gh-2168-plan-test-contract-current-tests-v1",
         "operation_type": "architecture_contract_record",
@@ -104683,6 +104969,27 @@
         "created_at": "2026-08-10T21:04:26.234+00:00"
       },
       {
+        "operation_id": "a60db143-e50d-4e4a-b7fd-e1a2b7ede2e5",
+        "idempotency_key": "architecture_design_transition:codex:PTH2-RUN-CONTEXT-AUTHORITY-RETIREMENT-20260814:e6e98773e425ddec",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-RETIREMENT-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Both duplicate responsibility rows were retired through audited exact-scope commands.",
+          "designId": "PTH2-RUN-CONTEXT-AUTHORITY-RETIREMENT-20260814",
+          "toStatus": "implemented",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T08:42:58.154+00:00"
+      },
+      {
         "operation_id": "a6d25920-95e1-42ac-96ed-9a88f8f9e40d",
         "idempotency_key": "architecture_design_create:codex:API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811:19983b062eafd02d",
         "operation_type": "architecture_design_create",
@@ -104836,6 +105143,27 @@
           "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
         },
         "created_at": "2026-08-14T05:29:45.818+00:00"
+      },
+      {
+        "operation_id": "a89971da-0680-4b1f-ba1e-f035e90a83dd",
+        "idempotency_key": "architecture_design_transition:codex:PTH2-RUN-CONTEXT-AUTHORITY-REPLACEMENT-20260814:1a23af6d4bd31e99",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-REPLACEMENT-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Finalize the replacement authority lifecycle after exact-scope writes.",
+          "designId": "PTH2-RUN-CONTEXT-AUTHORITY-REPLACEMENT-20260814",
+          "toStatus": "implementing",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "fromStatus": "approved",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T08:43:37.896+00:00"
       },
       {
         "operation_id": "a8c070e6-4677-4973-98ab-1c8103ed0a85",
@@ -105834,6 +106162,27 @@
         "created_at": "2026-08-10T21:06:22.796+00:00"
       },
       {
+        "operation_id": "b09a546d-ed46-4230-9d5d-9e60e9a4b504",
+        "idempotency_key": "architecture_design_transition:codex:PTH2-RUN-CONTEXT-AUTHORITY-RETIREMENT-20260814:e1ca844048ce7cab",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-RETIREMENT-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The audited responsibility retirement rail and its current-schema operation type are available on main.",
+          "designId": "PTH2-RUN-CONTEXT-AUTHORITY-RETIREMENT-20260814",
+          "toStatus": "implementing",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "fromStatus": "approved",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T08:42:44.018+00:00"
+      },
+      {
         "operation_id": "b1f455b8-16a7-4ffa-80d7-e079aa5774cf",
         "idempotency_key": "gh-2167-update-test-dbt-project-graph-runtime-catalog-v1",
         "operation_type": "architecture_test_record",
@@ -105959,6 +106308,27 @@
         "resulting_revision": 0,
         "payload": {},
         "created_at": "2026-08-11T11:55:48.023+00:00"
+      },
+      {
+        "operation_id": "b433ac5c-caf5-45fc-b053-87c1fa26b8ec",
+        "idempotency_key": "architecture_design_transition:codex:PTH2-RUN-CONTEXT-OBSERVABILITY-HARDCUT-20260814:cfaa9b132b28b5a5",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "PTH2-RUN-CONTEXT-OBSERVABILITY-HARDCUT-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The existing observability row is reused and the retired unsupported outcome is removed.",
+          "designId": "PTH2-RUN-CONTEXT-OBSERVABILITY-HARDCUT-20260814",
+          "toStatus": "approved",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "fromStatus": "review",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T08:45:38.886+00:00"
       },
       {
         "operation_id": "b473c539-8544-4191-901a-05556fcf54ab",
@@ -106382,6 +106752,40 @@
           "sourceContentSha256": "c8c8e3b444e75a9b8169c9c01b5043316bc7d51d95cb4a9c20e60e00633ad06b"
         },
         "created_at": "2026-08-11T04:16:11.036+00:00"
+      },
+      {
+        "operation_id": "b87853a1-cb88-4254-b3fe-2781f8ebf98b",
+        "idempotency_key": "architecture_design_create:codex:PTH2-RUN-CONTEXT-AUTHORITY-RETIREMENT-20260814:0c8c240fc455f9ff",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-RETIREMENT-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "PTH2 runtime admission",
+          "title": "Retire duplicate run-context component responsibilities",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
+              "subjectKind": "component"
+            }
+          ],
+          "status": "review",
+          "railRef": "RetireArchitectureComponentResponsibility",
+          "designId": "PTH2-RUN-CONTEXT-AUTHORITY-RETIREMENT-20260814",
+          "rationale": "Hard-cut the stale file-only and proposed duplicate responsibility rows before re-recording the single implemented artifact-backed authority.",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "workItemId": "GH-2329",
+          "fowlerSignal": "hidden_authority",
+          "supersedesId": null,
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T08:42:37.801+00:00"
       },
       {
         "operation_id": "b8c86acb-7044-46ef-9615-0d6d8561692f",
@@ -107627,6 +108031,27 @@
           "sourceContentSha256": "1051450cef6fcd4d6e985b5ba34566a54d7c98b7ba7482fbd13345a18c9f10b1"
         },
         "created_at": "2026-08-13T09:08:33.787+00:00"
+      },
+      {
+        "operation_id": "bea199ec-ef2f-4b0b-9482-d2f20fc7ece1",
+        "idempotency_key": "architecture_component_responsibility_retire:codex:PTH2-RUN-CONTEXT-AUTHORITY-RETIREMENT-20260814:RESP-RUN-CONTEXT-ARTIFACT-ADAPTER:e51af088fddc808a",
+        "operation_type": "architecture_component_responsibility_retire",
+        "actor": "codex",
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-RETIREMENT-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Remove the proposed duplicate before re-recording the same semantic responsibility with implemented lifecycle state.",
+          "designId": "PTH2-RUN-CONTEXT-AUTHORITY-RETIREMENT-20260814",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "componentId": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
+          "responsibilityId": "RESP-RUN-CONTEXT-ARTIFACT-ADAPTER",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T08:42:56.785+00:00"
       },
       {
         "operation_id": "bec8d4d4-3b15-49e4-8558-02b696826ede",
@@ -109344,6 +109769,43 @@
         "created_at": "2026-08-11T10:13:39.234+00:00"
       },
       {
+        "operation_id": "d04f6574-f26b-4ac4-9037-881ca5e30ac9",
+        "idempotency_key": "architecture_component_record:codex:PTH2-RUN-CONTEXT-AUTHORITY-REPLACEMENT-20260814:SYS-API-INFRA-DBT-RUN-CONTEXT-FILES:3a215cc4338694e4",
+        "operation_type": "architecture_component_record",
+        "actor": "codex",
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-REPLACEMENT-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "kind": "adapter",
+          "name": "Artifact-backed run execution-context writer",
+          "layer": "adapter",
+          "owner": "Runtime Admission",
+          "status": "implemented",
+          "runtime": "node",
+          "designId": "PTH2-RUN-CONTEXT-AUTHORITY-REPLACEMENT-20260814",
+          "repoPath": "apps/api/src/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.ts",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "componentId": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
+          "criticality": "critical",
+          "publicContract": "IRunExecutionContextWriter",
+          "responsibilities": [
+            {
+              "dddOwner": "ArtifactBackedRunExecutionContextWriter",
+              "reasonToChange": "The artifact-store implementation, immutable-write policy, or content addressing changes.",
+              "responsibility": "Persist one run context immutably in the configured file or S3 artifact backend and return its verified reference.",
+              "responsibilityId": "RESP-RUN-CONTEXT-ARTIFACT-ADAPTER"
+            }
+          ],
+          "parentComponentId": "SYS-API-INFRASTRUCTURE",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T08:43:13.16+00:00"
+      },
+      {
         "operation_id": "d0b3be37-9967-4bcf-9e00-cb6286c0c83f",
         "idempotency_key": "codex-api-h2-2-reachability-v6-implemented",
         "operation_type": "architecture_design_transition",
@@ -109384,6 +109846,27 @@
           "sourceContentSha256": "7d7ef4209d18b84c568120801202f5321010b6e85d4c3fd7d2aebe251c73cafe"
         },
         "created_at": "2026-08-11T01:38:25.2+00:00"
+      },
+      {
+        "operation_id": "d253cf9e-9c54-4d43-ba35-3135e0e352f9",
+        "idempotency_key": "architecture_design_transition:codex:PTH2-RUN-CONTEXT-OBSERVABILITY-HARDCUT-20260814:7a1c1cef7294acd6",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "PTH2-RUN-CONTEXT-OBSERVABILITY-HARDCUT-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The component profile now exposes only supported run-context outcomes.",
+          "designId": "PTH2-RUN-CONTEXT-OBSERVABILITY-HARDCUT-20260814",
+          "toStatus": "implemented",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T08:45:41.564+00:00"
       },
       {
         "operation_id": "d4777b91-94d8-4f02-b307-7f620567665a",
@@ -111970,6 +112453,27 @@
           "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
         },
         "created_at": "2026-08-10T21:04:06.879+00:00"
+      },
+      {
+        "operation_id": "f3f6f9ef-1ece-4b20-a910-2d74a8cb7030",
+        "idempotency_key": "architecture_design_transition:codex:PTH2-RUN-CONTEXT-AUTHORITY-REPLACEMENT-20260814:b032328c1e687e90",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-REPLACEMENT-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The component responsibility and stale test hard cut completed through their existing rails.",
+          "designId": "PTH2-RUN-CONTEXT-AUTHORITY-REPLACEMENT-20260814",
+          "toStatus": "approved",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "fromStatus": "review",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T08:43:36.593+00:00"
       },
       {
         "operation_id": "f4445e66-4166-44d1-9cd3-ecb397a32479",
