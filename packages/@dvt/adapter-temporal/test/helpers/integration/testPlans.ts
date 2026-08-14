@@ -19,6 +19,12 @@ export const INTEGRATION_PLAN_OWNERSHIP = {
   environmentId: 'test',
 } as const;
 
+export const INTEGRATION_POSTGRES_CONNECTION_REF = {
+  schemaVersion: 'connection-ref.v1',
+  connectionId: 'integration-warehouse',
+  provider: 'postgres',
+} as const;
+
 export function createPlanOwnershipFromContext(
   ctx: Pick<ResolvedRunContext, 'tenantId' | 'projectId' | 'environmentId'>
 ): NonNullable<ExecutionPlan['metadata']['ownership']> {
@@ -136,7 +142,11 @@ export function mkPostgresTransformationPlan(
           kind: 'PREPARE_POSTGRES_TRANSFORM',
           dependsOn: [],
           stepTypeConfig: {
+            connectionRef: INTEGRATION_POSTGRES_CONNECTION_REF,
             targetSchema: schema,
+            sourceSchema: 'raw',
+            sourceTable: 'orders',
+            sourceAlias: 'orders',
           },
         },
         {
@@ -144,7 +154,20 @@ export function mkPostgresTransformationPlan(
           kind: 'POSTGRES_SQL_TRANSFORM',
           dependsOn: ['s-1'],
           stepTypeConfig: {
+            connectionRef: INTEGRATION_POSTGRES_CONNECTION_REF,
+            dialect: 'postgres',
+            entrypoint: 'models/orders.sql',
             sql: 'SELECT 1 AS order_id UNION ALL SELECT 2 AS order_id',
+            sqlArtifact: {
+              repo: 'dunay2/dvt',
+              path: 'models/orders.sql',
+              ref: 'refs/heads/main',
+              commitSha: 'a'.repeat(40),
+              contentSha256: 'b'.repeat(64),
+            },
+            sourceSchema: 'raw',
+            sourceTable: 'orders',
+            sourceAlias: 'orders',
             sinkSchema: schema,
             sinkTable,
             materialization: 'table',
@@ -156,8 +179,11 @@ export function mkPostgresTransformationPlan(
           kind: 'CAPTURE_MATERIALIZATION_EVIDENCE',
           dependsOn: ['s-2'],
           stepTypeConfig: {
+            connectionRef: INTEGRATION_POSTGRES_CONNECTION_REF,
             sinkSchema: schema,
             sinkTable,
+            materialization: 'table',
+            writeMode: 'replace',
           },
         },
       ],

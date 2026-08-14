@@ -56,13 +56,30 @@ function allocateSchema(): string {
 }
 
 async function createClient(): Promise<Client> {
+  const connectionString = resolveIntegrationConnectionString();
+  const client = new Client({ connectionString });
+  await client.connect();
+  return client;
+}
+
+function resolveIntegrationConnectionString(): string {
   const connectionString = process.env.DVT_PG_URL ?? process.env.DATABASE_URL;
   if (!connectionString) {
     throw new Error('DVT_PG_URL or DATABASE_URL is required for integration tests');
   }
-  const client = new Client({ connectionString });
-  await client.connect();
-  return client;
+  return connectionString;
+}
+
+function createIntegrationPlanConnectionResolver() {
+  return {
+    async resolveConnection() {
+      return {
+        connectionRef: CONNECTION_REF,
+        credentialRef: 'postgres:integration-warehouse',
+        connectionString: resolveIntegrationConnectionString(),
+      };
+    },
+  };
 }
 
 afterAll(async () => {
@@ -110,6 +127,7 @@ describeIfPg('PostgresRelationalExecutionCapability integration', () => {
     const client = await createClient();
     const capability = new PostgresRelationalExecutionCapability({
       connectionString: process.env.DVT_PG_URL ?? process.env.DATABASE_URL,
+      planConnectionResolver: createIntegrationPlanConnectionResolver(),
       nowIsoUtc: () => '2026-04-09T00:00:00.000Z',
     });
 
@@ -214,6 +232,7 @@ describeIfPg('PostgresRelationalExecutionCapability integration', () => {
     const schema = allocateSchema();
     const capability = new PostgresRelationalExecutionCapability({
       connectionString: process.env.DVT_PG_URL ?? process.env.DATABASE_URL,
+      planConnectionResolver: createIntegrationPlanConnectionResolver(),
       nowIsoUtc: () => '2026-04-09T00:00:00.000Z',
     });
 

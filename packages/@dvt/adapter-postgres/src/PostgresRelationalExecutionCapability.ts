@@ -278,7 +278,7 @@ export class PostgresRelationalExecutionCapability {
     context: RuntimeStepExecutionContext
   ): Promise<PostgresAdapterClientSession> {
     if (this.config.planConnectionResolver === undefined) {
-      return this.clientSession;
+      throw new PostgresPlanConnectionRejectedError('POSTGRES_PLAN_CONNECTION_RESOLVER_REQUIRED');
     }
 
     const binding = await this.config.planConnectionResolver.resolveConnection(

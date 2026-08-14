@@ -22,6 +22,7 @@ import {
   createTenantWorkerHost,
   INTEGRATION_TEST_TIMEOUT,
   mkPostgresTransformationPlan,
+  INTEGRATION_POSTGRES_CONNECTION_REF,
   RunId,
   TestOutbox,
   TestProjector,
@@ -77,6 +78,15 @@ async function createPostgresCapabilityHarness(connectionString: string): Promis
   const { PostgresRelationalExecutionCapability } = await import('@dvt/adapter-postgres');
   const capability = new PostgresRelationalExecutionCapability({
     connectionString,
+    planConnectionResolver: {
+      async resolveConnection() {
+        return {
+          connectionRef: INTEGRATION_POSTGRES_CONNECTION_REF,
+          credentialRef: 'postgres:integration-warehouse',
+          connectionString,
+        };
+      },
+    },
     nowIsoUtc: () => '2026-04-09T00:00:00.000Z',
   });
 
@@ -191,7 +201,10 @@ describe('temporal integration (postgres capability)', () => {
 
         await waitForCondition(
           () => store.listRunEvents(RunId.of(ctx.runId)),
-          (events) => events.some((event) => event.eventType === 'RunCompleted'),
+          (events) =>
+            events.some(
+              (event) => event.eventType === 'RunCompleted' || event.eventType === 'RunFailed'
+            ),
           { timeoutMs: 30_000 }
         );
 
