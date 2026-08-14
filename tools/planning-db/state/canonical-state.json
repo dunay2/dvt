@@ -408,7 +408,7 @@
         "kind": "service",
         "layer": "application",
         "owner": "StartRun",
-        "repo_path": "apps/api/src/application/services/DbtRunExecutionContextBindingUseCase.ts",
+        "repo_path": "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts",
         "public_contract": "IStartRunUseCase",
         "runtime": "node",
         "criticality": "critical",
@@ -416,7 +416,7 @@
         "maturity_score": null,
         "parent_component_id": "SYS-API-APPLICATION-SERVICES",
         "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
+        "updated_at": "2026-08-14T04:51:34.47+00:00"
       },
       {
         "component_id": "SYS-API-APPLICATION-DBT-RUN-CONTEXT-WRITER",
@@ -424,15 +424,15 @@
         "kind": "port",
         "layer": "application",
         "owner": "dbt Runtime Admission",
-        "repo_path": "apps/api/src/application/ports/dbtRunExecutionContextWriter.ts",
-        "public_contract": "IDbtRunExecutionContextWriter",
+        "repo_path": "apps/api/src/application/ports/runExecutionContextWriter.ts",
+        "public_contract": "IRunExecutionContextWriter",
         "runtime": "node",
         "criticality": "critical",
         "status": "implemented",
         "maturity_score": null,
         "parent_component_id": "SYS-API-APPLICATION-SERVICES",
         "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
+        "updated_at": "2026-08-14T04:51:35.771+00:00"
       },
       {
         "component_id": "SYS-API-APPLICATION-PORTS",
@@ -1304,15 +1304,15 @@
         "kind": "adapter",
         "layer": "adapter",
         "owner": "dbt Runtime Admission",
-        "repo_path": "apps/api/src/infrastructure/dbt/FileDbtRunExecutionContextWriter.ts",
-        "public_contract": "IDbtRunExecutionContextWriter",
+        "repo_path": "apps/api/src/infrastructure/dbt/FileRunExecutionContextWriter.ts",
+        "public_contract": "IRunExecutionContextWriter",
         "runtime": "node",
         "criticality": "critical",
         "status": "implemented",
         "maturity_score": null,
         "parent_component_id": "SYS-API-INFRASTRUCTURE",
         "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
+        "updated_at": "2026-08-14T04:51:37.016+00:00"
       },
       {
         "component_id": "SYS-API-INFRA-RUNTIME-FOUNDATION",
@@ -13503,6 +13503,20 @@
         "supersedes_id": null,
         "created_at": "2026-08-07T00:49:55.642226+00:00",
         "updated_at": "2026-08-07T00:49:55.642226+00:00"
+      },
+      {
+        "design_id": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814",
+        "work_item_id": "2329",
+        "title": "Align run context architecture paths with the hard cut",
+        "owner": "Architecture",
+        "status": "review",
+        "rationale": "The PTH2 hard rename removed dbt-prefixed implementation paths while three canonical components still referenced those deleted files.",
+        "fowler_signal": "boundary_drift",
+        "rail_ref": "RecordArchitectureComponent",
+        "approved_at": null,
+        "supersedes_id": null,
+        "created_at": "2026-08-14T04:51:17.737+00:00",
+        "updated_at": "2026-08-14T04:51:17.737+00:00"
       },
       {
         "design_id": "R1-1C-STORED-PLAN-AUTHORITY-20260812",
@@ -38208,7 +38222,7 @@
         "component_id": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
         "responsibility": "Persist one run context once and return a verified file artifact reference.",
         "reason_to_change": "The artifact-store implementation, immutable-write policy, or file addressing changes.",
-        "ddd_owner": "FileDbtRunExecutionContextWriter",
+        "ddd_owner": "FileRunExecutionContextWriter",
         "status": "implemented",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
@@ -38217,7 +38231,7 @@
         "component_id": "SYS-API-APPLICATION-DBT-RUN-CONTEXT-WRITER",
         "responsibility": "Define immutable persistence of server-created run execution context.",
         "reason_to_change": "The application-level run-context persistence outcome or addressing contract changes.",
-        "ddd_owner": "IDbtRunExecutionContextWriter",
+        "ddd_owner": "IRunExecutionContextWriter",
         "status": "implemented",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
@@ -87431,6 +87445,30 @@
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
+        "design_id": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-APPLICATION-DBT-RUN-CONTEXT-BINDING",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T04:51:17.737+00:00"
+      },
+      {
+        "design_id": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-APPLICATION-DBT-RUN-CONTEXT-WRITER",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T04:51:17.737+00:00"
+      },
+      {
+        "design_id": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T04:51:17.737+00:00"
+      },
+      {
         "design_id": "R1-1C-STORED-PLAN-AUTHORITY-20260812",
         "subject_kind": "component",
         "subject_id": "SYS-API-APPLICATION-SERVICES",
@@ -90238,6 +90276,43 @@
           "sourceContentSha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598"
         },
         "created_at": "2026-08-11T13:02:34.37+00:00"
+      },
+      {
+        "operation_id": "02d4f750-5a81-4877-b13a-36e65ea1d55f",
+        "idempotency_key": "architecture_component_record:codex:PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814:SYS-API-APPLICATION-DBT-RUN-CONTEXT-WRITER:78ea7842e9234172",
+        "operation_type": "architecture_component_record",
+        "actor": "codex",
+        "design_id": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "kind": "port",
+          "name": "dbt run execution-context writer port",
+          "layer": "application",
+          "owner": "dbt Runtime Admission",
+          "status": "implemented",
+          "runtime": "node",
+          "designId": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814",
+          "repoPath": "apps/api/src/application/ports/runExecutionContextWriter.ts",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "componentId": "SYS-API-APPLICATION-DBT-RUN-CONTEXT-WRITER",
+          "criticality": "critical",
+          "publicContract": "IRunExecutionContextWriter",
+          "responsibilities": [
+            {
+              "dddOwner": "IRunExecutionContextWriter",
+              "reasonToChange": "The application-level run-context persistence outcome or addressing contract changes.",
+              "responsibility": "Define immutable persistence of server-created run execution context.",
+              "responsibilityId": "RESP-DBT-RUN-CONTEXT-WRITER-PORT"
+            }
+          ],
+          "parentComponentId": "SYS-API-APPLICATION-SERVICES",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T04:51:35.771+00:00"
       },
       {
         "operation_id": "02ee94ec-f692-4e33-a96c-fd2f09aa9526",
@@ -99729,6 +99804,43 @@
         "created_at": "2026-08-11T09:00:00.887+00:00"
       },
       {
+        "operation_id": "8126fc67-82d4-4d86-a017-bcfdfaa3b7a7",
+        "idempotency_key": "architecture_component_record:codex:PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814:SYS-API-INFRA-DBT-RUN-CONTEXT-FILES:1a15e0d22e898d4a",
+        "operation_type": "architecture_component_record",
+        "actor": "codex",
+        "design_id": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "kind": "adapter",
+          "name": "File dbt run execution-context writer",
+          "layer": "adapter",
+          "owner": "dbt Runtime Admission",
+          "status": "implemented",
+          "runtime": "node",
+          "designId": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814",
+          "repoPath": "apps/api/src/infrastructure/dbt/FileRunExecutionContextWriter.ts",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "componentId": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
+          "criticality": "critical",
+          "publicContract": "IRunExecutionContextWriter",
+          "responsibilities": [
+            {
+              "dddOwner": "FileRunExecutionContextWriter",
+              "reasonToChange": "The artifact-store implementation, immutable-write policy, or file addressing changes.",
+              "responsibility": "Persist one run context once and return a verified file artifact reference.",
+              "responsibilityId": "RESP-DBT-RUN-CONTEXT-FILE-ADAPTER"
+            }
+          ],
+          "parentComponentId": "SYS-API-INFRASTRUCTURE",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T04:51:37.016+00:00"
+      },
+      {
         "operation_id": "8142f30d-abb5-4d42-87c7-0dc4033e7c67",
         "idempotency_key": "architecture_storage_io_record:codex:DOC1-6-STORAGE-IO-RETIREMENT-20260810:STORAGE-SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-DB-SURFACE-WRITE-1:eb204f62bd3cdd38",
         "operation_type": "architecture_storage_io_record",
@@ -103476,6 +103588,43 @@
         "created_at": "2026-08-11T03:06:48.68+00:00"
       },
       {
+        "operation_id": "ae0bcd91-5375-43b7-9f31-4cd4719b9c48",
+        "idempotency_key": "architecture_component_record:codex:PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814:SYS-API-APPLICATION-DBT-RUN-CONTEXT-BINDING:c99d0f3fd296fc5f",
+        "operation_type": "architecture_component_record",
+        "actor": "codex",
+        "design_id": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "kind": "service",
+          "name": "dbt run execution-context binding",
+          "layer": "application",
+          "owner": "StartRun",
+          "status": "implemented",
+          "runtime": "node",
+          "designId": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814",
+          "repoPath": "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "componentId": "SYS-API-APPLICATION-DBT-RUN-CONTEXT-BINDING",
+          "criticality": "critical",
+          "publicContract": "IStartRunUseCase",
+          "responsibilities": [
+            {
+              "dddOwner": "DbtRunExecutionContextBindingUseCase",
+              "reasonToChange": "dbt-specific StartRun admission or execution-context binding changes.",
+              "responsibility": "Admit one persisted dbt plan into StartRun only when its project revision and target identity remain current.",
+              "responsibilityId": "RESP-DBT-RUN-CONTEXT-BINDING"
+            }
+          ],
+          "parentComponentId": "SYS-API-APPLICATION-SERVICES",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T04:51:34.47+00:00"
+      },
+      {
         "operation_id": "ae2652d2-a353-4ae2-964f-1a554801e58e",
         "idempotency_key": "codex-api-h2-2-reachability-approve",
         "operation_type": "architecture_design_transition",
@@ -106553,6 +106702,52 @@
           "sourceContentSha256": "464256792263886607dc2221358924eb92861d9c9377edeefdf7a591b600246a"
         },
         "created_at": "2026-08-11T10:02:33.729+00:00"
+      },
+      {
+        "operation_id": "cdeea03c-2a1f-430c-adb6-d37b07e15593",
+        "idempotency_key": "architecture_design_create:codex:PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814:734a429e32099b1a",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "Architecture",
+          "title": "Align run context architecture paths with the hard cut",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-API-APPLICATION-DBT-RUN-CONTEXT-BINDING",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-API-APPLICATION-DBT-RUN-CONTEXT-WRITER",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
+              "subjectKind": "component"
+            }
+          ],
+          "status": "review",
+          "railRef": "RecordArchitectureComponent",
+          "designId": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814",
+          "rationale": "The PTH2 hard rename removed dbt-prefixed implementation paths while three canonical components still referenced those deleted files.",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "workItemId": "2329",
+          "fowlerSignal": "boundary_drift",
+          "supersedesId": null,
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T04:51:17.737+00:00"
       },
       {
         "operation_id": "ce0b576f-4592-49e9-ae5f-49b97ed81c82",
@@ -154228,14 +154423,14 @@
         "docs/risk-register/**"
       ],
       "architectureGuards": [
-        "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+        "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
       ],
       "completionGate": [
         "pnpm verify:prepush",
         "pnpm docs:feature-mechanization:implementation"
       ],
-      "sourcePath": "https://github.com/dunay2/dvt/issues/2329",
-      "sourceContentSha256": "5eefcfb26cdbb327f56e94f9d038d00fa806cbfd7dea83ab14d50ba7051a9dae",
+      "sourcePath": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+      "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
       "rawRail": {
         "name": "CompilePlan",
         "type": "command",
@@ -154260,10 +154455,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "TransformationSqlFirstCompilerGraphSourceV2",
@@ -154275,10 +154471,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
+              "Explicit connection authority",
               "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           }
         ],
         "version": 1,
@@ -154331,7 +154528,7 @@
           }
         ],
         "architectureGuards": [
-          "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+          "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
         ],
         "implementationPlan": "https://github.com/dunay2/dvt/issues/2329",
         "mechanizationStatus": "implemented",
@@ -154345,7 +154542,7 @@
         ],
         "forbiddenImplementationSurfaces": ["docs/archive/**"]
       },
-      "revision": 1,
+      "revision": 3,
       "createdBy": "codex",
       "createdAt": "2026-08-14T04:15:37.256Z"
     },
@@ -154396,14 +154593,14 @@
         "docs/risk-register/**"
       ],
       "architectureGuards": [
-        "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+        "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
       ],
       "completionGate": [
         "pnpm verify:prepush",
         "pnpm docs:feature-mechanization:implementation"
       ],
-      "sourcePath": "https://github.com/dunay2/dvt/issues/2329",
-      "sourceContentSha256": "5eefcfb26cdbb327f56e94f9d038d00fa806cbfd7dea83ab14d50ba7051a9dae",
+      "sourcePath": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+      "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
       "rawRail": {
         "name": "ConfigureCanvasDvtNode",
         "type": "command",
@@ -154428,10 +154625,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "assertNoSeriousAccessibilityViolations",
@@ -154443,10 +154641,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "openNode",
@@ -154458,10 +154657,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "stubDvtConnectionAuthoring",
@@ -154473,10 +154673,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "visitDvtCanvas",
@@ -154488,10 +154689,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "parseImportedConnectionRef",
@@ -154503,10 +154705,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "parseManualConnectionRef",
@@ -154518,10 +154721,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "resolveEffectiveDvtConnectionRef",
@@ -154537,7 +154741,7 @@
               "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "resolveInheritedDvtConnectionRef",
@@ -154549,10 +154753,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           }
         ],
         "version": 1,
@@ -154605,7 +154810,7 @@
           }
         ],
         "architectureGuards": [
-          "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+          "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
         ],
         "implementationPlan": "https://github.com/dunay2/dvt/issues/2329",
         "mechanizationStatus": "implemented",
@@ -154619,7 +154824,7 @@
         ],
         "forbiddenImplementationSurfaces": ["docs/archive/**"]
       },
-      "revision": 2,
+      "revision": 4,
       "createdBy": "codex",
       "createdAt": "2026-08-14T04:15:27.624Z"
     },
@@ -154676,14 +154881,14 @@
         "docs/risk-register/**"
       ],
       "architectureGuards": [
-        "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+        "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
       ],
       "completionGate": [
         "pnpm verify:prepush",
         "pnpm docs:feature-mechanization:implementation"
       ],
-      "sourcePath": "https://github.com/dunay2/dvt/issues/2329",
-      "sourceContentSha256": "5eefcfb26cdbb327f56e94f9d038d00fa806cbfd7dea83ab14d50ba7051a9dae",
+      "sourcePath": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+      "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
       "rawRail": {
         "name": "CreateWarehouseConnection",
         "type": "command",
@@ -154708,10 +154913,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "IPostgresCredentialBindingResolver",
@@ -154723,10 +154929,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "InvalidPostgresCredentialBindingsError",
@@ -154738,10 +154945,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "PostgresCredentialBindingResolver",
@@ -154757,7 +154965,7 @@
               "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "PostgresCredentialBindings",
@@ -154769,10 +154977,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "isPlainRecord",
@@ -154784,10 +154993,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "isPostgresConnectionString",
@@ -154799,10 +155009,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "isPostgresCredentialRef",
@@ -154814,10 +155025,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "parsePostgresCredentialBindings",
@@ -154829,10 +155041,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "POSTGRES_CREDENTIAL_REF_PREFIX",
@@ -154844,10 +155057,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "PostgresCredentialRefSchema",
@@ -154859,10 +155073,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "LOCAL_POSTGRES_CREDENTIAL_REF",
@@ -154874,10 +155089,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           }
         ],
         "version": 1,
@@ -154930,7 +155146,7 @@
           }
         ],
         "architectureGuards": [
-          "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+          "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
         ],
         "implementationPlan": "https://github.com/dunay2/dvt/issues/2329",
         "mechanizationStatus": "implemented",
@@ -154944,7 +155160,7 @@
         ],
         "forbiddenImplementationSurfaces": ["docs/archive/**"]
       },
-      "revision": 1,
+      "revision": 3,
       "createdBy": "codex",
       "createdAt": "2026-08-14T04:15:33.202Z"
     },
@@ -154987,14 +155203,14 @@
         "docs/risk-register/**"
       ],
       "architectureGuards": [
-        "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+        "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
       ],
       "completionGate": [
         "pnpm verify:prepush",
         "pnpm docs:feature-mechanization:implementation"
       ],
-      "sourcePath": "https://github.com/dunay2/dvt/issues/2329",
-      "sourceContentSha256": "5eefcfb26cdbb327f56e94f9d038d00fa806cbfd7dea83ab14d50ba7051a9dae",
+      "sourcePath": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+      "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
       "rawRail": {
         "name": "PreviewExecutionPlan",
         "type": "command",
@@ -155019,10 +155235,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "TransformationSqlFirstCompilerGraphSourceV2",
@@ -155038,7 +155255,7 @@
               "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "TRANSFORMATION_SQL_FIRST_SOURCE_VERSION",
@@ -155050,10 +155267,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "TransformationSqlFirstGraphSourceV2",
@@ -155065,10 +155283,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "PostgresConnectionRefSchema",
@@ -155080,10 +155299,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           }
         ],
         "version": 1,
@@ -155136,7 +155356,7 @@
           }
         ],
         "architectureGuards": [
-          "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+          "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
         ],
         "implementationPlan": "https://github.com/dunay2/dvt/issues/2329",
         "mechanizationStatus": "implemented",
@@ -155150,7 +155370,7 @@
         ],
         "forbiddenImplementationSurfaces": ["docs/archive/**"]
       },
-      "revision": 1,
+      "revision": 3,
       "createdBy": "codex",
       "createdAt": "2026-08-14T04:15:35.932Z"
     },
@@ -155185,14 +155405,14 @@
         "docs/risk-register/**"
       ],
       "architectureGuards": [
-        "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+        "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
       ],
       "completionGate": [
         "pnpm verify:prepush",
         "pnpm docs:feature-mechanization:implementation"
       ],
-      "sourcePath": "https://github.com/dunay2/dvt/issues/2329",
-      "sourceContentSha256": "5eefcfb26cdbb327f56e94f9d038d00fa806cbfd7dea83ab14d50ba7051a9dae",
+      "sourcePath": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+      "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
       "rawRail": {
         "name": "SaveWorkspaceGraphDraft",
         "type": "command",
@@ -155221,7 +155441,7 @@
               "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           }
         ],
         "version": 1,
@@ -155274,7 +155494,7 @@
           }
         ],
         "architectureGuards": [
-          "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+          "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
         ],
         "implementationPlan": "https://github.com/dunay2/dvt/issues/2329",
         "mechanizationStatus": "implemented",
@@ -155288,7 +155508,7 @@
         ],
         "forbiddenImplementationSurfaces": ["docs/archive/**"]
       },
-      "revision": 1,
+      "revision": 3,
       "createdBy": "codex",
       "createdAt": "2026-08-14T04:15:29.087Z"
     },
@@ -155359,14 +155579,14 @@
         "docs/risk-register/**"
       ],
       "architectureGuards": [
-        "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+        "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
       ],
       "completionGate": [
         "pnpm verify:prepush",
         "pnpm docs:feature-mechanization:implementation"
       ],
-      "sourcePath": "https://github.com/dunay2/dvt/issues/2329",
-      "sourceContentSha256": "5eefcfb26cdbb327f56e94f9d038d00fa806cbfd7dea83ab14d50ba7051a9dae",
+      "sourcePath": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+      "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
       "rawRail": {
         "name": "StartRun",
         "type": "command",
@@ -155391,10 +155611,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "RunExecutionContextWriteResult",
@@ -155406,10 +155627,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "CALLER_CONTEXT_REJECTION",
@@ -155421,10 +155643,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "PostgresPlanConnectionResolution",
@@ -155436,10 +155659,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "RunExecutionContextBindingUseCase",
@@ -155455,7 +155679,7 @@
               "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "buildRunExecutionContext",
@@ -155467,10 +155691,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "isDbtPlan",
@@ -155482,10 +155707,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "rejectRunExecutionContext",
@@ -155497,10 +155723,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "renderBundleFailure",
@@ -155512,10 +155739,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "renderContextWriteFailure",
@@ -155527,10 +155755,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "resolvePostgresPlanConnection",
@@ -155542,10 +155771,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "sameConnectionRef",
@@ -155557,10 +155787,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "FileRunExecutionContextWriter",
@@ -155572,10 +155803,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "RunExecutionContextBindingPolicy",
@@ -155587,10 +155819,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "RunExecutionContextBindingPolicyOptions",
@@ -155602,10 +155835,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "TemporalWorkerPostgresPlanConnectionResolver",
@@ -155617,10 +155851,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "assertRunExecutionContextAlignment",
@@ -155632,10 +155867,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "reject",
@@ -155647,10 +155883,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "resolvePostgresPluginContext",
@@ -155662,10 +155899,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           }
         ],
         "version": 1,
@@ -155718,7 +155956,7 @@
           }
         ],
         "architectureGuards": [
-          "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+          "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
         ],
         "implementationPlan": "https://github.com/dunay2/dvt/issues/2329",
         "mechanizationStatus": "implemented",
@@ -155732,7 +155970,7 @@
         ],
         "forbiddenImplementationSurfaces": ["docs/archive/**"]
       },
-      "revision": 2,
+      "revision": 4,
       "createdBy": "codex",
       "createdAt": "2026-08-14T04:16:21.053Z"
     },
@@ -155767,14 +156005,14 @@
         "docs/risk-register/**"
       ],
       "architectureGuards": [
-        "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+        "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
       ],
       "completionGate": [
         "pnpm verify:prepush",
         "pnpm docs:feature-mechanization:implementation"
       ],
-      "sourcePath": "https://github.com/dunay2/dvt/issues/2329",
-      "sourceContentSha256": "5eefcfb26cdbb327f56e94f9d038d00fa806cbfd7dea83ab14d50ba7051a9dae",
+      "sourcePath": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+      "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
       "rawRail": {
         "name": "TestWarehouseConnection",
         "type": "command",
@@ -155803,7 +156041,7 @@
               "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           }
         ],
         "version": 1,
@@ -155856,7 +156094,7 @@
           }
         ],
         "architectureGuards": [
-          "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+          "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
         ],
         "implementationPlan": "https://github.com/dunay2/dvt/issues/2329",
         "mechanizationStatus": "implemented",
@@ -155870,7 +156108,7 @@
         ],
         "forbiddenImplementationSurfaces": ["docs/archive/**"]
       },
-      "revision": 1,
+      "revision": 3,
       "createdBy": "codex",
       "createdAt": "2026-08-14T04:15:34.565Z"
     },
@@ -155905,14 +156143,14 @@
         "docs/risk-register/**"
       ],
       "architectureGuards": [
-        "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+        "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
       ],
       "completionGate": [
         "pnpm verify:prepush",
         "pnpm docs:feature-mechanization:implementation"
       ],
-      "sourcePath": "https://github.com/dunay2/dvt/issues/2329",
-      "sourceContentSha256": "5eefcfb26cdbb327f56e94f9d038d00fa806cbfd7dea83ab14d50ba7051a9dae",
+      "sourcePath": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+      "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
       "rawRail": {
         "name": "GetWorkspaceGraphDraft",
         "type": "query",
@@ -155941,7 +156179,7 @@
               "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           }
         ],
         "version": 1,
@@ -155994,7 +156232,7 @@
           }
         ],
         "architectureGuards": [
-          "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+          "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
         ],
         "implementationPlan": "https://github.com/dunay2/dvt/issues/2329",
         "mechanizationStatus": "implemented",
@@ -156008,7 +156246,7 @@
         ],
         "forbiddenImplementationSurfaces": ["docs/archive/**"]
       },
-      "revision": 1,
+      "revision": 3,
       "createdBy": "codex",
       "createdAt": "2026-08-14T04:15:30.515Z"
     },
@@ -156043,14 +156281,14 @@
         "docs/risk-register/**"
       ],
       "architectureGuards": [
-        "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+        "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
       ],
       "completionGate": [
         "pnpm verify:prepush",
         "pnpm docs:feature-mechanization:implementation"
       ],
-      "sourcePath": "https://github.com/dunay2/dvt/issues/2329",
-      "sourceContentSha256": "5eefcfb26cdbb327f56e94f9d038d00fa806cbfd7dea83ab14d50ba7051a9dae",
+      "sourcePath": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+      "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
       "rawRail": {
         "name": "ListWarehouseConnections",
         "type": "query",
@@ -156079,7 +156317,7 @@
               "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           }
         ],
         "version": 1,
@@ -156132,7 +156370,7 @@
           }
         ],
         "architectureGuards": [
-          "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+          "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
         ],
         "implementationPlan": "https://github.com/dunay2/dvt/issues/2329",
         "mechanizationStatus": "implemented",
@@ -156146,7 +156384,7 @@
         ],
         "forbiddenImplementationSurfaces": ["docs/archive/**"]
       },
-      "revision": 1,
+      "revision": 3,
       "createdBy": "codex",
       "createdAt": "2026-08-14T04:15:31.869Z"
     },
@@ -156217,14 +156455,14 @@
         "docs/risk-register/**"
       ],
       "architectureGuards": [
-        "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+        "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
       ],
       "completionGate": [
         "pnpm verify:prepush",
         "pnpm docs:feature-mechanization:implementation"
       ],
-      "sourcePath": "https://github.com/dunay2/dvt/issues/2329",
-      "sourceContentSha256": "5eefcfb26cdbb327f56e94f9d038d00fa806cbfd7dea83ab14d50ba7051a9dae",
+      "sourcePath": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+      "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
       "rawRail": {
         "name": "ObservePlanRunReadiness",
         "type": "query",
@@ -156249,10 +156487,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "resolveStepConnectionRef",
@@ -156268,7 +156507,7 @@
               "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "sameConnectionRef",
@@ -156280,10 +156519,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "createDefaultPostgresRelationalCapability",
@@ -156295,10 +156535,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "IPostgresPlanConnectionResolver",
@@ -156310,10 +156551,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "PostgresPlanConnection",
@@ -156325,10 +156567,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "PostgresPlanConnectionRejectedError",
@@ -156340,10 +156583,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "buildPlanConnectionKey",
@@ -156355,10 +156599,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "failedPostgresOperation",
@@ -156370,10 +156615,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "renderStepConfigError",
@@ -156385,10 +156631,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "PostgresPlanConnectionRejectedError",
@@ -156400,10 +156647,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "PluginContextValueSchema",
@@ -156415,10 +156663,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "PostgresConnectionRefSchema",
@@ -156430,10 +156679,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "PostgresPluginContextSchema",
@@ -156445,10 +156695,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "PostgresPluginContextSchemaT",
@@ -156460,10 +156711,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "addPluginContextIssues",
@@ -156475,10 +156727,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "PluginContextValue",
@@ -156490,10 +156743,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "PostgresPluginContext",
@@ -156505,10 +156759,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           },
           {
             "name": "parsePostgresPluginContext",
@@ -156520,10 +156775,11 @@
             ],
             "fowlerSignals": [
               "Separate Query from Modifier",
-              "Explicit connection authority"
+              "Explicit connection authority",
+              "Reuse canonical rail without duplicate ownership"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts",
-            "architectureGuard": "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+            "architectureGuard": "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
           }
         ],
         "version": 1,
@@ -156576,7 +156832,7 @@
           }
         ],
         "architectureGuards": [
-          "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+          "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
         ],
         "implementationPlan": "https://github.com/dunay2/dvt/issues/2329",
         "mechanizationStatus": "implemented",
@@ -156590,7 +156846,7 @@
         ],
         "forbiddenImplementationSurfaces": ["docs/archive/**"]
       },
-      "revision": 2,
+      "revision": 4,
       "createdBy": "codex",
       "createdAt": "2026-08-14T04:16:22.485Z"
     },
@@ -196888,6 +197144,1746 @@
         "forbiddenImplementationSurfaces": ["docs/archive/**"]
       },
       "createdAt": "2026-08-14T04:25:59.234Z"
+    },
+    {
+      "operationId": "0c73b102-3b7c-4abd-95b7-b002bfae1b3c",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY:command:compileplan:1:7e1c5aa1539ed5d8",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY#command#compileplan",
+      "sourcePath": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+      "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "SQL-first execution previously accepted global PostgreSQL fallback state.",
+        "dddOwner": "Plan compile application service",
+        "railName": "CompilePlan",
+        "railType": "command",
+        "featureId": "PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY",
+        "greenTest": "Plan-scoped PostgreSQL resolution passes contract, isolation, Temporal, and browser coverage.",
+        "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "unitTests": [
+          "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts"
+        ],
+        "railStatus": "retired",
+        "userStories": [
+          "Bind each SQL-first plan to the governed PostgreSQL connection selected by its source node."
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts"
+        ],
+        "domainObjects": ["Compiled SQL-first plan"],
+        "fowlerSignals": [
+          "Separate Query from Modifier",
+          "Explicit connection authority",
+          "Reuse canonical rail without duplicate ownership"
+        ],
+        "negativeTests": [
+          "Reject SQL-first execution without a governed plan connection resolver."
+        ],
+        "patchSurfaces": ["apps/**", "packages/**", "scripts/**"],
+        "adapterSurface": "Planner compiler adapter",
+        "completionGate": [
+          "pnpm verify:prepush",
+          "pnpm docs:feature-mechanization:implementation"
+        ],
+        "applicationPort": "IPlanCompilationPort.compile",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Execution completed despite missing plan-scoped connection authority.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/state/github-mvp-issue-workflow.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md"
+        ],
+        "architectureGuards": [
+          "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+        ],
+        "authorizationScope": "Authenticated tenant/project/environment workspace scope",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2329",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/useCanvasExecutionActions.test.support.tsx#buildTestPostgresConnectionRef",
+          "packages/@dvt/contracts/src/contracts/planner/TransformationFlowCompiler.v1.ts#TransformationSqlFirstCompilerGraphSourceV2"
+        ],
+        "normalizedRailName": "compileplan",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "replaceArchitectureGuards": true,
+        "replaceImplementationRefs": true,
+        "allowedImplementationSurfaces": [
+          "apps/**",
+          "packages/**",
+          "scripts/**",
+          "docs/evidence/**",
+          "docs/risk-register/**"
+        ],
+        "forbiddenImplementationSurfaces": ["docs/archive/**"]
+      },
+      "createdAt": "2026-08-14T04:52:03.419Z"
+    },
+    {
+      "operationId": "ba49e593-87f7-44de-9bb5-b73b95a28806",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY:command:configurecanvasdvtnode:2:689c523437e04d6e",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY#command#configurecanvasdvtnode",
+      "sourcePath": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+      "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+      "expectedRevision": 2,
+      "previousRevision": 2,
+      "resultingRevision": 3,
+      "payload": {
+        "redTest": "SQL-first execution previously accepted global PostgreSQL fallback state.",
+        "dddOwner": "DvtNodeAuthoringMetadata",
+        "railName": "ConfigureCanvasDvtNode",
+        "railType": "command",
+        "featureId": "PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY",
+        "greenTest": "Plan-scoped PostgreSQL resolution passes contract, isolation, Temporal, and browser coverage.",
+        "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "unitTests": [
+          "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts"
+        ],
+        "railStatus": "retired",
+        "userStories": [
+          "Bind each SQL-first plan to the governed PostgreSQL connection selected by its source node."
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts"
+        ],
+        "domainObjects": ["DVT node connection metadata"],
+        "fowlerSignals": [
+          "Separate Query from Modifier",
+          "Explicit connection authority",
+          "Reuse canonical rail without duplicate ownership"
+        ],
+        "negativeTests": [
+          "Reject SQL-first execution without a governed plan connection resolver."
+        ],
+        "patchSurfaces": ["apps/**", "packages/**", "scripts/**"],
+        "adapterSurface": "Canvas inspector authoring adapter",
+        "completionGate": [
+          "pnpm verify:prepush",
+          "pnpm docs:feature-mechanization:implementation"
+        ],
+        "applicationPort": "CanvasDvtAuthoringModel",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Execution completed despite missing plan-scoped connection authority.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/state/github-mvp-issue-workflow.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md"
+        ],
+        "architectureGuards": [
+          "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+        ],
+        "authorizationScope": "Authenticated tenant/project/environment workspace scope",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2329",
+        "implementationRefs": [
+          "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts#CONNECTION_ID",
+          "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts#assertNoSeriousAccessibilityViolations",
+          "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts#openNode",
+          "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts#stubDvtConnectionAuthoring",
+          "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts#visitDvtCanvas",
+          "apps/web/src/app/views/canvas/canvasDvtAuthoringModel.ts#parseImportedConnectionRef",
+          "apps/web/src/app/views/canvas/canvasDvtAuthoringModel.ts#parseManualConnectionRef",
+          "apps/web/src/app/views/canvas/canvasDvtAuthoringModel.ts#resolveEffectiveDvtConnectionRef",
+          "apps/web/src/app/views/canvas/canvasDvtAuthoringModel.ts#resolveInheritedDvtConnectionRef"
+        ],
+        "normalizedRailName": "configurecanvasdvtnode",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "replaceArchitectureGuards": true,
+        "replaceImplementationRefs": true,
+        "allowedImplementationSurfaces": [
+          "apps/**",
+          "packages/**",
+          "scripts/**",
+          "docs/evidence/**",
+          "docs/risk-register/**"
+        ],
+        "forbiddenImplementationSurfaces": ["docs/archive/**"]
+      },
+      "createdAt": "2026-08-14T04:52:04.790Z"
+    },
+    {
+      "operationId": "c62e6f32-62fd-44e9-aa3b-e84d68150c42",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY:command:createwarehouseconnection:1:e634754c05d425d3",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY#command#createwarehouseconnection",
+      "sourcePath": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+      "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "SQL-first execution previously accepted global PostgreSQL fallback state.",
+        "dddOwner": "Warehouse connection aggregate",
+        "railName": "CreateWarehouseConnection",
+        "railType": "command",
+        "featureId": "PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY",
+        "greenTest": "Plan-scoped PostgreSQL resolution passes contract, isolation, Temporal, and browser coverage.",
+        "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "unitTests": [
+          "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts"
+        ],
+        "railStatus": "retired",
+        "userStories": [
+          "Bind each SQL-first plan to the governed PostgreSQL connection selected by its source node."
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts"
+        ],
+        "domainObjects": ["Governed PostgreSQL connection"],
+        "fowlerSignals": [
+          "Separate Query from Modifier",
+          "Explicit connection authority",
+          "Reuse canonical rail without duplicate ownership"
+        ],
+        "negativeTests": [
+          "Reject SQL-first execution without a governed plan connection resolver."
+        ],
+        "patchSurfaces": ["apps/**", "packages/**", "scripts/**"],
+        "adapterSurface": "Warehouse source import HTTP route",
+        "completionGate": [
+          "pnpm verify:prepush",
+          "pnpm docs:feature-mechanization:implementation"
+        ],
+        "applicationPort": "IWarehouseSourceImportPort.createConnection",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Execution completed despite missing plan-scoped connection authority.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/state/github-mvp-issue-workflow.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md"
+        ],
+        "architectureGuards": [
+          "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+        ],
+        "authorizationScope": "Authenticated tenant/project/environment workspace scope",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2329",
+        "implementationRefs": [
+          "apps/api/src/application/ports/warehouseSourceImport.ts#InvalidWarehouseCredentialReferenceError",
+          "packages/@dvt/adapter-postgres/src/PostgresCredentialBindingResolver.ts#IPostgresCredentialBindingResolver",
+          "packages/@dvt/adapter-postgres/src/PostgresCredentialBindingResolver.ts#InvalidPostgresCredentialBindingsError",
+          "packages/@dvt/adapter-postgres/src/PostgresCredentialBindingResolver.ts#PostgresCredentialBindingResolver",
+          "packages/@dvt/adapter-postgres/src/PostgresCredentialBindingResolver.ts#PostgresCredentialBindings",
+          "packages/@dvt/adapter-postgres/src/PostgresCredentialBindingResolver.ts#isPlainRecord",
+          "packages/@dvt/adapter-postgres/src/PostgresCredentialBindingResolver.ts#isPostgresConnectionString",
+          "packages/@dvt/adapter-postgres/src/PostgresCredentialBindingResolver.ts#isPostgresCredentialRef",
+          "packages/@dvt/adapter-postgres/src/PostgresCredentialBindingResolver.ts#parsePostgresCredentialBindings",
+          "packages/@dvt/contracts/src/contracts/source-import/SourceImportOperations.v1.ts#POSTGRES_CREDENTIAL_REF_PREFIX",
+          "packages/@dvt/contracts/src/contracts/source-import/SourceImportOperations.v1.ts#PostgresCredentialRefSchema",
+          "scripts/run-dev-stack.cjs#LOCAL_POSTGRES_CREDENTIAL_REF"
+        ],
+        "normalizedRailName": "createwarehouseconnection",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "replaceArchitectureGuards": true,
+        "replaceImplementationRefs": true,
+        "allowedImplementationSurfaces": [
+          "apps/**",
+          "packages/**",
+          "scripts/**",
+          "docs/evidence/**",
+          "docs/risk-register/**"
+        ],
+        "forbiddenImplementationSurfaces": ["docs/archive/**"]
+      },
+      "createdAt": "2026-08-14T04:52:06.064Z"
+    },
+    {
+      "operationId": "ecc930c3-4656-4637-8e66-e4ec164d58b5",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY:command:previewexecutionplan:1:37b451eccf9035d5",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY#command#previewexecutionplan",
+      "sourcePath": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+      "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "SQL-first execution previously accepted global PostgreSQL fallback state.",
+        "dddOwner": "Execution preview application service",
+        "railName": "PreviewExecutionPlan",
+        "railType": "command",
+        "featureId": "PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY",
+        "greenTest": "Plan-scoped PostgreSQL resolution passes contract, isolation, Temporal, and browser coverage.",
+        "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "unitTests": [
+          "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts"
+        ],
+        "railStatus": "retired",
+        "userStories": [
+          "Bind each SQL-first plan to the governed PostgreSQL connection selected by its source node."
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts"
+        ],
+        "domainObjects": ["SQL-first preview plan"],
+        "fowlerSignals": [
+          "Separate Query from Modifier",
+          "Explicit connection authority",
+          "Reuse canonical rail without duplicate ownership"
+        ],
+        "negativeTests": [
+          "Reject SQL-first execution without a governed plan connection resolver."
+        ],
+        "patchSurfaces": ["apps/**", "packages/**", "scripts/**"],
+        "adapterSurface": "Plan preview API adapter",
+        "completionGate": [
+          "pnpm verify:prepush",
+          "pnpm docs:feature-mechanization:implementation"
+        ],
+        "applicationPort": "IPlansService.preview",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Execution completed despite missing plan-scoped connection authority.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/state/github-mvp-issue-workflow.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md"
+        ],
+        "architectureGuards": [
+          "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+        ],
+        "authorizationScope": "Authenticated tenant/project/environment workspace scope",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2329",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/useCanvasExecutionActions.test.support.tsx#buildTestPostgresConnectionRef",
+          "packages/@dvt/contracts/src/contracts/planner/TransformationFlowCompiler.v1.ts#TransformationSqlFirstCompilerGraphSourceV2",
+          "packages/@dvt/contracts/src/contracts/planner/TransformationFlowDesignGraph.v1.ts#TRANSFORMATION_SQL_FIRST_SOURCE_VERSION",
+          "packages/@dvt/contracts/src/contracts/planner/TransformationFlowDesignGraph.v1.ts#TransformationSqlFirstGraphSourceV2",
+          "packages/@dvt/contracts/src/contracts/planner/TransformationFlowStepTypeConfigs.v1.ts#PostgresConnectionRefSchema"
+        ],
+        "normalizedRailName": "previewexecutionplan",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "replaceArchitectureGuards": true,
+        "replaceImplementationRefs": true,
+        "allowedImplementationSurfaces": [
+          "apps/**",
+          "packages/**",
+          "scripts/**",
+          "docs/evidence/**",
+          "docs/risk-register/**"
+        ],
+        "forbiddenImplementationSurfaces": ["docs/archive/**"]
+      },
+      "createdAt": "2026-08-14T04:52:07.353Z"
+    },
+    {
+      "operationId": "b288622c-2e61-46c0-9ec4-fb7d0df658d0",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY:command:saveworkspacegraphdraft:1:24b6aaf4e6d56818",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY#command#saveworkspacegraphdraft",
+      "sourcePath": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+      "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "SQL-first execution previously accepted global PostgreSQL fallback state.",
+        "dddOwner": "Workspace authoring aggregate",
+        "railName": "SaveWorkspaceGraphDraft",
+        "railType": "command",
+        "featureId": "PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY",
+        "greenTest": "Plan-scoped PostgreSQL resolution passes contract, isolation, Temporal, and browser coverage.",
+        "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "unitTests": [
+          "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts"
+        ],
+        "railStatus": "retired",
+        "userStories": [
+          "Bind each SQL-first plan to the governed PostgreSQL connection selected by its source node."
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts"
+        ],
+        "domainObjects": ["Workspace graph draft"],
+        "fowlerSignals": [
+          "Separate Query from Modifier",
+          "Explicit connection authority",
+          "Reuse canonical rail without duplicate ownership"
+        ],
+        "negativeTests": [
+          "Reject SQL-first execution without a governed plan connection resolver."
+        ],
+        "patchSurfaces": ["apps/**", "packages/**", "scripts/**"],
+        "adapterSurface": "Workspace graph API adapter",
+        "completionGate": [
+          "pnpm verify:prepush",
+          "pnpm docs:feature-mechanization:implementation"
+        ],
+        "applicationPort": "IWorkspaceGraphService.saveGraphDraft",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Execution completed despite missing plan-scoped connection authority.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/state/github-mvp-issue-workflow.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md"
+        ],
+        "architectureGuards": [
+          "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+        ],
+        "authorizationScope": "Authenticated tenant/project/environment workspace scope",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2329",
+        "implementationRefs": [
+          "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts#CONNECTION_ID"
+        ],
+        "normalizedRailName": "saveworkspacegraphdraft",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "replaceArchitectureGuards": true,
+        "replaceImplementationRefs": true,
+        "allowedImplementationSurfaces": [
+          "apps/**",
+          "packages/**",
+          "scripts/**",
+          "docs/evidence/**",
+          "docs/risk-register/**"
+        ],
+        "forbiddenImplementationSurfaces": ["docs/archive/**"]
+      },
+      "createdAt": "2026-08-14T04:52:08.711Z"
+    },
+    {
+      "operationId": "8d8055d1-640a-4444-a52c-c58f4c6f6f63",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY:command:startrun:2:1b72b51b34adfe1e",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY#command#startrun",
+      "sourcePath": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+      "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+      "expectedRevision": 2,
+      "previousRevision": 2,
+      "resultingRevision": 3,
+      "payload": {
+        "redTest": "SQL-first execution previously accepted global PostgreSQL fallback state.",
+        "dddOwner": "Run command application service",
+        "railName": "StartRun",
+        "railType": "command",
+        "featureId": "PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY",
+        "greenTest": "Plan-scoped PostgreSQL resolution passes contract, isolation, Temporal, and browser coverage.",
+        "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "unitTests": [
+          "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts"
+        ],
+        "railStatus": "retired",
+        "userStories": [
+          "Bind each SQL-first plan to the governed PostgreSQL connection selected by its source node."
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts"
+        ],
+        "domainObjects": ["Immutable run execution context"],
+        "fowlerSignals": [
+          "Separate Query from Modifier",
+          "Explicit connection authority",
+          "Reuse canonical rail without duplicate ownership"
+        ],
+        "negativeTests": [
+          "Reject SQL-first execution without a governed plan connection resolver."
+        ],
+        "patchSurfaces": ["apps/**", "packages/**", "scripts/**"],
+        "adapterSurface": "Temporal run execution adapter",
+        "completionGate": [
+          "pnpm verify:prepush",
+          "pnpm docs:feature-mechanization:implementation"
+        ],
+        "applicationPort": "IStartRunUseCase.execute",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Execution completed despite missing plan-scoped connection authority.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/state/github-mvp-issue-workflow.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md"
+        ],
+        "architectureGuards": [
+          "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+        ],
+        "authorizationScope": "Authenticated tenant/project/environment workspace scope",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2329",
+        "implementationRefs": [
+          "apps/api/src/application/ports/runExecutionContextWriter.ts#IRunExecutionContextWriter",
+          "apps/api/src/application/ports/runExecutionContextWriter.ts#RunExecutionContextWriteResult",
+          "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts#CALLER_CONTEXT_REJECTION",
+          "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts#PostgresPlanConnectionResolution",
+          "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts#RunExecutionContextBindingUseCase",
+          "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts#buildRunExecutionContext",
+          "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts#isDbtPlan",
+          "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts#rejectRunExecutionContext",
+          "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts#renderBundleFailure",
+          "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts#renderContextWriteFailure",
+          "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts#resolvePostgresPlanConnection",
+          "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts#sameConnectionRef",
+          "apps/api/src/infrastructure/dbt/FileRunExecutionContextWriter.ts#FileRunExecutionContextWriter",
+          "apps/api/src/infrastructure/startRun/RunExecutionContextBindingPolicy.ts#RunExecutionContextBindingPolicy",
+          "apps/api/src/infrastructure/startRun/RunExecutionContextBindingPolicy.ts#RunExecutionContextBindingPolicyOptions",
+          "apps/temporal-worker/src/runtime/TemporalWorkerPostgresPlanConnectionResolver.ts#TemporalWorkerPostgresPlanConnectionResolver",
+          "apps/temporal-worker/src/runtime/TemporalWorkerPostgresPlanConnectionResolver.ts#assertRunExecutionContextAlignment",
+          "apps/temporal-worker/src/runtime/TemporalWorkerPostgresPlanConnectionResolver.ts#reject",
+          "apps/temporal-worker/src/runtime/TemporalWorkerPostgresPlanConnectionResolver.ts#resolvePostgresPluginContext"
+        ],
+        "normalizedRailName": "startrun",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "replaceArchitectureGuards": true,
+        "replaceImplementationRefs": true,
+        "allowedImplementationSurfaces": [
+          "apps/**",
+          "packages/**",
+          "scripts/**",
+          "docs/evidence/**",
+          "docs/risk-register/**"
+        ],
+        "forbiddenImplementationSurfaces": ["docs/archive/**"]
+      },
+      "createdAt": "2026-08-14T04:52:10.029Z"
+    },
+    {
+      "operationId": "7daab717-8947-4c3a-9ad5-1dcef894029c",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY:command:testwarehouseconnection:1:af7fba66b2ed96a3",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY#command#testwarehouseconnection",
+      "sourcePath": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+      "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "SQL-first execution previously accepted global PostgreSQL fallback state.",
+        "dddOwner": "Warehouse connection validation service",
+        "railName": "TestWarehouseConnection",
+        "railType": "command",
+        "featureId": "PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY",
+        "greenTest": "Plan-scoped PostgreSQL resolution passes contract, isolation, Temporal, and browser coverage.",
+        "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "unitTests": [
+          "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts"
+        ],
+        "railStatus": "retired",
+        "userStories": [
+          "Bind each SQL-first plan to the governed PostgreSQL connection selected by its source node."
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts"
+        ],
+        "domainObjects": ["PostgreSQL connection admission result"],
+        "fowlerSignals": [
+          "Separate Query from Modifier",
+          "Explicit connection authority",
+          "Reuse canonical rail without duplicate ownership"
+        ],
+        "negativeTests": [
+          "Reject SQL-first execution without a governed plan connection resolver."
+        ],
+        "patchSurfaces": ["apps/**", "packages/**", "scripts/**"],
+        "adapterSurface": "Workspace warehouse connection probe",
+        "completionGate": [
+          "pnpm verify:prepush",
+          "pnpm docs:feature-mechanization:implementation"
+        ],
+        "applicationPort": "IWarehouseSourceImportPort.testConnection",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Execution completed despite missing plan-scoped connection authority.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/state/github-mvp-issue-workflow.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md"
+        ],
+        "architectureGuards": [
+          "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+        ],
+        "authorizationScope": "Authenticated tenant/project/environment workspace scope",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2329",
+        "implementationRefs": [
+          "apps/api/src/application/ports/warehouseSourceImport.ts#InvalidWarehouseCredentialReferenceError"
+        ],
+        "normalizedRailName": "testwarehouseconnection",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "replaceArchitectureGuards": true,
+        "replaceImplementationRefs": true,
+        "allowedImplementationSurfaces": [
+          "apps/**",
+          "packages/**",
+          "scripts/**",
+          "docs/evidence/**",
+          "docs/risk-register/**"
+        ],
+        "forbiddenImplementationSurfaces": ["docs/archive/**"]
+      },
+      "createdAt": "2026-08-14T04:52:11.356Z"
+    },
+    {
+      "operationId": "4043ecb4-79cd-4140-a1d3-c897c110de12",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY:query:getworkspacegraphdraft:1:4e5af3d935ea1a01",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY#query#getworkspacegraphdraft",
+      "sourcePath": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+      "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "SQL-first execution previously accepted global PostgreSQL fallback state.",
+        "dddOwner": "CanvasAuthoringAuthority",
+        "railName": "GetWorkspaceGraphDraft",
+        "railType": "query",
+        "featureId": "PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY",
+        "greenTest": "Plan-scoped PostgreSQL resolution passes contract, isolation, Temporal, and browser coverage.",
+        "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "unitTests": [
+          "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts"
+        ],
+        "railStatus": "retired",
+        "userStories": [
+          "Bind each SQL-first plan to the governed PostgreSQL connection selected by its source node."
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts"
+        ],
+        "domainObjects": ["Workspace graph draft read model"],
+        "fowlerSignals": [
+          "Separate Query from Modifier",
+          "Explicit connection authority",
+          "Reuse canonical rail without duplicate ownership"
+        ],
+        "negativeTests": [
+          "Reject SQL-first execution without a governed plan connection resolver."
+        ],
+        "patchSurfaces": ["apps/**", "packages/**", "scripts/**"],
+        "adapterSurface": "Workspace graph API adapter",
+        "completionGate": [
+          "pnpm verify:prepush",
+          "pnpm docs:feature-mechanization:implementation"
+        ],
+        "applicationPort": "IWorkspaceGraphService.getGraphDraft",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Execution completed despite missing plan-scoped connection authority.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/state/github-mvp-issue-workflow.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md"
+        ],
+        "architectureGuards": [
+          "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+        ],
+        "authorizationScope": "Authenticated tenant/project/environment workspace scope",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2329",
+        "implementationRefs": [
+          "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts#CONNECTION_ID"
+        ],
+        "normalizedRailName": "getworkspacegraphdraft",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "replaceArchitectureGuards": true,
+        "replaceImplementationRefs": true,
+        "allowedImplementationSurfaces": [
+          "apps/**",
+          "packages/**",
+          "scripts/**",
+          "docs/evidence/**",
+          "docs/risk-register/**"
+        ],
+        "forbiddenImplementationSurfaces": ["docs/archive/**"]
+      },
+      "createdAt": "2026-08-14T04:52:12.628Z"
+    },
+    {
+      "operationId": "85d30379-965b-4be1-accb-174d44f54104",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY:query:listwarehouseconnections:1:72b6e2b598ca8874",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY#query#listwarehouseconnections",
+      "sourcePath": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+      "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "SQL-first execution previously accepted global PostgreSQL fallback state.",
+        "dddOwner": "Warehouse connection read model",
+        "railName": "ListWarehouseConnections",
+        "railType": "query",
+        "featureId": "PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY",
+        "greenTest": "Plan-scoped PostgreSQL resolution passes contract, isolation, Temporal, and browser coverage.",
+        "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "unitTests": [
+          "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts"
+        ],
+        "railStatus": "retired",
+        "userStories": [
+          "Bind each SQL-first plan to the governed PostgreSQL connection selected by its source node."
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts"
+        ],
+        "domainObjects": ["Governed warehouse connection catalog"],
+        "fowlerSignals": [
+          "Separate Query from Modifier",
+          "Explicit connection authority",
+          "Reuse canonical rail without duplicate ownership"
+        ],
+        "negativeTests": [
+          "Reject SQL-first execution without a governed plan connection resolver."
+        ],
+        "patchSurfaces": ["apps/**", "packages/**", "scripts/**"],
+        "adapterSurface": "Warehouse source import API adapter",
+        "completionGate": [
+          "pnpm verify:prepush",
+          "pnpm docs:feature-mechanization:implementation"
+        ],
+        "applicationPort": "IWarehouseSourceImportPort.listConnections",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Execution completed despite missing plan-scoped connection authority.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/state/github-mvp-issue-workflow.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md"
+        ],
+        "architectureGuards": [
+          "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+        ],
+        "authorizationScope": "Authenticated tenant/project/environment workspace scope",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2329",
+        "implementationRefs": [
+          "apps/web/src/app/services/AppServicesContext.tsx#useOptionalWarehouseSourceImportPort"
+        ],
+        "normalizedRailName": "listwarehouseconnections",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "replaceArchitectureGuards": true,
+        "replaceImplementationRefs": true,
+        "allowedImplementationSurfaces": [
+          "apps/**",
+          "packages/**",
+          "scripts/**",
+          "docs/evidence/**",
+          "docs/risk-register/**"
+        ],
+        "forbiddenImplementationSurfaces": ["docs/archive/**"]
+      },
+      "createdAt": "2026-08-14T04:52:13.931Z"
+    },
+    {
+      "operationId": "1fd13de3-be08-4a9f-8f86-bcd482e5c983",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY:query:observeplanrunreadiness:2:0d1fa8ea05d0d224",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY#query#observeplanrunreadiness",
+      "sourcePath": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+      "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+      "expectedRevision": 2,
+      "previousRevision": 2,
+      "resultingRevision": 3,
+      "payload": {
+        "redTest": "SQL-first execution previously accepted global PostgreSQL fallback state.",
+        "dddOwner": "PlanRunReadinessReadModel",
+        "railName": "ObservePlanRunReadiness",
+        "railType": "query",
+        "featureId": "PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY",
+        "greenTest": "Plan-scoped PostgreSQL resolution passes contract, isolation, Temporal, and browser coverage.",
+        "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "unitTests": [
+          "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts"
+        ],
+        "railStatus": "retired",
+        "userStories": [
+          "Bind each SQL-first plan to the governed PostgreSQL connection selected by its source node."
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts"
+        ],
+        "domainObjects": ["Plan run readiness read model"],
+        "fowlerSignals": [
+          "Separate Query from Modifier",
+          "Explicit connection authority",
+          "Reuse canonical rail without duplicate ownership"
+        ],
+        "negativeTests": [
+          "Reject SQL-first execution without a governed plan connection resolver."
+        ],
+        "patchSurfaces": ["apps/**", "packages/**", "scripts/**"],
+        "adapterSurface": "Plan readiness API adapter",
+        "completionGate": [
+          "pnpm verify:prepush",
+          "pnpm docs:feature-mechanization:implementation"
+        ],
+        "applicationPort": "IPlansService.getPlanRunReadiness",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Execution completed despite missing plan-scoped connection authority.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/state/github-mvp-issue-workflow.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md"
+        ],
+        "architectureGuards": [
+          "PTH2-DVT-POSTGRES-CONNECTION-IMPLEMENTABLE-20260814"
+        ],
+        "authorizationScope": "Authenticated tenant/project/environment workspace scope",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2329",
+        "implementationRefs": [
+          "apps/temporal-worker/src/runtime/TemporalWorkerPostgresPlanConnectionResolver.ts#resolveStepConfigSchema",
+          "apps/temporal-worker/src/runtime/TemporalWorkerPostgresPlanConnectionResolver.ts#resolveStepConnectionRef",
+          "apps/temporal-worker/src/runtime/TemporalWorkerPostgresPlanConnectionResolver.ts#sameConnectionRef",
+          "apps/temporal-worker/src/runtime/temporalWorkerPostgresProfile.ts#createDefaultPostgresRelationalCapability",
+          "packages/@dvt/adapter-postgres/src/PostgresPlanConnectionResolver.ts#IPostgresPlanConnectionResolver",
+          "packages/@dvt/adapter-postgres/src/PostgresPlanConnectionResolver.ts#PostgresPlanConnection",
+          "packages/@dvt/adapter-postgres/src/PostgresPlanConnectionResolver.ts#PostgresPlanConnectionRejectedError",
+          "packages/@dvt/adapter-postgres/src/PostgresRelationalExecutionCapability.ts#buildPlanConnectionKey",
+          "packages/@dvt/adapter-postgres/src/PostgresRelationalExecutionCapability.ts#failedPostgresOperation",
+          "packages/@dvt/adapter-postgres/src/PostgresRelationalExecutionCapability.ts#renderStepConfigError",
+          "packages/@dvt/adapter-postgres/src/index.ts#PostgresPlanConnectionRejectedError",
+          "packages/@dvt/contracts/src/contracts/engine/RunExecutionContext.v1.ts#PluginContextValueSchema",
+          "packages/@dvt/contracts/src/contracts/engine/RunExecutionContext.v1.ts#PostgresConnectionRefSchema",
+          "packages/@dvt/contracts/src/contracts/engine/RunExecutionContext.v1.ts#PostgresPluginContextSchema",
+          "packages/@dvt/contracts/src/contracts/engine/RunExecutionContext.v1.ts#PostgresPluginContextSchemaT",
+          "packages/@dvt/contracts/src/contracts/engine/RunExecutionContext.v1.ts#addPluginContextIssues",
+          "packages/@dvt/contracts/src/types/contracts.ts#PluginContextValue",
+          "packages/@dvt/contracts/src/types/contracts.ts#PostgresPluginContext",
+          "packages/@dvt/contracts/src/validation/runtime.ts#parsePostgresPluginContext"
+        ],
+        "normalizedRailName": "observeplanrunreadiness",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "replaceArchitectureGuards": true,
+        "replaceImplementationRefs": true,
+        "allowedImplementationSurfaces": [
+          "apps/**",
+          "packages/**",
+          "scripts/**",
+          "docs/evidence/**",
+          "docs/risk-register/**"
+        ],
+        "forbiddenImplementationSurfaces": ["docs/archive/**"]
+      },
+      "createdAt": "2026-08-14T04:52:15.239Z"
+    },
+    {
+      "operationId": "9d474978-edf6-46c1-999f-e738d14db584",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY:command:compileplan:latest:50b2c2864aed22b9",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY#command#compileplan",
+      "sourcePath": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+      "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+      "expectedRevision": null,
+      "previousRevision": 2,
+      "resultingRevision": 3,
+      "payload": {
+        "redTest": "SQL-first execution previously accepted global PostgreSQL fallback state.",
+        "dddOwner": "Plan compile application service",
+        "railName": "CompilePlan",
+        "railType": "command",
+        "featureId": "PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY",
+        "greenTest": "Plan-scoped PostgreSQL resolution passes contract, isolation, Temporal, and browser coverage.",
+        "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "unitTests": [
+          "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts"
+        ],
+        "railStatus": "retired",
+        "userStories": [
+          "Bind each SQL-first plan to the governed PostgreSQL connection selected by its source node."
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts"
+        ],
+        "domainObjects": ["Compiled SQL-first plan"],
+        "fowlerSignals": [
+          "Separate Query from Modifier",
+          "Explicit connection authority",
+          "Reuse canonical rail without duplicate ownership"
+        ],
+        "negativeTests": [
+          "Reject SQL-first execution without a governed plan connection resolver."
+        ],
+        "patchSurfaces": ["apps/**", "packages/**", "scripts/**"],
+        "adapterSurface": "Planner compiler adapter",
+        "completionGate": [
+          "pnpm verify:prepush",
+          "pnpm docs:feature-mechanization:implementation"
+        ],
+        "applicationPort": "IPlanCompilationPort.compile",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Execution completed despite missing plan-scoped connection authority.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/state/github-mvp-issue-workflow.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md"
+        ],
+        "architectureGuards": [
+          "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
+        ],
+        "authorizationScope": "Authenticated tenant/project/environment workspace scope",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2329",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/useCanvasExecutionActions.test.support.tsx#buildTestPostgresConnectionRef",
+          "packages/@dvt/contracts/src/contracts/planner/TransformationFlowCompiler.v1.ts#TransformationSqlFirstCompilerGraphSourceV2"
+        ],
+        "normalizedRailName": "compileplan",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "replaceArchitectureGuards": true,
+        "replaceImplementationRefs": true,
+        "allowedImplementationSurfaces": [
+          "apps/**",
+          "packages/**",
+          "scripts/**",
+          "docs/evidence/**",
+          "docs/risk-register/**"
+        ],
+        "forbiddenImplementationSurfaces": ["docs/archive/**"]
+      },
+      "createdAt": "2026-08-14T04:53:18.583Z"
+    },
+    {
+      "operationId": "6c331492-d8cd-42c9-89ab-42a09f53c345",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY:command:configurecanvasdvtnode:latest:eac5dc32ce8324dd",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY#command#configurecanvasdvtnode",
+      "sourcePath": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+      "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+      "expectedRevision": null,
+      "previousRevision": 3,
+      "resultingRevision": 4,
+      "payload": {
+        "redTest": "SQL-first execution previously accepted global PostgreSQL fallback state.",
+        "dddOwner": "DvtNodeAuthoringMetadata",
+        "railName": "ConfigureCanvasDvtNode",
+        "railType": "command",
+        "featureId": "PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY",
+        "greenTest": "Plan-scoped PostgreSQL resolution passes contract, isolation, Temporal, and browser coverage.",
+        "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "unitTests": [
+          "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts"
+        ],
+        "railStatus": "retired",
+        "userStories": [
+          "Bind each SQL-first plan to the governed PostgreSQL connection selected by its source node."
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts"
+        ],
+        "domainObjects": ["DVT node connection metadata"],
+        "fowlerSignals": [
+          "Separate Query from Modifier",
+          "Explicit connection authority",
+          "Reuse canonical rail without duplicate ownership"
+        ],
+        "negativeTests": [
+          "Reject SQL-first execution without a governed plan connection resolver."
+        ],
+        "patchSurfaces": ["apps/**", "packages/**", "scripts/**"],
+        "adapterSurface": "Canvas inspector authoring adapter",
+        "completionGate": [
+          "pnpm verify:prepush",
+          "pnpm docs:feature-mechanization:implementation"
+        ],
+        "applicationPort": "CanvasDvtAuthoringModel",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Execution completed despite missing plan-scoped connection authority.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/state/github-mvp-issue-workflow.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md"
+        ],
+        "architectureGuards": [
+          "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
+        ],
+        "authorizationScope": "Authenticated tenant/project/environment workspace scope",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2329",
+        "implementationRefs": [
+          "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts#CONNECTION_ID",
+          "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts#assertNoSeriousAccessibilityViolations",
+          "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts#openNode",
+          "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts#stubDvtConnectionAuthoring",
+          "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts#visitDvtCanvas",
+          "apps/web/src/app/views/canvas/canvasDvtAuthoringModel.ts#parseImportedConnectionRef",
+          "apps/web/src/app/views/canvas/canvasDvtAuthoringModel.ts#parseManualConnectionRef",
+          "apps/web/src/app/views/canvas/canvasDvtAuthoringModel.ts#resolveEffectiveDvtConnectionRef",
+          "apps/web/src/app/views/canvas/canvasDvtAuthoringModel.ts#resolveInheritedDvtConnectionRef"
+        ],
+        "normalizedRailName": "configurecanvasdvtnode",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "replaceArchitectureGuards": true,
+        "replaceImplementationRefs": true,
+        "allowedImplementationSurfaces": [
+          "apps/**",
+          "packages/**",
+          "scripts/**",
+          "docs/evidence/**",
+          "docs/risk-register/**"
+        ],
+        "forbiddenImplementationSurfaces": ["docs/archive/**"]
+      },
+      "createdAt": "2026-08-14T04:53:19.914Z"
+    },
+    {
+      "operationId": "fa7aaebb-8716-4dd9-9a01-4f63dc6f8f04",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY:command:createwarehouseconnection:latest:b473d5c57d9d3915",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY#command#createwarehouseconnection",
+      "sourcePath": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+      "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+      "expectedRevision": null,
+      "previousRevision": 2,
+      "resultingRevision": 3,
+      "payload": {
+        "redTest": "SQL-first execution previously accepted global PostgreSQL fallback state.",
+        "dddOwner": "Warehouse connection aggregate",
+        "railName": "CreateWarehouseConnection",
+        "railType": "command",
+        "featureId": "PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY",
+        "greenTest": "Plan-scoped PostgreSQL resolution passes contract, isolation, Temporal, and browser coverage.",
+        "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "unitTests": [
+          "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts"
+        ],
+        "railStatus": "retired",
+        "userStories": [
+          "Bind each SQL-first plan to the governed PostgreSQL connection selected by its source node."
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts"
+        ],
+        "domainObjects": ["Governed PostgreSQL connection"],
+        "fowlerSignals": [
+          "Separate Query from Modifier",
+          "Explicit connection authority",
+          "Reuse canonical rail without duplicate ownership"
+        ],
+        "negativeTests": [
+          "Reject SQL-first execution without a governed plan connection resolver."
+        ],
+        "patchSurfaces": ["apps/**", "packages/**", "scripts/**"],
+        "adapterSurface": "Warehouse source import HTTP route",
+        "completionGate": [
+          "pnpm verify:prepush",
+          "pnpm docs:feature-mechanization:implementation"
+        ],
+        "applicationPort": "IWarehouseSourceImportPort.createConnection",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Execution completed despite missing plan-scoped connection authority.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/state/github-mvp-issue-workflow.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md"
+        ],
+        "architectureGuards": [
+          "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
+        ],
+        "authorizationScope": "Authenticated tenant/project/environment workspace scope",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2329",
+        "implementationRefs": [
+          "apps/api/src/application/ports/warehouseSourceImport.ts#InvalidWarehouseCredentialReferenceError",
+          "packages/@dvt/adapter-postgres/src/PostgresCredentialBindingResolver.ts#IPostgresCredentialBindingResolver",
+          "packages/@dvt/adapter-postgres/src/PostgresCredentialBindingResolver.ts#InvalidPostgresCredentialBindingsError",
+          "packages/@dvt/adapter-postgres/src/PostgresCredentialBindingResolver.ts#PostgresCredentialBindingResolver",
+          "packages/@dvt/adapter-postgres/src/PostgresCredentialBindingResolver.ts#PostgresCredentialBindings",
+          "packages/@dvt/adapter-postgres/src/PostgresCredentialBindingResolver.ts#isPlainRecord",
+          "packages/@dvt/adapter-postgres/src/PostgresCredentialBindingResolver.ts#isPostgresConnectionString",
+          "packages/@dvt/adapter-postgres/src/PostgresCredentialBindingResolver.ts#isPostgresCredentialRef",
+          "packages/@dvt/adapter-postgres/src/PostgresCredentialBindingResolver.ts#parsePostgresCredentialBindings",
+          "packages/@dvt/contracts/src/contracts/source-import/SourceImportOperations.v1.ts#POSTGRES_CREDENTIAL_REF_PREFIX",
+          "packages/@dvt/contracts/src/contracts/source-import/SourceImportOperations.v1.ts#PostgresCredentialRefSchema",
+          "scripts/run-dev-stack.cjs#LOCAL_POSTGRES_CREDENTIAL_REF"
+        ],
+        "normalizedRailName": "createwarehouseconnection",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "replaceArchitectureGuards": true,
+        "replaceImplementationRefs": true,
+        "allowedImplementationSurfaces": [
+          "apps/**",
+          "packages/**",
+          "scripts/**",
+          "docs/evidence/**",
+          "docs/risk-register/**"
+        ],
+        "forbiddenImplementationSurfaces": ["docs/archive/**"]
+      },
+      "createdAt": "2026-08-14T04:53:21.197Z"
+    },
+    {
+      "operationId": "6c2de978-6384-4c57-adad-cbebfb88b862",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY:command:previewexecutionplan:latest:a8af03787927e8e5",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY#command#previewexecutionplan",
+      "sourcePath": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+      "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+      "expectedRevision": null,
+      "previousRevision": 2,
+      "resultingRevision": 3,
+      "payload": {
+        "redTest": "SQL-first execution previously accepted global PostgreSQL fallback state.",
+        "dddOwner": "Execution preview application service",
+        "railName": "PreviewExecutionPlan",
+        "railType": "command",
+        "featureId": "PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY",
+        "greenTest": "Plan-scoped PostgreSQL resolution passes contract, isolation, Temporal, and browser coverage.",
+        "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "unitTests": [
+          "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts"
+        ],
+        "railStatus": "retired",
+        "userStories": [
+          "Bind each SQL-first plan to the governed PostgreSQL connection selected by its source node."
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts"
+        ],
+        "domainObjects": ["SQL-first preview plan"],
+        "fowlerSignals": [
+          "Separate Query from Modifier",
+          "Explicit connection authority",
+          "Reuse canonical rail without duplicate ownership"
+        ],
+        "negativeTests": [
+          "Reject SQL-first execution without a governed plan connection resolver."
+        ],
+        "patchSurfaces": ["apps/**", "packages/**", "scripts/**"],
+        "adapterSurface": "Plan preview API adapter",
+        "completionGate": [
+          "pnpm verify:prepush",
+          "pnpm docs:feature-mechanization:implementation"
+        ],
+        "applicationPort": "IPlansService.preview",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Execution completed despite missing plan-scoped connection authority.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/state/github-mvp-issue-workflow.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md"
+        ],
+        "architectureGuards": [
+          "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
+        ],
+        "authorizationScope": "Authenticated tenant/project/environment workspace scope",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2329",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/useCanvasExecutionActions.test.support.tsx#buildTestPostgresConnectionRef",
+          "packages/@dvt/contracts/src/contracts/planner/TransformationFlowCompiler.v1.ts#TransformationSqlFirstCompilerGraphSourceV2",
+          "packages/@dvt/contracts/src/contracts/planner/TransformationFlowDesignGraph.v1.ts#TRANSFORMATION_SQL_FIRST_SOURCE_VERSION",
+          "packages/@dvt/contracts/src/contracts/planner/TransformationFlowDesignGraph.v1.ts#TransformationSqlFirstGraphSourceV2",
+          "packages/@dvt/contracts/src/contracts/planner/TransformationFlowStepTypeConfigs.v1.ts#PostgresConnectionRefSchema"
+        ],
+        "normalizedRailName": "previewexecutionplan",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "replaceArchitectureGuards": true,
+        "replaceImplementationRefs": true,
+        "allowedImplementationSurfaces": [
+          "apps/**",
+          "packages/**",
+          "scripts/**",
+          "docs/evidence/**",
+          "docs/risk-register/**"
+        ],
+        "forbiddenImplementationSurfaces": ["docs/archive/**"]
+      },
+      "createdAt": "2026-08-14T04:53:22.528Z"
+    },
+    {
+      "operationId": "f7e6acec-4615-4e14-bed5-32812803c47b",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY:command:saveworkspacegraphdraft:latest:ef66271b2e507aa0",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY#command#saveworkspacegraphdraft",
+      "sourcePath": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+      "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+      "expectedRevision": null,
+      "previousRevision": 2,
+      "resultingRevision": 3,
+      "payload": {
+        "redTest": "SQL-first execution previously accepted global PostgreSQL fallback state.",
+        "dddOwner": "Workspace authoring aggregate",
+        "railName": "SaveWorkspaceGraphDraft",
+        "railType": "command",
+        "featureId": "PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY",
+        "greenTest": "Plan-scoped PostgreSQL resolution passes contract, isolation, Temporal, and browser coverage.",
+        "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "unitTests": [
+          "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts"
+        ],
+        "railStatus": "retired",
+        "userStories": [
+          "Bind each SQL-first plan to the governed PostgreSQL connection selected by its source node."
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts"
+        ],
+        "domainObjects": ["Workspace graph draft"],
+        "fowlerSignals": [
+          "Separate Query from Modifier",
+          "Explicit connection authority",
+          "Reuse canonical rail without duplicate ownership"
+        ],
+        "negativeTests": [
+          "Reject SQL-first execution without a governed plan connection resolver."
+        ],
+        "patchSurfaces": ["apps/**", "packages/**", "scripts/**"],
+        "adapterSurface": "Workspace graph API adapter",
+        "completionGate": [
+          "pnpm verify:prepush",
+          "pnpm docs:feature-mechanization:implementation"
+        ],
+        "applicationPort": "IWorkspaceGraphService.saveGraphDraft",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Execution completed despite missing plan-scoped connection authority.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/state/github-mvp-issue-workflow.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md"
+        ],
+        "architectureGuards": [
+          "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
+        ],
+        "authorizationScope": "Authenticated tenant/project/environment workspace scope",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2329",
+        "implementationRefs": [
+          "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts#CONNECTION_ID"
+        ],
+        "normalizedRailName": "saveworkspacegraphdraft",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "replaceArchitectureGuards": true,
+        "replaceImplementationRefs": true,
+        "allowedImplementationSurfaces": [
+          "apps/**",
+          "packages/**",
+          "scripts/**",
+          "docs/evidence/**",
+          "docs/risk-register/**"
+        ],
+        "forbiddenImplementationSurfaces": ["docs/archive/**"]
+      },
+      "createdAt": "2026-08-14T04:53:23.788Z"
+    },
+    {
+      "operationId": "4c18e37c-1d65-493a-961a-14128cc246a6",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY:command:startrun:latest:0832144d9557b8cf",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY#command#startrun",
+      "sourcePath": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+      "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+      "expectedRevision": null,
+      "previousRevision": 3,
+      "resultingRevision": 4,
+      "payload": {
+        "redTest": "SQL-first execution previously accepted global PostgreSQL fallback state.",
+        "dddOwner": "Run command application service",
+        "railName": "StartRun",
+        "railType": "command",
+        "featureId": "PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY",
+        "greenTest": "Plan-scoped PostgreSQL resolution passes contract, isolation, Temporal, and browser coverage.",
+        "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "unitTests": [
+          "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts"
+        ],
+        "railStatus": "retired",
+        "userStories": [
+          "Bind each SQL-first plan to the governed PostgreSQL connection selected by its source node."
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts"
+        ],
+        "domainObjects": ["Immutable run execution context"],
+        "fowlerSignals": [
+          "Separate Query from Modifier",
+          "Explicit connection authority",
+          "Reuse canonical rail without duplicate ownership"
+        ],
+        "negativeTests": [
+          "Reject SQL-first execution without a governed plan connection resolver."
+        ],
+        "patchSurfaces": ["apps/**", "packages/**", "scripts/**"],
+        "adapterSurface": "Temporal run execution adapter",
+        "completionGate": [
+          "pnpm verify:prepush",
+          "pnpm docs:feature-mechanization:implementation"
+        ],
+        "applicationPort": "IStartRunUseCase.execute",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Execution completed despite missing plan-scoped connection authority.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/state/github-mvp-issue-workflow.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md"
+        ],
+        "architectureGuards": [
+          "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
+        ],
+        "authorizationScope": "Authenticated tenant/project/environment workspace scope",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2329",
+        "implementationRefs": [
+          "apps/api/src/application/ports/runExecutionContextWriter.ts#IRunExecutionContextWriter",
+          "apps/api/src/application/ports/runExecutionContextWriter.ts#RunExecutionContextWriteResult",
+          "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts#CALLER_CONTEXT_REJECTION",
+          "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts#PostgresPlanConnectionResolution",
+          "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts#RunExecutionContextBindingUseCase",
+          "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts#buildRunExecutionContext",
+          "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts#isDbtPlan",
+          "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts#rejectRunExecutionContext",
+          "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts#renderBundleFailure",
+          "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts#renderContextWriteFailure",
+          "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts#resolvePostgresPlanConnection",
+          "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts#sameConnectionRef",
+          "apps/api/src/infrastructure/dbt/FileRunExecutionContextWriter.ts#FileRunExecutionContextWriter",
+          "apps/api/src/infrastructure/startRun/RunExecutionContextBindingPolicy.ts#RunExecutionContextBindingPolicy",
+          "apps/api/src/infrastructure/startRun/RunExecutionContextBindingPolicy.ts#RunExecutionContextBindingPolicyOptions",
+          "apps/temporal-worker/src/runtime/TemporalWorkerPostgresPlanConnectionResolver.ts#TemporalWorkerPostgresPlanConnectionResolver",
+          "apps/temporal-worker/src/runtime/TemporalWorkerPostgresPlanConnectionResolver.ts#assertRunExecutionContextAlignment",
+          "apps/temporal-worker/src/runtime/TemporalWorkerPostgresPlanConnectionResolver.ts#reject",
+          "apps/temporal-worker/src/runtime/TemporalWorkerPostgresPlanConnectionResolver.ts#resolvePostgresPluginContext"
+        ],
+        "normalizedRailName": "startrun",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "replaceArchitectureGuards": true,
+        "replaceImplementationRefs": true,
+        "allowedImplementationSurfaces": [
+          "apps/**",
+          "packages/**",
+          "scripts/**",
+          "docs/evidence/**",
+          "docs/risk-register/**"
+        ],
+        "forbiddenImplementationSurfaces": ["docs/archive/**"]
+      },
+      "createdAt": "2026-08-14T04:53:25.090Z"
+    },
+    {
+      "operationId": "d908eb41-3384-475d-80bc-95dc36acc4af",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY:command:testwarehouseconnection:latest:6d22864291a8c8c0",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY#command#testwarehouseconnection",
+      "sourcePath": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+      "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+      "expectedRevision": null,
+      "previousRevision": 2,
+      "resultingRevision": 3,
+      "payload": {
+        "redTest": "SQL-first execution previously accepted global PostgreSQL fallback state.",
+        "dddOwner": "Warehouse connection validation service",
+        "railName": "TestWarehouseConnection",
+        "railType": "command",
+        "featureId": "PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY",
+        "greenTest": "Plan-scoped PostgreSQL resolution passes contract, isolation, Temporal, and browser coverage.",
+        "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "unitTests": [
+          "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts"
+        ],
+        "railStatus": "retired",
+        "userStories": [
+          "Bind each SQL-first plan to the governed PostgreSQL connection selected by its source node."
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts"
+        ],
+        "domainObjects": ["PostgreSQL connection admission result"],
+        "fowlerSignals": [
+          "Separate Query from Modifier",
+          "Explicit connection authority",
+          "Reuse canonical rail without duplicate ownership"
+        ],
+        "negativeTests": [
+          "Reject SQL-first execution without a governed plan connection resolver."
+        ],
+        "patchSurfaces": ["apps/**", "packages/**", "scripts/**"],
+        "adapterSurface": "Workspace warehouse connection probe",
+        "completionGate": [
+          "pnpm verify:prepush",
+          "pnpm docs:feature-mechanization:implementation"
+        ],
+        "applicationPort": "IWarehouseSourceImportPort.testConnection",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Execution completed despite missing plan-scoped connection authority.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/state/github-mvp-issue-workflow.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md"
+        ],
+        "architectureGuards": [
+          "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
+        ],
+        "authorizationScope": "Authenticated tenant/project/environment workspace scope",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2329",
+        "implementationRefs": [
+          "apps/api/src/application/ports/warehouseSourceImport.ts#InvalidWarehouseCredentialReferenceError"
+        ],
+        "normalizedRailName": "testwarehouseconnection",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "replaceArchitectureGuards": true,
+        "replaceImplementationRefs": true,
+        "allowedImplementationSurfaces": [
+          "apps/**",
+          "packages/**",
+          "scripts/**",
+          "docs/evidence/**",
+          "docs/risk-register/**"
+        ],
+        "forbiddenImplementationSurfaces": ["docs/archive/**"]
+      },
+      "createdAt": "2026-08-14T04:53:26.404Z"
+    },
+    {
+      "operationId": "05206fda-26cf-4679-879b-846bd7b6807f",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY:query:getworkspacegraphdraft:latest:2f8e4df0d3bb846c",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY#query#getworkspacegraphdraft",
+      "sourcePath": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+      "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+      "expectedRevision": null,
+      "previousRevision": 2,
+      "resultingRevision": 3,
+      "payload": {
+        "redTest": "SQL-first execution previously accepted global PostgreSQL fallback state.",
+        "dddOwner": "CanvasAuthoringAuthority",
+        "railName": "GetWorkspaceGraphDraft",
+        "railType": "query",
+        "featureId": "PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY",
+        "greenTest": "Plan-scoped PostgreSQL resolution passes contract, isolation, Temporal, and browser coverage.",
+        "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "unitTests": [
+          "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts"
+        ],
+        "railStatus": "retired",
+        "userStories": [
+          "Bind each SQL-first plan to the governed PostgreSQL connection selected by its source node."
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts"
+        ],
+        "domainObjects": ["Workspace graph draft read model"],
+        "fowlerSignals": [
+          "Separate Query from Modifier",
+          "Explicit connection authority",
+          "Reuse canonical rail without duplicate ownership"
+        ],
+        "negativeTests": [
+          "Reject SQL-first execution without a governed plan connection resolver."
+        ],
+        "patchSurfaces": ["apps/**", "packages/**", "scripts/**"],
+        "adapterSurface": "Workspace graph API adapter",
+        "completionGate": [
+          "pnpm verify:prepush",
+          "pnpm docs:feature-mechanization:implementation"
+        ],
+        "applicationPort": "IWorkspaceGraphService.getGraphDraft",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Execution completed despite missing plan-scoped connection authority.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/state/github-mvp-issue-workflow.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md"
+        ],
+        "architectureGuards": [
+          "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
+        ],
+        "authorizationScope": "Authenticated tenant/project/environment workspace scope",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2329",
+        "implementationRefs": [
+          "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts#CONNECTION_ID"
+        ],
+        "normalizedRailName": "getworkspacegraphdraft",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "replaceArchitectureGuards": true,
+        "replaceImplementationRefs": true,
+        "allowedImplementationSurfaces": [
+          "apps/**",
+          "packages/**",
+          "scripts/**",
+          "docs/evidence/**",
+          "docs/risk-register/**"
+        ],
+        "forbiddenImplementationSurfaces": ["docs/archive/**"]
+      },
+      "createdAt": "2026-08-14T04:53:27.645Z"
+    },
+    {
+      "operationId": "8c3133d5-651f-4055-b1e5-72d185959db0",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY:query:listwarehouseconnections:latest:cf0c365c38deaa48",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY#query#listwarehouseconnections",
+      "sourcePath": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+      "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+      "expectedRevision": null,
+      "previousRevision": 2,
+      "resultingRevision": 3,
+      "payload": {
+        "redTest": "SQL-first execution previously accepted global PostgreSQL fallback state.",
+        "dddOwner": "Warehouse connection read model",
+        "railName": "ListWarehouseConnections",
+        "railType": "query",
+        "featureId": "PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY",
+        "greenTest": "Plan-scoped PostgreSQL resolution passes contract, isolation, Temporal, and browser coverage.",
+        "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "unitTests": [
+          "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts"
+        ],
+        "railStatus": "retired",
+        "userStories": [
+          "Bind each SQL-first plan to the governed PostgreSQL connection selected by its source node."
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts"
+        ],
+        "domainObjects": ["Governed warehouse connection catalog"],
+        "fowlerSignals": [
+          "Separate Query from Modifier",
+          "Explicit connection authority",
+          "Reuse canonical rail without duplicate ownership"
+        ],
+        "negativeTests": [
+          "Reject SQL-first execution without a governed plan connection resolver."
+        ],
+        "patchSurfaces": ["apps/**", "packages/**", "scripts/**"],
+        "adapterSurface": "Warehouse source import API adapter",
+        "completionGate": [
+          "pnpm verify:prepush",
+          "pnpm docs:feature-mechanization:implementation"
+        ],
+        "applicationPort": "IWarehouseSourceImportPort.listConnections",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Execution completed despite missing plan-scoped connection authority.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/state/github-mvp-issue-workflow.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md"
+        ],
+        "architectureGuards": [
+          "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
+        ],
+        "authorizationScope": "Authenticated tenant/project/environment workspace scope",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2329",
+        "implementationRefs": [
+          "apps/web/src/app/services/AppServicesContext.tsx#useOptionalWarehouseSourceImportPort"
+        ],
+        "normalizedRailName": "listwarehouseconnections",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "replaceArchitectureGuards": true,
+        "replaceImplementationRefs": true,
+        "allowedImplementationSurfaces": [
+          "apps/**",
+          "packages/**",
+          "scripts/**",
+          "docs/evidence/**",
+          "docs/risk-register/**"
+        ],
+        "forbiddenImplementationSurfaces": ["docs/archive/**"]
+      },
+      "createdAt": "2026-08-14T04:53:28.914Z"
+    },
+    {
+      "operationId": "b642a214-64b2-421d-ad40-319f792c48c0",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY:query:observeplanrunreadiness:latest:b4b84b5b0884b4f4",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY#query#observeplanrunreadiness",
+      "sourcePath": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+      "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+      "expectedRevision": null,
+      "previousRevision": 3,
+      "resultingRevision": 4,
+      "payload": {
+        "redTest": "SQL-first execution previously accepted global PostgreSQL fallback state.",
+        "dddOwner": "PlanRunReadinessReadModel",
+        "railName": "ObservePlanRunReadiness",
+        "railType": "query",
+        "featureId": "PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY",
+        "greenTest": "Plan-scoped PostgreSQL resolution passes contract, isolation, Temporal, and browser coverage.",
+        "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "unitTests": [
+          "packages/@dvt/adapter-postgres/test/PostgresPlanConnectionIsolation.test.ts"
+        ],
+        "railStatus": "retired",
+        "userStories": [
+          "Bind each SQL-first plan to the governed PostgreSQL connection selected by its source node."
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts"
+        ],
+        "domainObjects": ["Plan run readiness read model"],
+        "fowlerSignals": [
+          "Separate Query from Modifier",
+          "Explicit connection authority",
+          "Reuse canonical rail without duplicate ownership"
+        ],
+        "negativeTests": [
+          "Reject SQL-first execution without a governed plan connection resolver."
+        ],
+        "patchSurfaces": ["apps/**", "packages/**", "scripts/**"],
+        "adapterSurface": "Plan readiness API adapter",
+        "completionGate": [
+          "pnpm verify:prepush",
+          "pnpm docs:feature-mechanization:implementation"
+        ],
+        "applicationPort": "IPlansService.getPlanRunReadiness",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Execution completed despite missing plan-scoped connection authority.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/state/github-mvp-issue-workflow.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md"
+        ],
+        "architectureGuards": [
+          "PTH2-RUN-CONTEXT-COMPONENT-PATH-CORRECTION-20260814"
+        ],
+        "authorizationScope": "Authenticated tenant/project/environment workspace scope",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2329",
+        "implementationRefs": [
+          "apps/temporal-worker/src/runtime/TemporalWorkerPostgresPlanConnectionResolver.ts#resolveStepConfigSchema",
+          "apps/temporal-worker/src/runtime/TemporalWorkerPostgresPlanConnectionResolver.ts#resolveStepConnectionRef",
+          "apps/temporal-worker/src/runtime/TemporalWorkerPostgresPlanConnectionResolver.ts#sameConnectionRef",
+          "apps/temporal-worker/src/runtime/temporalWorkerPostgresProfile.ts#createDefaultPostgresRelationalCapability",
+          "packages/@dvt/adapter-postgres/src/PostgresPlanConnectionResolver.ts#IPostgresPlanConnectionResolver",
+          "packages/@dvt/adapter-postgres/src/PostgresPlanConnectionResolver.ts#PostgresPlanConnection",
+          "packages/@dvt/adapter-postgres/src/PostgresPlanConnectionResolver.ts#PostgresPlanConnectionRejectedError",
+          "packages/@dvt/adapter-postgres/src/PostgresRelationalExecutionCapability.ts#buildPlanConnectionKey",
+          "packages/@dvt/adapter-postgres/src/PostgresRelationalExecutionCapability.ts#failedPostgresOperation",
+          "packages/@dvt/adapter-postgres/src/PostgresRelationalExecutionCapability.ts#renderStepConfigError",
+          "packages/@dvt/adapter-postgres/src/index.ts#PostgresPlanConnectionRejectedError",
+          "packages/@dvt/contracts/src/contracts/engine/RunExecutionContext.v1.ts#PluginContextValueSchema",
+          "packages/@dvt/contracts/src/contracts/engine/RunExecutionContext.v1.ts#PostgresConnectionRefSchema",
+          "packages/@dvt/contracts/src/contracts/engine/RunExecutionContext.v1.ts#PostgresPluginContextSchema",
+          "packages/@dvt/contracts/src/contracts/engine/RunExecutionContext.v1.ts#PostgresPluginContextSchemaT",
+          "packages/@dvt/contracts/src/contracts/engine/RunExecutionContext.v1.ts#addPluginContextIssues",
+          "packages/@dvt/contracts/src/types/contracts.ts#PluginContextValue",
+          "packages/@dvt/contracts/src/types/contracts.ts#PostgresPluginContext",
+          "packages/@dvt/contracts/src/validation/runtime.ts#parsePostgresPluginContext"
+        ],
+        "normalizedRailName": "observeplanrunreadiness",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "replaceArchitectureGuards": true,
+        "replaceImplementationRefs": true,
+        "allowedImplementationSurfaces": [
+          "apps/**",
+          "packages/**",
+          "scripts/**",
+          "docs/evidence/**",
+          "docs/risk-register/**"
+        ],
+        "forbiddenImplementationSurfaces": ["docs/archive/**"]
+      },
+      "createdAt": "2026-08-14T04:53:30.193Z"
     }
   ],
   "governanceComponentDefinitions": [
