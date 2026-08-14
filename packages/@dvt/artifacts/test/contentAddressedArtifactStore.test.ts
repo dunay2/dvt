@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import {
   computeSha256,
+  createDefaultS3ContentAddressedArtifactStore,
   type PublishContentAddressedArtifactInput,
   S3ContentAddressedArtifactStore,
 } from '../src/index.js';
@@ -24,6 +25,12 @@ function input(bytes: Uint8Array = BYTES): PublishContentAddressedArtifactInput 
 }
 
 describe('S3ContentAddressedArtifactStore', () => {
+  it('reuses the default store instead of allocating an S3 client per publish', () => {
+    expect(createDefaultS3ContentAddressedArtifactStore()).toBe(
+      createDefaultS3ContentAddressedArtifactStore()
+    );
+  });
+
   it('creates the declared object once using a conditional put', async () => {
     const send = vi.fn(async () => ({}));
     const store = new S3ContentAddressedArtifactStore({ client: { send } as never });
