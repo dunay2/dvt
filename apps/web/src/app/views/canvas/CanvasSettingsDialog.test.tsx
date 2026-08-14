@@ -151,9 +151,13 @@ describe('CanvasSettingsDialog', () => {
 
     await act(async () => {
       fireEvent.click(impactSwitch!);
-      fireEvent.change(backgroundInput!, { target: { value: '#223344' } });
+      for (const partialColor of ['#2', '#22', '#223', '#2233', '#22334', '#223344']) {
+        fireEvent.change(backgroundInput!, { target: { value: partialColor } });
+      }
       fireEvent.mouseDown(layoutTab!, { button: 0, ctrlKey: false });
     });
+
+    expect(backgroundInput?.value).toBe('#223344');
 
     const autoLayoutSwitch = dialog?.querySelector<HTMLButtonElement>(
       '[data-slot="canvas-properties-auto-layout"]'

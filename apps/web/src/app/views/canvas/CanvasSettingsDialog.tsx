@@ -119,6 +119,20 @@ function CanvasColorField({
   fallback,
   onChange,
 }: CanvasColorFieldProps): JSX.Element {
+  const [inputColor, setInputColor] = useState<string>(color);
+
+  useEffect(() => {
+    setInputColor(color);
+  }, [color]);
+
+  function handleColorInput(nextColor: string): void {
+    const candidate = nextColor.startsWith('#') ? nextColor : `#${nextColor}`;
+    setInputColor(candidate);
+    if (/^#[0-9a-f]{6}$/i.test(candidate)) {
+      onChange(normalizeCanvasHexColor(candidate, fallback));
+    }
+  }
+
   return (
     <div className="grid gap-3">
       <Label className="text-sm font-medium text-(--text-default)">{label}</Label>
@@ -126,7 +140,10 @@ function CanvasColorField({
         <div className="canvas-background-color-picker overflow-hidden rounded-md border border-(--border-muted)">
           <HexColorPicker
             color={color}
-            onChange={(nextColor) => onChange(normalizeCanvasHexColor(nextColor, fallback))}
+            onChange={(nextColor) => {
+              setInputColor(nextColor);
+              onChange(normalizeCanvasHexColor(nextColor, fallback));
+            }}
           />
         </div>
         <div className="grid content-start gap-2">
@@ -136,11 +153,11 @@ function CanvasColorField({
           <HexColorInput
             id={`${inputSlot}-control`}
             data-slot={inputSlot}
-            color={color}
+            color={inputColor}
             prefixed
             aria-label={inputLabel}
             className="h-9 w-full rounded-md border border-(--border-default) bg-(--surface-panel-subtle) px-3 font-mono text-sm text-(--text-default) outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
-            onChange={(nextColor) => onChange(normalizeCanvasHexColor(nextColor, fallback))}
+            onChange={handleColorInput}
           />
         </div>
       </div>
