@@ -1,3 +1,4 @@
+import type { IPostgresCredentialBindingResolver } from '@dvt/adapter-postgres';
 import type {
   IPlanStoreReader,
   IStoredPlanArtifactStore,
@@ -23,6 +24,7 @@ import type { IRunExecutionContextInheritanceWriter } from '../application/ports
 import type { IRunExecutionContextReferenceReader } from '../application/ports/runExecutionContextReferenceReader.js';
 import type { IStartRunLatencyTelemetry } from '../application/ports/StartRunSlaTelemetry.js';
 import type { IStartRunUseCase } from '../application/ports/startRunUseCasePort.js';
+import type { IWarehouseConnectionCatalog } from '../application/ports/warehouseSourceImport.js';
 import type { IWorkspaceContextQuery } from '../application/ports/workspaceContext.js';
 import type { IWorkspaceGraphDraftStore } from '../application/ports/workspaceGraphDraft.js';
 import type { AuthorizeCommandScopeService } from '../application/services/authorizeCommandScopeService.js';
@@ -77,6 +79,8 @@ export interface ProtectedRuntimeModule {
   canvasAuthoringAuthorityPolicy: CanvasAuthoringAuthorityPolicy;
   dbtProjectImport: DbtProjectImportRuntime;
   workspaceFilesRoot: string;
+  warehouseConnectionCatalog: IWarehouseConnectionCatalog;
+  postgresCredentialResolver: IPostgresCredentialBindingResolver;
   workspaceGraphDraftCapabilityService: AuthorizeWorkspaceGraphDraftCapabilityService;
   getWorkspaceGraphDraftUseCase: GetWorkspaceGraphDraftUseCase;
   saveWorkspaceGraphDraftUseCase: SaveWorkspaceGraphDraftUseCase;

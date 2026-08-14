@@ -104,7 +104,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
         name: 'Local Postgres',
         type: 'postgres',
         database: 'dvt',
-        credentialRef: 'env:DVT_WAREHOUSE_URL',
+        credentialRef: 'postgres:warehouse',
       })
     ).resolves.toEqual({
       status: 'passed',
@@ -209,7 +209,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
     const result = await probe.inspectConnection({
       type: 'postgres',
       database: 'dvt',
-      credentialRef: 'env:DVT_WAREHOUSE_URL',
+      credentialRef: 'postgres:warehouse',
     });
 
     expect(result.status).toBe('passed');
@@ -278,7 +278,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
       name: 'Local Postgres',
       type: 'postgres',
       database: 'dvt',
-      credentialRef: 'env:DVT_WAREHOUSE_URL',
+      credentialRef: 'postgres:warehouse',
     });
 
     expect(result).toMatchObject({
@@ -333,7 +333,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
       name: 'Local Postgres',
       type: 'postgres',
       database: 'dvt',
-      credentialRef: 'env:DVT_WAREHOUSE_URL',
+      credentialRef: 'postgres:warehouse',
     });
 
     expect(result).toMatchObject({
@@ -405,7 +405,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
         name: 'Local Postgres',
         type: 'postgres',
         database: 'dvt',
-        credentialRef: 'env:DVT_WAREHOUSE_URL',
+        credentialRef: 'postgres:warehouse',
       })
     ).resolves.toEqual({
       status: 'passed',
@@ -492,7 +492,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
         name: 'Local Postgres',
         type: 'postgres',
         database: 'dvt',
-        credentialRef: 'env:DVT_WAREHOUSE_URL',
+        credentialRef: 'postgres:warehouse',
       })
     ).resolves.toEqual({
       status: 'passed',
@@ -567,7 +567,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
         name: 'Local Postgres',
         type: 'postgres',
         database: 'dvt',
-        credentialRef: 'env:DVT_WAREHOUSE_URL',
+        credentialRef: 'postgres:warehouse',
       })
     ).resolves.toEqual({
       status: 'passed',
@@ -641,7 +641,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
       name: 'Local Postgres',
       type: 'postgres',
       database: 'dvt',
-      credentialRef: 'env:DVT_WAREHOUSE_URL',
+      credentialRef: 'postgres:warehouse',
     });
 
     expect(result).toMatchObject({
@@ -672,7 +672,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
         name: 'Local Postgres',
         type: 'postgres',
         database: 'dvt',
-        credentialRef: 'env:DVT_WAREHOUSE_URL',
+        credentialRef: 'postgres:warehouse',
         sourceObjects: [],
       })
     ).resolves.toEqual({
@@ -733,7 +733,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
         name: 'Local Postgres',
         type: 'postgres',
         database: 'dvt',
-        credentialRef: 'env:DVT_WAREHOUSE_URL',
+        credentialRef: 'postgres:warehouse',
       })
     ).resolves.toEqual({
       status: 'passed',

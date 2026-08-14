@@ -11,9 +11,9 @@ import {
 import { sha256Hex } from '@dvt/crypto';
 import { describe, expect, it, vi } from 'vitest';
 
-import { DbtRunExecutionContextBindingUseCase } from '../../../src/application/services/DbtRunExecutionContextBindingUseCase.js';
 import { PlannerBackedStartRunUseCase } from '../../../src/application/services/PlannerBackedStartRunUseCase.js';
 import { PreviewPlanUseCase } from '../../../src/application/services/PreviewPlanUseCase.js';
+import { RunExecutionContextBindingUseCase } from '../../../src/application/services/RunExecutionContextBindingUseCase.js';
 import { StoredExecutablePlanResolver } from '../../../src/application/services/StoredExecutablePlanResolver.js';
 import { StoredPlanExecutabilityValidator } from '../../../src/application/services/StoredPlanExecutabilityValidator.js';
 import { EnvironmentId, ProjectId, TenantId } from '../../../src/domain/auth/types.js';
@@ -188,7 +188,7 @@ describe('stored plan authority flow', () => {
         value: { kind: 'accepted' as const, runId: 'run-1', accepted: true as const },
       })),
     };
-    const dbtBinding = new DbtRunExecutionContextBindingUseCase({
+    const runContextBinding = new RunExecutionContextBindingUseCase({
       delegate: engineDelegate,
       bundleBuilder: {
         build: vi.fn(async () => ({
@@ -223,12 +223,19 @@ describe('stored plan authority flow', () => {
         }),
       },
       stepTypeRegistry: harness.stepTypeRegistry,
+      warehouseConnectionCatalog: {
+        listConnections: vi.fn(),
+        listSourceObjects: vi.fn(),
+        getConnection: vi.fn(),
+        createConnection: vi.fn(),
+      },
+      postgresCredentialResolver: { resolveCredential: vi.fn() },
     });
     const start = new PlannerBackedStartRunUseCase({
       planner: { buildPlan: vi.fn() } as never,
       planStore: harness.planStore as never,
       validator: harness.validator,
-      delegate: dbtBinding,
+      delegate: runContextBinding,
       compileTelemetry: { recordPlanCompileLatency: vi.fn() },
       executableSubgraphResolver: { execute: vi.fn() } as never,
     });

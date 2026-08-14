@@ -2,6 +2,7 @@
  * Owned concern: assemble the protected start-run runtime subcomponent for
  * `apps/api` from already-bound abstract dependencies.
  */
+import type { IPostgresCredentialBindingResolver } from '@dvt/adapter-postgres';
 import type {
   DbtProjectBundleArtifactStore,
   IPlanStoreReader,
@@ -19,19 +20,20 @@ import type { AdmissionMode } from '../../application/ports/IAdmissionMode.js';
 import type { IStartRunExecutionCapacityPort } from '../../application/ports/IStartRunExecutionCapacityPort.js';
 import type { IStartRunLatencyTelemetry } from '../../application/ports/StartRunSlaTelemetry.js';
 import type { IStartRunUseCase } from '../../application/ports/startRunUseCasePort.js';
+import type { IWarehouseConnectionCatalog } from '../../application/ports/warehouseSourceImport.js';
 import type { IWorkspaceGraphDraftStore } from '../../application/ports/workspaceGraphDraft.js';
 import { BackpressureAwareStartRunUseCase } from '../../application/services/BackpressureAwareStartRunUseCase.js';
-import { DbtRunExecutionContextBindingUseCase } from '../../application/services/DbtRunExecutionContextBindingUseCase.js';
 import { DEFAULT_START_RUN_EXECUTION_CAPACITY_PORT } from '../../application/services/defaultStartRunExecutionCapacityPort.js';
 import { EngineStartRunUseCase } from '../../application/services/engineStartRunUseCase.js';
 import { PlannerBackedStartRunUseCase } from '../../application/services/PlannerBackedStartRunUseCase.js';
 import { ResolveAuthorizedExecutableSubgraphService } from '../../application/services/resolveAuthorizedExecutableSubgraph.js';
+import { RunExecutionContextBindingUseCase } from '../../application/services/RunExecutionContextBindingUseCase.js';
 import type { StoredExecutablePlanResolver } from '../../application/services/StoredExecutablePlanResolver.js';
 import { StoredPlanExecutabilityValidator } from '../../application/services/StoredPlanExecutabilityValidator.js';
 import { ObservabilityAdmissionTelemetry } from '../../infrastructure/admissionTelemetry/ObservabilityAdmissionTelemetry.js';
 import { DbtProjectBundleBuilder } from '../../infrastructure/dbt/DbtProjectBundleBuilder.js';
 import { DEFAULT_DBT_PROJECT_SOURCE_LIMITS } from '../../infrastructure/dbt/dbtProjectSourceSnapshot.js';
-import { FileDbtRunExecutionContextWriter } from '../../infrastructure/dbt/FileDbtRunExecutionContextWriter.js';
+import { FileRunExecutionContextWriter } from '../../infrastructure/dbt/FileRunExecutionContextWriter.js';
 import { ObservabilityStartRunSlaTelemetry } from '../../infrastructure/telemetry/ObservabilityStartRunSlaTelemetry.js';
 import { buildPlanCompilePlanner } from '../planCompileBoundary.js';
 
@@ -51,6 +53,8 @@ export type BuildProtectedStartRunRuntimeDeps = {
   readonly workspaceRoot: string;
   readonly dbtBundleStore: DbtProjectBundleArtifactStore | undefined;
   readonly dbtExecutionTargetResolver: IDbtExecutionTargetResolver;
+  readonly warehouseConnectionCatalog: IWarehouseConnectionCatalog;
+  readonly postgresCredentialResolver: IPostgresCredentialBindingResolver;
 };
 
 export type ProtectedStartRunRuntime = {
@@ -80,16 +84,18 @@ export function buildProtectedStartRunRuntime(
     workspaceGraphDraftStore: deps.workspaceGraphDraftStore,
   });
   const engineStartRunUseCase = new EngineStartRunUseCase(deps.engine);
-  const dbtRunExecutionContextBindingUseCase = new DbtRunExecutionContextBindingUseCase({
+  const runExecutionContextBindingUseCase = new RunExecutionContextBindingUseCase({
     delegate: engineStartRunUseCase,
     bundleBuilder: new DbtProjectBundleBuilder({
       workspaceFilesRoot: deps.workspaceRoot,
       bundleStore: deps.dbtBundleStore,
       limits: DEFAULT_DBT_PROJECT_SOURCE_LIMITS,
     }),
-    contextWriter: new FileDbtRunExecutionContextWriter(deps.dbtBundleStore),
+    contextWriter: new FileRunExecutionContextWriter(deps.dbtBundleStore),
     executionTargetResolver: deps.dbtExecutionTargetResolver,
     stepTypeRegistry: deps.stepTypeRegistry,
+    warehouseConnectionCatalog: deps.warehouseConnectionCatalog,
+    postgresCredentialResolver: deps.postgresCredentialResolver,
   });
   const plannerBackedUseCase = new PlannerBackedStartRunUseCase({
     planner: planCompilePlanner,
@@ -97,7 +103,7 @@ export function buildProtectedStartRunRuntime(
     validator: planValidator,
     compileTelemetry: startRunSlaTelemetry,
     executableSubgraphResolver,
-    delegate: dbtRunExecutionContextBindingUseCase,
+    delegate: runExecutionContextBindingUseCase,
   });
   const admissionUseCase = new BackpressureAwareStartRunUseCase({
     duplicateProbe: deps.duplicateProbe,

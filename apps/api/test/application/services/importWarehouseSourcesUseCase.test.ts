@@ -60,7 +60,7 @@ const CONNECTION: WarehouseConnectionCatalogEntry = {
   name: 'Production warehouse',
   type: 'postgres',
   database: 'analytics',
-  credentialRef: 'env:DVT_WAREHOUSE_URL',
+  credentialRef: 'postgres:warehouse',
   sourceObjects: [SOURCE_OBJECT],
 };
 

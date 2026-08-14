@@ -1,4 +1,5 @@
 /** Owned concern: verify warehouse connection metadata with server-resolved credentials. */
+import type { IPostgresCredentialBindingResolver } from '@dvt/adapter-postgres';
 import {
   buildRelationalSourceObjectId,
   SourceObjectConstraintSchema,
@@ -66,26 +67,10 @@ type PostgresExplainRow = Readonly<Record<'QUERY PLAN', unknown>>;
 
 const EXACT_ROW_COUNT_TIMEOUT_MS = 2000;
 
-export type WarehouseCredentialResolver = {
-  resolveCredential(credentialRef: string): Promise<string | null>;
-};
-
-export class EnvironmentWarehouseCredentialResolver implements WarehouseCredentialResolver {
-  public async resolveCredential(credentialRef: string): Promise<string | null> {
-    const envPrefix = 'env:';
-    if (!credentialRef.startsWith(envPrefix)) {
-      return null;
-    }
-
-    const envName = credentialRef.slice(envPrefix.length).trim();
-    return envName.length > 0 ? (process.env[envName] ?? null) : null;
-  }
-}
-
 export class WorkspaceWarehouseConnectionProbe implements IWarehouseConnectionProbe {
   public constructor(
     private readonly options: {
-      readonly credentialResolver: WarehouseCredentialResolver;
+      readonly credentialResolver: IPostgresCredentialBindingResolver;
       readonly now: () => Date;
     }
   ) {}

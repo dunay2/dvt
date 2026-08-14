@@ -308,12 +308,12 @@ function buildApp(
         name: 'Production warehouse',
         type: 'postgres',
         database: 'analytics',
-        credentialRef: 'env:DVT_WAREHOUSE_URL',
+        credentialRef: 'postgres:warehouse',
         sourceObjects: [defaultOrdersSourceObject],
       },
     ]
   ).map((entry) => ({
-    credentialRef: entry.credentialRef ?? `env:DVT_${entry.id.toUpperCase()}_URL`,
+    credentialRef: entry.credentialRef ?? `postgres:${entry.id}`,
     ...entry,
   }));
   const draftStore = {
@@ -523,7 +523,7 @@ describe('warehouseSourceImportRoutes', () => {
         name: 'Finance warehouse',
         type: 'postgres',
         database: 'finance',
-        credentialRef: 'env:DVT_FINANCE_WAREHOUSE_URL',
+        credentialRef: 'postgres:finance-warehouse',
       },
     });
 
@@ -561,7 +561,7 @@ describe('warehouseSourceImportRoutes', () => {
         name: 'Production warehouse',
         type: 'postgres',
         database: 'analytics',
-        credentialRef: 'env:DVT_DUPLICATE_WAREHOUSE_URL',
+        credentialRef: 'postgres:duplicate-warehouse',
       },
     });
 
@@ -582,7 +582,7 @@ describe('warehouseSourceImportRoutes', () => {
         name: 'MySQL legacy',
         type: 'mysql',
         database: 'legacy',
-        credentialRef: 'env:DVT_MYSQL_URL',
+        credentialRef: 'postgres:mysql-warehouse',
       },
     });
 
@@ -659,7 +659,7 @@ describe('warehouseSourceImportRoutes', () => {
         name: 'Finance warehouse',
         type: 'postgres',
         database: 'finance',
-        credentialRef: 'env:DVT_FINANCE_WAREHOUSE_URL',
+        credentialRef: 'postgres:finance-warehouse',
       },
     });
 

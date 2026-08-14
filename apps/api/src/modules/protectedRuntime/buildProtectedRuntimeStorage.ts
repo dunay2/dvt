@@ -2,12 +2,15 @@
  * Owned concern: assemble the protected-runtime storage and stored-plan
  * dependencies for `apps/api`.
  */
+import { PostgresCredentialBindingResolver } from '@dvt/adapter-postgres';
 import { asIsoUtcString, createDefaultStepTypeRegistry } from '@dvt/contracts';
 import type { ExecutionPlan } from '@dvt/engine';
 
 import { StoredExecutablePlanResolver } from '../../application/services/StoredExecutablePlanResolver.js';
 import { ArtifactBackedRunExecutionContextResolver } from '../../infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.js';
-import { ArtifactStoreDbtProjectBundleBindingPolicy } from '../../infrastructure/startRun/ArtifactStoreDbtProjectBundleBindingPolicy.js';
+import { RunExecutionContextBindingPolicy } from '../../infrastructure/startRun/RunExecutionContextBindingPolicy.js';
+import { WorkspaceWarehouseConnectionCatalog } from '../../infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionCatalog.js';
+import { LocalWorkspaceMetadataFileRepository } from '../../infrastructure/workspaceFiles/LocalWorkspaceMetadataFileRepository.js';
 import { resolveWorkspaceFilesRoot } from '../../infrastructure/workspaceFiles/resolveWorkspaceFilesRoot.js';
 import type { Env } from '../../plugins/env.js';
 import { bindStateStoreRoles } from '../stateStoreRoles.js';
@@ -59,10 +62,17 @@ export function buildProtectedRuntimeStorage(deps: BuildProtectedRuntimeStorageD
   });
   const systemClock = { nowIsoUtc: () => asIsoUtcString(new Date().toISOString()) };
   const dbtBundleStore = resolveDbtBundleArtifactStore(deps.env);
+  const workspaceFilesRoot = resolveWorkspaceFilesRoot(deps.env);
+  const warehouseConnectionCatalog = new WorkspaceWarehouseConnectionCatalog({
+    repository: new LocalWorkspaceMetadataFileRepository({ root: workspaceFilesRoot }),
+  });
+  const postgresCredentialResolver = new PostgresCredentialBindingResolver(
+    deps.env.DVT_POSTGRES_CREDENTIAL_BINDINGS
+  );
   const runExecutionContextResolver = new ArtifactBackedRunExecutionContextResolver({
     nodeEnv: deps.env.NODE_ENV,
   });
-  const runExecutionContextBindingPolicy = new ArtifactStoreDbtProjectBundleBindingPolicy({
+  const runExecutionContextBindingPolicy = new RunExecutionContextBindingPolicy({
     bundleStore: dbtBundleStore,
   });
 
@@ -75,7 +85,9 @@ export function buildProtectedRuntimeStorage(deps: BuildProtectedRuntimeStorageD
     stepTypeRegistry,
     executablePlanResolver,
     systemClock,
-    workspaceFilesRoot: resolveWorkspaceFilesRoot(deps.env),
+    workspaceFilesRoot,
+    warehouseConnectionCatalog,
+    postgresCredentialResolver,
     dbtBundleStore,
     runExecutionContextResolver,
     runExecutionContextBindingPolicy,

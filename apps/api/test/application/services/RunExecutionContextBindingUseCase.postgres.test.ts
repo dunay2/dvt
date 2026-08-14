@@ -9,8 +9,9 @@ import {
 } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
+import type { IWarehouseConnectionCatalog } from '../../../src/application/ports/warehouseSourceImport.js';
 import { WarehouseConnectionNotFoundError } from '../../../src/application/ports/warehouseSourceImport.js';
-import { DbtRunExecutionContextBindingUseCase as RunExecutionContextBindingUseCase } from '../../../src/application/services/DbtRunExecutionContextBindingUseCase.js';
+import { RunExecutionContextBindingUseCase } from '../../../src/application/services/RunExecutionContextBindingUseCase.js';
 import { EnvironmentId, ProjectId, TenantId } from '../../../src/domain/auth/types.js';
 
 import { buildAuthorizedContext } from './engineStartRunUseCase.test.support.js';
@@ -51,11 +52,11 @@ describe('RunExecutionContextBindingUseCase PostgreSQL authority', () => {
       delegate,
       bundleBuilder,
       contextWriter,
-      executionTargetResolver: { resolve: () => undefined },
+      executionTargetResolver: { resolve: () => null },
       stepTypeRegistry: createDefaultStepTypeRegistry(),
       warehouseConnectionCatalog: catalog,
       postgresCredentialResolver: credentialResolver,
-    } as never);
+    });
 
     const result = await useCase.executeAdmitted(buildCommand(), buildContext(), makeAdmission());
 
@@ -95,11 +96,11 @@ describe('RunExecutionContextBindingUseCase PostgreSQL authority', () => {
       delegate,
       bundleBuilder: { build: vi.fn() },
       contextWriter,
-      executionTargetResolver: { resolve: () => undefined },
+      executionTargetResolver: { resolve: () => null },
       stepTypeRegistry: createDefaultStepTypeRegistry(),
       warehouseConnectionCatalog: catalog,
       postgresCredentialResolver: { resolveCredential: vi.fn() },
-    } as never);
+    });
 
     await expect(
       useCase.executeAdmitted(buildCommand(), buildContext(), makeAdmission())
@@ -112,7 +113,9 @@ describe('RunExecutionContextBindingUseCase PostgreSQL authority', () => {
   });
 });
 
-function makeCatalog(): Record<string, ReturnType<typeof vi.fn>> {
+function makeCatalog(): IWarehouseConnectionCatalog & {
+  getConnection: ReturnType<typeof vi.fn>;
+} {
   return {
     listConnections: vi.fn(),
     listSourceObjects: vi.fn(),
@@ -165,9 +168,10 @@ function buildContext(): ReturnType<typeof buildAuthorizedContext> {
 function makeAdmission(): Parameters<RunExecutionContextBindingUseCase['executeAdmitted']>[2] {
   const sqlArtifact = {
     repo: 'dunay2/dvt',
-    ref: 'main',
-    sha: 'b'.repeat(40),
     path: 'models/orders.sql',
+    ref: 'refs/heads/main',
+    commitSha: 'b'.repeat(40),
+    contentSha256: 'c'.repeat(64),
   };
   const plan = parseExecutionPlan({
     metadata: {

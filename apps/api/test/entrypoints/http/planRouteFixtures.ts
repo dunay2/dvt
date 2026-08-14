@@ -21,7 +21,7 @@ export const VALID_PLAN_REF = {
 } as const;
 
 export const PREVIEW_PROFILE_GENERIC = 'planner-generic-v1' as const;
-export const PREVIEW_PROFILE_TRANSFORMATION = 'transformation-sql-first-v1' as const;
+export const PREVIEW_PROFILE_TRANSFORMATION = 'transformation-sql-first-v2' as const;
 
 export const VALID_PREVIEW_CONTEXT = {
   runId: 'run_1',
@@ -78,16 +78,23 @@ export const VALID_PREVIEW_PROVENANCE = {
   },
 } as const;
 
+export const VALID_POSTGRES_CONNECTION_REF = {
+  schemaVersion: 'connection-ref.v1',
+  connectionId: 'warehouse-a',
+  provider: 'postgres',
+} as const;
+
 export const VALID_TRANSFORMATION_GRAPH_SOURCE = {
   kind: 'generic-graph-v1',
   sourceFamily: 'transformation-design-graph',
-  sourceVersion: 'transformation-sql-first-v1',
+  sourceVersion: 'transformation-sql-first-v2',
   nodes: [
     {
       nodeId: 'source-node',
       stepKind: 'PREPARE_POSTGRES_TRANSFORM',
       dependsOn: [],
       stepTypeConfig: {
+        connectionRef: VALID_POSTGRES_CONNECTION_REF,
         targetSchema: 'analytics',
         sourceSchema: 'raw',
         sourceTable: 'orders',
@@ -99,6 +106,7 @@ export const VALID_TRANSFORMATION_GRAPH_SOURCE = {
       stepKind: 'POSTGRES_SQL_TRANSFORM',
       dependsOn: ['source-node'],
       stepTypeConfig: {
+        connectionRef: VALID_POSTGRES_CONNECTION_REF,
         dialect: 'postgres',
         entrypoint: 'models/model.sql',
         sql: 'select * from raw.orders',
@@ -117,6 +125,7 @@ export const VALID_TRANSFORMATION_GRAPH_SOURCE = {
       stepKind: 'CAPTURE_MATERIALIZATION_EVIDENCE',
       dependsOn: ['transform-node'],
       stepTypeConfig: {
+        connectionRef: VALID_POSTGRES_CONNECTION_REF,
         sinkSchema: 'analytics',
         sinkTable: 'orders_daily',
         materialization: 'table',

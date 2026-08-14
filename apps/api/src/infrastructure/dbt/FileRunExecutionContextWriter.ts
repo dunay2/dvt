@@ -1,4 +1,4 @@
-/** Owned concern: persist and address the server-created DBT run execution context. */
+/** Owned concern: persist and address one server-created run execution context. */
 import { createHash } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 
@@ -6,9 +6,9 @@ import type { DbtProjectBundleArtifactStore } from '@dvt/artifacts';
 import { parseRunExecutionContextRef } from '@dvt/contracts';
 
 import type {
-  DbtRunExecutionContextWriteResult,
-  IDbtRunExecutionContextWriter,
-} from '../../application/ports/dbtRunExecutionContextWriter.js';
+  IRunExecutionContextWriter,
+  RunExecutionContextWriteResult,
+} from '../../application/ports/runExecutionContextWriter.js';
 
 import { writeImmutableFileArtifact } from './immutableFileArtifactWriter.js';
 import {
@@ -16,12 +16,12 @@ import {
   resolveRunExecutionContextReferenceArtifactPath,
 } from './runExecutionContextArtifactPath.js';
 
-export class FileDbtRunExecutionContextWriter implements IDbtRunExecutionContextWriter {
+export class FileRunExecutionContextWriter implements IRunExecutionContextWriter {
   public constructor(private readonly store: DbtProjectBundleArtifactStore | undefined) {}
 
   public async write(
-    input: Parameters<IDbtRunExecutionContextWriter['write']>[0]
-  ): Promise<DbtRunExecutionContextWriteResult> {
+    input: Parameters<IRunExecutionContextWriter['write']>[0]
+  ): Promise<RunExecutionContextWriteResult> {
     if (this.store === undefined) return { ok: false, reason: 'artifact_store_unavailable' };
     if (this.store.kind !== 'file') return { ok: false, reason: 'artifact_store_unsupported' };
 

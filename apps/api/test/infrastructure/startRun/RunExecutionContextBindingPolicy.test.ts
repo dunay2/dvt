@@ -1,7 +1,7 @@
 import { TRANSFORMATION_STEP_KIND } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
-import { ArtifactStoreDbtProjectBundleBindingPolicy as RunExecutionContextBindingPolicy } from '../../../src/infrastructure/startRun/ArtifactStoreDbtProjectBundleBindingPolicy.js';
+import { RunExecutionContextBindingPolicy } from '../../../src/infrastructure/startRun/RunExecutionContextBindingPolicy.js';
 
 describe('RunExecutionContextBindingPolicy PostgreSQL context', () => {
   it('registers the SQL-first step kinds against the postgres context key', () => {

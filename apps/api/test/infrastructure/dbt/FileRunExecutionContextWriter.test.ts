@@ -6,11 +6,11 @@ import { URL } from 'node:url';
 import { parseRunExecutionContext, type RunExecutionContext } from '@dvt/contracts';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { FileDbtRunExecutionContextWriter } from '../../../src/infrastructure/dbt/FileDbtRunExecutionContextWriter.js';
+import { FileRunExecutionContextWriter } from '../../../src/infrastructure/dbt/FileRunExecutionContextWriter.js';
 
 let root: string | undefined;
 
-describe('FileDbtRunExecutionContextWriter', () => {
+describe('FileRunExecutionContextWriter', () => {
   afterEach(async () => {
     if (root !== undefined) await rm(root, { recursive: true, force: true });
     root = undefined;
@@ -19,7 +19,7 @@ describe('FileDbtRunExecutionContextWriter', () => {
   it('writes an immutable context without exposing the caller run id as a path segment', async () => {
     root = await mkdtemp(path.join(tmpdir(), 'dvt-dbt-run-context-'));
     const context = buildContext();
-    const writer = new FileDbtRunExecutionContextWriter({ kind: 'file', rootPath: root });
+    const writer = new FileRunExecutionContextWriter({ kind: 'file', rootPath: root });
 
     const result = await writer.write({ runId: '../unsafe/run', context });
 

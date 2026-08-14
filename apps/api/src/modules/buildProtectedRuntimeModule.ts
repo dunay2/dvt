@@ -164,6 +164,8 @@ export async function buildProtectedRuntimeModule(
     workspaceRoot: storageRuntime.workspaceFilesRoot,
     dbtBundleStore: storageRuntime.dbtBundleStore,
     dbtExecutionTargetResolver,
+    warehouseConnectionCatalog: storageRuntime.warehouseConnectionCatalog,
+    postgresCredentialResolver: storageRuntime.postgresCredentialResolver,
   });
   return {
     startRunUseCase: startRunRuntime.startRunUseCase,
@@ -201,6 +203,8 @@ export async function buildProtectedRuntimeModule(
     canvasAuthoringAuthorityPolicy: canvasAuthoringAuthorityRuntime.canvasAuthoringAuthorityPolicy,
     dbtProjectImport,
     workspaceFilesRoot: storageRuntime.workspaceFilesRoot,
+    warehouseConnectionCatalog: storageRuntime.warehouseConnectionCatalog,
+    postgresCredentialResolver: storageRuntime.postgresCredentialResolver,
     workspaceGraphDraftCapabilityService:
       workspaceGraphDraftRuntime.workspaceGraphDraftCapabilityService,
     getWorkspaceGraphDraftUseCase: workspaceGraphDraftRuntime.getWorkspaceGraphDraftUseCase,

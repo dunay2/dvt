@@ -126,7 +126,7 @@ function buildPreviewResponse(
   previewProfile: PreviewProfile
 ): PreviewRouteResponse {
   const planSummary =
-    previewProfile === PREVIEW_PROFILE.transformationSqlFirstV1
+    previewProfile === PREVIEW_PROFILE.transformationSqlFirstV2
       ? summarizeTransformationSqlFirstPlan(plan)
       : undefined;
 

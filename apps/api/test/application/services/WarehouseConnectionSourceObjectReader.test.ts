@@ -54,7 +54,7 @@ const connection: WarehouseConnectionCatalogEntry = {
   name: 'Production warehouse',
   type: 'postgres',
   database: 'analytics',
-  credentialRef: 'env:WAREHOUSE_URL',
+  credentialRef: 'postgres:warehouse',
   sourceObjects: [storedObject],
 };
 
@@ -88,7 +88,7 @@ describe('WarehouseConnectionSourceObjectReader', () => {
     expect(probe.inspectConnection).toHaveBeenCalledWith({
       type: 'postgres',
       database: 'analytics',
-      credentialRef: 'env:WAREHOUSE_URL',
+      credentialRef: 'postgres:warehouse',
     });
   });
 

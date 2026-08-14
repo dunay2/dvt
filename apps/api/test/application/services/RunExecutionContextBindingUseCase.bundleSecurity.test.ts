@@ -8,7 +8,7 @@ import {
 } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
-import { DbtRunExecutionContextBindingUseCase } from '../../../src/application/services/DbtRunExecutionContextBindingUseCase.js';
+import { RunExecutionContextBindingUseCase } from '../../../src/application/services/RunExecutionContextBindingUseCase.js';
 import { EnvironmentId, ProjectId, TenantId } from '../../../src/domain/auth/types.js';
 
 import { buildAuthorizedContext } from './engineStartRunUseCase.test.support.js';
@@ -25,7 +25,7 @@ describe('DBT runtime binding security boundary', () => {
   it('rejects caller-provided DBT run context references before artifact creation', async () => {
     const delegate = { execute: vi.fn() };
     const bundleBuilder = { build: vi.fn() };
-    const useCase = new DbtRunExecutionContextBindingUseCase({
+    const useCase = new RunExecutionContextBindingUseCase({
       delegate,
       bundleBuilder,
       contextWriter: { write: vi.fn() },
@@ -38,6 +38,13 @@ describe('DBT runtime binding security boundary', () => {
         }),
       },
       stepTypeRegistry: createDefaultStepTypeRegistry(),
+      warehouseConnectionCatalog: {
+        listConnections: vi.fn(),
+        listSourceObjects: vi.fn(),
+        getConnection: vi.fn(),
+        createConnection: vi.fn(),
+      },
+      postgresCredentialResolver: { resolveCredential: vi.fn() },
     });
 
     const result = await useCase.executeAdmitted(
@@ -91,7 +98,7 @@ describe('DBT runtime binding security boundary', () => {
       value: {
         kind: 'plan_rejected',
         reason:
-          'Caller-provided run execution context references are not accepted for DBT execution.',
+          'Caller-provided run execution context references are not accepted for governed execution.',
       },
     });
     expect(bundleBuilder.build).not.toHaveBeenCalled();
