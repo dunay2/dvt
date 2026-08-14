@@ -10677,6 +10677,20 @@
         "updated_at": "2026-08-11T14:09:48.127+00:00"
       },
       {
+        "design_id": "API-H2-5-ARCHITECTURE-RESPONSIBILITY-RETIREMENT-20260814",
+        "work_item_id": "https://github.com/dunay2/dvt/issues/2341",
+        "title": "Retire stale architecture component responsibilities",
+        "owner": "Architecture / Planning DB",
+        "status": "implemented",
+        "rationale": "Remove stale component responsibility authority through one explicit audited Planning DB command instead of direct SQL or generated-file edits.",
+        "fowler_signal": "hidden_authority",
+        "rail_ref": "RetireArchitectureComponentResponsibility",
+        "approved_at": "2026-08-14T07:30:06.111+00:00",
+        "supersedes_id": null,
+        "created_at": "2026-08-14T07:30:04.275+00:00",
+        "updated_at": "2026-08-14T07:30:45.365+00:00"
+      },
+      {
         "design_id": "CANVAS-BACKLOG-INTEGRITY-READINESS-20260626",
         "work_item_id": "E-CANVAS-UXDB-COMPONENT-SLICES-1",
         "title": "Canvas backlog component integrity readiness projection",
@@ -15385,6 +15399,20 @@
         "recorded_at": "2026-08-11T14:09:37.594+00:00",
         "source_content_sha256": "96071a0f8e97109913e01f7d00560d23f147f91dd3bd6723fb38b492558af2e6",
         "implementation_content_sha256": null
+      },
+      {
+        "evidence_id": "EVIDENCE-API-H2-5-RESPONSIBILITY-RETIREMENT-LOCAL",
+        "design_id": "API-H2-5-ARCHITECTURE-RESPONSIBILITY-RETIREMENT-20260814",
+        "subject_kind": "command",
+        "subject_id": "RetireArchitectureComponentResponsibility",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+        "source_path": "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+        "result_state": "pass",
+        "recorded_at": "2026-08-14T07:30:43.324+00:00",
+        "source_content_sha256": "0b7738bf4790cb51425a335acb2516cb21707164420cd1a77c8423162dd43f1a",
+        "implementation_content_sha256": "c0ebb5149e755944ac44ab72669fbeb6a0716d0e21b2ee97d387377e1862289c"
       },
       {
         "evidence_id": "EVIDENCE-CODE-WORKING-TREE-POST-SAVE-CONSUMER",
@@ -64439,6 +64467,78 @@
         "created_at": "2026-08-11T13:48:37.674+00:00"
       },
       {
+        "design_id": "API-H2-5-ARCHITECTURE-RESPONSIBILITY-RETIREMENT-20260814",
+        "subject_kind": "command",
+        "subject_id": "RetireArchitectureComponentResponsibility",
+        "scope_kind": "may_create",
+        "required": true,
+        "created_at": "2026-08-14T07:30:04.275+00:00"
+      },
+      {
+        "design_id": "API-H2-5-ARCHITECTURE-RESPONSIBILITY-RETIREMENT-20260814",
+        "subject_kind": "command",
+        "subject_id": "RetireArchitectureComponentResponsibility",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-14T07:30:04.275+00:00"
+      },
+      {
+        "design_id": "API-H2-5-ARCHITECTURE-RESPONSIBILITY-RETIREMENT-20260814",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T07:30:04.275+00:00"
+      },
+      {
+        "design_id": "API-H2-5-ARCHITECTURE-RESPONSIBILITY-RETIREMENT-20260814",
+        "subject_kind": "component",
+        "subject_id": "SYS-CI-GOVERNANCE-ROOT",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-14T07:30:04.275+00:00"
+      },
+      {
+        "design_id": "API-H2-5-ARCHITECTURE-RESPONSIBILITY-RETIREMENT-20260814",
+        "subject_kind": "evidence",
+        "subject_id": "EVIDENCE-API-H2-5-RESPONSIBILITY-RETIREMENT-LOCAL",
+        "scope_kind": "may_create",
+        "required": true,
+        "created_at": "2026-08-14T07:30:04.275+00:00"
+      },
+      {
+        "design_id": "API-H2-5-ARCHITECTURE-RESPONSIBILITY-RETIREMENT-20260814",
+        "subject_kind": "path",
+        "subject_id": "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T07:30:04.275+00:00"
+      },
+      {
+        "design_id": "API-H2-5-ARCHITECTURE-RESPONSIBILITY-RETIREMENT-20260814",
+        "subject_kind": "path",
+        "subject_id": "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T07:30:04.275+00:00"
+      },
+      {
+        "design_id": "API-H2-5-ARCHITECTURE-RESPONSIBILITY-RETIREMENT-20260814",
+        "subject_kind": "path",
+        "subject_id": "scripts/planning-db-operate-tests/helpers.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T07:30:04.275+00:00"
+      },
+      {
+        "design_id": "API-H2-5-ARCHITECTURE-RESPONSIBILITY-RETIREMENT-20260814",
+        "subject_kind": "path",
+        "subject_id": "scripts/planning-db-operate.cjs",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T07:30:04.275+00:00"
+      },
+      {
         "design_id": "CANVAS-BOTTOM-DRAWER-ACTIONABLE-READ-MODEL-20260626",
         "subject_kind": "component",
         "subject_id": "web.component.shell.BottomOperationalDrawer",
@@ -91439,6 +91539,27 @@
         "created_at": "2026-08-11T08:16:57.954+00:00"
       },
       {
+        "operation_id": "12bee145-e6f3-41e9-a8f9-d2f574f1272f",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-5-ARCHITECTURE-RESPONSIBILITY-RETIREMENT-20260814:662d21deff0f2f83",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-5-ARCHITECTURE-RESPONSIBILITY-RETIREMENT-20260814",
+        "source_ref": "scripts/planning-db-operate.cjs",
+        "source_content_sha256": "f02733115e7e20cbc1acce1cc653cc745c4876a447842bd3505b33b3c1a8081f",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "DoR complete: bounded command rail, scopes, negative cases, and red evidence are explicit.",
+          "designId": "API-H2-5-ARCHITECTURE-RESPONSIBILITY-RETIREMENT-20260814",
+          "toStatus": "approved",
+          "sourceRef": "scripts/planning-db-operate.cjs",
+          "fromStatus": "review",
+          "sourceContentSha256": "f02733115e7e20cbc1acce1cc653cc745c4876a447842bd3505b33b3c1a8081f"
+        },
+        "created_at": "2026-08-14T07:30:06.111+00:00"
+      },
+      {
         "operation_id": "12d84026-6089-49dc-bb94-b85da38cdcc3",
         "idempotency_key": "issue-2274-ev-pth14-idx-classify-review4",
         "operation_type": "architecture_evidence_record",
@@ -92311,6 +92432,27 @@
           "sourceContentSha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5"
         },
         "created_at": "2026-08-13T07:55:04.035+00:00"
+      },
+      {
+        "operation_id": "200a0d09-2de8-4497-830c-f0f860e1fb47",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-5-ARCHITECTURE-RESPONSIBILITY-RETIREMENT-20260814:be699fef441e8389",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-5-ARCHITECTURE-RESPONSIBILITY-RETIREMENT-20260814",
+        "source_ref": "scripts/planning-db-operate.cjs",
+        "source_content_sha256": "f02733115e7e20cbc1acce1cc653cc745c4876a447842bd3505b33b3c1a8081f",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "CLI, scope enforcement, ownership checks, exact delete, audit, idempotency replay, and focused green tests are present and evidenced.",
+          "designId": "API-H2-5-ARCHITECTURE-RESPONSIBILITY-RETIREMENT-20260814",
+          "toStatus": "implemented",
+          "sourceRef": "scripts/planning-db-operate.cjs",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "f02733115e7e20cbc1acce1cc653cc745c4876a447842bd3505b33b3c1a8081f"
+        },
+        "created_at": "2026-08-14T07:30:45.365+00:00"
       },
       {
         "operation_id": "2015258b-5d7a-448a-8717-f865e2efe9c1",
@@ -94784,6 +94926,88 @@
           "sourceContentSha256": "c475731dfe762c9706ac211b26758cd0b0f611e78dd245e8aa1a22ed70b6b551"
         },
         "created_at": "2026-08-13T06:58:38.927+00:00"
+      },
+      {
+        "operation_id": "4105e261-5056-462d-8872-b83f94ed1806",
+        "idempotency_key": "architecture_design_create:codex:API-H2-5-ARCHITECTURE-RESPONSIBILITY-RETIREMENT-20260814:ebd1214a2f2fbcaf",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "API-H2-5-ARCHITECTURE-RESPONSIBILITY-RETIREMENT-20260814",
+        "source_ref": "scripts/planning-db-operate.cjs",
+        "source_content_sha256": "f02733115e7e20cbc1acce1cc653cc745c4876a447842bd3505b33b3c1a8081f",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "Architecture / Planning DB",
+          "title": "Retire stale architecture component responsibilities",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-CI-GOVERNANCE-ROOT",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/planning-db-operate.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "scripts/planning-db-operate-tests/helpers.cjs",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_create",
+              "subjectId": "RetireArchitectureComponentResponsibility",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "RetireArchitectureComponentResponsibility",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_create",
+              "subjectId": "EVIDENCE-API-H2-5-RESPONSIBILITY-RETIREMENT-LOCAL",
+              "subjectKind": "evidence"
+            }
+          ],
+          "status": "review",
+          "railRef": "RetireArchitectureComponentResponsibility",
+          "designId": "API-H2-5-ARCHITECTURE-RESPONSIBILITY-RETIREMENT-20260814",
+          "rationale": "Remove stale component responsibility authority through one explicit audited Planning DB command instead of direct SQL or generated-file edits.",
+          "sourceRef": "scripts/planning-db-operate.cjs",
+          "workItemId": "https://github.com/dunay2/dvt/issues/2341",
+          "fowlerSignal": "hidden_authority",
+          "supersedesId": null,
+          "sourceContentSha256": "f02733115e7e20cbc1acce1cc653cc745c4876a447842bd3505b33b3c1a8081f"
+        },
+        "created_at": "2026-08-14T07:30:04.275+00:00"
       },
       {
         "operation_id": "4117fe82-ecfb-439e-85c7-f78944110746",
@@ -99481,6 +99705,31 @@
         "created_at": "2026-08-11T03:26:04.938+00:00"
       },
       {
+        "operation_id": "7ce2a152-94d3-47e9-807e-cb6564576148",
+        "idempotency_key": "architecture_evidence_record:codex:API-H2-5-ARCHITECTURE-RESPONSIBILITY-RETIREMENT-20260814:EVIDENCE-API-H2-5-RESPONSIBILITY-RETIREMENT-LOCAL:b5b7c0ea8ffb2727",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "API-H2-5-ARCHITECTURE-RESPONSIBILITY-RETIREMENT-20260814",
+        "source_ref": "node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+        "source_content_sha256": "0b7738bf4790cb51425a335acb2516cb21707164420cd1a77c8423162dd43f1a",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "API-H2-5-ARCHITECTURE-RESPONSIBILITY-RETIREMENT-20260814",
+          "sourceRef": "node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+          "subjectId": "RetireArchitectureComponentResponsibility",
+          "evidenceId": "EVIDENCE-API-H2-5-RESPONSIBILITY-RETIREMENT-LOCAL",
+          "sourcePath": "scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+          "resultState": "pass",
+          "subjectKind": "command",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "0b7738bf4790cb51425a335acb2516cb21707164420cd1a77c8423162dd43f1a"
+        },
+        "created_at": "2026-08-14T07:30:43.324+00:00"
+      },
+      {
         "operation_id": "7d38d022-37a0-40c0-b230-3f4d35f310fb",
         "idempotency_key": "gh-2168-qa-refresh-plan-command-test-8-v1",
         "operation_type": "architecture_test_record",
@@ -100408,6 +100657,27 @@
           "sourceContentSha256": "2954efe6369615bbb21a2ff20f077a1bd055ea344693e7feb74f94a80f8b73b3"
         },
         "created_at": "2026-08-10T21:04:07.532+00:00"
+      },
+      {
+        "operation_id": "8988d6f6-18bd-4515-8f25-e46eada4843d",
+        "idempotency_key": "architecture_design_transition:codex:API-H2-5-ARCHITECTURE-RESPONSIBILITY-RETIREMENT-20260814:0927c786ac94cb25",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "API-H2-5-ARCHITECTURE-RESPONSIBILITY-RETIREMENT-20260814",
+        "source_ref": "scripts/planning-db-operate.cjs",
+        "source_content_sha256": "f02733115e7e20cbc1acce1cc653cc745c4876a447842bd3505b33b3c1a8081f",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Implementation started from committed red tests and exact command authority.",
+          "designId": "API-H2-5-ARCHITECTURE-RESPONSIBILITY-RETIREMENT-20260814",
+          "toStatus": "implementing",
+          "sourceRef": "scripts/planning-db-operate.cjs",
+          "fromStatus": "approved",
+          "sourceContentSha256": "f02733115e7e20cbc1acce1cc653cc745c4876a447842bd3505b33b3c1a8081f"
+        },
+        "created_at": "2026-08-14T07:30:07.937+00:00"
       },
       {
         "operation_id": "89b2206c-1f7b-4458-ad41-c5b5c716bea8",
@@ -113223,7 +113493,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "5dfcbf003bcedf8724d44bf554c9bc20ab23871f962465baa7568cf626c4e218",
+      "sourceContentSha256": "f02733115e7e20cbc1acce1cc653cc745c4876a447842bd3505b33b3c1a8081f",
       "rawRail": {
         "name": "RecordArchitectureComponent",
         "type": "command",
@@ -113433,7 +113703,7 @@
         "node --test scripts/planning-db-operate-tests/architecture-plan.test.cjs scripts/planning-db-operate-tests/architecture-parse.test.cjs"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "5dfcbf003bcedf8724d44bf554c9bc20ab23871f962465baa7568cf626c4e218",
+      "sourceContentSha256": "f02733115e7e20cbc1acce1cc653cc745c4876a447842bd3505b33b3c1a8081f",
       "rawRail": {
         "name": "RecordArchitectureEvidenceExecution",
         "type": "command",
@@ -114007,7 +114277,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "5dfcbf003bcedf8724d44bf554c9bc20ab23871f962465baa7568cf626c4e218",
+      "sourceContentSha256": "f02733115e7e20cbc1acce1cc653cc745c4876a447842bd3505b33b3c1a8081f",
       "rawRail": {
         "name": "RecordArchitectureObservabilityEvidence",
         "type": "command",
@@ -114238,7 +114508,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "5dfcbf003bcedf8724d44bf554c9bc20ab23871f962465baa7568cf626c4e218",
+      "sourceContentSha256": "f02733115e7e20cbc1acce1cc653cc745c4876a447842bd3505b33b3c1a8081f",
       "rawRail": {
         "name": "RetireArchitectureEvidenceExecution",
         "type": "command",
@@ -114400,7 +114670,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "5dfcbf003bcedf8724d44bf554c9bc20ab23871f962465baa7568cf626c4e218",
+      "sourceContentSha256": "f02733115e7e20cbc1acce1cc653cc745c4876a447842bd3505b33b3c1a8081f",
       "rawRail": {
         "name": "RetireArchitectureTestEvidence",
         "type": "command",
@@ -114562,7 +114832,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "5dfcbf003bcedf8724d44bf554c9bc20ab23871f962465baa7568cf626c4e218",
+      "sourceContentSha256": "f02733115e7e20cbc1acce1cc653cc745c4876a447842bd3505b33b3c1a8081f",
       "rawRail": {
         "name": "RetireFeatureMechanizationRail",
         "type": "command",
@@ -114724,7 +114994,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "5dfcbf003bcedf8724d44bf554c9bc20ab23871f962465baa7568cf626c4e218",
+      "sourceContentSha256": "f02733115e7e20cbc1acce1cc653cc745c4876a447842bd3505b33b3c1a8081f",
       "rawRail": {
         "name": "TransitionArchitectureDesign",
         "type": "command",
@@ -115281,6 +115551,227 @@
       "revision": 2,
       "createdBy": "codex",
       "createdAt": "2026-08-11T19:47:04.735Z"
+    },
+    {
+      "railId": "local#API-H2-5-ARCHITECTURE-RESPONSIBILITY-RETIREMENT#command#retirearchitecturecomponentresponsibility",
+      "featureId": "API-H2-5-ARCHITECTURE-RESPONSIBILITY-RETIREMENT",
+      "mechanizationStatus": "implemented",
+      "railName": "RetireArchitectureComponentResponsibility",
+      "normalizedRailName": "retirearchitecturecomponentresponsibility",
+      "railType": "command",
+      "dddOwner": "ArchitectureCatalog",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "scripts/planning-db-operate.cjs#parseArchitectureComponentCommand",
+        "scripts/planning-db-operate.cjs#validateArchitectureResponsibilityId",
+        "scripts/planning-db-operate.cjs#assertArchitectureDesignMayImplement",
+        "scripts/planning-db-operate.cjs#planArchitectureComponentResponsibilityRetireOperation",
+        "scripts/planning-db-operate.cjs#readArchitectureComponentResponsibility",
+        "scripts/planning-db-operate.cjs#writePlannedArchitectureComponentResponsibilityRetireOperation",
+        "scripts/planning-db-operate.cjs#applyArchitectureComponentResponsibilityRetireOperation"
+      ],
+      "implementationRefs": [
+        "scripts/planning-db-operate.cjs#parseArchitectureComponentCommand",
+        "scripts/planning-db-operate.cjs#validateArchitectureResponsibilityId",
+        "scripts/planning-db-operate.cjs#assertArchitectureDesignMayImplement",
+        "scripts/planning-db-operate.cjs#planArchitectureComponentResponsibilityRetireOperation",
+        "scripts/planning-db-operate.cjs#readArchitectureComponentResponsibility",
+        "scripts/planning-db-operate.cjs#writePlannedArchitectureComponentResponsibilityRetireOperation",
+        "scripts/planning-db-operate.cjs#applyArchitectureComponentResponsibilityRetireOperation"
+      ],
+      "documentationRefs": ["https://github.com/dunay2/dvt/issues/2341"],
+      "governingSources": [
+        "AGENTS.md",
+        "docs/planning/status/governance-document-rule-inventory.md",
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "scripts/planning-db-operate.cjs",
+        "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+        "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+      ],
+      "architectureGuards": [
+        "Only an implementing design with exact component update scope can retire a responsibility belonging to that component"
+      ],
+      "completionGate": ["pnpm test:planning:db", "pnpm verify:prepush"],
+      "sourcePath": "scripts/planning-db-operate.cjs",
+      "sourceContentSha256": "f02733115e7e20cbc1acce1cc653cc745c4876a447842bd3505b33b3c1a8081f",
+      "rawRail": {
+        "name": "RetireArchitectureComponentResponsibility",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "ArchitectureCatalog",
+        "negativeTests": [
+          "Reject missing component update scope",
+          "Reject a responsibility owned by another component",
+          "Reject an unknown responsibility",
+          "Reject an idempotency replay with different payload or source hash"
+        ],
+        "adapterSurface": "scripts/planning-db-operate.cjs",
+        "applicationPort": "planning:db:operate architecture-component retire-responsibility",
+        "authorizationScope": "Exact component:<id>:may_update design scope, explicit actor, source hash, and idempotency key"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "parseArchitectureComponentCommand",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RetireArchitectureComponentResponsibility"],
+            "dddOwner": "ArchitectureCatalog",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority"],
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "Only an implementing design with exact component update scope can retire a responsibility belonging to that component"
+          },
+          {
+            "name": "validateArchitectureResponsibilityId",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RetireArchitectureComponentResponsibility"],
+            "dddOwner": "ArchitectureCatalog",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority"],
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "Only an implementing design with exact component update scope can retire a responsibility belonging to that component"
+          },
+          {
+            "name": "assertArchitectureDesignMayImplement",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RetireArchitectureComponentResponsibility"],
+            "dddOwner": "ArchitectureCatalog",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority"],
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "Only an implementing design with exact component update scope can retire a responsibility belonging to that component"
+          },
+          {
+            "name": "planArchitectureComponentResponsibilityRetireOperation",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RetireArchitectureComponentResponsibility"],
+            "dddOwner": "ArchitectureCatalog",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority"],
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "Only an implementing design with exact component update scope can retire a responsibility belonging to that component"
+          },
+          {
+            "name": "readArchitectureComponentResponsibility",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RetireArchitectureComponentResponsibility"],
+            "dddOwner": "ArchitectureCatalog",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority"],
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "Only an implementing design with exact component update scope can retire a responsibility belonging to that component"
+          },
+          {
+            "name": "writePlannedArchitectureComponentResponsibilityRetireOperation",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RetireArchitectureComponentResponsibility"],
+            "dddOwner": "ArchitectureCatalog",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority"],
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "Only an implementing design with exact component update scope can retire a responsibility belonging to that component"
+          },
+          {
+            "name": "applyArchitectureComponentResponsibilityRetireOperation",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RetireArchitectureComponentResponsibility"],
+            "dddOwner": "ArchitectureCatalog",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            ],
+            "fowlerSignals": ["hidden_authority"],
+            "cypressCoverage": "N/A - repository governance CLI",
+            "architectureGuard": "Only an implementing design with exact component update scope can retire a responsibility belonging to that component"
+          }
+        ],
+        "version": 1,
+        "featureId": "API-H2-5-ARCHITECTURE-RESPONSIBILITY-RETIREMENT",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2341"],
+        "cypressFlows": ["N/A - repository governance CLI"],
+        "domainObjects": ["ArchitectureCatalog"],
+        "fowlerSignals": ["hidden_authority"],
+        "completionGate": ["pnpm test:planning:db", "pnpm verify:prepush"],
+        "redGreenCycles": [
+          {
+            "id": "retirearchitecturecomponentresponsibility-record",
+            "redTest": "node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+            "greenTest": "node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+            "patchSurfaces": [
+              "scripts/planning-db-operate.cjs",
+              "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+              "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+            ],
+            "expectedFailure": "The CLI rejects retire-responsibility and exposes no planner or writer for the governed operation"
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "RetireArchitectureComponentResponsibility",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "ArchitectureCatalog",
+            "negativeTests": [
+              "Reject missing component update scope",
+              "Reject a responsibility owned by another component",
+              "Reject an unknown responsibility",
+              "Reject an idempotency replay with different payload or source hash"
+            ],
+            "adapterSurface": "scripts/planning-db-operate.cjs",
+            "applicationPort": "planning:db:operate architecture-component retire-responsibility",
+            "authorizationScope": "Exact component:<id>:may_update design scope, explicit actor, source hash, and idempotency key"
+          }
+        ],
+        "architectureGuards": [
+          "Only an implementing design with exact component update scope can retire a responsibility belonging to that component"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2341",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-operate.cjs",
+          "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+          "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/**",
+          "packages/**",
+          "docs/planning/proposals/mandatory/**"
+        ]
+      },
+      "revision": 0,
+      "createdBy": "codex",
+      "createdAt": "2026-08-14T07:30:32.670Z"
     },
     {
       "railId": "local#ARCH-DEPS-GUARD#command#applyarchitecturedependencyboundarygate",
@@ -123812,7 +124303,7 @@
         "pnpm docs:feature-mechanization:implementation"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "5dfcbf003bcedf8724d44bf554c9bc20ab23871f962465baa7568cf626c4e218",
+      "sourceContentSha256": "f02733115e7e20cbc1acce1cc653cc745c4876a447842bd3505b33b3c1a8081f",
       "rawRail": {
         "name": "RecordArchitectureStorageIo",
         "type": "command",
@@ -136651,7 +137142,7 @@
         "node --test scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
       ],
       "sourcePath": "scripts/planning-db-operate.cjs",
-      "sourceContentSha256": "5dfcbf003bcedf8724d44bf554c9bc20ab23871f962465baa7568cf626c4e218",
+      "sourceContentSha256": "f02733115e7e20cbc1acce1cc653cc745c4876a447842bd3505b33b3c1a8081f",
       "rawRail": {
         "name": "RecordFeatureMechanizationRail",
         "type": "command",
@@ -192600,6 +193091,87 @@
         ]
       },
       "createdAt": "2026-08-13T19:22:21.150Z"
+    },
+    {
+      "operationId": "6351db77-19e1-4664-ae75-8184650e7c7c",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:API-H2-5-ARCHITECTURE-RESPONSIBILITY-RETIREMENT:command:retirearchitecturecomponentresponsibility:latest:c1bacc387d3e7f5e",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#API-H2-5-ARCHITECTURE-RESPONSIBILITY-RETIREMENT#command#retirearchitecturecomponentresponsibility",
+      "sourcePath": "scripts/planning-db-operate.cjs",
+      "sourceContentSha256": "f02733115e7e20cbc1acce1cc653cc745c4876a447842bd3505b33b3c1a8081f",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+        "dddOwner": "ArchitectureCatalog",
+        "railName": "RetireArchitectureComponentResponsibility",
+        "railType": "command",
+        "featureId": "API-H2-5-ARCHITECTURE-RESPONSIBILITY-RETIREMENT",
+        "greenTest": "node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs scripts/planning-db-operate-tests/architecture-plan.test.cjs",
+        "sourceRef": "scripts/planning-db-operate.cjs",
+        "unitTests": [
+          "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+          "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2341"],
+        "cypressFlows": ["N/A - repository governance CLI"],
+        "domainObjects": ["ArchitectureCatalog"],
+        "fowlerSignals": ["hidden_authority"],
+        "negativeTests": [
+          "Reject missing component update scope",
+          "Reject a responsibility owned by another component",
+          "Reject an unknown responsibility",
+          "Reject an idempotency replay with different payload or source hash"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "scripts/planning-db-operate.cjs",
+        "completionGate": ["pnpm test:planning:db", "pnpm verify:prepush"],
+        "applicationPort": "planning:db:operate architecture-component retire-responsibility",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "The CLI rejects retire-responsibility and exposes no planner or writer for the governed operation",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": ["https://github.com/dunay2/dvt/issues/2341"],
+        "architectureGuards": [
+          "Only an implementing design with exact component update scope can retire a responsibility belonging to that component"
+        ],
+        "authorizationScope": "Exact component:<id>:may_update design scope, explicit actor, source hash, and idempotency key",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2341",
+        "implementationRefs": [
+          "scripts/planning-db-operate.cjs#parseArchitectureComponentCommand",
+          "scripts/planning-db-operate.cjs#validateArchitectureResponsibilityId",
+          "scripts/planning-db-operate.cjs#assertArchitectureDesignMayImplement",
+          "scripts/planning-db-operate.cjs#planArchitectureComponentResponsibilityRetireOperation",
+          "scripts/planning-db-operate.cjs#readArchitectureComponentResponsibility",
+          "scripts/planning-db-operate.cjs#writePlannedArchitectureComponentResponsibilityRetireOperation",
+          "scripts/planning-db-operate.cjs#applyArchitectureComponentResponsibilityRetireOperation"
+        ],
+        "normalizedRailName": "retirearchitecturecomponentresponsibility",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "f02733115e7e20cbc1acce1cc653cc745c4876a447842bd3505b33b3c1a8081f",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-operate.cjs",
+          "scripts/planning-db-operate-tests/architecture-parse.test.cjs",
+          "scripts/planning-db-operate-tests/architecture-plan.test.cjs"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/**",
+          "packages/**",
+          "docs/planning/proposals/mandatory/**"
+        ]
+      },
+      "createdAt": "2026-08-14T07:30:32.670Z"
     }
   ],
   "governanceComponentDefinitions": [
