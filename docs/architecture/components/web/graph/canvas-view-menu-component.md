@@ -1,118 +1,112 @@
 ---
-title: Canvas View Menu Component
+title: Canvas Properties Window Component
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-05-16
+last_reviewed: 2026-08-14
 ---
 
-# Canvas View Menu Component
+# Canvas Properties Window Component
 
 ## Purpose
 
-Define the component that contributes Canvas-specific visual controls to the
-global `View` menu.
+Define the single contextual surface for editing Canvas presentation properties.
+The Canvas background context menu opens a properties window composed from the
+shared workbench dialog, tab, field, and command components.
 
 This component owns:
 
-- route-local Canvas view-control registration;
-- rendering Canvas presentation toggles inside `ShellMenu`;
-- keeping the Canvas top-bar toolbar focused on workflow status and primary
-  route commands;
-- the semantic boundary between view preferences and graph/run mutations.
+- one buffered edit session for Canvas appearance, grid, and layout properties;
+- localized tabs, labels, accessible names, focus return, and keyboard dismissal;
+- dispatch to the existing Canvas preference and layout command rails only after
+  the user selects `Apply`;
+- removal of Canvas-specific properties from the global `View` menu.
 
-It does not own graph truth, draft persistence, execution commands, project
-snapshot file semantics, or backend command/query rails.
+It does not own graph truth, protected draft persistence, execution commands,
+project snapshots, or backend command/query rails.
 
 ## Public API
 
-The local public API is:
-
-- `CanvasViewMenuControls`
-- `CanvasViewMenuContribution`
-- `useCanvasViewMenuContributionStore`
-- `registerCanvasViewMenuContribution(...)`
-- `clearCanvasViewMenuContribution(contribution)`
-
-`CanvasToolbar` is the active Canvas-route consumer. It registers one
-`CanvasViewMenuContribution` while mounted. `ShellMenu` reads the current
-contribution and renders it inside `View`.
+- `WorkbenchPropertiesWindow`: shared modal shell with header, tabs, scrollable
+  content, and `Cancel` / `Apply` footer commands.
+- `WorkbenchPropertiesSection`: typed tab contribution contract.
+- `CanvasSettingsDialog`: Canvas adapter that builds the edit buffer and maps
+  fields to the existing callbacks.
+- `ResolveCanvasContextMenu`: query rail that exposes the background
+  `Canvas properties` command.
+- `ConfigureCanvasViewportPreferences`: command rail for local visual
+  preferences.
+- `PersistCanvasLayout`: command rail used when automatic layout is applied.
 
 ## Invariants
 
-- `View` owns Canvas visual toggles: layout, impact overlay, column lineage,
-  cost overlay, grid visibility, grid color, and snap-to-grid.
-- `ConfigureCanvasViewportPreferences` is the sole command rail for the Impact
-  preference; disabling it removes only the additive `impact` contribution and
-  skips upstream/downstream traversal.
-- Runtime and cost overlays remain available when Impact is disabled.
-- `overlayDecoration` is the only node-impact presentation contract. Canvas
-  node data must not project a parallel impact shape.
-- `CanvasToolbarPrimaryControls` must not render those visual toggles in the
-  top-bar toolbar.
-- `ShellMenu` must not import Canvas controller hooks or inspect Canvas route
-  internals.
-- The contribution is transient; unmounting the Canvas route removes the Canvas
-  View-menu controls.
-- Cleanup is identity-guarded: a stale route cleanup must not clear a newer
-  contribution registered by a rerender.
-- View-menu commands may change local presentation state or request layout, but
-  they must not start runs, plan execution, mutate persisted graph structure, or
-  fabricate export data.
-- Labels come from the Canvas copy catalog so the menu and route stay
-  localization-aligned.
+- The background context menu is the only entry point for Canvas properties.
+- The global `View` menu contains global view controls only: panels, focus mode,
+  and language.
+- `CanvasSettingsDialog` composes `WorkbenchPropertiesWindow`; it does not create
+  a second modal shell or a parallel settings store.
+- Field changes remain in the edit buffer until `Apply`.
+- `Cancel`, the close command, and `Escape` discard the edit buffer.
+- `Apply` invokes only rails whose values changed.
+- Automatic layout is unavailable when graph-edit permission is absent.
+- Labels and accessible names resolve through the Canvas copy catalog in English
+  and Spanish.
+- The shell menu must not import Canvas controller hooks, Canvas property state,
+  or Canvas-specific contribution stores.
 
 ## Transitions
 
 ```mermaid
 stateDiagram-v2
-  [*] --> NoCanvasContribution
-  NoCanvasContribution --> CanvasContributionActive: CanvasToolbar mounts
-  CanvasContributionActive --> CanvasContributionActive: Canvas state or handlers update
-  CanvasContributionActive --> CanvasContributionActive: stale cleanup ignored
-  CanvasContributionActive --> NoCanvasContribution: active contribution unmounts
+  [*] --> Closed
+  Closed --> Editing: Canvas context command
+  Editing --> Editing: change tab or field
+  Editing --> Closed: Cancel / Close / Escape
+  Editing --> Applying: Apply
+  Applying --> Closed: changed rails complete
 ```
 
 ## Component Flow
 
 ```mermaid
 flowchart LR
-  CanvasToolbar["CanvasToolbar"] --> Register["registerCanvasViewMenuContribution"]
-  Register --> Store["canvasViewMenuContributionStore"]
-  Store --> ShellMenu["ShellMenu"]
-  ShellMenu --> ViewGroup["Canvas view controls"]
-  ViewGroup --> Commands["layout / overlays / grid / snap"]
-  Commands --> OverlayModel["useCanvasOverlayModel"]
-  OverlayModel --> ActiveOverlays["runtime / cost / optional impact"]
+  Context["Canvas background context menu"] --> Query["ResolveCanvasContextMenu"]
+  Query --> Adapter["CanvasSettingsDialog"]
+  Adapter --> Window["WorkbenchPropertiesWindow"]
+  Window --> Appearance["Appearance tab"]
+  Window --> Grid["Grid tab"]
+  Window --> Layout["Layout tab"]
+  Adapter --> Preferences["ConfigureCanvasViewportPreferences"]
+  Adapter --> PersistLayout["PersistCanvasLayout"]
 ```
 
 ## Consumers
 
-- `CanvasToolbar`
-- `CanvasToolbarPrimaryControls`
+- `CanvasShell`
+- `CanvasViewport`
 - `ShellMenu`
-- `TopAppBar`
-- `CanvasToolbar.test.tsx`
-- `CanvasToolbar.architecture.test.tsx`
+- `CanvasSettingsDialog.test.tsx`
+- `WorkbenchPropertiesWindow.test.tsx`
+- `CanvasSettingsDialog.architecture.test.tsx`
+- `TopAppBar.test.tsx`
 
 ## User Stories Covered
 
-See [Canvas View Menu User Stories](./canvas-view-menu-user-stories.md).
+See [Canvas View Menu User Stories](./canvas-view-menu-user-stories.md). The
+historical story names remain stable; their accepted surface is now the
+contextual Canvas properties window.
 
 ## Fitness Functions
 
-- `pnpm --filter @dvt/web test -- src/app/views/canvas/CanvasToolbar.test.tsx`
-- `pnpm --filter @dvt/web test -- src/app/views/canvas/CanvasToolbar.architecture.test.tsx`
+- `pnpm --filter @dvt/web test:presentation:run -- src/app/components/TopAppBar.test.tsx`
+- `pnpm --filter @dvt/web test:canvas-presentation:run -- src/app/views/canvas/CanvasSettingsDialog.test.tsx`
+- `pnpm --filter @dvt/web test:canvas-architecture:run -- src/app/views/canvas/CanvasSettingsDialog.architecture.test.tsx`
 - `pnpm --filter @dvt/web typecheck`
 
 ## Drift To Watch
 
-- if Canvas view toggles appear again in `CanvasToolbarPrimaryControls`, the
-  command surface has regressed;
-- if `ShellMenu` imports `useCanvasController`, the shell has absorbed route
-  internals;
-- if the component guide loses public API, invariants, transitions, consumers,
-  or diagrams, architecture review can no longer verify the boundary;
-- if view controls start planning or running workflows, the View menu has
-  crossed into command-rail behavior.
-- if the Impact preference gates a node-data field while the active overlay
-  remains enabled, two authorities have reappeared.
+- Canvas background, grid, layout, or overlay controls reappearing in `View`;
+- a route-to-shell contribution store returning for Canvas properties;
+- immediate mutation before `Apply`;
+- a Canvas-local dialog shell duplicating the shared workbench window;
+- unlocalized or inaccessible tab, field, close, or footer commands;
+- visual preferences crossing into protected graph or run authority.

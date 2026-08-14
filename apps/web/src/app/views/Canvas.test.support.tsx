@@ -23,7 +23,6 @@ import {
   resetCanvasDraftPresentationState,
 } from './canvas/canvasDraftPresentationStore';
 import { useCanvasWorkspaceMenuContributionStore } from './canvas/canvasWorkspaceMenuContributionStore';
-import { useCanvasViewMenuContributionStore } from './canvas/canvasViewMenuContributionStore';
 import { useCanvasController } from './canvas/useCanvasController';
 import { buildController, type CanvasController } from './Canvas.test.controller';
 import { createAppServicesTestOverrides } from '../../testing/appServicesTestDoubles';
@@ -313,16 +312,9 @@ export function buildCanvasRouteReadyNodes(): CanvasController['nodesWithImpact'
 
 export function expectPrimaryCanvasActionsBlocked(container: ParentNode): void {
   const { layoutButton, planButton, runButton } = getPrimaryCanvasButtons(container);
-  const viewMenuContribution = useCanvasViewMenuContributionStore.getState().contribution;
-
   expect(layoutButton).toBeUndefined();
   expect(planButton).toBeUndefined();
   expect(runButton).toBeUndefined();
-  if (viewMenuContribution != null) {
-    expect(viewMenuContribution).toMatchObject({
-      canEditEdges: false,
-    });
-  }
 }
 
 export function expectActiveCanvasShellIdentity(args: {

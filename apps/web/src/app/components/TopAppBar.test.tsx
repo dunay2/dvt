@@ -199,6 +199,26 @@ describe('ShellTopBar workspace context', () => {
     }
   );
 
+  it('keeps Canvas properties out of the global View menu', async () => {
+    await act(async () => {
+      root.render(renderShellTopBar('/canvas'));
+    });
+
+    await act(async () => {
+      fireEvent.pointerDown(container.querySelector('[data-slot="shell-menu-trigger"]')!);
+    });
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Panels');
+      expect(document.body.textContent).toContain('Language');
+      expect(document.body.textContent).not.toContain('Canvas background');
+      expect(document.body.textContent).not.toContain('Grid size');
+      expect(document.body.textContent).not.toContain('Reset grid');
+      expect(document.body.textContent).not.toContain('Canvas properties');
+      expect(document.body.textContent).not.toContain('Layout');
+    });
+  });
+
   it('renders active Canvas identity as workbench context without restoring legacy top-bar canvas controls', async () => {
     useCanvasWorkspaceMenuContributionStore.setState({
       contribution: {

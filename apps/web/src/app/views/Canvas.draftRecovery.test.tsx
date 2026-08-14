@@ -7,7 +7,6 @@ import {
   getPrimaryCanvasButtons,
   renderCanvasRouteWithController,
 } from './Canvas.test.support';
-import { useCanvasViewMenuContributionStore } from './canvas/canvasViewMenuContributionStore';
 
 function expectCanvasActionsPaused(container: ParentNode): void {
   const { layoutButton, planButton, runButton } = getPrimaryCanvasButtons(container);
@@ -16,9 +15,6 @@ function expectCanvasActionsPaused(container: ParentNode): void {
   expect(planButton).toBeUndefined();
   expect(runButton).toBeUndefined();
   expect(container.querySelector('[data-slot="canvas-draft-save-status"]')).not.toBeNull();
-  expect(useCanvasViewMenuContributionStore.getState().contribution).toMatchObject({
-    canEditEdges: false,
-  });
 }
 
 describe('Canvas route draft recovery', () => {

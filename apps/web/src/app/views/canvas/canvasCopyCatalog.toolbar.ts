@@ -57,10 +57,6 @@ export const canvasViewToolbarCopyByKey = {
     key: 'canvas.toolbar.snapToGridLabel',
     fallback: 'Snap',
   },
-  toolbarCanvasSettingsLabel: {
-    key: 'canvas.toolbar.canvasSettingsLabel',
-    fallback: 'Canvas settings',
-  },
   canvasGraphSearchLabel: {
     key: 'canvas.graphSearch.label',
     fallback: 'Search graph',
@@ -217,7 +213,7 @@ export const canvasViewToolbarCopyByKey = {
   },
   canvasContextMenuCanvasSettingsLabel: {
     key: 'canvas.contextMenu.canvasSettingsLabel',
-    fallback: 'Canvas settings',
+    fallback: 'Canvas properties',
   },
   canvasContextMenuRemoveEdgeLabel: {
     key: 'canvas.contextMenu.removeEdgeLabel',
@@ -231,29 +227,49 @@ export const canvasViewToolbarCopyByKey = {
     key: 'canvas.settings.closeLabel',
     fallback: 'Close canvas settings',
   },
-  canvasSettingsEnableLabel: {
-    key: 'canvas.settings.enableLabel',
-    fallback: 'Enable',
+  canvasSettingsSectionsLabel: {
+    key: 'canvas.settings.sectionsLabel',
+    fallback: 'Canvas property sections',
   },
-  canvasSettingsDisableLabel: {
-    key: 'canvas.settings.disableLabel',
-    fallback: 'Disable',
+  canvasSettingsAppearanceTabLabel: {
+    key: 'canvas.settings.appearanceTabLabel',
+    fallback: 'Appearance',
   },
-  canvasSettingsShowGridLabel: {
-    key: 'canvas.settings.showGridLabel',
-    fallback: 'Show grid',
+  canvasSettingsGridTabLabel: {
+    key: 'canvas.settings.gridTabLabel',
+    fallback: 'Grid',
   },
-  canvasSettingsHideGridLabel: {
-    key: 'canvas.settings.hideGridLabel',
-    fallback: 'Hide grid',
+  canvasSettingsLayoutTabLabel: {
+    key: 'canvas.settings.layoutTabLabel',
+    fallback: 'Layout',
   },
-  canvasSettingsEnableSnapLabel: {
-    key: 'canvas.settings.enableSnapLabel',
-    fallback: 'Enable snap',
+  canvasSettingsBackgroundLabel: {
+    key: 'canvas.settings.backgroundLabel',
+    fallback: 'Canvas background',
   },
-  canvasSettingsDisableSnapLabel: {
-    key: 'canvas.settings.disableSnapLabel',
-    fallback: 'Disable snap',
+  canvasSettingsBackgroundInputLabel: {
+    key: 'canvas.settings.backgroundInputLabel',
+    fallback: 'Canvas background hex value',
+  },
+  canvasSettingsGridSizeLabel: {
+    key: 'canvas.settings.gridSizeLabel',
+    fallback: 'Grid size',
+  },
+  canvasSettingsResetGridLabel: {
+    key: 'canvas.settings.resetGridLabel',
+    fallback: 'Restore grid defaults',
+  },
+  canvasSettingsAutoLayoutLabel: {
+    key: 'canvas.settings.autoLayoutLabel',
+    fallback: 'Apply automatic layout',
+  },
+  canvasSettingsCancelLabel: {
+    key: 'canvas.settings.cancelLabel',
+    fallback: 'Cancel',
+  },
+  canvasSettingsApplyLabel: {
+    key: 'canvas.settings.applyLabel',
+    fallback: 'Apply',
   },
   canvasNodePortTargetLabel: {
     key: 'canvas.nodePort.targetLabel',

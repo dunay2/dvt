@@ -189,6 +189,7 @@ function CanvasViewportReactFlowSurface({
     <div
       ref={contextMenuPresenter.contextSurfaceRef}
       data-slot="canvas-viewport-context-surface"
+      role="region"
       aria-label={contextSurfaceLabel}
       tabIndex={0}
       className="h-full w-full outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-inset"

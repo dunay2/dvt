@@ -181,6 +181,7 @@ describe('CanvasViewport', () => {
 
     const contextSurface = container.querySelector('[data-slot="canvas-viewport-context-surface"]');
     expect(contextSurface).not.toBeNull();
+    expect(contextSurface?.getAttribute('role')).toBe('region');
 
     await act(async () => {
       contextSurface?.dispatchEvent(
@@ -195,7 +196,7 @@ describe('CanvasViewport', () => {
     });
 
     expect(document.querySelector('[data-slot="canvas-context-menu"]')).not.toBeNull();
-    expect(document.body.textContent).toContain('Canvas settings');
+    expect(document.body.textContent).toContain('Canvas properties');
   });
 
   it('uses one governed CSS grid layer for visibility, color, size, and snap policy', async () => {

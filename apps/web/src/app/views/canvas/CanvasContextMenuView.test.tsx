@@ -87,7 +87,7 @@ describe('CanvasContextMenuView', () => {
     await openCommandMenu();
     expect(document.querySelector('[data-slot="canvas-context-menu"]')).not.toBeNull();
     expect(menuButtonLabels('canvas-context-menu-add-group')).toEqual(['Add...']);
-    expect(menuButtonLabels('canvas-context-menu-canvas-group')).toEqual(['Canvas settings']);
+    expect(menuButtonLabels('canvas-context-menu-canvas-group')).toEqual(['Canvas properties']);
     expect(
       document.querySelector(
         '[data-slot="canvas-context-menu-item"][data-menu-item-kind="canvas"][data-menu-action="open-add-node-catalog"]'
@@ -272,13 +272,13 @@ describe('CanvasContextMenuView', () => {
     await renderContextMenu(model);
     await openCommandMenu();
     expect(document.body.textContent).toContain('Add...');
-    expect(document.body.textContent).toContain('Canvas settings');
+    expect(document.body.textContent).toContain('Canvas properties');
 
     await changeApplicationLanguage('es');
 
     expect(document.body.textContent).toContain('Añadir...');
-    expect(document.body.textContent).toContain('Configuración de canvas');
-    expect(document.body.textContent).not.toContain('Canvas settings');
+    expect(document.body.textContent).toContain('Propiedades del canvas');
+    expect(document.body.textContent).not.toContain('Canvas properties');
   });
 
   it('relocalizes an open component catalog when the application language changes', async () => {

@@ -219,7 +219,7 @@ describe('CanvasViewport keyboard context menu', () => {
 
     await act(async () => {
       menuItems()
-        .find((item) => item.textContent?.includes('Canvas settings'))
+        .find((item) => item.textContent?.includes('Canvas properties'))
         ?.click();
     });
 

@@ -44,9 +44,9 @@ describe('canvasContextMenuViewModel', () => {
         items: [
           {
             id: 'canvas:open-canvas-settings',
-            label: 'Canvas settings',
+            label: 'Canvas properties',
             kind: 'canvas',
-            action: { action: 'open-canvas-settings', label: 'Canvas settings' },
+            action: { action: 'open-canvas-settings', label: 'Canvas properties' },
           },
         ],
       },

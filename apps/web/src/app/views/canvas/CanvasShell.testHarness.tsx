@@ -217,6 +217,8 @@ export function buildCanvasShellProps(overrides?: CanvasShellPropsOverrides): Ca
       onToggleCostOverlay: vi.fn(),
       onToggleImpact: vi.fn(),
       onToggleColumns: vi.fn(),
+      onGridSizeChange: vi.fn(),
+      onCanvasPaletteChange: vi.fn(),
       onToggleGridVisible: vi.fn(),
       onGridColorChange: vi.fn(),
       onToggleSnapToGrid: vi.fn(),

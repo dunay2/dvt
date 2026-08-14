@@ -45,6 +45,8 @@ type CanvasStoreFacade = {
   inspectorPanelVisible: boolean;
   gridSize: number;
   canvasPalette: CanvasPaletteId;
+  setGridSize: (size: number) => void;
+  setCanvasPalette: (palette: CanvasPaletteId) => void;
   canvasGridVisible: boolean;
   canvasGridColor: CanvasPaletteId;
   canvasSnapToGrid: boolean;
@@ -121,6 +123,8 @@ export function useCanvasStoreFacade(): CanvasStoreView {
   const inspectorPanelVisible = useUiLayoutStore((state) => state.inspectorPanelVisible);
   const gridSize = useUiLayoutStore((state) => state.gridSize);
   const canvasPalette = useUiLayoutStore((state) => state.canvasPalette);
+  const setGridSize = useUiLayoutStore((state) => state.setGridSize);
+  const setCanvasPalette = useUiLayoutStore((state) => state.setCanvasPalette);
   const canvasGridVisible = useUiLayoutStore((state) => state.canvasGridVisible);
   const canvasGridColor = useUiLayoutStore((state) => state.canvasGridColor);
   const canvasSnapToGrid = useUiLayoutStore((state) => state.canvasSnapToGrid);
@@ -185,6 +189,8 @@ export function useCanvasStoreFacade(): CanvasStoreView {
     inspectorPanelVisible,
     gridSize,
     canvasPalette,
+    setGridSize,
+    setCanvasPalette,
     canvasGridVisible,
     canvasGridColor,
     canvasSnapToGrid,
