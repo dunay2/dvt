@@ -113,7 +113,8 @@ describe('Project onboarding first-use flow', () => {
 
     cy.contains(/Create a project|Crear un proyecto/, { timeout: 20_000 }).should('be.visible');
     cy.get('[data-slot="project-onboarding-form"]').within(() => {
-      cy.contains(E2E_WORKSPACE_SESSION.tenantId).should('be.visible');
+      cy.get('select[name="tenantId"]').should('not.exist');
+      cy.contains(E2E_WORKSPACE_SESSION.tenantId).should('not.exist');
       cy.get('input[name="projectName"]').type('Orders workspace');
       cy.contains('button', /Create project|Crear proyecto/).click();
     });
