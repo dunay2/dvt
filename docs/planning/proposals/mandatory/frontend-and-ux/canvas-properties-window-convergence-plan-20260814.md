@@ -192,7 +192,10 @@ allowedImplementationSurfaces:
   - apps/web/src/app/components/TopAppBar.tsx
   - apps/web/src/app/components/TopAppBar.test.tsx
   - apps/web/src/app/components/shell/ShellMenu.tsx
+  - apps/web/src/app/components/shell/shellViewControlsModel.ts
+  - apps/web/src/app/components/shell/shellViewControlsModel.test.ts
   - apps/web/src/app/views/Canvas.test.support.tsx
+  - apps/web/src/app/views/Canvas.test.controller.defaults.ts
   - apps/web/src/app/views/Canvas.readOnlyStates.test.tsx
   - apps/web/src/app/views/Canvas.draftRecovery.test.tsx
   - apps/web/src/app/views/canvas/CanvasSettingsDialog.tsx
@@ -201,20 +204,29 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/CanvasShell.tsx
   - apps/web/src/app/views/canvas/CanvasShell.contextualDialogs.test.tsx
   - apps/web/src/app/views/canvas/CanvasShellMainPanel.tsx
+  - apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx
+  - apps/web/src/app/views/canvas/CanvasViewport.test.tsx
+  - apps/web/src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx
+  - apps/web/src/app/views/canvas/CanvasContextMenuView.test.tsx
+  - apps/web/src/app/views/canvas/CanvasShell.testHarness.tsx
   - apps/web/src/app/views/canvas/CanvasViewMenuControls.tsx
   - apps/web/src/app/views/canvas/CanvasViewMenuControls.test.tsx
   - apps/web/src/app/views/canvas/canvasViewMenuContributionStore.ts
   - apps/web/src/app/views/canvas/canvasShell.types.ts
   - apps/web/src/app/views/canvas/canvasShellBuilder.types.ts
+  - apps/web/src/app/views/canvas/canvasShellChromeCommandsBuilder.ts
   - apps/web/src/app/views/canvas/canvasShellPropsBuilder.tsx
   - apps/web/src/app/views/canvas/canvasControllerViewModel.ts
   - apps/web/src/app/views/canvas/useCanvasStoreFacade.ts
+  - apps/web/src/app/views/canvas/useDbtProjectFileCanvasController.ts
   - apps/web/src/app/views/canvas/canvasCopy.types.ts
   - apps/web/src/app/views/canvas/canvasCopyCatalog.toolbar.ts
   - apps/web/src/app/views/canvas/canvasCopyCatalog.toolbar.es.ts
   - apps/web/src/app/views/canvas/copy.test.ts
   - apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+  - apps/web/cypress/e2e/canvas/canvas-preview-run-authoring.cy.ts
   - docs/architecture/components/web/graph/canvas-view-menu-component.md
+  - docs/architecture/components/web/graph/canvas-view-menu-user-stories.md
   - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
   - docs/planning/proposals/mandatory/frontend-and-ux/canvas-properties-window-convergence-plan-20260814.md
   - docs/planning/status/generated-code-state.md
@@ -268,6 +280,26 @@ symbols:
     architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run
     cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
     unitTests: [pnpm --filter @dvt/web test:canvas-presentation:run]
+  - path: apps/web/src/app/components/workbench/WorkbenchPropertiesWindow.tsx
+    name: WorkbenchPropertiesSection
+    kind: type
+    exported: true
+    dddOwner: Web workbench presentation
+    cqRails: [ConfigureCanvasViewportPreferences]
+    fowlerSignals: [Responsibility overload]
+    architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:presentation:run]
+  - path: apps/web/src/app/components/workbench/WorkbenchPropertiesWindow.tsx
+    name: WorkbenchPropertiesWindowProps
+    kind: type
+    exported: false
+    dddOwner: Web workbench presentation
+    cqRails: [ConfigureCanvasViewportPreferences]
+    fowlerSignals: [Responsibility overload]
+    architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:presentation:run]
   - path: apps/web/src/app/views/canvas/CanvasSettingsDialog.tsx
     name: CanvasSettingsDialog
     kind: function
@@ -275,6 +307,86 @@ symbols:
     dddOwner: Canvas contextual properties
     cqRails: [ConfigureCanvasViewportPreferences, GetCanvasLayout, PersistCanvasLayout]
     fowlerSignals: [Duplicate semantics, Hidden authority, Primitive obsession]
+    architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas-presentation:run]
+  - path: apps/web/src/app/views/canvas/CanvasSettingsDialog.tsx
+    name: CanvasPropertiesEditBuffer
+    kind: type
+    exported: false
+    dddOwner: Canvas contextual properties
+    cqRails: [ConfigureCanvasViewportPreferences, PersistCanvasLayout]
+    fowlerSignals: [Hidden authority]
+    architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas-presentation:run]
+  - path: apps/web/src/app/views/canvas/CanvasSettingsDialog.tsx
+    name: CanvasSettingToggleRowProps
+    kind: type
+    exported: false
+    dddOwner: Canvas contextual properties
+    cqRails: [ConfigureCanvasViewportPreferences]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas-presentation:run]
+  - path: apps/web/src/app/views/canvas/CanvasSettingsDialog.tsx
+    name: CanvasSettingToggleRow
+    kind: function
+    exported: false
+    dddOwner: Canvas contextual properties
+    cqRails: [ConfigureCanvasViewportPreferences]
+    fowlerSignals: [Duplicate semantics]
+    architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas-presentation:run]
+  - path: apps/web/src/app/views/canvas/CanvasSettingsDialog.tsx
+    name: CanvasColorFieldProps
+    kind: type
+    exported: false
+    dddOwner: Canvas contextual properties
+    cqRails: [ConfigureCanvasViewportPreferences]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas-presentation:run]
+  - path: apps/web/src/app/views/canvas/CanvasSettingsDialog.tsx
+    name: CanvasColorField
+    kind: function
+    exported: false
+    dddOwner: Canvas contextual properties
+    cqRails: [ConfigureCanvasViewportPreferences]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas-presentation:run]
+  - path: apps/web/src/app/views/canvas/CanvasSettingsDialog.tsx
+    name: buildEditBuffer
+    kind: function
+    exported: false
+    dddOwner: Canvas contextual properties
+    cqRails: [ConfigureCanvasViewportPreferences, PersistCanvasLayout]
+    fowlerSignals: [Hidden authority]
+    architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas-presentation:run]
+  - path: apps/web/src/app/views/canvas/CanvasSettingsDialog.tsx
+    name: GRID_OPTIONS
+    kind: const
+    exported: false
+    dddOwner: Canvas contextual properties
+    cqRails: [ConfigureCanvasViewportPreferences]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas-presentation:run]
+  - path: apps/web/src/app/views/canvas/CanvasSettingsDialog.tsx
+    name: DEFAULT_GRID_SIZE
+    kind: const
+    exported: false
+    dddOwner: Canvas contextual properties
+    cqRails: [ConfigureCanvasViewportPreferences]
+    fowlerSignals: [Primitive obsession]
     architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run
     cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
     unitTests: [pnpm --filter @dvt/web test:canvas-presentation:run]
@@ -320,6 +432,8 @@ redGreenCycles:
       - apps/web/src/app/views/canvas/canvasShellPropsBuilder.tsx
       - apps/web/src/app/views/canvas/canvasControllerViewModel.ts
       - apps/web/src/app/views/canvas/useCanvasStoreFacade.ts
+      - apps/web/src/app/views/canvas/useDbtProjectFileCanvasController.ts
+      - apps/web/src/app/views/Canvas.test.controller.defaults.ts
     greenTest: apps/web/src/app/views/canvas/CanvasSettingsDialog.test.tsx
   - id: retire-duplicate-view-controls
     redTest: apps/web/src/app/components/TopAppBar.test.tsx
@@ -328,6 +442,8 @@ redGreenCycles:
       - apps/web/src/app/components/TopAppBar.tsx
       - apps/web/src/app/components/TopAppBar.test.tsx
       - apps/web/src/app/components/shell/ShellMenu.tsx
+      - apps/web/src/app/components/shell/shellViewControlsModel.ts
+      - apps/web/src/app/components/shell/shellViewControlsModel.test.ts
       - apps/web/src/app/views/canvas/CanvasShellMainPanel.tsx
       - apps/web/src/app/views/canvas/CanvasViewMenuControls.tsx
       - apps/web/src/app/views/canvas/CanvasViewMenuControls.test.tsx
