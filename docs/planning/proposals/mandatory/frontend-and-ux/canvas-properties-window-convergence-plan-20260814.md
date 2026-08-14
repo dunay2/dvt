@@ -208,6 +208,9 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/CanvasViewport.test.tsx
   - apps/web/src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx
   - apps/web/src/app/views/canvas/CanvasContextMenuView.test.tsx
+  - apps/web/src/app/views/canvas/canvasContextMenuViewModel.test.ts
+  - apps/web/src/app/views/canvas/canvasInteractionCommandSurface.test.ts
+  - apps/web/src/app/views/canvas/useCanvasContextMenuPresenter.canvasActions.test.tsx
   - apps/web/src/app/views/canvas/CanvasShell.testHarness.tsx
   - apps/web/src/app/views/canvas/CanvasViewMenuControls.tsx
   - apps/web/src/app/views/canvas/CanvasViewMenuControls.test.tsx
@@ -390,6 +393,16 @@ symbols:
     architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run
     cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
     unitTests: [pnpm --filter @dvt/web test:canvas-presentation:run]
+  - path: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    name: assertCanvasPropertiesFitsViewport
+    kind: function
+    exported: false
+    dddOwner: Canvas properties browser proof
+    cqRails: [ConfigureCanvasViewportPreferences]
+    fowlerSignals: [Shotgun surgery]
+    architectureGuard: pnpm docs:feature-mechanization:implementation --feature CANVAS-PROPERTIES-WINDOW-2360
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:e2e:native]
 fowlerSignals:
   - Canvas settings are duplicated between the global View menu and contextual dialog.
   - The settings dialog mutates live state without a truthful Apply or Cancel boundary.
