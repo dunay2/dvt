@@ -253,9 +253,10 @@ describe('ProjectOnboardingView', () => {
     );
 
     await act(async () => {
-      fireEvent.change(mounted.container.querySelector('select[name="tenantId"]')!, {
-        target: { value: 'organization-b' },
-      });
+      fireEvent.change(
+        mounted?.container.querySelector('select[name="tenantId"]') as HTMLSelectElement,
+        { target: { value: 'organization-b' } }
+      );
     });
 
     expect(mounted.container.textContent).toContain(
