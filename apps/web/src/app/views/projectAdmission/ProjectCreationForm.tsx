@@ -30,41 +30,36 @@ type ProjectAdmissionControllerOptions = Readonly<{
   onProjectSelected?: (selection: EffectiveProjectWorkspaceContext) => Promise<void> | void;
 }>;
 
-function readableErrorMessage(error: unknown, fallback: string): string {
+function readableErrorMessage(
+  error: unknown,
+  fallback: string,
+  projectCreationCopy?: ProjectOnboardingCopy
+): string {
+  if (error instanceof ApiError && projectCreationCopy !== undefined) {
+    let reason: string | null = null;
+    if (error.responseBody != null && typeof error.responseBody === 'object') {
+      const envelope = error.responseBody as { readonly error?: unknown };
+      if (envelope.error != null && typeof envelope.error === 'object') {
+        const candidateReason = (envelope.error as { readonly reason?: unknown }).reason;
+        reason = typeof candidateReason === 'string' ? candidateReason : null;
+      }
+    }
+
+    switch (reason) {
+      case 'duplicate_project_name':
+        return projectCreationCopy.duplicateProjectNameMessage;
+      case 'idempotency_conflict':
+        return projectCreationCopy.projectCreationConflictMessage;
+      default:
+        return projectCreationCopy.projectCreationFailureMessage;
+    }
+  }
+
   if (error instanceof Error && error.message.length > 0) {
     return error.message;
   }
 
   return fallback;
-}
-
-function readProjectCreationErrorReason(error: ApiError): string | null {
-  if (error.responseBody == null || typeof error.responseBody !== 'object') {
-    return null;
-  }
-
-  const envelope = error.responseBody as { readonly error?: unknown };
-  if (envelope.error == null || typeof envelope.error !== 'object') {
-    return null;
-  }
-
-  const reason = (envelope.error as { readonly reason?: unknown }).reason;
-  return typeof reason === 'string' ? reason : null;
-}
-
-function projectCreationErrorMessage(error: unknown, copy: ProjectOnboardingCopy): string {
-  if (error instanceof ApiError) {
-    switch (readProjectCreationErrorReason(error)) {
-      case 'duplicate_project_name':
-        return copy.duplicateProjectNameMessage;
-      case 'idempotency_conflict':
-        return copy.projectCreationConflictMessage;
-      default:
-        return copy.projectCreationFailureMessage;
-    }
-  }
-
-  return readableErrorMessage(error, copy.projectCreationFailureMessage);
 }
 
 function resolveInitialTenantId(catalog: ProjectOnboardingCatalog): string {
@@ -166,7 +161,7 @@ export function useProjectAdmissionController({
       });
       await onProjectCreated(response);
     } catch (error) {
-      setFormError(projectCreationErrorMessage(error, copy));
+      setFormError(readableErrorMessage(error, copy.projectCreationFailureMessage, copy));
     } finally {
       submissionLockedRef.current = false;
       setSubmissionState('idle');
