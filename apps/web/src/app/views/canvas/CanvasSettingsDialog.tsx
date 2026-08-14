@@ -234,15 +234,23 @@ export function CanvasSettingsDialog(props: CanvasSettingsDialogProps): JSX.Elem
 
   const backgroundColorValid = /^#[0-9a-f]{6}$/i.test(draft.canvasPaletteInput);
   const gridColorValid = /^#[0-9a-f]{6}$/i.test(draft.canvasGridColorInput);
+  const normalizedCanvasPaletteInput = normalizeCanvasHexColor(
+    draft.canvasPaletteInput,
+    normalizeCanvasPaletteId(canvasPalette)
+  );
+  const normalizedCanvasGridColorInput = normalizeCanvasHexColor(
+    draft.canvasGridColorInput,
+    DEFAULT_CANVAS_GRID_COLOR
+  );
 
   const hasChanges =
     draft.impactOverlayEnabled !== impactOverlayEnabled ||
     draft.columnLevelLineageEnabled !== columnLevelLineageEnabled ||
     (canUseCostOverlay && draft.costOverlayEnabled !== costOverlayEnabled) ||
     draft.gridSize !== gridSize ||
-    draft.canvasPaletteInput !== normalizeCanvasPaletteId(canvasPalette) ||
+    normalizedCanvasPaletteInput !== normalizeCanvasPaletteId(canvasPalette) ||
     draft.canvasGridVisible !== canvasGridVisible ||
-    draft.canvasGridColorInput !==
+    normalizedCanvasGridColorInput !==
       normalizeCanvasHexColor(canvasGridColor, DEFAULT_CANVAS_GRID_COLOR) ||
     draft.canvasSnapToGrid !== canvasSnapToGrid ||
     draft.canvasEmptyStateGuideVisible !== canvasEmptyStateGuideVisible ||
@@ -407,21 +415,15 @@ export function CanvasSettingsDialog(props: CanvasSettingsDialogProps): JSX.Elem
     if (draft.columnLevelLineageEnabled !== columnLevelLineageEnabled) onToggleColumns();
     if (canUseCostOverlay && draft.costOverlayEnabled !== costOverlayEnabled) onToggleCostOverlay();
     if (draft.gridSize !== gridSize) onGridSizeChange(draft.gridSize);
-    const nextCanvasPalette = normalizeCanvasHexColor(
-      draft.canvasPaletteInput,
-      normalizeCanvasPaletteId(canvasPalette)
-    );
-    if (nextCanvasPalette !== normalizeCanvasPaletteId(canvasPalette)) {
-      onCanvasPaletteChange(nextCanvasPalette);
+    if (normalizedCanvasPaletteInput !== normalizeCanvasPaletteId(canvasPalette)) {
+      onCanvasPaletteChange(normalizedCanvasPaletteInput);
     }
     if (draft.canvasGridVisible !== canvasGridVisible) onToggleGridVisible();
     if (
-      draft.canvasGridColorInput !==
+      normalizedCanvasGridColorInput !==
       normalizeCanvasHexColor(canvasGridColor, DEFAULT_CANVAS_GRID_COLOR)
     ) {
-      onGridColorChange(
-        normalizeCanvasHexColor(draft.canvasGridColorInput, DEFAULT_CANVAS_GRID_COLOR)
-      );
+      onGridColorChange(normalizedCanvasGridColorInput);
     }
     if (draft.canvasSnapToGrid !== canvasSnapToGrid) onToggleSnapToGrid();
     if (draft.canvasEmptyStateGuideVisible !== canvasEmptyStateGuideVisible) {

@@ -271,4 +271,61 @@ describe('CanvasSettingsDialog', () => {
     expect(onCanvasPaletteChange).not.toHaveBeenCalled();
     expect(onClose).toHaveBeenCalledTimes(1);
   });
+
+  it('does not dispatch an equivalent grid color with different hex casing', async () => {
+    const onGridColorChange = vi.fn();
+    const onClose = vi.fn();
+
+    await act(async () => {
+      root.render(
+        <CanvasSettingsDialog
+          open
+          impactOverlayEnabled={false}
+          columnLevelLineageEnabled={false}
+          canUseCostOverlay={false}
+          costOverlayEnabled={false}
+          gridSize={20}
+          canvasPalette="#101826"
+          canvasGridVisible
+          canvasGridColor="#94a3b8"
+          canvasSnapToGrid={false}
+          canvasEmptyStateGuideVisible
+          canAutoLayout={false}
+          onToggleImpact={vi.fn()}
+          onToggleColumns={vi.fn()}
+          onToggleCostOverlay={vi.fn()}
+          onGridSizeChange={vi.fn()}
+          onCanvasPaletteChange={vi.fn()}
+          onToggleGridVisible={vi.fn()}
+          onGridColorChange={onGridColorChange}
+          onToggleSnapToGrid={vi.fn()}
+          onSetCanvasEmptyStateGuideVisible={vi.fn()}
+          onAutoLayout={vi.fn()}
+          onClose={onClose}
+        />
+      );
+    });
+
+    const dialog = document.body.querySelector<HTMLElement>('[data-slot="canvas-settings-dialog"]');
+    const gridTab = [...(dialog?.querySelectorAll<HTMLButtonElement>('[role="tab"]') ?? [])].find(
+      (tab) => tab.textContent === 'Grid'
+    );
+    await act(async () => fireEvent.mouseDown(gridTab!, { button: 0, ctrlKey: false }));
+
+    const gridColorInput = dialog?.querySelector<HTMLInputElement>(
+      '[data-slot="canvas-properties-grid-color-input"]'
+    );
+    await act(async () => {
+      fireEvent.change(gridColorInput!, { target: { value: '#94A3B8' } });
+    });
+
+    const applyButton = dialog?.querySelector<HTMLButtonElement>(
+      '[data-slot="workbench-properties-apply"]'
+    );
+    expect(gridColorInput?.getAttribute('aria-invalid')).toBe('false');
+    expect(applyButton?.disabled).toBe(true);
+    await act(async () => fireEvent.click(applyButton!));
+    expect(onGridColorChange).not.toHaveBeenCalled();
+    expect(onClose).not.toHaveBeenCalled();
+  });
 });
