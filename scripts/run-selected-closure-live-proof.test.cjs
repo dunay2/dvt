@@ -214,7 +214,11 @@ test('buildLiveProofApiEnv exposes workspace file roots for live warehouse catal
   });
 
   assert.equal(apiEnv.DATABASE_URL, defaultPgUrl);
-  assert.equal(apiEnv.DVT_LOCAL_POSTGRES_WAREHOUSE_URL, defaultPgUrl);
+  assert.equal(apiEnv.DVT_LOCAL_POSTGRES_WAREHOUSE_URL, undefined);
+  assert.equal(
+    apiEnv.DVT_POSTGRES_CREDENTIAL_BINDINGS,
+    JSON.stringify({ 'postgres:local-postgres-proof': defaultPgUrl })
+  );
   assert.equal(apiEnv.DVT_PG_SCHEMA, 'dvt_live_selected_closure_test');
   assert.equal(apiEnv.TEMPORAL_ADDRESS, '127.0.0.1:7233');
   assert.equal(apiEnv.TEMPORAL_NAMESPACE, 'default');

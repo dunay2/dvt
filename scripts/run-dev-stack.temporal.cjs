@@ -92,6 +92,11 @@ function buildTemporalWorkerEnv(options, env = process.env, databaseUrl) {
     DVT_TEMPORAL_ADMIN_PORT: String(posture.workerAdminPort),
     DVT_TEMPORAL_WORKER_RUN_MIGRATIONS:
       readNonEmptyEnv(env.DVT_TEMPORAL_WORKER_RUN_MIGRATIONS) ?? 'true',
+    ...(readNonEmptyEnv(env.DVT_POSTGRES_CREDENTIAL_BINDINGS) === undefined
+      ? {}
+      : {
+          DVT_POSTGRES_CREDENTIAL_BINDINGS: readNonEmptyEnv(env.DVT_POSTGRES_CREDENTIAL_BINDINGS),
+        }),
     ...(readNonEmptyEnv(env.DVT_TEMPORAL_DBT_ENABLED) === undefined
       ? {}
       : { DVT_TEMPORAL_DBT_ENABLED: readNonEmptyEnv(env.DVT_TEMPORAL_DBT_ENABLED) }),
