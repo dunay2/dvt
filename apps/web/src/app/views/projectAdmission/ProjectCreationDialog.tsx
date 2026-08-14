@@ -59,7 +59,9 @@ export function ProjectCreationDialog({
       >
         <DialogHeader>
           <DialogTitle>{copy.newProjectDialogTitle}</DialogTitle>
-          <DialogDescription>{copy.newProjectDialogDescription}</DialogDescription>
+          <DialogDescription className="sr-only">
+            {copy.newProjectDialogDescription}
+          </DialogDescription>
         </DialogHeader>
         <ProjectCreationForm
           autoFocusProjectName

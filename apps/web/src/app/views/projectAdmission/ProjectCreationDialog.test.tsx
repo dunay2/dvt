@@ -94,6 +94,13 @@ describe('ProjectCreationDialog', () => {
     expect(document.body.textContent).toContain('Crea un proyecto');
     expect(document.body.textContent).toContain('Nombre del proyecto');
     expect(document.body.textContent).not.toContain('Tenant');
+    const dialog = document.body.querySelector('[role="dialog"]');
+    const descriptionId = dialog?.getAttribute('aria-describedby');
+    const description = descriptionId ? document.getElementById(descriptionId) : null;
+    expect(description?.textContent).toBe(
+      'Elige una organización autorizada y asigna al proyecto un nombre reconocible.'
+    );
+    expect(description?.classList.contains('sr-only')).toBe(true);
     expect(document.activeElement).toBe(document.body.querySelector('input[name="projectName"]'));
 
     await act(async () => {
