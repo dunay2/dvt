@@ -175,7 +175,19 @@ function runGit(args, exec = execFileSync) {
 
 function readCanonicalDiff(baseRef, headRef, exec = execFileSync) {
   const range = `${baseRef}...${headRef}`;
-  const numstat = runGit(['diff', '--numstat', range, '--', CANONICAL_STATE_PATH], exec).trim();
+  let numstat;
+  try {
+    numstat = runGit(['diff', '--numstat', range, '--', CANONICAL_STATE_PATH], exec).trim();
+  } catch (error) {
+    const gitFailure = `${error.message ?? ''}\n${String(error.stderr ?? '')}`;
+    if (!/no merge base/iu.test(gitFailure)) {
+      throw error;
+    }
+    numstat = runGit(
+      ['diff', '--numstat', baseRef, headRef, '--', CANONICAL_STATE_PATH],
+      exec
+    ).trim();
+  }
   if (numstat.length === 0) {
     return { canonicalAdditions: 0, canonicalDeletions: 0 };
   }
