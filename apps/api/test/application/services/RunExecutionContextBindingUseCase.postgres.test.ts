@@ -1,0 +1,260 @@
+import {
+  TRANSFORMATION_STEP_KIND,
+  createDefaultStepTypeRegistry,
+  parseExecutionPlan,
+  parseExecutionSelection,
+  parsePlanRef,
+  parseRunExecutionContextRef,
+  type StartRunCommand,
+} from '@dvt/contracts';
+import { describe, expect, it, vi } from 'vitest';
+
+import { WarehouseConnectionNotFoundError } from '../../../src/application/ports/warehouseSourceImport.js';
+import { DbtRunExecutionContextBindingUseCase as RunExecutionContextBindingUseCase } from '../../../src/application/services/DbtRunExecutionContextBindingUseCase.js';
+import { EnvironmentId, ProjectId, TenantId } from '../../../src/domain/auth/types.js';
+
+import { buildAuthorizedContext } from './engineStartRunUseCase.test.support.js';
+
+const PLAN_ID = 'd'.repeat(64);
+const CONNECTION_REF = {
+  schemaVersion: 'connection-ref.v1',
+  connectionId: 'warehouse-a',
+  provider: 'postgres',
+} as const;
+const PLAN_REF = parsePlanRef({
+  uri: 'dvt-plan://postgres/sql-first-a',
+  sha256: 'a'.repeat(64),
+  schemaVersion: '1.0',
+  planId: PLAN_ID,
+  planVersion: '1.0',
+});
+const RUN_CONTEXT_REF = parseRunExecutionContextRef({
+  uri: 'file:///run-contexts/sql-first-a.json',
+  sha256: '3'.repeat(64),
+  schemaVersion: 'v1.0',
+  planId: PLAN_ID,
+  planVersion: '1.0',
+});
+
+describe('RunExecutionContextBindingUseCase PostgreSQL authority', () => {
+  it('binds the scoped catalog credential to the immutable PlanRef context once', async () => {
+    const delegate = makeDelegate();
+    const contextWriter = {
+      write: vi.fn(async () => ({ ok: true as const, ref: RUN_CONTEXT_REF })),
+    };
+    const catalog = makeCatalog();
+    const credentialResolver = {
+      resolveCredential: vi.fn(async () => 'postgresql://warehouse-a/orders'),
+    };
+    const bundleBuilder = { build: vi.fn() };
+    const useCase = new RunExecutionContextBindingUseCase({
+      delegate,
+      bundleBuilder,
+      contextWriter,
+      executionTargetResolver: { resolve: () => undefined },
+      stepTypeRegistry: createDefaultStepTypeRegistry(),
+      warehouseConnectionCatalog: catalog,
+      postgresCredentialResolver: credentialResolver,
+    } as never);
+
+    const result = await useCase.executeAdmitted(buildCommand(), buildContext(), makeAdmission());
+
+    expect(result).toMatchObject({ ok: true, value: { kind: 'accepted' } });
+    expect(catalog.getConnection).toHaveBeenCalledWith(
+      { tenantId: 'tenant-1', projectId: 'proj-1', environmentId: 'env-1' },
+      'warehouse-a'
+    );
+    expect(credentialResolver.resolveCredential).toHaveBeenCalledWith('postgres:warehouse-a');
+    expect(contextWriter.write).toHaveBeenCalledWith({
+      runId: 'run-test-1',
+      context: expect.objectContaining({
+        planSha256: PLAN_REF.sha256,
+        pluginContexts: {
+          postgres: {
+            connectionRef: CONNECTION_REF,
+            credentialRef: 'postgres:warehouse-a',
+          },
+        },
+      }),
+    });
+    expect(bundleBuilder.build).not.toHaveBeenCalled();
+    expect(delegate.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ runExecutionContextRef: RUN_CONTEXT_REF }),
+      expect.any(Object)
+    );
+  });
+
+  it('fails closed when the PlanRef connection does not exist in the authorized scope', async () => {
+    const delegate = makeDelegate();
+    const contextWriter = { write: vi.fn() };
+    const catalog = makeCatalog();
+    catalog.getConnection.mockRejectedValueOnce(
+      new WarehouseConnectionNotFoundError(CONNECTION_REF.connectionId)
+    );
+    const useCase = new RunExecutionContextBindingUseCase({
+      delegate,
+      bundleBuilder: { build: vi.fn() },
+      contextWriter,
+      executionTargetResolver: { resolve: () => undefined },
+      stepTypeRegistry: createDefaultStepTypeRegistry(),
+      warehouseConnectionCatalog: catalog,
+      postgresCredentialResolver: { resolveCredential: vi.fn() },
+    } as never);
+
+    await expect(
+      useCase.executeAdmitted(buildCommand(), buildContext(), makeAdmission())
+    ).resolves.toMatchObject({
+      ok: true,
+      value: { kind: 'plan_rejected', accepted: false, cause: 'run_execution_context' },
+    });
+    expect(contextWriter.write).not.toHaveBeenCalled();
+    expect(delegate.execute).not.toHaveBeenCalled();
+  });
+});
+
+function makeCatalog(): Record<string, ReturnType<typeof vi.fn>> {
+  return {
+    listConnections: vi.fn(),
+    listSourceObjects: vi.fn(),
+    createConnection: vi.fn(),
+    getConnection: vi.fn(async () => ({
+      id: 'warehouse-a',
+      name: 'Warehouse A',
+      type: 'postgres' as const,
+      database: 'orders',
+      credentialRef: 'postgres:warehouse-a',
+      sourceObjects: [],
+    })),
+  };
+}
+
+function makeDelegate(): { execute: ReturnType<typeof vi.fn> } {
+  return {
+    execute: vi.fn(async () => ({
+      ok: true as const,
+      value: { kind: 'accepted' as const, runId: 'run-test-1', accepted: true as const },
+    })),
+  };
+}
+
+function buildCommand(): StartRunCommand {
+  return {
+    runId: 'run-test-1',
+    targetAdapter: 'temporal',
+    planRef: PLAN_REF,
+    selection: parseExecutionSelection({
+      mode: 'explicit',
+      nodeIds: ['prepare', 'transform', 'capture'],
+    }),
+  };
+}
+
+function buildContext(): ReturnType<typeof buildAuthorizedContext> {
+  return {
+    ...buildAuthorizedContext('tenant-1'),
+    scope: {
+      resource: 'environment',
+      tenantId: TenantId.unsafe('tenant-1'),
+      projectId: ProjectId.unsafe('proj-1'),
+      environmentId: EnvironmentId.unsafe('env-1'),
+    },
+    authorizedAt: new Date('2026-08-14T00:00:00.000Z'),
+  };
+}
+
+function makeAdmission(): Parameters<RunExecutionContextBindingUseCase['executeAdmitted']>[2] {
+  const sqlArtifact = {
+    repo: 'dunay2/dvt',
+    ref: 'main',
+    sha: 'b'.repeat(40),
+    path: 'models/orders.sql',
+  };
+  const plan = parseExecutionPlan({
+    metadata: {
+      planId: PLAN_ID,
+      planVersion: '1.0',
+      schemaVersion: '1.0',
+      contractVersion: '1.0.0',
+      inputHashSha256: '5'.repeat(64),
+      createdAtIso: '2026-08-14T00:00:00.000Z',
+    },
+    steps: [
+      {
+        stepId: 'prepare',
+        kind: TRANSFORMATION_STEP_KIND.preparePostgresTransform,
+        dependsOn: [],
+        stepTypeConfig: {
+          connectionRef: CONNECTION_REF,
+          targetSchema: 'analytics',
+          sourceSchema: 'raw',
+          sourceTable: 'orders',
+          sourceAlias: 'orders',
+        },
+      },
+      {
+        stepId: 'transform',
+        kind: TRANSFORMATION_STEP_KIND.postgresSqlTransform,
+        dependsOn: ['prepare'],
+        stepTypeConfig: {
+          connectionRef: CONNECTION_REF,
+          dialect: 'postgres',
+          entrypoint: 'models/orders.sql',
+          sql: 'select * from raw.orders',
+          sqlArtifact,
+          sourceSchema: 'raw',
+          sourceTable: 'orders',
+          sourceAlias: 'orders',
+          sinkSchema: 'analytics',
+          sinkTable: 'orders',
+          materialization: 'table',
+          writeMode: 'replace',
+        },
+      },
+      {
+        stepId: 'capture',
+        kind: TRANSFORMATION_STEP_KIND.captureMaterializationEvidence,
+        dependsOn: ['transform'],
+        stepTypeConfig: {
+          connectionRef: CONNECTION_REF,
+          sinkSchema: 'analytics',
+          sinkTable: 'orders',
+          materialization: 'table',
+          writeMode: 'replace',
+        },
+      },
+    ],
+  });
+  return {
+    accepted: true,
+    planRef: PLAN_REF,
+    scopedPlanRef: {
+      tenantId: 'tenant-1',
+      projectId: 'proj-1',
+      environmentId: 'env-1',
+      planRef: PLAN_REF,
+    },
+    materialized: { executionPolicy: {}, plan },
+    planRecord: {
+      tenantId: 'tenant-1',
+      projectId: 'proj-1',
+      environmentId: 'env-1',
+      planId: PLAN_ID,
+      canonicalPlanJson: JSON.stringify(plan),
+      canonicalHash: '6'.repeat(64),
+      planVersion: '1.0',
+      schemaVersion: '1.0',
+      contractVersion: '1.0.0',
+      sourceRef: PLAN_REF.uri,
+      createdAtIso: '2026-08-14T00:00:00.000Z',
+      updatedAtIso: '2026-08-14T00:00:00.000Z',
+      state: 'ACTIVE',
+    },
+    validation: { status: 'OK', planId: PLAN_ID, adapterId: 'temporal' },
+    validationRecord: {
+      planId: PLAN_ID,
+      state: 'VALID',
+      storedAtIso: '2026-08-14T00:00:00.000Z',
+      updatedAtIso: '2026-08-14T00:00:00.000Z',
+    },
+  };
+}
