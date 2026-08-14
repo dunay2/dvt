@@ -1,4 +1,4 @@
-import { PutObjectCommand, type S3Client } from '@aws-sdk/client-s3';
+import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { ArtifactStoreError } from '@dvt/contracts';
 
 import { computeSha256 } from '../compiledCode/sha256.js';
@@ -50,6 +50,10 @@ export class S3ContentAddressedArtifactStore implements IContentAddressedArtifac
     validateExistingArtifact(input, existing);
     return receipt(input, 'verified-existing');
   }
+}
+
+export function createDefaultS3ContentAddressedArtifactStore(): S3ContentAddressedArtifactStore {
+  return new S3ContentAddressedArtifactStore({ client: new S3Client({}) });
 }
 
 async function readExistingArtifact(

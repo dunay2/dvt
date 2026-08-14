@@ -11,6 +11,7 @@ export type {
   PublishedContentAddressedArtifact,
 } from './contentAddressed/IContentAddressedArtifactStore.js';
 export {
+  createDefaultS3ContentAddressedArtifactStore,
   S3ContentAddressedArtifactStore,
   type S3ContentAddressedArtifactStoreOptions,
 } from './contentAddressed/S3ContentAddressedArtifactStore.js';
