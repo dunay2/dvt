@@ -154,20 +154,37 @@ describe('CanvasSettingsDialog', () => {
       for (const partialColor of ['#2', '#22', '#223', '#2233', '#22334', '#223344']) {
         fireEvent.change(backgroundInput!, { target: { value: partialColor } });
       }
-      fireEvent.mouseDown(layoutTab!, { button: 0, ctrlKey: false });
     });
 
     expect(backgroundInput?.value).toBe('#223344');
+    const applyButton = dialog?.querySelector<HTMLButtonElement>(
+      '[data-slot="workbench-properties-apply"]'
+    );
+
+    await act(async () => {
+      fireEvent.change(backgroundInput!, { target: { value: '#22334' } });
+    });
+    expect(backgroundInput?.value).toBe('#22334');
+    expect(backgroundInput?.getAttribute('aria-invalid')).toBe('true');
+    expect(applyButton?.disabled).toBe(true);
+    await act(async () => fireEvent.click(applyButton!));
+    expect(onCanvasPaletteChange).not.toHaveBeenCalled();
+    expect(onClose).not.toHaveBeenCalled();
+
+    await act(async () => {
+      fireEvent.change(backgroundInput!, { target: { value: '##223344' } });
+    });
+    expect(backgroundInput?.value).toBe('#223344');
+    expect(backgroundInput?.getAttribute('aria-invalid')).toBe('false');
+    expect(applyButton?.disabled).toBe(false);
+
+    await act(async () => fireEvent.mouseDown(layoutTab!, { button: 0, ctrlKey: false }));
 
     const autoLayoutSwitch = dialog?.querySelector<HTMLButtonElement>(
       '[data-slot="canvas-properties-auto-layout"]'
     );
     await act(async () => fireEvent.click(autoLayoutSwitch!));
-    await act(async () =>
-      fireEvent.click(
-        dialog?.querySelector<HTMLButtonElement>('[data-slot="workbench-properties-apply"]')!
-      )
-    );
+    await act(async () => fireEvent.click(applyButton!));
 
     expect(onToggleImpact).toHaveBeenCalledTimes(1);
     expect(onCanvasPaletteChange).toHaveBeenCalledWith('#223344');

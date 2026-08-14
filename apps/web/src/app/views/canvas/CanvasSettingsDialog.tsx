@@ -1,8 +1,9 @@
 /** Owned concern: render one contextual Canvas properties edit buffer. */
 import { useEffect, useState } from 'react';
-import { HexColorInput, HexColorPicker } from 'react-colorful';
+import { HexColorPicker } from 'react-colorful';
 
 import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import {
   Select,
@@ -109,6 +110,7 @@ type CanvasColorFieldProps = Readonly<{
   color: CanvasPaletteId;
   fallback: CanvasPaletteId;
   onChange: (color: CanvasPaletteId) => void;
+  onValidityChange: (valid: boolean) => void;
 }>;
 
 function CanvasColorField({
@@ -118,17 +120,21 @@ function CanvasColorField({
   color,
   fallback,
   onChange,
+  onValidityChange,
 }: CanvasColorFieldProps): JSX.Element {
   const [inputColor, setInputColor] = useState<string>(color);
+  const inputColorValid = /^#[0-9a-f]{6}$/i.test(inputColor);
 
   useEffect(() => {
     setInputColor(color);
   }, [color]);
 
   function handleColorInput(nextColor: string): void {
-    const candidate = nextColor.startsWith('#') ? nextColor : `#${nextColor}`;
+    const candidate = `#${nextColor.replace(/^#+/, '')}`;
     setInputColor(candidate);
-    if (/^#[0-9a-f]{6}$/i.test(candidate)) {
+    const valid = /^#[0-9a-f]{6}$/i.test(candidate);
+    onValidityChange(valid);
+    if (valid) {
       onChange(normalizeCanvasHexColor(candidate, fallback));
     }
   }
@@ -142,6 +148,7 @@ function CanvasColorField({
             color={color}
             onChange={(nextColor) => {
               setInputColor(nextColor);
+              onValidityChange(true);
               onChange(normalizeCanvasHexColor(nextColor, fallback));
             }}
           />
@@ -150,14 +157,15 @@ function CanvasColorField({
           <Label htmlFor={`${inputSlot}-control`} className="text-xs text-(--text-subtle)">
             {inputLabel}
           </Label>
-          <HexColorInput
+          <Input
             id={`${inputSlot}-control`}
             data-slot={inputSlot}
-            color={inputColor}
-            prefixed
+            value={inputColor}
+            spellCheck={false}
             aria-label={inputLabel}
+            aria-invalid={!inputColorValid}
             className="h-9 w-full rounded-md border border-(--border-default) bg-(--surface-panel-subtle) px-3 font-mono text-sm text-(--text-default) outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
-            onChange={handleColorInput}
+            onChange={(event) => handleColorInput(event.target.value)}
           />
         </div>
       </div>
@@ -222,10 +230,14 @@ export function CanvasSettingsDialog(props: CanvasSettingsDialogProps): JSX.Elem
     onClose,
   } = props;
   const [draft, setDraft] = useState<CanvasPropertiesEditBuffer>(() => buildEditBuffer(props));
+  const [backgroundColorValid, setBackgroundColorValid] = useState(true);
+  const [gridColorValid, setGridColorValid] = useState(true);
 
   useEffect(() => {
     if (open) {
       setDraft(buildEditBuffer(props));
+      setBackgroundColorValid(true);
+      setGridColorValid(true);
     }
   }, [
     open,
@@ -263,6 +275,7 @@ export function CanvasSettingsDialog(props: CanvasSettingsDialogProps): JSX.Elem
           inputSlot="canvas-properties-background-input"
           color={draft.canvasPalette}
           fallback={normalizeCanvasPaletteId(canvasPalette)}
+          onValidityChange={setBackgroundColorValid}
           onChange={(nextColor) =>
             setDraft((current) => ({ ...current, canvasPalette: nextColor }))
           }
@@ -365,6 +378,7 @@ export function CanvasSettingsDialog(props: CanvasSettingsDialogProps): JSX.Elem
           inputSlot="canvas-properties-grid-color-input"
           color={draft.canvasGridColor}
           fallback={DEFAULT_CANVAS_GRID_COLOR}
+          onValidityChange={setGridColorValid}
           onChange={(nextColor) =>
             setDraft((current) => ({ ...current, canvasGridColor: nextColor }))
           }
@@ -406,6 +420,7 @@ export function CanvasSettingsDialog(props: CanvasSettingsDialogProps): JSX.Elem
   }
 
   function applyChanges(): void {
+    if (!backgroundColorValid || !gridColorValid) return;
     if (draft.impactOverlayEnabled !== impactOverlayEnabled) onToggleImpact();
     if (draft.columnLevelLineageEnabled !== columnLevelLineageEnabled) onToggleColumns();
     if (canUseCostOverlay && draft.costOverlayEnabled !== costOverlayEnabled) onToggleCostOverlay();
@@ -438,7 +453,7 @@ export function CanvasSettingsDialog(props: CanvasSettingsDialogProps): JSX.Elem
       cancelLabel={copy.canvasSettingsCancelLabel}
       applyLabel={copy.canvasSettingsApplyLabel}
       sections={sections}
-      applyDisabled={!hasChanges}
+      applyDisabled={!hasChanges || !backgroundColorValid || !gridColorValid}
       onCancel={onClose}
       onApply={applyChanges}
       onRestoreFocus={onRestoreFocus}
