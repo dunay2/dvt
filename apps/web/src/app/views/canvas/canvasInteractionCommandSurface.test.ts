@@ -190,7 +190,7 @@ describe('canvasInteractionCommandSurface', () => {
 
     expect(model.canvasActions).toEqual([
       { action: 'open-add-node-catalog', label: 'Add...' },
-      { action: 'open-canvas-settings', label: 'Canvas settings' },
+      { action: 'open-canvas-settings', label: 'Canvas properties' },
     ]);
     expect(model.createNodeActions).toEqual([]);
     expect(JSON.stringify(model)).not.toContain('Edit SQL');
