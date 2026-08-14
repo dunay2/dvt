@@ -148,6 +148,9 @@ describe('CanvasSettingsDialog', () => {
     const layoutTab = [...(dialog?.querySelectorAll<HTMLButtonElement>('[role="tab"]') ?? [])].find(
       (tab) => tab.textContent === 'Layout'
     );
+    const gridTab = [...(dialog?.querySelectorAll<HTMLButtonElement>('[role="tab"]') ?? [])].find(
+      (tab) => tab.textContent === 'Grid'
+    );
 
     await act(async () => {
       fireEvent.click(impactSwitch!);
@@ -176,6 +179,24 @@ describe('CanvasSettingsDialog', () => {
     });
     expect(backgroundInput?.value).toBe('#223344');
     expect(backgroundInput?.getAttribute('aria-invalid')).toBe('false');
+    expect(applyButton?.disabled).toBe(false);
+
+    await act(async () => fireEvent.mouseDown(gridTab!, { button: 0, ctrlKey: false }));
+    const gridColorInput = dialog?.querySelector<HTMLInputElement>(
+      '[data-slot="canvas-properties-grid-color-input"]'
+    );
+    await act(async () => {
+      fireEvent.change(gridColorInput!, { target: { value: '#12345' } });
+    });
+    expect(gridColorInput?.getAttribute('aria-invalid')).toBe('true');
+    expect(applyButton?.disabled).toBe(true);
+
+    const resetGridButton = [...(dialog?.querySelectorAll<HTMLButtonElement>('button') ?? [])].find(
+      (button) => button.textContent === 'Restore grid defaults'
+    );
+    await act(async () => fireEvent.click(resetGridButton!));
+    expect(gridColorInput?.value).toBe('#94a3b8');
+    expect(gridColorInput?.getAttribute('aria-invalid')).toBe('false');
     expect(applyButton?.disabled).toBe(false);
 
     await act(async () => fireEvent.mouseDown(layoutTab!, { button: 0, ctrlKey: false }));

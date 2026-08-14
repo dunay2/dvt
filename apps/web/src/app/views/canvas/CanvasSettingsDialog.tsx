@@ -62,9 +62,9 @@ type CanvasPropertiesEditBuffer = Readonly<{
   columnLevelLineageEnabled: boolean;
   costOverlayEnabled: boolean;
   gridSize: number;
-  canvasPalette: CanvasPaletteId;
+  canvasPaletteInput: string;
   canvasGridVisible: boolean;
-  canvasGridColor: CanvasPaletteId;
+  canvasGridColorInput: string;
   canvasSnapToGrid: boolean;
   canvasEmptyStateGuideVisible: boolean;
   autoLayoutRequested: boolean;
@@ -107,10 +107,9 @@ type CanvasColorFieldProps = Readonly<{
   label: string;
   inputLabel: string;
   inputSlot: string;
-  color: CanvasPaletteId;
+  color: string;
   fallback: CanvasPaletteId;
-  onChange: (color: CanvasPaletteId) => void;
-  onValidityChange: (valid: boolean) => void;
+  onChange: (color: string) => void;
 }>;
 
 function CanvasColorField({
@@ -120,23 +119,12 @@ function CanvasColorField({
   color,
   fallback,
   onChange,
-  onValidityChange,
 }: CanvasColorFieldProps): JSX.Element {
-  const [inputColor, setInputColor] = useState<string>(color);
-  const inputColorValid = /^#[0-9a-f]{6}$/i.test(inputColor);
-
-  useEffect(() => {
-    setInputColor(color);
-  }, [color]);
+  const inputColorValid = /^#[0-9a-f]{6}$/i.test(color);
 
   function handleColorInput(nextColor: string): void {
     const candidate = `#${nextColor.replace(/^#+/, '')}`;
-    setInputColor(candidate);
-    const valid = /^#[0-9a-f]{6}$/i.test(candidate);
-    onValidityChange(valid);
-    if (valid) {
-      onChange(normalizeCanvasHexColor(candidate, fallback));
-    }
+    onChange(candidate);
   }
 
   return (
@@ -145,12 +133,8 @@ function CanvasColorField({
       <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_10rem]">
         <div className="canvas-background-color-picker overflow-hidden rounded-md border border-(--border-muted)">
           <HexColorPicker
-            color={color}
-            onChange={(nextColor) => {
-              setInputColor(nextColor);
-              onValidityChange(true);
-              onChange(normalizeCanvasHexColor(nextColor, fallback));
-            }}
+            color={normalizeCanvasHexColor(color, fallback)}
+            onChange={(nextColor) => onChange(normalizeCanvasHexColor(nextColor, fallback))}
           />
         </div>
         <div className="grid content-start gap-2">
@@ -160,7 +144,7 @@ function CanvasColorField({
           <Input
             id={`${inputSlot}-control`}
             data-slot={inputSlot}
-            value={inputColor}
+            value={color}
             spellCheck={false}
             aria-label={inputLabel}
             aria-invalid={!inputColorValid}
@@ -192,9 +176,9 @@ function buildEditBuffer(
     columnLevelLineageEnabled: props.columnLevelLineageEnabled,
     costOverlayEnabled: props.costOverlayEnabled,
     gridSize: props.gridSize,
-    canvasPalette: normalizeCanvasPaletteId(props.canvasPalette),
+    canvasPaletteInput: normalizeCanvasPaletteId(props.canvasPalette),
     canvasGridVisible: props.canvasGridVisible,
-    canvasGridColor: normalizeCanvasHexColor(props.canvasGridColor, DEFAULT_CANVAS_GRID_COLOR),
+    canvasGridColorInput: normalizeCanvasHexColor(props.canvasGridColor, DEFAULT_CANVAS_GRID_COLOR),
     canvasSnapToGrid: props.canvasSnapToGrid,
     canvasEmptyStateGuideVisible: props.canvasEmptyStateGuideVisible,
     autoLayoutRequested: false,
@@ -230,14 +214,10 @@ export function CanvasSettingsDialog(props: CanvasSettingsDialogProps): JSX.Elem
     onClose,
   } = props;
   const [draft, setDraft] = useState<CanvasPropertiesEditBuffer>(() => buildEditBuffer(props));
-  const [backgroundColorValid, setBackgroundColorValid] = useState(true);
-  const [gridColorValid, setGridColorValid] = useState(true);
 
   useEffect(() => {
     if (open) {
       setDraft(buildEditBuffer(props));
-      setBackgroundColorValid(true);
-      setGridColorValid(true);
     }
   }, [
     open,
@@ -252,14 +232,18 @@ export function CanvasSettingsDialog(props: CanvasSettingsDialogProps): JSX.Elem
     canvasEmptyStateGuideVisible,
   ]);
 
+  const backgroundColorValid = /^#[0-9a-f]{6}$/i.test(draft.canvasPaletteInput);
+  const gridColorValid = /^#[0-9a-f]{6}$/i.test(draft.canvasGridColorInput);
+
   const hasChanges =
     draft.impactOverlayEnabled !== impactOverlayEnabled ||
     draft.columnLevelLineageEnabled !== columnLevelLineageEnabled ||
     (canUseCostOverlay && draft.costOverlayEnabled !== costOverlayEnabled) ||
     draft.gridSize !== gridSize ||
-    draft.canvasPalette !== normalizeCanvasPaletteId(canvasPalette) ||
+    draft.canvasPaletteInput !== normalizeCanvasPaletteId(canvasPalette) ||
     draft.canvasGridVisible !== canvasGridVisible ||
-    draft.canvasGridColor !== normalizeCanvasHexColor(canvasGridColor, DEFAULT_CANVAS_GRID_COLOR) ||
+    draft.canvasGridColorInput !==
+      normalizeCanvasHexColor(canvasGridColor, DEFAULT_CANVAS_GRID_COLOR) ||
     draft.canvasSnapToGrid !== canvasSnapToGrid ||
     draft.canvasEmptyStateGuideVisible !== canvasEmptyStateGuideVisible ||
     (canAutoLayout && draft.autoLayoutRequested);
@@ -273,11 +257,10 @@ export function CanvasSettingsDialog(props: CanvasSettingsDialogProps): JSX.Elem
           label={copy.canvasSettingsBackgroundLabel}
           inputLabel={copy.canvasSettingsBackgroundInputLabel}
           inputSlot="canvas-properties-background-input"
-          color={draft.canvasPalette}
+          color={draft.canvasPaletteInput}
           fallback={normalizeCanvasPaletteId(canvasPalette)}
-          onValidityChange={setBackgroundColorValid}
           onChange={(nextColor) =>
-            setDraft((current) => ({ ...current, canvasPalette: nextColor }))
+            setDraft((current) => ({ ...current, canvasPaletteInput: nextColor }))
           }
         />
         <div className="border-t border-(--border-muted)">
@@ -376,11 +359,10 @@ export function CanvasSettingsDialog(props: CanvasSettingsDialogProps): JSX.Elem
           label={copy.toolbarGridColorLabel}
           inputLabel={copy.toolbarGridColorLabel}
           inputSlot="canvas-properties-grid-color-input"
-          color={draft.canvasGridColor}
+          color={draft.canvasGridColorInput}
           fallback={DEFAULT_CANVAS_GRID_COLOR}
-          onValidityChange={setGridColorValid}
           onChange={(nextColor) =>
-            setDraft((current) => ({ ...current, canvasGridColor: nextColor }))
+            setDraft((current) => ({ ...current, canvasGridColorInput: nextColor }))
           }
         />
         <Button
@@ -391,7 +373,7 @@ export function CanvasSettingsDialog(props: CanvasSettingsDialogProps): JSX.Elem
             setDraft((current) => ({
               ...current,
               gridSize: DEFAULT_GRID_SIZE,
-              canvasGridColor: DEFAULT_CANVAS_GRID_COLOR,
+              canvasGridColorInput: DEFAULT_CANVAS_GRID_COLOR,
             }))
           }
         >
@@ -425,14 +407,21 @@ export function CanvasSettingsDialog(props: CanvasSettingsDialogProps): JSX.Elem
     if (draft.columnLevelLineageEnabled !== columnLevelLineageEnabled) onToggleColumns();
     if (canUseCostOverlay && draft.costOverlayEnabled !== costOverlayEnabled) onToggleCostOverlay();
     if (draft.gridSize !== gridSize) onGridSizeChange(draft.gridSize);
-    if (draft.canvasPalette !== normalizeCanvasPaletteId(canvasPalette)) {
-      onCanvasPaletteChange(draft.canvasPalette);
+    const nextCanvasPalette = normalizeCanvasHexColor(
+      draft.canvasPaletteInput,
+      normalizeCanvasPaletteId(canvasPalette)
+    );
+    if (nextCanvasPalette !== normalizeCanvasPaletteId(canvasPalette)) {
+      onCanvasPaletteChange(nextCanvasPalette);
     }
     if (draft.canvasGridVisible !== canvasGridVisible) onToggleGridVisible();
     if (
-      draft.canvasGridColor !== normalizeCanvasHexColor(canvasGridColor, DEFAULT_CANVAS_GRID_COLOR)
+      draft.canvasGridColorInput !==
+      normalizeCanvasHexColor(canvasGridColor, DEFAULT_CANVAS_GRID_COLOR)
     ) {
-      onGridColorChange(draft.canvasGridColor);
+      onGridColorChange(
+        normalizeCanvasHexColor(draft.canvasGridColorInput, DEFAULT_CANVAS_GRID_COLOR)
+      );
     }
     if (draft.canvasSnapToGrid !== canvasSnapToGrid) onToggleSnapToGrid();
     if (draft.canvasEmptyStateGuideVisible !== canvasEmptyStateGuideVisible) {
