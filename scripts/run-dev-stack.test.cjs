@@ -74,7 +74,11 @@ test('buildApiEnv injects readiness flags and local postgres defaults for the co
   assert.equal(apiEnv.DVT_READYZ_ENABLED, 'true');
   assert.equal(apiEnv.DVT_DB_READY_ENABLED, 'true');
   assert.equal(apiEnv.DATABASE_URL, defaultPgUrl);
-  assert.equal(apiEnv.DVT_LOCAL_POSTGRES_WAREHOUSE_URL, defaultPgUrl);
+  assert.equal(apiEnv.DVT_LOCAL_POSTGRES_WAREHOUSE_URL, undefined);
+  assert.equal(
+    apiEnv.DVT_POSTGRES_CREDENTIAL_BINDINGS,
+    JSON.stringify({ 'postgres:local-postgres-proof': defaultPgUrl })
+  );
   assert.equal(apiEnv.TEMPORAL_ADDRESS, '127.0.0.1:7233');
   assert.equal(apiEnv.TEMPORAL_NAMESPACE, 'default');
   assert.equal(apiEnv.TEMPORAL_TASK_QUEUE, 'dvt-temporal');
@@ -100,6 +104,7 @@ test('buildApiEnv leaves database unset when postgres bootstrap is explicitly sk
   assert.equal(apiEnv.DVT_DB_READY_ENABLED, undefined);
   assert.equal(apiEnv.DATABASE_URL, undefined);
   assert.equal(apiEnv.DVT_LOCAL_POSTGRES_WAREHOUSE_URL, undefined);
+  assert.equal(apiEnv.DVT_POSTGRES_CREDENTIAL_BINDINGS, undefined);
   assert.equal(apiEnv.TEMPORAL_ADDRESS, undefined);
   assert.equal(apiEnv.DVT_TEMPORAL_WORKER_READYZ_URL, undefined);
 });
@@ -203,6 +208,10 @@ test('buildCoordinatedTemporalWorkerEnv derives worker queue from local tenant, 
 
   assert.equal(apiEnv.TEMPORAL_TASK_QUEUE, 'dvt-temporal');
   assert.equal(workerEnv.TEMPORAL_TASK_QUEUE, 'dvt-temporal-tenant');
+  assert.equal(
+    workerEnv.DVT_POSTGRES_CREDENTIAL_BINDINGS,
+    JSON.stringify({ 'postgres:local-postgres-proof': defaultPgUrl })
+  );
 });
 
 test('buildCoordinatedTemporalWorkerEnv preserves operator-owned worker queue', () => {
@@ -336,7 +345,7 @@ test('buildLocalWarehouseConnectionRequest uses the protected connection command
     name: 'Local Postgres proof',
     type: 'postgres',
     database: 'dvt',
-    credentialRef: 'env:DVT_LOCAL_POSTGRES_WAREHOUSE_URL',
+    credentialRef: 'postgres:local-postgres-proof',
   });
 });
 
