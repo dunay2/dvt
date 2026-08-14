@@ -404,7 +404,7 @@
       },
       {
         "component_id": "SYS-API-APPLICATION-DBT-RUN-CONTEXT-BINDING",
-        "name": "dbt run execution-context binding",
+        "name": "Run execution-context binding",
         "kind": "service",
         "layer": "application",
         "owner": "StartRun",
@@ -416,14 +416,14 @@
         "maturity_score": null,
         "parent_component_id": "SYS-API-APPLICATION-SERVICES",
         "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-14T04:51:34.47+00:00"
+        "updated_at": "2026-08-14T09:13:29.466+00:00"
       },
       {
         "component_id": "SYS-API-APPLICATION-DBT-RUN-CONTEXT-WRITER",
-        "name": "dbt run execution-context writer port",
+        "name": "Run execution-context writer port",
         "kind": "port",
         "layer": "application",
-        "owner": "dbt Runtime Admission",
+        "owner": "Runtime Admission",
         "repo_path": "apps/api/src/application/ports/runExecutionContextWriter.ts",
         "public_contract": "IRunExecutionContextWriter",
         "runtime": "node",
@@ -432,7 +432,7 @@
         "maturity_score": null,
         "parent_component_id": "SYS-API-APPLICATION-SERVICES",
         "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-14T04:51:35.771+00:00"
+        "updated_at": "2026-08-14T09:13:30.703+00:00"
       },
       {
         "component_id": "SYS-API-APPLICATION-PORTS",
@@ -13561,6 +13561,20 @@
         "updated_at": "2026-08-14T05:29:43.29+00:00"
       },
       {
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+        "work_item_id": "GH-2329",
+        "title": "Close run-context authority hard cut",
+        "owner": "PTH2 runtime admission",
+        "status": "implemented",
+        "rationale": "Align the surviving run-context components, required tests, relations, and observability with current implementation names and explicit result semantics while preserving stable governance IDs.",
+        "fowler_signal": "hidden_authority",
+        "rail_ref": "RecordArchitectureComponent;RecordArchitectureTestEvidence;RecordArchitectureRelation;RecordArchitectureObservabilityEvidence",
+        "approved_at": "2026-08-14T09:14:25.962+00:00",
+        "supersedes_id": null,
+        "created_at": "2026-08-14T09:13:16.045+00:00",
+        "updated_at": "2026-08-14T09:14:28.68+00:00"
+      },
+      {
         "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-REPLACEMENT-20260814",
         "work_item_id": "GH-2329",
         "title": "Publish single run-context component authority",
@@ -19473,7 +19487,7 @@
       {
         "observability_id": "OBS-DBT-RUN-CONTEXT-WRITE-OUTCOME",
         "component_id": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
-        "signal_name": "Typed unavailable, immutable-conflict, and success outcomes remain visible at StartRun admission.",
+        "signal_name": "Typed artifact-store unavailability and successful context references remain visible at StartRun admission.",
         "signal_kind": "log",
         "required": true,
         "status": "implemented",
@@ -27369,17 +27383,14 @@
         "direction": "outbound",
         "sync_async": "sync",
         "contract_id": "CONTRACT-WORKSPACE-FILE-SCOPE-PORT-V1",
-        "failure_mode": "A DBT plan can bundle files from another project or environment",
+        "failure_mode": "A run can bind workspace files from another project or environment.",
         "authorization_scope": "tenant/project/environment",
         "source_refs": [
-          "apps/api/src/application/services/DbtRunExecutionContextBindingUseCase.ts",
-          "apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts",
-          "apps/api/src/infrastructure/workspaceFiles/workspaceScopeStoragePath.ts",
-          "apps/api/test/application/services/DbtRunExecutionContextBindingUseCase.test.ts"
+          "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts"
         ],
         "status": "implemented",
         "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
+        "updated_at": "2026-08-14T09:14:13.23+00:00"
       },
       {
         "relation_id": "REL-DBT-RUN-CONTEXT-FILES-IMPLEMENTS-PORT",
@@ -27389,12 +27400,14 @@
         "direction": "inbound",
         "sync_async": "async",
         "contract_id": null,
-        "failure_mode": "Unsupported storage or conflicting immutable content rejects context persistence.",
+        "failure_mode": "Artifact-store unavailability returns a typed rejection; transport, integrity, or immutable-write failures abort persistence.",
         "authorization_scope": "server artifact store",
-        "source_refs": ["IDbtRunExecutionContextWriter"],
+        "source_refs": [
+          "apps/api/src/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.ts"
+        ],
         "status": "implemented",
         "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
+        "updated_at": "2026-08-14T09:14:14.526+00:00"
       },
       {
         "relation_id": "REL-DBT-TARGET-CONFIG-IMPLEMENTS-PORT",
@@ -38449,9 +38462,9 @@
       {
         "responsibility_id": "RESP-DBT-RUN-CONTEXT-BINDING",
         "component_id": "SYS-API-APPLICATION-DBT-RUN-CONTEXT-BINDING",
-        "responsibility": "Admit one persisted dbt plan into StartRun only when its project revision and target identity remain current.",
-        "reason_to_change": "dbt-specific StartRun admission or execution-context binding changes.",
-        "ddd_owner": "DbtRunExecutionContextBindingUseCase",
+        "responsibility": "Admit one persisted plan into StartRun only when its governed execution contexts remain current and are created server-side.",
+        "reason_to_change": "StartRun admission or execution-context binding changes.",
+        "ddd_owner": "RunExecutionContextBindingUseCase",
         "status": "implemented",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
@@ -44052,21 +44065,21 @@
       {
         "test_id": "TEST-API-START-RUN-DBT-BUNDLE-SECURITY",
         "component_id": "SYS-API-APPLICATION-SERVICES-START-RUN-ADMISSION",
-        "test_path": "apps/api/test/application/services/DbtRunExecutionContextBindingUseCase.bundleSecurity.test.ts",
+        "test_path": "apps/api/test/application/services/RunExecutionContextBindingUseCase.bundleSecurity.test.ts",
         "test_kind": "integration",
         "coverage_level": "negative",
         "required": true,
-        "validation_command": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/DbtRunExecutionContextBindingUseCase.bundleSecurity.test.ts test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts",
+        "validation_command": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/RunExecutionContextBindingUseCase.bundleSecurity.test.ts test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
         "test_id": "TEST-API-START-RUN-DBT-BUNDLE-SECURITY-OWNERSHIP",
         "component_id": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
-        "test_path": "apps/api/test/application/services/DbtRunExecutionContextBindingUseCase.bundleSecurity.test.ts",
+        "test_path": "apps/api/test/application/services/RunExecutionContextBindingUseCase.bundleSecurity.test.ts",
         "test_kind": "integration",
         "coverage_level": "negative",
         "required": true,
-        "validation_command": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/DbtRunExecutionContextBindingUseCase.bundleSecurity.test.ts",
+        "validation_command": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/RunExecutionContextBindingUseCase.bundleSecurity.test.ts",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -44552,21 +44565,21 @@
       {
         "test_id": "TEST-DBT-RUN-CONTEXT-BINDING-PHASE4",
         "component_id": "SYS-API-APPLICATION-DBT-RUN-CONTEXT-BINDING",
-        "test_path": "apps/api/test/application/services/DbtRunExecutionContextBindingUseCase.test.ts",
+        "test_path": "apps/api/test/application/services/RunExecutionContextBindingUseCase.test.ts",
         "test_kind": "unit",
         "coverage_level": "boundary",
         "required": true,
-        "validation_command": "pnpm --filter dvt-api exec vitest run test/application/services/DbtRunExecutionContextBindingUseCase.test.ts",
+        "validation_command": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/RunExecutionContextBindingUseCase.test.ts",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
         "test_id": "TEST-DBT-RUN-CONTEXT-WRITER-PORT-CONTRACT",
         "component_id": "SYS-API-APPLICATION-DBT-RUN-CONTEXT-WRITER",
-        "test_path": "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
+        "test_path": "apps/api/test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts",
         "test_kind": "contract",
         "coverage_level": "negative",
         "required": true,
-        "validation_command": "pnpm --filter dvt-api exec vitest run test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
+        "validation_command": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -47102,11 +47115,11 @@
       {
         "test_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-5",
         "component_id": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
-        "test_path": "apps/api/test/application/services/DbtRunExecutionContextBindingUseCase.test.ts",
+        "test_path": "apps/api/test/application/services/RunExecutionContextBindingUseCase.test.ts",
         "test_kind": "architecture",
         "coverage_level": "flow",
         "required": true,
-        "validation_command": "pnpm --filter dvt-api test -- test/application/services/DbtRunExecutionContextBindingUseCase.test.ts",
+        "validation_command": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/RunExecutionContextBindingUseCase.test.ts",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -88043,6 +88056,134 @@
         "created_at": "2026-08-14T05:13:25.961+00:00"
       },
       {
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-APPLICATION-DBT-RUN-CONTEXT-BINDING",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-14T09:13:16.045+00:00"
+      },
+      {
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-APPLICATION-DBT-RUN-CONTEXT-BINDING",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T09:13:16.045+00:00"
+      },
+      {
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-APPLICATION-DBT-RUN-CONTEXT-WRITER",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-14T09:13:16.045+00:00"
+      },
+      {
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-APPLICATION-DBT-RUN-CONTEXT-WRITER",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T09:13:16.045+00:00"
+      },
+      {
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-APPLICATION-SERVICES-START-RUN-ADMISSION",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-14T09:13:16.045+00:00"
+      },
+      {
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-14T09:13:16.045+00:00"
+      },
+      {
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-INFRA-WORKSPACE-FILES",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-14T09:13:16.045+00:00"
+      },
+      {
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-14T09:13:16.045+00:00"
+      },
+      {
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+        "subject_kind": "evidence",
+        "subject_id": "OBS-DBT-RUN-CONTEXT-WRITE-OUTCOME",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T09:13:16.045+00:00"
+      },
+      {
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+        "subject_kind": "relation",
+        "subject_id": "REL-DBT-RUN-BINDING-USES-SCOPED-WORKSPACE-ROOT",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T09:13:16.045+00:00"
+      },
+      {
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+        "subject_kind": "relation",
+        "subject_id": "REL-DBT-RUN-CONTEXT-FILES-IMPLEMENTS-PORT",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T09:13:16.045+00:00"
+      },
+      {
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+        "subject_kind": "test",
+        "subject_id": "TEST-API-START-RUN-DBT-BUNDLE-SECURITY-OWNERSHIP",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T09:13:16.045+00:00"
+      },
+      {
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+        "subject_kind": "test",
+        "subject_id": "TEST-API-START-RUN-DBT-BUNDLE-SECURITY",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T09:13:16.045+00:00"
+      },
+      {
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+        "subject_kind": "test",
+        "subject_id": "TEST-DBT-RUN-CONTEXT-BINDING-PHASE4",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T09:13:16.045+00:00"
+      },
+      {
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+        "subject_kind": "test",
+        "subject_id": "TEST-DBT-RUN-CONTEXT-WRITER-PORT-CONTRACT",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T09:13:16.045+00:00"
+      },
+      {
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+        "subject_kind": "test",
+        "subject_id": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-5",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-14T09:13:16.045+00:00"
+      },
+      {
         "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-REPLACEMENT-20260814",
         "subject_kind": "component",
         "subject_id": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
@@ -92176,6 +92317,27 @@
         "created_at": "2026-08-14T08:40:52.253+00:00"
       },
       {
+        "operation_id": "0d3483aa-66cc-44f8-a4c2-5e1cee2e8a96",
+        "idempotency_key": "architecture_design_transition:codex:PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814:77b4bc46951cb32e",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "All authority rows were updated through their owning command rails with source-aligned hashes.",
+          "designId": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+          "toStatus": "implementing",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "fromStatus": "approved",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T09:14:27.328+00:00"
+      },
+      {
         "operation_id": "0dec3df5-80b3-4338-a403-0d279bd5577e",
         "idempotency_key": "architecture_evidence_record:codex:API-H2-4-CI-EVIDENCE-AUTHENTICITY-V2-20260811:EVIDENCE-API-H2-4-CI-EVIDENCE-AUTHENTICITY-REVIEW:fc296fb3fdcd5917",
         "operation_type": "architecture_evidence_record",
@@ -93737,6 +93899,27 @@
         "created_at": "2026-08-10T21:04:44.804+00:00"
       },
       {
+        "operation_id": "205ab867-f3c5-4d78-89f1-d24fc6438145",
+        "idempotency_key": "architecture_design_transition:codex:PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814:ba79b4961e361615",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Current profiles now resolve only surviving files, DDD owners, relation sources, and write-result semantics.",
+          "designId": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+          "toStatus": "implemented",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T09:14:28.68+00:00"
+      },
+      {
         "operation_id": "2080af97-39c0-4cdf-8be5-8f44b3317765",
         "idempotency_key": "codex-api-h2-2-reachability-implemented-v2",
         "operation_type": "architecture_design_transition",
@@ -94613,6 +94796,43 @@
           "sourceContentSha256": "a93f7eb2f1923c969913d6d4b84102a69ed27a47dac1e080355615334b214ec1"
         },
         "created_at": "2026-08-12T18:54:34.509+00:00"
+      },
+      {
+        "operation_id": "2b03cd2d-49cc-454e-b066-728e1c2a5643",
+        "idempotency_key": "architecture_component_record:codex:PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814:SYS-API-APPLICATION-DBT-RUN-CONTEXT-BINDING:f493f1980d39efcb",
+        "operation_type": "architecture_component_record",
+        "actor": "codex",
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "kind": "service",
+          "name": "Run execution-context binding",
+          "layer": "application",
+          "owner": "StartRun",
+          "status": "implemented",
+          "runtime": "node",
+          "designId": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+          "repoPath": "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "componentId": "SYS-API-APPLICATION-DBT-RUN-CONTEXT-BINDING",
+          "criticality": "critical",
+          "publicContract": "IStartRunUseCase",
+          "responsibilities": [
+            {
+              "dddOwner": "RunExecutionContextBindingUseCase",
+              "reasonToChange": "StartRun admission or execution-context binding changes.",
+              "responsibility": "Admit one persisted plan into StartRun only when its governed execution contexts remain current and are created server-side.",
+              "responsibilityId": "RESP-DBT-RUN-CONTEXT-BINDING"
+            }
+          ],
+          "parentComponentId": "SYS-API-APPLICATION-SERVICES",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T09:13:29.466+00:00"
       },
       {
         "operation_id": "2b5c0382-b2ee-49e4-828c-0c86059dba5c",
@@ -96259,6 +96479,31 @@
           "sourceContentSha256": "a1b1c865ff403d57d786adaf61f98d6296967c4923a712414c2135b8cd4392c7"
         },
         "created_at": "2026-08-11T05:21:52.867+00:00"
+      },
+      {
+        "operation_id": "4077ab1a-cc42-4d94-b789-cb99b96c1a52",
+        "idempotency_key": "architecture_test_record:codex:PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814:SYS-API-APPLICATION-DBT-RUN-CONTEXT-BINDING:6796f0bcd54cf3ac",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-DBT-RUN-CONTEXT-BINDING-PHASE4",
+          "designId": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+          "required": true,
+          "testKind": "unit",
+          "testPath": "apps/api/test/application/services/RunExecutionContextBindingUseCase.test.ts",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "componentId": "SYS-API-APPLICATION-DBT-RUN-CONTEXT-BINDING",
+          "coverageLevel": "boundary",
+          "validationCommand": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/RunExecutionContextBindingUseCase.test.ts",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T09:13:55.858+00:00"
       },
       {
         "operation_id": "409a896e-7c17-42dd-b97f-31b6aaf69eaf",
@@ -100114,6 +100359,130 @@
         "created_at": "2026-08-11T18:22:11.783+00:00"
       },
       {
+        "operation_id": "6a724ced-cefc-43fb-8868-7d2e1dbaf5e4",
+        "idempotency_key": "architecture_design_create:codex:PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814:c40e87b0aae4efc8",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "PTH2 runtime admission",
+          "title": "Close run-context authority hard cut",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-API-APPLICATION-DBT-RUN-CONTEXT-BINDING",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-API-APPLICATION-DBT-RUN-CONTEXT-BINDING",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-API-APPLICATION-DBT-RUN-CONTEXT-WRITER",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-API-APPLICATION-DBT-RUN-CONTEXT-WRITER",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-API-APPLICATION-SERVICES-START-RUN-ADMISSION",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-API-INFRA-WORKSPACE-FILES",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-API-START-RUN-DBT-BUNDLE-SECURITY",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-API-START-RUN-DBT-BUNDLE-SECURITY-OWNERSHIP",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-DBT-RUN-CONTEXT-BINDING-PHASE4",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-DBT-RUN-CONTEXT-WRITER-PORT-CONTRACT",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-5",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "REL-DBT-RUN-BINDING-USES-SCOPED-WORKSPACE-ROOT",
+              "subjectKind": "relation"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "REL-DBT-RUN-CONTEXT-FILES-IMPLEMENTS-PORT",
+              "subjectKind": "relation"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "OBS-DBT-RUN-CONTEXT-WRITE-OUTCOME",
+              "subjectKind": "evidence"
+            }
+          ],
+          "status": "review",
+          "railRef": "RecordArchitectureComponent;RecordArchitectureTestEvidence;RecordArchitectureRelation;RecordArchitectureObservabilityEvidence",
+          "designId": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+          "rationale": "Align the surviving run-context components, required tests, relations, and observability with current implementation names and explicit result semantics while preserving stable governance IDs.",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "workItemId": "GH-2329",
+          "fowlerSignal": "hidden_authority",
+          "supersedesId": null,
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T09:13:16.045+00:00"
+      },
+      {
         "operation_id": "6b1eae66-a172-4034-bb3b-b9709c244ec7",
         "idempotency_key": "architecture_design_create:codex:API-H2-6-RESPONSIBILITY-LIFECYCLE-20260814:266c592fad243e1f",
         "operation_type": "architecture_design_create",
@@ -100397,6 +100766,31 @@
           "sourceContentSha256": "03006ee9cd61b79869078229eccd6e52b9d4bbcf180a0a49171dc008a17c0db5"
         },
         "created_at": "2026-08-13T09:13:17.452+00:00"
+      },
+      {
+        "operation_id": "6e047646-b221-43e8-8dfc-cdb9753006b8",
+        "idempotency_key": "architecture_test_record:codex:PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814:SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION:02014d0abc8d8561",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-API-START-RUN-DBT-BUNDLE-SECURITY-OWNERSHIP",
+          "designId": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+          "required": true,
+          "testKind": "integration",
+          "testPath": "apps/api/test/application/services/RunExecutionContextBindingUseCase.bundleSecurity.test.ts",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "componentId": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
+          "coverageLevel": "negative",
+          "validationCommand": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/RunExecutionContextBindingUseCase.bundleSecurity.test.ts",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T09:13:54.587+00:00"
       },
       {
         "operation_id": "6e2932b1-6702-41d9-bfef-b233f8beb972",
@@ -101634,6 +102028,34 @@
         "created_at": "2026-08-10T21:03:54.005+00:00"
       },
       {
+        "operation_id": "7e527a01-96bc-48f4-a859-63ca3c5bd403",
+        "idempotency_key": "architecture_relation_record:codex:PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814:REL-DBT-RUN-CONTEXT-FILES-IMPLEMENTS-PORT:cde4267ad03cd82f",
+        "operation_type": "architecture_relation_record",
+        "actor": "codex",
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+        "source_ref": "apps/api/src/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.ts",
+        "source_content_sha256": "9d455d8516c929f8f614824f076c4632cf965537fad0821e40b069d1435fc38f",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "status": "implemented",
+          "designId": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+          "direction": "inbound",
+          "sourceRef": "apps/api/src/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.ts",
+          "syncAsync": "async",
+          "contractId": null,
+          "relationId": "REL-DBT-RUN-CONTEXT-FILES-IMPLEMENTS-PORT",
+          "failureMode": "Artifact-store unavailability returns a typed rejection; transport, integrity, or immutable-write failures abort persistence.",
+          "relationType": "implements_port",
+          "sourceComponentId": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
+          "targetComponentId": "SYS-API-APPLICATION-DBT-RUN-CONTEXT-WRITER",
+          "authorizationScope": "server artifact store",
+          "sourceContentSha256": "9d455d8516c929f8f614824f076c4632cf965537fad0821e40b069d1435fc38f"
+        },
+        "created_at": "2026-08-14T09:14:14.526+00:00"
+      },
+      {
         "operation_id": "7e9764d5-c567-407c-8863-a295678e4915",
         "idempotency_key": "issue-2274-ev-pth14-v5-rec-evid-review5",
         "operation_type": "architecture_evidence_record",
@@ -102845,6 +103267,31 @@
           "sourceContentSha256": "d59dd28408b1db1b7415ed5fa40bcfa16a2bd542a0e4b59017f0e3c21f8eb680"
         },
         "created_at": "2026-08-10T21:04:28.084+00:00"
+      },
+      {
+        "operation_id": "8cf756dd-4c7c-4089-a16d-369d45da00c0",
+        "idempotency_key": "architecture_test_record:codex:PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814:SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION:e45daf194abb26a7",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION-5",
+          "designId": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+          "required": true,
+          "testKind": "architecture",
+          "testPath": "apps/api/test/application/services/RunExecutionContextBindingUseCase.test.ts",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "componentId": "SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION",
+          "coverageLevel": "flow",
+          "validationCommand": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/RunExecutionContextBindingUseCase.test.ts",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T09:13:58.305+00:00"
       },
       {
         "operation_id": "8d503c76-cd82-49c6-bc2e-7e92df054bd7",
@@ -104967,6 +105414,31 @@
           "sourceContentSha256": "d8b56d37bf5fafc57caaf2aa8e52c699f4697963ad5a000c3cc5af3b1bd18866"
         },
         "created_at": "2026-08-10T21:04:26.234+00:00"
+      },
+      {
+        "operation_id": "a5455f33-b2d4-45f0-9d78-1546e89d84df",
+        "idempotency_key": "architecture_test_record:codex:PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814:SYS-API-APPLICATION-SERVICES-START-RUN-ADMISSION:09a2f69289e4ea93",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-API-START-RUN-DBT-BUNDLE-SECURITY",
+          "designId": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+          "required": true,
+          "testKind": "integration",
+          "testPath": "apps/api/test/application/services/RunExecutionContextBindingUseCase.bundleSecurity.test.ts",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "componentId": "SYS-API-APPLICATION-SERVICES-START-RUN-ADMISSION",
+          "coverageLevel": "negative",
+          "validationCommand": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/RunExecutionContextBindingUseCase.bundleSecurity.test.ts test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T09:13:53.306+00:00"
       },
       {
         "operation_id": "a60db143-e50d-4e4a-b7fd-e1a2b7ede2e5",
@@ -109869,6 +110341,43 @@
         "created_at": "2026-08-14T08:45:41.564+00:00"
       },
       {
+        "operation_id": "d3fb0bfa-d644-45d8-a35a-a16652b1db15",
+        "idempotency_key": "architecture_component_record:codex:PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814:SYS-API-APPLICATION-DBT-RUN-CONTEXT-WRITER:52f5f0efcbe26866",
+        "operation_type": "architecture_component_record",
+        "actor": "codex",
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "kind": "port",
+          "name": "Run execution-context writer port",
+          "layer": "application",
+          "owner": "Runtime Admission",
+          "status": "implemented",
+          "runtime": "node",
+          "designId": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+          "repoPath": "apps/api/src/application/ports/runExecutionContextWriter.ts",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "componentId": "SYS-API-APPLICATION-DBT-RUN-CONTEXT-WRITER",
+          "criticality": "critical",
+          "publicContract": "IRunExecutionContextWriter",
+          "responsibilities": [
+            {
+              "dddOwner": "IRunExecutionContextWriter",
+              "reasonToChange": "The application-level run-context persistence outcome or addressing contract changes.",
+              "responsibility": "Define immutable persistence of server-created run execution context.",
+              "responsibilityId": "RESP-DBT-RUN-CONTEXT-WRITER-PORT"
+            }
+          ],
+          "parentComponentId": "SYS-API-APPLICATION-SERVICES",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T09:13:30.703+00:00"
+      },
+      {
         "operation_id": "d4777b91-94d8-4f02-b307-7f620567665a",
         "idempotency_key": "gh-2168-record-test-sys-api-http-plan-commands-9-v1",
         "operation_type": "architecture_test_record",
@@ -111037,6 +111546,30 @@
         "created_at": "2026-08-10T21:06:33.458+00:00"
       },
       {
+        "operation_id": "e4e5fb99-6e4c-4aeb-bf59-cdfd8388495f",
+        "idempotency_key": "architecture_observability_record:codex:PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814:SYS-API-INFRA-DBT-RUN-CONTEXT-FILES:fee4f95e30585ac5",
+        "operation_type": "architecture_observability_record",
+        "actor": "codex",
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "status": "implemented",
+          "designId": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+          "required": true,
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "signalKind": "log",
+          "signalName": "Typed artifact-store unavailability and successful context references remain visible at StartRun admission.",
+          "componentId": "SYS-API-INFRA-DBT-RUN-CONTEXT-FILES",
+          "observabilityId": "OBS-DBT-RUN-CONTEXT-WRITE-OUTCOME",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T09:14:15.781+00:00"
+      },
+      {
         "operation_id": "e5696135-e81e-4b96-96fd-040dd01c7d9c",
         "idempotency_key": "architecture_design_transition:codex:API-H2-4-ACTIVE-REFERENCE-CLOSURE-20260811:eac069ac9887b6cb",
         "operation_type": "architecture_design_transition",
@@ -111614,6 +112147,27 @@
           "sourceContentSha256": "0b7738bf4790cb51425a335acb2516cb21707164420cd1a77c8423162dd43f1a"
         },
         "created_at": "2026-08-14T07:46:34.272+00:00"
+      },
+      {
+        "operation_id": "eace650a-5f1d-4173-8d0d-6f6b2b6fabb0",
+        "idempotency_key": "architecture_design_transition:codex:PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814:30c76c0a7f3d3339",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The correction reuses every existing component, test, relation, and signal ID and removes only retired semantic references.",
+          "designId": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+          "toStatus": "approved",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "fromStatus": "review",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T09:14:25.962+00:00"
       },
       {
         "operation_id": "eb83bc53-65f4-4b48-b677-d16fce9753e2",
@@ -112453,6 +113007,34 @@
           "sourceContentSha256": "db182dff375f1d13c1224a8e2ec0c91730bce3faa2e7af0eae68190e4c268b67"
         },
         "created_at": "2026-08-10T21:04:06.879+00:00"
+      },
+      {
+        "operation_id": "f3ebcec8-706b-40f1-8e07-fc7aadbd77cb",
+        "idempotency_key": "architecture_relation_record:codex:PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814:CONTRACT-WORKSPACE-FILE-SCOPE-PORT-V1:6d178a2bb2fce525",
+        "operation_type": "architecture_relation_record",
+        "actor": "codex",
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+        "source_ref": "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts",
+        "source_content_sha256": "569309bc8cf9ed25a061f8365b191248bb04afcefef3abd8cbce5aafcebec74f",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "status": "implemented",
+          "designId": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+          "direction": "outbound",
+          "sourceRef": "apps/api/src/application/services/RunExecutionContextBindingUseCase.ts",
+          "syncAsync": "sync",
+          "contractId": "CONTRACT-WORKSPACE-FILE-SCOPE-PORT-V1",
+          "relationId": "REL-DBT-RUN-BINDING-USES-SCOPED-WORKSPACE-ROOT",
+          "failureMode": "A run can bind workspace files from another project or environment.",
+          "relationType": "depends_on",
+          "sourceComponentId": "SYS-API-APPLICATION-SERVICES-START-RUN-ADMISSION",
+          "targetComponentId": "SYS-API-INFRA-WORKSPACE-FILES",
+          "authorizationScope": "tenant/project/environment",
+          "sourceContentSha256": "569309bc8cf9ed25a061f8365b191248bb04afcefef3abd8cbce5aafcebec74f"
+        },
+        "created_at": "2026-08-14T09:14:13.23+00:00"
       },
       {
         "operation_id": "f3f6f9ef-1ece-4b20-a910-2d74a8cb7030",
@@ -113435,6 +114017,31 @@
           "sourceContentSha256": "972c21a525dd6abfeb44af39559f53d345ed08570d93872dddfbf3e966c32d88"
         },
         "created_at": "2026-08-11T04:42:58.369+00:00"
+      },
+      {
+        "operation_id": "ff41dd76-c114-4534-b691-e64fd17eefa4",
+        "idempotency_key": "architecture_test_record:codex:PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814:SYS-API-APPLICATION-DBT-RUN-CONTEXT-WRITER:b79af99155768ab1",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+        "source_ref": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+        "source_content_sha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-DBT-RUN-CONTEXT-WRITER-PORT-CONTRACT",
+          "designId": "PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814",
+          "required": true,
+          "testKind": "contract",
+          "testPath": "apps/api/test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts",
+          "sourceRef": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
+          "componentId": "SYS-API-APPLICATION-DBT-RUN-CONTEXT-WRITER",
+          "coverageLevel": "negative",
+          "validationCommand": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts",
+          "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
+        },
+        "created_at": "2026-08-14T09:13:57.075+00:00"
       },
       {
         "operation_id": "ff4fce58-a8ef-4782-9138-5e9450673ee1",
