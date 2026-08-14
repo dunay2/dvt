@@ -25,7 +25,7 @@ export type ProjectCatalogState =
   | { readonly kind: 'ready'; readonly catalog: ProjectOnboardingCatalog }
   | { readonly kind: 'failed'; readonly message: string };
 
-type SubmissionState = 'idle' | 'submitting';
+type SubmissionState = 'idle' | 'submitting' | 'created';
 
 type ProjectAdmissionControllerOptions = Readonly<{
   service?: ProjectOnboardingService;
@@ -147,6 +147,7 @@ export function useProjectAdmissionController({
     const trimmedName = projectName.trim();
     if (
       submissionLockedRef.current ||
+      submissionState !== 'idle' ||
       catalogState.kind !== 'ready' ||
       trimmedName.length === 0 ||
       selectedTenantId.length === 0
@@ -157,17 +158,26 @@ export function useProjectAdmissionController({
     submissionLockedRef.current = true;
     setSubmissionState('submitting');
     setFormError(null);
+    let response: CreateProjectResponse;
     try {
-      const response = await projectOnboardingService.createProject({
+      response = await projectOnboardingService.createProject({
         tenantId: selectedTenantId,
         name: trimmedName,
       });
-      await onProjectCreated(response);
     } catch (error) {
       setFormError(readableErrorMessage(error, copy.projectCreationFailureMessage, copy));
-    } finally {
       submissionLockedRef.current = false;
       setSubmissionState('idle');
+      return;
+    }
+
+    setSubmissionState('created');
+    try {
+      await onProjectCreated(response);
+    } catch {
+      setFormError(copy.projectActivationFailureMessage);
+    } finally {
+      submissionLockedRef.current = false;
     }
   }
 
@@ -230,12 +240,12 @@ type ProjectCreationFormProps = Readonly<{
   copy?: ProjectOnboardingCopy;
   className?: string;
   contentClassName?: string;
-  actionsClassName?: string;
   dataSlot?: string;
   showCatalogStatus?: boolean;
   showTitle?: boolean;
   autoFocusProjectName?: boolean;
   leadingAction?: ReactNode;
+  renderActions?: (actions: ReactNode) => ReactNode;
 }>;
 
 function resolveTenantDisplayName(tenant: ProjectOnboardingCatalog['tenants'][number]): string {
@@ -247,13 +257,27 @@ export function ProjectCreationForm({
   copy = controller.copy,
   className,
   contentClassName = 'space-y-4',
-  actionsClassName = 'mt-4 flex flex-wrap justify-end gap-2',
   dataSlot = 'project-onboarding-form',
   showCatalogStatus = false,
   showTitle = true,
   autoFocusProjectName = false,
   leadingAction,
+  renderActions,
 }: ProjectCreationFormProps): JSX.Element {
+  const actions = (
+    <>
+      {leadingAction}
+      <Button disabled={!controller.canSubmit} type="submit">
+        {controller.submissionState === 'submitting' ? (
+          <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
+        ) : (
+          <FolderPlus className="size-4" aria-hidden="true" />
+        )}
+        {copy.createProjectLabel}
+      </Button>
+    </>
+  );
+
   return (
     <form
       className={className}
@@ -286,7 +310,7 @@ export function ProjectCreationForm({
                 <select
                   className="h-9 w-full rounded-md border border-(--border-default) bg-(--surface-route) px-3 text-sm text-(--text-default) outline-none focus:border-(--focus-ring)"
                   name="tenantId"
-                  disabled={controller.submissionState === 'submitting'}
+                  disabled={controller.submissionState !== 'idle'}
                   onChange={(event) => controller.setSelectedTenantId(event.target.value)}
                   value={controller.selectedTenantId}
                 >
@@ -304,7 +328,7 @@ export function ProjectCreationForm({
                 autoFocus={autoFocusProjectName}
                 className="bg-(--surface-route) text-(--text-default) placeholder:text-(--text-disabled)"
                 name="projectName"
-                disabled={controller.submissionState === 'submitting'}
+                disabled={controller.submissionState !== 'idle'}
                 onChange={(event) => controller.setProjectName(event.target.value)}
                 placeholder={copy.projectNamePlaceholder}
                 value={controller.projectName}
@@ -330,17 +354,16 @@ export function ProjectCreationForm({
         ) : null}
       </div>
       {controller.catalogState.kind === 'ready' ? (
-        <div className={actionsClassName} data-slot="project-creation-actions">
-          {leadingAction}
-          <Button disabled={!controller.canSubmit} type="submit">
-            {controller.submissionState === 'submitting' ? (
-              <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
-            ) : (
-              <FolderPlus className="size-4" aria-hidden="true" />
-            )}
-            {copy.createProjectLabel}
-          </Button>
-        </div>
+        renderActions ? (
+          renderActions(actions)
+        ) : (
+          <div
+            className="mt-4 flex flex-wrap justify-end gap-2"
+            data-slot="project-creation-actions"
+          >
+            {actions}
+          </div>
+        )
       ) : null}
     </form>
   );

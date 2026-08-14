@@ -12,6 +12,7 @@ import {
   DialogClose,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '../../components/ui/dialog';
@@ -65,7 +66,6 @@ export function ProjectCreationDialog({
           </DialogDescription>
         </DialogHeader>
         <ProjectCreationForm
-          actionsClassName="flex flex-wrap justify-end gap-2 border-t border-(--border-muted) bg-(--surface-panel-subtle) px-6 py-4"
           autoFocusProjectName
           className="grid gap-0"
           contentClassName="grid gap-4 px-6 py-5"
@@ -78,6 +78,11 @@ export function ProjectCreationDialog({
               </Button>
             </DialogClose>
           }
+          renderActions={(actions) => (
+            <DialogFooter className="border-t border-(--border-muted) bg-(--surface-panel-subtle) px-6 py-4">
+              {actions}
+            </DialogFooter>
+          )}
           showCatalogStatus
           showTitle={false}
         />
