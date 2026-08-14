@@ -8,11 +8,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { waitForReactQuery, withTestQueryClient } from '../../testing/reactQueryHarness';
 import { setBootstrapStepStatus, startBootstrapScreen } from './appBootstrapScreen';
 import type { CreateProjectResponse } from '../services/projectOnboarding/projectOnboardingService';
+import { activateProjectWorkspace } from '../services/projectOnboarding/activateProjectWorkspace';
 import { resolveProtectedRouteSessionContext } from '../services/session/protectedRouteSessionContext';
 import AuthRouteGate from './AuthRouteGate';
 
 vi.mock('../services/session/protectedRouteSessionContext', () => ({
   resolveProtectedRouteSessionContext: vi.fn(),
+}));
+
+vi.mock('../services/projectOnboarding/activateProjectWorkspace', () => ({
+  activateProjectWorkspace: vi.fn(),
 }));
 
 vi.mock('../views/ProjectOnboardingView', () => ({
@@ -74,6 +79,8 @@ describe('AuthRouteGate project onboarding recovery', () => {
   beforeEach(() => {
     mounted = null;
     vi.mocked(resolveProtectedRouteSessionContext).mockReset();
+    vi.mocked(activateProjectWorkspace).mockReset();
+    vi.mocked(activateProjectWorkspace).mockResolvedValue(undefined);
   });
 
   afterEach(async () => {
@@ -116,7 +123,16 @@ describe('AuthRouteGate project onboarding recovery', () => {
         description: 'protected product shell after project onboarding',
       }
     );
-    expect(resolveProtectedRouteSessionContext).toHaveBeenCalledTimes(2);
+    expect(resolveProtectedRouteSessionContext).toHaveBeenCalledTimes(1);
+    expect(activateProjectWorkspace).toHaveBeenCalledWith(
+      {
+        tenantId: 'tenant-1',
+        projectId: 'orders',
+        projectName: 'Orders',
+        environmentId: 'dev',
+      },
+      expect.objectContaining({ apiClient: expect.any(Object) })
+    );
   });
 
   it('releases the startup overlay while project onboarding owns protected recovery', async () => {

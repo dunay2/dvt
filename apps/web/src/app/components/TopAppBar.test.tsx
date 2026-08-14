@@ -63,6 +63,7 @@ describe('ShellTopBar workspace context', () => {
     useCanvasWorkspaceMenuContributionStore.setState({ contribution: null });
     container.remove();
     document.body.replaceChildren();
+    vi.unstubAllGlobals();
   });
 
   function buildCanvasRunContribution(
@@ -192,6 +193,7 @@ describe('ShellTopBar workspace context', () => {
         expect(document.body.textContent).toContain(
           'No other project is available in this session.'
         );
+        expect(document.body.textContent).toContain('New project…');
         expect(document.body.querySelector('[data-slot="shell-menu-git-context"]')).toBeNull();
       });
     }
@@ -376,6 +378,65 @@ describe('ShellTopBar workspace context', () => {
       gridSize: 'Tamaño de rejilla',
       gridDensityDefault: 'Predeterminada',
     });
+  });
+
+  it('opens the localized new-project dialog from the active Project menu and cancels cleanly', async () => {
+    useApplicationLanguageStore.getState().configureApplicationLanguage('es');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            tenants: [{ tenantId: 'acme-corp', canCreateProject: true }],
+            projects: [],
+            integrityFindings: [],
+          }),
+          { status: 200, headers: { 'content-type': 'application/json' } }
+        )
+      )
+    );
+
+    await act(async () => {
+      root.render(renderShellTopBar('/canvas'));
+    });
+
+    const projectMenuTrigger = container.querySelector<HTMLElement>(
+      '[data-slot="shell-workspace-menu-trigger"]'
+    );
+    await act(async () => {
+      fireEvent.pointerDown(projectMenuTrigger!);
+    });
+
+    const newProjectCommand = await waitFor(() => {
+      const command = document.body.querySelector<HTMLElement>(
+        '[data-slot="shell-new-project-command"]'
+      );
+      expect(command?.textContent).toContain('Nuevo proyecto');
+      return command!;
+    });
+
+    await act(async () => {
+      fireEvent.click(newProjectCommand);
+    });
+
+    await waitFor(() => {
+      expect(document.body.querySelector('[data-slot="project-creation-dialog"]')).not.toBeNull();
+      expect(document.body.textContent).toContain('Crea un proyecto');
+    });
+    expect(document.body.textContent).not.toContain('Tenant');
+
+    const cancelButton = [...document.body.querySelectorAll<HTMLButtonElement>('button')].find(
+      (button) => button.textContent === 'Cancelar'
+    );
+    await act(async () => {
+      fireEvent.click(cancelButton!);
+    });
+
+    await waitFor(() => {
+      expect(document.body.querySelector('[data-slot="project-creation-dialog"]')).toBeNull();
+      expect(document.activeElement).toBe(projectMenuTrigger);
+    });
+    expect(useSessionStore.getState().projectId).toBe('dbt-analytics');
   });
 
   it('changes the application language from the View menu without reloading', async () => {

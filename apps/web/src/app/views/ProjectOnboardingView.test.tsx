@@ -263,4 +263,52 @@ describe('ProjectOnboardingView', () => {
       'Project creation is not granted for this organization.'
     );
   });
+
+  it('retains the entered name and reports a failed creation without duplicate submits', async () => {
+    let rejectCreation!: (error: Error) => void;
+    const createProject = vi.fn(
+      () =>
+        new Promise<Awaited<ReturnType<ProjectOnboardingService['createProject']>>>((_, reject) => {
+          rejectCreation = reject;
+        })
+    );
+
+    mounted = await withTestQueryClient(
+      <ProjectOnboardingView
+        onProjectCreated={vi.fn()}
+        service={buildProjectOnboardingService({ createProject })}
+      />
+    );
+
+    await waitForReactQuery(
+      () => mounted?.container.querySelector('input[name="projectName"]') != null,
+      { description: 'project name input' }
+    );
+
+    const input = mounted.container.querySelector('input[name="projectName"]') as HTMLInputElement;
+    const form = mounted.container.querySelector(
+      '[data-slot="project-onboarding-form"]'
+    ) as HTMLFormElement;
+
+    await act(async () => {
+      fireEvent.input(input, { target: { value: '  Orders  ' } });
+      fireEvent.submit(form);
+      fireEvent.submit(form);
+      await Promise.resolve();
+    });
+
+    expect(createProject).toHaveBeenCalledTimes(1);
+    expect(createProject).toHaveBeenCalledWith({ tenantId: 'tenant-1', name: 'Orders' });
+
+    await act(async () => {
+      rejectCreation(new Error('Project name already exists.'));
+      await Promise.resolve();
+    });
+
+    await waitForReactQuery(
+      () => mounted?.container.textContent?.includes('Project name already exists.') === true,
+      { description: 'project creation error' }
+    );
+    expect(input.value).toBe('  Orders  ');
+  });
 });

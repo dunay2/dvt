@@ -34,6 +34,15 @@ export function ShellTopBar({
   const location = useLocation();
   const selectedTenant = useSessionStore((state) => state.tenantId);
   const selectedProject = useSessionStore((state) => state.projectId);
+  const selectedProjectName = useSessionStore(
+    (state) =>
+      state.availableWorkspaces.find(
+        (workspace) =>
+          workspace.tenantId === state.tenantId &&
+          workspace.projectId === state.projectId &&
+          workspace.environmentId === state.environmentId
+      )?.projectName
+  );
   const selectedEnvironment = useSessionStore((state) => state.environmentId);
   const targetAdapter = useSessionStore((state) => state.targetAdapter);
   const connectionStatus = usePlatformConnectionStore((state) => state.connectionStatus);
@@ -59,6 +68,7 @@ export function ShellTopBar({
     workspaceBootstrap,
     selectedTenant,
     selectedProject,
+    selectedProjectName,
     selectedEnvironment,
     targetAdapter,
   });

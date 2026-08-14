@@ -1,5 +1,4 @@
 /** Owned concern: gate protected product routes behind authenticated session profile resolution. */
-import { asNonBlankString } from '@dvt/contracts';
 import { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router';
 
@@ -9,8 +8,8 @@ import type {
   CreateProjectResponse,
   EffectiveProjectWorkspaceContext,
 } from '../services/projectOnboarding/projectOnboardingService';
+import { activateProjectWorkspace } from '../services/projectOnboarding/activateProjectWorkspace';
 import { resolveProtectedRouteSessionContext } from '../services/session/protectedRouteSessionContext';
-import { useSessionStore } from '../stores/sessionStore';
 import ProjectOnboardingView from '../views/ProjectOnboardingView';
 
 type AuthGateState =
@@ -58,32 +57,26 @@ export default function AuthRouteGate({
   const location = useLocation();
   const [state, setState] = useState<AuthGateState>({ kind: 'checking' });
 
-  async function recoverProtectedRouteSession(): Promise<void> {
+  async function handleProjectCreated(response: CreateProjectResponse): Promise<void> {
     setState({ kind: 'checking' });
     try {
-      await resolveProtectedRouteSessionContext(sessionApiClient);
+      await activateProjectWorkspace(response.defaultWorkspace, { apiClient: sessionApiClient });
       setState({ kind: 'allowed' });
     } catch (error) {
       setState({ kind: 'denied', reason: classifyProtectedRouteSessionError(error) });
+      throw error;
     }
   }
 
-  async function handleProjectCreated(response: CreateProjectResponse): Promise<void> {
-    useSessionStore.getState().setSessionContext({
-      tenantId: asNonBlankString(response.defaultWorkspace.tenantId),
-      projectId: asNonBlankString(response.defaultWorkspace.projectId),
-      environmentId: asNonBlankString(response.defaultWorkspace.environmentId),
-    });
-    await recoverProtectedRouteSession();
-  }
-
   async function handleProjectSelected(selection: EffectiveProjectWorkspaceContext): Promise<void> {
-    useSessionStore.getState().setSessionContext({
-      tenantId: asNonBlankString(selection.tenantId),
-      projectId: asNonBlankString(selection.projectId),
-      environmentId: asNonBlankString(selection.environmentId),
-    });
-    await recoverProtectedRouteSession();
+    setState({ kind: 'checking' });
+    try {
+      await activateProjectWorkspace(selection, { apiClient: sessionApiClient });
+      setState({ kind: 'allowed' });
+    } catch (error) {
+      setState({ kind: 'denied', reason: classifyProtectedRouteSessionError(error) });
+      throw error;
+    }
   }
 
   useEffect(() => {

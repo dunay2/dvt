@@ -17,6 +17,11 @@ export type ProjectOnboardingCopy = Readonly<{
   openProjectLabel: string;
   noProjectsMessage: string;
   failureMessage: string;
+  newProjectActionLabel: string;
+  newProjectDialogTitle: string;
+  newProjectDialogDescription: string;
+  cancelActionLabel: string;
+  closeProjectDialogLabel: string;
 }>;
 
 const COPY_BY_LANGUAGE: Record<ApplicationLanguage, ProjectOnboardingCopy> = {
@@ -36,6 +41,12 @@ const COPY_BY_LANGUAGE: Record<ApplicationLanguage, ProjectOnboardingCopy> = {
     openProjectLabel: 'Open project',
     noProjectsMessage: 'No projects are available for this account.',
     failureMessage: 'Project onboarding failed.',
+    newProjectActionLabel: 'New project…',
+    newProjectDialogTitle: 'Create a new project',
+    newProjectDialogDescription:
+      'Choose an authorized organization and give the project a recognizable name.',
+    cancelActionLabel: 'Cancel',
+    closeProjectDialogLabel: 'Close new project dialog',
   },
   es: {
     workspaceLabel: 'Espacio de trabajo',
@@ -53,6 +64,12 @@ const COPY_BY_LANGUAGE: Record<ApplicationLanguage, ProjectOnboardingCopy> = {
     openProjectLabel: 'Abrir proyecto',
     noProjectsMessage: 'No hay proyectos disponibles para esta cuenta.',
     failureMessage: 'No se pudo preparar la selección de proyecto.',
+    newProjectActionLabel: 'Nuevo proyecto…',
+    newProjectDialogTitle: 'Crea un proyecto',
+    newProjectDialogDescription:
+      'Elige una organización autorizada y asigna al proyecto un nombre reconocible.',
+    cancelActionLabel: 'Cancelar',
+    closeProjectDialogLabel: 'Cerrar el diálogo de nuevo proyecto',
   },
 };
 

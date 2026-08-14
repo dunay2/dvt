@@ -151299,7 +151299,23 @@
         "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#ProjectOnboardingCatalog",
         "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#ProjectOnboardingCatalogSchema",
         "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#ProjectOnboardingTenant",
-        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#ProjectOnboardingTenantSchema"
+        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#ProjectOnboardingTenantSchema",
+        "apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts#ProjectCreationWindow",
+        "apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts#liveProjectCreationEnabled",
+        "apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts#visitCanvasWithProjectCreationObservation",
+        "apps/web/src/app/views/projectAdmission/ProjectCreationDialog.tsx#ProjectCreationDialog",
+        "apps/web/src/app/views/projectAdmission/ProjectCreationDialog.tsx#ProjectCreationDialogProps",
+        "apps/web/src/app/views/projectAdmission/ProjectCreationForm.tsx#ProjectAdmissionController",
+        "apps/web/src/app/views/projectAdmission/ProjectCreationForm.tsx#ProjectAdmissionControllerOptions",
+        "apps/web/src/app/views/projectAdmission/ProjectCreationForm.tsx#ProjectCatalogState",
+        "apps/web/src/app/views/projectAdmission/ProjectCreationForm.tsx#ProjectCreationForm",
+        "apps/web/src/app/views/projectAdmission/ProjectCreationForm.tsx#ProjectCreationFormProps",
+        "apps/web/src/app/views/projectAdmission/ProjectCreationForm.tsx#SubmissionState",
+        "apps/web/src/app/views/projectAdmission/ProjectCreationForm.tsx#readableErrorMessage",
+        "apps/web/src/app/views/projectAdmission/ProjectCreationForm.tsx#resolveDefaultEnvironment",
+        "apps/web/src/app/views/projectAdmission/ProjectCreationForm.tsx#resolveInitialTenantId",
+        "apps/web/src/app/views/projectAdmission/ProjectCreationForm.tsx#resolveTenantDisplayName",
+        "apps/web/src/app/views/projectAdmission/ProjectCreationForm.tsx#useProjectAdmissionController"
       ],
       "implementationRefs": [
         "apps/api/src/application/ports/projectOnboarding.ts#GrantedProjectCatalog",
@@ -151317,7 +151333,23 @@
         "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#ProjectOnboardingCatalog",
         "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#ProjectOnboardingCatalogSchema",
         "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#ProjectOnboardingTenant",
-        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#ProjectOnboardingTenantSchema"
+        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#ProjectOnboardingTenantSchema",
+        "apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts#ProjectCreationWindow",
+        "apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts#liveProjectCreationEnabled",
+        "apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts#visitCanvasWithProjectCreationObservation",
+        "apps/web/src/app/views/projectAdmission/ProjectCreationDialog.tsx#ProjectCreationDialog",
+        "apps/web/src/app/views/projectAdmission/ProjectCreationDialog.tsx#ProjectCreationDialogProps",
+        "apps/web/src/app/views/projectAdmission/ProjectCreationForm.tsx#ProjectAdmissionController",
+        "apps/web/src/app/views/projectAdmission/ProjectCreationForm.tsx#ProjectAdmissionControllerOptions",
+        "apps/web/src/app/views/projectAdmission/ProjectCreationForm.tsx#ProjectCatalogState",
+        "apps/web/src/app/views/projectAdmission/ProjectCreationForm.tsx#ProjectCreationForm",
+        "apps/web/src/app/views/projectAdmission/ProjectCreationForm.tsx#ProjectCreationFormProps",
+        "apps/web/src/app/views/projectAdmission/ProjectCreationForm.tsx#SubmissionState",
+        "apps/web/src/app/views/projectAdmission/ProjectCreationForm.tsx#readableErrorMessage",
+        "apps/web/src/app/views/projectAdmission/ProjectCreationForm.tsx#resolveDefaultEnvironment",
+        "apps/web/src/app/views/projectAdmission/ProjectCreationForm.tsx#resolveInitialTenantId",
+        "apps/web/src/app/views/projectAdmission/ProjectCreationForm.tsx#resolveTenantDisplayName",
+        "apps/web/src/app/views/projectAdmission/ProjectCreationForm.tsx#useProjectAdmissionController"
       ],
       "documentationRefs": [
         "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
@@ -151352,7 +151384,8 @@
       ],
       "architectureGuards": [
         "Creation is idempotent and grant persistence is atomic.",
-        "The retained rail has independent product value and no duplicate adapter."
+        "The retained rail has independent product value and no duplicate adapter.",
+        "Creation is idempotent, catalog-confirmed, and uses one shared presentation flow."
       ],
       "completionGate": ["pnpm verify:prepush"],
       "sourcePath": "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md",
@@ -151364,7 +151397,8 @@
         "dddOwner": "Project aggregate",
         "negativeTests": [
           "apps/api/test/application/services/createProjectUseCase.test.ts",
-          "apps/api/test/entrypoints/http/projectOnboardingRoutes.test.ts"
+          "apps/api/test/entrypoints/http/projectOnboardingRoutes.test.ts",
+          "apps/web/src/app/views/projectAdmission/ProjectCreationDialog.test.tsx"
         ],
         "adapterSurface": "POST /projects",
         "applicationPort": "IProjectOnboardingRepository",
@@ -151597,26 +151631,255 @@
             ],
             "cypressCoverage": "apps/web/cypress/e2e/shell/project-onboarding.cy.ts",
             "architectureGuard": "Creation is idempotent and grant persistence is atomic."
+          },
+          {
+            "name": "ProjectCreationWindow",
+            "path": "apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts",
+            "cqRails": ["CreateProject"],
+            "dddOwner": "Project aggregate",
+            "unitTests": [
+              "apps/web/src/app/views/projectAdmission/ProjectCreationDialog.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Reuse one governed project admission flow and retire duplicate presentation semantics."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts",
+            "architectureGuard": "Creation is idempotent, catalog-confirmed, and uses one shared presentation flow."
+          },
+          {
+            "name": "liveProjectCreationEnabled",
+            "path": "apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts",
+            "cqRails": ["CreateProject"],
+            "dddOwner": "Project aggregate",
+            "unitTests": [
+              "apps/web/src/app/views/projectAdmission/ProjectCreationDialog.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Reuse one governed project admission flow and retire duplicate presentation semantics."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts",
+            "architectureGuard": "Creation is idempotent, catalog-confirmed, and uses one shared presentation flow."
+          },
+          {
+            "name": "visitCanvasWithProjectCreationObservation",
+            "path": "apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts",
+            "cqRails": ["CreateProject"],
+            "dddOwner": "Project aggregate",
+            "unitTests": [
+              "apps/web/src/app/views/projectAdmission/ProjectCreationDialog.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Reuse one governed project admission flow and retire duplicate presentation semantics."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts",
+            "architectureGuard": "Creation is idempotent, catalog-confirmed, and uses one shared presentation flow."
+          },
+          {
+            "name": "ProjectCreationDialog",
+            "path": "apps/web/src/app/views/projectAdmission/ProjectCreationDialog.tsx",
+            "cqRails": ["CreateProject"],
+            "dddOwner": "Project aggregate",
+            "unitTests": [
+              "apps/web/src/app/views/projectAdmission/ProjectCreationDialog.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Reuse one governed project admission flow and retire duplicate presentation semantics."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts",
+            "architectureGuard": "Creation is idempotent, catalog-confirmed, and uses one shared presentation flow."
+          },
+          {
+            "name": "ProjectCreationDialogProps",
+            "path": "apps/web/src/app/views/projectAdmission/ProjectCreationDialog.tsx",
+            "cqRails": ["CreateProject"],
+            "dddOwner": "Project aggregate",
+            "unitTests": [
+              "apps/web/src/app/views/projectAdmission/ProjectCreationDialog.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Reuse one governed project admission flow and retire duplicate presentation semantics."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts",
+            "architectureGuard": "Creation is idempotent, catalog-confirmed, and uses one shared presentation flow."
+          },
+          {
+            "name": "ProjectAdmissionController",
+            "path": "apps/web/src/app/views/projectAdmission/ProjectCreationForm.tsx",
+            "cqRails": ["CreateProject"],
+            "dddOwner": "Project aggregate",
+            "unitTests": [
+              "apps/web/src/app/views/projectAdmission/ProjectCreationDialog.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Reuse one governed project admission flow and retire duplicate presentation semantics."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts",
+            "architectureGuard": "Creation is idempotent, catalog-confirmed, and uses one shared presentation flow."
+          },
+          {
+            "name": "ProjectAdmissionControllerOptions",
+            "path": "apps/web/src/app/views/projectAdmission/ProjectCreationForm.tsx",
+            "cqRails": ["CreateProject"],
+            "dddOwner": "Project aggregate",
+            "unitTests": [
+              "apps/web/src/app/views/projectAdmission/ProjectCreationDialog.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Reuse one governed project admission flow and retire duplicate presentation semantics."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts",
+            "architectureGuard": "Creation is idempotent, catalog-confirmed, and uses one shared presentation flow."
+          },
+          {
+            "name": "ProjectCatalogState",
+            "path": "apps/web/src/app/views/projectAdmission/ProjectCreationForm.tsx",
+            "cqRails": ["CreateProject"],
+            "dddOwner": "Project aggregate",
+            "unitTests": [
+              "apps/web/src/app/views/projectAdmission/ProjectCreationDialog.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Reuse one governed project admission flow and retire duplicate presentation semantics."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts",
+            "architectureGuard": "Creation is idempotent, catalog-confirmed, and uses one shared presentation flow."
+          },
+          {
+            "name": "ProjectCreationForm",
+            "path": "apps/web/src/app/views/projectAdmission/ProjectCreationForm.tsx",
+            "cqRails": ["CreateProject"],
+            "dddOwner": "Project aggregate",
+            "unitTests": [
+              "apps/web/src/app/views/projectAdmission/ProjectCreationDialog.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Reuse one governed project admission flow and retire duplicate presentation semantics."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts",
+            "architectureGuard": "Creation is idempotent, catalog-confirmed, and uses one shared presentation flow."
+          },
+          {
+            "name": "ProjectCreationFormProps",
+            "path": "apps/web/src/app/views/projectAdmission/ProjectCreationForm.tsx",
+            "cqRails": ["CreateProject"],
+            "dddOwner": "Project aggregate",
+            "unitTests": [
+              "apps/web/src/app/views/projectAdmission/ProjectCreationDialog.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Reuse one governed project admission flow and retire duplicate presentation semantics."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts",
+            "architectureGuard": "Creation is idempotent, catalog-confirmed, and uses one shared presentation flow."
+          },
+          {
+            "name": "SubmissionState",
+            "path": "apps/web/src/app/views/projectAdmission/ProjectCreationForm.tsx",
+            "cqRails": ["CreateProject"],
+            "dddOwner": "Project aggregate",
+            "unitTests": [
+              "apps/web/src/app/views/projectAdmission/ProjectCreationDialog.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Reuse one governed project admission flow and retire duplicate presentation semantics."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts",
+            "architectureGuard": "Creation is idempotent, catalog-confirmed, and uses one shared presentation flow."
+          },
+          {
+            "name": "readableErrorMessage",
+            "path": "apps/web/src/app/views/projectAdmission/ProjectCreationForm.tsx",
+            "cqRails": ["CreateProject"],
+            "dddOwner": "Project aggregate",
+            "unitTests": [
+              "apps/web/src/app/views/projectAdmission/ProjectCreationDialog.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Reuse one governed project admission flow and retire duplicate presentation semantics."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts",
+            "architectureGuard": "Creation is idempotent, catalog-confirmed, and uses one shared presentation flow."
+          },
+          {
+            "name": "resolveDefaultEnvironment",
+            "path": "apps/web/src/app/views/projectAdmission/ProjectCreationForm.tsx",
+            "cqRails": ["CreateProject"],
+            "dddOwner": "Project aggregate",
+            "unitTests": [
+              "apps/web/src/app/views/projectAdmission/ProjectCreationDialog.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Reuse one governed project admission flow and retire duplicate presentation semantics."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts",
+            "architectureGuard": "Creation is idempotent, catalog-confirmed, and uses one shared presentation flow."
+          },
+          {
+            "name": "resolveInitialTenantId",
+            "path": "apps/web/src/app/views/projectAdmission/ProjectCreationForm.tsx",
+            "cqRails": ["CreateProject"],
+            "dddOwner": "Project aggregate",
+            "unitTests": [
+              "apps/web/src/app/views/projectAdmission/ProjectCreationDialog.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Reuse one governed project admission flow and retire duplicate presentation semantics."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts",
+            "architectureGuard": "Creation is idempotent, catalog-confirmed, and uses one shared presentation flow."
+          },
+          {
+            "name": "resolveTenantDisplayName",
+            "path": "apps/web/src/app/views/projectAdmission/ProjectCreationForm.tsx",
+            "cqRails": ["CreateProject"],
+            "dddOwner": "Project aggregate",
+            "unitTests": [
+              "apps/web/src/app/views/projectAdmission/ProjectCreationDialog.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Reuse one governed project admission flow and retire duplicate presentation semantics."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts",
+            "architectureGuard": "Creation is idempotent, catalog-confirmed, and uses one shared presentation flow."
+          },
+          {
+            "name": "useProjectAdmissionController",
+            "path": "apps/web/src/app/views/projectAdmission/ProjectCreationForm.tsx",
+            "cqRails": ["CreateProject"],
+            "dddOwner": "Project aggregate",
+            "unitTests": [
+              "apps/web/src/app/views/projectAdmission/ProjectCreationDialog.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Reuse one governed project admission flow and retire duplicate presentation semantics."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts",
+            "architectureGuard": "Creation is idempotent, catalog-confirmed, and uses one shared presentation flow."
           }
         ],
         "version": 1,
         "featureId": "MVP-2170-PROJECT-WORKSPACE-AUTHORITY",
-        "userStories": ["https://github.com/dunay2/dvt/issues/2170"],
+        "userStories": [
+          "https://github.com/dunay2/dvt/issues/2170",
+          "https://github.com/dunay2/dvt/issues/2350"
+        ],
         "cypressFlows": [
           "apps/web/cypress/e2e/shell/project-onboarding.cy.ts",
-          "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts"
+          "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+          "apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts"
         ],
         "domainObjects": ["ProjectWorkspaceAuthority"],
         "fowlerSignals": [
           "One authoritative rail and one stored grant interpretation per product intent.",
-          "Replace parallel authority paths with one rail and one interpreter."
+          "Replace parallel authority paths with one rail and one interpreter.",
+          "Reuse one governed project admission flow and retire duplicate presentation semantics."
         ],
         "completionGate": ["pnpm verify:prepush"],
         "redGreenCycles": [
           {
             "id": "createproject-record",
-            "redTest": "Planning DB integrity rejects an external URL as a governed source path.",
-            "greenTest": "The rail cites the ARC evidence file with its exact SHA-256 and integrity passes.",
+            "redTest": "pnpm docs:feature-mechanization:implementation",
+            "greenTest": "pnpm docs:feature-mechanization:implementation",
             "patchSurfaces": [
               "apps/api/src/application/**",
               "apps/api/src/entrypoints/http/**",
@@ -151637,9 +151900,11 @@
               "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md",
               "docs/risk-register/quality/R-20260813-PROJECT-WORKSPACE-GRAPH-AUTHORITY.yaml",
               "tools/planning-db/state/canonical-state.json",
-              "apps/api/**"
+              "apps/api/**",
+              "apps/web/src/app/views/projectAdmission/**",
+              "apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts"
             ],
-            "expectedFailure": "The #2170 source_ref is not a repository-governed file."
+            "expectedFailure": "New project admission symbols are not declared in the existing CreateProject feature mechanization rail."
           }
         ],
         "componentGuides": [
@@ -151658,7 +151923,8 @@
             "dddOwner": "Project aggregate",
             "negativeTests": [
               "apps/api/test/application/services/createProjectUseCase.test.ts",
-              "apps/api/test/entrypoints/http/projectOnboardingRoutes.test.ts"
+              "apps/api/test/entrypoints/http/projectOnboardingRoutes.test.ts",
+              "apps/web/src/app/views/projectAdmission/ProjectCreationDialog.test.tsx"
             ],
             "adapterSurface": "POST /projects",
             "applicationPort": "IProjectOnboardingRepository",
@@ -151667,7 +151933,8 @@
         ],
         "architectureGuards": [
           "Creation is idempotent and grant persistence is atomic.",
-          "The retained rail has independent product value and no duplicate adapter."
+          "The retained rail has independent product value and no duplicate adapter.",
+          "Creation is idempotent, catalog-confirmed, and uses one shared presentation flow."
         ],
         "implementationPlan": "Converge project admission, workspace selection, grants, and graph-draft authority through existing rails.",
         "mechanizationStatus": "implemented",
@@ -151704,7 +151971,7 @@
           "docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-user-stories.md"
         ]
       },
-      "revision": 2,
+      "revision": 3,
       "createdBy": "codex-agent",
       "createdAt": "2026-08-13T19:09:29.297Z"
     },
@@ -152086,7 +152353,10 @@
         "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#ProjectWorkspaceDescriptor",
         "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#ProjectWorkspaceDescriptorSchema",
         "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#WorkspaceContextResponse",
-        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#WorkspaceContextResponseSchema"
+        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#WorkspaceContextResponseSchema",
+        "apps/web/src/app/services/projectOnboarding/activateProjectWorkspace.ts#ActivateProjectWorkspaceDependencies",
+        "apps/web/src/app/services/projectOnboarding/activateProjectWorkspace.ts#activateProjectWorkspace",
+        "apps/web/src/app/stores/sessionStore.ts#readPersistedNonBlankValue"
       ],
       "implementationRefs": [
         "apps/api/src/application/ports/principalGrantRepository.ts#EnvironmentGrant",
@@ -152119,7 +152389,10 @@
         "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#ProjectWorkspaceDescriptor",
         "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#ProjectWorkspaceDescriptorSchema",
         "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#WorkspaceContextResponse",
-        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#WorkspaceContextResponseSchema"
+        "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts#WorkspaceContextResponseSchema",
+        "apps/web/src/app/services/projectOnboarding/activateProjectWorkspace.ts#ActivateProjectWorkspaceDependencies",
+        "apps/web/src/app/services/projectOnboarding/activateProjectWorkspace.ts#activateProjectWorkspace",
+        "apps/web/src/app/stores/sessionStore.ts#readPersistedNonBlankValue"
       ],
       "documentationRefs": [
         "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
@@ -152154,7 +152427,8 @@
       ],
       "architectureGuards": [
         "Browser workspace state is a projection of server authority.",
-        "The retained rail has independent product value and no duplicate adapter."
+        "The retained rail has independent product value and no duplicate adapter.",
+        "Browser workspace state remains a validated projection of server-granted workspaces."
       ],
       "completionGate": ["pnpm verify:prepush"],
       "sourcePath": "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md",
@@ -152166,7 +152440,8 @@
         "dddOwner": "EffectiveWorkspaceContext read model",
         "negativeTests": [
           "apps/api/test/entrypoints/http/workspaceContextRoute.test.ts",
-          "apps/api/test/entrypoints/http/projectOnboardingRoutes.test.ts"
+          "apps/api/test/entrypoints/http/projectOnboardingRoutes.test.ts",
+          "apps/web/src/app/services/projectOnboarding/activateProjectWorkspace.test.ts"
         ],
         "adapterSurface": "GET /workspace/context",
         "applicationPort": "IWorkspaceContextQuery",
@@ -152609,25 +152884,75 @@
             ],
             "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
             "architectureGuard": "Browser workspace state is a projection of server authority."
+          },
+          {
+            "name": "ActivateProjectWorkspaceDependencies",
+            "path": "apps/web/src/app/services/projectOnboarding/activateProjectWorkspace.ts",
+            "cqRails": ["GetEffectiveWorkspaceContext"],
+            "dddOwner": "EffectiveWorkspaceContext read model",
+            "unitTests": [
+              "apps/web/src/app/services/session/protectedRouteSessionContext.test.ts",
+              "apps/web/src/app/stores/sessionStore.test.ts"
+            ],
+            "fowlerSignals": [
+              "Reuse one governed project admission flow and retire duplicate presentation semantics."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts",
+            "architectureGuard": "Browser workspace state remains a validated projection of server-granted workspaces."
+          },
+          {
+            "name": "activateProjectWorkspace",
+            "path": "apps/web/src/app/services/projectOnboarding/activateProjectWorkspace.ts",
+            "cqRails": ["GetEffectiveWorkspaceContext"],
+            "dddOwner": "EffectiveWorkspaceContext read model",
+            "unitTests": [
+              "apps/web/src/app/services/session/protectedRouteSessionContext.test.ts",
+              "apps/web/src/app/stores/sessionStore.test.ts"
+            ],
+            "fowlerSignals": [
+              "Reuse one governed project admission flow and retire duplicate presentation semantics."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts",
+            "architectureGuard": "Browser workspace state remains a validated projection of server-granted workspaces."
+          },
+          {
+            "name": "readPersistedNonBlankValue",
+            "path": "apps/web/src/app/stores/sessionStore.ts",
+            "cqRails": ["GetEffectiveWorkspaceContext"],
+            "dddOwner": "EffectiveWorkspaceContext read model",
+            "unitTests": [
+              "apps/web/src/app/services/session/protectedRouteSessionContext.test.ts",
+              "apps/web/src/app/stores/sessionStore.test.ts"
+            ],
+            "fowlerSignals": [
+              "Reuse one governed project admission flow and retire duplicate presentation semantics."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts",
+            "architectureGuard": "Browser workspace state remains a validated projection of server-granted workspaces."
           }
         ],
         "version": 1,
         "featureId": "MVP-2170-PROJECT-WORKSPACE-AUTHORITY",
-        "userStories": ["https://github.com/dunay2/dvt/issues/2170"],
+        "userStories": [
+          "https://github.com/dunay2/dvt/issues/2170",
+          "https://github.com/dunay2/dvt/issues/2350"
+        ],
         "cypressFlows": [
-          "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts"
+          "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+          "apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts"
         ],
         "domainObjects": ["ProjectWorkspaceAuthority"],
         "fowlerSignals": [
           "One authoritative rail and one stored grant interpretation per product intent.",
-          "Replace parallel authority paths with one rail and one interpreter."
+          "Replace parallel authority paths with one rail and one interpreter.",
+          "Reuse one governed project admission flow and retire duplicate presentation semantics."
         ],
         "completionGate": ["pnpm verify:prepush"],
         "redGreenCycles": [
           {
             "id": "geteffectiveworkspacecontext-record",
-            "redTest": "Planning DB integrity rejects an external URL as a governed source path.",
-            "greenTest": "The rail cites the ARC evidence file with its exact SHA-256 and integrity passes.",
+            "redTest": "pnpm docs:feature-mechanization:implementation",
+            "greenTest": "pnpm docs:feature-mechanization:implementation",
             "patchSurfaces": [
               "apps/api/src/application/**",
               "apps/api/src/entrypoints/http/**",
@@ -152648,9 +152973,11 @@
               "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md",
               "docs/risk-register/quality/R-20260813-PROJECT-WORKSPACE-GRAPH-AUTHORITY.yaml",
               "tools/planning-db/state/canonical-state.json",
-              "apps/api/**"
+              "apps/api/**",
+              "apps/web/src/app/services/projectOnboarding/activateProjectWorkspace.ts",
+              "apps/web/src/app/stores/sessionStore.ts"
             ],
-            "expectedFailure": "The #2170 source_ref is not a repository-governed file."
+            "expectedFailure": "Dynamic workspace activation symbols are not declared in the effective workspace context rail."
           }
         ],
         "componentGuides": [
@@ -152669,7 +152996,8 @@
             "dddOwner": "EffectiveWorkspaceContext read model",
             "negativeTests": [
               "apps/api/test/entrypoints/http/workspaceContextRoute.test.ts",
-              "apps/api/test/entrypoints/http/projectOnboardingRoutes.test.ts"
+              "apps/api/test/entrypoints/http/projectOnboardingRoutes.test.ts",
+              "apps/web/src/app/services/projectOnboarding/activateProjectWorkspace.test.ts"
             ],
             "adapterSurface": "GET /workspace/context",
             "applicationPort": "IWorkspaceContextQuery",
@@ -152678,7 +153006,8 @@
         ],
         "architectureGuards": [
           "Browser workspace state is a projection of server authority.",
-          "The retained rail has independent product value and no duplicate adapter."
+          "The retained rail has independent product value and no duplicate adapter.",
+          "Browser workspace state remains a validated projection of server-granted workspaces."
         ],
         "implementationPlan": "Converge project admission, workspace selection, grants, and graph-draft authority through existing rails.",
         "mechanizationStatus": "implemented",
@@ -152715,7 +153044,7 @@
           "docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-user-stories.md"
         ]
       },
-      "revision": 2,
+      "revision": 3,
       "createdBy": "codex-agent",
       "createdAt": "2026-08-13T19:09:32.410Z"
     },
@@ -194123,6 +194452,178 @@
         "forbiddenImplementationSurfaces": [".github/workflows/docs-deploy.yml"]
       },
       "createdAt": "2026-08-14T09:50:14.560Z"
+    },
+    {
+      "operationId": "65435417-c16b-400c-9dfb-c68a8bf2096f",
+      "idempotencyKey": "pth1-2350-create-project-ui-v1",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-2170-PROJECT-WORKSPACE-AUTHORITY#command#createproject",
+      "sourcePath": "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md",
+      "sourceContentSha256": "da6edf23ffe323c55d50da1cf840df2c15823fbbf4a4cda8d0257bf52f84e1a7",
+      "expectedRevision": 2,
+      "previousRevision": 2,
+      "resultingRevision": 3,
+      "payload": {
+        "redTest": "pnpm docs:feature-mechanization:implementation",
+        "dddOwner": "Project aggregate",
+        "railName": "CreateProject",
+        "railType": "command",
+        "featureId": "MVP-2170-PROJECT-WORKSPACE-AUTHORITY",
+        "greenTest": "pnpm docs:feature-mechanization:implementation",
+        "sourceRef": "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md",
+        "unitTests": [
+          "apps/web/src/app/views/projectAdmission/ProjectCreationDialog.test.tsx"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2350"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts"
+        ],
+        "domainObjects": ["ProjectWorkspaceAuthority"],
+        "fowlerSignals": [
+          "Reuse one governed project admission flow and retire duplicate presentation semantics."
+        ],
+        "negativeTests": [
+          "apps/web/src/app/views/projectAdmission/ProjectCreationDialog.test.tsx"
+        ],
+        "patchSurfaces": [
+          "apps/web/src/app/views/projectAdmission/**",
+          "apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts"
+        ],
+        "adapterSurface": "POST /projects",
+        "completionGate": ["pnpm verify:prepush"],
+        "applicationPort": "IProjectOnboardingRepository",
+        "componentGuides": [
+          "docs/architecture/components/web/appshell/effective-workspace-context-component.md"
+        ],
+        "expectedFailure": "New project admission symbols are not declared in the existing CreateProject feature mechanization rail.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+          "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md"
+        ],
+        "architectureGuards": [
+          "Creation is idempotent, catalog-confirmed, and uses one shared presentation flow."
+        ],
+        "authorizationScope": "Authenticated tenant actor with project:create authority.",
+        "implementationPlan": "Converge project admission, workspace selection, grants, and graph-draft authority through existing rails.",
+        "implementationRefs": [
+          "apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts#ProjectCreationWindow",
+          "apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts#liveProjectCreationEnabled",
+          "apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts#visitCanvasWithProjectCreationObservation",
+          "apps/web/src/app/views/projectAdmission/ProjectCreationDialog.tsx#ProjectCreationDialog",
+          "apps/web/src/app/views/projectAdmission/ProjectCreationDialog.tsx#ProjectCreationDialogProps",
+          "apps/web/src/app/views/projectAdmission/ProjectCreationForm.tsx#ProjectAdmissionController",
+          "apps/web/src/app/views/projectAdmission/ProjectCreationForm.tsx#ProjectAdmissionControllerOptions",
+          "apps/web/src/app/views/projectAdmission/ProjectCreationForm.tsx#ProjectCatalogState",
+          "apps/web/src/app/views/projectAdmission/ProjectCreationForm.tsx#ProjectCreationForm",
+          "apps/web/src/app/views/projectAdmission/ProjectCreationForm.tsx#ProjectCreationFormProps",
+          "apps/web/src/app/views/projectAdmission/ProjectCreationForm.tsx#SubmissionState",
+          "apps/web/src/app/views/projectAdmission/ProjectCreationForm.tsx#readableErrorMessage",
+          "apps/web/src/app/views/projectAdmission/ProjectCreationForm.tsx#resolveDefaultEnvironment",
+          "apps/web/src/app/views/projectAdmission/ProjectCreationForm.tsx#resolveInitialTenantId",
+          "apps/web/src/app/views/projectAdmission/ProjectCreationForm.tsx#resolveTenantDisplayName",
+          "apps/web/src/app/views/projectAdmission/ProjectCreationForm.tsx#useProjectAdmissionController"
+        ],
+        "normalizedRailName": "createproject",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "da6edf23ffe323c55d50da1cf840df2c15823fbbf4a4cda8d0257bf52f84e1a7",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/**",
+          "apps/web/cypress/**"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/projectOnboardingRouteGroup.ts"
+        ]
+      },
+      "createdAt": "2026-08-14T14:15:48.653Z"
+    },
+    {
+      "operationId": "9709b2fa-dca5-43c1-8881-adc57b8fdc28",
+      "idempotencyKey": "pth1-2350-effective-workspace-ui-v1",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-2170-PROJECT-WORKSPACE-AUTHORITY#query#geteffectiveworkspacecontext",
+      "sourcePath": "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md",
+      "sourceContentSha256": "da6edf23ffe323c55d50da1cf840df2c15823fbbf4a4cda8d0257bf52f84e1a7",
+      "expectedRevision": 2,
+      "previousRevision": 2,
+      "resultingRevision": 3,
+      "payload": {
+        "redTest": "pnpm docs:feature-mechanization:implementation",
+        "dddOwner": "EffectiveWorkspaceContext read model",
+        "railName": "GetEffectiveWorkspaceContext",
+        "railType": "query",
+        "featureId": "MVP-2170-PROJECT-WORKSPACE-AUTHORITY",
+        "greenTest": "pnpm docs:feature-mechanization:implementation",
+        "sourceRef": "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md",
+        "unitTests": [
+          "apps/web/src/app/services/session/protectedRouteSessionContext.test.ts",
+          "apps/web/src/app/stores/sessionStore.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2350"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts"
+        ],
+        "domainObjects": ["ProjectWorkspaceAuthority"],
+        "fowlerSignals": [
+          "Reuse one governed project admission flow and retire duplicate presentation semantics."
+        ],
+        "negativeTests": [
+          "apps/web/src/app/services/projectOnboarding/activateProjectWorkspace.test.ts"
+        ],
+        "patchSurfaces": [
+          "apps/web/src/app/services/projectOnboarding/activateProjectWorkspace.ts",
+          "apps/web/src/app/stores/sessionStore.ts"
+        ],
+        "adapterSurface": "GET /workspace/context",
+        "completionGate": ["pnpm verify:prepush"],
+        "applicationPort": "IWorkspaceContextQuery",
+        "componentGuides": [
+          "docs/architecture/components/web/appshell/effective-workspace-context-component.md"
+        ],
+        "expectedFailure": "Dynamic workspace activation symbols are not declared in the effective workspace context rail.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+          "docs/evidence/ED-20260813-project-workspace-graph-authority-hardcut.md"
+        ],
+        "architectureGuards": [
+          "Browser workspace state remains a validated projection of server-granted workspaces."
+        ],
+        "authorizationScope": "Authenticated principal receives one deterministic granted workspace.",
+        "implementationPlan": "Converge project admission, workspace selection, grants, and graph-draft authority through existing rails.",
+        "implementationRefs": [
+          "apps/web/src/app/services/projectOnboarding/activateProjectWorkspace.ts#ActivateProjectWorkspaceDependencies",
+          "apps/web/src/app/services/projectOnboarding/activateProjectWorkspace.ts#activateProjectWorkspace",
+          "apps/web/src/app/stores/sessionStore.ts#readPersistedNonBlankValue"
+        ],
+        "normalizedRailName": "geteffectiveworkspacecontext",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "da6edf23ffe323c55d50da1cf840df2c15823fbbf4a4cda8d0257bf52f84e1a7",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/**",
+          "apps/web/cypress/**"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/projectOnboardingRouteGroup.ts"
+        ]
+      },
+      "createdAt": "2026-08-14T14:15:50.016Z"
     }
   ],
   "governanceComponentDefinitions": [

@@ -52,4 +52,18 @@ describe('project identity badge', () => {
     expect(badge.projectLabel).toBe('project-b');
     expect(badge.environmentLabel).toBe('prod');
   });
+
+  it('prefers the server-granted project name over an unknown technical id', () => {
+    const badge = buildProjectIdentityBadge({
+      workspaceBootstrap: WORKSPACE_BOOTSTRAP,
+      selectedTenant: 'tenant-a',
+      selectedProject: 'project-generated-42',
+      selectedProjectName: 'Ventas',
+      selectedEnvironment: 'dev',
+      targetAdapter: 'temporal',
+    });
+
+    expect(badge.projectLabel).toBe('Ventas');
+    expect(badge.projectId).toBe('project-generated-42');
+  });
 });
