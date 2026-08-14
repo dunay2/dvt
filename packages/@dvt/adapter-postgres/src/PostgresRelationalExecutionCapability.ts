@@ -7,8 +7,14 @@
  * @version 1.0.0
  * @date 2026-04-09
  */
-import { asIsoUtcString, asNonBlankString } from '@dvt/contracts';
-import type { ExecutionPlan, MaterializationEvidence } from '@dvt/contracts';
+import {
+  CaptureMaterializationEvidenceStepTypeConfigSchema,
+  PostgresSqlTransformStepTypeConfigSchema,
+  PreparePostgresTransformStepTypeConfigSchema,
+  asIsoUtcString,
+  asNonBlankString,
+} from '@dvt/contracts';
+import type { ExecutionPlan, MaterializationEvidence, ResolvedRunContext } from '@dvt/contracts';
 import type { Pool } from 'pg';
 
 import { PostgresAdapterClientSession } from './PostgresAdapterClientSession.js';
@@ -19,11 +25,17 @@ import {
   type PostgresObjectFileLoadInput,
   type PostgresObjectFileLoadResult,
 } from './PostgresObjectFileLoader.js';
+import {
+  PostgresPlanConnectionRejectedError,
+  type IPostgresPlanConnectionResolver,
+  type PostgresPlanConnection,
+} from './PostgresPlanConnectionResolver.js';
 import { createObservedPostgresPool } from './PostgresPoolErrorPolicy.js';
 import { normalizeSchema, quoteIdentifier } from './sqlUtils.js';
 
 export interface RuntimeStepExecutionContext {
   executionIdentity: RuntimeExecutionIdentity;
+  runContext: ResolvedRunContext;
   gatewayContext?: Record<string, unknown>;
 }
 
@@ -57,6 +69,8 @@ export interface PostgresRelationalExecutionCapabilityConfig {
   statementTimeoutMs?: number;
   queryTimeoutMs?: number;
   nowIsoUtc?: () => string;
+  planConnectionResolver?: IPostgresPlanConnectionResolver;
+  planPoolFactory?: (binding: PostgresPlanConnection) => Pool;
 }
 
 interface PrepareTransformConfig {
@@ -96,11 +110,19 @@ export class PostgresRelationalExecutionCapability {
   private readonly clientSession: PostgresAdapterClientSession;
   private readonly objectFileLoader: PostgresObjectFileLoader;
   private readonly nowIsoUtc: () => string;
+  private readonly statementTimeoutMs: number;
+  private readonly queryTimeoutMs: number;
+  private readonly planClientSessions = new Map<
+    string,
+    { readonly clientSession: PostgresAdapterClientSession }
+  >();
 
-  constructor(config: PostgresRelationalExecutionCapabilityConfig) {
+  constructor(private readonly config: PostgresRelationalExecutionCapabilityConfig) {
     const statementTimeoutMs =
       config.statementTimeoutMs ??
       Number(process.env[C.statementTimeoutEnvVar] ?? C.defaultTimeoutMs);
+    const queryTimeoutMs =
+      config.queryTimeoutMs ?? Number(process.env[C.queryTimeoutEnvVar] ?? C.defaultTimeoutMs);
 
     if (config.pool) {
       this.pool = config.pool;
@@ -110,8 +132,7 @@ export class PostgresRelationalExecutionCapability {
       this.pool = createObservedPostgresPool({
         connectionString,
         statement_timeout: statementTimeoutMs,
-        query_timeout:
-          config.queryTimeoutMs ?? Number(process.env[C.queryTimeoutEnvVar] ?? C.defaultTimeoutMs),
+        query_timeout: queryTimeoutMs,
       });
       this.ownsPool = true;
     }
@@ -119,6 +140,8 @@ export class PostgresRelationalExecutionCapability {
     this.clientSession = new PostgresAdapterClientSession(this.pool, statementTimeoutMs);
     this.objectFileLoader = new PostgresObjectFileLoader(this.clientSession);
     this.nowIsoUtc = config.nowIsoUtc ?? (() => new Date().toISOString());
+    this.statementTimeoutMs = statementTimeoutMs;
+    this.queryTimeoutMs = queryTimeoutMs;
     this.stepActivitiesByKind = new Map([
       [
         'PREPARE_POSTGRES_TRANSFORM',
@@ -143,6 +166,10 @@ export class PostgresRelationalExecutionCapability {
 
   async close(): Promise<void> {
     await this.clientSession.close(this.ownsPool);
+    await Promise.all(
+      [...this.planClientSessions.values()].map(({ clientSession }) => clientSession.close(true))
+    );
+    this.planClientSessions.clear();
   }
 
   public async load(input: PostgresObjectFileLoadInput): Promise<PostgresObjectFileLoadResult> {
@@ -151,7 +178,7 @@ export class PostgresRelationalExecutionCapability {
 
   private async prepareTransform(
     step: ExecutionPlan['steps'][number],
-    _context: RuntimeStepExecutionContext
+    context: RuntimeStepExecutionContext
   ): Promise<RuntimeStepResult> {
     const parsed = parsePrepareTransformConfig(step);
     if (!parsed.ok) {
@@ -164,23 +191,19 @@ export class PostgresRelationalExecutionCapability {
     }
 
     try {
-      await this.clientSession.withClient((client) =>
+      const clientSession = await this.resolvePlanClientSession(step, context);
+      await clientSession.withClient((client) =>
         client.query(`CREATE SCHEMA IF NOT EXISTS ${quoteIdentifier(parsed.value.targetSchema)}`)
       );
       return completedStepResult(step.stepId);
     } catch (error: unknown) {
-      return failedStepResult(
-        step.stepId,
-        FAILURE_REASON.prepareFailed,
-        toErrorMessage(error),
-        isTransientPostgresError(error)
-      );
+      return failedPostgresOperation(step.stepId, FAILURE_REASON.prepareFailed, error);
     }
   }
 
   private async executeSqlTransform(
     step: ExecutionPlan['steps'][number],
-    _context: RuntimeStepExecutionContext
+    context: RuntimeStepExecutionContext
   ): Promise<RuntimeStepResult> {
     const parsed = parseSqlTransformConfig(step);
     if (!parsed.ok) {
@@ -195,18 +218,14 @@ export class PostgresRelationalExecutionCapability {
     const targetTable = qualifySinkRef(parsed.value.sink);
 
     try {
-      await this.clientSession.withTransaction(async (client) => {
+      const clientSession = await this.resolvePlanClientSession(step, context);
+      await clientSession.withTransaction(async (client) => {
         await client.query(`DROP TABLE IF EXISTS ${targetTable}`);
         await client.query(`CREATE TABLE ${targetTable} AS ${parsed.value.sql}`);
       });
       return completedStepResult(step.stepId);
     } catch (error: unknown) {
-      return failedStepResult(
-        step.stepId,
-        FAILURE_REASON.transformFailed,
-        toErrorMessage(error),
-        isTransientPostgresError(error)
-      );
+      return failedPostgresOperation(step.stepId, FAILURE_REASON.transformFailed, error);
     }
   }
 
@@ -228,7 +247,8 @@ export class PostgresRelationalExecutionCapability {
     const targetTable = qualifySinkRef(parsed.value.sink);
 
     try {
-      const rowsWritten = await this.clientSession.withClient(async (client) => {
+      const clientSession = await this.resolvePlanClientSession(step, context);
+      const rowsWritten = await clientSession.withClient(async (client) => {
         const result = await client.query<{ rows_written: string }>(
           `SELECT COUNT(*)::bigint AS rows_written FROM ${targetTable}`
         );
@@ -249,25 +269,50 @@ export class PostgresRelationalExecutionCapability {
         },
       };
     } catch (error: unknown) {
-      return failedStepResult(
-        step.stepId,
-        FAILURE_REASON.captureFailed,
-        toErrorMessage(error),
-        isTransientPostgresError(error)
-      );
+      return failedPostgresOperation(step.stepId, FAILURE_REASON.captureFailed, error);
     }
+  }
+
+  private async resolvePlanClientSession(
+    step: ExecutionPlan['steps'][number],
+    context: RuntimeStepExecutionContext
+  ): Promise<PostgresAdapterClientSession> {
+    if (this.config.planConnectionResolver === undefined) {
+      return this.clientSession;
+    }
+
+    const binding = await this.config.planConnectionResolver.resolveConnection(
+      step,
+      context.runContext
+    );
+    const key = buildPlanConnectionKey(binding);
+    const existing = this.planClientSessions.get(key);
+    if (existing !== undefined) {
+      return existing.clientSession;
+    }
+
+    const pool =
+      this.config.planPoolFactory?.(binding) ??
+      createObservedPostgresPool({
+        connectionString: binding.connectionString,
+        statement_timeout: this.statementTimeoutMs,
+        query_timeout: this.queryTimeoutMs,
+      });
+    const clientSession = new PostgresAdapterClientSession(pool, this.statementTimeoutMs);
+    this.planClientSessions.set(key, { clientSession });
+    return clientSession;
   }
 }
 
 function parsePrepareTransformConfig(
   step: ExecutionPlan['steps'][number]
 ): { ok: true; value: PrepareTransformConfig } | { ok: false; error: string } {
-  const stepTypeConfig = asPlainObject(step.stepTypeConfig);
-  if (!stepTypeConfig) {
-    return { ok: false, error: 'stepTypeConfig must be an object' };
+  const parsed = PreparePostgresTransformStepTypeConfigSchema.safeParse(step.stepTypeConfig);
+  if (!parsed.success) {
+    return { ok: false, error: renderStepConfigError(parsed.error.issues) };
   }
 
-  const targetSchema = normalizeIdentifier(stepTypeConfig['targetSchema'], 'targetSchema');
+  const targetSchema = normalizeIdentifier(parsed.data.targetSchema, 'targetSchema');
   if (!targetSchema.ok) {
     return { ok: false, error: targetSchema.error };
   }
@@ -283,21 +328,21 @@ function parsePrepareTransformConfig(
 function parseSqlTransformConfig(
   step: ExecutionPlan['steps'][number]
 ): { ok: true; value: SqlTransformConfig } | { ok: false; error: string } {
-  const stepTypeConfig = asPlainObject(step.stepTypeConfig);
-  if (!stepTypeConfig) {
-    return { ok: false, error: 'stepTypeConfig must be an object' };
+  const parsed = PostgresSqlTransformStepTypeConfigSchema.safeParse(step.stepTypeConfig);
+  if (!parsed.success) {
+    return { ok: false, error: renderStepConfigError(parsed.error.issues) };
   }
 
-  const sql = normalizeNonBlankString(stepTypeConfig['sql'], 'sql');
+  const sql = normalizeNonBlankString(parsed.data.sql, 'sql');
   if (!sql.ok) return { ok: false, error: sql.error };
 
-  const sink = parseRelationalSinkRef(stepTypeConfig);
+  const sink = parseRelationalSinkRef(parsed.data);
   if (!sink.ok) return { ok: false, error: sink.error };
 
-  if (stepTypeConfig['materialization'] !== 'table') {
+  if (parsed.data.materialization !== 'table') {
     return { ok: false, error: 'materialization must be table' };
   }
-  if (stepTypeConfig['writeMode'] !== 'replace') {
+  if (parsed.data.writeMode !== 'replace') {
     return { ok: false, error: 'writeMode must be replace' };
   }
 
@@ -315,12 +360,12 @@ function parseSqlTransformConfig(
 function parseCaptureEvidenceConfig(
   step: ExecutionPlan['steps'][number]
 ): { ok: true; value: CaptureEvidenceConfig } | { ok: false; error: string } {
-  const stepTypeConfig = asPlainObject(step.stepTypeConfig);
-  if (!stepTypeConfig) {
-    return { ok: false, error: 'stepTypeConfig must be an object' };
+  const parsed = CaptureMaterializationEvidenceStepTypeConfigSchema.safeParse(step.stepTypeConfig);
+  if (!parsed.success) {
+    return { ok: false, error: renderStepConfigError(parsed.error.issues) };
   }
 
-  const sink = parseRelationalSinkRef(stepTypeConfig);
+  const sink = parseRelationalSinkRef(parsed.data);
   if (!sink.ok) return { ok: false, error: sink.error };
 
   return {
@@ -355,12 +400,6 @@ function qualifySinkRef(sink: RelationalSinkRef): string {
 
 function formatSinkRef(sink: RelationalSinkRef): string {
   return `${sink.schema}.${sink.table}`;
-}
-
-function asPlainObject(value: unknown): Record<string, unknown> | undefined {
-  return typeof value === 'object' && value !== null && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : undefined;
 }
 
 function normalizeNonBlankString(
@@ -405,6 +444,39 @@ function failedStepResult(
     retriable,
     error,
   };
+}
+
+function renderStepConfigError(
+  issues: readonly { readonly path: PropertyKey[]; readonly message: string }[]
+): string {
+  return issues
+    .map((issue) => `${issue.path.map(String).join('.') || 'stepTypeConfig'}: ${issue.message}`)
+    .join('; ');
+}
+
+function failedPostgresOperation(
+  stepId: string,
+  defaultFailureReason: string,
+  error: unknown
+): RuntimeStepResult {
+  if (error instanceof PostgresPlanConnectionRejectedError) {
+    return failedStepResult(stepId, error.code, error.message, false);
+  }
+  return failedStepResult(
+    stepId,
+    defaultFailureReason,
+    toErrorMessage(error),
+    isTransientPostgresError(error)
+  );
+}
+
+function buildPlanConnectionKey(binding: PostgresPlanConnection): string {
+  return [
+    binding.connectionRef.schemaVersion,
+    binding.connectionRef.provider,
+    binding.connectionRef.connectionId,
+    binding.credentialRef,
+  ].join(':');
 }
 
 function toErrorMessage(error: unknown): string {

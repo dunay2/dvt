@@ -186,7 +186,7 @@ export function withTransformationRuntimeBinding<T extends Record<string, unknow
       extra: {
         ...currentExtra,
         transformationFlowRuntime: {
-          previewProfile: 'transformation-sql-first-v1',
+          previewProfile: 'transformation-sql-first-v2',
           executor,
         },
       },

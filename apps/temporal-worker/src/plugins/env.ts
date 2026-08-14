@@ -37,6 +37,7 @@ const EnvSchema = z
     DVT_PG_SCHEMA: z.string().default('dvt'),
     DVT_PG_STATEMENT_TIMEOUT_MS: z.coerce.number().int().min(0).default(0),
     DVT_PG_QUERY_TIMEOUT_MS: z.coerce.number().int().min(0).default(0),
+    DVT_POSTGRES_CREDENTIAL_BINDINGS: z.string().trim().min(2).optional(),
     DVT_RUNSTATE_CIRCUIT_BREAKER_FAILURE_THRESHOLD: z.coerce.number().int().min(1).default(3),
     DVT_RUNSTATE_CIRCUIT_BREAKER_OPEN_DURATION_MS: z.coerce.number().int().min(1).default(10000),
     DVT_RUNSTATE_CIRCUIT_BREAKER_OPERATION_TIMEOUT_MS: z.coerce.number().int().min(1).default(2000),

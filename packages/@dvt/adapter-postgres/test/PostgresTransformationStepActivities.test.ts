@@ -10,6 +10,11 @@ const describeIfPg = runIntegration ? describe : describe.skip;
 const schemaPrefix = `dvt_transform_it_${Date.now()}`;
 const createdSchemas = new Set<string>();
 let schemaCounter = 0;
+const CONNECTION_REF = {
+  schemaVersion: 'connection-ref.v1',
+  connectionId: 'integration-warehouse',
+  provider: 'postgres',
+} as const;
 
 function runtimeContext(environmentId = 'env-it'): {
   executionIdentity: {
@@ -17,12 +22,28 @@ function runtimeContext(environmentId = 'env-it'): {
     environmentId: string;
     runId: string;
   };
+  runContext: {
+    tenantId: string;
+    projectId: string;
+    environmentId: string;
+    runId: string;
+    targetAdapter: 'temporal';
+    logicalAttemptId: number;
+  };
 } {
   return {
     executionIdentity: {
       tenantId: 't-it',
       environmentId,
       runId: 'run-it-postgres-capability',
+    },
+    runContext: {
+      tenantId: 't-it',
+      projectId: 'p-it',
+      environmentId,
+      runId: 'run-it-postgres-capability',
+      targetAdapter: 'temporal',
+      logicalAttemptId: 1,
     },
   };
 }
@@ -111,7 +132,11 @@ describeIfPg('PostgresRelationalExecutionCapability integration', () => {
           kind: 'PREPARE_POSTGRES_TRANSFORM',
           dependsOn: [],
           stepTypeConfig: {
+            connectionRef: CONNECTION_REF,
             targetSchema: schema,
+            sourceSchema: 'raw',
+            sourceTable: 'orders',
+            sourceAlias: 'orders',
           },
         },
         runtimeContext()
@@ -124,7 +149,20 @@ describeIfPg('PostgresRelationalExecutionCapability integration', () => {
           kind: 'POSTGRES_SQL_TRANSFORM',
           dependsOn: ['prepare-1'],
           stepTypeConfig: {
+            connectionRef: CONNECTION_REF,
+            dialect: 'postgres',
+            entrypoint: 'models/orders.sql',
             sql: 'SELECT 1 AS order_id UNION ALL SELECT 2 AS order_id',
+            sqlArtifact: {
+              repo: 'dunay2/dvt',
+              path: 'models/orders.sql',
+              ref: 'refs/heads/main',
+              commitSha: 'a'.repeat(40),
+              contentSha256: 'b'.repeat(64),
+            },
+            sourceSchema: 'raw',
+            sourceTable: 'orders',
+            sourceAlias: 'orders',
             sinkSchema: schema,
             sinkTable,
             materialization: 'table',
@@ -141,8 +179,11 @@ describeIfPg('PostgresRelationalExecutionCapability integration', () => {
           kind: 'CAPTURE_MATERIALIZATION_EVIDENCE',
           dependsOn: ['transform-1'],
           stepTypeConfig: {
+            connectionRef: CONNECTION_REF,
             sinkSchema: schema,
             sinkTable,
+            materialization: 'table',
+            writeMode: 'replace',
           },
         },
         runtimeContext('env-it')
@@ -191,7 +232,11 @@ describeIfPg('PostgresRelationalExecutionCapability integration', () => {
           kind: 'PREPARE_POSTGRES_TRANSFORM',
           dependsOn: [],
           stepTypeConfig: {
+            connectionRef: CONNECTION_REF,
             targetSchema: schema,
+            sourceSchema: 'raw',
+            sourceTable: 'orders',
+            sourceAlias: 'orders',
           },
         },
         runtimeContext()
@@ -203,7 +248,20 @@ describeIfPg('PostgresRelationalExecutionCapability integration', () => {
           kind: 'POSTGRES_SQL_TRANSFORM',
           dependsOn: ['prepare-invalid-sql'],
           stepTypeConfig: {
+            connectionRef: CONNECTION_REF,
+            dialect: 'postgres',
+            entrypoint: 'models/orders.sql',
             sql: 'SELECT * FROM missing_source_table',
+            sqlArtifact: {
+              repo: 'dunay2/dvt',
+              path: 'models/orders.sql',
+              ref: 'refs/heads/main',
+              commitSha: 'a'.repeat(40),
+              contentSha256: 'b'.repeat(64),
+            },
+            sourceSchema: 'raw',
+            sourceTable: 'orders',
+            sourceAlias: 'orders',
             sinkSchema: schema,
             sinkTable: 'broken_sink',
             materialization: 'table',

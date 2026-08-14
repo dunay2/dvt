@@ -4,8 +4,8 @@
 import { type TemporalStepPluginProfile } from '@dvt/adapter-temporal';
 import {
   ArtifactBackedDbtProjectBundleReader,
-  ArtifactBackedRunExecutionContextReader,
   type DbtProjectBundleArtifactStore,
+  type IRunExecutionContextReader,
 } from '@dvt/artifacts';
 import {
   DbtCliPluginRunner,
@@ -29,17 +29,13 @@ export interface TemporalWorkerDbtProfile {
 
 export function createTemporalWorkerDbtProfile(
   env: Env,
-  options: CreateTemporalWorkerRuntimeOptions
+  options: CreateTemporalWorkerRuntimeOptions,
+  runExecutionContextReader: IRunExecutionContextReader
 ): TemporalWorkerDbtProfile {
   if (!env.DVT_TEMPORAL_DBT_ENABLED) {
     return {};
   }
 
-  const runExecutionContextReader =
-    options.runExecutionContextReaderFactory?.(env) ??
-    new ArtifactBackedRunExecutionContextReader({
-      nodeEnv: env.NODE_ENV,
-    });
   const bundleReader =
     options.bundleReaderFactory?.(env) ??
     new ArtifactBackedDbtProjectBundleReader({

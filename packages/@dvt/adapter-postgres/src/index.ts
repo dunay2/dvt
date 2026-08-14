@@ -66,6 +66,10 @@ export type {
   IPostgresCredentialBindingResolver,
   PostgresCredentialBindings,
 } from './PostgresCredentialBindingResolver.js';
+export type {
+  IPostgresPlanConnectionResolver,
+  PostgresPlanConnection,
+} from './PostgresPlanConnectionResolver.js';
 
 export { PostgresStateStoreAdapter } from './PostgresStateStoreAdapter.js';
 export { PostgresSchemaRollbackCompatibilityPolicy } from './PostgresSchemaManager.js';
@@ -105,6 +109,7 @@ export {
   PostgresCredentialBindingResolver,
   parsePostgresCredentialBindings,
 } from './PostgresCredentialBindingResolver.js';
+export { PostgresPlanConnectionRejectedError } from './PostgresPlanConnectionResolver.js';
 export {
   PostgresObjectFileLoader,
   resolvePostgresObjectFileScopeSchema,

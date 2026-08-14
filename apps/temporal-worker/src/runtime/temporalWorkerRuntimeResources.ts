@@ -5,6 +5,7 @@ import {
   composeTemporalStepPluginRegistries,
   loadTemporalAdapterConfig,
 } from '@dvt/adapter-temporal';
+import { ArtifactBackedRunExecutionContextReader } from '@dvt/artifacts';
 
 import type { Env } from '../plugins/env.js';
 
@@ -48,8 +49,15 @@ export function createTemporalWorkerRuntimeResources(
     stateStore,
     planArtifactReader
   );
-  const postgresProfile = createTemporalWorkerPostgresProfile(env, options);
-  const dbtProfile = createTemporalWorkerDbtProfile(env, options);
+  const runExecutionContextReader =
+    options.runExecutionContextReaderFactory?.(env) ??
+    new ArtifactBackedRunExecutionContextReader({ nodeEnv: env.NODE_ENV });
+  const postgresProfile = createTemporalWorkerPostgresProfile(
+    env,
+    options,
+    runExecutionContextReader
+  );
+  const dbtProfile = createTemporalWorkerDbtProfile(env, options, runExecutionContextReader);
   const objectFilePostgresProfile = createTemporalWorkerObjectFilePostgresProfile(
     env,
     options,

@@ -432,7 +432,7 @@ function createDbtExecutionPlan(args: {
     observability: {
       extra: {
         transformationFlowRuntime: {
-          previewProfile: 'transformation-sql-first-v1',
+          previewProfile: 'transformation-sql-first-v2',
           executor: 'dbt',
         },
       },
