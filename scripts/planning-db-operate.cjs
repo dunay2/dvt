@@ -343,11 +343,12 @@ const operationHelp = Object.freeze({
     ],
   },
   'architecture-component': {
-    operations: ['record'],
+    operations: ['record', 'retire-responsibility'],
     usage:
-      'pnpm planning:db:operate architecture-component record --design <DESIGN-ID> --component <SYS-ID> --actor <actor>',
+      'pnpm planning:db:operate architecture-component <record|retire-responsibility> --design <DESIGN-ID> --component <SYS-ID> --actor <actor>',
     details: [
       'RecordArchitectureComponent adds a scoped component to an approved or review design authority.',
+      'RetireArchitectureComponentResponsibility removes one stale responsibility through exact component update authority.',
       'Requires taxonomy fields --kind, --layer, --owner, --repo-path, --public-contract, and at least one --responsibility.',
     ],
   },
@@ -1306,6 +1307,17 @@ function operationPayload(command) {
     };
   }
 
+  if (command.kind === 'architecture_component_responsibility_retire') {
+    return {
+      designId: command.designId,
+      componentId: command.componentId,
+      responsibilityId: command.responsibilityId,
+      reason: command.reason,
+      sourceRef: command.sourceRef,
+      sourceContentSha256: command.sourceContentSha256,
+    };
+  }
+
   if (command.kind === 'architecture_relation_record') {
     return {
       designId: command.designId,
@@ -1642,6 +1654,7 @@ function defaultIdempotencyKey(command) {
 
   if (
     command.kind === 'architecture_component_record' ||
+    command.kind === 'architecture_component_responsibility_retire' ||
     command.kind === 'architecture_relation_record' ||
     command.kind === 'architecture_contract_record' ||
     command.kind === 'architecture_port_record' ||
@@ -1660,6 +1673,7 @@ function defaultIdempotencyKey(command) {
       command.storageIoId ||
         command.contractId ||
         command.portId ||
+        command.responsibilityId ||
         command.componentId ||
         command.relationId ||
         command.scanId ||
@@ -2280,6 +2294,17 @@ function parseArchitectureComponentResponsibilities(value) {
   return normalizeListOption(value).map(parseArchitectureComponentResponsibility);
 }
 
+function validateArchitectureResponsibilityId(value) {
+  const normalized = String(value || '').trim();
+  if (!/^RESP-[A-Z0-9]+(?:-[A-Z0-9]+)*$/.test(normalized)) {
+    throw new Error(
+      `Invalid --responsibility "${value}". Expected an uppercase RESP-* architecture responsibility id.`
+    );
+  }
+
+  return normalized;
+}
+
 function validateArchitectureComponentRecordCommand(command) {
   const requiredTextFields = [
     ['name', command.name],
@@ -2308,11 +2333,36 @@ function validateArchitectureComponentRecordCommand(command) {
 }
 
 function parseArchitectureComponentCommand(action, args) {
-  if (action !== 'record') {
-    throw new Error(`Unknown architecture-component operation "${action}". Expected record.`);
+  const options = parseFlagOptions(args);
+  if (action === 'retire-responsibility') {
+    const command = {
+      kind: 'architecture_component_responsibility_retire',
+      designId: validateArchitectureDesignId(requireOption(options, 'design')),
+      componentId: validateArchitectureComponentId(
+        requireOption(options, 'component'),
+        'component'
+      ),
+      responsibilityId: validateArchitectureResponsibilityId(
+        requireOption(options, 'responsibility')
+      ),
+      reason: requireOption(options, 'reason'),
+      sourceRef: requireOption(options, 'sourceRef'),
+      sourceContentSha256: validateSha256(
+        requireOption(options, 'sourceContentSha256'),
+        'source-content-sha256'
+      ),
+      actor: requireOption(options, 'actor'),
+      idempotencyKey: options.idempotencyKey,
+    };
+    return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
   }
 
-  const options = parseFlagOptions(args);
+  if (action !== 'record') {
+    throw new Error(
+      `Unknown architecture-component operation "${action}". Expected record or retire-responsibility.`
+    );
+  }
+
   const command = {
     kind: 'architecture_component_record',
     designId: validateArchitectureDesignId(requireOption(options, 'design')),
@@ -3700,6 +3750,21 @@ function assertArchitectureDesignMayProve(design, command) {
   return normalized;
 }
 
+function assertArchitectureDesignMayImplement(design, command) {
+  const normalized = normalizeArchitectureDesign(design);
+  if (!normalized || normalized.designId !== command.designId) {
+    throw new Error(`ARCH-COMPONENT-DESIGN-MISSING: ${command.designId}`);
+  }
+
+  if (normalized.status !== 'implementing') {
+    throw new Error(
+      `ARCH-COMPONENT-DESIGN-INACTIVE: design ${command.designId} is ${normalized.status}; governed responsibility retirement requires implementing.`
+    );
+  }
+
+  return normalized;
+}
+
 function assertArchitectureDesignScope(designScopes, subjectKind, subjectId, scopeKinds, code) {
   if (!hasArchitectureDesignScope(designScopes, subjectKind, subjectId, scopeKinds)) {
     throw new Error(`${code}: missing ${subjectKind}:${subjectId}:${scopeKinds.join('|')} scope.`);
@@ -3922,6 +3987,42 @@ function planArchitectureComponentRecordOperation({
   const audit = architectureScopedAudit({ command, operationId, now });
 
   return { component, responsibilities, audit };
+}
+
+function planArchitectureComponentResponsibilityRetireOperation({
+  command,
+  design,
+  designScopes,
+  existingResponsibility,
+  operationId,
+  now,
+}) {
+  assertArchitectureDesignMayImplement(design, command);
+  assertArchitectureDesignScope(
+    designScopes,
+    'component',
+    command.componentId,
+    ['may_update'],
+    'ARCH-COMPONENT-DESIGN-SCOPE-MISSING'
+  );
+  if (!existingResponsibility) {
+    throw new Error(`ARCH-RESPONSIBILITY-NOT-FOUND: ${command.responsibilityId}`);
+  }
+  const existingComponentId =
+    existingResponsibility.component_id ?? existingResponsibility.componentId;
+  if (existingComponentId !== command.componentId) {
+    throw new Error(
+      `ARCH-RESPONSIBILITY-COMPONENT-MISMATCH: ${command.responsibilityId} belongs to ${existingComponentId}.`
+    );
+  }
+
+  return {
+    retirement: {
+      responsibilityId: command.responsibilityId,
+      componentId: command.componentId,
+    },
+    audit: architectureScopedAudit({ command, operationId, now }),
+  };
 }
 
 function planArchitectureRelationRecordOperation({
@@ -5610,6 +5711,17 @@ async function readArchitectureComponent(client, componentId) {
   return result.rows[0] || null;
 }
 
+async function readArchitectureComponentResponsibility(client, responsibilityId) {
+  const result = await client.query(
+    `select *
+     from architecture.component_responsibility
+     where responsibility_id = $1`,
+    [responsibilityId]
+  );
+
+  return result.rows[0] || null;
+}
+
 async function readArchitectureRelation(client, relationId) {
   const result = await client.query(
     `select *
@@ -6024,6 +6136,21 @@ async function writePlannedArchitectureComponentRecordOperation(client, planned)
     );
   }
 
+  await writeArchitectureScopedAudit(client, planned.audit);
+}
+
+async function writePlannedArchitectureComponentResponsibilityRetireOperation(client, planned) {
+  const result = await client.query(
+    `delete from architecture.component_responsibility
+     where responsibility_id = $1
+       and component_id = $2`,
+    [planned.retirement.responsibilityId, planned.retirement.componentId]
+  );
+  if (result.rowCount !== 1) {
+    throw new Error(
+      `ARCH-RESPONSIBILITY-RETIRE-CONFLICT: ${planned.retirement.responsibilityId} was not deleted.`
+    );
+  }
   await writeArchitectureScopedAudit(client, planned.audit);
 }
 
@@ -7158,6 +7285,45 @@ async function applyArchitectureComponentRecordOperation(command, options = {}) 
   }
 }
 
+async function applyArchitectureComponentResponsibilityRetireOperation(command, options = {}) {
+  const client =
+    options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
+  const ownsClient = !options.client;
+  if (ownsClient) await client.connect();
+
+  try {
+    await assertPlanningDbCurrentSchemaReady(client);
+    await client.query('begin');
+    const existing = await readExistingArchitectureDesignOperation(client, command.idempotencyKey);
+    if (existing) {
+      assertArchitectureScopedOperationIdempotentReplayMatches(existing, command);
+      await client.query('commit');
+      return { idempotent: true, audit: existing };
+    }
+    const [design, designScopes, existingResponsibility] = await Promise.all([
+      readArchitectureDesign(client, command.designId),
+      readArchitectureDesignScopes(client, command.designId),
+      readArchitectureComponentResponsibility(client, command.responsibilityId),
+    ]);
+    const planned = planArchitectureComponentResponsibilityRetireOperation({
+      command,
+      design,
+      designScopes,
+      existingResponsibility,
+      operationId: options.operationId || crypto.randomUUID(),
+      now: options.now || new Date(),
+    });
+    await writePlannedArchitectureComponentResponsibilityRetireOperation(client, planned);
+    await client.query('commit');
+    return { idempotent: false, ...planned };
+  } catch (error) {
+    await client.query('rollback');
+    throw error;
+  } finally {
+    if (ownsClient) await client.end();
+  }
+}
+
 async function applyArchitectureRelationRecordOperation(command, options = {}) {
   const client =
     options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
@@ -8101,7 +8267,7 @@ function printOperationResult(result) {
 
   if (result.retirement) {
     console.log(
-      `[planning:db:operate] ${result.audit.operationType} retired=${result.retirement.testId || result.retirement.evidenceId || result.retirement.railId}`
+      `[planning:db:operate] ${result.audit.operationType} retired=${result.retirement.responsibilityId || result.retirement.testId || result.retirement.evidenceId || result.retirement.railId}`
     );
     return;
   }
@@ -8190,55 +8356,59 @@ async function main() {
           ? await applyArchitectureDesignTransitionOperation(command)
           : command.kind === 'architecture_component_record'
             ? await applyArchitectureComponentRecordOperation(command)
-            : command.kind === 'architecture_relation_record'
-              ? await applyArchitectureRelationRecordOperation(command)
-              : command.kind === 'architecture_contract_record'
-                ? await applyArchitectureContractRecordOperation(command)
-                : command.kind === 'architecture_port_record'
-                  ? await applyArchitecturePortRecordOperation(command)
-                  : command.kind === 'architecture_storage_io_record'
-                    ? await applyArchitectureStorageIoRecordOperation(command)
-                    : command.kind === 'architecture_fitness_scan'
-                      ? await applyArchitectureFitnessScanOperation(command)
-                      : command.kind === 'architecture_test_record'
-                        ? await applyArchitectureTestRecordOperation(command)
-                        : command.kind === 'architecture_test_retire'
-                          ? await applyArchitectureTestRetireOperation(command)
-                          : command.kind === 'architecture_observability_record'
-                            ? await applyArchitectureObservabilityRecordOperation(command)
-                            : command.kind === 'architecture_evidence_record'
-                              ? await applyArchitectureEvidenceRecordOperation(command)
-                              : command.kind === 'architecture_evidence_retire'
-                                ? await applyArchitectureEvidenceRetireOperation(command)
-                                : command.kind === 'component_create'
-                                  ? await applyComponentCreateOperation(command)
-                                  : command.kind === 'component_revise'
-                                    ? await applyComponentReviseOperation(command)
-                                    : command.kind === 'component_reparent'
-                                      ? await applyComponentReparentOperation(command)
-                                      : command.kind === 'db_surface_upsert'
-                                        ? await applyDbSurfaceUpsertOperation(command)
-                                        : command.kind === 'feature_mechanization_rail_record'
-                                          ? await applyFeatureMechanizationRailRecordOperation(
-                                              command
-                                            )
-                                          : command.kind === 'feature_mechanization_rail_retire'
-                                            ? await applyFeatureMechanizationRailRetireOperation(
+            : command.kind === 'architecture_component_responsibility_retire'
+              ? await applyArchitectureComponentResponsibilityRetireOperation(command)
+              : command.kind === 'architecture_relation_record'
+                ? await applyArchitectureRelationRecordOperation(command)
+                : command.kind === 'architecture_contract_record'
+                  ? await applyArchitectureContractRecordOperation(command)
+                  : command.kind === 'architecture_port_record'
+                    ? await applyArchitecturePortRecordOperation(command)
+                    : command.kind === 'architecture_storage_io_record'
+                      ? await applyArchitectureStorageIoRecordOperation(command)
+                      : command.kind === 'architecture_fitness_scan'
+                        ? await applyArchitectureFitnessScanOperation(command)
+                        : command.kind === 'architecture_test_record'
+                          ? await applyArchitectureTestRecordOperation(command)
+                          : command.kind === 'architecture_test_retire'
+                            ? await applyArchitectureTestRetireOperation(command)
+                            : command.kind === 'architecture_observability_record'
+                              ? await applyArchitectureObservabilityRecordOperation(command)
+                              : command.kind === 'architecture_evidence_record'
+                                ? await applyArchitectureEvidenceRecordOperation(command)
+                                : command.kind === 'architecture_evidence_retire'
+                                  ? await applyArchitectureEvidenceRetireOperation(command)
+                                  : command.kind === 'component_create'
+                                    ? await applyComponentCreateOperation(command)
+                                    : command.kind === 'component_revise'
+                                      ? await applyComponentReviseOperation(command)
+                                      : command.kind === 'component_reparent'
+                                        ? await applyComponentReparentOperation(command)
+                                        : command.kind === 'db_surface_upsert'
+                                          ? await applyDbSurfaceUpsertOperation(command)
+                                          : command.kind === 'feature_mechanization_rail_record'
+                                            ? await applyFeatureMechanizationRailRecordOperation(
                                                 command
                                               )
-                                            : command.kind === 'governance_refresh_run_record'
-                                              ? await applyGovernanceRefreshRunRecordOperation(
+                                            : command.kind === 'feature_mechanization_rail_retire'
+                                              ? await applyFeatureMechanizationRailRetireOperation(
                                                   command
                                                 )
-                                              : command.kind === 'governed_source_content_refresh'
-                                                ? await applyGovernedSourceRefreshOperation(command)
-                                                : command.kind.startsWith('fowler_analysis_')
-                                                  ? await applyFowlerAnalysisOperation(command)
-                                                  : (() => {
-                                                      throw new Error(
-                                                        `Unsupported planning DB operation "${command.kind}".`
-                                                      );
-                                                    })();
+                                              : command.kind === 'governance_refresh_run_record'
+                                                ? await applyGovernanceRefreshRunRecordOperation(
+                                                    command
+                                                  )
+                                                : command.kind === 'governed_source_content_refresh'
+                                                  ? await applyGovernedSourceRefreshOperation(
+                                                      command
+                                                    )
+                                                  : command.kind.startsWith('fowler_analysis_')
+                                                    ? await applyFowlerAnalysisOperation(command)
+                                                    : (() => {
+                                                        throw new Error(
+                                                          `Unsupported planning DB operation "${command.kind}".`
+                                                        );
+                                                      })();
   printOperationResult(result);
 }
 
@@ -8251,6 +8421,7 @@ if (require.main === module) {
 
 module.exports = {
   applyArchitectureComponentRecordOperation,
+  applyArchitectureComponentResponsibilityRetireOperation,
   applyArchitectureContractRecordOperation,
   applyArchitectureDesignCreateOperation,
   applyArchitectureDesignTransitionOperation,
@@ -8287,6 +8458,7 @@ module.exports = {
   materializeDocsResolutionCommand,
   parseArgs,
   planArchitectureComponentRecordOperation,
+  planArchitectureComponentResponsibilityRetireOperation,
   planArchitectureContractRecordOperation,
   planArchitectureDesignCreateOperation,
   planArchitectureDesignTransitionOperation,
@@ -8320,6 +8492,7 @@ module.exports = {
   writePlannedDbSurfaceUpsertOperation,
   writePlannedArchitectureContractRecordOperation,
   writePlannedArchitectureComponentRecordOperation,
+  writePlannedArchitectureComponentResponsibilityRetireOperation,
   writePlannedArchitectureDesignTransitionOperation,
   writePlannedArchitectureFitnessScanOperation,
   writePlannedArchitecturePortRecordOperation,

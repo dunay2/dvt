@@ -8,6 +8,7 @@ const {
   planArchitectureDesignCreateOperation,
   planArchitectureDesignTransitionOperation,
   planArchitectureComponentRecordOperation,
+  planArchitectureComponentResponsibilityRetireOperation,
   planArchitectureContractRecordOperation,
   planArchitecturePortRecordOperation,
   planArchitectureStorageIoRecordOperation,
@@ -20,6 +21,7 @@ const {
   planArchitectureRelationRecordOperation,
   writePlannedArchitectureContractRecordOperation,
   writePlannedArchitectureComponentRecordOperation,
+  writePlannedArchitectureComponentResponsibilityRetireOperation,
   writePlannedArchitecturePortRecordOperation,
   writePlannedArchitectureStorageIoRecordOperation,
   writePlannedArchitectureEvidenceRecordOperation,
@@ -331,6 +333,101 @@ test('architecture component updates preserve governed maturity and creation tim
   assert.equal(planned.component.maturityScore, 78);
   assert.equal(planned.component.createdAt, createdAt);
   assert.equal(planned.component.updatedAt, now.toISOString());
+});
+
+test('architecture responsibility retirement requires exact component authority and deletes one row', async () => {
+  const now = new Date('2026-08-14T08:00:00.000Z');
+  const command = parseArgs([
+    'architecture-component',
+    'retire-responsibility',
+    '--design',
+    'API-H2-5-ARCHITECTURE-RESPONSIBILITY-RETIREMENT-20260814',
+    '--component',
+    'SYS-API-INFRA-DBT-RUN-CONTEXT-FILES',
+    '--responsibility',
+    'RESP-DBT-RUN-CONTEXT-FILE-ADAPTER',
+    '--reason',
+    'The artifact-backed writer replaced the file-only responsibility.',
+    '--source-ref',
+    'scripts/planning-db-operate.cjs',
+    '--source-content-sha256',
+    'e'.repeat(64),
+    '--actor',
+    'codex',
+  ]);
+  const existingResponsibility = {
+    responsibility_id: command.responsibilityId,
+    component_id: command.componentId,
+  };
+  const planned = planArchitectureComponentResponsibilityRetireOperation({
+    command,
+    design: { design_id: command.designId, status: 'implementing' },
+    designScopes: [
+      {
+        subject_kind: 'component',
+        subject_id: command.componentId,
+        scope_kind: 'may_update',
+      },
+    ],
+    existingResponsibility,
+    operationId: 'op-architecture-responsibility-retire',
+    now,
+  });
+
+  assert.equal(planned.retirement.responsibilityId, command.responsibilityId);
+  assert.equal(planned.retirement.componentId, command.componentId);
+  assert.equal(planned.audit.operationType, 'architecture_component_responsibility_retire');
+  assert.throws(
+    () =>
+      planArchitectureComponentResponsibilityRetireOperation({
+        command,
+        design: { design_id: command.designId, status: 'implementing' },
+        designScopes: [],
+        existingResponsibility,
+        operationId: 'op-missing-scope',
+        now,
+      }),
+    /ARCH-COMPONENT-DESIGN-SCOPE-MISSING/
+  );
+  assert.throws(
+    () =>
+      planArchitectureComponentResponsibilityRetireOperation({
+        command,
+        design: { design_id: command.designId, status: 'implementing' },
+        designScopes: [
+          {
+            subject_kind: 'component',
+            subject_id: command.componentId,
+            scope_kind: 'may_update',
+          },
+        ],
+        existingResponsibility: {
+          ...existingResponsibility,
+          component_id: 'SYS-OTHER-COMPONENT',
+        },
+        operationId: 'op-component-mismatch',
+        now,
+      }),
+    /ARCH-RESPONSIBILITY-COMPONENT-MISMATCH/
+  );
+
+  const queries = [];
+  const client = {
+    async query(sql, params) {
+      queries.push({ sql, params });
+      return { rows: [], rowCount: 1 };
+    },
+  };
+  await writePlannedArchitectureComponentResponsibilityRetireOperation(client, planned);
+  assert.ok(
+    queries.some(
+      ({ sql, params }) =>
+        sql.includes('delete from architecture.component_responsibility') &&
+        params[0] === command.responsibilityId &&
+        params[1] === command.componentId
+    )
+  );
+  assert.ok(queries.some(({ sql }) => sql.includes('architecture.design_operations')));
 });
 
 test('architecture component updates do not downgrade existing responsibility status', async () => {
