@@ -538,7 +538,7 @@ describe('Canvas ready node authoring', () => {
       .type(authoredSql, { force: true, parseSpecialCharSequences: false, delay: 0 });
     cy.get('[data-slot="canvas-node-workbench-tab-general"]').click();
     cy.get('input[name="node-name"]').clear().type('Orders enriched');
-    cy.get('input[name="node-tags"]').clear().type('authoring, finance');
+    cy.get('input[name="node-tags"]').should('not.have.value', 'authoring').clear().type('finance');
     cy.get('textarea[name="node-description"]').type('Consumer-backed DVT transform');
     cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^Apply$/).click();
 
@@ -552,6 +552,8 @@ describe('Canvas ready node authoring', () => {
 
           return (
             node?.name === 'Orders enriched' &&
+            node.tags?.includes('authoring') === true &&
+            node.tags?.includes('finance') === true &&
             config?.sql === authoredSql &&
             config.selectedColumns?.[0] === 'source-1.order_id'
           );
@@ -563,6 +565,20 @@ describe('Canvas ready node authoring', () => {
     cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^Cancel$/).click();
     cy.get('input[name="node-name"]').should('have.value', 'Orders enriched');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
+
+    cy.get(
+      '.react-flow__node[data-id="dvt-sql-transform-1"] button[aria-label="Filter graph by tag finance"]'
+    )
+      .focus()
+      .should('have.focus')
+      .then(() => cy.press(Cypress.Keyboard.Keys.ENTER));
+    cy.get('[data-slot="canvas-graph-filter-control"]').should('contain.text', 'Tag: finance');
+    cy.get(
+      '.react-flow__node[data-id="dvt-sql-transform-1"] button[aria-label="Filter graph by tag finance"]'
+    ).click();
+    cy.get('[aria-label="Remove Tag filter finance"]').should('have.length', 1);
+    cy.get('button[aria-label="Clear graph filters"]').click();
+    cy.get('[aria-label="Remove Tag filter finance"]').should('not.exist');
 
     visitReadyCanvas();
 
@@ -589,7 +605,7 @@ describe('Canvas ready node authoring', () => {
     });
     cy.get('[data-slot="canvas-node-workbench-tab-general"]').click();
     cy.get('input[name="node-name"]').should('have.value', 'Orders enriched');
-    cy.get('input[name="node-tags"]').should('have.value', 'authoring, finance');
+    cy.get('input[name="node-tags"]').should('have.value', 'finance');
     cy.get('textarea[name="node-description"]').should(
       'have.value',
       'Consumer-backed DVT transform'
