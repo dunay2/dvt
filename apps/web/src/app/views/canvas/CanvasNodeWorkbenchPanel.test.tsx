@@ -15,6 +15,28 @@ import {
   type CanvasNodeWorkbenchPanelProps,
 } from './CanvasNodeWorkbenchPanel';
 
+vi.mock('../../components/monaco/MonacoCodeEditor', () => ({
+  MonacoCodeEditor: ({
+    language,
+    onChange,
+    path,
+    value,
+  }: {
+    language: string;
+    onChange: (value: string) => void;
+    path?: string;
+    value: string;
+  }) => (
+    <textarea
+      data-language={language}
+      data-path={path}
+      data-testid="dvt-transform-sql-editor"
+      onChange={(event) => onChange(event.currentTarget.value)}
+      value={value}
+    />
+  ),
+}));
+
 const SOURCE_NODE: CanonicalNode = {
   id: 'source.orders',
   name: 'Orders Source',
@@ -508,7 +530,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(
       columnsSection?.querySelector('[data-slot="canvas-node-workbench-authoring"]')
     ).toBeNull();
-    expect(container.querySelector('textarea[name="dvt-transform-sql"]')).toBeNull();
+    expect(container.querySelector('[data-testid="dvt-transform-sql-editor"]')).toBeNull();
   });
 
   it('renders DVT transform SQL editing inside the Code tab', () => {
@@ -516,12 +538,14 @@ describe('CanvasNodeWorkbenchPanel', () => {
 
     const codeSection = container.querySelector('[data-slot="canvas-node-workbench-code-section"]');
     const sqlEditor = codeSection?.querySelector<HTMLTextAreaElement>(
-      'textarea[name="dvt-transform-sql"]'
+      '[data-testid="dvt-transform-sql-editor"]'
     );
 
     expect(codeSection).not.toBeNull();
     expect(sqlEditor).not.toBeNull();
     expect(sqlEditor?.value).toBe('select order_id from source.orders');
+    expect(sqlEditor?.dataset.language).toBe('sql');
+    expect(sqlEditor?.dataset.path).toBe('canvas/transform.orders.sql');
     expect(codeSection?.querySelector('input[name="dvt-transform-column"]')).toBeNull();
   });
 
@@ -644,7 +668,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     });
 
     const sqlEditor = container.querySelector<HTMLTextAreaElement>(
-      'textarea[name="dvt-transform-sql"]'
+      '[data-testid="dvt-transform-sql-editor"]'
     );
     expect(sqlEditor).not.toBeNull();
 
@@ -679,7 +703,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     );
 
     const restoredSqlEditor = container.querySelector<HTMLTextAreaElement>(
-      'textarea[name="dvt-transform-sql"]'
+      '[data-testid="dvt-transform-sql-editor"]'
     );
     expect(restoredSqlEditor?.value).toBe('select customer from source.orders');
 
