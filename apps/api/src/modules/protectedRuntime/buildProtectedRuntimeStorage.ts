@@ -82,6 +82,9 @@ export function buildProtectedRuntimeStorage(deps: BuildProtectedRuntimeStorageD
   );
   const runExecutionContextResolver = new ArtifactBackedRunExecutionContextResolver({
     nodeEnv: deps.env.NODE_ENV,
+    ...(runExecutionContextStore.kind === 'file'
+      ? { fileReadRoot: runExecutionContextStore.rootPath }
+      : {}),
   });
   const runExecutionContextBindingPolicy = new RunExecutionContextBindingPolicy({
     bundleStore: dbtBundleStore,
