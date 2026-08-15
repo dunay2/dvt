@@ -160812,7 +160812,7 @@
         "pnpm docs:feature-mechanization:implementation"
       ],
       "sourcePath": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
-      "sourceContentSha256": "d1bf7e5d5b467c4192f4091c2d637ae57b27803e2233e47aa672b5ce4b24834c",
+      "sourceContentSha256": "97e2a15e9785506b1fd5bbd7dc64b8bc3a25b59b533f338511942998779cf056",
       "rawRail": {
         "name": "CompilePlan",
         "type": "command",
@@ -160982,7 +160982,7 @@
         "pnpm docs:feature-mechanization:implementation"
       ],
       "sourcePath": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
-      "sourceContentSha256": "d1bf7e5d5b467c4192f4091c2d637ae57b27803e2233e47aa672b5ce4b24834c",
+      "sourceContentSha256": "97e2a15e9785506b1fd5bbd7dc64b8bc3a25b59b533f338511942998779cf056",
       "rawRail": {
         "name": "ConfigureCanvasDvtNode",
         "type": "command",
@@ -161270,7 +161270,7 @@
         "pnpm docs:feature-mechanization:implementation"
       ],
       "sourcePath": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
-      "sourceContentSha256": "d1bf7e5d5b467c4192f4091c2d637ae57b27803e2233e47aa672b5ce4b24834c",
+      "sourceContentSha256": "97e2a15e9785506b1fd5bbd7dc64b8bc3a25b59b533f338511942998779cf056",
       "rawRail": {
         "name": "CreateWarehouseConnection",
         "type": "command",
@@ -161592,7 +161592,7 @@
         "pnpm docs:feature-mechanization:implementation"
       ],
       "sourcePath": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
-      "sourceContentSha256": "d1bf7e5d5b467c4192f4091c2d637ae57b27803e2233e47aa672b5ce4b24834c",
+      "sourceContentSha256": "97e2a15e9785506b1fd5bbd7dc64b8bc3a25b59b533f338511942998779cf056",
       "rawRail": {
         "name": "PreviewExecutionPlan",
         "type": "command",
@@ -161794,7 +161794,7 @@
         "pnpm docs:feature-mechanization:implementation"
       ],
       "sourcePath": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
-      "sourceContentSha256": "d1bf7e5d5b467c4192f4091c2d637ae57b27803e2233e47aa672b5ce4b24834c",
+      "sourceContentSha256": "97e2a15e9785506b1fd5bbd7dc64b8bc3a25b59b533f338511942998779cf056",
       "rawRail": {
         "name": "SaveWorkspaceGraphDraft",
         "type": "command",
@@ -161972,7 +161972,7 @@
         "pnpm docs:feature-mechanization:implementation"
       ],
       "sourcePath": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
-      "sourceContentSha256": "d1bf7e5d5b467c4192f4091c2d637ae57b27803e2233e47aa672b5ce4b24834c",
+      "sourceContentSha256": "97e2a15e9785506b1fd5bbd7dc64b8bc3a25b59b533f338511942998779cf056",
       "rawRail": {
         "name": "StartRun",
         "type": "command",
@@ -162441,7 +162441,7 @@
         "pnpm docs:feature-mechanization:implementation"
       ],
       "sourcePath": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
-      "sourceContentSha256": "d1bf7e5d5b467c4192f4091c2d637ae57b27803e2233e47aa672b5ce4b24834c",
+      "sourceContentSha256": "97e2a15e9785506b1fd5bbd7dc64b8bc3a25b59b533f338511942998779cf056",
       "rawRail": {
         "name": "TestWarehouseConnection",
         "type": "command",
@@ -162579,7 +162579,7 @@
         "pnpm docs:feature-mechanization:implementation"
       ],
       "sourcePath": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
-      "sourceContentSha256": "d1bf7e5d5b467c4192f4091c2d637ae57b27803e2233e47aa672b5ce4b24834c",
+      "sourceContentSha256": "97e2a15e9785506b1fd5bbd7dc64b8bc3a25b59b533f338511942998779cf056",
       "rawRail": {
         "name": "GetWorkspaceGraphDraft",
         "type": "query",
@@ -162717,7 +162717,7 @@
         "pnpm docs:feature-mechanization:implementation"
       ],
       "sourcePath": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
-      "sourceContentSha256": "d1bf7e5d5b467c4192f4091c2d637ae57b27803e2233e47aa672b5ce4b24834c",
+      "sourceContentSha256": "97e2a15e9785506b1fd5bbd7dc64b8bc3a25b59b533f338511942998779cf056",
       "rawRail": {
         "name": "ListWarehouseConnections",
         "type": "query",
@@ -162891,7 +162891,7 @@
         "pnpm docs:feature-mechanization:implementation"
       ],
       "sourcePath": "docs/evidence/ED-20260813-pth2-dvt-postgres-connection-authority.md",
-      "sourceContentSha256": "d1bf7e5d5b467c4192f4091c2d637ae57b27803e2233e47aa672b5ce4b24834c",
+      "sourceContentSha256": "97e2a15e9785506b1fd5bbd7dc64b8bc3a25b59b533f338511942998779cf056",
       "rawRail": {
         "name": "ObservePlanRunReadiness",
         "type": "query",

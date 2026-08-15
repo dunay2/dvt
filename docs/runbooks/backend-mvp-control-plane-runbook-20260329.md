@@ -78,6 +78,13 @@ same `DVT_POSTGRES_CREDENTIAL_BINDINGS` JSON object. Keys use
 credential reference persisted by the governed warehouse connection. Do not
 persist the URL in Canvas or plan payloads.
 
+For file-backed run contexts, configure the same mounted artifact boundary for
+the API and Temporal worker. An explicit `file` bundle backend uses
+`DVT_DBT_BUNDLE_FILE_ROOT`; the PostgreSQL-only fallback uses
+`DVT_WORKSPACE_FILES_ROOT/.dvt/run-context-artifacts`. Production worker startup
+fails closed if neither file root is explicit. S3-backed contexts do not use
+this file boundary.
+
 Optional route exposure flags:
 
 - `DVT_READYZ_ENABLED=true` to expose `/readyz`

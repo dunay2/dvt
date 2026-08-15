@@ -76,6 +76,7 @@ The workflow itself still starts on the tenant workflow queue.
 | `DVT_TEMPORAL_ADMIN_PORT`            | No                   | `9468`    | Operational server port            |
 | `DVT_TEMPORAL_DBT_ENABLED`           | No                   | `false`   | Enable DBT worker profile          |
 | `DVT_POSTGRES_CREDENTIAL_BINDINGS`   | SQL-first PostgreSQL | none      | Governed alias-to-URL bindings     |
+| `DVT_WORKSPACE_FILES_ROOT`           | Production file mode | none      | Shared workspace artifact root     |
 
 For SQL-first PostgreSQL execution, configure the same
 `DVT_POSTGRES_CREDENTIAL_BINDINGS` JSON object in the API and every Temporal
@@ -84,6 +85,13 @@ namespace and values are PostgreSQL connection URLs, for example
 `{"postgres:warehouse":"postgresql://user:password@host:5432/database"}`.
 The persisted `ConnectionRef` contains the alias, never the connection URL; a
 missing or different binding fails closed before SQL execution.
+
+When run contexts use the file store, API and worker must see the same mounted
+root. With an explicit `file` bundle backend, both use
+`DVT_DBT_BUNDLE_FILE_ROOT`. Without a bundle backend, both use
+`DVT_WORKSPACE_FILES_ROOT/.dvt/run-context-artifacts`; production worker startup
+fails closed when neither shared root is declared. S3 mode does not require a
+file root.
 
 ### Required When DBT Mode Is Enabled
 

@@ -40,6 +40,8 @@ mitigations:
     validation and recovery trust checks.
   - Keep production file artifact reads denied by default and allow only the real-path-scoped
     run-context root provisioned by API composition.
+  - Resolve the file/S3 context store once in the artifact bounded context, pass the same mounted
+    workspace root to API and worker, and reject production worker startup when it is absent.
   - Declare the identical API/Temporal worker `postgres:<alias>` credential-binding map in the
     canonical operational runbooks.
   - Bind Canvas connection-test feedback to the selected connection and latest request sequence,

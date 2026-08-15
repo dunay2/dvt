@@ -21,6 +21,7 @@ code_refs:
   - packages/@dvt/artifacts/src/runtime/S3RunExecutionContextReferenceStore.ts
   - packages/@dvt/artifacts/src/contentAddressed/S3ContentAddressedArtifactStore.ts
   - packages/@dvt/artifacts/src/runtime/readArtifactBytes.ts
+  - packages/@dvt/artifacts/src/runtime/resolveRunExecutionContextArtifactStore.ts
   - apps/api/src/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.ts
   - apps/api/src/infrastructure/dbt/ArtifactBackedRunExecutionContextReferenceReader.ts
   - apps/api/src/infrastructure/dbt/ArtifactBackedRunExecutionContextInheritanceWriter.ts
@@ -47,6 +48,7 @@ evidence:
     - DVT_PG_URL=postgresql://dvt:dvt@127.0.0.1:5432/dvt pnpm --filter @dvt/adapter-temporal exec vitest run test/integration.postgres.time-skipping.test.ts --config vitest.config.ts
     - pnpm --filter dvt-temporal-worker test
     - pnpm --filter dvt-temporal-worker typecheck
+    - node --test scripts/run-dev-stack.test.cjs
     - pnpm verify:prepush
 ---
 
@@ -114,8 +116,11 @@ publication, reference persistence and trust validation, so reserved tenant
 characters cannot change the object-key structure or escape their scope.
 Production file-backed run contexts remain denied by default; the API grants
 read authority only for the exact real-path root it provisioned for run-context
-artifacts, and rejects resolved paths outside that root. The canonical API and
-Temporal worker runbooks also declare the shared
+artifacts, and rejects resolved paths outside that root. API and Temporal worker
+now resolve that store through the same artifact component. The coordinated
+stack forwards the workspace root, and a production worker fails at startup if
+a file-backed context root is not explicit. The canonical API and Temporal
+worker runbooks also declare the shared
 `DVT_POSTGRES_CREDENTIAL_BINDINGS` JSON contract and its `postgres:<alias>`
 namespace.
 
