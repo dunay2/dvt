@@ -108,7 +108,8 @@ describe('SourceImportWizard', () => {
   });
 
   it('cancels connection rename with Escape and returns focus to its action', async () => {
-    await harness.renderWizard();
+    const onClose = vi.fn();
+    await harness.renderWizard({ onClose });
     await harness.clickConnectionOption('Local Postgres proof');
     await harness.clickButtonContaining('Rename connection');
 
@@ -122,7 +123,9 @@ describe('SourceImportWizard', () => {
     });
 
     expect(document.querySelector('[aria-label="New connection name"]')).toBeNull();
+    expect(document.querySelector('[role="dialog"]')).not.toBeNull();
     expect(document.activeElement).toBe(harness.findButtonContaining('Rename connection'));
+    expect(onClose).not.toHaveBeenCalled();
   });
 
   it('localizes rename failures without exposing transport diagnostics', async () => {
