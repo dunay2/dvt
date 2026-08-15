@@ -143,6 +143,24 @@ describe('temporal worker env', () => {
     ).toThrow(/DATABASE_URL/);
   });
 
+  it('requires an explicit shared run-context file root in production', () => {
+    const productionEnv = {
+      NODE_ENV: 'production',
+      DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+      TEMPORAL_ADDRESS: 'temporal:7233',
+      TEMPORAL_NAMESPACE: 'default',
+      TEMPORAL_TASK_QUEUE: 'dvt-temporal',
+    };
+
+    expect(() => loadEnv(productionEnv)).toThrow(/DVT_WORKSPACE_FILES_ROOT/);
+    expect(
+      loadEnv({
+        ...productionEnv,
+        DVT_WORKSPACE_FILES_ROOT: '/shared/workspaces',
+      }).DVT_WORKSPACE_FILES_ROOT
+    ).toBe('/shared/workspaces');
+  });
+
   it('requires explicit Temporal routing env', () => {
     expect(() =>
       loadEnv({

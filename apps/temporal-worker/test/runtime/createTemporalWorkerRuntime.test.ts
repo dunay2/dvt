@@ -1,7 +1,10 @@
+import { join } from 'node:path';
+
 import type { StepActivity, TemporalWorkerHostConfig } from '@dvt/adapter-temporal';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createTemporalWorkerRuntime } from '../../src/runtime/createTemporalWorkerRuntime.js';
+import { resolveTemporalWorkerRunExecutionContextReaderOptions } from '../../src/runtime/temporalWorkerRuntimeResources.js';
 
 const { mockNativeConnectionConnect } = vi.hoisted(() => ({
   mockNativeConnectionConnect: vi.fn(),
@@ -193,6 +196,30 @@ describe('createTemporalWorkerRuntime', () => {
     expect(closePostgresCapability).toHaveBeenCalledTimes(1);
   });
 
+  it('binds production run-context reads to the same configured file store', () => {
+    expect(
+      resolveTemporalWorkerRunExecutionContextReaderOptions(
+        createEnv({
+          NODE_ENV: 'production',
+          DVT_DBT_BUNDLE_STORE_BACKEND: 'file',
+          DVT_DBT_BUNDLE_FILE_ROOT: '/shared/dbt-bundles',
+        })
+      )
+    ).toEqual({ nodeEnv: 'production', fileReadRoot: '/shared/dbt-bundles' });
+
+    expect(
+      resolveTemporalWorkerRunExecutionContextReaderOptions(
+        createEnv({
+          NODE_ENV: 'production',
+          DVT_WORKSPACE_FILES_ROOT: '/shared/workspaces',
+        })
+      )
+    ).toEqual({
+      nodeEnv: 'production',
+      fileReadRoot: join('/shared/workspaces', '.dvt', 'run-context-artifacts'),
+    });
+  });
+
   it.each([
     {
       backend: 's3' as const,
@@ -297,7 +324,7 @@ function createEnv(
 }
 
 function buildBaseEnv(): {
-  NODE_ENV: 'test';
+  NODE_ENV: 'test' | 'production';
   LOG_LEVEL: 'info';
   SERVICE_NAME: string;
   DATABASE_URL: string;
@@ -333,6 +360,7 @@ function buildBaseEnv(): {
   DVT_DBT_BUNDLE_STORE_BACKEND: 'file' | 's3' | undefined;
   DVT_DBT_BUNDLE_S3_BUCKET: string | undefined;
   DVT_DBT_BUNDLE_FILE_ROOT: string | undefined;
+  DVT_WORKSPACE_FILES_ROOT: string | undefined;
 } {
   return {
     NODE_ENV: 'test' as const,
@@ -371,6 +399,7 @@ function buildBaseEnv(): {
     DVT_DBT_BUNDLE_STORE_BACKEND: undefined,
     DVT_DBT_BUNDLE_S3_BUCKET: undefined,
     DVT_DBT_BUNDLE_FILE_ROOT: undefined,
+    DVT_WORKSPACE_FILES_ROOT: undefined,
   };
 }
 

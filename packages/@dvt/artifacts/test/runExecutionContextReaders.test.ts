@@ -10,6 +10,7 @@ import { describe, expect, it } from 'vitest';
 import {
   ArtifactBackedDbtProjectBundleReader,
   ArtifactBackedRunExecutionContextReader,
+  resolveRunExecutionContextArtifactStore,
 } from '../src/index.js';
 
 class FakeS3Client {
@@ -28,6 +29,32 @@ class FakeS3Client {
 }
 
 describe('@dvt/artifacts runtime readers', () => {
+  it('resolves one run-context store authority for API and worker composition', () => {
+    expect(
+      resolveRunExecutionContextArtifactStore({
+        dbtBundleStoreBackend: 's3',
+        dbtBundleS3Bucket: 'context-bucket',
+        workingDirectory: '/runtime',
+      })
+    ).toEqual({ kind: 's3', bucket: 'context-bucket' });
+    expect(
+      resolveRunExecutionContextArtifactStore({
+        dbtBundleStoreBackend: 'file',
+        dbtBundleFileRoot: '/shared/dbt-bundles',
+        workingDirectory: '/runtime',
+      })
+    ).toEqual({ kind: 'file', rootPath: '/shared/dbt-bundles' });
+    expect(
+      resolveRunExecutionContextArtifactStore({
+        workspaceFilesRoot: '/shared/workspaces',
+        workingDirectory: '/runtime',
+      })
+    ).toEqual({
+      kind: 'file',
+      rootPath: join('/shared/workspaces', '.dvt', 'run-context-artifacts'),
+    });
+  });
+
   it('resolves runExecutionContext artifacts from file:// outside production', async () => {
     const { fileUrl: bundleFileUrl } = writeCanonicalBundleFixture('bundle');
     const content = makeRunExecutionContextArtifact(bundleFileUrl);
