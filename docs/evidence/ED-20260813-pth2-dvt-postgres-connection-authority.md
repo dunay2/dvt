@@ -21,6 +21,7 @@ code_refs:
   - packages/@dvt/artifacts/src/runtime/S3RunExecutionContextReferenceStore.ts
   - apps/api/src/infrastructure/dbt/ArtifactBackedRunExecutionContextReferenceReader.ts
   - apps/api/src/infrastructure/dbt/ArtifactBackedRunExecutionContextInheritanceWriter.ts
+  - apps/api/src/modules/protectedRuntime/buildProtectedRuntimeStorage.ts
 evidence:
   tests:
     - pnpm --filter @dvt/contracts test
@@ -28,6 +29,7 @@ evidence:
     - pnpm --filter dvt-api test:unit
     - pnpm --filter dvt-api lint
     - pnpm --filter dvt-api typecheck
+    - pnpm --filter ./apps/api exec vitest run test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts --maxWorkers=1 --minWorkers=1
     - pnpm --filter @dvt/artifacts test
     - pnpm --filter @dvt/artifacts typecheck
     - pnpm --filter @dvt/web test:canvas
@@ -85,6 +87,14 @@ tested selection is discarded. An authoritative selection or node change also
 clears feedback that was already visible in the reused inspector panel. The
 inspector cannot present connection A's availability as evidence for
 connection B.
+
+Run-context storage is provisioned independently from DBT execution. When no
+DBT artifact backend is configured, the protected runtime binds a file-backed
+context store under the workspace `.dvt/run-context-artifacts` boundary; DBT
+bundle creation remains disabled. Explicit file or S3 artifact configuration
+continues to provide the shared durable store. PostgreSQL-only execution can
+therefore persist, query and inherit its mandatory context while
+`DVT_TEMPORAL_DBT_ENABLED=false`.
 
 For the supported S3 artifact backend, the context payload remains
 content-addressed while `@dvt/artifacts` persists a separate immutable

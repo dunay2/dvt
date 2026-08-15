@@ -23,6 +23,8 @@ mitigations:
     bindings during contract admission.
   - Resolve the catalog entry and credential alias once at StartRun and persist only secret-free
     immutable context.
+  - Provision run-context storage independently from DBT execution, defaulting to the governed
+    workspace artifact boundary when no DBT bundle backend is configured.
   - Derive platform run-context creation time from the run UUIDv7 so retries persist byte-identical
     immutable context even when authorization is re-evaluated later.
   - Verify artifact integrity, workspace scope, PlanRef and exact step reference in the worker
