@@ -119,7 +119,9 @@ describe('SourceImportWizard', () => {
     expect(nameInput).not.toBeNull();
 
     await act(async () => {
-      nameInput?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      nameInput?.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })
+      );
     });
 
     expect(document.querySelector('[aria-label="New connection name"]')).toBeNull();
