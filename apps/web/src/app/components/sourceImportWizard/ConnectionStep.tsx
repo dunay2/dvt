@@ -7,6 +7,7 @@ import type {
   TestWarehouseConnectionResult,
   WarehouseConnection,
 } from '../../ports/workspace';
+import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
@@ -74,6 +75,83 @@ function formatConnectionCatalogSummary(
 ): string {
   const template = connectionCount === 1 ? copy.catalogSummarySingular : copy.catalogSummaryPlural;
   return template.replace('{count}', String(connectionCount));
+}
+
+interface ConnectionFeedbackProps {
+  loadError: string | null;
+  connectionTestResult: TestWarehouseConnectionResult | null;
+  renameConnectionSucceeded: boolean;
+}
+
+function ConnectionFeedback({
+  loadError,
+  connectionTestResult,
+  renameConnectionSucceeded,
+}: ConnectionFeedbackProps) {
+  const { copy } = useSourceImportLocalization();
+  const hasFeedback =
+    loadError !== null || connectionTestResult !== null || renameConnectionSucceeded;
+
+  if (!hasFeedback) return null;
+
+  return (
+    <div data-slot="source-import-connection-feedback" className="space-y-2">
+      {loadError ? (
+        <Alert
+          data-slot="source-import-connection-load-error"
+          aria-live="assertive"
+          aria-atomic="true"
+          variant="destructive"
+          className="border-red-700 bg-red-950/30 px-3 py-2 text-sm text-red-200"
+        >
+          <AlertDescription className="text-red-200">{loadError}</AlertDescription>
+        </Alert>
+      ) : null}
+
+      {renameConnectionSucceeded ? (
+        <div
+          data-slot="source-import-rename-connection-success"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          className="rounded-md border border-emerald-800/70 bg-emerald-950/20 px-3 py-2 text-xs text-emerald-200"
+        >
+          {copy.connection.renameSuccess}
+        </div>
+      ) : null}
+
+      {connectionTestResult?.status === 'failed' ? (
+        <Alert
+          data-slot="source-import-connection-test-failure"
+          aria-live="assertive"
+          aria-atomic="true"
+          variant="destructive"
+          className="border-red-700 bg-red-950/30 px-3 py-2 text-sm text-red-100"
+        >
+          <AlertTitle>{copy.connection.testFailed}</AlertTitle>
+          <AlertDescription className="text-xs text-red-100/85">
+            {copy.connection.testFailedDetail}
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
+      {connectionTestResult?.status === 'passed' ? (
+        <div
+          data-slot="source-import-connection-test-success"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          className="flex min-h-8 flex-wrap items-center gap-x-2 gap-y-1 rounded-md border border-emerald-800/70 bg-emerald-950/20 px-3 py-2 text-xs leading-4 text-emerald-200"
+        >
+          <CheckCircle2 className="size-3.5 shrink-0" aria-hidden="true" />
+          <span className="font-medium">{copy.connection.testPassed}</span>
+          <span className="text-emerald-300/80">
+            {connectionTestResult.objectCount} {copy.connection.reachableObjects}
+          </span>
+        </div>
+      ) : null}
+    </div>
+  );
 }
 
 export function ConnectionStep({
@@ -144,18 +222,6 @@ export function ConnectionStep({
         </div>
         <p className="mb-4 text-sm text-slate-300">{copy.connection.description}</p>
       </div>
-
-      {loadError ? (
-        <Card
-          data-slot="source-import-connection-load-error"
-          role="alert"
-          aria-live="assertive"
-          aria-atomic="true"
-          className="border-red-700 bg-red-950/30 p-3 text-sm text-red-200"
-        >
-          {loadError}
-        </Card>
-      ) : null}
 
       <div className="space-y-2">
         {isLoadingConnections ? (
@@ -250,31 +316,6 @@ export function ConnectionStep({
               />
             ) : null}
 
-            {renameConnectionSucceeded ? (
-              <div
-                data-slot="source-import-rename-connection-success"
-                role="status"
-                aria-live="polite"
-                aria-atomic="true"
-                className="rounded-md border border-emerald-800/70 bg-emerald-950/20 px-3 py-2 text-xs text-emerald-200"
-              >
-                {copy.connection.renameSuccess}
-              </div>
-            ) : null}
-
-            {connectionTestResult?.status === 'failed' ? (
-              <Card
-                data-slot="source-import-connection-test-failure"
-                role="alert"
-                aria-live="assertive"
-                aria-atomic="true"
-                className="border-red-700 bg-red-950/30 p-3 text-sm text-red-100"
-              >
-                <div className="font-medium">{copy.connection.testFailed}</div>
-                <div className="mt-1 text-xs opacity-85">{copy.connection.testFailedDetail}</div>
-              </Card>
-            ) : null}
-
             {connections.length === 0 ? (
               <Card className="border-slate-700 bg-slate-950/40 p-4 text-sm text-slate-300">
                 <div className="font-medium text-slate-100">{copy.connection.empty}</div>
@@ -324,21 +365,11 @@ export function ConnectionStep({
               })
             )}
 
-            {connectionTestResult?.status === 'passed' ? (
-              <div
-                data-slot="source-import-connection-test-success"
-                role="status"
-                aria-live="polite"
-                aria-atomic="true"
-                className="flex min-h-8 flex-wrap items-center gap-x-2 gap-y-1 rounded-md border border-emerald-800/70 bg-emerald-950/20 px-3 py-2 text-xs leading-4 text-emerald-200"
-              >
-                <CheckCircle2 className="size-3.5 shrink-0" aria-hidden="true" />
-                <span className="font-medium">{copy.connection.testPassed}</span>
-                <span className="text-emerald-300/80">
-                  {connectionTestResult.objectCount} {copy.connection.reachableObjects}
-                </span>
-              </div>
-            ) : null}
+            <ConnectionFeedback
+              loadError={loadError}
+              connectionTestResult={connectionTestResult}
+              renameConnectionSucceeded={renameConnectionSucceeded}
+            />
           </>
         )}
       </div>
