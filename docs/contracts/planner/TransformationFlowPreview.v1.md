@@ -2,7 +2,7 @@
 title: Transformation flow preview and design graph v1
 status: Active
 owner: docs
-last_reviewed: 2026-04-14
+last_reviewed: 2026-08-15
 ---
 
 # Transformation flow preview and design graph v1
@@ -62,15 +62,17 @@ caller-visible:
 `PlanPreviewRequest` freezes the caller-visible request contract for
 `POST /plans/preview`.
 
-For `transformation-sql-first-v1`:
+For `transformation-sql-first-v2`:
 
 - `previewProfile` is explicit and required
 - `persist` is always `true`
 - `selectedNodeIds` is non-empty and duplicate-free
 - `graphSource.sourceFamily` is `transformation-design-graph`
-- `graphSource.sourceVersion` is `transformation-sql-first-v1`
+- `graphSource.sourceVersion` is `transformation-sql-first-v2`
 - `graphSource` must satisfy the canonical compiler mapping documented in the
   companion compiler contract
+- every governed step config carries the same required PostgreSQL
+  `ConnectionRef`; the source-selected identity is execution authority
 - provenance is required
 
 ## Preview response
@@ -85,7 +87,7 @@ It always contains:
 - `persisted`
 - `validation`
 
-For `transformation-sql-first-v1` it additionally requires:
+For `transformation-sql-first-v2` it additionally requires:
 
 - `planSummary`
 - `provenance`

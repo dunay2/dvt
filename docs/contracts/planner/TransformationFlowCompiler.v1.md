@@ -2,7 +2,7 @@
 title: Transformation flow compiler mapping v1
 status: Active
 owner: docs
-last_reviewed: 2026-04-14
+last_reviewed: 2026-08-15
 ---
 
 # Transformation flow compiler mapping v1
@@ -48,13 +48,15 @@ The dependency order is fixed:
 ## Graph-source invariants
 
 For `sourceFamily = transformation-design-graph` and
-`sourceVersion = transformation-sql-first-v1`:
+`sourceVersion = transformation-sql-first-v2`:
 
 - exactly one prepare node is present
 - exactly one transform node is present
 - exactly one evidence node is present
 - there are exactly three governed nodes
 - source and sink binding stay coherent across prepare, transform, and evidence
+- every step carries the same required PostgreSQL `ConnectionRef`; mixed or
+  missing connection identities are rejected
 - `selectedNodeIds` must match the canonical compiler node ids when the preview
   request is validated
 
@@ -62,6 +64,7 @@ For `sourceFamily = transformation-design-graph` and
 
 `PREPARE_POSTGRES_TRANSFORM` owns:
 
+- `connectionRef`
 - `targetSchema`
 - `sourceSchema`
 - `sourceTable`
@@ -69,6 +72,7 @@ For `sourceFamily = transformation-design-graph` and
 
 `POSTGRES_SQL_TRANSFORM` owns:
 
+- `connectionRef`
 - `dialect`
 - `entrypoint`
 - `sql`
@@ -83,6 +87,7 @@ For `sourceFamily = transformation-design-graph` and
 
 `CAPTURE_MATERIALIZATION_EVIDENCE` owns:
 
+- `connectionRef`
 - `sinkSchema`
 - `sinkTable`
 - `materialization`
@@ -98,6 +103,7 @@ It requires the persisted plan to preserve:
 - the fixed three-step chain
 - the prepare-to-transform dependency
 - the transform-to-evidence dependency
+- one identical PostgreSQL `ConnectionRef` across all three steps
 - the same source table and sink table binding expressed in the compiler config
 
 The canonical summary is:

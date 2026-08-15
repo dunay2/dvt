@@ -52,8 +52,9 @@ This contract is route-truth only. It does not introduce new backend behavior.
 
 Preview-route rule:
 
-- `transformation-sql-first-v1` requires request-side `provenance.graphArtifact`
-  and `provenance.sqlArtifact`
+- `transformation-sql-first-v2` requires request-side `provenance.graphArtifact`
+  and `provenance.sqlArtifact`, plus one shared PostgreSQL `ConnectionRef`
+  across all governed SQL-first step configs
 - frontend callers must materialize the current `DesignGraphDraft` authoring
   artifact at the configured `graphArtifactPath` before calling preview and
   hash that saved content for `provenance.graphArtifact.contentSha256`

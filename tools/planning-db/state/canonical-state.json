@@ -147794,7 +147794,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "docs/architecture/components/web/graph/graph-frontend-architecture.md",
-      "sourceContentSha256": "1334275563ca4e458a3469aedd584a682ab30aafeb17c8df2cfa18a6f320bed6",
+      "sourceContentSha256": "8a8edcd46c97d4c53ead6e1e10c0e942c49f427874065913871ac200ae41caab",
       "rawRail": {
         "name": "AuthorCanvasGraphEdge",
         "type": "command",
@@ -158431,7 +158431,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "docs/architecture/components/web/graph/graph-frontend-architecture.md",
-      "sourceContentSha256": "1334275563ca4e458a3469aedd584a682ab30aafeb17c8df2cfa18a6f320bed6",
+      "sourceContentSha256": "8a8edcd46c97d4c53ead6e1e10c0e942c49f427874065913871ac200ae41caab",
       "rawRail": {
         "name": "GetCostAttributionSummary",
         "type": "query",
