@@ -5,6 +5,7 @@ date: 2026-08-13
 owners:
   - '@dvt/contracts'
   - '@dvt/adapter-postgres'
+  - '@dvt/artifacts'
   - dvt-api
   - dvt-temporal-worker
   - '@dvt/web'
@@ -17,6 +18,9 @@ code_refs:
   - apps/web/src/app/views/canvas/DvtSourceAuthoringSection.tsx
   - packages/@dvt/adapter-postgres/src/PostgresRelationalExecutionCapability.ts
   - apps/temporal-worker/src/runtime/TemporalWorkerPostgresPlanConnectionResolver.ts
+  - packages/@dvt/artifacts/src/runtime/S3RunExecutionContextReferenceStore.ts
+  - apps/api/src/infrastructure/dbt/ArtifactBackedRunExecutionContextReferenceReader.ts
+  - apps/api/src/infrastructure/dbt/ArtifactBackedRunExecutionContextInheritanceWriter.ts
 evidence:
   tests:
     - pnpm --filter @dvt/contracts test
@@ -24,6 +28,8 @@ evidence:
     - pnpm --filter dvt-api test:unit
     - pnpm --filter dvt-api lint
     - pnpm --filter dvt-api typecheck
+    - pnpm --filter @dvt/artifacts test
+    - pnpm --filter @dvt/artifacts typecheck
     - pnpm --filter @dvt/web test:canvas
     - pnpm --filter @dvt/web lint
     - pnpm --filter @dvt/web typecheck
@@ -63,6 +69,16 @@ The Temporal adapter integration fixture now supplies the same complete v2 step
 configs and an explicit plan resolver; its real PostgreSQL workflow reaches
 `RunCompleted` through all three steps.
 
+For the supported S3 artifact backend, the context payload remains
+content-addressed while `@dvt/artifacts` persists a separate immutable
+run-to-reference index. Tenant and run identifiers are SHA-256 addressed in
+that index, conditional S3 writes reject conflicting rebinds, and only an
+identical replay is accepted. Status and `RecoverRun` now load the same trusted
+reference through the artifact-backed reader; recovery verifies the source
+payload and records the descendant run identity against the same immutable S3
+context. Missing, malformed, cross-tenant or conflicting references fail
+closed.
+
 The headed browser proof created a new governed project and Warehouse
 Connection, imported `raw.orders`, authored Source -> Transform -> Sink,
 generated preview `a87244bb21f7957f3044098db1767f337bd87b4cedcf21aad7f764565435d9ea`
@@ -70,5 +86,5 @@ and completed run `run_019ffe42-d90d-785f-943f-7057809e9b37` with three rows
 written to `public.pth2_orders`. Its immutable run context retained
 `postgresql-local-gobernado` and `postgres:local-postgres-proof`.
 
-No stub, placeholder, migration layer, duplicate command/query rail or secret
-was added to graph, plan or run-context persistence.
+No stub, placeholder, database migration layer, duplicate command/query rail
+or secret was added to graph, plan or run-context persistence.

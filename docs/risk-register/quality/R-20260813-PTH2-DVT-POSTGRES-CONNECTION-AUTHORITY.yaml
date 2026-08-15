@@ -6,6 +6,7 @@ date: 2026-08-13
 owners:
   - packages/@dvt/contracts
   - packages/@dvt/adapter-postgres
+  - packages/@dvt/artifacts
   - apps/api
   - apps/temporal-worker
   - apps/web
@@ -13,7 +14,7 @@ severity: High
 probability: Low
 context: >
   PTH2 binds one source-owned PostgreSQL ConnectionRef through Canvas draft, preview, stored plan,
-  StartRun context and Temporal worker execution.
+  StartRun context, artifact-backed status/recovery and Temporal worker execution.
 risk: >
   A future fallback, inferred transform binding, stale credential alias or incomplete scope check
   could execute valid SQL against the wrong PostgreSQL connection without being obvious to the user.
@@ -27,6 +28,8 @@ mitigations:
   - Keep a separate pool per admitted binding and prove A/B routing with homonymous SQL objects.
   - Reject a missing plan resolver or alias without falling back to the capability pool or
     DATABASE_URL.
+  - Persist an immutable S3 run-to-reference index with hashed scope keys, conditional writes and
+    exact replay verification so status and recovery use the same trusted context as StartRun.
 residual_risk: >
   Credential rotation changes the value behind a stable alias for future worker processes. Revoked
   connection reconciliation and multi-provider SQL-first execution require separate product slices;
