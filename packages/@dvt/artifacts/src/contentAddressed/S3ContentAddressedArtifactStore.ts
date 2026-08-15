@@ -61,6 +61,10 @@ export function createDefaultS3ContentAddressedArtifactStore(): S3ContentAddress
   return defaultS3ContentAddressedArtifactStore;
 }
 
+export function encodeS3TenantPathSegment(tenantId: string): string {
+  return encodeURIComponent(tenantId);
+}
+
 async function readExistingArtifact(
   input: PublishContentAddressedArtifactInput,
   s3Client: S3LikeClient
@@ -110,7 +114,7 @@ function parseAndValidateLocator(input: PublishContentAddressedArtifactInput): {
   if (uri.protocol !== 's3:' || uri.hostname.length === 0 || parts.length !== 3) {
     throw ArtifactStoreError.uploadFailed('artifact storage URI is not content-addressed');
   }
-  if (parts[0] !== 'tenants' || parts[1] !== input.tenantId) {
+  if (parts[0] !== 'tenants' || parts[1] !== encodeS3TenantPathSegment(input.tenantId)) {
     throw ArtifactStoreError.tenantMismatch(input.tenantId, parts[1] ?? 'missing');
   }
   if (parts[2] !== input.sha256) {

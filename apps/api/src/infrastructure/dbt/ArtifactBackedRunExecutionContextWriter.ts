@@ -4,6 +4,7 @@ import { pathToFileURL } from 'node:url';
 
 import {
   createDefaultS3ContentAddressedArtifactStore,
+  encodeS3TenantPathSegment,
   type DbtProjectBundleArtifactStore,
   type IContentAddressedArtifactStore,
   type IRunExecutionContextReferenceStore,
@@ -42,7 +43,7 @@ export class ArtifactBackedRunExecutionContextWriter implements IRunExecutionCon
       if (this.referenceStore === undefined) {
         return { ok: false, reason: 'artifact_store_unavailable' };
       }
-      const uri = `s3://${this.store.bucket}/tenants/${input.context.tenantId}/${sha256}`;
+      const uri = `s3://${this.store.bucket}/tenants/${encodeS3TenantPathSegment(input.context.tenantId)}/${sha256}`;
       const ref = buildReference(input.context, uri, sha256);
       const artifactStore = this.s3ArtifactStore ?? createDefaultS3ContentAddressedArtifactStore();
       await artifactStore.publish({

@@ -8,6 +8,7 @@ import {
   type RunExecutionContextRef,
 } from '@dvt/contracts';
 
+import { encodeS3TenantPathSegment } from '../contentAddressed/S3ContentAddressedArtifactStore.js';
 import type {
   IRunExecutionContextReferenceStore,
   PutRunExecutionContextReferenceInput,
@@ -143,7 +144,7 @@ function assertReferenceBinding(
   if (
     uri.protocol !== 's3:' ||
     uri.hostname !== bucket ||
-    uri.pathname !== `/tenants/${tenantId}/${ref.sha256}`
+    uri.pathname !== `/tenants/${encodeS3TenantPathSegment(tenantId)}/${ref.sha256}`
   ) {
     throw new ArtifactReadError(
       'ARTIFACT_STORE_MISMATCH',

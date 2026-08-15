@@ -12,6 +12,7 @@ export type {
 } from './contentAddressed/IContentAddressedArtifactStore.js';
 export {
   createDefaultS3ContentAddressedArtifactStore,
+  encodeS3TenantPathSegment,
   S3ContentAddressedArtifactStore,
   type S3ContentAddressedArtifactStoreOptions,
 } from './contentAddressed/S3ContentAddressedArtifactStore.js';

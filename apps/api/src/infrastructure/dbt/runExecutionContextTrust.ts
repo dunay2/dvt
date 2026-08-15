@@ -1,5 +1,6 @@
 import { URL } from 'node:url';
 
+import { encodeS3TenantPathSegment } from '@dvt/artifacts';
 import type { RunExecutionContext, RunExecutionContextRef } from '@dvt/contracts';
 
 import type { RunExecutionContextExpectedBinding } from '../../application/ports/runExecutionContextReferenceReader.js';
@@ -29,7 +30,7 @@ export function runExecutionContextRefMatchesS3Store(input: {
     return (
       uri.protocol === 's3:' &&
       uri.hostname === input.bucket &&
-      uri.pathname === `/tenants/${input.tenantId}/${input.ref.sha256}`
+      uri.pathname === `/tenants/${encodeS3TenantPathSegment(input.tenantId)}/${input.ref.sha256}`
     );
   } catch {
     return false;
