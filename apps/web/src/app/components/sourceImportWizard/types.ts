@@ -5,6 +5,7 @@ import type {
   SourceObject,
   TestWarehouseConnectionResult,
   WarehouseConnection,
+  RenameWarehouseConnectionInput,
 } from '../../ports/workspace';
 import type { SourceImportOptionContribution } from '../../plugins/registry';
 
@@ -55,6 +56,8 @@ export type SourceImportFailureCode =
   | 'test-connection'
   | 'create-connection-validation'
   | 'create-connection'
+  | 'rename-connection-validation'
+  | 'rename-connection'
   | 'import-sources';
 
 export type SourceImportFailure = Readonly<{
@@ -78,6 +81,8 @@ export interface SourceImportWizardState {
   selectedConnection: string | null;
   createConnectionFormOpen: boolean;
   createConnectionForm: CreateWarehouseConnectionInput;
+  renameConnectionFormOpen: boolean;
+  renameConnectionForm: RenameWarehouseConnectionInput;
   sourceObjects: SelectableSourceObject[];
   groupingStrategy: SourceImportGroupingStrategy;
   includeColumns: boolean;
@@ -87,10 +92,13 @@ export interface SourceImportWizardState {
   isLoadingConnections: boolean;
   isLoadingSourceObjects: boolean;
   isCreatingConnection: boolean;
+  isRenamingConnection: boolean;
   isTestingConnection: boolean;
   connectionTestResult: TestWarehouseConnectionResult | null;
   loadError: SourceImportFailure | null;
   createConnectionError: SourceImportFailure | null;
+  renameConnectionError: SourceImportFailure | null;
+  renameConnectionSucceeded: boolean;
   importResult: ImportSourcesResult | null;
   activeSourceObjectKey: string | null;
   sourceObjectSearchQuery: string;

@@ -57,6 +57,15 @@ const EN_COPY = {
     createValidationError: 'Name, database, and credential reference are required.',
     createSuccess: 'Warehouse connection created',
     createError: 'Failed to create warehouse connection.',
+    renameAction: 'Rename connection',
+    renameTitle: 'Rename connection',
+    renameNameLabel: 'New connection name',
+    renameSubmitAction: 'Save name',
+    renamingAction: 'Saving...',
+    renameCancelAction: 'Cancel',
+    renameValidationError: 'Enter a different connection name.',
+    renameSuccess: 'Connection name updated',
+    renameError: 'Failed to rename the connection.',
     testAction: 'Test connection',
     testingAction: 'Testing...',
     testPassed: 'Connection passed',
@@ -252,6 +261,15 @@ const ES_COPY = {
       'El nombre, la base de datos y la referencia de credencial son obligatorios.',
     createSuccess: 'Conexión al warehouse creada',
     createError: 'No se pudo crear la conexión al warehouse.',
+    renameAction: 'Cambiar nombre',
+    renameTitle: 'Cambiar nombre de la conexión',
+    renameNameLabel: 'Nuevo nombre de la conexión',
+    renameSubmitAction: 'Guardar nombre',
+    renamingAction: 'Guardando...',
+    renameCancelAction: 'Cancelar',
+    renameValidationError: 'Escribe un nombre distinto para la conexión.',
+    renameSuccess: 'Nombre de la conexión actualizado',
+    renameError: 'No se pudo cambiar el nombre de la conexión.',
     testAction: 'Probar conexión',
     testingAction: 'Probando...',
     testPassed: 'Conexión correcta',
@@ -432,6 +450,10 @@ export function resolveSourceImportFailureMessage(
       return copy.connection.createValidationError;
     case 'create-connection':
       return copy.connection.createError;
+    case 'rename-connection-validation':
+      return copy.connection.renameValidationError;
+    case 'rename-connection':
+      return copy.connection.renameError;
     case 'import-sources':
       return copy.importError;
   }

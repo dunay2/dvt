@@ -19,6 +19,10 @@ export function WizardStepContent({ controller }: WizardStepContentProps) {
     copy,
     state.createConnectionError
   );
+  const renameConnectionError = resolveSourceImportFailureMessage(
+    copy,
+    state.renameConnectionError
+  );
   switch (state.currentStep) {
     case 'connection':
       return (
@@ -28,21 +32,32 @@ export function WizardStepContent({ controller }: WizardStepContentProps) {
             selectedConnection={state.selectedConnection}
             createConnectionFormOpen={state.createConnectionFormOpen}
             createConnectionForm={state.createConnectionForm}
+            renameConnectionFormOpen={state.renameConnectionFormOpen}
+            renameConnectionForm={state.renameConnectionForm}
             isLoadingConnections={state.isLoadingConnections}
             isCreatingConnection={state.isCreatingConnection}
+            isRenamingConnection={state.isRenamingConnection}
             isTestingConnection={state.isTestingConnection}
             connectionTestResult={state.connectionTestResult}
             loadError={loadError}
             createConnectionError={createConnectionError}
+            renameConnectionError={renameConnectionError}
+            renameConnectionSucceeded={state.renameConnectionSucceeded}
             onSelectConnection={controller.setSelectedConnection}
             onOpenCreateConnectionForm={controller.openCreateConnectionForm}
             onCancelCreateConnectionForm={controller.cancelCreateConnectionForm}
             onCreateConnectionFormChange={controller.setCreateConnectionFormField}
+            onOpenRenameConnectionForm={controller.openRenameConnectionForm}
+            onCancelRenameConnectionForm={controller.cancelRenameConnectionForm}
+            onRenameConnectionNameChange={controller.setRenameConnectionName}
             onCreateConnection={() => {
               void controller.handleCreateConnection();
             }}
             onTestConnection={() => {
               void controller.handleTestConnection();
+            }}
+            onRenameConnection={() => {
+              void controller.handleRenameConnection();
             }}
           />
         </div>

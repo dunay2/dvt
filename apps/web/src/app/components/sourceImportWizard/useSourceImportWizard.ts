@@ -6,6 +6,7 @@ import type {
   CreateWarehouseConnectionInput,
   ImportSourcesResult,
   IWarehouseSourceImportPort,
+  RenameWarehouseConnectionInput,
   WarehouseConnection,
 } from '../../ports/workspace';
 import type { SourceImportOptionContribution, SourceImportOptionId } from '../../plugins/registry';
@@ -64,6 +65,8 @@ const initialState: SourceImportWizardState = {
     database: '',
     credentialRef: '',
   },
+  renameConnectionFormOpen: false,
+  renameConnectionForm: { name: '' },
   sourceObjects: [],
   groupingStrategy: 'schema',
   includeColumns: false,
@@ -73,10 +76,13 @@ const initialState: SourceImportWizardState = {
   isLoadingConnections: false,
   isLoadingSourceObjects: false,
   isCreatingConnection: false,
+  isRenamingConnection: false,
   isTestingConnection: false,
   connectionTestResult: null,
   loadError: null,
   createConnectionError: null,
+  renameConnectionError: null,
+  renameConnectionSucceeded: false,
   importResult: null,
   activeSourceObjectKey: null,
   sourceObjectSearchQuery: '',
@@ -104,9 +110,10 @@ function upsertWarehouseConnection(
   const replaced = connections.map((connection) =>
     connection.id === nextConnection.id ? nextConnection : connection
   );
-  return replaced.some((connection) => connection.id === nextConnection.id)
+  const nextConnections = replaced.some((connection) => connection.id === nextConnection.id)
     ? replaced
     : [...connections, nextConnection];
+  return nextConnections.sort((left, right) => left.name.localeCompare(right.name));
 }
 
 export function useSourceImportWizard({
@@ -148,6 +155,9 @@ export function useSourceImportWizard({
       currentStep: 'selection',
       selectedConnection: initialSelection.connectionId,
       createConnectionFormOpen: false,
+      renameConnectionFormOpen: false,
+      renameConnectionError: null,
+      renameConnectionSucceeded: false,
       createConnectionError: null,
       sourceObjects: [],
       activeSourceObjectKey: null,
@@ -209,6 +219,9 @@ export function useSourceImportWizard({
       ...prev,
       selectedConnection,
       createConnectionError: null,
+      renameConnectionFormOpen: false,
+      renameConnectionError: null,
+      renameConnectionSucceeded: false,
       sourceObjects: selectedConnection === prev.selectedConnection ? prev.sourceObjects : [],
       activeSourceObjectKey:
         selectedConnection === prev.selectedConnection ? prev.activeSourceObjectKey : null,
@@ -233,6 +246,9 @@ export function useSourceImportWizard({
     setState((prev) => ({
       ...prev,
       createConnectionFormOpen: true,
+      renameConnectionFormOpen: false,
+      renameConnectionError: null,
+      renameConnectionSucceeded: false,
       createConnectionError: null,
       loadError: null,
     }));
@@ -253,6 +269,32 @@ export function useSourceImportWizard({
         [field]: value,
       },
       createConnectionError: null,
+    }));
+  const openRenameConnectionForm = () => {
+    if (!selectedConnectionObject) return;
+    setState((prev) => ({
+      ...prev,
+      createConnectionFormOpen: false,
+      createConnectionError: null,
+      renameConnectionFormOpen: true,
+      renameConnectionForm: { name: selectedConnectionObject.name },
+      renameConnectionError: null,
+      renameConnectionSucceeded: false,
+      loadError: null,
+    }));
+  };
+  const cancelRenameConnectionForm = () =>
+    setState((prev) => ({
+      ...prev,
+      renameConnectionFormOpen: false,
+      renameConnectionError: null,
+      renameConnectionSucceeded: false,
+    }));
+  const setRenameConnectionName = (name: RenameWarehouseConnectionInput['name']) =>
+    setState((prev) => ({
+      ...prev,
+      renameConnectionForm: { name },
+      renameConnectionError: null,
     }));
 
   const handleNext = () => {
@@ -336,6 +378,50 @@ export function useSourceImportWizard({
       toast.error(resolveSourceImportFailureMessage(copy, failure));
     } finally {
       setState((prev) => ({ ...prev, isCreatingConnection: false }));
+    }
+  };
+
+  const handleRenameConnection = async () => {
+    if (!selectedConnectionObject) return;
+    const name = state.renameConnectionForm.name.trim();
+    if (!name || name === selectedConnectionObject.name.trim()) {
+      setState((prev) => ({
+        ...prev,
+        renameConnectionError: buildSourceImportFailure('rename-connection-validation'),
+      }));
+      return;
+    }
+
+    setState((prev) => ({
+      ...prev,
+      isRenamingConnection: true,
+      renameConnectionError: null,
+      loadError: null,
+    }));
+    try {
+      const connection = await warehouseSourceImport.renameWarehouseConnection(
+        selectedConnectionObject.id,
+        { name }
+      );
+      setState((prev) => ({
+        ...prev,
+        connections: upsertWarehouseConnection(prev.connections, connection),
+        renameConnectionFormOpen: false,
+        renameConnectionForm: { name: '' },
+        renameConnectionError: null,
+        renameConnectionSucceeded: true,
+      }));
+      toast.success(copy.connection.renameSuccess);
+    } catch (error) {
+      const failure = buildSourceImportFailure('rename-connection', error);
+      setState((prev) => ({
+        ...prev,
+        renameConnectionError: failure,
+        renameConnectionSucceeded: false,
+      }));
+      toast.error(resolveSourceImportFailureMessage(copy, failure));
+    } finally {
+      setState((prev) => ({ ...prev, isRenamingConnection: false }));
     }
   };
 
@@ -466,6 +552,9 @@ export function useSourceImportWizard({
     openCreateConnectionForm,
     cancelCreateConnectionForm,
     setCreateConnectionFormField,
+    openRenameConnectionForm,
+    cancelRenameConnectionForm,
+    setRenameConnectionName,
     setGroupingStrategy,
     setIncludeColumns,
     setAddTests,
@@ -475,6 +564,7 @@ export function useSourceImportWizard({
     handleNext,
     handleBack,
     handleCreateConnection,
+    handleRenameConnection,
     handleTestConnection,
     handleImport,
     handleComplete,

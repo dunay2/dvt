@@ -143,6 +143,12 @@ function buildWorkspacePortStubs(): {
         type: input.type,
         database: input.database,
       })),
+      renameWarehouseConnection: vi.fn(async (connectionId, input) => ({
+        id: connectionId,
+        name: input.name,
+        type: 'postgres' as const,
+        database: 'analytics',
+      })),
       testWarehouseConnection: vi.fn(async (connectionId) => ({
         connectionId,
         status: 'passed' as const,
