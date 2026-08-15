@@ -69,6 +69,48 @@ describe('@dvt/artifacts runtime readers', () => {
     });
   });
 
+  it('resolves production file artifacts only from an explicitly allowed root', async () => {
+    const content = makeRunExecutionContextArtifact(
+      `s3://bundle-bucket/tenants/tenant-1/${'b'.repeat(64)}`
+    );
+    const allowedRoot = mkdtempSync(join(tmpdir(), 'dvt-artifacts-runctx-root-'));
+    const allowedPath = join(allowedRoot, 'tenants', 'tenant-1', sha256Hex(content));
+    mkdirSync(join(allowedRoot, 'tenants', 'tenant-1'), { recursive: true });
+    writeFileSync(allowedPath, content, 'utf8');
+    const reader = new ArtifactBackedRunExecutionContextReader({
+      nodeEnv: 'production',
+      fileReadRoot: allowedRoot,
+    });
+
+    await expect(
+      reader.resolve(
+        parseRunExecutionContextRef({
+          uri: pathToFileURL(allowedPath).href,
+          sha256: sha256Hex(content),
+          schemaVersion: 'v1.0',
+          planId: 'plan-1',
+          planVersion: '1.0',
+        })
+      )
+    ).resolves.toMatchObject({ planId: 'plan-1' });
+
+    const outsideUrl = writeTempFixture('outside.json', content);
+    await expect(
+      reader.resolve(
+        parseRunExecutionContextRef({
+          uri: outsideUrl,
+          sha256: sha256Hex(content),
+          schemaVersion: 'v1.0',
+          planId: 'plan-1',
+          planVersion: '1.0',
+        })
+      )
+    ).rejects.toMatchObject({
+      name: 'ArtifactReadError',
+      message: 'file:// runExecutionContextRef resolves outside its allowed root',
+    });
+  });
+
   it('reads DBT project bundles from s3://', async () => {
     const bundleBytes = Buffer.from('fake bundle');
     const reader = new ArtifactBackedDbtProjectBundleReader({
