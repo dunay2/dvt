@@ -7,6 +7,8 @@ import { parseRunExecutionContext, type RunExecutionContext } from '@dvt/contrac
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ArtifactBackedRunExecutionContextWriter } from '../../../src/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.js';
+import { resolveRunExecutionContextArtifactStore } from '../../../src/modules/protectedRuntime/buildProtectedRuntimeStorage.js';
+import { loadEnv } from '../../../src/plugins/env.js';
 
 let root: string | undefined;
 
@@ -27,6 +29,25 @@ describe('ArtifactBackedRunExecutionContextWriter', () => {
     if (!result.ok) throw new Error('Expected a run context reference.');
     expect(result.ref.uri).not.toContain('unsafe');
     await expect(readFile(new URL(result.ref.uri), 'utf8')).resolves.toBe(JSON.stringify(context));
+  });
+
+  it('provisions file-backed run-context storage when DBT execution is disabled', async () => {
+    root = await mkdtemp(path.join(tmpdir(), 'dvt-postgres-run-context-'));
+    const store = resolveRunExecutionContextArtifactStore(
+      loadEnv({
+        DVT_TEMPORAL_DBT_ENABLED: 'false',
+        DVT_WORKSPACE_FILES_ROOT: root,
+      })
+    );
+    const writer = new ArtifactBackedRunExecutionContextWriter(store);
+
+    const result = await writer.write({ runId: 'postgres-only-run', context: buildContext() });
+
+    expect(store).toEqual({
+      kind: 'file',
+      rootPath: path.join(root, '.dvt', 'run-context-artifacts'),
+    });
+    expect(result).toMatchObject({ ok: true });
   });
 
   it('publishes an S3-backed context through the existing content-addressed store', async () => {
