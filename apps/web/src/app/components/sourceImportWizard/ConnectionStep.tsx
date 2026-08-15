@@ -115,7 +115,15 @@ export function ConnectionStep({
       </div>
 
       {loadError ? (
-        <Card className="border-red-700 bg-red-950/30 p-3 text-sm text-red-200">{loadError}</Card>
+        <Card
+          data-slot="source-import-connection-load-error"
+          role="alert"
+          aria-live="assertive"
+          aria-atomic="true"
+          className="border-red-700 bg-red-950/30 p-3 text-sm text-red-200"
+        >
+          {loadError}
+        </Card>
       ) : null}
 
       <div className="space-y-2">
@@ -189,7 +197,13 @@ export function ConnectionStep({
             ) : null}
 
             {connectionTestResult?.status === 'failed' ? (
-              <Card className="border-red-700 bg-red-950/30 p-3 text-sm text-red-100">
+              <Card
+                data-slot="source-import-connection-test-failure"
+                role="alert"
+                aria-live="assertive"
+                aria-atomic="true"
+                className="border-red-700 bg-red-950/30 p-3 text-sm text-red-100"
+              >
                 <div className="font-medium">{copy.connection.testFailed}</div>
                 <div className="mt-1 text-xs opacity-85">{copy.connection.testFailedDetail}</div>
               </Card>
