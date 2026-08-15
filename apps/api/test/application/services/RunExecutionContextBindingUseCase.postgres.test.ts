@@ -9,6 +9,7 @@ import {
 } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
+import type { IRunExecutionContextWriter } from '../../../src/application/ports/runExecutionContextWriter.js';
 import type { IWarehouseConnectionCatalog } from '../../../src/application/ports/warehouseSourceImport.js';
 import { WarehouseConnectionNotFoundError } from '../../../src/application/ports/warehouseSourceImport.js';
 import { RunExecutionContextBindingUseCase } from '../../../src/application/services/RunExecutionContextBindingUseCase.js';
@@ -17,6 +18,7 @@ import { EnvironmentId, ProjectId, TenantId } from '../../../src/domain/auth/typ
 import { buildAuthorizedContext } from './engineStartRunUseCase.test.support.js';
 
 const PLAN_ID = 'd'.repeat(64);
+const PLATFORM_RUN_ID = 'run_0196454a-f0c8-7d37-a8e8-8a7f9afac0f1';
 const CONNECTION_REF = {
   schemaVersion: 'connection-ref.v1',
   connectionId: 'warehouse-a',
@@ -110,6 +112,49 @@ describe('RunExecutionContextBindingUseCase PostgreSQL authority', () => {
     });
     expect(contextWriter.write).not.toHaveBeenCalled();
     expect(delegate.execute).not.toHaveBeenCalled();
+  });
+
+  it('creates retry-stable context bytes from the platform run identity', async () => {
+    let firstContextBytes: string | undefined;
+    const contextWriter = {
+      write: vi.fn<IRunExecutionContextWriter['write']>(async (input) => {
+        const contextBytes = JSON.stringify(input.context);
+        if (firstContextBytes === undefined) {
+          firstContextBytes = contextBytes;
+        } else if (contextBytes !== firstContextBytes) {
+          throw new Error('The immutable run context changed across a retry.');
+        }
+        return { ok: true as const, ref: RUN_CONTEXT_REF };
+      }),
+    };
+    const useCase = new RunExecutionContextBindingUseCase({
+      delegate: makeDelegate(),
+      bundleBuilder: { build: vi.fn() },
+      contextWriter,
+      executionTargetResolver: { resolve: () => null },
+      stepTypeRegistry: createDefaultStepTypeRegistry(),
+      warehouseConnectionCatalog: makeCatalog(),
+      postgresCredentialResolver: {
+        resolveCredential: vi.fn(async () => 'postgresql://warehouse-a/orders'),
+      },
+    });
+    const command = { ...buildCommand(), runId: PLATFORM_RUN_ID };
+    const retryContext = {
+      ...buildContext(),
+      authorizedAt: new Date('2026-08-15T00:00:00.000Z'),
+    };
+
+    await expect(
+      useCase.executeAdmitted(command, buildContext(), makeAdmission())
+    ).resolves.toMatchObject({ ok: true, value: { kind: 'accepted' } });
+    await expect(
+      useCase.executeAdmitted(command, retryContext, makeAdmission())
+    ).resolves.toMatchObject({ ok: true, value: { kind: 'accepted' } });
+
+    expect(contextWriter.write).toHaveBeenCalledTimes(2);
+    expect(contextWriter.write.mock.calls[0]?.[0].context.createdAtIso).toBe(
+      '2025-04-17T19:47:41.384Z'
+    );
   });
 });
 
