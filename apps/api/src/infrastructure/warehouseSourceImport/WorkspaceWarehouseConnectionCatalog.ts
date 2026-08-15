@@ -3,6 +3,7 @@ import {
   PostgresCredentialRefSchema,
   SourceObjectListSchema,
   WarehouseConnectionSchema,
+  type RenameWarehouseConnectionRequest,
   type SourceObject,
   type WorkspaceGraphDraftScope,
 } from '@dvt/contracts';
@@ -124,6 +125,57 @@ export class WorkspaceWarehouseConnectionCatalog implements IWarehouseConnection
     }
 
     return toPublicWarehouseConnection(nextEntry);
+  }
+
+  public async renameConnection(
+    scope: WorkspaceGraphDraftScope,
+    connectionId: string,
+    input: RenameWarehouseConnectionRequest
+  ): Promise<WarehouseConnection> {
+    const currentFile = await readWorkspaceWarehouseCatalogFile(this.options.repository, scope);
+    const entries = currentFile ? [...parseWorkspaceWarehouseCatalog(currentFile.content)] : [];
+    const currentIndex = entries.findIndex((entry) => entry.id === connectionId);
+    if (currentIndex < 0) {
+      throw new WarehouseConnectionNotFoundError(connectionId);
+    }
+
+    const name = input.name.trim();
+    const normalizedName = name.toLowerCase();
+    if (
+      entries.some(
+        (entry, index) =>
+          index !== currentIndex && entry.name.trim().toLowerCase() === normalizedName
+      )
+    ) {
+      throw new DuplicateWarehouseConnectionError(name);
+    }
+
+    const currentEntry = entries[currentIndex];
+    if (!currentEntry) {
+      throw new WarehouseConnectionNotFoundError(connectionId);
+    }
+    if (currentEntry.name === name) {
+      return toPublicWarehouseConnection(currentEntry);
+    }
+
+    const renamedEntry = normalizeCatalogEntry({ ...currentEntry, name });
+    entries[currentIndex] = renamedEntry;
+    entries.sort((left, right) => left.name.localeCompare(right.name));
+    const saveResult = await this.options.repository.saveFileContent(scope, {
+      path: WORKSPACE_WAREHOUSE_CONNECTION_CATALOG_PATH,
+      content: serializeWorkspaceWarehouseCatalog(entries),
+      expectedRevision: currentFile
+        ? { kind: 'content_sha256', value: currentFile.contentSha256 }
+        : { kind: 'absent' },
+    });
+    if (saveResult.kind === 'conflict') {
+      throw new WorkspaceFileRevisionConflictError(
+        WORKSPACE_WAREHOUSE_CONNECTION_CATALOG_PATH,
+        saveResult.currentContentSha256
+      );
+    }
+
+    return toPublicWarehouseConnection(renamedEntry);
   }
 }
 

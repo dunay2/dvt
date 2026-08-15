@@ -8,6 +8,7 @@ export type ProjectIdentityBadgeInput = Readonly<{
   workspaceBootstrap: WorkspaceBootstrapConfig;
   selectedTenant: string;
   selectedProject: string;
+  selectedProjectName?: string;
   selectedEnvironment: string;
   targetAdapter: RunContext['targetAdapter'];
 }>;
@@ -37,6 +38,7 @@ export function buildProjectIdentityBadge({
   workspaceBootstrap,
   selectedTenant,
   selectedProject,
+  selectedProjectName,
   selectedEnvironment,
   targetAdapter,
 }: ProjectIdentityBadgeInput): ProjectIdentityBadge {
@@ -45,11 +47,13 @@ export function buildProjectIdentityBadge({
     selectedTenant,
     selectedTenant
   );
-  const projectLabel = resolveWorkspaceOptionLabel(
-    workspaceBootstrap.projectOptions,
-    selectedProject,
-    selectedProject
-  );
+  const projectLabel =
+    selectedProjectName ??
+    resolveWorkspaceOptionLabel(
+      workspaceBootstrap.projectOptions,
+      selectedProject,
+      selectedProject
+    );
   const environmentLabel = resolveWorkspaceOptionLabel(
     workspaceBootstrap.environmentOptions,
     selectedEnvironment,

@@ -19,6 +19,7 @@ export const RUNTIME_ROUTE_PATH = {
   dbtProjectImport: '/workspace/dbt/import',
   workspaceDiffChanges: '/workspace/diff/changes',
   warehouseConnections: '/workspace/warehouse/connections',
+  warehouseConnection: '/workspace/warehouse/connections/:connectionId',
   warehouseConnectionSourceObjects: '/workspace/warehouse/connections/:connectionId/objects',
   warehouseConnectionTest: '/workspace/warehouse/connections/:connectionId/test',
   warehouseSourcesImport: '/workspace/sources/import',

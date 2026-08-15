@@ -4,6 +4,7 @@ import {
   CreateWarehouseConnectionRequestSchema,
   ImportSourceObjectsRequestSchema,
   ImportSourceObjectsResultSchema,
+  RenameWarehouseConnectionRequestSchema,
   TestWarehouseConnectionResultSchema,
   WarehouseConnectionSchema,
 } from '../../src/contracts/source-import/SourceImportOperations.v1.js';
@@ -34,6 +35,18 @@ describe('SourceImportOperations v1', () => {
         database: 'analytics',
       })
     ).toMatchObject({ id: 'warehouse-prod' });
+    expect(
+      RenameWarehouseConnectionRequestSchema.parse({
+        name: 'Finance warehouse',
+      })
+    ).toEqual({ name: 'Finance warehouse' });
+    expect(() => RenameWarehouseConnectionRequestSchema.parse({ name: '   ' })).toThrow();
+    expect(() =>
+      RenameWarehouseConnectionRequestSchema.parse({
+        name: 'Finance warehouse',
+        credentialRef: 'env:SHOULD_NOT_BE_MUTABLE',
+      })
+    ).toThrow();
     expect(
       TestWarehouseConnectionResultSchema.parse({
         connectionId: 'warehouse-prod',

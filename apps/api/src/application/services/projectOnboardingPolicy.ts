@@ -12,8 +12,28 @@ export const PROJECT_ONBOARDING_POLICY = Object.freeze({
     AUTHORIZATION_ACTION_NAME.workspaceFilesSave,
     AUTHORIZATION_ACTION_NAME.workspaceSourceImportView,
     AUTHORIZATION_ACTION_NAME.workspaceSourceConnectionCreate,
+    AUTHORIZATION_ACTION_NAME.workspaceSourceConnectionRename,
     AUTHORIZATION_ACTION_NAME.workspaceSourceConnectionTest,
     AUTHORIZATION_ACTION_NAME.workspaceSourceImportImport,
     AUTHORIZATION_ACTION_NAME.workspacePluginsView,
   ]),
 });
+
+export function isCreatorWorkspaceActionGranted(
+  allowedActions: readonly string[],
+  actionName: string
+): boolean {
+  if (allowedActions.includes(actionName)) {
+    return true;
+  }
+
+  return (
+    actionName === AUTHORIZATION_ACTION_NAME.workspaceSourceConnectionRename &&
+    PROJECT_ONBOARDING_POLICY.creatorWorkspaceActions
+      .filter(
+        (requiredAction) =>
+          requiredAction !== AUTHORIZATION_ACTION_NAME.workspaceSourceConnectionRename
+      )
+      .every((requiredAction) => allowedActions.includes(requiredAction))
+  );
+}

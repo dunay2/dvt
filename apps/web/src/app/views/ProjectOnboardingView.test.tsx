@@ -68,7 +68,8 @@ describe('ProjectOnboardingView', () => {
     );
 
     expect(mounted.container.textContent).toContain('Create a project');
-    expect(mounted.container.textContent).toContain('tenant-1');
+    expect(mounted.container.textContent).not.toContain('Tenant');
+    expect(mounted.container.querySelector('select[name="tenantId"]')).toBeNull();
 
     await act(async () => {
       fireEvent.input(
@@ -135,6 +136,8 @@ describe('ProjectOnboardingView', () => {
     expect(mounted.container.textContent).toContain('Crear un proyecto');
     expect(mounted.container.textContent).toContain('Abrir proyecto');
     expect(mounted.container.textContent).not.toContain('Create a project');
+    expect(mounted.container.textContent).not.toContain('Tenant');
+    expect(mounted.container.querySelector('select[name="tenantId"]')).toBeNull();
     expect(
       mounted.container
         .querySelector('[data-slot="project-onboarding-title"]')
@@ -170,5 +173,142 @@ describe('ProjectOnboardingView', () => {
       { description: 'reactive onboarding language' }
     );
     expect(listProjects).toHaveBeenCalledTimes(1);
+  });
+
+  it('offers an accessible organization choice only when multiple grants exist', async () => {
+    const createProject = vi.fn(buildProjectOnboardingService().createProject);
+
+    mounted = await withTestQueryClient(
+      <ProjectOnboardingView
+        onProjectCreated={vi.fn()}
+        service={buildProjectOnboardingService({
+          createProject,
+          listProjects: async () => ({
+            tenants: [
+              { tenantId: 'organization-a', canCreateProject: true },
+              { tenantId: 'organization-b', canCreateProject: true },
+            ],
+            projects: [],
+            integrityFindings: [],
+          }),
+        })}
+      />
+    );
+
+    await waitForReactQuery(
+      () => mounted?.container.querySelector('select[name="tenantId"]') != null,
+      { description: 'multiple organization selector' }
+    );
+
+    const organizationSelect = mounted.container.querySelector(
+      'select[name="tenantId"]'
+    ) as HTMLSelectElement;
+    expect(organizationSelect.labels[0]?.textContent).toContain('Organization');
+    expect(Array.from(organizationSelect.options).map((option) => option.text)).toEqual([
+      'organization-a',
+      'organization-b',
+    ]);
+
+    await act(async () => {
+      fireEvent.change(organizationSelect, { target: { value: 'organization-b' } });
+      fireEvent.input(
+        mounted?.container.querySelector('input[name="projectName"]') as HTMLInputElement,
+        { target: { value: 'Orders' } }
+      );
+      fireEvent.submit(
+        mounted?.container.querySelector('[data-slot="project-onboarding-form"]') as HTMLFormElement
+      );
+      await Promise.resolve();
+    });
+
+    await waitForReactQuery(() => createProject.mock.calls.length === 1, {
+      description: 'selected organization project creation',
+    });
+    expect(createProject).toHaveBeenCalledWith({
+      tenantId: 'organization-b',
+      name: 'Orders',
+    });
+  });
+
+  it('uses the selected organization create permission', async () => {
+    mounted = await withTestQueryClient(
+      <ProjectOnboardingView
+        onProjectCreated={vi.fn()}
+        service={buildProjectOnboardingService({
+          listProjects: async () => ({
+            tenants: [
+              { tenantId: 'organization-a', canCreateProject: true },
+              { tenantId: 'organization-b', canCreateProject: false },
+            ],
+            projects: [],
+            integrityFindings: [],
+          }),
+        })}
+      />
+    );
+
+    await waitForReactQuery(
+      () => mounted?.container.querySelector('select[name="tenantId"]') != null,
+      { description: 'organization permission selector' }
+    );
+
+    await act(async () => {
+      fireEvent.change(
+        mounted?.container.querySelector('select[name="tenantId"]') as HTMLSelectElement,
+        { target: { value: 'organization-b' } }
+      );
+    });
+
+    expect(mounted.container.textContent).toContain(
+      'Project creation is not granted for this organization.'
+    );
+  });
+
+  it('retains the entered name and reports a failed creation without duplicate submits', async () => {
+    let rejectCreation!: (error: Error) => void;
+    const createProject = vi.fn(
+      () =>
+        new Promise<Awaited<ReturnType<ProjectOnboardingService['createProject']>>>((_, reject) => {
+          rejectCreation = reject;
+        })
+    );
+
+    mounted = await withTestQueryClient(
+      <ProjectOnboardingView
+        onProjectCreated={vi.fn()}
+        service={buildProjectOnboardingService({ createProject })}
+      />
+    );
+
+    await waitForReactQuery(
+      () => mounted?.container.querySelector('input[name="projectName"]') != null,
+      { description: 'project name input' }
+    );
+
+    const input = mounted.container.querySelector('input[name="projectName"]') as HTMLInputElement;
+    const form = mounted.container.querySelector(
+      '[data-slot="project-onboarding-form"]'
+    ) as HTMLFormElement;
+
+    await act(async () => {
+      fireEvent.input(input, { target: { value: '  Orders  ' } });
+      fireEvent.submit(form);
+      fireEvent.submit(form);
+      await Promise.resolve();
+    });
+
+    expect(createProject).toHaveBeenCalledTimes(1);
+    expect(createProject).toHaveBeenCalledWith({ tenantId: 'tenant-1', name: 'Orders' });
+
+    await act(async () => {
+      rejectCreation(new Error('Project name already exists.'));
+      await Promise.resolve();
+    });
+
+    await waitForReactQuery(
+      () => mounted?.container.textContent?.includes('Project name already exists.') === true,
+      { description: 'project creation error' }
+    );
+    expect(input.value).toBe('  Orders  ');
   });
 });

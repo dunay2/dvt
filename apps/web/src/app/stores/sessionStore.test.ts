@@ -88,6 +88,32 @@ describe('sessionStore persistence', () => {
     });
   });
 
+  it('rehydrates a dynamic project selection for later server grant validation', async () => {
+    const dynamicProjectId = 'project-created-from-active-workspace';
+    expect(workspaceBootstrap.projectOptions).not.toContainEqual({
+      value: dynamicProjectId,
+    });
+
+    localStorage.setItem(
+      'dvt-web-session',
+      JSON.stringify({
+        state: {
+          tenantId: bootstrapState.tenantId,
+          projectId: dynamicProjectId,
+          environmentId: bootstrapState.environmentId,
+        },
+      } satisfies PersistEnvelope)
+    );
+
+    await useSessionStore.persist.rehydrate();
+
+    expect(useSessionStore.getState()).toMatchObject({
+      tenantId: bootstrapState.tenantId,
+      projectId: dynamicProjectId,
+      environmentId: bootstrapState.environmentId,
+    });
+  });
+
   it('keeps the runtime-owned target adapter catalog during rehydrate', async () => {
     localStorage.setItem(
       'dvt-web-session',

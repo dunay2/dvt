@@ -54,6 +54,7 @@ describe('CanvasShell source import lifecycle', () => {
       listWarehouseConnections: vi.fn(),
       listSourceObjects: vi.fn(),
       createWarehouseConnection: vi.fn(),
+      renameWarehouseConnection: vi.fn(),
       testWarehouseConnection: vi.fn(),
       importSources: vi.fn(),
     } satisfies IWarehouseSourceImportPort;

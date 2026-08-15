@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { classifyHttpError, extractHttpStatusCode } from './classifyHttpError';
+import {
+  classifyHttpError,
+  extractHttpErrorReason,
+  extractHttpStatusCode,
+} from './classifyHttpError';
 import { ApiError } from './createApiClient';
 
 function makeApiError(statusCode: number): ApiError {
@@ -57,5 +61,34 @@ describe('extractHttpStatusCode', () => {
   it('returns undefined for non-ApiError values', () => {
     expect(extractHttpStatusCode(new Error('Generic'))).toBeUndefined();
     expect(extractHttpStatusCode(null)).toBeUndefined();
+  });
+});
+
+describe('extractHttpErrorReason', () => {
+  it('returns the semantic reason from an ApiError envelope', () => {
+    const error = new ApiError({
+      message: 'HTTP 409',
+      endpoint: '/test',
+      statusCode: 409,
+      category: 'client',
+      responseBody: {
+        error: { type: 'conflict', reason: 'workspace_file_revision_conflict' },
+      },
+    });
+
+    expect(extractHttpErrorReason(error)).toBe('workspace_file_revision_conflict');
+  });
+
+  it('returns undefined for malformed envelopes and non-ApiError values', () => {
+    const malformed = new ApiError({
+      message: 'HTTP 409',
+      endpoint: '/test',
+      statusCode: 409,
+      category: 'client',
+      responseBody: { error: 'warehouse_connection_duplicate' },
+    });
+
+    expect(extractHttpErrorReason(malformed)).toBeUndefined();
+    expect(extractHttpErrorReason(new Error('Generic'))).toBeUndefined();
   });
 });

@@ -27,6 +27,7 @@ describe('accessDecision contract vocabulary', () => {
       'workspace:files:save',
       'workspace:source-import:view',
       'workspace:source-connection:create',
+      'workspace:source-connection:rename',
       'workspace:source-connection:test',
       'workspace:source-import:import',
       'workspace:plugins:view',

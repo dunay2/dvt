@@ -162,6 +162,15 @@ function buildWarehouseConnectionSourceObjectsEndpoint(connectionId: string): st
   )}&environmentId=${encodeURIComponent(scope.environmentId)}`;
 }
 
+function buildWarehouseConnectionEndpoint(connectionId: string): string {
+  const scope = readWorkspaceGraphDraftScope();
+  return `/workspace/warehouse/connections/${encodeURIComponent(
+    connectionId
+  )}?tenantId=${encodeURIComponent(scope.tenantId)}&projectId=${encodeURIComponent(
+    scope.projectId
+  )}&environmentId=${encodeURIComponent(scope.environmentId)}`;
+}
+
 function buildWarehouseConnectionTestEndpoint(connectionId: string): string {
   const scope = readWorkspaceGraphDraftScope();
   return `/workspace/warehouse/connections/${encodeURIComponent(
@@ -211,6 +220,15 @@ export function createApiWarehouseSourceImportPort(
       WarehouseConnectionSchema.parse(
         await apiClient.postJson(buildWarehouseConnectionsEndpoint(), input)
       ),
+    renameWarehouseConnection: async (connectionId, input) => {
+      const endpoint = buildWarehouseConnectionEndpoint(connectionId);
+      const response = await apiClient.requestRaw(endpoint, { method: 'PATCH', jsonBody: input });
+      const responseBody = await parseJsonResponse(response);
+      if (!response.ok) {
+        throw createRequestFailedApiError(endpoint, response.status, responseBody);
+      }
+      return WarehouseConnectionSchema.parse(responseBody);
+    },
     testWarehouseConnection: async (connectionId) =>
       TestWarehouseConnectionResultSchema.parse(
         await apiClient.postJson(buildWarehouseConnectionTestEndpoint(connectionId), {})

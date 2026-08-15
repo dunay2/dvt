@@ -71,6 +71,15 @@ function resolvePersistedScopeValue(
     : currentValue;
 }
 
+function readPersistedNonBlankValue(persistedValue: unknown): string | null {
+  if (typeof persistedValue !== 'string') {
+    return null;
+  }
+
+  const normalizedValue = persistedValue.trim();
+  return normalizedValue.length > 0 ? normalizedValue : null;
+}
+
 export const useSessionStore = create<SessionState>()(
   persist(
     (set, get) => ({
@@ -138,23 +147,31 @@ export const useSessionStore = create<SessionState>()(
               (persistedState as Partial<PersistedSessionState>))
             : {};
 
+        const tenantId = resolvePersistedScopeValue(
+          persistedSessionState.tenantId,
+          currentState.tenantId,
+          workspaceBootstrap.tenantOptions
+        );
+        const environmentId = resolvePersistedScopeValue(
+          persistedSessionState.environmentId,
+          currentState.environmentId,
+          workspaceBootstrap.environmentOptions
+        );
+        const persistedTenantId = readPersistedNonBlankValue(persistedSessionState.tenantId);
+        const persistedEnvironmentId = readPersistedNonBlankValue(
+          persistedSessionState.environmentId
+        );
+        const projectId =
+          persistedTenantId === tenantId && persistedEnvironmentId === environmentId
+            ? (readPersistedNonBlankValue(persistedSessionState.projectId) ??
+              currentState.projectId)
+            : currentState.projectId;
+
         return {
           ...currentState,
-          tenantId: resolvePersistedScopeValue(
-            persistedSessionState.tenantId,
-            currentState.tenantId,
-            workspaceBootstrap.tenantOptions
-          ),
-          projectId: resolvePersistedScopeValue(
-            persistedSessionState.projectId,
-            currentState.projectId,
-            workspaceBootstrap.projectOptions
-          ),
-          environmentId: resolvePersistedScopeValue(
-            persistedSessionState.environmentId,
-            currentState.environmentId,
-            workspaceBootstrap.environmentOptions
-          ),
+          tenantId,
+          projectId,
+          environmentId,
           availableWorkspaces: currentState.availableWorkspaces,
           workspaceScopeSelectionStatus: currentState.workspaceScopeSelectionStatus,
           workspaceScopeSelectionRejectionReason:

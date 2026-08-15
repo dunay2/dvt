@@ -153,6 +153,22 @@ function assertViewportHasNoGlobalHorizontalOverflow(expectedWidth: number): voi
   });
 }
 
+function assertCanvasPropertiesFitsViewport(width: number, height: number): void {
+  cy.get('[data-slot="canvas-settings-dialog"]').should(($dialog) => {
+    const rect = $dialog.get(0).getBoundingClientRect();
+    expect(rect.left).to.be.at.least(0);
+    expect(rect.right).to.be.at.most(width);
+    expect(rect.top).to.be.at.least(0);
+    expect(rect.bottom).to.be.at.most(height);
+  });
+  cy.get('[data-slot="workbench-properties-footer"]').should(($footer) => {
+    const rect = $footer.get(0).getBoundingClientRect();
+    expect(rect.top).to.be.at.least(0);
+    expect(rect.bottom).to.be.at.most(height);
+  });
+  assertViewportHasNoGlobalHorizontalOverflow(width);
+}
+
 function assertDirectionalMarkers(): void {
   cy.get('.react-flow__edge-path')
     .should('have.length.at.least', 2)
@@ -501,7 +517,7 @@ describe('Canvas workbench screen composition', () => {
     openCanvasContextMenuAt(520, 300);
     cy.get('[data-slot="canvas-context-menu"]')
       .should('be.visible')
-      .and('contain.text', 'Configuración de canvas')
+      .and('contain.text', 'Propiedades del canvas')
       .and('not.contain.text', 'Explorar proyecto')
       .and('not.contain.text', 'Abrir código del proyecto');
     cy.get('body').type('{esc}');
@@ -793,10 +809,29 @@ describe('Canvas workbench screen composition', () => {
     cy.get('[data-menu-action="open-canvas-settings"]').click();
     cy.get('[data-slot="canvas-settings-dialog"]')
       .should('be.visible')
-      .and('contain.text', 'Cerrar');
-    cy.get('[data-slot="canvas-settings-close-command"]').click();
+      .and('contain.text', 'Propiedades del canvas')
+      .and('contain.text', 'Apariencia')
+      .and('contain.text', 'Rejilla')
+      .and('contain.text', 'Distribución');
+    cy.get('[data-slot="canvas-properties-impact"]')
+      .should('have.attr', 'data-state', 'unchecked')
+      .click()
+      .should('have.attr', 'data-state', 'checked');
+    cy.get('[data-slot="workbench-properties-apply"]').should('be.enabled');
+    cy.get('[data-slot="workbench-properties-cancel"]').click();
     cy.get('[data-slot="canvas-settings-dialog"]').should('not.exist');
     cy.get('body').should('not.have.css', 'pointer-events', 'none');
+
+    openCanvasContextMenuAt(260, 260);
+    cy.get('[data-menu-action="open-canvas-settings"]').click();
+    cy.get('[data-slot="canvas-properties-impact"]').should('have.attr', 'data-state', 'unchecked');
+    cy.get('[data-slot="canvas-properties-background-input"]')
+      .clear()
+      .type('#223344')
+      .should('have.value', '#223344');
+    cy.get('[data-slot="workbench-properties-apply"]').click();
+    cy.get('.react-flow').should('have.css', 'background-color', 'rgb(34, 51, 68)');
+    assertNoSeriousAccessibilityViolations('[data-slot="canvas-viewport-context-surface"]');
 
     cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
     cy.get('[data-slot="canvas-workspace-import-dbt-project-command"]').click();
@@ -810,6 +845,10 @@ describe('Canvas workbench screen composition', () => {
 
     cy.get('[data-slot="shell-menu-trigger"]').click();
     cy.get('[data-slot="shell-language-menu"]').should('contain.text', 'Idioma');
+    cy.get('[role="menu"]')
+      .should('not.contain.text', 'Fondo del canvas')
+      .and('not.contain.text', 'Tamaño de rejilla')
+      .and('not.contain.text', 'Propiedades del canvas');
     cy.get('[data-slot="shell-language-option-en"]').click();
     cy.get('[data-slot="shell-menu-trigger"]').should('contain.text', 'View');
     cy.get('html').should('have.attr', 'lang', 'en');
@@ -817,7 +856,52 @@ describe('Canvas workbench screen composition', () => {
     openCanvasContextMenuAt(260, 260);
     cy.get('[data-slot="canvas-context-menu"]')
       .should('contain.text', 'Add...')
-      .and('contain.text', 'Canvas settings');
+      .and('contain.text', 'Canvas properties');
+    cy.get('[data-menu-action="open-canvas-settings"]').click();
+    cy.get('[data-slot="canvas-settings-dialog"]')
+      .should('contain.text', 'Canvas properties')
+      .and('contain.text', 'Appearance')
+      .and('contain.text', 'Grid')
+      .and('contain.text', 'Layout');
+    cy.get('[data-slot="canvas-settings-dialog"] [role="tab"]')
+      .first()
+      .focus()
+      .type('{rightarrow}')
+      .should('have.attr', 'aria-selected', 'false');
+    cy.focused().should('contain.text', 'Grid').and('have.attr', 'aria-selected', 'true');
+    cy.focused().type('{leftarrow}');
+    cy.focused().should('contain.text', 'Appearance').and('have.attr', 'aria-selected', 'true');
+    assertNoSeriousAccessibilityViolations('[data-slot="canvas-settings-dialog"]');
+
+    cy.contains('[data-slot="canvas-settings-dialog"] [role="tab"]', 'Grid').click();
+    cy.get('[data-slot="canvas-properties-grid-color-input"]')
+      .clear()
+      .type('#12345')
+      .should('have.attr', 'aria-invalid', 'true');
+    cy.get('[data-slot="workbench-properties-apply"]').should('be.disabled');
+    cy.contains('button', 'Restore grid defaults').click();
+    cy.get('[data-slot="canvas-properties-grid-color-input"]')
+      .should('have.value', '#94a3b8')
+      .and('have.attr', 'aria-invalid', 'false');
+    cy.get('[data-slot="canvas-properties-grid-visible"]').click();
+    cy.get('[data-slot="workbench-properties-apply"]').should('be.enabled').click();
+
+    openCanvasContextMenuAt(260, 260);
+    cy.get('[data-menu-action="open-canvas-settings"]').click();
+
+    clearBrowserEmulation();
+    cy.viewport(1366, 768);
+    assertCanvasPropertiesFitsViewport(1366, 768);
+    emulateBrowserZoom(2, { width: 1366, height: 768 });
+    assertCanvasPropertiesFitsViewport(683, 384);
+    clearBrowserEmulation();
+    cy.viewport(1920, 1080);
+    assertCanvasPropertiesFitsViewport(1920, 1080);
+    emulateBrowserZoom(2, { width: 1920, height: 1080 });
+    assertCanvasPropertiesFitsViewport(960, 540);
+    cy.get('[data-slot="workbench-properties-cancel"]').click();
+
+    openCanvasContextMenuAt(260, 260);
     cy.get('[data-menu-action="open-add-node-catalog"]').click();
     cy.get('[role="dialog"]')
       .should('contain.text', 'Add component')

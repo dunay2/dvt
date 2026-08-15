@@ -764,6 +764,11 @@ export function createMockWarehouseSourceImportPort(
       type: input.type,
       database: input.database,
     }),
+    renameWarehouseConnection: async (connectionId, input) => {
+      const connection = mockConnections.find((candidate) => candidate.id === connectionId);
+      if (!connection) throw new Error(`Mock warehouse connection not found: ${connectionId}`);
+      return { ...connection, name: input.name };
+    },
     testWarehouseConnection: async (connectionId) => ({
       connectionId,
       status: 'passed',

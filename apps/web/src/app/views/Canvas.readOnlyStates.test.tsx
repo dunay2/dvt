@@ -8,7 +8,6 @@ import {
   renderCanvasRouteWithController,
 } from './Canvas.test.support';
 import { deriveCanvasDraftAccessPosture } from './canvas/canvasDraftAccessPostureModel';
-import { useCanvasViewMenuContributionStore } from './canvas/canvasViewMenuContributionStore';
 
 describe('Canvas route access states', () => {
   let harness: ReturnType<typeof createCanvasRouteHarness>;
@@ -47,9 +46,6 @@ describe('Canvas route access states', () => {
       kindLabel: 'Transformation',
     });
     expect(harness.container.querySelector('[data-slot="canvas-draft-save-status"]')).toBeNull();
-    expect(useCanvasViewMenuContributionStore.getState().contribution).toMatchObject({
-      canEditEdges: false,
-    });
   });
 
   it('keeps the viewport visible and shows limited access when the draft boundary is read_only', async () => {
@@ -102,9 +98,6 @@ describe('Canvas route access states', () => {
 
     expect(draftStatus).not.toBeNull();
     expect(draftStatus?.textContent).toContain('Read-only draft');
-    expect(useCanvasViewMenuContributionStore.getState().contribution).toMatchObject({
-      canEditEdges: false,
-    });
     expect(harness.container.textContent).not.toContain('Inspect only');
 
     harness.container

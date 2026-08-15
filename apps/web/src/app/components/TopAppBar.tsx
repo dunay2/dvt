@@ -34,6 +34,15 @@ export function ShellTopBar({
   const location = useLocation();
   const selectedTenant = useSessionStore((state) => state.tenantId);
   const selectedProject = useSessionStore((state) => state.projectId);
+  const selectedProjectName = useSessionStore(
+    (state) =>
+      state.availableWorkspaces.find(
+        (workspace) =>
+          workspace.tenantId === state.tenantId &&
+          workspace.projectId === state.projectId &&
+          workspace.environmentId === state.environmentId
+      )?.projectName
+  );
   const selectedEnvironment = useSessionStore((state) => state.environmentId);
   const targetAdapter = useSessionStore((state) => state.targetAdapter);
   const connectionStatus = usePlatformConnectionStore((state) => state.connectionStatus);
@@ -41,11 +50,7 @@ export function ShellTopBar({
   const toggleFocusMode = useUiLayoutStore((state) => state.toggleFocusMode);
   const bottomDrawerVisible = useUiLayoutStore((state) => state.bottomDrawerVisible);
   const toggleBottomDrawer = useUiLayoutStore((state) => state.toggleBottomDrawer);
-  const gridSize = useUiLayoutStore((state) => state.gridSize);
-  const canvasPalette = useUiLayoutStore((state) => state.canvasPalette);
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
-  const setGridSize = useUiLayoutStore((state) => state.setGridSize);
-  const setCanvasPalette = useUiLayoutStore((state) => state.setCanvasPalette);
   const operationalDrawerContribution = useOperationalDrawerContributionStore(
     (state) => state.contribution
   );
@@ -59,6 +64,7 @@ export function ShellTopBar({
     workspaceBootstrap,
     selectedTenant,
     selectedProject,
+    selectedProjectName,
     selectedEnvironment,
     targetAdapter,
   });
@@ -104,16 +110,12 @@ export function ShellTopBar({
               viewControls={shellViewControls}
               bottomDrawerVisible={bottomDrawerVisible}
               focusMode={focusMode}
-              gridSize={gridSize}
-              canvasPalette={canvasPalette}
               navigationModel={navigationModel}
               projectIdentityBadge={projectIdentityBadge}
               gitBranch={workspaceBootstrap.gitBranch}
               gitSha={workspaceBootstrap.gitSha}
               toggleBottomDrawer={toggleBottomDrawer}
               toggleFocusMode={toggleFocusMode}
-              setGridSize={setGridSize}
-              setCanvasPalette={setCanvasPalette}
               copy={copy}
             />
           )}
@@ -122,16 +124,12 @@ export function ShellTopBar({
             viewControls={shellViewControls}
             bottomDrawerVisible={bottomDrawerVisible}
             focusMode={focusMode}
-            gridSize={gridSize}
-            canvasPalette={canvasPalette}
             navigationModel={navigationModel}
             projectIdentityBadge={projectIdentityBadge}
             gitBranch={workspaceBootstrap.gitBranch}
             gitSha={workspaceBootstrap.gitSha}
             toggleBottomDrawer={toggleBottomDrawer}
             toggleFocusMode={toggleFocusMode}
-            setGridSize={setGridSize}
-            setCanvasPalette={setCanvasPalette}
             copy={copy}
           />
         </div>

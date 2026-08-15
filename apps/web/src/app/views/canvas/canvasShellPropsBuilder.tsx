@@ -175,6 +175,8 @@ function buildCanvasShellChromeCommandsArgs({
       handleToggleCostOverlay: controller.handleToggleCostOverlay,
       toggleImpactOverlay: controller.toggleImpactOverlay,
       toggleColumnLevelLineage: controller.toggleColumnLevelLineage,
+      setGridSize: controller.setGridSize,
+      setCanvasPalette: controller.setCanvasPalette,
       canvasGridVisible: controller.canvasGridVisible,
       canvasSnapToGrid: controller.canvasSnapToGrid,
       setCanvasGridVisible: controller.setCanvasGridVisible,

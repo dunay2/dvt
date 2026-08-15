@@ -55,6 +55,9 @@ describe('useCanvasGraphFilterController', () => {
           <button type="button" onClick={controller.clear}>
             Clear
           </button>
+          <button type="button" onClick={() => controller.filterByTag('finance')}>
+            Filter finance
+          </button>
           <output>{JSON.stringify(controller.model)}</output>
         </div>
       );
@@ -87,6 +90,17 @@ describe('useCanvasGraphFilterController', () => {
       composition: 'and',
       presentation: 'dim',
       status: 'idle',
+      matchCount: 2,
+    });
+
+    click('Filter finance');
+    click('Filter finance');
+    expect(model()).toMatchObject({
+      open: true,
+      draftDimension: 'tag',
+      draftValue: 'finance',
+      predicates: [{ dimension: 'tag', value: 'finance' }],
+      status: 'matched',
       matchCount: 2,
     });
 

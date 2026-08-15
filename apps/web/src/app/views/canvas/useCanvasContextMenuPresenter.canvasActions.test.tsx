@@ -92,7 +92,7 @@ describe('useCanvasContextMenuPresenter canvas actions', () => {
 
     expect(menuPresenter.model?.canvasActions).toEqual([
       { action: 'open-add-node-catalog', label: 'Add...' },
-      { action: 'open-canvas-settings', label: 'Canvas settings' },
+      { action: 'open-canvas-settings', label: 'Canvas properties' },
     ]);
 
     await act(async () => {
@@ -136,7 +136,7 @@ describe('useCanvasContextMenuPresenter canvas actions', () => {
     await act(async () => {
       menuPresenter.handleCanvasAction({
         action: 'open-canvas-settings',
-        label: 'Canvas settings',
+        label: 'Canvas properties',
       });
     });
 

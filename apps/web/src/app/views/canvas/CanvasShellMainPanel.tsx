@@ -8,7 +8,6 @@ import {
 } from './CanvasShellMainPanelFrame';
 import { CanvasNodeWorkbenchOverlay } from './CanvasNodeWorkbenchOverlay';
 import { isCanvasNodeWorkbenchVisible } from './canvasNodeWorkbenchVisibility';
-import { CanvasViewMenuContributionRegistrar } from './CanvasViewMenuControls';
 import CanvasViewport from './CanvasViewport';
 import { CanvasWorkspaceMenuContributionRegistrar } from './CanvasWorkspaceMenuControls';
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
@@ -44,7 +43,6 @@ type CanvasShellMainPanelProps = Readonly<{
 
 function CanvasShellMenuContributionRegistrars({
   panels,
-  graph,
   chromeState,
   chromeCommands,
   onOpenProjectExplorer,
@@ -53,7 +51,6 @@ function CanvasShellMenuContributionRegistrars({
 }: Pick<
   CanvasShellMainPanelProps,
   | 'panels'
-  | 'graph'
   | 'chromeState'
   | 'chromeCommands'
   | 'onOpenProjectExplorer'
@@ -61,40 +58,19 @@ function CanvasShellMenuContributionRegistrars({
   | 'onImportDbtProject'
 >): JSX.Element {
   return (
-    <>
-      <CanvasViewMenuContributionRegistrar
-        canEditEdges={panels.userPermissions.canEditEdges}
-        canUseCostOverlay={chromeState.canUseCostOverlay}
-        exclusiveOverlayMode={chromeState.exclusiveOverlayMode}
-        impactOverlayEnabled={chromeState.impactOverlayEnabled}
-        columnLevelLineageEnabled={chromeState.columnLevelLineageEnabled}
-        canvasGridVisible={graph.canvasGridVisible}
-        canvasGridColor={graph.canvasGridColor}
-        canvasSnapToGrid={graph.canvasSnapToGrid}
-        canvasEmptyStateGuideVisible={graph.canvasEmptyStateGuideVisible}
-        onAutoLayout={chromeCommands.onAutoLayout}
-        onToggleCostOverlay={chromeCommands.onToggleCostOverlay}
-        onToggleImpact={chromeCommands.onToggleImpact}
-        onToggleColumns={chromeCommands.onToggleColumns}
-        onToggleGridVisible={chromeCommands.onToggleGridVisible}
-        onGridColorChange={chromeCommands.onGridColorChange}
-        onToggleSnapToGrid={chromeCommands.onToggleSnapToGrid}
-        onSetCanvasEmptyStateGuideVisible={chromeCommands.onSetCanvasEmptyStateGuideVisible}
-      />
-      <CanvasWorkspaceMenuContributionRegistrar
-        activeCanvas={panels.activeCanvas}
-        canExportProjectSnapshot={chromeState.canExportProjectSnapshot}
-        canImportProjectSnapshot={chromeState.canImportProjectSnapshot}
-        canOpenProjectExplorer={typeof onOpenProjectExplorer === 'function'}
-        canOpenProjectCode={typeof onOpenProjectCode === 'function'}
-        canImportDbtProject={typeof onImportDbtProject === 'function'}
-        onExportProjectSnapshot={chromeCommands.onExportProjectSnapshot}
-        onImportProjectSnapshotFile={chromeCommands.onImportProjectSnapshotFile}
-        onOpenProjectExplorer={onOpenProjectExplorer}
-        onOpenProjectCode={onOpenProjectCode}
-        onImportDbtProject={onImportDbtProject}
-      />
-    </>
+    <CanvasWorkspaceMenuContributionRegistrar
+      activeCanvas={panels.activeCanvas}
+      canExportProjectSnapshot={chromeState.canExportProjectSnapshot}
+      canImportProjectSnapshot={chromeState.canImportProjectSnapshot}
+      canOpenProjectExplorer={typeof onOpenProjectExplorer === 'function'}
+      canOpenProjectCode={typeof onOpenProjectCode === 'function'}
+      canImportDbtProject={typeof onImportDbtProject === 'function'}
+      onExportProjectSnapshot={chromeCommands.onExportProjectSnapshot}
+      onImportProjectSnapshotFile={chromeCommands.onImportProjectSnapshotFile}
+      onOpenProjectExplorer={onOpenProjectExplorer}
+      onOpenProjectCode={onOpenProjectCode}
+      onImportDbtProject={onImportDbtProject}
+    />
   );
 }
 
@@ -279,7 +255,6 @@ export function CanvasShellMainPanel({
     <CanvasShellMainPanelFrame defaultSize={resolveCanvasShellMainPanelDefaultSize()}>
       <CanvasShellMenuContributionRegistrars
         panels={panels}
-        graph={graph}
         chromeState={chromeState}
         chromeCommands={chromeCommands}
         onOpenProjectExplorer={onOpenProjectExplorer}

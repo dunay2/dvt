@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 
 import type {
   CreateWarehouseConnectionInput,
+  RenameWarehouseConnectionInput,
   TestWarehouseConnectionResult,
   WarehouseConnection,
 } from '../../ports/workspace';
@@ -11,18 +12,24 @@ import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { type SourceImportWizardCopy, useSourceImportLocalization } from './copy';
 import { WarehouseConnectionCreateForm } from './WarehouseConnectionCreateForm';
+import { WarehouseConnectionRenameForm } from './WarehouseConnectionRenameForm';
 
 interface ConnectionStepProps {
   connections: WarehouseConnection[];
   selectedConnection: string | null;
   createConnectionFormOpen: boolean;
   createConnectionForm: CreateWarehouseConnectionInput;
+  renameConnectionFormOpen: boolean;
+  renameConnectionForm: RenameWarehouseConnectionInput;
   isLoadingConnections: boolean;
   isCreatingConnection: boolean;
+  isRenamingConnection: boolean;
   isTestingConnection: boolean;
   connectionTestResult: TestWarehouseConnectionResult | null;
   loadError: string | null;
   createConnectionError: string | null;
+  renameConnectionError: string | null;
+  renameConnectionSucceeded: boolean;
   onSelectConnection: (connectionId: string) => void;
   onOpenCreateConnectionForm: () => void;
   onCancelCreateConnectionForm: () => void;
@@ -30,8 +37,12 @@ interface ConnectionStepProps {
     field: Field,
     value: CreateWarehouseConnectionInput[Field]
   ) => void;
+  onOpenRenameConnectionForm: () => void;
+  onCancelRenameConnectionForm: () => void;
+  onRenameConnectionNameChange: (name: string) => void;
   onCreateConnection: () => void;
   onTestConnection: () => void;
+  onRenameConnection: () => void;
 }
 
 function filterConnections(
@@ -70,22 +81,37 @@ export function ConnectionStep({
   selectedConnection,
   createConnectionFormOpen,
   createConnectionForm,
+  renameConnectionFormOpen,
+  renameConnectionForm,
   isLoadingConnections,
   isCreatingConnection,
+  isRenamingConnection,
   isTestingConnection,
   connectionTestResult,
   loadError,
   createConnectionError,
+  renameConnectionError,
+  renameConnectionSucceeded,
   onSelectConnection,
   onOpenCreateConnectionForm,
   onCancelCreateConnectionForm,
   onCreateConnectionFormChange,
+  onOpenRenameConnectionForm,
+  onCancelRenameConnectionForm,
+  onRenameConnectionNameChange,
   onCreateConnection,
   onTestConnection,
+  onRenameConnection,
 }: ConnectionStepProps) {
   const { copy } = useSourceImportLocalization();
   const [searchValue, setSearchValue] = useState('');
   const selectedConnectionOptionRef = useRef<HTMLButtonElement | null>(null);
+  const renameConnectionActionRef = useRef<HTMLButtonElement | null>(null);
+  const selectedConnectionObject = connections.find(
+    (connection) => connection.id === selectedConnection
+  );
+  const isConnectionActionBusy =
+    isCreatingConnection || isRenamingConnection || isTestingConnection;
   const visibleConnections = useMemo(
     () => filterConnections(connections, searchValue),
     [connections, searchValue]
@@ -104,6 +130,11 @@ export function ConnectionStep({
     selectedOption.scrollIntoView({ block: 'center', inline: 'nearest' });
   }, [selectedConnection]);
 
+  const cancelRenameConnection = () => {
+    onCancelRenameConnectionForm();
+    queueMicrotask(() => renameConnectionActionRef.current?.focus());
+  };
+
   return (
     <div className="space-y-4">
       <div>
@@ -115,7 +146,15 @@ export function ConnectionStep({
       </div>
 
       {loadError ? (
-        <Card className="border-red-700 bg-red-950/30 p-3 text-sm text-red-200">{loadError}</Card>
+        <Card
+          data-slot="source-import-connection-load-error"
+          role="alert"
+          aria-live="assertive"
+          aria-atomic="true"
+          className="border-red-700 bg-red-950/30 p-3 text-sm text-red-200"
+        >
+          {loadError}
+        </Card>
       ) : null}
 
       <div className="space-y-2">
@@ -137,24 +176,35 @@ export function ConnectionStep({
                 </div>
                 <div
                   data-slot="source-import-connection-actions"
-                  className="grid w-full min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 md:w-auto md:shrink-0"
+                  className="grid w-full min-w-0 grid-cols-1 gap-2 sm:grid-cols-3 md:w-auto md:shrink-0"
                 >
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     className="w-full min-w-0"
-                    disabled={isCreatingConnection}
+                    disabled={isConnectionActionBusy}
                     onClick={onOpenCreateConnectionForm}
                   >
                     {copy.connection.createAction}
+                  </Button>
+                  <Button
+                    ref={renameConnectionActionRef}
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full min-w-0"
+                    disabled={!selectedConnection || isConnectionActionBusy}
+                    onClick={onOpenRenameConnectionForm}
+                  >
+                    {copy.connection.renameAction}
                   </Button>
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     className="w-full min-w-0"
-                    disabled={!selectedConnection || isTestingConnection}
+                    disabled={!selectedConnection || isConnectionActionBusy}
                     onClick={onTestConnection}
                   >
                     {isTestingConnection
@@ -188,24 +238,40 @@ export function ConnectionStep({
               />
             ) : null}
 
-            {connectionTestResult ? (
-              <Card
-                className={
-                  connectionTestResult.status === 'passed'
-                    ? 'border-emerald-700 bg-emerald-950/30 p-3 text-sm text-emerald-100'
-                    : 'border-red-700 bg-red-950/30 p-3 text-sm text-red-100'
-                }
+            {renameConnectionFormOpen && selectedConnectionObject ? (
+              <WarehouseConnectionRenameForm
+                currentName={selectedConnectionObject.name}
+                form={renameConnectionForm}
+                isRenaming={isRenamingConnection}
+                error={renameConnectionError}
+                onNameChange={onRenameConnectionNameChange}
+                onCancel={cancelRenameConnection}
+                onSubmit={onRenameConnection}
+              />
+            ) : null}
+
+            {renameConnectionSucceeded ? (
+              <div
+                data-slot="source-import-rename-connection-success"
+                role="status"
+                aria-live="polite"
+                aria-atomic="true"
+                className="rounded-md border border-emerald-800/70 bg-emerald-950/20 px-3 py-2 text-xs text-emerald-200"
               >
-                <div className="font-medium">
-                  {connectionTestResult.status === 'passed'
-                    ? copy.connection.testPassed
-                    : copy.connection.testFailed}
-                </div>
-                <div className="mt-1 text-xs opacity-85">
-                  {connectionTestResult.status === 'passed'
-                    ? `${connectionTestResult.objectCount} ${copy.connection.reachableObjects}`
-                    : copy.connection.testFailedDetail}
-                </div>
+                {copy.connection.renameSuccess}
+              </div>
+            ) : null}
+
+            {connectionTestResult?.status === 'failed' ? (
+              <Card
+                data-slot="source-import-connection-test-failure"
+                role="alert"
+                aria-live="assertive"
+                aria-atomic="true"
+                className="border-red-700 bg-red-950/30 p-3 text-sm text-red-100"
+              >
+                <div className="font-medium">{copy.connection.testFailed}</div>
+                <div className="mt-1 text-xs opacity-85">{copy.connection.testFailedDetail}</div>
               </Card>
             ) : null}
 
@@ -257,6 +323,22 @@ export function ConnectionStep({
                 );
               })
             )}
+
+            {connectionTestResult?.status === 'passed' ? (
+              <div
+                data-slot="source-import-connection-test-success"
+                role="status"
+                aria-live="polite"
+                aria-atomic="true"
+                className="flex min-h-8 flex-wrap items-center gap-x-2 gap-y-1 rounded-md border border-emerald-800/70 bg-emerald-950/20 px-3 py-2 text-xs leading-4 text-emerald-200"
+              >
+                <CheckCircle2 className="size-3.5 shrink-0" aria-hidden="true" />
+                <span className="font-medium">{copy.connection.testPassed}</span>
+                <span className="text-emerald-300/80">
+                  {connectionTestResult.objectCount} {copy.connection.reachableObjects}
+                </span>
+              </div>
+            ) : null}
           </>
         )}
       </div>

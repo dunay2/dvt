@@ -205,6 +205,12 @@ describe('AppServicesProvider', () => {
         type: input.type,
         database: input.database,
       }),
+      renameWarehouseConnection: async (connectionId, input) => ({
+        id: connectionId,
+        name: input.name,
+        type: 'postgres',
+        database: 'analytics',
+      }),
       testWarehouseConnection: async (connectionId) => ({
         connectionId,
         status: 'passed',

@@ -3,7 +3,7 @@
 /** Owned concern: prove CanvasShell contextual dialogs without source-import contract noise. */
 import { DbtProjectImportResultSchema } from '@dvt/contracts';
 import { act } from 'react';
-import { waitFor } from '@testing-library/dom';
+import { fireEvent, waitFor } from '@testing-library/dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -110,20 +110,38 @@ describe('CanvasShell contextual dialogs', () => {
 
     const settingsDialog = document.body.querySelector('[data-slot="canvas-settings-dialog"]');
     expect(settingsDialog).not.toBeNull();
-    expect(settingsDialog?.textContent).toContain('Canvas settings');
+    expect(settingsDialog?.textContent).toContain('Canvas properties');
 
-    const gridButton = Array.from(settingsDialog?.querySelectorAll('button') ?? []).find(
-      (button) => button.textContent === 'Hide grid'
-    );
-    const snapButton = Array.from(settingsDialog?.querySelectorAll('button') ?? []).find(
-      (button) => button.textContent === 'Enable snap'
-    );
-    expect(gridButton).toBeDefined();
-    expect(snapButton).toBeDefined();
+    const gridTab = Array.from(
+      settingsDialog?.querySelectorAll<HTMLButtonElement>('[role="tab"]') ?? []
+    ).find((tab) => tab.textContent === 'Grid');
+    expect(gridTab).toBeDefined();
 
     await act(async () => {
-      gridButton?.click();
-      snapButton?.click();
+      fireEvent.mouseDown(gridTab!, { button: 0, ctrlKey: false });
+    });
+
+    const gridSwitch = settingsDialog?.querySelector<HTMLButtonElement>(
+      '[data-slot="canvas-properties-grid-visible"]'
+    );
+    const snapSwitch = settingsDialog?.querySelector<HTMLButtonElement>(
+      '[data-slot="canvas-properties-snap"]'
+    );
+    expect(gridSwitch).not.toBeNull();
+    expect(snapSwitch).not.toBeNull();
+
+    await act(async () => {
+      gridSwitch?.click();
+      snapSwitch?.click();
+    });
+
+    expect(onToggleGridVisible).not.toHaveBeenCalled();
+    expect(onToggleSnapToGrid).not.toHaveBeenCalled();
+
+    await act(async () => {
+      settingsDialog
+        ?.querySelector<HTMLButtonElement>('[data-slot="workbench-properties-apply"]')
+        ?.click();
     });
 
     expect(onToggleGridVisible).toHaveBeenCalledTimes(1);

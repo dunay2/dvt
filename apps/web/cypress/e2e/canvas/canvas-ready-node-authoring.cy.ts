@@ -26,6 +26,7 @@ type CanvasDraftSaveRequestBody = {
       name: string;
       kind: string;
       pluginId: string;
+      tags?: string[];
       metadata?: Record<string, unknown>;
     }>;
   };
@@ -205,6 +206,63 @@ function removeCanvasNode(nodeId: string): void {
 describe('Canvas ready node authoring', () => {
   beforeEach(() => {
     stubRuntimeCapabilities();
+  });
+
+  it('persists business tags while semantic tags stay protected and directly filterable', () => {
+    stubStatefulCanvasDraftAuthoring({
+      authoringGenerated: true,
+      title: 'Actionable tags',
+    });
+
+    visitReadyCanvas();
+
+    cy.get(
+      '.react-flow__node[data-id="dvt-sql-transform-1"] [data-slot="canvas-node-shell"]'
+    ).dblclick();
+    cy.get('[data-slot="canvas-node-workbench-tab-general"]').click();
+    cy.get('input[name="node-tags"]').should('have.value', '').type('finance');
+    cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^Apply$/).click();
+
+    cy.wrap(null).should(() => {
+      const savedNode = getE2eApiCalls('/workspace/graph/draft', 'PUT')
+        .map((call) => call.body as CanvasDraftSaveRequestBody)
+        .map((body) => body.draft.nodes.find((candidate) => candidate.id === 'dvt-sql-transform-1'))
+        .find(
+          (node) => node?.tags?.includes('authoring') === true && node.tags.includes('finance')
+        );
+
+      expect(savedNode, 'saved business and semantic tags').to.not.be.undefined;
+    });
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
+
+    const englishTagAction =
+      '.react-flow__node[data-id="dvt-sql-transform-1"] button[aria-label="Filter graph by tag finance"]';
+    cy.get(englishTagAction)
+      .focus()
+      .should('have.focus')
+      .then(() => cy.press(Cypress.Keyboard.Keys.ENTER));
+    cy.get('[data-slot="canvas-graph-filter-control"]').should('contain.text', 'Tag: finance');
+    cy.get(englishTagAction).click();
+    cy.get('[aria-label="Remove Tag filter finance"]').should('have.length', 1);
+    cy.get('button[aria-label="Clear graph filters"]').click();
+    cy.get('[aria-label="Remove Tag filter finance"]').should('not.exist');
+
+    visitReadyCanvas();
+
+    cy.get(
+      '.react-flow__node[data-id="dvt-sql-transform-1"] [data-slot="canvas-node-shell"]'
+    ).dblclick();
+    cy.get('[data-slot="canvas-node-workbench-tab-general"]').click();
+    cy.get('input[name="node-tags"]').should('have.value', 'finance');
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
+
+    cy.get('[data-slot="shell-menu-trigger"]').click();
+    cy.get('[data-slot="shell-language-option-es"]').click();
+    cy.get(
+      '.react-flow__node[data-id="dvt-sql-transform-1"] button[aria-label="Filtrar el grafo por la etiqueta finance"]'
+    ).click();
+    cy.get('[data-slot="canvas-graph-filter-control"]').should('contain.text', 'Etiqueta: finance');
+    assertNoSeriousAccessibilityViolations('[data-slot="canvas-graph-filter-control"]');
   });
 
   it('adds a governed authoring node from the canvas context menu on an existing canvas', () => {
@@ -569,7 +627,7 @@ describe('Canvas ready node authoring', () => {
       .type(authoredSql, { force: true, parseSpecialCharSequences: false, delay: 0 });
     cy.get('[data-slot="canvas-node-workbench-tab-general"]').click();
     cy.get('input[name="node-name"]').clear().type('Orders enriched');
-    cy.get('input[name="node-tags"]').clear().type('authoring, finance');
+    cy.get('input[name="node-tags"]').should('not.have.value', 'authoring').clear().type('finance');
     cy.get('textarea[name="node-description"]').type('Consumer-backed DVT transform');
     cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^Apply$/).click();
 
@@ -583,6 +641,8 @@ describe('Canvas ready node authoring', () => {
 
           return (
             node?.name === 'Orders enriched' &&
+            node.tags?.includes('authoring') === true &&
+            node.tags?.includes('finance') === true &&
             config?.sql === authoredSql &&
             config.selectedColumns?.[0] === 'source-1.order_id'
           );
@@ -594,6 +654,20 @@ describe('Canvas ready node authoring', () => {
     cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^Cancel$/).click();
     cy.get('input[name="node-name"]').should('have.value', 'Orders enriched');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
+
+    cy.get(
+      '.react-flow__node[data-id="dvt-sql-transform-1"] button[aria-label="Filter graph by tag finance"]'
+    )
+      .focus()
+      .should('have.focus')
+      .then(() => cy.press(Cypress.Keyboard.Keys.ENTER));
+    cy.get('[data-slot="canvas-graph-filter-control"]').should('contain.text', 'Tag: finance');
+    cy.get(
+      '.react-flow__node[data-id="dvt-sql-transform-1"] button[aria-label="Filter graph by tag finance"]'
+    ).click();
+    cy.get('[aria-label="Remove Tag filter finance"]').should('have.length', 1);
+    cy.get('button[aria-label="Clear graph filters"]').click();
+    cy.get('[aria-label="Remove Tag filter finance"]').should('not.exist');
 
     visitReadyCanvas();
 
@@ -620,7 +694,7 @@ describe('Canvas ready node authoring', () => {
     });
     cy.get('[data-slot="canvas-node-workbench-tab-general"]').click();
     cy.get('input[name="node-name"]').should('have.value', 'Orders enriched');
-    cy.get('input[name="node-tags"]').should('have.value', 'authoring, finance');
+    cy.get('input[name="node-tags"]').should('have.value', 'finance');
     cy.get('textarea[name="node-description"]').should(
       'have.value',
       'Consumer-backed DVT transform'

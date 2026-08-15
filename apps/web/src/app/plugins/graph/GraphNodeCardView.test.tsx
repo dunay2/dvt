@@ -199,7 +199,10 @@ describe('GraphNodeCardView', () => {
             accentTone: 'source',
             nodeActionsLabel: 'Open node menu',
           }}
-          tags={['postgres', 'public']}
+          tags={[
+            { value: 'postgres', label: 'postgres' },
+            { value: 'public', label: 'public' },
+          ]}
         />
       );
     });

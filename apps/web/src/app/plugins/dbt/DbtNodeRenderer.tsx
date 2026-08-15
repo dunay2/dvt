@@ -37,6 +37,7 @@ import { buildGraphNodeCardPlayAction } from '../graph/graphNodeCardActions';
 import { buildGraphNodeCardReadModel } from '../graph/graphNodeCardReadModel';
 import type { GraphNodeOperationalDetail } from '../graph/graphNodeCardStrategyContracts';
 import { GraphNodeCardView } from '../graph/GraphNodeCardView';
+import { resolveGraphNodeTagActionProps } from '../graph/GraphNodeTagList';
 import { CANVAS_NODE_KINDS } from '../nodeTypeCatalog';
 
 const DBT_PLUGIN_ID = 'dbt';
@@ -237,8 +238,15 @@ export function DbtNodeRenderer({
     columns.length > 0 &&
     (kindMeta?.supportsColumns || node.role === 'input' || node.role === 'transform');
   const displayTags = Array.isArray(data.displayTags)
-    ? data.displayTags.filter((tag): tag is string => typeof tag === 'string')
-    : node.tags;
+    ? data.displayTags.filter(
+        (tag): tag is Readonly<{ value: string; label: string }> =>
+          typeof tag === 'object' &&
+          tag != null &&
+          typeof (tag as { value?: unknown }).value === 'string' &&
+          typeof (tag as { label?: unknown }).label === 'string'
+      )
+    : node.tags.map((tag) => ({ value: tag, label: tag }));
+  const tagActionProps = resolveGraphNodeTagActionProps(data);
 
   return (
     <GraphNodeCardView
@@ -255,6 +263,7 @@ export function DbtNodeRenderer({
       dimmed={dimmed}
       overlayStyle={overlayProps.style}
       playAction={playAction}
+      {...tagActionProps}
       onOpenOperationalDetails={
         typeof openOperationalDetails === 'function'
           ? (detail: GraphNodeOperationalDetail, anchorElement: HTMLElement) => {

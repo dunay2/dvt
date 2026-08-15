@@ -55,6 +55,12 @@ export const CreateWarehouseConnectionRequestSchema = z
   })
   .strict();
 
+export const RenameWarehouseConnectionRequestSchema = z
+  .object({
+    name: NonBlankStringSchema,
+  })
+  .strict();
+
 export const TestWarehouseConnectionResultSchema = z.discriminatedUnion('status', [
   z
     .object({
@@ -111,6 +117,9 @@ export type WarehouseConnectionType = (typeof WAREHOUSE_CONNECTION_TYPE)[number]
 export type WarehouseConnection = z.infer<typeof WarehouseConnectionSchema>;
 export type CreateWarehouseConnectionRequest = z.infer<
   typeof CreateWarehouseConnectionRequestSchema
+>;
+export type RenameWarehouseConnectionRequest = z.infer<
+  typeof RenameWarehouseConnectionRequestSchema
 >;
 export type WarehouseConnectionTestFailureReason =
   (typeof WAREHOUSE_CONNECTION_TEST_FAILURE_REASON)[number];

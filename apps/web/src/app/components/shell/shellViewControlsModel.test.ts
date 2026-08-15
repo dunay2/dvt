@@ -12,7 +12,6 @@ describe('resolveShellViewControls', () => {
       expect(controls).not.toHaveProperty('showInspectorPanelToggle');
       expect(controls.showBottomDrawerToggle).toBe(true);
       expect(controls.showFocusModeToggle).toBe(true);
-      expect(controls.showCanvasViewContributionControls).toBe(true);
     }
   );
 
@@ -22,6 +21,5 @@ describe('resolveShellViewControls', () => {
     expect(controls).not.toHaveProperty('showInspectorPanelToggle');
     expect(controls.showBottomDrawerToggle).toBe(true);
     expect(controls.showFocusModeToggle).toBe(true);
-    expect(controls.showCanvasViewContributionControls).toBe(false);
   });
 });
