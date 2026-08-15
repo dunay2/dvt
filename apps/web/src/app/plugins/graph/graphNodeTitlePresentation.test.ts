@@ -108,7 +108,7 @@ describe('buildGraphNodeTitlePresentation', () => {
         },
       })
     ).toEqual({
-      title: 'Dvt · public',
+      title: 'source_1',
       technicalName: 'src_local_postgres_dvt_public_source_1',
     });
   });
@@ -137,8 +137,72 @@ describe('buildGraphNodeTitlePresentation', () => {
         },
       })
     ).toEqual({
-      title: 'Postgres · public',
+      title: 'source_1',
       technicalName: 'src_local_postgres_dvt_public_source_1',
+    });
+  });
+
+  it('prefers the physical warehouse identifier over the normalized YAML table alias', () => {
+    expect(
+      buildGraphNodeTitlePresentation({
+        nodeName: 'src_warehouse_public_order_items',
+        pluginId: 'dvt.warehouse-source',
+        kind: 'dvt:source',
+        metadata: {
+          database: 'warehouse',
+          schema: 'public',
+          tableName: 'order_items',
+          tableIdentifier: 'Order-Items',
+        },
+      })
+    ).toEqual({
+      title: 'Order-Items',
+      technicalName: 'src_warehouse_public_order_items',
+    });
+  });
+
+  it('keeps same-schema warehouse source cards distinct with exact table identifiers', () => {
+    const buildTitle = (tableName: string): string =>
+      buildGraphNodeTitlePresentation({
+        nodeName: `src_local_postgres_dvt_${tableName}`,
+        pluginId: 'dvt.warehouse-source',
+        kind: 'dvt:source',
+        metadata: {
+          database: 'dvt',
+          schema: 'dvt',
+          tableName,
+        },
+      }).title;
+
+    expect([buildTitle('auth_audit_events'), buildTitle('email_outbox')]).toEqual([
+      'auth_audit_events',
+      'email_outbox',
+    ]);
+  });
+
+  it('falls back to provider and schema when a warehouse source table is unavailable', () => {
+    expect(
+      buildGraphNodeTitlePresentation({
+        nodeName: 'src_local_postgres_dvt_public',
+        pluginId: 'dvt.warehouse-source',
+        kind: 'dvt:source',
+        metadata: {
+          connectedSourceRef: {
+            schemaVersion: 'connected-source-ref.v1',
+            connectionRef: {
+              schemaVersion: 'connection-ref.v1',
+              connectionId: 'local-postgres',
+              provider: 'postgres',
+            },
+            sourceObjectId: 'schema/dvt/public',
+          },
+          database: 'dvt',
+          schema: 'public',
+        },
+      })
+    ).toEqual({
+      title: 'Postgres · public',
+      technicalName: 'src_local_postgres_dvt_public',
     });
   });
 

@@ -51,6 +51,8 @@ export function buildGraphNodeTitlePresentation({
   const dbtData = recordValue(data.dbt);
   const configData = recordValue(data.config);
   const { database, schema, table: tableName } = resolveGraphNodeRelationParts(metadata, data);
+  const physicalTableIdentifier =
+    stringValue(metadata.tableIdentifier) ?? stringValue(data.tableIdentifier);
   const connectedSourceRef = ConnectedSourceRefSchema.safeParse(metadata.connectedSourceRef);
   const connectionProvider = connectedSourceRef.success
     ? connectedSourceRef.data.connectionRef.provider
@@ -62,11 +64,21 @@ export function buildGraphNodeTitlePresentation({
     stringValue(data.sourceName) ??
     stringValue(dbtData.sourceName) ??
     stringValue(configData.sourceName);
-  if (pluginId === 'dvt.warehouse-source' && kind === 'dvt:source' && database && schema) {
-    return {
-      title: `${titleCaseIdentifier(connectionProvider ?? database)} · ${schema}`,
-      technicalName: nodeName,
-    };
+  if (pluginId === 'dvt.warehouse-source' && kind === 'dvt:source') {
+    const warehouseTableTitle = physicalTableIdentifier ?? tableName;
+    if (warehouseTableTitle) {
+      return {
+        title: warehouseTableTitle,
+        technicalName: nodeName,
+      };
+    }
+
+    if (database && schema) {
+      return {
+        title: `${titleCaseIdentifier(connectionProvider ?? database)} · ${schema}`,
+        technicalName: nodeName,
+      };
+    }
   }
 
   if ((kind === 'dbt:source' || kind === 'dvt:source') && sourceName && tableName) {

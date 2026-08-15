@@ -206,7 +206,7 @@ describe('buildGraphNodeCardReadModel', () => {
       [dvtGraphNodeCardStrategy]
     );
 
-    expect(model.title).toBe('Warehouse · erp');
+    expect(model.title).toBe('orders');
     expect(model.technicalName).toBe('src_erp_orders');
     expect(model.subtitle).toBe('warehouse.erp.orders');
     expect(model.path).toBe('models/sources/src_erp.yml');
