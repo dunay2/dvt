@@ -88,7 +88,7 @@ describe('EmbeddedAccessDecisionService', () => {
       'workspace:source-import:import',
       'workspace:plugins:view',
     ];
-    const buildService = (allowedActions: readonly string[]) =>
+    const buildService = (allowedActions: readonly string[]): EmbeddedAccessDecisionService =>
       new EmbeddedAccessDecisionService({
         async migrate() {},
         async load() {
