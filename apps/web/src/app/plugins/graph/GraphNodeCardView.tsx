@@ -22,8 +22,7 @@ export type GraphNodeCardColumn = GraphNodeColumn;
 export type GraphNodeCardViewProps = Readonly<{
   cardModel: GraphNodeCardReadModel;
   typeLabel: string;
-  tags: readonly string[];
-  canonicalTags?: readonly string[];
+  tags: readonly Readonly<{ value: string; label: string }>[];
   columns: readonly GraphNodeCardColumn[];
   showColumns: boolean;
   icon?: LucideIcon;
@@ -69,7 +68,6 @@ export function GraphNodeCardView({
   cardModel,
   typeLabel,
   tags,
-  canonicalTags,
   columns,
   showColumns,
   icon: Icon,
@@ -179,7 +177,6 @@ export function GraphNodeCardView({
 
         <GraphNodeTagList
           tags={tags}
-          canonicalTags={canonicalTags}
           tone={cardModel.accentTone}
           onSelectTag={onSelectTag}
           getSelectTagLabel={getSelectTagLabel}

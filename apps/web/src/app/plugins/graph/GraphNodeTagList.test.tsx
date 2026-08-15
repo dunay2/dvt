@@ -42,7 +42,14 @@ describe('GraphNodeTagList', () => {
 
   it('renders already-selected display tags with explicit overflow instead of hiding values', () => {
     act(() => {
-      root.render(<GraphNodeTagList tags={['postgres', 'public', 'source', 'hidden']} />);
+      root.render(
+        <GraphNodeTagList
+          tags={['postgres', 'public', 'source', 'hidden'].map((tag) => ({
+            value: tag,
+            label: tag,
+          }))}
+        />
+      );
     });
 
     expect(container.querySelector('[data-slot="graph-node-tag-list"]')).not.toBeNull();
@@ -50,11 +57,27 @@ describe('GraphNodeTagList', () => {
     expect(
       container.querySelector('[data-slot="graph-node-tag-overflow"]')?.getAttribute('title')
     ).toBe('hidden');
+    const overflow = container.querySelector<HTMLButtonElement>(
+      'button[data-slot="graph-node-tag-overflow"]'
+    )!;
+    expect(overflow.getAttribute('aria-expanded')).toBe('false');
+
+    act(() => {
+      fireEvent.click(overflow);
+    });
+
+    expect(overflow.getAttribute('aria-expanded')).toBe('true');
+    expect(container.textContent).toBe('postgrespublicsourcehidden−1');
   });
 
   it('honors the supplied visible tag limit', () => {
     act(() => {
-      root.render(<GraphNodeTagList tags={['model', 'authoring']} limit={1} />);
+      root.render(
+        <GraphNodeTagList
+          tags={['model', 'authoring'].map((tag) => ({ value: tag, label: tag }))}
+          limit={1}
+        />
+      );
     });
 
     expect(container.textContent).toBe('model+1');
@@ -66,8 +89,10 @@ describe('GraphNodeTagList', () => {
     act(() => {
       root.render(
         <GraphNodeTagList
-          tags={['En edición', 'finanzas']}
-          canonicalTags={['authoring', 'finance']}
+          tags={[
+            { value: 'authoring', label: 'En edición' },
+            { value: 'finance', label: 'finanzas' },
+          ]}
           onSelectTag={onSelectTag}
           getSelectTagLabel={(tag) => `Filtrar por la etiqueta ${tag}`}
         />
@@ -90,7 +115,12 @@ describe('GraphNodeTagList', () => {
 
   it('renders the supplied accent tone without deriving it from tag text', () => {
     act(() => {
-      root.render(<GraphNodeTagList tags={['public', 'source']} tone="source" />);
+      root.render(
+        <GraphNodeTagList
+          tags={['public', 'source'].map((tag) => ({ value: tag, label: tag }))}
+          tone="source"
+        />
+      );
     });
 
     const list = container.querySelector('[data-slot="graph-node-tag-list"]');

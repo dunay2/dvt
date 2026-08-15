@@ -1,5 +1,5 @@
 /** Owned concern: render graph-node tags from already-selected display tags. */
-import type { ReactElement } from 'react';
+import { useState, type ReactElement } from 'react';
 
 import { canvasNodeEmbeddedControlProps } from '../../components/canvas/canvasNodeInteractionBoundary';
 import { cn } from '../../components/ui/utils';
@@ -7,8 +7,7 @@ import type { GraphNodeCardAccentTone } from './graphNodeCardStrategyContracts';
 import { graphNodeTagListClasses } from './graphVisualTokens';
 
 export type GraphNodeTagListProps = Readonly<{
-  tags: readonly string[];
-  canonicalTags?: readonly string[];
+  tags: readonly Readonly<{ value: string; label: string }>[];
   limit?: number;
   tone?: GraphNodeCardAccentTone;
   onSelectTag?: (tag: string) => void;
@@ -17,22 +16,21 @@ export type GraphNodeTagListProps = Readonly<{
 
 export function GraphNodeTagList({
   tags,
-  canonicalTags = tags,
   limit = 3,
   tone = 'unknown',
   onSelectTag,
   getSelectTagLabel,
 }: GraphNodeTagListProps): ReactElement | null {
-  const visibleTags = tags.slice(0, limit);
+  const [expanded, setExpanded] = useState(false);
   const hiddenTags = tags.slice(limit);
-  if (visibleTags.length === 0) {
+  const renderedTags = expanded ? tags : tags.slice(0, limit);
+  if (renderedTags.length === 0) {
     return null;
   }
 
   return (
     <div data-slot="graph-node-tag-list" data-tone={tone} className={graphNodeTagListClasses.root}>
-      {visibleTags.map((tag, index) => {
-        const canonicalTag = canonicalTags[index] ?? tag;
+      {renderedTags.map((tag) => {
         const className = cn(
           graphNodeTagListClasses.tag,
           graphNodeTagListClasses.tone[tone],
@@ -40,41 +38,48 @@ export function GraphNodeTagList({
         );
         return onSelectTag ? (
           <button
-            key={canonicalTag}
+            key={tag.value}
             type="button"
             data-slot="graph-node-tag"
             data-tone={tone}
             {...canvasNodeEmbeddedControlProps}
             className={className}
-            aria-label={getSelectTagLabel?.(tag) ?? tag}
-            title={getSelectTagLabel?.(tag) ?? tag}
+            aria-label={getSelectTagLabel?.(tag.label) ?? tag.label}
+            title={getSelectTagLabel?.(tag.label) ?? tag.label}
             onClick={(event) => {
               event.stopPropagation();
-              onSelectTag(canonicalTag);
+              onSelectTag(tag.value);
             }}
           >
-            {tag}
+            {tag.label}
           </button>
         ) : (
-          <span
-            key={canonicalTag}
-            data-slot="graph-node-tag"
-            data-tone={tone}
-            className={className}
-          >
-            {tag}
+          <span key={tag.value} data-slot="graph-node-tag" data-tone={tone} className={className}>
+            {tag.label}
           </span>
         );
       })}
       {hiddenTags.length === 0 ? null : (
-        <span
+        <button
+          type="button"
           data-slot="graph-node-tag-overflow"
-          className={cn(graphNodeTagListClasses.tag, graphNodeTagListClasses.tone[tone])}
-          title={hiddenTags.join(', ')}
-          aria-label={hiddenTags.join(', ')}
+          {...canvasNodeEmbeddedControlProps}
+          className={cn(
+            graphNodeTagListClasses.tag,
+            graphNodeTagListClasses.tone[tone],
+            graphNodeTagListClasses.interactiveTag
+          )}
+          title={hiddenTags.map(({ label }) => label).join(', ')}
+          aria-label={hiddenTags.map(({ label }) => label).join(', ')}
+          aria-expanded={expanded}
+          onClick={(event) => {
+            event.stopPropagation();
+            setExpanded((current) => !current);
+          }}
         >
-          +{hiddenTags.length}
-        </span>
+          {expanded ? '−' : '+'}
+          {hiddenTags.length}
+        </button>
       )}
     </div>
   );

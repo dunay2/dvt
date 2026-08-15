@@ -114,9 +114,10 @@ export function mapCanonicalNodeToCanvasNode({
       lastCost: canonicalNode.lastCost,
       overlayDecoration: overlayDecoration ?? null,
       tags: canonicalNode.tags,
-      displayTags: canonicalNode.tags.map((tag) =>
-        tag === 'authoring' ? (presentationCopy.authoringTagLabel ?? tag) : tag
-      ),
+      displayTags: canonicalNode.tags.map((tag) => ({
+        value: tag,
+        label: tag === 'authoring' ? (presentationCopy.authoringTagLabel ?? tag) : tag,
+      })),
       metadata: canonicalNode.metadata == null ? undefined : { ...canonicalNode.metadata },
       presentationTruth: resolvedPresentationTruth,
       presentationCopy,
@@ -232,9 +233,10 @@ export function mapDroppedCanonicalNodeToCanvasNode(
       lastDuration: canonicalNode.lastDuration,
       lastCost: canonicalNode.lastCost,
       tags: canonicalNode.tags,
-      displayTags: canonicalNode.tags.map((tag) =>
-        tag === 'authoring' ? (presentationCopy.authoringTagLabel ?? tag) : tag
-      ),
+      displayTags: canonicalNode.tags.map((tag) => ({
+        value: tag,
+        label: tag === 'authoring' ? (presentationCopy.authoringTagLabel ?? tag) : tag,
+      })),
       metadata: canonicalNode.metadata == null ? undefined : { ...canonicalNode.metadata },
       presentationTruth,
       presentationCopy,

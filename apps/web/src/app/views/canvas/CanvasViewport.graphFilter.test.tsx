@@ -2,6 +2,7 @@
 
 import { fireEvent, waitFor } from '@testing-library/dom';
 import { act } from 'react';
+import { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@xyflow/react', () => import('./canvasViewportXyflowTestAdapter'));
@@ -16,6 +17,8 @@ import {
   type CanvasViewportProps,
 } from './CanvasViewport.testHarness';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import { GraphNodeRenderer } from '../../plugins/graph/GraphNodeRenderer';
+import type { CanonicalNode } from '../../types/canonical';
 
 describe('CanvasViewport graph filtering', () => {
   let harness: ReturnType<typeof createCanvasViewportHarness>;
@@ -133,21 +136,44 @@ describe('CanvasViewport graph filtering', () => {
     ).toBe(true);
   });
 
-  it('routes canonical card-tag actions through the existing filter controller', () => {
+  it('routes a real card-tag button through the existing filter controller', () => {
     const sourceNode = viewportNode('customers');
     const data = sourceNode?.data as Record<string, unknown> | undefined;
-    const filterByTag = data?.onFilterByTag;
-    const getTagFilterLabel = data?.getTagFilterLabel;
-
-    expect(typeof filterByTag).toBe('function');
-    expect(typeof getTagFilterLabel).toBe('function');
-    expect((getTagFilterLabel as (tag: string) => string)('source')).toBe(
-      'Filter graph by tag source'
-    );
+    const rendererContainer = document.createElement('div');
+    document.body.append(rendererContainer);
+    const rendererRoot = createRoot(rendererContainer);
+    const canonicalNode: CanonicalNode = {
+      id: 'customers',
+      name: 'Customers',
+      pluginId: 'dbt',
+      kind: 'dbt:source',
+      role: 'input',
+      status: 'idle',
+      tags: ['source'],
+    };
 
     act(() => {
-      (filterByTag as (tag: string) => void)('source');
-      (filterByTag as (tag: string) => void)('source');
+      rendererRoot.render(
+        <GraphNodeRenderer
+          node={canonicalNode}
+          selected={false}
+          hovered={false}
+          overlayDecoration={null}
+          badges={[]}
+          graphNodeCardStrategies={[]}
+          data={data ?? {}}
+        />
+      );
+    });
+
+    const tagButton = rendererContainer.querySelector<HTMLButtonElement>(
+      'button[aria-label="Filter graph by tag source"]'
+    );
+    expect(tagButton?.type).toBe('button');
+
+    act(() => {
+      fireEvent.click(tagButton!);
+      fireEvent.click(tagButton!);
     });
 
     const control = document.querySelector<HTMLElement>(
@@ -158,6 +184,9 @@ describe('CanvasViewport graph filtering', () => {
     expect(control?.querySelectorAll('[aria-label="Remove Tag filter source"]')).toHaveLength(1);
     expect(viewportNode('orders-failed')?.className).toContain('canvas-graph-filter-dimmed-node');
     expect(viewportNode('customers')?.className).toBe('domain-customers');
+
+    act(() => rendererRoot.unmount());
+    rendererContainer.remove();
   });
 
   it('updates card-tag action copy when the application language changes', async () => {

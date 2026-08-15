@@ -238,8 +238,14 @@ export function DbtNodeRenderer({
     columns.length > 0 &&
     (kindMeta?.supportsColumns || node.role === 'input' || node.role === 'transform');
   const displayTags = Array.isArray(data.displayTags)
-    ? data.displayTags.filter((tag): tag is string => typeof tag === 'string')
-    : node.tags;
+    ? data.displayTags.filter(
+        (tag): tag is Readonly<{ value: string; label: string }> =>
+          typeof tag === 'object' &&
+          tag != null &&
+          typeof (tag as { value?: unknown }).value === 'string' &&
+          typeof (tag as { label?: unknown }).label === 'string'
+      )
+    : node.tags.map((tag) => ({ value: tag, label: tag }));
   const tagActionProps = resolveGraphNodeTagActionProps(data);
 
   return (
@@ -247,7 +253,6 @@ export function DbtNodeRenderer({
       cardModel={cardModel}
       typeLabel={typeLabel}
       tags={displayTags}
-      canonicalTags={node.tags}
       columns={columns}
       showColumns={showColumns}
       icon={Icon}

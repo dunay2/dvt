@@ -63,7 +63,10 @@ describe('canvasNodeMapper', () => {
 
     expect(mappedNode.data.typeLabel).toBe('Modelo');
     expect(mappedNode.data.tags).toEqual(['authoring', 'finance']);
-    expect(mappedNode.data.displayTags).toEqual(['En edición', 'finance']);
+    expect(mappedNode.data.displayTags).toEqual([
+      { value: 'authoring', label: 'En edición' },
+      { value: 'finance', label: 'finance' },
+    ]);
   });
 
   it('projects a high-visibility closed arrow for dependency direction', () => {
