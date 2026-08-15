@@ -62,6 +62,7 @@ export type InspectWarehouseConnectionResult =
   | {
       readonly status: 'passed';
       readonly checkedAt: string;
+      readonly databaseUser?: string;
       readonly sourceObjects: readonly SourceObject[];
     }
   | {

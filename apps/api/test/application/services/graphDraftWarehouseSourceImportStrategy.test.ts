@@ -102,6 +102,7 @@ describe('GraphDraftWarehouseSourceImportStrategy', () => {
                 },
                 sourceMetricEvidence: SOURCE_OBJECT.metricEvidence,
                 columns: SOURCE_OBJECT.columns,
+                databaseUser: 'warehouse_reader',
               }),
             }),
           ],
@@ -120,6 +121,7 @@ describe('GraphDraftWarehouseSourceImportStrategy', () => {
     const savedNode = vi.mocked(draftStore.save).mock.calls[0]?.[0].draft.nodes[0];
     expect(savedNode?.metadata).not.toHaveProperty('sourceObjectId');
     expect(savedNode?.metadata).not.toHaveProperty('connectionType');
+    expect(savedNode?.metadata).not.toHaveProperty('credentialRef');
   });
 
   it('rejects a missing Graph Draft before publishing files', async () => {
@@ -438,6 +440,7 @@ const CONTEXT: WarehouseSourceImportCommandContext = {
     type: 'postgres',
     database: 'analytics',
   },
+  databaseUser: 'warehouse_reader',
   sourceObjects: [
     {
       ...SOURCE_OBJECT,

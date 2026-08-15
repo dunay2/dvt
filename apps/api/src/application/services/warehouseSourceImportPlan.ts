@@ -26,6 +26,7 @@ export type WarehouseSourceImportCommandContext = Readonly<{
   canvasId: string;
   idempotencyKey: string;
   connection: WarehouseConnection;
+  databaseUser?: string;
   sourceObjects: readonly ConnectedRelationalSourceObject[];
   groupingStrategy: SourceImportGrouping;
   includeColumns: boolean;

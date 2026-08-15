@@ -61,6 +61,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
             table_catalog: 'dvt',
             table_schema: 'public',
             table_name: 'orders',
+            database_user: 'warehouse_reader',
             relation_kind: 'r',
             row_count: '128',
           },
@@ -109,6 +110,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
     ).resolves.toEqual({
       status: 'passed',
       checkedAt: '2026-06-27T12:00:00.000Z',
+      databaseUser: 'warehouse_reader',
       sourceObjects: [
         {
           ...expectedRelationIdentity('orders'),
@@ -148,6 +150,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
     expect(pgMock.query).toHaveBeenCalledTimes(3);
     expect(pgMock.query.mock.calls[0]?.[0]).not.toContain('pg_total_relation_size(relation.oid)');
     expect(pgMock.query.mock.calls[0]?.[0]).toContain('pg_stat_get_live_tuples(relation.oid)');
+    expect(pgMock.query.mock.calls[0]?.[0]).toContain('current_user as database_user');
     expect(pgMock.query.mock.calls[1]?.[0]).toContain('with discovered_relations as');
     expect(pgMock.query.mock.calls[0]?.[0]).not.toContain('limit ');
     expect(pgMock.query.mock.calls[1]?.[0]).not.toContain('limit ');
