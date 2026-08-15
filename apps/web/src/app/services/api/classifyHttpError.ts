@@ -9,11 +9,7 @@ import { ApiError } from './createApiClient';
 
 /** Category of HTTP error, independent of the calling domain's message strings. */
 export type HttpErrorKind =
-  | 'auth-required'
-  | 'access-denied'
-  | 'service-unavailable'
-  | 'client-error'
-  | 'unclassified';
+  'auth-required' | 'access-denied' | 'service-unavailable' | 'client-error' | 'unclassified';
 
 /**
  * Classifies an unknown error value into a typed {@link HttpErrorKind}.
@@ -50,4 +46,27 @@ export function extractHttpStatusCode(error: unknown): number | undefined {
   return error instanceof ApiError && typeof error.statusCode === 'number'
     ? error.statusCode
     : undefined;
+}
+
+/**
+ * Returns a semantic reason from the canonical API error envelope without
+ * exposing transport diagnostics to presentation code.
+ */
+export function extractHttpErrorReason(error: unknown): string | undefined {
+  if (!(error instanceof ApiError)) {
+    return undefined;
+  }
+
+  const responseBody = error.responseBody;
+  if (responseBody === null || typeof responseBody !== 'object') {
+    return undefined;
+  }
+
+  const envelopeError = (responseBody as { readonly error?: unknown }).error;
+  if (envelopeError === null || typeof envelopeError !== 'object') {
+    return undefined;
+  }
+
+  const reason = (envelopeError as { readonly reason?: unknown }).reason;
+  return typeof reason === 'string' ? reason : undefined;
 }
