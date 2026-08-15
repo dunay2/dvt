@@ -362,7 +362,8 @@ describe('SourceImportWizard', () => {
       '[data-slot="source-import-connection-actions"]'
     );
 
-    expect(dialog?.className).toContain('sm:max-w-5xl');
+    expect(dialog?.className).toContain('max-w-[min(64rem,calc(100vw-2rem))]');
+    expect(dialog?.className).not.toContain('sm:max-w-5xl');
     expect(connectionSummary?.className).toContain('flex-col');
     expect(connectionSummary?.className).toContain('md:flex-row');
     expect(connectionActions?.className).toContain('grid');
