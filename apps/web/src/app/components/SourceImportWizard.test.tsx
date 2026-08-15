@@ -368,6 +368,8 @@ describe('SourceImportWizard', () => {
     expect(createNameInput?.closest('form')?.textContent).toContain(
       'No se pudo crear la conexión al warehouse.'
     );
+    expect(createNameInput?.getAttribute('aria-invalid')).toBeNull();
+    expect(createNameInput?.getAttribute('aria-errormessage')).toBeNull();
   });
 
   it('explains a duplicate connection at the top of the create form', async () => {
@@ -789,6 +791,26 @@ describe('SourceImportWizard', () => {
     expect(document.body.textContent).toContain(
       'Name, database, and credential reference are required.'
     );
+
+    const alert = document.body.querySelector<HTMLElement>(
+      '[data-slot="source-import-create-connection-error"]'
+    );
+    const nameInput = document.body.querySelector<HTMLInputElement>(
+      '[data-slot="source-import-create-connection-name"]'
+    );
+    const databaseInput = document.body.querySelector<HTMLInputElement>(
+      '[data-slot="source-import-create-connection-database"]'
+    );
+    const credentialInput = document.body.querySelector<HTMLInputElement>(
+      '[data-slot="source-import-create-connection-credential-ref"]'
+    );
+
+    expect(nameInput?.getAttribute('aria-invalid')).toBeNull();
+    expect(nameInput?.getAttribute('aria-errormessage')).toBeNull();
+    expect(databaseInput?.getAttribute('aria-invalid')).toBe('true');
+    expect(databaseInput?.getAttribute('aria-errormessage')).toBe(alert?.id);
+    expect(credentialInput?.getAttribute('aria-invalid')).toBe('true');
+    expect(credentialInput?.getAttribute('aria-errormessage')).toBe(alert?.id);
   });
 
   it('completes import flow, applies imported sources immediately, and renders a passive result step', async () => {
