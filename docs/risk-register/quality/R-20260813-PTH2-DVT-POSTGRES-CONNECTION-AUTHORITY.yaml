@@ -26,6 +26,8 @@ mitigations:
   - Verify artifact integrity, workspace scope, PlanRef and exact step reference in the worker
     before resolving a credential or opening a pool.
   - Keep a separate pool per admitted binding and prove A/B routing with homonymous SQL objects.
+  - Bound retained idle plan sessions with least-recently-used eviction, preserve active leases and
+    close each evicted pool so connection churn cannot accumulate worker-lifetime resources.
   - Reject a missing plan resolver or alias without falling back to the capability pool or
     DATABASE_URL.
   - Persist an immutable S3 run-to-reference index with hashed scope keys, conditional writes and

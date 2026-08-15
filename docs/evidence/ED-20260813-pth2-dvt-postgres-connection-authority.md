@@ -51,12 +51,14 @@ writes one immutable `RunExecutionContext.v1` for the worker.
 
 The Temporal worker verifies the context artifact, workspace scope, PlanRef and
 step-level reference before resolving credentials. Each admitted binding owns a
-separate PostgreSQL pool. Missing, malformed, cross-scope or mismatched bindings
-fail before SQL is sent. The relational capability also rejects SQL-first steps
-when no plan connection resolver was composed, so its object-file pool cannot
-become an implicit execution fallback. `DATABASE_URL` is not a fallback for
-SQL-first DVT execution; it remains only on the pre-existing object-file loading
-seam.
+separate PostgreSQL pool. The worker retains at most 32 idle plan-bound sessions
+by default, updates recency when a binding is reused and closes an evicted pool;
+active leases are never evicted mid-step. Missing, malformed, cross-scope or
+mismatched bindings fail before SQL is sent. The relational capability also
+rejects SQL-first steps when no plan connection resolver was composed, so its
+object-file pool cannot become an implicit execution fallback. `DATABASE_URL`
+is not a fallback for SQL-first DVT execution; it remains only on the
+pre-existing object-file loading seam.
 
 The hard cut upgrades the SQL-first transformation profile to v2 without a
 compatibility union, migration state or dual read. Generic execution plans
