@@ -71,6 +71,19 @@ The Temporal adapter integration fixture now supplies the same complete v2 step
 configs and an explicit plan resolver; its real PostgreSQL workflow reaches
 `RunCompleted` through all three steps.
 
+Repeated `StartRun` delivery for the same platform run identifier now derives
+the context creation instant from that UUIDv7 identifier. A retry therefore
+writes byte-identical immutable context even when authorization is evaluated at
+a later instant; a concurrent retry cannot poison the run after dispatch has
+already succeeded. Non-platform identifiers retain the explicitly authorized
+instant used by bounded tests and internal callers.
+
+The Canvas connection test feedback is bound to both the selected connection
+and the latest request sequence. Changing the connection invalidates an
+in-flight result, and a response whose connection identifier does not match the
+tested selection is discarded. The inspector cannot present connection A's
+availability as evidence for connection B.
+
 For the supported S3 artifact backend, the context payload remains
 content-addressed while `@dvt/artifacts` persists a separate immutable
 run-to-reference index. Tenant and run identifiers are SHA-256 addressed in

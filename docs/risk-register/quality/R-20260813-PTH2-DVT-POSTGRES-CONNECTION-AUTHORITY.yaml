@@ -23,6 +23,8 @@ mitigations:
     bindings during contract admission.
   - Resolve the catalog entry and credential alias once at StartRun and persist only secret-free
     immutable context.
+  - Derive platform run-context creation time from the run UUIDv7 so retries persist byte-identical
+    immutable context even when authorization is re-evaluated later.
   - Verify artifact integrity, workspace scope, PlanRef and exact step reference in the worker
     before resolving a credential or opening a pool.
   - Keep a separate pool per admitted binding and prove A/B routing with homonymous SQL objects.
@@ -32,6 +34,8 @@ mitigations:
     DATABASE_URL.
   - Persist an immutable S3 run-to-reference index with hashed scope keys, conditional writes and
     exact replay verification so status and recovery use the same trusted context as StartRun.
+  - Bind Canvas connection-test feedback to the selected connection and latest request sequence,
+    discarding stale or mismatched responses after a selection change.
 residual_risk: >
   Credential rotation changes the value behind a stable alias for future worker processes. Revoked
   connection reconciliation and multi-provider SQL-first execution require separate product slices;
