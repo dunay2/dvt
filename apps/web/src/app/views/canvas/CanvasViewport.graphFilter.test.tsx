@@ -15,11 +15,13 @@ import {
   getCanvasViewportXyflowState,
   type CanvasViewportProps,
 } from './CanvasViewport.testHarness';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 
 describe('CanvasViewport graph filtering', () => {
   let harness: ReturnType<typeof createCanvasViewportHarness>;
 
   beforeEach(async () => {
+    useApplicationLanguageStore.setState({ language: 'en' });
     harness = createCanvasViewportHarness();
     await harness.render({ nodesWithImpact: graphNodes(), edges: graphEdges() });
   });
@@ -131,6 +133,45 @@ describe('CanvasViewport graph filtering', () => {
     ).toBe(true);
   });
 
+  it('routes canonical card-tag actions through the existing filter controller', () => {
+    const sourceNode = viewportNode('customers');
+    const data = sourceNode?.data as Record<string, unknown> | undefined;
+    const filterByTag = data?.onFilterByTag;
+    const getTagFilterLabel = data?.getTagFilterLabel;
+
+    expect(typeof filterByTag).toBe('function');
+    expect(typeof getTagFilterLabel).toBe('function');
+    expect((getTagFilterLabel as (tag: string) => string)('source')).toBe(
+      'Filter graph by tag source'
+    );
+
+    act(() => {
+      (filterByTag as (tag: string) => void)('source');
+      (filterByTag as (tag: string) => void)('source');
+    });
+
+    const control = document.querySelector<HTMLElement>(
+      '[data-slot="canvas-graph-filter-control"]'
+    );
+    expect(control).not.toBeNull();
+    expect(control?.textContent).toContain('Tag: source');
+    expect(control?.querySelectorAll('[aria-label="Remove Tag filter source"]')).toHaveLength(1);
+    expect(viewportNode('orders-failed')?.className).toContain('canvas-graph-filter-dimmed-node');
+    expect(viewportNode('customers')?.className).toBe('domain-customers');
+  });
+
+  it('updates card-tag action copy when the application language changes', async () => {
+    act(() => {
+      useApplicationLanguageStore.getState().configureApplicationLanguage('es');
+    });
+
+    await waitFor(() => {
+      const data = viewportNode('customers')?.data as Record<string, unknown> | undefined;
+      const getTagFilterLabel = data?.getTagFilterLabel as ((tag: string) => string) | undefined;
+      expect(getTagFilterLabel?.('source')).toBe('Filtrar el grafo por la etiqueta source');
+    });
+  });
+
   function viewportNodes(): CanvasViewportProps['nodesWithImpact'] {
     return getCanvasViewportXyflowState().lastReactFlowProps
       ?.nodes as CanvasViewportProps['nodesWithImpact'];
@@ -192,7 +233,7 @@ function graphNodes(): CanvasViewportProps['nodesWithImpact'] {
         pluginId: 'dbt',
         role: 'transform',
         status: 'failed',
-        tags: [],
+        tags: ['finance'],
       },
     },
     {
@@ -205,7 +246,7 @@ function graphNodes(): CanvasViewportProps['nodesWithImpact'] {
         pluginId: 'dbt',
         role: 'transform',
         status: 'success',
-        tags: [],
+        tags: ['finance'],
       },
     },
     {
@@ -218,7 +259,7 @@ function graphNodes(): CanvasViewportProps['nodesWithImpact'] {
         pluginId: 'dbt',
         role: 'input',
         status: 'success',
-        tags: [],
+        tags: ['source'],
       },
     },
   ];
