@@ -62,11 +62,20 @@ export function buildGraphNodeTitlePresentation({
     stringValue(data.sourceName) ??
     stringValue(dbtData.sourceName) ??
     stringValue(configData.sourceName);
-  if (pluginId === 'dvt.warehouse-source' && kind === 'dvt:source' && database && schema) {
-    return {
-      title: `${titleCaseIdentifier(connectionProvider ?? database)} · ${schema}`,
-      technicalName: nodeName,
-    };
+  if (pluginId === 'dvt.warehouse-source' && kind === 'dvt:source') {
+    if (tableName) {
+      return {
+        title: tableName,
+        technicalName: nodeName,
+      };
+    }
+
+    if (database && schema) {
+      return {
+        title: `${titleCaseIdentifier(connectionProvider ?? database)} · ${schema}`,
+        technicalName: nodeName,
+      };
+    }
   }
 
   if ((kind === 'dbt:source' || kind === 'dvt:source') && sourceName && tableName) {
