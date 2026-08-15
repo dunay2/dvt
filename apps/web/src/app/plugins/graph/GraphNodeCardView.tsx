@@ -88,7 +88,6 @@ function GraphNodeCardTitle({ cardModel }: { cardModel: GraphNodeCardReadModel }
       <TooltipTrigger asChild>
         <span
           data-slot="graph-node-source-identity-trigger"
-          {...canvasNodeEmbeddedControlProps}
           tabIndex={0}
           aria-label={sourceIdentity.ariaLabel}
           className={cn(

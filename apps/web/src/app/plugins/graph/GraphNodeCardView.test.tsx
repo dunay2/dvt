@@ -267,6 +267,9 @@ describe('GraphNodeCardView', () => {
     expect(trigger?.getAttribute('tabindex')).toBe('0');
     expect(trigger?.getAttribute('aria-label')).toBe('Ver identidad de origen de orders');
     expect(trigger?.getAttribute('title')).toBeNull();
+    expect(trigger?.hasAttribute('data-canvas-node-control')).toBe(false);
+    expect(trigger?.className).not.toContain('nodrag');
+    expect(trigger?.className).not.toContain('nopan');
 
     await act(async () => {
       trigger?.focus();
