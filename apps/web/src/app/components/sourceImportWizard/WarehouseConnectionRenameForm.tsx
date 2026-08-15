@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useId, useRef } from 'react';
 
 import type { RenameWarehouseConnectionInput } from '../../ports/workspace';
 import { Button } from '../ui/button';
@@ -26,6 +26,7 @@ export function WarehouseConnectionRenameForm({
 }: WarehouseConnectionRenameFormProps) {
   const { copy } = useSourceImportLocalization();
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const errorId = useId();
   const normalizedName = form.name.trim();
   const canSubmit = normalizedName.length > 0 && normalizedName !== currentName.trim();
 
@@ -53,6 +54,7 @@ export function WarehouseConnectionRenameForm({
 
         {error ? (
           <div
+            id={errorId}
             data-slot="source-import-rename-connection-error"
             role="alert"
             aria-live="assertive"
@@ -71,6 +73,8 @@ export function WarehouseConnectionRenameForm({
             ref={inputRef}
             data-slot="source-import-rename-connection-name"
             aria-label={copy.connection.renameNameLabel}
+            aria-invalid={error ? true : undefined}
+            aria-errormessage={error ? errorId : undefined}
             value={form.name}
             disabled={isRenaming}
             className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-blue-500"
