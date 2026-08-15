@@ -140,7 +140,11 @@ describe('ProjectDbtGraphFromFilesUseCase', () => {
     const analyze = vi.fn().mockResolvedValue(analyzerResult());
     const { useCase, resolve } = buildUseCase(analyze);
 
-    const projection = await useCase.execute({ scope: SCOPE, canvasId: FILE_AUTHORITY.canvasId });
+    const projection = await useCase.execute({
+      scope: SCOPE,
+      canvasId: FILE_AUTHORITY.canvasId,
+      includeGovernedSourceIdentity: true,
+    });
 
     expect(analyze).toHaveBeenCalledWith({ scope: SCOPE, projectRoot: 'analytics' });
     expect(resolve).toHaveBeenCalledWith({ ...SCOPE, canvasId: FILE_AUTHORITY.canvasId });
@@ -207,10 +211,31 @@ describe('ProjectDbtGraphFromFilesUseCase', () => {
     });
     const { useCase, getConnection } = buildUseCase(analyze);
 
-    await useCase.execute({ scope: SCOPE, canvasId: FILE_AUTHORITY.canvasId });
+    await useCase.execute({
+      scope: SCOPE,
+      canvasId: FILE_AUTHORITY.canvasId,
+      includeGovernedSourceIdentity: true,
+    });
 
     expect(getConnection).toHaveBeenCalledTimes(1);
     expect(getConnection).toHaveBeenCalledWith(SCOPE, 'warehouse-prod');
+  });
+
+  it('keeps legacy projections independent from the warehouse connection catalog', async () => {
+    const analyze = vi.fn().mockResolvedValue(analyzerResult());
+    const { useCase, getConnection } = buildUseCase(analyze);
+    getConnection.mockRejectedValue(new Error('WAREHOUSE_CONNECTION_CATALOG_MALFORMED'));
+
+    const projection = await useCase.execute({
+      scope: SCOPE,
+      canvasId: FILE_AUTHORITY.canvasId,
+    });
+
+    expect(getConnection).not.toHaveBeenCalled();
+    expect(projection.nodes).toEqual([
+      expect.objectContaining({ uniqueId: 'model.analytics.orders' }),
+      expect.not.objectContaining({ sourceIdentity: expect.anything() }),
+    ]);
   });
 
   it.each(['invalid', 'unavailable'] as const)(

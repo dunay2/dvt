@@ -45,6 +45,7 @@ describe('dbtProjectGraphRoutes', () => {
     expect(execute).toHaveBeenCalledWith({
       scope: { tenantId: 'tenant-a', projectId: 'project-a', environmentId: 'env-a' },
       canvasId: 'canvas-orders',
+      includeGovernedSourceIdentity: false,
     });
   });
 
@@ -78,6 +79,11 @@ describe('dbtProjectGraphRoutes', () => {
 
     expect(response.statusCode).toBe(200);
     expect(response.json()).toEqual(expandedProjection);
+    expect(execute).toHaveBeenCalledWith({
+      scope: { tenantId: 'tenant-a', projectId: 'project-a', environmentId: 'env-a' },
+      canvasId: 'canvas-orders',
+      includeGovernedSourceIdentity: true,
+    });
   });
 
   it('rejects unknown projection features before invoking the query', async () => {
@@ -180,6 +186,7 @@ describe('dbtProjectGraphRoutes', () => {
     expect(execute).toHaveBeenCalledWith({
       scope: { tenantId: 'tenant-a', projectId: 'project-a', environmentId: 'env-a' },
       canvasId: 'canvas-orders',
+      includeGovernedSourceIdentity: false,
     });
   });
 

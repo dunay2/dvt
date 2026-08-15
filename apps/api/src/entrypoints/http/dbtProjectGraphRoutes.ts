@@ -63,6 +63,9 @@ export function registerDbtProjectGraphRoutes(
         const projection = await deps.useCase.execute({
           scope: authorized.scope,
           canvasId: parsed.value.canvasId,
+          includeGovernedSourceIdentity:
+            parsed.value.projectionFeature ===
+            DBT_PROJECT_GRAPH_PROJECTION_FEATURE.governedSourceIdentity,
         });
         reply
           .code(200)

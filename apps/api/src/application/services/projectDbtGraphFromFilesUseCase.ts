@@ -15,6 +15,7 @@ import type { CanvasAuthoringAuthorityPolicy } from './canvasAuthoringAuthorityP
 export type ProjectDbtGraphFromFilesInput = Readonly<{
   scope: WorkspaceStorageScope;
   canvasId: string;
+  includeGovernedSourceIdentity?: boolean;
 }>;
 
 export class ProjectDbtGraphFromFilesUseCase {
@@ -47,12 +48,15 @@ export class ProjectDbtGraphFromFilesUseCase {
     const nodes = (
       await Promise.all(
         analysis.resources.map(async ({ codeOnlyReasons, sourceIdentityRef, ...resource }) => {
-          const sourceIdentity = await resolveSourceIdentity(
-            sourceIdentityRef,
-            input.scope,
-            this.deps.connectionCatalog,
-            connectionLookups
-          );
+          const sourceIdentity =
+            input.includeGovernedSourceIdentity === true
+              ? await resolveSourceIdentity(
+                  sourceIdentityRef,
+                  input.scope,
+                  this.deps.connectionCatalog,
+                  connectionLookups
+                )
+              : undefined;
           return {
             ...resource,
             ...(sourceIdentity === undefined ? {} : { sourceIdentity }),
