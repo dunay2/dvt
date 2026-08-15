@@ -160779,7 +160779,7 @@
       "railName": "ImportWarehouseSources",
       "normalizedRailName": "importwarehousesources",
       "railType": "command",
-      "dddOwner": "WarehouseSourceImport",
+      "dddOwner": "Warehouse Source Import",
       "railStatus": "implemented",
       "symbolRefs": [
         "apps/api/src/application/services/warehouseSourceYamlMerge.ts#buildGovernedSourceMetadata",
@@ -160807,10 +160807,12 @@
         "apps/api/test/application/services/*WarehouseSource*.test.ts",
         "apps/api/test/application/services/importWarehouseSourcesUseCase.test.ts",
         "apps/api/test/application/services/warehouseSource*.test.ts",
-        "apps/api/test/infrastructure/warehouseSourceImport/**"
+        "apps/api/test/infrastructure/warehouseSourceImport/**",
+        "tools/planning-db/state/canonical-state.json"
       ],
       "architectureGuards": [
-        "pnpm --filter dvt-api test -- importWarehouseSourcesUseCase warehouseSourceYaml WorkspaceWarehouseConnectionProbe"
+        "pnpm --filter dvt-api test -- importWarehouseSourcesUseCase warehouseSourceYaml WorkspaceWarehouseConnectionProbe",
+        "pnpm --dir apps/api exec vitest run test/application/services/importWarehouseSourcesUseCase.test.ts"
       ],
       "completionGate": [
         "pnpm docs:feature-mechanization:implementation -- --feature PTH1-SOURCE-IDENTITY-HOVER-2379",
@@ -160822,7 +160824,7 @@
         "name": "ImportWarehouseSources",
         "type": "command",
         "status": "implemented",
-        "dddOwner": "WarehouseSourceImport",
+        "dddOwner": "Warehouse Source Import",
         "negativeTests": [
           "Reject or omit incomplete identity and never project credential references or secrets"
         ],
@@ -160836,16 +160838,17 @@
             "name": "buildGovernedSourceMetadata",
             "path": "apps/api/src/application/services/warehouseSourceYamlMerge.ts",
             "cqRails": ["ImportWarehouseSources"],
-            "dddOwner": "WarehouseSourceImport",
+            "dddOwner": "Warehouse Source Import",
             "unitTests": [
               "apps/api/test/application/services/importWarehouseSourcesUseCase.test.ts",
               "apps/api/test/application/services/warehouseSourceYaml.test.ts"
             ],
             "fowlerSignals": [
-              "Move the non-secret database principal through the existing import rail instead of adding a presentation lookup."
+              "Move the non-secret database principal through the existing import rail instead of adding a presentation lookup.",
+              "Reuse the canonical Warehouse Source Import owner and command vocabulary without a parallel rail."
             ],
             "cypressCoverage": "Agent-browser governed source import and table-title identity proof",
-            "architectureGuard": "pnpm --filter dvt-api test -- importWarehouseSourcesUseCase warehouseSourceYaml WorkspaceWarehouseConnectionProbe"
+            "architectureGuard": "pnpm --dir apps/api exec vitest run test/application/services/importWarehouseSourcesUseCase.test.ts"
           },
           {
             "name": "parseOptionalNonBlankString",
@@ -160871,7 +160874,8 @@
         ],
         "domainObjects": ["WarehouseSourceImport"],
         "fowlerSignals": [
-          "Move the non-secret database principal through the existing import rail instead of adding a presentation lookup."
+          "Move the non-secret database principal through the existing import rail instead of adding a presentation lookup.",
+          "Reuse the canonical Warehouse Source Import owner and command vocabulary without a parallel rail."
         ],
         "completionGate": [
           "pnpm docs:feature-mechanization:implementation -- --feature PTH1-SOURCE-IDENTITY-HOVER-2379",
@@ -160880,8 +160884,8 @@
         "redGreenCycles": [
           {
             "id": "importwarehousesources-record",
-            "redTest": "pnpm --dir apps/api exec vitest run test/application/services/importWarehouseSourcesUseCase.test.ts",
-            "greenTest": "pnpm --dir apps/api exec vitest run test/application/services/importWarehouseSourcesUseCase.test.ts test/application/services/warehouseSourceYaml.test.ts test/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.test.ts",
+            "redTest": "pnpm planning:db:query rail-vocabulary --limit 20",
+            "greenTest": "pnpm planning:db:integrity:check",
             "patchSurfaces": [
               "apps/api/src/application/ports/warehouseSourceImport.ts",
               "apps/api/src/application/services/WarehouseConnectionSourceObjectReader.ts",
@@ -160893,9 +160897,10 @@
               "apps/api/test/application/services/*WarehouseSource*.test.ts",
               "apps/api/test/application/services/importWarehouseSourcesUseCase.test.ts",
               "apps/api/test/application/services/warehouseSource*.test.ts",
-              "apps/api/test/infrastructure/warehouseSourceImport/**"
+              "apps/api/test/infrastructure/warehouseSourceImport/**",
+              "tools/planning-db/state/canonical-state.json"
             ],
-            "expectedFailure": "Imported source metadata lacks the authenticated non-secret database user."
+            "expectedFailure": "ImportWarehouseSources appears as an exact duplicate because the local owner vocabulary differs from the canonical owner."
           }
         ],
         "componentGuides": [
@@ -160910,7 +160915,7 @@
             "name": "ImportWarehouseSources",
             "type": "command",
             "status": "implemented",
-            "dddOwner": "WarehouseSourceImport",
+            "dddOwner": "Warehouse Source Import",
             "negativeTests": [
               "Reject or omit incomplete identity and never project credential references or secrets"
             ],
@@ -160920,7 +160925,8 @@
           }
         ],
         "architectureGuards": [
-          "pnpm --filter dvt-api test -- importWarehouseSourcesUseCase warehouseSourceYaml WorkspaceWarehouseConnectionProbe"
+          "pnpm --filter dvt-api test -- importWarehouseSourcesUseCase warehouseSourceYaml WorkspaceWarehouseConnectionProbe",
+          "pnpm --dir apps/api exec vitest run test/application/services/importWarehouseSourcesUseCase.test.ts"
         ],
         "implementationPlan": "https://github.com/dunay2/dvt/issues/2379",
         "mechanizationStatus": "implemented",
@@ -160936,13 +160942,14 @@
           "apps/api/test/application/services/*WarehouseSource*.test.ts",
           "apps/api/test/application/services/importWarehouseSourcesUseCase.test.ts",
           "apps/api/test/application/services/warehouseSource*.test.ts",
-          "apps/api/test/infrastructure/warehouseSourceImport/**"
+          "apps/api/test/infrastructure/warehouseSourceImport/**",
+          "tools/planning-db/state/canonical-state.json"
         ],
         "forbiddenImplementationSurfaces": [
           "apps/web/src/app/plugins/graph/SourceIdentityTooltip.tsx"
         ]
       },
-      "revision": 0,
+      "revision": 1,
       "createdBy": "codex",
       "createdAt": "2026-08-15T22:38:12.245Z"
     },
@@ -209314,6 +209321,79 @@
         ]
       },
       "createdAt": "2026-08-15T22:40:44.264Z"
+    },
+    {
+      "operationId": "5c7e936a-b5c0-4bf4-bbb5-855df80641f6",
+      "idempotencyKey": "pth1-source-identity-2379-import-owner-v2",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH1-SOURCE-IDENTITY-HOVER-2379#command#importwarehousesources",
+      "sourcePath": "docs/evidence/ED-20260815-governed-source-identity-projection.md",
+      "sourceContentSha256": "4163c5f6a257c3d41de1b218826166b1f378f5c60a56f77471a081836d33b4ed",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "pnpm planning:db:query rail-vocabulary --limit 20",
+        "dddOwner": "Warehouse Source Import",
+        "railName": "ImportWarehouseSources",
+        "railType": "command",
+        "featureId": "PTH1-SOURCE-IDENTITY-HOVER-2379",
+        "greenTest": "pnpm planning:db:integrity:check",
+        "sourceRef": "docs/evidence/ED-20260815-governed-source-identity-projection.md",
+        "unitTests": [
+          "apps/api/test/application/services/importWarehouseSourcesUseCase.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2379"],
+        "cypressFlows": [
+          "Agent-browser governed source import and table-title identity proof"
+        ],
+        "domainObjects": ["WarehouseSourceImport"],
+        "fowlerSignals": [
+          "Reuse the canonical Warehouse Source Import owner and command vocabulary without a parallel rail."
+        ],
+        "negativeTests": [
+          "Reject or omit incomplete identity and never project credential references or secrets"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "Protected source-import API and PostgreSQL probe",
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation -- --feature PTH1-SOURCE-IDENTITY-HOVER-2379",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "ImportWarehouseSources use case and warehouse connection ports",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "ImportWarehouseSources appears as an exact duplicate because the local owner vocabulary differs from the canonical owner.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260815-governed-source-identity-projection.md"
+        ],
+        "architectureGuards": [
+          "pnpm --dir apps/api exec vitest run test/application/services/importWarehouseSourcesUseCase.test.ts"
+        ],
+        "authorizationScope": "Authorized tenant project and environment workspace; credentials resolved only by the server",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2379",
+        "implementationRefs": [
+          "apps/api/src/application/services/warehouseSourceYamlMerge.ts#buildGovernedSourceMetadata"
+        ],
+        "normalizedRailName": "importwarehousesources",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "4163c5f6a257c3d41de1b218826166b1f378f5c60a56f77471a081836d33b4ed",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": [
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/web/src/app/plugins/graph/SourceIdentityTooltip.tsx"
+        ]
+      },
+      "createdAt": "2026-08-15T22:45:49.750Z"
     }
   ],
   "governanceComponentDefinitions": [
