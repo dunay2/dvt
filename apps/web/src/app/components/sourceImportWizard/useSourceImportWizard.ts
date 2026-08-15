@@ -1,4 +1,5 @@
 /** Owned concern: coordinate source import wizard state through the import port. */
+import { PostgresCredentialRefSchema } from '@dvt/contracts';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -10,7 +11,10 @@ import type {
   WarehouseConnection,
 } from '../../ports/workspace';
 import type { SourceImportOptionContribution, SourceImportOptionId } from '../../plugins/registry';
-import { extractHttpErrorReason } from '../../services/api/classifyHttpError';
+import {
+  extractHttpErrorReason,
+  extractHttpErrorTarget,
+} from '../../services/api/classifyHttpError';
 import { resolveSourceImportFailureMessage, useSourceImportLocalization } from './copy';
 import {
   buildSourceImportCommand,
@@ -350,6 +354,13 @@ export function useSourceImportWizard({
       }));
       return;
     }
+    if (!PostgresCredentialRefSchema.safeParse(input.credentialRef).success) {
+      setState((prev) => ({
+        ...prev,
+        createConnectionError: buildSourceImportFailure('create-connection-credential-reference'),
+      }));
+      return;
+    }
 
     setState((prev) => ({
       ...prev,
@@ -374,10 +385,14 @@ export function useSourceImportWizard({
       }));
       toast.success(copy.connection.createSuccess);
     } catch (error) {
+      const reason = extractHttpErrorReason(error);
+      const target = extractHttpErrorTarget(error);
       const failure = buildSourceImportFailure(
-        extractHttpErrorReason(error) === 'warehouse_connection_duplicate'
+        reason === 'warehouse_connection_duplicate'
           ? 'connection-name-conflict'
-          : 'create-connection',
+          : reason === 'invalid_credential_reference' && target === 'credentialRef'
+            ? 'create-connection-credential-reference'
+            : 'create-connection',
         error
       );
       setState((prev) => ({ ...prev, createConnectionError: failure }));
