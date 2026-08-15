@@ -14,6 +14,7 @@ const CONNECTION_REF_A = {
   provider: 'postgres',
 } as const;
 const CONNECTION_REF_B = { ...CONNECTION_REF_A, connectionId: 'warehouse-b' } as const;
+const CONNECTION_REF_C = { ...CONNECTION_REF_A, connectionId: 'warehouse-c' } as const;
 
 describe('PostgresRelationalExecutionCapability plan connection isolation', () => {
   it('fails closed when SQL-first execution has no plan connection resolver', async () => {
@@ -100,6 +101,51 @@ describe('PostgresRelationalExecutionCapability plan connection isolation', () =
     expect(planPoolFactory).not.toHaveBeenCalled();
     await capability.close();
   });
+
+  it('evicts and closes the least recently used idle plan connection', async () => {
+    const poolA = createPool();
+    const poolB = createPool();
+    const poolC = createPool();
+    const pools = new Map([
+      ['postgresql://warehouse-a/orders', poolA],
+      ['postgresql://warehouse-b/orders', poolB],
+      ['postgresql://warehouse-c/orders', poolC],
+    ]);
+    const capability = new PostgresRelationalExecutionCapability({
+      pool: createPool() as never,
+      maxPlanClientSessions: 2,
+      planConnectionResolver: {
+        async resolveConnection(_step, context): Promise<PostgresPlanConnection> {
+          const connectionId = context.runId.replace('run-', 'warehouse-');
+          return {
+            connectionRef: {
+              schemaVersion: 'connection-ref.v1',
+              connectionId,
+              provider: 'postgres',
+            },
+            credentialRef: `postgres:${connectionId}`,
+            connectionString: `postgresql://${connectionId}/orders`,
+          };
+        },
+      },
+      planPoolFactory: (binding) => pools.get(binding.connectionString) as never,
+    } as ConstructorParameters<typeof PostgresRelationalExecutionCapability>[0]);
+    const transform = capability.stepActivitiesByKind.get('POSTGRES_SQL_TRANSFORM');
+
+    await transform!.execute(transformStep(CONNECTION_REF_A), runtimeContext('run-a'));
+    await transform!.execute(transformStep(CONNECTION_REF_B), runtimeContext('run-b'));
+    await transform!.execute(transformStep(CONNECTION_REF_A), runtimeContext('run-a'));
+    await transform!.execute(transformStep(CONNECTION_REF_C), runtimeContext('run-c'));
+
+    expect(poolA.end).not.toHaveBeenCalled();
+    expect(poolB.end).toHaveBeenCalledTimes(1);
+    expect(poolC.end).not.toHaveBeenCalled();
+
+    await capability.close();
+    expect(poolA.end).toHaveBeenCalledTimes(1);
+    expect(poolB.end).toHaveBeenCalledTimes(1);
+    expect(poolC.end).toHaveBeenCalledTimes(1);
+  });
 });
 
 function createPool(): {
@@ -119,7 +165,7 @@ function createPool(): {
 }
 
 function transformStep(
-  connectionRef: typeof CONNECTION_REF_A | typeof CONNECTION_REF_B
+  connectionRef: typeof CONNECTION_REF_A | typeof CONNECTION_REF_B | typeof CONNECTION_REF_C
 ): ExecutionPlan['steps'][number] {
   return {
     stepId: 'transform-orders',
