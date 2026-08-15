@@ -83,15 +83,42 @@ function buildImportedWarehouseSourceNode(): CanonicalNode {
 function DvtAuthoringFieldsHarness({
   node,
   warehouseSourceImport,
+  externalConnectionId,
 }: Readonly<{
   node: CanonicalNode;
   warehouseSourceImport?: IWarehouseSourceImportPort;
+  externalConnectionId?: string;
 }>): JSX.Element {
   const [draft, setDraft] = useState(() => createCanvasInspectorNodeDraft(node));
   const errors = validateCanvasInspectorNodeDraft(draft);
 
   const fields = (
     <>
+      {externalConnectionId ? (
+        <button
+          type="button"
+          data-slot="load-external-connection"
+          onClick={() => {
+            setDraft((currentDraft) =>
+              currentDraft.dvt?.kind === 'source'
+                ? {
+                    ...currentDraft,
+                    dvt: {
+                      ...currentDraft.dvt,
+                      connectionRef: {
+                        schemaVersion: 'connection-ref.v1',
+                        connectionId: externalConnectionId,
+                        provider: 'postgres',
+                      },
+                    },
+                  }
+                : currentDraft
+            );
+          }}
+        >
+          Load external connection
+        </button>
+      ) : null}
       <DvtAuthoringFields
         node={node}
         disabled={false}
@@ -139,11 +166,16 @@ describe('DvtAuthoringFields', () => {
 
   function renderFields(
     node: CanonicalNode,
-    warehouseSourceImport?: IWarehouseSourceImportPort
+    warehouseSourceImport?: IWarehouseSourceImportPort,
+    externalConnectionId?: string
   ): void {
     act(() => {
       root.render(
-        <DvtAuthoringFieldsHarness node={node} warehouseSourceImport={warehouseSourceImport} />
+        <DvtAuthoringFieldsHarness
+          node={node}
+          warehouseSourceImport={warehouseSourceImport}
+          externalConnectionId={externalConnectionId}
+        />
       );
     });
   }
@@ -316,6 +348,57 @@ describe('DvtAuthoringFields', () => {
 
     expect(testWarehouseConnection).toHaveBeenCalledWith('warehouse-a');
     expect(connectionSelect.value).toBe('warehouse-b');
+    expect(container.querySelector('[role="status"]')).toBeNull();
+  });
+
+  it('clears visible connection-test feedback after an authoritative selection change', async () => {
+    const baseWarehouseSourceImport = createAppServicesTestOverrides().warehouseSourceImport;
+    if (!baseWarehouseSourceImport)
+      throw new Error('Warehouse source import test port is required.');
+    const warehouseSourceImport: IWarehouseSourceImportPort = {
+      ...baseWarehouseSourceImport,
+      listWarehouseConnections: async () => [
+        { id: 'warehouse-a', name: 'Warehouse A', type: 'postgres', database: 'orders_a' },
+        { id: 'warehouse-b', name: 'Warehouse B', type: 'postgres', database: 'orders_b' },
+      ],
+      testWarehouseConnection: async (connectionId) => ({
+        connectionId,
+        status: 'passed',
+        checkedAt: '2026-08-15T00:00:00.000Z',
+        objectCount: 12,
+      }),
+    };
+    renderFields(
+      buildDvtNode('dvt:source', {
+        connectionRef: {
+          schemaVersion: 'connection-ref.v1',
+          connectionId: 'warehouse-a',
+          provider: 'postgres',
+        },
+        config: { schema: 'raw', table: 'orders', alias: 'orders' },
+      }),
+      warehouseSourceImport,
+      'warehouse-b'
+    );
+    await act(async () => Promise.resolve());
+
+    const testButton = [...container.querySelectorAll('button')].find((button) =>
+      button.textContent?.includes('Test')
+    );
+    expect(testButton).toBeDefined();
+    await act(async () => {
+      fireEvent.click(testButton!);
+      await Promise.resolve();
+    });
+    expect(container.querySelector('[role="status"]')).not.toBeNull();
+
+    act(() => {
+      fireEvent.click(container.querySelector('[data-slot="load-external-connection"]')!);
+    });
+
+    expect(
+      (container.querySelector('select[name="dvt-source-connection"]') as HTMLSelectElement).value
+    ).toBe('warehouse-b');
     expect(container.querySelector('[role="status"]')).toBeNull();
   });
 });
