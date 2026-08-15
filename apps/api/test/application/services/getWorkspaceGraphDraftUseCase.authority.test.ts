@@ -1,6 +1,8 @@
 import type { CanvasAuthoringAuthorityResolution } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
+import type { IWarehouseConnectionCatalog } from '../../../src/application/ports/warehouseSourceImport.js';
+import { WarehouseConnectionNotFoundError } from '../../../src/application/ports/warehouseSourceImport.js';
 import type {
   IWorkspaceGraphDraftAuditPort,
   IWorkspaceGraphDraftStore,
@@ -43,20 +45,26 @@ function buildUseCase(
       canvasId: canvasId ?? 'unused-canvas',
       authority: { kind: 'graph-draft' },
     },
-  }
+  },
+  options: Readonly<{
+    draft?: ReturnType<typeof buildWorkspaceGraphDraft>;
+    connectionCatalog?: Pick<IWarehouseConnectionCatalog, 'getConnection'>;
+  }> = {}
 ): GetWorkspaceGraphDraftUseCase {
   const store = {
     read: vi.fn(async () => ({
       scope: TEST_WORKSPACE_SCOPE,
       schemaVersion: 'workspace-graph-draft.v1',
       revision: 'revision-authority',
-      draftPayload: buildWorkspaceGraphDraft({
-        canvas: {
-          ...(canvasId === null ? {} : { id: canvasId }),
-          kind: 'transformation',
-          title: 'Main canvas',
-        },
-      }),
+      draftPayload:
+        options.draft ??
+        buildWorkspaceGraphDraft({
+          canvas: {
+            ...(canvasId === null ? {} : { id: canvasId }),
+            kind: 'transformation',
+            title: 'Main canvas',
+          },
+        }),
       updatedAt: '2026-07-31T00:00:00.000Z',
     })),
   } as unknown as IWorkspaceGraphDraftStore;
@@ -64,9 +72,14 @@ function buildUseCase(
     record: vi.fn(async () => undefined),
   } satisfies IWorkspaceGraphDraftAuditPort;
 
-  return new GetWorkspaceGraphDraftUseCase(store, audit, {
-    resolveGraphDraftReadAuthority: vi.fn(async () => authority),
-  });
+  return new GetWorkspaceGraphDraftUseCase(
+    store,
+    audit,
+    {
+      resolveGraphDraftReadAuthority: vi.fn(async () => authority),
+    },
+    options.connectionCatalog ?? { getConnection: vi.fn() }
+  );
 }
 
 describe('GetWorkspaceGraphDraftUseCase authoring authority', () => {
@@ -125,5 +138,95 @@ describe('GetWorkspaceGraphDraftUseCase authoring authority', () => {
         },
       },
     });
+  });
+
+  it('replaces an imported source connection snapshot with the current catalog name', async () => {
+    const draft = buildWorkspaceGraphDraft();
+    const source = draft.nodes[0];
+    if (!source) throw new Error('Expected source fixture.');
+    const result = await buildUseCase('main-canvas', undefined, {
+      draft: {
+        ...draft,
+        canvas: { ...draft.canvas, id: 'main-canvas' },
+        nodes: [
+          {
+            ...source,
+            pluginId: 'dvt.warehouse-source',
+            kind: 'dvt:source',
+            metadata: {
+              ...source.metadata,
+              connectionName: 'Old warehouse name',
+              connectedSourceRef: {
+                schemaVersion: 'connected-source-ref.v1',
+                connectionRef: {
+                  schemaVersion: 'connection-ref.v1',
+                  connectionId: 'warehouse-prod',
+                  provider: 'postgres',
+                },
+                sourceObjectId: 'relation/analytics/raw/orders',
+              },
+            },
+          },
+          ...draft.nodes.slice(1),
+        ],
+      },
+      connectionCatalog: {
+        getConnection: vi.fn(async () => ({
+          id: 'warehouse-prod',
+          name: 'Current warehouse name',
+          type: 'postgres' as const,
+          database: 'analytics',
+          sourceObjects: [],
+        })),
+      },
+    }).execute(DECISION);
+
+    expect(result.response.kind).toBe('ok');
+    if (result.response.kind !== 'ok') throw new Error('Expected readable graph draft.');
+    expect(result.response.record.draft.nodes[0]?.metadata?.connectionName).toBe(
+      'Current warehouse name'
+    );
+  });
+
+  it('removes a stale connection name when the referenced catalog entry no longer exists', async () => {
+    const draft = buildWorkspaceGraphDraft();
+    const source = draft.nodes[0];
+    if (!source) throw new Error('Expected source fixture.');
+    const result = await buildUseCase('main-canvas', undefined, {
+      draft: {
+        ...draft,
+        canvas: { ...draft.canvas, id: 'main-canvas' },
+        nodes: [
+          {
+            ...source,
+            pluginId: 'dvt.warehouse-source',
+            kind: 'dvt:source',
+            metadata: {
+              ...source.metadata,
+              connectionName: 'Deleted warehouse',
+              connectedSourceRef: {
+                schemaVersion: 'connected-source-ref.v1',
+                connectionRef: {
+                  schemaVersion: 'connection-ref.v1',
+                  connectionId: 'warehouse-deleted',
+                  provider: 'postgres',
+                },
+                sourceObjectId: 'relation/analytics/raw/orders',
+              },
+            },
+          },
+          ...draft.nodes.slice(1),
+        ],
+      },
+      connectionCatalog: {
+        getConnection: vi.fn(async () => {
+          throw new WarehouseConnectionNotFoundError('warehouse-deleted');
+        }),
+      },
+    }).execute(DECISION);
+
+    expect(result.response.kind).toBe('ok');
+    if (result.response.kind !== 'ok') throw new Error('Expected readable graph draft.');
+    expect(result.response.record.draft.nodes[0]?.metadata).not.toHaveProperty('connectionName');
   });
 });

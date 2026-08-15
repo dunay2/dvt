@@ -95,6 +95,7 @@ export async function buildProtectedRuntimeModule(
     commandAuthorizer: securityRuntime.commandAuthorizer,
     env,
     pool,
+    warehouseConnectionCatalog: storageRuntime.warehouseConnectionCatalog,
     buildCanvasAuthoringAuthorityRuntime: ({ workspaceGraphDraftStore }) =>
       buildCanvasAuthoringAuthorityRuntime({
         pool,

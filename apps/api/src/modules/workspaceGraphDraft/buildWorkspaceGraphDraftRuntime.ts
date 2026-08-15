@@ -4,6 +4,7 @@
  */
 import type { Logger } from 'pino';
 
+import type { IWarehouseConnectionCatalog } from '../../application/ports/warehouseSourceImport.js';
 import type { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
 import { AuthorizeWorkspaceGraphDraftCapabilityService } from '../../application/services/authorizeWorkspaceGraphDraftCapabilityService.js';
 import { GetWorkspaceGraphDraftUseCase } from '../../application/services/getWorkspaceGraphDraftUseCase.js';
@@ -21,6 +22,7 @@ export type BuildWorkspaceGraphDraftRuntimeDeps = {
   readonly commandAuthorizer: AuthorizeCommandScopeService;
   readonly env: Env;
   readonly pool: WorkspaceGraphDraftRuntimePool;
+  readonly warehouseConnectionCatalog: IWarehouseConnectionCatalog;
   readonly buildCanvasAuthoringAuthorityRuntime: (input: {
     readonly workspaceGraphDraftStore: PostgresWorkspaceGraphDraftStore;
   }) => CanvasAuthoringAuthorityRuntime;
@@ -43,7 +45,8 @@ export function buildWorkspaceGraphDraftRuntime(deps: BuildWorkspaceGraphDraftRu
   const getWorkspaceGraphDraftUseCase = new GetWorkspaceGraphDraftUseCase(
     workspaceGraphDraftStore,
     workspaceGraphDraftAudit,
-    canvasAuthoringAuthorityRuntime.canvasAuthoringAuthorityPolicy
+    canvasAuthoringAuthorityRuntime.canvasAuthoringAuthorityPolicy,
+    deps.warehouseConnectionCatalog
   );
   const saveWorkspaceGraphDraftUseCase = new SaveWorkspaceGraphDraftUseCase(
     workspaceGraphDraftStore,
