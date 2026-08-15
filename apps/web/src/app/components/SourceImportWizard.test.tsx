@@ -427,6 +427,106 @@ describe('SourceImportWizard', () => {
     );
   });
 
+  it('rejects an invalid credential reference locally with field-specific localized feedback', async () => {
+    useApplicationLanguageStore.getState().configureApplicationLanguage('es');
+    const createWarehouseConnection = vi.fn(
+      buildWarehouseSourceImportPort().createWarehouseConnection
+    );
+
+    await harness.renderWizard({
+      warehouseSourceImport: buildWarehouseSourceImportPort({
+        listWarehouseConnections: async () => [],
+        createWarehouseConnection,
+      }),
+    });
+    await harness.clickButtonContaining('Nueva conexión');
+    await harness.fillInputByLabel('Nombre de la conexión', 'URL no permitida');
+    await harness.fillInputByLabel('Base de datos', 'dvt');
+    await harness.fillInputByLabel(
+      'Referencia de credencial',
+      'postgresql://dvt:secret@localhost:5432/dvt'
+    );
+    await harness.clickButtonContaining('Crear conexión');
+    await harness.flushPendingWork();
+
+    const alert = document.body.querySelector<HTMLElement>(
+      '[data-slot="source-import-create-connection-error"]'
+    );
+    const nameInput = document.body.querySelector<HTMLInputElement>(
+      '[data-slot="source-import-create-connection-name"]'
+    );
+    const databaseInput = document.body.querySelector<HTMLInputElement>(
+      '[data-slot="source-import-create-connection-database"]'
+    );
+    const credentialInput = document.body.querySelector<HTMLInputElement>(
+      '[data-slot="source-import-create-connection-credential-ref"]'
+    );
+
+    expect(createWarehouseConnection).not.toHaveBeenCalled();
+    expect(alert?.textContent).toContain(
+      'Usa una referencia con formato postgres:<alias>. No introduzcas la URL ni la contraseña.'
+    );
+    expect(nameInput?.getAttribute('aria-invalid')).toBeNull();
+    expect(databaseInput?.getAttribute('aria-invalid')).toBeNull();
+    expect(credentialInput?.getAttribute('aria-invalid')).toBe('true');
+    expect(credentialInput?.getAttribute('aria-errormessage')).toBe(alert?.id);
+
+    await act(async () => {
+      useApplicationLanguageStore.getState().configureApplicationLanguage('en');
+    });
+
+    expect(alert?.textContent).toContain(
+      'Use a reference in the format postgres:<alias>. Do not enter the URL or password.'
+    );
+  });
+
+  it('translates authoritative invalid credential reference feedback from the API', async () => {
+    useApplicationLanguageStore.getState().configureApplicationLanguage('es');
+    const createWarehouseConnection = vi.fn(async () => {
+      throw new ApiError({
+        message: 'Request failed (400)',
+        endpoint: '/workspace/warehouse/connections',
+        statusCode: 400,
+        category: 'client',
+        responseBody: {
+          error: {
+            type: 'bad_request',
+            reason: 'invalid_credential_reference',
+            target: 'credentialRef',
+          },
+        },
+      });
+    });
+
+    await harness.renderWizard({
+      warehouseSourceImport: buildWarehouseSourceImportPort({
+        listWarehouseConnections: async () => [],
+        createWarehouseConnection,
+      }),
+    });
+    await harness.clickButtonContaining('Nueva conexión');
+    await harness.fillInputByLabel('Nombre de la conexión', 'Alias rechazado');
+    await harness.fillInputByLabel('Base de datos', 'dvt');
+    await harness.fillInputByLabel('Referencia de credencial', 'postgres:server-approved-alias');
+    await harness.clickButtonContaining('Crear conexión');
+    await harness.flushPendingWork();
+
+    const alert = document.body.querySelector<HTMLElement>(
+      '[data-slot="source-import-create-connection-error"]'
+    );
+    const credentialInput = document.body.querySelector<HTMLInputElement>(
+      '[data-slot="source-import-create-connection-credential-ref"]'
+    );
+
+    expect(createWarehouseConnection).toHaveBeenCalledOnce();
+    expect(alert?.textContent).toContain(
+      'Usa una referencia con formato postgres:<alias>. No introduzcas la URL ni la contraseña.'
+    );
+    expect(credentialInput?.getAttribute('aria-invalid')).toBe('true');
+    expect(credentialInput?.getAttribute('aria-errormessage')).toBe(alert?.id);
+    expect(document.body.textContent).not.toContain('invalid_credential_reference');
+  });
+
   it('localizes import failures in the review surface without exposing adapter diagnostics', async () => {
     useApplicationLanguageStore.getState().configureApplicationLanguage('es');
 
