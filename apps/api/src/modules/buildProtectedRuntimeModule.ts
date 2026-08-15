@@ -163,6 +163,7 @@ export async function buildProtectedRuntimeModule(
     workspaceGraphDraftStore: workspaceGraphDraftRuntime.workspaceGraphDraftStore,
     workspaceRoot: storageRuntime.workspaceFilesRoot,
     dbtBundleStore: storageRuntime.dbtBundleStore,
+    runExecutionContextStore: storageRuntime.runExecutionContextStore,
     ...(storageRuntime.runExecutionContextReferenceStore === undefined
       ? {}
       : {
@@ -194,11 +195,11 @@ export async function buildProtectedRuntimeModule(
     planCompilePlanner: startRunRuntime.planCompilePlanner,
     planStore: storageRuntime.planStore,
     runExecutionContextReferenceReader: new ArtifactBackedRunExecutionContextReferenceReader(
-      storageRuntime.dbtBundleStore,
+      storageRuntime.runExecutionContextStore,
       storageRuntime.runExecutionContextReferenceStore
     ),
     runExecutionContextInheritanceWriter: new ArtifactBackedRunExecutionContextInheritanceWriter(
-      storageRuntime.dbtBundleStore,
+      storageRuntime.runExecutionContextStore,
       storageRuntime.runExecutionContextReferenceStore
     ),
     systemClock: storageRuntime.systemClock,

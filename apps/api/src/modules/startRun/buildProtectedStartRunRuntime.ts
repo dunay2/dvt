@@ -53,6 +53,7 @@ export type BuildProtectedStartRunRuntimeDeps = {
   readonly workspaceGraphDraftStore: IWorkspaceGraphDraftStore;
   readonly workspaceRoot: string;
   readonly dbtBundleStore: DbtProjectBundleArtifactStore | undefined;
+  readonly runExecutionContextStore: DbtProjectBundleArtifactStore;
   readonly runExecutionContextReferenceStore?: IRunExecutionContextReferenceStore;
   readonly dbtExecutionTargetResolver: IDbtExecutionTargetResolver;
   readonly warehouseConnectionCatalog: IWarehouseConnectionCatalog;
@@ -94,7 +95,7 @@ export function buildProtectedStartRunRuntime(
       limits: DEFAULT_DBT_PROJECT_SOURCE_LIMITS,
     }),
     contextWriter: new ArtifactBackedRunExecutionContextWriter(
-      deps.dbtBundleStore,
+      deps.runExecutionContextStore,
       undefined,
       deps.runExecutionContextReferenceStore
     ),

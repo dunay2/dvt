@@ -2,8 +2,13 @@
  * Owned concern: assemble the protected-runtime storage and stored-plan
  * dependencies for `apps/api`.
  */
+import path from 'node:path';
+
 import { PostgresCredentialBindingResolver } from '@dvt/adapter-postgres';
-import { S3RunExecutionContextReferenceStore } from '@dvt/artifacts';
+import {
+  S3RunExecutionContextReferenceStore,
+  type DbtProjectBundleArtifactStore,
+} from '@dvt/artifacts';
 import { asIsoUtcString, createDefaultStepTypeRegistry } from '@dvt/contracts';
 import type { ExecutionPlan } from '@dvt/engine';
 
@@ -63,9 +68,10 @@ export function buildProtectedRuntimeStorage(deps: BuildProtectedRuntimeStorageD
   });
   const systemClock = { nowIsoUtc: () => asIsoUtcString(new Date().toISOString()) };
   const dbtBundleStore = resolveDbtBundleArtifactStore(deps.env);
+  const runExecutionContextStore = resolveRunExecutionContextArtifactStore(deps.env);
   const runExecutionContextReferenceStore =
-    dbtBundleStore?.kind === 's3'
-      ? new S3RunExecutionContextReferenceStore({ bucket: dbtBundleStore.bucket })
+    runExecutionContextStore.kind === 's3'
+      ? new S3RunExecutionContextReferenceStore({ bucket: runExecutionContextStore.bucket })
       : undefined;
   const workspaceFilesRoot = resolveWorkspaceFilesRoot(deps.env);
   const warehouseConnectionCatalog = new WorkspaceWarehouseConnectionCatalog({
@@ -94,6 +100,7 @@ export function buildProtectedRuntimeStorage(deps: BuildProtectedRuntimeStorageD
     warehouseConnectionCatalog,
     postgresCredentialResolver,
     dbtBundleStore,
+    runExecutionContextStore,
     runExecutionContextReferenceStore,
     runExecutionContextResolver,
     runExecutionContextBindingPolicy,
@@ -101,6 +108,15 @@ export function buildProtectedRuntimeStorage(deps: BuildProtectedRuntimeStorageD
 }
 
 export type ProtectedRuntimeStorage = ReturnType<typeof buildProtectedRuntimeStorage>;
+
+export function resolveRunExecutionContextArtifactStore(env: Env): DbtProjectBundleArtifactStore {
+  return (
+    resolveDbtBundleArtifactStore(env) ?? {
+      kind: 'file',
+      rootPath: path.join(resolveWorkspaceFilesRoot(env), '.dvt', 'run-context-artifacts'),
+    }
+  );
+}
 
 function resolveDbtBundleArtifactStore(env: Env) {
   if (env.DVT_DBT_BUNDLE_STORE_BACKEND === 's3') {
