@@ -272,6 +272,35 @@ describe('buildGraphNodeCardReadModel', () => {
     expect(model.sourceIdentity).toBeNull();
   });
 
+  it('projects the same governed identity for a dbt-project-files source card', () => {
+    const model = buildGraphNodeCardReadModel(
+      buildNode({
+        kind: 'dbt:source',
+        pluginId: 'dbt',
+        name: 'orders',
+        metadata: {
+          tableIdentifier: 'orders',
+          database: 'analytics',
+          connectionName: 'Current production warehouse',
+          schema: 'raw',
+          databaseUser: 'warehouse_reader',
+        },
+      }),
+      { presentationCopy: { ...SPANISH_PRESENTATION_COPY, locale: 'es' } },
+      [dbtGraphNodeCardStrategy]
+    );
+
+    expect(model.sourceIdentity).toEqual({
+      ariaLabel: 'Ver identidad de origen de orders',
+      rows: [
+        { id: 'database', label: 'Base de datos', value: 'analytics' },
+        { id: 'connection', label: 'Conexión', value: 'Current production warehouse' },
+        { id: 'schema', label: 'Esquema', value: 'raw' },
+        { id: 'user', label: 'Usuario', value: 'warehouse_reader' },
+      ],
+    });
+  });
+
   it('adds DVT runtime metrics only from recorded metadata', () => {
     const model = buildGraphNodeCardReadModel(
       buildNode({

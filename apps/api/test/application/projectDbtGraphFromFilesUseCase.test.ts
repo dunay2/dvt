@@ -43,6 +43,12 @@ function analyzerResult(status: 'valid' | 'invalid' | 'unavailable' = 'valid'): 
               originalFilePath: 'models/sources.yml',
               descriptionFilePath: 'models/sources.yml',
               sourceName: 'raw',
+              sourceIdentityRef: {
+                database: 'analytics',
+                connectionId: 'warehouse-prod',
+                schema: 'raw',
+                databaseUser: 'warehouse_reader',
+              },
               columns: [{ name: 'order_id', dataType: 'integer' }],
               tags: ['raw'],
               codeOnlyReasons: ['phase_two_read_only_projection'],
@@ -114,6 +120,15 @@ function buildUseCase(
       analyzer: { analyze },
       authorityPolicy: { resolve },
       executionTargetResolver: { resolve: () => executionTarget },
+      connectionCatalog: {
+        getConnection: vi.fn(async () => ({
+          id: 'warehouse-prod',
+          name: 'Current production warehouse',
+          type: 'postgres' as const,
+          database: 'analytics',
+          sourceObjects: [],
+        })),
+      },
     }),
     resolve,
   };
@@ -151,6 +166,12 @@ describe('ProjectDbtGraphFromFilesUseCase', () => {
         }),
         expect.objectContaining({
           uniqueId: 'source.analytics.raw.orders',
+          sourceIdentity: {
+            database: 'analytics',
+            connectionName: 'Current production warehouse',
+            schema: 'raw',
+            databaseUser: 'warehouse_reader',
+          },
           visualEditability: expect.objectContaining({
             status: 'partially_editable',
             operations: ['yaml_description'],

@@ -3,6 +3,7 @@
 import { resolveSourceObjectColumnConstraintSemantics } from '@dvt/contracts';
 
 import { DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR } from './warehouseSourceYamlDescriptor.js';
+import { isRecord } from './warehouseSourceYamlDocument.js';
 import type {
   ConnectedRelationalSourceObject,
   SourceYamlColumn,
@@ -15,6 +16,7 @@ export function upsertSourceTable(
   sourceObject: ConnectedRelationalSourceObject,
   options: {
     readonly includeColumns: boolean;
+    readonly databaseUser?: string;
     readonly addTests: boolean;
     readonly addFreshness: boolean;
     readonly sourceName?: string;
@@ -45,7 +47,11 @@ export function upsertSourceTable(
     columns: options.includeColumns
       ? mergeColumns(existingTable?.columns ?? [], buildColumns(sourceObject, options.addTests))
       : (existingTable?.columns ?? []),
-    metadata: existingTable?.metadata ?? {},
+    metadata: buildGovernedSourceMetadata(
+      existingTable?.metadata ?? {},
+      sourceObject.connectionId,
+      options.databaseUser
+    ),
   };
   nextTablesByName.set(tableName, nextTable);
   sourcesByName.set(sourceName, {
@@ -72,6 +78,32 @@ export function upsertSourceTable(
     sources: Array.from(sourcesByName.values()).sort((left, right) =>
       left.name.localeCompare(right.name)
     ),
+  };
+}
+
+export function buildGovernedSourceMetadata(
+  existingMetadata: Readonly<Record<string, unknown>>,
+  connectionId: string,
+  databaseUser: string | undefined
+): Readonly<Record<string, unknown>> {
+  const existingMeta = isRecord(existingMetadata.meta) ? existingMetadata.meta : {};
+  const { dvt_source_identity: _ownedIdentity, ...userMeta } = existingMeta;
+  const { meta: _existingMeta, ...metadataWithoutMeta } = existingMetadata;
+  const nextMeta = {
+    ...userMeta,
+    ...(databaseUser === undefined
+      ? {}
+      : {
+          dvt_source_identity: {
+            connection_id: connectionId,
+            database_user: databaseUser,
+          },
+        }),
+  };
+
+  return {
+    ...metadataWithoutMeta,
+    ...(Object.keys(nextMeta).length === 0 ? {} : { meta: nextMeta }),
   };
 }
 

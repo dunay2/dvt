@@ -161,6 +161,7 @@ describe('warehouse source YAML projection', () => {
   it('projects columns, tests, and freshness into deterministic dbt source YAML', () => {
     const updates = buildWarehouseSourceYamlUpdates({
       existingFiles: new Map(),
+      databaseUser: 'warehouse_reader',
       groupingStrategy: 'schema',
       includeColumns: true,
       addTests: true,
@@ -203,6 +204,14 @@ describe('warehouse source YAML projection', () => {
         ],
       }),
     ]);
+    expect(document.sources[0]?.tables[0]?.metadata).toMatchObject({
+      meta: {
+        dvt_source_identity: {
+          connection_id: 'warehouse-prod',
+          database_user: 'warehouse_reader',
+        },
+      },
+    });
   });
 
   it('preserves physical schema and relation identifiers behind stable dbt aliases', () => {

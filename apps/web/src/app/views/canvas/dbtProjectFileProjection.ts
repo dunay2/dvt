@@ -74,6 +74,8 @@ function projectNode(
         ? {}
         : { descriptionFilePath: normalizeWorkspacePath(node.descriptionFilePath) }),
       ...(node.sourceName === undefined ? {} : { sourceName: node.sourceName }),
+      ...(node.resourceType === 'source' ? { tableIdentifier: node.name } : {}),
+      ...(node.sourceIdentity === undefined ? {} : { ...node.sourceIdentity }),
       ...(node.materialized === undefined ? {} : { materialized: node.materialized }),
       columns: node.columns.map((column) => ({
         name: column.name,

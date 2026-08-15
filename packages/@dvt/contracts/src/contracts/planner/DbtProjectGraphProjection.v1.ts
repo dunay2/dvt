@@ -86,6 +86,15 @@ const DbtProjectedTestMetadataSchema = z
   })
   .strict();
 
+export const DbtProjectedSourceIdentitySchema = z
+  .object({
+    database: NonBlankStringSchema,
+    connectionName: NonBlankStringSchema,
+    schema: NonBlankStringSchema,
+    databaseUser: NonBlankStringSchema,
+  })
+  .strict();
+
 const DbtProjectedNodeSchema = z
   .object({
     uniqueId: NonBlankStringSchema,
@@ -95,6 +104,7 @@ const DbtProjectedNodeSchema = z
     originalFilePath: NonBlankStringSchema.optional(),
     descriptionFilePath: NonBlankStringSchema.optional(),
     sourceName: NonBlankStringSchema.optional(),
+    sourceIdentity: DbtProjectedSourceIdentitySchema.optional(),
     description: z.string().optional(),
     materialized: NonBlankStringSchema.optional(),
     columns: z.array(DbtProjectedColumnSchema),
@@ -116,6 +126,14 @@ const DbtProjectedNodeSchema = z
         code: 'custom',
         message: 'sourceName is required for source resources',
         path: ['sourceName'],
+      });
+    }
+
+    if (node.resourceType !== 'source' && node.sourceIdentity !== undefined) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'sourceIdentity is only valid for source resources',
+        path: ['sourceIdentity'],
       });
     }
   });

@@ -90,6 +90,7 @@ export type BuildWarehouseSourceYamlBindingsInput = {
 
 export type BuildWarehouseSourceYamlUpdatesInput = {
   readonly sourceObjects: readonly ConnectedRelationalSourceObject[];
+  readonly databaseUser?: string;
   readonly groupingStrategy: SourceImportGrouping;
   readonly includeColumns: boolean;
   readonly addTests: boolean;

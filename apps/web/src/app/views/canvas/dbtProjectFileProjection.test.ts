@@ -35,6 +35,12 @@ function buildProjection(): DbtProjectGraphProjection {
         name: 'raw_orders',
         packageName: 'analytics',
         sourceName: 'raw',
+        sourceIdentity: {
+          database: 'analytics',
+          connectionName: 'Current production warehouse',
+          schema: 'raw',
+          databaseUser: 'warehouse_reader',
+        },
         originalFilePath: 'models/sources.yml',
         columns: [{ name: 'order_id', dataType: 'integer', description: 'Order key' }],
         tags: ['raw'],
@@ -169,6 +175,10 @@ describe('projectDbtProjectGraphToCanonicalCanvas', () => {
       metadata: {
         packageName: 'analytics',
         sourceName: 'raw',
+        database: 'analytics',
+        connectionName: 'Current production warehouse',
+        schema: 'raw',
+        databaseUser: 'warehouse_reader',
         columns: [{ name: 'order_id', type: 'integer', description: 'Order key' }],
         visualEditability: { status: 'editable' },
       },

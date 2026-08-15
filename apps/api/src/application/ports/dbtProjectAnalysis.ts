@@ -5,14 +5,25 @@ import type { WorkspaceStorageScope } from './workspaceFiles.js';
 type ProjectedNode = DbtProjectGraphProjection['nodes'][number];
 type ProjectedEdge = DbtProjectGraphProjection['edges'][number];
 
+export type DbtProjectSourceIdentityRef = Readonly<{
+  database: string;
+  connectionId: string;
+  schema: string;
+  databaseUser: string;
+}>;
+
 export type AnalyzeDbtProjectInput = Readonly<{
   scope: WorkspaceStorageScope;
   projectRoot: string;
 }>;
 
-export type DbtProjectAnalysisResource = Omit<ProjectedNode, 'visualEditability'> &
+export type DbtProjectAnalysisResource = Omit<
+  ProjectedNode,
+  'sourceIdentity' | 'visualEditability'
+> &
   Readonly<{
     codeOnlyReasons: readonly string[];
+    sourceIdentityRef?: DbtProjectSourceIdentityRef;
   }>;
 
 export type DbtProjectAnalysisDependency = Omit<ProjectedEdge, 'id'>;

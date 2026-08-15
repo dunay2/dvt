@@ -5,6 +5,7 @@ import type {
   IDbtProjectImportInspectorPort,
   IDbtProjectImportProcessStore,
 } from '../../application/ports/dbtProjectImport.js';
+import type { IWarehouseConnectionCatalog } from '../../application/ports/warehouseSourceImport.js';
 import { AnalyzeSelectedDbtModelQuery } from '../../application/services/analyzeSelectedDbtModelQuery.js';
 import type { CanvasAuthoringAuthorityPolicy } from '../../application/services/canvasAuthoringAuthorityPolicy.js';
 import { ImportDbtProjectUseCase } from '../../application/services/importDbtProjectUseCase.js';
@@ -18,6 +19,7 @@ export type BuildDbtProjectImportRuntimeDeps = {
   readonly inspector: IDbtProjectImportInspectorPort;
   readonly processStore: IDbtProjectImportProcessStore;
   readonly authorityPolicy: CanvasAuthoringAuthorityPolicy;
+  readonly warehouseConnectionCatalog: IWarehouseConnectionCatalog;
   readonly now: () => Date;
   readonly createLeaseToken: () => string;
   readonly operationLeaseMs: number;
@@ -28,6 +30,7 @@ export function buildDbtProjectImportRuntime(deps: BuildDbtProjectImportRuntimeD
     analyzer: deps.analyzer,
     authorityPolicy: deps.authorityPolicy,
     executionTargetResolver: deps.executionTargetResolver,
+    connectionCatalog: deps.warehouseConnectionCatalog,
   });
   const selectedModelAnalysisResolver = new SelectedDbtModelAnalysisResolver({
     analyzer: deps.analyzer,

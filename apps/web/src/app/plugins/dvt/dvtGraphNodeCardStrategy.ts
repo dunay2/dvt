@@ -3,18 +3,15 @@ import type { CanonicalNode } from '../../types/canonical';
 import type {
   GraphNodeCardMetric,
   GraphNodeCardReadModel,
-  GraphNodeSourceIdentity,
   GraphNodeCardStrategy,
 } from '../graph/graphNodeCardStrategyContracts';
-import {
-  graphNodeCardCopyTokens,
-  resolveGraphNodeCardCopy,
-} from '../graph/graphNodeCardCopyTokens';
+import { graphNodeCardCopyTokens } from '../graph/graphNodeCardCopyTokens';
 import { buildGraphNodeOperationalSummary } from '../graph/graphNodeOperationalSummary';
 import { buildGraphNodeVolumeMetricProjection } from '../graph/graphNodeSourceMetricProjection';
 import { buildGraphNodeTitlePresentation } from '../graph/graphNodeTitlePresentation';
 import {
   metadataOf,
+  buildGraphNodeSourceIdentity,
   numericValue,
   pushMetric,
   pushRuntimeMetrics,
@@ -71,32 +68,6 @@ function pushCanonicalCostMetric(
     null;
 
   pushMetric(metrics, 'cost', 'Cost', cost == null ? null : `$${cost.toFixed(2)}`);
-}
-
-function buildDvtSourceIdentity(
-  node: CanonicalNode,
-  metadata: Record<string, unknown>,
-  title: string,
-  locale?: string
-): GraphNodeSourceIdentity | null {
-  if (node.kind !== 'dvt:source' || stringValue(metadata.tableIdentifier) === null) return null;
-
-  const database = stringValue(metadata.database);
-  const connection = stringValue(metadata.connectionName);
-  const schema = stringValue(metadata.schema);
-  const user = stringValue(metadata.databaseUser);
-  if (database === null || connection === null || schema === null || user === null) return null;
-
-  const copy = resolveGraphNodeCardCopy(locale);
-  return {
-    ariaLabel: copy.sourceIdentityAriaLabelTemplate.replace('{table}', title),
-    rows: [
-      { id: 'database', label: copy.sourceIdentityDatabaseLabel, value: database },
-      { id: 'connection', label: copy.sourceIdentityConnectionLabel, value: connection },
-      { id: 'schema', label: copy.sourceIdentitySchemaLabel, value: schema },
-      { id: 'user', label: copy.sourceIdentityUserLabel, value: user },
-    ],
-  };
 }
 
 function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): GraphNodeCardReadModel {
@@ -163,7 +134,7 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     metrics,
     operationalMetrics: operationalSummary.metrics,
     operationalDetail: operationalSummary.detail,
-    sourceIdentity: buildDvtSourceIdentity(
+    sourceIdentity: buildGraphNodeSourceIdentity(
       node,
       metadata,
       titlePresentation.title,

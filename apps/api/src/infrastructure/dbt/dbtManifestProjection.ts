@@ -3,6 +3,7 @@ import type {
   DbtProjectAnalysisDependency,
   DbtProjectAnalysisIdentity,
   DbtProjectAnalysisResource,
+  DbtProjectSourceIdentityRef,
 } from '../../application/ports/dbtProjectAnalysis.js';
 
 const SUPPORTED_RESOURCE_TYPES = new Set([
@@ -209,6 +210,7 @@ function projectResource(
     .filter((column): column is NonNullable<typeof column> => column !== null)
     .sort((left, right) => left.name.localeCompare(right.name));
   const testMetadata = projectedType === 'test' ? projectTestMetadata(resource) : undefined;
+  const sourceIdentityRef = projectSourceIdentityRef(resource, projectedType);
 
   return {
     uniqueId,
@@ -229,8 +231,32 @@ function projectResource(
     columns,
     tags: [...new Set(stringArray(resource.tags))].sort(),
     ...(testMetadata === undefined ? {} : { testMetadata }),
+    ...(sourceIdentityRef === undefined ? {} : { sourceIdentityRef }),
     codeOnlyReasons: ['phase_two_read_only_projection'],
   };
+}
+
+export function projectSourceIdentityRef(
+  resource: Record<string, unknown>,
+  resourceType: DbtProjectAnalysisResource['resourceType']
+): DbtProjectSourceIdentityRef | undefined {
+  if (resourceType !== 'source') return undefined;
+
+  const identity = record(record(resource.meta).dvt_source_identity);
+  const database = stringValue(resource.database);
+  const connectionId = stringValue(identity.connection_id);
+  const schema = stringValue(resource.schema);
+  const databaseUser = stringValue(identity.database_user);
+  if (
+    database === undefined ||
+    connectionId === undefined ||
+    schema === undefined ||
+    databaseUser === undefined
+  ) {
+    return undefined;
+  }
+
+  return { database, connectionId, schema, databaseUser };
 }
 
 function projectTestMetadata(resource: Record<string, unknown>) {

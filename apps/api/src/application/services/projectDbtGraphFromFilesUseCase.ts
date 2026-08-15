@@ -1,8 +1,13 @@
 import { DbtProjectGraphProjectionSchema, type DbtProjectGraphProjection } from '@dvt/contracts';
 
 import type { IDbtExecutionTargetResolver } from '../ports/dbtExecutionTarget.js';
-import type { IDbtProjectAnalyzerPort } from '../ports/dbtProjectAnalysis.js';
+import type {
+  DbtProjectSourceIdentityRef,
+  IDbtProjectAnalyzerPort,
+} from '../ports/dbtProjectAnalysis.js';
 import { DbtProjectFileAuthorityRequiredError } from '../ports/dbtProjectImport.js';
+import type { IWarehouseConnectionCatalog } from '../ports/warehouseSourceImport.js';
+import { WarehouseConnectionNotFoundError } from '../ports/warehouseSourceImport.js';
 import type { WorkspaceStorageScope } from '../ports/workspaceFiles.js';
 
 import type { CanvasAuthoringAuthorityPolicy } from './canvasAuthoringAuthorityPolicy.js';
@@ -18,6 +23,7 @@ export class ProjectDbtGraphFromFilesUseCase {
       readonly analyzer: IDbtProjectAnalyzerPort;
       readonly authorityPolicy: Pick<CanvasAuthoringAuthorityPolicy, 'resolve'>;
       readonly executionTargetResolver: IDbtExecutionTargetResolver;
+      readonly connectionCatalog: Pick<IWarehouseConnectionCatalog, 'getConnection'>;
     }
   ) {}
 
@@ -34,21 +40,31 @@ export class ProjectDbtGraphFromFilesUseCase {
       scope: input.scope,
       projectRoot: authorityBinding.authority.projectRoot,
     });
-    const nodes = analysis.resources
-      .map(({ codeOnlyReasons, ...resource }) => ({
-        ...resource,
-        visualEditability: resolveVisualEditability({
-          codeOnlyReasons,
-          packageName: resource.packageName,
-          ...(resource.descriptionFilePath === undefined
-            ? {}
-            : { descriptionFilePath: resource.descriptionFilePath }),
-          ...(analysis.projectRevision.projectName === undefined
-            ? {}
-            : { projectName: analysis.projectRevision.projectName }),
-        }),
-      }))
-      .sort((left, right) => left.uniqueId.localeCompare(right.uniqueId));
+    const nodes = (
+      await Promise.all(
+        analysis.resources.map(async ({ codeOnlyReasons, sourceIdentityRef, ...resource }) => {
+          const sourceIdentity = await resolveSourceIdentity(
+            sourceIdentityRef,
+            input.scope,
+            this.deps.connectionCatalog
+          );
+          return {
+            ...resource,
+            ...(sourceIdentity === undefined ? {} : { sourceIdentity }),
+            visualEditability: resolveVisualEditability({
+              codeOnlyReasons,
+              packageName: resource.packageName,
+              ...(resource.descriptionFilePath === undefined
+                ? {}
+                : { descriptionFilePath: resource.descriptionFilePath }),
+              ...(analysis.projectRevision.projectName === undefined
+                ? {}
+                : { projectName: analysis.projectRevision.projectName }),
+            }),
+          };
+        })
+      )
+    ).sort((left, right) => left.uniqueId.localeCompare(right.uniqueId));
     const edges = analysis.dependencies
       .map((dependency) => ({
         id: `${dependency.sourceUniqueId}->${dependency.targetUniqueId}:${dependency.relation}`,
@@ -82,6 +98,27 @@ export class ProjectDbtGraphFromFilesUseCase {
           .length,
       },
     });
+  }
+}
+
+export async function resolveSourceIdentity(
+  identityRef: DbtProjectSourceIdentityRef | undefined,
+  scope: WorkspaceStorageScope,
+  connectionCatalog: Pick<IWarehouseConnectionCatalog, 'getConnection'>
+): Promise<DbtProjectGraphProjection['nodes'][number]['sourceIdentity'] | undefined> {
+  if (identityRef === undefined) return undefined;
+
+  try {
+    const connection = await connectionCatalog.getConnection(scope, identityRef.connectionId);
+    return {
+      database: identityRef.database,
+      connectionName: connection.name,
+      schema: identityRef.schema,
+      databaseUser: identityRef.databaseUser,
+    };
+  } catch (error) {
+    if (error instanceof WarehouseConnectionNotFoundError) return undefined;
+    throw error;
   }
 }
 
