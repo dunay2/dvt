@@ -1,3 +1,5 @@
+import { useId } from 'react';
+
 import {
   SUPPORTED_WAREHOUSE_CONNECTION_TYPES,
   type CreateWarehouseConnectionInput,
@@ -27,6 +29,7 @@ export function WarehouseConnectionCreateForm({
   onSubmit,
 }: WarehouseConnectionCreateFormProps) {
   const { copy } = useSourceImportLocalization();
+  const errorId = useId();
 
   return (
     <Card className="border-slate-700 bg-slate-950/50 p-4">
@@ -43,7 +46,14 @@ export function WarehouseConnectionCreateForm({
         </div>
 
         {error ? (
-          <div className="rounded-md border border-red-700 bg-red-950/30 px-3 py-2 text-sm text-red-100">
+          <div
+            id={errorId}
+            data-slot="source-import-create-connection-error"
+            role="alert"
+            aria-live="assertive"
+            aria-atomic="true"
+            className="rounded-md border border-red-700 bg-red-950/30 px-3 py-2 text-sm text-red-100"
+          >
             {error}
           </div>
         ) : null}
@@ -55,6 +65,8 @@ export function WarehouseConnectionCreateForm({
           <input
             data-slot="source-import-create-connection-name"
             aria-label={copy.connection.createNameLabel}
+            aria-invalid={error ? true : undefined}
+            aria-errormessage={error ? errorId : undefined}
             value={form.name}
             disabled={isCreating}
             className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-500 focus:border-blue-500"
