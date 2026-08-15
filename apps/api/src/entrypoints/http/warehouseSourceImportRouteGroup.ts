@@ -7,6 +7,7 @@ import { GraphDraftWarehouseSourceImportStrategy } from '../../application/servi
 import { ImportWarehouseSourcesUseCase } from '../../application/services/importWarehouseSourcesUseCase.js';
 import { ListWarehouseConnectionSourceObjectsUseCase } from '../../application/services/listWarehouseConnectionSourceObjectsUseCase.js';
 import { ListWarehouseConnectionsUseCase } from '../../application/services/listWarehouseConnectionsUseCase.js';
+import { RenameWarehouseConnectionUseCase } from '../../application/services/renameWarehouseConnectionUseCase.js';
 import { TestWarehouseConnectionUseCase } from '../../application/services/testWarehouseConnectionUseCase.js';
 import { WarehouseConnectionSourceObjectReader } from '../../application/services/WarehouseConnectionSourceObjectReader.js';
 import { WorkspaceWarehouseConnectionCatalog } from '../../infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionCatalog.js';
@@ -52,6 +53,7 @@ export function registerProtectedWarehouseSourceImportRouteGroup(
     listConnectionsUseCase: new ListWarehouseConnectionsUseCase(catalog),
     listSourceObjectsUseCase: new ListWarehouseConnectionSourceObjectsUseCase(sourceObjectReader),
     createConnectionUseCase: new CreateWarehouseConnectionUseCase(catalog, probe),
+    renameConnectionUseCase: new RenameWarehouseConnectionUseCase(catalog),
     testConnectionUseCase: new TestWarehouseConnectionUseCase(catalog, probe),
     importSourcesUseCase: new ImportWarehouseSourcesUseCase({
       sourceObjectReader,

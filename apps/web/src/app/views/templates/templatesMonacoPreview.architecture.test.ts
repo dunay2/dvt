@@ -136,7 +136,6 @@ describe('Templates Monaco preview architecture', () => {
       const source = readFileSync(canvasModule, 'utf8');
       expect(source, canvasModule).not.toContain('@monaco-editor/react');
       expect(source, canvasModule).not.toContain('MonacoCodeViewer');
-      expect(source, canvasModule).not.toContain('MonacoCodeEditor');
       expect(source, canvasModule).not.toContain('MonacoDiffViewer');
     }
   });

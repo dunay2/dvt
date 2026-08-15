@@ -64,6 +64,7 @@ function catalog(): IWarehouseConnectionCatalog {
     listSourceObjects: vi.fn(async () => connection.sourceObjects),
     getConnection: vi.fn(async () => connection),
     createConnection: vi.fn(async () => connection),
+    renameConnection: vi.fn(async () => connection),
   };
 }
 

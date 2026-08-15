@@ -19,6 +19,7 @@ import type {
   IPrincipalGrantRepository,
   PrincipalGrantSnapshot,
 } from '../../application/ports/principalGrantRepository.js';
+import { isCreatorWorkspaceActionGranted } from '../../application/services/projectOnboardingPolicy.js';
 import type { AuthenticatedPrincipal } from '../../domain/auth/types.js';
 
 export class EmbeddedAccessDecisionService implements IAccessDecisionService {
@@ -107,7 +108,10 @@ function decideFromSnapshot(
   const actionName = requestedScope.action.name;
   switch (requestedScope.resource) {
     case ACCESS_SCOPE_RESOURCE.tenant:
-      return buildAllowedDecision(requestedScope, tenantGrant.allowedActions.includes(actionName));
+      return buildAllowedDecision(
+        requestedScope,
+        isActionGranted(tenantGrant.allowedActions, actionName)
+      );
     case ACCESS_SCOPE_RESOURCE.project: {
       const projectGrant = tenantGrant.projectAccess.find(
         (project) => project.projectId === requestedScope.projectId.value
@@ -118,8 +122,8 @@ function decideFromSnapshot(
 
       return buildAllowedDecision(
         requestedScope,
-        projectGrant.allowedActions.includes(actionName) ||
-          tenantGrant.allowedActions.includes(actionName)
+        isActionGranted(projectGrant.allowedActions, actionName) ||
+          isActionGranted(tenantGrant.allowedActions, actionName)
       );
     }
     case ACCESS_SCOPE_RESOURCE.environment:
@@ -140,11 +144,15 @@ function decideFromSnapshot(
 
       return buildAllowedDecision(
         requestedScope,
-        environmentGrant.allowedActions.includes(actionName) ||
-          projectGrant.allowedActions.includes(actionName) ||
-          tenantGrant.allowedActions.includes(actionName)
+        isActionGranted(environmentGrant.allowedActions, actionName) ||
+          isActionGranted(projectGrant.allowedActions, actionName) ||
+          isActionGranted(tenantGrant.allowedActions, actionName)
       );
     }
+  }
+
+  function isActionGranted(allowedActions: readonly string[], actionName: string): boolean {
+    return isCreatorWorkspaceActionGranted(allowedActions, actionName);
   }
 }
 

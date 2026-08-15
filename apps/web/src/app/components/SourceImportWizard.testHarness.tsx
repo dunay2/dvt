@@ -68,6 +68,12 @@ export function buildWarehouseSourceImportPort(
       type: input.type,
       database: input.database,
     }),
+    renameWarehouseConnection: async (connectionId, input) => ({
+      id: connectionId,
+      name: input.name,
+      type: 'postgres',
+      database: 'dvt',
+    }),
     testWarehouseConnection: async (connectionId) => ({
       connectionId,
       status: 'passed',

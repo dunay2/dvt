@@ -290,6 +290,40 @@ describe('workspace ports api file content command', () => {
 describe('workspace ports api warehouse source import', () => {
   installWorkspaceScopeHarness();
 
+  it('renames a warehouse connection through the scoped protected command endpoint', async () => {
+    const scope = buildWorkspaceScope();
+    setWorkspaceScope(scope);
+    const { requestRaw, warehouseSourceImport } = createApiWorkspacePortHarness({
+      requestRaw: async () =>
+        jsonResponse({
+          id: 'warehouse-prod',
+          name: 'Finance warehouse',
+          type: 'postgres',
+          database: 'analytics',
+        }),
+    });
+
+    await expect(
+      (
+        warehouseSourceImport as unknown as {
+          renameWarehouseConnection(
+            connectionId: string,
+            input: { readonly name: string }
+          ): Promise<unknown>;
+        }
+      ).renameWarehouseConnection('warehouse-prod', { name: 'Finance warehouse' })
+    ).resolves.toEqual({
+      id: 'warehouse-prod',
+      name: 'Finance warehouse',
+      type: 'postgres',
+      database: 'analytics',
+    });
+    expect(requestRaw).toHaveBeenCalledWith(
+      `/workspace/warehouse/connections/warehouse-prod?tenantId=${scope.tenantId}&projectId=${scope.projectId}&environmentId=${scope.environmentId}`,
+      { method: 'PATCH', jsonBody: { name: 'Finance warehouse' } }
+    );
+  });
+
   it('loads warehouse connections through the scoped protected runtime endpoint', async () => {
     const scope = buildWorkspaceScope();
     setWorkspaceScope(scope);

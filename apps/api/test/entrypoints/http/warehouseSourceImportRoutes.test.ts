@@ -27,7 +27,10 @@ import type {
   WarehouseConnection,
   WarehouseConnectionCatalogEntry,
 } from '../../../src/application/ports/warehouseSourceImport.js';
-import { WorkspaceFileNotFoundError } from '../../../src/application/ports/workspaceFiles.js';
+import {
+  WorkspaceFileNotFoundError,
+  WorkspaceFileRevisionConflictError,
+} from '../../../src/application/ports/workspaceFiles.js';
 import type {
   DeleteWorkspaceFileContentInput,
   IWorkspaceFileBatchMutationPort,
@@ -45,6 +48,7 @@ import { GraphDraftWarehouseSourceImportStrategy } from '../../../src/applicatio
 import { ImportWarehouseSourcesUseCase } from '../../../src/application/services/importWarehouseSourcesUseCase.js';
 import { ListWarehouseConnectionSourceObjectsUseCase } from '../../../src/application/services/listWarehouseConnectionSourceObjectsUseCase.js';
 import { ListWarehouseConnectionsUseCase } from '../../../src/application/services/listWarehouseConnectionsUseCase.js';
+import { RenameWarehouseConnectionUseCase } from '../../../src/application/services/renameWarehouseConnectionUseCase.js';
 import { TestWarehouseConnectionUseCase } from '../../../src/application/services/testWarehouseConnectionUseCase.js';
 import { WarehouseConnectionSourceObjectReader } from '../../../src/application/services/WarehouseConnectionSourceObjectReader.js';
 import { registerWarehouseSourceImportRoutes } from '../../../src/entrypoints/http/warehouseSourceImportRoutes.js';
@@ -190,6 +194,33 @@ class TestWarehouseConnectionCatalog implements IWarehouseConnectionCatalog {
     return connection;
   }
 
+  public async renameConnection(
+    scope: WorkspaceGraphDraftScope,
+    connectionId: string,
+    input: { readonly name: string }
+  ): Promise<WarehouseConnection> {
+    const entries = this.entries(scope);
+    const currentIndex = entries.findIndex((entry) => entry.id === connectionId);
+    if (currentIndex < 0) throw new WarehouseConnectionNotFoundError(connectionId);
+    if (
+      entries.some(
+        (entry, index) =>
+          index !== currentIndex &&
+          entry.name.trim().toLowerCase() === input.name.trim().toLowerCase()
+      )
+    ) {
+      throw new DuplicateWarehouseConnectionError(input.name);
+    }
+    const current = entries[currentIndex];
+    if (!current) throw new WarehouseConnectionNotFoundError(connectionId);
+    const renamed = { ...current, name: input.name.trim() };
+    const nextEntries = [...entries];
+    nextEntries[currentIndex] = renamed;
+    this.entriesByScope.set(scopeKey(scope), nextEntries);
+    const { sourceObjects: _sourceObjects, credentialRef: _credentialRef, ...connection } = renamed;
+    return connection;
+  }
+
   private entries(scope: WorkspaceGraphDraftScope): readonly WarehouseConnectionCatalogEntry[] {
     return this.entriesByScope.get(scopeKey(scope)) ?? [];
   }
@@ -286,6 +317,7 @@ function buildApp(
         };
     readonly existingSourceFileContent?: string;
     readonly connectionTestResult?: TestWarehouseConnectionProbeFailure;
+    readonly renameError?: Error;
   } = {}
 ): {
   readonly app: FastifyInstance;
@@ -445,6 +477,9 @@ function buildApp(
       });
     }
   );
+  if (options.renameError) {
+    vi.spyOn(catalog, 'renameConnection').mockRejectedValue(options.renameError);
+  }
   const probe = new TestWarehouseConnectionProbe(
     options.connectionTestResult ?? null,
     (input) =>
@@ -482,6 +517,7 @@ function buildApp(
     listConnectionsUseCase: new ListWarehouseConnectionsUseCase(catalog),
     listSourceObjectsUseCase: new ListWarehouseConnectionSourceObjectsUseCase(sourceObjectReader),
     createConnectionUseCase: new CreateWarehouseConnectionUseCase(catalog, probe),
+    renameConnectionUseCase: new RenameWarehouseConnectionUseCase(catalog),
     testConnectionUseCase: new TestWarehouseConnectionUseCase(catalog, probe),
     importSourcesUseCase: new ImportWarehouseSourcesUseCase({
       sourceObjectReader,
@@ -513,6 +549,135 @@ function sha256(content: string): string {
 }
 
 describe('warehouseSourceImportRoutes', () => {
+  it('renames a warehouse connection through a dedicated protected command rail', async () => {
+    const { app, authorize } = buildApp();
+
+    const response = await app.inject({
+      method: 'PATCH',
+      url: `/workspace/warehouse/connections/warehouse-prod?${SCOPE_QUERY}`,
+      payload: { name: 'Finance warehouse' },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual({
+      id: 'warehouse-prod',
+      name: 'Finance warehouse',
+      type: 'postgres',
+      database: 'analytics',
+    });
+    expect(authorize).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        action: { kind: 'command', name: 'workspace:source-connection:rename' },
+      }),
+      expect.any(String)
+    );
+  });
+
+  it('returns explicit errors for invalid, duplicate, and unknown connection renames', async () => {
+    const duplicate = buildApp({
+      catalogEntries: [
+        {
+          id: 'warehouse-prod',
+          name: 'Production warehouse',
+          type: 'postgres',
+          database: 'analytics',
+          credentialRef: 'env:DVT_WAREHOUSE_URL',
+          sourceObjects: [defaultOrdersSourceObject],
+        },
+        {
+          id: 'finance-prod',
+          name: 'Finance warehouse',
+          type: 'postgres',
+          database: 'finance',
+          credentialRef: 'env:DVT_FINANCE_WAREHOUSE_URL',
+          sourceObjects: [],
+        },
+      ],
+    });
+
+    const invalidResponse = await duplicate.app.inject({
+      method: 'PATCH',
+      url: `/workspace/warehouse/connections/warehouse-prod?${SCOPE_QUERY}`,
+      payload: { name: '   ' },
+    });
+    expect(invalidResponse.statusCode).toBe(400);
+
+    const duplicateResponse = await duplicate.app.inject({
+      method: 'PATCH',
+      url: `/workspace/warehouse/connections/warehouse-prod?${SCOPE_QUERY}`,
+      payload: { name: ' FINANCE WAREHOUSE ' },
+    });
+    expect(duplicateResponse.statusCode).toBe(409);
+    expect(duplicateResponse.json()).toEqual({
+      error: { type: 'conflict', reason: 'warehouse_connection_duplicate' },
+    });
+
+    const missingResponse = await duplicate.app.inject({
+      method: 'PATCH',
+      url: `/workspace/warehouse/connections/missing?${SCOPE_QUERY}`,
+      payload: { name: 'Missing connection' },
+    });
+    expect(missingResponse.statusCode).toBe(404);
+    expect(missingResponse.json()).toEqual({
+      error: { type: 'not_found', reason: 'warehouse_connection_not_found' },
+    });
+  });
+
+  it('fails the rename command closed without authentication or its dedicated grant', async () => {
+    const unauthenticated = buildApp({ authenticated: false });
+    const missingTokenResponse = await unauthenticated.app.inject({
+      method: 'PATCH',
+      url: `/workspace/warehouse/connections/warehouse-prod?${SCOPE_QUERY}`,
+      payload: { name: 'Finance warehouse' },
+    });
+
+    expect(missingTokenResponse.statusCode).toBe(401);
+    expect(missingTokenResponse.json()).toEqual({
+      error: { type: 'unauthorized', reason: 'missing_token' },
+    });
+    expect(unauthenticated.authorize).not.toHaveBeenCalled();
+
+    const denied = buildApp({ authorized: false });
+    const deniedResponse = await denied.app.inject({
+      method: 'PATCH',
+      url: `/workspace/warehouse/connections/warehouse-prod?${SCOPE_QUERY}`,
+      payload: { name: 'Finance warehouse' },
+    });
+
+    expect(deniedResponse.statusCode).toBe(403);
+    expect(deniedResponse.json()).toEqual({
+      error: { type: 'forbidden', reason: 'action_not_granted' },
+    });
+    expect(denied.authorize).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        action: { kind: 'command', name: 'workspace:source-connection:rename' },
+      }),
+      expect.any(String)
+    );
+  });
+
+  it('returns an explicit conflict when the rename loses its catalog revision race', async () => {
+    const { app } = buildApp({
+      renameError: new WorkspaceFileRevisionConflictError(
+        WORKSPACE_WAREHOUSE_CONNECTION_CATALOG_PATH,
+        'changed-revision'
+      ),
+    });
+
+    const response = await app.inject({
+      method: 'PATCH',
+      url: `/workspace/warehouse/connections/warehouse-prod?${SCOPE_QUERY}`,
+      payload: { name: 'Finance warehouse' },
+    });
+
+    expect(response.statusCode).toBe(409);
+    expect(response.json()).toEqual({
+      error: { type: 'conflict', reason: 'workspace_file_revision_conflict' },
+    });
+  });
+
   it('creates a warehouse connection through the protected command rail before listing it', async () => {
     const { app, authorize, workspaceFiles } = buildApp({ catalogEntries: [] });
 

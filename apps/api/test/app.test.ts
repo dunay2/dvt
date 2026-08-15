@@ -87,6 +87,27 @@ describe('buildApp composition root smoke', () => {
     });
   });
 
+  it('allows browser preflight for governed warehouse connection renames', async () => {
+    await withAppEnv(BASE_APP_ENV, async ({ app }) => {
+      const res = await app.inject({
+        method: 'OPTIONS',
+        url: '/workspace/warehouse/connections/local-postgres-proof',
+        headers: {
+          origin: 'http://localhost:5173',
+          'access-control-request-method': 'PATCH',
+          'access-control-request-headers': 'authorization,content-type,x-tenant-id,x-project-id',
+        },
+      });
+
+      expect(res.statusCode).toBe(204);
+      expect(res.headers['access-control-allow-methods']).toContain('PATCH');
+      expect(res.headers['access-control-allow-headers']).toContain('authorization');
+      expect(res.headers['access-control-allow-headers']).toContain('content-type');
+      expect(res.headers['access-control-allow-headers']).toContain('x-tenant-id');
+      expect(res.headers['access-control-allow-headers']).toContain('x-project-id');
+    });
+  });
+
   it('shuts down the managed trace exporter when the application closes', async () => {
     const shutdownSpy = vi.spyOn(OtelObservability.prototype, 'shutdown');
     let observability: OtelObservability | undefined;

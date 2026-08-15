@@ -42,6 +42,7 @@ export default function SourceImportWizard({
       isResultStep={isResultStep}
       isProcessing={state.isProcessing}
       canImport={controller.canImport}
+      preventCloseOnEscape={state.renameConnectionFormOpen}
       onClose={onClose}
       onRestoreFocus={onRestoreFocus}
       onDone={controller.handleComplete}

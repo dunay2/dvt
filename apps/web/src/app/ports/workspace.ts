@@ -6,6 +6,7 @@ import {
   type CreateWarehouseConnectionRequest,
   type ImportSourceObjectsRequestV2,
   type ImportSourceObjectsResultV2,
+  type RenameWarehouseConnectionRequest,
   type SourceObject,
   type TestWarehouseConnectionResult as ContractTestWarehouseConnectionResult,
   type WarehouseConnection as ContractWarehouseConnection,
@@ -98,6 +99,8 @@ export type WarehouseConnection = ContractWarehouseConnection;
 
 export type CreateWarehouseConnectionInput = CreateWarehouseConnectionRequest;
 
+export type RenameWarehouseConnectionInput = RenameWarehouseConnectionRequest;
+
 export type TestWarehouseConnectionResult = ContractTestWarehouseConnectionResult;
 
 export const SUPPORTED_SOURCE_IMPORT_GROUPINGS = SOURCE_IMPORT_GROUPING;
@@ -155,6 +158,10 @@ export interface IWarehouseSourceImportPort {
   listSourceObjects: (connectionId: string) => Promise<SourceObject[]>;
   createWarehouseConnection: (
     input: CreateWarehouseConnectionInput
+  ) => Promise<WarehouseConnection>;
+  renameWarehouseConnection: (
+    connectionId: string,
+    input: RenameWarehouseConnectionInput
   ) => Promise<WarehouseConnection>;
   testWarehouseConnection: (connectionId: string) => Promise<TestWarehouseConnectionResult>;
   importSources: (input: ImportSourcesInput) => Promise<ImportSourcesResult>;

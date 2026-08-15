@@ -76,6 +76,7 @@ type SourceImportWizardFrameProps = Readonly<{
   isResultStep: boolean;
   isProcessing: boolean;
   canImport: boolean;
+  preventCloseOnEscape?: boolean;
   sections: ReactNode;
   children: ReactNode;
   onClose: () => void;
@@ -90,6 +91,7 @@ export function SourceImportWizardFrame({
   isResultStep,
   isProcessing,
   canImport,
+  preventCloseOnEscape = false,
   sections,
   children,
   onClose,
@@ -110,7 +112,12 @@ export function SourceImportWizardFrame({
     >
       <DialogContent
         closeLabel={copy.closeAction}
-        className="flex h-[calc(100vh-2rem)] max-h-[760px] w-[calc(100vw-2rem)] min-w-0 max-w-5xl flex-col overflow-hidden sm:max-w-5xl"
+        className="flex h-[calc(100vh-2rem)] max-h-[760px] w-[calc(100vw-2rem)] min-w-0 flex-col overflow-hidden sm:max-w-[min(64rem,calc(100vw-2rem))]"
+        onEscapeKeyDown={(event) => {
+          if (preventCloseOnEscape) {
+            event.preventDefault();
+          }
+        }}
         onCloseAutoFocus={(event) => {
           if (onRestoreFocus) {
             event.preventDefault();
