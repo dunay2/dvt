@@ -188,7 +188,16 @@ describe('GetWorkspaceGraphDraftUseCase authoring authority', () => {
     );
   });
 
-  it('removes a stale connection name when the referenced catalog entry no longer exists', async () => {
+  it.each([
+    {
+      caseName: 'the referenced catalog entry no longer exists',
+      catalogError: new WarehouseConnectionNotFoundError('warehouse-deleted'),
+    },
+    {
+      caseName: 'the auxiliary catalog cannot be read',
+      catalogError: new Error('WAREHOUSE_CONNECTION_CATALOG_MALFORMED'),
+    },
+  ])('keeps the graph readable without a stale name when $caseName', async ({ catalogError }) => {
     const draft = buildWorkspaceGraphDraft();
     const source = draft.nodes[0];
     if (!source) throw new Error('Expected source fixture.');
@@ -220,7 +229,7 @@ describe('GetWorkspaceGraphDraftUseCase authoring authority', () => {
       },
       connectionCatalog: {
         getConnection: vi.fn(async () => {
-          throw new WarehouseConnectionNotFoundError('warehouse-deleted');
+          throw catalogError;
         }),
       },
     }).execute(DECISION);

@@ -24,7 +24,6 @@ import {
 } from '@dvt/contracts';
 
 import type { IWarehouseConnectionCatalog } from '../ports/warehouseSourceImport.js';
-import { WarehouseConnectionNotFoundError } from '../ports/warehouseSourceImport.js';
 import type {
   IWorkspaceGraphDraftAuditPort,
   IWorkspaceGraphDraftStore,
@@ -191,10 +190,7 @@ export async function refreshGraphDraftConnectionNames(
     const pending = connectionCatalog
       .getConnection(scope, connectionId)
       .then((connection) => connection.name)
-      .catch((error: unknown) => {
-        if (error instanceof WarehouseConnectionNotFoundError) return null;
-        throw error;
-      });
+      .catch(() => null);
     connectionNameById.set(connectionId, pending);
     return pending;
   };
