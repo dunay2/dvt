@@ -112,7 +112,7 @@ export function SourceImportWizardFrame({
     >
       <DialogContent
         closeLabel={copy.closeAction}
-        className="flex h-[calc(100vh-2rem)] max-h-[760px] w-[calc(100vw-2rem)] min-w-0 max-w-[min(64rem,calc(100vw-2rem))] flex-col overflow-hidden"
+        className="flex h-[calc(100vh-2rem)] max-h-[760px] w-[calc(100vw-2rem)] min-w-0 flex-col overflow-hidden sm:max-w-[min(64rem,calc(100vw-2rem))]"
         onEscapeKeyDown={(event) => {
           if (preventCloseOnEscape) {
             event.preventDefault();
