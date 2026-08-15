@@ -161109,7 +161109,7 @@
       "normalizedRailName": "projectdbtgraphfromfiles",
       "railType": "query",
       "dddOwner": "DbtProjectGraphProjection",
-      "railStatus": "implemented",
+      "railStatus": "declared",
       "symbolRefs": [
         "apps/api/src/application/ports/dbtProjectAnalysis.ts#DbtProjectAnalysisResource",
         "apps/api/src/application/ports/dbtProjectAnalysis.ts#DbtProjectSourceIdentityRef",
@@ -161162,7 +161162,8 @@
       "architectureGuards": [
         "pnpm --dir packages/@dvt/contracts exec vitest run test/dbt-project-file-projection.contract.test.ts",
         "pnpm --dir apps/api exec vitest run test/entrypoints/http/dbtProjectGraphRoutes.test.ts test/application/projectDbtGraphFromFilesUseCase.test.ts",
-        "pnpm --dir apps/api exec vitest run test/entrypoints/http/dbtProjectGraphRoutes.test.ts"
+        "pnpm --dir apps/api exec vitest run test/entrypoints/http/dbtProjectGraphRoutes.test.ts",
+        "pnpm docs:dbt-roundtrip-capabilities:check"
       ],
       "completionGate": [
         "pnpm docs:feature-mechanization:implementation -- --feature PTH1-SOURCE-IDENTITY-HOVER-2379",
@@ -161173,7 +161174,7 @@
       "rawRail": {
         "name": "ProjectDbtGraphFromFiles",
         "type": "query",
-        "status": "implemented",
+        "status": "declared",
         "dddOwner": "DbtProjectGraphProjection",
         "negativeTests": [
           "Legacy clients receive the unchanged strict v1 shape; unknown features fail; credential references never enter source identity"
@@ -161243,10 +161244,11 @@
               "packages/@dvt/contracts/test/dbt-project-file-projection.contract.test.ts"
             ],
             "fowlerSignals": [
-              "Negotiate one additive projection feature on the existing query rail and preserve the strict legacy wire shape."
+              "Negotiate one additive projection feature on the existing query rail and preserve the strict legacy wire shape.",
+              "Preserve the canonical declared rail lifecycle while extending its implemented mechanization."
             ],
             "cypressCoverage": "Agent-browser file-backed source table identity hover and focus proof",
-            "architectureGuard": "pnpm --dir apps/api exec vitest run test/entrypoints/http/dbtProjectGraphRoutes.test.ts"
+            "architectureGuard": "pnpm docs:dbt-roundtrip-capabilities:check"
           },
           {
             "name": "projectSourceIdentityRef",
@@ -161305,7 +161307,8 @@
         ],
         "domainObjects": ["DbtProjectGraphProjection"],
         "fowlerSignals": [
-          "Negotiate one additive projection feature on the existing query rail and preserve the strict legacy wire shape."
+          "Negotiate one additive projection feature on the existing query rail and preserve the strict legacy wire shape.",
+          "Preserve the canonical declared rail lifecycle while extending its implemented mechanization."
         ],
         "completionGate": [
           "pnpm docs:feature-mechanization:implementation -- --feature PTH1-SOURCE-IDENTITY-HOVER-2379",
@@ -161314,8 +161317,8 @@
         "redGreenCycles": [
           {
             "id": "projectdbtgraphfromfiles-record",
-            "redTest": "pnpm --dir apps/api exec vitest run test/entrypoints/http/dbtProjectGraphRoutes.test.ts",
-            "greenTest": "pnpm --dir apps/api exec vitest run test/entrypoints/http/dbtProjectGraphRoutes.test.ts",
+            "redTest": "pnpm docs:dbt-roundtrip-capabilities:check",
+            "greenTest": "pnpm docs:dbt-roundtrip-capabilities:check",
             "patchSurfaces": [
               "apps/api/src/application/ports/dbtProjectAnalysis.ts",
               "apps/api/src/application/services/projectDbtGraphFromFilesUseCase.ts",
@@ -161340,7 +161343,7 @@
               "tools/planning-db/state/canonical-state.json",
               "docs/planning/status/system-governance-unit-index.units.yaml"
             ],
-            "expectedFailure": "The unchanged v1 endpoint emits new strict node keys to already-open Web clients or omits identity from the current client."
+            "expectedFailure": "ProjectDbtGraphFromFiles reports rail_status_drift because the local rail changed the canonical declared lifecycle to implemented."
           }
         ],
         "componentGuides": [
@@ -161354,7 +161357,7 @@
           {
             "name": "ProjectDbtGraphFromFiles",
             "type": "query",
-            "status": "implemented",
+            "status": "declared",
             "dddOwner": "DbtProjectGraphProjection",
             "negativeTests": [
               "Legacy clients receive the unchanged strict v1 shape; unknown features fail; credential references never enter source identity"
@@ -161367,7 +161370,8 @@
         "architectureGuards": [
           "pnpm --dir packages/@dvt/contracts exec vitest run test/dbt-project-file-projection.contract.test.ts",
           "pnpm --dir apps/api exec vitest run test/entrypoints/http/dbtProjectGraphRoutes.test.ts test/application/projectDbtGraphFromFilesUseCase.test.ts",
-          "pnpm --dir apps/api exec vitest run test/entrypoints/http/dbtProjectGraphRoutes.test.ts"
+          "pnpm --dir apps/api exec vitest run test/entrypoints/http/dbtProjectGraphRoutes.test.ts",
+          "pnpm docs:dbt-roundtrip-capabilities:check"
         ],
         "implementationPlan": "https://github.com/dunay2/dvt/issues/2379",
         "mechanizationStatus": "implemented",
@@ -161400,7 +161404,7 @@
           "apps/api/src/entrypoints/http/dbtProjectSourceIdentityRoutes.ts"
         ]
       },
-      "revision": 1,
+      "revision": 2,
       "createdBy": "codex",
       "createdAt": "2026-08-15T22:38:16.217Z"
     },
@@ -209394,6 +209398,77 @@
         ]
       },
       "createdAt": "2026-08-15T22:45:49.750Z"
+    },
+    {
+      "operationId": "6be11b28-d6e9-46e3-a591-1ce983790481",
+      "idempotencyKey": "pth1-source-identity-2379-dbt-status-v3",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH1-SOURCE-IDENTITY-HOVER-2379#query#projectdbtgraphfromfiles",
+      "sourcePath": "docs/evidence/ED-20260815-governed-source-identity-projection.md",
+      "sourceContentSha256": "4163c5f6a257c3d41de1b218826166b1f378f5c60a56f77471a081836d33b4ed",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "pnpm docs:dbt-roundtrip-capabilities:check",
+        "dddOwner": "DbtProjectGraphProjection",
+        "railName": "ProjectDbtGraphFromFiles",
+        "railType": "query",
+        "featureId": "PTH1-SOURCE-IDENTITY-HOVER-2379",
+        "greenTest": "pnpm docs:dbt-roundtrip-capabilities:check",
+        "sourceRef": "docs/evidence/ED-20260815-governed-source-identity-projection.md",
+        "unitTests": [
+          "apps/api/test/entrypoints/http/dbtProjectGraphRoutes.test.ts"
+        ],
+        "railStatus": "declared",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2379"],
+        "cypressFlows": [
+          "Agent-browser file-backed source table identity hover and focus proof"
+        ],
+        "domainObjects": ["DbtProjectGraphProjection"],
+        "fowlerSignals": [
+          "Preserve the canonical declared rail lifecycle while extending its implemented mechanization."
+        ],
+        "negativeTests": [
+          "Legacy clients receive the unchanged strict v1 shape; unknown features fail; credential references never enter source identity"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "Protected dbt graph HTTP route and Web query adapter",
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation -- --feature PTH1-SOURCE-IDENTITY-HOVER-2379",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "ProjectDbtGraphFromFiles use case",
+        "componentGuides": [
+          "docs/planning/proposals/mandatory/frontend-and-ux/dbt-project-roundtrip-product-plan-20260527.md"
+        ],
+        "expectedFailure": "ProjectDbtGraphFromFiles reports rail_status_drift because the local rail changed the canonical declared lifecycle to implemented.",
+        "governingSources": [
+          "docs/adr/ADR-0060-dbt-project-authoring-authority.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260815-governed-source-identity-projection.md"
+        ],
+        "architectureGuards": ["pnpm docs:dbt-roundtrip-capabilities:check"],
+        "authorizationScope": "Authorized workspace files and graph-draft view scope",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2379",
+        "implementationRefs": [
+          "apps/api/src/entrypoints/http/dbtProjectGraphRoutes.ts#projectDbtGraphWireResponse"
+        ],
+        "normalizedRailName": "projectdbtgraphfromfiles",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "4163c5f6a257c3d41de1b218826166b1f378f5c60a56f77471a081836d33b4ed",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": [
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/dbtProjectSourceIdentityRoutes.ts"
+        ]
+      },
+      "createdAt": "2026-08-15T22:53:33.324Z"
     }
   ],
   "governanceComponentDefinitions": [
