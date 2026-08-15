@@ -78,7 +78,7 @@ describe('canvasConnectionCompatibilityPresenter', () => {
     });
     expect(compatibilityByNodeId.get(model.id)?.target).toEqual({
       state: 'available',
-      compatibleNodeNames: ['Postgres · public'],
+      compatibleNodeNames: ['orders'],
     });
     expect(compatibilityByNodeId.get(sink.id)?.source).toEqual({
       state: 'unavailable',
