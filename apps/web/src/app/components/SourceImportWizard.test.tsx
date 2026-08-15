@@ -122,6 +122,14 @@ describe('SourceImportWizard', () => {
 
     expect(document.body.textContent).toContain('No se pudo probar la conexión al warehouse.');
     expect(document.body.textContent).not.toContain('raw connection test diagnostic');
+
+    const commandFailureAlert = document.body.querySelector<HTMLElement>(
+      '[data-slot="source-import-connection-load-error"]'
+    );
+
+    expect(commandFailureAlert?.getAttribute('role')).toBe('alert');
+    expect(commandFailureAlert?.getAttribute('aria-live')).toBe('assertive');
+    expect(commandFailureAlert?.getAttribute('aria-atomic')).toBe('true');
   });
 
   it('localizes connection creation failures without exposing adapter diagnostics', async () => {
@@ -348,6 +356,47 @@ describe('SourceImportWizard', () => {
             Node.DOCUMENT_POSITION_FOLLOWING
         : 0
     ).not.toBe(0);
+
+    await act(async () => {
+      useApplicationLanguageStore.getState().configureApplicationLanguage('es');
+    });
+
+    expect(successStatus?.textContent).toContain('Conexión correcta');
+    expect(successStatus?.textContent).toContain('12 objetos accesibles');
+  });
+
+  it('announces a failed connection result while preserving prominent error styling', async () => {
+    const testWarehouseConnection = vi.fn(async (connectionId: string) => ({
+      connectionId,
+      status: 'failed' as const,
+      reason: 'connection_failed' as const,
+      message: 'provider diagnostic that must not become product copy',
+      checkedAt: '2026-06-08T00:00:00.000Z',
+    }));
+
+    await harness.renderWizard({
+      warehouseSourceImport: buildWarehouseSourceImportPort({ testWarehouseConnection }),
+    });
+
+    await harness.clickConnectionOption('Local Postgres proof');
+    await harness.clickButtonContaining('Test connection');
+    await harness.flushPendingWork();
+
+    const resultFailureAlert = document.body.querySelector<HTMLElement>(
+      '[data-slot="source-import-connection-test-failure"]'
+    );
+
+    expect(testWarehouseConnection).toHaveBeenCalledWith('conn-1');
+    expect(resultFailureAlert?.getAttribute('role')).toBe('alert');
+    expect(resultFailureAlert?.getAttribute('aria-live')).toBe('assertive');
+    expect(resultFailureAlert?.getAttribute('aria-atomic')).toBe('true');
+    expect(resultFailureAlert?.getAttribute('data-slot')).toBe(
+      'source-import-connection-test-failure'
+    );
+    expect(resultFailureAlert?.className).toContain('border-red-700');
+    expect(document.body.textContent).not.toContain(
+      'provider diagnostic that must not become product copy'
+    );
   });
 
   it('creates a governed warehouse connection before browsing source tables', async () => {
