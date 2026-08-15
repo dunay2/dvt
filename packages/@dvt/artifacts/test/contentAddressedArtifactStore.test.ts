@@ -6,6 +6,7 @@ import {
   createDefaultS3ContentAddressedArtifactStore,
   type PublishContentAddressedArtifactInput,
   S3ContentAddressedArtifactStore,
+  S3RunExecutionContextReferenceStore,
 } from '../src/index.js';
 
 const TENANT_ID = 'tenant-a';
@@ -147,5 +148,46 @@ describe('S3ContentAddressedArtifactStore', () => {
 
     await store.publish({ ...input(), abortSignal: signal });
     expect(send.mock.calls[0]?.[1]).toEqual({ abortSignal: signal });
+  });
+});
+
+describe('S3RunExecutionContextReferenceStore', () => {
+  it('persists and reloads an immutable run-scoped reference without exposing raw ids', async () => {
+    const ref = {
+      uri: `s3://het2-artifacts/tenants/${TENANT_ID}/${'a'.repeat(64)}`,
+      sha256: 'a'.repeat(64),
+      schemaVersion: 'v1.0' as const,
+      planId: 'b'.repeat(64),
+      planVersion: '1.0',
+    };
+    const send = vi.fn(async (command: unknown) => {
+      if (command instanceof PutObjectCommand) return {};
+      if (command instanceof GetObjectCommand) {
+        const bytes = Buffer.from(JSON.stringify(ref), 'utf8');
+        return {
+          Body: { transformToByteArray: async () => Uint8Array.from(bytes) },
+          ContentLength: bytes.byteLength,
+          ContentType: 'application/json',
+        };
+      }
+      throw new Error('unexpected command');
+    });
+    const store = new S3RunExecutionContextReferenceStore({
+      bucket: 'het2-artifacts',
+      client: { send } as never,
+    });
+
+    await store.put({ tenantId: TENANT_ID, runId: '../unsafe/run', ref });
+    await expect(store.get({ tenantId: TENANT_ID, runId: '../unsafe/run' })).resolves.toEqual(ref);
+
+    const command = send.mock.calls[0]?.[0];
+    expect(command).toBeInstanceOf(PutObjectCommand);
+    expect(command?.input).toMatchObject({
+      Bucket: 'het2-artifacts',
+      ContentType: 'application/json',
+      IfNoneMatch: '*',
+    });
+    expect(command?.input.Key).not.toContain(TENANT_ID);
+    expect(command?.input.Key).not.toContain('unsafe');
   });
 });

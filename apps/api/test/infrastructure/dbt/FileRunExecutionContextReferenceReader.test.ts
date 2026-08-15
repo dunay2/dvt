@@ -3,8 +3,8 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { URL } from 'node:url';
 
-import { parseRunExecutionContext } from '@dvt/contracts';
-import { afterEach, describe, expect, it } from 'vitest';
+import { parseRunExecutionContext, type RunExecutionContextRef } from '@dvt/contracts';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type {
   RunExecutionContextExpectedBinding,
@@ -282,5 +282,85 @@ describe('FileRunExecutionContextReferenceReader', () => {
       planVersion: original.ref.planVersion,
     });
     expect(inherited.uri).not.toBe(original.ref.uri);
+  });
+
+  it('persists and inherits a trusted S3 context reference for recovery', async () => {
+    const inheritanceModulePath =
+      '../../../src/infrastructure/dbt/ArtifactBackedRunExecutionContextInheritanceWriter.js';
+    const readerModulePath =
+      '../../../src/infrastructure/dbt/ArtifactBackedRunExecutionContextReferenceReader.js';
+    const { ArtifactBackedRunExecutionContextInheritanceWriter } = await import(
+      inheritanceModulePath
+    );
+    const { ArtifactBackedRunExecutionContextReferenceReader } = await import(readerModulePath);
+    const context = parseRunExecutionContext({
+      schemaVersion: 'v1.0',
+      planId: 'a'.repeat(64),
+      planVersion: '1.0',
+      planSha256: 'b'.repeat(64),
+      tenantId: 'tenant-1',
+      projectId: 'project-1',
+      environmentId: 'dev',
+      targetAdapter: 'temporal',
+      createdAtIso: '2026-07-15T00:00:00.000Z',
+      createdBy: 'principal-1',
+      pluginContexts: {},
+    });
+    const references = new Map<string, RunExecutionContextRef>();
+    const referenceStore = {
+      get: vi.fn(async ({ runId }: { readonly runId: string }) => references.get(runId)),
+      put: vi.fn(
+        async ({
+          runId,
+          ref,
+        }: {
+          readonly runId: string;
+          readonly ref: RunExecutionContextRef;
+        }) => {
+          references.set(runId, ref);
+        }
+      ),
+    };
+    const publish = vi.fn(async (input) => ({
+      disposition: 'created' as const,
+      storageUri: input.storageUri,
+      sha256: input.sha256,
+      sizeBytes: input.sizeBytes,
+      mediaType: input.mediaType,
+    }));
+    const contextReader = { resolve: vi.fn(async () => context) };
+    const store = { kind: 's3' as const, bucket: 'dvt-run-contexts' };
+    const writer = new ArtifactBackedRunExecutionContextWriter(store, { publish }, referenceStore);
+    const original = await writer.write({ runId: 'run-source-1', context });
+    if (!original.ok) throw new Error('Expected an immutable run-context reference.');
+    const originalRef = original.ref;
+    const reader = new ArtifactBackedRunExecutionContextReferenceReader(
+      store,
+      referenceStore,
+      contextReader
+    );
+
+    await expect(reader.read(referenceQuery('run-source-1'))).resolves.toEqual({
+      kind: 'trusted',
+      ref: originalRef,
+    });
+
+    const inherited = await new ArtifactBackedRunExecutionContextInheritanceWriter(
+      store,
+      referenceStore,
+      contextReader
+    ).inherit({
+      tenantId: 'tenant-1',
+      sourceRunId: 'run-source-1',
+      recoveryRunId: 'run-recovery-1',
+      sourceRef: originalRef,
+    });
+
+    await expect(reader.read(referenceQuery('run-recovery-1'))).resolves.toEqual({
+      kind: 'trusted',
+      ref: inherited,
+    });
+    expect(inherited).toEqual(originalRef);
+    expect(referenceStore.put).toHaveBeenCalledTimes(2);
   });
 });
