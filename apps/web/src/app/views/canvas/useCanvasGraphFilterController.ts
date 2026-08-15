@@ -45,6 +45,7 @@ export type CanvasGraphFilterController = Readonly<{
   selectDimension: (dimension: CanvasGraphFilterDimension) => void;
   selectValue: (value: string) => void;
   addDraftPredicate: () => void;
+  filterByTag: (tag: string) => void;
   removePredicate: (predicate: CanvasGraphFilterPredicate) => void;
   setComposition: (composition: CanvasGraphFilterComposition) => void;
   setPresentation: (presentation: CanvasGraphFilterPresentationMode) => void;
@@ -92,6 +93,26 @@ export function useCanvasGraphFilterController({
         }).predicates
     );
   }, [draftDimension, resolvedDraftValue]);
+  const filterByTag = useCallback(
+    (tag: string) => {
+      const canonicalTag = tag.trim();
+      const availableTags = optionGroups.find((group) => group.dimension === 'tag')?.values ?? [];
+      if (!availableTags.includes(canonicalTag)) {
+        return;
+      }
+
+      setDraftDimension('tag');
+      setDraftValue(canonicalTag);
+      setPredicates(
+        (current) =>
+          createCanvasGraphFilterQuery({
+            predicates: [...current, { dimension: 'tag', value: canonicalTag }],
+          }).predicates
+      );
+      setOpen(true);
+    },
+    [optionGroups]
+  );
   const removePredicate = useCallback((predicate: CanvasGraphFilterPredicate) => {
     setPredicates((current) =>
       current.filter(
@@ -124,6 +145,7 @@ export function useCanvasGraphFilterController({
     selectDimension,
     selectValue: setDraftValue,
     addDraftPredicate,
+    filterByTag,
     removePredicate,
     setComposition,
     setPresentation,

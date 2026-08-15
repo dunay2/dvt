@@ -12,6 +12,7 @@ import type { GraphNodeOperationalDetail } from '../../plugins/graph/graphNodeCa
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import { normalizeCanvasPaletteId, type CanvasPaletteId } from './canvasPalette';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
+import { formatCanvasCopyTemplate } from './canvasCopyFormatting';
 import type { CreateCanvasAuthoringNode } from './canvasGraphHandlerContracts';
 import { projectCanvasGraphFilterPresentation } from './canvasGraphFilterPresentation';
 import { projectCanvasGraphSearchPresentation } from './canvasGraphSearchPresentation';
@@ -176,14 +177,30 @@ function CanvasViewportWithPresenter({
   const graphFilterController = useCanvasGraphFilterController({
     nodes: nodesWithOperationalDetails,
   });
+  const getTagFilterLabel = useCallback(
+    (tag: string) => formatCanvasCopyTemplate(copy.canvasGraphFilterByTagLabelTemplate, { tag }),
+    [copy.canvasGraphFilterByTagLabelTemplate]
+  );
+  const nodesWithTagFilterIntent = useMemo(
+    () =>
+      nodesWithOperationalDetails.map((node) => ({
+        ...node,
+        data: {
+          ...node.data,
+          onFilterByTag: graphFilterController.filterByTag,
+          getTagFilterLabel,
+        },
+      })),
+    [getTagFilterLabel, graphFilterController.filterByTag, nodesWithOperationalDetails]
+  );
   const graphFilterPresentation = useMemo(
     () =>
       projectCanvasGraphFilterPresentation({
-        nodes: nodesWithOperationalDetails,
+        nodes: nodesWithTagFilterIntent,
         edges: props.edges,
         result: graphFilterController.result,
       }),
-    [graphFilterController.result, nodesWithOperationalDetails, props.edges]
+    [graphFilterController.result, nodesWithTagFilterIntent, props.edges]
   );
   const graphFilterMatchingNodeIds = useMemo(
     () => new Set(graphFilterController.result.matchingNodeIds),
@@ -192,9 +209,9 @@ function CanvasViewportWithPresenter({
   const graphSearchNodes = useMemo(
     () =>
       graphFilterController.result.status === 'idle'
-        ? nodesWithOperationalDetails
-        : nodesWithOperationalDetails.filter((node) => graphFilterMatchingNodeIds.has(node.id)),
-    [graphFilterController.result.status, graphFilterMatchingNodeIds, nodesWithOperationalDetails]
+        ? nodesWithTagFilterIntent
+        : nodesWithTagFilterIntent.filter((node) => graphFilterMatchingNodeIds.has(node.id)),
+    [graphFilterController.result.status, graphFilterMatchingNodeIds, nodesWithTagFilterIntent]
   );
   const graphSearchController = useCanvasGraphSearchController({ nodes: graphSearchNodes });
 
