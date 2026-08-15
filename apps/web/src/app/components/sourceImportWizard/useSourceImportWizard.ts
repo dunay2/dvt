@@ -10,6 +10,7 @@ import type {
   WarehouseConnection,
 } from '../../ports/workspace';
 import type { SourceImportOptionContribution, SourceImportOptionId } from '../../plugins/registry';
+import { extractHttpStatusCode } from '../../services/api/classifyHttpError';
 import { resolveSourceImportFailureMessage, useSourceImportLocalization } from './copy';
 import {
   buildSourceImportCommand,
@@ -413,7 +414,10 @@ export function useSourceImportWizard({
       }));
       toast.success(copy.connection.renameSuccess);
     } catch (error) {
-      const failure = buildSourceImportFailure('rename-connection', error);
+      const failure = buildSourceImportFailure(
+        extractHttpStatusCode(error) === 409 ? 'rename-connection-conflict' : 'rename-connection',
+        error
+      );
       setState((prev) => ({
         ...prev,
         renameConnectionError: failure,

@@ -57,6 +57,7 @@ export type SourceImportFailureCode =
   | 'create-connection-validation'
   | 'create-connection'
   | 'rename-connection-validation'
+  | 'rename-connection-conflict'
   | 'rename-connection'
   | 'import-sources';
 
