@@ -27,7 +27,10 @@ import type {
   WarehouseConnection,
   WarehouseConnectionCatalogEntry,
 } from '../../../src/application/ports/warehouseSourceImport.js';
-import { WorkspaceFileNotFoundError } from '../../../src/application/ports/workspaceFiles.js';
+import {
+  WorkspaceFileNotFoundError,
+  WorkspaceFileRevisionConflictError,
+} from '../../../src/application/ports/workspaceFiles.js';
 import type {
   DeleteWorkspaceFileContentInput,
   IWorkspaceFileBatchMutationPort,
@@ -314,6 +317,7 @@ function buildApp(
         };
     readonly existingSourceFileContent?: string;
     readonly connectionTestResult?: TestWarehouseConnectionProbeFailure;
+    readonly renameError?: Error;
   } = {}
 ): {
   readonly app: FastifyInstance;
@@ -473,6 +477,9 @@ function buildApp(
       });
     }
   );
+  if (options.renameError) {
+    vi.spyOn(catalog, 'renameConnection').mockRejectedValue(options.renameError);
+  }
   const probe = new TestWarehouseConnectionProbe(
     options.connectionTestResult ?? null,
     (input) =>
@@ -614,6 +621,60 @@ describe('warehouseSourceImportRoutes', () => {
     expect(missingResponse.statusCode).toBe(404);
     expect(missingResponse.json()).toEqual({
       error: { type: 'not_found', reason: 'warehouse_connection_not_found' },
+    });
+  });
+
+  it('fails the rename command closed without authentication or its dedicated grant', async () => {
+    const unauthenticated = buildApp({ authenticated: false });
+    const missingTokenResponse = await unauthenticated.app.inject({
+      method: 'PATCH',
+      url: `/workspace/warehouse/connections/warehouse-prod?${SCOPE_QUERY}`,
+      payload: { name: 'Finance warehouse' },
+    });
+
+    expect(missingTokenResponse.statusCode).toBe(401);
+    expect(missingTokenResponse.json()).toEqual({
+      error: { type: 'unauthorized', reason: 'missing_token' },
+    });
+    expect(unauthenticated.authorize).not.toHaveBeenCalled();
+
+    const denied = buildApp({ authorized: false });
+    const deniedResponse = await denied.app.inject({
+      method: 'PATCH',
+      url: `/workspace/warehouse/connections/warehouse-prod?${SCOPE_QUERY}`,
+      payload: { name: 'Finance warehouse' },
+    });
+
+    expect(deniedResponse.statusCode).toBe(403);
+    expect(deniedResponse.json()).toEqual({
+      error: { type: 'forbidden', reason: 'action_not_granted' },
+    });
+    expect(denied.authorize).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        action: { kind: 'command', name: 'workspace:source-connection:rename' },
+      }),
+      expect.any(String)
+    );
+  });
+
+  it('returns an explicit conflict when the rename loses its catalog revision race', async () => {
+    const { app } = buildApp({
+      renameError: new WorkspaceFileRevisionConflictError(
+        WORKSPACE_WAREHOUSE_CONNECTION_CATALOG_PATH,
+        'changed-revision'
+      ),
+    });
+
+    const response = await app.inject({
+      method: 'PATCH',
+      url: `/workspace/warehouse/connections/warehouse-prod?${SCOPE_QUERY}`,
+      payload: { name: 'Finance warehouse' },
+    });
+
+    expect(response.statusCode).toBe(409);
+    expect(response.json()).toEqual({
+      error: { type: 'conflict', reason: 'workspace_file_revision_conflict' },
     });
   });
 

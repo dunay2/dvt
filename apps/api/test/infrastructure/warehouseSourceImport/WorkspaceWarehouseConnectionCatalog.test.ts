@@ -6,13 +6,16 @@ import {
   type SourceObjectMetricEvidence,
   type WorkspaceGraphDraftScope,
 } from '@dvt/contracts';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import {
   DuplicateWarehouseConnectionError,
   WarehouseConnectionNotFoundError,
 } from '../../../src/application/ports/warehouseSourceImport.js';
-import { WorkspaceFileNotFoundError } from '../../../src/application/ports/workspaceFiles.js';
+import {
+  WorkspaceFileNotFoundError,
+  WorkspaceFileRevisionConflictError,
+} from '../../../src/application/ports/workspaceFiles.js';
 import type {
   DeleteWorkspaceFileContentInput,
   IWorkspaceFileRepository,
@@ -286,6 +289,26 @@ describe('WorkspaceWarehouseConnectionCatalog', () => {
     await expect(
       catalog.renameConnection(SCOPE_A, 'missing', { name: 'New name' })
     ).rejects.toBeInstanceOf(WarehouseConnectionNotFoundError);
+  });
+
+  it('does not overwrite a concurrent catalog revision during rename', async () => {
+    const repository = repositoryWithCatalog(catalogDocument([]));
+    const save = vi.spyOn(repository, 'saveFileContent').mockResolvedValue({
+      kind: 'conflict',
+      currentContentSha256: 'changed-revision',
+    });
+    const catalog = new WorkspaceWarehouseConnectionCatalog({ repository });
+
+    await expect(
+      catalog.renameConnection(SCOPE_A, 'finance-prod', { name: 'Finance warehouse' })
+    ).rejects.toBeInstanceOf(WorkspaceFileRevisionConflictError);
+    expect(save).toHaveBeenCalledWith(
+      SCOPE_A,
+      expect.objectContaining({
+        path: WORKSPACE_WAREHOUSE_CONNECTION_CATALOG_PATH,
+        expectedRevision: expect.objectContaining({ kind: 'content_sha256' }),
+      })
+    );
   });
 
   it('persists a governed connection and its provider-neutral source objects', async () => {
