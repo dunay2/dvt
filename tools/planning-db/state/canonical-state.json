@@ -161426,7 +161426,8 @@
         "apps/web/src/app/plugins/graph/graphNodeCardCopyTokens.ts#resolveGraphNodeCardCopy",
         "apps/web/src/app/plugins/graph/graphNodeCardStrategyContracts.ts#GraphNodeSourceIdentity",
         "apps/web/src/app/plugins/graph/graphNodeCardStrategyUtils.ts#buildGraphNodeSourceIdentity",
-        "apps/web/src/app/plugins/graph/graphVisualTokens.ts#graphNodeSourceIdentityTooltipClasses"
+        "apps/web/src/app/plugins/graph/graphVisualTokens.ts#graphNodeSourceIdentityTooltipClasses",
+        "apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.tsx#refreshConnectionIdentityProjections"
       ],
       "implementationRefs": [
         "apps/web/src/app/plugins/graph/GraphNodeCardView.tsx#GraphNodeCardTitle",
@@ -161437,7 +161438,8 @@
         "apps/web/src/app/plugins/graph/graphNodeCardCopyTokens.ts#resolveGraphNodeCardCopy",
         "apps/web/src/app/plugins/graph/graphNodeCardStrategyContracts.ts#GraphNodeSourceIdentity",
         "apps/web/src/app/plugins/graph/graphNodeCardStrategyUtils.ts#buildGraphNodeSourceIdentity",
-        "apps/web/src/app/plugins/graph/graphVisualTokens.ts#graphNodeSourceIdentityTooltipClasses"
+        "apps/web/src/app/plugins/graph/graphVisualTokens.ts#graphNodeSourceIdentityTooltipClasses",
+        "apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.tsx#refreshConnectionIdentityProjections"
       ],
       "documentationRefs": [
         "docs/evidence/ED-20260815-governed-source-identity-projection.md"
@@ -161449,10 +161451,16 @@
       "allowedImplementationSurfaces": [
         "apps/web/src/app/plugins/graph/**",
         "apps/web/src/app/plugins/dbt/dbtGraphNodeCardStrategy.ts",
-        "apps/web/src/app/plugins/dvt/dvtGraphNodeCardStrategy.ts"
+        "apps/web/src/app/plugins/dvt/dvtGraphNodeCardStrategy.ts",
+        "apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.tsx",
+        "apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.test.ts",
+        "apps/web/src/app/components/SourceImportWizard*",
+        "apps/web/src/app/components/sourceImportWizard/**",
+        "apps/web/src/app/queries/queryKeys.ts"
       ],
       "architectureGuards": [
-        "pnpm --dir apps/web exec vitest run --config vitest.architecture.config.ts src/app/plugins/graph/graphNodeCardArchitecture.test.ts"
+        "pnpm --dir apps/web exec vitest run --config vitest.architecture.config.ts src/app/plugins/graph/graphNodeCardArchitecture.test.ts",
+        "pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/views/canvas/CanvasSourceImportDialogHost.test.ts"
       ],
       "completionGate": [
         "pnpm docs:feature-mechanization:implementation -- --feature PTH1-SOURCE-IDENTITY-HOVER-2379",
@@ -161468,7 +161476,7 @@
         "negativeTests": [
           "Do not render identity for non-source or incomplete nodes and do not expose credential material"
         ],
-        "adapterSurface": "Shared GraphNodeCardView and Radix Tooltip",
+        "adapterSurface": "Shared GraphNodeCardView, Radix Tooltip, and Canvas source-import cache refresh",
         "applicationPort": "Graph node card strategy projection",
         "authorizationScope": "Authorized Canvas projection already admitted to the browser"
       },
@@ -161608,6 +161616,20 @@
             ],
             "cypressCoverage": "Agent-browser hover focus double-click and viewport source-card proof",
             "architectureGuard": "pnpm --dir apps/web exec vitest run --config vitest.architecture.config.ts src/app/plugins/graph/graphNodeCardArchitecture.test.ts"
+          },
+          {
+            "name": "refreshConnectionIdentityProjections",
+            "path": "apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.tsx",
+            "cqRails": ["ProjectGraphNodeCardReadModel"],
+            "dddOwner": "CanvasGraphPresentation",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.test.ts"
+            ],
+            "fowlerSignals": [
+              "Refresh existing graph projections after connection rename instead of introducing a second identity cache."
+            ],
+            "cypressCoverage": "Agent-browser hover focus double-click and viewport source-card proof",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/views/canvas/CanvasSourceImportDialogHost.test.ts"
           }
         ],
         "version": 1,
@@ -161618,7 +161640,8 @@
         ],
         "domainObjects": ["GraphNodeCardReadModel"],
         "fowlerSignals": [
-          "Replace primitive title text with one localized typed read model while reusing the shared Tooltip."
+          "Replace primitive title text with one localized typed read model while reusing the shared Tooltip.",
+          "Refresh existing graph projections after connection rename instead of introducing a second identity cache."
         ],
         "completionGate": [
           "pnpm docs:feature-mechanization:implementation -- --feature PTH1-SOURCE-IDENTITY-HOVER-2379",
@@ -161627,14 +161650,19 @@
         "redGreenCycles": [
           {
             "id": "projectgraphnodecardreadmodel-record",
-            "redTest": "pnpm --dir apps/web exec vitest run src/app/plugins/graph/graphNodeCardReadModel.test.ts src/app/plugins/graph/GraphNodeCardView.test.tsx",
-            "greenTest": "pnpm --dir apps/web exec vitest run src/app/plugins/graph/graphNodeCardReadModel.test.ts src/app/plugins/graph/GraphNodeCardView.test.tsx",
+            "redTest": "Connection rename leaves Graph Draft and dbt Project Graph caches stale",
+            "greenTest": "pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/views/canvas/CanvasSourceImportDialogHost.test.ts",
             "patchSurfaces": [
               "apps/web/src/app/plugins/graph/**",
               "apps/web/src/app/plugins/dbt/dbtGraphNodeCardStrategy.ts",
-              "apps/web/src/app/plugins/dvt/dvtGraphNodeCardStrategy.ts"
+              "apps/web/src/app/plugins/dvt/dvtGraphNodeCardStrategy.ts",
+              "apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.tsx",
+              "apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.test.ts",
+              "apps/web/src/app/components/SourceImportWizard*",
+              "apps/web/src/app/components/sourceImportWizard/**",
+              "apps/web/src/app/queries/queryKeys.ts"
             ],
-            "expectedFailure": "The source table title has only an unstructured native title and cannot present localized governed identity."
+            "expectedFailure": "The source identity tooltip keeps the previous connection name after a successful rename."
           }
         ],
         "componentGuides": [
@@ -161653,13 +161681,14 @@
             "negativeTests": [
               "Do not render identity for non-source or incomplete nodes and do not expose credential material"
             ],
-            "adapterSurface": "Shared GraphNodeCardView and Radix Tooltip",
+            "adapterSurface": "Shared GraphNodeCardView, Radix Tooltip, and Canvas source-import cache refresh",
             "applicationPort": "Graph node card strategy projection",
             "authorizationScope": "Authorized Canvas projection already admitted to the browser"
           }
         ],
         "architectureGuards": [
-          "pnpm --dir apps/web exec vitest run --config vitest.architecture.config.ts src/app/plugins/graph/graphNodeCardArchitecture.test.ts"
+          "pnpm --dir apps/web exec vitest run --config vitest.architecture.config.ts src/app/plugins/graph/graphNodeCardArchitecture.test.ts",
+          "pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/views/canvas/CanvasSourceImportDialogHost.test.ts"
         ],
         "implementationPlan": "https://github.com/dunay2/dvt/issues/2379",
         "mechanizationStatus": "implemented",
@@ -161667,13 +161696,19 @@
         "allowedImplementationSurfaces": [
           "apps/web/src/app/plugins/graph/**",
           "apps/web/src/app/plugins/dbt/dbtGraphNodeCardStrategy.ts",
-          "apps/web/src/app/plugins/dvt/dvtGraphNodeCardStrategy.ts"
+          "apps/web/src/app/plugins/dvt/dvtGraphNodeCardStrategy.ts",
+          "apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.tsx",
+          "apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.test.ts",
+          "apps/web/src/app/components/SourceImportWizard*",
+          "apps/web/src/app/components/sourceImportWizard/**",
+          "apps/web/src/app/queries/queryKeys.ts"
         ],
         "forbiddenImplementationSurfaces": [
-          "apps/web/src/app/plugins/graph/SourceIdentityTooltip.tsx"
+          "apps/web/src/app/plugins/graph/SourceIdentityTooltip.tsx",
+          "apps/api/src/application/services/getWorkspaceGraphDraftSourceIdentityUseCase.ts"
         ]
       },
-      "revision": 0,
+      "revision": 2,
       "createdBy": "codex",
       "createdAt": "2026-08-15T22:38:14.905Z"
     },
@@ -209469,6 +209504,159 @@
         ]
       },
       "createdAt": "2026-08-15T22:53:33.324Z"
+    },
+    {
+      "operationId": "ea691b24-f9fe-4738-b119-85890f802a96",
+      "idempotencyKey": "pth1-source-identity-2379-connection-rename-refresh-v1",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH1-SOURCE-IDENTITY-HOVER-2379#query#projectgraphnodecardreadmodel",
+      "sourcePath": "docs/evidence/ED-20260815-governed-source-identity-projection.md",
+      "sourceContentSha256": "4163c5f6a257c3d41de1b218826166b1f378f5c60a56f77471a081836d33b4ed",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "Connection rename leaves Graph Draft and dbt Project Graph caches stale",
+        "dddOwner": "CanvasGraphPresentation",
+        "railName": "ProjectGraphNodeCardReadModel",
+        "railType": "query",
+        "featureId": "PTH1-SOURCE-IDENTITY-HOVER-2379",
+        "greenTest": "pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/views/canvas/CanvasSourceImportDialogHost.test.ts",
+        "sourceRef": "docs/evidence/ED-20260815-governed-source-identity-projection.md",
+        "unitTests": [
+          "apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2379"],
+        "cypressFlows": [
+          "Agent-browser hover focus double-click and viewport source-card proof"
+        ],
+        "domainObjects": ["GraphNodeCardReadModel"],
+        "fowlerSignals": [
+          "Refresh existing graph projections after connection rename instead of introducing a second identity cache."
+        ],
+        "negativeTests": [
+          "Do not render identity for non-source or incomplete nodes and do not expose credential material"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "Shared GraphNodeCardView, Radix Tooltip, and Canvas source-import cache refresh",
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation -- --feature PTH1-SOURCE-IDENTITY-HOVER-2379",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "Graph node card strategy projection",
+        "componentGuides": [
+          "docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md"
+        ],
+        "expectedFailure": "The source identity tooltip keeps the previous connection name after a successful rename.",
+        "governingSources": [
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260815-governed-source-identity-projection.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/views/canvas/CanvasSourceImportDialogHost.test.ts"
+        ],
+        "authorizationScope": "Authorized Canvas projection already admitted to the browser",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2379",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.tsx#refreshConnectionIdentityProjections"
+        ],
+        "normalizedRailName": "projectgraphnodecardreadmodel",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "4163c5f6a257c3d41de1b218826166b1f378f5c60a56f77471a081836d33b4ed",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.tsx",
+          "apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.test.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/application/services/getWorkspaceGraphDraftSourceIdentityUseCase.ts"
+        ]
+      },
+      "createdAt": "2026-08-15T23:11:10.412Z"
+    },
+    {
+      "operationId": "9078c4a1-1ae2-4270-b3ff-a4212341b4d4",
+      "idempotencyKey": "pth1-source-identity-2379-connection-rename-surfaces-v1",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH1-SOURCE-IDENTITY-HOVER-2379#query#projectgraphnodecardreadmodel",
+      "sourcePath": "docs/evidence/ED-20260815-governed-source-identity-projection.md",
+      "sourceContentSha256": "4163c5f6a257c3d41de1b218826166b1f378f5c60a56f77471a081836d33b4ed",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "Connection rename leaves Graph Draft and dbt Project Graph caches stale",
+        "dddOwner": "CanvasGraphPresentation",
+        "railName": "ProjectGraphNodeCardReadModel",
+        "railType": "query",
+        "featureId": "PTH1-SOURCE-IDENTITY-HOVER-2379",
+        "greenTest": "pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/views/canvas/CanvasSourceImportDialogHost.test.ts",
+        "sourceRef": "docs/evidence/ED-20260815-governed-source-identity-projection.md",
+        "unitTests": [
+          "apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2379"],
+        "cypressFlows": [
+          "Agent-browser hover focus double-click and viewport source-card proof"
+        ],
+        "domainObjects": ["GraphNodeCardReadModel"],
+        "fowlerSignals": [
+          "Refresh existing graph projections after connection rename instead of introducing a second identity cache."
+        ],
+        "negativeTests": [
+          "Do not render identity for non-source or incomplete nodes and do not expose credential material"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "Shared GraphNodeCardView, Radix Tooltip, and Canvas source-import cache refresh",
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation -- --feature PTH1-SOURCE-IDENTITY-HOVER-2379",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "Graph node card strategy projection",
+        "componentGuides": [
+          "docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md"
+        ],
+        "expectedFailure": "The source identity tooltip keeps the previous connection name after a successful rename.",
+        "governingSources": [
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260815-governed-source-identity-projection.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/views/canvas/CanvasSourceImportDialogHost.test.ts"
+        ],
+        "authorizationScope": "Authorized Canvas projection already admitted to the browser",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2379",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.tsx#refreshConnectionIdentityProjections"
+        ],
+        "normalizedRailName": "projectgraphnodecardreadmodel",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "4163c5f6a257c3d41de1b218826166b1f378f5c60a56f77471a081836d33b4ed",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/components/SourceImportWizard*",
+          "apps/web/src/app/components/sourceImportWizard/**",
+          "apps/web/src/app/queries/queryKeys.ts",
+          "apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.tsx",
+          "apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.test.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/application/services/getWorkspaceGraphDraftSourceIdentityUseCase.ts"
+        ]
+      },
+      "createdAt": "2026-08-15T23:13:14.268Z"
     }
   ],
   "governanceComponentDefinitions": [
