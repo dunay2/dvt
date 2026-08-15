@@ -12,6 +12,7 @@ import type { ImportSourcesInput } from '../ports/workspace';
 import { buildGraphDraftSourceImportResult } from '../../testing/sourceImportTestFixtures';
 import { buildSourceImportTestMetricEvidence } from './sourceImportWizard/sourceImportWizard.testFixtures';
 import { useApplicationLanguageStore } from '../stores/applicationLanguageStore';
+import { ApiError } from '../services/api/createApiClient';
 
 describe('SourceImportWizard', () => {
   let harness: ReturnType<typeof createSourceImportWizardHarness>;
@@ -152,6 +153,38 @@ describe('SourceImportWizard', () => {
     expect(alert?.getAttribute('role')).toBe('alert');
     expect(alert?.textContent).toContain('No se pudo cambiar el nombre de la conexión.');
     expect(document.body.textContent).not.toContain('raw duplicate connection diagnostic');
+  });
+
+  it('explains a duplicate connection name without exposing its transport response', async () => {
+    useApplicationLanguageStore.getState().configureApplicationLanguage('es');
+    await harness.renderWizard({
+      warehouseSourceImport: buildWarehouseSourceImportPort({
+        renameWarehouseConnection: async () => {
+          throw new ApiError({
+            message: 'Request failed (409)',
+            endpoint: '/workspace/warehouse/connections/conn-1',
+            statusCode: 409,
+            category: 'client',
+            responseBody: { error: 'warehouse_connection_name_conflict' },
+          });
+        },
+      }),
+    });
+
+    await harness.clickConnectionOption('Local Postgres proof');
+    await harness.clickButtonContaining('Cambiar nombre');
+    await harness.fillInputByLabel('Nuevo nombre de la conexión', 'Postgres duplicado');
+    await harness.clickButtonContaining('Guardar nombre');
+    await harness.flushPendingWork();
+
+    expect(document.body.textContent).toContain('Ya existe una conexión con ese nombre.');
+    expect(document.body.textContent).not.toContain('warehouse_connection_name_conflict');
+
+    await act(async () => {
+      useApplicationLanguageStore.getState().configureApplicationLanguage('en');
+    });
+
+    expect(document.body.textContent).toContain('A connection with that name already exists.');
   });
 
   it('keeps a connection catalog failure localized when the language changes', async () => {
