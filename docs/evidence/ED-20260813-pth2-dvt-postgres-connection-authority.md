@@ -81,8 +81,10 @@ instant used by bounded tests and internal callers.
 The Canvas connection test feedback is bound to both the selected connection
 and the latest request sequence. Changing the connection invalidates an
 in-flight result, and a response whose connection identifier does not match the
-tested selection is discarded. The inspector cannot present connection A's
-availability as evidence for connection B.
+tested selection is discarded. An authoritative selection or node change also
+clears feedback that was already visible in the reused inspector panel. The
+inspector cannot present connection A's availability as evidence for
+connection B.
 
 For the supported S3 artifact backend, the context payload remains
 content-addressed while `@dvt/artifacts` persists a separate immutable
