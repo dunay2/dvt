@@ -156155,7 +156155,10 @@
         "apps/api/src/entrypoints/http/warehouseSourceImportRoutes.ts#parseRenameWarehouseConnectionBody",
         "apps/web/src/app/ports/workspace.ts#RenameWarehouseConnectionInput",
         "apps/web/src/app/services/workspace/workspacePorts.api.ts#buildWarehouseConnectionEndpoint",
-        "apps/web/src/app/components/sourceImportWizard/WarehouseConnectionRenameForm.tsx#WarehouseConnectionRenameFormProps"
+        "apps/web/src/app/components/sourceImportWizard/WarehouseConnectionRenameForm.tsx#WarehouseConnectionRenameFormProps",
+        "apps/api/src/application/services/projectOnboardingPolicy.ts#isCreatorWorkspaceActionGranted",
+        "apps/api/src/infrastructure/auth/embeddedAccessDecisionService.ts#isActionGranted",
+        "apps/web/src/app/services/api/classifyHttpError.ts#extractHttpErrorReason"
       ],
       "implementationRefs": [
         "packages/@dvt/contracts/src/contracts/source-import/SourceImportOperations.v1.ts#RenameWarehouseConnectionRequestSchema",
@@ -156171,7 +156174,10 @@
         "apps/api/src/entrypoints/http/warehouseSourceImportRoutes.ts#parseRenameWarehouseConnectionBody",
         "apps/web/src/app/ports/workspace.ts#RenameWarehouseConnectionInput",
         "apps/web/src/app/services/workspace/workspacePorts.api.ts#buildWarehouseConnectionEndpoint",
-        "apps/web/src/app/components/sourceImportWizard/WarehouseConnectionRenameForm.tsx#WarehouseConnectionRenameFormProps"
+        "apps/web/src/app/components/sourceImportWizard/WarehouseConnectionRenameForm.tsx#WarehouseConnectionRenameFormProps",
+        "apps/api/src/application/services/projectOnboardingPolicy.ts#isCreatorWorkspaceActionGranted",
+        "apps/api/src/infrastructure/auth/embeddedAccessDecisionService.ts#isActionGranted",
+        "apps/web/src/app/services/api/classifyHttpError.ts#extractHttpErrorReason"
       ],
       "documentationRefs": [
         "https://github.com/dunay2/dvt/issues/2366",
@@ -156217,14 +156223,20 @@
         "docs/risk-register/quality/R-20260815-WAREHOUSE-CONNECTION-RENAME.yaml",
         "docs/risk-register/quality/index.md",
         "tools/planning-db/state/canonical-state.json",
-        "docs/planning/status/system-governance-unit-index.units.yaml"
+        "docs/planning/status/system-governance-unit-index.units.yaml",
+        "apps/api/src/infrastructure/auth/embeddedAccessDecisionService.ts",
+        "apps/api/test/infrastructure/auth/embeddedAccessDecisionService.test.ts",
+        "apps/web/src/app/services/api/classifyHttpError.ts",
+        "apps/web/src/app/services/api/classifyHttpError.test.ts"
       ],
       "architectureGuards": [
-        "The rename command changes only name, preserves id/type/database/credentialRef/sourceObjects, and uses optimistic workspace file revision"
+        "The rename command changes only name, preserves id/type/database/credentialRef/sourceObjects, and uses optimistic workspace file revision",
+        "Legacy creator recognition requires the complete prior creator action profile; partial grants remain denied."
       ],
       "completionGate": [
         "Focused contracts/API/Web tests, lint, type-check, headed-browser verification, ARC check, independent Fowler QA, and pnpm verify:prepush",
-        "pnpm verify:prepush"
+        "pnpm verify:prepush",
+        "Focused authorization and Web conflict tests"
       ],
       "sourcePath": "docs/evidence/ED-20260815-warehouse-connection-rename.md",
       "sourceContentSha256": "9a1f1bf9efcac72a5050802052a8c298e0dc1e6bbcab22b2863fd265ca934c48",
@@ -156234,7 +156246,8 @@
         "status": "implemented",
         "dddOwner": "Warehouse Connection aggregate",
         "negativeTests": [
-          "Reject blank or malformed names with 400; unknown connection with 404; duplicate case-insensitive name with 409; unauthorized scope fails closed; concurrent workspace revision is not overwritten"
+          "Reject blank or malformed names with 400; unknown connection with 404; duplicate case-insensitive name with 409; unauthorized scope fails closed; concurrent workspace revision is not overwritten",
+          "Reject legacy partial grants, distinguish duplicate names from workspace revision conflicts, and preserve fail-closed authorization"
         ],
         "adapterSurface": "PATCH /workspace/warehouse/connections/:connectionId through WorkspaceWarehouseConnectionCatalog and the Web workspace port",
         "applicationPort": "IWarehouseConnectionCatalog.renameConnection",
@@ -156318,13 +156331,15 @@
             "cqRails": ["RenameWarehouseConnection"],
             "dddOwner": "Warehouse Connection aggregate",
             "unitTests": [
-              "packages/@dvt/contracts/test/source-import/SourceImportOperations.v1.test.ts; apps/api warehouse source import tests; apps/web Source Import wizard tests"
+              "packages/@dvt/contracts/test/source-import/SourceImportOperations.v1.test.ts; apps/api warehouse source import tests; apps/web Source Import wizard tests",
+              "apps/api/test/infrastructure/auth/embeddedAccessDecisionService.test.ts; apps/web/src/app/services/api/classifyHttpError.test.ts; apps/web/src/app/components/SourceImportWizard.test.tsx"
             ],
             "fowlerSignals": [
-              "Replace duplicate intent; preserve aggregate identity; encapsulate mutation; reuse Source Import interaction; fail closed; consolidate localized feedback"
+              "Replace duplicate intent; preserve aggregate identity; encapsulate mutation; reuse Source Import interaction; fail closed; consolidate localized feedback",
+              "Preserve existing creator capability without storing a migration state and classify conflicts by semantic reason."
             ],
-            "cypressCoverage": "Headed browser: Source Import -> select connection -> rename -> close/reopen -> reload -> verify persisted name and stable identity in ES and EN",
-            "architectureGuard": "The rename command changes only name, preserves id/type/database/credentialRef/sourceObjects, and uses optimistic workspace file revision"
+            "cypressCoverage": "Headed browser: existing creator workspace can rename; duplicate name remains distinct from revision conflict.",
+            "architectureGuard": "Legacy creator recognition requires the complete prior creator action profile; partial grants remain denied."
           },
           {
             "name": "WarehouseConnectionRenameForm",
@@ -156437,32 +156452,79 @@
             ],
             "cypressCoverage": "Headed browser: Source Import -> select connection -> rename -> close/reopen -> reload -> verify persisted name and stable identity in ES and EN",
             "architectureGuard": "The rename command changes only name, preserves id/type/database/credentialRef/sourceObjects, and uses optimistic workspace file revision"
+          },
+          {
+            "name": "isCreatorWorkspaceActionGranted",
+            "path": "apps/api/src/application/services/projectOnboardingPolicy.ts",
+            "cqRails": ["RenameWarehouseConnection"],
+            "dddOwner": "Warehouse Connection aggregate",
+            "unitTests": [
+              "apps/api/test/infrastructure/auth/embeddedAccessDecisionService.test.ts; apps/web/src/app/services/api/classifyHttpError.test.ts; apps/web/src/app/components/SourceImportWizard.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Preserve existing creator capability without storing a migration state and classify conflicts by semantic reason."
+            ],
+            "cypressCoverage": "Headed browser: existing creator workspace can rename; duplicate name remains distinct from revision conflict.",
+            "architectureGuard": "Legacy creator recognition requires the complete prior creator action profile; partial grants remain denied."
+          },
+          {
+            "name": "isActionGranted",
+            "path": "apps/api/src/infrastructure/auth/embeddedAccessDecisionService.ts",
+            "cqRails": ["RenameWarehouseConnection"],
+            "dddOwner": "Warehouse Connection aggregate",
+            "unitTests": [
+              "apps/api/test/infrastructure/auth/embeddedAccessDecisionService.test.ts; apps/web/src/app/services/api/classifyHttpError.test.ts; apps/web/src/app/components/SourceImportWizard.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Preserve existing creator capability without storing a migration state and classify conflicts by semantic reason."
+            ],
+            "cypressCoverage": "Headed browser: existing creator workspace can rename; duplicate name remains distinct from revision conflict.",
+            "architectureGuard": "Legacy creator recognition requires the complete prior creator action profile; partial grants remain denied."
+          },
+          {
+            "name": "extractHttpErrorReason",
+            "path": "apps/web/src/app/services/api/classifyHttpError.ts",
+            "cqRails": ["RenameWarehouseConnection"],
+            "dddOwner": "Warehouse Connection aggregate",
+            "unitTests": [
+              "apps/api/test/infrastructure/auth/embeddedAccessDecisionService.test.ts; apps/web/src/app/services/api/classifyHttpError.test.ts; apps/web/src/app/components/SourceImportWizard.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Preserve existing creator capability without storing a migration state and classify conflicts by semantic reason."
+            ],
+            "cypressCoverage": "Headed browser: existing creator workspace can rename; duplicate name remains distinct from revision conflict.",
+            "architectureGuard": "Legacy creator recognition requires the complete prior creator action profile; partial grants remain denied."
           }
         ],
         "version": 1,
         "featureId": "PTH1-2366-WAREHOUSE-CONNECTION-RENAME",
         "userStories": [
-          "As a workspace user I can rename a selected governed warehouse connection without changing its identity or credentials"
+          "As a workspace user I can rename a selected governed warehouse connection without changing its identity or credentials",
+          "https://github.com/dunay2/dvt/issues/2366"
         ],
         "cypressFlows": [
           "Headed browser: Source Import -> select connection -> rename -> close/reopen -> reload -> verify persisted name and stable identity in ES and EN",
-          "Headed browser: Source Import -> select connection -> rename -> close/reopen -> reload -> verify persisted name, stable identity, duplicate rejection, ES/EN, keyboard behavior, and viewport bounds"
+          "Headed browser: Source Import -> select connection -> rename -> close/reopen -> reload -> verify persisted name, stable identity, duplicate rejection, ES/EN, keyboard behavior, and viewport bounds",
+          "Headed browser: existing creator workspace can rename; duplicate name remains distinct from revision conflict."
         ],
         "domainObjects": [
-          "Warehouse Connection aggregate with stable connectionId and mutable display name"
+          "Warehouse Connection aggregate with stable connectionId and mutable display name",
+          "Warehouse Connection aggregate"
         ],
         "fowlerSignals": [
-          "Replace duplicate intent; preserve aggregate identity; encapsulate mutation; reuse Source Import interaction; fail closed; consolidate localized feedback"
+          "Replace duplicate intent; preserve aggregate identity; encapsulate mutation; reuse Source Import interaction; fail closed; consolidate localized feedback",
+          "Preserve existing creator capability without storing a migration state and classify conflicts by semantic reason."
         ],
         "completionGate": [
           "Focused contracts/API/Web tests, lint, type-check, headed-browser verification, ARC check, independent Fowler QA, and pnpm verify:prepush",
-          "pnpm verify:prepush"
+          "pnpm verify:prepush",
+          "Focused authorization and Web conflict tests"
         ],
         "redGreenCycles": [
           {
             "id": "renamewarehouseconnection-record",
-            "redTest": "The canonical rename request schema, use case/catalog route, Web port/controller, and selected-connection action do not exist and focused tests fail before production edits",
-            "greenTest": "A selected connection can be renamed in ES/EN; stable ID and all non-name fields persist unchanged; duplicate, invalid, missing, unauthorized, and concurrent cases fail explicitly",
+            "redTest": "Focused tests fail before review corrections",
+            "greenTest": "Focused authorization and Web conflict tests pass",
             "patchSurfaces": [
               "Existing Source Import connection step, Web workspace port/API adapter, warehouse source import contracts/routes/use cases/catalog, focused tests, and mandatory governed evidence",
               "packages/@dvt/contracts/src/contracts/source-import/**",
@@ -156498,13 +156560,18 @@
               "docs/risk-register/quality/R-20260815-WAREHOUSE-CONNECTION-RENAME.yaml",
               "docs/risk-register/quality/index.md",
               "tools/planning-db/state/canonical-state.json",
-              "docs/planning/status/system-governance-unit-index.units.yaml"
+              "docs/planning/status/system-governance-unit-index.units.yaml",
+              "apps/api/src/infrastructure/auth/embeddedAccessDecisionService.ts",
+              "apps/api/test/infrastructure/auth/embeddedAccessDecisionService.test.ts",
+              "apps/web/src/app/services/api/classifyHttpError.ts",
+              "apps/web/src/app/services/api/classifyHttpError.test.ts"
             ],
-            "expectedFailure": "RenameWarehouseConnection is absent from contract, protected route, persistence catalog, Web port, and Source Import UI"
+            "expectedFailure": "Existing creator grant receives ACTION_NOT_GRANTED or a revision conflict is mislabeled as duplicate."
           }
         ],
         "componentGuides": [
-          "docs/architecture/components/web/frontend-component-inventory.md"
+          "docs/architecture/components/web/frontend-component-inventory.md",
+          "docs/architecture/command-query-rail-governance.md"
         ],
         "governingSources": [
           "docs/architecture/command-query-rail-governance.md",
@@ -156518,7 +156585,8 @@
             "status": "implemented",
             "dddOwner": "Warehouse Connection aggregate",
             "negativeTests": [
-              "Reject blank or malformed names with 400; unknown connection with 404; duplicate case-insensitive name with 409; unauthorized scope fails closed; concurrent workspace revision is not overwritten"
+              "Reject blank or malformed names with 400; unknown connection with 404; duplicate case-insensitive name with 409; unauthorized scope fails closed; concurrent workspace revision is not overwritten",
+              "Reject legacy partial grants, distinguish duplicate names from workspace revision conflicts, and preserve fail-closed authorization"
             ],
             "adapterSurface": "PATCH /workspace/warehouse/connections/:connectionId through WorkspaceWarehouseConnectionCatalog and the Web workspace port",
             "applicationPort": "IWarehouseConnectionCatalog.renameConnection",
@@ -156526,9 +156594,10 @@
           }
         ],
         "architectureGuards": [
-          "The rename command changes only name, preserves id/type/database/credentialRef/sourceObjects, and uses optimistic workspace file revision"
+          "The rename command changes only name, preserves id/type/database/credentialRef/sourceObjects, and uses optimistic workspace file revision",
+          "Legacy creator recognition requires the complete prior creator action profile; partial grants remain denied."
         ],
-        "implementationPlan": "TDD in microcommits: contract/API red tests; explicit protected rename command; Web red interaction tests; accessible localized inline rename form; browser and regression evidence",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2366",
         "mechanizationStatus": "implemented",
         "noHumanDecisionsRemaining": true,
         "allowedImplementationSurfaces": [
@@ -156566,13 +156635,18 @@
           "docs/risk-register/quality/R-20260815-WAREHOUSE-CONNECTION-RENAME.yaml",
           "docs/risk-register/quality/index.md",
           "tools/planning-db/state/canonical-state.json",
-          "docs/planning/status/system-governance-unit-index.units.yaml"
+          "docs/planning/status/system-governance-unit-index.units.yaml",
+          "apps/api/src/infrastructure/auth/embeddedAccessDecisionService.ts",
+          "apps/api/test/infrastructure/auth/embeddedAccessDecisionService.test.ts",
+          "apps/web/src/app/services/api/classifyHttpError.ts",
+          "apps/web/src/app/services/api/classifyHttpError.test.ts"
         ],
         "forbiddenImplementationSurfaces": [
-          "Standalone connection-management page, regenerated connection IDs, credential edits, browser-only persistence, raw transport errors, migrations, unrelated CI changes"
+          "Standalone connection-management page, regenerated connection IDs, credential edits, browser-only persistence, raw transport errors, migrations, unrelated CI changes",
+          "infra/db/migrations/**"
         ]
       },
-      "revision": 5,
+      "revision": 6,
       "createdBy": "codex",
       "createdAt": "2026-08-15T02:28:04.025Z"
     },
@@ -197551,6 +197625,85 @@
         ]
       },
       "createdAt": "2026-08-15T05:07:22.977Z"
+    },
+    {
+      "operationId": "2a98b77b-c6d6-4c40-8425-bcd048be6f6d",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:PTH1-2366-WAREHOUSE-CONNECTION-RENAME:command:renamewarehouseconnection:5:66b9c6708a874130",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH1-2366-WAREHOUSE-CONNECTION-RENAME#command#renamewarehouseconnection",
+      "sourcePath": "docs/evidence/ED-20260815-warehouse-connection-rename.md",
+      "sourceContentSha256": "9a1f1bf9efcac72a5050802052a8c298e0dc1e6bbcab22b2863fd265ca934c48",
+      "expectedRevision": 5,
+      "previousRevision": 5,
+      "resultingRevision": 6,
+      "payload": {
+        "redTest": "Focused tests fail before review corrections",
+        "dddOwner": "Warehouse Connection aggregate",
+        "railName": "RenameWarehouseConnection",
+        "railType": "command",
+        "featureId": "PTH1-2366-WAREHOUSE-CONNECTION-RENAME",
+        "greenTest": "Focused authorization and Web conflict tests pass",
+        "sourceRef": "docs/evidence/ED-20260815-warehouse-connection-rename.md",
+        "unitTests": [
+          "apps/api/test/infrastructure/auth/embeddedAccessDecisionService.test.ts; apps/web/src/app/services/api/classifyHttpError.test.ts; apps/web/src/app/components/SourceImportWizard.test.tsx"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2366"],
+        "cypressFlows": [
+          "Headed browser: existing creator workspace can rename; duplicate name remains distinct from revision conflict."
+        ],
+        "domainObjects": ["Warehouse Connection aggregate"],
+        "fowlerSignals": [
+          "Preserve existing creator capability without storing a migration state and classify conflicts by semantic reason."
+        ],
+        "negativeTests": [
+          "Reject legacy partial grants, distinguish duplicate names from workspace revision conflicts, and preserve fail-closed authorization"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "PATCH /workspace/warehouse/connections/:connectionId through WorkspaceWarehouseConnectionCatalog and the Web workspace port",
+        "completionGate": [
+          "Focused authorization and Web conflict tests",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "IWarehouseConnectionCatalog.renameConnection",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Existing creator grant receives ACTION_NOT_GRANTED or a revision conflict is mislabeled as duplicate.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/planning/state/github-mvp-issue-workflow.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260815-warehouse-connection-rename.md"
+        ],
+        "architectureGuards": [
+          "Legacy creator recognition requires the complete prior creator action profile; partial grants remain denied."
+        ],
+        "authorizationScope": "Active tenant/project/environment workspace with workspace:source-connection:rename",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2366",
+        "implementationRefs": [
+          "apps/api/src/application/services/projectOnboardingPolicy.ts#isCreatorWorkspaceActionGranted",
+          "apps/api/src/infrastructure/auth/embeddedAccessDecisionService.ts#isActionGranted",
+          "apps/web/src/app/services/api/classifyHttpError.ts#extractHttpErrorReason",
+          "apps/web/src/app/components/sourceImportWizard/useSourceImportWizard.ts#handleRenameConnection"
+        ],
+        "normalizedRailName": "renamewarehouseconnection",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "9a1f1bf9efcac72a5050802052a8c298e0dc1e6bbcab22b2863fd265ca934c48",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/infrastructure/auth/embeddedAccessDecisionService.ts",
+          "apps/api/test/infrastructure/auth/embeddedAccessDecisionService.test.ts",
+          "apps/web/src/app/services/api/classifyHttpError.ts",
+          "apps/web/src/app/services/api/classifyHttpError.test.ts"
+        ],
+        "forbiddenImplementationSurfaces": ["infra/db/migrations/**"]
+      },
+      "createdAt": "2026-08-15T05:27:25.601Z"
     }
   ],
   "governanceComponentDefinitions": [
