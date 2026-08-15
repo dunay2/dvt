@@ -106,6 +106,8 @@ export function formatCanvasInspectorNodeDraftError(
       return copy.inspectorErrorDvtTableRequired;
     case 'dvt_alias_required':
       return copy.inspectorErrorDvtAliasRequired;
+    case 'dvt_connection_required':
+      return copy.inspectorErrorDvtConnectionRequired;
     case 'dvt_materialization_invalid':
       return copy.inspectorErrorDvtMaterializationInvalid;
     case 'dvt_write_mode_invalid':
@@ -152,6 +154,8 @@ export function formatTransformationGraphValidationSummary(
       return copy.transformationAmbiguousExecutablePathMessage;
     case 'requires_executable_path':
       return copy.transformationRequiresExecutablePathMessage;
+    case 'requires_postgres_connection':
+      return copy.transformationRequiresPostgresConnectionMessage;
     case 'requires_three_nodes':
       return copy.transformationRequiresThreeNodesMessage;
     case 'unsupported_roles':

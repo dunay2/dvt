@@ -5,7 +5,13 @@ import React, { act, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type {
+  IWarehouseSourceImportPort,
+  TestWarehouseConnectionResult,
+} from '../../ports/workspace';
+import { AppServicesProvider } from '../../services/AppServicesContext';
 import type { CanonicalNode } from '../../types/canonical';
+import { createAppServicesTestOverrides } from '../../../testing/appServicesTestDoubles';
 import {
   createCanvasInspectorNodeDraft,
   validateCanvasInspectorNodeDraft,
@@ -74,12 +80,45 @@ function buildImportedWarehouseSourceNode(): CanonicalNode {
   };
 }
 
-function DvtAuthoringFieldsHarness({ node }: Readonly<{ node: CanonicalNode }>): JSX.Element {
+function DvtAuthoringFieldsHarness({
+  node,
+  warehouseSourceImport,
+  externalConnectionId,
+}: Readonly<{
+  node: CanonicalNode;
+  warehouseSourceImport?: IWarehouseSourceImportPort;
+  externalConnectionId?: string;
+}>): JSX.Element {
   const [draft, setDraft] = useState(() => createCanvasInspectorNodeDraft(node));
   const errors = validateCanvasInspectorNodeDraft(draft);
 
-  return (
+  const fields = (
     <>
+      {externalConnectionId ? (
+        <button
+          type="button"
+          data-slot="load-external-connection"
+          onClick={() => {
+            setDraft((currentDraft) =>
+              currentDraft.dvt?.kind === 'source'
+                ? {
+                    ...currentDraft,
+                    dvt: {
+                      ...currentDraft.dvt,
+                      connectionRef: {
+                        schemaVersion: 'connection-ref.v1',
+                        connectionId: externalConnectionId,
+                        provider: 'postgres',
+                      },
+                    },
+                  }
+                : currentDraft
+            );
+          }}
+        >
+          Load external connection
+        </button>
+      ) : null}
       <DvtAuthoringFields
         node={node}
         disabled={false}
@@ -89,6 +128,18 @@ function DvtAuthoringFieldsHarness({ node }: Readonly<{ node: CanonicalNode }>):
       />
       <output data-slot="dvt-draft-json">{JSON.stringify(draft.dvt)}</output>
     </>
+  );
+  if (!warehouseSourceImport) return fields;
+
+  return (
+    <AppServicesProvider
+      overrides={{
+        ...createAppServicesTestOverrides(),
+        warehouseSourceImport,
+      }}
+    >
+      {fields}
+    </AppServicesProvider>
   );
 }
 
@@ -113,9 +164,19 @@ describe('DvtAuthoringFields', () => {
     vi.clearAllMocks();
   });
 
-  function renderFields(node: CanonicalNode): void {
+  function renderFields(
+    node: CanonicalNode,
+    warehouseSourceImport?: IWarehouseSourceImportPort,
+    externalConnectionId?: string
+  ): void {
     act(() => {
-      root.render(<DvtAuthoringFieldsHarness node={node} />);
+      root.render(
+        <DvtAuthoringFieldsHarness
+          node={node}
+          warehouseSourceImport={warehouseSourceImport}
+          externalConnectionId={externalConnectionId}
+        />
+      );
     });
   }
 
@@ -231,5 +292,113 @@ describe('DvtAuthoringFields', () => {
     expect(draftJson()).toContain('"materialization":"table"');
     expect(draftJson()).toContain('"writeMode":"replace"');
     expect(draftJson()).not.toContain('partitionStrategy');
+  });
+
+  it('discards a connection-test response after the selected connection changes', async () => {
+    const baseWarehouseSourceImport = createAppServicesTestOverrides().warehouseSourceImport;
+    if (!baseWarehouseSourceImport)
+      throw new Error('Warehouse source import test port is required.');
+    let resolveConnectionTest!: (result: TestWarehouseConnectionResult) => void;
+    const connectionTest = new Promise<TestWarehouseConnectionResult>((resolve) => {
+      resolveConnectionTest = resolve;
+    });
+    const testWarehouseConnection = vi.fn(() => connectionTest);
+    const warehouseSourceImport: IWarehouseSourceImportPort = {
+      ...baseWarehouseSourceImport,
+      listWarehouseConnections: async () => [
+        { id: 'warehouse-a', name: 'Warehouse A', type: 'postgres', database: 'orders_a' },
+        { id: 'warehouse-b', name: 'Warehouse B', type: 'postgres', database: 'orders_b' },
+      ],
+      testWarehouseConnection,
+    };
+    renderFields(
+      buildDvtNode('dvt:source', {
+        connectionRef: {
+          schemaVersion: 'connection-ref.v1',
+          connectionId: 'warehouse-a',
+          provider: 'postgres',
+        },
+        config: { schema: 'raw', table: 'orders', alias: 'orders' },
+      }),
+      warehouseSourceImport
+    );
+    await act(async () => Promise.resolve());
+
+    const connectionSelect = container.querySelector(
+      'select[name="dvt-source-connection"]'
+    ) as HTMLSelectElement;
+    const testButton = [...container.querySelectorAll('button')].find((button) =>
+      button.textContent?.includes('Test')
+    );
+    expect(testButton).toBeDefined();
+
+    act(() => {
+      fireEvent.click(testButton!);
+      fireEvent.change(connectionSelect, { target: { value: 'warehouse-b' } });
+    });
+    await act(async () => {
+      resolveConnectionTest({
+        connectionId: 'warehouse-a',
+        status: 'passed',
+        checkedAt: '2026-08-15T00:00:00.000Z',
+        objectCount: 12,
+      });
+      await connectionTest;
+    });
+
+    expect(testWarehouseConnection).toHaveBeenCalledWith('warehouse-a');
+    expect(connectionSelect.value).toBe('warehouse-b');
+    expect(container.querySelector('[role="status"]')).toBeNull();
+  });
+
+  it('clears visible connection-test feedback after an authoritative selection change', async () => {
+    const baseWarehouseSourceImport = createAppServicesTestOverrides().warehouseSourceImport;
+    if (!baseWarehouseSourceImport)
+      throw new Error('Warehouse source import test port is required.');
+    const warehouseSourceImport: IWarehouseSourceImportPort = {
+      ...baseWarehouseSourceImport,
+      listWarehouseConnections: async () => [
+        { id: 'warehouse-a', name: 'Warehouse A', type: 'postgres', database: 'orders_a' },
+        { id: 'warehouse-b', name: 'Warehouse B', type: 'postgres', database: 'orders_b' },
+      ],
+      testWarehouseConnection: async (connectionId) => ({
+        connectionId,
+        status: 'passed',
+        checkedAt: '2026-08-15T00:00:00.000Z',
+        objectCount: 12,
+      }),
+    };
+    renderFields(
+      buildDvtNode('dvt:source', {
+        connectionRef: {
+          schemaVersion: 'connection-ref.v1',
+          connectionId: 'warehouse-a',
+          provider: 'postgres',
+        },
+        config: { schema: 'raw', table: 'orders', alias: 'orders' },
+      }),
+      warehouseSourceImport,
+      'warehouse-b'
+    );
+    await act(async () => Promise.resolve());
+
+    const testButton = [...container.querySelectorAll('button')].find((button) =>
+      button.textContent?.includes('Test')
+    );
+    expect(testButton).toBeDefined();
+    await act(async () => {
+      fireEvent.click(testButton!);
+      await Promise.resolve();
+    });
+    expect(container.querySelector('[role="status"]')).not.toBeNull();
+
+    act(() => {
+      fireEvent.click(container.querySelector('[data-slot="load-external-connection"]')!);
+    });
+
+    expect(
+      (container.querySelector('select[name="dvt-source-connection"]') as HTMLSelectElement).value
+    ).toBe('warehouse-b');
+    expect(container.querySelector('[role="status"]')).toBeNull();
   });
 });

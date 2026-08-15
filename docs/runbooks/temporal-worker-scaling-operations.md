@@ -2,7 +2,7 @@
 title: Temporal Worker Scaling Operations
 status: Active
 owner: Runtime / SRE / Delivery
-last_reviewed: 2026-05-14
+last_reviewed: 2026-08-15
 ---
 
 # Temporal Worker Scaling Operations
@@ -63,18 +63,35 @@ The workflow itself still starts on the tenant workflow queue.
 
 ### Always Required
 
-| Variable                             | Required | Default   | Purpose                            |
-| ------------------------------------ | -------- | --------- | ---------------------------------- |
-| `DATABASE_URL`                       | Yes      | none      | Postgres connection string         |
-| `TEMPORAL_ADDRESS`                   | Yes      | none      | Temporal server gRPC address       |
-| `TEMPORAL_NAMESPACE`                 | Yes      | none      | Temporal namespace                 |
-| `TEMPORAL_TASK_QUEUE`                | Yes      | none      | The single queue this worker polls |
-| `DVT_PG_SCHEMA`                      | No       | `dvt`     | State-store schema                 |
-| `DVT_TEMPORAL_WORKER_RUN_MIGRATIONS` | No       | `false`   | Run worker-owned migrations        |
-| `TEMPORAL_STEP_ACTIVITY_ROUTES`      | No       | none      | Optional step kind activity routes |
-| `DVT_TEMPORAL_ADMIN_HOST`            | No       | `0.0.0.0` | Operational server bind host       |
-| `DVT_TEMPORAL_ADMIN_PORT`            | No       | `9468`    | Operational server port            |
-| `DVT_TEMPORAL_DBT_ENABLED`           | No       | `false`   | Enable DBT worker profile          |
+| Variable                             | Required             | Default   | Purpose                            |
+| ------------------------------------ | -------------------- | --------- | ---------------------------------- |
+| `DATABASE_URL`                       | Yes                  | none      | Postgres connection string         |
+| `TEMPORAL_ADDRESS`                   | Yes                  | none      | Temporal server gRPC address       |
+| `TEMPORAL_NAMESPACE`                 | Yes                  | none      | Temporal namespace                 |
+| `TEMPORAL_TASK_QUEUE`                | Yes                  | none      | The single queue this worker polls |
+| `DVT_PG_SCHEMA`                      | No                   | `dvt`     | State-store schema                 |
+| `DVT_TEMPORAL_WORKER_RUN_MIGRATIONS` | No                   | `false`   | Run worker-owned migrations        |
+| `TEMPORAL_STEP_ACTIVITY_ROUTES`      | No                   | none      | Optional step kind activity routes |
+| `DVT_TEMPORAL_ADMIN_HOST`            | No                   | `0.0.0.0` | Operational server bind host       |
+| `DVT_TEMPORAL_ADMIN_PORT`            | No                   | `9468`    | Operational server port            |
+| `DVT_TEMPORAL_DBT_ENABLED`           | No                   | `false`   | Enable DBT worker profile          |
+| `DVT_POSTGRES_CREDENTIAL_BINDINGS`   | SQL-first PostgreSQL | none      | Governed alias-to-URL bindings     |
+| `DVT_WORKSPACE_FILES_ROOT`           | Production file mode | none      | Shared workspace artifact root     |
+
+For SQL-first PostgreSQL execution, configure the same
+`DVT_POSTGRES_CREDENTIAL_BINDINGS` JSON object in the API and every Temporal
+worker that can receive the plan. Keys use the governed `postgres:<alias>`
+namespace and values are PostgreSQL connection URLs, for example
+`{"postgres:warehouse":"postgresql://user:password@host:5432/database"}`.
+The persisted `ConnectionRef` contains the alias, never the connection URL; a
+missing or different binding fails closed before SQL execution.
+
+When run contexts use the file store, API and worker must see the same mounted
+root. With an explicit `file` bundle backend, both use
+`DVT_DBT_BUNDLE_FILE_ROOT`. Without a bundle backend, both use
+`DVT_WORKSPACE_FILES_ROOT/.dvt/run-context-artifacts`; production worker startup
+fails closed when neither shared root is declared. S3 mode does not require a
+file root.
 
 ### Required When DBT Mode Is Enabled
 

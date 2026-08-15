@@ -100,14 +100,14 @@ function mapPreviewContractError(
     return badRequestResult(HTTP_ERROR_REASON.invalidSelection, { target: 'selection' });
   }
   if (
-    record.previewProfile === PREVIEW_PROFILE.transformationSqlFirstV1 &&
+    record.previewProfile === PREVIEW_PROFILE.transformationSqlFirstV2 &&
     record.provenance === undefined &&
     roots.has('provenance')
   ) {
     return unprocessableResult(HTTP_ERROR_REASON.planRejected, {
       details: {
         cause: 'missing_preview_provenance',
-        previewProfile: PREVIEW_PROFILE.transformationSqlFirstV1,
+        previewProfile: PREVIEW_PROFILE.transformationSqlFirstV2,
         requiredArtifacts: ['graphArtifact', 'sqlArtifact'],
       },
     });
@@ -117,12 +117,12 @@ function mapPreviewContractError(
   }
   if (
     roots.has('graphSource') &&
-    record.previewProfile === PREVIEW_PROFILE.transformationSqlFirstV1
+    record.previewProfile === PREVIEW_PROFILE.transformationSqlFirstV2
   ) {
     return badRequestResult(HTTP_ERROR_REASON.invalidPlanSource, {
       details: {
         cause: 'preview_contract_validation_failed',
-        previewProfile: PREVIEW_PROFILE.transformationSqlFirstV1,
+        previewProfile: PREVIEW_PROFILE.transformationSqlFirstV2,
         issues,
       },
     });
@@ -156,7 +156,7 @@ function buildPreviewObservability(
   provenance: PlanPreviewProvenance | undefined
 ): NonNullable<ExecutionPlan['observability']> {
   const extra = {
-    ...(previewProfile === PREVIEW_PROFILE.transformationSqlFirstV1
+    ...(previewProfile === PREVIEW_PROFILE.transformationSqlFirstV2
       ? {
           transformationFlowRuntime: {
             previewProfile,

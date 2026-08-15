@@ -268,7 +268,7 @@ describe('ResolveAuthorizedPreviewSelectionService', () => {
       graphSource: {
         kind: 'generic-graph-v1' as const,
         sourceFamily: 'transformation-design-graph',
-        sourceVersion: 'transformation-sql-first-v1',
+        sourceVersion: 'transformation-sql-first-v2',
         nodes: [{ nodeId: 'transform', stepKind: 'POSTGRES_SQL_TRANSFORM', dependsOn: [] }],
       },
     };

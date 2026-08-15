@@ -25,10 +25,10 @@ import type {
 } from '../ports/StartRunSlaTelemetry.js';
 import type { IStartRunUseCase, StartRunUseCaseResult } from '../ports/startRunUseCasePort.js';
 
-import type { DbtRunExecutionContextBindingUseCase } from './DbtRunExecutionContextBindingUseCase.js';
 import { ResolveAuthorizedExecutableSubgraphService } from './resolveAuthorizedExecutableSubgraph.js';
 import type { ExecutableSubgraphSelectionRejection } from './resolveAuthorizedExecutableSubgraph.js';
 import { resolveCanonicalPlannerInputEnvelope } from './resolveCanonicalPlannerInputEnvelope.js';
+import type { RunExecutionContextBindingUseCase } from './RunExecutionContextBindingUseCase.js';
 import { elapsedSlaSecondsSince } from './slaTiming.js';
 import {
   StoredPlanAdmissionCoordinator,
@@ -58,7 +58,7 @@ export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
         Pick<IPlanStoreReader, 'getPlanRecordByRef'>;
       readonly validator: Pick<StoredPlanExecutabilityValidator, 'materializeAndValidatePlan'>;
       readonly delegate: IStartRunUseCase &
-        Pick<DbtRunExecutionContextBindingUseCase, 'executeAdmitted'>;
+        Pick<RunExecutionContextBindingUseCase, 'executeAdmitted'>;
       readonly compileTelemetry: IPlanCompileLatencyTelemetry;
       readonly executableSubgraphResolver: ResolveAuthorizedExecutableSubgraphService;
     }

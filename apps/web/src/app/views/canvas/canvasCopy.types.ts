@@ -310,6 +310,7 @@ export type CanvasViewCopy = {
   readonly selectionRecoveryRefreshReceiptTemplate: string;
   readonly transformationAmbiguousExecutablePathMessage: string;
   readonly transformationRequiresExecutablePathMessage: string;
+  readonly transformationRequiresPostgresConnectionMessage: string;
   readonly transformationRequiresThreeNodesMessage: string;
   readonly transformationUnsupportedRolesMessage: string;
   readonly transformationRequiresOneOfEachRoleMessage: string;
@@ -407,6 +408,14 @@ export type CanvasViewCopy = {
   readonly inspectorDbtTestSeverityWarnLabel: string;
   readonly inspectorDbtTestNoConnectedTargetMessage: string;
   readonly inspectorDvtSourceTitle: string;
+  readonly inspectorDvtConnectionLabel: string;
+  readonly inspectorDvtConnectionPlaceholder: string;
+  readonly inspectorDvtConnectionLoadingLabel: string;
+  readonly inspectorDvtConnectionLoadFailedMessage: string;
+  readonly inspectorDvtConnectionTestLabel: string;
+  readonly inspectorDvtConnectionTestPassedMessage: string;
+  readonly inspectorDvtConnectionTestFailedMessage: string;
+  readonly inspectorDvtInheritedConnectionLabel: string;
   readonly inspectorDvtSqlTransformTitle: string;
   readonly inspectorDvtSinkTitle: string;
   readonly inspectorDvtDatabaseLabel: string;
@@ -474,6 +483,7 @@ export type CanvasViewCopy = {
   readonly inspectorErrorDvtSchemaRequired: string;
   readonly inspectorErrorDvtTableRequired: string;
   readonly inspectorErrorDvtAliasRequired: string;
+  readonly inspectorErrorDvtConnectionRequired: string;
   readonly inspectorErrorDvtMaterializationInvalid: string;
   readonly inspectorErrorDvtWriteModeInvalid: string;
   readonly inspectorObjectFileTitle: string;

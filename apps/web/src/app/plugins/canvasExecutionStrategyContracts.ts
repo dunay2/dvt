@@ -4,7 +4,7 @@ import type { GenericGraphSourceV1 } from '@dvt/contracts';
 export type CanvasExecutionStrategy =
   | {
       kind: 'transformation_preview';
-      previewProfile: 'transformation-sql-first-v1';
+      previewProfile: 'transformation-sql-first-v2';
     }
   | {
       kind: 'planner_generic_preview';

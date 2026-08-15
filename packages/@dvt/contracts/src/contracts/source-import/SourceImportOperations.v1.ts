@@ -12,6 +12,7 @@ import { z } from 'zod';
 import { SourceObjectSelectionListSchema } from './SourceObjectCatalog.v1.js';
 
 export const WAREHOUSE_CONNECTION_TYPE = ['postgres'] as const;
+export const POSTGRES_CREDENTIAL_REF_PREFIX = 'postgres:' as const;
 export const SOURCE_IMPORT_GROUPING = ['schema', 'database'] as const;
 export const WAREHOUSE_CONNECTION_TEST_FAILURE_REASON = [
   'invalid_credentials',
@@ -20,6 +21,12 @@ export const WAREHOUSE_CONNECTION_TEST_FAILURE_REASON = [
 ] as const;
 
 const NonBlankStringSchema = z.string().trim().min(1);
+export const PostgresCredentialRefSchema = NonBlankStringSchema.refine(
+  (credentialRef) =>
+    credentialRef.startsWith(POSTGRES_CREDENTIAL_REF_PREFIX) &&
+    credentialRef.length > POSTGRES_CREDENTIAL_REF_PREFIX.length,
+  'PostgreSQL credential references must use postgres:<alias>.'
+);
 const NonNegativeSafeIntegerSchema = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER);
 const CanonicalIsoTimestampSchema = z
   .string()
@@ -44,7 +51,7 @@ export const CreateWarehouseConnectionRequestSchema = z
     name: NonBlankStringSchema,
     type: z.enum(WAREHOUSE_CONNECTION_TYPE),
     database: NonBlankStringSchema,
-    credentialRef: NonBlankStringSchema,
+    credentialRef: PostgresCredentialRefSchema,
   })
   .strict();
 

@@ -159,7 +159,7 @@ export type {
   DesignGraphSqlTransformNode,
   DesignNodeType,
   TransformationExecutionTarget,
-  TransformationSqlFirstGraphSourceV1,
+  TransformationSqlFirstGraphSourceV2,
 } from './contracts/planner/TransformationFlowDesignGraph.v1.js';
 export {
   DbtExecutionTargetIdentitySchema,
@@ -301,7 +301,7 @@ export type {
   PostgresSqlTransformStepTypeConfig,
   PreparePostgresTransformStepTypeConfig,
   TransformationCompilerGraphNodeV1,
-  TransformationSqlFirstCompilerGraphSourceV1,
+  TransformationSqlFirstCompilerGraphSourceV2,
   TransformationSqlFirstPlanSummary,
   TransformationStepKind,
 } from './contracts/planner/TransformationFlowCompiler.v1.js';

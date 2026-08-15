@@ -117,6 +117,7 @@ Evidence documents that justify or validate relevant changes.
 - [ED 20260810 On Demand Status Provider Guard](ED-20260810-on-demand-status-provider-guard.md)
 - [ED 20260813 Plan Ref Digest Boundary](ED-20260813-plan-ref-digest-boundary.md)
 - [ED 20260813 Project Workspace Graph Authority Hardcut](ED-20260813-project-workspace-graph-authority-hardcut.md)
+- [ED 20260813 Pth2 Dvt Postgres Connection Authority](ED-20260813-pth2-dvt-postgres-connection-authority.md)
 - [ED 20260813 Run Lifecycle Rail Hardcut](ED-20260813-run-lifecycle-rail-hardcut.md)
 - [ED 20260813 Stored Plan Materialization Boundary](ED-20260813-stored-plan-materialization-boundary.md)
 - [ED 20260815 Warehouse Connection Rename](ED-20260815-warehouse-connection-rename.md)

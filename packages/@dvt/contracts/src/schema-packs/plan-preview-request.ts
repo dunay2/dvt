@@ -44,7 +44,7 @@ export const PlanPreviewRequestSchema = z
   })
   .strict()
   .superRefine((request, ctx) => {
-    if (request.previewProfile !== PREVIEW_PROFILE.transformationSqlFirstV1) {
+    if (request.previewProfile !== PREVIEW_PROFILE.transformationSqlFirstV2) {
       return;
     }
 
@@ -52,7 +52,7 @@ export const PlanPreviewRequestSchema = z
       addPlanPreviewRequestIssue(
         ctx,
         ['provenance'],
-        'transformation-sql-first-v1 requires graphArtifact and sqlArtifact provenance.'
+        'transformation-sql-first-v2 requires graphArtifact and sqlArtifact provenance.'
       );
     } else if (
       request.provenance.kind !== PLAN_PREVIEW_PROVENANCE_KIND.transformationGitArtifacts
@@ -60,7 +60,7 @@ export const PlanPreviewRequestSchema = z
       addPlanPreviewRequestIssue(
         ctx,
         ['provenance', 'kind'],
-        'transformation-sql-first-v1 requires transformation Git artifact provenance.'
+        'transformation-sql-first-v2 requires transformation Git artifact provenance.'
       );
     }
 
@@ -68,7 +68,7 @@ export const PlanPreviewRequestSchema = z
       addPlanPreviewRequestIssue(
         ctx,
         ['graphSource', 'sourceFamily'],
-        `transformation-sql-first-v1 requires sourceFamily ${TRANSFORMATION_DESIGN_GRAPH_SOURCE_FAMILY}.`
+        `transformation-sql-first-v2 requires sourceFamily ${TRANSFORMATION_DESIGN_GRAPH_SOURCE_FAMILY}.`
       );
     }
 
@@ -76,7 +76,7 @@ export const PlanPreviewRequestSchema = z
       addPlanPreviewRequestIssue(
         ctx,
         ['graphSource', 'sourceVersion'],
-        `transformation-sql-first-v1 requires sourceVersion ${TRANSFORMATION_SQL_FIRST_SOURCE_VERSION}.`
+        `transformation-sql-first-v2 requires sourceVersion ${TRANSFORMATION_SQL_FIRST_SOURCE_VERSION}.`
       );
     }
 

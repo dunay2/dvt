@@ -10,12 +10,12 @@ import {
 } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
-import { DbtRunExecutionContextBindingUseCase } from '../../../src/application/services/DbtRunExecutionContextBindingUseCase.js';
+import { RunExecutionContextBindingUseCase } from '../../../src/application/services/RunExecutionContextBindingUseCase.js';
 import { EnvironmentId, ProjectId, TenantId } from '../../../src/domain/auth/types.js';
 
 import { buildAuthorizedContext } from './engineStartRunUseCase.test.support.js';
 
-type BindingDependencies = ConstructorParameters<typeof DbtRunExecutionContextBindingUseCase>[0];
+type BindingDependencies = ConstructorParameters<typeof RunExecutionContextBindingUseCase>[0];
 
 const PLAN_ID = 'd'.repeat(64);
 const PROJECT_REVISION = '1'.repeat(64);
@@ -42,7 +42,7 @@ const RUN_CONTEXT_REF = parseRunExecutionContextRef({
 });
 const STEP_TYPE_REGISTRY = createDefaultStepTypeRegistry();
 
-describe('DbtRunExecutionContextBindingUseCase', () => {
+describe('RunExecutionContextBindingUseCase', () => {
   it('orchestrates a revision-bound bundle and server-owned run context before dispatch', async () => {
     const delegate = makeDelegate();
     const bundleBuilder = {
@@ -60,12 +60,13 @@ describe('DbtRunExecutionContextBindingUseCase', () => {
     const contextWriter = {
       write: vi.fn(async () => ({ ok: true as const, ref: RUN_CONTEXT_REF })),
     };
-    const useCase = new DbtRunExecutionContextBindingUseCase({
+    const useCase = new RunExecutionContextBindingUseCase({
       delegate,
       bundleBuilder,
       contextWriter,
       executionTargetResolver: { resolve: () => TARGET },
       stepTypeRegistry: STEP_TYPE_REGISTRY,
+      ...unusedPostgresBindingDependencies(),
     });
 
     const result = await useCase.executeAdmitted(
@@ -101,7 +102,7 @@ describe('DbtRunExecutionContextBindingUseCase', () => {
   it('rejects a changed project before writing context or dispatching', async () => {
     const delegate = makeDelegate();
     const contextWriter = { write: vi.fn() };
-    const useCase = new DbtRunExecutionContextBindingUseCase({
+    const useCase = new RunExecutionContextBindingUseCase({
       delegate,
       bundleBuilder: {
         build: vi.fn(async () => ({
@@ -114,6 +115,7 @@ describe('DbtRunExecutionContextBindingUseCase', () => {
       contextWriter,
       executionTargetResolver: { resolve: () => TARGET },
       stepTypeRegistry: STEP_TYPE_REGISTRY,
+      ...unusedPostgresBindingDependencies(),
     });
 
     const result = await useCase.executeAdmitted(
@@ -139,12 +141,13 @@ describe('DbtRunExecutionContextBindingUseCase', () => {
     const bundleBuilder = { build: vi.fn() };
     const command = { ...buildCommand(), planRef: PLAN_REF };
     const context = buildContext();
-    const useCase = new DbtRunExecutionContextBindingUseCase({
+    const useCase = new RunExecutionContextBindingUseCase({
       delegate,
       bundleBuilder,
       contextWriter: { write: vi.fn() },
       executionTargetResolver: { resolve: () => TARGET },
       stepTypeRegistry: STEP_TYPE_REGISTRY,
+      ...unusedPostgresBindingDependencies(),
     });
 
     await useCase.executeAdmitted(command, context, makeAdmission(undefined, undefined));
@@ -162,12 +165,13 @@ describe('DbtRunExecutionContextBindingUseCase', () => {
       })),
     };
     const stepTypeRegistry = createDbtExtensionRegistry();
-    const useCase = new DbtRunExecutionContextBindingUseCase({
+    const useCase = new RunExecutionContextBindingUseCase({
       delegate,
       bundleBuilder,
       contextWriter: { write: vi.fn() },
       executionTargetResolver: { resolve: () => TARGET },
       stepTypeRegistry,
+      ...unusedPostgresBindingDependencies(),
     });
 
     const result = await useCase.executeAdmitted(
@@ -185,7 +189,7 @@ describe('DbtRunExecutionContextBindingUseCase', () => {
 
   it('reports an unavailable bundle store without dispatching', async () => {
     const delegate = makeDelegate();
-    const useCase = new DbtRunExecutionContextBindingUseCase({
+    const useCase = new RunExecutionContextBindingUseCase({
       delegate,
       bundleBuilder: {
         build: vi.fn(async () => ({
@@ -196,6 +200,7 @@ describe('DbtRunExecutionContextBindingUseCase', () => {
       contextWriter: { write: vi.fn() },
       executionTargetResolver: { resolve: () => TARGET },
       stepTypeRegistry: STEP_TYPE_REGISTRY,
+      ...unusedPostgresBindingDependencies(),
     });
 
     const result = await useCase.executeAdmitted(
@@ -231,6 +236,25 @@ function makeDelegate(): BindingDependencies['delegate'] {
   };
 }
 
+function unusedPostgresBindingDependencies(): Pick<
+  BindingDependencies,
+  'warehouseConnectionCatalog' | 'postgresCredentialResolver'
+> {
+  const unexpected = async (): Promise<never> => {
+    throw new Error('Unexpected PostgreSQL binding for a DBT-only plan');
+  };
+  return {
+    warehouseConnectionCatalog: {
+      listConnections: unexpected,
+      listSourceObjects: unexpected,
+      getConnection: unexpected,
+      createConnection: unexpected,
+      renameConnection: unexpected,
+    },
+    postgresCredentialResolver: { resolveCredential: unexpected },
+  };
+}
+
 function createDbtExtensionRegistry(): IStepTypeRegistry {
   return {
     validate: (...args) => STEP_TYPE_REGISTRY.validate(...args),
@@ -249,7 +273,7 @@ function createDbtExtensionRegistry(): IStepTypeRegistry {
 function makeAdmission(
   stepKind: string | undefined,
   provenance: unknown
-): Parameters<DbtRunExecutionContextBindingUseCase['executeAdmitted']>[2] {
+): Parameters<RunExecutionContextBindingUseCase['executeAdmitted']>[2] {
   const plan = parseExecutionPlan({
     metadata: {
       planId: PLAN_ID,

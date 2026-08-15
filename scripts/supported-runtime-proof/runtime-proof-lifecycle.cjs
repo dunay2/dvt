@@ -9,6 +9,7 @@ const {
   buildApiEnv,
   buildCoordinatedTemporalWorkerEnv,
   closeReaders,
+  ensureLocalWarehouseConnectionViaApi,
   seedLocalPostgresProofData,
   spawnProcess,
   terminateProcess,
@@ -145,6 +146,12 @@ async function startSupportedRuntimeProofLifecycle(profile) {
       principalId: auth.principalId,
       tenantActions: [...LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS, 'admin:rebuild-snapshot'],
       workspaceScope: profile.scope,
+    });
+    await ensureLocalWarehouseConnectionViaApi({
+      apiBaseUrl: `http://${host}:${ports.api}`,
+      bearerToken: auth.webEnv.VITE_API_BEARER_TOKEN,
+      workspaceScope: profile.scope,
+      commandTimeoutMs: READY_TIMEOUT_MS,
     });
 
     const temporalWorkerEnv = buildCoordinatedTemporalWorkerEnv(stackOptions, {

@@ -3,8 +3,10 @@ import { describe, expect, it, vi } from 'vitest';
 
 import {
   computeSha256,
+  createDefaultS3ContentAddressedArtifactStore,
   type PublishContentAddressedArtifactInput,
   S3ContentAddressedArtifactStore,
+  S3RunExecutionContextReferenceStore,
 } from '../src/index.js';
 
 const TENANT_ID = 'tenant-a';
@@ -24,6 +26,12 @@ function input(bytes: Uint8Array = BYTES): PublishContentAddressedArtifactInput 
 }
 
 describe('S3ContentAddressedArtifactStore', () => {
+  it('reuses the default store instead of allocating an S3 client per publish', () => {
+    expect(createDefaultS3ContentAddressedArtifactStore()).toBe(
+      createDefaultS3ContentAddressedArtifactStore()
+    );
+  });
+
   it('creates the declared object once using a conditional put', async () => {
     const send = vi.fn(async () => ({}));
     const store = new S3ContentAddressedArtifactStore({ client: { send } as never });
@@ -45,6 +53,23 @@ describe('S3ContentAddressedArtifactStore', () => {
       ContentLength: BYTES.byteLength,
       IfNoneMatch: '*',
       Metadata: { sha256: SHA256 },
+    });
+  });
+
+  it('accepts a URL-encoded tenant path segment as the same tenant identity', async () => {
+    const tenantId = 'tenant /#?';
+    const tenantSegment = encodeURIComponent(tenantId);
+    const send = vi.fn(async () => ({}));
+    const store = new S3ContentAddressedArtifactStore({ client: { send } as never });
+
+    await store.publish({
+      ...input(),
+      tenantId,
+      storageUri: `s3://het2-artifacts/tenants/${tenantSegment}/${SHA256}`,
+    });
+
+    expect(send.mock.calls[0]?.[0]?.input).toMatchObject({
+      Key: `tenants/${tenantSegment}/${SHA256}`,
     });
   });
 
@@ -140,5 +165,101 @@ describe('S3ContentAddressedArtifactStore', () => {
 
     await store.publish({ ...input(), abortSignal: signal });
     expect(send.mock.calls[0]?.[1]).toEqual({ abortSignal: signal });
+  });
+});
+
+describe('S3RunExecutionContextReferenceStore', () => {
+  it('persists and reloads an immutable run-scoped reference without exposing raw ids', async () => {
+    const ref = {
+      uri: `s3://het2-artifacts/tenants/${TENANT_ID}/${'a'.repeat(64)}`,
+      sha256: 'a'.repeat(64),
+      schemaVersion: 'v1.0' as const,
+      planId: 'b'.repeat(64),
+      planVersion: '1.0',
+    };
+    const send = vi.fn(async (command: unknown) => {
+      if (command instanceof PutObjectCommand) return {};
+      if (command instanceof GetObjectCommand) {
+        const bytes = Buffer.from(JSON.stringify(ref), 'utf8');
+        return {
+          Body: { transformToByteArray: async () => Uint8Array.from(bytes) },
+          ContentLength: bytes.byteLength,
+          ContentType: 'application/json',
+        };
+      }
+      throw new Error('unexpected command');
+    });
+    const store = new S3RunExecutionContextReferenceStore({
+      bucket: 'het2-artifacts',
+      client: { send } as never,
+    });
+
+    await store.put({ tenantId: TENANT_ID, runId: '../unsafe/run', ref });
+    await expect(store.get({ tenantId: TENANT_ID, runId: '../unsafe/run' })).resolves.toEqual(ref);
+
+    const command = send.mock.calls[0]?.[0];
+    expect(command).toBeInstanceOf(PutObjectCommand);
+    expect(command?.input).toMatchObject({
+      Bucket: 'het2-artifacts',
+      ContentType: 'application/json',
+      IfNoneMatch: '*',
+    });
+    expect(command?.input.Key).not.toContain(TENANT_ID);
+    expect(command?.input.Key).not.toContain('unsafe');
+  });
+
+  it('accepts an encoded tenant segment in the referenced context URI', async () => {
+    const tenantId = 'tenant /#?';
+    const ref = {
+      uri: `s3://het2-artifacts/tenants/${encodeURIComponent(tenantId)}/${'a'.repeat(64)}`,
+      sha256: 'a'.repeat(64),
+      schemaVersion: 'v1.0' as const,
+      planId: 'b'.repeat(64),
+      planVersion: '1.0',
+    };
+    const send = vi.fn(async () => ({}));
+    const store = new S3RunExecutionContextReferenceStore({
+      bucket: 'het2-artifacts',
+      client: { send } as never,
+    });
+
+    await expect(store.put({ tenantId, runId: 'run-1', ref })).resolves.toBeUndefined();
+    expect(send).toHaveBeenCalledOnce();
+  });
+
+  it('rejects a conflicting reference for an existing run identity', async () => {
+    const ref = {
+      uri: `s3://het2-artifacts/tenants/${TENANT_ID}/${'a'.repeat(64)}`,
+      sha256: 'a'.repeat(64),
+      schemaVersion: 'v1.0' as const,
+      planId: 'b'.repeat(64),
+      planVersion: '1.0',
+    };
+    const conflictingRef = {
+      ...ref,
+      uri: `s3://het2-artifacts/tenants/${TENANT_ID}/${'c'.repeat(64)}`,
+      sha256: 'c'.repeat(64),
+    };
+    const alreadyExists = Object.assign(new Error('provider detail'), {
+      name: 'PreconditionFailed',
+      $metadata: { httpStatusCode: 412 },
+    });
+    const send = vi.fn(async (command: unknown) => {
+      if (command instanceof PutObjectCommand) throw alreadyExists;
+      const bytes = Buffer.from(JSON.stringify(conflictingRef), 'utf8');
+      return {
+        Body: { transformToByteArray: async () => Uint8Array.from(bytes) },
+        ContentLength: bytes.byteLength,
+        ContentType: 'application/json',
+      };
+    });
+    const store = new S3RunExecutionContextReferenceStore({
+      bucket: 'het2-artifacts',
+      client: { send } as never,
+    });
+
+    await expect(store.put({ tenantId: TENANT_ID, runId: 'run-1', ref })).rejects.toMatchObject({
+      code: 'ARTIFACT_UPLOAD_FAILED',
+    });
   });
 });

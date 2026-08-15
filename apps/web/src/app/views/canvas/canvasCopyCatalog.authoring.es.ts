@@ -20,6 +20,8 @@ export const canvasViewAuthoringCopyEs = {
     'El Execution Preview requiere seleccionar una única ruta source -> sql_transform -> sink.',
   transformationRequiresExecutablePathMessage:
     'El Execution Preview requiere una ruta conectada source -> sql_transform -> sink.',
+  transformationRequiresPostgresConnectionMessage:
+    'Selecciona una conexión PostgreSQL gobernada en el origen antes de generar la vista previa.',
   transformationUnsupportedRolesMessage:
     'El Execution Preview solo admite nodos input, transform y output en esta vertical.',
   transformationRequiresOneOfEachRoleMessage:
@@ -130,9 +132,17 @@ export const canvasViewAuthoringCopyEs = {
   inspectorDbtTestSeverityWarnLabel: 'Informar advertencia',
   inspectorDbtTestNoConnectedTargetMessage:
     'Conecta esta validación a un modelo DBT antes de configurarla.',
-  inspectorDvtSourceTitle: 'Source DVT',
+  inspectorDvtSourceTitle: 'Origen DVT',
+  inspectorDvtConnectionLabel: 'Conexión PostgreSQL',
+  inspectorDvtConnectionPlaceholder: 'Selecciona una conexión gobernada',
+  inspectorDvtConnectionLoadingLabel: 'Cargando conexiones…',
+  inspectorDvtConnectionLoadFailedMessage: 'No se pudieron cargar las conexiones.',
+  inspectorDvtConnectionTestLabel: 'Probar conexión',
+  inspectorDvtConnectionTestPassedMessage: 'Conexión disponible.',
+  inspectorDvtConnectionTestFailedMessage: 'Conexión no disponible.',
+  inspectorDvtInheritedConnectionLabel: 'Conexión PostgreSQL heredada',
   inspectorDvtSqlTransformTitle: 'Transformación SQL DVT',
-  inspectorDvtSinkTitle: 'Sink DVT',
+  inspectorDvtSinkTitle: 'Salida DVT',
   inspectorDvtDatabaseLabel: 'Base de datos',
   inspectorDvtSchemaLabel: 'Esquema',
   inspectorDvtTableLabel: 'Tabla',
@@ -201,6 +211,7 @@ export const canvasViewAuthoringCopyEs = {
   inspectorErrorDvtSchemaRequired: 'El esquema es obligatorio.',
   inspectorErrorDvtTableRequired: 'La tabla es obligatoria.',
   inspectorErrorDvtAliasRequired: 'El alias es obligatorio.',
+  inspectorErrorDvtConnectionRequired: 'Selecciona una conexión PostgreSQL.',
   inspectorErrorDvtMaterializationInvalid: 'La materialización debe ser tabla o vista.',
   inspectorErrorDvtWriteModeInvalid: 'El modo de escritura debe ser reemplazar o añadir.',
   inspectorObjectFileTitle: 'Carga de fichero de objetos',

@@ -162,5 +162,5 @@ envelope.
 
 - [Planner contracts index](./index.md)
 - [Execution selection and executable subgraph v1](./execution-selection-and-executable-subgraph-v1.md)
-- [Transformation flow preview and design graph v1](./TransformationFlowPreview.v1.md)
+- [Transformation flow preview and design graph v1](./transformation-flow-preview-v1.md)
 - [Workspace authoring draft aggregate](../../architecture/components/planner/workspace-authoring-draft-aggregate.md)

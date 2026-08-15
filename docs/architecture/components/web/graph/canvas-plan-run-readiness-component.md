@@ -48,7 +48,8 @@ runs, own runtime identity, or replace planner/runtime contracts.
 - Zero inferred paths or multiple inferred paths remain `plan_integrity`
   blockers. The SQL-first preview payload still contains exactly one source,
   one SQL transform, one sink, and the two ordered edges required by the
-  `transformation-sql-first-v1` contract.
+  `transformation-sql-first-v2` contract, including one shared PostgreSQL
+  `ConnectionRef` across the selected closure.
 - `authorization_denied` covers route permission denial before any
   `IRunsPort.startRun` call.
 - `capability_mismatch` covers canvas kinds or execution strategies that cannot

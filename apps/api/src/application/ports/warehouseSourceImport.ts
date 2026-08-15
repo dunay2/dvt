@@ -155,6 +155,13 @@ export class UnsupportedWarehouseAdapterError extends Error {
   }
 }
 
+export class InvalidWarehouseCredentialReferenceError extends Error {
+  public constructor() {
+    super('PostgreSQL credential references must use postgres:<alias>.');
+    this.name = 'InvalidWarehouseCredentialReferenceError';
+  }
+}
+
 export class WarehouseConnectionTestFailedError extends Error {
   public constructor(
     readonly result: Extract<InspectWarehouseConnectionResult, { status: 'failed' }>

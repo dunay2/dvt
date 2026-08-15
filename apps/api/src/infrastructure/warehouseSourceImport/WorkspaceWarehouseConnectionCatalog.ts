@@ -1,5 +1,6 @@
 /** Owned concern: read warehouse source-import catalog metadata from workspace-owned files. */
 import {
+  PostgresCredentialRefSchema,
   SourceObjectListSchema,
   WarehouseConnectionSchema,
   type RenameWarehouseConnectionRequest,
@@ -35,7 +36,12 @@ export const WarehouseConnectionCatalogSchema = z.object({
   name: z.string().min(1),
   type: z.enum(SUPPORTED_WAREHOUSE_CONNECTION_TYPES),
   database: z.string().min(1),
-  credentialRef: z.string().min(1).optional(),
+  credentialRef: z
+    .string()
+    .refine((value) => PostgresCredentialRefSchema.safeParse(value).success, {
+      message: 'PostgreSQL credential references must use postgres:<alias>.',
+    })
+    .optional(),
   sourceObjects: z.array(z.unknown()),
 });
 

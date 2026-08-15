@@ -72,15 +72,11 @@ describe('useCanvasExecutionActions plan preview freshness', () => {
     });
 
     expect(harness.text('can-start-run')).toBe('false');
-    expect(harness.text('plan-status-summary')).toBe(
-      canvasViewCopy.runPreviewStaleMessage
-    );
+    expect(harness.text('plan-status-summary')).toBe(canvasViewCopy.runPreviewStaleMessage);
 
     await harness.clickStartRun();
 
-    expect(harness.shellFeedback.error).toHaveBeenCalledWith(
-      canvasViewCopy.runPreviewStaleMessage
-    );
+    expect(harness.shellFeedback.error).toHaveBeenCalledWith(canvasViewCopy.runPreviewStaleMessage);
   });
 
   it('keeps preview current when only raw metadata changes without changing the projected graph source', async () => {
@@ -112,7 +108,7 @@ describe('useCanvasExecutionActions plan preview freshness', () => {
         graphSource: {
           kind: 'generic-graph-v1',
           sourceFamily: 'transformation-design-graph',
-          sourceVersion: 'transformation-sql-first-v1',
+          sourceVersion: 'transformation-sql-first-v2',
           nodes: expect.arrayContaining([
             expect.objectContaining({
               nodeId: 'transform-node',
@@ -146,9 +142,7 @@ describe('useCanvasExecutionActions plan preview freshness', () => {
     });
 
     expect(harness.text('can-start-run')).toBe('false');
-    expect(harness.text('plan-status-summary')).toBe(
-      canvasViewCopy.runPreviewStaleMessage
-    );
+    expect(harness.text('plan-status-summary')).toBe(canvasViewCopy.runPreviewStaleMessage);
 
     await harness.clickPlan();
 
@@ -158,7 +152,7 @@ describe('useCanvasExecutionActions plan preview freshness', () => {
         graphSource: {
           kind: 'generic-graph-v1',
           sourceFamily: 'transformation-design-graph',
-          sourceVersion: 'transformation-sql-first-v1',
+          sourceVersion: 'transformation-sql-first-v2',
           nodes: expect.arrayContaining([
             expect.objectContaining({
               nodeId: 'transform-node',

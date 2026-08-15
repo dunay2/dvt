@@ -383,7 +383,7 @@ async function startTemporalRun(
       graphSource: {
         kind: 'generic-graph-v1',
         sourceFamily: 'transformation-design-graph',
-        sourceVersion: 'transformation-sql-first-v1',
+        sourceVersion: 'transformation-sql-first-v2',
         nodes: [
           {
             nodeId: input.graphNodeId,

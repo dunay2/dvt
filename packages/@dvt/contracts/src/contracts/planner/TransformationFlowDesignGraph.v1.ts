@@ -9,6 +9,7 @@
 import { z } from 'zod';
 
 import { isNonBlankString, NON_BLANK_STRING_MESSAGE } from '../../utils/contractPrimitives.js';
+import { ConnectionRefSchema, type ConnectionRef } from '../source-import/ConnectedSourceRef.v1.js';
 
 import type { GenericGraphSourceV1 } from './ExecutionPlan.v1.js';
 import { GitArtifactRefSchema, type GitArtifactRef } from './PlanPreviewProvenance.v1.js';
@@ -22,7 +23,7 @@ const NonBlankStringSchema = z
   .brand<'NonBlankString'>();
 export const TRANSFORMATION_EXECUTION_TARGET = 'postgres' as const;
 export const TRANSFORMATION_DESIGN_GRAPH_SOURCE_FAMILY = 'transformation-design-graph' as const;
-export const TRANSFORMATION_SQL_FIRST_SOURCE_VERSION = 'transformation-sql-first-v1' as const;
+export const TRANSFORMATION_SQL_FIRST_SOURCE_VERSION = 'transformation-sql-first-v2' as const;
 
 export type TransformationExecutionTarget = typeof TRANSFORMATION_EXECUTION_TARGET;
 export type DesignNodeType = 'source' | 'sql_transform' | 'sink';
@@ -40,6 +41,7 @@ export interface DesignGraphSourceNode {
   type: 'source';
   payload: {
     kind: 'postgres_table';
+    connectionRef: ConnectionRef;
     schema: string;
     table: string;
     alias: string;
@@ -82,7 +84,7 @@ export interface DesignGraphDraft {
   edges: readonly DesignGraphEdge[];
 }
 
-export interface TransformationSqlFirstGraphSourceV1 extends GenericGraphSourceV1 {
+export interface TransformationSqlFirstGraphSourceV2 extends GenericGraphSourceV1 {
   sourceFamily: typeof TRANSFORMATION_DESIGN_GRAPH_SOURCE_FAMILY;
   sourceVersion: typeof TRANSFORMATION_SQL_FIRST_SOURCE_VERSION;
 }
@@ -104,6 +106,13 @@ const DesignGraphSourceNodeSchema = z
     payload: z
       .object({
         kind: z.literal('postgres_table'),
+        connectionRef: ConnectionRefSchema.refine(
+          (connectionRef) => connectionRef.provider === 'postgres',
+          {
+            message: 'SQL-first design sources require provider postgres.',
+            path: ['provider'],
+          }
+        ),
         schema: NonBlankStringSchema,
         table: NonBlankStringSchema,
         alias: NonBlankStringSchema,

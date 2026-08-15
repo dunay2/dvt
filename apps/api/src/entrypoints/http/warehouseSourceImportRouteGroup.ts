@@ -10,14 +10,9 @@ import { ListWarehouseConnectionsUseCase } from '../../application/services/list
 import { RenameWarehouseConnectionUseCase } from '../../application/services/renameWarehouseConnectionUseCase.js';
 import { TestWarehouseConnectionUseCase } from '../../application/services/testWarehouseConnectionUseCase.js';
 import { WarehouseConnectionSourceObjectReader } from '../../application/services/WarehouseConnectionSourceObjectReader.js';
-import { WorkspaceWarehouseConnectionCatalog } from '../../infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionCatalog.js';
-import {
-  EnvironmentWarehouseCredentialResolver,
-  WorkspaceWarehouseConnectionProbe,
-} from '../../infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.js';
+import { WorkspaceWarehouseConnectionProbe } from '../../infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.js';
 import { LocalWorkspaceFileBatchMutationGateway } from '../../infrastructure/workspaceFiles/LocalWorkspaceFileBatchMutationGateway.js';
 import { LocalWorkspaceFileRepository } from '../../infrastructure/workspaceFiles/LocalWorkspaceFileRepository.js';
-import { LocalWorkspaceMetadataFileRepository } from '../../infrastructure/workspaceFiles/LocalWorkspaceMetadataFileRepository.js';
 import type { ProtectedRuntimeModule } from '../../modules/types.js';
 import type { Env } from '../../plugins/env.js';
 
@@ -38,13 +33,10 @@ export function registerProtectedWarehouseSourceImportRouteGroup(
   const workspaceFiles = new LocalWorkspaceFileRepository({
     root: workspaceFilesRoot,
   });
-  const workspaceMetadataFiles = new LocalWorkspaceMetadataFileRepository({
-    root: workspaceFilesRoot,
-  });
   const batchMutation = new LocalWorkspaceFileBatchMutationGateway({ root: workspaceFilesRoot });
-  const catalog = new WorkspaceWarehouseConnectionCatalog({ repository: workspaceMetadataFiles });
+  const catalog = options.protectedModule.warehouseConnectionCatalog;
   const probe = new WorkspaceWarehouseConnectionProbe({
-    credentialResolver: new EnvironmentWarehouseCredentialResolver(),
+    credentialResolver: options.protectedModule.postgresCredentialResolver,
     now: () => new Date(),
   });
   const sourceObjectReader = new WarehouseConnectionSourceObjectReader(catalog, probe);

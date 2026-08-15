@@ -106,13 +106,18 @@ function describePlanCompileBoundaryCases(): void {
         graphSource: {
           kind: 'generic-graph-v1',
           sourceFamily: 'transformation-design-graph',
-          sourceVersion: 'transformation-sql-first-v1',
+          sourceVersion: 'transformation-sql-first-v2',
           nodes: [
             {
               nodeId: 'prepare_orders',
               stepKind: 'PREPARE_POSTGRES_TRANSFORM',
               dependsOn: [],
               stepTypeConfig: {
+                connectionRef: {
+                  schemaVersion: 'connection-ref.v1',
+                  connectionId: 'warehouse-a',
+                  provider: 'postgres',
+                },
                 targetSchema: 'analytics',
                 sourceSchema: 'raw',
                 sourceTable: 'orders',
@@ -124,6 +129,11 @@ function describePlanCompileBoundaryCases(): void {
               stepKind: 'POSTGRES_SQL_TRANSFORM',
               dependsOn: ['prepare_orders'],
               stepTypeConfig: {
+                connectionRef: {
+                  schemaVersion: 'connection-ref.v1',
+                  connectionId: 'warehouse-a',
+                  provider: 'postgres',
+                },
                 dialect: 'postgres',
                 entrypoint: 'models/analytics/model_orders.sql',
                 sql: 'select * from raw.orders',
@@ -148,6 +158,11 @@ function describePlanCompileBoundaryCases(): void {
               stepKind: 'CAPTURE_MATERIALIZATION_EVIDENCE',
               dependsOn: ['transform_orders'],
               stepTypeConfig: {
+                connectionRef: {
+                  schemaVersion: 'connection-ref.v1',
+                  connectionId: 'warehouse-a',
+                  provider: 'postgres',
+                },
                 sinkSchema: 'analytics',
                 sinkTable: 'orders_daily',
                 materialization: 'table',
@@ -166,6 +181,11 @@ function describePlanCompileBoundaryCases(): void {
           stepId: 'prepare_orders',
           kind: 'PREPARE_POSTGRES_TRANSFORM',
           stepTypeConfig: {
+            connectionRef: {
+              schemaVersion: 'connection-ref.v1',
+              connectionId: 'warehouse-a',
+              provider: 'postgres',
+            },
             targetSchema: 'analytics',
             sourceSchema: 'raw',
             sourceTable: 'orders',
@@ -176,6 +196,11 @@ function describePlanCompileBoundaryCases(): void {
           stepId: 'transform_orders',
           kind: 'POSTGRES_SQL_TRANSFORM',
           stepTypeConfig: {
+            connectionRef: {
+              schemaVersion: 'connection-ref.v1',
+              connectionId: 'warehouse-a',
+              provider: 'postgres',
+            },
             dialect: 'postgres',
             entrypoint: 'models/analytics/model_orders.sql',
             sinkSchema: 'analytics',
@@ -186,6 +211,11 @@ function describePlanCompileBoundaryCases(): void {
           stepId: 'capture_orders',
           kind: 'CAPTURE_MATERIALIZATION_EVIDENCE',
           stepTypeConfig: {
+            connectionRef: {
+              schemaVersion: 'connection-ref.v1',
+              connectionId: 'warehouse-a',
+              provider: 'postgres',
+            },
             sinkSchema: 'analytics',
             sinkTable: 'orders_daily',
             materialization: 'table',

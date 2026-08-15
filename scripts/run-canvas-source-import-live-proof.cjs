@@ -449,7 +449,9 @@ class CanvasSourceImportLiveProofRunner {
         HOST: this.apiBindHost,
         PORT: String(this.apiPort),
         DATABASE_URL: defaultPgUrl,
-        DVT_LOCAL_POSTGRES_WAREHOUSE_URL: defaultPgUrl,
+        DVT_POSTGRES_CREDENTIAL_BINDINGS:
+          this.env.DVT_POSTGRES_CREDENTIAL_BINDINGS ??
+          JSON.stringify({ 'postgres:local-postgres-proof': defaultPgUrl }),
         DVT_PG_SCHEMA: liveProofSchema,
         DVT_READYZ_ENABLED: 'true',
         DVT_VERSION_ENABLED: 'true',

@@ -1,8 +1,11 @@
 /** Owned concern: render DVT source authoring fields. */
-import type { Dispatch, SetStateAction } from 'react';
+import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react';
 
+import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
+import { useOptionalWarehouseSourceImportPort } from '../../services/AppServicesContext';
+import type { TestWarehouseConnectionResult, WarehouseConnection } from '../../ports/workspace';
 import type { CanonicalNode } from '../../types/canonical';
 import type { DvtSourceAuthoringMetadata } from './canvasDvtAuthoringModel';
 import { formatCanvasInspectorNodeDraftError } from './canvasCopyFormatting';
@@ -28,6 +31,47 @@ export function DvtSourceAuthoringSection({
   sourceTarget: string;
   onChange: Dispatch<SetStateAction<CanvasInspectorNodeDraft>>;
 }>): JSX.Element {
+  const warehouseSourceImport = useOptionalWarehouseSourceImportPort();
+  const [connections, setConnections] = useState<readonly WarehouseConnection[]>([]);
+  const [loadState, setLoadState] = useState<'idle' | 'loading' | 'failed'>('idle');
+  const [testResult, setTestResult] = useState<TestWarehouseConnectionResult | null>(null);
+  const connectionTestSequence = useRef(0);
+  const isImportedSource = node.pluginId === 'dvt.warehouse-source';
+
+  useEffect(() => {
+    if (!warehouseSourceImport || isImportedSource) {
+      return;
+    }
+
+    let active = true;
+    setLoadState('loading');
+    void warehouseSourceImport
+      .listWarehouseConnections()
+      .then((result) => {
+        if (!active) return;
+        setConnections(result.filter((connection) => connection.type === 'postgres'));
+        setLoadState('idle');
+      })
+      .catch(() => {
+        if (active) setLoadState('failed');
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [isImportedSource, warehouseSourceImport]);
+
+  const selectedConnectionId = draft.connectionRef?.connectionId ?? '';
+  const selectedConnectionIdRef = useRef(selectedConnectionId);
+  selectedConnectionIdRef.current = selectedConnectionId;
+  useEffect(() => {
+    connectionTestSequence.current += 1;
+    setTestResult(null);
+  }, [node.id, selectedConnectionId]);
+  const selectedConnectionMissingFromList =
+    selectedConnectionId.length > 0 &&
+    !connections.some((connection) => connection.id === selectedConnectionId);
+
   return (
     <div className={inspectorVisualClasses.inspectorDbtSection}>
       <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>
@@ -46,6 +90,122 @@ export function DvtSourceAuthoringSection({
         </div>
       </div>
       <div className="grid grid-cols-1 gap-3">
+        <div className="space-y-2">
+          <Label htmlFor={`inspector-dvt-source-connection-${node.id}`}>
+            {canvasViewCopy.inspectorDvtConnectionLabel}
+          </Label>
+          {isImportedSource ? (
+            <code className="block rounded border border-[color:var(--border-default)] bg-[var(--surface-elevated)] px-3 py-2 text-xs text-(--text-default)">
+              {selectedConnectionId || '-'}
+            </code>
+          ) : (
+            <select
+              id={`inspector-dvt-source-connection-${node.id}`}
+              name="dvt-source-connection"
+              value={selectedConnectionId}
+              disabled={disabled || loadState === 'loading' || warehouseSourceImport == null}
+              className={inspectorVisualClasses.inspectorSelectInput}
+              aria-invalid={errors?.connectionRef ? 'true' : undefined}
+              onChange={(event) => {
+                const connection = connections.find(
+                  (candidate) => candidate.id === event.currentTarget.value
+                );
+                connectionTestSequence.current += 1;
+                setTestResult(null);
+                onChange((currentDraft) =>
+                  currentDraft.dvt?.kind === 'source'
+                    ? {
+                        ...currentDraft,
+                        dvt: {
+                          ...currentDraft.dvt,
+                          connectionRef: connection
+                            ? {
+                                schemaVersion: 'connection-ref.v1',
+                                connectionId: connection.id,
+                                provider: connection.type,
+                              }
+                            : undefined,
+                        },
+                      }
+                    : currentDraft
+                );
+              }}
+            >
+              <option value="">
+                {loadState === 'loading'
+                  ? canvasViewCopy.inspectorDvtConnectionLoadingLabel
+                  : canvasViewCopy.inspectorDvtConnectionPlaceholder}
+              </option>
+              {selectedConnectionMissingFromList ? (
+                <option value={selectedConnectionId}>{selectedConnectionId}</option>
+              ) : null}
+              {connections.map((connection) => (
+                <option key={connection.id} value={connection.id}>
+                  {connection.name} ({connection.database})
+                </option>
+              ))}
+            </select>
+          )}
+          {loadState === 'failed' ? (
+            <p className={inspectorVisualClasses.inspectorErrorText} role="alert">
+              {canvasViewCopy.inspectorDvtConnectionLoadFailedMessage}
+            </p>
+          ) : null}
+          {errors?.connectionRef ? (
+            <p className={inspectorVisualClasses.inspectorErrorText}>
+              {formatCanvasInspectorNodeDraftError(errors.connectionRef, canvasViewCopy)}
+            </p>
+          ) : null}
+          {!isImportedSource && warehouseSourceImport && selectedConnectionId ? (
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                disabled={disabled}
+                onClick={() => {
+                  const testedConnectionId = selectedConnectionId;
+                  const testSequence = ++connectionTestSequence.current;
+                  void warehouseSourceImport
+                    .testWarehouseConnection(testedConnectionId)
+                    .then((result) => {
+                      if (
+                        connectionTestSequence.current === testSequence &&
+                        selectedConnectionIdRef.current === testedConnectionId &&
+                        result.connectionId === testedConnectionId
+                      ) {
+                        setTestResult(result);
+                      }
+                    })
+                    .catch(() => {
+                      if (
+                        connectionTestSequence.current === testSequence &&
+                        selectedConnectionIdRef.current === testedConnectionId
+                      ) {
+                        setTestResult(null);
+                      }
+                    });
+                }}
+              >
+                {canvasViewCopy.inspectorDvtConnectionTestLabel}
+              </Button>
+              {testResult ? (
+                <span
+                  className={
+                    testResult.status === 'passed'
+                      ? 'text-xs text-(--status-success)'
+                      : inspectorVisualClasses.inspectorErrorText
+                  }
+                  role="status"
+                >
+                  {testResult.status === 'passed'
+                    ? canvasViewCopy.inspectorDvtConnectionTestPassedMessage
+                    : canvasViewCopy.inspectorDvtConnectionTestFailedMessage}
+                </span>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
         <div className="space-y-2">
           <Label htmlFor={`inspector-dvt-source-schema-${node.id}`}>
             {canvasViewCopy.inspectorDvtSchemaLabel}

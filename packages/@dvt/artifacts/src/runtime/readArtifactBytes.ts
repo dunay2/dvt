@@ -1,4 +1,5 @@
-import { readFile, stat } from 'node:fs/promises';
+import { readFile, realpath, stat } from 'node:fs/promises';
+import { isAbsolute, relative, sep } from 'node:path';
 import { fileURLToPath, URL } from 'node:url';
 
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
@@ -12,6 +13,7 @@ export interface ArtifactReadRuntimeOptions {
   readonly s3Client?: S3LikeClient;
   readonly abortSignal?: globalThis.AbortSignal;
   readonly maxBytes?: number;
+  readonly fileReadRoot?: string;
 }
 
 export interface ReadArtifactBytesOptions extends ArtifactReadRuntimeOptions {
@@ -55,19 +57,23 @@ export async function readArtifact(
   }
 
   if (scheme === 'file') {
-    if (nodeEnv === 'production') {
+    if (nodeEnv === 'production' && options.fileReadRoot === undefined) {
       throw new ArtifactReadError(
         'ARTIFACT_FILE_NOT_ALLOWED_IN_PRODUCTION',
         `file:// ${options.uriLabel} is not allowed in production`
       );
     }
 
-    return readFileArtifact(
-      parsedUri,
-      options.artifactLabel,
-      options.abortSignal,
-      options.maxBytes
-    );
+    const filePath =
+      options.fileReadRoot === undefined
+        ? fileURLToPath(parsedUri)
+        : await resolveFileArtifactPath(
+            parsedUri,
+            options.fileReadRoot,
+            options.artifactLabel,
+            options.uriLabel
+          );
+    return readFileArtifact(filePath, options.artifactLabel, options.abortSignal, options.maxBytes);
   }
 
   throw new ArtifactReadError(
@@ -94,16 +100,15 @@ function parseArtifactUri(uri: string, uriLabel: string): URL {
 }
 
 async function readFileArtifact(
-  uri: URL,
+  filePath: string,
   artifactLabel: string,
   abortSignal?: globalThis.AbortSignal,
   maxBytes?: number
 ): Promise<ReadArtifactResult> {
   try {
-    const path = fileURLToPath(uri);
-    const fileStat = await stat(path);
+    const fileStat = await stat(filePath);
     assertWithinSizeLimit(fileStat.size, maxBytes, artifactLabel);
-    const bytes = await readFile(path, { signal: abortSignal });
+    const bytes = await readFile(filePath, { signal: abortSignal });
     assertWithinSizeLimit(bytes.byteLength, maxBytes, artifactLabel);
     return {
       bytes,
@@ -118,6 +123,45 @@ async function readFileArtifact(
       );
     }
 
+    throw error;
+  }
+}
+
+async function resolveFileArtifactPath(
+  uri: URL,
+  fileReadRoot: string,
+  artifactLabel: string,
+  uriLabel: string
+): Promise<string> {
+  try {
+    const [rootPath, artifactPath] = await Promise.all([
+      realpath(fileReadRoot),
+      realpath(fileURLToPath(uri)),
+    ]);
+    const relativePath = relative(rootPath, artifactPath);
+    const isWithinRoot =
+      relativePath === '' ||
+      (relativePath !== '..' && !relativePath.startsWith(`..${sep}`) && !isAbsolute(relativePath));
+
+    if (!isWithinRoot) {
+      throw new ArtifactReadError(
+        'ARTIFACT_URI_LOCATOR_INVALID',
+        `file:// ${uriLabel} resolves outside its allowed root`
+      );
+    }
+
+    return artifactPath;
+  } catch (error) {
+    if (error instanceof ArtifactReadError) {
+      throw error;
+    }
+    if (isMissingFileError(error)) {
+      throw new ArtifactReadError(
+        'ARTIFACT_NOT_FOUND',
+        `${artifactLabel} artifact could not be found`,
+        { cause: error }
+      );
+    }
     throw error;
   }
 }

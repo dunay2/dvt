@@ -82,6 +82,29 @@ describe('ArtifactBackedRunExecutionContextResolver', () => {
     });
   });
 
+  it('resolves production file artifacts through an explicitly scoped root', async () => {
+    const content = makeRunExecutionContextArtifact();
+    const allowedRoot = mkdtempSync(join(tmpdir(), 'dvt-api-runctx-root-'));
+    const filePath = join(allowedRoot, 'run-context.json');
+    writeFileSync(filePath, content, 'utf8');
+    const resolver = new ArtifactBackedRunExecutionContextResolver({
+      nodeEnv: 'production',
+      fileReadRoot: allowedRoot,
+    });
+
+    await expect(
+      resolver.resolve(
+        makeRef({
+          uri: pathToFileURL(filePath).href,
+          sha256: sha256Hex(content),
+          schemaVersion: 'v1.0',
+          planId: 'plan-1',
+          planVersion: '1.0',
+        })
+      )
+    ).resolves.toMatchObject({ planId: 'plan-1' });
+  });
+
   it('parses s3:// refs and fetches the expected bucket/key', async () => {
     const content = makeRunExecutionContextArtifact();
     const client = new FakeS3Client(async () => ({

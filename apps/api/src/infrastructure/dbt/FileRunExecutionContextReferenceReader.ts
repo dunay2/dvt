@@ -12,7 +12,6 @@ import {
 
 import type {
   IRunExecutionContextReferenceReader,
-  RunExecutionContextExpectedBinding,
   RunExecutionContextReferenceQuery,
   RunExecutionContextReferenceReadResult,
 } from '../../application/ports/runExecutionContextReferenceReader.js';
@@ -21,6 +20,7 @@ import {
   resolveRunExecutionContextArtifactPath,
   resolveRunExecutionContextReferenceArtifactPath,
 } from './runExecutionContextArtifactPath.js';
+import { runExecutionContextMatchesBinding } from './runExecutionContextTrust.js';
 
 export class FileRunExecutionContextReferenceReader implements IRunExecutionContextReferenceReader {
   public constructor(private readonly store: DbtProjectBundleArtifactStore | undefined) {}
@@ -66,7 +66,7 @@ export class FileRunExecutionContextReferenceReader implements IRunExecutionCont
     if (context === undefined || !referenceDescribesContext(ref, context)) {
       return { kind: 'untrusted', reason: 'reference_mismatch' };
     }
-    if (!contextMatchesBinding(context, query.expectedBinding)) {
+    if (!runExecutionContextMatchesBinding(context, query.expectedBinding)) {
       return { kind: 'untrusted', reason: 'binding_mismatch' };
     }
     return { kind: 'trusted', ref };
@@ -100,21 +100,6 @@ function referenceDescribesContext(
     ref.planId === context.planId &&
     ref.planVersion === context.planVersion &&
     ref.pluginCompatibilityFingerprint === context.pluginCompatibilityFingerprint
-  );
-}
-
-function contextMatchesBinding(
-  context: ReturnType<typeof parseRunExecutionContext>,
-  expected: RunExecutionContextExpectedBinding
-): boolean {
-  return (
-    context.tenantId === expected.tenantId &&
-    context.projectId === expected.projectId &&
-    context.environmentId === expected.environmentId &&
-    context.planId === expected.planId &&
-    context.planVersion === expected.planVersion &&
-    context.planSha256 === expected.planSha256 &&
-    context.targetAdapter === expected.targetAdapter
   );
 }
 

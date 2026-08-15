@@ -5,6 +5,7 @@ import type { SaveWorkspaceFileContentInput } from '../../ports/workspace';
 import { WorkspaceFileLoadError } from '../../services/workspace/workspaceErrors';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { resolvePreviewProvenance } from './canvasPreviewProvenance';
+import { buildTestPostgresConnectionRef } from './useCanvasExecutionActions.test.support';
 
 describe('resolvePreviewProvenance', () => {
   it('materializes draft SQL as the preview artifact for file-backed transforms', async () => {
@@ -21,7 +22,10 @@ describe('resolvePreviewProvenance', () => {
         role: 'input',
         status: 'idle',
         tags: [],
-        metadata: { config: { schema: 'raw', table: 'orders', alias: 'raw_orders' } },
+        metadata: {
+          connectionRef: buildTestPostgresConnectionRef(),
+          config: { schema: 'raw', table: 'orders', alias: 'raw_orders' },
+        },
       },
       {
         id: 'transform',
@@ -138,7 +142,10 @@ describe('resolvePreviewProvenance', () => {
         role: 'input',
         status: 'idle',
         tags: ['authoring'],
-        metadata: { config: { schema: 'raw', table: 'orders', alias: 'raw_orders' } },
+        metadata: {
+          connectionRef: buildTestPostgresConnectionRef(),
+          config: { schema: 'raw', table: 'orders', alias: 'raw_orders' },
+        },
       },
       {
         id: 'transform',

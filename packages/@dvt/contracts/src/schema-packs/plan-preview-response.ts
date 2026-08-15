@@ -85,7 +85,7 @@ function validatePlanPreviewIdentity(
   response: z.infer<typeof PlanPreviewIdentityPayloadSchema>,
   ctx: z.RefinementCtx
 ): void {
-  if (response.previewProfile !== PREVIEW_PROFILE.transformationSqlFirstV1) {
+  if (response.previewProfile !== PREVIEW_PROFILE.transformationSqlFirstV2) {
     return;
   }
 
@@ -93,13 +93,13 @@ function validatePlanPreviewIdentity(
     addPlanPreviewResponseIssue(
       ctx,
       ['provenance'],
-      'transformation-sql-first-v1 responses require graphArtifact and sqlArtifact provenance.'
+      'transformation-sql-first-v2 responses require graphArtifact and sqlArtifact provenance.'
     );
   } else if (response.provenance.kind !== PLAN_PREVIEW_PROVENANCE_KIND.transformationGitArtifacts) {
     addPlanPreviewResponseIssue(
       ctx,
       ['provenance', 'kind'],
-      'transformation-sql-first-v1 responses require transformation Git artifact provenance.'
+      'transformation-sql-first-v2 responses require transformation Git artifact provenance.'
     );
   }
 
@@ -107,7 +107,7 @@ function validatePlanPreviewIdentity(
     addPlanPreviewResponseIssue(
       ctx,
       ['planSummary'],
-      'transformation-sql-first-v1 responses require planSummary.'
+      'transformation-sql-first-v2 responses require planSummary.'
     );
     return;
   }
@@ -116,7 +116,7 @@ function validatePlanPreviewIdentity(
     addPlanPreviewResponseIssue(
       ctx,
       ['planSummary', 'executor'],
-      'transformation-sql-first-v1 responses require executor postgres.'
+      'transformation-sql-first-v2 responses require executor postgres.'
     );
   }
 
@@ -129,7 +129,7 @@ function validatePlanPreviewIdentity(
       ['plan'],
       error instanceof Error
         ? error.message
-        : 'transformation-sql-first-v1 responses require the canonical compiler plan shape.'
+        : 'transformation-sql-first-v2 responses require the canonical compiler plan shape.'
     );
     return;
   }
@@ -138,7 +138,7 @@ function validatePlanPreviewIdentity(
     addPlanPreviewResponseIssue(
       ctx,
       ['planSummary', 'nodeCount'],
-      `transformation-sql-first-v1 responses require nodeCount ${expectedSummary.nodeCount}.`
+      `transformation-sql-first-v2 responses require nodeCount ${expectedSummary.nodeCount}.`
     );
   }
 
@@ -146,7 +146,7 @@ function validatePlanPreviewIdentity(
     addPlanPreviewResponseIssue(
       ctx,
       ['planSummary', 'stepCount'],
-      `transformation-sql-first-v1 responses require stepCount ${expectedSummary.stepCount}.`
+      `transformation-sql-first-v2 responses require stepCount ${expectedSummary.stepCount}.`
     );
   }
 
@@ -154,7 +154,7 @@ function validatePlanPreviewIdentity(
     addPlanPreviewResponseIssue(
       ctx,
       ['planSummary', 'sourceTables'],
-      'transformation-sql-first-v1 responses require sourceTables derived from the canonical compiler plan.'
+      'transformation-sql-first-v2 responses require sourceTables derived from the canonical compiler plan.'
     );
   }
 
@@ -162,7 +162,7 @@ function validatePlanPreviewIdentity(
     addPlanPreviewResponseIssue(
       ctx,
       ['planSummary', 'sinkTables'],
-      'transformation-sql-first-v1 responses require sinkTables derived from the canonical compiler plan.'
+      'transformation-sql-first-v2 responses require sinkTables derived from the canonical compiler plan.'
     );
   }
 }

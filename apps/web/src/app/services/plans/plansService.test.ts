@@ -9,16 +9,23 @@ import { createMockPlansService } from '../../../testing/plansPortDoubles';
 import type { IPlansPort, PlanPreviewInput, PreviewedPlanViewModel } from '../../ports/plans';
 import { createPlansService } from './plansService';
 
+const POSTGRES_CONNECTION_REF = {
+  schemaVersion: 'connection-ref.v1',
+  connectionId: 'warehouse-a',
+  provider: 'postgres',
+} as const;
+
 const VALID_TRANSFORMATION_GRAPH_SOURCE = {
   kind: 'generic-graph-v1',
   sourceFamily: 'transformation-design-graph',
-  sourceVersion: 'transformation-sql-first-v1',
+  sourceVersion: 'transformation-sql-first-v2',
   nodes: [
     {
       nodeId: 'source-node',
       stepKind: 'PREPARE_POSTGRES_TRANSFORM',
       dependsOn: [],
       stepTypeConfig: {
+        connectionRef: POSTGRES_CONNECTION_REF,
         targetSchema: 'analytics',
         sourceSchema: 'raw',
         sourceTable: 'orders',
@@ -30,6 +37,7 @@ const VALID_TRANSFORMATION_GRAPH_SOURCE = {
       stepKind: 'POSTGRES_SQL_TRANSFORM',
       dependsOn: ['source-node'],
       stepTypeConfig: {
+        connectionRef: POSTGRES_CONNECTION_REF,
         dialect: 'postgres',
         entrypoint: 'sql/orders.sql',
         sql: 'select * from raw.orders',
@@ -54,6 +62,7 @@ const VALID_TRANSFORMATION_GRAPH_SOURCE = {
       stepKind: 'CAPTURE_MATERIALIZATION_EVIDENCE',
       dependsOn: ['transform-node'],
       stepTypeConfig: {
+        connectionRef: POSTGRES_CONNECTION_REF,
         sinkSchema: 'analytics',
         sinkTable: 'orders_daily',
         materialization: 'table',
@@ -254,7 +263,7 @@ function buildTransformationPreviewPayload(
   overrides: Readonly<Record<string, unknown>> = {}
 ): Record<string, unknown> {
   return {
-    previewProfile: 'transformation-sql-first-v1',
+    previewProfile: 'transformation-sql-first-v2',
     plan: buildValidTransformationPlan(),
     planRef: buildValidPlanRef(),
     planSummary: {
@@ -368,7 +377,7 @@ describe('createPlansService', () => {
     const service = createMockPlansService();
 
     const plan = await previewAccepted(service, {
-      previewProfile: 'transformation-sql-first-v1',
+      previewProfile: 'transformation-sql-first-v2',
       graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
       selection: toExplicitSelection(VALID_TRANSFORMATION_SELECTION),
       persist: true,
@@ -393,7 +402,7 @@ describe('createPlansService', () => {
     );
 
     const plan = await previewAccepted(service, {
-      previewProfile: 'transformation-sql-first-v1',
+      previewProfile: 'transformation-sql-first-v2',
       graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
       selection: toExplicitSelection(VALID_TRANSFORMATION_SELECTION),
       persist: true,
@@ -453,7 +462,7 @@ describe('createPlansService', () => {
     expect(postJsonMock).toHaveBeenCalledWith(
       '/plans/preview',
       expect.objectContaining({
-        previewProfile: 'transformation-sql-first-v1',
+        previewProfile: 'transformation-sql-first-v2',
         graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
         selection: toExplicitSelection(VALID_TRANSFORMATION_SELECTION),
         persist: true,
@@ -483,7 +492,7 @@ describe('createPlansService', () => {
     );
 
     const plan = await previewAccepted(service, {
-      previewProfile: 'transformation-sql-first-v1',
+      previewProfile: 'transformation-sql-first-v2',
       graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
       selection: toExplicitSelection(VALID_TRANSFORMATION_SELECTION),
       persist: true,
@@ -511,7 +520,7 @@ describe('createPlansService', () => {
     );
 
     const plan = await previewAccepted(service, {
-      previewProfile: 'transformation-sql-first-v1',
+      previewProfile: 'transformation-sql-first-v2',
       graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
       selection: toExplicitSelection(VALID_TRANSFORMATION_SELECTION),
       persist: true,
@@ -544,7 +553,7 @@ describe('createPlansService', () => {
 
     await expect(
       service.previewPlan({
-        previewProfile: 'transformation-sql-first-v1',
+        previewProfile: 'transformation-sql-first-v2',
         graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
         selection: toExplicitSelection(VALID_TRANSFORMATION_SELECTION),
         persist: true,
@@ -591,7 +600,7 @@ describe('createPlansService', () => {
 
     await expect(
       service.previewPlan({
-        previewProfile: 'transformation-sql-first-v1',
+        previewProfile: 'transformation-sql-first-v2',
         graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
         selection: toExplicitSelection(VALID_TRANSFORMATION_SELECTION),
         persist: true,

@@ -298,7 +298,7 @@ function resolveHarnessArgs(
     canonicalEdges: args.canonicalEdges ?? buildCanonicalEdges(),
     executionStrategy: args.executionStrategy ?? {
       kind: 'transformation_preview',
-      previewProfile: 'transformation-sql-first-v1',
+      previewProfile: 'transformation-sql-first-v2',
     },
     ...(args.executionEnvironmentId == null
       ? {}
@@ -323,6 +323,7 @@ export function buildCanonicalNodes(): CanonicalNode[] {
       status: 'idle',
       tags: [],
       metadata: {
+        connectionRef: buildTestPostgresConnectionRef(),
         config: {
           schema: 'raw',
           table: 'orders',
@@ -363,6 +364,14 @@ export function buildCanonicalNodes(): CanonicalNode[] {
       },
     },
   ];
+}
+
+export function buildTestPostgresConnectionRef(connectionId = 'warehouse-a') {
+  return {
+    schemaVersion: 'connection-ref.v1' as const,
+    connectionId,
+    provider: 'postgres' as const,
+  };
 }
 
 export function buildCanonicalEdges(): CanonicalEdge[] {

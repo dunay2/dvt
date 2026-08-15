@@ -16,9 +16,17 @@ describe('SourceImportOperations v1', () => {
         name: 'Production warehouse',
         type: 'postgres',
         database: 'analytics',
-        credentialRef: 'env:WAREHOUSE_URL',
+        credentialRef: 'postgres:warehouse-prod',
       })
     ).toMatchObject({ type: 'postgres', database: 'analytics' });
+    expect(() =>
+      CreateWarehouseConnectionRequestSchema.parse({
+        name: 'Legacy warehouse',
+        type: 'postgres',
+        database: 'analytics',
+        credentialRef: 'env:WAREHOUSE_URL',
+      })
+    ).toThrow();
     expect(
       WarehouseConnectionSchema.parse({
         id: 'warehouse-prod',

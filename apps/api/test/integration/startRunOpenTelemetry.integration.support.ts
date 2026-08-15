@@ -33,10 +33,10 @@ import {
 import type { IAuthenticator } from '../../src/application/ports/auth.js';
 import type { IWorkspaceGraphDraftStore } from '../../src/application/ports/workspaceGraphDraft.js';
 import { AuthorizeCommandScopeService } from '../../src/application/services/authorizeCommandScopeService.js';
-import { DbtRunExecutionContextBindingUseCase } from '../../src/application/services/DbtRunExecutionContextBindingUseCase.js';
 import { EngineStartRunUseCase } from '../../src/application/services/engineStartRunUseCase.js';
 import { PlannerBackedStartRunUseCase } from '../../src/application/services/PlannerBackedStartRunUseCase.js';
 import { ResolveAuthorizedExecutableSubgraphService } from '../../src/application/services/resolveAuthorizedExecutableSubgraph.js';
+import { RunExecutionContextBindingUseCase } from '../../src/application/services/RunExecutionContextBindingUseCase.js';
 import { createStartRunTargetAdapterRegistryFromValues } from '../../src/application/services/startRunTargetAdapterRegistry.js';
 import { StoredExecutablePlanResolver } from '../../src/application/services/StoredExecutablePlanResolver.js';
 import { StoredPlanExecutabilityValidator } from '../../src/application/services/StoredPlanExecutabilityValidator.js';
@@ -162,7 +162,7 @@ export async function createStartRunOpenTelemetryProof(
       adapters,
       stepTypeRegistry,
     }),
-    delegate: new DbtRunExecutionContextBindingUseCase({
+    delegate: new RunExecutionContextBindingUseCase({
       delegate: new EngineStartRunUseCase(engineRuntime.engine),
       bundleBuilder: {
         async build() {
@@ -180,6 +180,28 @@ export async function createStartRunOpenTelemetryProof(
         },
       },
       stepTypeRegistry,
+      warehouseConnectionCatalog: {
+        async listConnections() {
+          throw new Error('Unexpected PostgreSQL catalog access for an empty plan');
+        },
+        async listSourceObjects() {
+          throw new Error('Unexpected PostgreSQL catalog access for an empty plan');
+        },
+        async getConnection() {
+          throw new Error('Unexpected PostgreSQL catalog access for an empty plan');
+        },
+        async createConnection() {
+          throw new Error('Unexpected PostgreSQL catalog access for an empty plan');
+        },
+        async renameConnection() {
+          throw new Error('Unexpected PostgreSQL catalog access for an empty plan');
+        },
+      },
+      postgresCredentialResolver: {
+        async resolveCredential() {
+          throw new Error('Unexpected PostgreSQL credential access for an empty plan');
+        },
+      },
     }),
     executableSubgraphResolver: new ResolveAuthorizedExecutableSubgraphService({
       planner,

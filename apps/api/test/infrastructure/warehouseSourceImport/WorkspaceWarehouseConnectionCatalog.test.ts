@@ -218,7 +218,7 @@ describe('WorkspaceWarehouseConnectionCatalog', () => {
           name: 'Finance production',
           type: 'postgres',
           database: 'analytics',
-          credentialRef: 'env:DVT_FINANCE_WAREHOUSE_URL',
+          credentialRef: 'postgres:finance-prod',
           sourceObjects: [sourceObject],
         },
       ],
@@ -246,7 +246,7 @@ describe('WorkspaceWarehouseConnectionCatalog', () => {
         name: 'Finance warehouse',
         type: 'postgres',
         database: 'analytics',
-        credentialRef: 'env:DVT_FINANCE_WAREHOUSE_URL',
+        credentialRef: 'postgres:finance-prod',
         sourceObjects: [sourceObject],
       }),
     ]);
@@ -320,7 +320,7 @@ describe('WorkspaceWarehouseConnectionCatalog', () => {
       name: 'Finance warehouse',
       type: 'postgres',
       database: 'finance',
-      credentialRef: 'env:DVT_FINANCE_WAREHOUSE_URL',
+      credentialRef: 'postgres:finance-warehouse',
       sourceObjects: [sourceObject],
     });
 
@@ -332,7 +332,7 @@ describe('WorkspaceWarehouseConnectionCatalog', () => {
     });
     const persisted =
       repository.readSavedFile(SCOPE_A, WORKSPACE_WAREHOUSE_CONNECTION_CATALOG_PATH) ?? '';
-    expect(persisted).toContain('"credentialRef": "env:DVT_FINANCE_WAREHOUSE_URL"');
+    expect(persisted).toContain('"credentialRef": "postgres:finance-warehouse"');
     expect(persisted).not.toContain('password');
     await expect(catalog.listConnections(SCOPE_A)).resolves.toEqual([
       {
@@ -451,7 +451,7 @@ describe('WorkspaceWarehouseConnectionCatalog', () => {
       name: 'Finance warehouse',
       type: 'postgres',
       database: 'finance',
-      credentialRef: 'env:DVT_FINANCE_WAREHOUSE_URL',
+      credentialRef: 'postgres:finance-warehouse',
       sourceObjects: [relationSourceObject()],
     });
 

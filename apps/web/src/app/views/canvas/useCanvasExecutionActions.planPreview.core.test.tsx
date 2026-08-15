@@ -64,11 +64,11 @@ describe('useCanvasExecutionActions plan preview core', () => {
     expect(plansService.previewPlan).toHaveBeenCalledTimes(1);
     expect(plansService.previewPlan).toHaveBeenCalledWith(
       expect.objectContaining({
-        previewProfile: 'transformation-sql-first-v1',
+        previewProfile: 'transformation-sql-first-v2',
         graphSource: expect.objectContaining({
           kind: 'generic-graph-v1',
           sourceFamily: 'transformation-design-graph',
-          sourceVersion: 'transformation-sql-first-v1',
+          sourceVersion: 'transformation-sql-first-v2',
           nodes: expect.arrayContaining([
             expect.objectContaining({
               nodeId: 'source-node',

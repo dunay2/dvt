@@ -8,16 +8,23 @@ import {
   parsePlanPreviewRequest,
 } from '../../src/validation.js';
 
+const postgresConnectionRef = {
+  schemaVersion: 'connection-ref.v1',
+  connectionId: 'warehouse-a',
+  provider: 'postgres',
+} as const;
+
 const transformationGraphSource = {
   kind: 'generic-graph-v1',
   sourceFamily: 'transformation-design-graph',
-  sourceVersion: 'transformation-sql-first-v1',
+  sourceVersion: 'transformation-sql-first-v2',
   nodes: [
     {
       nodeId: 'source-1',
       stepKind: 'PREPARE_POSTGRES_TRANSFORM',
       dependsOn: [],
       stepTypeConfig: {
+        connectionRef: postgresConnectionRef,
         targetSchema: 'analytics',
         sourceSchema: 'raw',
         sourceTable: 'orders',
@@ -29,6 +36,7 @@ const transformationGraphSource = {
       stepKind: 'POSTGRES_SQL_TRANSFORM',
       dependsOn: ['source-1'],
       stepTypeConfig: {
+        connectionRef: postgresConnectionRef,
         dialect: 'postgres',
         entrypoint: 'models/orders.sql',
         sql: 'select * from raw.orders',
@@ -53,6 +61,7 @@ const transformationGraphSource = {
       stepKind: 'CAPTURE_MATERIALIZATION_EVIDENCE',
       dependsOn: ['transform-1'],
       stepTypeConfig: {
+        connectionRef: postgresConnectionRef,
         sinkSchema: 'analytics',
         sinkTable: 'orders_daily',
         materialization: 'table',
@@ -109,6 +118,7 @@ export function registerValidationPreviewSuite(): void {
             type: 'source',
             payload: {
               kind: 'postgres_table',
+              connectionRef: postgresConnectionRef,
               schema: 'raw',
               table: 'orders',
               alias: 'orders_src',
@@ -166,6 +176,7 @@ export function registerValidationPreviewSuite(): void {
               type: 'source',
               payload: {
                 kind: 'postgres_table',
+                connectionRef: postgresConnectionRef,
                 schema: 'raw',
                 table: 'orders',
                 alias: 'orders_src',
@@ -208,7 +219,7 @@ export function registerValidationPreviewSuite(): void {
 
     it('parses transformation preview request when provenance and graph identity are explicit', () => {
       const request = parsePlanPreviewRequest({
-        previewProfile: 'transformation-sql-first-v1',
+        previewProfile: 'transformation-sql-first-v2',
         context: {
           tenantId: 'tenant-a',
           projectId: 'project-a',
@@ -241,14 +252,14 @@ export function registerValidationPreviewSuite(): void {
         persist: true,
       });
 
-      expect(request.previewProfile).toBe('transformation-sql-first-v1');
+      expect(request.previewProfile).toBe('transformation-sql-first-v2');
       expect(request.provenance?.graphArtifact.path).toBe('graphs/orders.yml');
     });
 
     it('rejects transformation preview request when provenance is missing', () => {
       expect(() =>
         parsePlanPreviewRequest({
-          previewProfile: 'transformation-sql-first-v1',
+          previewProfile: 'transformation-sql-first-v2',
           context: {
             tenantId: 'tenant-a',
             projectId: 'project-a',
@@ -269,7 +280,7 @@ export function registerValidationPreviewSuite(): void {
     it('rejects transformation preview response when required provenance is missing', () => {
       expect(() =>
         parsePlanPreviewPersistResponse({
-          previewProfile: 'transformation-sql-first-v1',
+          previewProfile: 'transformation-sql-first-v2',
           plan: transformationPlan,
           planRef: {
             uri: 'dvt-plan://plans/plan-1',

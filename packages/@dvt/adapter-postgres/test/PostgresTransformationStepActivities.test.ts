@@ -1,7 +1,10 @@
 import { Client } from 'pg';
 import { afterAll, describe, expect, it } from 'vitest';
 
-import { PostgresRelationalExecutionCapability } from '../src/index.js';
+import {
+  PostgresRelationalExecutionCapability,
+  type IPostgresPlanConnectionResolver,
+} from '../src/index.js';
 import { quoteIdentifier } from '../src/sqlUtils.js';
 
 const runIntegration = process.env.DVT_PG_INTEGRATION === '1';
@@ -10,6 +13,11 @@ const describeIfPg = runIntegration ? describe : describe.skip;
 const schemaPrefix = `dvt_transform_it_${Date.now()}`;
 const createdSchemas = new Set<string>();
 let schemaCounter = 0;
+const CONNECTION_REF = {
+  schemaVersion: 'connection-ref.v1',
+  connectionId: 'integration-warehouse',
+  provider: 'postgres',
+} as const;
 
 function runtimeContext(environmentId = 'env-it'): {
   executionIdentity: {
@@ -17,12 +25,28 @@ function runtimeContext(environmentId = 'env-it'): {
     environmentId: string;
     runId: string;
   };
+  runContext: {
+    tenantId: string;
+    projectId: string;
+    environmentId: string;
+    runId: string;
+    targetAdapter: 'temporal';
+    logicalAttemptId: number;
+  };
 } {
   return {
     executionIdentity: {
       tenantId: 't-it',
       environmentId,
       runId: 'run-it-postgres-capability',
+    },
+    runContext: {
+      tenantId: 't-it',
+      projectId: 'p-it',
+      environmentId,
+      runId: 'run-it-postgres-capability',
+      targetAdapter: 'temporal',
+      logicalAttemptId: 1,
     },
   };
 }
@@ -35,13 +59,30 @@ function allocateSchema(): string {
 }
 
 async function createClient(): Promise<Client> {
+  const connectionString = resolveIntegrationConnectionString();
+  const client = new Client({ connectionString });
+  await client.connect();
+  return client;
+}
+
+function resolveIntegrationConnectionString(): string {
   const connectionString = process.env.DVT_PG_URL ?? process.env.DATABASE_URL;
   if (!connectionString) {
     throw new Error('DVT_PG_URL or DATABASE_URL is required for integration tests');
   }
-  const client = new Client({ connectionString });
-  await client.connect();
-  return client;
+  return connectionString;
+}
+
+function createIntegrationPlanConnectionResolver(): IPostgresPlanConnectionResolver {
+  return {
+    async resolveConnection() {
+      return {
+        connectionRef: CONNECTION_REF,
+        credentialRef: 'postgres:integration-warehouse',
+        connectionString: resolveIntegrationConnectionString(),
+      };
+    },
+  };
 }
 
 afterAll(async () => {
@@ -89,6 +130,7 @@ describeIfPg('PostgresRelationalExecutionCapability integration', () => {
     const client = await createClient();
     const capability = new PostgresRelationalExecutionCapability({
       connectionString: process.env.DVT_PG_URL ?? process.env.DATABASE_URL,
+      planConnectionResolver: createIntegrationPlanConnectionResolver(),
       nowIsoUtc: () => '2026-04-09T00:00:00.000Z',
     });
 
@@ -111,7 +153,11 @@ describeIfPg('PostgresRelationalExecutionCapability integration', () => {
           kind: 'PREPARE_POSTGRES_TRANSFORM',
           dependsOn: [],
           stepTypeConfig: {
+            connectionRef: CONNECTION_REF,
             targetSchema: schema,
+            sourceSchema: 'raw',
+            sourceTable: 'orders',
+            sourceAlias: 'orders',
           },
         },
         runtimeContext()
@@ -124,7 +170,20 @@ describeIfPg('PostgresRelationalExecutionCapability integration', () => {
           kind: 'POSTGRES_SQL_TRANSFORM',
           dependsOn: ['prepare-1'],
           stepTypeConfig: {
+            connectionRef: CONNECTION_REF,
+            dialect: 'postgres',
+            entrypoint: 'models/orders.sql',
             sql: 'SELECT 1 AS order_id UNION ALL SELECT 2 AS order_id',
+            sqlArtifact: {
+              repo: 'dunay2/dvt',
+              path: 'models/orders.sql',
+              ref: 'refs/heads/main',
+              commitSha: 'a'.repeat(40),
+              contentSha256: 'b'.repeat(64),
+            },
+            sourceSchema: 'raw',
+            sourceTable: 'orders',
+            sourceAlias: 'orders',
             sinkSchema: schema,
             sinkTable,
             materialization: 'table',
@@ -141,8 +200,11 @@ describeIfPg('PostgresRelationalExecutionCapability integration', () => {
           kind: 'CAPTURE_MATERIALIZATION_EVIDENCE',
           dependsOn: ['transform-1'],
           stepTypeConfig: {
+            connectionRef: CONNECTION_REF,
             sinkSchema: schema,
             sinkTable,
+            materialization: 'table',
+            writeMode: 'replace',
           },
         },
         runtimeContext('env-it')
@@ -173,6 +235,7 @@ describeIfPg('PostgresRelationalExecutionCapability integration', () => {
     const schema = allocateSchema();
     const capability = new PostgresRelationalExecutionCapability({
       connectionString: process.env.DVT_PG_URL ?? process.env.DATABASE_URL,
+      planConnectionResolver: createIntegrationPlanConnectionResolver(),
       nowIsoUtc: () => '2026-04-09T00:00:00.000Z',
     });
 
@@ -191,7 +254,11 @@ describeIfPg('PostgresRelationalExecutionCapability integration', () => {
           kind: 'PREPARE_POSTGRES_TRANSFORM',
           dependsOn: [],
           stepTypeConfig: {
+            connectionRef: CONNECTION_REF,
             targetSchema: schema,
+            sourceSchema: 'raw',
+            sourceTable: 'orders',
+            sourceAlias: 'orders',
           },
         },
         runtimeContext()
@@ -203,7 +270,20 @@ describeIfPg('PostgresRelationalExecutionCapability integration', () => {
           kind: 'POSTGRES_SQL_TRANSFORM',
           dependsOn: ['prepare-invalid-sql'],
           stepTypeConfig: {
+            connectionRef: CONNECTION_REF,
+            dialect: 'postgres',
+            entrypoint: 'models/orders.sql',
             sql: 'SELECT * FROM missing_source_table',
+            sqlArtifact: {
+              repo: 'dunay2/dvt',
+              path: 'models/orders.sql',
+              ref: 'refs/heads/main',
+              commitSha: 'a'.repeat(40),
+              contentSha256: 'b'.repeat(64),
+            },
+            sourceSchema: 'raw',
+            sourceTable: 'orders',
+            sourceAlias: 'orders',
             sinkSchema: schema,
             sinkTable: 'broken_sink',
             materialization: 'table',

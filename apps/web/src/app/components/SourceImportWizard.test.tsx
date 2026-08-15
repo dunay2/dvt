@@ -308,10 +308,7 @@ describe('SourceImportWizard', () => {
     await harness.clickButtonContaining('Nueva conexión');
     await harness.fillInputByLabel('Nombre de la conexión', 'Postgres local');
     await harness.fillInputByLabel('Base de datos', 'dvt');
-    await harness.fillInputByLabel(
-      'Referencia de credencial',
-      'env:DVT_LOCAL_POSTGRES_WAREHOUSE_URL'
-    );
+    await harness.fillInputByLabel('Referencia de credencial', 'postgres:local-warehouse');
     await harness.clickButtonContaining('Crear conexión');
     await harness.flushPendingWork();
 
@@ -596,10 +593,7 @@ describe('SourceImportWizard', () => {
       await harness.fillInputByLabel('Connection name', 'Local Postgres proof');
       await harness.selectByLabel('Connection type', 'postgres');
       await harness.fillInputByLabel('Database', 'dvt');
-      await harness.fillInputByLabel(
-        'Credential reference',
-        'env:DVT_LOCAL_POSTGRES_WAREHOUSE_URL'
-      );
+      await harness.fillInputByLabel('Credential reference', 'postgres:local-warehouse');
       await harness.clickButtonContaining('Create connection');
       await harness.flushPendingWork();
 
@@ -607,7 +601,7 @@ describe('SourceImportWizard', () => {
         name: 'Local Postgres proof',
         type: 'postgres',
         database: 'dvt',
-        credentialRef: 'env:DVT_LOCAL_POSTGRES_WAREHOUSE_URL',
+        credentialRef: 'postgres:local-warehouse',
       });
       expect(document.body.textContent).toContain('Local Postgres proof');
       expect(document.body.textContent).toContain('postgres - dvt');
@@ -646,7 +640,7 @@ describe('SourceImportWizard', () => {
       document.querySelector<HTMLInputElement>(
         '[data-slot="source-import-create-connection-credential-ref"]'
       )?.placeholder
-    ).toBe('env:DVT_LOCAL_POSTGRES_WAREHOUSE_URL');
+    ).toBe('postgres:local-warehouse');
   });
 
   it('does not create a warehouse connection when required command fields are missing', async () => {

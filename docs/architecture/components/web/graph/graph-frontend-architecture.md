@@ -165,7 +165,8 @@ As of release `0.5.3` on 2026-08-02:
   registered canvas kinds whose plugin is disabled fail closed as
   `disabled_plugin` with separate operator copy; only a missing document may
   use the default transformation creation posture
-- `transformation` uses `transformation-sql-first-v1`; `dbt` uses the
+- `transformation` uses `transformation-sql-first-v2` with one source-selected
+  PostgreSQL `ConnectionRef` shared by its governed steps; `dbt` uses the
   TF-C3-backed `planner-generic-v1` posture. DBT preview/run is available only
   through generated workspace artifacts, a dbt `GenericGraphSourceV1`, and a
   persisted `PlanRef`; API-mode warehouse source import is available only when

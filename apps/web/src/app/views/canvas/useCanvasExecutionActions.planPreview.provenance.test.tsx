@@ -9,6 +9,7 @@ import { buildPreviewDesignGraphArtifactContent } from './previewGraphSource';
 import {
   buildCanonicalEdges,
   buildCanonicalNodes,
+  buildTestPostgresConnectionRef,
   createPlansServiceMock,
   createRunsServiceMock,
   createSessionContext,
@@ -42,7 +43,10 @@ describe('useCanvasExecutionActions plan preview provenance', () => {
         role: 'input' as const,
         status: 'idle' as const,
         tags: ['authoring'],
-        metadata: { typeLabel: 'Source' },
+        metadata: {
+          typeLabel: 'Source',
+          connectionRef: buildTestPostgresConnectionRef(),
+        },
       },
       {
         id: 'dvt-sql-transform-1',
@@ -110,7 +114,7 @@ describe('useCanvasExecutionActions plan preview provenance', () => {
     );
     expect(plansService.previewPlan).toHaveBeenCalledWith(
       expect.objectContaining({
-        previewProfile: 'transformation-sql-first-v1',
+        previewProfile: 'transformation-sql-first-v2',
         graphSource: expect.objectContaining({
           nodes: expect.arrayContaining([
             expect.objectContaining({
@@ -164,7 +168,10 @@ describe('useCanvasExecutionActions plan preview provenance', () => {
         role: 'input' as const,
         status: 'idle' as const,
         tags: ['authoring'],
-        metadata: { typeLabel: 'Source' },
+        metadata: {
+          typeLabel: 'Source',
+          connectionRef: buildTestPostgresConnectionRef(),
+        },
       },
       {
         id: 'dvt-sql-transform-1',
@@ -280,7 +287,7 @@ describe('useCanvasExecutionActions plan preview provenance', () => {
 
     expect(plansService.previewPlan).toHaveBeenCalledWith(
       expect.objectContaining({
-        previewProfile: 'transformation-sql-first-v1',
+        previewProfile: 'transformation-sql-first-v2',
         provenance: {
           kind: 'transformation-git-artifacts',
           graphArtifact: {

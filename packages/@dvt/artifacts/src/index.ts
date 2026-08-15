@@ -11,6 +11,8 @@ export type {
   PublishedContentAddressedArtifact,
 } from './contentAddressed/IContentAddressedArtifactStore.js';
 export {
+  createDefaultS3ContentAddressedArtifactStore,
+  encodeS3TenantPathSegment,
   S3ContentAddressedArtifactStore,
   type S3ContentAddressedArtifactStoreOptions,
 } from './contentAddressed/S3ContentAddressedArtifactStore.js';
@@ -34,6 +36,11 @@ export type {
   StorePlanArtifactInput,
 } from './ports/IStoredPlanArtifactStore.js';
 export type { IRunExecutionContextReader } from './ports/IRunExecutionContextReader.js';
+export type {
+  IRunExecutionContextReferenceStore,
+  PutRunExecutionContextReferenceInput,
+  RunExecutionContextReferenceIdentity,
+} from './ports/IRunExecutionContextReferenceStore.js';
 export { ArtifactReadError, type ArtifactReadErrorCode } from './runtime/ArtifactReadError.js';
 export {
   ArtifactBackedDbtProjectBundleReader,
@@ -48,6 +55,10 @@ export {
   type ArtifactBackedRunExecutionContextReaderOptions,
 } from './runtime/ArtifactBackedRunExecutionContextReader.js';
 export {
+  S3RunExecutionContextReferenceStore,
+  type S3RunExecutionContextReferenceStoreOptions,
+} from './runtime/S3RunExecutionContextReferenceStore.js';
+export {
   validateArtifactIntegrity,
   type ArtifactIntegrityInput,
 } from './runtime/validateArtifactIntegrity.js';
@@ -58,6 +69,10 @@ export {
   type ReadArtifactBytesOptions,
   type ReadArtifactResult,
 } from './runtime/readArtifactBytes.js';
+export {
+  resolveRunExecutionContextArtifactStore,
+  type RunExecutionContextArtifactStoreConfig,
+} from './runtime/resolveRunExecutionContextArtifactStore.js';
 export { computeSha256 } from './compiledCode/sha256.js';
 export {
   attachCompiledCodeRefs,

@@ -1,0 +1,135 @@
+---
+title: PTH2 DVT PostgreSQL connection authority
+status: Accepted
+date: 2026-08-13
+owners:
+  - '@dvt/contracts'
+  - '@dvt/adapter-postgres'
+  - '@dvt/artifacts'
+  - dvt-api
+  - dvt-temporal-worker
+  - '@dvt/web'
+arc_level: ARC-2
+breaking: true
+code_refs:
+  - packages/@dvt/contracts/src/contracts/planner/TransformationFlowDesignGraph.v1.ts
+  - packages/@dvt/contracts/src/contracts/engine/RunExecutionContext.v1.ts
+  - apps/api/src/application/services/RunExecutionContextBindingUseCase.ts
+  - apps/web/src/app/views/canvas/DvtSourceAuthoringSection.tsx
+  - packages/@dvt/adapter-postgres/src/PostgresRelationalExecutionCapability.ts
+  - apps/temporal-worker/src/runtime/TemporalWorkerPostgresPlanConnectionResolver.ts
+  - packages/@dvt/artifacts/src/runtime/S3RunExecutionContextReferenceStore.ts
+  - packages/@dvt/artifacts/src/contentAddressed/S3ContentAddressedArtifactStore.ts
+  - packages/@dvt/artifacts/src/runtime/readArtifactBytes.ts
+  - packages/@dvt/artifacts/src/runtime/resolveRunExecutionContextArtifactStore.ts
+  - apps/api/src/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.ts
+  - apps/api/src/infrastructure/dbt/ArtifactBackedRunExecutionContextReferenceReader.ts
+  - apps/api/src/infrastructure/dbt/ArtifactBackedRunExecutionContextInheritanceWriter.ts
+  - apps/api/src/modules/protectedRuntime/buildProtectedRuntimeStorage.ts
+evidence:
+  tests:
+    - pnpm --filter @dvt/contracts test
+    - pnpm --filter @dvt/contracts typecheck
+    - pnpm --filter dvt-api test:unit
+    - pnpm --filter dvt-api lint
+    - pnpm --filter dvt-api typecheck
+    - pnpm --filter ./apps/api exec vitest run test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts --maxWorkers=1 --minWorkers=1
+    - pnpm --filter @dvt/artifacts test
+    - pnpm --filter @dvt/artifacts exec vitest run test/contentAddressedArtifactStore.test.ts --config vitest.config.ts --maxWorkers=1 --minWorkers=1
+    - pnpm --filter @dvt/artifacts exec vitest run test/runExecutionContextReaders.test.ts --config vitest.config.ts --maxWorkers=1 --minWorkers=1
+    - pnpm --filter @dvt/artifacts typecheck
+    - pnpm --filter @dvt/web test:canvas
+    - pnpm --filter @dvt/web lint
+    - pnpm --filter @dvt/web typecheck
+    - pnpm --filter @dvt/adapter-postgres test
+    - pnpm --filter @dvt/adapter-postgres exec vitest run test/PostgresPlanConnectionIsolation.test.ts test/PostgresTransformationStepActivities.test.ts --config vitest.config.ts
+    - DVT_PG_INTEGRATION=1 DVT_PG_URL=postgresql://dvt:dvt@127.0.0.1:5432/dvt pnpm --filter @dvt/adapter-postgres exec vitest run test/PostgresPlanConnectionIsolation.integration.test.ts --config vitest.config.ts
+    - pnpm --filter @dvt/adapter-postgres typecheck
+    - DVT_PG_URL=postgresql://dvt:dvt@127.0.0.1:5432/dvt pnpm --filter @dvt/adapter-temporal exec vitest run test/integration.postgres.time-skipping.test.ts --config vitest.config.ts
+    - pnpm --filter dvt-temporal-worker test
+    - pnpm --filter dvt-temporal-worker typecheck
+    - node --test scripts/run-dev-stack.test.cjs
+    - pnpm verify:prepush
+---
+
+Issue #2329 establishes one secret-free PostgreSQL `ConnectionRef` as the
+authority for a SQL-first DVT plan. The source node owns that reference;
+transform and sink nodes inherit it. Graph draft, preview and stored plan retain
+the same reference, while `StartRun` resolves its governed credential alias and
+writes one immutable `RunExecutionContext.v1` for the worker.
+
+The Temporal worker verifies the context artifact, workspace scope, PlanRef and
+step-level reference before resolving credentials. Each admitted binding owns a
+separate PostgreSQL pool. The worker retains at most 32 idle plan-bound sessions
+by default, updates recency when a binding is reused and closes an evicted pool;
+active leases are never evicted mid-step. Missing, malformed, cross-scope or
+mismatched bindings fail before SQL is sent. The relational capability also
+rejects SQL-first steps when no plan connection resolver was composed, so its
+object-file pool cannot become an implicit execution fallback. `DATABASE_URL`
+is not a fallback for SQL-first DVT execution; it remains only on the
+pre-existing object-file loading seam.
+
+The hard cut upgrades the SQL-first transformation profile to v2 without a
+compatibility union, migration state or dual read. Generic execution plans
+remain at their existing schema version. A real PostgreSQL integration test
+creates two independent databases A/B with homonymous `raw.orders` and
+`analytics.orders` relations. Each PlanRef mutates only its admitted database;
+executing the old A plan after the editable selection moves to B still updates
+A and leaves B unchanged. An unadmitted alias cannot open a database session.
+The Temporal adapter integration fixture now supplies the same complete v2 step
+configs and an explicit plan resolver; its real PostgreSQL workflow reaches
+`RunCompleted` through all three steps.
+
+Repeated `StartRun` delivery for the same platform run identifier now derives
+the context creation instant from that UUIDv7 identifier. A retry therefore
+writes byte-identical immutable context even when authorization is evaluated at
+a later instant; a concurrent retry cannot poison the run after dispatch has
+already succeeded. Non-platform identifiers retain the explicitly authorized
+instant used by bounded tests and internal callers.
+
+The Canvas connection test feedback is bound to both the selected connection
+and the latest request sequence. Changing the connection invalidates an
+in-flight result, and a response whose connection identifier does not match the
+tested selection is discarded. An authoritative selection or node change also
+clears feedback that was already visible in the reused inspector panel. The
+inspector cannot present connection A's availability as evidence for
+connection B.
+
+Run-context storage is provisioned independently from DBT execution. When no
+DBT artifact backend is configured, the protected runtime binds a file-backed
+context store under the workspace `.dvt/run-context-artifacts` boundary; DBT
+bundle creation remains disabled. Explicit file or S3 artifact configuration
+continues to provide the shared durable store. PostgreSQL-only execution can
+therefore persist, query and inherit its mandatory context while
+`DVT_TEMPORAL_DBT_ENABLED=false`.
+
+For the supported S3 artifact backend, the context payload remains
+content-addressed while `@dvt/artifacts` persists a separate immutable
+run-to-reference index. Tenant and run identifiers are SHA-256 addressed in
+that index, conditional S3 writes reject conflicting rebinds, and only an
+identical replay is accepted. Status and `RecoverRun` now load the same trusted
+reference through the artifact-backed reader; recovery verifies the source
+payload and records the descendant run identity against the same immutable S3
+context. Missing, malformed, cross-tenant or conflicting references fail
+closed. S3 context locators use one canonical URL-encoded tenant segment across
+publication, reference persistence and trust validation, so reserved tenant
+characters cannot change the object-key structure or escape their scope.
+Production file-backed run contexts remain denied by default; the API grants
+read authority only for the exact real-path root it provisioned for run-context
+artifacts, and rejects resolved paths outside that root. API and Temporal worker
+now resolve that store through the same artifact component. The coordinated
+stack forwards the workspace root, and a production worker fails at startup if
+a file-backed context root is not explicit. The canonical API and Temporal
+worker runbooks also declare the shared
+`DVT_POSTGRES_CREDENTIAL_BINDINGS` JSON contract and its `postgres:<alias>`
+namespace.
+
+The headed browser proof created a new governed project and Warehouse
+Connection, imported `raw.orders`, authored Source -> Transform -> Sink,
+generated preview `a87244bb21f7957f3044098db1767f337bd87b4cedcf21aad7f764565435d9ea`
+and completed run `run_019ffe42-d90d-785f-943f-7057809e9b37` with three rows
+written to `public.pth2_orders`. Its immutable run context retained
+`postgresql-local-gobernado` and `postgres:local-postgres-proof`.
+
+No stub, placeholder, database migration layer, duplicate command/query rail
+or secret was added to graph, plan or run-context persistence.

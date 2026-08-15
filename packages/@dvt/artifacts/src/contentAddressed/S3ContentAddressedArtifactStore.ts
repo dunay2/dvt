@@ -1,4 +1,4 @@
-import { PutObjectCommand, type S3Client } from '@aws-sdk/client-s3';
+import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { ArtifactStoreError } from '@dvt/contracts';
 
 import { computeSha256 } from '../compiledCode/sha256.js';
@@ -12,6 +12,8 @@ import type {
 } from './IContentAddressedArtifactStore.js';
 
 type S3LikeClient = Pick<S3Client, 'send'>;
+
+let defaultS3ContentAddressedArtifactStore: S3ContentAddressedArtifactStore | undefined;
 
 export interface S3ContentAddressedArtifactStoreOptions {
   readonly client: S3LikeClient;
@@ -50,6 +52,17 @@ export class S3ContentAddressedArtifactStore implements IContentAddressedArtifac
     validateExistingArtifact(input, existing);
     return receipt(input, 'verified-existing');
   }
+}
+
+export function createDefaultS3ContentAddressedArtifactStore(): S3ContentAddressedArtifactStore {
+  defaultS3ContentAddressedArtifactStore ??= new S3ContentAddressedArtifactStore({
+    client: new S3Client({}),
+  });
+  return defaultS3ContentAddressedArtifactStore;
+}
+
+export function encodeS3TenantPathSegment(tenantId: string): string {
+  return encodeURIComponent(tenantId);
 }
 
 async function readExistingArtifact(
@@ -101,7 +114,7 @@ function parseAndValidateLocator(input: PublishContentAddressedArtifactInput): {
   if (uri.protocol !== 's3:' || uri.hostname.length === 0 || parts.length !== 3) {
     throw ArtifactStoreError.uploadFailed('artifact storage URI is not content-addressed');
   }
-  if (parts[0] !== 'tenants' || parts[1] !== input.tenantId) {
+  if (parts[0] !== 'tenants' || parts[1] !== encodeS3TenantPathSegment(input.tenantId)) {
     throw ArtifactStoreError.tenantMismatch(input.tenantId, parts[1] ?? 'missing');
   }
   if (parts[2] !== input.sha256) {

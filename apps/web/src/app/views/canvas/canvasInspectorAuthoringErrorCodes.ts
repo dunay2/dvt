@@ -13,6 +13,7 @@ export type CanvasInspectorNodeDraftErrorCode =
   | 'dvt_schema_required'
   | 'dvt_table_required'
   | 'dvt_alias_required'
+  | 'dvt_connection_required'
   | 'dvt_materialization_invalid'
   | 'dvt_write_mode_invalid'
   | 'object_file_storage_uri_invalid'

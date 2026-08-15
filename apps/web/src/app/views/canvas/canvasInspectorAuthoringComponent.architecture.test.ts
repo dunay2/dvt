@@ -124,6 +124,7 @@ describe('canvas inspector authoring component architecture', () => {
     expect(DVT_FIELDS_SOURCE).toContain('DvtSqlTransformAuthoringSection');
     expect(DVT_FIELDS_SOURCE).toContain('DvtSinkAuthoringSection');
     expect(DVT_SQL_SECTION_SOURCE).toContain('MonacoCodeEditor');
+    expect(DVT_SQL_SECTION_SOURCE).toContain("from '../../components/monaco/MonacoCodeEditor'");
     expect(DVT_SQL_SECTION_SOURCE).not.toContain('@monaco-editor/react');
     expect(DVT_FIELDS_SOURCE).not.toContain('workspaceService');
 

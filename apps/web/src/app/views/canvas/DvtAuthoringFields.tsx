@@ -1,17 +1,20 @@
 /** Owned concern: render DVT-specific Canvas Inspector authoring fields. */
 import type { Dispatch, SetStateAction } from 'react';
 
-import type { CanonicalNode } from '../../types/canonical';
+import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {
   createCanvasInspectorNodeDraft,
   validateCanvasInspectorNodeDraft,
 } from './canvasInspectorAuthoringModel';
+import { resolveInheritedDvtConnectionRef } from './canvasDvtAuthoringModel';
 import { DvtSinkAuthoringSection } from './DvtSinkAuthoringSection';
 import { DvtSourceAuthoringSection } from './DvtSourceAuthoringSection';
 import { DvtSqlTransformAuthoringSection } from './DvtSqlTransformAuthoringSection';
 
 type DvtAuthoringFieldsProps = Readonly<{
   node: CanonicalNode;
+  nodes?: readonly CanonicalNode[];
+  edges?: readonly CanonicalEdge[];
   disabled: boolean;
   draft: ReturnType<typeof createCanvasInspectorNodeDraft>;
   errors: ReturnType<typeof validateCanvasInspectorNodeDraft>;
@@ -26,6 +29,8 @@ function formatQualifiedTarget(parts: readonly string[]): string {
 
 export function DvtAuthoringFields({
   node,
+  nodes = [node],
+  edges = [],
   disabled,
   draft,
   errors,
@@ -35,6 +40,12 @@ export function DvtAuthoringFields({
   if (!draft.dvt) {
     return null;
   }
+
+  const inheritedConnectionId = resolveInheritedDvtConnectionRef({
+    node,
+    nodes,
+    edges,
+  })?.connectionId;
 
   if (draft.dvt.kind === 'source') {
     if (section !== 'all' && section !== 'general') {
@@ -65,6 +76,7 @@ export function DvtAuthoringFields({
         draft={draft.dvt}
         errors={errors.dvt}
         section={section === 'code' ? 'code' : 'all'}
+        inheritedConnectionId={inheritedConnectionId}
         onChange={onChange}
       />
     );
@@ -81,6 +93,7 @@ export function DvtAuthoringFields({
       draft={draft.dvt}
       errors={errors.dvt}
       destinationTarget={formatQualifiedTarget([draft.dvt.schema, draft.dvt.table])}
+      inheritedConnectionId={inheritedConnectionId}
       onChange={onChange}
     />
   );

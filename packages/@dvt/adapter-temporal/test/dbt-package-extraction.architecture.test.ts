@@ -78,10 +78,7 @@ describe('Temporal DBT plugin package extraction architecture', () => {
       'utf8'
     );
     const apiAdmissionPolicy = readFileSync(
-      join(
-        REPO_ROOT,
-        'apps/api/src/infrastructure/startRun/ArtifactStoreDbtProjectBundleBindingPolicy.ts'
-      ),
+      join(REPO_ROOT, 'apps/api/src/infrastructure/startRun/RunExecutionContextBindingPolicy.ts'),
       'utf8'
     );
 

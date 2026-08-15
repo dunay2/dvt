@@ -1,5 +1,7 @@
 import type { $brand } from 'zod';
 
+import type { ConnectionRef } from '../contracts/source-import/ConnectedSourceRef.v1.js';
+
 import type { DbtProjectBundleRef } from './artifacts.js';
 
 /**
@@ -167,12 +169,17 @@ export interface RunExecutionContextRef {
 }
 
 export type PluginContextScalar = NonBlankString;
-export type PluginContextValue = PluginContextScalar | DbtProjectBundleRef;
+export type PluginContextValue = PluginContextScalar | DbtProjectBundleRef | ConnectionRef;
 export type GenericPluginContext = Record<string, PluginContextValue>;
 
 export interface DbtPluginContext {
   projectBundleRef: DbtProjectBundleRef;
   targetProfile?: NonBlankString | undefined;
+  credentialRef: NonBlankString;
+}
+
+export interface PostgresPluginContext {
+  connectionRef: ConnectionRef;
   credentialRef: NonBlankString;
 }
 

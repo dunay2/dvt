@@ -480,7 +480,7 @@ describe('workspace ports api warehouse source import', () => {
         name: 'Finance warehouse',
         type: 'postgres',
         database: 'finance',
-        credentialRef: 'env:DVT_FINANCE_WAREHOUSE_URL',
+        credentialRef: 'postgres:finance-warehouse',
       })
     ).resolves.toEqual({
       id: 'finance-warehouse',
@@ -494,7 +494,7 @@ describe('workspace ports api warehouse source import', () => {
         name: 'Finance warehouse',
         type: 'postgres',
         database: 'finance',
-        credentialRef: 'env:DVT_FINANCE_WAREHOUSE_URL',
+        credentialRef: 'postgres:finance-warehouse',
       }
     );
   });

@@ -16,12 +16,12 @@ import type {
   PlanPreviewProvenance,
   TransformationGitArtifactsProvenance,
 } from './PlanPreviewProvenance.v1.js';
-import type { TransformationSqlFirstCompilerGraphSourceV1 } from './TransformationFlowCompiler.v1.js';
+import type { TransformationSqlFirstCompilerGraphSourceV2 } from './TransformationFlowCompiler.v1.js';
 import { TRANSFORMATION_SQL_FIRST_SOURCE_VERSION } from './TransformationFlowDesignGraph.v1.js';
 
 export const PREVIEW_PROFILE = {
   plannerGenericV1: 'planner-generic-v1',
-  transformationSqlFirstV1: TRANSFORMATION_SQL_FIRST_SOURCE_VERSION,
+  transformationSqlFirstV2: TRANSFORMATION_SQL_FIRST_SOURCE_VERSION,
 } as const;
 
 export type PreviewProfile = (typeof PREVIEW_PROFILE)[keyof typeof PREVIEW_PROFILE];
@@ -47,8 +47,8 @@ export interface TransformationSqlFirstPlanPreviewRequest extends Omit<
   PlanPreviewRequest,
   'previewProfile' | 'graphSource' | 'provenance'
 > {
-  previewProfile: typeof PREVIEW_PROFILE.transformationSqlFirstV1;
-  graphSource: TransformationSqlFirstCompilerGraphSourceV1;
+  previewProfile: typeof PREVIEW_PROFILE.transformationSqlFirstV2;
+  graphSource: TransformationSqlFirstCompilerGraphSourceV2;
   provenance: TransformationGitArtifactsProvenance;
 }
 
@@ -81,7 +81,7 @@ export interface PlanPreviewPersistResponse {
 }
 
 export interface TransformationSqlFirstPlanPreviewPersistResponse extends PlanPreviewPersistResponse {
-  previewProfile: typeof PREVIEW_PROFILE.transformationSqlFirstV1;
+  previewProfile: typeof PREVIEW_PROFILE.transformationSqlFirstV2;
   planSummary: PlanPreviewSummary & {
     executor: 'postgres';
   };

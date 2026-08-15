@@ -1,0 +1,55 @@
+---
+id: R-20260813-PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY
+title: SQL-first execution could drift from its governed PostgreSQL connection
+status: Open
+date: 2026-08-13
+owners:
+  - packages/@dvt/contracts
+  - packages/@dvt/adapter-postgres
+  - packages/@dvt/artifacts
+  - apps/api
+  - apps/temporal-worker
+  - apps/web
+severity: High
+probability: Low
+context: >
+  PTH2 binds one source-owned PostgreSQL ConnectionRef through Canvas draft, preview, stored plan,
+  StartRun context, artifact-backed status/recovery and Temporal worker execution.
+risk: >
+  A future fallback, inferred transform binding, stale credential alias or incomplete scope check
+  could execute valid SQL against the wrong PostgreSQL connection without being obvious to the user.
+mitigations:
+  - Require the same strict ConnectionRef on every SQL-first step and reject mixed or missing
+    bindings during contract admission.
+  - Resolve the catalog entry and credential alias once at StartRun and persist only secret-free
+    immutable context.
+  - Provision run-context storage independently from DBT execution, defaulting to the governed
+    workspace artifact boundary when no DBT bundle backend is configured.
+  - Derive platform run-context creation time from the run UUIDv7 so retries persist byte-identical
+    immutable context even when authorization is re-evaluated later.
+  - Verify artifact integrity, workspace scope, PlanRef and exact step reference in the worker
+    before resolving a credential or opening a pool.
+  - Keep a separate pool per admitted binding and prove A/B routing with homonymous SQL objects.
+  - Bound retained idle plan sessions with least-recently-used eviction, preserve active leases and
+    close each evicted pool so connection churn cannot accumulate worker-lifetime resources.
+  - Reject a missing plan resolver or alias without falling back to the capability pool or
+    DATABASE_URL.
+  - Persist an immutable S3 run-to-reference index with hashed scope keys, conditional writes and
+    exact replay verification so status and recovery use the same trusted context as StartRun.
+  - URL-encode the tenant segment through one canonical helper for S3 publication, reference
+    validation and recovery trust checks.
+  - Keep production file artifact reads denied by default and allow only the real-path-scoped
+    run-context root provisioned by API composition.
+  - Resolve the file/S3 context store once in the artifact bounded context, pass the same mounted
+    workspace root to API and worker, and reject production worker startup when it is absent.
+  - Declare the identical API/Temporal worker `postgres:<alias>` credential-binding map in the
+    canonical operational runbooks.
+  - Bind Canvas connection-test feedback to the selected connection and latest request sequence,
+    discarding stale or mismatched responses and clearing visible feedback after an authoritative
+    selection or node change.
+residual_risk: >
+  Credential rotation changes the value behind a stable alias for future worker processes. Revoked
+  connection reconciliation and multi-provider SQL-first execution require separate product slices;
+  neither is represented as complete here.
+review_after: 2026-09-13
+---

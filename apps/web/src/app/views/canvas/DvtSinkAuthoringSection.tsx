@@ -19,6 +19,7 @@ export function DvtSinkAuthoringSection({
   draft,
   errors,
   destinationTarget,
+  inheritedConnectionId,
   onChange,
 }: Readonly<{
   node: CanonicalNode;
@@ -26,6 +27,7 @@ export function DvtSinkAuthoringSection({
   draft: DvtSinkAuthoringMetadata;
   errors: CanvasInspectorNodeDraftErrors['dvt'];
   destinationTarget: string;
+  inheritedConnectionId?: string;
   onChange: Dispatch<SetStateAction<CanvasInspectorNodeDraft>>;
 }>): JSX.Element {
   const selectClassName = inspectorVisualClasses.inspectorSelectInput;
@@ -49,6 +51,14 @@ export function DvtSinkAuthoringSection({
             {canvasViewCopy.inspectorDvtDestinationTargetLabel}
           </span>
           <code className="mt-1 block truncate text-(--text-default)">{destinationTarget}</code>
+        </div>
+        <div>
+          <span className="block text-(--text-muted)">
+            {canvasViewCopy.inspectorDvtInheritedConnectionLabel}
+          </span>
+          <code className="mt-1 block truncate text-(--text-default)">
+            {inheritedConnectionId ?? '-'}
+          </code>
         </div>
         <div className="flex flex-wrap gap-2">
           <span className="rounded border border-[color:var(--border-default)] px-2 py-1 text-(--text-muted)">

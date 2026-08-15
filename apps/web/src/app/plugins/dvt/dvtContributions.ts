@@ -62,7 +62,7 @@ export const dvtContributions: PluginContributions = {
       pluginId: DVT_PLUGIN_ID,
       executionStrategy: {
         kind: 'transformation_preview',
-        previewProfile: 'transformation-sql-first-v1',
+        previewProfile: 'transformation-sql-first-v2',
       },
       graphStrategy: transformationCanvasGraphStrategy,
       surfaceStrategy: dvtCanvasSurfaceStrategy,

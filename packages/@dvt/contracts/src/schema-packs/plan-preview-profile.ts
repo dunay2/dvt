@@ -11,7 +11,7 @@ export const PlanPreviewSelectionSchema = ExecutionSelectionSchema;
 
 export const PreviewProfileSchema = z.enum([
   PREVIEW_PROFILE.plannerGenericV1,
-  PREVIEW_PROFILE.transformationSqlFirstV1,
+  PREVIEW_PROFILE.transformationSqlFirstV2,
 ]);
 
 export type PreviewProfileSchemaT = z.infer<typeof PreviewProfileSchema>;

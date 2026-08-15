@@ -1,0 +1,165 @@
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { URL } from 'node:url';
+
+import { parseRunExecutionContext, type RunExecutionContext } from '@dvt/contracts';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+
+import { ArtifactBackedRunExecutionContextWriter } from '../../../src/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.js';
+import { runExecutionContextRefMatchesS3Store } from '../../../src/infrastructure/dbt/runExecutionContextTrust.js';
+import { resolveRunExecutionContextArtifactStore } from '../../../src/modules/protectedRuntime/buildProtectedRuntimeStorage.js';
+import { loadEnv } from '../../../src/plugins/env.js';
+
+let root: string | undefined;
+
+describe('ArtifactBackedRunExecutionContextWriter', () => {
+  afterEach(async () => {
+    if (root !== undefined) await rm(root, { recursive: true, force: true });
+    root = undefined;
+  });
+
+  it('writes an immutable context without exposing the caller run id as a path segment', async () => {
+    root = await mkdtemp(path.join(tmpdir(), 'dvt-dbt-run-context-'));
+    const context = buildContext();
+    const writer = new ArtifactBackedRunExecutionContextWriter({ kind: 'file', rootPath: root });
+
+    const result = await writer.write({ runId: '../unsafe/run', context });
+
+    expect(result).toMatchObject({ ok: true });
+    if (!result.ok) throw new Error('Expected a run context reference.');
+    expect(result.ref.uri).not.toContain('unsafe');
+    await expect(readFile(new URL(result.ref.uri), 'utf8')).resolves.toBe(JSON.stringify(context));
+  });
+
+  it('provisions file-backed run-context storage when DBT execution is disabled', async () => {
+    root = await mkdtemp(path.join(tmpdir(), 'dvt-postgres-run-context-'));
+    const store = resolveRunExecutionContextArtifactStore(
+      loadEnv({
+        DVT_TEMPORAL_DBT_ENABLED: 'false',
+        DVT_WORKSPACE_FILES_ROOT: root,
+      })
+    );
+    const writer = new ArtifactBackedRunExecutionContextWriter(store);
+
+    const result = await writer.write({ runId: 'postgres-only-run', context: buildContext() });
+
+    expect(store).toEqual({
+      kind: 'file',
+      rootPath: path.join(root, '.dvt', 'run-context-artifacts'),
+    });
+    expect(result).toMatchObject({ ok: true });
+  });
+
+  it('publishes an S3-backed context through the existing content-addressed store', async () => {
+    const context = buildContext();
+    const publish = vi.fn(async (input) => ({
+      disposition: 'created' as const,
+      storageUri: input.storageUri,
+      sha256: input.sha256,
+      sizeBytes: input.sizeBytes,
+      mediaType: input.mediaType,
+    }));
+    const put = vi.fn(async () => undefined);
+    const writer = new ArtifactBackedRunExecutionContextWriter(
+      { kind: 's3', bucket: 'dvt-run-contexts' },
+      { publish },
+      { put, get: vi.fn(async () => undefined) }
+    );
+
+    const result = await writer.write({ runId: 'run-1', context });
+
+    expect(result).toMatchObject({ ok: true });
+    if (!result.ok) throw new Error('Expected a run context reference.');
+    expect(result.ref.uri).toBe(
+      `s3://dvt-run-contexts/tenants/${context.tenantId}/${result.ref.sha256}`
+    );
+    expect(publish).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tenantId: context.tenantId,
+        storageUri: result.ref.uri,
+        sha256: result.ref.sha256,
+        mediaType: 'application/json',
+      })
+    );
+    expect(put).toHaveBeenCalledWith({
+      tenantId: context.tenantId,
+      runId: 'run-1',
+      ref: result.ref,
+    });
+  });
+
+  it('encodes reserved tenant characters in the S3 locator and trust check', async () => {
+    const context = buildContext('tenant /#?');
+    const publish = vi.fn(async (input) => ({
+      disposition: 'created' as const,
+      storageUri: input.storageUri,
+      sha256: input.sha256,
+      sizeBytes: input.sizeBytes,
+      mediaType: input.mediaType,
+    }));
+    const writer = new ArtifactBackedRunExecutionContextWriter(
+      { kind: 's3', bucket: 'dvt-run-contexts' },
+      { publish },
+      { put: vi.fn(async () => undefined), get: vi.fn(async () => undefined) }
+    );
+
+    const result = await writer.write({ runId: 'run-1', context });
+
+    expect(result).toMatchObject({ ok: true });
+    if (!result.ok) throw new Error('Expected a run context reference.');
+    expect(result.ref.uri).toBe(
+      `s3://dvt-run-contexts/tenants/${encodeURIComponent(context.tenantId)}/${result.ref.sha256}`
+    );
+    expect(
+      runExecutionContextRefMatchesS3Store({
+        bucket: 'dvt-run-contexts',
+        tenantId: context.tenantId,
+        ref: result.ref,
+      })
+    ).toBe(true);
+  });
+
+  it('fails closed before S3 publication when the recovery reference store is absent', async () => {
+    const publish = vi.fn(async () => {
+      throw new Error('must not publish');
+    });
+    const writer = new ArtifactBackedRunExecutionContextWriter(
+      { kind: 's3', bucket: 'dvt-run-contexts' },
+      { publish }
+    );
+
+    await expect(writer.write({ runId: 'run-1', context: buildContext() })).resolves.toEqual({
+      ok: false,
+      reason: 'artifact_store_unavailable',
+    });
+    expect(publish).not.toHaveBeenCalled();
+  });
+});
+
+function buildContext(tenantId = 'tenant-1'): RunExecutionContext {
+  return parseRunExecutionContext({
+    schemaVersion: 'v1.0',
+    planId: 'a'.repeat(64),
+    planVersion: '1.0',
+    planSha256: 'b'.repeat(64),
+    tenantId,
+    projectId: 'project-1',
+    environmentId: 'dev',
+    targetAdapter: 'temporal',
+    createdAtIso: '2026-07-15T00:00:00.000Z',
+    createdBy: 'principal-1',
+    pluginContexts: {
+      dbt: {
+        credentialRef: 'env:DBT_PROFILES_DIR',
+        projectBundleRef: {
+          uri: `file:///bundles/tenants/tenant-1/${'c'.repeat(64)}`,
+          kind: 'dbt-project-bundle',
+          sha256: 'c'.repeat(64),
+          tenantId: 'tenant-1',
+        },
+        targetProfile: 'production',
+      },
+    },
+  });
+}

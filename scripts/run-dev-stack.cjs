@@ -34,6 +34,9 @@ const DEFAULT_LOCAL_WORKSPACE_FILES_ROOT = path.resolve(
   '../.dvt/dev-stack/workspace-files'
 );
 const DEFAULT_LOCAL_DBT_BUNDLE_FILE_ROOT = path.resolve(__dirname, '../.dvt/dev-stack/dbt-bundles');
+const LOCAL_POSTGRES_CONNECTION_ID = 'local-postgres-proof';
+const LOCAL_POSTGRES_CONNECTION_NAME = 'Local Postgres proof';
+const LOCAL_POSTGRES_CREDENTIAL_REF = 'postgres:local-postgres-proof';
 
 function parseArgs(argv) {
   const parsed = {
@@ -129,7 +132,9 @@ function buildApiEnv(options, env = process.env) {
       ? {}
       : {
           DATABASE_URL: databaseUrl,
-          DVT_LOCAL_POSTGRES_WAREHOUSE_URL: databaseUrl,
+          DVT_POSTGRES_CREDENTIAL_BINDINGS:
+            readNonEmptyEnv(env.DVT_POSTGRES_CREDENTIAL_BINDINGS) ??
+            JSON.stringify({ [LOCAL_POSTGRES_CREDENTIAL_REF]: databaseUrl }),
           DVT_DB_READY_ENABLED: 'true',
         }),
   };
@@ -217,10 +222,10 @@ ANALYZE raw.orders;
 
 function buildLocalWarehouseConnectionRequest() {
   return {
-    name: 'Local Postgres proof',
+    name: LOCAL_POSTGRES_CONNECTION_NAME,
     type: 'postgres',
     database: 'dvt',
-    credentialRef: 'env:DVT_LOCAL_POSTGRES_WAREHOUSE_URL',
+    credentialRef: LOCAL_POSTGRES_CREDENTIAL_REF,
   };
 }
 
@@ -725,6 +730,7 @@ module.exports = {
   shouldStartTemporalWorker,
   resolveProcessStartupOrder,
   buildLocalPostgresProofSeedSql,
+  LOCAL_POSTGRES_CONNECTION_ID,
   buildLocalWarehouseConnectionRequest,
   seedLocalPostgresProofData,
   ensureLocalWarehouseConnectionViaApi,

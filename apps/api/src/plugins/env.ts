@@ -74,6 +74,7 @@ const EnvSchema = z.object({
   DVT_DBT_EXECUTION_ADAPTER: z.string().trim().min(1).optional(),
   DVT_DBT_EXECUTION_TARGET_NAME: z.string().trim().min(1).optional(),
   DVT_DBT_EXECUTION_CREDENTIAL_REF: z.string().trim().min(1).optional(),
+  DVT_POSTGRES_CREDENTIAL_BINDINGS: z.string().trim().min(2).optional(),
   // OIDC / auth -- all three required together when auth is enabled
   OIDC_JWKS_URI: z.string().optional(),
   OIDC_ISSUER: z.string().optional(),

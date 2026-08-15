@@ -18,6 +18,7 @@ export function DvtSqlTransformAuthoringSection({
   draft,
   errors,
   section = 'all',
+  inheritedConnectionId,
   onChange,
 }: Readonly<{
   node: CanonicalNode;
@@ -25,6 +26,7 @@ export function DvtSqlTransformAuthoringSection({
   draft: DvtSqlTransformAuthoringMetadata;
   errors: CanvasInspectorNodeDraftErrors['dvt'];
   section?: 'all' | 'code';
+  inheritedConnectionId?: string;
   onChange: Dispatch<SetStateAction<CanvasInspectorNodeDraft>>;
 }>): JSX.Element {
   const showCode = section === 'all' || section === 'code';
@@ -46,6 +48,14 @@ export function DvtSqlTransformAuthoringSection({
             {canvasViewCopy.inspectorDvtSqlTransformTitle}
           </h3>
           <div className="rounded border border-[color:var(--border-default)] bg-[var(--surface-elevated)] p-3 text-xs">
+            <span className="block text-(--text-muted)">
+              {canvasViewCopy.inspectorDvtInheritedConnectionLabel}
+            </span>
+            <code className="mt-1 block truncate text-(--text-default)">
+              {inheritedConnectionId ?? '-'}
+            </code>
+          </div>
+          <div className="rounded border border-[color:var(--border-default)] bg-[var(--surface-elevated)] p-3 text-xs">
             <div className="flex items-center justify-between gap-3">
               <span className="text-(--text-muted)">{canvasViewCopy.inspectorDvtSqlBodyLabel}</span>
               <span className="text-(--text-muted)">
@@ -64,12 +74,12 @@ export function DvtSqlTransformAuthoringSection({
               ariaLabel={canvasViewCopy.inspectorDvtSqlLabel}
               language="sql"
               loadingLabel={canvasViewCopy.inspectorDvtSqlBodyLabel}
-              onChange={(value) =>
+              onChange={(sql) =>
                 onChange((currentDraft) =>
                   currentDraft.dvt?.kind === 'sql_transform'
                     ? {
                         ...currentDraft,
-                        dvt: { ...currentDraft.dvt, sql: value },
+                        dvt: { ...currentDraft.dvt, sql },
                       }
                     : currentDraft
                 )

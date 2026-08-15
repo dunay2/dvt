@@ -92,6 +92,11 @@ function buildTemporalWorkerEnv(options, env = process.env, databaseUrl) {
     DVT_TEMPORAL_ADMIN_PORT: String(posture.workerAdminPort),
     DVT_TEMPORAL_WORKER_RUN_MIGRATIONS:
       readNonEmptyEnv(env.DVT_TEMPORAL_WORKER_RUN_MIGRATIONS) ?? 'true',
+    ...(readNonEmptyEnv(env.DVT_POSTGRES_CREDENTIAL_BINDINGS) === undefined
+      ? {}
+      : {
+          DVT_POSTGRES_CREDENTIAL_BINDINGS: readNonEmptyEnv(env.DVT_POSTGRES_CREDENTIAL_BINDINGS),
+        }),
     ...(readNonEmptyEnv(env.DVT_TEMPORAL_DBT_ENABLED) === undefined
       ? {}
       : { DVT_TEMPORAL_DBT_ENABLED: readNonEmptyEnv(env.DVT_TEMPORAL_DBT_ENABLED) }),
@@ -101,6 +106,9 @@ function buildTemporalWorkerEnv(options, env = process.env, databaseUrl) {
     ...(readNonEmptyEnv(env.DVT_DBT_BUNDLE_FILE_ROOT) === undefined
       ? {}
       : { DVT_DBT_BUNDLE_FILE_ROOT: readNonEmptyEnv(env.DVT_DBT_BUNDLE_FILE_ROOT) }),
+    ...(readNonEmptyEnv(env.DVT_WORKSPACE_FILES_ROOT) === undefined
+      ? {}
+      : { DVT_WORKSPACE_FILES_ROOT: readNonEmptyEnv(env.DVT_WORKSPACE_FILES_ROOT) }),
     ...(readNonEmptyEnv(env.DVT_DBT_BUNDLE_S3_BUCKET) === undefined
       ? {}
       : { DVT_DBT_BUNDLE_S3_BUCKET: readNonEmptyEnv(env.DVT_DBT_BUNDLE_S3_BUCKET) }),

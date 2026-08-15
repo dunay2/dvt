@@ -5,7 +5,7 @@ const SQL_SHA = 'b'.repeat(64);
 
 function buildRuntimeProofDraftSaveRequest(profile) {
   const { scope } = profile;
-  const { source, sink } = profile.workload;
+  const { source, sink, connectionRef } = profile.workload;
 
   return {
     scope,
@@ -21,7 +21,10 @@ function buildRuntimeProofDraftSaveRequest(profile) {
         sink_1: { x: 480, y: 0 },
       },
       nodes: [
-        buildDraftNode('source_1', 'Orders source', 'postgres_table', 'input', source),
+        buildDraftNode('source_1', 'Orders source', 'postgres_table', 'input', {
+          ...source,
+          connectionRef,
+        }),
         {
           ...buildDraftNode('transform_1', 'Orders transform', 'sql_transform', 'transform'),
           path: 'models/runtime-proof-orders.sql',
@@ -52,7 +55,7 @@ function buildRuntimeProofDraftSaveRequest(profile) {
 
 function buildRuntimeProofPreviewRequest(profile) {
   const { scope } = profile;
-  const { source, sink } = profile.workload;
+  const { source, sink, connectionRef } = profile.workload;
   const sqlPath = 'models/runtime-proof-orders.sql';
 
   return {
@@ -61,18 +64,19 @@ function buildRuntimeProofPreviewRequest(profile) {
       ...scope,
       targetAdapter: 'temporal',
     },
-    previewProfile: 'transformation-sql-first-v1',
+    previewProfile: 'transformation-sql-first-v2',
     selection: { mode: 'upstream', nodeIds: ['sink_1'] },
     graphSource: {
       kind: 'generic-graph-v1',
       sourceFamily: 'transformation-design-graph',
-      sourceVersion: 'transformation-sql-first-v1',
+      sourceVersion: 'transformation-sql-first-v2',
       nodes: [
         {
           nodeId: 'source_1',
           stepKind: 'PREPARE_POSTGRES_TRANSFORM',
           dependsOn: [],
           stepTypeConfig: {
+            connectionRef,
             targetSchema: sink.schema,
             sourceSchema: source.schema,
             sourceTable: source.table,
@@ -84,6 +88,7 @@ function buildRuntimeProofPreviewRequest(profile) {
           stepKind: 'POSTGRES_SQL_TRANSFORM',
           dependsOn: ['source_1'],
           stepTypeConfig: {
+            connectionRef,
             dialect: 'postgres',
             entrypoint: sqlPath,
             sql: `select * from ${source.schema}.${source.table}`,
@@ -102,6 +107,7 @@ function buildRuntimeProofPreviewRequest(profile) {
           stepKind: 'CAPTURE_MATERIALIZATION_EVIDENCE',
           dependsOn: ['transform_1'],
           stepTypeConfig: {
+            connectionRef,
             sinkSchema: sink.schema,
             sinkTable: sink.table,
             materialization: 'table',

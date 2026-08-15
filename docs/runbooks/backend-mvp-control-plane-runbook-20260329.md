@@ -2,7 +2,7 @@
 title: Backend MVP Control-Plane Runbook
 status: Review
 owner: API / Runtime / Docs
-last_reviewed: 2026-04-29
+last_reviewed: 2026-08-15
 ---
 
 # Backend MVP Control-Plane Runbook
@@ -71,6 +71,19 @@ To enable protected runtime routes:
 - `OIDC_ISSUER`
 - `OIDC_AUDIENCE`
 - `DATABASE_URL` (required when OIDC-protected runtime is enabled)
+
+For SQL-first PostgreSQL plans, both the API and the Temporal worker require the
+same `DVT_POSTGRES_CREDENTIAL_BINDINGS` JSON object. Keys use
+`postgres:<alias>` and values are PostgreSQL connection URLs; the alias is the
+credential reference persisted by the governed warehouse connection. Do not
+persist the URL in Canvas or plan payloads.
+
+For file-backed run contexts, configure the same mounted artifact boundary for
+the API and Temporal worker. An explicit `file` bundle backend uses
+`DVT_DBT_BUNDLE_FILE_ROOT`; the PostgreSQL-only fallback uses
+`DVT_WORKSPACE_FILES_ROOT/.dvt/run-context-artifacts`. Production worker startup
+fails closed if neither file root is explicit. S3-backed contexts do not use
+this file boundary.
 
 Optional route exposure flags:
 

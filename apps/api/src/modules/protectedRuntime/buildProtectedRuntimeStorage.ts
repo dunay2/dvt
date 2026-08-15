@@ -2,12 +2,20 @@
  * Owned concern: assemble the protected-runtime storage and stored-plan
  * dependencies for `apps/api`.
  */
+import { PostgresCredentialBindingResolver } from '@dvt/adapter-postgres';
+import {
+  resolveRunExecutionContextArtifactStore as resolveCanonicalRunExecutionContextArtifactStore,
+  S3RunExecutionContextReferenceStore,
+  type DbtProjectBundleArtifactStore,
+} from '@dvt/artifacts';
 import { asIsoUtcString, createDefaultStepTypeRegistry } from '@dvt/contracts';
 import type { ExecutionPlan } from '@dvt/engine';
 
 import { StoredExecutablePlanResolver } from '../../application/services/StoredExecutablePlanResolver.js';
 import { ArtifactBackedRunExecutionContextResolver } from '../../infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.js';
-import { ArtifactStoreDbtProjectBundleBindingPolicy } from '../../infrastructure/startRun/ArtifactStoreDbtProjectBundleBindingPolicy.js';
+import { RunExecutionContextBindingPolicy } from '../../infrastructure/startRun/RunExecutionContextBindingPolicy.js';
+import { WorkspaceWarehouseConnectionCatalog } from '../../infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionCatalog.js';
+import { LocalWorkspaceMetadataFileRepository } from '../../infrastructure/workspaceFiles/LocalWorkspaceMetadataFileRepository.js';
 import { resolveWorkspaceFilesRoot } from '../../infrastructure/workspaceFiles/resolveWorkspaceFilesRoot.js';
 import type { Env } from '../../plugins/env.js';
 import { bindStateStoreRoles } from '../stateStoreRoles.js';
@@ -59,10 +67,25 @@ export function buildProtectedRuntimeStorage(deps: BuildProtectedRuntimeStorageD
   });
   const systemClock = { nowIsoUtc: () => asIsoUtcString(new Date().toISOString()) };
   const dbtBundleStore = resolveDbtBundleArtifactStore(deps.env);
+  const runExecutionContextStore = resolveRunExecutionContextArtifactStore(deps.env);
+  const runExecutionContextReferenceStore =
+    runExecutionContextStore.kind === 's3'
+      ? new S3RunExecutionContextReferenceStore({ bucket: runExecutionContextStore.bucket })
+      : undefined;
+  const workspaceFilesRoot = resolveWorkspaceFilesRoot(deps.env);
+  const warehouseConnectionCatalog = new WorkspaceWarehouseConnectionCatalog({
+    repository: new LocalWorkspaceMetadataFileRepository({ root: workspaceFilesRoot }),
+  });
+  const postgresCredentialResolver = new PostgresCredentialBindingResolver(
+    deps.env.DVT_POSTGRES_CREDENTIAL_BINDINGS
+  );
   const runExecutionContextResolver = new ArtifactBackedRunExecutionContextResolver({
     nodeEnv: deps.env.NODE_ENV,
+    ...(runExecutionContextStore.kind === 'file'
+      ? { fileReadRoot: runExecutionContextStore.rootPath }
+      : {}),
   });
-  const runExecutionContextBindingPolicy = new ArtifactStoreDbtProjectBundleBindingPolicy({
+  const runExecutionContextBindingPolicy = new RunExecutionContextBindingPolicy({
     bundleStore: dbtBundleStore,
   });
 
@@ -75,14 +98,28 @@ export function buildProtectedRuntimeStorage(deps: BuildProtectedRuntimeStorageD
     stepTypeRegistry,
     executablePlanResolver,
     systemClock,
-    workspaceFilesRoot: resolveWorkspaceFilesRoot(deps.env),
+    workspaceFilesRoot,
+    warehouseConnectionCatalog,
+    postgresCredentialResolver,
     dbtBundleStore,
+    runExecutionContextStore,
+    runExecutionContextReferenceStore,
     runExecutionContextResolver,
     runExecutionContextBindingPolicy,
   };
 }
 
 export type ProtectedRuntimeStorage = ReturnType<typeof buildProtectedRuntimeStorage>;
+
+export function resolveRunExecutionContextArtifactStore(env: Env): DbtProjectBundleArtifactStore {
+  return resolveCanonicalRunExecutionContextArtifactStore({
+    dbtBundleStoreBackend: env.DVT_DBT_BUNDLE_STORE_BACKEND,
+    dbtBundleS3Bucket: env.DVT_DBT_BUNDLE_S3_BUCKET,
+    dbtBundleFileRoot: env.DVT_DBT_BUNDLE_FILE_ROOT,
+    workspaceFilesRoot: env.DVT_WORKSPACE_FILES_ROOT,
+    workingDirectory: process.cwd(),
+  });
+}
 
 function resolveDbtBundleArtifactStore(env: Env) {
   if (env.DVT_DBT_BUNDLE_STORE_BACKEND === 's3') {

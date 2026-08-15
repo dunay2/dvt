@@ -485,7 +485,9 @@ function buildLiveProofApiEnv({
     HOST: API_BIND_HOST,
     PORT: String(DEFAULT_API_PORT),
     DATABASE_URL: databaseUrl,
-    DVT_LOCAL_POSTGRES_WAREHOUSE_URL: databaseUrl,
+    DVT_POSTGRES_CREDENTIAL_BINDINGS:
+      readNonEmptyEnv(sourceEnv.DVT_POSTGRES_CREDENTIAL_BINDINGS) ??
+      JSON.stringify({ 'postgres:local-postgres-proof': databaseUrl }),
     DVT_PG_SCHEMA: liveProofSchema,
     DVT_DBT_ANALYZER_PROFILES_DIR: profilesDirectory,
     DVT_READYZ_ENABLED: 'true',

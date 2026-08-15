@@ -2,7 +2,7 @@
 title: WorkflowEngine boundary ownership component
 status: Active
 owner: Architecture / Engine / Artifacts / API
-last_reviewed: 2026-04-29
+last_reviewed: 2026-08-15
 ---
 
 # WorkflowEngine Boundary Ownership Component
@@ -16,14 +16,15 @@ readers into engine needs.
 
 ## Public API
 
-| Surface                        | Canonical owner                                         | Public role                                                                       |
-| ------------------------------ | ------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| `PlanRef`                      | `@dvt/contracts`                                        | Shared immutable plan reference and integrity metadata.                           |
-| `RunExecutionContextRef`       | `@dvt/contracts`                                        | Shared immutable reference to plugin/runtime execution context.                   |
-| `IStoredPlanArtifactReader`    | `@dvt/artifacts/src/ports/IStoredPlanArtifactStore.ts`  | Artifact-owned port that materializes executable plan bytes from `ScopedPlanRef`. |
-| `IPlanIntegrityValidator`      | `@dvt/engine/src/ports/IPlanIntegrityValidator.ts`      | Engine-owned integrity gate abstraction for start-run and recovery preflight.     |
-| `IRunExecutionContextResolver` | `@dvt/engine/src/ports/IRunExecutionContextResolver.ts` | Engine-owned resolver need for admission-time context materialization.            |
-| `IRunExecutionContextReader`   | `@dvt/artifacts`                                        | Artifact-owned reader implementation seam for context payloads.                   |
+| Surface                              | Canonical owner                                                  | Public role                                                                                        |
+| ------------------------------------ | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `PlanRef`                            | `@dvt/contracts`                                                 | Shared immutable plan reference and integrity metadata.                                            |
+| `RunExecutionContextRef`             | `@dvt/contracts`                                                 | Shared immutable reference to plugin/runtime execution context.                                    |
+| `IStoredPlanArtifactReader`          | `@dvt/artifacts/src/ports/IStoredPlanArtifactStore.ts`           | Artifact-owned port that materializes executable plan bytes from `ScopedPlanRef`.                  |
+| `IPlanIntegrityValidator`            | `@dvt/engine/src/ports/IPlanIntegrityValidator.ts`               | Engine-owned integrity gate abstraction for start-run and recovery preflight.                      |
+| `IRunExecutionContextResolver`       | `@dvt/engine/src/ports/IRunExecutionContextResolver.ts`          | Engine-owned resolver need for admission-time context materialization.                             |
+| `IRunExecutionContextReader`         | `@dvt/artifacts`                                                 | Artifact-owned reader implementation seam for context payloads.                                    |
+| `IRunExecutionContextReferenceStore` | `@dvt/artifacts/src/ports/IRunExecutionContextReferenceStore.ts` | Artifact-owned immutable run-to-reference index for status and recovery across file and S3 stores. |
 
 `@dvt/artifacts` exports `StoredPlanArtifact` and
 `IStoredPlanArtifactReader`. `@dvt/engine` exports only
@@ -39,7 +40,9 @@ readers into engine needs.
 - `IPlanIntegrityValidator` belongs to `@dvt/engine` because it owns the
   dispatch-time invariant that fetched bytes and metadata match the scoped
   `PlanRef`.
-- Artifact storage and context reading behavior belongs to `@dvt/artifacts`.
+- Artifact storage, context reading and immutable run-to-reference indexing
+  belong to `@dvt/artifacts`. S3 context publication is not complete until the
+  same run identity can reload that reference for status and recovery.
 - `IRunStateStore` must not publish plan-fetching or artifact-reader
   responsibilities.
 - Provider adapters receive an engine-approved `PlanRef`; they do not decide
@@ -65,6 +68,7 @@ readers into engine needs.
 - `apps/api/src/application/services/StoredExecutablePlanResolver.ts`
 - `packages/@dvt/artifacts/src/ports/IStoredPlanArtifactStore.ts`
 - `packages/@dvt/artifacts/src/ports/IRunExecutionContextReader.ts`
+- `packages/@dvt/artifacts/src/ports/IRunExecutionContextReferenceStore.ts`
 
 ## User Stories
 
@@ -83,10 +87,12 @@ flowchart LR
   Artifacts["@dvt/artifacts<br/>artifact/context readers"]
   Engine["@dvt/engine<br/>WorkflowEngine"]
   PlanPort["IStoredPlanArtifactReader<br/>artifact-owned port"]
+  ReferenceStore["IRunExecutionContextReferenceStore<br/>artifact-owned file/S3 index"]
   ContextPort["IRunExecutionContextResolver<br/>engine-owned port"]
   Adapter["IProviderAdapter<br/>run-driven provider"]
 
   Contracts --> Api
+  Api --> ReferenceStore
   Api --> Engine
   Api --> Artifacts
   Engine --> Validator["IPlanIntegrityValidator<br/>engine-owned gate"]

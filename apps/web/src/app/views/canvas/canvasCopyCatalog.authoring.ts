@@ -49,6 +49,10 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.transformation.requiresExecutablePathMessage',
     fallback: 'Execution Preview requires a connected source -> sql_transform -> sink path.',
   },
+  transformationRequiresPostgresConnectionMessage: {
+    key: 'canvas.transformation.requiresPostgresConnectionMessage',
+    fallback: 'Select a governed PostgreSQL connection on the source before previewing.',
+  },
   transformationUnsupportedRolesMessage: {
     key: 'canvas.transformation.unsupportedRolesMessage',
     fallback:
@@ -434,6 +438,38 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.dvtSourceTitle',
     fallback: 'DVT source',
   },
+  inspectorDvtConnectionLabel: {
+    key: 'canvas.inspector.authoring.dvtConnectionLabel',
+    fallback: 'PostgreSQL connection',
+  },
+  inspectorDvtConnectionPlaceholder: {
+    key: 'canvas.inspector.authoring.dvtConnectionPlaceholder',
+    fallback: 'Select a governed connection',
+  },
+  inspectorDvtConnectionLoadingLabel: {
+    key: 'canvas.inspector.authoring.dvtConnectionLoadingLabel',
+    fallback: 'Loading connections…',
+  },
+  inspectorDvtConnectionLoadFailedMessage: {
+    key: 'canvas.inspector.authoring.dvtConnectionLoadFailedMessage',
+    fallback: 'Connections could not be loaded.',
+  },
+  inspectorDvtConnectionTestLabel: {
+    key: 'canvas.inspector.authoring.dvtConnectionTestLabel',
+    fallback: 'Test connection',
+  },
+  inspectorDvtConnectionTestPassedMessage: {
+    key: 'canvas.inspector.authoring.dvtConnectionTestPassedMessage',
+    fallback: 'Connection available.',
+  },
+  inspectorDvtConnectionTestFailedMessage: {
+    key: 'canvas.inspector.authoring.dvtConnectionTestFailedMessage',
+    fallback: 'Connection unavailable.',
+  },
+  inspectorDvtInheritedConnectionLabel: {
+    key: 'canvas.inspector.authoring.dvtInheritedConnectionLabel',
+    fallback: 'Inherited PostgreSQL connection',
+  },
   inspectorDvtSqlTransformTitle: {
     key: 'canvas.inspector.authoring.dvtSqlTransformTitle',
     fallback: 'DVT SQL transform',
@@ -701,6 +737,10 @@ export const canvasViewAuthoringCopyByKey = {
   inspectorErrorDvtAliasRequired: {
     key: 'canvas.inspector.authoring.errorDvtAliasRequired',
     fallback: 'Alias is required.',
+  },
+  inspectorErrorDvtConnectionRequired: {
+    key: 'canvas.inspector.authoring.errorDvtConnectionRequired',
+    fallback: 'Select a PostgreSQL connection.',
   },
   inspectorErrorDvtMaterializationInvalid: {
     key: 'canvas.inspector.authoring.errorDvtMaterializationInvalid',

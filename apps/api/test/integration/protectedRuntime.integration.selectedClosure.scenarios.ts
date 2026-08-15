@@ -190,7 +190,7 @@ function buildSelectedClosurePreviewPayload(input: {
       environmentId: ENVIRONMENT_ID,
       targetAdapter: 'temporal',
     },
-    previewProfile: 'transformation-sql-first-v1',
+    previewProfile: 'transformation-sql-first-v2',
     selection: {
       mode: input.selection.mode,
       nodeIds: [...input.selection.nodeIds],
@@ -234,7 +234,7 @@ function buildSelectedClosureDraft(): ReturnType<typeof buildWorkspaceGraphDraft
 function buildTransformationGraphSource(nodeIds: readonly string[]): {
   kind: 'generic-graph-v1';
   sourceFamily: 'transformation-design-graph';
-  sourceVersion: 'transformation-sql-first-v1';
+  sourceVersion: 'transformation-sql-first-v2';
   nodes: Array<Record<string, unknown>>;
 } {
   const nodeSet = new Set(nodeIds);
@@ -284,7 +284,7 @@ function buildTransformationGraphSource(nodeIds: readonly string[]): {
   return {
     kind: 'generic-graph-v1',
     sourceFamily: 'transformation-design-graph',
-    sourceVersion: 'transformation-sql-first-v1',
+    sourceVersion: 'transformation-sql-first-v2',
     nodes: allNodes.filter((node) => nodeSet.has(node.nodeId as string)),
   };
 }
@@ -295,7 +295,7 @@ function buildMismatchedTransformationGraphSource(): ReturnType<
   return {
     kind: 'generic-graph-v1',
     sourceFamily: 'transformation-design-graph',
-    sourceVersion: 'transformation-sql-first-v1',
+    sourceVersion: 'transformation-sql-first-v2',
     nodes: [
       {
         nodeId: 'alternate_source',

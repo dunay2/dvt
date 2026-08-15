@@ -10,6 +10,7 @@ import { describe, expect, it } from 'vitest';
 import {
   ArtifactBackedDbtProjectBundleReader,
   ArtifactBackedRunExecutionContextReader,
+  resolveRunExecutionContextArtifactStore,
 } from '../src/index.js';
 
 class FakeS3Client {
@@ -28,6 +29,32 @@ class FakeS3Client {
 }
 
 describe('@dvt/artifacts runtime readers', () => {
+  it('resolves one run-context store authority for API and worker composition', () => {
+    expect(
+      resolveRunExecutionContextArtifactStore({
+        dbtBundleStoreBackend: 's3',
+        dbtBundleS3Bucket: 'context-bucket',
+        workingDirectory: '/runtime',
+      })
+    ).toEqual({ kind: 's3', bucket: 'context-bucket' });
+    expect(
+      resolveRunExecutionContextArtifactStore({
+        dbtBundleStoreBackend: 'file',
+        dbtBundleFileRoot: '/shared/dbt-bundles',
+        workingDirectory: '/runtime',
+      })
+    ).toEqual({ kind: 'file', rootPath: '/shared/dbt-bundles' });
+    expect(
+      resolveRunExecutionContextArtifactStore({
+        workspaceFilesRoot: '/shared/workspaces',
+        workingDirectory: '/runtime',
+      })
+    ).toEqual({
+      kind: 'file',
+      rootPath: join('/shared/workspaces', '.dvt', 'run-context-artifacts'),
+    });
+  });
+
   it('resolves runExecutionContext artifacts from file:// outside production', async () => {
     const { fileUrl: bundleFileUrl } = writeCanonicalBundleFixture('bundle');
     const content = makeRunExecutionContextArtifact(bundleFileUrl);
@@ -66,6 +93,48 @@ describe('@dvt/artifacts runtime readers', () => {
     ).rejects.toMatchObject({
       name: 'ArtifactReadError',
       message: 'file:// runExecutionContextRef is not allowed in production',
+    });
+  });
+
+  it('resolves production file artifacts only from an explicitly allowed root', async () => {
+    const content = makeRunExecutionContextArtifact(
+      `s3://bundle-bucket/tenants/tenant-1/${'b'.repeat(64)}`
+    );
+    const allowedRoot = mkdtempSync(join(tmpdir(), 'dvt-artifacts-runctx-root-'));
+    const allowedPath = join(allowedRoot, 'tenants', 'tenant-1', sha256Hex(content));
+    mkdirSync(join(allowedRoot, 'tenants', 'tenant-1'), { recursive: true });
+    writeFileSync(allowedPath, content, 'utf8');
+    const reader = new ArtifactBackedRunExecutionContextReader({
+      nodeEnv: 'production',
+      fileReadRoot: allowedRoot,
+    });
+
+    await expect(
+      reader.resolve(
+        parseRunExecutionContextRef({
+          uri: pathToFileURL(allowedPath).href,
+          sha256: sha256Hex(content),
+          schemaVersion: 'v1.0',
+          planId: 'plan-1',
+          planVersion: '1.0',
+        })
+      )
+    ).resolves.toMatchObject({ planId: 'plan-1' });
+
+    const outsideUrl = writeTempFixture('outside.json', content);
+    await expect(
+      reader.resolve(
+        parseRunExecutionContextRef({
+          uri: outsideUrl,
+          sha256: sha256Hex(content),
+          schemaVersion: 'v1.0',
+          planId: 'plan-1',
+          planVersion: '1.0',
+        })
+      )
+    ).rejects.toMatchObject({
+      name: 'ArtifactReadError',
+      message: 'file:// runExecutionContextRef resolves outside its allowed root',
     });
   });
 

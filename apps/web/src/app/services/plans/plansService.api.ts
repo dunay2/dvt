@@ -197,7 +197,7 @@ function mapContractPlanToUi(
       const nodes =
         nodesFromConfig.length > 0
           ? nodesFromConfig
-          : previewProfile === PREVIEW_PROFILE.transformationSqlFirstV1 ||
+          : previewProfile === PREVIEW_PROFILE.transformationSqlFirstV2 ||
               previewProfile === PREVIEW_PROFILE.plannerGenericV1
             ? [step.stepId]
             : [];
