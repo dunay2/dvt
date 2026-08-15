@@ -39,6 +39,7 @@ describe('SourceImportWizard', () => {
     expect(document.body.textContent).toContain('Elegir conexión a base de datos');
     expect(document.body.textContent).toContain('1 conexión en el catálogo gobernado');
     expect(document.body.textContent).toContain('Nueva conexión');
+    expect(document.body.textContent).toContain('Cambiar nombre');
     expect(document.body.textContent).toContain('Probar conexión');
     expect(document.body.textContent).toContain('Cancelar');
     expect(document.body.textContent).toContain('Adjuntar orígenes al canvas');
@@ -60,6 +61,92 @@ describe('SourceImportWizard', () => {
     expect(document.body.textContent).toContain('Add source');
     expect(document.body.textContent).toContain('Register database connection');
     expect(document.body.textContent).not.toContain('Añadir origen');
+  });
+
+  it('renames the selected connection in place with localized accessible controls', async () => {
+    useApplicationLanguageStore.getState().configureApplicationLanguage('es');
+    const renameWarehouseConnection = vi.fn(
+      async (connectionId: string, input: { readonly name: string }) => ({
+        id: connectionId,
+        name: input.name,
+        type: 'postgres' as const,
+        database: 'dvt',
+      })
+    );
+
+    await harness.renderWizard({
+      warehouseSourceImport: buildWarehouseSourceImportPort({ renameWarehouseConnection }),
+    });
+
+    const renameAction = harness.findButtonContaining('Cambiar nombre');
+    expect(renameAction?.disabled).toBe(true);
+
+    await harness.clickConnectionOption('Local Postgres proof');
+    expect(renameAction?.disabled).toBe(false);
+    await harness.clickButtonContaining('Cambiar nombre');
+
+    const nameInput = document.querySelector<HTMLInputElement>(
+      '[aria-label="Nuevo nombre de la conexión"]'
+    );
+    const saveAction = harness.findButtonContaining('Guardar nombre');
+    expect(nameInput?.value).toBe('Local Postgres proof');
+    expect(document.activeElement).toBe(nameInput);
+    expect(saveAction?.disabled).toBe(true);
+
+    await harness.fillInputByLabel('Nuevo nombre de la conexión', 'Postgres principal');
+    expect(saveAction?.disabled).toBe(false);
+    await harness.clickButtonContaining('Guardar nombre');
+    await harness.flushPendingWork();
+
+    expect(renameWarehouseConnection).toHaveBeenCalledWith('conn-1', {
+      name: 'Postgres principal',
+    });
+    expect(harness.findConnectionOption('Postgres principal')).toBeDefined();
+    expect(document.body.textContent).toContain('conn-1');
+    expect(document.body.textContent).not.toContain('Local Postgres proof');
+    expect(document.body.textContent).toContain('Nombre de la conexión actualizado');
+  });
+
+  it('cancels connection rename with Escape and returns focus to its action', async () => {
+    await harness.renderWizard();
+    await harness.clickConnectionOption('Local Postgres proof');
+    await harness.clickButtonContaining('Rename connection');
+
+    const nameInput = document.querySelector<HTMLInputElement>(
+      '[aria-label="New connection name"]'
+    );
+    expect(nameInput).not.toBeNull();
+
+    await act(async () => {
+      nameInput?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    });
+
+    expect(document.querySelector('[aria-label="New connection name"]')).toBeNull();
+    expect(document.activeElement).toBe(harness.findButtonContaining('Rename connection'));
+  });
+
+  it('localizes rename failures without exposing transport diagnostics', async () => {
+    useApplicationLanguageStore.getState().configureApplicationLanguage('es');
+    await harness.renderWizard({
+      warehouseSourceImport: buildWarehouseSourceImportPort({
+        renameWarehouseConnection: async () => {
+          throw new Error('raw duplicate connection diagnostic');
+        },
+      }),
+    });
+
+    await harness.clickConnectionOption('Local Postgres proof');
+    await harness.clickButtonContaining('Cambiar nombre');
+    await harness.fillInputByLabel('Nuevo nombre de la conexión', 'Postgres principal');
+    await harness.clickButtonContaining('Guardar nombre');
+    await harness.flushPendingWork();
+
+    const alert = document.querySelector<HTMLElement>(
+      '[data-slot="source-import-rename-connection-error"]'
+    );
+    expect(alert?.getAttribute('role')).toBe('alert');
+    expect(alert?.textContent).toContain('No se pudo cambiar el nombre de la conexión.');
+    expect(document.body.textContent).not.toContain('raw duplicate connection diagnostic');
   });
 
   it('keeps a connection catalog failure localized when the language changes', async () => {
@@ -242,12 +329,12 @@ describe('SourceImportWizard', () => {
     expect(connectionSummary?.className).toContain('md:flex-row');
     expect(connectionActions?.className).toContain('grid');
     expect(connectionActions?.className).toContain('w-full');
-    expect(connectionActions?.className).toContain('sm:grid-cols-2');
+    expect(connectionActions?.className).toContain('sm:grid-cols-3');
 
     const connectionActionButtons = Array.from(
       connectionActions?.querySelectorAll<HTMLButtonElement>('button') ?? []
     );
-    expect(connectionActionButtons).toHaveLength(2);
+    expect(connectionActionButtons).toHaveLength(3);
     for (const action of connectionActionButtons) {
       expect(action.className).toContain('min-w-0');
       expect(action.className).toContain('w-full');
