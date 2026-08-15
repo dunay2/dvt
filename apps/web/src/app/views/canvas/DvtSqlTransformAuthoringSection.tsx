@@ -1,9 +1,8 @@
 /** Owned concern: render DVT SQL transform authoring fields. */
 import type { Dispatch, SetStateAction } from 'react';
 
+import { MonacoCodeEditor } from '../../components/monaco/MonacoCodeEditor';
 import { inspectorVisualClasses } from '../../components/inspector/inspectorVisualTokens';
-import { Label } from '../../components/ui/label';
-import { Textarea } from '../../components/ui/textarea';
 import type { CanonicalNode } from '../../types/canonical';
 import type { DvtSqlTransformAuthoringMetadata } from './canvasDvtAuthoringModel';
 import { formatCanvasInspectorNodeDraftError } from './canvasCopyFormatting';
@@ -68,28 +67,14 @@ export function DvtSqlTransformAuthoringSection({
             </code>
           </div>
           <div className="space-y-2">
-            <Label htmlFor={`inspector-dvt-transform-sql-${node.id}`}>
+            <h4 className={inspectorVisualClasses.contextPanelSectionTitle}>
               {canvasViewCopy.inspectorDvtSqlLabel}
-            </Label>
-            <Textarea
-              id={`inspector-dvt-transform-sql-${node.id}`}
-              name="dvt-transform-sql"
-              value={draft.sql}
-              disabled={disabled}
-              className={`${inspectorVisualClasses.inspectorCodeEditor} nokey`}
-              spellCheck={false}
-              onKeyDown={(event) => {
-                if (event.key === 'Backspace' || event.key === 'Delete') {
-                  event.stopPropagation();
-                }
-              }}
-              onKeyUp={(event) => {
-                if (event.key === 'Backspace' || event.key === 'Delete') {
-                  event.stopPropagation();
-                }
-              }}
-              onChange={(event) => {
-                const sql = event.currentTarget.value;
+            </h4>
+            <MonacoCodeEditor
+              ariaLabel={canvasViewCopy.inspectorDvtSqlLabel}
+              language="sql"
+              loadingLabel={canvasViewCopy.inspectorDvtSqlBodyLabel}
+              onChange={(sql) =>
                 onChange((currentDraft) =>
                   currentDraft.dvt?.kind === 'sql_transform'
                     ? {
@@ -97,8 +82,11 @@ export function DvtSqlTransformAuthoringSection({
                         dvt: { ...currentDraft.dvt, sql },
                       }
                     : currentDraft
-                );
-              }}
+                )
+              }
+              path={`canvas/${node.id}.sql`}
+              readOnly={disabled}
+              value={draft.sql}
             />
             {errors?.sql ? (
               <p className={inspectorVisualClasses.inspectorErrorText}>
