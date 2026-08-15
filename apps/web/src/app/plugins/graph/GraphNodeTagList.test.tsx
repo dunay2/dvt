@@ -63,7 +63,7 @@ describe('GraphNodeTagList', () => {
     expect(overflow.getAttribute('aria-expanded')).toBe('false');
 
     act(() => {
-      fireEvent.click(overflow);
+      fireEvent.keyDown(overflow, { key: 'Enter' });
     });
 
     expect(overflow.getAttribute('aria-expanded')).toBe('true');
@@ -106,11 +106,13 @@ describe('GraphNodeTagList', () => {
     expect(button?.className).toContain('cursor-pointer');
 
     act(() => {
-      fireEvent.click(button!);
+      fireEvent.keyDown(button!, { key: 'Enter' });
+      fireEvent.keyDown(button!, { key: ' ' });
     });
 
-    expect(onSelectTag).toHaveBeenCalledOnce();
-    expect(onSelectTag).toHaveBeenCalledWith('authoring');
+    expect(onSelectTag).toHaveBeenCalledTimes(2);
+    expect(onSelectTag).toHaveBeenNthCalledWith(1, 'authoring');
+    expect(onSelectTag).toHaveBeenNthCalledWith(2, 'authoring');
   });
 
   it('renders the supplied accent tone without deriving it from tag text', () => {

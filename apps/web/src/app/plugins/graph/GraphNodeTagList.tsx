@@ -50,6 +50,14 @@ export function GraphNodeTagList({
               event.stopPropagation();
               onSelectTag(tag.value);
             }}
+            onKeyDown={(event) => {
+              if (event.key !== 'Enter' && event.key !== ' ') {
+                return;
+              }
+              event.preventDefault();
+              event.stopPropagation();
+              onSelectTag(tag.value);
+            }}
           >
             {tag.label}
           </button>
@@ -73,6 +81,14 @@ export function GraphNodeTagList({
           aria-label={hiddenTags.map(({ label }) => label).join(', ')}
           aria-expanded={expanded}
           onClick={(event) => {
+            event.stopPropagation();
+            setExpanded((current) => !current);
+          }}
+          onKeyDown={(event) => {
+            if (event.key !== 'Enter' && event.key !== ' ') {
+              return;
+            }
+            event.preventDefault();
             event.stopPropagation();
             setExpanded((current) => !current);
           }}

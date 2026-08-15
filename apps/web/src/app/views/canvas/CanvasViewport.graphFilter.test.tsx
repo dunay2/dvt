@@ -172,8 +172,8 @@ describe('CanvasViewport graph filtering', () => {
     expect(tagButton?.type).toBe('button');
 
     act(() => {
-      fireEvent.click(tagButton!);
-      fireEvent.click(tagButton!);
+      fireEvent.keyDown(tagButton!, { key: 'Enter' });
+      fireEvent.keyDown(tagButton!, { key: ' ' });
     });
 
     const control = document.querySelector<HTMLElement>(
