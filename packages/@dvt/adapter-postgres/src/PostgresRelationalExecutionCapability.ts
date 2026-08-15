@@ -71,6 +71,12 @@ export interface PostgresRelationalExecutionCapabilityConfig {
   nowIsoUtc?: () => string;
   planConnectionResolver?: IPostgresPlanConnectionResolver;
   planPoolFactory?: (binding: PostgresPlanConnection) => Pool;
+  maxPlanClientSessions?: number;
+}
+
+interface PlanClientSessionEntry {
+  readonly clientSession: PostgresAdapterClientSession;
+  activeLeases: number;
 }
 
 interface PrepareTransformConfig {
@@ -102,6 +108,8 @@ const FAILURE_REASON = Object.freeze({
   captureFailed: 'POSTGRES_CAPTURE_MATERIALIZATION_EVIDENCE_ERROR',
 });
 
+const DEFAULT_MAX_PLAN_CLIENT_SESSIONS = 32;
+
 export class PostgresRelationalExecutionCapability {
   public readonly stepActivitiesByKind: RuntimeStepActivityRegistry;
 
@@ -112,10 +120,8 @@ export class PostgresRelationalExecutionCapability {
   private readonly nowIsoUtc: () => string;
   private readonly statementTimeoutMs: number;
   private readonly queryTimeoutMs: number;
-  private readonly planClientSessions = new Map<
-    string,
-    { readonly clientSession: PostgresAdapterClientSession }
-  >();
+  private readonly maxPlanClientSessions: number;
+  private readonly planClientSessions = new Map<string, PlanClientSessionEntry>();
 
   constructor(private readonly config: PostgresRelationalExecutionCapabilityConfig) {
     const statementTimeoutMs =
@@ -142,6 +148,7 @@ export class PostgresRelationalExecutionCapability {
     this.nowIsoUtc = config.nowIsoUtc ?? (() => new Date().toISOString());
     this.statementTimeoutMs = statementTimeoutMs;
     this.queryTimeoutMs = queryTimeoutMs;
+    this.maxPlanClientSessions = parseMaxPlanClientSessions(config.maxPlanClientSessions);
     this.stepActivitiesByKind = new Map([
       [
         'PREPARE_POSTGRES_TRANSFORM',
@@ -191,9 +198,10 @@ export class PostgresRelationalExecutionCapability {
     }
 
     try {
-      const clientSession = await this.resolvePlanClientSession(step, context);
-      await clientSession.withClient((client) =>
-        client.query(`CREATE SCHEMA IF NOT EXISTS ${quoteIdentifier(parsed.value.targetSchema)}`)
+      await this.withPlanClientSession(step, context, (clientSession) =>
+        clientSession.withClient((client) =>
+          client.query(`CREATE SCHEMA IF NOT EXISTS ${quoteIdentifier(parsed.value.targetSchema)}`)
+        )
       );
       return completedStepResult(step.stepId);
     } catch (error: unknown) {
@@ -218,11 +226,12 @@ export class PostgresRelationalExecutionCapability {
     const targetTable = qualifySinkRef(parsed.value.sink);
 
     try {
-      const clientSession = await this.resolvePlanClientSession(step, context);
-      await clientSession.withTransaction(async (client) => {
-        await client.query(`DROP TABLE IF EXISTS ${targetTable}`);
-        await client.query(`CREATE TABLE ${targetTable} AS ${parsed.value.sql}`);
-      });
+      await this.withPlanClientSession(step, context, (clientSession) =>
+        clientSession.withTransaction(async (client) => {
+          await client.query(`DROP TABLE IF EXISTS ${targetTable}`);
+          await client.query(`CREATE TABLE ${targetTable} AS ${parsed.value.sql}`);
+        })
+      );
       return completedStepResult(step.stepId);
     } catch (error: unknown) {
       return failedPostgresOperation(step.stepId, FAILURE_REASON.transformFailed, error);
@@ -247,13 +256,14 @@ export class PostgresRelationalExecutionCapability {
     const targetTable = qualifySinkRef(parsed.value.sink);
 
     try {
-      const clientSession = await this.resolvePlanClientSession(step, context);
-      const rowsWritten = await clientSession.withClient(async (client) => {
-        const result = await client.query<{ rows_written: string }>(
-          `SELECT COUNT(*)::bigint AS rows_written FROM ${targetTable}`
-        );
-        return Number(result.rows[0]?.rows_written ?? 0);
-      });
+      const rowsWritten = await this.withPlanClientSession(step, context, (clientSession) =>
+        clientSession.withClient(async (client) => {
+          const result = await client.query<{ rows_written: string }>(
+            `SELECT COUNT(*)::bigint AS rows_written FROM ${targetTable}`
+          );
+          return Number(result.rows[0]?.rows_written ?? 0);
+        })
+      );
       const completedAt = this.nowIsoUtc();
       return {
         stepId: step.stepId,
@@ -273,10 +283,24 @@ export class PostgresRelationalExecutionCapability {
     }
   }
 
-  private async resolvePlanClientSession(
+  private async withPlanClientSession<T>(
+    step: ExecutionPlan['steps'][number],
+    context: RuntimeStepExecutionContext,
+    operation: (clientSession: PostgresAdapterClientSession) => Promise<T>
+  ): Promise<T> {
+    const entry = await this.acquirePlanClientSession(step, context);
+    try {
+      return await operation(entry.clientSession);
+    } finally {
+      entry.activeLeases -= 1;
+      await this.evictIdlePlanClientSessions();
+    }
+  }
+
+  private async acquirePlanClientSession(
     step: ExecutionPlan['steps'][number],
     context: RuntimeStepExecutionContext
-  ): Promise<PostgresAdapterClientSession> {
+  ): Promise<PlanClientSessionEntry> {
     if (this.config.planConnectionResolver === undefined) {
       throw new PostgresPlanConnectionRejectedError('POSTGRES_PLAN_CONNECTION_RESOLVER_REQUIRED');
     }
@@ -288,7 +312,10 @@ export class PostgresRelationalExecutionCapability {
     const key = buildPlanConnectionKey(binding);
     const existing = this.planClientSessions.get(key);
     if (existing !== undefined) {
-      return existing.clientSession;
+      this.planClientSessions.delete(key);
+      this.planClientSessions.set(key, existing);
+      existing.activeLeases += 1;
+      return existing;
     }
 
     const pool =
@@ -298,10 +325,35 @@ export class PostgresRelationalExecutionCapability {
         statement_timeout: this.statementTimeoutMs,
         query_timeout: this.queryTimeoutMs,
       });
-    const clientSession = new PostgresAdapterClientSession(pool, this.statementTimeoutMs);
-    this.planClientSessions.set(key, { clientSession });
-    return clientSession;
+    const entry: PlanClientSessionEntry = {
+      clientSession: new PostgresAdapterClientSession(pool, this.statementTimeoutMs),
+      activeLeases: 1,
+    };
+    this.planClientSessions.set(key, entry);
+    await this.evictIdlePlanClientSessions();
+    return entry;
   }
+
+  private async evictIdlePlanClientSessions(): Promise<void> {
+    while (this.planClientSessions.size > this.maxPlanClientSessions) {
+      const candidate = [...this.planClientSessions].find(([, entry]) => entry.activeLeases === 0);
+      if (candidate === undefined) {
+        return;
+      }
+
+      const [key, entry] = candidate;
+      this.planClientSessions.delete(key);
+      await entry.clientSession.close(true);
+    }
+  }
+}
+
+function parseMaxPlanClientSessions(value: number | undefined): number {
+  const resolved = value ?? DEFAULT_MAX_PLAN_CLIENT_SESSIONS;
+  if (!Number.isSafeInteger(resolved) || resolved < 1) {
+    throw new RangeError('maxPlanClientSessions must be a positive safe integer');
+  }
+  return resolved;
 }
 
 function parsePrepareTransformConfig(

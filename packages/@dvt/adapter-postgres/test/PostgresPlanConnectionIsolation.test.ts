@@ -129,7 +129,7 @@ describe('PostgresRelationalExecutionCapability plan connection isolation', () =
         },
       },
       planPoolFactory: (binding) => pools.get(binding.connectionString) as never,
-    } as ConstructorParameters<typeof PostgresRelationalExecutionCapability>[0]);
+    });
     const transform = capability.stepActivitiesByKind.get('POSTGRES_SQL_TRANSFORM');
 
     await transform!.execute(transformStep(CONNECTION_REF_A), runtimeContext('run-a'));
