@@ -513,6 +513,81 @@ function sha256(content: string): string {
 }
 
 describe('warehouseSourceImportRoutes', () => {
+  it('renames a warehouse connection through a dedicated protected command rail', async () => {
+    const { app, authorize } = buildApp();
+
+    const response = await app.inject({
+      method: 'PATCH',
+      url: `/workspace/warehouse/connections/warehouse-prod?${SCOPE_QUERY}`,
+      payload: { name: 'Finance warehouse' },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual({
+      id: 'warehouse-prod',
+      name: 'Finance warehouse',
+      type: 'postgres',
+      database: 'analytics',
+    });
+    expect(authorize).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        action: { kind: 'command', name: 'workspace:source-connection:rename' },
+      }),
+      expect.any(String)
+    );
+  });
+
+  it('returns explicit errors for invalid, duplicate, and unknown connection renames', async () => {
+    const duplicate = buildApp({
+      catalogEntries: [
+        {
+          id: 'warehouse-prod',
+          name: 'Production warehouse',
+          type: 'postgres',
+          database: 'analytics',
+          credentialRef: 'env:DVT_WAREHOUSE_URL',
+          sourceObjects: [defaultOrdersSourceObject],
+        },
+        {
+          id: 'finance-prod',
+          name: 'Finance warehouse',
+          type: 'postgres',
+          database: 'finance',
+          credentialRef: 'env:DVT_FINANCE_WAREHOUSE_URL',
+          sourceObjects: [],
+        },
+      ],
+    });
+
+    const invalidResponse = await duplicate.app.inject({
+      method: 'PATCH',
+      url: `/workspace/warehouse/connections/warehouse-prod?${SCOPE_QUERY}`,
+      payload: { name: '   ' },
+    });
+    expect(invalidResponse.statusCode).toBe(400);
+
+    const duplicateResponse = await duplicate.app.inject({
+      method: 'PATCH',
+      url: `/workspace/warehouse/connections/warehouse-prod?${SCOPE_QUERY}`,
+      payload: { name: ' FINANCE WAREHOUSE ' },
+    });
+    expect(duplicateResponse.statusCode).toBe(409);
+    expect(duplicateResponse.json()).toEqual({
+      error: { type: 'conflict', reason: 'warehouse_connection_duplicate' },
+    });
+
+    const missingResponse = await duplicate.app.inject({
+      method: 'PATCH',
+      url: `/workspace/warehouse/connections/missing?${SCOPE_QUERY}`,
+      payload: { name: 'Missing connection' },
+    });
+    expect(missingResponse.statusCode).toBe(404);
+    expect(missingResponse.json()).toEqual({
+      error: { type: 'not_found', reason: 'warehouse_connection_not_found' },
+    });
+  });
+
   it('creates a warehouse connection through the protected command rail before listing it', async () => {
     const { app, authorize, workspaceFiles } = buildApp({ catalogEntries: [] });
 
