@@ -106,6 +106,22 @@ describe('SourceImportWizard', () => {
     expect(document.body.textContent).toContain('conn-1');
     expect(document.body.textContent).not.toContain('Local Postgres proof');
     expect(document.body.textContent).toContain('Nombre de la conexión actualizado');
+
+    const renamedConnection = harness.findConnectionOption('Postgres principal');
+    const renameSuccess = document.body.querySelector<HTMLElement>(
+      '[data-slot="source-import-rename-connection-success"]'
+    );
+    const feedbackRegion = document.body.querySelector<HTMLElement>(
+      '[data-slot="source-import-connection-feedback"]'
+    );
+
+    expect(renameSuccess?.parentElement).toBe(feedbackRegion);
+    expect(
+      renamedConnection && feedbackRegion
+        ? renamedConnection.compareDocumentPosition(feedbackRegion) &
+            Node.DOCUMENT_POSITION_FOLLOWING
+        : 0
+    ).not.toBe(0);
   });
 
   it('cancels connection rename with Escape and returns focus to its action', async () => {
@@ -157,6 +173,7 @@ describe('SourceImportWizard', () => {
     expect(alert?.id).toBeTruthy();
     expect(nameInput?.getAttribute('aria-invalid')).toBe('true');
     expect(nameInput?.getAttribute('aria-errormessage')).toBe(alert?.id);
+    expect(alert?.closest('form')).toBe(nameInput?.closest('form'));
     expect(alert?.textContent).toContain('No se pudo cambiar el nombre de la conexión.');
     expect(document.body.textContent).not.toContain('raw duplicate connection diagnostic');
   });
@@ -241,6 +258,23 @@ describe('SourceImportWizard', () => {
     );
     expect(document.body.textContent).not.toContain('raw connection catalog diagnostic');
 
+    const catalogSummary = document.body.querySelector<HTMLElement>(
+      '[data-slot="source-import-connection-summary"]'
+    );
+    const loadFailureAlert = document.body.querySelector<HTMLElement>(
+      '[data-slot="source-import-connection-load-error"]'
+    );
+    const feedbackRegion = document.body.querySelector<HTMLElement>(
+      '[data-slot="source-import-connection-feedback"]'
+    );
+
+    expect(loadFailureAlert?.parentElement).toBe(feedbackRegion);
+    expect(
+      catalogSummary && feedbackRegion
+        ? catalogSummary.compareDocumentPosition(feedbackRegion) & Node.DOCUMENT_POSITION_FOLLOWING
+        : 0
+    ).not.toBe(0);
+
     await act(async () => {
       useApplicationLanguageStore.getState().configureApplicationLanguage('en');
     });
@@ -292,6 +326,19 @@ describe('SourceImportWizard', () => {
     expect(commandFailureAlert?.getAttribute('role')).toBe('alert');
     expect(commandFailureAlert?.getAttribute('aria-live')).toBe('assertive');
     expect(commandFailureAlert?.getAttribute('aria-atomic')).toBe('true');
+
+    const selectedConnection = harness.findConnectionOption('Local Postgres proof');
+    const feedbackRegion = document.body.querySelector<HTMLElement>(
+      '[data-slot="source-import-connection-feedback"]'
+    );
+
+    expect(commandFailureAlert?.parentElement).toBe(feedbackRegion);
+    expect(
+      selectedConnection && feedbackRegion
+        ? selectedConnection.compareDocumentPosition(feedbackRegion) &
+            Node.DOCUMENT_POSITION_FOLLOWING
+        : 0
+    ).not.toBe(0);
   });
 
   it('localizes connection creation failures without exposing adapter diagnostics', async () => {
@@ -314,6 +361,13 @@ describe('SourceImportWizard', () => {
 
     expect(document.body.textContent).toContain('No se pudo crear la conexión al warehouse.');
     expect(document.body.textContent).not.toContain('raw connection creation diagnostic');
+
+    const createNameInput = document.body.querySelector<HTMLInputElement>(
+      '[data-slot="source-import-create-connection-name"]'
+    );
+    expect(createNameInput?.closest('form')?.textContent).toContain(
+      'No se pudo crear la conexión al warehouse.'
+    );
   });
 
   it('localizes import failures in the review surface without exposing adapter diagnostics', async () => {
@@ -510,6 +564,9 @@ describe('SourceImportWizard', () => {
     expect(successStatus?.getAttribute('aria-live')).toBe('polite');
     expect(successStatus?.className).toContain('text-xs');
     expect(successStatus?.closest('[data-slot="card"]')).toBeNull();
+    expect(successStatus?.parentElement?.getAttribute('data-slot')).toBe(
+      'source-import-connection-feedback'
+    );
     expect(
       selectedConnection && successStatus
         ? selectedConnection.compareDocumentPosition(successStatus) &
@@ -557,6 +614,19 @@ describe('SourceImportWizard', () => {
     expect(document.body.textContent).not.toContain(
       'provider diagnostic that must not become product copy'
     );
+
+    const selectedConnection = harness.findConnectionOption('Local Postgres proof');
+    const feedbackRegion = document.body.querySelector<HTMLElement>(
+      '[data-slot="source-import-connection-feedback"]'
+    );
+
+    expect(resultFailureAlert?.parentElement).toBe(feedbackRegion);
+    expect(
+      selectedConnection && feedbackRegion
+        ? selectedConnection.compareDocumentPosition(feedbackRegion) &
+            Node.DOCUMENT_POSITION_FOLLOWING
+        : 0
+    ).not.toBe(0);
   });
 
   it('creates a governed warehouse connection before browsing source tables', async () => {
