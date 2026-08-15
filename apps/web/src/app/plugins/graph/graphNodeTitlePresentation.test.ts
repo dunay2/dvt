@@ -143,7 +143,7 @@ describe('buildGraphNodeTitlePresentation', () => {
   });
 
   it('keeps same-schema warehouse source cards distinct with exact table identifiers', () => {
-    const buildTitle = (tableName: string) =>
+    const buildTitle = (tableName: string): string =>
       buildGraphNodeTitlePresentation({
         nodeName: `src_local_postgres_dvt_${tableName}`,
         pluginId: 'dvt.warehouse-source',
