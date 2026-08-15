@@ -1,0 +1,30 @@
+---
+id: R-20260815-SOURCE-IDENTITY-AUTHORITY-DRIFT
+title: Source identity could diverge across Canvas authorities or retain stale connection labels
+status: Closed
+date: 2026-08-15
+owners:
+  - packages/@dvt/contracts
+  - apps/api
+  - apps/web
+severity: Medium
+probability: Low
+context: >
+  Canvas supports graph-draft and dbt-project-files authoring authorities while warehouse
+  connections retain stable identifiers and mutable display names.
+risk: >
+  Projecting identity only at import time could omit the tooltip on dbt-backed canvases, retain a
+  stale name after rename, or leak credential material through a presentation-oriented contract.
+mitigations:
+  - Both supported authority queries project into the same complete source-card identity.
+  - Governed dbt YAML stores only a stable connection ID and non-secret database principal.
+  - Query-time catalog resolution supplies the current display name and omits deleted references.
+  - The strict optional contract rejects partial identity and undeclared credential fields.
+  - Tooltip values wrap, support hover and keyboard focus, and follow ES/EN copy.
+closure_evidence:
+  - docs/evidence/ED-20260815-governed-source-identity-projection.md
+  - packages/@dvt/contracts/test/dbt-project-file-projection.contract.test.ts
+  - apps/api/test/application/projectDbtGraphFromFilesUseCase.test.ts
+  - apps/api/test/application/services/getWorkspaceGraphDraftUseCase.authority.test.ts
+  - apps/web/src/app/plugins/graph/graphNodeCardReadModel.test.ts
+---
