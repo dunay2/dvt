@@ -344,7 +344,8 @@ describe('SourceImportWizard', () => {
     expect(successStatus?.closest('[data-slot="card"]')).toBeNull();
     expect(
       selectedConnection && successStatus
-        ? selectedConnection.compareDocumentPosition(successStatus) & Node.DOCUMENT_POSITION_FOLLOWING
+        ? selectedConnection.compareDocumentPosition(successStatus) &
+            Node.DOCUMENT_POSITION_FOLLOWING
         : 0
     ).not.toBe(0);
   });
