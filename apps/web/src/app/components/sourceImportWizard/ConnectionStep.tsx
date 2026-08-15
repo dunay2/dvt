@@ -115,7 +115,15 @@ export function ConnectionStep({
       </div>
 
       {loadError ? (
-        <Card className="border-red-700 bg-red-950/30 p-3 text-sm text-red-200">{loadError}</Card>
+        <Card
+          data-slot="source-import-connection-load-error"
+          role="alert"
+          aria-live="assertive"
+          aria-atomic="true"
+          className="border-red-700 bg-red-950/30 p-3 text-sm text-red-200"
+        >
+          {loadError}
+        </Card>
       ) : null}
 
       <div className="space-y-2">
@@ -188,24 +196,16 @@ export function ConnectionStep({
               />
             ) : null}
 
-            {connectionTestResult ? (
+            {connectionTestResult?.status === 'failed' ? (
               <Card
-                className={
-                  connectionTestResult.status === 'passed'
-                    ? 'border-emerald-700 bg-emerald-950/30 p-3 text-sm text-emerald-100'
-                    : 'border-red-700 bg-red-950/30 p-3 text-sm text-red-100'
-                }
+                data-slot="source-import-connection-test-failure"
+                role="alert"
+                aria-live="assertive"
+                aria-atomic="true"
+                className="border-red-700 bg-red-950/30 p-3 text-sm text-red-100"
               >
-                <div className="font-medium">
-                  {connectionTestResult.status === 'passed'
-                    ? copy.connection.testPassed
-                    : copy.connection.testFailed}
-                </div>
-                <div className="mt-1 text-xs opacity-85">
-                  {connectionTestResult.status === 'passed'
-                    ? `${connectionTestResult.objectCount} ${copy.connection.reachableObjects}`
-                    : copy.connection.testFailedDetail}
-                </div>
+                <div className="font-medium">{copy.connection.testFailed}</div>
+                <div className="mt-1 text-xs opacity-85">{copy.connection.testFailedDetail}</div>
               </Card>
             ) : null}
 
@@ -257,6 +257,22 @@ export function ConnectionStep({
                 );
               })
             )}
+
+            {connectionTestResult?.status === 'passed' ? (
+              <div
+                data-slot="source-import-connection-test-success"
+                role="status"
+                aria-live="polite"
+                aria-atomic="true"
+                className="flex min-h-8 flex-wrap items-center gap-x-2 gap-y-1 rounded-md border border-emerald-800/70 bg-emerald-950/20 px-3 py-2 text-xs leading-4 text-emerald-200"
+              >
+                <CheckCircle2 className="size-3.5 shrink-0" aria-hidden="true" />
+                <span className="font-medium">{copy.connection.testPassed}</span>
+                <span className="text-emerald-300/80">
+                  {connectionTestResult.objectCount} {copy.connection.reachableObjects}
+                </span>
+              </div>
+            ) : null}
           </>
         )}
       </div>
