@@ -1,5 +1,5 @@
 /** Owned concern: render DVT source authoring fields. */
-import { useEffect, useState, type Dispatch, type SetStateAction } from 'react';
+import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react';
 
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -35,6 +35,7 @@ export function DvtSourceAuthoringSection({
   const [connections, setConnections] = useState<readonly WarehouseConnection[]>([]);
   const [loadState, setLoadState] = useState<'idle' | 'loading' | 'failed'>('idle');
   const [testResult, setTestResult] = useState<TestWarehouseConnectionResult | null>(null);
+  const connectionTestSequence = useRef(0);
   const isImportedSource = node.pluginId === 'dvt.warehouse-source';
 
   useEffect(() => {
@@ -61,6 +62,8 @@ export function DvtSourceAuthoringSection({
   }, [isImportedSource, warehouseSourceImport]);
 
   const selectedConnectionId = draft.connectionRef?.connectionId ?? '';
+  const selectedConnectionIdRef = useRef(selectedConnectionId);
+  selectedConnectionIdRef.current = selectedConnectionId;
   const selectedConnectionMissingFromList =
     selectedConnectionId.length > 0 &&
     !connections.some((connection) => connection.id === selectedConnectionId);
@@ -103,6 +106,7 @@ export function DvtSourceAuthoringSection({
                 const connection = connections.find(
                   (candidate) => candidate.id === event.currentTarget.value
                 );
+                connectionTestSequence.current += 1;
                 setTestResult(null);
                 onChange((currentDraft) =>
                   currentDraft.dvt?.kind === 'source'
@@ -156,10 +160,27 @@ export function DvtSourceAuthoringSection({
                 size="sm"
                 disabled={disabled}
                 onClick={() => {
+                  const testedConnectionId = selectedConnectionId;
+                  const testSequence = ++connectionTestSequence.current;
                   void warehouseSourceImport
-                    .testWarehouseConnection(selectedConnectionId)
-                    .then(setTestResult)
-                    .catch(() => setTestResult(null));
+                    .testWarehouseConnection(testedConnectionId)
+                    .then((result) => {
+                      if (
+                        connectionTestSequence.current === testSequence &&
+                        selectedConnectionIdRef.current === testedConnectionId &&
+                        result.connectionId === testedConnectionId
+                      ) {
+                        setTestResult(result);
+                      }
+                    })
+                    .catch(() => {
+                      if (
+                        connectionTestSequence.current === testSequence &&
+                        selectedConnectionIdRef.current === testedConnectionId
+                      ) {
+                        setTestResult(null);
+                      }
+                    });
                 }}
               >
                 {canvasViewCopy.inspectorDvtConnectionTestLabel}
