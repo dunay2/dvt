@@ -419,7 +419,18 @@ function parseCreateWarehouseConnectionBody(
   const parsed = CreateWarehouseConnectionRequestSchema.safeParse(body);
   if (!parsed.success) {
     const type = parseWarehouseConnectionType(body?.type);
-    return type.ok ? invalidBody() : type;
+    if (!type.ok) {
+      return type;
+    }
+    if (parsed.error.issues.some((issue) => issue.path[0] === 'credentialRef')) {
+      return {
+        ok: false,
+        issue: badRequestIssue(HTTP_ERROR_REASON.invalidCredentialReference, {
+          target: 'credentialRef',
+        }),
+      };
+    }
+    return invalidBody();
   }
 
   return {

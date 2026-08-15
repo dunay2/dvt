@@ -38,7 +38,9 @@ export function WarehouseConnectionCreateForm({
     errorCode === 'connection-name-conflict' ||
     (isValidationError && form.name.trim().length === 0);
   const databaseHasError = isValidationError && form.database.trim().length === 0;
-  const credentialRefHasError = isValidationError && form.credentialRef.trim().length === 0;
+  const credentialRefHasError =
+    errorCode === 'create-connection-credential-reference' ||
+    (isValidationError && form.credentialRef.trim().length === 0);
 
   return (
     <Card className="border-slate-700 bg-slate-950/50 p-4">

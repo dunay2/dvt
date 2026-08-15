@@ -70,3 +70,25 @@ export function extractHttpErrorReason(error: unknown): string | undefined {
   const reason = (envelopeError as { readonly reason?: unknown }).reason;
   return typeof reason === 'string' ? reason : undefined;
 }
+
+/**
+ * Returns the field or resource targeted by a canonical API error envelope.
+ */
+export function extractHttpErrorTarget(error: unknown): string | undefined {
+  if (!(error instanceof ApiError)) {
+    return undefined;
+  }
+
+  const responseBody = error.responseBody;
+  if (responseBody === null || typeof responseBody !== 'object') {
+    return undefined;
+  }
+
+  const envelopeError = (responseBody as { readonly error?: unknown }).error;
+  if (envelopeError === null || typeof envelopeError !== 'object') {
+    return undefined;
+  }
+
+  const target = (envelopeError as { readonly target?: unknown }).target;
+  return typeof target === 'string' ? target : undefined;
+}

@@ -55,6 +55,7 @@ export type SourceImportFailureCode =
   | 'load-source-objects'
   | 'test-connection'
   | 'create-connection-validation'
+  | 'create-connection-credential-reference'
   | 'create-connection'
   | 'connection-name-conflict'
   | 'rename-connection-validation'

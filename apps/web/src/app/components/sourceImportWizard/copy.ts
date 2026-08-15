@@ -55,6 +55,8 @@ const EN_COPY = {
     creatingAction: 'Creating...',
     createCancelAction: 'Cancel',
     createValidationError: 'Name, database, and credential reference are required.',
+    createCredentialRefError:
+      'Use a reference in the format postgres:<alias>. Do not enter the URL or password.',
     createSuccess: 'Warehouse connection created',
     createError: 'Failed to create warehouse connection.',
     renameAction: 'Rename connection',
@@ -260,6 +262,8 @@ const ES_COPY = {
     createCancelAction: 'Cancelar',
     createValidationError:
       'El nombre, la base de datos y la referencia de credencial son obligatorios.',
+    createCredentialRefError:
+      'Usa una referencia con formato postgres:<alias>. No introduzcas la URL ni la contraseña.',
     createSuccess: 'Conexión al warehouse creada',
     createError: 'No se pudo crear la conexión al warehouse.',
     renameAction: 'Cambiar nombre',
@@ -450,6 +454,8 @@ export function resolveSourceImportFailureMessage(
       return copy.connection.testError;
     case 'create-connection-validation':
       return copy.connection.createValidationError;
+    case 'create-connection-credential-reference':
+      return copy.connection.createCredentialRefError;
     case 'create-connection':
       return copy.connection.createError;
     case 'rename-connection-validation':

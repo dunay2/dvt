@@ -716,6 +716,31 @@ describe('warehouseSourceImportRoutes', () => {
     );
   });
 
+  it('identifies an invalid PostgreSQL credential reference before command side effects', async () => {
+    const { app, workspaceFiles } = buildApp({ catalogEntries: [] });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: `/workspace/warehouse/connections?${SCOPE_QUERY}`,
+      payload: {
+        name: 'Unsafe inline URL',
+        type: 'postgres',
+        database: 'finance',
+        credentialRef: 'postgresql://user:password@localhost:5432/finance',
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toEqual({
+      error: {
+        type: 'bad_request',
+        reason: 'invalid_credential_reference',
+        target: 'credentialRef',
+      },
+    });
+    expect(workspaceFiles.saveFileContent).not.toHaveBeenCalled();
+  });
+
   it('rejects duplicate warehouse connection names before mutating the catalog', async () => {
     const { app, workspaceFiles } = buildApp();
 
