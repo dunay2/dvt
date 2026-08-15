@@ -150,7 +150,13 @@ describe('SourceImportWizard', () => {
     const alert = document.querySelector<HTMLElement>(
       '[data-slot="source-import-rename-connection-error"]'
     );
+    const nameInput = document.querySelector<HTMLInputElement>(
+      '[aria-label="Nuevo nombre de la conexión"]'
+    );
     expect(alert?.getAttribute('role')).toBe('alert');
+    expect(alert?.id).toBeTruthy();
+    expect(nameInput?.getAttribute('aria-invalid')).toBe('true');
+    expect(nameInput?.getAttribute('aria-errormessage')).toBe(alert?.id);
     expect(alert?.textContent).toContain('No se pudo cambiar el nombre de la conexión.');
     expect(document.body.textContent).not.toContain('raw duplicate connection diagnostic');
   });
