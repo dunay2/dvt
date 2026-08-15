@@ -43,6 +43,7 @@ describe('DBT runtime binding security boundary', () => {
         listSourceObjects: vi.fn(),
         getConnection: vi.fn(),
         createConnection: vi.fn(),
+        renameConnection: vi.fn(),
       },
       postgresCredentialResolver: { resolveCredential: vi.fn() },
     });

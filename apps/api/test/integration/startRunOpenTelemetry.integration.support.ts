@@ -193,6 +193,9 @@ export async function createStartRunOpenTelemetryProof(
         async createConnection() {
           throw new Error('Unexpected PostgreSQL catalog access for an empty plan');
         },
+        async renameConnection() {
+          throw new Error('Unexpected PostgreSQL catalog access for an empty plan');
+        },
       },
       postgresCredentialResolver: {
         async resolveCredential() {

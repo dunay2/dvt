@@ -249,6 +249,7 @@ function unusedPostgresBindingDependencies(): Pick<
       listSourceObjects: unexpected,
       getConnection: unexpected,
       createConnection: unexpected,
+      renameConnection: unexpected,
     },
     postgresCredentialResolver: { resolveCredential: unexpected },
   };

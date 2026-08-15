@@ -120,6 +120,7 @@ function makeCatalog(): IWarehouseConnectionCatalog & {
     listConnections: vi.fn(),
     listSourceObjects: vi.fn(),
     createConnection: vi.fn(),
+    renameConnection: vi.fn(),
     getConnection: vi.fn(async () => ({
       id: 'warehouse-a',
       name: 'Warehouse A',
