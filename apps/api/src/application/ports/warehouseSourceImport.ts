@@ -15,6 +15,7 @@ import type {
   ImportSourceObjectsResultV2,
   SourceObject,
   SourceImportGrouping as ContractSourceImportGrouping,
+  RenameWarehouseConnectionRequest,
   TestWarehouseConnectionResult as ContractTestWarehouseConnectionResult,
   WarehouseConnection as ContractWarehouseConnection,
   WarehouseConnectionTestFailureReason as ContractWarehouseConnectionTestFailureReason,
@@ -41,6 +42,11 @@ export type CreateWarehouseConnectionInput = CreateWarehouseConnectionRequest & 
 
 export type CreateWarehouseConnectionCatalogInput = CreateWarehouseConnectionRequest & {
   readonly sourceObjects: readonly SourceObject[];
+};
+
+export type RenameWarehouseConnectionInput = RenameWarehouseConnectionRequest & {
+  readonly scope: WorkspaceGraphDraftScope;
+  readonly connectionId: string;
 };
 
 export type TestWarehouseConnectionInput = {
@@ -96,6 +102,11 @@ export interface IWarehouseConnectionCatalog {
   createConnection(
     scope: WorkspaceGraphDraftScope,
     input: CreateWarehouseConnectionCatalogInput
+  ): Promise<WarehouseConnection>;
+  renameConnection(
+    scope: WorkspaceGraphDraftScope,
+    connectionId: string,
+    input: RenameWarehouseConnectionRequest
   ): Promise<WarehouseConnection>;
 }
 

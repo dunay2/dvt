@@ -45,6 +45,7 @@ import { GraphDraftWarehouseSourceImportStrategy } from '../../../src/applicatio
 import { ImportWarehouseSourcesUseCase } from '../../../src/application/services/importWarehouseSourcesUseCase.js';
 import { ListWarehouseConnectionSourceObjectsUseCase } from '../../../src/application/services/listWarehouseConnectionSourceObjectsUseCase.js';
 import { ListWarehouseConnectionsUseCase } from '../../../src/application/services/listWarehouseConnectionsUseCase.js';
+import { RenameWarehouseConnectionUseCase } from '../../../src/application/services/renameWarehouseConnectionUseCase.js';
 import { TestWarehouseConnectionUseCase } from '../../../src/application/services/testWarehouseConnectionUseCase.js';
 import { WarehouseConnectionSourceObjectReader } from '../../../src/application/services/WarehouseConnectionSourceObjectReader.js';
 import { registerWarehouseSourceImportRoutes } from '../../../src/entrypoints/http/warehouseSourceImportRoutes.js';
@@ -187,6 +188,33 @@ class TestWarehouseConnectionCatalog implements IWarehouseConnectionCatalog {
     this.entriesByScope.set(scopeKey(scope), nextEntries);
     await this.saveConnection?.(scope, input, nextEntries);
     const { sourceObjects: _sourceObjects, credentialRef: _credentialRef, ...connection } = entry;
+    return connection;
+  }
+
+  public async renameConnection(
+    scope: WorkspaceGraphDraftScope,
+    connectionId: string,
+    input: { readonly name: string }
+  ): Promise<WarehouseConnection> {
+    const entries = this.entries(scope);
+    const currentIndex = entries.findIndex((entry) => entry.id === connectionId);
+    if (currentIndex < 0) throw new WarehouseConnectionNotFoundError(connectionId);
+    if (
+      entries.some(
+        (entry, index) =>
+          index !== currentIndex &&
+          entry.name.trim().toLowerCase() === input.name.trim().toLowerCase()
+      )
+    ) {
+      throw new DuplicateWarehouseConnectionError(input.name);
+    }
+    const current = entries[currentIndex];
+    if (!current) throw new WarehouseConnectionNotFoundError(connectionId);
+    const renamed = { ...current, name: input.name.trim() };
+    const nextEntries = [...entries];
+    nextEntries[currentIndex] = renamed;
+    this.entriesByScope.set(scopeKey(scope), nextEntries);
+    const { sourceObjects: _sourceObjects, credentialRef: _credentialRef, ...connection } = renamed;
     return connection;
   }
 
@@ -482,6 +510,7 @@ function buildApp(
     listConnectionsUseCase: new ListWarehouseConnectionsUseCase(catalog),
     listSourceObjectsUseCase: new ListWarehouseConnectionSourceObjectsUseCase(sourceObjectReader),
     createConnectionUseCase: new CreateWarehouseConnectionUseCase(catalog, probe),
+    renameConnectionUseCase: new RenameWarehouseConnectionUseCase(catalog),
     testConnectionUseCase: new TestWarehouseConnectionUseCase(catalog, probe),
     importSourcesUseCase: new ImportWarehouseSourcesUseCase({
       sourceObjectReader,

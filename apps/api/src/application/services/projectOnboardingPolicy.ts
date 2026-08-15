@@ -12,6 +12,7 @@ export const PROJECT_ONBOARDING_POLICY = Object.freeze({
     AUTHORIZATION_ACTION_NAME.workspaceFilesSave,
     AUTHORIZATION_ACTION_NAME.workspaceSourceImportView,
     AUTHORIZATION_ACTION_NAME.workspaceSourceConnectionCreate,
+    AUTHORIZATION_ACTION_NAME.workspaceSourceConnectionRename,
     AUTHORIZATION_ACTION_NAME.workspaceSourceConnectionTest,
     AUTHORIZATION_ACTION_NAME.workspaceSourceImportImport,
     AUTHORIZATION_ACTION_NAME.workspacePluginsView,

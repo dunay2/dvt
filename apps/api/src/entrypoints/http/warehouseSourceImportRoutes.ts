@@ -2,6 +2,7 @@
 import {
   CreateWarehouseConnectionRequestSchema,
   ImportSourceObjectsRequestV2Schema,
+  RenameWarehouseConnectionRequestSchema,
 } from '@dvt/contracts';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 
@@ -23,6 +24,7 @@ import {
   WarehouseSourceDiscoveryFailedError,
   type CreateWarehouseConnectionInput,
   type ImportWarehouseSourcesInput,
+  type RenameWarehouseConnectionInput,
   type WarehouseConnectionType,
 } from '../../application/ports/warehouseSourceImport.js';
 import { WorkspaceFileRevisionConflictError } from '../../application/ports/workspaceFiles.js';
@@ -34,6 +36,7 @@ import { WarehouseSourceImportCanvasNotFoundError } from '../../application/serv
 import type { ImportWarehouseSourcesUseCase } from '../../application/services/importWarehouseSourcesUseCase.js';
 import type { ListWarehouseConnectionSourceObjectsUseCase } from '../../application/services/listWarehouseConnectionSourceObjectsUseCase.js';
 import type { ListWarehouseConnectionsUseCase } from '../../application/services/listWarehouseConnectionsUseCase.js';
+import type { RenameWarehouseConnectionUseCase } from '../../application/services/renameWarehouseConnectionUseCase.js';
 import type { TestWarehouseConnectionUseCase } from '../../application/services/testWarehouseConnectionUseCase.js';
 import { EnvironmentId, ProjectId, TenantId } from '../../domain/auth/types.js';
 
@@ -61,6 +64,10 @@ type CreateWarehouseConnectionBody = {
   readonly credentialRef?: unknown;
 };
 
+type RenameWarehouseConnectionBody = {
+  readonly name?: unknown;
+};
+
 type ImportWarehouseSourcesBody = {
   readonly schemaVersion?: unknown;
   readonly canvasId?: unknown;
@@ -79,6 +86,7 @@ type WarehouseSourceImportRouteDeps = {
   readonly listConnectionsUseCase: ListWarehouseConnectionsUseCase;
   readonly listSourceObjectsUseCase: ListWarehouseConnectionSourceObjectsUseCase;
   readonly createConnectionUseCase: CreateWarehouseConnectionUseCase;
+  readonly renameConnectionUseCase: RenameWarehouseConnectionUseCase;
   readonly testConnectionUseCase: TestWarehouseConnectionUseCase;
   readonly importSourcesUseCase: ImportWarehouseSourcesUseCase;
   readonly rateLimit: { readonly max: number; readonly timeWindow: number };
@@ -206,6 +214,56 @@ export function registerWarehouseSourceImportRoutes(
     }
   );
 
+  app.patch<{
+    Params: WarehouseConnectionParams;
+    Querystring: WarehouseSourceImportQuery;
+    Body: RenameWarehouseConnectionBody;
+  }>(
+    RUNTIME_ROUTE_PATH.warehouseConnection,
+    { config: { rateLimit: deps.rateLimit } },
+    async (request, reply) => {
+      const authorized = await authorizeWarehouseSourceImportRequest(request, reply, deps, {
+        action: AUTHORIZATION_ACTION.workspaceSourceConnectionRename,
+      });
+      if (!authorized) return;
+
+      const parsed = parseRenameWarehouseConnectionBody(
+        request.body,
+        request.params.connectionId,
+        authorized.scope
+      );
+      if (!parsed.ok) {
+        httpErrorTranslation.respond(reply, httpErrorTranslation.parse.issue(parsed.issue));
+        return;
+      }
+
+      try {
+        reply.code(200).send(await deps.renameConnectionUseCase.execute(parsed.value));
+      } catch (error) {
+        if (error instanceof WarehouseConnectionNotFoundError) {
+          reply.code(404).send({
+            error: { type: 'not_found', reason: 'warehouse_connection_not_found' },
+          });
+          return;
+        }
+        if (error instanceof DuplicateWarehouseConnectionError) {
+          reply.code(409).send({
+            error: { type: 'conflict', reason: 'warehouse_connection_duplicate' },
+          });
+          return;
+        }
+        if (error instanceof WorkspaceFileRevisionConflictError) {
+          httpErrorTranslation.respond(
+            reply,
+            httpErrorTranslation.workspaceFiles.revisionConflict()
+          );
+          return;
+        }
+        throw error;
+      }
+    }
+  );
+
   app.post<{ Querystring: WarehouseSourceImportQuery; Body: ImportWarehouseSourcesBody }>(
     RUNTIME_ROUTE_PATH.warehouseSourcesImport,
     { config: { rateLimit: deps.rateLimit } },
@@ -321,6 +379,7 @@ async function authorizeWarehouseSourceImportRequest(
     readonly action?:
       | typeof AUTHORIZATION_ACTION.workspaceSourceImportView
       | typeof AUTHORIZATION_ACTION.workspaceSourceConnectionCreate
+      | typeof AUTHORIZATION_ACTION.workspaceSourceConnectionRename
       | typeof AUTHORIZATION_ACTION.workspaceSourceConnectionTest
       | typeof AUTHORIZATION_ACTION.workspaceSourceImportImport;
   } = {}
@@ -367,6 +426,24 @@ function parseCreateWarehouseConnectionBody(
     ok: true,
     value: {
       scope: toDraftScope(scope),
+      ...parsed.data,
+    },
+  };
+}
+
+function parseRenameWarehouseConnectionBody(
+  body: RenameWarehouseConnectionBody | undefined,
+  connectionId: string,
+  scope: ReturnType<typeof buildEnvironmentAccessScope>
+): RouteParseResult<RenameWarehouseConnectionInput> {
+  const parsed = RenameWarehouseConnectionRequestSchema.safeParse(body);
+  if (!parsed.success) return invalidBody();
+
+  return {
+    ok: true,
+    value: {
+      scope: toDraftScope(scope),
+      connectionId,
       ...parsed.data,
     },
   };
