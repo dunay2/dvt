@@ -33,8 +33,15 @@ function buildProjection(): DbtProjectGraphProjection {
         uniqueId: 'source.analytics.raw_orders',
         resourceType: 'source',
         name: 'raw_orders',
+        identifier: 'raw-orders-physical',
         packageName: 'analytics',
         sourceName: 'raw',
+        sourceIdentity: {
+          database: 'analytics',
+          connectionName: 'Current production warehouse',
+          schema: 'raw',
+          databaseUser: 'warehouse_reader',
+        },
         originalFilePath: 'models/sources.yml',
         columns: [{ name: 'order_id', dataType: 'integer', description: 'Order key' }],
         tags: ['raw'],
@@ -165,10 +172,16 @@ describe('projectDbtProjectGraphToCanonicalCanvas', () => {
       'metric',
     ]);
     expect(projection.nodes[0]).toMatchObject({
+      name: 'raw_orders',
       path: 'models/sources.yml',
       metadata: {
+        tableIdentifier: 'raw-orders-physical',
         packageName: 'analytics',
         sourceName: 'raw',
+        database: 'analytics',
+        connectionName: 'Current production warehouse',
+        schema: 'raw',
+        databaseUser: 'warehouse_reader',
         columns: [{ name: 'order_id', type: 'integer', description: 'Order key' }],
         visualEditability: { status: 'editable' },
       },

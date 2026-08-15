@@ -75,6 +75,7 @@ describe('WarehouseConnectionSourceObjectReader', () => {
         async (): Promise<Awaited<ReturnType<IWarehouseConnectionProbe['inspectConnection']>>> => ({
           status: 'passed',
           checkedAt: liveObject.metricEvidence.observedAt,
+          databaseUser: 'warehouse_reader',
           sourceObjects: [liveObject],
         })
       ),
@@ -85,6 +86,7 @@ describe('WarehouseConnectionSourceObjectReader', () => {
     const result = await reader.read(scope, connection.id);
 
     expect(result.connection).toEqual(connection);
+    expect(result.databaseUser).toBe('warehouse_reader');
     expect(result.sourceObjects).toEqual([liveObject]);
     expect(probe.inspectConnection).toHaveBeenCalledWith({
       type: 'postgres',

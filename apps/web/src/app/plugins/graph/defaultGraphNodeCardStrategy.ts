@@ -65,6 +65,7 @@ function buildDefaultCard(
     metrics,
     operationalMetrics: [],
     operationalDetail: buildGraphNodeOperationalDetail(titlePresentation.title, []),
+    sourceIdentity: null,
     nodeActionsLabel: graphNodeCardCopyTokens.nodeActionsLabel,
   };
 }

@@ -68,6 +68,7 @@ describe('buildDbtProjectImportRuntime', () => {
       authorityPolicy: new CanvasAuthoringAuthorityPolicy(authorityStore as never, {
         read: vi.fn().mockResolvedValue(null),
       }),
+      warehouseConnectionCatalog: { getConnection: vi.fn() } as never,
       processStore: {} as never,
       now: () => new Date('2026-07-14T10:00:00.000Z'),
       createLeaseToken: () => 'lease-a',

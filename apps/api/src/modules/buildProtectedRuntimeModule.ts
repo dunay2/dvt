@@ -95,6 +95,7 @@ export async function buildProtectedRuntimeModule(
     commandAuthorizer: securityRuntime.commandAuthorizer,
     env,
     pool,
+    warehouseConnectionCatalog: storageRuntime.warehouseConnectionCatalog,
     buildCanvasAuthoringAuthorityRuntime: ({ workspaceGraphDraftStore }) =>
       buildCanvasAuthoringAuthorityRuntime({
         pool,
@@ -140,6 +141,7 @@ export async function buildProtectedRuntimeModule(
     }),
     processStore: dbtProjectImportProcessStore,
     authorityPolicy: canvasAuthoringAuthorityRuntime.canvasAuthoringAuthorityPolicy,
+    warehouseConnectionCatalog: storageRuntime.warehouseConnectionCatalog,
     now: () => new Date(),
     createLeaseToken: randomUUID,
     operationLeaseMs: Math.max(

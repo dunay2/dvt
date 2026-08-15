@@ -1,4 +1,8 @@
 /** Owned concern: adapt the protected ProjectDbtGraphFromFiles query rail to HTTP. */
+import {
+  DBT_PROJECT_GRAPH_PROJECTION_FEATURE,
+  type DbtProjectGraphProjection,
+} from '@dvt/contracts';
 import type { FastifyInstance } from 'fastify';
 
 import {
@@ -22,6 +26,7 @@ import { RUNTIME_ROUTE_PATH } from './runtimeRoutes.constants.js';
 
 type DbtProjectGraphQuery = DbtProjectFileScopeQuery & {
   readonly canvasId?: string;
+  readonly projectionFeature?: string;
 };
 
 type DbtProjectGraphRouteDeps = {
@@ -55,12 +60,16 @@ export function registerDbtProjectGraphRoutes(
       if (!authorized) return;
 
       try {
-        reply.code(200).send(
-          await deps.useCase.execute({
-            scope: authorized.scope,
-            canvasId: parsed.value.canvasId,
-          })
-        );
+        const projection = await deps.useCase.execute({
+          scope: authorized.scope,
+          canvasId: parsed.value.canvasId,
+          includeGovernedSourceIdentity:
+            parsed.value.projectionFeature ===
+            DBT_PROJECT_GRAPH_PROJECTION_FEATURE.governedSourceIdentity,
+        });
+        reply
+          .code(200)
+          .send(projectDbtGraphWireResponse(projection, parsed.value.projectionFeature));
       } catch (error) {
         if (error instanceof DbtProjectFileAuthorityRequiredError) {
           reply.code(409).send({
@@ -80,10 +89,17 @@ export function registerDbtProjectGraphRoutes(
 function parseDbtProjectGraphQuery(input: DbtProjectGraphQuery): RouteParseResult<{
   readonly accessScope: ReturnType<typeof buildEnvironmentAccessScope>;
   readonly canvasId: string;
+  readonly projectionFeature?: typeof DBT_PROJECT_GRAPH_PROJECTION_FEATURE.governedSourceIdentity;
 }> {
   const accessScope = parseDbtProjectFileScope(input);
   const canvasId = input.canvasId?.trim();
-  if (!accessScope.ok || !canvasId) {
+  const projectionFeature = input.projectionFeature?.trim();
+  if (
+    !accessScope.ok ||
+    !canvasId ||
+    (projectionFeature !== undefined &&
+      projectionFeature !== DBT_PROJECT_GRAPH_PROJECTION_FEATURE.governedSourceIdentity)
+  ) {
     return {
       ok: false,
       issue: badRequestIssue(HTTP_ERROR_REASON.invalidDbtProjectGraphRequest, {
@@ -97,6 +113,30 @@ function parseDbtProjectGraphQuery(input: DbtProjectGraphQuery): RouteParseResul
     value: {
       accessScope: accessScope.value,
       canvasId,
+      ...(projectionFeature === undefined
+        ? {}
+        : {
+            projectionFeature: DBT_PROJECT_GRAPH_PROJECTION_FEATURE.governedSourceIdentity,
+          }),
     },
+  };
+}
+
+function projectDbtGraphWireResponse(
+  projection: DbtProjectGraphProjection,
+  projectionFeature: typeof DBT_PROJECT_GRAPH_PROJECTION_FEATURE.governedSourceIdentity | undefined
+): DbtProjectGraphProjection {
+  if (projectionFeature === DBT_PROJECT_GRAPH_PROJECTION_FEATURE.governedSourceIdentity) {
+    return projection;
+  }
+
+  return {
+    ...projection,
+    nodes: projection.nodes.map((node) => {
+      const legacyNode = { ...node };
+      delete legacyNode.identifier;
+      delete legacyNode.sourceIdentity;
+      return legacyNode;
+    }),
   };
 }

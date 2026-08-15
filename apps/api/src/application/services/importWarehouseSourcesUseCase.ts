@@ -57,8 +57,11 @@ export class ImportWarehouseSourcesUseCase {
       ...input.scope,
       canvasId: request.data.canvasId,
     });
-    const { connection, sourceObjects: catalogSourceObjects } =
-      await this.deps.sourceObjectReader.read(input.scope, request.data.connectionId);
+    const {
+      connection,
+      databaseUser,
+      sourceObjects: catalogSourceObjects,
+    } = await this.deps.sourceObjectReader.read(input.scope, request.data.connectionId);
     const sourceObjects = request.data.objects.map(({ objectId }) => {
       const sourceObject = catalogSourceObjects.find(
         (candidate) => candidate.objectId === objectId
@@ -77,6 +80,7 @@ export class ImportWarehouseSourcesUseCase {
       canvasId: request.data.canvasId,
       idempotencyKey: request.data.idempotencyKey,
       connection,
+      ...(databaseUser === undefined ? {} : { databaseUser }),
       sourceObjects,
       groupingStrategy: request.data.groupingStrategy,
       includeColumns: request.data.includeColumns,

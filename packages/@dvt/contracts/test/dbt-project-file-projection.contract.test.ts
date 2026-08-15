@@ -83,9 +83,16 @@ describe('DbtProjectGraphProjection.v1', () => {
           uniqueId: 'source.analytics.raw.orders',
           resourceType: 'source',
           name: 'orders',
+          identifier: 'orders-physical',
           packageName: 'analytics',
           originalFilePath: 'models/sources.yml',
           sourceName: 'raw',
+          sourceIdentity: {
+            database: 'analytics',
+            connectionName: 'Production PostgreSQL',
+            schema: 'raw',
+            databaseUser: 'warehouse_reader',
+          },
           columns: [{ name: 'order_id', dataType: 'integer' }],
           tags: ['raw'],
           visualEditability: {
@@ -131,6 +138,24 @@ describe('DbtProjectGraphProjection.v1', () => {
     } as const;
 
     expect(DbtProjectGraphProjectionSchema.parse(projection)).toEqual(projection);
+    const sourceNode = projection.nodes[0];
+    expect(
+      DbtProjectGraphProjectionSchema.safeParse({
+        ...projection,
+        nodes: [
+          {
+            ...sourceNode,
+            sourceIdentity: {
+              database: 'analytics',
+              connectionName: 'Production PostgreSQL',
+              schema: 'raw',
+              credentialRef: 'postgres:must-not-leak',
+            },
+          },
+          ...projection.nodes.slice(1),
+        ],
+      }).success
+    ).toBe(false);
   });
 
   it('accepts invalid analysis without pretending it is executable', () => {

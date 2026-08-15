@@ -64,6 +64,12 @@ export function buildGraphNodeTitlePresentation({
     stringValue(data.sourceName) ??
     stringValue(dbtData.sourceName) ??
     stringValue(configData.sourceName);
+  if (kind === 'dbt:source' && physicalTableIdentifier) {
+    return {
+      title: physicalTableIdentifier,
+      technicalName: nodeName,
+    };
+  }
   if (pluginId === 'dvt.warehouse-source' && kind === 'dvt:source') {
     const warehouseTableTitle = physicalTableIdentifier ?? tableName;
     if (warehouseTableTitle) {

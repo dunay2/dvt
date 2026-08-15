@@ -19,6 +19,7 @@ export const queryKeys = {
   // Workspace
   // -------------------------------------------------------------------------
   workspace: {
+    graphDraftRoot: () => ['workspace', 'graph-draft'] as const,
     graphDraft: (workspaceLayoutKey: string) =>
       ['workspace', 'graph-draft', workspaceLayoutKey] as const,
     graphForView: (workspaceLayoutKey: string, viewId: string) =>
@@ -39,6 +40,7 @@ export const queryKeys = {
         canvasId,
         projectRoot,
       ] as const,
+    dbtProjectGraphRoot: () => ['workspace', 'dbt-project-graph'] as const,
     diffChanges: (workspaceLayoutKey: string) =>
       ['workspace', 'diff-changes', workspaceLayoutKey] as const,
     plugins: (workspaceLayoutKey: string) => ['workspace', 'plugins', workspaceLayoutKey] as const,

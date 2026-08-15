@@ -55,6 +55,7 @@ interface UseSourceImportWizardParams {
   warehouseSourceImport: IWarehouseSourceImportPort;
   sourceImportOptions: readonly SourceImportOptionContribution[];
   onComplete?: (result: ImportSourcesResult) => void;
+  onConnectionRenamed?: (connection: WarehouseConnection) => void | Promise<void>;
   onClose: () => void;
   initialSelection?: SourceImportInitialSelection | null;
 }
@@ -127,6 +128,7 @@ export function useSourceImportWizard({
   warehouseSourceImport,
   sourceImportOptions,
   onComplete,
+  onConnectionRenamed,
   onClose,
   initialSelection,
 }: UseSourceImportWizardParams) {
@@ -424,6 +426,7 @@ export function useSourceImportWizard({
         selectedConnectionObject.id,
         { name }
       );
+      await onConnectionRenamed?.(connection);
       setState((prev) => ({
         ...prev,
         connections: upsertWarehouseConnection(prev.connections, connection),

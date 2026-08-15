@@ -28,6 +28,10 @@ const IsoUtcStringSchema = NonBlankStringSchema.refine(isIsoUtcString, {
 });
 const NonNegativeIntegerSchema = z.number().int().nonnegative();
 
+export const DBT_PROJECT_GRAPH_PROJECTION_FEATURE = {
+  governedSourceIdentity: 'governed-source-identity.v1',
+} as const;
+
 function addDuplicateIssues(
   values: readonly string[],
   ctx: z.RefinementCtx,
@@ -86,15 +90,26 @@ const DbtProjectedTestMetadataSchema = z
   })
   .strict();
 
+export const DbtProjectedSourceIdentitySchema = z
+  .object({
+    database: NonBlankStringSchema,
+    connectionName: NonBlankStringSchema,
+    schema: NonBlankStringSchema,
+    databaseUser: NonBlankStringSchema,
+  })
+  .strict();
+
 const DbtProjectedNodeSchema = z
   .object({
     uniqueId: NonBlankStringSchema,
     resourceType: z.enum(['source', 'model', 'seed', 'snapshot', 'test', 'exposure', 'metric']),
     name: NonBlankStringSchema,
+    identifier: NonBlankStringSchema.optional(),
     packageName: NonBlankStringSchema,
     originalFilePath: NonBlankStringSchema.optional(),
     descriptionFilePath: NonBlankStringSchema.optional(),
     sourceName: NonBlankStringSchema.optional(),
+    sourceIdentity: DbtProjectedSourceIdentitySchema.optional(),
     description: z.string().optional(),
     materialized: NonBlankStringSchema.optional(),
     columns: z.array(DbtProjectedColumnSchema),
@@ -116,6 +131,14 @@ const DbtProjectedNodeSchema = z
         code: 'custom',
         message: 'sourceName is required for source resources',
         path: ['sourceName'],
+      });
+    }
+
+    if (node.resourceType !== 'source' && node.sourceIdentity !== undefined) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'sourceIdentity is only valid for source resources',
+        path: ['sourceIdentity'],
       });
     }
   });

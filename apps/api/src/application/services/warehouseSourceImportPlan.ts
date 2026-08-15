@@ -26,6 +26,7 @@ export type WarehouseSourceImportCommandContext = Readonly<{
   canvasId: string;
   idempotencyKey: string;
   connection: WarehouseConnection;
+  databaseUser?: string;
   sourceObjects: readonly ConnectedRelationalSourceObject[];
   groupingStrategy: SourceImportGrouping;
   includeColumns: boolean;
@@ -75,6 +76,9 @@ export async function buildWarehouseSourceImportFilePlan(input: {
   });
   const relativeUpdates = buildWarehouseSourceYamlUpdates({
     sourceObjects: input.context.sourceObjects,
+    ...(input.context.databaseUser === undefined
+      ? {}
+      : { databaseUser: input.context.databaseUser }),
     groupingStrategy: input.context.groupingStrategy,
     includeColumns: input.context.includeColumns,
     addTests: input.context.addTests,

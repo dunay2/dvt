@@ -11,6 +11,7 @@ import { buildGraphNodeVolumeMetricProjection } from '../graph/graphNodeSourceMe
 import { buildGraphNodeTitlePresentation } from '../graph/graphNodeTitlePresentation';
 import {
   metadataOf,
+  buildGraphNodeSourceIdentity,
   numericValue,
   pushMetric,
   pushRuntimeMetrics,
@@ -133,6 +134,12 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     metrics,
     operationalMetrics: operationalSummary.metrics,
     operationalDetail: operationalSummary.detail,
+    sourceIdentity: buildGraphNodeSourceIdentity(
+      node,
+      metadata,
+      titlePresentation.title,
+      presentationCopy?.locale
+    ),
     nodeActionsLabel:
       presentationCopy?.nodeActionsLabel ?? graphNodeCardCopyTokens.nodeActionsLabel,
   };

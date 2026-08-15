@@ -123,6 +123,7 @@ describe('ImportWarehouseSourcesUseCase', () => {
         scope: SCOPE,
         canvasId: INPUT.canvasId,
         idempotencyKey: INPUT.idempotencyKey,
+        databaseUser: 'warehouse_reader',
         sourceObjects: [expect.objectContaining({ connectionId: CONNECTION.id })],
       }),
       GRAPH_AUTHORITY
@@ -231,7 +232,11 @@ function createHarness(
   useCase: ImportWarehouseSourcesUseCase;
 }> {
   const sourceObjectReader = {
-    read: vi.fn(async () => ({ connection: CONNECTION, sourceObjects })),
+    read: vi.fn(async () => ({
+      connection: CONNECTION,
+      databaseUser: 'warehouse_reader',
+      sourceObjects,
+    })),
   };
   const authorityPolicy = { resolve: vi.fn(async () => authorityBinding) };
   const graphResult: WarehouseSourceImportStrategyResult = {

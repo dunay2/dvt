@@ -345,6 +345,7 @@ function toSourceNode(
       tableName,
       tableIdentifier: sourceObject.locator.name,
       connectionName: context.connection.name,
+      ...(context.databaseUser === undefined ? {} : { databaseUser: context.databaseUser }),
       database: sourceObject.locator.catalog,
       schema: sourceObject.locator.schema,
       relationType: sourceObject.locator.relationType,

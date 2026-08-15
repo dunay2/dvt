@@ -27,6 +27,7 @@ type PostgresTableDiscoveryRow = {
   readonly table_catalog: string;
   readonly table_schema: string;
   readonly table_name: string;
+  readonly database_user?: string;
   readonly relation_kind: 'r' | 'p' | 'v' | 'm' | 'f';
   readonly row_count: number | string | null;
 };
@@ -94,6 +95,9 @@ export class WorkspaceWarehouseConnectionProbe implements IWarehouseConnectionPr
     return {
       status: 'passed' as const,
       checkedAt: observedAt,
+      ...(sourceObjects.databaseUser === undefined
+        ? {}
+        : { databaseUser: sourceObjects.databaseUser }),
       sourceObjects: sourceObjects.sourceObjects,
     };
   }
@@ -129,7 +133,11 @@ export class WorkspaceWarehouseConnectionProbe implements IWarehouseConnectionPr
     credentialRef: string,
     observedAt: string
   ): Promise<
-    | { readonly ok: true; readonly sourceObjects: readonly SourceObject[] }
+    | {
+        readonly ok: true;
+        readonly databaseUser?: string;
+        readonly sourceObjects: readonly SourceObject[];
+      }
     | {
         readonly ok: false;
         readonly reason: 'invalid_credentials' | 'connection_failed';
@@ -150,7 +158,7 @@ export class WorkspaceWarehouseConnectionProbe implements IWarehouseConnectionPr
       await client.connect();
       const result = await client.query<PostgresTableDiscoveryRow>(
         [
-          'select current_database() as table_catalog, namespace.nspname as table_schema, relation.relname as table_name, relation.relkind as relation_kind,',
+          'select current_database() as table_catalog, current_user as database_user, namespace.nspname as table_schema, relation.relname as table_name, relation.relkind as relation_kind,',
           "case when relation.reltuples >= 0 then relation.reltuples::bigint when relation.relkind in ('r', 'p', 'm') then pg_stat_get_live_tuples(relation.oid)::bigint else null end as row_count",
           'from pg_class relation',
           'join pg_namespace namespace on namespace.oid = relation.relnamespace',
@@ -178,7 +186,12 @@ export class WorkspaceWarehouseConnectionProbe implements IWarehouseConnectionPr
         }
       }
 
-      return { ok: true, sourceObjects };
+      const databaseUser = parseOptionalNonBlankString(result.rows[0]?.database_user);
+      return {
+        ok: true,
+        ...(databaseUser === undefined ? {} : { databaseUser }),
+        sourceObjects,
+      };
     } catch (error) {
       return {
         ok: false,
@@ -611,6 +624,12 @@ function parseOptionalRowCount(value: unknown): number | undefined {
 
 function parseOptionalByteSize(value: unknown): number | undefined {
   return parseOptionalNonNegativeInteger(value);
+}
+
+function parseOptionalNonBlankString(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined;
+  const normalized = value.trim();
+  return normalized.length > 0 ? normalized : undefined;
 }
 
 function parseOptionalNonNegativeInteger(value: unknown): number | undefined {

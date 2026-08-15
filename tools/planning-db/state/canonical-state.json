@@ -160773,6 +160773,946 @@
       "createdAt": "2026-08-09T09:16:34.047Z"
     },
     {
+      "railId": "local#PTH1-SOURCE-IDENTITY-HOVER-2379#command#importwarehousesources",
+      "featureId": "PTH1-SOURCE-IDENTITY-HOVER-2379",
+      "mechanizationStatus": "implemented",
+      "railName": "ImportWarehouseSources",
+      "normalizedRailName": "importwarehousesources",
+      "railType": "command",
+      "dddOwner": "Warehouse Source Import",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "apps/api/src/application/services/warehouseSourceYamlMerge.ts#buildGovernedSourceMetadata",
+        "apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.ts#parseOptionalNonBlankString"
+      ],
+      "implementationRefs": [
+        "apps/api/src/application/services/warehouseSourceYamlMerge.ts#buildGovernedSourceMetadata",
+        "apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.ts#parseOptionalNonBlankString"
+      ],
+      "documentationRefs": [
+        "docs/evidence/ED-20260815-governed-source-identity-projection.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "apps/api/src/application/ports/warehouseSourceImport.ts",
+        "apps/api/src/application/services/WarehouseConnectionSourceObjectReader.ts",
+        "apps/api/src/application/services/graphDraftWarehouseSourceImportStrategy.ts",
+        "apps/api/src/application/services/importWarehouseSourcesUseCase.ts",
+        "apps/api/src/application/services/warehouseSource*.ts",
+        "apps/api/src/infrastructure/warehouseSourceImport/**",
+        "apps/api/test/application/services/WarehouseConnectionSourceObjectReader.test.ts",
+        "apps/api/test/application/services/*WarehouseSource*.test.ts",
+        "apps/api/test/application/services/importWarehouseSourcesUseCase.test.ts",
+        "apps/api/test/application/services/warehouseSource*.test.ts",
+        "apps/api/test/infrastructure/warehouseSourceImport/**",
+        "tools/planning-db/state/canonical-state.json"
+      ],
+      "architectureGuards": [
+        "pnpm --filter dvt-api test -- importWarehouseSourcesUseCase warehouseSourceYaml WorkspaceWarehouseConnectionProbe",
+        "pnpm --dir apps/api exec vitest run test/application/services/importWarehouseSourcesUseCase.test.ts"
+      ],
+      "completionGate": [
+        "pnpm docs:feature-mechanization:implementation -- --feature PTH1-SOURCE-IDENTITY-HOVER-2379",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "docs/evidence/ED-20260815-governed-source-identity-projection.md",
+      "sourceContentSha256": "4163c5f6a257c3d41de1b218826166b1f378f5c60a56f77471a081836d33b4ed",
+      "rawRail": {
+        "name": "ImportWarehouseSources",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "Warehouse Source Import",
+        "negativeTests": [
+          "Reject or omit incomplete identity and never project credential references or secrets"
+        ],
+        "adapterSurface": "Protected source-import API and PostgreSQL probe",
+        "applicationPort": "ImportWarehouseSources use case and warehouse connection ports",
+        "authorizationScope": "Authorized tenant project and environment workspace; credentials resolved only by the server"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "buildGovernedSourceMetadata",
+            "path": "apps/api/src/application/services/warehouseSourceYamlMerge.ts",
+            "cqRails": ["ImportWarehouseSources"],
+            "dddOwner": "Warehouse Source Import",
+            "unitTests": [
+              "apps/api/test/application/services/importWarehouseSourcesUseCase.test.ts",
+              "apps/api/test/application/services/warehouseSourceYaml.test.ts"
+            ],
+            "fowlerSignals": [
+              "Move the non-secret database principal through the existing import rail instead of adding a presentation lookup.",
+              "Reuse the canonical Warehouse Source Import owner and command vocabulary without a parallel rail."
+            ],
+            "cypressCoverage": "Agent-browser governed source import and table-title identity proof",
+            "architectureGuard": "pnpm --dir apps/api exec vitest run test/application/services/importWarehouseSourcesUseCase.test.ts"
+          },
+          {
+            "name": "parseOptionalNonBlankString",
+            "path": "apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.ts",
+            "cqRails": ["ImportWarehouseSources"],
+            "dddOwner": "WarehouseSourceImport",
+            "unitTests": [
+              "apps/api/test/application/services/importWarehouseSourcesUseCase.test.ts",
+              "apps/api/test/application/services/warehouseSourceYaml.test.ts"
+            ],
+            "fowlerSignals": [
+              "Move the non-secret database principal through the existing import rail instead of adding a presentation lookup."
+            ],
+            "cypressCoverage": "Agent-browser governed source import and table-title identity proof",
+            "architectureGuard": "pnpm --filter dvt-api test -- importWarehouseSourcesUseCase warehouseSourceYaml WorkspaceWarehouseConnectionProbe"
+          }
+        ],
+        "version": 1,
+        "featureId": "PTH1-SOURCE-IDENTITY-HOVER-2379",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2379"],
+        "cypressFlows": [
+          "Agent-browser governed source import and table-title identity proof"
+        ],
+        "domainObjects": ["WarehouseSourceImport"],
+        "fowlerSignals": [
+          "Move the non-secret database principal through the existing import rail instead of adding a presentation lookup.",
+          "Reuse the canonical Warehouse Source Import owner and command vocabulary without a parallel rail."
+        ],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation -- --feature PTH1-SOURCE-IDENTITY-HOVER-2379",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "importwarehousesources-record",
+            "redTest": "pnpm planning:db:query rail-vocabulary --limit 20",
+            "greenTest": "pnpm planning:db:integrity:check",
+            "patchSurfaces": [
+              "apps/api/src/application/ports/warehouseSourceImport.ts",
+              "apps/api/src/application/services/WarehouseConnectionSourceObjectReader.ts",
+              "apps/api/src/application/services/graphDraftWarehouseSourceImportStrategy.ts",
+              "apps/api/src/application/services/importWarehouseSourcesUseCase.ts",
+              "apps/api/src/application/services/warehouseSource*.ts",
+              "apps/api/src/infrastructure/warehouseSourceImport/**",
+              "apps/api/test/application/services/WarehouseConnectionSourceObjectReader.test.ts",
+              "apps/api/test/application/services/*WarehouseSource*.test.ts",
+              "apps/api/test/application/services/importWarehouseSourcesUseCase.test.ts",
+              "apps/api/test/application/services/warehouseSource*.test.ts",
+              "apps/api/test/infrastructure/warehouseSourceImport/**",
+              "tools/planning-db/state/canonical-state.json"
+            ],
+            "expectedFailure": "ImportWarehouseSources appears as an exact duplicate because the local owner vocabulary differs from the canonical owner."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ImportWarehouseSources",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "Warehouse Source Import",
+            "negativeTests": [
+              "Reject or omit incomplete identity and never project credential references or secrets"
+            ],
+            "adapterSurface": "Protected source-import API and PostgreSQL probe",
+            "applicationPort": "ImportWarehouseSources use case and warehouse connection ports",
+            "authorizationScope": "Authorized tenant project and environment workspace; credentials resolved only by the server"
+          }
+        ],
+        "architectureGuards": [
+          "pnpm --filter dvt-api test -- importWarehouseSourcesUseCase warehouseSourceYaml WorkspaceWarehouseConnectionProbe",
+          "pnpm --dir apps/api exec vitest run test/application/services/importWarehouseSourcesUseCase.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2379",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/ports/warehouseSourceImport.ts",
+          "apps/api/src/application/services/WarehouseConnectionSourceObjectReader.ts",
+          "apps/api/src/application/services/graphDraftWarehouseSourceImportStrategy.ts",
+          "apps/api/src/application/services/importWarehouseSourcesUseCase.ts",
+          "apps/api/src/application/services/warehouseSource*.ts",
+          "apps/api/src/infrastructure/warehouseSourceImport/**",
+          "apps/api/test/application/services/WarehouseConnectionSourceObjectReader.test.ts",
+          "apps/api/test/application/services/*WarehouseSource*.test.ts",
+          "apps/api/test/application/services/importWarehouseSourcesUseCase.test.ts",
+          "apps/api/test/application/services/warehouseSource*.test.ts",
+          "apps/api/test/infrastructure/warehouseSourceImport/**",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/web/src/app/plugins/graph/SourceIdentityTooltip.tsx"
+        ]
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-15T22:38:12.245Z"
+    },
+    {
+      "railId": "local#PTH1-SOURCE-IDENTITY-HOVER-2379#query#getworkspacegraphdraft",
+      "featureId": "PTH1-SOURCE-IDENTITY-HOVER-2379",
+      "mechanizationStatus": "implemented",
+      "railName": "GetWorkspaceGraphDraft",
+      "normalizedRailName": "getworkspacegraphdraft",
+      "railType": "query",
+      "dddOwner": "CanvasAuthoringAuthority",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "apps/api/src/application/services/getWorkspaceGraphDraftUseCase.ts#refreshGraphDraftConnectionNames",
+        "apps/api/src/application/services/getWorkspaceGraphDraftUseCase.ts#refreshNodeConnectionName"
+      ],
+      "implementationRefs": [
+        "apps/api/src/application/services/getWorkspaceGraphDraftUseCase.ts#refreshGraphDraftConnectionNames",
+        "apps/api/src/application/services/getWorkspaceGraphDraftUseCase.ts#refreshNodeConnectionName"
+      ],
+      "documentationRefs": [
+        "docs/evidence/ED-20260815-governed-source-identity-projection.md"
+      ],
+      "governingSources": [
+        "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+        "docs/architecture/command-query-rail-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "apps/api/src/application/services/getWorkspaceGraphDraftUseCase.ts",
+        "apps/api/src/modules/workspaceGraphDraft/buildWorkspaceGraphDraftRuntime.ts",
+        "apps/api/test/application/services/getWorkspaceGraphDraftUseCase.authority.test.ts"
+      ],
+      "architectureGuards": [
+        "pnpm --dir apps/api exec vitest run test/application/services/getWorkspaceGraphDraftUseCase.authority.test.ts"
+      ],
+      "completionGate": [
+        "pnpm docs:feature-mechanization:implementation -- --feature PTH1-SOURCE-IDENTITY-HOVER-2379",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "docs/evidence/ED-20260815-governed-source-identity-projection.md",
+      "sourceContentSha256": "4163c5f6a257c3d41de1b218826166b1f378f5c60a56f77471a081836d33b4ed",
+      "rawRail": {
+        "name": "GetWorkspaceGraphDraft",
+        "type": "query",
+        "status": "implemented",
+        "dddOwner": "CanvasAuthoringAuthority",
+        "negativeTests": [
+          "Omit identity when the stable connection no longer exists and never mutate the persisted draft"
+        ],
+        "adapterSurface": "Protected workspace graph-draft query composition",
+        "applicationPort": "GetWorkspaceGraphDraft use case",
+        "authorizationScope": "Authorized tenant project and environment workspace"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "refreshGraphDraftConnectionNames",
+            "path": "apps/api/src/application/services/getWorkspaceGraphDraftUseCase.ts",
+            "cqRails": ["GetWorkspaceGraphDraft"],
+            "dddOwner": "CanvasAuthoringAuthority",
+            "unitTests": [
+              "apps/api/test/application/services/getWorkspaceGraphDraftUseCase.authority.test.ts"
+            ],
+            "fowlerSignals": [
+              "Resolve mutable connection labels at query time instead of duplicating them as stale persisted authority."
+            ],
+            "cypressCoverage": "Agent-browser graph-draft source table identity hover and focus proof",
+            "architectureGuard": "pnpm --dir apps/api exec vitest run test/application/services/getWorkspaceGraphDraftUseCase.authority.test.ts"
+          },
+          {
+            "name": "refreshNodeConnectionName",
+            "path": "apps/api/src/application/services/getWorkspaceGraphDraftUseCase.ts",
+            "cqRails": ["GetWorkspaceGraphDraft"],
+            "dddOwner": "CanvasAuthoringAuthority",
+            "unitTests": [
+              "apps/api/test/application/services/getWorkspaceGraphDraftUseCase.authority.test.ts"
+            ],
+            "fowlerSignals": [
+              "Resolve mutable connection labels at query time instead of duplicating them as stale persisted authority."
+            ],
+            "cypressCoverage": "Agent-browser graph-draft source table identity hover and focus proof",
+            "architectureGuard": "pnpm --dir apps/api exec vitest run test/application/services/getWorkspaceGraphDraftUseCase.authority.test.ts"
+          }
+        ],
+        "version": 1,
+        "featureId": "PTH1-SOURCE-IDENTITY-HOVER-2379",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2379"],
+        "cypressFlows": [
+          "Agent-browser graph-draft source table identity hover and focus proof"
+        ],
+        "domainObjects": ["CanvasAuthoringAuthority"],
+        "fowlerSignals": [
+          "Resolve mutable connection labels at query time instead of duplicating them as stale persisted authority."
+        ],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation -- --feature PTH1-SOURCE-IDENTITY-HOVER-2379",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "getworkspacegraphdraft-record",
+            "redTest": "pnpm --dir apps/api exec vitest run test/application/services/getWorkspaceGraphDraftUseCase.authority.test.ts",
+            "greenTest": "pnpm --dir apps/api exec vitest run test/application/services/getWorkspaceGraphDraftUseCase.authority.test.ts",
+            "patchSurfaces": [
+              "apps/api/src/application/services/getWorkspaceGraphDraftUseCase.ts",
+              "apps/api/src/modules/workspaceGraphDraft/buildWorkspaceGraphDraftRuntime.ts",
+              "apps/api/test/application/services/getWorkspaceGraphDraftUseCase.authority.test.ts"
+            ],
+            "expectedFailure": "Graph-draft reads retain the import-time connection label after the governed connection is renamed."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "governingSources": [
+          "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "GetWorkspaceGraphDraft",
+            "type": "query",
+            "status": "implemented",
+            "dddOwner": "CanvasAuthoringAuthority",
+            "negativeTests": [
+              "Omit identity when the stable connection no longer exists and never mutate the persisted draft"
+            ],
+            "adapterSurface": "Protected workspace graph-draft query composition",
+            "applicationPort": "GetWorkspaceGraphDraft use case",
+            "authorizationScope": "Authorized tenant project and environment workspace"
+          }
+        ],
+        "architectureGuards": [
+          "pnpm --dir apps/api exec vitest run test/application/services/getWorkspaceGraphDraftUseCase.authority.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2379",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/services/getWorkspaceGraphDraftUseCase.ts",
+          "apps/api/src/modules/workspaceGraphDraft/buildWorkspaceGraphDraftRuntime.ts",
+          "apps/api/test/application/services/getWorkspaceGraphDraftUseCase.authority.test.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/application/services/getWorkspaceGraphDraftSourceIdentityUseCase.ts"
+        ]
+      },
+      "revision": 0,
+      "createdBy": "codex",
+      "createdAt": "2026-08-15T22:38:13.595Z"
+    },
+    {
+      "railId": "local#PTH1-SOURCE-IDENTITY-HOVER-2379#query#projectdbtgraphfromfiles",
+      "featureId": "PTH1-SOURCE-IDENTITY-HOVER-2379",
+      "mechanizationStatus": "implemented",
+      "railName": "ProjectDbtGraphFromFiles",
+      "normalizedRailName": "projectdbtgraphfromfiles",
+      "railType": "query",
+      "dddOwner": "DbtProjectGraphProjection",
+      "railStatus": "declared",
+      "symbolRefs": [
+        "apps/api/src/application/ports/dbtProjectAnalysis.ts#DbtProjectAnalysisResource",
+        "apps/api/src/application/ports/dbtProjectAnalysis.ts#DbtProjectSourceIdentityRef",
+        "apps/api/src/application/services/projectDbtGraphFromFilesUseCase.ts#resolveSourceIdentity",
+        "apps/api/src/entrypoints/http/dbtProjectGraphRoutes.ts#projectDbtGraphWireResponse",
+        "apps/api/src/infrastructure/dbt/dbtManifestProjection.ts#projectSourceIdentityRef",
+        "packages/@dvt/contracts/src/contracts/planner/DbtProjectGraphProjection.v1.ts#DBT_PROJECT_GRAPH_PROJECTION_FEATURE",
+        "packages/@dvt/contracts/src/contracts/planner/DbtProjectGraphProjection.v1.ts#DbtProjectedSourceIdentitySchema"
+      ],
+      "implementationRefs": [
+        "apps/api/src/application/ports/dbtProjectAnalysis.ts#DbtProjectAnalysisResource",
+        "apps/api/src/application/ports/dbtProjectAnalysis.ts#DbtProjectSourceIdentityRef",
+        "apps/api/src/application/services/projectDbtGraphFromFilesUseCase.ts#resolveSourceIdentity",
+        "apps/api/src/entrypoints/http/dbtProjectGraphRoutes.ts#projectDbtGraphWireResponse",
+        "apps/api/src/infrastructure/dbt/dbtManifestProjection.ts#projectSourceIdentityRef",
+        "packages/@dvt/contracts/src/contracts/planner/DbtProjectGraphProjection.v1.ts#DBT_PROJECT_GRAPH_PROJECTION_FEATURE",
+        "packages/@dvt/contracts/src/contracts/planner/DbtProjectGraphProjection.v1.ts#DbtProjectedSourceIdentitySchema"
+      ],
+      "documentationRefs": [
+        "docs/evidence/ED-20260815-governed-source-identity-projection.md"
+      ],
+      "governingSources": [
+        "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+        "docs/architecture/command-query-rail-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "apps/api/src/application/ports/dbtProjectAnalysis.ts",
+        "apps/api/src/application/services/projectDbtGraphFromFilesUseCase.ts",
+        "apps/api/src/entrypoints/http/dbtProjectGraphRoutes.ts",
+        "apps/api/src/infrastructure/dbt/dbtManifestProjection.ts",
+        "apps/api/src/modules/buildProtectedRuntimeModule.ts",
+        "apps/api/src/modules/dbtProjectImport/buildDbtProjectImportRuntime.ts",
+        "apps/api/test/application/projectDbtGraphFromFilesUseCase.test.ts",
+        "apps/api/test/entrypoints/http/dbtProjectGraphRoutes.test.ts",
+        "apps/api/test/infrastructure/dbt/dbtManifestProjection.test.ts",
+        "apps/api/test/modules/buildDbtProjectImportRuntime.test.ts",
+        "apps/web/src/app/services/dbtProject/**",
+        "apps/web/src/app/views/canvas/dbtProjectFileProjection.ts",
+        "apps/web/src/app/views/canvas/dbtProjectFileProjection.test.ts",
+        "packages/@dvt/contracts/src/contracts/planner/DbtProjectGraphProjection.v1.ts",
+        "packages/@dvt/contracts/src/index.ts",
+        "packages/@dvt/contracts/test/dbt-project-file-projection.contract.test.ts",
+        "docs/evidence/ED-20260815-governed-source-identity-projection.md",
+        "docs/evidence/index.md",
+        "docs/risk-register/quality/R-20260815-SOURCE-IDENTITY-AUTHORITY-DRIFT.yaml",
+        "docs/risk-register/quality/index.md",
+        "tools/planning-db/state/canonical-state.json",
+        "docs/planning/status/system-governance-unit-index.units.yaml"
+      ],
+      "architectureGuards": [
+        "pnpm --dir packages/@dvt/contracts exec vitest run test/dbt-project-file-projection.contract.test.ts",
+        "pnpm --dir apps/api exec vitest run test/entrypoints/http/dbtProjectGraphRoutes.test.ts test/application/projectDbtGraphFromFilesUseCase.test.ts",
+        "pnpm --dir apps/api exec vitest run test/entrypoints/http/dbtProjectGraphRoutes.test.ts",
+        "pnpm docs:dbt-roundtrip-capabilities:check"
+      ],
+      "completionGate": [
+        "pnpm docs:feature-mechanization:implementation -- --feature PTH1-SOURCE-IDENTITY-HOVER-2379",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "docs/evidence/ED-20260815-governed-source-identity-projection.md",
+      "sourceContentSha256": "4163c5f6a257c3d41de1b218826166b1f378f5c60a56f77471a081836d33b4ed",
+      "rawRail": {
+        "name": "ProjectDbtGraphFromFiles",
+        "type": "query",
+        "status": "declared",
+        "dddOwner": "DbtProjectGraphProjection",
+        "negativeTests": [
+          "Legacy clients receive the unchanged strict v1 shape; unknown features fail; credential references never enter source identity"
+        ],
+        "adapterSurface": "Protected dbt graph HTTP route and Web query adapter",
+        "applicationPort": "ProjectDbtGraphFromFiles use case",
+        "authorizationScope": "Authorized workspace files and graph-draft view scope"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "DbtProjectAnalysisResource",
+            "path": "apps/api/src/application/ports/dbtProjectAnalysis.ts",
+            "cqRails": ["ProjectDbtGraphFromFiles"],
+            "dddOwner": "DbtProjectGraphProjection",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/dbtProjectGraphRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/dbtProjectGraph.api.test.ts",
+              "packages/@dvt/contracts/test/dbt-project-file-projection.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "Negotiate one additive projection feature on the existing query rail and preserve the strict legacy wire shape."
+            ],
+            "cypressCoverage": "Agent-browser file-backed source table identity hover and focus proof",
+            "architectureGuard": "pnpm --dir packages/@dvt/contracts exec vitest run test/dbt-project-file-projection.contract.test.ts"
+          },
+          {
+            "name": "DbtProjectSourceIdentityRef",
+            "path": "apps/api/src/application/ports/dbtProjectAnalysis.ts",
+            "cqRails": ["ProjectDbtGraphFromFiles"],
+            "dddOwner": "DbtProjectGraphProjection",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/dbtProjectGraphRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/dbtProjectGraph.api.test.ts",
+              "packages/@dvt/contracts/test/dbt-project-file-projection.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "Negotiate one additive projection feature on the existing query rail and preserve the strict legacy wire shape."
+            ],
+            "cypressCoverage": "Agent-browser file-backed source table identity hover and focus proof",
+            "architectureGuard": "pnpm --dir packages/@dvt/contracts exec vitest run test/dbt-project-file-projection.contract.test.ts"
+          },
+          {
+            "name": "resolveSourceIdentity",
+            "path": "apps/api/src/application/services/projectDbtGraphFromFilesUseCase.ts",
+            "cqRails": ["ProjectDbtGraphFromFiles"],
+            "dddOwner": "DbtProjectGraphProjection",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/dbtProjectGraphRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/dbtProjectGraph.api.test.ts",
+              "packages/@dvt/contracts/test/dbt-project-file-projection.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "Negotiate one additive projection feature on the existing query rail and preserve the strict legacy wire shape."
+            ],
+            "cypressCoverage": "Agent-browser file-backed source table identity hover and focus proof",
+            "architectureGuard": "pnpm --dir packages/@dvt/contracts exec vitest run test/dbt-project-file-projection.contract.test.ts"
+          },
+          {
+            "name": "projectDbtGraphWireResponse",
+            "path": "apps/api/src/entrypoints/http/dbtProjectGraphRoutes.ts",
+            "cqRails": ["ProjectDbtGraphFromFiles"],
+            "dddOwner": "DbtProjectGraphProjection",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/dbtProjectGraphRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/dbtProjectGraph.api.test.ts",
+              "packages/@dvt/contracts/test/dbt-project-file-projection.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "Negotiate one additive projection feature on the existing query rail and preserve the strict legacy wire shape.",
+              "Preserve the canonical declared rail lifecycle while extending its implemented mechanization."
+            ],
+            "cypressCoverage": "Agent-browser file-backed source table identity hover and focus proof",
+            "architectureGuard": "pnpm docs:dbt-roundtrip-capabilities:check"
+          },
+          {
+            "name": "projectSourceIdentityRef",
+            "path": "apps/api/src/infrastructure/dbt/dbtManifestProjection.ts",
+            "cqRails": ["ProjectDbtGraphFromFiles"],
+            "dddOwner": "DbtProjectGraphProjection",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/dbtProjectGraphRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/dbtProjectGraph.api.test.ts",
+              "packages/@dvt/contracts/test/dbt-project-file-projection.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "Negotiate one additive projection feature on the existing query rail and preserve the strict legacy wire shape."
+            ],
+            "cypressCoverage": "Agent-browser file-backed source table identity hover and focus proof",
+            "architectureGuard": "pnpm --dir packages/@dvt/contracts exec vitest run test/dbt-project-file-projection.contract.test.ts"
+          },
+          {
+            "name": "DBT_PROJECT_GRAPH_PROJECTION_FEATURE",
+            "path": "packages/@dvt/contracts/src/contracts/planner/DbtProjectGraphProjection.v1.ts",
+            "cqRails": ["ProjectDbtGraphFromFiles"],
+            "dddOwner": "DbtProjectGraphProjection",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/dbtProjectGraphRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/dbtProjectGraph.api.test.ts",
+              "packages/@dvt/contracts/test/dbt-project-file-projection.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "Negotiate one additive projection feature on the existing query rail and preserve the strict legacy wire shape."
+            ],
+            "cypressCoverage": "Agent-browser file-backed source table identity hover and focus proof",
+            "architectureGuard": "pnpm --dir packages/@dvt/contracts exec vitest run test/dbt-project-file-projection.contract.test.ts"
+          },
+          {
+            "name": "DbtProjectedSourceIdentitySchema",
+            "path": "packages/@dvt/contracts/src/contracts/planner/DbtProjectGraphProjection.v1.ts",
+            "cqRails": ["ProjectDbtGraphFromFiles"],
+            "dddOwner": "DbtProjectGraphProjection",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/dbtProjectGraphRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/dbtProjectGraph.api.test.ts",
+              "packages/@dvt/contracts/test/dbt-project-file-projection.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "Negotiate one additive projection feature on the existing query rail and preserve the strict legacy wire shape."
+            ],
+            "cypressCoverage": "Agent-browser file-backed source table identity hover and focus proof",
+            "architectureGuard": "pnpm --dir packages/@dvt/contracts exec vitest run test/dbt-project-file-projection.contract.test.ts"
+          }
+        ],
+        "version": 1,
+        "featureId": "PTH1-SOURCE-IDENTITY-HOVER-2379",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2379"],
+        "cypressFlows": [
+          "Agent-browser file-backed source table identity hover and focus proof"
+        ],
+        "domainObjects": ["DbtProjectGraphProjection"],
+        "fowlerSignals": [
+          "Negotiate one additive projection feature on the existing query rail and preserve the strict legacy wire shape.",
+          "Preserve the canonical declared rail lifecycle while extending its implemented mechanization."
+        ],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation -- --feature PTH1-SOURCE-IDENTITY-HOVER-2379",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "projectdbtgraphfromfiles-record",
+            "redTest": "pnpm docs:dbt-roundtrip-capabilities:check",
+            "greenTest": "pnpm docs:dbt-roundtrip-capabilities:check",
+            "patchSurfaces": [
+              "apps/api/src/application/ports/dbtProjectAnalysis.ts",
+              "apps/api/src/application/services/projectDbtGraphFromFilesUseCase.ts",
+              "apps/api/src/entrypoints/http/dbtProjectGraphRoutes.ts",
+              "apps/api/src/infrastructure/dbt/dbtManifestProjection.ts",
+              "apps/api/src/modules/buildProtectedRuntimeModule.ts",
+              "apps/api/src/modules/dbtProjectImport/buildDbtProjectImportRuntime.ts",
+              "apps/api/test/application/projectDbtGraphFromFilesUseCase.test.ts",
+              "apps/api/test/entrypoints/http/dbtProjectGraphRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtManifestProjection.test.ts",
+              "apps/api/test/modules/buildDbtProjectImportRuntime.test.ts",
+              "apps/web/src/app/services/dbtProject/**",
+              "apps/web/src/app/views/canvas/dbtProjectFileProjection.ts",
+              "apps/web/src/app/views/canvas/dbtProjectFileProjection.test.ts",
+              "packages/@dvt/contracts/src/contracts/planner/DbtProjectGraphProjection.v1.ts",
+              "packages/@dvt/contracts/src/index.ts",
+              "packages/@dvt/contracts/test/dbt-project-file-projection.contract.test.ts",
+              "docs/evidence/ED-20260815-governed-source-identity-projection.md",
+              "docs/evidence/index.md",
+              "docs/risk-register/quality/R-20260815-SOURCE-IDENTITY-AUTHORITY-DRIFT.yaml",
+              "docs/risk-register/quality/index.md",
+              "tools/planning-db/state/canonical-state.json",
+              "docs/planning/status/system-governance-unit-index.units.yaml"
+            ],
+            "expectedFailure": "ProjectDbtGraphFromFiles reports rail_status_drift because the local rail changed the canonical declared lifecycle to implemented."
+          }
+        ],
+        "componentGuides": [
+          "docs/planning/proposals/mandatory/frontend-and-ux/dbt-project-roundtrip-product-plan-20260527.md"
+        ],
+        "governingSources": [
+          "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ProjectDbtGraphFromFiles",
+            "type": "query",
+            "status": "declared",
+            "dddOwner": "DbtProjectGraphProjection",
+            "negativeTests": [
+              "Legacy clients receive the unchanged strict v1 shape; unknown features fail; credential references never enter source identity"
+            ],
+            "adapterSurface": "Protected dbt graph HTTP route and Web query adapter",
+            "applicationPort": "ProjectDbtGraphFromFiles use case",
+            "authorizationScope": "Authorized workspace files and graph-draft view scope"
+          }
+        ],
+        "architectureGuards": [
+          "pnpm --dir packages/@dvt/contracts exec vitest run test/dbt-project-file-projection.contract.test.ts",
+          "pnpm --dir apps/api exec vitest run test/entrypoints/http/dbtProjectGraphRoutes.test.ts test/application/projectDbtGraphFromFilesUseCase.test.ts",
+          "pnpm --dir apps/api exec vitest run test/entrypoints/http/dbtProjectGraphRoutes.test.ts",
+          "pnpm docs:dbt-roundtrip-capabilities:check"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2379",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/ports/dbtProjectAnalysis.ts",
+          "apps/api/src/application/services/projectDbtGraphFromFilesUseCase.ts",
+          "apps/api/src/entrypoints/http/dbtProjectGraphRoutes.ts",
+          "apps/api/src/infrastructure/dbt/dbtManifestProjection.ts",
+          "apps/api/src/modules/buildProtectedRuntimeModule.ts",
+          "apps/api/src/modules/dbtProjectImport/buildDbtProjectImportRuntime.ts",
+          "apps/api/test/application/projectDbtGraphFromFilesUseCase.test.ts",
+          "apps/api/test/entrypoints/http/dbtProjectGraphRoutes.test.ts",
+          "apps/api/test/infrastructure/dbt/dbtManifestProjection.test.ts",
+          "apps/api/test/modules/buildDbtProjectImportRuntime.test.ts",
+          "apps/web/src/app/services/dbtProject/**",
+          "apps/web/src/app/views/canvas/dbtProjectFileProjection.ts",
+          "apps/web/src/app/views/canvas/dbtProjectFileProjection.test.ts",
+          "packages/@dvt/contracts/src/contracts/planner/DbtProjectGraphProjection.v1.ts",
+          "packages/@dvt/contracts/src/index.ts",
+          "packages/@dvt/contracts/test/dbt-project-file-projection.contract.test.ts",
+          "docs/evidence/ED-20260815-governed-source-identity-projection.md",
+          "docs/evidence/index.md",
+          "docs/risk-register/quality/R-20260815-SOURCE-IDENTITY-AUTHORITY-DRIFT.yaml",
+          "docs/risk-register/quality/index.md",
+          "tools/planning-db/state/canonical-state.json",
+          "docs/planning/status/system-governance-unit-index.units.yaml"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/dbtProjectSourceIdentityRoutes.ts"
+        ]
+      },
+      "revision": 2,
+      "createdBy": "codex",
+      "createdAt": "2026-08-15T22:38:16.217Z"
+    },
+    {
+      "railId": "local#PTH1-SOURCE-IDENTITY-HOVER-2379#query#projectgraphnodecardreadmodel",
+      "featureId": "PTH1-SOURCE-IDENTITY-HOVER-2379",
+      "mechanizationStatus": "implemented",
+      "railName": "ProjectGraphNodeCardReadModel",
+      "normalizedRailName": "projectgraphnodecardreadmodel",
+      "railType": "query",
+      "dddOwner": "CanvasGraphPresentation",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "apps/web/src/app/plugins/graph/GraphNodeCardView.tsx#GraphNodeCardTitle",
+        "apps/web/src/app/plugins/graph/graphNodeCardCopyTokens.ts#ENGLISH_GRAPH_NODE_CARD_COPY",
+        "apps/web/src/app/plugins/graph/graphNodeCardCopyTokens.ts#GraphNodeCardCopy",
+        "apps/web/src/app/plugins/graph/graphNodeCardCopyTokens.ts#SPANISH_GRAPH_NODE_CARD_COPY",
+        "apps/web/src/app/plugins/graph/graphNodeCardCopyTokens.ts#graphNodeCardCopyTokens",
+        "apps/web/src/app/plugins/graph/graphNodeCardCopyTokens.ts#resolveGraphNodeCardCopy",
+        "apps/web/src/app/plugins/graph/graphNodeCardStrategyContracts.ts#GraphNodeSourceIdentity",
+        "apps/web/src/app/plugins/graph/graphNodeCardStrategyUtils.ts#buildGraphNodeSourceIdentity",
+        "apps/web/src/app/plugins/graph/graphVisualTokens.ts#graphNodeSourceIdentityTooltipClasses",
+        "apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.tsx#refreshConnectionIdentityProjections"
+      ],
+      "implementationRefs": [
+        "apps/web/src/app/plugins/graph/GraphNodeCardView.tsx#GraphNodeCardTitle",
+        "apps/web/src/app/plugins/graph/graphNodeCardCopyTokens.ts#ENGLISH_GRAPH_NODE_CARD_COPY",
+        "apps/web/src/app/plugins/graph/graphNodeCardCopyTokens.ts#GraphNodeCardCopy",
+        "apps/web/src/app/plugins/graph/graphNodeCardCopyTokens.ts#SPANISH_GRAPH_NODE_CARD_COPY",
+        "apps/web/src/app/plugins/graph/graphNodeCardCopyTokens.ts#graphNodeCardCopyTokens",
+        "apps/web/src/app/plugins/graph/graphNodeCardCopyTokens.ts#resolveGraphNodeCardCopy",
+        "apps/web/src/app/plugins/graph/graphNodeCardStrategyContracts.ts#GraphNodeSourceIdentity",
+        "apps/web/src/app/plugins/graph/graphNodeCardStrategyUtils.ts#buildGraphNodeSourceIdentity",
+        "apps/web/src/app/plugins/graph/graphVisualTokens.ts#graphNodeSourceIdentityTooltipClasses",
+        "apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.tsx#refreshConnectionIdentityProjections"
+      ],
+      "documentationRefs": [
+        "docs/evidence/ED-20260815-governed-source-identity-projection.md"
+      ],
+      "governingSources": [
+        "docs/architecture/fowler-opportunity-planning-governance.md",
+        "docs/architecture/command-query-rail-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "apps/web/src/app/plugins/graph/**",
+        "apps/web/src/app/plugins/dbt/dbtGraphNodeCardStrategy.ts",
+        "apps/web/src/app/plugins/dvt/dvtGraphNodeCardStrategy.ts",
+        "apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.tsx",
+        "apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.test.ts",
+        "apps/web/src/app/components/SourceImportWizard*",
+        "apps/web/src/app/components/sourceImportWizard/**",
+        "apps/web/src/app/queries/queryKeys.ts"
+      ],
+      "architectureGuards": [
+        "pnpm --dir apps/web exec vitest run --config vitest.architecture.config.ts src/app/plugins/graph/graphNodeCardArchitecture.test.ts",
+        "pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/views/canvas/CanvasSourceImportDialogHost.test.ts"
+      ],
+      "completionGate": [
+        "pnpm docs:feature-mechanization:implementation -- --feature PTH1-SOURCE-IDENTITY-HOVER-2379",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "docs/evidence/ED-20260815-governed-source-identity-projection.md",
+      "sourceContentSha256": "4163c5f6a257c3d41de1b218826166b1f378f5c60a56f77471a081836d33b4ed",
+      "rawRail": {
+        "name": "ProjectGraphNodeCardReadModel",
+        "type": "query",
+        "status": "implemented",
+        "dddOwner": "CanvasGraphPresentation",
+        "negativeTests": [
+          "Do not render identity for non-source or incomplete nodes and do not expose credential material"
+        ],
+        "adapterSurface": "Shared GraphNodeCardView, Radix Tooltip, and Canvas source-import cache refresh",
+        "applicationPort": "Graph node card strategy projection",
+        "authorizationScope": "Authorized Canvas projection already admitted to the browser"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "GraphNodeCardTitle",
+            "path": "apps/web/src/app/plugins/graph/GraphNodeCardView.tsx",
+            "cqRails": ["ProjectGraphNodeCardReadModel"],
+            "dddOwner": "CanvasGraphPresentation",
+            "unitTests": [
+              "apps/web/src/app/plugins/graph/graphNodeCardReadModel.test.ts",
+              "apps/web/src/app/plugins/graph/GraphNodeCardView.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Replace primitive title text with one localized typed read model while reusing the shared Tooltip."
+            ],
+            "cypressCoverage": "Agent-browser hover focus double-click and viewport source-card proof",
+            "architectureGuard": "pnpm --dir apps/web exec vitest run --config vitest.architecture.config.ts src/app/plugins/graph/graphNodeCardArchitecture.test.ts"
+          },
+          {
+            "name": "ENGLISH_GRAPH_NODE_CARD_COPY",
+            "path": "apps/web/src/app/plugins/graph/graphNodeCardCopyTokens.ts",
+            "cqRails": ["ProjectGraphNodeCardReadModel"],
+            "dddOwner": "CanvasGraphPresentation",
+            "unitTests": [
+              "apps/web/src/app/plugins/graph/graphNodeCardReadModel.test.ts",
+              "apps/web/src/app/plugins/graph/GraphNodeCardView.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Replace primitive title text with one localized typed read model while reusing the shared Tooltip."
+            ],
+            "cypressCoverage": "Agent-browser hover focus double-click and viewport source-card proof",
+            "architectureGuard": "pnpm --dir apps/web exec vitest run --config vitest.architecture.config.ts src/app/plugins/graph/graphNodeCardArchitecture.test.ts"
+          },
+          {
+            "name": "GraphNodeCardCopy",
+            "path": "apps/web/src/app/plugins/graph/graphNodeCardCopyTokens.ts",
+            "cqRails": ["ProjectGraphNodeCardReadModel"],
+            "dddOwner": "CanvasGraphPresentation",
+            "unitTests": [
+              "apps/web/src/app/plugins/graph/graphNodeCardReadModel.test.ts",
+              "apps/web/src/app/plugins/graph/GraphNodeCardView.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Replace primitive title text with one localized typed read model while reusing the shared Tooltip."
+            ],
+            "cypressCoverage": "Agent-browser hover focus double-click and viewport source-card proof",
+            "architectureGuard": "pnpm --dir apps/web exec vitest run --config vitest.architecture.config.ts src/app/plugins/graph/graphNodeCardArchitecture.test.ts"
+          },
+          {
+            "name": "SPANISH_GRAPH_NODE_CARD_COPY",
+            "path": "apps/web/src/app/plugins/graph/graphNodeCardCopyTokens.ts",
+            "cqRails": ["ProjectGraphNodeCardReadModel"],
+            "dddOwner": "CanvasGraphPresentation",
+            "unitTests": [
+              "apps/web/src/app/plugins/graph/graphNodeCardReadModel.test.ts",
+              "apps/web/src/app/plugins/graph/GraphNodeCardView.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Replace primitive title text with one localized typed read model while reusing the shared Tooltip."
+            ],
+            "cypressCoverage": "Agent-browser hover focus double-click and viewport source-card proof",
+            "architectureGuard": "pnpm --dir apps/web exec vitest run --config vitest.architecture.config.ts src/app/plugins/graph/graphNodeCardArchitecture.test.ts"
+          },
+          {
+            "name": "graphNodeCardCopyTokens",
+            "path": "apps/web/src/app/plugins/graph/graphNodeCardCopyTokens.ts",
+            "cqRails": ["ProjectGraphNodeCardReadModel"],
+            "dddOwner": "CanvasGraphPresentation",
+            "unitTests": [
+              "apps/web/src/app/plugins/graph/graphNodeCardReadModel.test.ts",
+              "apps/web/src/app/plugins/graph/GraphNodeCardView.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Replace primitive title text with one localized typed read model while reusing the shared Tooltip."
+            ],
+            "cypressCoverage": "Agent-browser hover focus double-click and viewport source-card proof",
+            "architectureGuard": "pnpm --dir apps/web exec vitest run --config vitest.architecture.config.ts src/app/plugins/graph/graphNodeCardArchitecture.test.ts"
+          },
+          {
+            "name": "resolveGraphNodeCardCopy",
+            "path": "apps/web/src/app/plugins/graph/graphNodeCardCopyTokens.ts",
+            "cqRails": ["ProjectGraphNodeCardReadModel"],
+            "dddOwner": "CanvasGraphPresentation",
+            "unitTests": [
+              "apps/web/src/app/plugins/graph/graphNodeCardReadModel.test.ts",
+              "apps/web/src/app/plugins/graph/GraphNodeCardView.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Replace primitive title text with one localized typed read model while reusing the shared Tooltip."
+            ],
+            "cypressCoverage": "Agent-browser hover focus double-click and viewport source-card proof",
+            "architectureGuard": "pnpm --dir apps/web exec vitest run --config vitest.architecture.config.ts src/app/plugins/graph/graphNodeCardArchitecture.test.ts"
+          },
+          {
+            "name": "GraphNodeSourceIdentity",
+            "path": "apps/web/src/app/plugins/graph/graphNodeCardStrategyContracts.ts",
+            "cqRails": ["ProjectGraphNodeCardReadModel"],
+            "dddOwner": "CanvasGraphPresentation",
+            "unitTests": [
+              "apps/web/src/app/plugins/graph/graphNodeCardReadModel.test.ts",
+              "apps/web/src/app/plugins/graph/GraphNodeCardView.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Replace primitive title text with one localized typed read model while reusing the shared Tooltip."
+            ],
+            "cypressCoverage": "Agent-browser hover focus double-click and viewport source-card proof",
+            "architectureGuard": "pnpm --dir apps/web exec vitest run --config vitest.architecture.config.ts src/app/plugins/graph/graphNodeCardArchitecture.test.ts"
+          },
+          {
+            "name": "buildGraphNodeSourceIdentity",
+            "path": "apps/web/src/app/plugins/graph/graphNodeCardStrategyUtils.ts",
+            "cqRails": ["ProjectGraphNodeCardReadModel"],
+            "dddOwner": "CanvasGraphPresentation",
+            "unitTests": [
+              "apps/web/src/app/plugins/graph/graphNodeCardReadModel.test.ts",
+              "apps/web/src/app/plugins/graph/GraphNodeCardView.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Replace primitive title text with one localized typed read model while reusing the shared Tooltip."
+            ],
+            "cypressCoverage": "Agent-browser hover focus double-click and viewport source-card proof",
+            "architectureGuard": "pnpm --dir apps/web exec vitest run --config vitest.architecture.config.ts src/app/plugins/graph/graphNodeCardArchitecture.test.ts"
+          },
+          {
+            "name": "graphNodeSourceIdentityTooltipClasses",
+            "path": "apps/web/src/app/plugins/graph/graphVisualTokens.ts",
+            "cqRails": ["ProjectGraphNodeCardReadModel"],
+            "dddOwner": "CanvasGraphPresentation",
+            "unitTests": [
+              "apps/web/src/app/plugins/graph/graphNodeCardReadModel.test.ts",
+              "apps/web/src/app/plugins/graph/GraphNodeCardView.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Replace primitive title text with one localized typed read model while reusing the shared Tooltip."
+            ],
+            "cypressCoverage": "Agent-browser hover focus double-click and viewport source-card proof",
+            "architectureGuard": "pnpm --dir apps/web exec vitest run --config vitest.architecture.config.ts src/app/plugins/graph/graphNodeCardArchitecture.test.ts"
+          },
+          {
+            "name": "refreshConnectionIdentityProjections",
+            "path": "apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.tsx",
+            "cqRails": ["ProjectGraphNodeCardReadModel"],
+            "dddOwner": "CanvasGraphPresentation",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.test.ts"
+            ],
+            "fowlerSignals": [
+              "Refresh existing graph projections after connection rename instead of introducing a second identity cache."
+            ],
+            "cypressCoverage": "Agent-browser hover focus double-click and viewport source-card proof",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/views/canvas/CanvasSourceImportDialogHost.test.ts"
+          }
+        ],
+        "version": 1,
+        "featureId": "PTH1-SOURCE-IDENTITY-HOVER-2379",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2379"],
+        "cypressFlows": [
+          "Agent-browser hover focus double-click and viewport source-card proof"
+        ],
+        "domainObjects": ["GraphNodeCardReadModel"],
+        "fowlerSignals": [
+          "Replace primitive title text with one localized typed read model while reusing the shared Tooltip.",
+          "Refresh existing graph projections after connection rename instead of introducing a second identity cache."
+        ],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation -- --feature PTH1-SOURCE-IDENTITY-HOVER-2379",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "projectgraphnodecardreadmodel-record",
+            "redTest": "Connection rename leaves Graph Draft and dbt Project Graph caches stale",
+            "greenTest": "pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/views/canvas/CanvasSourceImportDialogHost.test.ts",
+            "patchSurfaces": [
+              "apps/web/src/app/plugins/graph/**",
+              "apps/web/src/app/plugins/dbt/dbtGraphNodeCardStrategy.ts",
+              "apps/web/src/app/plugins/dvt/dvtGraphNodeCardStrategy.ts",
+              "apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.tsx",
+              "apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.test.ts",
+              "apps/web/src/app/components/SourceImportWizard*",
+              "apps/web/src/app/components/sourceImportWizard/**",
+              "apps/web/src/app/queries/queryKeys.ts"
+            ],
+            "expectedFailure": "The source identity tooltip keeps the previous connection name after a successful rename."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md"
+        ],
+        "governingSources": [
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ProjectGraphNodeCardReadModel",
+            "type": "query",
+            "status": "implemented",
+            "dddOwner": "CanvasGraphPresentation",
+            "negativeTests": [
+              "Do not render identity for non-source or incomplete nodes and do not expose credential material"
+            ],
+            "adapterSurface": "Shared GraphNodeCardView, Radix Tooltip, and Canvas source-import cache refresh",
+            "applicationPort": "Graph node card strategy projection",
+            "authorizationScope": "Authorized Canvas projection already admitted to the browser"
+          }
+        ],
+        "architectureGuards": [
+          "pnpm --dir apps/web exec vitest run --config vitest.architecture.config.ts src/app/plugins/graph/graphNodeCardArchitecture.test.ts",
+          "pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/views/canvas/CanvasSourceImportDialogHost.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2379",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/plugins/graph/**",
+          "apps/web/src/app/plugins/dbt/dbtGraphNodeCardStrategy.ts",
+          "apps/web/src/app/plugins/dvt/dvtGraphNodeCardStrategy.ts",
+          "apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.tsx",
+          "apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.test.ts",
+          "apps/web/src/app/components/SourceImportWizard*",
+          "apps/web/src/app/components/sourceImportWizard/**",
+          "apps/web/src/app/queries/queryKeys.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/web/src/app/plugins/graph/SourceIdentityTooltip.tsx",
+          "apps/api/src/application/services/getWorkspaceGraphDraftSourceIdentityUseCase.ts"
+        ]
+      },
+      "revision": 2,
+      "createdBy": "codex",
+      "createdAt": "2026-08-15T22:38:14.905Z"
+    },
+    {
       "railId": "local#PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY#command#compileplan",
       "featureId": "PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY",
       "mechanizationStatus": "implemented",
@@ -207996,6 +208936,727 @@
         "forbiddenImplementationSurfaces": ["infra/db/migrations/**"]
       },
       "createdAt": "2026-08-15T05:27:25.601Z"
+    },
+    {
+      "operationId": "2124b605-506d-467f-a0bd-7030108024f1",
+      "idempotencyKey": "pth1-source-identity-2379-import-canonical-v1",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH1-SOURCE-IDENTITY-HOVER-2379#command#importwarehousesources",
+      "sourcePath": "docs/evidence/ED-20260815-governed-source-identity-projection.md",
+      "sourceContentSha256": "4163c5f6a257c3d41de1b218826166b1f378f5c60a56f77471a081836d33b4ed",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "pnpm --dir apps/api exec vitest run test/application/services/importWarehouseSourcesUseCase.test.ts",
+        "dddOwner": "WarehouseSourceImport",
+        "railName": "ImportWarehouseSources",
+        "railType": "command",
+        "featureId": "PTH1-SOURCE-IDENTITY-HOVER-2379",
+        "greenTest": "pnpm --dir apps/api exec vitest run test/application/services/importWarehouseSourcesUseCase.test.ts test/application/services/warehouseSourceYaml.test.ts test/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.test.ts",
+        "sourceRef": "docs/evidence/ED-20260815-governed-source-identity-projection.md",
+        "unitTests": [
+          "apps/api/test/application/services/importWarehouseSourcesUseCase.test.ts",
+          "apps/api/test/application/services/warehouseSourceYaml.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2379"],
+        "cypressFlows": [
+          "Agent-browser governed source import and table-title identity proof"
+        ],
+        "domainObjects": ["WarehouseSourceImport"],
+        "fowlerSignals": [
+          "Move the non-secret database principal through the existing import rail instead of adding a presentation lookup."
+        ],
+        "negativeTests": [
+          "Reject or omit incomplete identity and never project credential references or secrets"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "Protected source-import API and PostgreSQL probe",
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation -- --feature PTH1-SOURCE-IDENTITY-HOVER-2379",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "ImportWarehouseSources use case and warehouse connection ports",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Imported source metadata lacks the authenticated non-secret database user.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260815-governed-source-identity-projection.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter dvt-api test -- importWarehouseSourcesUseCase warehouseSourceYaml WorkspaceWarehouseConnectionProbe"
+        ],
+        "authorizationScope": "Authorized tenant project and environment workspace; credentials resolved only by the server",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2379",
+        "implementationRefs": [
+          "apps/api/src/application/services/warehouseSourceYamlMerge.ts#buildGovernedSourceMetadata",
+          "apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.ts#parseOptionalNonBlankString"
+        ],
+        "normalizedRailName": "importwarehousesources",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "4163c5f6a257c3d41de1b218826166b1f378f5c60a56f77471a081836d33b4ed",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/ports/warehouseSourceImport.ts",
+          "apps/api/src/application/services/WarehouseConnectionSourceObjectReader.ts",
+          "apps/api/src/application/services/graphDraftWarehouseSourceImportStrategy.ts",
+          "apps/api/src/application/services/importWarehouseSourcesUseCase.ts",
+          "apps/api/src/application/services/warehouseSource*.ts",
+          "apps/api/src/infrastructure/warehouseSourceImport/**",
+          "apps/api/test/application/services/WarehouseConnectionSourceObjectReader.test.ts",
+          "apps/api/test/application/services/*WarehouseSource*.test.ts",
+          "apps/api/test/application/services/importWarehouseSourcesUseCase.test.ts",
+          "apps/api/test/application/services/warehouseSource*.test.ts",
+          "apps/api/test/infrastructure/warehouseSourceImport/**"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/web/src/app/plugins/graph/SourceIdentityTooltip.tsx"
+        ]
+      },
+      "createdAt": "2026-08-15T22:38:12.245Z"
+    },
+    {
+      "operationId": "cdf09f24-7427-4cf2-a26c-a4aa90833e6c",
+      "idempotencyKey": "pth1-source-identity-2379-graph-draft-canonical-v1",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH1-SOURCE-IDENTITY-HOVER-2379#query#getworkspacegraphdraft",
+      "sourcePath": "docs/evidence/ED-20260815-governed-source-identity-projection.md",
+      "sourceContentSha256": "4163c5f6a257c3d41de1b218826166b1f378f5c60a56f77471a081836d33b4ed",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "pnpm --dir apps/api exec vitest run test/application/services/getWorkspaceGraphDraftUseCase.authority.test.ts",
+        "dddOwner": "CanvasAuthoringAuthority",
+        "railName": "GetWorkspaceGraphDraft",
+        "railType": "query",
+        "featureId": "PTH1-SOURCE-IDENTITY-HOVER-2379",
+        "greenTest": "pnpm --dir apps/api exec vitest run test/application/services/getWorkspaceGraphDraftUseCase.authority.test.ts",
+        "sourceRef": "docs/evidence/ED-20260815-governed-source-identity-projection.md",
+        "unitTests": [
+          "apps/api/test/application/services/getWorkspaceGraphDraftUseCase.authority.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2379"],
+        "cypressFlows": [
+          "Agent-browser graph-draft source table identity hover and focus proof"
+        ],
+        "domainObjects": ["CanvasAuthoringAuthority"],
+        "fowlerSignals": [
+          "Resolve mutable connection labels at query time instead of duplicating them as stale persisted authority."
+        ],
+        "negativeTests": [
+          "Omit identity when the stable connection no longer exists and never mutate the persisted draft"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "Protected workspace graph-draft query composition",
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation -- --feature PTH1-SOURCE-IDENTITY-HOVER-2379",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "GetWorkspaceGraphDraft use case",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Graph-draft reads retain the import-time connection label after the governed connection is renamed.",
+        "governingSources": [
+          "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260815-governed-source-identity-projection.md"
+        ],
+        "architectureGuards": [
+          "pnpm --dir apps/api exec vitest run test/application/services/getWorkspaceGraphDraftUseCase.authority.test.ts"
+        ],
+        "authorizationScope": "Authorized tenant project and environment workspace",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2379",
+        "implementationRefs": [
+          "apps/api/src/application/services/getWorkspaceGraphDraftUseCase.ts#refreshGraphDraftConnectionNames",
+          "apps/api/src/application/services/getWorkspaceGraphDraftUseCase.ts#refreshNodeConnectionName"
+        ],
+        "normalizedRailName": "getworkspacegraphdraft",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "4163c5f6a257c3d41de1b218826166b1f378f5c60a56f77471a081836d33b4ed",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/services/getWorkspaceGraphDraftUseCase.ts",
+          "apps/api/src/modules/workspaceGraphDraft/buildWorkspaceGraphDraftRuntime.ts",
+          "apps/api/test/application/services/getWorkspaceGraphDraftUseCase.authority.test.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/application/services/getWorkspaceGraphDraftSourceIdentityUseCase.ts"
+        ]
+      },
+      "createdAt": "2026-08-15T22:38:13.595Z"
+    },
+    {
+      "operationId": "4067f7c0-ceb2-4a09-9c10-0457bdcb36ba",
+      "idempotencyKey": "pth1-source-identity-2379-card-read-model-canonical-v1",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH1-SOURCE-IDENTITY-HOVER-2379#query#projectgraphnodecardreadmodel",
+      "sourcePath": "docs/evidence/ED-20260815-governed-source-identity-projection.md",
+      "sourceContentSha256": "4163c5f6a257c3d41de1b218826166b1f378f5c60a56f77471a081836d33b4ed",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "pnpm --dir apps/web exec vitest run src/app/plugins/graph/graphNodeCardReadModel.test.ts src/app/plugins/graph/GraphNodeCardView.test.tsx",
+        "dddOwner": "CanvasGraphPresentation",
+        "railName": "ProjectGraphNodeCardReadModel",
+        "railType": "query",
+        "featureId": "PTH1-SOURCE-IDENTITY-HOVER-2379",
+        "greenTest": "pnpm --dir apps/web exec vitest run src/app/plugins/graph/graphNodeCardReadModel.test.ts src/app/plugins/graph/GraphNodeCardView.test.tsx",
+        "sourceRef": "docs/evidence/ED-20260815-governed-source-identity-projection.md",
+        "unitTests": [
+          "apps/web/src/app/plugins/graph/graphNodeCardReadModel.test.ts",
+          "apps/web/src/app/plugins/graph/GraphNodeCardView.test.tsx"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2379"],
+        "cypressFlows": [
+          "Agent-browser hover focus double-click and viewport source-card proof"
+        ],
+        "domainObjects": ["GraphNodeCardReadModel"],
+        "fowlerSignals": [
+          "Replace primitive title text with one localized typed read model while reusing the shared Tooltip."
+        ],
+        "negativeTests": [
+          "Do not render identity for non-source or incomplete nodes and do not expose credential material"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "Shared GraphNodeCardView and Radix Tooltip",
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation -- --feature PTH1-SOURCE-IDENTITY-HOVER-2379",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "Graph node card strategy projection",
+        "componentGuides": [
+          "docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md"
+        ],
+        "expectedFailure": "The source table title has only an unstructured native title and cannot present localized governed identity.",
+        "governingSources": [
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260815-governed-source-identity-projection.md"
+        ],
+        "architectureGuards": [
+          "pnpm --dir apps/web exec vitest run --config vitest.architecture.config.ts src/app/plugins/graph/graphNodeCardArchitecture.test.ts"
+        ],
+        "authorizationScope": "Authorized Canvas projection already admitted to the browser",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2379",
+        "implementationRefs": [
+          "apps/web/src/app/plugins/graph/GraphNodeCardView.tsx#GraphNodeCardTitle",
+          "apps/web/src/app/plugins/graph/graphNodeCardCopyTokens.ts#ENGLISH_GRAPH_NODE_CARD_COPY",
+          "apps/web/src/app/plugins/graph/graphNodeCardCopyTokens.ts#GraphNodeCardCopy",
+          "apps/web/src/app/plugins/graph/graphNodeCardCopyTokens.ts#SPANISH_GRAPH_NODE_CARD_COPY",
+          "apps/web/src/app/plugins/graph/graphNodeCardCopyTokens.ts#graphNodeCardCopyTokens",
+          "apps/web/src/app/plugins/graph/graphNodeCardCopyTokens.ts#resolveGraphNodeCardCopy",
+          "apps/web/src/app/plugins/graph/graphNodeCardStrategyContracts.ts#GraphNodeSourceIdentity",
+          "apps/web/src/app/plugins/graph/graphNodeCardStrategyUtils.ts#buildGraphNodeSourceIdentity",
+          "apps/web/src/app/plugins/graph/graphVisualTokens.ts#graphNodeSourceIdentityTooltipClasses"
+        ],
+        "normalizedRailName": "projectgraphnodecardreadmodel",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "4163c5f6a257c3d41de1b218826166b1f378f5c60a56f77471a081836d33b4ed",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/plugins/graph/**",
+          "apps/web/src/app/plugins/dbt/dbtGraphNodeCardStrategy.ts",
+          "apps/web/src/app/plugins/dvt/dvtGraphNodeCardStrategy.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/web/src/app/plugins/graph/SourceIdentityTooltip.tsx"
+        ]
+      },
+      "createdAt": "2026-08-15T22:38:14.905Z"
+    },
+    {
+      "operationId": "3050843f-3f2c-4e6a-bdd4-3532e0881574",
+      "idempotencyKey": "pth1-source-identity-2379-dbt-projection-canonical-v1",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH1-SOURCE-IDENTITY-HOVER-2379#query#projectdbtgraphfromfiles",
+      "sourcePath": "docs/evidence/ED-20260815-governed-source-identity-projection.md",
+      "sourceContentSha256": "4163c5f6a257c3d41de1b218826166b1f378f5c60a56f77471a081836d33b4ed",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "pnpm --dir apps/api exec vitest run test/entrypoints/http/dbtProjectGraphRoutes.test.ts",
+        "dddOwner": "DbtProjectGraphProjection",
+        "railName": "ProjectDbtGraphFromFiles",
+        "railType": "query",
+        "featureId": "PTH1-SOURCE-IDENTITY-HOVER-2379",
+        "greenTest": "pnpm --dir apps/api exec vitest run test/entrypoints/http/dbtProjectGraphRoutes.test.ts and pnpm --dir apps/web exec vitest run src/app/services/dbtProject/dbtProjectGraph.api.test.ts",
+        "sourceRef": "docs/evidence/ED-20260815-governed-source-identity-projection.md",
+        "unitTests": [
+          "apps/api/test/entrypoints/http/dbtProjectGraphRoutes.test.ts",
+          "apps/web/src/app/services/dbtProject/dbtProjectGraph.api.test.ts",
+          "packages/@dvt/contracts/test/dbt-project-file-projection.contract.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2379"],
+        "cypressFlows": [
+          "Agent-browser file-backed source table identity hover and focus proof"
+        ],
+        "domainObjects": ["DbtProjectGraphProjection"],
+        "fowlerSignals": [
+          "Negotiate one additive projection feature on the existing query rail and preserve the strict legacy wire shape."
+        ],
+        "negativeTests": [
+          "Legacy clients receive the unchanged strict v1 shape; unknown features fail; credential references never enter source identity"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "Protected dbt graph HTTP route and Web query adapter",
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation -- --feature PTH1-SOURCE-IDENTITY-HOVER-2379",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "ProjectDbtGraphFromFiles use case",
+        "componentGuides": [
+          "docs/planning/proposals/mandatory/frontend-and-ux/dbt-project-roundtrip-product-plan-20260527.md"
+        ],
+        "expectedFailure": "The unchanged v1 endpoint emits new strict node keys to already-open Web clients or omits identity from the current client.",
+        "governingSources": [
+          "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260815-governed-source-identity-projection.md"
+        ],
+        "architectureGuards": [
+          "pnpm --dir packages/@dvt/contracts exec vitest run test/dbt-project-file-projection.contract.test.ts",
+          "pnpm --dir apps/api exec vitest run test/entrypoints/http/dbtProjectGraphRoutes.test.ts test/application/projectDbtGraphFromFilesUseCase.test.ts"
+        ],
+        "authorizationScope": "Authorized workspace files and graph-draft view scope",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2379",
+        "implementationRefs": [
+          "apps/api/src/application/ports/dbtProjectAnalysis.ts#DbtProjectAnalysisResource",
+          "apps/api/src/application/ports/dbtProjectAnalysis.ts#DbtProjectSourceIdentityRef",
+          "apps/api/src/application/services/projectDbtGraphFromFilesUseCase.ts#resolveSourceIdentity",
+          "apps/api/src/entrypoints/http/dbtProjectGraphRoutes.ts#projectDbtGraphWireResponse",
+          "apps/api/src/infrastructure/dbt/dbtManifestProjection.ts#projectSourceIdentityRef",
+          "packages/@dvt/contracts/src/contracts/planner/DbtProjectGraphProjection.v1.ts#DBT_PROJECT_GRAPH_PROJECTION_FEATURE",
+          "packages/@dvt/contracts/src/contracts/planner/DbtProjectGraphProjection.v1.ts#DbtProjectedSourceIdentitySchema"
+        ],
+        "normalizedRailName": "projectdbtgraphfromfiles",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "4163c5f6a257c3d41de1b218826166b1f378f5c60a56f77471a081836d33b4ed",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/ports/dbtProjectAnalysis.ts",
+          "apps/api/src/application/services/projectDbtGraphFromFilesUseCase.ts",
+          "apps/api/src/entrypoints/http/dbtProjectGraphRoutes.ts",
+          "apps/api/src/infrastructure/dbt/dbtManifestProjection.ts",
+          "apps/api/src/modules/buildProtectedRuntimeModule.ts",
+          "apps/api/src/modules/dbtProjectImport/buildDbtProjectImportRuntime.ts",
+          "apps/api/test/application/projectDbtGraphFromFilesUseCase.test.ts",
+          "apps/api/test/entrypoints/http/dbtProjectGraphRoutes.test.ts",
+          "apps/api/test/infrastructure/dbt/dbtManifestProjection.test.ts",
+          "apps/api/test/modules/buildDbtProjectImportRuntime.test.ts",
+          "apps/web/src/app/services/dbtProject/**",
+          "apps/web/src/app/views/canvas/dbtProjectFileProjection.ts",
+          "apps/web/src/app/views/canvas/dbtProjectFileProjection.test.ts",
+          "packages/@dvt/contracts/src/contracts/planner/DbtProjectGraphProjection.v1.ts",
+          "packages/@dvt/contracts/src/index.ts",
+          "packages/@dvt/contracts/test/dbt-project-file-projection.contract.test.ts",
+          "docs/evidence/ED-20260815-governed-source-identity-projection.md",
+          "docs/evidence/index.md",
+          "docs/risk-register/quality/R-20260815-SOURCE-IDENTITY-AUTHORITY-DRIFT.yaml",
+          "docs/risk-register/quality/index.md"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/dbtProjectSourceIdentityRoutes.ts"
+        ]
+      },
+      "createdAt": "2026-08-15T22:38:16.217Z"
+    },
+    {
+      "operationId": "215a0240-c444-47cc-a518-997034c7c876",
+      "idempotencyKey": "pth1-source-identity-2379-dbt-projection-canonical-v2",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH1-SOURCE-IDENTITY-HOVER-2379#query#projectdbtgraphfromfiles",
+      "sourcePath": "docs/evidence/ED-20260815-governed-source-identity-projection.md",
+      "sourceContentSha256": "4163c5f6a257c3d41de1b218826166b1f378f5c60a56f77471a081836d33b4ed",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "pnpm --dir apps/api exec vitest run test/entrypoints/http/dbtProjectGraphRoutes.test.ts",
+        "dddOwner": "DbtProjectGraphProjection",
+        "railName": "ProjectDbtGraphFromFiles",
+        "railType": "query",
+        "featureId": "PTH1-SOURCE-IDENTITY-HOVER-2379",
+        "greenTest": "pnpm --dir apps/api exec vitest run test/entrypoints/http/dbtProjectGraphRoutes.test.ts",
+        "sourceRef": "docs/evidence/ED-20260815-governed-source-identity-projection.md",
+        "unitTests": [
+          "apps/api/test/entrypoints/http/dbtProjectGraphRoutes.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2379"],
+        "cypressFlows": [
+          "Agent-browser file-backed source table identity hover and focus proof"
+        ],
+        "domainObjects": ["DbtProjectGraphProjection"],
+        "fowlerSignals": [
+          "Negotiate one additive projection feature on the existing query rail and preserve the strict legacy wire shape."
+        ],
+        "negativeTests": [
+          "Legacy clients receive the unchanged strict v1 shape; unknown features fail; credential references never enter source identity"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "Protected dbt graph HTTP route and Web query adapter",
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation -- --feature PTH1-SOURCE-IDENTITY-HOVER-2379",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "ProjectDbtGraphFromFiles use case",
+        "componentGuides": [
+          "docs/planning/proposals/mandatory/frontend-and-ux/dbt-project-roundtrip-product-plan-20260527.md"
+        ],
+        "expectedFailure": "The unchanged v1 endpoint emits new strict node keys to already-open Web clients or omits identity from the current client.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260815-governed-source-identity-projection.md"
+        ],
+        "architectureGuards": [
+          "pnpm --dir apps/api exec vitest run test/entrypoints/http/dbtProjectGraphRoutes.test.ts"
+        ],
+        "authorizationScope": "Authorized workspace files and graph-draft view scope",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2379",
+        "implementationRefs": [
+          "apps/api/src/entrypoints/http/dbtProjectGraphRoutes.ts#projectDbtGraphWireResponse"
+        ],
+        "normalizedRailName": "projectdbtgraphfromfiles",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "4163c5f6a257c3d41de1b218826166b1f378f5c60a56f77471a081836d33b4ed",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": [
+          "tools/planning-db/state/canonical-state.json",
+          "docs/planning/status/system-governance-unit-index.units.yaml"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/dbtProjectSourceIdentityRoutes.ts"
+        ]
+      },
+      "createdAt": "2026-08-15T22:40:44.264Z"
+    },
+    {
+      "operationId": "5c7e936a-b5c0-4bf4-bbb5-855df80641f6",
+      "idempotencyKey": "pth1-source-identity-2379-import-owner-v2",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH1-SOURCE-IDENTITY-HOVER-2379#command#importwarehousesources",
+      "sourcePath": "docs/evidence/ED-20260815-governed-source-identity-projection.md",
+      "sourceContentSha256": "4163c5f6a257c3d41de1b218826166b1f378f5c60a56f77471a081836d33b4ed",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "pnpm planning:db:query rail-vocabulary --limit 20",
+        "dddOwner": "Warehouse Source Import",
+        "railName": "ImportWarehouseSources",
+        "railType": "command",
+        "featureId": "PTH1-SOURCE-IDENTITY-HOVER-2379",
+        "greenTest": "pnpm planning:db:integrity:check",
+        "sourceRef": "docs/evidence/ED-20260815-governed-source-identity-projection.md",
+        "unitTests": [
+          "apps/api/test/application/services/importWarehouseSourcesUseCase.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2379"],
+        "cypressFlows": [
+          "Agent-browser governed source import and table-title identity proof"
+        ],
+        "domainObjects": ["WarehouseSourceImport"],
+        "fowlerSignals": [
+          "Reuse the canonical Warehouse Source Import owner and command vocabulary without a parallel rail."
+        ],
+        "negativeTests": [
+          "Reject or omit incomplete identity and never project credential references or secrets"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "Protected source-import API and PostgreSQL probe",
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation -- --feature PTH1-SOURCE-IDENTITY-HOVER-2379",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "ImportWarehouseSources use case and warehouse connection ports",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "ImportWarehouseSources appears as an exact duplicate because the local owner vocabulary differs from the canonical owner.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260815-governed-source-identity-projection.md"
+        ],
+        "architectureGuards": [
+          "pnpm --dir apps/api exec vitest run test/application/services/importWarehouseSourcesUseCase.test.ts"
+        ],
+        "authorizationScope": "Authorized tenant project and environment workspace; credentials resolved only by the server",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2379",
+        "implementationRefs": [
+          "apps/api/src/application/services/warehouseSourceYamlMerge.ts#buildGovernedSourceMetadata"
+        ],
+        "normalizedRailName": "importwarehousesources",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "4163c5f6a257c3d41de1b218826166b1f378f5c60a56f77471a081836d33b4ed",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": [
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/web/src/app/plugins/graph/SourceIdentityTooltip.tsx"
+        ]
+      },
+      "createdAt": "2026-08-15T22:45:49.750Z"
+    },
+    {
+      "operationId": "6be11b28-d6e9-46e3-a591-1ce983790481",
+      "idempotencyKey": "pth1-source-identity-2379-dbt-status-v3",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH1-SOURCE-IDENTITY-HOVER-2379#query#projectdbtgraphfromfiles",
+      "sourcePath": "docs/evidence/ED-20260815-governed-source-identity-projection.md",
+      "sourceContentSha256": "4163c5f6a257c3d41de1b218826166b1f378f5c60a56f77471a081836d33b4ed",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "pnpm docs:dbt-roundtrip-capabilities:check",
+        "dddOwner": "DbtProjectGraphProjection",
+        "railName": "ProjectDbtGraphFromFiles",
+        "railType": "query",
+        "featureId": "PTH1-SOURCE-IDENTITY-HOVER-2379",
+        "greenTest": "pnpm docs:dbt-roundtrip-capabilities:check",
+        "sourceRef": "docs/evidence/ED-20260815-governed-source-identity-projection.md",
+        "unitTests": [
+          "apps/api/test/entrypoints/http/dbtProjectGraphRoutes.test.ts"
+        ],
+        "railStatus": "declared",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2379"],
+        "cypressFlows": [
+          "Agent-browser file-backed source table identity hover and focus proof"
+        ],
+        "domainObjects": ["DbtProjectGraphProjection"],
+        "fowlerSignals": [
+          "Preserve the canonical declared rail lifecycle while extending its implemented mechanization."
+        ],
+        "negativeTests": [
+          "Legacy clients receive the unchanged strict v1 shape; unknown features fail; credential references never enter source identity"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "Protected dbt graph HTTP route and Web query adapter",
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation -- --feature PTH1-SOURCE-IDENTITY-HOVER-2379",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "ProjectDbtGraphFromFiles use case",
+        "componentGuides": [
+          "docs/planning/proposals/mandatory/frontend-and-ux/dbt-project-roundtrip-product-plan-20260527.md"
+        ],
+        "expectedFailure": "ProjectDbtGraphFromFiles reports rail_status_drift because the local rail changed the canonical declared lifecycle to implemented.",
+        "governingSources": [
+          "docs/adr/ADR-0060-dbt-project-authoring-authority.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260815-governed-source-identity-projection.md"
+        ],
+        "architectureGuards": ["pnpm docs:dbt-roundtrip-capabilities:check"],
+        "authorizationScope": "Authorized workspace files and graph-draft view scope",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2379",
+        "implementationRefs": [
+          "apps/api/src/entrypoints/http/dbtProjectGraphRoutes.ts#projectDbtGraphWireResponse"
+        ],
+        "normalizedRailName": "projectdbtgraphfromfiles",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "4163c5f6a257c3d41de1b218826166b1f378f5c60a56f77471a081836d33b4ed",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": [
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/entrypoints/http/dbtProjectSourceIdentityRoutes.ts"
+        ]
+      },
+      "createdAt": "2026-08-15T22:53:33.324Z"
+    },
+    {
+      "operationId": "ea691b24-f9fe-4738-b119-85890f802a96",
+      "idempotencyKey": "pth1-source-identity-2379-connection-rename-refresh-v1",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH1-SOURCE-IDENTITY-HOVER-2379#query#projectgraphnodecardreadmodel",
+      "sourcePath": "docs/evidence/ED-20260815-governed-source-identity-projection.md",
+      "sourceContentSha256": "4163c5f6a257c3d41de1b218826166b1f378f5c60a56f77471a081836d33b4ed",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "Connection rename leaves Graph Draft and dbt Project Graph caches stale",
+        "dddOwner": "CanvasGraphPresentation",
+        "railName": "ProjectGraphNodeCardReadModel",
+        "railType": "query",
+        "featureId": "PTH1-SOURCE-IDENTITY-HOVER-2379",
+        "greenTest": "pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/views/canvas/CanvasSourceImportDialogHost.test.ts",
+        "sourceRef": "docs/evidence/ED-20260815-governed-source-identity-projection.md",
+        "unitTests": [
+          "apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2379"],
+        "cypressFlows": [
+          "Agent-browser hover focus double-click and viewport source-card proof"
+        ],
+        "domainObjects": ["GraphNodeCardReadModel"],
+        "fowlerSignals": [
+          "Refresh existing graph projections after connection rename instead of introducing a second identity cache."
+        ],
+        "negativeTests": [
+          "Do not render identity for non-source or incomplete nodes and do not expose credential material"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "Shared GraphNodeCardView, Radix Tooltip, and Canvas source-import cache refresh",
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation -- --feature PTH1-SOURCE-IDENTITY-HOVER-2379",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "Graph node card strategy projection",
+        "componentGuides": [
+          "docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md"
+        ],
+        "expectedFailure": "The source identity tooltip keeps the previous connection name after a successful rename.",
+        "governingSources": [
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260815-governed-source-identity-projection.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/views/canvas/CanvasSourceImportDialogHost.test.ts"
+        ],
+        "authorizationScope": "Authorized Canvas projection already admitted to the browser",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2379",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.tsx#refreshConnectionIdentityProjections"
+        ],
+        "normalizedRailName": "projectgraphnodecardreadmodel",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "4163c5f6a257c3d41de1b218826166b1f378f5c60a56f77471a081836d33b4ed",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.tsx",
+          "apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.test.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/application/services/getWorkspaceGraphDraftSourceIdentityUseCase.ts"
+        ]
+      },
+      "createdAt": "2026-08-15T23:11:10.412Z"
+    },
+    {
+      "operationId": "9078c4a1-1ae2-4270-b3ff-a4212341b4d4",
+      "idempotencyKey": "pth1-source-identity-2379-connection-rename-surfaces-v1",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH1-SOURCE-IDENTITY-HOVER-2379#query#projectgraphnodecardreadmodel",
+      "sourcePath": "docs/evidence/ED-20260815-governed-source-identity-projection.md",
+      "sourceContentSha256": "4163c5f6a257c3d41de1b218826166b1f378f5c60a56f77471a081836d33b4ed",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "Connection rename leaves Graph Draft and dbt Project Graph caches stale",
+        "dddOwner": "CanvasGraphPresentation",
+        "railName": "ProjectGraphNodeCardReadModel",
+        "railType": "query",
+        "featureId": "PTH1-SOURCE-IDENTITY-HOVER-2379",
+        "greenTest": "pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/views/canvas/CanvasSourceImportDialogHost.test.ts",
+        "sourceRef": "docs/evidence/ED-20260815-governed-source-identity-projection.md",
+        "unitTests": [
+          "apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2379"],
+        "cypressFlows": [
+          "Agent-browser hover focus double-click and viewport source-card proof"
+        ],
+        "domainObjects": ["GraphNodeCardReadModel"],
+        "fowlerSignals": [
+          "Refresh existing graph projections after connection rename instead of introducing a second identity cache."
+        ],
+        "negativeTests": [
+          "Do not render identity for non-source or incomplete nodes and do not expose credential material"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "Shared GraphNodeCardView, Radix Tooltip, and Canvas source-import cache refresh",
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation -- --feature PTH1-SOURCE-IDENTITY-HOVER-2379",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "Graph node card strategy projection",
+        "componentGuides": [
+          "docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md"
+        ],
+        "expectedFailure": "The source identity tooltip keeps the previous connection name after a successful rename.",
+        "governingSources": [
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260815-governed-source-identity-projection.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/views/canvas/CanvasSourceImportDialogHost.test.ts"
+        ],
+        "authorizationScope": "Authorized Canvas projection already admitted to the browser",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2379",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.tsx#refreshConnectionIdentityProjections"
+        ],
+        "normalizedRailName": "projectgraphnodecardreadmodel",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "4163c5f6a257c3d41de1b218826166b1f378f5c60a56f77471a081836d33b4ed",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/components/SourceImportWizard*",
+          "apps/web/src/app/components/sourceImportWizard/**",
+          "apps/web/src/app/queries/queryKeys.ts",
+          "apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.tsx",
+          "apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.test.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/src/application/services/getWorkspaceGraphDraftSourceIdentityUseCase.ts"
+        ]
+      },
+      "createdAt": "2026-08-15T23:13:14.268Z"
     }
   ],
   "governanceComponentDefinitions": [

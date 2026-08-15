@@ -213,6 +213,7 @@ export {
   type CanvasAuthoringAuthorityResolution,
 } from './contracts/planner/CanvasAuthoringAuthorityBinding.v1.js';
 export {
+  DBT_PROJECT_GRAPH_PROJECTION_FEATURE,
   DbtProjectGraphProjectionSchema,
   DbtProjectRevisionSchema,
   type DbtProjectGraphProjection,

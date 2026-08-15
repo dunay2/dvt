@@ -3,6 +3,7 @@ import type { CanonicalNode } from '../../types/canonical';
 import { isCanvasNodePresentationCopy } from '../../components/canvas/canvasNodePresentationCopy.contract';
 import { isCanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
 import { formatSourceObjectMetricByteSize } from '../../services/workspace/sourceObjectMetricEvidencePresentation';
+import { resolveGraphNodeCardCopy } from './graphNodeCardCopyTokens';
 import type {
   GraphNodeCardAccentTone,
   GraphNodeCardMetric,
@@ -10,6 +11,7 @@ import type {
   GraphNodeCardStatus,
   GraphNodeCardStatusTone,
   GraphNodeOperationalDetail,
+  GraphNodeSourceIdentity,
 } from './graphNodeCardStrategyContracts';
 
 type PushMetricOptions = Readonly<{
@@ -36,6 +38,32 @@ export function stringValue(value: unknown): string | null {
 
 export function numericValue(value: unknown): number | null {
   return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
+export function buildGraphNodeSourceIdentity(
+  node: CanonicalNode,
+  metadata: Record<string, unknown>,
+  title: string,
+  locale?: string
+): GraphNodeSourceIdentity | null {
+  if (!node.kind.endsWith(':source')) return null;
+
+  const database = stringValue(metadata.database);
+  const connection = stringValue(metadata.connectionName);
+  const schema = stringValue(metadata.schema);
+  const user = stringValue(metadata.databaseUser);
+  if (database === null || connection === null || schema === null || user === null) return null;
+
+  const copy = resolveGraphNodeCardCopy(locale);
+  return {
+    ariaLabel: copy.sourceIdentityAriaLabelTemplate.replace('{table}', title),
+    rows: [
+      { id: 'database', label: copy.sourceIdentityDatabaseLabel, value: database },
+      { id: 'connection', label: copy.sourceIdentityConnectionLabel, value: connection },
+      { id: 'schema', label: copy.sourceIdentitySchemaLabel, value: schema },
+      { id: 'user', label: copy.sourceIdentityUserLabel, value: user },
+    ],
+  };
 }
 
 export function arrayCount(value: unknown): number | null {

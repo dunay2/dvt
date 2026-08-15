@@ -74,9 +74,11 @@ describe('SourceImportWizard', () => {
         database: 'dvt',
       })
     );
+    const onConnectionRenamed = vi.fn(async () => undefined);
 
     await harness.renderWizard({
       warehouseSourceImport: buildWarehouseSourceImportPort({ renameWarehouseConnection }),
+      onConnectionRenamed,
     });
 
     const renameAction = harness.findButtonContaining('Cambiar nombre');
@@ -101,6 +103,12 @@ describe('SourceImportWizard', () => {
 
     expect(renameWarehouseConnection).toHaveBeenCalledWith('conn-1', {
       name: 'Postgres principal',
+    });
+    expect(onConnectionRenamed).toHaveBeenCalledWith({
+      id: 'conn-1',
+      name: 'Postgres principal',
+      type: 'postgres',
+      database: 'dvt',
     });
     expect(harness.findConnectionOption('Postgres principal')).toBeDefined();
     expect(document.body.textContent).toContain('conn-1');

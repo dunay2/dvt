@@ -7,6 +7,7 @@
  * compile projection, or HTTP response translation.
  */
 import {
+  ConnectedSourceRefSchema,
   WORKSPACE_GRAPH_DRAFT_AUDIT_ACTION,
   WORKSPACE_GRAPH_DRAFT_AUDIT_OUTCOME,
   WORKSPACE_GRAPH_DRAFT_CAPABILITY_MODE,
@@ -18,8 +19,11 @@ import {
   type WorkspaceGraphDraftAuditRef,
   type WorkspaceGraphDraftCapabilityMode,
   type WorkspaceGraphDraftReadResponse,
+  type WorkspaceGraphAuthoringDraft,
+  type WorkspaceGraphAuthoringNode,
 } from '@dvt/contracts';
 
+import type { IWarehouseConnectionCatalog } from '../ports/warehouseSourceImport.js';
 import type {
   IWorkspaceGraphDraftAuditPort,
   IWorkspaceGraphDraftStore,
@@ -42,7 +46,8 @@ export class GetWorkspaceGraphDraftUseCase {
     private readonly authorityPolicy: Pick<
       CanvasAuthoringAuthorityPolicy,
       'resolveGraphDraftReadAuthority'
-    >
+    >,
+    private readonly connectionCatalog: Pick<IWarehouseConnectionCatalog, 'getConnection'>
   ) {}
 
   public async execute(
@@ -131,7 +136,11 @@ export class GetWorkspaceGraphDraftUseCase {
       };
     }
 
-    const draft = parsedDraft.data;
+    const draft = await refreshGraphDraftConnectionNames(
+      parsedDraft.data,
+      decision.scope,
+      this.connectionCatalog
+    );
     const ok = {
       kind: 'ok',
       capability: decision.capability,
@@ -166,6 +175,62 @@ export class GetWorkspaceGraphDraftUseCase {
       response,
     };
   }
+}
+
+export async function refreshGraphDraftConnectionNames(
+  draft: WorkspaceGraphAuthoringDraft,
+  scope: WorkspaceGraphDraftDecisionContext['scope'],
+  connectionCatalog: Pick<IWarehouseConnectionCatalog, 'getConnection'>
+): Promise<WorkspaceGraphAuthoringDraft> {
+  const connectionNameById = new Map<string, Promise<string | null>>();
+  const resolveConnectionName = (connectionId: string): Promise<string | null> => {
+    const cached = connectionNameById.get(connectionId);
+    if (cached) return cached;
+
+    const pending = connectionCatalog
+      .getConnection(scope, connectionId)
+      .then((connection) => connection.name)
+      .catch(() => null);
+    connectionNameById.set(connectionId, pending);
+    return pending;
+  };
+  const refreshNodes = (nodes: readonly WorkspaceGraphAuthoringNode[]) =>
+    Promise.all(nodes.map((node) => refreshNodeConnectionName(node, resolveConnectionName)));
+
+  return {
+    ...draft,
+    nodes: await refreshNodes(draft.nodes),
+    ...(draft.canvases === undefined
+      ? {}
+      : {
+          canvases: await Promise.all(
+            draft.canvases.map(async (workspace) => ({
+              ...workspace,
+              nodes: await refreshNodes(workspace.nodes),
+            }))
+          ),
+        }),
+  };
+}
+
+async function refreshNodeConnectionName(
+  node: WorkspaceGraphAuthoringNode,
+  resolveConnectionName: (connectionId: string) => Promise<string | null>
+): Promise<WorkspaceGraphAuthoringNode> {
+  if (node.kind !== 'dvt:source' || node.metadata === undefined) return node;
+
+  const sourceRef = ConnectedSourceRefSchema.safeParse(node.metadata.connectedSourceRef);
+  if (!sourceRef.success) return node;
+
+  const connectionName = await resolveConnectionName(sourceRef.data.connectionRef.connectionId);
+  const { connectionName: _staleConnectionName, ...metadataWithoutConnectionName } = node.metadata;
+  return {
+    ...node,
+    metadata: {
+      ...metadataWithoutConnectionName,
+      ...(connectionName === null ? {} : { connectionName }),
+    },
+  };
 }
 
 async function resolveGraphDraftAuthoringAuthority(

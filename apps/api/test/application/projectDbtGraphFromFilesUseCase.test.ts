@@ -43,6 +43,12 @@ function analyzerResult(status: 'valid' | 'invalid' | 'unavailable' = 'valid'): 
               originalFilePath: 'models/sources.yml',
               descriptionFilePath: 'models/sources.yml',
               sourceName: 'raw',
+              sourceIdentityRef: {
+                database: 'analytics',
+                connectionId: 'warehouse-prod',
+                schema: 'raw',
+                databaseUser: 'warehouse_reader',
+              },
               columns: [{ name: 'order_id', dataType: 'integer' }],
               tags: ['raw'],
               codeOnlyReasons: ['phase_two_read_only_projection'],
@@ -107,15 +113,25 @@ function buildUseCase(
 ): {
   readonly useCase: ProjectDbtGraphFromFilesUseCase;
   readonly resolve: ReturnType<typeof vi.fn>;
+  readonly getConnection: ReturnType<typeof vi.fn>;
 } {
   const resolve = vi.fn().mockResolvedValue(binding);
+  const getConnection = vi.fn(async () => ({
+    id: 'warehouse-prod',
+    name: 'Current production warehouse',
+    type: 'postgres' as const,
+    database: 'analytics',
+    sourceObjects: [],
+  }));
   return {
     useCase: new ProjectDbtGraphFromFilesUseCase({
       analyzer: { analyze },
       authorityPolicy: { resolve },
       executionTargetResolver: { resolve: () => executionTarget },
+      connectionCatalog: { getConnection },
     }),
     resolve,
+    getConnection,
   };
 }
 
@@ -124,7 +140,11 @@ describe('ProjectDbtGraphFromFilesUseCase', () => {
     const analyze = vi.fn().mockResolvedValue(analyzerResult());
     const { useCase, resolve } = buildUseCase(analyze);
 
-    const projection = await useCase.execute({ scope: SCOPE, canvasId: FILE_AUTHORITY.canvasId });
+    const projection = await useCase.execute({
+      scope: SCOPE,
+      canvasId: FILE_AUTHORITY.canvasId,
+      includeGovernedSourceIdentity: true,
+    });
 
     expect(analyze).toHaveBeenCalledWith({ scope: SCOPE, projectRoot: 'analytics' });
     expect(resolve).toHaveBeenCalledWith({ ...SCOPE, canvasId: FILE_AUTHORITY.canvasId });
@@ -151,6 +171,12 @@ describe('ProjectDbtGraphFromFilesUseCase', () => {
         }),
         expect.objectContaining({
           uniqueId: 'source.analytics.raw.orders',
+          sourceIdentity: {
+            database: 'analytics',
+            connectionName: 'Current production warehouse',
+            schema: 'raw',
+            databaseUser: 'warehouse_reader',
+          },
           visualEditability: expect.objectContaining({
             status: 'partially_editable',
             operations: ['yaml_description'],
@@ -170,6 +196,46 @@ describe('ProjectDbtGraphFromFilesUseCase', () => {
       targetName: 'production',
       credentialRef: 'env:DBT_PROFILES_DIR',
     });
+  });
+
+  it('resolves each stable source connection once per projection', async () => {
+    const analysis = analyzerResult();
+    const source = analysis.resources.find((resource) => resource.resourceType === 'source');
+    expect(source).toBeDefined();
+    const analyze = vi.fn().mockResolvedValue({
+      ...analysis,
+      resources: [
+        ...analysis.resources,
+        { ...source!, uniqueId: 'source.analytics.raw.customers', name: 'customers' },
+      ],
+    });
+    const { useCase, getConnection } = buildUseCase(analyze);
+
+    await useCase.execute({
+      scope: SCOPE,
+      canvasId: FILE_AUTHORITY.canvasId,
+      includeGovernedSourceIdentity: true,
+    });
+
+    expect(getConnection).toHaveBeenCalledTimes(1);
+    expect(getConnection).toHaveBeenCalledWith(SCOPE, 'warehouse-prod');
+  });
+
+  it('keeps legacy projections independent from the warehouse connection catalog', async () => {
+    const analyze = vi.fn().mockResolvedValue(analyzerResult());
+    const { useCase, getConnection } = buildUseCase(analyze);
+    getConnection.mockRejectedValue(new Error('WAREHOUSE_CONNECTION_CATALOG_MALFORMED'));
+
+    const projection = await useCase.execute({
+      scope: SCOPE,
+      canvasId: FILE_AUTHORITY.canvasId,
+    });
+
+    expect(getConnection).not.toHaveBeenCalled();
+    expect(projection.nodes).toEqual([
+      expect.objectContaining({ uniqueId: 'model.analytics.orders' }),
+      expect.not.objectContaining({ sourceIdentity: expect.anything() }),
+    ]);
   });
 
   it.each(['invalid', 'unavailable'] as const)(

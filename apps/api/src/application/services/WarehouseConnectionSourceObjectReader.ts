@@ -10,6 +10,7 @@ import { WarehouseSourceDiscoveryFailedError } from '../ports/warehouseSourceImp
 
 export type WarehouseConnectionSourceObjectRead = Readonly<{
   connection: WarehouseConnectionCatalogEntry;
+  databaseUser?: string;
   sourceObjects: readonly SourceObject[];
 }>;
 
@@ -40,6 +41,10 @@ export class WarehouseConnectionSourceObjectReader {
       throw new WarehouseSourceDiscoveryFailedError(inspected.reason, inspected.message);
     }
 
-    return { connection, sourceObjects: inspected.sourceObjects };
+    return {
+      connection,
+      ...(inspected.databaseUser === undefined ? {} : { databaseUser: inspected.databaseUser }),
+      sourceObjects: inspected.sourceObjects,
+    };
   }
 }

@@ -19,6 +19,7 @@ const BASE_PROPS = {
     metrics: [],
     operationalMetrics: [],
     operationalDetail: null,
+    sourceIdentity: null,
     accentTone: 'model' as const,
     nodeActionsLabel: 'Open node menu',
   },
@@ -35,6 +36,7 @@ describe('GraphNodeCardView', () => {
   let container: HTMLDivElement;
   let root: Root;
   let previousActEnvironment: boolean | undefined;
+  let previousResizeObserver: typeof ResizeObserver | undefined;
 
   beforeEach(() => {
     const globalObject = globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean };
@@ -43,6 +45,12 @@ describe('GraphNodeCardView', () => {
     container = document.createElement('div');
     document.body.append(container);
     root = createRoot(container);
+    previousResizeObserver = globalThis.ResizeObserver;
+    globalThis.ResizeObserver = class implements ResizeObserver {
+      disconnect(): void {}
+      observe(): void {}
+      unobserve(): void {}
+    };
   });
 
   afterEach(() => {
@@ -53,6 +61,14 @@ describe('GraphNodeCardView', () => {
       Reflect.deleteProperty(globalObject, 'IS_REACT_ACT_ENVIRONMENT');
     } else {
       globalObject.IS_REACT_ACT_ENVIRONMENT = previousActEnvironment;
+    }
+    document
+      .querySelectorAll('[data-slot="tooltip-content"]')
+      .forEach((element) => element.remove());
+    if (previousResizeObserver === undefined) {
+      Reflect.deleteProperty(globalThis, 'ResizeObserver');
+    } else {
+      globalThis.ResizeObserver = previousResizeObserver;
     }
   });
 
@@ -196,6 +212,7 @@ describe('GraphNodeCardView', () => {
                 { id: 'size', label: 'Size', value: '18.2 GB' },
               ],
             },
+            sourceIdentity: null,
             accentTone: 'source',
             nodeActionsLabel: 'Open node menu',
           }}
@@ -220,6 +237,90 @@ describe('GraphNodeCardView', () => {
     ).toBe('source');
     expect(container.textContent).toContain('Freshness');
     expect(container.textContent).toContain('42 MB/min');
+  });
+
+  it('reveals the structured source identity from the table title on keyboard focus', async () => {
+    await act(async () => {
+      root.render(
+        <GraphNodeCardView
+          {...BASE_PROPS}
+          cardModel={{
+            ...BASE_PROPS.cardModel,
+            title: 'orders',
+            sourceIdentity: {
+              ariaLabel: 'Ver identidad de origen de orders',
+              rows: [
+                { id: 'database', label: 'Base de datos', value: 'analytics' },
+                { id: 'connection', label: 'Conexión', value: 'PostgreSQL local' },
+                { id: 'schema', label: 'Esquema', value: 'erp' },
+                { id: 'user', label: 'Usuario', value: 'warehouse_reader' },
+              ],
+            },
+          }}
+        />
+      );
+    });
+
+    const trigger = container.querySelector<HTMLElement>(
+      '[data-slot="graph-node-source-identity-trigger"]'
+    );
+    expect(trigger?.getAttribute('tabindex')).toBe('0');
+    expect(trigger?.getAttribute('aria-label')).toBe('Ver identidad de origen de orders');
+    expect(trigger?.getAttribute('title')).toBeNull();
+    expect(trigger?.hasAttribute('data-canvas-node-control')).toBe(false);
+    expect(trigger?.className).not.toContain('nodrag');
+    expect(trigger?.className).not.toContain('nopan');
+
+    await act(async () => {
+      trigger?.focus();
+      await Promise.resolve();
+    });
+
+    const tooltip = document.body.querySelector('[role="tooltip"]');
+    expect(tooltip?.textContent).toContain('Base de datosanalytics');
+    expect(tooltip?.textContent).toContain('ConexiónPostgreSQL local');
+    expect(tooltip?.textContent).toContain('Esquemaerp');
+    expect(tooltip?.textContent).toContain('Usuariowarehouse_reader');
+  });
+
+  it('keeps long source identity values fully readable instead of truncating them', async () => {
+    const longConnectionName =
+      'PostgreSQL de operaciones financieras para Europa occidental y auditoría';
+    await act(async () => {
+      root.render(
+        <GraphNodeCardView
+          {...BASE_PROPS}
+          cardModel={{
+            ...BASE_PROPS.cardModel,
+            title: 'orders',
+            sourceIdentity: {
+              ariaLabel: 'Ver identidad de origen de orders',
+              rows: [
+                { id: 'database', label: 'Base de datos', value: 'analytics' },
+                { id: 'connection', label: 'Conexión', value: longConnectionName },
+                { id: 'schema', label: 'Esquema', value: 'erp' },
+                { id: 'user', label: 'Usuario', value: 'warehouse_reader' },
+              ],
+            },
+          }}
+        />
+      );
+    });
+
+    const trigger = container.querySelector<HTMLElement>(
+      '[data-slot="graph-node-source-identity-trigger"]'
+    );
+    await act(async () => {
+      trigger?.focus();
+      await Promise.resolve();
+    });
+
+    const tooltip = document.body.querySelector('[role="tooltip"]');
+    const connectionValue = [...(tooltip?.querySelectorAll('dd') ?? [])].find(
+      (value) => value.textContent === longConnectionName
+    );
+    expect(connectionValue?.className).toContain('break-all');
+    expect(connectionValue?.className).not.toContain('truncate');
   });
 
   it('renders icon tone from the card model without inline colors', () => {

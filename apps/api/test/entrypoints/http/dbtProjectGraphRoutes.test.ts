@@ -1,5 +1,5 @@
 import { DbtProjectGraphProjectionSchema, type DbtProjectGraphProjection } from '@dvt/contracts';
-import Fastify from 'fastify';
+import Fastify, { type FastifyInstance } from 'fastify';
 import { describe, expect, it, vi } from 'vitest';
 
 import { DbtProjectFileAuthorityRequiredError } from '../../../src/application/ports/dbtProjectImport.js';
@@ -45,7 +45,58 @@ describe('dbtProjectGraphRoutes', () => {
     expect(execute).toHaveBeenCalledWith({
       scope: { tenantId: 'tenant-a', projectId: 'project-a', environmentId: 'env-a' },
       canvasId: 'canvas-orders',
+      includeGovernedSourceIdentity: false,
     });
+  });
+
+  it('preserves the legacy v1 wire shape when no projection feature is negotiated', async () => {
+    const execute = vi.fn().mockResolvedValue(projectionWithSourceIdentity());
+    const app = buildAuthorizedApp(execute);
+
+    const response = await app.inject({
+      method: 'GET',
+      url: `/workspace/dbt/graph?${VALID_QUERY}`,
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json().nodes).toEqual([
+      expect.not.objectContaining({
+        identifier: expect.anything(),
+        sourceIdentity: expect.anything(),
+      }),
+    ]);
+  });
+
+  it('returns governed source identity only when the feature is explicitly negotiated', async () => {
+    const expandedProjection = projectionWithSourceIdentity();
+    const execute = vi.fn().mockResolvedValue(expandedProjection);
+    const app = buildAuthorizedApp(execute);
+
+    const response = await app.inject({
+      method: 'GET',
+      url: `/workspace/dbt/graph?${VALID_QUERY}&projectionFeature=governed-source-identity.v1`,
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual(expandedProjection);
+    expect(execute).toHaveBeenCalledWith({
+      scope: { tenantId: 'tenant-a', projectId: 'project-a', environmentId: 'env-a' },
+      canvasId: 'canvas-orders',
+      includeGovernedSourceIdentity: true,
+    });
+  });
+
+  it('rejects unknown projection features before invoking the query', async () => {
+    const execute = vi.fn();
+    const app = buildAuthorizedApp(execute);
+
+    const response = await app.inject({
+      method: 'GET',
+      url: `/workspace/dbt/graph?${VALID_QUERY}&projectionFeature=unknown-feature`,
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(execute).not.toHaveBeenCalled();
   });
 
   it('denies analysis when the caller cannot read workspace files', async () => {
@@ -135,6 +186,7 @@ describe('dbtProjectGraphRoutes', () => {
     expect(execute).toHaveBeenCalledWith({
       scope: { tenantId: 'tenant-a', projectId: 'project-a', environmentId: 'env-a' },
       canvasId: 'canvas-orders',
+      includeGovernedSourceIdentity: false,
     });
   });
 
@@ -217,6 +269,59 @@ function projection(): DbtProjectGraphProjection {
     diagnostics: [],
     capabilities: { canPreview: false, canRun: false, codeOnlyResourceCount: 0 },
   });
+}
+
+function projectionWithSourceIdentity(): DbtProjectGraphProjection {
+  return DbtProjectGraphProjectionSchema.parse({
+    ...projection(),
+    nodes: [
+      {
+        uniqueId: 'source.analytics.raw.orders',
+        resourceType: 'source',
+        name: 'orders',
+        identifier: 'orders_physical',
+        packageName: 'analytics',
+        sourceName: 'raw',
+        sourceIdentity: {
+          database: 'warehouse',
+          connectionName: 'Production PostgreSQL',
+          schema: 'raw',
+          databaseUser: 'warehouse_reader',
+        },
+        columns: [],
+        tags: [],
+        visualEditability: {
+          status: 'code_only',
+          reasons: ['phase_two_read_only_projection'],
+        },
+      },
+    ],
+    capabilities: { canPreview: false, canRun: false, codeOnlyResourceCount: 1 },
+  });
+}
+
+function buildAuthorizedApp(execute: ReturnType<typeof vi.fn>): FastifyInstance {
+  const app = Fastify({ logger: false });
+  registerDbtProjectGraphRoutes(app, {
+    authenticator: {
+      authenticateBearerToken: vi.fn().mockResolvedValue({ ok: true, principal: principal() }),
+    } as never,
+    authorizer: {
+      authorize: vi.fn().mockImplementation((_principal, requestedScope) => ({
+        ok: true,
+        context: {
+          principal: principal(),
+          scope: { resource: 'environment', tenantId: { value: 'tenant-a' } },
+          action: requestedScope.action,
+          requestId: 'req-1',
+          authorizedAt: new Date('2026-07-13T00:00:00Z'),
+        },
+      })),
+    } as never,
+    useCase: { execute } as never,
+    rateLimit: { max: 100, timeWindow: 60_000 },
+  });
+  return app;
 }
 
 function principal(): Record<string, unknown> {

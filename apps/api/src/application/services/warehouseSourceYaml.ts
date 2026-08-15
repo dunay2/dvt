@@ -84,6 +84,7 @@ export function buildWarehouseSourceYamlUpdates(
       const nextDocument = sourceObjects.reduce(
         (document, sourceObject) =>
           upsertSourceTable(document, sourceObject, {
+            ...(input.databaseUser === undefined ? {} : { databaseUser: input.databaseUser }),
             includeColumns: input.includeColumns,
             addTests: input.addTests,
             addFreshness: input.addFreshness,

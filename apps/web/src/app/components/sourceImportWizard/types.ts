@@ -15,6 +15,7 @@ export interface SourceImportWizardProps {
   onClose: () => void;
   onRestoreFocus?: () => void;
   onComplete?: (result: ImportSourcesResult) => void;
+  onConnectionRenamed?: (connection: WarehouseConnection) => void | Promise<void>;
   sourceImportOptions?: readonly SourceImportOptionContribution[];
   initialSelection?: SourceImportInitialSelection | null;
 }
