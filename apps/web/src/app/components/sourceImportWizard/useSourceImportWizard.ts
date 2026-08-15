@@ -374,7 +374,12 @@ export function useSourceImportWizard({
       }));
       toast.success(copy.connection.createSuccess);
     } catch (error) {
-      const failure = buildSourceImportFailure('create-connection', error);
+      const failure = buildSourceImportFailure(
+        extractHttpErrorReason(error) === 'warehouse_connection_duplicate'
+          ? 'connection-name-conflict'
+          : 'create-connection',
+        error
+      );
       setState((prev) => ({ ...prev, createConnectionError: failure }));
       toast.error(resolveSourceImportFailureMessage(copy, failure));
     } finally {
@@ -416,7 +421,7 @@ export function useSourceImportWizard({
     } catch (error) {
       const failure = buildSourceImportFailure(
         extractHttpErrorReason(error) === 'warehouse_connection_duplicate'
-          ? 'rename-connection-conflict'
+          ? 'connection-name-conflict'
           : 'rename-connection',
         error
       );

@@ -64,7 +64,7 @@ const EN_COPY = {
     renamingAction: 'Saving...',
     renameCancelAction: 'Cancel',
     renameValidationError: 'Enter a different connection name.',
-    renameConflictError: 'A connection with that name already exists.',
+    duplicateNameError: 'A connection with that name already exists. Choose another name.',
     renameSuccess: 'Connection name updated',
     renameError: 'Failed to rename the connection.',
     testAction: 'Test connection',
@@ -269,7 +269,7 @@ const ES_COPY = {
     renamingAction: 'Guardando...',
     renameCancelAction: 'Cancelar',
     renameValidationError: 'Escribe un nombre distinto para la conexión.',
-    renameConflictError: 'Ya existe una conexión con ese nombre.',
+    duplicateNameError: 'Ya existe una conexión con ese nombre. Elige otro nombre.',
     renameSuccess: 'Nombre de la conexión actualizado',
     renameError: 'No se pudo cambiar el nombre de la conexión.',
     testAction: 'Probar conexión',
@@ -454,8 +454,8 @@ export function resolveSourceImportFailureMessage(
       return copy.connection.createError;
     case 'rename-connection-validation':
       return copy.connection.renameValidationError;
-    case 'rename-connection-conflict':
-      return copy.connection.renameConflictError;
+    case 'connection-name-conflict':
+      return copy.connection.duplicateNameError;
     case 'rename-connection':
       return copy.connection.renameError;
     case 'import-sources':

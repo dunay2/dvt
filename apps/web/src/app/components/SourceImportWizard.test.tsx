@@ -368,6 +368,63 @@ describe('SourceImportWizard', () => {
     expect(createNameInput?.closest('form')?.textContent).toContain(
       'No se pudo crear la conexión al warehouse.'
     );
+    expect(createNameInput?.getAttribute('aria-invalid')).toBeNull();
+    expect(createNameInput?.getAttribute('aria-errormessage')).toBeNull();
+  });
+
+  it('explains a duplicate connection at the top of the create form', async () => {
+    useApplicationLanguageStore.getState().configureApplicationLanguage('es');
+
+    await harness.renderWizard({
+      warehouseSourceImport: buildWarehouseSourceImportPort({
+        createWarehouseConnection: async () => {
+          throw new ApiError({
+            message: 'Request failed (409)',
+            endpoint: '/workspace/warehouse/connections',
+            statusCode: 409,
+            category: 'client',
+            responseBody: {
+              error: { type: 'conflict', reason: 'warehouse_connection_duplicate' },
+            },
+          });
+        },
+      }),
+    });
+    await harness.clickButtonContaining('Nueva conexión');
+    await harness.fillInputByLabel('Nombre de la conexión', 'Local Postgres proof');
+    await harness.fillInputByLabel('Base de datos', 'dvt');
+    await harness.fillInputByLabel('Referencia de credencial', 'postgres:local-postgres-proof');
+    await harness.clickButtonContaining('Crear conexión');
+    await harness.flushPendingWork();
+
+    const alert = document.body.querySelector<HTMLElement>(
+      '[data-slot="source-import-create-connection-error"]'
+    );
+    const nameInput = document.body.querySelector<HTMLInputElement>(
+      '[data-slot="source-import-create-connection-name"]'
+    );
+
+    expect(alert?.textContent).toContain(
+      'Ya existe una conexión con ese nombre. Elige otro nombre.'
+    );
+    expect(alert?.getAttribute('role')).toBe('alert');
+    expect(alert?.closest('form')).toBe(nameInput?.closest('form'));
+    expect(nameInput?.getAttribute('aria-invalid')).toBe('true');
+    expect(nameInput?.getAttribute('aria-errormessage')).toBe(alert?.id);
+    expect(
+      alert && nameInput
+        ? alert.compareDocumentPosition(nameInput) & Node.DOCUMENT_POSITION_FOLLOWING
+        : 0
+    ).not.toBe(0);
+    expect(document.body.textContent).not.toContain('warehouse_connection_duplicate');
+
+    await act(async () => {
+      useApplicationLanguageStore.getState().configureApplicationLanguage('en');
+    });
+
+    expect(alert?.textContent).toContain(
+      'A connection with that name already exists. Choose another name.'
+    );
   });
 
   it('localizes import failures in the review surface without exposing adapter diagnostics', async () => {
@@ -734,6 +791,26 @@ describe('SourceImportWizard', () => {
     expect(document.body.textContent).toContain(
       'Name, database, and credential reference are required.'
     );
+
+    const alert = document.body.querySelector<HTMLElement>(
+      '[data-slot="source-import-create-connection-error"]'
+    );
+    const nameInput = document.body.querySelector<HTMLInputElement>(
+      '[data-slot="source-import-create-connection-name"]'
+    );
+    const databaseInput = document.body.querySelector<HTMLInputElement>(
+      '[data-slot="source-import-create-connection-database"]'
+    );
+    const credentialInput = document.body.querySelector<HTMLInputElement>(
+      '[data-slot="source-import-create-connection-credential-ref"]'
+    );
+
+    expect(nameInput?.getAttribute('aria-invalid')).toBeNull();
+    expect(nameInput?.getAttribute('aria-errormessage')).toBeNull();
+    expect(databaseInput?.getAttribute('aria-invalid')).toBe('true');
+    expect(databaseInput?.getAttribute('aria-errormessage')).toBe(alert?.id);
+    expect(credentialInput?.getAttribute('aria-invalid')).toBe('true');
+    expect(credentialInput?.getAttribute('aria-errormessage')).toBe(alert?.id);
   });
 
   it('completes import flow, applies imported sources immediately, and renders a passive result step', async () => {

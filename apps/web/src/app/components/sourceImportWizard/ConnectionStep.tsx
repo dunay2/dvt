@@ -12,6 +12,7 @@ import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { type SourceImportWizardCopy, useSourceImportLocalization } from './copy';
+import type { SourceImportFailureCode } from './types';
 import { WarehouseConnectionCreateForm } from './WarehouseConnectionCreateForm';
 import { WarehouseConnectionRenameForm } from './WarehouseConnectionRenameForm';
 
@@ -29,6 +30,7 @@ interface ConnectionStepProps {
   connectionTestResult: TestWarehouseConnectionResult | null;
   loadError: string | null;
   createConnectionError: string | null;
+  createConnectionErrorCode: SourceImportFailureCode | null;
   renameConnectionError: string | null;
   renameConnectionSucceeded: boolean;
   onSelectConnection: (connectionId: string) => void;
@@ -168,6 +170,7 @@ export function ConnectionStep({
   connectionTestResult,
   loadError,
   createConnectionError,
+  createConnectionErrorCode,
   renameConnectionError,
   renameConnectionSucceeded,
   onSelectConnection,
@@ -298,6 +301,7 @@ export function ConnectionStep({
                 form={createConnectionForm}
                 isCreating={isCreatingConnection}
                 error={createConnectionError}
+                errorCode={createConnectionErrorCode}
                 onFieldChange={onCreateConnectionFormChange}
                 onCancel={onCancelCreateConnectionForm}
                 onSubmit={onCreateConnection}
