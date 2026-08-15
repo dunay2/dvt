@@ -69,6 +69,10 @@ export {
   type ReadArtifactBytesOptions,
   type ReadArtifactResult,
 } from './runtime/readArtifactBytes.js';
+export {
+  resolveRunExecutionContextArtifactStore,
+  type RunExecutionContextArtifactStoreConfig,
+} from './runtime/resolveRunExecutionContextArtifactStore.js';
 export { computeSha256 } from './compiledCode/sha256.js';
 export {
   attachCompiledCodeRefs,

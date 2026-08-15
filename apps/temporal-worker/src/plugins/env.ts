@@ -72,6 +72,7 @@ const EnvSchema = z
     DVT_DBT_BUNDLE_STORE_BACKEND: z.enum(['file', 's3']).optional(),
     DVT_DBT_BUNDLE_S3_BUCKET: z.string().optional(),
     DVT_DBT_BUNDLE_FILE_ROOT: z.string().optional(),
+    DVT_WORKSPACE_FILES_ROOT: z.string().optional(),
   })
   .superRefine((input, ctx) => {
     if (input.DVT_HTTP_JSON_ALLOW_LOOPBACK_FIXTURE && input.NODE_ENV === 'production') {
@@ -120,6 +121,21 @@ const EnvSchema = z
         'postgres:',
         ctx
       );
+    }
+
+    if (input.NODE_ENV === 'production' && input.DVT_DBT_BUNDLE_STORE_BACKEND !== 's3') {
+      const hasSharedFileRoot =
+        (input.DVT_WORKSPACE_FILES_ROOT !== undefined &&
+          input.DVT_WORKSPACE_FILES_ROOT.trim().length > 0) ||
+        (input.DVT_DBT_BUNDLE_FILE_ROOT !== undefined &&
+          input.DVT_DBT_BUNDLE_FILE_ROOT.trim().length > 0);
+      if (!hasSharedFileRoot) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['DVT_WORKSPACE_FILES_ROOT'],
+          message: 'required in production when run execution contexts use the file store',
+        });
+      }
     }
 
     if (!input.DVT_TEMPORAL_DBT_ENABLED) {

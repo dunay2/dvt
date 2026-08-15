@@ -5,7 +5,11 @@ import {
   composeTemporalStepPluginRegistries,
   loadTemporalAdapterConfig,
 } from '@dvt/adapter-temporal';
-import { ArtifactBackedRunExecutionContextReader } from '@dvt/artifacts';
+import {
+  ArtifactBackedRunExecutionContextReader,
+  resolveRunExecutionContextArtifactStore,
+  type ArtifactBackedRunExecutionContextReaderOptions,
+} from '@dvt/artifacts';
 
 import type { Env } from '../plugins/env.js';
 
@@ -51,7 +55,9 @@ export function createTemporalWorkerRuntimeResources(
   );
   const runExecutionContextReader =
     options.runExecutionContextReaderFactory?.(env) ??
-    new ArtifactBackedRunExecutionContextReader({ nodeEnv: env.NODE_ENV });
+    new ArtifactBackedRunExecutionContextReader(
+      resolveTemporalWorkerRunExecutionContextReaderOptions(env)
+    );
   const postgresProfile = createTemporalWorkerPostgresProfile(
     env,
     options,
@@ -88,4 +94,36 @@ export function createTemporalWorkerRuntimeResources(
     ...(stepActivitiesByKind === undefined ? {} : { stepActivitiesByKind }),
     closeStepActivityResources: postgresProfile.close,
   };
+}
+
+export function resolveTemporalWorkerRunExecutionContextReaderOptions(
+  env: Env
+): ArtifactBackedRunExecutionContextReaderOptions {
+  assertRunExecutionContextStoreConfig(env);
+  const store = resolveRunExecutionContextArtifactStore({
+    dbtBundleStoreBackend: env.DVT_DBT_BUNDLE_STORE_BACKEND,
+    dbtBundleS3Bucket: env.DVT_DBT_BUNDLE_S3_BUCKET,
+    dbtBundleFileRoot: env.DVT_DBT_BUNDLE_FILE_ROOT,
+    workspaceFilesRoot: env.DVT_WORKSPACE_FILES_ROOT,
+    workingDirectory: process.cwd(),
+  });
+  return {
+    nodeEnv: env.NODE_ENV,
+    ...(store.kind === 'file' ? { fileReadRoot: store.rootPath } : {}),
+  };
+}
+
+function assertRunExecutionContextStoreConfig(env: Env): void {
+  if (
+    env.DVT_DBT_BUNDLE_STORE_BACKEND === 's3' &&
+    (env.DVT_DBT_BUNDLE_S3_BUCKET === undefined || env.DVT_DBT_BUNDLE_S3_BUCKET.trim().length === 0)
+  ) {
+    throw new Error('DVT_DBT_BUNDLE_S3_BUCKET is required when DVT_DBT_BUNDLE_STORE_BACKEND=s3');
+  }
+  if (
+    env.DVT_DBT_BUNDLE_STORE_BACKEND === 'file' &&
+    (env.DVT_DBT_BUNDLE_FILE_ROOT === undefined || env.DVT_DBT_BUNDLE_FILE_ROOT.trim().length === 0)
+  ) {
+    throw new Error('DVT_DBT_BUNDLE_FILE_ROOT is required when DVT_DBT_BUNDLE_STORE_BACKEND=file');
+  }
 }

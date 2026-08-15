@@ -2,10 +2,9 @@
  * Owned concern: assemble the protected-runtime storage and stored-plan
  * dependencies for `apps/api`.
  */
-import path from 'node:path';
-
 import { PostgresCredentialBindingResolver } from '@dvt/adapter-postgres';
 import {
+  resolveRunExecutionContextArtifactStore as resolveCanonicalRunExecutionContextArtifactStore,
   S3RunExecutionContextReferenceStore,
   type DbtProjectBundleArtifactStore,
 } from '@dvt/artifacts';
@@ -113,12 +112,13 @@ export function buildProtectedRuntimeStorage(deps: BuildProtectedRuntimeStorageD
 export type ProtectedRuntimeStorage = ReturnType<typeof buildProtectedRuntimeStorage>;
 
 export function resolveRunExecutionContextArtifactStore(env: Env): DbtProjectBundleArtifactStore {
-  return (
-    resolveDbtBundleArtifactStore(env) ?? {
-      kind: 'file',
-      rootPath: path.join(resolveWorkspaceFilesRoot(env), '.dvt', 'run-context-artifacts'),
-    }
-  );
+  return resolveCanonicalRunExecutionContextArtifactStore({
+    dbtBundleStoreBackend: env.DVT_DBT_BUNDLE_STORE_BACKEND,
+    dbtBundleS3Bucket: env.DVT_DBT_BUNDLE_S3_BUCKET,
+    dbtBundleFileRoot: env.DVT_DBT_BUNDLE_FILE_ROOT,
+    workspaceFilesRoot: env.DVT_WORKSPACE_FILES_ROOT,
+    workingDirectory: process.cwd(),
+  });
 }
 
 function resolveDbtBundleArtifactStore(env: Env) {
