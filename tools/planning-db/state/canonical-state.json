@@ -117813,7 +117813,19 @@
         "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#DraftSnapshot",
         "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#addDbtNode",
         "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#waitForDraftNodeCount",
-        "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#openGraphSearch"
+        "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#openGraphSearch",
+        "apps/web/src/app/views/canvas/useCanvasGraphFilterController.ts#useCanvasGraphFilterController",
+        "apps/web/src/app/plugins/graph/GraphNodeTagList.tsx#GraphNodeTagList",
+        "apps/web/src/app/plugins/graph/GraphNodeTagList.tsx#resolveGraphNodeTagActionProps",
+        "apps/web/src/app/plugins/graph/GraphNodeCardView.tsx#GraphNodeCardView",
+        "apps/web/src/app/plugins/graph/GraphNodeRenderer.tsx#GraphNodeRenderer",
+        "apps/web/src/app/plugins/dbt/DbtNodeRenderer.tsx#DbtNodeRenderer",
+        "apps/web/src/app/views/canvas/CanvasViewport.tsx#CanvasViewport",
+        "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts#useCanvasNodeWorkbenchDraftController",
+        "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts#isSemanticCanvasNodeTag",
+        "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts#mergeBusinessTagsWithSemanticAuthority",
+        "apps/web/src/app/views/canvas/canvasNodeMapper.ts#mapCanonicalNodeToCanvasNode",
+        "apps/web/src/app/views/canvas/canvasNodeMapper.ts#mapDroppedCanonicalNodeToCanvasNode"
       ],
       "implementationRefs": [
         "apps/web/src/app/views/canvas/canvasGraphFilter.ts#filterCanvasGraph",
@@ -117821,11 +117833,24 @@
         "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#DraftSnapshot",
         "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#addDbtNode",
         "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#waitForDraftNodeCount",
-        "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#openGraphSearch"
+        "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#openGraphSearch",
+        "apps/web/src/app/views/canvas/useCanvasGraphFilterController.ts#useCanvasGraphFilterController",
+        "apps/web/src/app/plugins/graph/GraphNodeTagList.tsx#GraphNodeTagList",
+        "apps/web/src/app/plugins/graph/GraphNodeTagList.tsx#resolveGraphNodeTagActionProps",
+        "apps/web/src/app/plugins/graph/GraphNodeCardView.tsx#GraphNodeCardView",
+        "apps/web/src/app/plugins/graph/GraphNodeRenderer.tsx#GraphNodeRenderer",
+        "apps/web/src/app/plugins/dbt/DbtNodeRenderer.tsx#DbtNodeRenderer",
+        "apps/web/src/app/views/canvas/CanvasViewport.tsx#CanvasViewport",
+        "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts#useCanvasNodeWorkbenchDraftController",
+        "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts#isSemanticCanvasNodeTag",
+        "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts#mergeBusinessTagsWithSemanticAuthority",
+        "apps/web/src/app/views/canvas/canvasNodeMapper.ts#mapCanonicalNodeToCanvasNode",
+        "apps/web/src/app/views/canvas/canvasNodeMapper.ts#mapDroppedCanonicalNodeToCanvasNode"
       ],
       "documentationRefs": [
         "https://github.com/dunay2/dvt/issues/2069",
-        "https://github.com/dunay2/dvt/issues/2070"
+        "https://github.com/dunay2/dvt/issues/2070",
+        "https://github.com/dunay2/dvt/issues/2364"
       ],
       "governingSources": [
         "docs/architecture/command-query-rail-governance.md",
@@ -117834,19 +117859,27 @@
       "allowedImplementationSurfaces": [
         "apps/web/src/app/views/canvas/**",
         "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
-        "tools/planning-db/state/canonical-state.json"
+        "tools/planning-db/state/canonical-state.json",
+        "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx",
+        "apps/web/src/app/plugins/graph/**",
+        "apps/web/src/app/plugins/dbt/DbtNodeRenderer.tsx",
+        "apps/web/src/app/components/canvas/DbtNodeComponent.tsx",
+        "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts"
       ],
       "architectureGuards": [
-        "Search and filters remain independent over the same Canvas node projection",
-        "Search and filter browser proof must not mutate the workspace graph draft",
-        "Filter-specific executable evidence belongs to FilterCanvasGraph"
+        "Direct tag filtering must not mutate the persisted workspace graph draft.",
+        "Unknown tags cannot create graph-filter predicates.",
+        "Repeated activation of the same tag remains idempotent.",
+        "Tag projection cannot associate a localized label with a different canonical value.",
+        "Semantic tags remain protected while business tags are filterable."
       ],
       "completionGate": [
         "pnpm --filter @dvt/web typecheck",
         "pnpm --filter @dvt/web lint",
         "pnpm verify:prepush",
         "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-GRAPH-FILTER-2069",
-        "pnpm docs:feature-mechanization:implementation"
+        "pnpm docs:feature-mechanization:implementation",
+        "pnpm --filter @dvt/web test:e2e:first-authoring:live"
       ],
       "sourcePath": "apps/web/src/app/views/canvas/canvasGraphFilter.ts",
       "sourceContentSha256": "e839ad03106f9c80b4041535b08b3ec1aeae9c5cbe71979373f0dbd06ee4a77e",
@@ -117854,7 +117887,13 @@
         "name": "FilterCanvasGraph",
         "type": "query",
         "status": "implemented",
-        "dddOwner": "CanvasGraphFilter"
+        "dddOwner": "CanvasGraphFilter",
+        "negativeTests": [
+          "reject unknown tags, mismatched projections and duplicate predicates without graph mutation"
+        ],
+        "adapterSurface": "Canvas graph node tag controls",
+        "applicationPort": "useCanvasGraphFilterController.filterByTag query adapter",
+        "authorizationScope": "active authorized workspace graph projection only"
       },
       "rawManifest": {
         "symbols": [
@@ -117864,18 +117903,19 @@
             "cqRails": ["FilterCanvasGraph"],
             "dddOwner": "CanvasGraphFilter",
             "unitTests": [
-              "apps/web/src/app/views/canvas/canvasGraphFilter.test.ts",
-              "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx"
+              "apps/web/src/app/plugins/graph/GraphNodeTagList.test.tsx",
+              "apps/web/src/app/views/canvas/useCanvasGraphFilterController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx",
+              "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx",
+              "apps/web/src/app/views/canvas/canvasNodeMapper.test.ts"
             ],
             "fowlerSignals": [
-              "Pure read model projection with explicit published language",
-              "Protected browser evidence exercises the existing filter query without mutating the persisted graph",
-              "Protected browser evidence exercises the composed query flow without mutating the persisted graph",
-              "database ownership evidence is exported through canonical state",
-              "Filter-specific behavior is owned by FilterCanvasGraph while the protected proof composes independent queries"
+              "Node tag controls reuse the existing graph-filter query rather than creating parallel selection state.",
+              "Canonical value and localized label travel as one projected tag item.",
+              "Shared semantic-tag guards keep the filter read model free from hidden execution markers."
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
-            "architectureGuard": "Search and filter browser proof must not mutate the workspace graph draft"
+            "architectureGuard": "Direct tag filtering must not mutate the persisted workspace graph draft."
           },
           {
             "name": "openGraphFilters",
@@ -117883,17 +117923,19 @@
             "cqRails": ["FilterCanvasGraph"],
             "dddOwner": "CanvasGraphFilter",
             "unitTests": [
-              "apps/web/src/app/views/canvas/canvasGraphFilter.test.ts",
-              "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx"
+              "apps/web/src/app/plugins/graph/GraphNodeTagList.test.tsx",
+              "apps/web/src/app/views/canvas/useCanvasGraphFilterController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx",
+              "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx",
+              "apps/web/src/app/views/canvas/canvasNodeMapper.test.ts"
             ],
             "fowlerSignals": [
-              "Pure read model projection with explicit published language",
-              "Protected browser evidence exercises the existing filter query without mutating the persisted graph",
-              "Protected browser evidence exercises the composed query flow without mutating the persisted graph",
-              "Filter-specific behavior is owned by FilterCanvasGraph while the protected proof composes independent queries"
+              "Node tag controls reuse the existing graph-filter query rather than creating parallel selection state.",
+              "Canonical value and localized label travel as one projected tag item.",
+              "Shared semantic-tag guards keep the filter read model free from hidden execution markers."
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
-            "architectureGuard": "Search and filter browser proof must not mutate the workspace graph draft"
+            "architectureGuard": "Direct tag filtering must not mutate the persisted workspace graph draft."
           },
           {
             "name": "DraftSnapshot",
@@ -117901,15 +117943,19 @@
             "cqRails": ["FilterCanvasGraph"],
             "dddOwner": "CanvasGraphFilter",
             "unitTests": [
+              "apps/web/src/app/plugins/graph/GraphNodeTagList.test.tsx",
+              "apps/web/src/app/views/canvas/useCanvasGraphFilterController.test.tsx",
               "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx",
-              "apps/web/src/app/views/canvas/canvasGraphFilter.test.ts"
+              "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx",
+              "apps/web/src/app/views/canvas/canvasNodeMapper.test.ts"
             ],
             "fowlerSignals": [
-              "Protected browser evidence exercises the composed query flow without mutating the persisted graph",
-              "Filter-specific behavior is owned by FilterCanvasGraph while the protected proof composes independent queries"
+              "Node tag controls reuse the existing graph-filter query rather than creating parallel selection state.",
+              "Canonical value and localized label travel as one projected tag item.",
+              "Shared semantic-tag guards keep the filter read model free from hidden execution markers."
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
-            "architectureGuard": "Search and filter browser proof must not mutate the workspace graph draft"
+            "architectureGuard": "Direct tag filtering must not mutate the persisted workspace graph draft."
           },
           {
             "name": "addDbtNode",
@@ -117917,15 +117963,19 @@
             "cqRails": ["FilterCanvasGraph"],
             "dddOwner": "CanvasGraphFilter",
             "unitTests": [
+              "apps/web/src/app/plugins/graph/GraphNodeTagList.test.tsx",
+              "apps/web/src/app/views/canvas/useCanvasGraphFilterController.test.tsx",
               "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx",
-              "apps/web/src/app/views/canvas/canvasGraphFilter.test.ts"
+              "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx",
+              "apps/web/src/app/views/canvas/canvasNodeMapper.test.ts"
             ],
             "fowlerSignals": [
-              "Protected browser evidence exercises the composed query flow without mutating the persisted graph",
-              "Filter-specific behavior is owned by FilterCanvasGraph while the protected proof composes independent queries"
+              "Node tag controls reuse the existing graph-filter query rather than creating parallel selection state.",
+              "Canonical value and localized label travel as one projected tag item.",
+              "Shared semantic-tag guards keep the filter read model free from hidden execution markers."
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
-            "architectureGuard": "Search and filter browser proof must not mutate the workspace graph draft"
+            "architectureGuard": "Direct tag filtering must not mutate the persisted workspace graph draft."
           },
           {
             "name": "waitForDraftNodeCount",
@@ -117933,15 +117983,19 @@
             "cqRails": ["FilterCanvasGraph"],
             "dddOwner": "CanvasGraphFilter",
             "unitTests": [
+              "apps/web/src/app/plugins/graph/GraphNodeTagList.test.tsx",
+              "apps/web/src/app/views/canvas/useCanvasGraphFilterController.test.tsx",
               "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx",
-              "apps/web/src/app/views/canvas/canvasGraphFilter.test.ts"
+              "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx",
+              "apps/web/src/app/views/canvas/canvasNodeMapper.test.ts"
             ],
             "fowlerSignals": [
-              "Protected browser evidence exercises the composed query flow without mutating the persisted graph",
-              "Filter-specific behavior is owned by FilterCanvasGraph while the protected proof composes independent queries"
+              "Node tag controls reuse the existing graph-filter query rather than creating parallel selection state.",
+              "Canonical value and localized label travel as one projected tag item.",
+              "Shared semantic-tag guards keep the filter read model free from hidden execution markers."
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
-            "architectureGuard": "Search and filter browser proof must not mutate the workspace graph draft"
+            "architectureGuard": "Direct tag filtering must not mutate the persisted workspace graph draft."
           },
           {
             "name": "openGraphSearch",
@@ -117949,13 +118003,259 @@
             "cqRails": ["FilterCanvasGraph"],
             "dddOwner": "CanvasGraphFilter",
             "unitTests": [
-              "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx"
+              "apps/web/src/app/plugins/graph/GraphNodeTagList.test.tsx",
+              "apps/web/src/app/views/canvas/useCanvasGraphFilterController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx",
+              "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx",
+              "apps/web/src/app/views/canvas/canvasNodeMapper.test.ts"
             ],
             "fowlerSignals": [
-              "Protected browser evidence exercises the composed query flow without mutating the persisted graph"
+              "Node tag controls reuse the existing graph-filter query rather than creating parallel selection state.",
+              "Canonical value and localized label travel as one projected tag item.",
+              "Shared semantic-tag guards keep the filter read model free from hidden execution markers."
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
-            "architectureGuard": "Search and filter browser proof must not mutate the workspace graph draft"
+            "architectureGuard": "Direct tag filtering must not mutate the persisted workspace graph draft."
+          },
+          {
+            "name": "useCanvasGraphFilterController",
+            "path": "apps/web/src/app/views/canvas/useCanvasGraphFilterController.ts",
+            "cqRails": ["FilterCanvasGraph"],
+            "dddOwner": "CanvasGraphFilter",
+            "unitTests": [
+              "apps/web/src/app/plugins/graph/GraphNodeTagList.test.tsx",
+              "apps/web/src/app/views/canvas/useCanvasGraphFilterController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx",
+              "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx",
+              "apps/web/src/app/views/canvas/canvasNodeMapper.test.ts"
+            ],
+            "fowlerSignals": [
+              "Node tag controls reuse the existing graph-filter query rather than creating parallel selection state.",
+              "Canonical value and localized label travel as one projected tag item.",
+              "Shared semantic-tag guards keep the filter read model free from hidden execution markers."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
+            "architectureGuard": "Direct tag filtering must not mutate the persisted workspace graph draft."
+          },
+          {
+            "name": "GraphNodeTagList",
+            "path": "apps/web/src/app/plugins/graph/GraphNodeTagList.tsx",
+            "cqRails": ["FilterCanvasGraph"],
+            "dddOwner": "CanvasGraphFilter",
+            "unitTests": [
+              "apps/web/src/app/plugins/graph/GraphNodeTagList.test.tsx",
+              "apps/web/src/app/views/canvas/useCanvasGraphFilterController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx",
+              "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx",
+              "apps/web/src/app/views/canvas/canvasNodeMapper.test.ts"
+            ],
+            "fowlerSignals": [
+              "Node tag controls reuse the existing graph-filter query rather than creating parallel selection state.",
+              "Canonical value and localized label travel as one projected tag item.",
+              "Shared semantic-tag guards keep the filter read model free from hidden execution markers."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
+            "architectureGuard": "Direct tag filtering must not mutate the persisted workspace graph draft."
+          },
+          {
+            "name": "resolveGraphNodeTagActionProps",
+            "path": "apps/web/src/app/plugins/graph/GraphNodeTagList.tsx",
+            "cqRails": ["FilterCanvasGraph"],
+            "dddOwner": "CanvasGraphFilter",
+            "unitTests": [
+              "apps/web/src/app/plugins/graph/GraphNodeTagList.test.tsx",
+              "apps/web/src/app/views/canvas/useCanvasGraphFilterController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx",
+              "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx",
+              "apps/web/src/app/views/canvas/canvasNodeMapper.test.ts"
+            ],
+            "fowlerSignals": [
+              "Node tag controls reuse the existing graph-filter query rather than creating parallel selection state.",
+              "Canonical value and localized label travel as one projected tag item.",
+              "Shared semantic-tag guards keep the filter read model free from hidden execution markers."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
+            "architectureGuard": "Direct tag filtering must not mutate the persisted workspace graph draft."
+          },
+          {
+            "name": "GraphNodeCardView",
+            "path": "apps/web/src/app/plugins/graph/GraphNodeCardView.tsx",
+            "cqRails": ["FilterCanvasGraph"],
+            "dddOwner": "CanvasGraphFilter",
+            "unitTests": [
+              "apps/web/src/app/plugins/graph/GraphNodeTagList.test.tsx",
+              "apps/web/src/app/views/canvas/useCanvasGraphFilterController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx",
+              "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx",
+              "apps/web/src/app/views/canvas/canvasNodeMapper.test.ts"
+            ],
+            "fowlerSignals": [
+              "Node tag controls reuse the existing graph-filter query rather than creating parallel selection state.",
+              "Canonical value and localized label travel as one projected tag item.",
+              "Shared semantic-tag guards keep the filter read model free from hidden execution markers."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
+            "architectureGuard": "Direct tag filtering must not mutate the persisted workspace graph draft."
+          },
+          {
+            "name": "GraphNodeRenderer",
+            "path": "apps/web/src/app/plugins/graph/GraphNodeRenderer.tsx",
+            "cqRails": ["FilterCanvasGraph"],
+            "dddOwner": "CanvasGraphFilter",
+            "unitTests": [
+              "apps/web/src/app/plugins/graph/GraphNodeTagList.test.tsx",
+              "apps/web/src/app/views/canvas/useCanvasGraphFilterController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx",
+              "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx",
+              "apps/web/src/app/views/canvas/canvasNodeMapper.test.ts"
+            ],
+            "fowlerSignals": [
+              "Node tag controls reuse the existing graph-filter query rather than creating parallel selection state.",
+              "Canonical value and localized label travel as one projected tag item.",
+              "Shared semantic-tag guards keep the filter read model free from hidden execution markers."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
+            "architectureGuard": "Direct tag filtering must not mutate the persisted workspace graph draft."
+          },
+          {
+            "name": "DbtNodeRenderer",
+            "path": "apps/web/src/app/plugins/dbt/DbtNodeRenderer.tsx",
+            "cqRails": ["FilterCanvasGraph"],
+            "dddOwner": "CanvasGraphFilter",
+            "unitTests": [
+              "apps/web/src/app/plugins/graph/GraphNodeTagList.test.tsx",
+              "apps/web/src/app/views/canvas/useCanvasGraphFilterController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx",
+              "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx",
+              "apps/web/src/app/views/canvas/canvasNodeMapper.test.ts"
+            ],
+            "fowlerSignals": [
+              "Node tag controls reuse the existing graph-filter query rather than creating parallel selection state.",
+              "Canonical value and localized label travel as one projected tag item.",
+              "Shared semantic-tag guards keep the filter read model free from hidden execution markers."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
+            "architectureGuard": "Direct tag filtering must not mutate the persisted workspace graph draft."
+          },
+          {
+            "name": "CanvasViewport",
+            "path": "apps/web/src/app/views/canvas/CanvasViewport.tsx",
+            "cqRails": ["FilterCanvasGraph"],
+            "dddOwner": "CanvasGraphFilter",
+            "unitTests": [
+              "apps/web/src/app/plugins/graph/GraphNodeTagList.test.tsx",
+              "apps/web/src/app/views/canvas/useCanvasGraphFilterController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx",
+              "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx",
+              "apps/web/src/app/views/canvas/canvasNodeMapper.test.ts"
+            ],
+            "fowlerSignals": [
+              "Node tag controls reuse the existing graph-filter query rather than creating parallel selection state.",
+              "Canonical value and localized label travel as one projected tag item.",
+              "Shared semantic-tag guards keep the filter read model free from hidden execution markers."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
+            "architectureGuard": "Direct tag filtering must not mutate the persisted workspace graph draft."
+          },
+          {
+            "name": "useCanvasNodeWorkbenchDraftController",
+            "path": "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts",
+            "cqRails": ["FilterCanvasGraph"],
+            "dddOwner": "CanvasGraphFilter",
+            "unitTests": [
+              "apps/web/src/app/plugins/graph/GraphNodeTagList.test.tsx",
+              "apps/web/src/app/views/canvas/useCanvasGraphFilterController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx",
+              "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx",
+              "apps/web/src/app/views/canvas/canvasNodeMapper.test.ts"
+            ],
+            "fowlerSignals": [
+              "Node tag controls reuse the existing graph-filter query rather than creating parallel selection state.",
+              "Canonical value and localized label travel as one projected tag item.",
+              "Shared semantic-tag guards keep the filter read model free from hidden execution markers."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
+            "architectureGuard": "Direct tag filtering must not mutate the persisted workspace graph draft."
+          },
+          {
+            "name": "isSemanticCanvasNodeTag",
+            "path": "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts",
+            "cqRails": ["FilterCanvasGraph"],
+            "dddOwner": "CanvasGraphFilter",
+            "unitTests": [
+              "apps/web/src/app/plugins/graph/GraphNodeTagList.test.tsx",
+              "apps/web/src/app/views/canvas/useCanvasGraphFilterController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx",
+              "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx",
+              "apps/web/src/app/views/canvas/canvasNodeMapper.test.ts"
+            ],
+            "fowlerSignals": [
+              "Node tag controls reuse the existing graph-filter query rather than creating parallel selection state.",
+              "Canonical value and localized label travel as one projected tag item.",
+              "Shared semantic-tag guards keep the filter read model free from hidden execution markers."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
+            "architectureGuard": "Direct tag filtering must not mutate the persisted workspace graph draft."
+          },
+          {
+            "name": "mergeBusinessTagsWithSemanticAuthority",
+            "path": "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts",
+            "cqRails": ["FilterCanvasGraph"],
+            "dddOwner": "CanvasGraphFilter",
+            "unitTests": [
+              "apps/web/src/app/plugins/graph/GraphNodeTagList.test.tsx",
+              "apps/web/src/app/views/canvas/useCanvasGraphFilterController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx",
+              "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx",
+              "apps/web/src/app/views/canvas/canvasNodeMapper.test.ts"
+            ],
+            "fowlerSignals": [
+              "Node tag controls reuse the existing graph-filter query rather than creating parallel selection state.",
+              "Canonical value and localized label travel as one projected tag item.",
+              "Shared semantic-tag guards keep the filter read model free from hidden execution markers."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
+            "architectureGuard": "Direct tag filtering must not mutate the persisted workspace graph draft."
+          },
+          {
+            "name": "mapCanonicalNodeToCanvasNode",
+            "path": "apps/web/src/app/views/canvas/canvasNodeMapper.ts",
+            "cqRails": ["FilterCanvasGraph"],
+            "dddOwner": "CanvasGraphFilter",
+            "unitTests": [
+              "apps/web/src/app/plugins/graph/GraphNodeTagList.test.tsx",
+              "apps/web/src/app/views/canvas/useCanvasGraphFilterController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx",
+              "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx",
+              "apps/web/src/app/views/canvas/canvasNodeMapper.test.ts"
+            ],
+            "fowlerSignals": [
+              "Node tag controls reuse the existing graph-filter query rather than creating parallel selection state.",
+              "Canonical value and localized label travel as one projected tag item.",
+              "Shared semantic-tag guards keep the filter read model free from hidden execution markers."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
+            "architectureGuard": "Direct tag filtering must not mutate the persisted workspace graph draft."
+          },
+          {
+            "name": "mapDroppedCanonicalNodeToCanvasNode",
+            "path": "apps/web/src/app/views/canvas/canvasNodeMapper.ts",
+            "cqRails": ["FilterCanvasGraph"],
+            "dddOwner": "CanvasGraphFilter",
+            "unitTests": [
+              "apps/web/src/app/plugins/graph/GraphNodeTagList.test.tsx",
+              "apps/web/src/app/views/canvas/useCanvasGraphFilterController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx",
+              "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx",
+              "apps/web/src/app/views/canvas/canvasNodeMapper.test.ts"
+            ],
+            "fowlerSignals": [
+              "Node tag controls reuse the existing graph-filter query rather than creating parallel selection state.",
+              "Canonical value and localized label travel as one projected tag item.",
+              "Shared semantic-tag guards keep the filter read model free from hidden execution markers."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
+            "architectureGuard": "Direct tag filtering must not mutate the persisted workspace graph draft."
           }
         ],
         "version": 1,
@@ -117966,35 +118266,48 @@
         ],
         "cypressFlows": [
           "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx",
-          "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts"
+          "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
+          "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts"
         ],
-        "domainObjects": ["CanvasGraphFilterQuery"],
+        "domainObjects": [
+          "CanvasGraphFilterQuery",
+          "CanvasNodeTagFilter",
+          "CanvasNodeSemanticTags"
+        ],
         "fowlerSignals": [
           "Pure read model projection with explicit published language",
           "Protected browser evidence exercises the existing filter query without mutating the persisted graph",
           "Protected browser evidence exercises the composed query flow without mutating the persisted graph",
           "database ownership evidence is exported through canonical state",
-          "Filter-specific behavior is owned by FilterCanvasGraph while the protected proof composes independent queries"
+          "Filter-specific behavior is owned by FilterCanvasGraph while the protected proof composes independent queries",
+          "Node tag controls reuse the existing graph-filter query rather than creating parallel selection state.",
+          "Canonical value and localized label travel as one projected tag item.",
+          "Shared semantic-tag guards keep the filter read model free from hidden execution markers."
         ],
         "completionGate": [
           "pnpm --filter @dvt/web typecheck",
           "pnpm --filter @dvt/web lint",
           "pnpm verify:prepush",
           "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-GRAPH-FILTER-2069",
-          "pnpm docs:feature-mechanization:implementation"
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm --filter @dvt/web test:e2e:first-authoring:live"
         ],
         "redGreenCycles": [
           {
             "id": "filtercanvasgraph-record",
-            "redTest": "The combined protected-browser proof attributes search-specific actions to FilterCanvasGraph.",
-            "greenTest": "pnpm docs:feature-mechanization:implementation",
+            "redTest": "pnpm exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/CanvasViewport.graphFilter.test.tsx src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx src/app/views/canvas/canvasNodeMapper.test.ts",
+            "greenTest": "pnpm --filter @dvt/web test:e2e:first-authoring:live",
             "patchSurfaces": [
               "apps/web/src/app/views/canvas/**",
               "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx",
               "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
-              "tools/planning-db/state/canonical-state.json"
+              "tools/planning-db/state/canonical-state.json",
+              "apps/web/src/app/plugins/graph/**",
+              "apps/web/src/app/plugins/dbt/DbtNodeRenderer.tsx",
+              "apps/web/src/app/components/canvas/DbtNodeComponent.tsx",
+              "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts"
             ],
-            "expectedFailure": "FilterCanvasGraph owns openGraphSearch instead of only its filter action and neutral proof harness."
+            "expectedFailure": "Tags are passive, semantic values are exposed, and localized labels are detached from canonical values."
           }
         ],
         "componentGuides": [
@@ -118009,27 +118322,41 @@
             "name": "FilterCanvasGraph",
             "type": "query",
             "status": "implemented",
-            "dddOwner": "CanvasGraphFilter"
+            "dddOwner": "CanvasGraphFilter",
+            "negativeTests": [
+              "reject unknown tags, mismatched projections and duplicate predicates without graph mutation"
+            ],
+            "adapterSurface": "Canvas graph node tag controls",
+            "applicationPort": "useCanvasGraphFilterController.filterByTag query adapter",
+            "authorizationScope": "active authorized workspace graph projection only"
           }
         ],
         "architectureGuards": [
-          "Search and filters remain independent over the same Canvas node projection",
-          "Search and filter browser proof must not mutate the workspace graph draft",
-          "Filter-specific executable evidence belongs to FilterCanvasGraph"
+          "Direct tag filtering must not mutate the persisted workspace graph draft.",
+          "Unknown tags cannot create graph-filter predicates.",
+          "Repeated activation of the same tag remains idempotent.",
+          "Tag projection cannot associate a localized label with a different canonical value.",
+          "Semantic tags remain protected while business tags are filterable."
         ],
-        "implementationPlan": "https://github.com/dunay2/dvt/issues/2069",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2364",
         "mechanizationStatus": "implemented",
         "noHumanDecisionsRemaining": true,
         "allowedImplementationSurfaces": [
           "apps/web/src/app/views/canvas/**",
           "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
-          "tools/planning-db/state/canonical-state.json"
+          "tools/planning-db/state/canonical-state.json",
+          "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx",
+          "apps/web/src/app/plugins/graph/**",
+          "apps/web/src/app/plugins/dbt/DbtNodeRenderer.tsx",
+          "apps/web/src/app/components/canvas/DbtNodeComponent.tsx",
+          "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts"
         ],
         "forbiddenImplementationSurfaces": [
-          "Persisted graph content and execution state"
+          "Persisted graph content and execution state",
+          "apps/api/**"
         ]
       },
-      "revision": 5,
+      "revision": 6,
       "createdBy": "codex",
       "createdAt": "2026-08-04T06:14:05.920Z"
     },
@@ -119676,6 +120003,1272 @@
       "revision": 14,
       "createdBy": "codex",
       "createdAt": "2026-08-04T01:29:12.684Z"
+    },
+    {
+      "railId": "local#CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604#command#configurecanvasdbtnode",
+      "featureId": "CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604",
+      "mechanizationStatus": "implemented",
+      "railName": "ConfigureCanvasDbtNode",
+      "normalizedRailName": "configurecanvasdbtnode",
+      "railType": "command",
+      "dddOwner": "CanvasNodeAuthoringMetadata",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "apps/web/src/app/views/canvas/DbtAuthoringFields.tsx#DbtAuthoringFields",
+        "apps/web/src/app/views/canvas/DbtAuthoringFields.tsx#DbtAuthoringFieldsProps",
+        "apps/web/src/app/views/canvas/canvasInspectorAuthoringErrorCodes.ts#CanvasInspectorNodeDraftErrorCode",
+        "apps/web/src/app/views/canvas/canvasCopyFormatting.ts#formatCanvasInspectorNodeDraftError",
+        "apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.ts#canvasViewAuthoringCopyByKey",
+        "apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.es.ts#canvasViewAuthoringCopyEs",
+        "apps/web/src/app/views/canvas/copy.test.ts#INSPECTOR_DRAFT_ERROR_COPY_KEYS",
+        "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts#useCanvasNodeWorkbenchDraftController",
+        "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts#isSemanticCanvasNodeTag",
+        "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts#mergeBusinessTagsWithSemanticAuthority"
+      ],
+      "implementationRefs": [
+        "apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.es.ts#canvasViewAuthoringCopyEs",
+        "apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.ts#canvasViewAuthoringCopyByKey",
+        "apps/web/src/app/views/canvas/canvasCopyFormatting.ts#formatCanvasInspectorNodeDraftError",
+        "apps/web/src/app/views/canvas/canvasInspectorAuthoringErrorCodes.ts#CanvasInspectorNodeDraftErrorCode",
+        "apps/web/src/app/views/canvas/copy.test.ts#INSPECTOR_DRAFT_ERROR_COPY_KEYS",
+        "apps/web/src/app/views/canvas/DbtAuthoringFields.tsx#DbtAuthoringFields",
+        "apps/web/src/app/views/canvas/DbtAuthoringFields.tsx#DbtAuthoringFieldsProps",
+        "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts#useCanvasNodeWorkbenchDraftController",
+        "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts#isSemanticCanvasNodeTag",
+        "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts#mergeBusinessTagsWithSemanticAuthority"
+      ],
+      "documentationRefs": [
+        {
+          "name": "ConfigureCanvasDbtNode",
+          "path": "docs/architecture/components/web/frontend-command-query-rail-inventory.md",
+          "sourceKind": "documentation"
+        },
+        {
+          "name": "ConfigureCanvasDbtNode",
+          "path": "docs/architecture/components/web/frontend-component-inventory.md",
+          "sourceKind": "documentation"
+        },
+        {
+          "name": "ConfigureCanvasDbtNode",
+          "path": "docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md",
+          "sourceKind": "documentation"
+        },
+        {
+          "name": "ConfigureCanvasDbtNode",
+          "path": "docs/planning/proposals/mandatory/frontend-and-ux/canvas-node-properties-authoring-roundtrip-plan-20260812.md",
+          "sourceKind": "documentation"
+        },
+        {
+          "name": "ConfigureCanvasDbtNode",
+          "path": "docs/planning/proposals/mandatory/frontend-and-ux/canvas-node-workbench-hardening-plan-20260808.md",
+          "sourceKind": "documentation"
+        },
+        {
+          "name": "ConfigureCanvasDbtNode",
+          "path": "docs/planning/proposals/mandatory/frontend-and-ux/dbt-authoring-code-run-vertical-plan-20260526.md",
+          "sourceKind": "documentation"
+        },
+        "https://github.com/dunay2/dvt/issues/2364",
+        "docs/planning/proposals/mandatory/frontend-and-ux/canvas-inspector-plugin-authoring-fields-plan-20260604.md"
+      ],
+      "governingSources": [
+        "AGENTS.md",
+        "docs/planning/status/governance-document-rule-inventory.md",
+        "docs/guides/ai-work-protocol.md",
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md",
+        "docs/architecture/components/web/graph/canvas-inspector-authoring-component.md",
+        "docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "apps/web/src/app/views/canvas/CanvasInspectorAuthoringSection.tsx",
+        "apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx",
+        "apps/web/src/app/views/canvas/DbtAuthoringFields.tsx",
+        "apps/web/src/app/views/canvas/DvtAuthoringFields.tsx",
+        "apps/web/src/app/views/canvas/canvasCopy.types.ts",
+        "apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.ts",
+        "apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.es.ts",
+        "apps/web/src/app/views/canvas/canvasCopyFormatting.ts",
+        "apps/web/src/app/views/canvas/canvasDbtAuthoringRun.architecture.test.ts",
+        "apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.test.ts",
+        "apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts",
+        "apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.ts",
+        "apps/web/src/app/views/canvas/canvasDvtAuthoringModel.ts",
+        "apps/web/src/app/views/canvas/canvasInspectorAuthoring.types.ts",
+        "apps/web/src/app/views/canvas/canvasInspectorAuthoringComponent.architecture.test.ts",
+        "apps/web/src/app/views/canvas/canvasInspectorAuthoringErrorCodes.ts",
+        "apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.test.ts",
+        "apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.ts",
+        "apps/web/src/app/views/canvas/copy.test.ts",
+        "apps/web/src/app/views/canvas/useCanvasExecutionActions.dbt.test.tsx",
+        "apps/web/src/testing/vitestSuites.architecture.test.ts",
+        "apps/web/vitest.suites.ts",
+        "docs/architecture/components/web/graph/canvas-inspector-authoring-component.md",
+        "docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md",
+        "docs/architecture/components/web/web-vitest-changed-suite-router-component.md",
+        "docs/planning/proposals/mandatory/frontend-and-ux/canvas-inspector-plugin-authoring-fields-plan-20260604.md",
+        "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts",
+        "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx",
+        "tools/planning-db/state/canonical-state.json"
+      ],
+      "architectureGuards": [
+        "pnpm --filter @dvt/web test:canvas",
+        "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604",
+        "authoring, template:*, and target:* remain protected from generic tag input.",
+        "Business tag changes preserve semantic authority values exactly."
+      ],
+      "completionGate": [
+        "pnpm --filter @dvt/web test:canvas",
+        "pnpm --filter @dvt/web typecheck",
+        "pnpm --filter @dvt/web lint",
+        "pnpm governance:refresh",
+        "pnpm verify:prepush",
+        "pnpm --filter @dvt/web test:e2e:first-authoring:live"
+      ],
+      "sourcePath": "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts",
+      "sourceContentSha256": "d12400fa96d182cee81f152ce7feae92b4a1486724deebb1b8266e58807a55a8",
+      "rawRail": {
+        "name": "ConfigureCanvasDbtNode",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "CanvasNodeAuthoringMetadata",
+        "negativeTests": [
+          "generic tag edits cannot remove or manufacture reserved semantic tags"
+        ],
+        "adapterSurface": "Canvas node properties General tab",
+        "applicationPort": "useCanvasNodeWorkbenchDraftController tag update command adapter",
+        "authorizationScope": "active authorized workspace draft node only"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "DbtAuthoringFields",
+            "path": "apps/web/src/app/views/canvas/DbtAuthoringFields.tsx",
+            "cqRails": ["ConfigureCanvasDbtNode", "SelectDbtModelOrigin"],
+            "dddOwner": "dbt authoring fields presentation",
+            "unitTests": ["pnpm --filter @dvt/web test:canvas"],
+            "fowlerSignals": ["Extract Component", "Boundary drift"],
+            "cypressCoverage": "N/A - Canvas inspector unit coverage",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604"
+          },
+          {
+            "name": "DbtAuthoringFieldsProps",
+            "path": "apps/web/src/app/views/canvas/DbtAuthoringFields.tsx",
+            "cqRails": ["ConfigureCanvasDbtNode"],
+            "dddOwner": "dbt authoring fields presentation DTO",
+            "unitTests": ["pnpm --filter @dvt/web test:canvas"],
+            "fowlerSignals": ["Data clump"],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604"
+          },
+          {
+            "name": "DbtOriginNode",
+            "path": "apps/web/src/app/views/canvas/DbtAuthoringFields.tsx",
+            "cqRails": ["SelectDbtModelOrigin"],
+            "dddOwner": "DbtSourceRelationshipSelection presentation node guard",
+            "unitTests": ["pnpm --filter @dvt/web test:canvas"],
+            "fowlerSignals": [
+              "Introduce Assertion",
+              "Replace Type Code with Explicit Type"
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604"
+          },
+          {
+            "name": "isDbtOriginNode",
+            "path": "apps/web/src/app/views/canvas/DbtAuthoringFields.tsx",
+            "cqRails": ["SelectDbtModelOrigin"],
+            "dddOwner": "DbtSourceRelationshipSelection presentation node guard",
+            "unitTests": ["pnpm --filter @dvt/web test:canvas"],
+            "fowlerSignals": [
+              "Introduce Assertion",
+              "Replace Type Code with Explicit Type"
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604"
+          },
+          {
+            "name": "buildDbtOriginOptions",
+            "path": "apps/web/src/app/views/canvas/DbtAuthoringFields.tsx",
+            "cqRails": ["SelectDbtModelOrigin"],
+            "dddOwner": "DbtSourceRelationshipSelection presentation",
+            "unitTests": ["pnpm --filter @dvt/web test:canvas"],
+            "fowlerSignals": ["Policy Object"],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604"
+          },
+          {
+            "name": "buildGeneratedDbtModelSqlPreview",
+            "path": "apps/web/src/app/views/canvas/DbtAuthoringFields.tsx",
+            "cqRails": ["GenerateDbtWorkspaceArtifacts"],
+            "dddOwner": "dbt generated SQL preview projection",
+            "unitTests": ["pnpm --filter @dvt/web test:canvas"],
+            "fowlerSignals": ["Hidden authority"],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604"
+          },
+          {
+            "name": "normalizeDbtIdentifier",
+            "path": "apps/web/src/app/views/canvas/DbtAuthoringFields.tsx",
+            "cqRails": ["GenerateDbtWorkspaceArtifacts"],
+            "dddOwner": "dbt generated SQL preview value normalization",
+            "unitTests": ["pnpm --filter @dvt/web test:canvas"],
+            "fowlerSignals": ["Primitive obsession"],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604"
+          },
+          {
+            "name": "resolveDbtModelOrigin",
+            "path": "apps/web/src/app/views/canvas/DbtAuthoringFields.tsx",
+            "cqRails": ["SelectDbtModelOrigin"],
+            "dddOwner": "dbt origin presentation policy",
+            "unitTests": ["pnpm --filter @dvt/web test:canvas"],
+            "fowlerSignals": ["Policy Object"],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604"
+          },
+          {
+            "name": "DvtAuthoringFields",
+            "path": "apps/web/src/app/views/canvas/DvtAuthoringFields.tsx",
+            "cqRails": ["ConfigureCanvasDvtNode"],
+            "dddOwner": "DVT authoring fields presentation",
+            "unitTests": ["pnpm --filter @dvt/web test:canvas"],
+            "fowlerSignals": ["Extract Component"],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604"
+          },
+          {
+            "name": "DvtAuthoringFieldsProps",
+            "path": "apps/web/src/app/views/canvas/DvtAuthoringFields.tsx",
+            "cqRails": ["ConfigureCanvasDvtNode"],
+            "dddOwner": "DVT authoring fields presentation DTO",
+            "unitTests": ["pnpm --filter @dvt/web test:canvas"],
+            "fowlerSignals": ["Data clump"],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604"
+          },
+          {
+            "name": "CanvasInspectorNodeDraftErrorCode",
+            "path": "apps/web/src/app/views/canvas/canvasInspectorAuthoringErrorCodes.ts",
+            "cqRails": ["ConfigureCanvasDbtNode", "ConfigureCanvasDvtNode"],
+            "dddOwner": "Inspector authoring validation vocabulary",
+            "unitTests": ["pnpm --filter @dvt/web test:canvas"],
+            "fowlerSignals": ["Primitive obsession", "Boundary drift"],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604"
+          },
+          {
+            "name": "formatCanvasInspectorNodeDraftError",
+            "path": "apps/web/src/app/views/canvas/canvasCopyFormatting.ts",
+            "cqRails": ["ConfigureCanvasDbtNode", "ConfigureCanvasDvtNode"],
+            "dddOwner": "Inspector authoring copy formatter",
+            "unitTests": ["pnpm --filter @dvt/web test:canvas"],
+            "fowlerSignals": [
+              "Replace Conditional with Polymorphism - not selected",
+              "Extract Function"
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604"
+          },
+          {
+            "name": "canvasViewAuthoringCopyByKey",
+            "path": "apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.ts",
+            "cqRails": ["ConfigureCanvasDbtNode", "ConfigureCanvasDvtNode"],
+            "dddOwner": "Canvas authoring i18n catalog",
+            "unitTests": ["pnpm --filter @dvt/web test:canvas"],
+            "fowlerSignals": ["Duplicate semantics"],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604"
+          },
+          {
+            "name": "canvasViewAuthoringCopyEs",
+            "path": "apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.es.ts",
+            "cqRails": ["ConfigureCanvasDbtNode", "ConfigureCanvasDvtNode"],
+            "dddOwner": "Canvas authoring i18n catalog",
+            "unitTests": ["pnpm --filter @dvt/web test:canvas"],
+            "fowlerSignals": ["Duplicate semantics"],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604"
+          },
+          {
+            "name": "INSPECTOR_DRAFT_ERROR_COPY_KEYS",
+            "path": "apps/web/src/app/views/canvas/copy.test.ts",
+            "cqRails": ["ConfigureCanvasDbtNode", "ConfigureCanvasDvtNode"],
+            "dddOwner": "Inspector authoring copy formatter coverage",
+            "unitTests": ["pnpm --filter @dvt/web test:canvas"],
+            "fowlerSignals": [
+              "Semantic Fitness Function",
+              "Test-only confidence"
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604"
+          },
+          {
+            "name": "tryAddGovernanceSuite",
+            "path": "apps/web/vitest.suites.ts",
+            "cqRails": ["ResolveWebVitestChangedSuitePlan"],
+            "dddOwner": "WebVitestChangedSuiteRouter governance-path routing policy",
+            "unitTests": ["pnpm --filter @dvt/web test:changed"],
+            "fowlerSignals": ["Test-only confidence"],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm --filter @dvt/web test:changed -- --files apps/web/vitest.suites.ts apps/web/src/testing/vitestSuites.architecture.test.ts"
+          },
+          {
+            "name": "resolveSuiteForWebPath",
+            "path": "apps/web/vitest.suites.ts",
+            "cqRails": ["ResolveWebVitestChangedSuitePlan"],
+            "dddOwner": "WebVitestChangedSuiteRouter path-to-suite policy",
+            "unitTests": ["pnpm --filter @dvt/web test:changed"],
+            "fowlerSignals": ["Test-only confidence"],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm --filter @dvt/web test:changed -- --files apps/web/vitest.suites.ts apps/web/src/testing/vitestSuites.architecture.test.ts"
+          },
+          {
+            "name": "resolveWebVitestChangedSuitePlan",
+            "path": "apps/web/vitest.suites.ts",
+            "cqRails": ["ResolveWebVitestChangedSuitePlan"],
+            "dddOwner": "WebVitestChangedSuiteRouter changed-file read model",
+            "unitTests": ["pnpm --filter @dvt/web test:changed"],
+            "fowlerSignals": ["Semantic Fitness Function"],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm --filter @dvt/web test:changed -- --files apps/web/vitest.suites.ts apps/web/src/testing/vitestSuites.architecture.test.ts"
+          },
+          {
+            "name": "DBT_FIELDS_SOURCE",
+            "path": "apps/web/src/app/views/canvas/canvasInspectorAuthoringComponent.architecture.test.ts",
+            "cqRails": ["N/A - architecture test constant"],
+            "dddOwner": "inspector authoring architecture guard fixture",
+            "unitTests": ["pnpm --filter @dvt/web test:canvas"],
+            "fowlerSignals": ["Test-only confidence"],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604"
+          },
+          {
+            "name": "DVT_FIELDS_SOURCE",
+            "path": "apps/web/src/app/views/canvas/canvasInspectorAuthoringComponent.architecture.test.ts",
+            "cqRails": ["N/A - architecture test constant"],
+            "dddOwner": "inspector authoring architecture guard fixture",
+            "unitTests": ["pnpm --filter @dvt/web test:canvas"],
+            "fowlerSignals": ["Test-only confidence"],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604"
+          },
+          {
+            "name": "ERROR_CODES_SOURCE",
+            "path": "apps/web/src/app/views/canvas/canvasInspectorAuthoringComponent.architecture.test.ts",
+            "cqRails": ["N/A - architecture test constant"],
+            "dddOwner": "inspector authoring architecture guard fixture",
+            "unitTests": ["pnpm --filter @dvt/web test:canvas"],
+            "fowlerSignals": ["Test-only confidence"],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604"
+          },
+          {
+            "name": "PANEL_SOURCE",
+            "path": "apps/web/src/app/views/canvas/canvasInspectorAuthoringComponent.architecture.test.ts",
+            "cqRails": ["N/A - architecture test constant"],
+            "dddOwner": "inspector authoring architecture guard fixture",
+            "unitTests": ["pnpm --filter @dvt/web test:canvas"],
+            "fowlerSignals": ["Test-only confidence"],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604"
+          },
+          {
+            "name": "useCanvasNodeWorkbenchDraftController",
+            "path": "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts",
+            "cqRails": ["ConfigureCanvasDbtNode"],
+            "dddOwner": "CanvasNodeAuthoringMetadata",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Business tags stay editable while semantic tags retain command authority.",
+              "A shared workbench controller removes duplicated DBT and DVT tag semantics."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts",
+            "architectureGuard": "authoring, template:*, and target:* remain protected from generic tag input."
+          },
+          {
+            "name": "isSemanticCanvasNodeTag",
+            "path": "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts",
+            "cqRails": ["ConfigureCanvasDbtNode"],
+            "dddOwner": "CanvasNodeAuthoringMetadata",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Business tags stay editable while semantic tags retain command authority.",
+              "A shared workbench controller removes duplicated DBT and DVT tag semantics."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts",
+            "architectureGuard": "authoring, template:*, and target:* remain protected from generic tag input."
+          },
+          {
+            "name": "mergeBusinessTagsWithSemanticAuthority",
+            "path": "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts",
+            "cqRails": ["ConfigureCanvasDbtNode"],
+            "dddOwner": "CanvasNodeAuthoringMetadata",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Business tags stay editable while semantic tags retain command authority.",
+              "A shared workbench controller removes duplicated DBT and DVT tag semantics."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts",
+            "architectureGuard": "authoring, template:*, and target:* remain protected from generic tag input."
+          }
+        ],
+        "version": 1,
+        "featureId": "CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604",
+        "userStories": [
+          "docs/architecture/components/web/graph/canvas-layout-persistence-user-stories.md",
+          "https://github.com/dunay2/dvt/issues/2364"
+        ],
+        "cypressFlows": [
+          "N/A - covered by Canvas inspector unit and architecture tests",
+          "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts"
+        ],
+        "domainObjects": [
+          {
+            "name": "CanvasInspectorAuthoringSection",
+            "type": "presentation orchestrator",
+            "owner": "Canvas Inspector authoring"
+          },
+          {
+            "name": "DbtAuthoringFields",
+            "type": "plugin presentation component",
+            "owner": "dbt authoring controls"
+          },
+          {
+            "name": "DvtAuthoringFields",
+            "type": "plugin presentation component",
+            "owner": "DVT authoring controls"
+          },
+          "CanvasNodeAuthoringMetadata",
+          "CanvasNodeSemanticTags"
+        ],
+        "fowlerSignals": [
+          "Responsibility overload",
+          "Boundary drift",
+          "Hidden authority",
+          "Documentation drift",
+          "Business tags stay editable while semantic tags retain command authority.",
+          "A shared workbench controller removes duplicated DBT and DVT tag semantics."
+        ],
+        "completionGate": [
+          "pnpm --filter @dvt/web test:canvas",
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm --filter @dvt/web lint",
+          "pnpm governance:refresh",
+          "pnpm verify:prepush",
+          "pnpm --filter @dvt/web test:e2e:first-authoring:live"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "inspector-plugin-field-extraction",
+            "redTest": "pnpm docs:feature-mechanization:implementation",
+            "greenTest": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604",
+            "patchSurfaces": [
+              "docs/planning/proposals/mandatory/frontend-and-ux/canvas-inspector-plugin-authoring-fields-plan-20260604.md",
+              "apps/web/src/app/views/canvas/DbtAuthoringFields.tsx",
+              "apps/web/src/app/views/canvas/DvtAuthoringFields.tsx",
+              "apps/web/src/app/views/canvas/CanvasInspectorAuthoringSection.tsx"
+            ],
+            "expectedFailure": "New dbt/DVT authoring field symbols are outside the declared feature mechanization surface."
+          },
+          {
+            "id": "dbt-generated-sql-preview",
+            "redTest": "pnpm --filter @dvt/web test:canvas -- src/app/views/canvas/useCanvasExecutionActions.dbt.test.tsx",
+            "greenTest": "pnpm --filter @dvt/web test:canvas",
+            "patchSurfaces": [
+              "apps/web/src/app/views/canvas/DbtAuthoringFields.tsx",
+              "apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.ts",
+              "apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.test.ts",
+              "apps/web/src/app/views/canvas/useCanvasExecutionActions.dbt.test.tsx"
+            ],
+            "expectedFailure": "The dbt model without explicit SQL is blocked by generic Canvas policy instead of plugin projection."
+          },
+          {
+            "id": "inspector-plugin-authoring-i18n-boundary",
+            "redTest": "pnpm --filter @dvt/web test:canvas:run -- src/app/views/canvas/copy.test.ts src/app/views/canvas/canvasInspectorAuthoringModel.test.ts src/app/views/canvas/canvasInspectorAuthoringComponent.architecture.test.ts",
+            "greenTest": "pnpm --filter @dvt/web test:canvas:run -- src/app/views/canvas/copy.test.ts src/app/views/canvas/canvasInspectorAuthoringModel.test.ts src/app/views/canvas/canvasInspectorAuthoringComponent.architecture.test.ts",
+            "patchSurfaces": [
+              "apps/web/src/app/views/canvas/CanvasInspectorAuthoringSection.tsx",
+              "apps/web/src/app/views/canvas/DbtAuthoringFields.tsx",
+              "apps/web/src/app/views/canvas/DvtAuthoringFields.tsx",
+              "apps/web/src/app/views/canvas/canvasCopy.types.ts",
+              "apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.ts",
+              "apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.es.ts",
+              "apps/web/src/app/views/canvas/canvasCopyFormatting.ts",
+              "apps/web/src/app/views/canvas/canvasDvtAuthoringModel.ts",
+              "apps/web/src/app/views/canvas/canvasInspectorAuthoring.types.ts",
+              "apps/web/src/app/views/canvas/canvasInspectorAuthoringErrorCodes.ts",
+              "apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.ts",
+              "apps/web/src/app/views/canvas/copy.test.ts",
+              "apps/web/src/app/views/canvas/canvasInspectorAuthoringComponent.architecture.test.ts"
+            ],
+            "expectedFailure": "Plugin authoring fields embed visible English labels and validation messages instead of resolving Canvas copy."
+          },
+          {
+            "id": "configurecanvasdbtnode-record",
+            "redTest": "pnpm exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx",
+            "greenTest": "pnpm exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx",
+            "patchSurfaces": [
+              "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts",
+              "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx"
+            ],
+            "expectedFailure": "Generic tag input exposes and can overwrite semantic command tags."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/components/web/graph/canvas-inspector-authoring-component.md",
+          "docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md",
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/guides/ai-work-protocol.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/architecture/components/web/graph/canvas-inspector-authoring-component.md",
+          "docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ConfigureCanvasDbtNode",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "CanvasNodeAuthoringMetadata",
+            "negativeTests": [
+              "generic tag edits cannot remove or manufacture reserved semantic tags"
+            ],
+            "adapterSurface": "Canvas node properties General tab",
+            "applicationPort": "useCanvasNodeWorkbenchDraftController tag update command adapter",
+            "authorizationScope": "active authorized workspace draft node only"
+          },
+          {
+            "name": "SelectDbtModelOrigin",
+            "type": "command",
+            "dddOwner": "DbtSourceRelationshipSelection"
+          },
+          {
+            "name": "GenerateDbtWorkspaceArtifacts",
+            "type": "command",
+            "dddOwner": "DbtWorkspaceArtifactProjection"
+          },
+          {
+            "name": "BuildDbtPlannerGraphSource",
+            "type": "query",
+            "dddOwner": "DbtCanvasGraphSourceProjection"
+          },
+          {
+            "name": "ConfigureCanvasDvtNode",
+            "type": "command",
+            "dddOwner": "DvtNodeAuthoringMetadata"
+          },
+          {
+            "name": "GenerateTransformationWorkspaceArtifacts",
+            "type": "command",
+            "dddOwner": "TransformationWorkspaceArtifactProjection"
+          },
+          {
+            "name": "ResolveWebVitestChangedSuitePlan",
+            "type": "query",
+            "dddOwner": "WebVitestChangedSuiteRouter"
+          }
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/web test:canvas",
+          "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604",
+          "authoring, template:*, and target:* remain protected from generic tag input.",
+          "Business tag changes preserve semantic authority values exactly."
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2364",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/views/canvas/CanvasInspectorAuthoringSection.tsx",
+          "apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx",
+          "apps/web/src/app/views/canvas/DbtAuthoringFields.tsx",
+          "apps/web/src/app/views/canvas/DvtAuthoringFields.tsx",
+          "apps/web/src/app/views/canvas/canvasCopy.types.ts",
+          "apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.ts",
+          "apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.es.ts",
+          "apps/web/src/app/views/canvas/canvasCopyFormatting.ts",
+          "apps/web/src/app/views/canvas/canvasDbtAuthoringRun.architecture.test.ts",
+          "apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.test.ts",
+          "apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts",
+          "apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.ts",
+          "apps/web/src/app/views/canvas/canvasDvtAuthoringModel.ts",
+          "apps/web/src/app/views/canvas/canvasInspectorAuthoring.types.ts",
+          "apps/web/src/app/views/canvas/canvasInspectorAuthoringComponent.architecture.test.ts",
+          "apps/web/src/app/views/canvas/canvasInspectorAuthoringErrorCodes.ts",
+          "apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.test.ts",
+          "apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.ts",
+          "apps/web/src/app/views/canvas/copy.test.ts",
+          "apps/web/src/app/views/canvas/useCanvasExecutionActions.dbt.test.tsx",
+          "apps/web/src/testing/vitestSuites.architecture.test.ts",
+          "apps/web/vitest.suites.ts",
+          "docs/architecture/components/web/graph/canvas-inspector-authoring-component.md",
+          "docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md",
+          "docs/architecture/components/web/web-vitest-changed-suite-router-component.md",
+          "docs/planning/proposals/mandatory/frontend-and-ux/canvas-inspector-plugin-authoring-fields-plan-20260604.md",
+          "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts",
+          "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/**",
+          "packages/@dvt/contracts/**",
+          "packages/@dvt/engine/**",
+          "packages/@dvt/adapter-*/**",
+          "packages/@dvt/planner/**",
+          "specs/**"
+        ]
+      },
+      "revision": 0,
+      "createdBy": "codex",
+      "createdAt": "2026-08-15T01:30:58.881Z"
+    },
+    {
+      "railId": "local#CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604#command#configurecanvasdvtnode",
+      "featureId": "CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604",
+      "mechanizationStatus": "implemented",
+      "railName": "ConfigureCanvasDvtNode",
+      "normalizedRailName": "configurecanvasdvtnode",
+      "railType": "command",
+      "dddOwner": "CanvasNodeAuthoringMetadata",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "apps/web/src/app/views/canvas/DvtAuthoringFields.tsx#DvtAuthoringFields",
+        "apps/web/src/app/views/canvas/DvtAuthoringFields.tsx#DvtAuthoringFieldsProps",
+        "apps/web/src/app/views/canvas/canvasInspectorAuthoringErrorCodes.ts#CanvasInspectorNodeDraftErrorCode",
+        "apps/web/src/app/views/canvas/canvasCopyFormatting.ts#formatCanvasInspectorNodeDraftError",
+        "apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.ts#canvasViewAuthoringCopyByKey",
+        "apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.es.ts#canvasViewAuthoringCopyEs",
+        "apps/web/src/app/views/canvas/copy.test.ts#INSPECTOR_DRAFT_ERROR_COPY_KEYS",
+        "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts#useCanvasNodeWorkbenchDraftController",
+        "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts#isSemanticCanvasNodeTag",
+        "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts#mergeBusinessTagsWithSemanticAuthority"
+      ],
+      "implementationRefs": [
+        "apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.es.ts#canvasViewAuthoringCopyEs",
+        "apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.ts#canvasViewAuthoringCopyByKey",
+        "apps/web/src/app/views/canvas/canvasCopyFormatting.ts#formatCanvasInspectorNodeDraftError",
+        "apps/web/src/app/views/canvas/canvasInspectorAuthoringErrorCodes.ts#CanvasInspectorNodeDraftErrorCode",
+        "apps/web/src/app/views/canvas/copy.test.ts#INSPECTOR_DRAFT_ERROR_COPY_KEYS",
+        "apps/web/src/app/views/canvas/DvtAuthoringFields.tsx#DvtAuthoringFields",
+        "apps/web/src/app/views/canvas/DvtAuthoringFields.tsx#DvtAuthoringFieldsProps",
+        "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts#useCanvasNodeWorkbenchDraftController",
+        "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts#isSemanticCanvasNodeTag",
+        "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts#mergeBusinessTagsWithSemanticAuthority"
+      ],
+      "documentationRefs": [
+        {
+          "name": "ConfigureCanvasDvtNode",
+          "path": "docs/architecture/components/web/frontend-command-query-rail-inventory.md",
+          "sourceKind": "documentation"
+        },
+        {
+          "name": "ConfigureCanvasDvtNode",
+          "path": "docs/architecture/components/web/frontend-component-inventory.md",
+          "sourceKind": "documentation"
+        },
+        {
+          "name": "ConfigureCanvasDvtNode",
+          "path": "docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md",
+          "sourceKind": "documentation"
+        },
+        {
+          "name": "ConfigureCanvasDvtNode",
+          "path": "docs/planning/proposals/mandatory/frontend-and-ux/canvas-node-properties-authoring-roundtrip-plan-20260812.md",
+          "sourceKind": "documentation"
+        },
+        {
+          "name": "ConfigureCanvasDvtNode",
+          "path": "docs/planning/proposals/mandatory/frontend-and-ux/canvas-node-workbench-hardening-plan-20260808.md",
+          "sourceKind": "documentation"
+        },
+        {
+          "name": "ConfigureCanvasDvtNode",
+          "path": "docs/planning/proposals/mandatory/frontend-and-ux/e-dvt-inspector-panels-plan-20260601.md",
+          "sourceKind": "documentation"
+        },
+        {
+          "name": "ConfigureCanvasDvtNode",
+          "path": "docs/planning/proposals/mandatory/frontend-and-ux/sql-canvas-demanding-user-flow-review-plan-20260608.md",
+          "sourceKind": "documentation"
+        },
+        {
+          "name": "ConfigureCanvasDvtNode",
+          "path": "docs/planning/reviews/20260608-sql-canvas-demanding-user-flow-review.md",
+          "sourceKind": "documentation"
+        },
+        "https://github.com/dunay2/dvt/issues/2364",
+        "docs/planning/proposals/mandatory/frontend-and-ux/canvas-inspector-plugin-authoring-fields-plan-20260604.md"
+      ],
+      "governingSources": [
+        "AGENTS.md",
+        "docs/planning/status/governance-document-rule-inventory.md",
+        "docs/guides/ai-work-protocol.md",
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md",
+        "docs/architecture/components/web/graph/canvas-inspector-authoring-component.md",
+        "docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "apps/web/src/app/views/canvas/CanvasInspectorAuthoringSection.tsx",
+        "apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx",
+        "apps/web/src/app/views/canvas/DbtAuthoringFields.tsx",
+        "apps/web/src/app/views/canvas/DvtAuthoringFields.tsx",
+        "apps/web/src/app/views/canvas/canvasCopy.types.ts",
+        "apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.ts",
+        "apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.es.ts",
+        "apps/web/src/app/views/canvas/canvasCopyFormatting.ts",
+        "apps/web/src/app/views/canvas/canvasDbtAuthoringRun.architecture.test.ts",
+        "apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.test.ts",
+        "apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts",
+        "apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.ts",
+        "apps/web/src/app/views/canvas/canvasDvtAuthoringModel.ts",
+        "apps/web/src/app/views/canvas/canvasInspectorAuthoring.types.ts",
+        "apps/web/src/app/views/canvas/canvasInspectorAuthoringComponent.architecture.test.ts",
+        "apps/web/src/app/views/canvas/canvasInspectorAuthoringErrorCodes.ts",
+        "apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.test.ts",
+        "apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.ts",
+        "apps/web/src/app/views/canvas/copy.test.ts",
+        "apps/web/src/app/views/canvas/useCanvasExecutionActions.dbt.test.tsx",
+        "apps/web/src/testing/vitestSuites.architecture.test.ts",
+        "apps/web/vitest.suites.ts",
+        "docs/architecture/components/web/graph/canvas-inspector-authoring-component.md",
+        "docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md",
+        "docs/architecture/components/web/web-vitest-changed-suite-router-component.md",
+        "docs/planning/proposals/mandatory/frontend-and-ux/canvas-inspector-plugin-authoring-fields-plan-20260604.md",
+        "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts",
+        "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx",
+        "tools/planning-db/state/canonical-state.json"
+      ],
+      "architectureGuards": [
+        "pnpm --filter @dvt/web test:canvas",
+        "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604",
+        "authoring, template:*, and target:* remain protected from generic tag input.",
+        "Business tag changes preserve semantic authority values exactly."
+      ],
+      "completionGate": [
+        "pnpm --filter @dvt/web test:canvas",
+        "pnpm --filter @dvt/web typecheck",
+        "pnpm --filter @dvt/web lint",
+        "pnpm governance:refresh",
+        "pnpm verify:prepush",
+        "pnpm --filter @dvt/web test:e2e:first-authoring:live"
+      ],
+      "sourcePath": "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts",
+      "sourceContentSha256": "d12400fa96d182cee81f152ce7feae92b4a1486724deebb1b8266e58807a55a8",
+      "rawRail": {
+        "name": "ConfigureCanvasDvtNode",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "CanvasNodeAuthoringMetadata",
+        "negativeTests": [
+          "generic tag edits cannot remove or manufacture reserved semantic tags"
+        ],
+        "adapterSurface": "Canvas node properties General tab",
+        "applicationPort": "useCanvasNodeWorkbenchDraftController tag update command adapter",
+        "authorizationScope": "active authorized workspace draft node only"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "DbtAuthoringFields",
+            "path": "apps/web/src/app/views/canvas/DbtAuthoringFields.tsx",
+            "cqRails": ["ConfigureCanvasDbtNode", "SelectDbtModelOrigin"],
+            "dddOwner": "dbt authoring fields presentation",
+            "unitTests": ["pnpm --filter @dvt/web test:canvas"],
+            "fowlerSignals": ["Extract Component", "Boundary drift"],
+            "cypressCoverage": "N/A - Canvas inspector unit coverage",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604"
+          },
+          {
+            "name": "DbtAuthoringFieldsProps",
+            "path": "apps/web/src/app/views/canvas/DbtAuthoringFields.tsx",
+            "cqRails": ["ConfigureCanvasDbtNode"],
+            "dddOwner": "dbt authoring fields presentation DTO",
+            "unitTests": ["pnpm --filter @dvt/web test:canvas"],
+            "fowlerSignals": ["Data clump"],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604"
+          },
+          {
+            "name": "DbtOriginNode",
+            "path": "apps/web/src/app/views/canvas/DbtAuthoringFields.tsx",
+            "cqRails": ["SelectDbtModelOrigin"],
+            "dddOwner": "DbtSourceRelationshipSelection presentation node guard",
+            "unitTests": ["pnpm --filter @dvt/web test:canvas"],
+            "fowlerSignals": [
+              "Introduce Assertion",
+              "Replace Type Code with Explicit Type"
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604"
+          },
+          {
+            "name": "isDbtOriginNode",
+            "path": "apps/web/src/app/views/canvas/DbtAuthoringFields.tsx",
+            "cqRails": ["SelectDbtModelOrigin"],
+            "dddOwner": "DbtSourceRelationshipSelection presentation node guard",
+            "unitTests": ["pnpm --filter @dvt/web test:canvas"],
+            "fowlerSignals": [
+              "Introduce Assertion",
+              "Replace Type Code with Explicit Type"
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604"
+          },
+          {
+            "name": "buildDbtOriginOptions",
+            "path": "apps/web/src/app/views/canvas/DbtAuthoringFields.tsx",
+            "cqRails": ["SelectDbtModelOrigin"],
+            "dddOwner": "DbtSourceRelationshipSelection presentation",
+            "unitTests": ["pnpm --filter @dvt/web test:canvas"],
+            "fowlerSignals": ["Policy Object"],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604"
+          },
+          {
+            "name": "buildGeneratedDbtModelSqlPreview",
+            "path": "apps/web/src/app/views/canvas/DbtAuthoringFields.tsx",
+            "cqRails": ["GenerateDbtWorkspaceArtifacts"],
+            "dddOwner": "dbt generated SQL preview projection",
+            "unitTests": ["pnpm --filter @dvt/web test:canvas"],
+            "fowlerSignals": ["Hidden authority"],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604"
+          },
+          {
+            "name": "normalizeDbtIdentifier",
+            "path": "apps/web/src/app/views/canvas/DbtAuthoringFields.tsx",
+            "cqRails": ["GenerateDbtWorkspaceArtifacts"],
+            "dddOwner": "dbt generated SQL preview value normalization",
+            "unitTests": ["pnpm --filter @dvt/web test:canvas"],
+            "fowlerSignals": ["Primitive obsession"],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604"
+          },
+          {
+            "name": "resolveDbtModelOrigin",
+            "path": "apps/web/src/app/views/canvas/DbtAuthoringFields.tsx",
+            "cqRails": ["SelectDbtModelOrigin"],
+            "dddOwner": "dbt origin presentation policy",
+            "unitTests": ["pnpm --filter @dvt/web test:canvas"],
+            "fowlerSignals": ["Policy Object"],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604"
+          },
+          {
+            "name": "DvtAuthoringFields",
+            "path": "apps/web/src/app/views/canvas/DvtAuthoringFields.tsx",
+            "cqRails": ["ConfigureCanvasDvtNode"],
+            "dddOwner": "DVT authoring fields presentation",
+            "unitTests": ["pnpm --filter @dvt/web test:canvas"],
+            "fowlerSignals": ["Extract Component"],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604"
+          },
+          {
+            "name": "DvtAuthoringFieldsProps",
+            "path": "apps/web/src/app/views/canvas/DvtAuthoringFields.tsx",
+            "cqRails": ["ConfigureCanvasDvtNode"],
+            "dddOwner": "DVT authoring fields presentation DTO",
+            "unitTests": ["pnpm --filter @dvt/web test:canvas"],
+            "fowlerSignals": ["Data clump"],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604"
+          },
+          {
+            "name": "CanvasInspectorNodeDraftErrorCode",
+            "path": "apps/web/src/app/views/canvas/canvasInspectorAuthoringErrorCodes.ts",
+            "cqRails": ["ConfigureCanvasDbtNode", "ConfigureCanvasDvtNode"],
+            "dddOwner": "Inspector authoring validation vocabulary",
+            "unitTests": ["pnpm --filter @dvt/web test:canvas"],
+            "fowlerSignals": ["Primitive obsession", "Boundary drift"],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604"
+          },
+          {
+            "name": "formatCanvasInspectorNodeDraftError",
+            "path": "apps/web/src/app/views/canvas/canvasCopyFormatting.ts",
+            "cqRails": ["ConfigureCanvasDbtNode", "ConfigureCanvasDvtNode"],
+            "dddOwner": "Inspector authoring copy formatter",
+            "unitTests": ["pnpm --filter @dvt/web test:canvas"],
+            "fowlerSignals": [
+              "Replace Conditional with Polymorphism - not selected",
+              "Extract Function"
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604"
+          },
+          {
+            "name": "canvasViewAuthoringCopyByKey",
+            "path": "apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.ts",
+            "cqRails": ["ConfigureCanvasDbtNode", "ConfigureCanvasDvtNode"],
+            "dddOwner": "Canvas authoring i18n catalog",
+            "unitTests": ["pnpm --filter @dvt/web test:canvas"],
+            "fowlerSignals": ["Duplicate semantics"],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604"
+          },
+          {
+            "name": "canvasViewAuthoringCopyEs",
+            "path": "apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.es.ts",
+            "cqRails": ["ConfigureCanvasDbtNode", "ConfigureCanvasDvtNode"],
+            "dddOwner": "Canvas authoring i18n catalog",
+            "unitTests": ["pnpm --filter @dvt/web test:canvas"],
+            "fowlerSignals": ["Duplicate semantics"],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604"
+          },
+          {
+            "name": "INSPECTOR_DRAFT_ERROR_COPY_KEYS",
+            "path": "apps/web/src/app/views/canvas/copy.test.ts",
+            "cqRails": ["ConfigureCanvasDbtNode", "ConfigureCanvasDvtNode"],
+            "dddOwner": "Inspector authoring copy formatter coverage",
+            "unitTests": ["pnpm --filter @dvt/web test:canvas"],
+            "fowlerSignals": [
+              "Semantic Fitness Function",
+              "Test-only confidence"
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604"
+          },
+          {
+            "name": "tryAddGovernanceSuite",
+            "path": "apps/web/vitest.suites.ts",
+            "cqRails": ["ResolveWebVitestChangedSuitePlan"],
+            "dddOwner": "WebVitestChangedSuiteRouter governance-path routing policy",
+            "unitTests": ["pnpm --filter @dvt/web test:changed"],
+            "fowlerSignals": ["Test-only confidence"],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm --filter @dvt/web test:changed -- --files apps/web/vitest.suites.ts apps/web/src/testing/vitestSuites.architecture.test.ts"
+          },
+          {
+            "name": "resolveSuiteForWebPath",
+            "path": "apps/web/vitest.suites.ts",
+            "cqRails": ["ResolveWebVitestChangedSuitePlan"],
+            "dddOwner": "WebVitestChangedSuiteRouter path-to-suite policy",
+            "unitTests": ["pnpm --filter @dvt/web test:changed"],
+            "fowlerSignals": ["Test-only confidence"],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm --filter @dvt/web test:changed -- --files apps/web/vitest.suites.ts apps/web/src/testing/vitestSuites.architecture.test.ts"
+          },
+          {
+            "name": "resolveWebVitestChangedSuitePlan",
+            "path": "apps/web/vitest.suites.ts",
+            "cqRails": ["ResolveWebVitestChangedSuitePlan"],
+            "dddOwner": "WebVitestChangedSuiteRouter changed-file read model",
+            "unitTests": ["pnpm --filter @dvt/web test:changed"],
+            "fowlerSignals": ["Semantic Fitness Function"],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm --filter @dvt/web test:changed -- --files apps/web/vitest.suites.ts apps/web/src/testing/vitestSuites.architecture.test.ts"
+          },
+          {
+            "name": "DBT_FIELDS_SOURCE",
+            "path": "apps/web/src/app/views/canvas/canvasInspectorAuthoringComponent.architecture.test.ts",
+            "cqRails": ["N/A - architecture test constant"],
+            "dddOwner": "inspector authoring architecture guard fixture",
+            "unitTests": ["pnpm --filter @dvt/web test:canvas"],
+            "fowlerSignals": ["Test-only confidence"],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604"
+          },
+          {
+            "name": "DVT_FIELDS_SOURCE",
+            "path": "apps/web/src/app/views/canvas/canvasInspectorAuthoringComponent.architecture.test.ts",
+            "cqRails": ["N/A - architecture test constant"],
+            "dddOwner": "inspector authoring architecture guard fixture",
+            "unitTests": ["pnpm --filter @dvt/web test:canvas"],
+            "fowlerSignals": ["Test-only confidence"],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604"
+          },
+          {
+            "name": "ERROR_CODES_SOURCE",
+            "path": "apps/web/src/app/views/canvas/canvasInspectorAuthoringComponent.architecture.test.ts",
+            "cqRails": ["N/A - architecture test constant"],
+            "dddOwner": "inspector authoring architecture guard fixture",
+            "unitTests": ["pnpm --filter @dvt/web test:canvas"],
+            "fowlerSignals": ["Test-only confidence"],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604"
+          },
+          {
+            "name": "PANEL_SOURCE",
+            "path": "apps/web/src/app/views/canvas/canvasInspectorAuthoringComponent.architecture.test.ts",
+            "cqRails": ["N/A - architecture test constant"],
+            "dddOwner": "inspector authoring architecture guard fixture",
+            "unitTests": ["pnpm --filter @dvt/web test:canvas"],
+            "fowlerSignals": ["Test-only confidence"],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604"
+          },
+          {
+            "name": "useCanvasNodeWorkbenchDraftController",
+            "path": "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts",
+            "cqRails": ["ConfigureCanvasDvtNode"],
+            "dddOwner": "CanvasNodeAuthoringMetadata",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Business tags stay editable while semantic tags retain command authority.",
+              "A shared workbench controller removes duplicated DBT and DVT tag semantics."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts",
+            "architectureGuard": "authoring, template:*, and target:* remain protected from generic tag input."
+          },
+          {
+            "name": "isSemanticCanvasNodeTag",
+            "path": "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts",
+            "cqRails": ["ConfigureCanvasDvtNode"],
+            "dddOwner": "CanvasNodeAuthoringMetadata",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Business tags stay editable while semantic tags retain command authority.",
+              "A shared workbench controller removes duplicated DBT and DVT tag semantics."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts",
+            "architectureGuard": "authoring, template:*, and target:* remain protected from generic tag input."
+          },
+          {
+            "name": "mergeBusinessTagsWithSemanticAuthority",
+            "path": "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts",
+            "cqRails": ["ConfigureCanvasDvtNode"],
+            "dddOwner": "CanvasNodeAuthoringMetadata",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Business tags stay editable while semantic tags retain command authority.",
+              "A shared workbench controller removes duplicated DBT and DVT tag semantics."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts",
+            "architectureGuard": "authoring, template:*, and target:* remain protected from generic tag input."
+          }
+        ],
+        "version": 1,
+        "featureId": "CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604",
+        "userStories": [
+          "docs/architecture/components/web/graph/canvas-layout-persistence-user-stories.md",
+          "https://github.com/dunay2/dvt/issues/2364"
+        ],
+        "cypressFlows": [
+          "N/A - covered by Canvas inspector unit and architecture tests",
+          "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts"
+        ],
+        "domainObjects": [
+          {
+            "name": "CanvasInspectorAuthoringSection",
+            "type": "presentation orchestrator",
+            "owner": "Canvas Inspector authoring"
+          },
+          {
+            "name": "DbtAuthoringFields",
+            "type": "plugin presentation component",
+            "owner": "dbt authoring controls"
+          },
+          {
+            "name": "DvtAuthoringFields",
+            "type": "plugin presentation component",
+            "owner": "DVT authoring controls"
+          },
+          "CanvasNodeAuthoringMetadata",
+          "CanvasNodeSemanticTags"
+        ],
+        "fowlerSignals": [
+          "Responsibility overload",
+          "Boundary drift",
+          "Hidden authority",
+          "Documentation drift",
+          "Business tags stay editable while semantic tags retain command authority.",
+          "A shared workbench controller removes duplicated DBT and DVT tag semantics."
+        ],
+        "completionGate": [
+          "pnpm --filter @dvt/web test:canvas",
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm --filter @dvt/web lint",
+          "pnpm governance:refresh",
+          "pnpm verify:prepush",
+          "pnpm --filter @dvt/web test:e2e:first-authoring:live"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "inspector-plugin-field-extraction",
+            "redTest": "pnpm docs:feature-mechanization:implementation",
+            "greenTest": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604",
+            "patchSurfaces": [
+              "docs/planning/proposals/mandatory/frontend-and-ux/canvas-inspector-plugin-authoring-fields-plan-20260604.md",
+              "apps/web/src/app/views/canvas/DbtAuthoringFields.tsx",
+              "apps/web/src/app/views/canvas/DvtAuthoringFields.tsx",
+              "apps/web/src/app/views/canvas/CanvasInspectorAuthoringSection.tsx"
+            ],
+            "expectedFailure": "New dbt/DVT authoring field symbols are outside the declared feature mechanization surface."
+          },
+          {
+            "id": "dbt-generated-sql-preview",
+            "redTest": "pnpm --filter @dvt/web test:canvas -- src/app/views/canvas/useCanvasExecutionActions.dbt.test.tsx",
+            "greenTest": "pnpm --filter @dvt/web test:canvas",
+            "patchSurfaces": [
+              "apps/web/src/app/views/canvas/DbtAuthoringFields.tsx",
+              "apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.ts",
+              "apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.test.ts",
+              "apps/web/src/app/views/canvas/useCanvasExecutionActions.dbt.test.tsx"
+            ],
+            "expectedFailure": "The dbt model without explicit SQL is blocked by generic Canvas policy instead of plugin projection."
+          },
+          {
+            "id": "inspector-plugin-authoring-i18n-boundary",
+            "redTest": "pnpm --filter @dvt/web test:canvas:run -- src/app/views/canvas/copy.test.ts src/app/views/canvas/canvasInspectorAuthoringModel.test.ts src/app/views/canvas/canvasInspectorAuthoringComponent.architecture.test.ts",
+            "greenTest": "pnpm --filter @dvt/web test:canvas:run -- src/app/views/canvas/copy.test.ts src/app/views/canvas/canvasInspectorAuthoringModel.test.ts src/app/views/canvas/canvasInspectorAuthoringComponent.architecture.test.ts",
+            "patchSurfaces": [
+              "apps/web/src/app/views/canvas/CanvasInspectorAuthoringSection.tsx",
+              "apps/web/src/app/views/canvas/DbtAuthoringFields.tsx",
+              "apps/web/src/app/views/canvas/DvtAuthoringFields.tsx",
+              "apps/web/src/app/views/canvas/canvasCopy.types.ts",
+              "apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.ts",
+              "apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.es.ts",
+              "apps/web/src/app/views/canvas/canvasCopyFormatting.ts",
+              "apps/web/src/app/views/canvas/canvasDvtAuthoringModel.ts",
+              "apps/web/src/app/views/canvas/canvasInspectorAuthoring.types.ts",
+              "apps/web/src/app/views/canvas/canvasInspectorAuthoringErrorCodes.ts",
+              "apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.ts",
+              "apps/web/src/app/views/canvas/copy.test.ts",
+              "apps/web/src/app/views/canvas/canvasInspectorAuthoringComponent.architecture.test.ts"
+            ],
+            "expectedFailure": "Plugin authoring fields embed visible English labels and validation messages instead of resolving Canvas copy."
+          },
+          {
+            "id": "configurecanvasdvtnode-record",
+            "redTest": "pnpm exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx",
+            "greenTest": "pnpm exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx",
+            "patchSurfaces": [
+              "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts",
+              "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx"
+            ],
+            "expectedFailure": "Generic tag input exposes and can overwrite semantic command tags."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/components/web/graph/canvas-inspector-authoring-component.md",
+          "docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md",
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/guides/ai-work-protocol.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/architecture/components/web/graph/canvas-inspector-authoring-component.md",
+          "docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ConfigureCanvasDbtNode",
+            "type": "command",
+            "dddOwner": "DbtNodeAuthoringMetadata"
+          },
+          {
+            "name": "SelectDbtModelOrigin",
+            "type": "command",
+            "dddOwner": "DbtSourceRelationshipSelection"
+          },
+          {
+            "name": "GenerateDbtWorkspaceArtifacts",
+            "type": "command",
+            "dddOwner": "DbtWorkspaceArtifactProjection"
+          },
+          {
+            "name": "BuildDbtPlannerGraphSource",
+            "type": "query",
+            "dddOwner": "DbtCanvasGraphSourceProjection"
+          },
+          {
+            "name": "ConfigureCanvasDvtNode",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "CanvasNodeAuthoringMetadata",
+            "negativeTests": [
+              "generic tag edits cannot remove or manufacture reserved semantic tags"
+            ],
+            "adapterSurface": "Canvas node properties General tab",
+            "applicationPort": "useCanvasNodeWorkbenchDraftController tag update command adapter",
+            "authorizationScope": "active authorized workspace draft node only"
+          },
+          {
+            "name": "GenerateTransformationWorkspaceArtifacts",
+            "type": "command",
+            "dddOwner": "TransformationWorkspaceArtifactProjection"
+          },
+          {
+            "name": "ResolveWebVitestChangedSuitePlan",
+            "type": "query",
+            "dddOwner": "WebVitestChangedSuiteRouter"
+          }
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/web test:canvas",
+          "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604",
+          "authoring, template:*, and target:* remain protected from generic tag input.",
+          "Business tag changes preserve semantic authority values exactly."
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2364",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/views/canvas/CanvasInspectorAuthoringSection.tsx",
+          "apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx",
+          "apps/web/src/app/views/canvas/DbtAuthoringFields.tsx",
+          "apps/web/src/app/views/canvas/DvtAuthoringFields.tsx",
+          "apps/web/src/app/views/canvas/canvasCopy.types.ts",
+          "apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.ts",
+          "apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.es.ts",
+          "apps/web/src/app/views/canvas/canvasCopyFormatting.ts",
+          "apps/web/src/app/views/canvas/canvasDbtAuthoringRun.architecture.test.ts",
+          "apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.test.ts",
+          "apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts",
+          "apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.ts",
+          "apps/web/src/app/views/canvas/canvasDvtAuthoringModel.ts",
+          "apps/web/src/app/views/canvas/canvasInspectorAuthoring.types.ts",
+          "apps/web/src/app/views/canvas/canvasInspectorAuthoringComponent.architecture.test.ts",
+          "apps/web/src/app/views/canvas/canvasInspectorAuthoringErrorCodes.ts",
+          "apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.test.ts",
+          "apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.ts",
+          "apps/web/src/app/views/canvas/copy.test.ts",
+          "apps/web/src/app/views/canvas/useCanvasExecutionActions.dbt.test.tsx",
+          "apps/web/src/testing/vitestSuites.architecture.test.ts",
+          "apps/web/vitest.suites.ts",
+          "docs/architecture/components/web/graph/canvas-inspector-authoring-component.md",
+          "docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md",
+          "docs/architecture/components/web/web-vitest-changed-suite-router-component.md",
+          "docs/planning/proposals/mandatory/frontend-and-ux/canvas-inspector-plugin-authoring-fields-plan-20260604.md",
+          "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts",
+          "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/**",
+          "packages/@dvt/contracts/**",
+          "packages/@dvt/engine/**",
+          "packages/@dvt/adapter-*/**",
+          "packages/@dvt/planner/**",
+          "specs/**"
+        ]
+      },
+      "revision": 0,
+      "createdBy": "codex",
+      "createdAt": "2026-08-15T01:30:58.881Z"
     },
     {
       "railId": "local#CI-PR-WORKFLOW-HARD-CUT-2312#command#enforcepullrequestvalidationpolicy",
@@ -194624,6 +196217,301 @@
         ]
       },
       "createdAt": "2026-08-14T14:15:50.016Z"
+    },
+    {
+      "operationId": "d81133eb-8947-4923-ba22-19732ca97af6",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:CANVAS-GRAPH-FILTER-2069:query:filtercanvasgraph:5:8102064d403072da",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#CANVAS-GRAPH-FILTER-2069#query#filtercanvasgraph",
+      "sourcePath": "apps/web/src/app/views/canvas/canvasGraphFilter.ts",
+      "sourceContentSha256": "e839ad03106f9c80b4041535b08b3ec1aeae9c5cbe71979373f0dbd06ee4a77e",
+      "expectedRevision": 5,
+      "previousRevision": 5,
+      "resultingRevision": 6,
+      "payload": {
+        "redTest": "pnpm exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/CanvasViewport.graphFilter.test.tsx src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx src/app/views/canvas/canvasNodeMapper.test.ts",
+        "dddOwner": "CanvasGraphFilter",
+        "railName": "FilterCanvasGraph",
+        "railType": "query",
+        "featureId": "CANVAS-GRAPH-FILTER-2069",
+        "greenTest": "pnpm --filter @dvt/web test:e2e:first-authoring:live",
+        "sourceRef": "apps/web/src/app/views/canvas/canvasGraphFilter.ts",
+        "unitTests": [
+          "apps/web/src/app/plugins/graph/GraphNodeTagList.test.tsx",
+          "apps/web/src/app/views/canvas/useCanvasGraphFilterController.test.tsx",
+          "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx",
+          "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx",
+          "apps/web/src/app/views/canvas/canvasNodeMapper.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2070"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
+          "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts"
+        ],
+        "domainObjects": [
+          "CanvasGraphFilterQuery",
+          "CanvasNodeTagFilter",
+          "CanvasNodeSemanticTags"
+        ],
+        "fowlerSignals": [
+          "Node tag controls reuse the existing graph-filter query rather than creating parallel selection state.",
+          "Canonical value and localized label travel as one projected tag item.",
+          "Shared semantic-tag guards keep the filter read model free from hidden execution markers."
+        ],
+        "negativeTests": [
+          "reject unknown tags, mismatched projections and duplicate predicates without graph mutation"
+        ],
+        "patchSurfaces": [
+          "apps/web/src/app/views/canvas/**",
+          "apps/web/src/app/plugins/graph/**",
+          "apps/web/src/app/plugins/dbt/DbtNodeRenderer.tsx",
+          "apps/web/src/app/components/canvas/DbtNodeComponent.tsx",
+          "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts"
+        ],
+        "adapterSurface": "Canvas graph node tag controls",
+        "completionGate": [
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm --filter @dvt/web lint",
+          "pnpm --filter @dvt/web test:e2e:first-authoring:live",
+          "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-GRAPH-FILTER-2069",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "useCanvasGraphFilterController.filterByTag query adapter",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Tags are passive, semantic values are exposed, and localized labels are detached from canonical values.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "https://github.com/dunay2/dvt/issues/2364",
+          "https://github.com/dunay2/dvt/issues/2069"
+        ],
+        "architectureGuards": [
+          "Direct tag filtering must not mutate the persisted workspace graph draft.",
+          "Unknown tags cannot create graph-filter predicates.",
+          "Repeated activation of the same tag remains idempotent.",
+          "Tag projection cannot associate a localized label with a different canonical value.",
+          "Semantic tags remain protected while business tags are filterable."
+        ],
+        "authorizationScope": "active authorized workspace graph projection only",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2364",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/canvasGraphFilter.ts#filterCanvasGraph",
+          "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#openGraphFilters",
+          "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#DraftSnapshot",
+          "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#addDbtNode",
+          "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#waitForDraftNodeCount",
+          "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#openGraphSearch",
+          "apps/web/src/app/views/canvas/useCanvasGraphFilterController.ts#useCanvasGraphFilterController",
+          "apps/web/src/app/plugins/graph/GraphNodeTagList.tsx#GraphNodeTagList",
+          "apps/web/src/app/plugins/graph/GraphNodeTagList.tsx#resolveGraphNodeTagActionProps",
+          "apps/web/src/app/plugins/graph/GraphNodeCardView.tsx#GraphNodeCardView",
+          "apps/web/src/app/plugins/graph/GraphNodeRenderer.tsx#GraphNodeRenderer",
+          "apps/web/src/app/plugins/dbt/DbtNodeRenderer.tsx#DbtNodeRenderer",
+          "apps/web/src/app/views/canvas/CanvasViewport.tsx#CanvasViewport",
+          "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts#useCanvasNodeWorkbenchDraftController",
+          "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts#isSemanticCanvasNodeTag",
+          "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts#mergeBusinessTagsWithSemanticAuthority",
+          "apps/web/src/app/views/canvas/canvasNodeMapper.ts#mapCanonicalNodeToCanvasNode",
+          "apps/web/src/app/views/canvas/canvasNodeMapper.ts#mapDroppedCanonicalNodeToCanvasNode"
+        ],
+        "normalizedRailName": "filtercanvasgraph",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "e839ad03106f9c80b4041535b08b3ec1aeae9c5cbe71979373f0dbd06ee4a77e",
+        "replaceArchitectureGuards": true,
+        "replaceImplementationRefs": true,
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/views/canvas/**",
+          "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx",
+          "apps/web/src/app/plugins/graph/**",
+          "apps/web/src/app/plugins/dbt/DbtNodeRenderer.tsx",
+          "apps/web/src/app/components/canvas/DbtNodeComponent.tsx",
+          "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
+          "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": ["apps/api/**"]
+      },
+      "createdAt": "2026-08-15T01:33:36.662Z"
+    },
+    {
+      "operationId": "d989aec9-fecc-4fd5-a18c-4ae8d1b2b610",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604:command:configurecanvasdbtnode:latest:4ff42409d04098e5",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604#command#configurecanvasdbtnode",
+      "sourcePath": "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts",
+      "sourceContentSha256": "d12400fa96d182cee81f152ce7feae92b4a1486724deebb1b8266e58807a55a8",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "pnpm exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx",
+        "dddOwner": "CanvasNodeAuthoringMetadata",
+        "railName": "ConfigureCanvasDbtNode",
+        "railType": "command",
+        "featureId": "CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604",
+        "greenTest": "pnpm exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx",
+        "sourceRef": "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts",
+        "unitTests": [
+          "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2364"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts"
+        ],
+        "domainObjects": [
+          "CanvasNodeAuthoringMetadata",
+          "CanvasNodeSemanticTags"
+        ],
+        "fowlerSignals": [
+          "Business tags stay editable while semantic tags retain command authority.",
+          "A shared workbench controller removes duplicated DBT and DVT tag semantics."
+        ],
+        "negativeTests": [
+          "generic tag edits cannot remove or manufacture reserved semantic tags"
+        ],
+        "patchSurfaces": [
+          "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts",
+          "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx"
+        ],
+        "adapterSurface": "Canvas node properties General tab",
+        "completionGate": [
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm --filter @dvt/web lint",
+          "pnpm --filter @dvt/web test:e2e:first-authoring:live",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "useCanvasNodeWorkbenchDraftController tag update command adapter",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Generic tag input exposes and can overwrite semantic command tags.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "https://github.com/dunay2/dvt/issues/2364",
+          "docs/planning/proposals/mandatory/frontend-and-ux/canvas-inspector-plugin-authoring-fields-plan-20260604.md"
+        ],
+        "architectureGuards": [
+          "authoring, template:*, and target:* remain protected from generic tag input.",
+          "Business tag changes preserve semantic authority values exactly."
+        ],
+        "authorizationScope": "active authorized workspace draft node only",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2364",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts#useCanvasNodeWorkbenchDraftController",
+          "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts#isSemanticCanvasNodeTag",
+          "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts#mergeBusinessTagsWithSemanticAuthority"
+        ],
+        "normalizedRailName": "configurecanvasdbtnode",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "d12400fa96d182cee81f152ce7feae92b4a1486724deebb1b8266e58807a55a8",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts",
+          "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": ["apps/api/**"]
+      },
+      "createdAt": "2026-08-15T01:34:05.437Z"
+    },
+    {
+      "operationId": "7d6e090d-07ea-4e1a-adc4-424d38c4ef68",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604:command:configurecanvasdvtnode:latest:96eb173743288864",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604#command#configurecanvasdvtnode",
+      "sourcePath": "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts",
+      "sourceContentSha256": "d12400fa96d182cee81f152ce7feae92b4a1486724deebb1b8266e58807a55a8",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "pnpm exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx",
+        "dddOwner": "CanvasNodeAuthoringMetadata",
+        "railName": "ConfigureCanvasDvtNode",
+        "railType": "command",
+        "featureId": "CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604",
+        "greenTest": "pnpm exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx",
+        "sourceRef": "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts",
+        "unitTests": [
+          "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2364"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts"
+        ],
+        "domainObjects": [
+          "CanvasNodeAuthoringMetadata",
+          "CanvasNodeSemanticTags"
+        ],
+        "fowlerSignals": [
+          "Business tags stay editable while semantic tags retain command authority.",
+          "A shared workbench controller removes duplicated DBT and DVT tag semantics."
+        ],
+        "negativeTests": [
+          "generic tag edits cannot remove or manufacture reserved semantic tags"
+        ],
+        "patchSurfaces": [
+          "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts",
+          "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx"
+        ],
+        "adapterSurface": "Canvas node properties General tab",
+        "completionGate": [
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm --filter @dvt/web lint",
+          "pnpm --filter @dvt/web test:e2e:first-authoring:live",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "useCanvasNodeWorkbenchDraftController tag update command adapter",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Generic tag input exposes and can overwrite semantic command tags.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "https://github.com/dunay2/dvt/issues/2364",
+          "docs/planning/proposals/mandatory/frontend-and-ux/canvas-inspector-plugin-authoring-fields-plan-20260604.md"
+        ],
+        "architectureGuards": [
+          "authoring, template:*, and target:* remain protected from generic tag input.",
+          "Business tag changes preserve semantic authority values exactly."
+        ],
+        "authorizationScope": "active authorized workspace draft node only",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2364",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts#useCanvasNodeWorkbenchDraftController",
+          "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts#isSemanticCanvasNodeTag",
+          "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts#mergeBusinessTagsWithSemanticAuthority"
+        ],
+        "normalizedRailName": "configurecanvasdvtnode",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "d12400fa96d182cee81f152ce7feae92b4a1486724deebb1b8266e58807a55a8",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.ts",
+          "apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": ["apps/api/**"]
+      },
+      "createdAt": "2026-08-15T01:34:07.521Z"
     }
   ],
   "governanceComponentDefinitions": [
