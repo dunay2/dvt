@@ -64,6 +64,10 @@ export function DvtSourceAuthoringSection({
   const selectedConnectionId = draft.connectionRef?.connectionId ?? '';
   const selectedConnectionIdRef = useRef(selectedConnectionId);
   selectedConnectionIdRef.current = selectedConnectionId;
+  useEffect(() => {
+    connectionTestSequence.current += 1;
+    setTestResult(null);
+  }, [node.id, selectedConnectionId]);
   const selectedConnectionMissingFromList =
     selectedConnectionId.length > 0 &&
     !connections.some((connection) => connection.id === selectedConnectionId);
