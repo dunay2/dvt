@@ -7,6 +7,7 @@ import { parseRunExecutionContext, type RunExecutionContext } from '@dvt/contrac
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ArtifactBackedRunExecutionContextWriter } from '../../../src/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.js';
+import { runExecutionContextRefMatchesS3Store } from '../../../src/infrastructure/dbt/runExecutionContextTrust.js';
 import { resolveRunExecutionContextArtifactStore } from '../../../src/modules/protectedRuntime/buildProtectedRuntimeStorage.js';
 import { loadEnv } from '../../../src/plugins/env.js';
 
@@ -88,6 +89,37 @@ describe('ArtifactBackedRunExecutionContextWriter', () => {
     });
   });
 
+  it('encodes reserved tenant characters in the S3 locator and trust check', async () => {
+    const context = buildContext('tenant /#?');
+    const publish = vi.fn(async (input) => ({
+      disposition: 'created' as const,
+      storageUri: input.storageUri,
+      sha256: input.sha256,
+      sizeBytes: input.sizeBytes,
+      mediaType: input.mediaType,
+    }));
+    const writer = new ArtifactBackedRunExecutionContextWriter(
+      { kind: 's3', bucket: 'dvt-run-contexts' },
+      { publish },
+      { put: vi.fn(async () => undefined), get: vi.fn(async () => undefined) }
+    );
+
+    const result = await writer.write({ runId: 'run-1', context });
+
+    expect(result).toMatchObject({ ok: true });
+    if (!result.ok) throw new Error('Expected a run context reference.');
+    expect(result.ref.uri).toBe(
+      `s3://dvt-run-contexts/tenants/${encodeURIComponent(context.tenantId)}/${result.ref.sha256}`
+    );
+    expect(
+      runExecutionContextRefMatchesS3Store({
+        bucket: 'dvt-run-contexts',
+        tenantId: context.tenantId,
+        ref: result.ref,
+      })
+    ).toBe(true);
+  });
+
   it('fails closed before S3 publication when the recovery reference store is absent', async () => {
     const publish = vi.fn(async () => {
       throw new Error('must not publish');
@@ -105,13 +137,13 @@ describe('ArtifactBackedRunExecutionContextWriter', () => {
   });
 });
 
-function buildContext(): RunExecutionContext {
+function buildContext(tenantId = 'tenant-1'): RunExecutionContext {
   return parseRunExecutionContext({
     schemaVersion: 'v1.0',
     planId: 'a'.repeat(64),
     planVersion: '1.0',
     planSha256: 'b'.repeat(64),
-    tenantId: 'tenant-1',
+    tenantId,
     projectId: 'project-1',
     environmentId: 'dev',
     targetAdapter: 'temporal',
