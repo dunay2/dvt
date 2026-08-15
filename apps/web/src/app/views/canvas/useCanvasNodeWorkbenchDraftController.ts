@@ -51,7 +51,7 @@ type DraftControllerAction =
   | Readonly<{ type: 'reset-requested' }>;
 
 function tagsTextFromDraft(draft: CanvasInspectorNodeDraft): string {
-  return draft.tags.join(', ');
+  return draft.tags.filter((tag) => !isSemanticCanvasNodeTag(tag)).join(', ');
 }
 
 function tagsFromText(value: string): readonly string[] {
@@ -60,9 +60,23 @@ function tagsFromText(value: string): readonly string[] {
       value
         .split(',')
         .map((tag) => tag.trim())
-        .filter((tag) => tag.length > 0)
+        .filter((tag) => tag.length > 0 && !isSemanticCanvasNodeTag(tag))
     )
   );
+}
+
+function isSemanticCanvasNodeTag(tag: string): boolean {
+  return tag === 'authoring' || tag.startsWith('template:') || tag.startsWith('target:');
+}
+
+function mergeBusinessTagsWithSemanticAuthority(
+  authority: CanvasInspectorNodeDraft,
+  businessTags: readonly string[]
+): readonly string[] {
+  return [
+    ...authority.tags.filter(isSemanticCanvasNodeTag),
+    ...businessTags.filter((tag) => !isSemanticCanvasNodeTag(tag)),
+  ];
 }
 
 function createDraftControllerState(
@@ -120,7 +134,10 @@ function reduceDraftControllerState(
         ...state,
         draft: {
           ...state.draft,
-          tags: tagsFromText(tagsText),
+          tags: mergeBusinessTagsWithSemanticAuthority(
+            state.authoritativeDraft,
+            tagsFromText(tagsText)
+          ),
         },
         submittedDraft: null,
         tagsText,
