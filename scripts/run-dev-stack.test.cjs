@@ -248,12 +248,14 @@ test('buildTemporalWorkerEnv forwards configured DBT bundle store settings', () 
     {
       DVT_DBT_BUNDLE_STORE_BACKEND: 'file',
       DVT_DBT_BUNDLE_FILE_ROOT: 'C:\\custom\\dbt-bundles',
+      DVT_WORKSPACE_FILES_ROOT: 'C:\\custom\\workspace-files',
     },
     defaultPgUrl
   );
 
   assert.equal(workerEnv.DVT_DBT_BUNDLE_STORE_BACKEND, 'file');
   assert.equal(workerEnv.DVT_DBT_BUNDLE_FILE_ROOT, 'C:\\custom\\dbt-bundles');
+  assert.equal(workerEnv.DVT_WORKSPACE_FILES_ROOT, 'C:\\custom\\workspace-files');
 });
 
 test('buildCoordinatedTemporalWorkerEnv keeps DBT execution profile aligned with API env', () => {
