@@ -5,6 +5,7 @@ import type { LucideIcon } from 'lucide-react';
 
 import { canvasNodeEmbeddedControlProps } from '../../components/canvas/canvasNodeInteractionBoundary';
 import { cn } from '../../components/ui/utils';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip';
 import { GraphNodeColumnSection, type GraphNodeColumn } from './GraphNodeColumnSection';
 import { GraphNodeMetricRow } from './GraphNodeMetricRow';
 import { GraphNodeOperationalRail } from './GraphNodeOperationalRail';
@@ -15,7 +16,11 @@ import type {
   GraphNodeCardReadModel,
   GraphNodeOperationalDetail,
 } from './graphNodeCardStrategyContracts';
-import { graphNodeCardLayoutClasses, graphNodeCardSurfaceClasses } from './graphVisualTokens';
+import {
+  graphNodeCardLayoutClasses,
+  graphNodeCardSurfaceClasses,
+  graphNodeSourceIdentityTooltipClasses,
+} from './graphVisualTokens';
 
 export type GraphNodeCardColumn = GraphNodeColumn;
 
@@ -62,6 +67,54 @@ function openGovernedNodeActions(event: ReactMouseEvent<HTMLButtonElement>): voi
     value: true,
   });
   trigger.dispatchEvent(contextMenuEvent);
+}
+
+function GraphNodeCardTitle({ cardModel }: { cardModel: GraphNodeCardReadModel }): ReactElement {
+  const sourceIdentity = cardModel.sourceIdentity;
+  if (sourceIdentity == null) {
+    return (
+      <span
+        data-slot="graph-node-card-title"
+        className={graphNodeCardLayoutClasses.title}
+        title={cardModel.technicalName ?? cardModel.title}
+      >
+        {cardModel.title}
+      </span>
+    );
+  }
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span
+          data-slot="graph-node-source-identity-trigger"
+          {...canvasNodeEmbeddedControlProps}
+          tabIndex={0}
+          aria-label={sourceIdentity.ariaLabel}
+          className={cn(
+            graphNodeCardLayoutClasses.title,
+            graphNodeCardLayoutClasses.sourceIdentityTrigger
+          )}
+        >
+          {cardModel.title}
+        </span>
+      </TooltipTrigger>
+      <TooltipContent
+        side="bottom"
+        sideOffset={6}
+        className={graphNodeSourceIdentityTooltipClasses.root}
+      >
+        <dl className={graphNodeSourceIdentityTooltipClasses.rows}>
+          {sourceIdentity.rows.map((row) => (
+            <div key={row.id} className={graphNodeSourceIdentityTooltipClasses.row}>
+              <dt className={graphNodeSourceIdentityTooltipClasses.label}>{row.label}</dt>
+              <dd className={graphNodeSourceIdentityTooltipClasses.value}>{row.value}</dd>
+            </div>
+          ))}
+        </dl>
+      </TooltipContent>
+    </Tooltip>
+  );
 }
 
 export function GraphNodeCardView({
@@ -113,13 +166,7 @@ export function GraphNodeCardView({
                 )}
               />
             )}
-            <span
-              data-slot="graph-node-card-title"
-              className={graphNodeCardLayoutClasses.title}
-              title={cardModel.technicalName ?? cardModel.title}
-            >
-              {cardModel.title}
-            </span>
+            <GraphNodeCardTitle cardModel={cardModel} />
           </div>
           <div className={graphNodeCardLayoutClasses.headerActions}>
             <GraphNodeStatusChip status={cardModel.status} />

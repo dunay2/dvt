@@ -9,6 +9,7 @@ import type {
 export type {
   GraphNodeCardMetric,
   GraphNodeCardReadModel,
+  GraphNodeSourceIdentity,
   GraphNodeCardStrategy,
 } from './graphNodeCardStrategyContracts';
 

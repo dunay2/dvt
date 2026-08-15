@@ -7,6 +7,16 @@ import { dvtGraphNodeCardStrategy } from '../dvt/dvtGraphNodeCardStrategy';
 import { buildGraphNodeCardReadModel } from './graphNodeCardReadModel';
 
 const SOURCE_METRICS_OBSERVED_AT = '2026-07-10T21:00:00.000Z';
+const SPANISH_PRESENTATION_COPY = {
+  columnsLabel: 'Columnas',
+  declaredColumnsDetailTemplate: '{count} columnas declaradas',
+  inheritedColumnsDetailTemplate: '{count} columnas heredadas',
+  noColumnsDetail: 'No hay columnas',
+  codeLabel: 'Código',
+  workspaceCodeDetailTemplate: 'Código en {path}',
+  generatedCodeDetailTemplate: 'Código generado en {path}',
+  codeUnavailableMessage: 'Código no disponible',
+} as const;
 
 function sourceMetricEvidence(rowCount: number): SourceObjectMetricEvidence {
   return {
@@ -210,6 +220,56 @@ describe('buildGraphNodeCardReadModel', () => {
     expect(model.technicalName).toBe('src_erp_orders');
     expect(model.subtitle).toBe('warehouse.erp.orders');
     expect(model.path).toBe('models/sources/src_erp.yml');
+  });
+
+  it('projects a localized governed identity for an imported physical source table', () => {
+    const model = buildGraphNodeCardReadModel(
+      buildNode({
+        kind: 'dvt:source',
+        pluginId: 'dvt.warehouse-source',
+        name: 'src_erp_orders',
+        metadata: {
+          tableIdentifier: 'orders',
+          database: 'analytics',
+          connectionName: 'PostgreSQL local',
+          schema: 'erp',
+          databaseUser: 'warehouse_reader',
+          credentialRef: 'postgres:must-not-leak',
+        },
+      }),
+      { presentationCopy: { ...SPANISH_PRESENTATION_COPY, locale: 'es' } },
+      [dvtGraphNodeCardStrategy]
+    );
+
+    expect(model.sourceIdentity).toEqual({
+      ariaLabel: 'Ver identidad de origen de orders',
+      rows: [
+        { id: 'database', label: 'Base de datos', value: 'analytics' },
+        { id: 'connection', label: 'Conexión', value: 'PostgreSQL local' },
+        { id: 'schema', label: 'Esquema', value: 'erp' },
+        { id: 'user', label: 'Usuario', value: 'warehouse_reader' },
+      ],
+    });
+    expect(JSON.stringify(model)).not.toContain('postgres:must-not-leak');
+  });
+
+  it('does not invent source identity when one authoritative field is absent', () => {
+    const model = buildGraphNodeCardReadModel(
+      buildNode({
+        kind: 'dvt:source',
+        pluginId: 'dvt.warehouse-source',
+        metadata: {
+          tableIdentifier: 'orders',
+          database: 'analytics',
+          connectionName: 'PostgreSQL local',
+          schema: 'erp',
+        },
+      }),
+      {},
+      [dvtGraphNodeCardStrategy]
+    );
+
+    expect(model.sourceIdentity).toBeNull();
   });
 
   it('adds DVT runtime metrics only from recorded metadata', () => {

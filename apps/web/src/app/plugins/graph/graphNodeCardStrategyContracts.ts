@@ -11,23 +11,10 @@ export type GraphNodeCardMetric = Readonly<{
 }>;
 
 export type GraphNodeCardMetricIcon =
-  | 'clock'
-  | 'refresh'
-  | 'throughput'
-  | 'database'
-  | 'columns'
-  | 'timer'
-  | 'rows'
-  | 'cost'
-  | 'drift';
+  'clock' | 'refresh' | 'throughput' | 'database' | 'columns' | 'timer' | 'rows' | 'cost' | 'drift';
 
 export type GraphNodeCardAccentTone =
-  | 'source'
-  | 'model'
-  | 'test'
-  | 'output'
-  | 'control'
-  | 'unknown';
+  'source' | 'model' | 'test' | 'output' | 'control' | 'unknown';
 
 export type GraphNodeOperationalDetail = Readonly<{
   title: string;
@@ -36,16 +23,20 @@ export type GraphNodeOperationalDetail = Readonly<{
 }>;
 
 export type GraphNodeCardStatusTone =
-  | 'neutral'
-  | 'info'
-  | 'success'
-  | 'warning'
-  | 'danger'
-  | 'running';
+  'neutral' | 'info' | 'success' | 'warning' | 'danger' | 'running';
 
 export type GraphNodeCardStatus = Readonly<{
   label: string;
   tone: GraphNodeCardStatusTone;
+}>;
+
+export type GraphNodeSourceIdentity = Readonly<{
+  ariaLabel: string;
+  rows: readonly Readonly<{
+    id: 'database' | 'connection' | 'schema' | 'user';
+    label: string;
+    value: string;
+  }>[];
 }>;
 
 export type GraphNodeCardReadModel = Readonly<{
@@ -59,6 +50,7 @@ export type GraphNodeCardReadModel = Readonly<{
   metrics: readonly GraphNodeCardMetric[];
   operationalMetrics: readonly GraphNodeCardMetric[];
   operationalDetail: GraphNodeOperationalDetail | null;
+  sourceIdentity: GraphNodeSourceIdentity | null;
   nodeActionsLabel: string;
 }>;
 

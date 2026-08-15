@@ -120,6 +120,7 @@ function buildDbtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     metrics,
     operationalMetrics: operationalSummary.metrics,
     operationalDetail: operationalSummary.detail,
+    sourceIdentity: null,
     nodeActionsLabel:
       presentationCopy?.nodeActionsLabel ?? graphNodeCardCopyTokens.nodeActionsLabel,
   };

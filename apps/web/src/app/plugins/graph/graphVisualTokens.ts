@@ -16,6 +16,8 @@ export const graphNodeCardLayoutClasses = {
   titleRow: 'flex min-w-0 flex-1 items-center gap-2',
   icon: 'shrink-0 opacity-80',
   title: 'truncate text-sm font-semibold leading-tight text-slate-50',
+  sourceIdentityTrigger:
+    'nodrag nopan min-w-0 cursor-help rounded-sm text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-300',
   headerActions: 'flex shrink-0 items-center gap-2',
   kind: 'mt-2 text-xs font-medium text-blue-200',
   path: 'mt-1 truncate text-xs text-slate-400',
@@ -33,6 +35,14 @@ export const graphNodeCardLayoutClasses = {
     control: 'text-slate-300',
     unknown: 'text-slate-400',
   },
+} as const;
+
+export const graphNodeSourceIdentityTooltipClasses = {
+  root: 'w-64 border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 shadow-xl',
+  rows: 'space-y-1.5',
+  row: 'grid grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] gap-3',
+  label: 'text-slate-400',
+  value: 'truncate text-right font-medium text-slate-100',
 } as const;
 
 export const graphNodeMetricRowClasses = {
