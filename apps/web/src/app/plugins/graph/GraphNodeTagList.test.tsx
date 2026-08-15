@@ -80,7 +80,9 @@ describe('GraphNodeTagList', () => {
     expect(button).not.toBeNull();
     expect(button?.className).toContain('cursor-pointer');
 
-    act(() => fireEvent.click(button!));
+    act(() => {
+      fireEvent.click(button!);
+    });
 
     expect(onSelectTag).toHaveBeenCalledOnce();
     expect(onSelectTag).toHaveBeenCalledWith('authoring');
