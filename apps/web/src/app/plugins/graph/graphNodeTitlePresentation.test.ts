@@ -142,6 +142,25 @@ describe('buildGraphNodeTitlePresentation', () => {
     });
   });
 
+  it('prefers the physical warehouse identifier over the normalized YAML table alias', () => {
+    expect(
+      buildGraphNodeTitlePresentation({
+        nodeName: 'src_warehouse_public_order_items',
+        pluginId: 'dvt.warehouse-source',
+        kind: 'dvt:source',
+        metadata: {
+          database: 'warehouse',
+          schema: 'public',
+          tableName: 'order_items',
+          tableIdentifier: 'Order-Items',
+        },
+      })
+    ).toEqual({
+      title: 'Order-Items',
+      technicalName: 'src_warehouse_public_order_items',
+    });
+  });
+
   it('keeps same-schema warehouse source cards distinct with exact table identifiers', () => {
     const buildTitle = (tableName: string): string =>
       buildGraphNodeTitlePresentation({
