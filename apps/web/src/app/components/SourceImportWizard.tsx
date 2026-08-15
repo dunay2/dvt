@@ -15,6 +15,7 @@ export default function SourceImportWizard({
   onClose,
   onRestoreFocus,
   onComplete,
+  onConnectionRenamed,
   sourceImportOptions: declaredSourceImportOptions,
   initialSelection,
 }: SourceImportWizardProps) {
@@ -29,6 +30,7 @@ export default function SourceImportWizard({
     warehouseSourceImport,
     sourceImportOptions,
     onComplete,
+    onConnectionRenamed,
     onClose,
     initialSelection,
   });

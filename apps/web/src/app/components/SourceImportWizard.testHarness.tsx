@@ -14,7 +14,10 @@ import type { SourceImportOptionContribution } from '../plugins/registry';
 import { AppServicesProvider } from '../services/AppServicesContext';
 import { buildGraphDraftSourceImportResult } from '../../testing/sourceImportTestFixtures';
 import SourceImportWizard from './SourceImportWizard';
-import type { SourceImportInitialSelection } from './sourceImportWizard/types';
+import type {
+  SourceImportInitialSelection,
+  SourceImportWizardProps,
+} from './sourceImportWizard/types';
 import {
   buildSourceImportTestMetricEvidence,
   buildSourceImportTestObject,
@@ -129,6 +132,7 @@ export function createSourceImportWizardHarness() {
     warehouseSourceImport?: IWarehouseSourceImportPort;
     onClose?: () => void;
     onComplete?: (result: ImportSourcesResult) => void;
+    onConnectionRenamed?: SourceImportWizardProps['onConnectionRenamed'];
     sourceImportOptions?: readonly SourceImportOptionContribution[];
     initialSelection?: SourceImportInitialSelection | null;
   }): Promise<void> {
@@ -145,6 +149,7 @@ export function createSourceImportWizardHarness() {
             canvasId={args?.canvasId ?? 'canvas-orders'}
             onClose={args?.onClose ?? vi.fn()}
             onComplete={args?.onComplete}
+            onConnectionRenamed={args?.onConnectionRenamed}
             sourceImportOptions={args?.sourceImportOptions}
             initialSelection={args?.initialSelection}
           />
