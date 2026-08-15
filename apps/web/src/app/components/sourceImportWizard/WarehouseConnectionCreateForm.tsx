@@ -7,11 +7,13 @@ import {
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { useSourceImportLocalization } from './copy';
+import type { SourceImportFailureCode } from './types';
 
 interface WarehouseConnectionCreateFormProps {
   form: CreateWarehouseConnectionInput;
   isCreating: boolean;
   error: string | null;
+  errorCode: SourceImportFailureCode | null;
   onFieldChange: <Field extends keyof CreateWarehouseConnectionInput>(
     field: Field,
     value: CreateWarehouseConnectionInput[Field]
@@ -24,12 +26,19 @@ export function WarehouseConnectionCreateForm({
   form,
   isCreating,
   error,
+  errorCode,
   onFieldChange,
   onCancel,
   onSubmit,
 }: WarehouseConnectionCreateFormProps) {
   const { copy } = useSourceImportLocalization();
   const errorId = useId();
+  const isValidationError = errorCode === 'create-connection-validation';
+  const nameHasError =
+    errorCode === 'connection-name-conflict' ||
+    (isValidationError && form.name.trim().length === 0);
+  const databaseHasError = isValidationError && form.database.trim().length === 0;
+  const credentialRefHasError = isValidationError && form.credentialRef.trim().length === 0;
 
   return (
     <Card className="border-slate-700 bg-slate-950/50 p-4">
@@ -65,8 +74,8 @@ export function WarehouseConnectionCreateForm({
           <input
             data-slot="source-import-create-connection-name"
             aria-label={copy.connection.createNameLabel}
-            aria-invalid={error ? true : undefined}
-            aria-errormessage={error ? errorId : undefined}
+            aria-invalid={nameHasError ? true : undefined}
+            aria-errormessage={nameHasError ? errorId : undefined}
             value={form.name}
             disabled={isCreating}
             className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-500 focus:border-blue-500"
@@ -114,6 +123,8 @@ export function WarehouseConnectionCreateForm({
             <input
               data-slot="source-import-create-connection-database"
               aria-label={copy.connection.createDatabaseLabel}
+              aria-invalid={databaseHasError ? true : undefined}
+              aria-errormessage={databaseHasError ? errorId : undefined}
               value={form.database}
               disabled={isCreating}
               className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-500 focus:border-blue-500"
@@ -130,6 +141,8 @@ export function WarehouseConnectionCreateForm({
           <input
             data-slot="source-import-create-connection-credential-ref"
             aria-label={copy.connection.createCredentialRefLabel}
+            aria-invalid={credentialRefHasError ? true : undefined}
+            aria-errormessage={credentialRefHasError ? errorId : undefined}
             value={form.credentialRef}
             disabled={isCreating}
             placeholder={copy.connection.createCredentialRefPlaceholder}

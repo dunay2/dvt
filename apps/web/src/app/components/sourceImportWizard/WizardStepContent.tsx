@@ -41,6 +41,7 @@ export function WizardStepContent({ controller }: WizardStepContentProps) {
             connectionTestResult={state.connectionTestResult}
             loadError={loadError}
             createConnectionError={createConnectionError}
+            createConnectionErrorCode={state.createConnectionError?.code ?? null}
             renameConnectionError={renameConnectionError}
             renameConnectionSucceeded={state.renameConnectionSucceeded}
             onSelectConnection={controller.setSelectedConnection}
