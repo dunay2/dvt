@@ -110,6 +110,6 @@ For `transformation-sql-first-v2` it additionally requires:
 ## Related
 
 - [Planner contracts index](./index.md)
-- [Transformation flow compiler mapping v1](./TransformationFlowCompiler.v1.md)
+- [Transformation flow compiler mapping v1](./transformation-flow-compiler-v1.md)
 - [Transformation flow architecture and contracts](../../planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md)
 - [Transformation flow product decisions](../../planning/proposals/mandatory/runtime-and-contracts/transformation-flow-product-decisions-20260405.md)

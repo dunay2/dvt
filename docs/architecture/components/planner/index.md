@@ -14,7 +14,7 @@ last_reviewed: 2026-04-10
 3. [Planner private behavior ports component](./planner-private-behavior-ports-component.md)
 4. [Workspace authoring draft aggregate](./workspace-authoring-draft-aggregate.md)
 5. [Executable subgraph derivation component](./executable-subgraph-derivation-component.md)
-6. [Transformation flow compiler mapping v1](../../../contracts/planner/TransformationFlowCompiler.v1.md)
+6. [Transformation flow compiler mapping v1](../../../contracts/planner/transformation-flow-compiler-v1.md)
 7. [GenericGraphSource user manual](../../../guides/generic-graph-source-user-manual-20260404.md)
 8. [Planner cycle detection technical manual](../../../guides/planner-cycle-detection-technical-manual-20260404.md)
 9. [Planner cycle detection user manual](../../../guides/planner-cycle-detection-user-manual-20260404.md)

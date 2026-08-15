@@ -57,8 +57,8 @@ ExecutionPlan and planner-related schemas and admission contracts.
 
 - [Execution selection and executable subgraph v1](execution-selection-and-executable-subgraph-v1.md)
 - [Plan store records v1](plan-store-records-v1.md)
-- [Transformation flow compiler mapping v1](TransformationFlowCompiler.v1.md)
-- [Transformation flow preview and design graph v1](TransformationFlowPreview.v1.md)
+- [Transformation flow compiler mapping v1](transformation-flow-compiler-v1.md)
+- [Transformation flow preview and design graph v1](transformation-flow-preview-v1.md)
 - [Workspace graph draft persistence v1](workspace-graph-draft-persistence-v1.md)
 
 ## Related

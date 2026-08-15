@@ -131,5 +131,5 @@ The canonical summary is:
 ## Related
 
 - [Planner contracts index](./index.md)
-- [Transformation flow preview and design graph v1](./TransformationFlowPreview.v1.md)
+- [Transformation flow preview and design graph v1](./transformation-flow-preview-v1.md)
 - [Transformation flow architecture and contracts](../../planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md)

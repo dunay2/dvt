@@ -33,7 +33,7 @@ Canvas Inspector Authoring component.
 - `docs/architecture/fowler-opportunity-planning-governance.md`
 - `docs/architecture/components/web/graph/canvas-inspector-authoring-component.md`
 - `docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`
-- `docs/contracts/planner/TransformationFlowPreview.v1.md`
+- `docs/contracts/planner/transformation-flow-preview-v1.md`
 
 ## Command And Query Rails
 
@@ -73,7 +73,7 @@ governingSources:
   - docs/architecture/fowler-opportunity-planning-governance.md
   - docs/architecture/components/web/graph/canvas-inspector-authoring-component.md
   - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
-  - docs/contracts/planner/TransformationFlowPreview.v1.md
+  - docs/contracts/planner/transformation-flow-preview-v1.md
 allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/CanvasInspectorAuthoringSection.tsx
   - apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx

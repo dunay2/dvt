@@ -32,7 +32,7 @@ boundary owns authoring truth first and compiled projection second.
 - `docs/planning/execution-model/dvt-execution-model.md`
 - `docs/architecture/components/engine/contracts/engine/SignalsAndAuth.v1.md`
 - `docs/architecture/components/web/frontend-data-boundary-architecture.md`
-- `docs/contracts/planner/TransformationFlowPreview.v1.md`
+- `docs/contracts/planner/transformation-flow-preview-v1.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-production-node-authoring-and-persistence-plan-20260416.md`
 
 ## Problem
@@ -233,11 +233,7 @@ type WorkspaceGraphDraftScope = {
 type WorkspaceGraphDraftCapabilityMode = 'writable' | 'read_only' | 'forbidden';
 
 type WorkspaceGraphDraftCapabilityReason =
-  | 'authorized'
-  | 'write_denied'
-  | 'tenant_mismatch'
-  | 'workspace_scope_denied'
-  | 'unauthenticated';
+  'authorized' | 'write_denied' | 'tenant_mismatch' | 'workspace_scope_denied' | 'unauthenticated';
 
 type WorkspaceGraphDraftCapabilityOutcome = {
   scope: WorkspaceGraphDraftScope;
@@ -315,9 +311,7 @@ minimum outcome shape:
 
 ```ts
 type WorkspaceGraphDraftFormatErrorReason =
-  | 'unsupported_schema_version'
-  | 'corrupt_payload'
-  | 'migration_failed';
+  'unsupported_schema_version' | 'corrupt_payload' | 'migration_failed';
 
 type WorkspaceGraphDraftFormatError = {
   reason: WorkspaceGraphDraftFormatErrorReason;
