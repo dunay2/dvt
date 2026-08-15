@@ -295,7 +295,7 @@ describe('DbtNodeRenderer history panel', () => {
     ).toBe('1');
   });
 
-  it('routes the card play affordance through execution selection', async () => {
+  it('does not expose execution selection as a node-card header button', async () => {
     const toggleNodeSelection = vi.fn();
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -323,14 +323,9 @@ describe('DbtNodeRenderer history panel', () => {
       );
     });
 
-    const playButton = container.querySelector('button[aria-label="Select for execution"]');
-    expect(playButton).not.toBeNull();
-
-    await act(async () => {
-      playButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
-
-    expect(toggleNodeSelection).toHaveBeenCalledWith('model_orders', true);
+    expect(container.querySelector('[data-slot="graph-node-card-play"]')).toBeNull();
+    expect(container.querySelector('[data-slot="graph-node-card-actions"]')).not.toBeNull();
+    expect(toggleNodeSelection).not.toHaveBeenCalled();
   });
 
   it('renders node-scoped runtime events for the active run', async () => {
