@@ -1,5 +1,7 @@
 'use strict';
 
+const { LOCAL_POSTGRES_CONNECTION_ID } = require('../run-dev-stack.cjs');
+
 const SUPPORTED_RUNTIME_PROOF_PROFILE = deepFreeze({
   schemaVersion: 'dvt-supported-runtime-proof/v1',
   profileId: 'mvp-18-local-v1',
@@ -19,6 +21,11 @@ const SUPPORTED_RUNTIME_PROOF_PROFILE = deepFreeze({
   },
   workload: {
     runCompletionTimeoutMs: 60_000,
+    connectionRef: {
+      schemaVersion: 'connection-ref.v1',
+      connectionId: LOCAL_POSTGRES_CONNECTION_ID,
+      provider: 'postgres',
+    },
     source: { schema: 'raw', table: 'orders' },
     sink: { schema: 'runtime_proof', table: 'orders_snapshot' },
     steadyState: {
@@ -65,6 +72,15 @@ function validateSupportedRuntimeProofProfile(profile) {
   }
   if (!isPositiveInteger(profile?.workload?.runCompletionTimeoutMs)) {
     failures.push('workload.runCompletionTimeoutMs must be a positive integer');
+  }
+  const connectionRef = profile?.workload?.connectionRef;
+  if (
+    connectionRef?.schemaVersion !== 'connection-ref.v1' ||
+    connectionRef?.provider !== 'postgres' ||
+    typeof connectionRef?.connectionId !== 'string' ||
+    connectionRef.connectionId.trim().length === 0
+  ) {
+    failures.push('workload.connectionRef must identify a governed PostgreSQL connection');
   }
 
   const steadyState = profile?.workload?.steadyState;
