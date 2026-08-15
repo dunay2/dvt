@@ -20,6 +20,7 @@ code_refs:
   - apps/temporal-worker/src/runtime/TemporalWorkerPostgresPlanConnectionResolver.ts
   - packages/@dvt/artifacts/src/runtime/S3RunExecutionContextReferenceStore.ts
   - packages/@dvt/artifacts/src/contentAddressed/S3ContentAddressedArtifactStore.ts
+  - packages/@dvt/artifacts/src/runtime/readArtifactBytes.ts
   - apps/api/src/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.ts
   - apps/api/src/infrastructure/dbt/ArtifactBackedRunExecutionContextReferenceReader.ts
   - apps/api/src/infrastructure/dbt/ArtifactBackedRunExecutionContextInheritanceWriter.ts
@@ -34,6 +35,7 @@ evidence:
     - pnpm --filter ./apps/api exec vitest run test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts --maxWorkers=1 --minWorkers=1
     - pnpm --filter @dvt/artifacts test
     - pnpm --filter @dvt/artifacts exec vitest run test/contentAddressedArtifactStore.test.ts --config vitest.config.ts --maxWorkers=1 --minWorkers=1
+    - pnpm --filter @dvt/artifacts exec vitest run test/runExecutionContextReaders.test.ts --config vitest.config.ts --maxWorkers=1 --minWorkers=1
     - pnpm --filter @dvt/artifacts typecheck
     - pnpm --filter @dvt/web test:canvas
     - pnpm --filter @dvt/web lint
@@ -110,6 +112,12 @@ context. Missing, malformed, cross-tenant or conflicting references fail
 closed. S3 context locators use one canonical URL-encoded tenant segment across
 publication, reference persistence and trust validation, so reserved tenant
 characters cannot change the object-key structure or escape their scope.
+Production file-backed run contexts remain denied by default; the API grants
+read authority only for the exact real-path root it provisioned for run-context
+artifacts, and rejects resolved paths outside that root. The canonical API and
+Temporal worker runbooks also declare the shared
+`DVT_POSTGRES_CREDENTIAL_BINDINGS` JSON contract and its `postgres:<alias>`
+namespace.
 
 The headed browser proof created a new governed project and Warehouse
 Connection, imported `raw.orders`, authored Source -> Transform -> Sink,

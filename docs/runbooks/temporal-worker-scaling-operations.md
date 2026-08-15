@@ -2,7 +2,7 @@
 title: Temporal Worker Scaling Operations
 status: Active
 owner: Runtime / SRE / Delivery
-last_reviewed: 2026-05-14
+last_reviewed: 2026-08-15
 ---
 
 # Temporal Worker Scaling Operations
@@ -63,18 +63,27 @@ The workflow itself still starts on the tenant workflow queue.
 
 ### Always Required
 
-| Variable                             | Required | Default   | Purpose                            |
-| ------------------------------------ | -------- | --------- | ---------------------------------- |
-| `DATABASE_URL`                       | Yes      | none      | Postgres connection string         |
-| `TEMPORAL_ADDRESS`                   | Yes      | none      | Temporal server gRPC address       |
-| `TEMPORAL_NAMESPACE`                 | Yes      | none      | Temporal namespace                 |
-| `TEMPORAL_TASK_QUEUE`                | Yes      | none      | The single queue this worker polls |
-| `DVT_PG_SCHEMA`                      | No       | `dvt`     | State-store schema                 |
-| `DVT_TEMPORAL_WORKER_RUN_MIGRATIONS` | No       | `false`   | Run worker-owned migrations        |
-| `TEMPORAL_STEP_ACTIVITY_ROUTES`      | No       | none      | Optional step kind activity routes |
-| `DVT_TEMPORAL_ADMIN_HOST`            | No       | `0.0.0.0` | Operational server bind host       |
-| `DVT_TEMPORAL_ADMIN_PORT`            | No       | `9468`    | Operational server port            |
-| `DVT_TEMPORAL_DBT_ENABLED`           | No       | `false`   | Enable DBT worker profile          |
+| Variable                             | Required             | Default   | Purpose                            |
+| ------------------------------------ | -------------------- | --------- | ---------------------------------- |
+| `DATABASE_URL`                       | Yes                  | none      | Postgres connection string         |
+| `TEMPORAL_ADDRESS`                   | Yes                  | none      | Temporal server gRPC address       |
+| `TEMPORAL_NAMESPACE`                 | Yes                  | none      | Temporal namespace                 |
+| `TEMPORAL_TASK_QUEUE`                | Yes                  | none      | The single queue this worker polls |
+| `DVT_PG_SCHEMA`                      | No                   | `dvt`     | State-store schema                 |
+| `DVT_TEMPORAL_WORKER_RUN_MIGRATIONS` | No                   | `false`   | Run worker-owned migrations        |
+| `TEMPORAL_STEP_ACTIVITY_ROUTES`      | No                   | none      | Optional step kind activity routes |
+| `DVT_TEMPORAL_ADMIN_HOST`            | No                   | `0.0.0.0` | Operational server bind host       |
+| `DVT_TEMPORAL_ADMIN_PORT`            | No                   | `9468`    | Operational server port            |
+| `DVT_TEMPORAL_DBT_ENABLED`           | No                   | `false`   | Enable DBT worker profile          |
+| `DVT_POSTGRES_CREDENTIAL_BINDINGS`   | SQL-first PostgreSQL | none      | Governed alias-to-URL bindings     |
+
+For SQL-first PostgreSQL execution, configure the same
+`DVT_POSTGRES_CREDENTIAL_BINDINGS` JSON object in the API and every Temporal
+worker that can receive the plan. Keys use the governed `postgres:<alias>`
+namespace and values are PostgreSQL connection URLs, for example
+`{"postgres:warehouse":"postgresql://user:password@host:5432/database"}`.
+The persisted `ConnectionRef` contains the alias, never the connection URL; a
+missing or different binding fails closed before SQL execution.
 
 ### Required When DBT Mode Is Enabled
 
