@@ -108,7 +108,7 @@ describe('buildGraphNodeTitlePresentation', () => {
         },
       })
     ).toEqual({
-      title: 'Dvt · public',
+      title: 'source_1',
       technicalName: 'src_local_postgres_dvt_public_source_1',
     });
   });
@@ -137,8 +137,53 @@ describe('buildGraphNodeTitlePresentation', () => {
         },
       })
     ).toEqual({
-      title: 'Postgres · public',
+      title: 'source_1',
       technicalName: 'src_local_postgres_dvt_public_source_1',
+    });
+  });
+
+  it('keeps same-schema warehouse source cards distinct with exact table identifiers', () => {
+    const buildTitle = (tableName: string) =>
+      buildGraphNodeTitlePresentation({
+        nodeName: `src_local_postgres_dvt_${tableName}`,
+        pluginId: 'dvt.warehouse-source',
+        kind: 'dvt:source',
+        metadata: {
+          database: 'dvt',
+          schema: 'dvt',
+          tableName,
+        },
+      }).title;
+
+    expect([buildTitle('auth_audit_events'), buildTitle('email_outbox')]).toEqual([
+      'auth_audit_events',
+      'email_outbox',
+    ]);
+  });
+
+  it('falls back to provider and schema when a warehouse source table is unavailable', () => {
+    expect(
+      buildGraphNodeTitlePresentation({
+        nodeName: 'src_local_postgres_dvt_public',
+        pluginId: 'dvt.warehouse-source',
+        kind: 'dvt:source',
+        metadata: {
+          connectedSourceRef: {
+            schemaVersion: 'connected-source-ref.v1',
+            connectionRef: {
+              schemaVersion: 'connection-ref.v1',
+              connectionId: 'local-postgres',
+              provider: 'postgres',
+            },
+            sourceObjectId: 'schema/dvt/public',
+          },
+          database: 'dvt',
+          schema: 'public',
+        },
+      })
+    ).toEqual({
+      title: 'Postgres · public',
+      technicalName: 'src_local_postgres_dvt_public',
     });
   });
 
