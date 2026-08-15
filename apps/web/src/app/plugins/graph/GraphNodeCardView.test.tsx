@@ -280,6 +280,46 @@ describe('GraphNodeCardView', () => {
     expect(tooltip?.textContent).toContain('Usuariowarehouse_reader');
   });
 
+  it('keeps long source identity values fully readable instead of truncating them', async () => {
+    const longConnectionName =
+      'PostgreSQL de operaciones financieras para Europa occidental y auditoría';
+    await act(async () => {
+      root.render(
+        <GraphNodeCardView
+          {...BASE_PROPS}
+          cardModel={{
+            ...BASE_PROPS.cardModel,
+            title: 'orders',
+            sourceIdentity: {
+              ariaLabel: 'Ver identidad de origen de orders',
+              rows: [
+                { id: 'database', label: 'Base de datos', value: 'analytics' },
+                { id: 'connection', label: 'Conexión', value: longConnectionName },
+                { id: 'schema', label: 'Esquema', value: 'erp' },
+                { id: 'user', label: 'Usuario', value: 'warehouse_reader' },
+              ],
+            },
+          }}
+        />
+      );
+    });
+
+    const trigger = container.querySelector<HTMLElement>(
+      '[data-slot="graph-node-source-identity-trigger"]'
+    );
+    await act(async () => {
+      trigger?.focus();
+      await Promise.resolve();
+    });
+
+    const tooltip = document.body.querySelector('[role="tooltip"]');
+    const connectionValue = [...(tooltip?.querySelectorAll('dd') ?? [])].find(
+      (value) => value.textContent === longConnectionName
+    );
+    expect(connectionValue?.className).toContain('break-all');
+    expect(connectionValue?.className).not.toContain('truncate');
+  });
+
   it('renders icon tone from the card model without inline colors', () => {
     act(() => {
       root.render(

@@ -42,7 +42,7 @@ export const graphNodeSourceIdentityTooltipClasses = {
   rows: 'space-y-1.5',
   row: 'grid grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] gap-3',
   label: 'text-slate-400',
-  value: 'truncate text-right font-medium text-slate-100',
+  value: 'min-w-0 break-all text-right font-medium text-slate-100',
 } as const;
 
 export const graphNodeMetricRowClasses = {
