@@ -6,6 +6,7 @@ import type { IPostgresCredentialBindingResolver } from '@dvt/adapter-postgres';
 import type {
   DbtProjectBundleArtifactStore,
   IPlanStoreReader,
+  IRunExecutionContextReferenceStore,
   IStoredPlanArtifactStore,
 } from '@dvt/artifacts';
 import type { IPlanner, IStepTypeRegistry } from '@dvt/contracts';
@@ -52,6 +53,7 @@ export type BuildProtectedStartRunRuntimeDeps = {
   readonly workspaceGraphDraftStore: IWorkspaceGraphDraftStore;
   readonly workspaceRoot: string;
   readonly dbtBundleStore: DbtProjectBundleArtifactStore | undefined;
+  readonly runExecutionContextReferenceStore?: IRunExecutionContextReferenceStore;
   readonly dbtExecutionTargetResolver: IDbtExecutionTargetResolver;
   readonly warehouseConnectionCatalog: IWarehouseConnectionCatalog;
   readonly postgresCredentialResolver: IPostgresCredentialBindingResolver;
@@ -91,7 +93,11 @@ export function buildProtectedStartRunRuntime(
       bundleStore: deps.dbtBundleStore,
       limits: DEFAULT_DBT_PROJECT_SOURCE_LIMITS,
     }),
-    contextWriter: new ArtifactBackedRunExecutionContextWriter(deps.dbtBundleStore),
+    contextWriter: new ArtifactBackedRunExecutionContextWriter(
+      deps.dbtBundleStore,
+      undefined,
+      deps.runExecutionContextReferenceStore
+    ),
     executionTargetResolver: deps.dbtExecutionTargetResolver,
     stepTypeRegistry: deps.stepTypeRegistry,
     warehouseConnectionCatalog: deps.warehouseConnectionCatalog,

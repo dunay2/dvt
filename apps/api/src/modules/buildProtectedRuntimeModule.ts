@@ -10,10 +10,10 @@ import type { FastifyInstance } from 'fastify';
 import type { Logger } from 'pino';
 
 import { getPgPool } from '../db/pool.js';
+import { ArtifactBackedRunExecutionContextInheritanceWriter } from '../infrastructure/dbt/ArtifactBackedRunExecutionContextInheritanceWriter.js';
+import { ArtifactBackedRunExecutionContextReferenceReader } from '../infrastructure/dbt/ArtifactBackedRunExecutionContextReferenceReader.js';
 import { ConfiguredDbtExecutionTargetResolver } from '../infrastructure/dbt/ConfiguredDbtExecutionTargetResolver.js';
 import { DbtCliProjectAnalyzer } from '../infrastructure/dbt/DbtCliProjectAnalyzer.js';
-import { FileRunExecutionContextInheritanceWriter } from '../infrastructure/dbt/FileRunExecutionContextInheritanceWriter.js';
-import { FileRunExecutionContextReferenceReader } from '../infrastructure/dbt/FileRunExecutionContextReferenceReader.js';
 import { LocalDbtProjectImportInspector } from '../infrastructure/dbt/LocalDbtProjectImportInspector.js';
 import { PostgresDbtProjectImportProcessStore } from '../infrastructure/dbt/PostgresDbtProjectImportProcessStore.js';
 import type { Env } from '../plugins/env.js';
@@ -163,6 +163,11 @@ export async function buildProtectedRuntimeModule(
     workspaceGraphDraftStore: workspaceGraphDraftRuntime.workspaceGraphDraftStore,
     workspaceRoot: storageRuntime.workspaceFilesRoot,
     dbtBundleStore: storageRuntime.dbtBundleStore,
+    ...(storageRuntime.runExecutionContextReferenceStore === undefined
+      ? {}
+      : {
+          runExecutionContextReferenceStore: storageRuntime.runExecutionContextReferenceStore,
+        }),
     dbtExecutionTargetResolver,
     warehouseConnectionCatalog: storageRuntime.warehouseConnectionCatalog,
     postgresCredentialResolver: storageRuntime.postgresCredentialResolver,
@@ -188,11 +193,13 @@ export async function buildProtectedRuntimeModule(
     planner: startRunRuntime.planner,
     planCompilePlanner: startRunRuntime.planCompilePlanner,
     planStore: storageRuntime.planStore,
-    runExecutionContextReferenceReader: new FileRunExecutionContextReferenceReader(
-      storageRuntime.dbtBundleStore
+    runExecutionContextReferenceReader: new ArtifactBackedRunExecutionContextReferenceReader(
+      storageRuntime.dbtBundleStore,
+      storageRuntime.runExecutionContextReferenceStore
     ),
-    runExecutionContextInheritanceWriter: new FileRunExecutionContextInheritanceWriter(
-      storageRuntime.dbtBundleStore
+    runExecutionContextInheritanceWriter: new ArtifactBackedRunExecutionContextInheritanceWriter(
+      storageRuntime.dbtBundleStore,
+      storageRuntime.runExecutionContextReferenceStore
     ),
     systemClock: storageRuntime.systemClock,
     runExecutionContextBindingPolicy: storageRuntime.runExecutionContextBindingPolicy,

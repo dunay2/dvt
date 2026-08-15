@@ -6,6 +6,7 @@ import {
   createDefaultS3ContentAddressedArtifactStore,
   type DbtProjectBundleArtifactStore,
   type IContentAddressedArtifactStore,
+  type IRunExecutionContextReferenceStore,
 } from '@dvt/artifacts';
 import { parseRunExecutionContextRef, type RunExecutionContextRef } from '@dvt/contracts';
 
@@ -25,7 +26,8 @@ const RUN_EXECUTION_CONTEXT_MEDIA_TYPE = 'application/json';
 export class ArtifactBackedRunExecutionContextWriter implements IRunExecutionContextWriter {
   public constructor(
     private readonly store: DbtProjectBundleArtifactStore | undefined,
-    private readonly s3ArtifactStore?: IContentAddressedArtifactStore
+    private readonly s3ArtifactStore?: IContentAddressedArtifactStore,
+    private readonly referenceStore?: IRunExecutionContextReferenceStore
   ) {}
 
   public async write(
@@ -37,7 +39,11 @@ export class ArtifactBackedRunExecutionContextWriter implements IRunExecutionCon
     const sha256 = createHash('sha256').update(bytes).digest('hex');
 
     if (this.store.kind === 's3') {
+      if (this.referenceStore === undefined) {
+        return { ok: false, reason: 'artifact_store_unavailable' };
+      }
       const uri = `s3://${this.store.bucket}/tenants/${input.context.tenantId}/${sha256}`;
+      const ref = buildReference(input.context, uri, sha256);
       const artifactStore = this.s3ArtifactStore ?? createDefaultS3ContentAddressedArtifactStore();
       await artifactStore.publish({
         tenantId: input.context.tenantId,
@@ -47,7 +53,12 @@ export class ArtifactBackedRunExecutionContextWriter implements IRunExecutionCon
         mediaType: RUN_EXECUTION_CONTEXT_MEDIA_TYPE,
         bytes,
       });
-      return { ok: true, ref: buildReference(input.context, uri, sha256) };
+      await this.referenceStore.put({
+        tenantId: input.context.tenantId,
+        runId: input.runId,
+        ref,
+      });
+      return { ok: true, ref };
     }
 
     const artifactPath = resolveRunExecutionContextArtifactPath({

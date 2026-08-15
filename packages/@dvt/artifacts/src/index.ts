@@ -35,6 +35,11 @@ export type {
   StorePlanArtifactInput,
 } from './ports/IStoredPlanArtifactStore.js';
 export type { IRunExecutionContextReader } from './ports/IRunExecutionContextReader.js';
+export type {
+  IRunExecutionContextReferenceStore,
+  PutRunExecutionContextReferenceInput,
+  RunExecutionContextReferenceIdentity,
+} from './ports/IRunExecutionContextReferenceStore.js';
 export { ArtifactReadError, type ArtifactReadErrorCode } from './runtime/ArtifactReadError.js';
 export {
   ArtifactBackedDbtProjectBundleReader,
@@ -48,6 +53,10 @@ export {
   ArtifactBackedRunExecutionContextReader,
   type ArtifactBackedRunExecutionContextReaderOptions,
 } from './runtime/ArtifactBackedRunExecutionContextReader.js';
+export {
+  S3RunExecutionContextReferenceStore,
+  type S3RunExecutionContextReferenceStoreOptions,
+} from './runtime/S3RunExecutionContextReferenceStore.js';
 export {
   validateArtifactIntegrity,
   type ArtifactIntegrityInput,

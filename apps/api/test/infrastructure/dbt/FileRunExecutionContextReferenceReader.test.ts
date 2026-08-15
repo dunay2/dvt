@@ -10,6 +10,8 @@ import type {
   RunExecutionContextExpectedBinding,
   RunExecutionContextReferenceQuery,
 } from '../../../src/application/ports/runExecutionContextReferenceReader.js';
+import { ArtifactBackedRunExecutionContextInheritanceWriter } from '../../../src/infrastructure/dbt/ArtifactBackedRunExecutionContextInheritanceWriter.js';
+import { ArtifactBackedRunExecutionContextReferenceReader } from '../../../src/infrastructure/dbt/ArtifactBackedRunExecutionContextReferenceReader.js';
 import { ArtifactBackedRunExecutionContextWriter } from '../../../src/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.js';
 import { FileRunExecutionContextInheritanceWriter } from '../../../src/infrastructure/dbt/FileRunExecutionContextInheritanceWriter.js';
 import { FileRunExecutionContextReferenceReader } from '../../../src/infrastructure/dbt/FileRunExecutionContextReferenceReader.js';
@@ -285,14 +287,6 @@ describe('FileRunExecutionContextReferenceReader', () => {
   });
 
   it('persists and inherits a trusted S3 context reference for recovery', async () => {
-    const inheritanceModulePath =
-      '../../../src/infrastructure/dbt/ArtifactBackedRunExecutionContextInheritanceWriter.js';
-    const readerModulePath =
-      '../../../src/infrastructure/dbt/ArtifactBackedRunExecutionContextReferenceReader.js';
-    const { ArtifactBackedRunExecutionContextInheritanceWriter } = await import(
-      inheritanceModulePath
-    );
-    const { ArtifactBackedRunExecutionContextReferenceReader } = await import(readerModulePath);
     const context = parseRunExecutionContext({
       schemaVersion: 'v1.0',
       planId: 'a'.repeat(64),

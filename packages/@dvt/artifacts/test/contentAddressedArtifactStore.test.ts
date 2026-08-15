@@ -190,4 +190,40 @@ describe('S3RunExecutionContextReferenceStore', () => {
     expect(command?.input.Key).not.toContain(TENANT_ID);
     expect(command?.input.Key).not.toContain('unsafe');
   });
+
+  it('rejects a conflicting reference for an existing run identity', async () => {
+    const ref = {
+      uri: `s3://het2-artifacts/tenants/${TENANT_ID}/${'a'.repeat(64)}`,
+      sha256: 'a'.repeat(64),
+      schemaVersion: 'v1.0' as const,
+      planId: 'b'.repeat(64),
+      planVersion: '1.0',
+    };
+    const conflictingRef = {
+      ...ref,
+      uri: `s3://het2-artifacts/tenants/${TENANT_ID}/${'c'.repeat(64)}`,
+      sha256: 'c'.repeat(64),
+    };
+    const alreadyExists = Object.assign(new Error('provider detail'), {
+      name: 'PreconditionFailed',
+      $metadata: { httpStatusCode: 412 },
+    });
+    const send = vi.fn(async (command: unknown) => {
+      if (command instanceof PutObjectCommand) throw alreadyExists;
+      const bytes = Buffer.from(JSON.stringify(conflictingRef), 'utf8');
+      return {
+        Body: { transformToByteArray: async () => Uint8Array.from(bytes) },
+        ContentLength: bytes.byteLength,
+        ContentType: 'application/json',
+      };
+    });
+    const store = new S3RunExecutionContextReferenceStore({
+      bucket: 'het2-artifacts',
+      client: { send } as never,
+    });
+
+    await expect(store.put({ tenantId: TENANT_ID, runId: 'run-1', ref })).rejects.toMatchObject({
+      code: 'ARTIFACT_UPLOAD_FAILED',
+    });
+  });
 });

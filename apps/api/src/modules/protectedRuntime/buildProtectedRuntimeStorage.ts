@@ -3,6 +3,7 @@
  * dependencies for `apps/api`.
  */
 import { PostgresCredentialBindingResolver } from '@dvt/adapter-postgres';
+import { S3RunExecutionContextReferenceStore } from '@dvt/artifacts';
 import { asIsoUtcString, createDefaultStepTypeRegistry } from '@dvt/contracts';
 import type { ExecutionPlan } from '@dvt/engine';
 
@@ -62,6 +63,10 @@ export function buildProtectedRuntimeStorage(deps: BuildProtectedRuntimeStorageD
   });
   const systemClock = { nowIsoUtc: () => asIsoUtcString(new Date().toISOString()) };
   const dbtBundleStore = resolveDbtBundleArtifactStore(deps.env);
+  const runExecutionContextReferenceStore =
+    dbtBundleStore?.kind === 's3'
+      ? new S3RunExecutionContextReferenceStore({ bucket: dbtBundleStore.bucket })
+      : undefined;
   const workspaceFilesRoot = resolveWorkspaceFilesRoot(deps.env);
   const warehouseConnectionCatalog = new WorkspaceWarehouseConnectionCatalog({
     repository: new LocalWorkspaceMetadataFileRepository({ root: workspaceFilesRoot }),
@@ -89,6 +94,7 @@ export function buildProtectedRuntimeStorage(deps: BuildProtectedRuntimeStorageD
     warehouseConnectionCatalog,
     postgresCredentialResolver,
     dbtBundleStore,
+    runExecutionContextReferenceStore,
     runExecutionContextResolver,
     runExecutionContextBindingPolicy,
   };

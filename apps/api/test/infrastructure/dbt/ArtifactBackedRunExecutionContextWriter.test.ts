@@ -38,9 +38,11 @@ describe('ArtifactBackedRunExecutionContextWriter', () => {
       sizeBytes: input.sizeBytes,
       mediaType: input.mediaType,
     }));
+    const put = vi.fn(async () => undefined);
     const writer = new ArtifactBackedRunExecutionContextWriter(
       { kind: 's3', bucket: 'dvt-run-contexts' },
-      { publish }
+      { publish },
+      { put, get: vi.fn(async () => undefined) }
     );
 
     const result = await writer.write({ runId: 'run-1', context });
@@ -58,6 +60,27 @@ describe('ArtifactBackedRunExecutionContextWriter', () => {
         mediaType: 'application/json',
       })
     );
+    expect(put).toHaveBeenCalledWith({
+      tenantId: context.tenantId,
+      runId: 'run-1',
+      ref: result.ref,
+    });
+  });
+
+  it('fails closed before S3 publication when the recovery reference store is absent', async () => {
+    const publish = vi.fn(async () => {
+      throw new Error('must not publish');
+    });
+    const writer = new ArtifactBackedRunExecutionContextWriter(
+      { kind: 's3', bucket: 'dvt-run-contexts' },
+      { publish }
+    );
+
+    await expect(writer.write({ runId: 'run-1', context: buildContext() })).resolves.toEqual({
+      ok: false,
+      reason: 'artifact_store_unavailable',
+    });
+    expect(publish).not.toHaveBeenCalled();
   });
 });
 
