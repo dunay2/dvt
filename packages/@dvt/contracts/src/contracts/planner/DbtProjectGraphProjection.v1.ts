@@ -28,6 +28,10 @@ const IsoUtcStringSchema = NonBlankStringSchema.refine(isIsoUtcString, {
 });
 const NonNegativeIntegerSchema = z.number().int().nonnegative();
 
+export const DBT_PROJECT_GRAPH_PROJECTION_FEATURE = {
+  governedSourceIdentity: 'governed-source-identity.v1',
+} as const;
+
 function addDuplicateIssues(
   values: readonly string[],
   ctx: z.RefinementCtx,

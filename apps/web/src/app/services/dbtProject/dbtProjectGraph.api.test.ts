@@ -63,7 +63,7 @@ describe('dbtProjectGraph api query port', () => {
       projection
     );
     expect(requestRaw).toHaveBeenCalledWith(
-      `/workspace/dbt/graph?tenantId=${scope.tenantId}&projectId=${scope.projectId}&environmentId=${scope.environmentId}&canvasId=analytics-canvas&projectRoot=.`,
+      `/workspace/dbt/graph?tenantId=${scope.tenantId}&projectId=${scope.projectId}&environmentId=${scope.environmentId}&canvasId=analytics-canvas&projectRoot=.&projectionFeature=governed-source-identity.v1`,
       { method: 'GET' }
     );
   });

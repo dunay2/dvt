@@ -1,6 +1,7 @@
 /** Owned concern: adapt ProjectDbtGraphFromFiles to the browser query port. */
 import {
   CanvasAuthoringAuthorityBindingSchema,
+  DBT_PROJECT_GRAPH_PROJECTION_FEATURE,
   DbtProjectGraphProjectionSchema,
 } from '@dvt/contracts';
 
@@ -40,6 +41,7 @@ function buildDbtProjectGraphEndpoint(binding: DbtProjectFilesAuthorityBinding):
     environmentId,
     canvasId: parsedBinding.canvasId,
     projectRoot: parsedBinding.authority.projectRoot,
+    projectionFeature: DBT_PROJECT_GRAPH_PROJECTION_FEATURE.governedSourceIdentity,
   });
   return `${DBT_PROJECT_GRAPH_ENDPOINT}?${query.toString()}`;
 }
