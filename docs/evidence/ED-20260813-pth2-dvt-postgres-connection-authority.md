@@ -19,6 +19,8 @@ code_refs:
   - packages/@dvt/adapter-postgres/src/PostgresRelationalExecutionCapability.ts
   - apps/temporal-worker/src/runtime/TemporalWorkerPostgresPlanConnectionResolver.ts
   - packages/@dvt/artifacts/src/runtime/S3RunExecutionContextReferenceStore.ts
+  - packages/@dvt/artifacts/src/contentAddressed/S3ContentAddressedArtifactStore.ts
+  - apps/api/src/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.ts
   - apps/api/src/infrastructure/dbt/ArtifactBackedRunExecutionContextReferenceReader.ts
   - apps/api/src/infrastructure/dbt/ArtifactBackedRunExecutionContextInheritanceWriter.ts
   - apps/api/src/modules/protectedRuntime/buildProtectedRuntimeStorage.ts
@@ -31,6 +33,7 @@ evidence:
     - pnpm --filter dvt-api typecheck
     - pnpm --filter ./apps/api exec vitest run test/infrastructure/dbt/ArtifactBackedRunExecutionContextWriter.test.ts --maxWorkers=1 --minWorkers=1
     - pnpm --filter @dvt/artifacts test
+    - pnpm --filter @dvt/artifacts exec vitest run test/contentAddressedArtifactStore.test.ts --config vitest.config.ts --maxWorkers=1 --minWorkers=1
     - pnpm --filter @dvt/artifacts typecheck
     - pnpm --filter @dvt/web test:canvas
     - pnpm --filter @dvt/web lint
@@ -104,7 +107,9 @@ identical replay is accepted. Status and `RecoverRun` now load the same trusted
 reference through the artifact-backed reader; recovery verifies the source
 payload and records the descendant run identity against the same immutable S3
 context. Missing, malformed, cross-tenant or conflicting references fail
-closed.
+closed. S3 context locators use one canonical URL-encoded tenant segment across
+publication, reference persistence and trust validation, so reserved tenant
+characters cannot change the object-key structure or escape their scope.
 
 The headed browser proof created a new governed project and Warehouse
 Connection, imported `raw.orders`, authored Source -> Transform -> Sink,

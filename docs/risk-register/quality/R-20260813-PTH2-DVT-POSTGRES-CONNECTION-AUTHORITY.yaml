@@ -36,6 +36,8 @@ mitigations:
     DATABASE_URL.
   - Persist an immutable S3 run-to-reference index with hashed scope keys, conditional writes and
     exact replay verification so status and recovery use the same trusted context as StartRun.
+  - URL-encode the tenant segment through one canonical helper for S3 publication, reference
+    validation and recovery trust checks.
   - Bind Canvas connection-test feedback to the selected connection and latest request sequence,
     discarding stale or mismatched responses and clearing visible feedback after an authoritative
     selection or node change.
