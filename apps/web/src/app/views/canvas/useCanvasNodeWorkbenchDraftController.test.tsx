@@ -133,6 +133,31 @@ describe('useCanvasNodeWorkbenchDraftController', () => {
     expect(harness.getController().draft.tags).toEqual(['mart', 'daily']);
   });
 
+  it('keeps semantic authoring tags outside the business-tag editor and preserves them', async () => {
+    await harness.renderNode({
+      ...DVT_TRANSFORM_NODE,
+      tags: ['authoring', 'template:filter-rows', 'target:reporting-view-replace', 'finance'],
+    });
+
+    expect(harness.getController().tagsText).toBe('finance');
+
+    await act(async () => {
+      harness
+        .getController()
+        .onTagsTextChange('critical, authoring, template:override, target:override');
+    });
+
+    expect(harness.getController().draft.tags).toEqual([
+      'authoring',
+      'template:filter-rows',
+      'target:reporting-view-replace',
+      'critical',
+    ]);
+    expect(harness.getController().tagsText).toBe(
+      'critical, authoring, template:override, target:override'
+    );
+  });
+
   it('updates a clean draft when the same node authoritative snapshot changes', async () => {
     await harness.renderNode(MODEL_NODE);
     await harness.renderNode({

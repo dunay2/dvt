@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 
+import { fireEvent } from '@testing-library/dom';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GraphNodeTagList } from './GraphNodeTagList';
 
@@ -39,14 +40,16 @@ describe('GraphNodeTagList', () => {
     expect(container.querySelector('[data-slot="graph-node-tag-list"]')).toBeNull();
   });
 
-  it('renders already-selected display tags without choosing them from metadata', () => {
+  it('renders already-selected display tags with explicit overflow instead of hiding values', () => {
     act(() => {
       root.render(<GraphNodeTagList tags={['postgres', 'public', 'source', 'hidden']} />);
     });
 
     expect(container.querySelector('[data-slot="graph-node-tag-list"]')).not.toBeNull();
-    expect(container.textContent).toBe('postgrespublicsource');
-    expect(container.textContent).not.toContain('hidden');
+    expect(container.textContent).toBe('postgrespublicsource+1');
+    expect(
+      container.querySelector('[data-slot="graph-node-tag-overflow"]')?.getAttribute('title')
+    ).toBe('hidden');
   });
 
   it('honors the supplied visible tag limit', () => {
@@ -54,7 +57,33 @@ describe('GraphNodeTagList', () => {
       root.render(<GraphNodeTagList tags={['model', 'authoring']} limit={1} />);
     });
 
-    expect(container.textContent).toBe('model');
+    expect(container.textContent).toBe('model+1');
+  });
+
+  it('selects the canonical tag through a localized keyboard-operable action', () => {
+    const onSelectTag = vi.fn();
+
+    act(() => {
+      root.render(
+        <GraphNodeTagList
+          tags={['En edición', 'finanzas']}
+          canonicalTags={['authoring', 'finance']}
+          onSelectTag={onSelectTag}
+          getSelectTagLabel={(tag) => `Filtrar por la etiqueta ${tag}`}
+        />
+      );
+    });
+
+    const button = container.querySelector<HTMLButtonElement>(
+      'button[aria-label="Filtrar por la etiqueta En edición"]'
+    );
+    expect(button).not.toBeNull();
+    expect(button?.className).toContain('cursor-pointer');
+
+    act(() => fireEvent.click(button!));
+
+    expect(onSelectTag).toHaveBeenCalledOnce();
+    expect(onSelectTag).toHaveBeenCalledWith('authoring');
   });
 
   it('renders the supplied accent tone without deriving it from tag text', () => {
