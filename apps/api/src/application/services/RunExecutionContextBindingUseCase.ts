@@ -291,10 +291,28 @@ function buildRunExecutionContext(input: {
     projectId: input.scope.projectId,
     environmentId: input.scope.environmentId,
     targetAdapter: input.command.targetAdapter,
-    createdAtIso: input.context.authorizedAt.toISOString(),
+    createdAtIso: resolveRunContextCreatedAtIso(input.command.runId, input.context.authorizedAt),
     createdBy: input.context.principal.principalId,
     pluginContexts: input.pluginContexts,
   });
+}
+
+function resolveRunContextCreatedAtIso(runId: string, authorizedAt: Date): string {
+  const uuid = runId.startsWith('run_') ? runId.slice('run_'.length) : '';
+  const segments = uuid.split('-');
+  if (
+    segments.length !== 5 ||
+    segments[0]?.length !== 8 ||
+    segments[1]?.length !== 4 ||
+    segments[2]?.length !== 4 ||
+    segments[2]?.[0] !== '7' ||
+    !/^[0-9a-f]+$/u.test(segments.join(''))
+  ) {
+    return authorizedAt.toISOString();
+  }
+
+  const timestampMs = Number.parseInt(`${segments[0]}${segments[1]}`, 16);
+  return new Date(timestampMs).toISOString();
 }
 
 function renderBundleFailure(failure: Extract<DbtProjectBundleBuildResult, { ok: false }>): string {
