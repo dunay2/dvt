@@ -1,0 +1,33 @@
+---
+id: R-20260815-WAREHOUSE-CONNECTION-RENAME
+title: Warehouse connection rename could change identity or bypass workspace authorization
+status: Closed
+date: 2026-08-15
+owners:
+  - apps/api
+  - apps/web
+  - packages/@dvt/contracts
+severity: High
+probability: Low
+context: >
+  Warehouse connection identifiers are derived when connections are created and are subsequently
+  referenced by source discovery and canvas import flows.
+risk: >
+  Treating rename as recreation or as an unrestricted patch could invalidate references, expose
+  credential mutation, overwrite concurrent catalog edits, or authorize a write outside the active
+  workspace.
+mitigations:
+  - RenameWarehouseConnection is a dedicated command with a strict name-only contract.
+  - The catalog preserves ID, type, database, credential reference, and source-object metadata.
+  - The protected route requires workspace:source-connection:rename and fails closed.
+  - Case-insensitive duplicate, invalid, missing, unauthorized, and revision-conflict paths are
+    tested.
+  - The Web interaction reuses Source Import, preserves selection, localizes feedback, and keeps
+    nested Escape cancellation inside the dialog.
+  - The Source Import dialog remains viewport-bounded at supported desktop sizes and 200% zoom.
+closure_evidence:
+  - docs/evidence/ED-20260815-warehouse-connection-rename.md
+  - apps/api/test/entrypoints/http/warehouseSourceImportRoutes.test.ts
+  - apps/api/test/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionCatalog.test.ts
+  - apps/web/src/app/components/SourceImportWizard.test.tsx
+---

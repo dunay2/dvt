@@ -113371,7 +113371,7 @@
         "pnpm --filter @dvt/web test:unit:run -- src/app/services/workspace/workspacePorts.api.test.ts"
       ],
       "sourcePath": "apps/web/src/app/services/workspace/workspacePorts.api.ts",
-      "sourceContentSha256": "eee4ea86fc1e8b897a44559bed02925e170c109ec174ff78f5a2791255c03c66",
+      "sourceContentSha256": "7f86058d2834a24953a3b5242b012eca55f8441d29eef3c0bfe32835586a3827",
       "rawRail": {
         "name": "ListAdminAuditLog",
         "type": "query",
@@ -113439,7 +113439,7 @@
         "pnpm --filter @dvt/web test:unit:run -- src/app/services/workspace/workspacePorts.api.test.ts"
       ],
       "sourcePath": "apps/web/src/app/services/workspace/workspacePorts.api.ts",
-      "sourceContentSha256": "eee4ea86fc1e8b897a44559bed02925e170c109ec174ff78f5a2791255c03c66",
+      "sourceContentSha256": "7f86058d2834a24953a3b5242b012eca55f8441d29eef3c0bfe32835586a3827",
       "rawRail": {
         "name": "ListAdminRoles",
         "type": "query",
@@ -156133,6 +156133,234 @@
       "createdAt": "2026-07-31T19:13:06.127Z"
     },
     {
+      "railId": "local#PTH1-2366-WAREHOUSE-CONNECTION-RENAME#command#renamewarehouseconnection",
+      "featureId": "PTH1-2366-WAREHOUSE-CONNECTION-RENAME",
+      "mechanizationStatus": "implemented",
+      "railName": "RenameWarehouseConnection",
+      "normalizedRailName": "renamewarehouseconnection",
+      "railType": "command",
+      "dddOwner": "Warehouse Connection aggregate",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "packages/@dvt/contracts/src/contracts/source-import/SourceImportOperations.v1.ts#RenameWarehouseConnectionRequestSchema",
+        "apps/api/src/application/services/renameWarehouseConnectionUseCase.ts#RenameWarehouseConnectionUseCase",
+        "apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionCatalog.ts#WorkspaceWarehouseConnectionCatalog.renameConnection",
+        "apps/api/src/entrypoints/http/warehouseSourceImportRoutes.ts#registerWarehouseSourceImportRoutes",
+        "apps/web/src/app/services/workspace/workspacePorts.api.ts#renameWarehouseConnection",
+        "apps/web/src/app/components/sourceImportWizard/useSourceImportWizard.ts#handleRenameConnection",
+        "apps/web/src/app/components/sourceImportWizard/WarehouseConnectionRenameForm.tsx#WarehouseConnectionRenameForm"
+      ],
+      "implementationRefs": [
+        "packages/@dvt/contracts/src/contracts/source-import/SourceImportOperations.v1.ts#RenameWarehouseConnectionRequestSchema",
+        "apps/api/src/application/services/renameWarehouseConnectionUseCase.ts#RenameWarehouseConnectionUseCase",
+        "apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionCatalog.ts#WorkspaceWarehouseConnectionCatalog.renameConnection",
+        "apps/api/src/entrypoints/http/warehouseSourceImportRoutes.ts#registerWarehouseSourceImportRoutes",
+        "apps/web/src/app/services/workspace/workspacePorts.api.ts#renameWarehouseConnection",
+        "apps/web/src/app/components/sourceImportWizard/useSourceImportWizard.ts#handleRenameConnection",
+        "apps/web/src/app/components/sourceImportWizard/WarehouseConnectionRenameForm.tsx#WarehouseConnectionRenameForm"
+      ],
+      "documentationRefs": [
+        "https://github.com/dunay2/dvt/issues/2366",
+        "docs/evidence/ED-20260815-warehouse-connection-rename.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/planning/state/github-mvp-issue-workflow.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "Existing Source Import connection step, Web workspace port/API adapter, warehouse source import contracts/routes/use cases/catalog, focused tests, and mandatory governed evidence"
+      ],
+      "architectureGuards": [
+        "The rename command changes only name, preserves id/type/database/credentialRef/sourceObjects, and uses optimistic workspace file revision"
+      ],
+      "completionGate": [
+        "Focused contracts/API/Web tests, lint, type-check, headed-browser verification, ARC check, independent Fowler QA, and pnpm verify:prepush",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2366",
+      "sourceContentSha256": "b6492a1811b077ddad3a7fedb22f292aeaa54fd4af0fc973ab459eb4cb816aef",
+      "rawRail": {
+        "name": "RenameWarehouseConnection",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "Warehouse Connection aggregate",
+        "negativeTests": [
+          "Reject blank or malformed names with 400; unknown connection with 404; duplicate case-insensitive name with 409; unauthorized scope fails closed; concurrent workspace revision is not overwritten"
+        ],
+        "adapterSurface": "PATCH /workspace/warehouse/connections/:connectionId through WorkspaceWarehouseConnectionCatalog and the Web workspace port",
+        "applicationPort": "IWarehouseConnectionCatalog.renameConnection",
+        "authorizationScope": "Active tenant/project/environment workspace with workspace:source-connection:rename"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "RenameWarehouseConnectionRequestSchema",
+            "path": "packages/@dvt/contracts/src/contracts/source-import/SourceImportOperations.v1.ts",
+            "cqRails": ["RenameWarehouseConnection"],
+            "dddOwner": "Warehouse Connection aggregate",
+            "unitTests": [
+              "packages/@dvt/contracts/test/source-import/SourceImportOperations.v1.test.ts; apps/api warehouse source import tests; apps/web Source Import wizard tests"
+            ],
+            "fowlerSignals": [
+              "Replace duplicate intent; preserve aggregate identity; encapsulate mutation; reuse Source Import interaction; fail closed; consolidate localized feedback"
+            ],
+            "cypressCoverage": "Headed browser: Source Import -> select connection -> rename -> close/reopen -> reload -> verify persisted name, stable identity, duplicate rejection, ES/EN, keyboard behavior, and viewport bounds",
+            "architectureGuard": "The rename command changes only name, preserves id/type/database/credentialRef/sourceObjects, and uses optimistic workspace file revision"
+          },
+          {
+            "name": "RenameWarehouseConnectionUseCase",
+            "path": "apps/api/src/application/services/renameWarehouseConnectionUseCase.ts",
+            "cqRails": ["RenameWarehouseConnection"],
+            "dddOwner": "Warehouse Connection aggregate",
+            "unitTests": [
+              "packages/@dvt/contracts/test/source-import/SourceImportOperations.v1.test.ts; apps/api warehouse source import tests; apps/web Source Import wizard tests"
+            ],
+            "fowlerSignals": [
+              "Replace duplicate intent; preserve aggregate identity; encapsulate mutation; reuse Source Import interaction; fail closed; consolidate localized feedback"
+            ],
+            "cypressCoverage": "Headed browser: Source Import -> select connection -> rename -> close/reopen -> reload -> verify persisted name, stable identity, duplicate rejection, ES/EN, keyboard behavior, and viewport bounds",
+            "architectureGuard": "The rename command changes only name, preserves id/type/database/credentialRef/sourceObjects, and uses optimistic workspace file revision"
+          },
+          {
+            "name": "WorkspaceWarehouseConnectionCatalog.renameConnection",
+            "path": "apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionCatalog.ts",
+            "cqRails": ["RenameWarehouseConnection"],
+            "dddOwner": "Warehouse Connection aggregate",
+            "unitTests": [
+              "packages/@dvt/contracts/test/source-import/SourceImportOperations.v1.test.ts; apps/api warehouse source import tests; apps/web Source Import wizard tests"
+            ],
+            "fowlerSignals": [
+              "Replace duplicate intent; preserve aggregate identity; encapsulate mutation; reuse Source Import interaction; fail closed; consolidate localized feedback"
+            ],
+            "cypressCoverage": "Headed browser: Source Import -> select connection -> rename -> close/reopen -> reload -> verify persisted name, stable identity, duplicate rejection, ES/EN, keyboard behavior, and viewport bounds",
+            "architectureGuard": "The rename command changes only name, preserves id/type/database/credentialRef/sourceObjects, and uses optimistic workspace file revision"
+          },
+          {
+            "name": "registerWarehouseSourceImportRoutes",
+            "path": "apps/api/src/entrypoints/http/warehouseSourceImportRoutes.ts",
+            "cqRails": ["RenameWarehouseConnection"],
+            "dddOwner": "Warehouse Connection aggregate",
+            "unitTests": [
+              "packages/@dvt/contracts/test/source-import/SourceImportOperations.v1.test.ts; apps/api warehouse source import tests; apps/web Source Import wizard tests"
+            ],
+            "fowlerSignals": [
+              "Replace duplicate intent; preserve aggregate identity; encapsulate mutation; reuse Source Import interaction; fail closed; consolidate localized feedback"
+            ],
+            "cypressCoverage": "Headed browser: Source Import -> select connection -> rename -> close/reopen -> reload -> verify persisted name, stable identity, duplicate rejection, ES/EN, keyboard behavior, and viewport bounds",
+            "architectureGuard": "The rename command changes only name, preserves id/type/database/credentialRef/sourceObjects, and uses optimistic workspace file revision"
+          },
+          {
+            "name": "renameWarehouseConnection",
+            "path": "apps/web/src/app/services/workspace/workspacePorts.api.ts",
+            "cqRails": ["RenameWarehouseConnection"],
+            "dddOwner": "Warehouse Connection aggregate",
+            "unitTests": [
+              "packages/@dvt/contracts/test/source-import/SourceImportOperations.v1.test.ts; apps/api warehouse source import tests; apps/web Source Import wizard tests"
+            ],
+            "fowlerSignals": [
+              "Replace duplicate intent; preserve aggregate identity; encapsulate mutation; reuse Source Import interaction; fail closed; consolidate localized feedback"
+            ],
+            "cypressCoverage": "Headed browser: Source Import -> select connection -> rename -> close/reopen -> reload -> verify persisted name, stable identity, duplicate rejection, ES/EN, keyboard behavior, and viewport bounds",
+            "architectureGuard": "The rename command changes only name, preserves id/type/database/credentialRef/sourceObjects, and uses optimistic workspace file revision"
+          },
+          {
+            "name": "handleRenameConnection",
+            "path": "apps/web/src/app/components/sourceImportWizard/useSourceImportWizard.ts",
+            "cqRails": ["RenameWarehouseConnection"],
+            "dddOwner": "Warehouse Connection aggregate",
+            "unitTests": [
+              "packages/@dvt/contracts/test/source-import/SourceImportOperations.v1.test.ts; apps/api warehouse source import tests; apps/web Source Import wizard tests"
+            ],
+            "fowlerSignals": [
+              "Replace duplicate intent; preserve aggregate identity; encapsulate mutation; reuse Source Import interaction; fail closed; consolidate localized feedback"
+            ],
+            "cypressCoverage": "Headed browser: Source Import -> select connection -> rename -> close/reopen -> reload -> verify persisted name, stable identity, duplicate rejection, ES/EN, keyboard behavior, and viewport bounds",
+            "architectureGuard": "The rename command changes only name, preserves id/type/database/credentialRef/sourceObjects, and uses optimistic workspace file revision"
+          },
+          {
+            "name": "WarehouseConnectionRenameForm",
+            "path": "apps/web/src/app/components/sourceImportWizard/WarehouseConnectionRenameForm.tsx",
+            "cqRails": ["RenameWarehouseConnection"],
+            "dddOwner": "Warehouse Connection aggregate",
+            "unitTests": [
+              "packages/@dvt/contracts/test/source-import/SourceImportOperations.v1.test.ts; apps/api warehouse source import tests; apps/web Source Import wizard tests"
+            ],
+            "fowlerSignals": [
+              "Replace duplicate intent; preserve aggregate identity; encapsulate mutation; reuse Source Import interaction; fail closed; consolidate localized feedback"
+            ],
+            "cypressCoverage": "Headed browser: Source Import -> select connection -> rename -> close/reopen -> reload -> verify persisted name, stable identity, duplicate rejection, ES/EN, keyboard behavior, and viewport bounds",
+            "architectureGuard": "The rename command changes only name, preserves id/type/database/credentialRef/sourceObjects, and uses optimistic workspace file revision"
+          }
+        ],
+        "version": 1,
+        "featureId": "PTH1-2366-WAREHOUSE-CONNECTION-RENAME",
+        "userStories": [
+          "As a workspace user I can rename a selected governed warehouse connection without changing its identity or credentials"
+        ],
+        "cypressFlows": [
+          "Headed browser: Source Import -> select connection -> rename -> close/reopen -> reload -> verify persisted name and stable identity in ES and EN",
+          "Headed browser: Source Import -> select connection -> rename -> close/reopen -> reload -> verify persisted name, stable identity, duplicate rejection, ES/EN, keyboard behavior, and viewport bounds"
+        ],
+        "domainObjects": [
+          "Warehouse Connection aggregate with stable connectionId and mutable display name"
+        ],
+        "fowlerSignals": [
+          "Replace duplicate intent; preserve aggregate identity; encapsulate mutation; reuse Source Import interaction; fail closed; consolidate localized feedback"
+        ],
+        "completionGate": [
+          "Focused contracts/API/Web tests, lint, type-check, headed-browser verification, ARC check, independent Fowler QA, and pnpm verify:prepush",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "renamewarehouseconnection-record",
+            "redTest": "The canonical rename request schema, use case/catalog route, Web port/controller, and selected-connection action do not exist and focused tests fail before production edits",
+            "greenTest": "A selected connection can be renamed in ES/EN; stable ID and all non-name fields persist unchanged; duplicate, invalid, missing, unauthorized, and concurrent cases fail explicitly",
+            "patchSurfaces": [
+              "Existing Source Import connection step, Web workspace port/API adapter, warehouse source import contracts/routes/use cases/catalog, focused tests, and mandatory governed evidence"
+            ],
+            "expectedFailure": "RenameWarehouseConnection is absent from contract, protected route, persistence catalog, Web port, and Source Import UI"
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/components/web/frontend-component-inventory.md"
+        ],
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/state/github-mvp-issue-workflow.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "RenameWarehouseConnection",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "Warehouse Connection aggregate",
+            "negativeTests": [
+              "Reject blank or malformed names with 400; unknown connection with 404; duplicate case-insensitive name with 409; unauthorized scope fails closed; concurrent workspace revision is not overwritten"
+            ],
+            "adapterSurface": "PATCH /workspace/warehouse/connections/:connectionId through WorkspaceWarehouseConnectionCatalog and the Web workspace port",
+            "applicationPort": "IWarehouseConnectionCatalog.renameConnection",
+            "authorizationScope": "Active tenant/project/environment workspace with workspace:source-connection:rename"
+          }
+        ],
+        "architectureGuards": [
+          "The rename command changes only name, preserves id/type/database/credentialRef/sourceObjects, and uses optimistic workspace file revision"
+        ],
+        "implementationPlan": "TDD in microcommits: contract/API red tests; explicit protected rename command; Web red interaction tests; accessible localized inline rename form; browser and regression evidence",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "Existing Source Import connection step, Web workspace port/API adapter, warehouse source import contracts/routes/use cases/catalog, focused tests, and mandatory governed evidence"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "Standalone connection-management page, regenerated connection IDs, credential edits, browser-only persistence, raw transport errors, migrations, unrelated CI changes"
+        ]
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-15T02:28:04.025Z"
+    },
+    {
       "railId": "local#PTH1-CONNECTED-SOURCE-TRUTH#command#configureapplicationlanguage",
       "featureId": "PTH1-CONNECTED-SOURCE-TRUTH",
       "mechanizationStatus": "implemented",
@@ -196512,6 +196740,168 @@
         "forbiddenImplementationSurfaces": ["apps/api/**"]
       },
       "createdAt": "2026-08-15T01:34:07.521Z"
+    },
+    {
+      "operationId": "77585934-1a99-4b2b-b154-c7a606304c04",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:PTH1-2366-WAREHOUSE-CONNECTION-RENAME:command:renamewarehouseconnection:latest:76581f65306574a2",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH1-2366-WAREHOUSE-CONNECTION-RENAME#command#renamewarehouseconnection",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2366",
+      "sourceContentSha256": "b630fcffb3f09306860ed40be3fc651bff84133f79037da5c223cad5d27301f2",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "The canonical rename request schema, use case/catalog route, Web port/controller, and selected-connection action do not exist and focused tests fail before production edits",
+        "dddOwner": "Warehouse Connection aggregate",
+        "railName": "RenameWarehouseConnection",
+        "railType": "command",
+        "featureId": "PTH1-2366-WAREHOUSE-CONNECTION-RENAME",
+        "greenTest": "A selected connection can be renamed in ES/EN; stable ID and all non-name fields persist unchanged; duplicate, invalid, missing, unauthorized, and concurrent cases fail explicitly",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2366",
+        "unitTests": [
+          "packages/@dvt/contracts/test/source-import/SourceImportOperations.v1.test.ts; apps/api warehouse source import tests; apps/web Source Import wizard tests"
+        ],
+        "railStatus": "planned",
+        "userStories": [
+          "As a workspace user I can rename a selected governed warehouse connection without changing its identity or credentials"
+        ],
+        "cypressFlows": [
+          "Headed browser: Source Import -> select connection -> rename -> close/reopen -> reload -> verify persisted name and stable identity in ES and EN"
+        ],
+        "domainObjects": [
+          "Warehouse Connection aggregate with stable connectionId and mutable display name"
+        ],
+        "fowlerSignals": [
+          "Replace duplicate intent; preserve aggregate identity; encapsulate mutation; reuse Source Import interaction; fail closed; consolidate localized feedback"
+        ],
+        "negativeTests": [
+          "Reject blank or malformed names with 400; unknown connection with 404; duplicate case-insensitive name with 409; unauthorized scope fails closed; concurrent workspace revision is not overwritten"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "PATCH /workspace/warehouse/connections/:connectionId through WorkspaceWarehouseConnectionCatalog and the Web workspace port",
+        "completionGate": [
+          "Focused contracts/API/Web tests, lint, type-check, headed-browser verification, ARC check, independent Fowler QA, and pnpm verify:prepush",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "IWarehouseConnectionCatalog.renameConnection",
+        "componentGuides": [
+          "docs/architecture/components/web/frontend-component-inventory.md"
+        ],
+        "expectedFailure": "RenameWarehouseConnection is absent from contract, protected route, persistence catalog, Web port, and Source Import UI",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/state/github-mvp-issue-workflow.md"
+        ],
+        "documentationRefs": ["https://github.com/dunay2/dvt/issues/2366"],
+        "architectureGuards": [
+          "The rename command changes only name, preserves id/type/database/credentialRef/sourceObjects, and uses optimistic workspace file revision"
+        ],
+        "authorizationScope": "Active tenant/project/environment workspace with workspace:source-connection:rename",
+        "implementationPlan": "TDD in microcommits: contract/API red tests; explicit protected rename command; Web red interaction tests; accessible localized inline rename form; browser and regression evidence",
+        "implementationRefs": [
+          "apps/api/src/application/services/renameWarehouseConnectionUseCase.ts#RenameWarehouseConnectionUseCase"
+        ],
+        "normalizedRailName": "renamewarehouseconnection",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "b630fcffb3f09306860ed40be3fc651bff84133f79037da5c223cad5d27301f2",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": [
+          "Existing Source Import connection step, Web workspace port/API adapter, warehouse source import contracts/routes/use cases/catalog, focused tests, and mandatory governed evidence"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "Standalone connection-management page, regenerated connection IDs, credential edits, browser-only persistence, raw transport errors, migrations, unrelated CI changes"
+        ]
+      },
+      "createdAt": "2026-08-15T02:28:04.025Z"
+    },
+    {
+      "operationId": "655f248a-3694-4b43-b537-4015ced303e4",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:PTH1-2366-WAREHOUSE-CONNECTION-RENAME:command:renamewarehouseconnection:0:312eb3fff882285f",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH1-2366-WAREHOUSE-CONNECTION-RENAME#command#renamewarehouseconnection",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2366",
+      "sourceContentSha256": "b6492a1811b077ddad3a7fedb22f292aeaa54fd4af0fc973ab459eb4cb816aef",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "The canonical rename request schema, use case/catalog route, Web port/controller, and selected-connection action do not exist and focused tests fail before production edits",
+        "dddOwner": "Warehouse Connection aggregate",
+        "railName": "RenameWarehouseConnection",
+        "railType": "command",
+        "featureId": "PTH1-2366-WAREHOUSE-CONNECTION-RENAME",
+        "greenTest": "A selected connection can be renamed in ES/EN; stable ID and all non-name fields persist unchanged; duplicate, invalid, missing, unauthorized, and concurrent cases fail explicitly",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2366",
+        "unitTests": [
+          "packages/@dvt/contracts/test/source-import/SourceImportOperations.v1.test.ts; apps/api warehouse source import tests; apps/web Source Import wizard tests"
+        ],
+        "railStatus": "implemented",
+        "userStories": [
+          "As a workspace user I can rename a selected governed warehouse connection without changing its identity or credentials"
+        ],
+        "cypressFlows": [
+          "Headed browser: Source Import -> select connection -> rename -> close/reopen -> reload -> verify persisted name, stable identity, duplicate rejection, ES/EN, keyboard behavior, and viewport bounds"
+        ],
+        "domainObjects": [
+          "Warehouse Connection aggregate with stable connectionId and mutable display name"
+        ],
+        "fowlerSignals": [
+          "Replace duplicate intent; preserve aggregate identity; encapsulate mutation; reuse Source Import interaction; fail closed; consolidate localized feedback"
+        ],
+        "negativeTests": [
+          "Reject blank or malformed names with 400; unknown connection with 404; duplicate case-insensitive name with 409; unauthorized scope fails closed; concurrent workspace revision is not overwritten"
+        ],
+        "patchSurfaces": [
+          "Existing Source Import connection step, Web workspace port/API adapter, warehouse source import contracts/routes/use cases/catalog, focused tests, and mandatory governed evidence"
+        ],
+        "adapterSurface": "PATCH /workspace/warehouse/connections/:connectionId through WorkspaceWarehouseConnectionCatalog and the Web workspace port",
+        "completionGate": [
+          "Focused contracts/API/Web tests, lint, type-check, headed-browser verification, ARC check, independent Fowler QA, and pnpm verify:prepush",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "IWarehouseConnectionCatalog.renameConnection",
+        "componentGuides": [
+          "docs/architecture/components/web/frontend-component-inventory.md"
+        ],
+        "expectedFailure": "RenameWarehouseConnection is absent from contract, protected route, persistence catalog, Web port, and Source Import UI",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/state/github-mvp-issue-workflow.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260815-warehouse-connection-rename.md"
+        ],
+        "architectureGuards": [
+          "The rename command changes only name, preserves id/type/database/credentialRef/sourceObjects, and uses optimistic workspace file revision"
+        ],
+        "authorizationScope": "Active tenant/project/environment workspace with workspace:source-connection:rename",
+        "implementationPlan": "TDD in microcommits: contract/API red tests; explicit protected rename command; Web red interaction tests; accessible localized inline rename form; browser and regression evidence",
+        "implementationRefs": [
+          "packages/@dvt/contracts/src/contracts/source-import/SourceImportOperations.v1.ts#RenameWarehouseConnectionRequestSchema",
+          "apps/api/src/application/services/renameWarehouseConnectionUseCase.ts#RenameWarehouseConnectionUseCase",
+          "apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionCatalog.ts#WorkspaceWarehouseConnectionCatalog.renameConnection",
+          "apps/api/src/entrypoints/http/warehouseSourceImportRoutes.ts#registerWarehouseSourceImportRoutes",
+          "apps/web/src/app/services/workspace/workspacePorts.api.ts#renameWarehouseConnection",
+          "apps/web/src/app/components/sourceImportWizard/useSourceImportWizard.ts#handleRenameConnection",
+          "apps/web/src/app/components/sourceImportWizard/WarehouseConnectionRenameForm.tsx#WarehouseConnectionRenameForm"
+        ],
+        "normalizedRailName": "renamewarehouseconnection",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "b6492a1811b077ddad3a7fedb22f292aeaa54fd4af0fc973ab459eb4cb816aef",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": true,
+        "allowedImplementationSurfaces": [
+          "Existing Source Import connection step, Web workspace port/API adapter, warehouse source import contracts/routes/use cases/catalog, focused tests, and mandatory governed evidence"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "Standalone connection-management page, regenerated connection IDs, credential edits, browser-only persistence, raw transport errors, migrations, unrelated CI changes"
+        ]
+      },
+      "createdAt": "2026-08-15T04:02:05.008Z"
     }
   ],
   "governanceComponentDefinitions": [
