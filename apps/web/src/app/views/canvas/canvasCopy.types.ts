@@ -104,6 +104,7 @@ export type CanvasViewCopy = {
   readonly canvasGraphFilterRoleDimensionLabel: string;
   readonly canvasGraphFilterStatusDimensionLabel: string;
   readonly canvasGraphFilterTagDimensionLabel: string;
+  readonly canvasGraphFilterByTagLabelTemplate: string;
   readonly canvasNodeContextEditGroupLabel: string;
   readonly canvasNodeContextDuplicateLabel: string;
   readonly canvasNodeContextSelectForExecutionLabel: string;

@@ -53,6 +53,8 @@ export const graphNodeMetricRowClasses = {
 export const graphNodeTagListClasses = {
   root: 'mt-3 flex flex-wrap gap-1.5',
   tag: 'rounded border border-slate-700 bg-slate-900 px-2 py-0.5 text-xs text-slate-300',
+  interactiveTag:
+    'nodrag nopan cursor-pointer transition hover:brightness-125 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400',
   tone: {
     source: 'border-purple-300/55 bg-purple-500/10 text-purple-100',
     model: 'border-blue-400/35 bg-blue-500/10 text-blue-200',

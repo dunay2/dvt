@@ -23,6 +23,7 @@ export type GraphNodeCardViewProps = Readonly<{
   cardModel: GraphNodeCardReadModel;
   typeLabel: string;
   tags: readonly string[];
+  canonicalTags?: readonly string[];
   columns: readonly GraphNodeCardColumn[];
   showColumns: boolean;
   icon?: LucideIcon;
@@ -37,6 +38,8 @@ export type GraphNodeCardViewProps = Readonly<{
     detail: GraphNodeOperationalDetail,
     anchorElement: HTMLElement
   ) => void;
+  onSelectTag?: (tag: string) => void;
+  getSelectTagLabel?: (tag: string) => string;
 }>;
 
 function openGovernedNodeActions(event: ReactMouseEvent<HTMLButtonElement>): void {
@@ -66,6 +69,7 @@ export function GraphNodeCardView({
   cardModel,
   typeLabel,
   tags,
+  canonicalTags,
   columns,
   showColumns,
   icon: Icon,
@@ -77,6 +81,8 @@ export function GraphNodeCardView({
   overlayStyle,
   playAction,
   onOpenOperationalDetails,
+  onSelectTag,
+  getSelectTagLabel,
 }: GraphNodeCardViewProps): ReactElement {
   const operationalDetail = cardModel.operationalDetail;
   const interactiveOperationalDetail =
@@ -171,7 +177,13 @@ export function GraphNodeCardView({
           </div>
         )}
 
-        <GraphNodeTagList tags={tags} tone={cardModel.accentTone} />
+        <GraphNodeTagList
+          tags={tags}
+          canonicalTags={canonicalTags}
+          tone={cardModel.accentTone}
+          onSelectTag={onSelectTag}
+          getSelectTagLabel={getSelectTagLabel}
+        />
 
         {showColumns && <GraphNodeColumnSection columns={columns} />}
       </div>

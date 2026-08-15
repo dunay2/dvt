@@ -42,6 +42,7 @@ export const canvasViewToolbarCopyEs = {
   canvasGraphFilterRoleDimensionLabel: 'Rol',
   canvasGraphFilterStatusDimensionLabel: 'Estado',
   canvasGraphFilterTagDimensionLabel: 'Etiqueta',
+  canvasGraphFilterByTagLabelTemplate: 'Filtrar el grafo por la etiqueta {tag}',
   canvasNodeContextEditGroupLabel: 'Editar',
   canvasNodeContextDuplicateLabel: 'Duplicar',
   canvasNodeContextSelectForExecutionLabel: 'Seleccionar para ejecución',

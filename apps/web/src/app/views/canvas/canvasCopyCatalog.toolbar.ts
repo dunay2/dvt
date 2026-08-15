@@ -147,6 +147,10 @@ export const canvasViewToolbarCopyByKey = {
     key: 'canvas.graphFilter.tagDimensionLabel',
     fallback: 'Tag',
   },
+  canvasGraphFilterByTagLabelTemplate: {
+    key: 'canvas.graphFilter.byTagLabelTemplate',
+    fallback: 'Filter graph by tag {tag}',
+  },
   canvasNodeContextEditGroupLabel: {
     key: 'canvas.nodeContext.editGroupLabel',
     fallback: 'Edit',

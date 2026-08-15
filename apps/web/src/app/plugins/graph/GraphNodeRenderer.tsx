@@ -8,6 +8,7 @@ import { buildGraphNodeCardPlayAction } from './graphNodeCardActions';
 import { buildGraphNodeCardReadModel } from './graphNodeCardReadModel';
 import type { GraphNodeOperationalDetail } from './graphNodeCardStrategyContracts';
 import { GraphNodeCardView } from './GraphNodeCardView';
+import { resolveGraphNodeTagActionProps } from './GraphNodeTagList';
 
 type ColumnMeta = {
   name: string;
@@ -72,12 +73,14 @@ export function GraphNodeRenderer({
   const displayTags = Array.isArray(data.displayTags)
     ? data.displayTags.filter((tag): tag is string => typeof tag === 'string')
     : node.tags;
+  const tagActionProps = resolveGraphNodeTagActionProps(data);
 
   return (
     <GraphNodeCardView
       cardModel={cardModel}
       typeLabel={typeLabel}
       tags={displayTags}
+      canonicalTags={node.tags}
       columns={columns}
       showColumns={showColumns}
       icon={kindMeta.icon}
@@ -88,6 +91,7 @@ export function GraphNodeRenderer({
       dimmed={dimmed}
       overlayStyle={overlayProps.style}
       playAction={playAction}
+      {...tagActionProps}
       onOpenOperationalDetails={
         typeof openOperationalDetails === 'function'
           ? (detail: GraphNodeOperationalDetail, anchorElement: HTMLElement) => {
