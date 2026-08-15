@@ -83,6 +83,7 @@ describe('DbtProjectGraphProjection.v1', () => {
           uniqueId: 'source.analytics.raw.orders',
           resourceType: 'source',
           name: 'orders',
+          identifier: 'orders-physical',
           packageName: 'analytics',
           originalFilePath: 'models/sources.yml',
           sourceName: 'raw',

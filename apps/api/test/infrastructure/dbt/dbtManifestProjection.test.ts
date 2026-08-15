@@ -50,6 +50,7 @@ describe('projectDbtManifest', () => {
           unique_id: 'source.analytics.raw.orders',
           resource_type: 'source',
           name: 'orders',
+          identifier: 'orders-physical',
           source_name: 'raw',
           package_name: 'analytics',
           database: 'analytics',
@@ -95,6 +96,7 @@ describe('projectDbtManifest', () => {
         }),
         expect.objectContaining({
           uniqueId: 'source.analytics.raw.orders',
+          identifier: 'orders-physical',
           originalFilePath: 'models/sources/src_raw.yml',
           descriptionFilePath: 'models/sources/src_raw.yml',
           sourceIdentityRef: {

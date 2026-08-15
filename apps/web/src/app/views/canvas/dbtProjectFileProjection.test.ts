@@ -33,6 +33,7 @@ function buildProjection(): DbtProjectGraphProjection {
         uniqueId: 'source.analytics.raw_orders',
         resourceType: 'source',
         name: 'raw_orders',
+        identifier: 'raw-orders-physical',
         packageName: 'analytics',
         sourceName: 'raw',
         sourceIdentity: {
@@ -171,8 +172,10 @@ describe('projectDbtProjectGraphToCanonicalCanvas', () => {
       'metric',
     ]);
     expect(projection.nodes[0]).toMatchObject({
+      name: 'raw_orders',
       path: 'models/sources.yml',
       metadata: {
+        tableIdentifier: 'raw-orders-physical',
         packageName: 'analytics',
         sourceName: 'raw',
         database: 'analytics',

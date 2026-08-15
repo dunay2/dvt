@@ -100,6 +100,7 @@ const DbtProjectedNodeSchema = z
     uniqueId: NonBlankStringSchema,
     resourceType: z.enum(['source', 'model', 'seed', 'snapshot', 'test', 'exposure', 'metric']),
     name: NonBlankStringSchema,
+    identifier: NonBlankStringSchema.optional(),
     packageName: NonBlankStringSchema,
     originalFilePath: NonBlankStringSchema.optional(),
     descriptionFilePath: NonBlankStringSchema.optional(),

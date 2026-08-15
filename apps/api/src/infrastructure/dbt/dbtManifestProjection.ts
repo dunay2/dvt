@@ -211,11 +211,13 @@ function projectResource(
     .sort((left, right) => left.name.localeCompare(right.name));
   const testMetadata = projectedType === 'test' ? projectTestMetadata(resource) : undefined;
   const sourceIdentityRef = projectSourceIdentityRef(resource, projectedType);
+  const identifier = projectedType === 'source' ? stringValue(resource.identifier) : undefined;
 
   return {
     uniqueId,
     resourceType: projectedType,
     name,
+    ...(identifier === undefined ? {} : { identifier }),
     packageName,
     ...(normalizedOriginalFilePath === undefined
       ? {}
