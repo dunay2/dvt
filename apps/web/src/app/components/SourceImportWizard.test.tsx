@@ -171,7 +171,9 @@ describe('SourceImportWizard', () => {
             endpoint: '/workspace/warehouse/connections/conn-1',
             statusCode: 409,
             category: 'client',
-            responseBody: { error: 'warehouse_connection_name_conflict' },
+            responseBody: {
+              error: { type: 'conflict', reason: 'warehouse_connection_duplicate' },
+            },
           });
         },
       }),
@@ -191,6 +193,35 @@ describe('SourceImportWizard', () => {
     });
 
     expect(document.body.textContent).toContain('A connection with that name already exists.');
+  });
+
+  it('does not mislabel a catalog revision conflict as a duplicate name', async () => {
+    useApplicationLanguageStore.getState().configureApplicationLanguage('es');
+    await harness.renderWizard({
+      warehouseSourceImport: buildWarehouseSourceImportPort({
+        renameWarehouseConnection: async () => {
+          throw new ApiError({
+            message: 'Request failed (409)',
+            endpoint: '/workspace/warehouse/connections/conn-1',
+            statusCode: 409,
+            category: 'client',
+            responseBody: {
+              error: { type: 'conflict', reason: 'workspace_file_revision_conflict' },
+            },
+          });
+        },
+      }),
+    });
+
+    await harness.clickConnectionOption('Local Postgres proof');
+    await harness.clickButtonContaining('Cambiar nombre');
+    await harness.fillInputByLabel('Nuevo nombre de la conexión', 'Postgres principal');
+    await harness.clickButtonContaining('Guardar nombre');
+    await harness.flushPendingWork();
+
+    expect(document.body.textContent).toContain('No se pudo cambiar el nombre de la conexión.');
+    expect(document.body.textContent).not.toContain('Ya existe una conexión con ese nombre.');
+    expect(document.body.textContent).not.toContain('workspace_file_revision_conflict');
   });
 
   it('keeps a connection catalog failure localized when the language changes', async () => {
