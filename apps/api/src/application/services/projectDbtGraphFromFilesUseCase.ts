@@ -40,13 +40,18 @@ export class ProjectDbtGraphFromFilesUseCase {
       scope: input.scope,
       projectRoot: authorityBinding.authority.projectRoot,
     });
+    const connectionLookups = new Map<
+      string,
+      ReturnType<IWarehouseConnectionCatalog['getConnection']>
+    >();
     const nodes = (
       await Promise.all(
         analysis.resources.map(async ({ codeOnlyReasons, sourceIdentityRef, ...resource }) => {
           const sourceIdentity = await resolveSourceIdentity(
             sourceIdentityRef,
             input.scope,
-            this.deps.connectionCatalog
+            this.deps.connectionCatalog,
+            connectionLookups
           );
           return {
             ...resource,
@@ -104,12 +109,18 @@ export class ProjectDbtGraphFromFilesUseCase {
 export async function resolveSourceIdentity(
   identityRef: DbtProjectSourceIdentityRef | undefined,
   scope: WorkspaceStorageScope,
-  connectionCatalog: Pick<IWarehouseConnectionCatalog, 'getConnection'>
+  connectionCatalog: Pick<IWarehouseConnectionCatalog, 'getConnection'>,
+  connectionLookups?: Map<string, ReturnType<IWarehouseConnectionCatalog['getConnection']>>
 ): Promise<DbtProjectGraphProjection['nodes'][number]['sourceIdentity'] | undefined> {
   if (identityRef === undefined) return undefined;
 
   try {
-    const connection = await connectionCatalog.getConnection(scope, identityRef.connectionId);
+    let connectionLookup = connectionLookups?.get(identityRef.connectionId);
+    if (connectionLookup === undefined) {
+      connectionLookup = connectionCatalog.getConnection(scope, identityRef.connectionId);
+      connectionLookups?.set(identityRef.connectionId, connectionLookup);
+    }
+    const connection = await connectionLookup;
     return {
       database: identityRef.database,
       connectionName: connection.name,

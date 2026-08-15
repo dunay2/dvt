@@ -113,24 +113,25 @@ function buildUseCase(
 ): {
   readonly useCase: ProjectDbtGraphFromFilesUseCase;
   readonly resolve: ReturnType<typeof vi.fn>;
+  readonly getConnection: ReturnType<typeof vi.fn>;
 } {
   const resolve = vi.fn().mockResolvedValue(binding);
+  const getConnection = vi.fn(async () => ({
+    id: 'warehouse-prod',
+    name: 'Current production warehouse',
+    type: 'postgres' as const,
+    database: 'analytics',
+    sourceObjects: [],
+  }));
   return {
     useCase: new ProjectDbtGraphFromFilesUseCase({
       analyzer: { analyze },
       authorityPolicy: { resolve },
       executionTargetResolver: { resolve: () => executionTarget },
-      connectionCatalog: {
-        getConnection: vi.fn(async () => ({
-          id: 'warehouse-prod',
-          name: 'Current production warehouse',
-          type: 'postgres' as const,
-          database: 'analytics',
-          sourceObjects: [],
-        })),
-      },
+      connectionCatalog: { getConnection },
     }),
     resolve,
+    getConnection,
   };
 }
 
@@ -191,6 +192,25 @@ describe('ProjectDbtGraphFromFilesUseCase', () => {
       targetName: 'production',
       credentialRef: 'env:DBT_PROFILES_DIR',
     });
+  });
+
+  it('resolves each stable source connection once per projection', async () => {
+    const analysis = analyzerResult();
+    const source = analysis.resources.find((resource) => resource.resourceType === 'source');
+    expect(source).toBeDefined();
+    const analyze = vi.fn().mockResolvedValue({
+      ...analysis,
+      resources: [
+        ...analysis.resources,
+        { ...source!, uniqueId: 'source.analytics.raw.customers', name: 'customers' },
+      ],
+    });
+    const { useCase, getConnection } = buildUseCase(analyze);
+
+    await useCase.execute({ scope: SCOPE, canvasId: FILE_AUTHORITY.canvasId });
+
+    expect(getConnection).toHaveBeenCalledTimes(1);
+    expect(getConnection).toHaveBeenCalledWith(SCOPE, 'warehouse-prod');
   });
 
   it.each(['invalid', 'unavailable'] as const)(
