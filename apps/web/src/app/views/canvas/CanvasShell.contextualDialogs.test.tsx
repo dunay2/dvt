@@ -197,8 +197,33 @@ describe('CanvasShell contextual dialogs', () => {
       onImported?.(result, sourceTableDeclarations);
     });
 
-    expect(onDbtProjectImported).toHaveBeenCalledWith(result);
+    expect(onDbtProjectImported).toHaveBeenCalledWith(result, sourceTableDeclarations);
     expect(shellState.dbtProjectImportDialogProps).toMatchObject({ open: false });
+    expect(shellState.sourceImportWizardProps).toMatchObject({ open: false });
+  });
+
+  it('opens and consumes a dbt source-binding continuation owned by the route', async () => {
+    const onConsumed = vi.fn();
+    const sourceTableDeclarations = [
+      {
+        uniqueId: 'source.analytics.raw.orders',
+        filePath: 'models/sources.yml',
+        sourceName: 'raw',
+        tableName: 'orders',
+        database: 'RAW',
+        schema: 'ERP',
+        identifier: 'ORDERS',
+      },
+    ] as const;
+
+    await renderShell({
+      sourceImportInitialSelection: {
+        kind: 'dbt-source-binding',
+        sourceTableDeclarations,
+      },
+      onSourceImportInitialSelectionConsumed: onConsumed,
+    });
+
     expect(shellState.sourceImportWizardProps).toMatchObject({
       open: true,
       initialSelection: {
@@ -206,6 +231,7 @@ describe('CanvasShell contextual dialogs', () => {
         sourceTableDeclarations,
       },
     });
+    expect(onConsumed).toHaveBeenCalledTimes(1);
   });
 
   it('opens contextual project Code from a one-shot route intent', async () => {
