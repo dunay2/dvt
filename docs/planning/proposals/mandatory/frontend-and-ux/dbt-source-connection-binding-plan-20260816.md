@@ -222,6 +222,7 @@ allowedImplementationSurfaces:
   - apps/api/src/infrastructure/dbt/dbtManifestProjection.ts
   - apps/api/test/application/services/importWarehouseSourcesUseCase.test.ts
   - apps/api/test/application/services/dbtProjectFilesWarehouseSourceImportStrategy.test.ts
+  - apps/api/test/application/services/graphDraftWarehouseSourceImportStrategy.test.ts
   - apps/api/test/application/projectDbtGraphFromFilesUseCase.test.ts
   - apps/api/test/application/dbtProjectImportUseCases.test.ts
   - apps/api/test/application/dbtProjectImportSourceBinding.test.ts
@@ -533,6 +534,14 @@ symbols:
     dddOwner: CanvasRouteAuthorityPresentation
     cqRails: [ImportDbtProject, ImportWarehouseSources]
     fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
+    unitTests: [apps/web/src/app/views/canvas/canvasDbtSourceImportContinuationStore.test.ts]
+  - name: CANVAS_DBT_SOURCE_IMPORT_CONTINUATION_STORAGE_KEY
+    path: apps/web/src/app/views/canvas/canvasDbtSourceImportContinuationStore.ts
+    dddOwner: CanvasRouteAuthorityPresentation
+    cqRails: [ImportDbtProject, ImportWarehouseSources]
+    fowlerSignals: [Hidden authority]
     architectureGuard: pnpm docs:feature-mechanization:implementation
     cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
     unitTests: [apps/web/src/app/views/canvas/canvasDbtSourceImportContinuationStore.test.ts]
