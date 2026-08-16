@@ -40,6 +40,7 @@ const ACCEPTED_REPORT = DbtProjectImportValidationReportSchema.parse({
       message: 'The adapter is not available for execution yet.',
     },
   ],
+  sourceTableDeclarations: [],
   receipt: {
     schemaVersion: 'dbt-project-import-validation-receipt.v1',
     projectRoot: 'analytics',

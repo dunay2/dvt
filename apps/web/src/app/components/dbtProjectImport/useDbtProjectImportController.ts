@@ -1,5 +1,5 @@
 /** Owned concern: orchestrate validate-before-import interaction for one dialog session. */
-import type { DbtProjectImportResult } from '@dvt/contracts';
+import type { DbtProjectImportResult, DbtProjectSourceTableDeclaration } from '@dvt/contracts';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import type { IDbtProjectImportPort } from '../../ports/dbtProjectImport';
@@ -13,7 +13,10 @@ import {
 type UseDbtProjectImportControllerOptions = Readonly<{
   open: boolean;
   port: IDbtProjectImportPort;
-  onImported: (result: DbtProjectImportResult) => void;
+  onImported: (
+    result: DbtProjectImportResult,
+    sourceTableDeclarations: readonly DbtProjectSourceTableDeclaration[]
+  ) => void;
 }>;
 
 const INITIAL_STATE: DbtProjectImportInteractionState = {
@@ -192,7 +195,7 @@ export function useDbtProjectImportController({
         result,
         failureMessage: null,
       }));
-      onImported(result);
+      onImported(result, state.report.sourceTableDeclarations);
     } catch (error) {
       if (operationRevision.current !== revision) {
         return;

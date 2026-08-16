@@ -31,6 +31,7 @@ import {
   getPreviousStep,
   getSelectedCount,
   getSelectedSourceObjects,
+  matchRequestedDbtSourceTargets,
   resolveActiveSourceObject,
   resolveSectionForStep,
   resolveStepForSection,
@@ -138,6 +139,12 @@ export function useSourceImportWizard({
     [sourceImportOptions]
   );
   const [state, setState] = useState<SourceImportWizardState>(initialWizardState);
+  const dbtSourceBinding =
+    initialSelection?.kind === 'dbt-source-binding' ? initialSelection : null;
+  const catalogInitialSelection =
+    initialSelection != null && initialSelection.kind !== 'dbt-source-binding'
+      ? initialSelection
+      : null;
   const pendingImportIdentity = useRef<SourceImportCommandIdentity | null>(null);
   useEffect(() => {
     if (!open) {
@@ -159,8 +166,9 @@ export function useSourceImportWizard({
 
     setState((prev) => ({
       ...prev,
-      currentStep: 'selection',
-      selectedConnection: initialSelection.connectionId,
+      currentStep: initialSelection.kind === 'dbt-source-binding' ? 'connection' : 'selection',
+      selectedConnection:
+        initialSelection.kind === 'dbt-source-binding' ? null : initialSelection.connectionId,
       createConnectionFormOpen: false,
       renameConnectionFormOpen: false,
       renameConnectionError: null,
@@ -192,15 +200,38 @@ export function useSourceImportWizard({
     [state.connections, state.selectedConnection]
   );
   const initiallySelectedSourceObjectsForConnection =
-    state.selectedConnection === initialSelection?.connectionId
-      ? initialSelection.sourceObjects
+    state.selectedConnection === catalogInitialSelection?.connectionId
+      ? catalogInitialSelection.sourceObjects
       : undefined;
+  const dbtSourceTargetMatch = useMemo(
+    () =>
+      dbtSourceBinding == null
+        ? null
+        : matchRequestedDbtSourceTargets(
+            dbtSourceBinding.sourceTableDeclarations,
+            state.sourceObjects
+          ),
+    [dbtSourceBinding, state.sourceObjects]
+  );
+  const dbtSourceBindingReady = useMemo(() => {
+    if (dbtSourceBinding == null || dbtSourceTargetMatch == null) return true;
+    const selectedObjectIds = new Set(
+      selectedSourceObjects.map((sourceObject) => sourceObject.objectId)
+    );
+    return (
+      dbtSourceTargetMatch.unmatchedSourceUniqueIds.length === 0 &&
+      dbtSourceTargetMatch.targets.length === dbtSourceBinding.sourceTableDeclarations.length &&
+      selectedObjectIds.size === dbtSourceTargetMatch.objectIds.length &&
+      dbtSourceTargetMatch.objectIds.every((objectId) => selectedObjectIds.has(objectId))
+    );
+  }, [dbtSourceBinding, dbtSourceTargetMatch, selectedSourceObjects]);
 
   useConnectionsLoader({ open, warehouseSourceImport, setState });
   useSourceObjectsLoader({
     open,
     selectedConnection: state.selectedConnection,
     initiallySelectedSourceObjects: initiallySelectedSourceObjectsForConnection,
+    requestedDbtSourceDeclarations: dbtSourceBinding?.sourceTableDeclarations,
     warehouseSourceImport,
     setState,
   });
@@ -224,6 +255,8 @@ export function useSourceImportWizard({
   const setSelectedConnection = (selectedConnection: string | null) =>
     setState((prev) => ({
       ...prev,
+      currentStep:
+        dbtSourceBinding != null && selectedConnection != null ? 'selection' : prev.currentStep,
       selectedConnection,
       createConnectionError: null,
       renameConnectionFormOpen: false,
@@ -375,6 +408,7 @@ export function useSourceImportWizard({
       const connection = await warehouseSourceImport.createWarehouseConnection(input);
       setState((prev) => ({
         ...prev,
+        currentStep: dbtSourceBinding == null ? prev.currentStep : 'selection',
         connections: upsertWarehouseConnection(prev.connections, connection),
         selectedConnection: connection.id,
         createConnectionFormOpen: false,
@@ -474,6 +508,9 @@ export function useSourceImportWizard({
         includeColumns: state.includeColumns,
         addTests: state.addTests,
         addFreshness: state.addFreshness,
+        ...(dbtSourceTargetMatch == null
+          ? {}
+          : { existingDbtSourceTargets: [...dbtSourceTargetMatch.targets] }),
       };
       const commandIdentity = resolveSourceImportCommandIdentity(
         commandDraft,
@@ -506,6 +543,7 @@ export function useSourceImportWizard({
   };
 
   const toggleSourceObject = (index: number) => {
+    if (dbtSourceBinding != null) return;
     setState((prev) => {
       const sourceObject = prev.sourceObjects[index];
       if (sourceObject == null || !isSourceObjectImportable(sourceObject)) {
@@ -532,6 +570,7 @@ export function useSourceImportWizard({
   };
 
   const toggleSchema = (schema: SourceImportSchemaIdentity) => {
+    if (dbtSourceBinding != null) return;
     setState((prev) => {
       const schemaSelection = toggleSourceImportSchemaSelection(prev.sourceObjects, schema);
 
@@ -544,6 +583,7 @@ export function useSourceImportWizard({
   };
 
   const toggleDatabase = (database: SourceImportDatabaseIdentity) => {
+    if (dbtSourceBinding != null) return;
     setState((prev) => {
       const databaseSelection = toggleSourceImportDatabaseSelection(prev.sourceObjects, database);
 
@@ -556,7 +596,11 @@ export function useSourceImportWizard({
   };
 
   const canProceed = canProceedForStep(state.currentStep, state.selectedConnection, selectedCount);
-  const canImport = state.selectedConnection != null && selectedCount > 0 && !state.isProcessing;
+  const canImport =
+    state.selectedConnection != null &&
+    selectedCount > 0 &&
+    dbtSourceBindingReady &&
+    !state.isProcessing;
 
   return {
     state,

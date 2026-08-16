@@ -43,6 +43,7 @@ const VALIDATION_REPORT = DbtProjectImportValidationReportSchema.parse({
     ],
   },
   diagnostics: [],
+  sourceTableDeclarations: [],
   receipt: {
     schemaVersion: 'dbt-project-import-validation-receipt.v1',
     projectRoot: 'analytics',

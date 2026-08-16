@@ -1,5 +1,5 @@
 /** Owned concern: compose the dbt project import gateway, controller, and presentation. */
-import type { DbtProjectImportResult } from '@dvt/contracts';
+import type { DbtProjectImportResult, DbtProjectSourceTableDeclaration } from '@dvt/contracts';
 
 import { useDbtProjectImportPort } from '../../services/AppServicesContext';
 import { DbtProjectImportDialogView } from './DbtProjectImportDialogView';
@@ -8,7 +8,10 @@ import { useDbtProjectImportController } from './useDbtProjectImportController';
 type DbtProjectImportDialogProps = Readonly<{
   open: boolean;
   onClose: () => void;
-  onImported: (result: DbtProjectImportResult) => void;
+  onImported: (
+    result: DbtProjectImportResult,
+    sourceTableDeclarations: readonly DbtProjectSourceTableDeclaration[]
+  ) => void;
   onRestoreFocus?: () => void;
 }>;
 

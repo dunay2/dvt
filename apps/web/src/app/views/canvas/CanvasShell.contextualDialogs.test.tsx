@@ -179,14 +179,33 @@ describe('CanvasShell contextual dialogs', () => {
     expect(shellState.dbtProjectImportDialogProps).toMatchObject({ open: true });
     expect(container.querySelector('[data-testid="dbt-project-import-dialog"]')).not.toBeNull();
 
+    const sourceTableDeclarations = [
+      {
+        uniqueId: 'source.analytics.raw.orders',
+        filePath: 'models/sources.yml',
+        sourceName: 'raw',
+        tableName: 'orders',
+        database: 'RAW',
+        schema: 'ERP',
+        identifier: 'ORDERS',
+      },
+    ] as const;
     await act(async () => {
       const onImported = shellState.dbtProjectImportDialogProps?.onImported as
-        ((receipt: typeof result) => void) | undefined;
-      onImported?.(result);
+        | ((receipt: typeof result, declarations: typeof sourceTableDeclarations) => void)
+        | undefined;
+      onImported?.(result, sourceTableDeclarations);
     });
 
     expect(onDbtProjectImported).toHaveBeenCalledWith(result);
     expect(shellState.dbtProjectImportDialogProps).toMatchObject({ open: false });
+    expect(shellState.sourceImportWizardProps).toMatchObject({
+      open: true,
+      initialSelection: {
+        kind: 'dbt-source-binding',
+        sourceTableDeclarations,
+      },
+    });
   });
 
   it('opens contextual project Code from a one-shot route intent', async () => {

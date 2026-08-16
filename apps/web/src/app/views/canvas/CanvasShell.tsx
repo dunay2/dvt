@@ -389,9 +389,15 @@ export default function CanvasShell({
         open={dbtProjectImportOpen}
         onClose={() => setDbtProjectImportOpen(false)}
         onRestoreFocus={restoreProjectExplorerFocus}
-        onImported={(result) => {
+        onImported={(result, sourceTableDeclarations) => {
           setDbtProjectImportOpen(false);
           onDbtProjectImported?.(result);
+          if (sourceTableDeclarations.length > 0) {
+            sourceImportDialog.openCommand?.({
+              kind: 'dbt-source-binding',
+              sourceTableDeclarations,
+            });
+          }
         }}
       />
     </ResizablePanelGroup>

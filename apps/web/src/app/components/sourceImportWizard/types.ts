@@ -1,3 +1,5 @@
+import type { DbtProjectSourceTableDeclaration } from '@dvt/contracts';
+
 import type {
   CreateWarehouseConnectionInput,
   ImportSourcesResult,
@@ -20,10 +22,16 @@ export interface SourceImportWizardProps {
   initialSelection?: SourceImportInitialSelection | null;
 }
 
-export type SourceImportInitialSelection = Readonly<{
-  connectionId: string;
-  sourceObjects: readonly SourceObject[];
-}>;
+export type SourceImportInitialSelection =
+  | Readonly<{
+      kind?: 'catalog-selection';
+      connectionId: string;
+      sourceObjects: readonly SourceObject[];
+    }>
+  | Readonly<{
+      kind: 'dbt-source-binding';
+      sourceTableDeclarations: readonly DbtProjectSourceTableDeclaration[];
+    }>;
 
 export type WizardStep = 'connection' | 'selection' | 'grouping' | 'options' | 'review' | 'result';
 
@@ -54,6 +62,7 @@ export type SourceImportFailureCode =
   | 'select-connection'
   | 'load-connections'
   | 'load-source-objects'
+  | 'match-dbt-source-tables'
   | 'test-connection'
   | 'create-connection-validation'
   | 'create-connection-credential-reference'
