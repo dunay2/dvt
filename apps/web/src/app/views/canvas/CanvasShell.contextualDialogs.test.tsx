@@ -13,6 +13,8 @@ import {
 } from './CanvasShell.testHarness';
 import { useCanvasWorkspaceMenuContributionStore } from './canvasWorkspaceMenuContributionStore';
 import type { CanvasShellProps } from './canvasShell.types';
+import type { ImportSourcesResult } from '../../ports/workspace';
+import { buildGraphDraftSourceImportResult } from '../../../testing/sourceImportTestFixtures';
 
 const shellState = getCanvasShellState();
 type DialogViewportCommand = 'onOpenCanvasSettings';
@@ -202,7 +204,7 @@ describe('CanvasShell contextual dialogs', () => {
     expect(shellState.sourceImportWizardProps).toMatchObject({ open: false });
   });
 
-  it('opens and consumes a dbt source-binding continuation owned by the route', async () => {
+  it('retains a dbt source-binding continuation until a successful source import', async () => {
     const onConsumed = vi.fn();
     const sourceTableDeclarations = [
       {
@@ -230,6 +232,32 @@ describe('CanvasShell contextual dialogs', () => {
         kind: 'dbt-source-binding',
         sourceTableDeclarations,
       },
+    });
+    expect(onConsumed).not.toHaveBeenCalled();
+
+    await act(async () => {
+      const close = shellState.sourceImportWizardProps?.onClose as (() => void) | undefined;
+      close?.();
+    });
+    expect(shellState.sourceImportWizardProps).toMatchObject({ open: false });
+    expect(onConsumed).not.toHaveBeenCalled();
+
+    await act(async () => {
+      const reopen = shellState.canvasViewportProps?.onOpenSourceImport as (() => void) | undefined;
+      reopen?.();
+    });
+    expect(shellState.sourceImportWizardProps).toMatchObject({
+      open: true,
+      initialSelection: {
+        kind: 'dbt-source-binding',
+        sourceTableDeclarations,
+      },
+    });
+
+    await act(async () => {
+      const complete = shellState.sourceImportWizardProps?.onComplete as
+        ((result: ImportSourcesResult) => void) | undefined;
+      complete?.(buildGraphDraftSourceImportResult());
     });
     expect(onConsumed).toHaveBeenCalledTimes(1);
   });
