@@ -114,6 +114,11 @@ async function buildExistingDbtSourceFilePlan(input: {
   readonly workspaceFiles: IWorkspaceFileRepository;
   readonly authorityProjectRoot: string | null;
 }): Promise<WarehouseSourceImportFilePlan> {
+  if (input.context.databaseUser === undefined) {
+    throw new InvalidWarehouseSourceImportRequestError(
+      'The governed database user is required to bind imported dbt sources.'
+    );
+  }
   const previousFiles = new Map<string, WorkspaceFileContent>();
   const documentsByRelativePath = new Map<string, ReturnType<typeof readExistingSourceDocument>>();
   const targetsByObjectId = new Map(
@@ -153,9 +158,7 @@ async function buildExistingDbtSourceFilePlan(input: {
       target.filePath,
       upsertSourceTable(document, sourceObject, {
         includeColumns: input.context.includeColumns,
-        ...(input.context.databaseUser === undefined
-          ? {}
-          : { databaseUser: input.context.databaseUser }),
+        databaseUser: input.context.databaseUser,
         addTests: input.context.addTests,
         addFreshness: input.context.addFreshness,
         sourceName: target.sourceName,

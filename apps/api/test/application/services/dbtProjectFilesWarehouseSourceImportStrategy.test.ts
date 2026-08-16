@@ -8,6 +8,7 @@ import {
 } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
+import { InvalidWarehouseSourceImportRequestError } from '../../../src/application/ports/warehouseSourceImport.js';
 import type {
   IWorkspaceFileBatchMutationPort,
   IWorkspaceFileRepository,
@@ -134,6 +135,46 @@ describe('DbtProjectFilesWarehouseSourceImportStrategy', () => {
       kind: 'dbt-project-files',
       projectedSourceUniqueIds: ['source.analytics.raw.orders'],
     });
+  });
+
+  it('rejects an exact dbt source binding when the governed database user is unavailable', async () => {
+    const existingContent = [
+      'version: 2',
+      '',
+      'sources:',
+      '  - name: raw',
+      '    database: analytics',
+      '    schema: erp',
+      '    tables:',
+      '      - name: orders',
+      '',
+    ].join('\n');
+    const strategy = new DbtProjectFilesWarehouseSourceImportStrategy({
+      workspaceFiles: createWorkspaceFiles({
+        'analytics/models/sources.yml': existingContent,
+      }),
+      batchMutation: createBatchMutation(),
+      projectGraph: { execute: vi.fn(async () => createProjection()) },
+    });
+    const { databaseUser: _databaseUser, ...contextWithoutDatabaseUser } = CONTEXT;
+
+    await expect(
+      strategy.execute(
+        {
+          ...contextWithoutDatabaseUser,
+          existingDbtSourceTargets: [
+            {
+              objectId: SOURCE_OBJECT.objectId,
+              sourceUniqueId: 'source.analytics.raw.orders',
+              filePath: 'models/sources.yml',
+              sourceName: 'raw',
+              tableName: 'orders',
+            },
+          ],
+        },
+        AUTHORITY
+      )
+    ).rejects.toBeInstanceOf(InvalidWarehouseSourceImportRequestError);
   });
 
   it('rolls back YAML and rejects success when the refreshed projection is not fresh', async () => {
