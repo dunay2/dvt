@@ -19,10 +19,6 @@ concurrency:
 jobs:
   ci-tool-contracts:
     name: CI tool contracts
-    needs: detect-affected
-    if: >-
-      github.event_name != 'pull_request' ||
-      needs.detect-affected.outputs.changed_file_validation_relevant == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -47,7 +43,6 @@ jobs:
       any_changed: ${{ steps.matrix.outputs.any_changed }}
       matrix: ${{ steps.matrix.outputs.matrix }}
       docs_changed: ${{ steps.scope.outputs.docs_changed }}
-      changed_file_validation_relevant: ${{ steps.scope.outputs.changed_file_validation_relevant }}
       security_analysis_relevant: ${{ steps.scope.outputs.security_analysis_relevant }}
       ci_tool_executable_contracts_relevant:
         ${{ steps.scope.outputs.ci_tool_executable_contracts_relevant }}

@@ -214,13 +214,9 @@ test('workflow scope policy stays wired into ci and pr quality workflows', () =>
   );
   assertWorkflowContains(ciWorkflow, 'node tools/ci/emit-scope.mjs --mode workflow');
   assertWorkflowContains(ciWorkflow, 'node tools/ci/emit-workspace-matrix.mjs');
-  assert.match(
+  assert.doesNotMatch(
     ciWorkflow,
-    /changed_file_validation_relevant:\s*\$\{\{\s*steps\.scope\.outputs\.changed_file_validation_relevant/u
-  );
-  assert.match(
-    ciWorkflow,
-    /ci-tool-contracts:[\s\S]*needs:\s*detect-affected[\s\S]*needs\.detect-affected\.outputs\.changed_file_validation_relevant\s*==\s*'true'/u
+    /changed_file_validation_relevant:\s*\$\{\{\s*steps\.scope\.outputs/u
   );
   assertWorkflowContains(ciWorkflow, 'steps.scope.outputs.security_analysis_relevant');
   assertWorkflowContains(ciWorkflow, 'ci_tool_executable_contracts_relevant:');
