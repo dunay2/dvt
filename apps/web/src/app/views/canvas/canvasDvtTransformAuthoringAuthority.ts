@@ -34,6 +34,14 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
+function hasEditableSqlMetadata(node: CanonicalNode): boolean {
+  if (node.metadata != null && Object.hasOwn(node.metadata, 'sql')) {
+    return true;
+  }
+  const config = node.metadata?.config;
+  return isRecord(config) && Object.hasOwn(config, 'sql');
+}
+
 function removeEditableSqlMetadata(node: CanonicalNode): Record<string, unknown> {
   const {
     sql: _sql,
@@ -71,7 +79,7 @@ export function readDvtTransformAuthoringAuthority(
   }
 
   if (result.data.mode === DVT_TRANSFORM_AUTHORING_MODE.visual) {
-    if (sql.length > 0) {
+    if (hasEditableSqlMetadata(node)) {
       throw new Error('Visual DVT transform authority cannot coexist with editable SQL.');
     }
     return result.data;

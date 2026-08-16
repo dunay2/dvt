@@ -117,6 +117,24 @@ describe('DVT transform authoring authority', () => {
     );
   });
 
+  it('treats even an empty SQL field as a second editable authority', () => {
+    const topLevelSql = buildTransformNode({
+      sql: '',
+      transformAuthoring: { version: 'v1', mode: 'visual', recipe: RECIPE },
+    });
+    const configSql = buildTransformNode({
+      config: { sql: '' },
+      transformAuthoring: { version: 'v1', mode: 'visual', recipe: RECIPE },
+    });
+
+    expect(() => readDvtTransformAuthoringAuthority(topLevelSql)).toThrow(
+      'Visual DVT transform authority cannot coexist with editable SQL.'
+    );
+    expect(() => readDvtTransformAuthoringAuthority(configSql)).toThrow(
+      'Visual DVT transform authority cannot coexist with editable SQL.'
+    );
+  });
+
   it('fails closed for malformed or unknown authority metadata', () => {
     const node = buildTransformNode({
       transformAuthoring: { version: 'v2', mode: 'visual', recipe: RECIPE },
