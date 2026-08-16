@@ -62,6 +62,41 @@ const WorkspaceRelativeFilePathSchema = WorkspaceRelativeProjectRootSchema.refin
   'Expected a workspace-relative file path.'
 );
 
+export const DbtProjectSourceTableDeclarationSchema = z
+  .object({
+    uniqueId: NonBlankStringSchema,
+    filePath: WorkspaceRelativeFilePathSchema,
+    sourceName: NonBlankStringSchema,
+    tableName: NonBlankStringSchema,
+    database: NonBlankStringSchema.optional(),
+    schema: NonBlankStringSchema.optional(),
+    identifier: NonBlankStringSchema.optional(),
+  })
+  .strict();
+
+const DbtProjectSourceTableDeclarationListSchema = z
+  .array(DbtProjectSourceTableDeclarationSchema)
+  .superRefine((declarations, context) => {
+    const uniqueIds = new Set<string>();
+    declarations.forEach((declaration, index) => {
+      if (uniqueIds.has(declaration.uniqueId)) {
+        context.addIssue({
+          code: 'custom',
+          message: `Duplicate dbt source table declaration: ${declaration.uniqueId}`,
+          path: [index, 'uniqueId'],
+        });
+      }
+      uniqueIds.add(declaration.uniqueId);
+      if (index > 0 && declarations[index - 1]!.uniqueId.localeCompare(declaration.uniqueId) > 0) {
+        context.addIssue({
+          code: 'custom',
+          message: 'dbt source table declarations must be ordered by unique ID.',
+          path: [index, 'uniqueId'],
+        });
+      }
+    });
+  });
+
 const IncludedProjectFileSchema = z
   .object({
     path: WorkspaceRelativeFilePathSchema,
@@ -167,6 +202,7 @@ const AcceptedDbtProjectImportValidationReportSchema = z
     adapterType: NonBlankStringSchema.optional(),
     inventory: DbtProjectImportInventorySchema,
     diagnostics: z.array(DbtProjectImportDiagnosticSchema),
+    sourceTableDeclarations: DbtProjectSourceTableDeclarationListSchema,
     receipt: DbtProjectImportValidationReceiptSchema,
   })
   .strict();
@@ -263,6 +299,9 @@ export type DbtProjectImportDiagnosticCode = (typeof DBT_PROJECT_IMPORT_DIAGNOST
 export type DbtProjectImportFile = z.infer<typeof DbtProjectImportFileSchema>;
 export type DbtProjectImportInventory = z.infer<typeof DbtProjectImportInventorySchema>;
 export type DbtProjectImportDiagnostic = z.infer<typeof DbtProjectImportDiagnosticSchema>;
+export type DbtProjectSourceTableDeclaration = z.infer<
+  typeof DbtProjectSourceTableDeclarationSchema
+>;
 export type DbtProjectImportValidationReceipt = z.infer<
   typeof DbtProjectImportValidationReceiptSchema
 >;

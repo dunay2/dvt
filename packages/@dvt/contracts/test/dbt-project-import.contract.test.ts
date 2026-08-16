@@ -51,6 +51,17 @@ const ACCEPTED_REPORT = {
     ],
   },
   diagnostics: [],
+  sourceTableDeclarations: [
+    {
+      uniqueId: 'source.orders.raw.orders',
+      filePath: 'models/sources.yml',
+      sourceName: 'raw',
+      tableName: 'orders',
+      database: 'analytics',
+      schema: 'raw',
+      identifier: 'orders_v2',
+    },
+  ],
   receipt: VALIDATION_RECEIPT,
 } as const;
 
@@ -120,6 +131,39 @@ describe('DbtProjectImport.v1', () => {
           },
         ],
         receipt: VALIDATION_RECEIPT,
+      }).success
+    ).toBe(false);
+  });
+
+  it('requires a deterministic inventory entry for every imported dbt source table', () => {
+    expect(
+      DbtProjectImportValidationReportSchema.parse(ACCEPTED_REPORT).sourceTableDeclarations
+    ).toEqual([
+      {
+        uniqueId: 'source.orders.raw.orders',
+        filePath: 'models/sources.yml',
+        sourceName: 'raw',
+        tableName: 'orders',
+        database: 'analytics',
+        schema: 'raw',
+        identifier: 'orders_v2',
+      },
+    ]);
+    expect(
+      DbtProjectImportValidationReportSchema.safeParse({
+        ...ACCEPTED_REPORT,
+        sourceTableDeclarations: [
+          ...ACCEPTED_REPORT.sourceTableDeclarations,
+          ACCEPTED_REPORT.sourceTableDeclarations[0],
+        ],
+      }).success
+    ).toBe(false);
+    expect(
+      DbtProjectImportValidationReportSchema.safeParse({
+        ...ACCEPTED_REPORT,
+        sourceTableDeclarations: [
+          { ...ACCEPTED_REPORT.sourceTableDeclarations[0], filePath: '../sources.yml' },
+        ],
       }).success
     ).toBe(false);
   });

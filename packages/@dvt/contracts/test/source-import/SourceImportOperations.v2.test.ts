@@ -46,6 +46,40 @@ describe('SourceImportOperations.v2', () => {
     );
   });
 
+  it('accepts one exact existing dbt source target for every selected object', () => {
+    const request = {
+      ...REQUEST,
+      existingDbtSourceTargets: [
+        {
+          objectId: 'relation/analytics/public/orders',
+          sourceUniqueId: 'source.orders.raw.orders',
+          filePath: 'models/sources.yml',
+          sourceName: 'raw',
+          tableName: 'orders',
+        },
+      ],
+    } as const;
+
+    expect(ImportSourceObjectsRequestV2Schema.parse(request)).toEqual(request);
+    expect(
+      ImportSourceObjectsRequestV2Schema.safeParse({
+        ...request,
+        existingDbtSourceTargets: [
+          { ...request.existingDbtSourceTargets[0], objectId: 'relation/analytics/public/missing' },
+        ],
+      }).success
+    ).toBe(false);
+    expect(
+      ImportSourceObjectsRequestV2Schema.safeParse({
+        ...request,
+        existingDbtSourceTargets: [
+          request.existingDbtSourceTargets[0],
+          request.existingDbtSourceTargets[0],
+        ],
+      }).success
+    ).toBe(false);
+  });
+
   it('accepts a graph-draft outcome with draft identifiers', () => {
     const result = {
       ...RESULT_BASE,
