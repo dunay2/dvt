@@ -218,6 +218,16 @@ test('classifies executable CI tool contracts separately from static CI policy t
   assert.equal(syncDocsScope.ci_tool_executable_contracts_relevant, true);
 });
 
+test('governed evidence and its manifest do not change CI executable contracts', () => {
+  const scope = computeBooleanScope(
+    ['docs/.manifest.json', 'docs/evidence/ED-20991231-web-feature-proof.md'],
+    WORKFLOW_SCOPE_PATTERNS
+  );
+
+  assert.equal(scope.docs_changed, true);
+  assert.equal(scope.ci_tool_executable_contracts_relevant, false);
+});
+
 test('workspace matrix covers every workspace with a build or typecheck script', () => {
   const ciWorkspacePackages = new Set(WORKSPACE_ENTRIES.map(({ pkg }) => pkg));
   const missing = collectWorkspacePackages()
