@@ -4,6 +4,44 @@ import type { CanvasViewCopy } from './canvasCopy.types';
 type CanvasCopySection = Partial<Record<keyof CanvasViewCopy, LocalizableString>>;
 
 export const canvasViewAuthoringCopyByKey = {
+  columnMappingAddedMessage: {
+    key: 'canvas.columnMapping.addedMessage',
+    fallback: 'Column mapping added.',
+  },
+  columnMappingRemovedMessage: {
+    key: 'canvas.columnMapping.removedMessage',
+    fallback: 'Column mapping removed.',
+  },
+  columnMappingSourceSelectedTemplate: {
+    key: 'canvas.columnMapping.sourceSelectedTemplate',
+    fallback: 'Selected {column}. Choose a Model target column.',
+  },
+  columnMappingAutomapSummaryTemplate: {
+    key: 'canvas.columnMapping.automapSummaryTemplate',
+    fallback: 'Mapped {count} compatible columns.',
+  },
+  columnMappingRequiresDependencyMessage: {
+    key: 'canvas.columnMapping.requiresDependencyMessage',
+    fallback: 'Connect the Source to this Model before mapping columns.',
+  },
+  columnMappingSqlAuthorityMessage: {
+    key: 'canvas.columnMapping.sqlAuthorityMessage',
+    fallback:
+      'This Model contains authored SQL. Convert it to visual editing before mapping columns.',
+  },
+  columnMappingComplexExpressionMessage: {
+    key: 'canvas.columnMapping.complexExpressionMessage',
+    fallback:
+      'Edit this calculated column in Model properties instead of replacing its inputs here.',
+  },
+  columnMappingUnavailableMessage: {
+    key: 'canvas.columnMapping.unavailableMessage',
+    fallback: 'This column mapping is not available for the selected nodes.',
+  },
+  columnMappingNoCompatibleColumnsMessage: {
+    key: 'canvas.columnMapping.noCompatibleColumnsMessage',
+    fallback: 'No unique exact-name columns with known compatible types were found.',
+  },
   connectionIncompleteMessage: {
     key: 'canvas.connection.incompleteMessage',
     fallback: 'Connection is incomplete.',

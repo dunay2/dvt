@@ -369,8 +369,8 @@ export function useCanvasController() {
     refreshAnalysis: refreshExecutionSelectionAnalysis,
   });
 
-  const { transformationValidation, nodesWithImpact, inspectorNode } = useCanvasControllerReadModel(
-    {
+  const { transformationValidation, nodesWithImpact, edgesWithImpact, inspectorNode } =
+    useCanvasControllerReadModel({
       graphModel,
       visibleScope,
       executionScope,
@@ -383,8 +383,7 @@ export function useCanvasController() {
       canMutateGraph: canMutateActiveCanvas,
       canSelectExecution,
       columnLevelLineageEnabled: store.columnLevelLineageEnabled,
-    }
-  );
+    });
   const inspectorCommands = useCanvasInspectorCommands({
     inspectorNode,
     setDraftSession,
@@ -406,6 +405,7 @@ export function useCanvasController() {
     readModel: {
       transformationValidation,
       nodesWithImpact,
+      edgesWithImpact,
       inspectorNode,
     },
     inspectorCommands,

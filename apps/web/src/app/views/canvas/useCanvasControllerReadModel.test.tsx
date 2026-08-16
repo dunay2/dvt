@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CanonicalNode } from '../../types/canonical';
 import { mapCanonicalNodeToCanvasNode } from './canvasNodeMapper';
 import { useCanvasControllerReadModel } from './useCanvasControllerReadModel';
+import { applyDvtVisualTransformRecipe } from './canvasDvtTransformAuthoringAuthority';
 
 type ReadModelArgs = Parameters<typeof useCanvasControllerReadModel>[0];
 type ReadModelState = ReturnType<typeof useCanvasControllerReadModel>;
@@ -19,6 +20,10 @@ type ReadModelNodeData = {
   onToggleNodeSelection?: unknown;
   selectedForExecution?: unknown;
   showColumns?: unknown;
+  activeColumnHandleId?: unknown;
+  onColumnPortActivate?: unknown;
+  onColumnDisclosureChange?: unknown;
+  onAutomapColumns?: unknown;
 };
 
 const testNode = {
@@ -79,6 +84,11 @@ function buildReadModelArgs(
       handleRemoveNode: vi.fn(),
       handleToggleNodeSelection: vi.fn(),
       handleAttachSchemaToNode: vi.fn(),
+      activeColumnHandleId: null,
+      handleColumnPortActivate: vi.fn(),
+      handleColumnDisclosureChange: vi.fn(),
+      handleAutomapCanvasColumns: vi.fn(),
+      handleRemoveColumnMapping: vi.fn(),
     },
     onToggleExecutionSelection: vi.fn(),
     activeCanvasKind: 'transformation',
@@ -176,6 +186,92 @@ describe('useCanvasControllerReadModel', () => {
     }
   });
 
+  it('derives visible column lineage and attaches interactions without changing graph edges', async () => {
+    const sourceNode = {
+      ...testNode,
+      metadata: { columns: [{ name: 'order_id', type: 'integer' }] },
+    } satisfies CanonicalNode;
+    const modelNode = applyDvtVisualTransformRecipe(
+      {
+        ...testNode,
+        id: 'model-orders',
+        name: 'Orders Model',
+        kind: 'dvt:sql_transform',
+        role: 'transform',
+      },
+      {
+        version: 'v1',
+        outputs: [
+          {
+            id: 'output:order_id',
+            name: 'order_id',
+            dataType: 'integer',
+            expression: {
+              inputs: [{ nodeId: sourceNode.id, columnName: 'order_id' }],
+              operations: [{ kind: 'passthrough' }],
+            },
+          },
+        ],
+        filters: [],
+      }
+    );
+    const dependency = {
+      id: 'source-to-model',
+      sourceId: sourceNode.id,
+      targetId: modelNode.id,
+      relation: 'lineage' as const,
+    };
+    const base = buildReadModelArgs({ canMutateGraph: true });
+    const graphNodes = [sourceNode, modelNode].map((node, index) => ({
+      ...mapCanonicalNodeToCanvasNode({ canonicalNode: node, index, showColumns: true }),
+      data: {
+        ...mapCanonicalNodeToCanvasNode({ canonicalNode: node, index, showColumns: true }).data,
+        columnDisclosureExpanded: true,
+      },
+    }));
+    const args: ReadModelArgs = {
+      ...base,
+      graphModel: {
+        nodes: graphNodes,
+        edges: [],
+        canonicalNodesById: new Map([sourceNode, modelNode].map((node) => [node.id, node])),
+      },
+      visibleScope: {
+        canonicalNodes: [sourceNode, modelNode],
+        canonicalEdges: [dependency],
+      },
+      executionScope: {
+        selectedNodeIds: [],
+        workspaceNodeIds: [sourceNode.id, modelNode.id],
+      },
+    };
+    const mounted = await renderReadModel(args);
+
+    try {
+      const state = mounted.readState();
+      expect(state?.edgesWithImpact).toHaveLength(1);
+      expect(state?.edgesWithImpact[0]).toMatchObject({
+        type: 'columnLineage',
+        source: sourceNode.id,
+        target: modelNode.id,
+        data: { kind: 'column-lineage', removable: true },
+      });
+      const onRemove = state?.edgesWithImpact[0]?.data?.onRemove;
+      expect(typeof onRemove).toBe('function');
+      (onRemove as () => void)();
+      expect(args.graphHandlers.handleRemoveColumnMapping).toHaveBeenCalledTimes(1);
+      expect(args.graphModel.edges).toEqual([]);
+
+      const sourceData = state?.nodesWithImpact[0]?.data as ReadModelNodeData;
+      expect(sourceData.onColumnPortActivate).toBe(args.graphHandlers.handleColumnPortActivate);
+      expect(sourceData.onColumnDisclosureChange).toBe(
+        args.graphHandlers.handleColumnDisclosureChange
+      );
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
   it('preserves recorded column visibility through impact decoration when lineage overlay is off', async () => {
     const columns = [
       { name: 'order_id', type: 'integer' },
@@ -208,7 +304,15 @@ describe('useCanvasControllerReadModel', () => {
     try {
       const nodeData = readProjectedNodeData(mounted.readState());
 
-      expect(nodeData?.columns).toEqual(columns);
+      expect(nodeData?.columns).toMatchObject(columns);
+      expect(nodeData?.columns).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: 'order_id',
+            sourceHandleId: 'column:source:source-orders:order_id',
+          }),
+        ])
+      );
       expect(nodeData?.showColumns).toBe(true);
     } finally {
       await mounted.cleanup();

@@ -131,6 +131,36 @@ function readEditableRecipe(
   }
 }
 
+export function resolveCanvasColumnMappingTarget(
+  targetNode: CanonicalNode,
+  columnId: string
+): CanvasColumnMappingTarget | null {
+  if (targetNode.pluginId !== 'dvt' || targetNode.kind !== 'dvt:sql_transform') return null;
+  try {
+    const authority = readDvtTransformAuthoringAuthority(targetNode);
+    if (authority.mode === DVT_TRANSFORM_AUTHORING_MODE.visual) {
+      const output = authority.recipe.outputs.find((candidate) => candidate.id === columnId);
+      return output == null
+        ? null
+        : {
+            nodeId: targetNode.id,
+            outputId: output.id,
+            columnName: output.name,
+            ...(output.dataType == null ? {} : { dataType: output.dataType }),
+          };
+    }
+    return {
+      nodeId: targetNode.id,
+      columnName: columnId,
+      ...(readColumns(targetNode).find((column) => column.name === columnId)?.type == null
+        ? {}
+        : { dataType: readColumns(targetNode).find((column) => column.name === columnId)?.type }),
+    };
+  } catch {
+    return null;
+  }
+}
+
 function isSimplePassthrough(output: VisualTransformOutputColumnV1): boolean {
   return (
     output.expression.inputs.length <= 1 &&

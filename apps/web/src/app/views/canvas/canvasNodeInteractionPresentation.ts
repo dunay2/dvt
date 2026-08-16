@@ -1,4 +1,8 @@
 import type { Node } from '@xyflow/react';
+import type {
+  GraphNodeColumn,
+  GraphNodeColumnPortIdentity,
+} from '../../plugins/graph/GraphNodeColumnSection';
 
 type NodeActionHandlers = {
   onInspectNode: (nodeId: string) => void;
@@ -6,6 +10,9 @@ type NodeActionHandlers = {
   onRemoveNode?: (nodeId: string) => void;
   onToggleNodeSelection?: (nodeId: string, shouldSelect: boolean) => void;
   onAttachSchemaToNode?: (nodeId: string, schemaName: string) => void;
+  onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
+  onColumnDisclosureChange?: (nodeId: string, expanded: boolean) => void;
+  onAutomapColumns?: (nodeId: string, columns: readonly GraphNodeColumn[]) => void;
 };
 
 type BuildCanvasNodeInteractionPresentationParams = {
@@ -41,6 +48,9 @@ export function buildCanvasNodeInteractionPresentation({
       onRemoveNode: handlers.onRemoveNode,
       onToggleNodeSelection: handlers.onToggleNodeSelection,
       onAttachSchemaToNode: handlers.onAttachSchemaToNode,
+      onColumnPortActivate: handlers.onColumnPortActivate,
+      onColumnDisclosureChange: handlers.onColumnDisclosureChange,
+      onAutomapColumns: handlers.onAutomapColumns,
     },
   }));
 }

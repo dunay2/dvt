@@ -1,5 +1,7 @@
 import type { Edge, Node, ReactFlowProps } from '@xyflow/react';
 import type { Dispatch, SetStateAction } from 'react';
+import type { GraphNodeColumnPortIdentity } from '../../plugins/graph/GraphNodeColumnSection';
+import type { CanvasColumnLineageEdgeData } from './canvasColumnLineageProjection';
 
 import type {
   CanvasGraphInteractionEffects,
@@ -29,4 +31,12 @@ export type UseCanvasGraphHandlersResult = {
   handleToggleNodeSelection: (nodeId: string, shouldSelect: boolean) => void;
   handleRemoveNode: (nodeId: string) => void;
   handleAttachSchemaToNode: (nodeId: string, schemaName: string) => void;
+  activeColumnHandleId: string | null;
+  handleColumnPortActivate: (identity: GraphNodeColumnPortIdentity) => void;
+  handleColumnDisclosureChange: (nodeId: string, expanded: boolean) => void;
+  handleAutomapCanvasColumns: (
+    nodeId: string,
+    columns: readonly Readonly<{ name: string; type: string }>[]
+  ) => void;
+  handleRemoveColumnMapping: (mapping: CanvasColumnLineageEdgeData) => void;
 };

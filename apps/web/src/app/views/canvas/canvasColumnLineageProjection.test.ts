@@ -21,7 +21,7 @@ function buildNode(
     pluginId: 'dvt',
     kind,
     role,
-    status: 'draft',
+    status: 'idle',
     tags: [],
     metadata: { columns },
   };

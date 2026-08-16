@@ -89,7 +89,7 @@ function buildCanvasShellViewModel(args: CanvasControllerViewModelArgs) {
       canCreateCanvasDocument,
     },
     overlayModel,
-    readModel: { nodesWithImpact, inspectorNode },
+    readModel: { nodesWithImpact, edgesWithImpact, inspectorNode },
   } = args;
   const routeDraftRecord = resolveRouteDraftRecord({ draftReadModel, draftSession });
   const routeDraft = routeDraftRecord?.draft ?? null;
@@ -128,7 +128,7 @@ function buildCanvasShellViewModel(args: CanvasControllerViewModelArgs) {
     canvasSurfaceStrategy: surfaceStrategy,
     canOpenSourceImport: runtimePolicy.commands.canOpenSourceImport,
     nodesWithImpact,
-    edges: graphModel.edges,
+    edges: edgesWithImpact,
     nodeTypes: canvasControllerNodeTypes,
     gridSize: store.gridSize,
     canvasPalette: store.canvasPalette,
