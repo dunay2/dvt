@@ -13,6 +13,7 @@ import {
   buildWarehouseSourceYamlUpdates,
   groupSourceObjectsForYaml,
   readExistingSourceDocument,
+  serializeSourceDocument,
   sourceObjectIdentity,
   type ConnectedRelationalSourceObject,
 } from '../../../src/application/services/warehouseSourceYaml.js';
@@ -205,13 +206,119 @@ describe('warehouse source YAML projection', () => {
       }),
     ]);
     expect(document.sources[0]?.tables[0]?.metadata).toMatchObject({
-      meta: {
-        dvt_source_identity: {
-          connection_id: 'warehouse-prod',
-          database_user: 'warehouse_reader',
+      config: {
+        meta: {
+          dvt_source_identity: {
+            connection_id: 'warehouse-prod',
+            database_user: 'warehouse_reader',
+          },
         },
       },
     });
+    expect(updates[0]?.content).not.toMatch(/^ {8}meta:/m);
+  });
+
+  it('generates canonical dbt config meta for governed source identity', () => {
+    const [update] = buildWarehouseSourceYamlUpdates({
+      existingFiles: new Map(),
+      databaseUser: 'dvt',
+      groupingStrategy: 'schema',
+      includeColumns: true,
+      addTests: false,
+      addFreshness: false,
+      sourceObjects: [
+        sourceObject({
+          connectionId: 'postgresql-local',
+          catalog: 'dvt',
+          schema: 'dvt',
+          name: 'auth_audit_events',
+          columns: [{ name: 'event_id', type: 'text', nullable: false }],
+        }),
+      ],
+    });
+
+    expect(update?.content).toBe(`version: 2
+
+sources:
+  - name: postgresql_local_dvt_dvt
+    database: dvt
+    schema: dvt
+    tables:
+      - name: auth_audit_events
+        config:
+          meta:
+            dvt_source_identity:
+              connection_id: postgresql-local
+              database_user: dvt
+        columns:
+          - name: event_id
+            data_type: text
+`);
+    expect(update?.content).not.toMatch(/^ {8}meta:/m);
+  });
+
+  it('normalizes legacy table meta into config meta and preserves canonical metadata on round-trip', () => {
+    const path = 'models/sources/src_erp.yml';
+    const existing = `version: 2
+
+sources:
+  - name: warehouse_prod_analytics_erp
+    database: analytics
+    schema: erp
+    tables:
+      - name: orders
+        meta:
+          legacy_owner: finance
+          dvt_source_identity:
+            connection_id: stale-connection
+            database_user: stale-user
+        config:
+          enabled: true
+          meta:
+            canonical_owner: analytics
+`;
+
+    const [update] = buildWarehouseSourceYamlUpdates({
+      existingFiles: new Map([[path, existing]]),
+      databaseUser: 'warehouse_reader',
+      groupingStrategy: 'schema',
+      includeColumns: false,
+      addTests: false,
+      addFreshness: false,
+      sourceObjects: [sourceObject()],
+    });
+
+    const document = readExistingSourceDocument(update?.content);
+    expect(document.sources[0]?.tables[0]?.metadata).toEqual({
+      config: {
+        enabled: true,
+        meta: {
+          legacy_owner: 'finance',
+          canonical_owner: 'analytics',
+          dvt_source_identity: {
+            connection_id: 'warehouse-prod',
+            database_user: 'warehouse_reader',
+          },
+        },
+      },
+    });
+    expect(serializeSourceDocument(document)).toBe(update?.content);
+    expect(update?.content).not.toMatch(/^ {8}meta:/m);
+  });
+
+  it('does not emit empty config metadata for a table without governed identity', () => {
+    const [update] = buildWarehouseSourceYamlUpdates({
+      existingFiles: new Map(),
+      groupingStrategy: 'schema',
+      includeColumns: false,
+      addTests: false,
+      addFreshness: false,
+      sourceObjects: [sourceObject()],
+    });
+
+    expect(readExistingSourceDocument(update?.content).sources[0]?.tables[0]?.metadata).toEqual({});
+    expect(update?.content).not.toContain('dvt_source_identity');
+    expect(update?.content).not.toMatch(/^ {8}config:/m);
   });
 
   it('preserves physical schema and relation identifiers behind stable dbt aliases', () => {
