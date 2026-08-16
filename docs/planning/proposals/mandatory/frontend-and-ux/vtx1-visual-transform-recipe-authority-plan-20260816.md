@@ -269,7 +269,8 @@ cypressFlows:
   - N/A - contract and persistence slice with no user-facing surface in #2383
 completionGate:
   - pnpm --filter @dvt/contracts test
-  - pnpm --filter @dvt/web test:canvas:run -- src/app/views/canvas/canvasDvtTransformAuthoringAuthority.test.ts src/app/services/workspace/workspaceGraphDraftProjection.test.ts src/app/views/canvas/canvasDraftAuthoring.test.ts
+  - pnpm --filter @dvt/web test:canvas:run -- src/app/views/canvas/canvasDvtTransformAuthoringAuthority.test.ts src/app/views/canvas/canvasDraftAuthoring.test.ts
+  - pnpm --filter @dvt/web test:workspace-services:run -- src/app/services/workspace/workspaceGraphDraftProjection.test.ts
   - pnpm --filter @dvt/web lint
   - pnpm --filter @dvt/contracts typecheck
   - pnpm --filter @dvt/web typecheck
@@ -284,14 +285,14 @@ redGreenCycles:
       - packages/@dvt/contracts/test/visual-transform-recipe.contract.test.ts
     greenTest: pnpm --filter @dvt/contracts test -- visual-transform-recipe.contract.test.ts
   - id: dvt-authority-roundtrip
-    redTest: pnpm --filter @dvt/web test:canvas:run -- src/app/views/canvas/canvasDvtTransformAuthoringAuthority.test.ts src/app/services/workspace/workspaceGraphDraftProjection.test.ts src/app/views/canvas/canvasDraftAuthoring.test.ts
+    redTest: pnpm --filter @dvt/web test:canvas:run -- src/app/views/canvas/canvasDvtTransformAuthoringAuthority.test.ts src/app/views/canvas/canvasDraftAuthoring.test.ts
     expectedFailure: Visual authority and recipe do not have a governed metadata roundtrip.
     patchSurfaces:
       - apps/web/src/app/views/canvas/canvasDvtTransformAuthoringAuthority.ts
       - apps/web/src/app/views/canvas/canvasDvtTransformAuthoringAuthority.test.ts
       - apps/web/src/app/services/workspace/workspaceGraphDraftProjection.test.ts
       - apps/web/src/app/views/canvas/canvasDraftAuthoring.test.ts
-    greenTest: pnpm --filter @dvt/web test:canvas:run -- src/app/views/canvas/canvasDvtTransformAuthoringAuthority.test.ts src/app/services/workspace/workspaceGraphDraftProjection.test.ts src/app/views/canvas/canvasDraftAuthoring.test.ts
+    greenTest: pnpm --filter @dvt/web test:canvas:run -- src/app/views/canvas/canvasDvtTransformAuthoringAuthority.test.ts src/app/views/canvas/canvasDraftAuthoring.test.ts
 symbols:
   - &contractSymbol
     name: VisualTransformRecipeV1Schema

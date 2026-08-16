@@ -14,7 +14,8 @@ evidence:
   tests:
     - pnpm --filter @dvt/contracts test
     - pnpm --filter @dvt/contracts typecheck
-    - pnpm --filter @dvt/web test:canvas:run -- src/app/views/canvas/canvasDvtTransformAuthoringAuthority.test.ts src/app/services/workspace/workspaceGraphDraftProjection.test.ts src/app/views/canvas/canvasDraftAuthoring.test.ts
+    - pnpm --filter @dvt/web test:canvas:run -- src/app/views/canvas/canvasDvtTransformAuthoringAuthority.test.ts src/app/views/canvas/canvasDraftAuthoring.test.ts
+    - pnpm --filter @dvt/web test:workspace-services:run -- src/app/services/workspace/workspaceGraphDraftProjection.test.ts
     - pnpm --filter @dvt/web lint
     - pnpm --filter @dvt/web typecheck
     - pnpm docs:feature-mechanization:implementation -- --feature VTX1-VISUAL-TRANSFORM-RECIPE-AUTHORITY
