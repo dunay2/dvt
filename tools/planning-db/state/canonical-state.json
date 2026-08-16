@@ -13943,14 +13943,14 @@
         "work_item_id": "2389",
         "title": "Canvas impact visual focus separation",
         "owner": "Frontend / Canvas",
-        "status": "implementing",
+        "status": "implemented",
         "rationale": "Make Impact Highlight consume React Flow visual focus instead of Canvas execution selection while preserving both existing intents.",
         "fowler_signal": "hidden_authority",
         "rail_ref": "InspectCanvasNode",
         "approved_at": "2026-08-16T01:39:22.087+00:00",
         "supersedes_id": null,
         "created_at": "2026-08-16T01:39:20.789+00:00",
-        "updated_at": "2026-08-16T01:39:23.358+00:00"
+        "updated_at": "2026-08-16T01:59:21.877+00:00"
       },
       {
         "design_id": "W4-NODE-EXECUTION-TOGGLE-LOCAL-RAIL-RETIREMENT-20260816",
@@ -95362,6 +95362,27 @@
           "sourceContentSha256": "5fcbfc912ca973123fae1530ac0f48969efde5c0e7b3646f5aade934681d57ba"
         },
         "created_at": "2026-08-11T08:50:07.905+00:00"
+      },
+      {
+        "operation_id": "32d35bc9-cecf-4f1f-acfa-ef057d54bbfa",
+        "idempotency_key": "architecture_design_transition:codex:W4-IMPACT-VISUAL-FOCUS-SEPARATION-20260816:c3b41c142def511d",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "W4-IMPACT-VISUAL-FOCUS-SEPARATION-20260816",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2389",
+        "source_content_sha256": "7ae9875b98dd9110160857c3557f9ca61c1061472ec797179d0596141e775631",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Unit, type, lint, agent-browser and native Electron evidence prove visual focus and execution selection are separated.",
+          "designId": "W4-IMPACT-VISUAL-FOCUS-SEPARATION-20260816",
+          "toStatus": "implemented",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2389",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "7ae9875b98dd9110160857c3557f9ca61c1061472ec797179d0596141e775631"
+        },
+        "created_at": "2026-08-16T01:59:21.877+00:00"
       },
       {
         "operation_id": "3328a0c6-4345-44bc-8a45-516fab84e241",
