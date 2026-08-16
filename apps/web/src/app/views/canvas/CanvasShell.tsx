@@ -23,12 +23,7 @@ import { useCanvasRouteIntentHandler } from './useCanvasRouteIntentHandler';
 import { useCanvasInteractionStore } from '../../stores/canvasInteractionStore';
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
-
-type GraphDraftCodeTarget = Readonly<{
-  nodeId: string;
-  nodeName: string;
-  path: string;
-}>;
+import { buildGraphDraftWorkspaceFileCodeContributions } from './graphDraftWorkspaceFileCodeContribution';
 
 type WorkbenchOpener = Readonly<{
   element: HTMLElement | null;
@@ -70,9 +65,6 @@ export default function CanvasShell({
   const [projectExplorerOpen, setProjectExplorerOpen] = useState(false);
   const [canvasSettingsOpen, setCanvasSettingsOpen] = useState(false);
   const [dbtProjectImportOpen, setDbtProjectImportOpen] = useState(false);
-  const [graphDraftCodeTarget, setGraphDraftCodeTarget] = useState<GraphDraftCodeTarget | null>(
-    null
-  );
   const workbenchOpenerRef = useRef<WorkbenchOpener | null>(null);
   const contextualWorkbenchId = useCanvasInteractionStore((state) => state.contextualWorkbenchId);
   const contextualWorkbenchOwnerKey = useCanvasInteractionStore(
@@ -125,22 +117,9 @@ export default function CanvasShell({
   }, []);
   const openProjectCodeWorkbench = useCallback(() => {
     if (activeContextualWorkbenchOwnerKey != null) {
-      setGraphDraftCodeTarget(null);
       openContextualWorkbench('project-code', activeContextualWorkbenchOwnerKey);
     }
   }, [activeContextualWorkbenchOwnerKey, openContextualWorkbench]);
-  const openGraphDraftNodeCodeWorkbench = useCallback(
-    (target: GraphDraftCodeTarget) => {
-      if (activeContextualWorkbenchOwnerKey == null) {
-        return;
-      }
-
-      setGraphDraftCodeTarget(target);
-      chromeCommands.onHideInspector();
-      openContextualWorkbench('node-code', activeContextualWorkbenchOwnerKey);
-    },
-    [activeContextualWorkbenchOwnerKey, chromeCommands, openContextualWorkbench]
-  );
   const openProjectExplorer = useCallback(() => setProjectExplorerOpen(true), []);
   const restoreProjectExplorerFocus = useCallback(() => {
     document
@@ -177,51 +156,34 @@ export default function CanvasShell({
   useEffect(() => {
     if (contextualWorkbenchId != null && scopedContextualWorkbenchId == null) {
       closeContextualWorkbench();
-      setGraphDraftCodeTarget(null);
     }
   }, [closeContextualWorkbench, contextualWorkbenchId, scopedContextualWorkbenchId]);
   const internalContextualWorkbench = useMemo<CanvasShellContextualWorkbench | undefined>(() => {
-    const isProjectCode = scopedContextualWorkbenchId === 'project-code';
-    const isNodeCode = scopedContextualWorkbenchId === 'node-code' && graphDraftCodeTarget != null;
-    if (!isProjectCode && !isNodeCode) {
+    if (scopedContextualWorkbenchId !== 'project-code') {
       return undefined;
     }
 
     return {
-      id: isNodeCode ? 'node-code' : 'project-code',
-      title: isNodeCode ? copy.sqlContextWorkbenchNodeTitle : copy.sqlContextWorkbenchProjectTitle,
+      id: 'project-code',
+      title: copy.sqlContextWorkbenchProjectTitle,
       closeLabel: copy.nodeWorkbenchCloseLabel,
       moveLabel: copy.sqlContextWorkbenchMoveLabel,
-      description: isNodeCode
-        ? graphDraftCodeTarget.path
-        : copy.sqlContextWorkbenchProjectDescription,
+      description: copy.sqlContextWorkbenchProjectDescription,
       requestClose: async () => {
         const flushed = (await codeWorkbenchRef.current?.flush()) ?? true;
         if (flushed) {
           closeContextualWorkbench();
-          setGraphDraftCodeTarget(null);
-          if (isNodeCode) {
-            chromeCommands.onShowInspector();
-          }
         }
         return flushed;
       },
-      panel: (
-        <SqlContextWorkbench
-          ref={codeWorkbenchRef}
-          initialPath={isNodeCode ? graphDraftCodeTarget.path : undefined}
-        />
-      ),
+      panel: <SqlContextWorkbench ref={codeWorkbenchRef} />,
     };
   }, [
     scopedContextualWorkbenchId,
-    graphDraftCodeTarget,
     copy.nodeWorkbenchCloseLabel,
     copy.sqlContextWorkbenchMoveLabel,
     copy.sqlContextWorkbenchProjectDescription,
-    copy.sqlContextWorkbenchNodeTitle,
     copy.sqlContextWorkbenchProjectTitle,
-    chromeCommands,
     closeContextualWorkbench,
   ]);
   const selectedContextualWorkbench = layout.contextualWorkbench ?? internalContextualWorkbench;
@@ -253,33 +215,15 @@ export default function CanvasShell({
       ...graph,
       nodesWithImpact: graph.nodesWithImpact.map((node) => {
         const data = node.data as DbtNodeData;
-        const existingOpenNodeCode = data.onOpenNodeCode;
         const workspaceFilePath = resolveWorkspaceFilePath(data);
         const codeTruthKind = data.presentationTruth?.code.kind;
         const canInspectNodeCode =
           typeof data.onInspectNode === 'function' &&
-          (data.pluginKind === 'dbt:model' ||
+          (workspaceFilePath != null ||
+            data.pluginKind === 'dbt:model' ||
             codeTruthKind === 'inline' ||
             codeTruthKind === 'generated');
-        const fallbackOpenNodeCode =
-          workspaceFilePath != null
-            ? (nodeId: string) => {
-                openGraphDraftNodeCodeWorkbench({
-                  nodeId,
-                  nodeName: data.name,
-                  path: workspaceFilePath,
-                });
-              }
-            : canInspectNodeCode
-              ? (nodeId: string) => data.onInspectNode?.(nodeId, 'code')
-              : undefined;
-        const openNodeCode =
-          data.canOpenNodeCode === true
-            ? existingOpenNodeCode
-            : data.canOpenNodeCode === false
-              ? undefined
-              : (existingOpenNodeCode ?? fallbackOpenNodeCode);
-        const canOpenNodeCode = typeof openNodeCode === 'function';
+        const canOpenNodeCode = data.canOpenNodeCode !== false && canInspectNodeCode;
 
         return {
           ...node,
@@ -288,15 +232,48 @@ export default function CanvasShell({
             canOpenNodeCode,
             onOpenNodeCode: canOpenNodeCode
               ? (nodeId: string) => {
-                  captureWorkbenchOpener(undefined, nodeId);
-                  openNodeCode?.(nodeId);
+                  data.onInspectNode?.(nodeId, 'code');
                 }
               : undefined,
           },
         };
       }),
     }),
-    [captureWorkbenchOpener, graph, openGraphDraftNodeCodeWorkbench]
+    [graph]
+  );
+  const graphOwnedPaths = useMemo(
+    () =>
+      new Set(
+        graphWithCanonicalCodeCommands.nodesWithImpact.flatMap((node) => {
+          const path = resolveWorkspaceFilePath(node.data as DbtNodeData);
+          return path == null ? [] : [path];
+        })
+      ),
+    [graphWithCanonicalCodeCommands.nodesWithImpact]
+  );
+  const inspectorWorkspaceFilePath =
+    panels.inspectorNode == null
+      ? null
+      : resolveWorkspaceFilePath(panels.inspectorNode as unknown as DbtNodeData);
+  const hasRouteOwnedCodeContribution = panels.inspectorWorkbenchContributions.some(
+    (contribution) =>
+      contribution.nodeId === panels.inspectorNode?.id && contribution.sectionId === 'code'
+  );
+  const panelsWithCanonicalCodeContribution = useMemo(
+    () => ({
+      ...panels,
+      inspectorWorkbenchContributions: hasRouteOwnedCodeContribution
+        ? panels.inspectorWorkbenchContributions
+        : [
+            ...panels.inspectorWorkbenchContributions,
+            ...buildGraphDraftWorkspaceFileCodeContributions({
+              node: panels.inspectorNode,
+              path: inspectorWorkspaceFilePath,
+              graphOwnedPaths,
+            }),
+          ],
+    }),
+    [graphOwnedPaths, hasRouteOwnedCodeContribution, inspectorWorkspaceFilePath, panels]
   );
   useCanvasRouteIntentHandler({
     request: routeIntentRequest ?? null,
@@ -346,7 +323,7 @@ export default function CanvasShell({
       )}
       <CanvasShellMainPanel
         layout={shellLayout}
-        panels={panels}
+        panels={panelsWithCanonicalCodeContribution}
         graph={graphWithCanonicalCodeCommands}
         chromeState={chromeState}
         graphCommands={graphCommands}
