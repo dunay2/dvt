@@ -189,18 +189,20 @@ export const WorkspaceFileCodeEditor = forwardRef<
       <div className="flex min-h-10 items-center gap-3 border-b border-(--border-subtle) px-3 py-2">
         <code className="min-w-0 flex-1 truncate text-xs text-(--text-secondary)">{path}</code>
       </div>
-      <CodeWorkingTreeStatus
-        phase={posture.kind === 'editable' ? workingTreeSync.phase : 'read_only'}
-        copy={workingTreeStatusCopy}
-        onRetry={() => void retryWorkingTreeSync()}
-        onReload={() => {
-          void fileContentQuery.refetch().then((result) => {
-            if (result.data) {
-              workingTreeSync.loadAuthoritative(result.data);
-            }
-          });
-        }}
-      />
+      {posture.kind === 'graph_owned_read_only' ? null : (
+        <CodeWorkingTreeStatus
+          phase={posture.kind === 'editable' ? workingTreeSync.phase : 'read_only'}
+          copy={workingTreeStatusCopy}
+          onRetry={() => void retryWorkingTreeSync()}
+          onReload={() => {
+            void fileContentQuery.refetch().then((result) => {
+              if (result.data) {
+                workingTreeSync.loadAuthoritative(result.data);
+              }
+            });
+          }}
+        />
+      )}
       <div className="min-h-80 flex-1 p-3">{surface}</div>
     </div>
   );

@@ -160,6 +160,7 @@ describe('WorkspaceFileCodeEditor', () => {
       graphOwnedPaths: new Set([FILE_PATH]),
     });
 
+    expect(container?.querySelector('[data-slot="code-working-tree-status"]')).toBeNull();
     expect(container?.querySelector('[data-testid="monaco-code-editor"]')).toBeNull();
     expect(container?.querySelector('[data-testid="monaco-code-viewer"]')).not.toBeNull();
     expect(saveFileContent).not.toHaveBeenCalled();
