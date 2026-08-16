@@ -105,6 +105,51 @@ describe('useCanvasController core', () => {
     expect(protectedDraftDecorationCall?.[3]).toEqual({ overlay: 'ctx' });
   });
 
+  it('projects Impact Highlight from visual focus without consuming execution selection', async () => {
+    harness.cleanup();
+    harness = setupCanvasControllerHarness();
+    harness.state.remoteDraftRecord = buildRemoteDraftRecord({
+      nodeIds: ['node_1', 'node_2'],
+      nodePositions: {
+        node_1: { x: 0, y: 0 },
+        node_2: { x: 100, y: 0 },
+      },
+      edges: [{ sourceId: 'node_1', targetId: 'node_2' }],
+    });
+    harness.state.store.executionSelectionIntent = {
+      mode: 'explicit',
+      nodeIds: ['node_1'],
+    };
+    harness.mocks.mapCanonicalNodeToCanvasNode.mockImplementation(
+      ({
+        canonicalNode: node,
+        index,
+      }: {
+        canonicalNode: { id: string; name: string };
+        index: number;
+      }) => ({
+        id: node.id,
+        type: 'dbtNode',
+        position: { x: index * 100, y: 0 },
+        selected: node.id === 'node_2',
+        data: { name: node.name },
+      })
+    );
+
+    await harness.renderProbe();
+    await harness.renderProbe();
+
+    expect(harness.mocks.buildOverlayContext).toHaveBeenLastCalledWith(
+      expect.any(Array),
+      ['node_2'],
+      null,
+      expect.any(Map),
+      expect.any(Map),
+      true
+    );
+    expect(harness.state.store.executionSelectionIntent.nodeIds).toEqual(['node_1']);
+  });
+
   it('derives inspector node from protected draft semantics and forwards graph and execution hook results', () => {
     const result = harness.getLatestResult();
     expect(result?.inspectorNode).toEqual(
