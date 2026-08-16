@@ -266,12 +266,17 @@ export function useCanvasController() {
     onLayoutComplete: persistence.handleNodePositionsSave,
   });
 
+  const impactFocusNodeIds = useMemo(
+    () => graphModel.nodes.filter((node) => node.selected === true).map((node) => node.id),
+    [graphModel.nodes]
+  );
+
   const overlayModel = useCanvasOverlayModel({
     canonicalNodes: graphModel.canonicalNodes,
     currentRun: store.currentRun,
     capabilities,
     edges: graphModel.edges,
-    selectedNodeIds: uiScope.selectedNodeIds,
+    impactFocusNodeIds,
     impactOverlayEnabled: store.impactOverlayEnabled,
   });
 
