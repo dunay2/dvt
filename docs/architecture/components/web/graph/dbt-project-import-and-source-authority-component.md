@@ -272,9 +272,11 @@ sequenceDiagram
   changes affect project revision while generated output changes do not.
 - Browser components consume typed ports and presentation models; they do not
   parse dbt, mutate files directly, or synthesize success.
-- A dbt import source-binding continuation is ephemeral route-composition
-  state scoped by Canvas id and project root. It carries no credential and is
-  consumed only after the file-authoritative Source Import dialog opens.
+- A dbt import source-binding continuation is session-scoped route-composition
+  state keyed by Canvas id and project root. Its versioned `sessionStorage`
+  projection carries declarations but no credential, survives route remount and
+  browser reload, and is consumed only after file-authoritative Source Import
+  succeeds. Cancelling or a failed import therefore preserves the exact retry.
 - Exact binding requires complete and unique coverage of the validation report.
   Missing, ambiguous, duplicate, cross-database, stale, or userless connection
   matches fail closed before file mutation.
