@@ -212,6 +212,8 @@ allowedImplementationSurfaces:
   - docs/concepts/repository-map.md
   - docs/.manifest.json
   - docs/planning/proposals/mandatory/frontend-and-ux/canvas-node-workbench-hardening-plan-20260808.md
+  - docs/planning/status/system-governance-planstore-file-ownership-20260501.md
+  - docs/planning/status/system-governance-unit-index-20260501.md
   - docs/planning/status/system-governance-unit-index.units.yaml
   - scripts/run-selected-closure-live-proof.cjs
   - scripts/run-selected-closure-live-proof.test.cjs
