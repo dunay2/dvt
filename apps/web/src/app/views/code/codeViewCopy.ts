@@ -171,7 +171,7 @@ const COPY_BY_KEY: Record<keyof CodeViewCopy, LocalizableString> = {
   workingTreeGraphOwnedReadOnlyMessage: {
     key: 'code.workingTreeGraphOwnedReadOnlyMessage',
     fallback:
-      'This graph-draft file is generated from the Canvas. Edit model SQL from Node Code; use a file-authoritative DBT project for direct Project Code editing.',
+      'This graph-draft file is generated from the Canvas and is read-only in Properties > Code. Use a file-authoritative DBT project for direct editing.',
   },
   workingTreeRetryLabel: { key: 'code.workingTreeRetryLabel', fallback: 'Retry' },
   workingTreeReloadLabel: { key: 'code.workingTreeReloadLabel', fallback: 'Reload file' },
@@ -294,7 +294,7 @@ const SPANISH_COPY: CodeViewCopy = {
   workingTreeReadOnlyMessage: 'Este archivo no se puede modificar.',
   workingTreeGraphOwnedReadOnlyLabel: 'Generado por el Canvas',
   workingTreeGraphOwnedReadOnlyMessage:
-    'Este archivo del borrador de grafo se genera desde el Canvas. Edita el SQL del modelo desde Código del nodo; usa un proyecto DBT con autoridad de archivos para editar directamente en Código de proyecto.',
+    'Este archivo del borrador de grafo se genera desde el Canvas y es de solo lectura en Propiedades > Código. Usa un proyecto DBT con autoridad de archivos para editarlo directamente.',
   workingTreeRetryLabel: 'Reintentar',
   workingTreeReloadLabel: 'Recargar archivo',
   routeLoadingMessage: 'Cargando archivos del workspace...',

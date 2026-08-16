@@ -896,7 +896,8 @@ describe('CodeView', () => {
     );
     expect(viewer?.getAttribute('data-path')).toBe('models/payments_model.sql');
     expect(viewer?.textContent).toContain("{{ source('finance_warehouse', 'payments_final') }}");
-    expect(currentContainer.textContent).toContain(copy.workingTreeGraphOwnedReadOnlyLabel);
+    expect(currentContainer.textContent).not.toContain(copy.workingTreeGraphOwnedReadOnlyLabel);
+    expect(currentContainer.querySelector('[data-slot="code-working-tree-status"]')).toBeNull();
   });
 
   it('renders a governed route empty state when no workspace files are available', async () => {

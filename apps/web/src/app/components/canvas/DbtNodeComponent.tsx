@@ -72,7 +72,6 @@ export interface DbtNodeData extends Record<string, unknown> {
     preferredTabId?: 'general' | 'inputs-outputs' | 'tests' | 'code' | null
   ) => void;
   canOpenNodeCode?: boolean;
-  onOpenNodeCode?: (nodeId: string) => void;
   onDuplicateNode?: (nodeId: string) => void;
   onRemoveNode?: (nodeId: string) => void;
   onToggleNodeSelection?: (nodeId: string, shouldSelect: boolean) => void;

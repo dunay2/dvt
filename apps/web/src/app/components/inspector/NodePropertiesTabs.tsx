@@ -26,6 +26,7 @@ export type NodePropertiesTabsProps = Readonly<{
   panels: readonly InspectorPanelContribution[];
   activeTab: string;
   primarySectionIds?: readonly NodePropertySection['id'][];
+  persistentSectionIds?: readonly NodePropertySection['id'][];
   beforePanels?: ReactNode;
   sectionBeforeChildren?: Partial<Record<NodePropertySection['id'], ReactNode>>;
   sectionAfterChildren?: Partial<Record<NodePropertySection['id'], ReactNode>>;
@@ -83,6 +84,7 @@ export function NodePropertiesTabs({
   panels,
   activeTab,
   primarySectionIds,
+  persistentSectionIds = [],
   beforePanels,
   sectionBeforeChildren,
   sectionAfterChildren,
@@ -204,7 +206,13 @@ export function NodePropertiesTabs({
       </div>
 
       {model.sections.map((section) => (
-        <TabsContent key={section.id} value={section.id} className="m-0">
+        <TabsContent
+          key={section.id}
+          value={section.id}
+          forceMount={persistentSectionIds.includes(section.id) ? true : undefined}
+          data-slot={`${slots.sectionPrefix}-${section.id}-content`}
+          className="m-0 data-[state=inactive]:hidden"
+        >
           <NodePropertySectionView
             section={section}
             slots={slots}

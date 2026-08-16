@@ -20,6 +20,7 @@ import CanvasViewportSource from './CanvasViewport.tsx?raw';
 import CanvasViewportSurfaceViewSource from './CanvasViewportSurfaceView.tsx?raw';
 import DvtSqlTransformAuthoringSectionSource from './DvtSqlTransformAuthoringSection.tsx?raw';
 import DbtProjectFileCanvasControllerSource from './useDbtProjectFileCanvasController.ts?raw';
+import DbtWorkspaceFileCodeContributionSource from './dbtWorkspaceFileCodeContribution.tsx?raw';
 import CanvasSelectionHandlersSource from './useCanvasSelectionHandlers.ts?raw';
 
 describe('Canvas Node Workbench W4 hardening contracts', () => {
@@ -78,6 +79,9 @@ describe('Canvas Node Workbench W4 hardening contracts', () => {
       'canvasNodeContextOpenWorkbenchLabel',
       'canvasNodeContextWorkbenchGroupLabel',
       'canvasNodeContextExecuteGroupLabel',
+      'nodeWorkbenchEditCodeFileLabel',
+      'nodeWorkbenchEditCodeFileDescription',
+      'sqlContextWorkbenchNodeTitle',
     ]) {
       expect(CanvasNodeContextMenuModelSource).not.toContain(retiredFact);
       expect(CanvasNodeMapperSource).not.toContain(retiredFact);
@@ -85,30 +89,19 @@ describe('Canvas Node Workbench W4 hardening contracts', () => {
       expect(CanvasToolbarCopySource).not.toContain(retiredFact);
       expect(CanvasToolbarCopyEsSource).not.toContain(retiredFact);
     }
-
-    expect(CanvasAuthoringCopySource).toContain('nodeWorkbenchEditCodeFileLabel');
-    expect(CanvasAuthoringCopySource).toContain('nodeWorkbenchEditCodeFileDescription');
-    expect(CanvasNodeWorkbenchPanelSource).toContain('copy.nodeWorkbenchEditCodeFileLabel');
-    expect(CanvasNodeWorkbenchPanelSource).toContain('copy.nodeWorkbenchEditCodeFileDescription');
   });
 
-  it('keeps code inside Properties navigation before any file-authoritative editor opens', () => {
+  it('keeps the authoritative file editor inside Properties without a node workbench target', () => {
     expect(CanvasNodeWorkbenchPanelSource).toContain('setActiveTab(nextTabId);');
-    expect(CanvasNodeWorkbenchPanelSource).toContain(
-      'data-slot="canvas-node-workbench-open-code-editor"'
-    );
+    expect(CanvasNodeWorkbenchPanelSource).not.toContain('canvas-node-workbench-open-code-editor');
+    expect(DbtWorkspaceFileCodeContributionSource).toContain('WorkspaceFileCodeEditor');
+    expect(DbtWorkspaceFileCodeContributionSource).toContain('authority="dbt-project-files"');
     expect(DbtProjectFileCanvasControllerSource).toContain(
       "setInspectorNode(nodeId, preferredTabId ?? 'general');"
     );
-    expect(DbtProjectFileCanvasControllerSource).toContain(
-      "setCodeWorkbenchTarget({ kind: 'node', nodeId: node.id, initialPath: node.path });"
-    );
-    expect(DbtProjectFileCanvasControllerSource).toContain(
-      'codeWorkbenchReturnNodeIdRef.current = node.id;'
-    );
-    expect(DbtProjectFileCanvasControllerSource).toContain(
-      "setInspectorNode(returnNodeId, 'code');"
-    );
+    expect(DbtProjectFileCanvasControllerSource).toContain('nodeCodeEditorRef.current?.flush()');
+    expect(DbtProjectFileCanvasControllerSource).not.toContain('codeWorkbenchReturnNodeIdRef');
+    expect(DbtProjectFileCanvasControllerSource).not.toContain("kind: 'node'");
   });
 
   it('keeps contextual Workbench help and close as compact right-aligned accessible controls', () => {

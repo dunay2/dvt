@@ -280,12 +280,10 @@ describe('dbt project file projection live vertical', () => {
       .should('be.visible')
       .and('have.attr', 'aria-selected', 'true');
 
-    // File-authoritative editing is reached from inside the Code section, not from another node gesture.
-    cy.get('[data-slot="canvas-node-workbench-open-code-editor"]').should('be.visible').click();
-    cy.get('[data-slot="canvas-contextual-workbench"]', { timeout: 30_000 }).should('be.visible');
-    cy.get(
-      `[data-slot="code-workspace-file-entry"][data-workspace-path="${PROJECT_ROOT}/models/orders.sql"]`
-    ).should('be.visible');
+    // The authoritative file is edited directly inside Properties Code.
+    cy.get('[data-slot="workspace-file-code-editor"]', { timeout: 30_000 })
+      .should('be.visible')
+      .and('have.attr', 'data-file-path', `${PROJECT_ROOT}/models/orders.sql`);
     cy.get('[data-testid="monaco-code-editor"]', { timeout: 30_000 })
       .find('.view-lines')
       .invoke('text')
@@ -294,10 +292,9 @@ describe('dbt project file projection live vertical', () => {
           /source\(\s*'raw'\s*,\s*'orders'\s*\)/
         );
       });
-    cy.get('[data-slot="canvas-contextual-workbench-close"]').should('be.visible').click();
     cy.get('[data-slot="canvas-contextual-workbench"]').should('not.exist');
 
-    // Closing Code returns to the same node Properties context.
+    // Other Properties sections remain in the same node context.
     cy.get('[data-slot="canvas-node-workbench-overlay"]', { timeout: 20_000 }).should('be.visible');
     cy.get('[data-slot="canvas-node-workbench-help"]')
       .should('be.visible')

@@ -26,6 +26,11 @@ const SECOND_NODE: CanonicalNode = {
   name: 'customers',
 };
 
+const FILE_BACKED_NODE: CanonicalNode = {
+  ...NODE,
+  path: 'models/orders.sql',
+};
+
 describe('CanvasNodeWorkbenchPanel contextual contributions', () => {
   let container: HTMLDivElement;
   let root: Root;
@@ -84,6 +89,37 @@ describe('CanvasNodeWorkbenchPanel contextual contributions', () => {
     expect(labels).not.toContain('Description');
     expect(generalSection?.textContent).not.toContain('Existing description.');
     expect(container.querySelector('[data-slot="canvas-node-workbench-code-section"]')).toBeNull();
+  });
+
+  it('lets an authoritative Code contribution replace passive copy and the legacy launcher', () => {
+    act(() => {
+      root.render(
+        <CanvasNodeWorkbenchPanel
+          node={FILE_BACKED_NODE}
+          nodes={[FILE_BACKED_NODE]}
+          edges={[]}
+          activeRunId={null}
+          preferredTabId="code"
+          authoring={{ canEditNode: false, onApplyNodeDraft: vi.fn() }}
+          contributions={[
+            {
+              id: 'workspace-file-editor',
+              nodeId: FILE_BACKED_NODE.id,
+              sectionId: 'code',
+              placement: 'before-body',
+              content: <div data-slot="workspace-file-editor-contribution">Editor</div>,
+            },
+          ]}
+          onClose={vi.fn()}
+        />
+      );
+    });
+
+    const codeSection = container.querySelector('[data-slot="canvas-node-workbench-code-section"]');
+    expect(
+      codeSection?.querySelector('[data-slot="workspace-file-editor-contribution"]')
+    ).not.toBeNull();
+    expect(codeSection?.textContent).not.toContain(FILE_BACKED_NODE.path);
   });
 
   it('resolves workbench commands through the Canvas locale catalog', () => {

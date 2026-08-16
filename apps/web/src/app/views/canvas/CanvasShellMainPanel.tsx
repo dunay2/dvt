@@ -10,7 +10,6 @@ import { CanvasNodeWorkbenchOverlay } from './CanvasNodeWorkbenchOverlay';
 import { isCanvasNodeWorkbenchVisible } from './canvasNodeWorkbenchVisibility';
 import CanvasViewport from './CanvasViewport';
 import { CanvasWorkspaceMenuContributionRegistrar } from './CanvasWorkspaceMenuControls';
-import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 import type { CanvasContextMenuPresenter } from './useCanvasContextMenuPresenter';
 import type {
   CanvasShellChromeCommands,
@@ -210,27 +209,13 @@ function CanvasShellMainSurface({
 function CanvasShellNodeWorkbenchOverlay({
   layout,
   panels,
-  graph,
   chromeCommands,
-}: Pick<
-  CanvasShellMainPanelProps,
-  'layout' | 'panels' | 'graph' | 'chromeCommands'
->): JSX.Element | null {
-  const inspectorNodeId = panels.inspectorNode?.id;
-  const inspectorNodeData = graph.nodesWithImpact.find((node) => node.id === inspectorNodeId)
-    ?.data as DbtNodeData | undefined;
-  const openNodeCode = inspectorNodeData?.onOpenNodeCode;
-
+}: Pick<CanvasShellMainPanelProps, 'layout' | 'panels' | 'chromeCommands'>): JSX.Element | null {
   return (
     <CanvasNodeWorkbenchOverlay
       layout={layout}
       panels={panels}
       onHide={chromeCommands.onHideInspector}
-      onOpenNodeCode={
-        inspectorNodeId != null && typeof openNodeCode === 'function'
-          ? () => openNodeCode(inspectorNodeId)
-          : undefined
-      }
     />
   );
 }
@@ -285,7 +270,6 @@ export function CanvasShellMainPanel({
         <CanvasShellNodeWorkbenchOverlay
           layout={layout}
           panels={panels}
-          graph={graph}
           chromeCommands={chromeCommands}
         />
       ) : null}

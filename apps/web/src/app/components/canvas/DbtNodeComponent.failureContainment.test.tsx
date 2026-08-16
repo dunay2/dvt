@@ -104,7 +104,6 @@ describe('DbtNodeComponent plugin failure containment', () => {
 
   it('opens Properties on Code while honoring an explicit external editor denial', () => {
     const onInspectNode = vi.fn();
-    const onOpenNodeCode = vi.fn();
     const nodeProps = {
       id: 'model.orders',
       selected: false,
@@ -113,7 +112,6 @@ describe('DbtNodeComponent plugin failure containment', () => {
         type: 'MODEL',
         status: 'idle',
         canOpenNodeCode: false,
-        onOpenNodeCode,
         onInspectNode,
         presentationTruth: {
           columns: {
@@ -146,7 +144,6 @@ describe('DbtNodeComponent plugin failure containment', () => {
       fireEvent.dblClick(container.querySelector('div')!);
     });
 
-    expect(onOpenNodeCode).not.toHaveBeenCalled();
     expect(onInspectNode).toHaveBeenCalledOnce();
     expect(onInspectNode).toHaveBeenCalledWith('model.orders', 'code');
   });

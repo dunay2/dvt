@@ -311,8 +311,6 @@ describe('CanvasNodeWorkbenchPanel', () => {
   });
 
   it('does not repeat an external code action when the node already supports inline authoring', () => {
-    const onOpenNodeCode = vi.fn();
-
     act(() => {
       root.render(
         <CanvasNodeWorkbenchPanel
@@ -322,7 +320,6 @@ describe('CanvasNodeWorkbenchPanel', () => {
           activeRunId={null}
           preferredTabId="general"
           authoring={{ canEditNode: true, onApplyNodeDraft: vi.fn() }}
-          onOpenNodeCode={onOpenNodeCode}
           onClose={vi.fn()}
         />
       );
@@ -340,18 +337,10 @@ describe('CanvasNodeWorkbenchPanel', () => {
       fireEvent.click(codeTab!);
     });
 
-    expect(onOpenNodeCode).not.toHaveBeenCalled();
-
-    expect(
-      container.querySelector('[data-slot="canvas-node-workbench-open-code-editor"]')
-    ).toBeNull();
     expect(container.querySelector('textarea[name="dbt-model-sql"]')).not.toBeNull();
-    expect(onOpenNodeCode).not.toHaveBeenCalled();
   });
 
-  it('retains one explicit file editor action for a file-backed node without inline authoring', () => {
-    const onOpenNodeCode = vi.fn();
-
+  it('does not synthesize a duplicate code action for a file-backed node', () => {
     act(() => {
       root.render(
         <CanvasNodeWorkbenchPanel
@@ -361,23 +350,12 @@ describe('CanvasNodeWorkbenchPanel', () => {
           activeRunId={null}
           preferredTabId="code"
           authoring={{ canEditNode: false, onApplyNodeDraft: vi.fn() }}
-          onOpenNodeCode={onOpenNodeCode}
           onClose={vi.fn()}
         />
       );
     });
 
-    const editSqlFile = container.querySelector<HTMLButtonElement>(
-      '[data-slot="canvas-node-workbench-open-code-editor"]'
-    );
-    expect(editSqlFile?.textContent).toBe('Edit SQL file');
     expect(container.querySelector('textarea[name="dbt-model-sql"]')).toBeNull();
-
-    act(() => {
-      fireEvent.click(editSqlFile!);
-    });
-
-    expect(onOpenNodeCode).toHaveBeenCalledTimes(1);
   });
 
   it('keeps the accessible movement handle separate from the close command', () => {

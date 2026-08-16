@@ -62,7 +62,7 @@ export type CanvasShellLayout = {
 };
 
 export type CanvasShellContextualWorkbench = Readonly<{
-  id: 'node-code' | 'project-code';
+  id: 'project-code';
   title: string;
   closeLabel: string;
   moveLabel?: string;

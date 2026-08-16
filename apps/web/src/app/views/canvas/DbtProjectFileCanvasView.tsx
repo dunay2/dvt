@@ -11,6 +11,7 @@ import { CanvasErrorStateView, CanvasLoadingStateView } from './CanvasStateViews
 import { buildDbtProjectFileCodeWorkbench } from './dbtProjectFileCodeWorkbench';
 import type { SqlContextWorkbenchHandle } from './SqlContextWorkbench';
 import { buildDbtYamlDescriptionWorkbenchContributions } from './dbtYamlDescriptionWorkbenchContribution';
+import { buildDbtWorkspaceFileCodeContributions } from './dbtWorkspaceFileCodeContribution';
 import { useCanvasRunControlSurface } from './useCanvasRunControlSurface';
 import type { useDbtProjectFileCanvasController } from './useDbtProjectFileCanvasController';
 
@@ -143,19 +144,26 @@ export function DbtProjectFileCanvasView({
     defaultPermission: 'read' as const,
   };
   const centerSurface = resolveCenterSurface(controller);
-  const inspectorWorkbenchContributions = buildDbtYamlDescriptionWorkbenchContributions({
-    canvasId: activeCanvas.id,
-    node: controller.inspectorNode,
-    onProjectChanged: controller.refreshProjectGraphAfterMutation,
-    onReloadLatest: controller.reloadNodeDescription,
-  });
+  const inspectorWorkbenchContributions = [
+    ...buildDbtYamlDescriptionWorkbenchContributions({
+      canvasId: activeCanvas.id,
+      node: controller.inspectorNode,
+      onProjectChanged: controller.refreshProjectGraphAfterMutation,
+      onReloadLatest: controller.reloadNodeDescription,
+    }),
+    ...buildDbtWorkspaceFileCodeContributions({
+      node: controller.inspectorNode,
+      editorRef: controller.nodeCodeEditorRef,
+      reconcilePersistedFile: controller.reconcileCodeFilePersistence,
+    }),
+  ];
   const contextualWorkbench = buildDbtProjectFileCodeWorkbench({
     copy,
     workbenchRef: codeWorkbenchRef,
     onClose: controller.closeCodeWorkbench,
     reconcilePersistedFile: controller.reconcileCodeFilePersistence,
     projectRoot,
-    target: controller.codeWorkbenchTarget,
+    open: controller.projectCodeWorkbenchOpen,
   });
   const shellProps: CanvasShellProps = {
     layout: {
@@ -244,7 +252,9 @@ export function DbtProjectFileCanvasView({
     runControls,
     workspaceCommands: {
       canOpenProjectExplorer: false,
-      onOpenProjectCode: controller.openProjectCode,
+      onOpenProjectCode: () => {
+        void controller.openProjectCode();
+      },
     },
     routeIntentRequest,
     canvasContextScreenToFlowPosition: screenToFlowPosition,

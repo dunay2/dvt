@@ -230,7 +230,7 @@ export function DbtNodeRenderer({
         : (kindMeta?.label ?? node.kind);
   const cardModel = buildGraphNodeCardReadModel(node, data, graphNodeCardStrategies);
   const openOperationalDetails = data.onOpenOperationalDetails;
-  const openNodeCode = data.onOpenNodeCode;
+  const inspectNode = data.onInspectNode;
   const columns = resolveColumns(data, node.metadata);
   const showColumns =
     data.showColumns === true &&
@@ -263,8 +263,8 @@ export function DbtNodeRenderer({
       overlayStyle={overlayProps.style}
       {...tagActionProps}
       onOpenCode={
-        data.canOpenNodeCode !== false && typeof openNodeCode === 'function'
-          ? () => openNodeCode(node.id)
+        data.canOpenNodeCode !== false && typeof inspectNode === 'function'
+          ? () => inspectNode(node.id, 'code')
           : undefined
       }
       onOpenOperationalDetails={

@@ -120,4 +120,30 @@ describe('NodePropertiesTabs primary sections', () => {
     expect(container.querySelector('[data-slot="node-inspector-tab-tests"]')).toBeNull();
     expect(container.querySelector('[data-slot="node-inspector-more-trigger"]')).not.toBeNull();
   });
+
+  it('keeps a contributed Code editor mounted while another Properties tab is active', () => {
+    act(() => {
+      root.render(
+        <NodePropertiesTabs
+          node={node}
+          model={readModel}
+          activeRunId={null}
+          panels={[]}
+          activeTab="general"
+          moreLabel="More"
+          persistentSectionIds={['code']}
+          sectionBeforeChildren={{
+            code: <textarea data-slot="inline-code-editor-session" defaultValue="select 1" />,
+          }}
+          onActiveTabChange={vi.fn()}
+          onHide={vi.fn()}
+        />
+      );
+    });
+
+    const codeContent = container.querySelector('[data-slot="node-inspector-code-content"]');
+    expect(codeContent?.getAttribute('data-state')).toBe('inactive');
+    expect(codeContent?.className).toContain('data-[state=inactive]:hidden');
+    expect(codeContent?.querySelector('[data-slot="inline-code-editor-session"]')).not.toBeNull();
+  });
 });

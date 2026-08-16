@@ -132,7 +132,10 @@ function openModelCodeEditor(): void {
   cy.get('[data-slot="canvas-node-workbench-tab-code"]')
     .should('be.visible')
     .and('have.attr', 'aria-selected', 'true');
-  cy.get('[data-slot="canvas-node-workbench-open-code-editor"]').should('be.enabled').click();
+  cy.get('[data-slot="workspace-file-code-editor"]', { timeout: 30_000 })
+    .should('be.visible')
+    .and('have.attr', 'data-file-path', MODEL_SQL_PATH);
+  cy.get('[data-testid="monaco-code-editor"]', { timeout: 30_000 }).should('be.visible');
 }
 
 function proveModelWorkbenchMovement(): void {
