@@ -153,6 +153,7 @@ governingSources:
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
 allowedImplementationSurfaces:
+  - apps/web/src/app/views/Canvas.test.controller.defaults.ts
   - apps/web/cypress/support/canvasExecutionSelection.ts
   - apps/web/cypress/support/test/canvasPreviewRunPersisted.ts
   - apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts
@@ -188,6 +189,7 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx
   - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx
   - apps/web/src/app/views/canvas/CanvasShell.graphSurface.test.tsx
+  - apps/web/src/app/views/canvas/CanvasShellMainPanel.tsx
   - apps/web/src/app/views/canvas/CanvasShell.tsx
   - apps/web/src/app/views/canvas/useCanvasController.core.test.tsx
   - apps/web/src/app/views/canvas/useCanvasController.ts
@@ -201,8 +203,14 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/CanvasViewport.architecture.test.ts
   - apps/web/src/app/views/canvas/CanvasViewport.keyboardNodeEntry.test.ts
   - apps/web/src/app/views/canvas/CanvasViewport.nodeFloatingToolbar.test.tsx
+  - apps/web/src/app/views/canvas/CanvasViewport.nodeOperationalRail.test.tsx
   - apps/web/src/app/views/canvas/CanvasViewport.tsx
   - apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx
+  - apps/web/src/app/views/canvas/canvasControllerViewModel.ts
+  - apps/web/src/app/views/canvas/canvasShell.types.ts
+  - apps/web/src/app/views/canvas/canvasShellBuilder.types.ts
+  - apps/web/src/app/views/canvas/canvasShellGraphCommandsBuilder.ts
+  - apps/web/src/app/views/canvas/canvasShellPropsBuilder.tsx
   - apps/web/src/app/views/canvas/canvasNodeContextSurfaceModel.test.ts
   - apps/web/src/app/views/canvas/canvasNodeContextSurfaceModel.ts
   - apps/web/src/app/views/canvas/canvasNodeFloatingToolbarModel.test.ts
