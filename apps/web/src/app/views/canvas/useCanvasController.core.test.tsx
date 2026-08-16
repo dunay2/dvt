@@ -105,7 +105,7 @@ describe('useCanvasController core', () => {
     expect(protectedDraftDecorationCall?.[3]).toEqual({ overlay: 'ctx' });
   });
 
-  it('projects Impact Highlight from visual focus without consuming execution selection', async () => {
+  it('projects Impact Highlight from explicit node focus without consuming execution selection', async () => {
     harness.cleanup();
     harness = setupCanvasControllerHarness();
     harness.state.remoteDraftRecord = buildRemoteDraftRecord({
@@ -131,13 +131,17 @@ describe('useCanvasController core', () => {
         id: node.id,
         type: 'dbtNode',
         position: { x: index * 100, y: 0 },
-        selected: node.id === 'node_2',
+        selected: true,
         data: { name: node.name },
       })
     );
 
     await harness.renderProbe();
     await harness.renderProbe();
+
+    await act(async () => {
+      harness.getLatestResult()?.handleImpactFocusNodeChange('node_2');
+    });
 
     expect(harness.mocks.buildOverlayContext).toHaveBeenLastCalledWith(
       expect.any(Array),

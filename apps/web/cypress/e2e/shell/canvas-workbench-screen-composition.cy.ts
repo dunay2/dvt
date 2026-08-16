@@ -988,7 +988,7 @@ describe('Canvas workbench screen composition', () => {
       .find('[data-slot="graph-node-card"]')
       .should('have.css', 'opacity', '0.3');
 
-    cy.get('@orphanNode').click();
+    cy.get('@orphanNode').focus();
     cy.get('@orphanNode').find('[data-slot="graph-node-card"]').should('have.css', 'opacity', '1');
     cy.get('@modelNode').find('[data-slot="graph-node-card"]').should('have.css', 'opacity', '0.3');
 
