@@ -1000,7 +1000,7 @@ describe('Canvas workbench screen composition', () => {
       .and('have.attr', 'aria-selected', 'true');
     cy.get('[data-slot="canvas-node-workbench-open-code-editor"]').should('not.exist');
     cy.get('[data-slot="canvas-node-workbench-overlay"]').should('be.visible');
-    cy.get('[data-testid="monaco-code-editor"], [data-testid="monaco-code-viewer"]')
+    cy.get('[data-testid="monaco-code-editor"]')
       .find('.view-line')
       .should(($lines) => {
         const renderedLines = [...$lines].map((line) =>
@@ -1030,7 +1030,7 @@ describe('Canvas workbench screen composition', () => {
       .should('be.visible')
       .and('have.attr', 'aria-selected', 'true');
     cy.get('[data-slot="canvas-node-workbench-open-code-editor"]').should('not.exist');
-    cy.get('[data-testid="monaco-code-editor"], [data-testid="monaco-code-viewer"]')
+    cy.get('[data-testid="monaco-code-editor"]')
       .find('.view-line')
       .should(($lines) => {
         const renderedLines = [...$lines].map((line) =>
