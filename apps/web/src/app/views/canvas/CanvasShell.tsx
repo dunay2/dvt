@@ -167,11 +167,13 @@ export default function CanvasShell({
     }
     sourceImportDialog.openCommand(sourceImportInitialSelection);
   }, [sourceImportDialog.openCommand, sourceImportInitialSelection]);
-  const openSourceImport = useCallback<CanvasShellOpenDataRegistryCommand>(
-    (initialSelection, placement) =>
-      sourceImportDialog.openCommand?.(initialSelection ?? sourceImportInitialSelection, placement),
-    [sourceImportDialog.openCommand, sourceImportInitialSelection]
-  );
+  const openSourceImport = useMemo<CanvasShellOpenDataRegistryCommand | undefined>(() => {
+    const openCommand = sourceImportDialog.openCommand;
+    return openCommand == null
+      ? undefined
+      : (initialSelection, placement) =>
+          openCommand(initialSelection ?? sourceImportInitialSelection, placement);
+  }, [sourceImportDialog.openCommand, sourceImportInitialSelection]);
   useEffect(() => {
     if (contextualWorkbenchId != null && scopedContextualWorkbenchId == null) {
       closeContextualWorkbench();
