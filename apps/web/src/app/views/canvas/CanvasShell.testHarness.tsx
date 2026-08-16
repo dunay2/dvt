@@ -1,5 +1,6 @@
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { vi } from 'vitest';
 
 import CanvasShell from './CanvasShell';
@@ -254,6 +255,12 @@ export function createCanvasShellHarness(): {
   const container = document.createElement('div');
   document.body.appendChild(container);
   const root: Root = createRoot(container);
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      mutations: { retry: false },
+      queries: { retry: false },
+    },
+  });
   (
     globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
   ).IS_REACT_ACT_ENVIRONMENT = true;
@@ -270,13 +277,21 @@ export function createCanvasShellHarness(): {
     render: async (overrides?: CanvasShellPropsOverrides) => {
       const props = buildCanvasShellProps(overrides);
       await act(async () => {
-        root.render(<CanvasShell {...props} />);
+        root.render(
+          <QueryClientProvider client={queryClient}>
+            <CanvasShell {...props} />
+          </QueryClientProvider>
+        );
       });
       return props;
     },
     renderProps: async (props: CanvasShellProps) => {
       await act(async () => {
-        root.render(<CanvasShell {...props} />);
+        root.render(
+          <QueryClientProvider client={queryClient}>
+            <CanvasShell {...props} />
+          </QueryClientProvider>
+        );
       });
     },
     unmount: () => {
@@ -288,6 +303,7 @@ export function createCanvasShellHarness(): {
         contextualWorkbenchId: null,
         contextualWorkbenchOwnerKey: null,
       });
+      queryClient.clear();
       container.remove();
       vi.clearAllMocks();
     },
