@@ -21,5 +21,6 @@ export function buildCanvasShellGraphCommands({
     onCreateAuthoringNode: graphCommands.handleCreateAuthoringNode,
     onSourceImportComplete: graphCommands.handleSourceImportComplete,
     onImportedNodeFocusComplete: graphCommands.handleImportedNodeFocusComplete,
+    onImpactFocusNodeChange: graphCommands.handleImpactFocusNodeChange,
   };
 }

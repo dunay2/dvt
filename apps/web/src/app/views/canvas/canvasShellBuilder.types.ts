@@ -130,6 +130,7 @@ export type CanvasShellGraphCommandsBuilderArgs = Readonly<{
     | 'handleCreateAuthoringNode'
     | 'handleSourceImportComplete'
     | 'handleImportedNodeFocusComplete'
+    | 'handleImpactFocusNodeChange'
   >;
 }>;
 

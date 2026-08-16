@@ -57,6 +57,7 @@ type CanvasViewportSurfaceViewProps = Readonly<{
     position: { x: number; y: number };
   } | null;
   onCloseNodeHealthPopover: (restoreTriggerFocus?: boolean) => void;
+  onImpactFocusNodeChange?: (nodeId: string | null) => void;
   graphSearchController: CanvasGraphSearchController;
   graphFilterController: CanvasGraphFilterController;
   copy: CanvasViewCopy;
@@ -122,6 +123,14 @@ export function activateFocusedCanvasNodeFromKeyboard(
   return true;
 }
 
+export function resolveFocusedCanvasNodeId(target: EventTarget | null): string | null {
+  if (!(target instanceof Element)) {
+    return null;
+  }
+
+  return target.closest<HTMLElement>('.react-flow__node')?.dataset.id ?? null;
+}
+
 function CanvasViewportReactFlowSurface({
   canEditEdges,
   canDeleteWithKeyboard,
@@ -145,6 +154,7 @@ function CanvasViewportReactFlowSurface({
   contextMenuPresenter,
   contextSurfaceLabel,
   onCloseNodeHealthPopover,
+  onImpactFocusNodeChange,
   graphSearchController,
   copy,
 }: Omit<
@@ -157,6 +167,7 @@ function CanvasViewportReactFlowSurface({
 >): JSX.Element {
   const handlePaneClick: NonNullable<ReactFlowProps<Node, Edge>['onPaneClick']> = (event) => {
     onCloseNodeHealthPopover();
+    onImpactFocusNodeChange?.(null);
     contextMenuPresenter.handlePaneClick(event);
   };
   const handleNodeDrag: NonNullable<ReactFlowProps<Node, Edge>['onNodeDrag']> = (
@@ -194,6 +205,9 @@ function CanvasViewportReactFlowSurface({
       tabIndex={0}
       className="h-full w-full outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-inset"
       onContextMenuCapture={contextMenuPresenter.handleViewportContextMenu}
+      onFocusCapture={(event) => {
+        onImpactFocusNodeChange?.(resolveFocusedCanvasNodeId(event.target));
+      }}
       onKeyDownCapture={(event) => {
         activateFocusedCanvasNodeFromKeyboard(event);
       }}

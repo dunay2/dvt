@@ -160,6 +160,7 @@ function buildCanvasShellGraphCommandsArgs({
       handleCreateAuthoringNode: controller.handleCreateAuthoringNode,
       handleSourceImportComplete: controller.handleSourceImportComplete,
       handleImportedNodeFocusComplete: controller.handleImportedNodeFocusComplete,
+      handleImpactFocusNodeChange: controller.handleImpactFocusNodeChange,
     },
   };
 }

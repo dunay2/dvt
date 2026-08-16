@@ -1,5 +1,5 @@
 /** Owned concern: compose Canvas environment, authoring runtime, adapter seams, and execution seams into one route facade. */
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   resolveActiveCanvasAuthoringMode,
@@ -53,6 +53,7 @@ export function useCanvasController() {
     store,
   } = environment;
   const previousWorkspaceLayoutKeyRef = useRef(store.workspaceLayoutKey);
+  const [impactFocusNodeId, setImpactFocusNodeId] = useState<string | null>(null);
 
   useEffect(() => {
     if (previousWorkspaceLayoutKeyRef.current === store.workspaceLayoutKey) {
@@ -60,6 +61,7 @@ export function useCanvasController() {
     }
 
     previousWorkspaceLayoutKeyRef.current = store.workspaceLayoutKey;
+    setImpactFocusNodeId(null);
     store.setExecutionSelectionIntent(createCanvasExecutionSelectionIntent([]));
     store.setInspectorNode(null);
     store.closeContextualWorkbench();
@@ -267,8 +269,11 @@ export function useCanvasController() {
   });
 
   const impactFocusNodeIds = useMemo(
-    () => graphModel.nodes.filter((node) => node.selected === true).map((node) => node.id),
-    [graphModel.nodes]
+    () =>
+      impactFocusNodeId != null && graphModel.nodes.some((node) => node.id === impactFocusNodeId)
+        ? [impactFocusNodeId]
+        : [],
+    [graphModel.nodes, impactFocusNodeId]
   );
 
   const overlayModel = useCanvasOverlayModel({
@@ -405,5 +410,6 @@ export function useCanvasController() {
     },
     inspectorCommands,
     executionSelectionRecovery,
+    handleImpactFocusNodeChange: setImpactFocusNodeId,
   });
 }

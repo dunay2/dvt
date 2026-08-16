@@ -208,6 +208,7 @@ export function buildCanvasShellProps(overrides?: CanvasShellPropsOverrides): Ca
       onCreateAuthoringNode: vi.fn(),
       onSourceImportComplete: vi.fn(),
       onImportedNodeFocusComplete: vi.fn(),
+      onImpactFocusNodeChange: vi.fn(),
       ...overrides?.graphCommands,
     },
     chromeCommands: {

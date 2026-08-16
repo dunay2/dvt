@@ -128,6 +128,7 @@ function CanvasShellViewport({
       onCreateAuthoringNode={graphCommands.onCreateAuthoringNode}
       importedNodeFocusIds={panels.importedNodeFocusIds}
       onImportedNodeFocusComplete={graphCommands.onImportedNodeFocusComplete}
+      onImpactFocusNodeChange={graphCommands.onImpactFocusNodeChange}
       canOpenSourceImport={typeof onOpenSourceImport === 'function'}
       onOpenSourceImport={
         onOpenSourceImport == null
