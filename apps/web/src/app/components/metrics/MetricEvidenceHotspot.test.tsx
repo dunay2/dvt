@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 
+import { fireEvent } from '@testing-library/dom';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { MetricEvidenceHotspot } from './MetricEvidenceHotspot';
 
@@ -73,5 +74,31 @@ describe('MetricEvidenceHotspot', () => {
     expect(
       container.querySelector('[data-slot="metric-evidence-hotspot"]')?.getAttribute('tabindex')
     ).toBeNull();
+  });
+
+  it('uses a native button only when the evidence value has an action', () => {
+    const onActivate = vi.fn();
+    act(() => {
+      root.render(
+        <MetricEvidenceHotspot
+          detail="Code lives at models/orders.sql."
+          onActivate={onActivate}
+          value="File"
+        />
+      );
+    });
+
+    const trigger = container.querySelector<HTMLButtonElement>(
+      '[data-slot="metric-evidence-hotspot"]'
+    );
+    expect(trigger?.tagName).toBe('BUTTON');
+    expect(trigger?.type).toBe('button');
+    expect(trigger?.className).toContain('cursor-pointer');
+
+    act(() => {
+      fireEvent.click(trigger!);
+    });
+
+    expect(onActivate).toHaveBeenCalledOnce();
   });
 });
