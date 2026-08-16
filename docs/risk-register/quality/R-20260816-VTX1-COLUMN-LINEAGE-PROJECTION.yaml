@@ -1,0 +1,27 @@
+---
+id: R-20260816-VTX1-COLUMN-LINEAGE-PROJECTION
+title: Visual column edges could diverge from transform recipe authority
+status: Closed
+date: 2026-08-16
+owners:
+  - apps/web
+severity: High
+probability: Low
+context: >
+  Canvas needs interactive column mappings while the protected Graph Draft and visual transform
+  recipe already own transformation semantics.
+risk: >
+  Persisting React Flow column edges or disclosure state independently could reload different
+  mappings, bypass SQL-versus-visual authority, or silently guess ambiguous column relations.
+mitigations:
+  - Column edges are derived from VisualTransformRecipeV1 and never persisted independently.
+  - Mapping commands update the existing Graph Draft node through the DVT authoring authority.
+  - Stage dependencies remain on their existing admission rail.
+  - Automap requires exact names, known compatible types, and one unambiguous candidate.
+  - SQL-authoritative and complex-expression transforms reject unsafe visual edits.
+  - Architecture, unit, presentation, Cypress, localization, and accessibility checks cover drift.
+closure_evidence:
+  - docs/evidence/ED-20260816-vtx1-column-lineage-mapping-projection.md
+  - apps/web/src/app/views/canvas/canvasAuthoringProjection.architecture.test.ts
+  - apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts
+---

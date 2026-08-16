@@ -1,6 +1,6 @@
 ---
 title: VTX1 Column Lineage And Mapping Projection Plan
-status: Working proposal
+status: Accepted
 owner: Frontend / Canvas
 last_reviewed: 2026-08-16
 planning_type: proposal
@@ -170,40 +170,41 @@ No parallel command/query rail is added.
 
 ## Definition Of Done
 
-- [ ] Source column rows expose output handles only.
-- [ ] Model recipe-output rows expose input and output handles.
-- [ ] Sink column rows expose input handles only.
-- [ ] Recipe mappings render as a visually distinct custom edge.
-- [ ] No column edge or disclosure state is persisted as semantic graph truth.
-- [ ] Pointer and keyboard create/change mappings through one command.
-- [ ] A selected mapping can be removed by keyboard or pointer.
-- [ ] Deterministic automap creates only exact-name, known-compatible,
+- [x] Source column rows expose output handles only.
+- [x] Model recipe-output rows expose input and output handles.
+- [x] Sink column rows expose input handles only.
+- [x] Recipe mappings render as a visually distinct custom edge.
+- [x] No column edge or disclosure state is persisted as semantic graph truth.
+- [x] Pointer and keyboard create/change mappings through one command.
+- [x] A selected mapping can be removed by keyboard or pointer.
+- [x] Deterministic automap creates only exact-name, known-compatible,
       unambiguous mappings.
-- [ ] Ambiguous, incompatible, disconnected, or SQL-authoritative cases fail
+- [x] Ambiguous, incompatible, disconnected, or SQL-authoritative cases fail
       closed without mutation.
-- [ ] Collapse, expand, and remainder disclosure update React Flow internals.
-- [ ] Compact cards remain free of column-edge noise while collapsed.
-- [ ] Unit, presentation, Cypress, accessibility, ES/EN, lint, type-check,
+- [x] Collapse, expand, and remainder disclosure update React Flow internals.
+- [x] Compact cards remain free of column-edge noise while collapsed.
+- [x] Unit, presentation, Cypress, accessibility, ES/EN, lint, type-check,
       governance, and pre-push gates pass.
-- [ ] No debt, stub, new dependency, duplicated renderer, or disabled rule is
+- [x] No debt, stub, new dependency, duplicated renderer, or disabled rule is
       introduced.
 
 ## Microcommit Sequence
 
 1. `docs(docs)` define #2384 projection and command plan.
-2. `test(web)` add red handle, projection, automap, and command tests.
-3. `feat(web)` add stable column mapping command and projection.
-4. `test(web)` add red card, keyboard, removal, and viewport tests.
-5. `feat(web)` wire column ports, custom edges, disclosure, and accessibility.
-6. `test(web)` add the bounded end-to-end Canvas mapping flow.
-7. `docs(docs)` close mechanization, component rationale, evidence, and risk.
+2. `feat(web)` add governed mapping command and derived projection.
+3. `feat(web)` render accessible role-correct column ports.
+4. `feat(web)` wire pointer and keyboard mapping interactions.
+5. `fix(web)` keep derived mapping selection and deletion operable.
+6. `fix(web)` preserve the source type on prospective outputs.
+7. `test(web)` prove the bounded lifecycle, architecture, locale, and a11y flow.
+8. `docs(docs)` close mechanization, component rationale, evidence, and risk.
 
 ## Validation Plan
 
 - focused Canvas unit and presentation tests for every red/green cycle;
 - Web lint and type-check;
-- headed browser verification in ES and EN, pointer and keyboard, 100% and
-  200% zoom;
+- headed browser verification in ES and EN with pointer and keyboard;
+- constrained-viewport Cypress verification with accessibility assertions;
 - bounded Cypress column-mapping flow;
 - feature-mechanization and governance checks;
 - `pnpm verify:prepush`.
@@ -211,7 +212,7 @@ No parallel command/query rail is added.
 ```feature-mechanization
 version: 1
 featureId: VTX1-COLUMN-LINEAGE-MAPPING-PROJECTION
-mechanizationStatus: open
+mechanizationStatus: closed
 noHumanDecisionsRemaining: true
 implementationPlan: docs/planning/proposals/mandatory/frontend-and-ux/vtx1-column-lineage-mapping-projection-plan-20260816.md
 componentGuides:
@@ -229,11 +230,17 @@ allowedImplementationSurfaces:
   - apps/web/src/app/components/canvas/CanvasNodePortHandle.test.tsx
   - apps/web/src/app/components/canvas/CanvasNodeShell.module.css
   - apps/web/src/app/components/canvas/DbtNodeComponent.tsx
+  - apps/web/src/app/components/canvas/canvasNodePresentationCopy.contract.ts
+  - apps/web/src/app/components/canvas/canvasNodePresentationTruth.contract.ts
+  - apps/web/src/app/components/inspector/nodePropertiesReadModel.ts
+  - apps/web/src/app/components/inspector/nodePropertiesReadModel.test.ts
   - apps/web/src/app/plugins/graph/GraphNodeCardView.tsx
   - apps/web/src/app/plugins/graph/GraphNodeColumnSection.tsx
   - apps/web/src/app/plugins/graph/GraphNodeColumnSection.test.tsx
   - apps/web/src/app/plugins/graph/GraphNodeRenderer.tsx
   - apps/web/src/app/plugins/graph/graphNodeCardCopyTokens.ts
+  - apps/web/src/app/plugins/graph/graphNodeCardReadModel.test.ts
+  - apps/web/src/app/plugins/graph/graphNodeCardStrategyUtils.ts
   - apps/web/src/app/plugins/graph/graphVisualTokens.ts
   - apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.ts
   - apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.test.ts
@@ -242,17 +249,27 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/CanvasColumnLineageEdge.tsx
   - apps/web/src/app/views/canvas/CanvasColumnLineageEdge.test.tsx
   - apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx
+  - apps/web/src/app/views/canvas/canvasAuthoringProjection.architecture.test.ts
+  - apps/web/src/app/views/canvas/canvasControllerViewModel.ts
+  - apps/web/src/app/views/canvas/canvasCopy.types.ts
+  - apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.ts
+  - apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.es.ts
   - apps/web/src/app/views/canvas/canvasNodeMapper.ts
   - apps/web/src/app/views/canvas/canvasNodePresentationProjection.ts
+  - apps/web/src/app/views/canvas/canvasNodePresentationProjection.test.ts
+  - apps/web/src/app/views/canvas/canvasNodePresentationCopy.ts
   - apps/web/src/app/views/canvas/canvasNodeInteractionPresentation.ts
+  - apps/web/src/app/views/canvas/useCanvasController.ts
   - apps/web/src/app/views/canvas/useCanvasControllerReadModel.ts
+  - apps/web/src/app/views/canvas/useCanvasControllerReadModel.test.tsx
   - apps/web/src/app/views/canvas/useCanvasEdgeAuthoringHandlers.ts
   - apps/web/src/app/views/canvas/useCanvasGraphHandlers.ts
+  - apps/web/src/app/views/canvas/useCanvasGraphHandlers.edgeAuthoring.test.tsx
   - apps/web/src/app/views/canvas/useCanvasGraphHandlers.types.ts
   - apps/web/src/app/views/canvas/useCanvasViewportGraphModel.ts
-  - apps/web/src/app/views/canvas/useCanvasViewportGraphModel.edges.test.tsx
   - apps/web/src/app/views/canvas/useCanvasViewportGraphModel.nodeData.test.tsx
-  - apps/web/cypress/e2e/canvas-column-mapping.cy.ts
+  - apps/web/cypress/support/canvasDraftAuthoring.ts
+  - apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts
   - docs/architecture/components/web/graph/canvas-inspector-authoring-component.md
   - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
   - docs/evidence/**
@@ -288,6 +305,61 @@ domainObjects:
   - name: VisualTransformRecipeV1
     type: value object
     owner: DVT Transform Authoring
+symbols:
+  - { name: assertNoSeriousAccessibilityViolations, path: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, dddOwner: Canvas column mapping verification, cqRails: [ConfigureCanvasDvtNode, ProjectCanvasAuthoringDraft], fowlerSignals: [Test-only confidence], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.test.ts] }
+  - { name: canvasNode, path: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, dddOwner: Canvas column mapping verification, cqRails: [ConfigureCanvasDvtNode, ProjectCanvasAuthoringDraft], fowlerSignals: [Test-only confidence], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.test.ts] }
+  - { name: stubColumnMappingCanvas, path: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, dddOwner: Canvas column mapping verification, cqRails: [ConfigureCanvasDvtNode, ProjectCanvasAuthoringDraft], fowlerSignals: [Test-only confidence], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.test.ts] }
+  - { name: toggleColumns, path: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, dddOwner: Canvas column mapping verification, cqRails: [ConfigureCanvasDvtNode, ProjectCanvasAuthoringDraft], fowlerSignals: [Test-only confidence], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.test.ts] }
+  - { name: visitColumnMappingCanvas, path: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, dddOwner: Canvas column mapping verification, cqRails: [ConfigureCanvasDvtNode, ProjectCanvasAuthoringDraft], fowlerSignals: [Test-only confidence], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.test.ts] }
+  - { name: GraphNodeColumnPortDirection, path: apps/web/src/app/plugins/graph/GraphNodeColumnSection.tsx, dddOwner: Graph node column presentation, cqRails: [ProjectCanvasAuthoringDraft, ConfigureCanvasDvtNode], fowlerSignals: [Inappropriate intimacy], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/plugins/graph/GraphNodeColumnSection.test.tsx] }
+  - { name: GraphNodeColumnPortIdentity, path: apps/web/src/app/plugins/graph/GraphNodeColumnSection.tsx, dddOwner: Graph node column presentation, cqRails: [ProjectCanvasAuthoringDraft, ConfigureCanvasDvtNode], fowlerSignals: [Inappropriate intimacy], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/plugins/graph/GraphNodeColumnSection.test.tsx] }
+  - { name: GraphNodeColumnSection, path: apps/web/src/app/plugins/graph/GraphNodeColumnSection.tsx, dddOwner: Graph node column presentation, cqRails: [ProjectCanvasAuthoringDraft, ConfigureCanvasDvtNode], fowlerSignals: [Inappropriate intimacy], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/plugins/graph/GraphNodeColumnSection.test.tsx] }
+  - { name: CanvasColumnLineageEdge, path: apps/web/src/app/views/canvas/CanvasColumnLineageEdge.tsx, dddOwner: Canvas column lineage presentation, cqRails: [ProjectCanvasAuthoringDraft, ConfigureCanvasDvtNode], fowlerSignals: [Duplicated state], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/CanvasColumnLineageEdge.test.tsx] }
+  - { name: CanvasColumnLineageFlowEdge, path: apps/web/src/app/views/canvas/CanvasColumnLineageEdge.tsx, dddOwner: Canvas column lineage presentation, cqRails: [ProjectCanvasAuthoringDraft, ConfigureCanvasDvtNode], fowlerSignals: [Duplicated state], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/CanvasColumnLineageEdge.test.tsx] }
+  - { name: InteractiveCanvasColumnLineageEdgeData, path: apps/web/src/app/views/canvas/CanvasColumnLineageEdge.tsx, dddOwner: Canvas column lineage presentation, cqRails: [ProjectCanvasAuthoringDraft, ConfigureCanvasDvtNode], fowlerSignals: [Duplicated state], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/CanvasColumnLineageEdge.test.tsx] }
+  - { name: CANVAS_EDGE_TYPES, path: apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx, dddOwner: Canvas viewport edge registry, cqRails: [ProjectCanvasAuthoringDraft], fowlerSignals: [Parallel abstraction], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/CanvasColumnLineageEdge.test.tsx] }
+  - { name: CanvasColumnHandleIdentity, path: apps/web/src/app/views/canvas/canvasColumnLineageProjection.ts, dddOwner: Canvas column lineage projection, cqRails: [ProjectCanvasAuthoringDraft], fowlerSignals: [Duplicated state], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnLineageProjection.test.ts] }
+  - { name: CanvasColumnLineageEdge, path: apps/web/src/app/views/canvas/canvasColumnLineageProjection.ts, dddOwner: Canvas column lineage projection, cqRails: [ProjectCanvasAuthoringDraft], fowlerSignals: [Duplicated state], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnLineageProjection.test.ts] }
+  - { name: CanvasColumnLineageEdgeData, path: apps/web/src/app/views/canvas/canvasColumnLineageProjection.ts, dddOwner: Canvas column lineage projection, cqRails: [ProjectCanvasAuthoringDraft], fowlerSignals: [Duplicated state], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnLineageProjection.test.ts] }
+  - { name: CanvasColumnPortDirection, path: apps/web/src/app/views/canvas/canvasColumnLineageProjection.ts, dddOwner: Canvas column lineage projection, cqRails: [ProjectCanvasAuthoringDraft], fowlerSignals: [Duplicated state], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnLineageProjection.test.ts] }
+  - { name: Column, path: apps/web/src/app/views/canvas/canvasColumnLineageProjection.ts, dddOwner: Canvas column lineage projection, cqRails: [ProjectCanvasAuthoringDraft], fowlerSignals: [Duplicated state], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnLineageProjection.test.ts] }
+  - { name: HANDLE_PREFIX, path: apps/web/src/app/views/canvas/canvasColumnLineageProjection.ts, dddOwner: Canvas column lineage projection, cqRails: [ProjectCanvasAuthoringDraft], fowlerSignals: [Duplicated state], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnLineageProjection.test.ts] }
+  - { name: buildLineageEdge, path: apps/web/src/app/views/canvas/canvasColumnLineageProjection.ts, dddOwner: Canvas column lineage projection, cqRails: [ProjectCanvasAuthoringDraft], fowlerSignals: [Duplicated state], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnLineageProjection.test.ts] }
+  - { name: createCanvasColumnHandleId, path: apps/web/src/app/views/canvas/canvasColumnLineageProjection.ts, dddOwner: Canvas column lineage projection, cqRails: [ProjectCanvasAuthoringDraft], fowlerSignals: [Duplicated state], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnLineageProjection.test.ts] }
+  - { name: createLineageEdgeId, path: apps/web/src/app/views/canvas/canvasColumnLineageProjection.ts, dddOwner: Canvas column lineage projection, cqRails: [ProjectCanvasAuthoringDraft], fowlerSignals: [Duplicated state], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnLineageProjection.test.ts] }
+  - { name: hasDependency, path: apps/web/src/app/views/canvas/canvasColumnLineageProjection.ts, dddOwner: Canvas column lineage projection, cqRails: [ProjectCanvasAuthoringDraft], fowlerSignals: [Duplicated state], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnLineageProjection.test.ts] }
+  - { name: isRecord, path: apps/web/src/app/views/canvas/canvasColumnLineageProjection.ts, dddOwner: Canvas column lineage projection, cqRails: [ProjectCanvasAuthoringDraft], fowlerSignals: [Duplicated state], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnLineageProjection.test.ts] }
+  - { name: parseCanvasColumnHandleId, path: apps/web/src/app/views/canvas/canvasColumnLineageProjection.ts, dddOwner: Canvas column lineage projection, cqRails: [ProjectCanvasAuthoringDraft], fowlerSignals: [Duplicated state], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnLineageProjection.test.ts] }
+  - { name: projectCanvasColumnLineage, path: apps/web/src/app/views/canvas/canvasColumnLineageProjection.ts, dddOwner: Canvas column lineage projection, cqRails: [ProjectCanvasAuthoringDraft], fowlerSignals: [Duplicated state], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnLineageProjection.test.ts] }
+  - { name: readColumns, path: apps/web/src/app/views/canvas/canvasColumnLineageProjection.ts, dddOwner: Canvas column lineage projection, cqRails: [ProjectCanvasAuthoringDraft], fowlerSignals: [Duplicated state], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnLineageProjection.test.ts] }
+  - { name: readString, path: apps/web/src/app/views/canvas/canvasColumnLineageProjection.ts, dddOwner: Canvas column lineage projection, cqRails: [ProjectCanvasAuthoringDraft], fowlerSignals: [Duplicated state], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnLineageProjection.test.ts] }
+  - { name: readVisualRecipe, path: apps/web/src/app/views/canvas/canvasColumnLineageProjection.ts, dddOwner: Canvas column lineage projection, cqRails: [ProjectCanvasAuthoringDraft], fowlerSignals: [Duplicated state], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnLineageProjection.test.ts] }
+  - { name: resolveCanvasColumnPortDirections, path: apps/web/src/app/views/canvas/canvasColumnLineageProjection.ts, dddOwner: Canvas column lineage projection, cqRails: [ProjectCanvasAuthoringDraft], fowlerSignals: [Duplicated state], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnLineageProjection.test.ts] }
+  - { name: CanvasColumnAutomapResult, path: apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.ts, dddOwner: Canvas column mapping command, cqRails: [ConfigureCanvasDvtNode, SaveCanvasAuthoringDraft], fowlerSignals: [Hidden authority], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.test.ts] }
+  - { name: CanvasColumnMappingRejection, path: apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.ts, dddOwner: Canvas column mapping command, cqRails: [ConfigureCanvasDvtNode, SaveCanvasAuthoringDraft], fowlerSignals: [Hidden authority], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.test.ts] }
+  - { name: CanvasColumnMappingResult, path: apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.ts, dddOwner: Canvas column mapping command, cqRails: [ConfigureCanvasDvtNode, SaveCanvasAuthoringDraft], fowlerSignals: [Hidden authority], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.test.ts] }
+  - { name: CanvasColumnMappingSource, path: apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.ts, dddOwner: Canvas column mapping command, cqRails: [ConfigureCanvasDvtNode, SaveCanvasAuthoringDraft], fowlerSignals: [Hidden authority], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.test.ts] }
+  - { name: CanvasColumnMappingTarget, path: apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.ts, dddOwner: Canvas column mapping command, cqRails: [ConfigureCanvasDvtNode, SaveCanvasAuthoringDraft], fowlerSignals: [Hidden authority], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.test.ts] }
+  - { name: Column, path: apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.ts, dddOwner: Canvas column mapping command, cqRails: [ConfigureCanvasDvtNode, SaveCanvasAuthoringDraft], fowlerSignals: [Hidden authority], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.test.ts] }
+  - { name: applyCanvasColumnMapping, path: apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.ts, dddOwner: Canvas column mapping command, cqRails: [ConfigureCanvasDvtNode, SaveCanvasAuthoringDraft], fowlerSignals: [Hidden authority], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.test.ts] }
+  - { name: areCanvasColumnTypesCompatible, path: apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.ts, dddOwner: Canvas column mapping command, cqRails: [ConfigureCanvasDvtNode, SaveCanvasAuthoringDraft], fowlerSignals: [Hidden authority], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.test.ts] }
+  - { name: automapCanvasColumns, path: apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.ts, dddOwner: Canvas column mapping command, cqRails: [ConfigureCanvasDvtNode, SaveCanvasAuthoringDraft], fowlerSignals: [Hidden authority], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.test.ts] }
+  - { name: createEmptyRecipe, path: apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.ts, dddOwner: Canvas column mapping command, cqRails: [ConfigureCanvasDvtNode, SaveCanvasAuthoringDraft], fowlerSignals: [Hidden authority], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.test.ts] }
+  - { name: createOutputId, path: apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.ts, dddOwner: Canvas column mapping command, cqRails: [ConfigureCanvasDvtNode, SaveCanvasAuthoringDraft], fowlerSignals: [Hidden authority], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.test.ts] }
+  - { name: hasStageDependency, path: apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.ts, dddOwner: Canvas column mapping command, cqRails: [ConfigureCanvasDvtNode, SaveCanvasAuthoringDraft], fowlerSignals: [Hidden authority], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.test.ts] }
+  - { name: isRecord, path: apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.ts, dddOwner: Canvas column mapping command, cqRails: [ConfigureCanvasDvtNode, SaveCanvasAuthoringDraft], fowlerSignals: [Hidden authority], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.test.ts] }
+  - { name: isSimplePassthrough, path: apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.ts, dddOwner: Canvas column mapping command, cqRails: [ConfigureCanvasDvtNode, SaveCanvasAuthoringDraft], fowlerSignals: [Hidden authority], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.test.ts] }
+  - { name: normalizeKnownType, path: apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.ts, dddOwner: Canvas column mapping command, cqRails: [ConfigureCanvasDvtNode, SaveCanvasAuthoringDraft], fowlerSignals: [Hidden authority], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.test.ts] }
+  - { name: readColumns, path: apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.ts, dddOwner: Canvas column mapping command, cqRails: [ConfigureCanvasDvtNode, SaveCanvasAuthoringDraft], fowlerSignals: [Hidden authority], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.test.ts] }
+  - { name: readEditableRecipe, path: apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.ts, dddOwner: Canvas column mapping command, cqRails: [ConfigureCanvasDvtNode, SaveCanvasAuthoringDraft], fowlerSignals: [Hidden authority], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.test.ts] }
+  - { name: readNonblankString, path: apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.ts, dddOwner: Canvas column mapping command, cqRails: [ConfigureCanvasDvtNode, SaveCanvasAuthoringDraft], fowlerSignals: [Hidden authority], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.test.ts] }
+  - { name: removeCanvasColumnMapping, path: apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.ts, dddOwner: Canvas column mapping command, cqRails: [ConfigureCanvasDvtNode, SaveCanvasAuthoringDraft], fowlerSignals: [Hidden authority], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.test.ts] }
+  - { name: resolveCanvasColumnMappingTarget, path: apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.ts, dddOwner: Canvas column mapping command, cqRails: [ConfigureCanvasDvtNode, SaveCanvasAuthoringDraft], fowlerSignals: [Hidden authority], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.test.ts] }
+  - { name: resolveSessionNode, path: apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.ts, dddOwner: Canvas column mapping command, cqRails: [ConfigureCanvasDvtNode, SaveCanvasAuthoringDraft], fowlerSignals: [Hidden authority], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.test.ts] }
+  - { name: projectInteractiveColumns, path: apps/web/src/app/views/canvas/useCanvasControllerReadModel.ts, dddOwner: Canvas controller read model, cqRails: [ProjectCanvasAuthoringDraft], fowlerSignals: [Divergent change], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/useCanvasControllerReadModel.test.tsx] }
+  - { name: formatColumnMappingRejection, path: apps/web/src/app/views/canvas/useCanvasEdgeAuthoringHandlers.ts, dddOwner: Canvas edge authoring command router, cqRails: [ConfigureCanvasDvtNode], fowlerSignals: [Divergent change], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/useCanvasGraphHandlers.edgeAuthoring.test.tsx] }
+  - { name: resolveCurrentNode, path: apps/web/src/app/views/canvas/useCanvasEdgeAuthoringHandlers.ts, dddOwner: Canvas edge authoring command router, cqRails: [ConfigureCanvasDvtNode], fowlerSignals: [Divergent change], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/useCanvasGraphHandlers.edgeAuthoring.test.tsx] }
+  - { name: useCanvasColumnMappingHandlers, path: apps/web/src/app/views/canvas/useCanvasEdgeAuthoringHandlers.ts, dddOwner: Canvas edge authoring command router, cqRails: [ConfigureCanvasDvtNode], fowlerSignals: [Divergent change], architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/src/app/views/canvas/useCanvasGraphHandlers.edgeAuthoring.test.tsx] }
 fowlerSignals:
   - Duplicated state
   - Divergent change
@@ -299,10 +371,13 @@ fowlerSignals:
 architectureGuards:
   - pnpm docs:feature-mechanization:implementation -- --feature VTX1-COLUMN-LINEAGE-MAPPING-PROJECTION
 cypressFlows:
-  - apps/web/cypress/e2e/canvas-column-mapping.cy.ts
+  - apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts
 completionGate:
   - pnpm --filter @dvt/web test:canvas:run -- src/app/views/canvas/canvasColumnMappingAuthoring.test.ts src/app/views/canvas/canvasColumnLineageProjection.test.ts
-  - pnpm --filter @dvt/web test:canvas-components:run -- src/app/plugins/graph/GraphNodeColumnSection.test.tsx src/app/views/canvas/CanvasColumnLineageEdge.test.tsx
+  - pnpm --filter @dvt/web test:presentation:run -- src/app/plugins/graph/GraphNodeColumnSection.test.tsx
+  - pnpm --filter @dvt/web test:canvas-presentation:run -- src/app/views/canvas/CanvasColumnLineageEdge.test.tsx
+  - pnpm --filter @dvt/web test:canvas-architecture:run -- src/app/views/canvas/canvasAuthoringProjection.architecture.test.ts
+  - pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts
   - pnpm --filter @dvt/web lint
   - pnpm --filter @dvt/web typecheck
   - pnpm docs:feature-mechanization:implementation -- --feature VTX1-COLUMN-LINEAGE-MAPPING-PROJECTION
@@ -323,11 +398,11 @@ redGreenCycles:
       - apps/web/src/app/views/canvas/canvasColumnLineageProjection.test.ts
     greenTest: pnpm --filter @dvt/web test:canvas:run -- src/app/views/canvas/canvasColumnLineageProjection.test.ts
   - id: accessible-column-ports
-    redTest: pnpm --filter @dvt/web test:canvas-components:run -- src/app/plugins/graph/GraphNodeColumnSection.test.tsx src/app/views/canvas/CanvasColumnLineageEdge.test.tsx
+    redTest: pnpm --filter @dvt/web test:presentation:run -- src/app/plugins/graph/GraphNodeColumnSection.test.tsx
     expectedFailure: Disclosed column rows have no role-correct pointer or keyboard ports.
     patchSurfaces:
       - apps/web/src/app/components/canvas/CanvasNodePortHandle.tsx
       - apps/web/src/app/plugins/graph/GraphNodeColumnSection.tsx
       - apps/web/src/app/views/canvas/CanvasColumnLineageEdge.tsx
-    greenTest: pnpm --filter @dvt/web test:canvas-components:run -- src/app/plugins/graph/GraphNodeColumnSection.test.tsx src/app/views/canvas/CanvasColumnLineageEdge.test.tsx
+    greenTest: pnpm --filter @dvt/web test:presentation:run -- src/app/plugins/graph/GraphNodeColumnSection.test.tsx
 ```
