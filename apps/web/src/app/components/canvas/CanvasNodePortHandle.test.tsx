@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
 
 import { ReactFlowProvider } from '@xyflow/react';
+import { fireEvent } from '@testing-library/dom';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CanvasNodePortHandle } from './CanvasNodePortHandle';
 
@@ -110,5 +111,36 @@ describe('CanvasNodePortHandle', () => {
     expect(handle?.getAttribute('aria-describedby')).toBe(hint?.getAttribute('id'));
     expect(hint?.getAttribute('data-port')).toBe('source');
     expect(hint?.getAttribute('data-port-compatibility')).toBe('available');
+  });
+
+  it('activates a compact column port from Enter or Space without simulating drag', () => {
+    const onActivate = vi.fn();
+    act(() => {
+      root.render(
+        <ReactFlowProvider>
+          <CanvasNodePortHandle
+            kind="source"
+            id="column:source:orders:order_id"
+            tone="source"
+            label="Connect order_id output"
+            variant="column"
+            active
+            onActivate={onActivate}
+          />
+        </ReactFlowProvider>
+      );
+    });
+
+    const handle = container.querySelector<HTMLElement>('[data-slot="canvas-node-port-handle"]');
+    expect(handle?.getAttribute('data-port-variant')).toBe('column');
+    expect(handle?.getAttribute('aria-pressed')).toBe('true');
+
+    act(() => {
+      fireEvent.keyDown(handle!, { key: 'Enter' });
+      fireEvent.keyDown(handle!, { key: ' ' });
+      fireEvent.keyDown(handle!, { key: 'Escape' });
+    });
+
+    expect(onActivate).toHaveBeenCalledTimes(2);
   });
 });

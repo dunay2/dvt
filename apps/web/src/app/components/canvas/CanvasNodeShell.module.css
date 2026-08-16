@@ -27,6 +27,23 @@
   box-shadow: 0 0 0 6px color-mix(in srgb, var(--node-port-ring) 26%, transparent);
 }
 
+.columnPortHandle {
+  width: 1.125rem !important;
+  height: 1.125rem !important;
+}
+
+.columnPortHandle::before {
+  inset: 0.25rem;
+  border-width: 1px;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--node-port-ring) 18%, transparent);
+}
+
+.columnPortHandle[aria-pressed='true']::before {
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--node-port-ring) 34%, transparent),
+    0 0 12px color-mix(in srgb, var(--node-port-ring) 46%, transparent);
+}
+
 .portCompatibilityHint {
   position: absolute;
   top: 50%;

@@ -1,24 +1,50 @@
 /** Owned concern: render recorded graph-node columns as a compact disclosure. */
-import { useId, useState, type ReactElement } from 'react';
+import { useEffect, useId, useState, type ReactElement } from 'react';
 import { ChevronDown, ChevronUp, Table } from 'lucide-react';
 
 import { canvasNodeEmbeddedControlProps } from '../../components/canvas/canvasNodeInteractionBoundary';
+import { CanvasNodePortHandle } from '../../components/canvas/CanvasNodePortHandle';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { resolveGraphNodeCardCopy } from './graphNodeCardCopyTokens';
 import { graphNodeColumnClasses } from './graphVisualTokens';
 
 export type GraphNodeColumn = Readonly<{
+  id?: string;
   name: string;
   type: string;
+  sourceHandleId?: string;
+  targetHandleId?: string;
+}>;
+export type GraphNodeColumnPortDirection = 'source' | 'target';
+export type GraphNodeColumnPortIdentity = Readonly<{
+  direction: GraphNodeColumnPortDirection;
+  nodeId: string;
+  columnId: string;
 }>;
 
 export type GraphNodeColumnSectionProps = Readonly<{
   columns: readonly GraphNodeColumn[];
+  nodeId?: string;
+  portDirections?: readonly GraphNodeColumnPortDirection[];
+  activeColumnHandleId?: string | null;
+  onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
+  onDisclosureChange?: (expanded: boolean) => void;
+  onColumnLayoutChange?: () => void;
+  onAutomap?: () => void;
 }>;
 
 const MAX_PREVIEW_COLUMNS = 5;
 
-export function GraphNodeColumnSection({ columns }: GraphNodeColumnSectionProps): ReactElement {
+export function GraphNodeColumnSection({
+  columns,
+  nodeId,
+  portDirections = [],
+  activeColumnHandleId,
+  onColumnPortActivate,
+  onDisclosureChange,
+  onColumnLayoutChange,
+  onAutomap,
+}: GraphNodeColumnSectionProps): ReactElement {
   const [columnsExpanded, setColumnsExpanded] = useState(false);
   const [showAllColumns, setShowAllColumns] = useState(false);
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
@@ -30,6 +56,18 @@ export function GraphNodeColumnSection({ columns }: GraphNodeColumnSectionProps)
     '{count}',
     String(remainingColumnCount)
   );
+  const setDisclosure = (expanded: boolean) => {
+    setColumnsExpanded(expanded);
+    if (!expanded) setShowAllColumns(false);
+    onDisclosureChange?.(expanded);
+  };
+  const setRemainderDisclosure = (expanded: boolean) => {
+    setShowAllColumns(expanded);
+  };
+
+  useEffect(() => {
+    onColumnLayoutChange?.();
+  }, [columnsExpanded, onColumnLayoutChange, showAllColumns, visibleColumns.length]);
 
   return (
     <div data-slot="graph-node-column-section" className={graphNodeColumnClasses.shell}>
@@ -39,12 +77,7 @@ export function GraphNodeColumnSection({ columns }: GraphNodeColumnSectionProps)
         {...canvasNodeEmbeddedControlProps}
         aria-expanded={columnsExpanded}
         aria-controls={columnListId}
-        onClick={() => {
-          setColumnsExpanded((value) => !value);
-          if (columnsExpanded) {
-            setShowAllColumns(false);
-          }
-        }}
+        onClick={() => setDisclosure(!columnsExpanded)}
         className={graphNodeColumnClasses.toggle}
       >
         <span className={graphNodeColumnClasses.toggleLabel}>
@@ -65,16 +98,49 @@ export function GraphNodeColumnSection({ columns }: GraphNodeColumnSectionProps)
             data-slot="graph-node-column-list"
             className={graphNodeColumnClasses.list}
           >
-            {visibleColumns.map((column) => (
-              <div
-                key={column.name}
-                data-slot="graph-node-column-row"
-                className={graphNodeColumnClasses.row}
-              >
-                <span className={graphNodeColumnClasses.name}>{column.name}</span>
-                <span className={graphNodeColumnClasses.type}>{column.type}</span>
-              </div>
-            ))}
+            {visibleColumns.map((column) => {
+              const columnId = column.id ?? column.name;
+              return (
+                <div
+                  key={columnId}
+                  data-slot="graph-node-column-row"
+                  className={graphNodeColumnClasses.row}
+                >
+                  {nodeId != null &&
+                    column.targetHandleId != null &&
+                    portDirections.includes('target') && (
+                      <CanvasNodePortHandle
+                        kind="target"
+                        id={column.targetHandleId}
+                        tone="model"
+                        variant="column"
+                        active={activeColumnHandleId === column.targetHandleId}
+                        label={copy.targetColumnPortLabelTemplate.replace('{column}', column.name)}
+                        onActivate={() =>
+                          onColumnPortActivate?.({ direction: 'target', nodeId, columnId })
+                        }
+                      />
+                    )}
+                  <span className={graphNodeColumnClasses.name}>{column.name}</span>
+                  <span className={graphNodeColumnClasses.type}>{column.type}</span>
+                  {nodeId != null &&
+                    column.sourceHandleId != null &&
+                    portDirections.includes('source') && (
+                      <CanvasNodePortHandle
+                        kind="source"
+                        id={column.sourceHandleId}
+                        tone="source"
+                        variant="column"
+                        active={activeColumnHandleId === column.sourceHandleId}
+                        label={copy.sourceColumnPortLabelTemplate.replace('{column}', column.name)}
+                        onActivate={() =>
+                          onColumnPortActivate?.({ direction: 'source', nodeId, columnId })
+                        }
+                      />
+                    )}
+                </div>
+              );
+            })}
           </div>
           {remainingColumnCount > 0 && (
             <button
@@ -83,12 +149,23 @@ export function GraphNodeColumnSection({ columns }: GraphNodeColumnSectionProps)
               {...canvasNodeEmbeddedControlProps}
               aria-expanded={showAllColumns}
               aria-controls={columnListId}
-              onClick={() => setShowAllColumns((value) => !value)}
+              onClick={() => setRemainderDisclosure(!showAllColumns)}
               className={graphNodeColumnClasses.remainderToggle}
             >
               {showAllColumns ? copy.showFirstFiveColumnsLabel : remainderActionLabel}
             </button>
           )}
+          {onAutomap != null ? (
+            <button
+              type="button"
+              data-slot="graph-node-column-automap"
+              {...canvasNodeEmbeddedControlProps}
+              onClick={onAutomap}
+              className={graphNodeColumnClasses.automap}
+            >
+              {copy.automapColumnsLabel}
+            </button>
+          ) : null}
         </div>
       )}
     </div>

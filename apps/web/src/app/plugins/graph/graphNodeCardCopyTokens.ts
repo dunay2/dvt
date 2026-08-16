@@ -4,6 +4,9 @@ type GraphNodeCardCopy = Readonly<{
   columnsLabel: string;
   remainingColumnsLabelTemplate: string;
   showFirstFiveColumnsLabel: string;
+  automapColumnsLabel: string;
+  sourceColumnPortLabelTemplate: string;
+  targetColumnPortLabelTemplate: string;
   sourceIdentityAriaLabelTemplate: string;
   sourceIdentityDatabaseLabel: string;
   sourceIdentityConnectionLabel: string;
@@ -16,6 +19,9 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   columnsLabel: 'Columns',
   remainingColumnsLabelTemplate: 'Show remaining columns ({count})',
   showFirstFiveColumnsLabel: 'Show first 5 columns',
+  automapColumnsLabel: 'Map compatible columns',
+  sourceColumnPortLabelTemplate: 'Connect {column} output',
+  targetColumnPortLabelTemplate: 'Map into {column}',
   sourceIdentityAriaLabelTemplate: 'View source identity for {table}',
   sourceIdentityDatabaseLabel: 'Database',
   sourceIdentityConnectionLabel: 'Connection',
@@ -28,6 +34,9 @@ const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   columnsLabel: 'Columnas',
   remainingColumnsLabelTemplate: 'Ver columnas restantes ({count})',
   showFirstFiveColumnsLabel: 'Mostrar solo las 5 primeras',
+  automapColumnsLabel: 'Asignar columnas compatibles',
+  sourceColumnPortLabelTemplate: 'Conectar salida de {column}',
+  targetColumnPortLabelTemplate: 'Asignar a {column}',
   sourceIdentityAriaLabelTemplate: 'Ver identidad de origen de {table}',
   sourceIdentityDatabaseLabel: 'Base de datos',
   sourceIdentityConnectionLabel: 'Conexión',

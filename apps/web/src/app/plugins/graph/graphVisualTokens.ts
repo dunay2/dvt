@@ -126,11 +126,13 @@ export const graphNodeColumnClasses = {
   toggleIcon: 'size-3',
   disclosure: 'mt-2',
   list: 'space-y-1',
-  row: 'flex items-center justify-between rounded bg-slate-950 px-2 py-1 text-xs',
+  row: 'relative flex items-center justify-between rounded bg-slate-950 px-3 py-1 text-xs',
   name: 'truncate font-mono text-white',
   type: 'ml-2 shrink-0 text-slate-400',
   remainderToggle:
     'nodrag nopan mt-2 w-full cursor-pointer rounded border border-slate-700 bg-slate-900 px-2 py-1.5 text-left text-xs font-medium text-blue-200 transition hover:border-blue-400/60 hover:bg-slate-800 hover:text-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400',
+  automap:
+    'nodrag nopan mt-2 w-full cursor-pointer rounded border border-purple-500/50 bg-purple-500/10 px-2 py-1.5 text-left text-xs font-semibold text-purple-100 transition hover:border-purple-400 hover:bg-purple-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400',
 } as const;
 
 export const graphNodeStatusChipClasses = {

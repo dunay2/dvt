@@ -1,6 +1,6 @@
 /** Owned concern: render a graph node port handle with Canvas-owned presentation tokens. */
 import { Handle, Position } from '@xyflow/react';
-import { Fragment, useId } from 'react';
+import { Fragment, useId, type KeyboardEvent } from 'react';
 
 import { canvasNodeEmbeddedControlProps } from './canvasNodeInteractionBoundary';
 import styles from './CanvasNodeShell.module.css';
@@ -19,6 +19,9 @@ type CanvasNodePortHandleProps = Readonly<{
   tone?: CanvasNodePortTone;
   label?: string;
   compatibility?: CanvasNodePortCompatibilityView;
+  variant?: 'node' | 'column';
+  active?: boolean;
+  onActivate?: () => void;
 }>;
 
 function resolveCompatibilityHintText(
@@ -39,11 +42,22 @@ export function CanvasNodePortHandle({
   tone = 'control',
   label,
   compatibility,
+  variant = 'node',
+  active = false,
+  onActivate,
 }: CanvasNodePortHandleProps): JSX.Element {
   const generatedHintId = useId();
   const compatibilityHintText = resolveCompatibilityHintText(compatibility);
   const compatibilityHintId =
     compatibilityHintText == null ? undefined : `${generatedHintId}-compatibility`;
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (onActivate == null || (event.key !== 'Enter' && event.key !== ' ')) {
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    onActivate();
+  };
 
   return (
     <Fragment>
@@ -54,14 +68,17 @@ export function CanvasNodePortHandle({
         data-slot="canvas-node-port-handle"
         {...canvasNodeEmbeddedControlProps}
         data-port={kind}
+        data-port-variant={variant}
         data-tone={tone}
         data-port-compatibility={compatibility?.state}
         role="button"
         aria-label={label}
         aria-describedby={compatibilityHintId}
+        aria-pressed={variant === 'column' ? active : undefined}
         tabIndex={0}
         title={compatibility?.description}
-        className={styles.portHandle}
+        onKeyDown={handleKeyDown}
+        className={`${styles.portHandle} ${variant === 'column' ? styles.columnPortHandle : ''}`}
       />
       {compatibilityHintText == null || compatibility == null ? null : (
         <span
