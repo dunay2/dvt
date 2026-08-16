@@ -974,12 +974,41 @@ describe('Canvas workbench screen composition', () => {
     assertDirectionalMarkers();
 
     cy.get('.react-flow__node[data-id="model_orders"]').as('modelNode').should('be.visible');
+    cy.get('.react-flow__node[data-id="orphan_metrics"]').as('orphanNode').should('be.visible');
+    openCanvasContextMenuAt(260, 260);
+    cy.get('[data-menu-action="open-canvas-settings"]').click();
+    cy.get('[data-slot="canvas-properties-impact"]')
+      .should('have.attr', 'data-state', 'unchecked')
+      .click();
+    cy.get('[data-slot="workbench-properties-apply"]').click();
+
+    cy.get('@modelNode').click();
+    cy.get('@modelNode').find('[data-slot="graph-node-card"]').should('have.css', 'opacity', '1');
+    cy.get('@orphanNode')
+      .find('[data-slot="graph-node-card"]')
+      .should('have.css', 'opacity', '0.3');
+
+    cy.get('@orphanNode').focus();
+    cy.get('@orphanNode').find('[data-slot="graph-node-card"]').should('have.css', 'opacity', '1');
+    cy.get('@modelNode').find('[data-slot="graph-node-card"]').should('have.css', 'opacity', '0.3');
+
+    cy.get('.react-flow__pane').click('topLeft', { force: true });
+    cy.get('@modelNode').find('[data-slot="graph-node-card"]').should('have.css', 'opacity', '1');
+    cy.get('@orphanNode').find('[data-slot="graph-node-card"]').should('have.css', 'opacity', '1');
+
     cy.get('@modelNode').find('[data-slot="graph-node-card-play"]').should('not.exist');
     openCanvasNodeOperations('model_orders');
     cy.contains(
       '[data-slot="canvas-node-context-menu-item"]',
       'Seleccionar para ejecución'
     ).click();
+    openCanvasNodeOperations('model_orders');
+    cy.contains('[data-slot="canvas-node-context-menu-item"]', 'Quitar de la ejecución').should(
+      'be.visible'
+    );
+    cy.get('body').type('{esc}');
+    cy.get('.react-flow__pane').click('topLeft', { force: true });
+    cy.get('@orphanNode').find('[data-slot="graph-node-card"]').should('have.css', 'opacity', '1');
     openCanvasNodeOperations('model_orders');
     cy.contains('[data-slot="canvas-node-context-menu-item"]', 'Quitar de la ejecución').should(
       'be.visible'

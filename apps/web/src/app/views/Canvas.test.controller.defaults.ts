@@ -296,6 +296,7 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
   | 'handleRemoveNode'
   | 'handleSourceImportComplete'
   | 'handleImportedNodeFocusComplete'
+  | 'handleImpactFocusNodeChange'
   | 'hideInspectorPanel'
   | 'showInspectorPanel'
   | 'handleAutoLayout'
@@ -341,6 +342,7 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
     handleSourceImportComplete: vi.fn(),
     importedNodeFocusIds: [],
     handleImportedNodeFocusComplete: vi.fn(),
+    handleImpactFocusNodeChange: vi.fn(),
     hideInspectorPanel: vi.fn(),
     showInspectorPanel: vi.fn(),
     handleAutoLayout: vi.fn(),

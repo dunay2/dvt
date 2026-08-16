@@ -60,6 +60,7 @@ type CanvasViewportProps = {
   readonly onCreateAuthoringNode: CreateCanvasAuthoringNode;
   readonly importedNodeFocusIds: string[];
   readonly onImportedNodeFocusComplete: () => void;
+  readonly onImpactFocusNodeChange?: (nodeId: string | null) => void;
   readonly canOpenSourceImport?: boolean;
   readonly onOpenSourceImport?: (flowPosition?: { x: number; y: number }) => void;
   readonly canOpenCanvasSettings?: boolean;
@@ -328,6 +329,7 @@ function CanvasViewportWithPresenter({
       contextMenuLabel={copy.canvasContextMenuLabel}
       nodeHealthPopoverModel={nodeHealthPopoverModel}
       onCloseNodeHealthPopover={closeNodeHealthPopover}
+      onImpactFocusNodeChange={props.onImpactFocusNodeChange}
       graphSearchController={graphSearchController}
       graphFilterController={graphFilterController}
       copy={copy}

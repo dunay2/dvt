@@ -142,6 +142,7 @@ export type CanvasShellGraphCommands = {
     context?: CanvasSourceImportCompletionContext
   ) => void;
   onImportedNodeFocusComplete: () => void;
+  onImpactFocusNodeChange?: (nodeId: string | null) => void;
 };
 
 export type CanvasShellChromeCommands = {

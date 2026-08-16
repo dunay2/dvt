@@ -193,7 +193,39 @@ describe('CanvasViewport node operational rail', () => {
     expect(container.querySelector('[data-slot="graph-node-health-popover"]')).toBeNull();
   });
 
-  it('keeps the operational popover independent because visual selection has no application callback', async () => {
+  it('reports the single focused node independently from React Flow selection', async () => {
+    const onImpactFocusNodeChange = vi.fn();
+    await renderViewport({ onImpactFocusNodeChange });
+
+    const viewport = container.querySelector<HTMLElement>(
+      '[data-slot="canvas-viewport-context-surface"]'
+    );
+    if (viewport == null) {
+      throw new Error('Expected the Canvas viewport context surface.');
+    }
+
+    const focusedNode = document.createElement('div');
+    focusedNode.className = 'react-flow__node';
+    focusedNode.dataset.id = 'model_orders';
+    focusedNode.tabIndex = 0;
+    viewport.append(focusedNode);
+
+    await act(async () => {
+      focusedNode.focus();
+    });
+
+    expect(onImpactFocusNodeChange).toHaveBeenLastCalledWith('model_orders');
+
+    const onPaneClick = xyflowState.lastReactFlowProps?.onPaneClick as
+      ((event: React.MouseEvent<Element>) => void) | undefined;
+    await act(async () => {
+      onPaneClick?.({ clientX: 20, clientY: 30 } as unknown as React.MouseEvent<Element>);
+    });
+
+    expect(onImpactFocusNodeChange).toHaveBeenLastCalledWith(null);
+  });
+
+  it('keeps the operational popover independent because execution selection has no React Flow callback', async () => {
     await renderViewport({
       nodesWithImpact: [
         {

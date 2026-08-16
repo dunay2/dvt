@@ -13939,6 +13939,20 @@
         "updated_at": "2026-08-07T00:52:45.205967+00:00"
       },
       {
+        "design_id": "W4-IMPACT-VISUAL-FOCUS-SEPARATION-20260816",
+        "work_item_id": "2389",
+        "title": "Canvas impact visual focus separation",
+        "owner": "Frontend / Canvas",
+        "status": "implemented",
+        "rationale": "Make Impact Highlight consume React Flow visual focus instead of Canvas execution selection while preserving both existing intents.",
+        "fowler_signal": "hidden_authority",
+        "rail_ref": "InspectCanvasNode",
+        "approved_at": "2026-08-16T01:39:22.087+00:00",
+        "supersedes_id": null,
+        "created_at": "2026-08-16T01:39:20.789+00:00",
+        "updated_at": "2026-08-16T01:59:21.877+00:00"
+      },
+      {
         "design_id": "W4-NODE-EXECUTION-TOGGLE-LOCAL-RAIL-RETIREMENT-20260816",
         "work_item_id": "2381",
         "title": "Retire superseded local execution-selection rail overlay",
@@ -91078,6 +91092,14 @@
         "created_at": "2026-08-07T00:52:45.205967+00:00"
       },
       {
+        "design_id": "W4-IMPACT-VISUAL-FOCUS-SEPARATION-20260816",
+        "subject_kind": "component",
+        "subject_id": "SYS-WEB-CANVAS-CONTROLLER-PRESENTATION-POLICY",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-16T01:39:20.789+00:00"
+      },
+      {
         "design_id": "W4-NODE-EXECUTION-TOGGLE-LOCAL-RAIL-RETIREMENT-20260816",
         "subject_kind": "decision",
         "subject_id": "local#W4-CANVAS-NODE-WORKBENCH-HARDENING-20260808#command#selectcanvasexecutionnode",
@@ -94538,6 +94560,27 @@
         "created_at": "2026-08-11T18:40:38.792+00:00"
       },
       {
+        "operation_id": "289d65b3-7c36-432c-b004-c27286a400e2",
+        "idempotency_key": "architecture_design_transition:codex:W4-IMPACT-VISUAL-FOCUS-SEPARATION-20260816:37bd1cee280d684a",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "W4-IMPACT-VISUAL-FOCUS-SEPARATION-20260816",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2389",
+        "source_content_sha256": "7ae9875b98dd9110160857c3557f9ca61c1061472ec797179d0596141e775631",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Issue 2389 fixes an explicit semantic violation with bounded Web-only scope and executable tests.",
+          "designId": "W4-IMPACT-VISUAL-FOCUS-SEPARATION-20260816",
+          "toStatus": "approved",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2389",
+          "fromStatus": "review",
+          "sourceContentSha256": "7ae9875b98dd9110160857c3557f9ca61c1061472ec797179d0596141e775631"
+        },
+        "created_at": "2026-08-16T01:39:22.087+00:00"
+      },
+      {
         "operation_id": "28f0e87e-64f6-4b40-9504-0598f980037a",
         "idempotency_key": "gh-2167-update-test-sys-api-infra-workspace-draft-1-v1",
         "operation_type": "architecture_test_record",
@@ -95135,6 +95178,27 @@
         "created_at": "2026-08-11T13:03:21.306+00:00"
       },
       {
+        "operation_id": "304db1de-fb7a-4398-8f84-20ee0d39350e",
+        "idempotency_key": "architecture_design_transition:codex:W4-IMPACT-VISUAL-FOCUS-SEPARATION-20260816:e59136610d99fded",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "W4-IMPACT-VISUAL-FOCUS-SEPARATION-20260816",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2389",
+        "source_content_sha256": "7ae9875b98dd9110160857c3557f9ca61c1061472ec797179d0596141e775631",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "DoR is complete and the red-green sequence is ready to execute.",
+          "designId": "W4-IMPACT-VISUAL-FOCUS-SEPARATION-20260816",
+          "toStatus": "implementing",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2389",
+          "fromStatus": "approved",
+          "sourceContentSha256": "7ae9875b98dd9110160857c3557f9ca61c1061472ec797179d0596141e775631"
+        },
+        "created_at": "2026-08-16T01:39:23.358+00:00"
+      },
+      {
         "operation_id": "3067294d-b20f-455a-b2a6-e0a694ea4895",
         "idempotency_key": "architecture_design_create:codex:GH-2166-PLAN-REJECTION-CLASSIFICATION-20260813:02ca1820287c2e6a",
         "operation_type": "architecture_design_create",
@@ -95298,6 +95362,27 @@
           "sourceContentSha256": "5fcbfc912ca973123fae1530ac0f48969efde5c0e7b3646f5aade934681d57ba"
         },
         "created_at": "2026-08-11T08:50:07.905+00:00"
+      },
+      {
+        "operation_id": "32d35bc9-cecf-4f1f-acfa-ef057d54bbfa",
+        "idempotency_key": "architecture_design_transition:codex:W4-IMPACT-VISUAL-FOCUS-SEPARATION-20260816:c3b41c142def511d",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "W4-IMPACT-VISUAL-FOCUS-SEPARATION-20260816",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2389",
+        "source_content_sha256": "7ae9875b98dd9110160857c3557f9ca61c1061472ec797179d0596141e775631",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Unit, type, lint, agent-browser and native Electron evidence prove visual focus and execution selection are separated.",
+          "designId": "W4-IMPACT-VISUAL-FOCUS-SEPARATION-20260816",
+          "toStatus": "implemented",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2389",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "7ae9875b98dd9110160857c3557f9ca61c1061472ec797179d0596141e775631"
+        },
+        "created_at": "2026-08-16T01:59:21.877+00:00"
       },
       {
         "operation_id": "3328a0c6-4345-44bc-8a45-516fab84e241",
@@ -114115,6 +114200,40 @@
           "sourceContentSha256": "995ad5790791389c3241e330d1234373d6f4b7ec130b2502896fd55acdbedd10"
         },
         "created_at": "2026-08-11T05:28:37.412+00:00"
+      },
+      {
+        "operation_id": "ff17924b-c1fc-491b-a52f-4c7f0617bd05",
+        "idempotency_key": "architecture_design_create:codex:W4-IMPACT-VISUAL-FOCUS-SEPARATION-20260816:77995a817441aa33",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "W4-IMPACT-VISUAL-FOCUS-SEPARATION-20260816",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2389",
+        "source_content_sha256": "7ae9875b98dd9110160857c3557f9ca61c1061472ec797179d0596141e775631",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "Frontend / Canvas",
+          "title": "Canvas impact visual focus separation",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-WEB-CANVAS-CONTROLLER-PRESENTATION-POLICY",
+              "subjectKind": "component"
+            }
+          ],
+          "status": "review",
+          "railRef": "InspectCanvasNode",
+          "designId": "W4-IMPACT-VISUAL-FOCUS-SEPARATION-20260816",
+          "rationale": "Make Impact Highlight consume React Flow visual focus instead of Canvas execution selection while preserving both existing intents.",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2389",
+          "workItemId": "2389",
+          "fowlerSignal": "hidden_authority",
+          "supersedesId": null,
+          "sourceContentSha256": "7ae9875b98dd9110160857c3557f9ca61c1061472ec797179d0596141e775631"
+        },
+        "created_at": "2026-08-16T01:39:20.789+00:00"
       },
       {
         "operation_id": "ff238d37-4d9c-4d9b-be8f-afdfa3b90fee",

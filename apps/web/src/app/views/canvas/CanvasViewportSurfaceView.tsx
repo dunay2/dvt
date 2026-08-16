@@ -57,6 +57,7 @@ type CanvasViewportSurfaceViewProps = Readonly<{
     position: { x: number; y: number };
   } | null;
   onCloseNodeHealthPopover: (restoreTriggerFocus?: boolean) => void;
+  onImpactFocusNodeChange?: (nodeId: string | null) => void;
   graphSearchController: CanvasGraphSearchController;
   graphFilterController: CanvasGraphFilterController;
   copy: CanvasViewCopy;
@@ -145,6 +146,7 @@ function CanvasViewportReactFlowSurface({
   contextMenuPresenter,
   contextSurfaceLabel,
   onCloseNodeHealthPopover,
+  onImpactFocusNodeChange,
   graphSearchController,
   copy,
 }: Omit<
@@ -157,6 +159,7 @@ function CanvasViewportReactFlowSurface({
 >): JSX.Element {
   const handlePaneClick: NonNullable<ReactFlowProps<Node, Edge>['onPaneClick']> = (event) => {
     onCloseNodeHealthPopover();
+    onImpactFocusNodeChange?.(null);
     contextMenuPresenter.handlePaneClick(event);
   };
   const handleNodeDrag: NonNullable<ReactFlowProps<Node, Edge>['onNodeDrag']> = (
@@ -194,6 +197,13 @@ function CanvasViewportReactFlowSurface({
       tabIndex={0}
       className="h-full w-full outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-inset"
       onContextMenuCapture={contextMenuPresenter.handleViewportContextMenu}
+      onFocusCapture={(event) => {
+        onImpactFocusNodeChange?.(
+          event.target instanceof Element
+            ? (event.target.closest<HTMLElement>('.react-flow__node')?.dataset.id ?? null)
+            : null
+        );
+      }}
       onKeyDownCapture={(event) => {
         activateFocusedCanvasNodeFromKeyboard(event);
       }}

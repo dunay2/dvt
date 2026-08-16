@@ -1,5 +1,5 @@
 /** Owned concern: compose Canvas environment, authoring runtime, adapter seams, and execution seams into one route facade. */
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   resolveActiveCanvasAuthoringMode,
@@ -53,6 +53,7 @@ export function useCanvasController() {
     store,
   } = environment;
   const previousWorkspaceLayoutKeyRef = useRef(store.workspaceLayoutKey);
+  const [impactFocusNodeId, setImpactFocusNodeId] = useState<string | null>(null);
 
   useEffect(() => {
     if (previousWorkspaceLayoutKeyRef.current === store.workspaceLayoutKey) {
@@ -60,6 +61,7 @@ export function useCanvasController() {
     }
 
     previousWorkspaceLayoutKeyRef.current = store.workspaceLayoutKey;
+    setImpactFocusNodeId(null);
     store.setExecutionSelectionIntent(createCanvasExecutionSelectionIntent([]));
     store.setInspectorNode(null);
     store.closeContextualWorkbench();
@@ -266,12 +268,20 @@ export function useCanvasController() {
     onLayoutComplete: persistence.handleNodePositionsSave,
   });
 
+  const impactFocusNodeIds = useMemo(
+    () =>
+      impactFocusNodeId != null && graphModel.nodes.some((node) => node.id === impactFocusNodeId)
+        ? [impactFocusNodeId]
+        : [],
+    [graphModel.nodes, impactFocusNodeId]
+  );
+
   const overlayModel = useCanvasOverlayModel({
     canonicalNodes: graphModel.canonicalNodes,
     currentRun: store.currentRun,
     capabilities,
     edges: graphModel.edges,
-    selectedNodeIds: uiScope.selectedNodeIds,
+    impactFocusNodeIds,
     impactOverlayEnabled: store.impactOverlayEnabled,
   });
 
@@ -400,5 +410,6 @@ export function useCanvasController() {
     },
     inspectorCommands,
     executionSelectionRecovery,
+    handleImpactFocusNodeChange: setImpactFocusNodeId,
   });
 }

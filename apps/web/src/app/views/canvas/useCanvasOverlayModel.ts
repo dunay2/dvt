@@ -53,7 +53,7 @@ type UseCanvasOverlayModelArgs = {
   currentRun: unknown;
   capabilities: RuntimeCapabilities | undefined;
   edges: Edge[];
-  selectedNodeIds: string[];
+  impactFocusNodeIds: string[];
   impactOverlayEnabled: boolean;
 };
 
@@ -62,7 +62,7 @@ export function useCanvasOverlayModel({
   currentRun,
   capabilities,
   edges,
-  selectedNodeIds,
+  impactFocusNodeIds,
   impactOverlayEnabled,
 }: UseCanvasOverlayModelArgs) {
   const activeCanonicalRun = useMemo(
@@ -96,7 +96,7 @@ export function useCanvasOverlayModel({
       exclusiveOverlayMode === 'runtime' && activeRunStatus == null ? null : exclusiveOverlayMode;
     const overlayCtx = buildOverlayContext(
       edges,
-      selectedNodeIds,
+      impactFocusNodeIds,
       activeRunStatus,
       runStatusByNodeId,
       costByNodeId,
@@ -119,8 +119,8 @@ export function useCanvasOverlayModel({
     edges,
     exclusiveOverlayMode,
     impactOverlayEnabled,
+    impactFocusNodeIds,
     runStatusByNodeId,
-    selectedNodeIds,
   ]);
 
   const handleToggleCostOverlay = useCallback(() => {

@@ -53,6 +53,7 @@ type CanvasControllerViewModelArgs = {
   readModel: CanvasControllerReadModel;
   inspectorCommands: CanvasInspectorCommands;
   executionSelectionRecovery: CanvasExecutionSelectionRecovery;
+  handleImpactFocusNodeChange: (nodeId: string | null) => void;
 };
 
 function resolveCanvasGraphErrorMessage(authoringRuntime: CanvasAuthoringRuntime): string | null {
@@ -177,6 +178,7 @@ function buildCanvasInteractionViewModel(args: CanvasControllerViewModelArgs) {
     handleSourceImportComplete: mutationHandlers.handleSourceImportComplete,
     importedNodeFocusIds: mutationHandlers.importedNodeFocusIds,
     handleImportedNodeFocusComplete: mutationHandlers.handleImportedNodeFocusComplete,
+    handleImpactFocusNodeChange: args.handleImpactFocusNodeChange,
     hideInspectorPanel: store.hideInspectorPanel,
     showInspectorPanel: store.showInspectorPanel,
     handleAutoLayout: graphHandlers.handleAutoLayout,
