@@ -13939,6 +13939,20 @@
         "updated_at": "2026-08-07T00:52:45.205967+00:00"
       },
       {
+        "design_id": "W4-CARD-COLUMN-DISCLOSURE-20260816",
+        "work_item_id": "2391",
+        "title": "Canvas card five-column disclosure",
+        "owner": "Frontend / Canvas",
+        "status": "review",
+        "rationale": "Replace implicit internal scrolling with a localized accessible five-row disclosure while reusing the existing graph-node card query and component.",
+        "fowler_signal": "hidden_authority",
+        "rail_ref": "ProjectGraphNodeCardReadModel",
+        "approved_at": null,
+        "supersedes_id": null,
+        "created_at": "2026-08-16T03:13:54.793+00:00",
+        "updated_at": "2026-08-16T03:13:54.793+00:00"
+      },
+      {
         "design_id": "W4-IMPACT-VISUAL-FOCUS-SEPARATION-20260816",
         "work_item_id": "2389",
         "title": "Canvas impact visual focus separation",
@@ -91092,6 +91106,14 @@
         "created_at": "2026-08-07T00:52:45.205967+00:00"
       },
       {
+        "design_id": "W4-CARD-COLUMN-DISCLOSURE-20260816",
+        "subject_kind": "component",
+        "subject_id": "web.component.canvas.GraphNodeColumnSection",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-16T03:13:54.793+00:00"
+      },
+      {
         "design_id": "W4-IMPACT-VISUAL-FOCUS-SEPARATION-20260816",
         "subject_kind": "component",
         "subject_id": "SYS-WEB-CANVAS-CONTROLLER-PRESENTATION-POLICY",
@@ -106324,6 +106346,40 @@
           "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95"
         },
         "created_at": "2026-08-13T13:22:17.039+00:00"
+      },
+      {
+        "operation_id": "aaebb76f-2e9e-46fb-b577-58f8225512f9",
+        "idempotency_key": "architecture_design_create:codex:W4-CARD-COLUMN-DISCLOSURE-20260816:e77c1ad8d2cd697b",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "W4-CARD-COLUMN-DISCLOSURE-20260816",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2391",
+        "source_content_sha256": "effdc6ba727a98818cc4a60b883a563c3e2f6e9c7480fe25bbdda264cc87cfbd",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "Frontend / Canvas",
+          "title": "Canvas card five-column disclosure",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "web.component.canvas.GraphNodeColumnSection",
+              "subjectKind": "component"
+            }
+          ],
+          "status": "review",
+          "railRef": "ProjectGraphNodeCardReadModel",
+          "designId": "W4-CARD-COLUMN-DISCLOSURE-20260816",
+          "rationale": "Replace implicit internal scrolling with a localized accessible five-row disclosure while reusing the existing graph-node card query and component.",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2391",
+          "workItemId": "2391",
+          "fowlerSignal": "hidden_authority",
+          "supersedesId": null,
+          "sourceContentSha256": "effdc6ba727a98818cc4a60b883a563c3e2f6e9c7480fe25bbdda264cc87cfbd"
+        },
+        "created_at": "2026-08-16T03:13:54.793+00:00"
       },
       {
         "operation_id": "ab3208bc-dc33-459f-a825-7099081fa6b1",
