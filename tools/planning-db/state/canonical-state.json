@@ -117074,7 +117074,7 @@
         "pnpm planning:db:integrity:check"
       ],
       "sourcePath": "docs/architecture/components/web/frontend-component-inventory.md",
-      "sourceContentSha256": "c1a133f3bbc1307bbb706349d41b967aedb8acdf2f02c1127aef1c929b7cdeaf",
+      "sourceContentSha256": "b9f5bf1f257df0ef69e1702b059a7158a98f32770b7ce5f908b17f81ffe8c4f7",
       "rawRail": {
         "name": "ListWorkspaceArtifacts",
         "type": "query",
