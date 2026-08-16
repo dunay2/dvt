@@ -227,6 +227,8 @@ allowedImplementationSurfaces:
   - apps/api/test/entrypoints/http/dbtProjectImportRoutes.test.ts
   - apps/api/test/infrastructure/dbt/dbtManifestProjection.test.ts
   - apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
+  - apps/web/cypress/e2e/dbt/dbt-project-import-source-live.cy.ts
+  - apps/web/cypress/support/liveWarehouseSourceImport.ts
   - apps/web/src/app/components/SourceImportWizard.tsx
   - apps/web/src/app/components/SourceImportWizard.test.tsx
   - apps/web/src/app/components/SourceImportWizard.metadata.test.tsx
@@ -234,9 +236,16 @@ allowedImplementationSurfaces:
   - apps/web/src/app/components/sourceImportWizard/**
   - apps/web/src/app/views/canvas/CanvasShell.tsx
   - apps/web/src/app/views/canvas/CanvasShell.contextualDialogs.test.tsx
+  - apps/web/src/app/views/canvas/CanvasShell.testHarness.tsx
   - apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.tsx
+  - apps/web/src/app/views/canvas/DbtProjectFileCanvas.tsx
+  - apps/web/src/app/views/canvas/DbtProjectFileCanvasView.tsx
+  - apps/web/src/app/views/canvas/canvasDbtSourceImportContinuationStore.test.ts
+  - apps/web/src/app/views/canvas/canvasDbtSourceImportContinuationStore.ts
   - apps/web/src/app/views/canvas/canvasShell.types.ts
+  - apps/web/src/app/views/canvas/useDbtProjectFileCanvasController.ts
   - apps/web/src/app/views/canvas/useCanvasSourceImportDialogState.ts
+  - apps/web/src/app/views/Canvas.tsx
   - apps/web/src/app/services/dbtProject/dbtProjectImport.api.test.ts
   - packages/@dvt/contracts/src/contracts/dbt-project/DbtProjectImport.v1.ts
   - packages/@dvt/contracts/src/contracts/source-import/SourceImportOperations.v2.ts
@@ -478,4 +487,156 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
     unitTests:
       - apps/web/src/app/components/SourceImportWizard.metadata.test.tsx
+  - name: resolveDbtSourceImportContinuation
+    path: apps/web/src/app/views/canvas/canvasDbtSourceImportContinuationStore.ts
+    dddOwner: CanvasRouteAuthorityPresentation
+    cqRails:
+      - ImportDbtProject
+      - ImportWarehouseSources
+    fowlerSignals:
+      - Responsibility overload
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasDbtSourceImportContinuationStore.test.ts
+  - name: useCanvasDbtSourceImportContinuationStore
+    path: apps/web/src/app/views/canvas/canvasDbtSourceImportContinuationStore.ts
+    dddOwner: CanvasRouteAuthorityPresentation
+    cqRails:
+      - ImportDbtProject
+      - ImportWarehouseSources
+    fowlerSignals:
+      - Responsibility overload
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasDbtSourceImportContinuationStore.test.ts
+  - name: DbtSourceImportContinuation
+    path: apps/web/src/app/views/canvas/canvasDbtSourceImportContinuationStore.ts
+    dddOwner: CanvasRouteAuthorityPresentation
+    cqRails: [ImportDbtProject, ImportWarehouseSources]
+    fowlerSignals: [Responsibility overload]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
+    unitTests: [apps/web/src/app/views/canvas/canvasDbtSourceImportContinuationStore.test.ts]
+  - name: CanvasDbtSourceImportContinuationState
+    path: apps/web/src/app/views/canvas/canvasDbtSourceImportContinuationStore.ts
+    dddOwner: CanvasRouteAuthorityPresentation
+    cqRails: [ImportDbtProject, ImportWarehouseSources]
+    fowlerSignals: [Responsibility overload]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
+    unitTests: [apps/web/src/app/views/canvas/canvasDbtSourceImportContinuationStore.test.ts]
+  - name: authorityKey
+    path: apps/web/src/app/views/canvas/canvasDbtSourceImportContinuationStore.ts
+    dddOwner: CanvasRouteAuthorityPresentation
+    cqRails: [ImportDbtProject, ImportWarehouseSources]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
+    unitTests: [apps/web/src/app/views/canvas/canvasDbtSourceImportContinuationStore.test.ts]
+  - name: AUTHORITY_BINDING
+    path: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
+    dddOwner: DbtSourceBindingAcceptanceProof
+    cqRails: [ImportDbtProject]
+    fowlerSignals: [Test-only confidence]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
+    unitTests: [apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts]
+  - name: CANVAS_ID
+    path: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
+    dddOwner: DbtSourceBindingAcceptanceProof
+    cqRails: [ImportDbtProject]
+    fowlerSignals: [Test-only confidence]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
+    unitTests: [apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts]
+  - name: CONNECTION_ID
+    path: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
+    dddOwner: DbtSourceBindingAcceptanceProof
+    cqRails: [ListWarehouseConnections]
+    fowlerSignals: [Test-only confidence]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
+    unitTests: [apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts]
+  - name: PROJECT_ROOT
+    path: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
+    dddOwner: DbtSourceBindingAcceptanceProof
+    cqRails: [ImportDbtProject]
+    fowlerSignals: [Test-only confidence]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
+    unitTests: [apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts]
+  - name: SOURCE_DECLARATIONS
+    path: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
+    dddOwner: DbtSourceBindingAcceptanceProof
+    cqRails: [ValidateDbtProjectImport]
+    fowlerSignals: [Test-only confidence]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
+    unitTests: [apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts]
+  - name: SOURCE_UNIQUE_IDS
+    path: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
+    dddOwner: DbtSourceBindingAcceptanceProof
+    cqRails: [ProjectDbtGraphFromFiles]
+    fowlerSignals: [Test-only confidence]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
+    unitTests: [apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts]
+  - name: assertSeriousAccessibility
+    path: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
+    dddOwner: DbtSourceBindingAcceptanceProof
+    cqRails: [ImportWarehouseSources]
+    fowlerSignals: [Test-only confidence]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
+    unitTests: [apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts]
+  - name: buildMetricEvidence
+    path: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
+    dddOwner: DbtSourceBindingAcceptanceProof
+    cqRails: [ImportWarehouseSources]
+    fowlerSignals: [Test-only confidence]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
+    unitTests: [apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts]
+  - name: buildProjectGraph
+    path: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
+    dddOwner: DbtSourceBindingAcceptanceProof
+    cqRails: [ProjectDbtGraphFromFiles]
+    fowlerSignals: [Test-only confidence]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
+    unitTests: [apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts]
+  - name: buildSourceObject
+    path: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
+    dddOwner: DbtSourceBindingAcceptanceProof
+    cqRails: [ImportWarehouseSources]
+    fowlerSignals: [Test-only confidence]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
+    unitTests: [apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts]
+  - name: openAndValidateDbtImport
+    path: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
+    dddOwner: DbtSourceBindingAcceptanceProof
+    cqRails: [ValidateDbtProjectImport, ImportDbtProject]
+    fowlerSignals: [Test-only confidence]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
+    unitTests: [apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts]
+  - name: stubDbtSourceBindingFlow
+    path: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
+    dddOwner: DbtSourceBindingAcceptanceProof
+    cqRails: [ValidateDbtProjectImport, ImportDbtProject, ImportWarehouseSources]
+    fowlerSignals: [Test-only confidence]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
+    unitTests: [apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts]
+  - name: visitCanvas
+    path: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
+    dddOwner: DbtSourceBindingAcceptanceProof
+    cqRails: [ImportDbtProject]
+    fowlerSignals: [Test-only confidence]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
+    unitTests: [apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts]
 ```
