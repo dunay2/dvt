@@ -47,6 +47,7 @@ export const graphNodeMetricRowClasses = {
   item: 'inline-flex items-baseline gap-1',
   label: 'text-slate-500',
   value: 'font-medium text-slate-200',
+  interactiveValue: 'nodrag nopan',
   valueTone: {
     neutral: 'text-slate-200',
     info: 'text-blue-200',

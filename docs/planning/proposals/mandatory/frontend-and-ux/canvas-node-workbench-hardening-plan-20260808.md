@@ -195,6 +195,62 @@ Rejected alternatives:
   test composition root and was integrated independently through PR #2393 before this
   slice continued.
 
+## File-backed card action — #2395
+
+### Pre-implementation brief
+
+- **Mode:** Full. This changes the visible and keyboard-operable meaning of the
+  file-backed Code metric.
+- **Outcome:** the card no longer repeats the backing file path below its metrics;
+  activating the localized `File` / `Archivo` metric opens that exact file in the
+  existing Code workbench.
+- **Existing owners:** `GraphNodeCardView` owns card composition,
+  `GraphNodeMetricRow` owns compact metric rendering, and the existing
+  `onOpenNodeCode` callback owns entry into the contextual editor.
+- **Rails:** reuse `ProjectGraphNodeCardReadModel` for presentation and
+  `InspectCanvasNode` for the user action. File reading and saving remain on
+  `GetWorkspaceFileContent` and `SaveWorkspaceFileContent`.
+- **Accessibility:** the code metric becomes a native button only when the callback
+  exists. The existing tooltip remains available, while the Canvas control boundary
+  plus `nodrag` and `nopan` prevent node selection or movement.
+
+Current mechanism:
+
+```mermaid
+flowchart LR
+  A[ProjectGraphNodeCardReadModel] --> B[Code metric: File]
+  B --> C[Tooltip containing backing path]
+  A --> D[Repeated visible backing path]
+  B -. no action .-> E[Code workbench]
+```
+
+Target mechanism:
+
+```mermaid
+flowchart LR
+  A[ProjectGraphNodeCardReadModel] --> B[Code metric: File]
+  B --> C[Tooltip retains backing path]
+  B -->|click or keyboard| D[Existing onOpenNodeCode callback]
+  D --> E[Code workbench at node backing file]
+  A --> F[Distinct semantic subtitle when present]
+```
+
+| Fowler signal        | Current mechanism                              | MVP correction                                     | Proof                 |
+| -------------------- | ---------------------------------------------- | -------------------------------------------------- | --------------------- |
+| Duplicate semantics  | path appears in tooltip and visible card line  | retain tooltip; remove repeated visible path       | card component test   |
+| Feature envy         | card knows a file exists but cannot open it    | forward the existing node-code callback            | renderer test         |
+| Primitive obsession  | actionable `File` is a focusable `span`        | native button only when the action exists          | semantic DOM test     |
+| Boundary drift       | embedded click could select or move React Flow | control boundary plus `nodrag` and `nopan`         | interaction assertion |
+| Test-only confidence | no card-to-authoritative-file proof            | red/green component path plus headed browser proof | Vitest and browser    |
+
+Rejected alternatives:
+
+- Keep the visible path and make it clickable: this preserves duplicate information
+  and creates a second visual launch point.
+- Open generic project Code: it loses the node's authoritative initial file.
+- Add a new route, event bus, store or editor: all required navigation already exists.
+- Make every metric clickable: health and column evidence do not share Code semantics.
+
 ## Feature Mechanization
 
 ```feature-mechanization
@@ -214,6 +270,7 @@ userStories:
   - As a Canvas author, I select or deselect execution through node operations without a misleading Play/Pause control in the card header.
   - As a Canvas author, Impact Highlight follows visual node focus and never treats execution selection as presentation focus.
   - As a Canvas author, I see five card columns first and can explicitly reveal or hide the remaining columns.
+  - As a file-backed Canvas author, I activate File on the card to open that exact file without a repeated path line.
   - As a file-backed dbt author, I open the authoritative editor from Properties Code and return to the same node context.
 governingSources:
   - AGENTS.md
@@ -241,6 +298,9 @@ allowedImplementationSurfaces:
   - apps/web/src/app/components/canvas/DbtNodeComponent.tsx
   - apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts
   - apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts
+  - apps/web/src/app/components/metrics/MetricEvidenceHotspot.test.tsx
+  - apps/web/src/app/components/metrics/MetricEvidenceHotspot.tsx
+  - apps/web/src/app/components/metrics/metricEvidenceTokens.ts
   - apps/web/src/app/plugins/dbt/DbtNodeRenderer.test.tsx
   - apps/web/src/app/plugins/dbt/DbtNodeRenderer.tsx
   - apps/web/src/app/plugins/canvasSurfaceStrategyContracts.ts
@@ -252,6 +312,10 @@ allowedImplementationSurfaces:
   - apps/web/src/app/plugins/graph/GraphNodeCardView.tsx
   - apps/web/src/app/plugins/graph/GraphNodeColumnSection.test.tsx
   - apps/web/src/app/plugins/graph/GraphNodeColumnSection.tsx
+  - apps/web/src/app/plugins/graph/GraphNodeMetricHotspot.test.tsx
+  - apps/web/src/app/plugins/graph/GraphNodeMetricHotspot.tsx
+  - apps/web/src/app/plugins/graph/GraphNodeMetricRow.test.tsx
+  - apps/web/src/app/plugins/graph/GraphNodeMetricRow.tsx
   - apps/web/src/app/plugins/graph/GraphNodeRenderer.tsx
   - apps/web/src/app/plugins/graph/graphNodeCardCopyTokens.ts
   - apps/web/src/app/plugins/graph/graphVisualTokens.ts
@@ -371,6 +435,26 @@ domainObjects:
     type: command state
     owner: Canvas execution-selection intent
 symbols:
+  - path: apps/web/src/app/components/metrics/MetricEvidenceHotspot.tsx
+    name: MetricEvidenceTriggerProps
+    kind: type
+    exported: false
+    dddOwner: Shared metric evidence presentation
+    cqRails: [InspectCanvasNode]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- MetricEvidenceHotspot.test.tsx]
+  - path: apps/web/src/app/plugins/graph/GraphNodeMetricRow.tsx
+    name: GraphNodeMetricRow
+    kind: function
+    exported: true
+    dddOwner: CanvasGraphPresentation
+    cqRails: [ProjectGraphNodeCardReadModel, InspectCanvasNode]
+    fowlerSignals: [Feature envy, Primitive obsession]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- GraphNodeMetricRow.test.tsx]
   - path: apps/web/src/app/plugins/graph/GraphNodeColumnSection.tsx
     name: MAX_PREVIEW_COLUMNS
     kind: constant
@@ -607,6 +691,7 @@ fowlerSignals:
   - Play/Pause versus execution-selection semantic conflation resolved by #2381: retain the command and retire only the misleading card adapter
   - Impact Highlight versus execution-selection semantic conflation corrected by #2389: visual focus owns transient graph dimming while execution selection remains unchanged
   - card-column discoverability corrected by #2391: five visible rows and a localized reversible disclosure replace implicit internal scrolling
+  - file-backed card duplication and inert action corrected by #2395: the tooltip retains the path while File opens the existing contextual editor
   - displaced floating-toolbar state and tests
 architectureGuards:
   - pnpm docs:feature-mechanization:implementation --feature W4-CANVAS-NODE-WORKBENCH-HARDENING-20260808
@@ -622,6 +707,21 @@ completionGate:
   - pnpm governance:refresh
   - pnpm verify:prepush
 redGreenCycles:
+  - id: file-backed-card-code-action
+    redTest: apps/web/src/app/plugins/graph/GraphNodeCardView.test.tsx
+    expectedFailure: The backing path is repeated under the metrics and the File metric cannot invoke the existing node-code callback.
+    patchSurfaces:
+      - apps/web/src/app/components/metrics/MetricEvidenceHotspot.test.tsx
+      - apps/web/src/app/components/metrics/MetricEvidenceHotspot.tsx
+      - apps/web/src/app/components/metrics/metricEvidenceTokens.ts
+      - apps/web/src/app/plugins/graph/GraphNodeCardView.test.tsx
+      - apps/web/src/app/plugins/graph/GraphNodeCardView.tsx
+      - apps/web/src/app/plugins/graph/GraphNodeMetricHotspot.test.tsx
+      - apps/web/src/app/plugins/graph/GraphNodeMetricHotspot.tsx
+      - apps/web/src/app/plugins/graph/GraphNodeMetricRow.test.tsx
+      - apps/web/src/app/plugins/graph/GraphNodeMetricRow.tsx
+      - apps/web/src/app/plugins/graph/GraphNodeRenderer.tsx
+    greenTest: apps/web/src/app/plugins/graph/GraphNodeCardView.test.tsx
   - id: bounded-card-column-disclosure
     redTest: apps/web/src/app/plugins/graph/GraphNodeColumnSection.test.tsx
     expectedFailure: Expanding a card renders every column inside an implicit scroll region and exposes no localized action for the remainder.

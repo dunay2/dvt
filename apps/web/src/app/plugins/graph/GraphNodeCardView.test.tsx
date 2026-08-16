@@ -6,7 +6,10 @@ import { createRoot, type Root } from 'react-dom/client';
 import { Database } from 'lucide-react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { CanonicalNode } from '../../types/canonical';
+import { dvtGraphNodeCardStrategy } from '../dvt/dvtGraphNodeCardStrategy';
 import { GraphNodeCardView } from './GraphNodeCardView';
+import { GraphNodeRenderer } from './GraphNodeRenderer';
 
 const BASE_PROPS = {
   cardModel: {
@@ -124,7 +127,7 @@ describe('GraphNodeCardView', () => {
     expect(card?.className).not.toContain('min-w-[220px]');
   });
 
-  it('renders semantic status, path, tags, and operational rail from the read model', () => {
+  it('renders semantic status, subtitle, tags, and operational rail without repeating the backing path', () => {
     act(() => {
       root.render(
         <GraphNodeCardView
@@ -169,13 +172,143 @@ describe('GraphNodeCardView', () => {
       container.querySelector('[data-slot="graph-node-card-title"]')?.getAttribute('title')
     ).toBe('src_public_orders');
     expect(container.textContent).toContain('Ready');
-    expect(container.textContent).toContain('models/sources/src_public.yml');
+    expect(container.textContent).toContain('warehouse.public.orders');
+    expect(container.textContent).not.toContain('models/sources/src_public.yml');
     expect(container.textContent).toContain('postgres');
     expect(
       container.querySelector('[data-slot="graph-node-tag-list"]')?.getAttribute('data-tone')
     ).toBe('source');
     expect(container.textContent).toContain('Freshness');
     expect(container.textContent).toContain('42 MB/min');
+  });
+
+  it('preserves a relation-only subtitle when no file-backed Code metric represents it', () => {
+    act(() => {
+      root.render(
+        <GraphNodeCardView
+          {...BASE_PROPS}
+          cardModel={{
+            ...BASE_PROPS.cardModel,
+            subtitle: 'RAW.ERP.ORDERS',
+            path: 'RAW.ERP.ORDERS',
+            metrics: [{ id: 'columns', label: 'Columns', value: '3' }],
+          }}
+        />
+      );
+    });
+
+    expect(container.textContent).toContain('RAW.ERP.ORDERS');
+  });
+
+  it('suppresses a repeated file subtitle when the Code metric already owns the path', () => {
+    act(() => {
+      root.render(
+        <GraphNodeCardView
+          {...BASE_PROPS}
+          cardModel={{
+            ...BASE_PROPS.cardModel,
+            subtitle: 'models/marts/orders.sql',
+            path: 'models/marts/orders.sql',
+            metrics: [
+              {
+                id: 'code',
+                label: 'Code',
+                value: 'File',
+                detail: 'Code lives in models/marts/orders.sql.',
+              },
+            ],
+          }}
+        />
+      );
+    });
+
+    expect(container.textContent).not.toContain('models/marts/orders.sql');
+  });
+
+  it('opens Code from the file metric without bubbling to the node card', () => {
+    const onOpenCode = vi.fn();
+    const onCardClick = vi.fn();
+    act(() => {
+      root.render(
+        <div onClick={onCardClick}>
+          <GraphNodeCardView
+            {...BASE_PROPS}
+            cardModel={{
+              ...BASE_PROPS.cardModel,
+              metrics: [
+                {
+                  id: 'code',
+                  label: 'Código',
+                  value: 'Archivo',
+                  detail: 'El código está en models/sources/src_public.yml.',
+                },
+              ],
+            }}
+            onOpenCode={onOpenCode}
+          />
+        </div>
+      );
+    });
+
+    const fileAction = container.querySelector<HTMLButtonElement>(
+      '[data-slot="graph-node-metric-hotspot"]'
+    );
+    expect(fileAction?.tagName).toBe('BUTTON');
+
+    act(() => {
+      fireEvent.click(fileAction!);
+    });
+
+    expect(onOpenCode).toHaveBeenCalledOnce();
+    expect(onCardClick).not.toHaveBeenCalled();
+  });
+
+  it('forwards the canonical node id through the generic graph renderer file action', () => {
+    const onOpenNodeCode = vi.fn();
+    const node: CanonicalNode = {
+      id: 'source.auth_audit_events',
+      name: 'auth_audit_events',
+      pluginId: 'dvt',
+      kind: 'dvt:source',
+      role: 'input',
+      status: 'success',
+      tags: [],
+      path: 'models/sources/src_dvt.yml',
+      metadata: {},
+    };
+
+    act(() => {
+      root.render(
+        <GraphNodeRenderer
+          node={node}
+          selected={false}
+          hovered={false}
+          overlayDecoration={null}
+          badges={[]}
+          graphNodeCardStrategies={[dvtGraphNodeCardStrategy]}
+          data={{
+            onOpenNodeCode,
+            presentationTruth: {
+              columns: { visibleCount: 0, visibleProvenance: 'none' },
+              code: {
+                kind: 'workspace-file',
+                path: 'models/sources/src_dvt.yml',
+                language: 'yaml',
+              },
+            },
+          }}
+        />
+      );
+    });
+
+    const fileAction = container.querySelector<HTMLButtonElement>(
+      '[data-slot="graph-node-metric-hotspot"]'
+    );
+    act(() => {
+      fireEvent.click(fileAction!);
+    });
+
+    expect(onOpenNodeCode).toHaveBeenCalledWith('source.auth_audit_events');
   });
 
   it('reveals the structured source identity from the table title on keyboard focus', async () => {

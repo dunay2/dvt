@@ -4,6 +4,7 @@ import { createAppServicesTestOverrides } from '../../../testing/appServicesTest
 import { createMockRunsService } from '../../../testing/runsPortDoubles';
 import { asIsoUtcString, asNonBlankString, asStepId, type EventEnvelope } from '@dvt/contracts';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { fireEvent } from '@testing-library/dom';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -293,6 +294,51 @@ describe('DbtNodeRenderer history panel', () => {
       document.querySelector('[data-slot="graph-node-metric-hotspot"][aria-label="Columns: 1"]')
         ?.textContent
     ).toBe('1');
+  });
+
+  it('opens the authoritative dbt file from the card File metric', async () => {
+    const onOpenNodeCode = vi.fn();
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+    (
+      globalThis as typeof globalThis & {
+        IS_REACT_ACT_ENVIRONMENT?: boolean;
+      }
+    ).IS_REACT_ACT_ENVIRONMENT = true;
+
+    await act(async () => {
+      root?.render(
+        <DbtNodeRenderer
+          node={buildNode({ path: 'models/marts/orders.sql' })}
+          selected={false}
+          hovered={false}
+          overlayDecoration={null}
+          badges={[]}
+          graphNodeCardStrategies={[dbtGraphNodeCardStrategy]}
+          data={{
+            onOpenNodeCode,
+            presentationTruth: {
+              columns: { visibleCount: 0, visibleProvenance: 'none' },
+              code: {
+                kind: 'workspace-file',
+                path: 'models/marts/orders.sql',
+                language: 'sql',
+              },
+            },
+          }}
+        />
+      );
+    });
+
+    const fileAction = container.querySelector<HTMLButtonElement>(
+      '[data-slot="graph-node-metric-hotspot"]'
+    );
+    act(() => {
+      fireEvent.click(fileAction!);
+    });
+
+    expect(onOpenNodeCode).toHaveBeenCalledWith('model_orders');
   });
 
   it('does not expose execution selection as a node-card header button', async () => {

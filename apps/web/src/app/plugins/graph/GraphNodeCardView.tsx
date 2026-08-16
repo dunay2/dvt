@@ -40,6 +40,7 @@ export type GraphNodeCardViewProps = Readonly<{
     detail: GraphNodeOperationalDetail,
     anchorElement: HTMLElement
   ) => void;
+  onOpenCode?: () => void;
   onSelectTag?: (tag: string) => void;
   getSelectTagLabel?: (tag: string) => string;
 }>;
@@ -128,12 +129,24 @@ export function GraphNodeCardView({
   dimmed,
   overlayStyle,
   onOpenOperationalDetails,
+  onOpenCode,
   onSelectTag,
   getSelectTagLabel,
 }: GraphNodeCardViewProps): ReactElement {
   const operationalDetail = cardModel.operationalDetail;
   const interactiveOperationalDetail =
     operationalDetail != null && operationalDetail.rows.length > 0 ? operationalDetail : null;
+  const backingPath = cardModel.path;
+  const pathIsRepresentedByCodeMetric =
+    backingPath != null &&
+    cardModel.metrics.some(
+      (metric) => metric.id === 'code' && metric.detail?.includes(backingPath) === true
+    );
+  const visibleSubtitle =
+    cardModel.subtitle != null &&
+    (cardModel.subtitle !== cardModel.path || !pathIsRepresentedByCodeMetric)
+      ? cardModel.subtitle
+      : null;
 
   return (
     <div
@@ -182,12 +195,10 @@ export function GraphNodeCardView({
 
         <div className={graphNodeCardLayoutClasses.kind}>{cardModel.kindLabel || typeLabel}</div>
 
-        <GraphNodeMetricRow metrics={cardModel.metrics} />
+        <GraphNodeMetricRow metrics={cardModel.metrics} onOpenCode={onOpenCode} />
 
-        {(cardModel.path ?? cardModel.subtitle) && (
-          <div className={graphNodeCardLayoutClasses.path}>
-            {cardModel.path ?? cardModel.subtitle}
-          </div>
+        {visibleSubtitle && (
+          <div className={graphNodeCardLayoutClasses.path}>{visibleSubtitle}</div>
         )}
 
         <GraphNodeTagList

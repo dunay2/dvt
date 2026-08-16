@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 
+import { fireEvent } from '@testing-library/dom';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GraphNodeMetricRow } from './GraphNodeMetricRow';
 
@@ -105,5 +106,36 @@ describe('GraphNodeMetricRow', () => {
     ]);
     expect(container.querySelector('[data-tone="success"]')).not.toBeNull();
     expect(container.querySelector('[data-tone="warning"]')).not.toBeNull();
+  });
+
+  it('makes only the file-backed code metric open Code', () => {
+    const onOpenCode = vi.fn();
+    act(() => {
+      root.render(
+        <GraphNodeMetricRow
+          metrics={[
+            {
+              id: 'code',
+              label: 'Código',
+              value: 'Archivo',
+              detail: 'El código está en models/sources.yml.',
+            },
+            { id: 'columns', label: 'Columnas', value: '8' },
+          ]}
+          onOpenCode={onOpenCode}
+        />
+      );
+    });
+
+    const hotspots = container.querySelectorAll('[data-slot="graph-node-metric-hotspot"]');
+    expect(hotspots[0]?.tagName).toBe('BUTTON');
+    expect(hotspots[1]?.tagName).toBe('SPAN');
+
+    act(() => {
+      fireEvent.click(hotspots[0]!);
+      fireEvent.click(hotspots[1]!);
+    });
+
+    expect(onOpenCode).toHaveBeenCalledOnce();
   });
 });
