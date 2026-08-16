@@ -198,6 +198,7 @@ function validationReport(): DbtProjectImportValidationReport {
       ],
     },
     diagnostics: [],
+    sourceTableDeclarations: [],
     receipt: importCommand().validationReceipt,
   });
 }
