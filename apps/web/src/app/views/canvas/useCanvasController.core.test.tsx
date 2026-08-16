@@ -147,7 +147,10 @@ describe('useCanvasController core', () => {
       expect.any(Map),
       true
     );
-    expect(harness.state.store.executionSelectionIntent.nodeIds).toEqual(['node_1']);
+    expect(harness.state.store.executionSelectionIntent).toEqual({
+      mode: 'explicit',
+      nodeIds: ['node_1'],
+    });
   });
 
   it('derives inspector node from protected draft semantics and forwards graph and execution hook results', () => {
