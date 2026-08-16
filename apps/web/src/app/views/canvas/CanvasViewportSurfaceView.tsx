@@ -123,14 +123,6 @@ export function activateFocusedCanvasNodeFromKeyboard(
   return true;
 }
 
-export function resolveFocusedCanvasNodeId(target: EventTarget | null): string | null {
-  if (!(target instanceof Element)) {
-    return null;
-  }
-
-  return target.closest<HTMLElement>('.react-flow__node')?.dataset.id ?? null;
-}
-
 function CanvasViewportReactFlowSurface({
   canEditEdges,
   canDeleteWithKeyboard,
@@ -206,7 +198,11 @@ function CanvasViewportReactFlowSurface({
       className="h-full w-full outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-inset"
       onContextMenuCapture={contextMenuPresenter.handleViewportContextMenu}
       onFocusCapture={(event) => {
-        onImpactFocusNodeChange?.(resolveFocusedCanvasNodeId(event.target));
+        onImpactFocusNodeChange?.(
+          event.target instanceof Element
+            ? (event.target.closest<HTMLElement>('.react-flow__node')?.dataset.id ?? null)
+            : null
+        );
       }}
       onKeyDownCapture={(event) => {
         activateFocusedCanvasNodeFromKeyboard(event);

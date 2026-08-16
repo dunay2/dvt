@@ -50,7 +50,6 @@ export function buildCanvasViewportProps(
     onCreateAuthoringNode: vi.fn(),
     importedNodeFocusIds: [],
     onImportedNodeFocusComplete: vi.fn(),
-    onImpactFocusNodeChange: vi.fn(),
     canOpenCanvasSettings: false,
     onOpenCanvasSettings: vi.fn(),
     ...overrides,

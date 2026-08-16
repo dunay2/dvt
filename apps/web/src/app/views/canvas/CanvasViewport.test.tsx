@@ -247,7 +247,6 @@ describe('CanvasViewport', () => {
       ] as CanvasViewportProps['nodesWithImpact'],
       importedNodeFocusIds: ['src_erp_orders', 'src_erp_customers'],
       onImportedNodeFocusComplete: vi.fn(),
-      onImpactFocusNodeChange: vi.fn(),
     });
 
     await renderViewport(props);
