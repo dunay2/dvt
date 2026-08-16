@@ -6,12 +6,17 @@ import {
 } from '@dvt/contracts';
 
 import type {
+  IWorkspaceFileBatchMutationPort,
   IWorkspaceFileRepository,
   WorkspaceFileBatchWrite,
+  WorkspaceFileBatchReceipt,
   WorkspaceFileContent,
   WorkspaceStorageScope,
 } from '../ports/workspaceFiles.js';
-import { WorkspaceFileNotFoundError } from '../ports/workspaceFiles.js';
+import {
+  WorkspaceFileNotFoundError,
+  WorkspaceFileRevisionConflictError,
+} from '../ports/workspaceFiles.js';
 
 import { readExistingSourceDocument, serializeSourceDocument } from './warehouseSourceYaml.js';
 import type { SourceYamlDocument, SourceYamlSource } from './warehouseSourceYamlTypes.js';
@@ -65,6 +70,66 @@ export async function buildWarehouseSourceRemovalFilePlan(input: {
   }
 
   return { writes, deletes, previousFiles };
+}
+
+export async function applyWarehouseSourceRemovalFilePlan(input: {
+  readonly scope: WorkspaceStorageScope;
+  readonly idempotencyKey: string;
+  readonly plan: WarehouseSourceRemovalFilePlan;
+  readonly batchMutation: IWorkspaceFileBatchMutationPort;
+}): Promise<WorkspaceFileBatchReceipt> {
+  const result = await input.batchMutation.apply(input.scope, {
+    idempotencyKey: `${input.idempotencyKey}:source-removal:apply`,
+    expectedFiles: plannedPaths(input.plan).map((path) => ({
+      path,
+      expectedContentSha256: requirePreviousFile(input.plan, path).contentSha256,
+    })),
+    writes: input.plan.writes,
+    deletes: input.plan.deletes,
+  });
+  if (result.kind === 'conflict') {
+    const first = result.conflicts[0];
+    throw new WorkspaceFileRevisionConflictError(
+      first?.path ?? plannedPaths(input.plan)[0] ?? 'unknown',
+      first?.currentContentSha256 ?? null
+    );
+  }
+  return result;
+}
+
+export async function rollbackWarehouseSourceRemovalFilePlan(input: {
+  readonly scope: WorkspaceStorageScope;
+  readonly idempotencyKey: string;
+  readonly plan: WarehouseSourceRemovalFilePlan;
+  readonly appliedReceipt: WorkspaceFileBatchReceipt;
+  readonly batchMutation: IWorkspaceFileBatchMutationPort;
+}): Promise<void> {
+  const appliedWriteShaByPath = new Map(
+    input.appliedReceipt.writes.map((write) => [write.path, write.contentSha256])
+  );
+  const appliedDeletePaths = new Set(input.appliedReceipt.deletes);
+  const expectedFiles = plannedPaths(input.plan).map((path) => {
+    const appliedWriteSha = appliedWriteShaByPath.get(path);
+    if (appliedWriteSha) return { path, expectedContentSha256: appliedWriteSha };
+    if (appliedDeletePaths.has(path)) return { path };
+    throw new Error(`Warehouse source removal receipt is missing the applied file: ${path}`);
+  });
+  const result = await input.batchMutation.apply(input.scope, {
+    idempotencyKey: `${input.idempotencyKey}:source-removal:rollback`,
+    expectedFiles,
+    writes: plannedPaths(input.plan).map((path) => ({
+      path,
+      content: requirePreviousFile(input.plan, path).content,
+    })),
+    deletes: [],
+  });
+  if (result.kind === 'conflict') {
+    const first = result.conflicts[0];
+    throw new WorkspaceFileRevisionConflictError(
+      first?.path ?? plannedPaths(input.plan)[0] ?? 'unknown',
+      first?.currentContentSha256 ?? null
+    );
+  }
 }
 
 function collectWarehouseSourceYamlBindings(
@@ -165,4 +230,21 @@ function isDisposableEmptyDocument(document: SourceYamlDocument): boolean {
     document.sources.length === 0 &&
     Object.keys(document.metadata).every((key) => key === 'version')
   );
+}
+
+function plannedPaths(plan: WarehouseSourceRemovalFilePlan): readonly string[] {
+  return [...plan.writes.map((write) => write.path), ...plan.deletes].sort((left, right) =>
+    left.localeCompare(right)
+  );
+}
+
+function requirePreviousFile(
+  plan: WarehouseSourceRemovalFilePlan,
+  path: string
+): WorkspaceFileContent {
+  const previousFile = plan.previousFiles.get(path);
+  if (!previousFile) {
+    throw new Error(`Warehouse source removal plan is missing the previous file: ${path}`);
+  }
+  return previousFile;
 }
