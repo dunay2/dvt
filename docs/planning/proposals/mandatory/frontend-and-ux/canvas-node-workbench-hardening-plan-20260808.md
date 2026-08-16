@@ -435,6 +435,26 @@ domainObjects:
     type: command state
     owner: Canvas execution-selection intent
 symbols:
+  - path: apps/web/src/app/components/metrics/MetricEvidenceHotspot.tsx
+    name: MetricEvidenceTriggerProps
+    kind: type
+    exported: false
+    dddOwner: Shared metric evidence presentation
+    cqRails: [InspectCanvasNode]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- MetricEvidenceHotspot.test.tsx]
+  - path: apps/web/src/app/plugins/graph/GraphNodeMetricRow.tsx
+    name: GraphNodeMetricRow
+    kind: function
+    exported: true
+    dddOwner: CanvasGraphPresentation
+    cqRails: [ProjectGraphNodeCardReadModel, InspectCanvasNode]
+    fowlerSignals: [Feature envy, Primitive obsession]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- GraphNodeMetricRow.test.tsx]
   - path: apps/web/src/app/plugins/graph/GraphNodeColumnSection.tsx
     name: MAX_PREVIEW_COLUMNS
     kind: constant

@@ -1,11 +1,11 @@
 /** Owned concern: reveal complete metric evidence from a compact UI value. */
-import type { MouseEventHandler, ReactElement } from 'react';
+import type { HTMLAttributes, MouseEventHandler, ReactElement } from 'react';
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { cn } from '../ui/utils';
 import { metricEvidenceHotspotClasses } from './metricEvidenceTokens';
 
-type MetricEvidenceTriggerProps = {
+type MetricEvidenceTriggerProps = HTMLAttributes<HTMLSpanElement> & {
   readonly [attribute: `data-${string}`]: string | number | undefined;
 };
 
