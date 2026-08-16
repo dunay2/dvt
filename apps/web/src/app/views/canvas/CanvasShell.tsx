@@ -57,6 +57,8 @@ export default function CanvasShell({
   workspaceCommands,
   routeIntentRequest,
   canvasContextScreenToFlowPosition,
+  sourceImportInitialSelection,
+  onSourceImportInitialSelectionConsumed,
   onDbtProjectImported,
 }: CanvasShellProps): JSX.Element {
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
@@ -155,6 +157,22 @@ export default function CanvasShell({
   const canBrowseDataRegistry = layout.canOpenSourceImport && sourceImportContributions.length > 0;
   const canOpenDataRegistry = canBrowseDataRegistry;
   const sourceImportDialog = useCanvasSourceImportDialogState(canOpenDataRegistry);
+  useEffect(() => {
+    if (sourceImportInitialSelection == null || sourceImportDialog.openCommand == null) {
+      return;
+    }
+    sourceImportDialog.openCommand(sourceImportInitialSelection);
+  }, [sourceImportDialog.openCommand, sourceImportInitialSelection]);
+  useEffect(() => {
+    if (!sourceImportDialog.open || sourceImportInitialSelection == null) {
+      return;
+    }
+    onSourceImportInitialSelectionConsumed?.();
+  }, [
+    onSourceImportInitialSelectionConsumed,
+    sourceImportDialog.open,
+    sourceImportInitialSelection,
+  ]);
   useEffect(() => {
     if (contextualWorkbenchId != null && scopedContextualWorkbenchId == null) {
       closeContextualWorkbench();
@@ -391,13 +409,7 @@ export default function CanvasShell({
         onRestoreFocus={restoreProjectExplorerFocus}
         onImported={(result, sourceTableDeclarations) => {
           setDbtProjectImportOpen(false);
-          onDbtProjectImported?.(result);
-          if (sourceTableDeclarations.length > 0) {
-            sourceImportDialog.openCommand?.({
-              kind: 'dbt-source-binding',
-              sourceTableDeclarations,
-            });
-          }
+          onDbtProjectImported?.(result, sourceTableDeclarations);
         }}
       />
     </ResizablePanelGroup>

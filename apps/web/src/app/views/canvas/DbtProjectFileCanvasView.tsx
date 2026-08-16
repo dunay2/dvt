@@ -1,7 +1,5 @@
 /** Owned concern: present the read-only file-authoritative dbt Canvas surface. */
 import { useRef, type ReactNode } from 'react';
-import type { DbtProjectImportResult } from '@dvt/contracts';
-
 import { cn } from '../../components/ui/utils';
 import { dbtProjectFileCanvasSurfaceStrategy } from '../../plugins/dbt/dbtProjectFileCanvasSurfaceStrategy';
 import { DBT_NODE_KINDS } from '../../plugins/nodeTypeCatalog.dbt';
@@ -118,11 +116,15 @@ export function DbtProjectFileCanvasView({
   controller,
   screenToFlowPosition,
   onDbtProjectImported,
+  sourceImportInitialSelection,
+  onSourceImportInitialSelectionConsumed,
   routeIntentRequest,
 }: Readonly<{
   controller: DbtProjectFileCanvasController;
   screenToFlowPosition: NonNullable<CanvasShellProps['canvasContextScreenToFlowPosition']>;
-  onDbtProjectImported: (result: DbtProjectImportResult) => void;
+  onDbtProjectImported: NonNullable<CanvasShellProps['onDbtProjectImported']>;
+  sourceImportInitialSelection?: CanvasShellProps['sourceImportInitialSelection'];
+  onSourceImportInitialSelectionConsumed?: CanvasShellProps['onSourceImportInitialSelectionConsumed'];
   routeIntentRequest?: CanvasShellRouteIntentRequest;
 }>): JSX.Element {
   const codeWorkbenchRef = useRef<SqlContextWorkbenchHandle>(null);
@@ -194,6 +196,7 @@ export function DbtProjectFileCanvasView({
         canEditEdges: false,
       },
       importedNodeFocusIds: controller.importedNodeFocusIds,
+      runtimeCapabilities: controller.runtimeCapabilities,
     },
     graph: {
       nodesWithImpact: controller.nodesWithCommands,
@@ -245,6 +248,8 @@ export function DbtProjectFileCanvasView({
     },
     routeIntentRequest,
     canvasContextScreenToFlowPosition: screenToFlowPosition,
+    sourceImportInitialSelection,
+    onSourceImportInitialSelectionConsumed,
     onDbtProjectImported,
   };
 
