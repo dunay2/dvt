@@ -228,6 +228,7 @@ allowedImplementationSurfaces:
   - docs/evidence/**
   - docs/risk-register/quality/**
   - docs/planning/proposals/mandatory/frontend-and-ux/vtx1-visual-transform-recipe-authority-plan-20260816.md
+  - docs/.manifest.json
   - docs/**/index.md
 forbiddenImplementationSurfaces:
   - apps/api/**
