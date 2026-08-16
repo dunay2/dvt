@@ -197,6 +197,30 @@ export type {
   WorkspaceGraphAuthoringNodeStatus,
 } from './contracts/planner/WorkspaceGraphAuthoringDraft.v1.js';
 export {
+  DVT_TRANSFORM_AUTHORING_MODE,
+  DvtTransformAuthoringAuthorityV1Schema,
+  VISUAL_TRANSFORM_FILTER_OPERATOR,
+  VISUAL_TRANSFORM_FUNCTION_ID,
+  VISUAL_TRANSFORM_RECIPE_VERSION,
+  VisualTransformColumnInputRefV1Schema,
+  VisualTransformExpressionV1Schema,
+  VisualTransformFilterV1Schema,
+  VisualTransformOperationV1Schema,
+  VisualTransformOutputColumnV1Schema,
+  VisualTransformRecipeV1Schema,
+  canonicalizeVisualTransformRecipeV1,
+  serializeVisualTransformRecipeV1,
+} from './contracts/planner/VisualTransformRecipe.v1.js';
+export type {
+  DvtTransformAuthoringAuthorityV1,
+  VisualTransformColumnInputRefV1,
+  VisualTransformExpressionV1,
+  VisualTransformFilterV1,
+  VisualTransformOperationV1,
+  VisualTransformOutputColumnV1,
+  VisualTransformRecipeV1,
+} from './contracts/planner/VisualTransformRecipe.v1.js';
+export {
   WORKSPACE_GRAPH_AUTHORING_COMMAND_TYPE,
   WorkspaceGraphAuthoringCommandSchema,
 } from './contracts/planner/WorkspaceGraphAuthoringCommand.v1.js';

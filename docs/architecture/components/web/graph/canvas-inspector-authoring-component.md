@@ -2,7 +2,7 @@
 title: Canvas Inspector Authoring Component
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-08-13
+last_reviewed: 2026-08-16
 planning_type: architecture
 ---
 
@@ -39,6 +39,8 @@ inspector contract.
 | DTO                 | `CanvasInspectorNodeDraft`           | one semantic editing contract for route-owned node details                     |
 | Value Object        | `DbtNodeAuthoringMetadata`           | normalized dbt package, source, table, materialization, and origin state       |
 | Value Object        | `DvtNodeAuthoringMetadata`           | normalized source, SQL transform, and sink config for DVT transformation nodes |
+| Value Object        | `VisualTransformRecipeV1`            | versioned visual output, input, operation, and filter intent                   |
+| Policy Object       | `DvtTransformAuthoringAuthority`     | admits exactly one SQL or visual recipe authority per transform                |
 | Policy Object       | `DbtSourceRelationshipSelection`     | dbt model origins must come from the visible connected dbt graph               |
 | Domain policy       | `canvasInspectorAuthoringModel.ts`   | validation and normalization are explicit and pure                             |
 | Presentation policy | Canvas i18n copy catalog             | visible labels and validation messages are resolved at render time             |
@@ -58,6 +60,11 @@ write surface lives one level up in the route-owned wrapper.
 | `CanvasInspectorNodeDraft`                       | semantic editing DTO for governed node details                             |
 | `DbtNodeAuthoringMetadata`                       | route-owned dbt card configuration value object                            |
 | `DvtNodeAuthoringMetadata`                       | route-owned DVT source, SQL transform, and sink configuration value object |
+| `VisualTransformRecipeV1`                        | strict visual transformation recipe persisted as node metadata             |
+| `DvtTransformAuthoringAuthority`                 | explicit and exclusive SQL-or-visual transform-authority policy            |
+| `readDvtTransformAuthoringAuthority`             | fail-closed projection of current DVT transform authority                  |
+| `applyDvtVisualTransformRecipe`                  | persist a validated visual recipe while removing editable SQL authority    |
+| `convertDvtVisualTransformToSql`                 | atomically replace visual authority with nonblank generated SQL            |
 | `DbtSourceRelationshipSelection`                 | policy result for selected dbt model origin                                |
 | `CanvasInspectorAuthoringContract`               | route-owned contract: can edit and apply                                   |
 | `createCanvasInspectorNodeDraft`                 | project a selected canonical node into the Inspector draft                 |
@@ -100,6 +107,17 @@ write surface lives one level up in the route-owned wrapper.
 - DVT transformation configuration that changes preview semantics belongs to
   the route-owned Inspector DTO and is applied to `metadata.config` or
   `metadata.sql`, not to plugin-owned passive panels.
+- A DVT transform has exactly one authoring authority: legacy or explicit SQL,
+  or a versioned visual recipe. A visual recipe and editable SQL must never be
+  accepted together.
+- Existing DVT SQL nodes without an authority envelope remain SQL-authoritative
+  without a migration. Invalid or dual-authority envelopes fail closed.
+- Visual recipes are the sole semantic source for later column-lineage
+  projection. React Flow column edges are derived read models and must not be
+  persisted as a second authority.
+- Historical `config.selectedColumns` metadata is preserved as inert
+  compatibility data; it is not editable and must not be interpreted as a
+  visual recipe.
 - The DVT SQL transform presentation leaf reuses `MonacoCodeEditor`. Canvas
   must not import Monaco directly, create a second SQL buffer, or move file
   persistence authority into the Inspector.
@@ -160,6 +178,8 @@ write surface lives one level up in the route-owned wrapper.
 | `canvasCopyFormatting.ts`                    | copy-backed formatting for authoring errors and Canvas messages     | validation rules                                    |
 | `canvasDbtAuthoringModel.ts`                 | dbt card metadata value object and origin-selection policy          | React hooks, services, or persistence               |
 | `canvasDvtAuthoringModel.ts`                 | DVT source, SQL transform, and sink config value object             | React hooks, services, or persistence               |
+| `canvasDvtTransformAuthoringAuthority.ts`    | exclusive SQL/visual authority and Graph Draft metadata projection  | React Flow edges, UI state, or SQL generation       |
+| `VisualTransformRecipe.v1.ts`                | strict recipe schema, value objects, and deterministic serializer   | UI state, graph geometry, or runtime execution      |
 | `canvasInspectorAuthoringCommand.ts`         | aggregate mutation from validated Inspector draft                   | UI state or passive panel composition               |
 | `useCanvasInspectorCommands.ts`              | route callback bridge into the aggregate                            | validation rules or persistence timing              |
 | `CanvasInspectorAuthoringSection.tsx`        | route-owned edit orchestration and base node fields                 | plugin semantics or transport ownership             |
@@ -196,6 +216,9 @@ flowchart LR
   Projection --> Metadata["toCanvasAuthoringMetadata"]
   Metadata --> Signature
   Metadata --> Persist["Workspace draft persistence"]
+  Recipe["VisualTransformRecipeV1"] --> Authority["DVT transform authority"]
+  Authority --> Metadata
+  Authority -. "derives in #2384" .-> ColumnLineage["React Flow column lineage"]
   Bootstrap["bootstrap / reload"] --> Baseline["serializeCanvasDraftAuthoringBaselineSignature"]
   Baseline --> Autosave
   Signature --> Autosave["draft autosave scheduling"]
@@ -286,6 +309,8 @@ sequenceDiagram
 - [canvasInspectorAuthoringModel.test.ts](../../../../../apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.test.ts)
 - [canvasDbtAuthoringModel.test.ts](../../../../../apps/web/src/app/views/canvas/canvasDbtAuthoringModel.test.ts)
 - [canvasDraftAuthoring.test.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftAuthoring.test.ts)
+- [canvasDvtTransformAuthoringAuthority.test.ts](../../../../../apps/web/src/app/views/canvas/canvasDvtTransformAuthoringAuthority.test.ts)
+- [visual-transform-recipe.contract.test.ts](../../../../../packages/@dvt/contracts/test/visual-transform-recipe.contract.test.ts)
 - [useCanvasController.activeDraftMutations.test.tsx](../../../../../apps/web/src/app/views/canvas/useCanvasController.activeDraftMutations.test.tsx)
 - [canvasDuplicateNodeCommand.test.ts](../../../../../apps/web/src/app/views/canvas/canvasDuplicateNodeCommand.test.ts)
 - [lineageGraphStrategyBoundary.architecture.test.ts](../../../../../apps/web/src/app/views/lineage/lineageGraphStrategyBoundary.architecture.test.ts)
@@ -303,6 +328,9 @@ sequenceDiagram
 - moving DVT SQL transform validation into dbt authoring fields
 - reintroducing editable DVT fields without a real preview or persistence
   consumer
+- accepting visual recipe and editable SQL as simultaneous transform authority
+- treating historical `config.selectedColumns` as visual recipe authority
+- persisting React Flow column edges instead of deriving them from the recipe
 - importing Monaco directly into Canvas or creating a parallel SQL editor
 - using the Inspector form as a second persistence model
 - using a structural-only dirty signature that cannot see node name,

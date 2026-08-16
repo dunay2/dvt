@@ -1,0 +1,29 @@
+---
+id: R-20260816-VTX1-VISUAL-TRANSFORM-AUTHORITY
+title: SQL and visual transformation authority could diverge
+status: Closed
+date: 2026-08-16
+owners:
+  - packages/@dvt/contracts
+  - apps/web
+severity: High
+probability: Low
+context: >
+  DVT transform nodes historically store editable SQL, while visual column mapping requires a
+  durable semantic recipe before its UI and derived lineage are introduced.
+risk: >
+  Persisting SQL, selected-column residue, or React Flow column edges beside a visual recipe could
+  create multiple authorities that reload differently or generate an unintended transformation.
+mitigations:
+  - A strict discriminated policy admits exactly one SQL or visual recipe authority.
+  - Existing nodes without an envelope remain SQL-authoritative without migration.
+  - Invalid envelopes, dual authority, unsupported operations, and blank SQL conversion fail closed.
+  - The recipe uses stable node, column, output, and filter identities with deterministic
+    serialization.
+  - Graph Draft roundtrip tests prove semantic persistence through the existing aggregate.
+  - Historical selectedColumns remains inert and column-lineage edges are explicitly derived.
+closure_evidence:
+  - docs/evidence/ED-20260816-vtx1-visual-transform-recipe-authority.md
+  - packages/@dvt/contracts/test/visual-transform-recipe.contract.test.ts
+  - apps/web/src/app/views/canvas/canvasDvtTransformAuthoringAuthority.test.ts
+---

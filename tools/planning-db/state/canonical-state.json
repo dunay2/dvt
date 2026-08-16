@@ -13939,6 +13939,20 @@
         "updated_at": "2026-08-07T00:52:45.205967+00:00"
       },
       {
+        "design_id": "VTX1-VISUAL-TRANSFORM-RECIPE-AUTHORITY-V3-20260816",
+        "work_item_id": "2383",
+        "title": "VTX1 visual transform recipe authority",
+        "owner": "Frontend / Canvas / Contracts",
+        "status": "implemented",
+        "rationale": "Freeze one versioned visual recipe authority before projecting column mappings.",
+        "fowler_signal": "hidden_authority",
+        "rail_ref": "ConfigureCanvasDvtNode",
+        "approved_at": "2026-08-16T19:43:35.377+00:00",
+        "supersedes_id": null,
+        "created_at": "2026-08-16T19:43:29.995+00:00",
+        "updated_at": "2026-08-16T19:43:45.204+00:00"
+      },
+      {
         "design_id": "W4-CARD-COLUMN-DISCLOSURE-20260816",
         "work_item_id": "2391",
         "title": "Canvas card five-column disclosure",
@@ -91106,6 +91120,70 @@
         "created_at": "2026-08-07T00:52:45.205967+00:00"
       },
       {
+        "design_id": "VTX1-VISUAL-TRANSFORM-RECIPE-AUTHORITY-V3-20260816",
+        "subject_kind": "command",
+        "subject_id": "ConfigureCanvasDvtNode",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-16T19:43:29.995+00:00"
+      },
+      {
+        "design_id": "VTX1-VISUAL-TRANSFORM-RECIPE-AUTHORITY-V3-20260816",
+        "subject_kind": "command",
+        "subject_id": "SaveCanvasAuthoringDraft",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-16T19:43:29.995+00:00"
+      },
+      {
+        "design_id": "VTX1-VISUAL-TRANSFORM-RECIPE-AUTHORITY-V3-20260816",
+        "subject_kind": "contract",
+        "subject_id": "VisualTransformRecipeV1",
+        "scope_kind": "may_create",
+        "required": true,
+        "created_at": "2026-08-16T19:43:29.995+00:00"
+      },
+      {
+        "design_id": "VTX1-VISUAL-TRANSFORM-RECIPE-AUTHORITY-V3-20260816",
+        "subject_kind": "evidence",
+        "subject_id": "ED-20260816-vtx1-visual-transform-recipe-authority",
+        "scope_kind": "must_prove",
+        "required": false,
+        "created_at": "2026-08-16T19:43:29.995+00:00"
+      },
+      {
+        "design_id": "VTX1-VISUAL-TRANSFORM-RECIPE-AUTHORITY-V3-20260816",
+        "subject_kind": "path",
+        "subject_id": "apps/web/src/app/views/canvas/canvasDvtTransformAuthoringAuthority.ts",
+        "scope_kind": "may_create",
+        "required": true,
+        "created_at": "2026-08-16T19:43:29.995+00:00"
+      },
+      {
+        "design_id": "VTX1-VISUAL-TRANSFORM-RECIPE-AUTHORITY-V3-20260816",
+        "subject_kind": "path",
+        "subject_id": "packages/@dvt/contracts/src/contracts/planner/VisualTransformRecipe.v1.ts",
+        "scope_kind": "may_create",
+        "required": true,
+        "created_at": "2026-08-16T19:43:29.995+00:00"
+      },
+      {
+        "design_id": "VTX1-VISUAL-TRANSFORM-RECIPE-AUTHORITY-V3-20260816",
+        "subject_kind": "query",
+        "subject_id": "GetWorkspaceGraphDraft",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-16T19:43:29.995+00:00"
+      },
+      {
+        "design_id": "VTX1-VISUAL-TRANSFORM-RECIPE-AUTHORITY-V3-20260816",
+        "subject_kind": "query",
+        "subject_id": "ProjectCanvasAuthoringDraft",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-16T19:43:29.995+00:00"
+      },
+      {
         "design_id": "W4-CARD-COLUMN-DISCLOSURE-20260816",
         "subject_kind": "component",
         "subject_id": "web.component.canvas.GraphNodeColumnSection",
@@ -97274,6 +97352,27 @@
         "created_at": "2026-08-13T13:52:41.75+00:00"
       },
       {
+        "operation_id": "4975d541-39d6-4cee-a090-b79ebfa9ff96",
+        "idempotency_key": "architecture_design_transition:codex:VTX1-VISUAL-TRANSFORM-RECIPE-AUTHORITY-V3-20260816:cb5700e1e79277a6",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "VTX1-VISUAL-TRANSFORM-RECIPE-AUTHORITY-V3-20260816",
+        "source_ref": "docs/planning/proposals/mandatory/frontend-and-ux/vtx1-visual-transform-recipe-authority-plan-20260816.md",
+        "source_content_sha256": "630d3f523731959a80870e14745935e475b9544f5fc7e6b8c52d0edb07cd5fbf",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Contract, compatibility, rails, and test boundaries were reviewed before implementation.",
+          "designId": "VTX1-VISUAL-TRANSFORM-RECIPE-AUTHORITY-V3-20260816",
+          "toStatus": "approved",
+          "sourceRef": "docs/planning/proposals/mandatory/frontend-and-ux/vtx1-visual-transform-recipe-authority-plan-20260816.md",
+          "fromStatus": "review",
+          "sourceContentSha256": "630d3f523731959a80870e14745935e475b9544f5fc7e6b8c52d0edb07cd5fbf"
+        },
+        "created_at": "2026-08-16T19:43:35.377+00:00"
+      },
+      {
         "operation_id": "49f4e974-4f94-495e-9e87-25c365e0ba80",
         "idempotency_key": "gh-2167-update-contract-sys-api-http-entrypoint-tests-authentication-evidence-v1",
         "operation_type": "architecture_contract_record",
@@ -100667,6 +100766,27 @@
         "created_at": "2026-08-14T09:13:16.045+00:00"
       },
       {
+        "operation_id": "6a81ecb4-4419-4d12-95fe-2a4273cbe80d",
+        "idempotency_key": "architecture_design_transition:codex:VTX1-VISUAL-TRANSFORM-RECIPE-AUTHORITY-V3-20260816:450e3779766e045e",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "VTX1-VISUAL-TRANSFORM-RECIPE-AUTHORITY-V3-20260816",
+        "source_ref": "docs/planning/proposals/mandatory/frontend-and-ux/vtx1-visual-transform-recipe-authority-plan-20260816.md",
+        "source_content_sha256": "630d3f523731959a80870e14745935e475b9544f5fc7e6b8c52d0edb07cd5fbf",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Contract, schema, Web roundtrip, lint, type, ARC-2, and pre-push checks passed.",
+          "designId": "VTX1-VISUAL-TRANSFORM-RECIPE-AUTHORITY-V3-20260816",
+          "toStatus": "implemented",
+          "sourceRef": "docs/planning/proposals/mandatory/frontend-and-ux/vtx1-visual-transform-recipe-authority-plan-20260816.md",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "630d3f523731959a80870e14745935e475b9544f5fc7e6b8c52d0edb07cd5fbf"
+        },
+        "created_at": "2026-08-16T19:43:45.204+00:00"
+      },
+      {
         "operation_id": "6b1eae66-a172-4034-bb3b-b9709c244ec7",
         "idempotency_key": "architecture_design_create:codex:API-H2-6-RESPONSIBILITY-LIFECYCLE-20260814:266c592fad243e1f",
         "operation_type": "architecture_design_create",
@@ -100873,6 +100993,27 @@
           "sourceContentSha256": "0d44cd43036f06d7594d77c1396d2ccaf88b7dc1862db12e066f6ed6a52f26e3"
         },
         "created_at": "2026-08-12T19:12:40.133+00:00"
+      },
+      {
+        "operation_id": "6d7e3f75-3d69-42ea-9d3f-8da3c7393daa",
+        "idempotency_key": "architecture_design_transition:codex:VTX1-VISUAL-TRANSFORM-RECIPE-AUTHORITY-V3-20260816:be5b6631bf277e66",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "VTX1-VISUAL-TRANSFORM-RECIPE-AUTHORITY-V3-20260816",
+        "source_ref": "docs/planning/proposals/mandatory/frontend-and-ux/vtx1-visual-transform-recipe-authority-plan-20260816.md",
+        "source_content_sha256": "630d3f523731959a80870e14745935e475b9544f5fc7e6b8c52d0edb07cd5fbf",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Contract and Web authority implementation completed under the approved scopes.",
+          "designId": "VTX1-VISUAL-TRANSFORM-RECIPE-AUTHORITY-V3-20260816",
+          "toStatus": "implementing",
+          "sourceRef": "docs/planning/proposals/mandatory/frontend-and-ux/vtx1-visual-transform-recipe-authority-plan-20260816.md",
+          "fromStatus": "approved",
+          "sourceContentSha256": "630d3f523731959a80870e14745935e475b9544f5fc7e6b8c52d0edb07cd5fbf"
+        },
+        "created_at": "2026-08-16T19:43:40.793+00:00"
       },
       {
         "operation_id": "6d876670-e874-4a3d-a884-f4c51eef57e9",
@@ -107560,6 +107701,82 @@
           "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
         },
         "created_at": "2026-08-14T08:42:37.801+00:00"
+      },
+      {
+        "operation_id": "b879d53b-5ff8-448e-be52-329f3cd6e4aa",
+        "idempotency_key": "architecture_design_create:codex:VTX1-VISUAL-TRANSFORM-RECIPE-AUTHORITY-V3-20260816:3dc01bf4095ee8d1",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "VTX1-VISUAL-TRANSFORM-RECIPE-AUTHORITY-V3-20260816",
+        "source_ref": "docs/planning/proposals/mandatory/frontend-and-ux/vtx1-visual-transform-recipe-authority-plan-20260816.md",
+        "source_content_sha256": "630d3f523731959a80870e14745935e475b9544f5fc7e6b8c52d0edb07cd5fbf",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "Frontend / Canvas / Contracts",
+          "title": "VTX1 visual transform recipe authority",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_create",
+              "subjectId": "VisualTransformRecipeV1",
+              "subjectKind": "contract"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "ConfigureCanvasDvtNode",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SaveCanvasAuthoringDraft",
+              "subjectKind": "command"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "GetWorkspaceGraphDraft",
+              "subjectKind": "query"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "ProjectCanvasAuthoringDraft",
+              "subjectKind": "query"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_create",
+              "subjectId": "packages/@dvt/contracts/src/contracts/planner/VisualTransformRecipe.v1.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_create",
+              "subjectId": "apps/web/src/app/views/canvas/canvasDvtTransformAuthoringAuthority.ts",
+              "subjectKind": "path"
+            },
+            {
+              "required": false,
+              "scopeKind": "must_prove",
+              "subjectId": "ED-20260816-vtx1-visual-transform-recipe-authority",
+              "subjectKind": "evidence"
+            }
+          ],
+          "status": "review",
+          "railRef": "ConfigureCanvasDvtNode",
+          "designId": "VTX1-VISUAL-TRANSFORM-RECIPE-AUTHORITY-V3-20260816",
+          "rationale": "Freeze one versioned visual recipe authority before projecting column mappings.",
+          "sourceRef": "docs/planning/proposals/mandatory/frontend-and-ux/vtx1-visual-transform-recipe-authority-plan-20260816.md",
+          "workItemId": "2383",
+          "fowlerSignal": "hidden_authority",
+          "supersedesId": null,
+          "sourceContentSha256": "630d3f523731959a80870e14745935e475b9544f5fc7e6b8c52d0edb07cd5fbf"
+        },
+        "created_at": "2026-08-16T19:43:29.995+00:00"
       },
       {
         "operation_id": "b8c86acb-7044-46ef-9615-0d6d8561692f",
