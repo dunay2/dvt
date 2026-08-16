@@ -10,6 +10,8 @@ import { AuthorizeWorkspaceGraphDraftCapabilityService } from '../../application
 import { GetWorkspaceGraphDraftUseCase } from '../../application/services/getWorkspaceGraphDraftUseCase.js';
 import { SaveWorkspaceGraphDraftUseCase } from '../../application/services/saveWorkspaceGraphDraftUseCase.js';
 import { getPgPool } from '../../db/pool.js';
+import { LocalWorkspaceFileBatchMutationGateway } from '../../infrastructure/workspaceFiles/LocalWorkspaceFileBatchMutationGateway.js';
+import { LocalWorkspaceFileRepository } from '../../infrastructure/workspaceFiles/LocalWorkspaceFileRepository.js';
 import { PostgresWorkspaceGraphDraftStore } from '../../infrastructure/workspaceGraphDraft/PostgresWorkspaceGraphDraftStore.js';
 import { StructuredWorkspaceGraphDraftAuditLogger } from '../../infrastructure/workspaceGraphDraft/StructuredWorkspaceGraphDraftAuditLogger.js';
 import type { Env } from '../../plugins/env.js';
@@ -22,6 +24,7 @@ export type BuildWorkspaceGraphDraftRuntimeDeps = {
   readonly commandAuthorizer: AuthorizeCommandScopeService;
   readonly env: Env;
   readonly pool: WorkspaceGraphDraftRuntimePool;
+  readonly workspaceFilesRoot: string;
   readonly warehouseConnectionCatalog: IWarehouseConnectionCatalog;
   readonly buildCanvasAuthoringAuthorityRuntime: (input: {
     readonly workspaceGraphDraftStore: PostgresWorkspaceGraphDraftStore;
@@ -51,7 +54,13 @@ export function buildWorkspaceGraphDraftRuntime(deps: BuildWorkspaceGraphDraftRu
   const saveWorkspaceGraphDraftUseCase = new SaveWorkspaceGraphDraftUseCase(
     workspaceGraphDraftStore,
     workspaceGraphDraftAudit,
-    () => new Date()
+    () => new Date(),
+    {
+      workspaceFiles: new LocalWorkspaceFileRepository({ root: deps.workspaceFilesRoot }),
+      batchMutation: new LocalWorkspaceFileBatchMutationGateway({
+        root: deps.workspaceFilesRoot,
+      }),
+    }
   );
 
   return {

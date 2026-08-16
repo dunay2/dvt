@@ -8,6 +8,7 @@
 import { randomUUID } from 'node:crypto';
 
 import {
+  WorkspaceGraphAuthoringDraftSchema,
   WORKSPACE_GRAPH_DRAFT_AUDIT_ACTION,
   WORKSPACE_GRAPH_DRAFT_AUDIT_OUTCOME,
   WORKSPACE_GRAPH_DRAFT_CAPABILITY_MODE,
@@ -23,11 +24,25 @@ import {
   type WorkspaceGraphDraftSaveResponse,
 } from '@dvt/contracts';
 
+import { WorkspaceFileRevisionConflictError } from '../ports/workspaceFiles.js';
+import type {
+  IWorkspaceFileBatchMutationPort,
+  IWorkspaceFileRepository,
+  WorkspaceFileBatchReceipt,
+} from '../ports/workspaceFiles.js';
 import type {
   IWorkspaceGraphDraftAuditPort,
   IWorkspaceGraphDraftStore,
   WorkspaceGraphDraftDecisionContext,
+  WorkspaceGraphDraftSaveStoreResult,
 } from '../ports/workspaceGraphDraft.js';
+
+import {
+  applyWarehouseSourceRemovalFilePlan,
+  buildWarehouseSourceRemovalFilePlan,
+  rollbackWarehouseSourceRemovalFilePlan,
+  type WarehouseSourceRemovalFilePlan,
+} from './warehouseSourceRemovalPlan.js';
 
 export type SaveWorkspaceGraphDraftUseCaseResult = {
   readonly kind: 'response';
@@ -39,7 +54,11 @@ export class SaveWorkspaceGraphDraftUseCase {
   public constructor(
     private readonly store: IWorkspaceGraphDraftStore,
     private readonly audit: IWorkspaceGraphDraftAuditPort,
-    private readonly clock: () => Date
+    private readonly clock: () => Date,
+    private readonly sourceRemoval: Readonly<{
+      workspaceFiles: Pick<IWorkspaceFileRepository, 'getFileContent'>;
+      batchMutation: IWorkspaceFileBatchMutationPort;
+    }>
   ) {}
 
   public async execute(input: {
@@ -90,17 +109,60 @@ export class SaveWorkspaceGraphDraftUseCase {
       return { kind: 'response', httpStatus: 422, response: unsupported };
     }
 
-    const saveResult = await this.store.save({
-      scope: request.scope,
-      schemaVersion: request.schemaVersion,
-      expectedRevision: request.expectedRevision,
-      idempotencyKey: request.idempotencyKey,
-      draft: request.draft,
-      canvasIds: resolveWorkspaceGraphDraftCanvasIds(request.draft),
-      requestHash: createSaveRequestHash(request),
-      revision: randomUUID(),
-      nowIso: this.clock().toISOString(),
-    });
+    const previousRecord = await this.store.read(request.scope);
+    const sourceRemovalPlan = await this.buildSourceRemovalPlan(request, previousRecord);
+    let appliedSourceRemoval: WorkspaceFileBatchReceipt | null = null;
+    let workspaceFileConflictPath: string | null = null;
+    let saveResult: WorkspaceGraphDraftSaveStoreResult;
+    try {
+      if (sourceRemovalPlan) {
+        appliedSourceRemoval = await applyWarehouseSourceRemovalFilePlan({
+          scope: request.scope,
+          idempotencyKey: request.idempotencyKey,
+          plan: sourceRemovalPlan,
+          batchMutation: this.sourceRemoval.batchMutation,
+        });
+      }
+      saveResult = await this.store.save({
+        scope: request.scope,
+        schemaVersion: request.schemaVersion,
+        expectedRevision: request.expectedRevision,
+        idempotencyKey: request.idempotencyKey,
+        draft: request.draft,
+        canvasIds: resolveWorkspaceGraphDraftCanvasIds(request.draft),
+        requestHash: createSaveRequestHash(request),
+        revision: randomUUID(),
+        nowIso: this.clock().toISOString(),
+      });
+    } catch (error) {
+      if (error instanceof WorkspaceFileRevisionConflictError && !appliedSourceRemoval) {
+        workspaceFileConflictPath = error.path;
+        saveResult = {
+          kind: 'conflict' as const,
+          currentRevision: previousRecord?.revision ?? request.expectedRevision,
+          storedSchemaVersion:
+            previousRecord?.schemaVersion ?? WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
+          updatedAt: previousRecord?.updatedAt ?? null,
+        };
+      } else {
+        await this.rollbackSourceRemovalAfterFailure({
+          request,
+          plan: sourceRemovalPlan,
+          appliedReceipt: appliedSourceRemoval,
+          cause: error,
+        });
+        throw error;
+      }
+    }
+
+    if (saveResult.kind !== 'saved') {
+      await this.rollbackSourceRemovalAfterFailure({
+        request,
+        plan: sourceRemovalPlan,
+        appliedReceipt: appliedSourceRemoval,
+        cause: new Error(`Workspace graph draft save returned ${saveResult.kind}.`),
+      });
+    }
 
     if (saveResult.kind === 'authoring_authority_conflict') {
       const authorityConflict = parseWorkspaceGraphDraftSaveResponse({
@@ -162,6 +224,7 @@ export class SaveWorkspaceGraphDraftUseCase {
         metadata: {
           expectedRevision: request.expectedRevision,
           currentRevision: conflict.currentRevision,
+          ...(workspaceFileConflictPath === null ? {} : { workspaceFileConflictPath }),
         },
       });
       return {
@@ -200,6 +263,53 @@ export class SaveWorkspaceGraphDraftUseCase {
       httpStatus: 200,
       response,
     };
+  }
+
+  private async buildSourceRemovalPlan(
+    request: WorkspaceGraphDraftSaveRequest,
+    previousRecord: Awaited<ReturnType<IWorkspaceGraphDraftStore['read']>>
+  ): Promise<WarehouseSourceRemovalFilePlan | null> {
+    if (
+      !previousRecord ||
+      previousRecord.revision !== request.expectedRevision ||
+      previousRecord.schemaVersion !== WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION
+    ) {
+      return null;
+    }
+    const previousDraft = WorkspaceGraphAuthoringDraftSchema.safeParse(previousRecord.draftPayload);
+    if (!previousDraft.success) return null;
+
+    const plan = await buildWarehouseSourceRemovalFilePlan({
+      scope: request.scope,
+      previousDraft: previousDraft.data,
+      nextDraft: request.draft,
+      workspaceFiles: this.sourceRemoval.workspaceFiles,
+    });
+    return plan.writes.length === 0 && plan.deletes.length === 0 ? null : plan;
+  }
+
+  private async rollbackSourceRemovalAfterFailure(input: {
+    readonly request: WorkspaceGraphDraftSaveRequest;
+    readonly plan: WarehouseSourceRemovalFilePlan | null;
+    readonly appliedReceipt: WorkspaceFileBatchReceipt | null;
+    readonly cause: unknown;
+  }): Promise<void> {
+    if (!input.plan || !input.appliedReceipt || input.appliedReceipt.deduplicated) return;
+    try {
+      await rollbackWarehouseSourceRemovalFilePlan({
+        scope: input.request.scope,
+        idempotencyKey: input.request.idempotencyKey,
+        plan: input.plan,
+        appliedReceipt: input.appliedReceipt,
+        batchMutation: this.sourceRemoval.batchMutation,
+      });
+    } catch (rollbackError) {
+      throw new AggregateError(
+        [input.cause, rollbackError],
+        'Workspace graph draft save failed and source YAML rollback was incomplete.',
+        { cause: rollbackError }
+      );
+    }
   }
 }
 
