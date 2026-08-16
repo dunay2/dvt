@@ -16,14 +16,16 @@ export type GraphNodeColumnSectionProps = Readonly<{
   columns: readonly GraphNodeColumn[];
 }>;
 
+const MAX_PREVIEW_COLUMNS = 5;
+
 export function GraphNodeColumnSection({ columns }: GraphNodeColumnSectionProps): ReactElement {
   const [columnsExpanded, setColumnsExpanded] = useState(false);
   const [showAllColumns, setShowAllColumns] = useState(false);
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const copy = resolveGraphNodeCardCopy(applicationLanguage);
   const columnListId = useId();
-  const visibleColumns = showAllColumns ? columns : columns.slice(0, 5);
-  const remainingColumnCount = Math.max(columns.length - 5, 0);
+  const visibleColumns = showAllColumns ? columns : columns.slice(0, MAX_PREVIEW_COLUMNS);
+  const remainingColumnCount = Math.max(columns.length - MAX_PREVIEW_COLUMNS, 0);
   const remainderActionLabel = copy.remainingColumnsLabelTemplate.replace(
     '{count}',
     String(remainingColumnCount)
@@ -57,8 +59,12 @@ export function GraphNodeColumnSection({ columns }: GraphNodeColumnSectionProps)
       </button>
 
       {columnsExpanded && (
-        <div id={columnListId} className={graphNodeColumnClasses.disclosure}>
-          <div className={graphNodeColumnClasses.list}>
+        <div className={graphNodeColumnClasses.disclosure}>
+          <div
+            id={columnListId}
+            data-slot="graph-node-column-list"
+            className={graphNodeColumnClasses.list}
+          >
             {visibleColumns.map((column) => (
               <div
                 key={column.name}

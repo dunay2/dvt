@@ -52,9 +52,7 @@ describe('GraphNodeColumnSection', () => {
     const remainderToggle = container.querySelector<HTMLButtonElement>(
       '[data-slot="graph-node-column-remainder-toggle"]'
     );
-    const columnList = container.querySelector<HTMLElement>(
-      '[data-slot="graph-node-column-section"] > [id]'
-    );
+    const columnList = container.querySelector<HTMLElement>('[data-slot="graph-node-column-list"]');
     expect(remainderToggle?.textContent).toContain('Ver columnas restantes (3)');
     expect(remainderToggle?.getAttribute('aria-expanded')).toBe('false');
     expect(remainderToggle?.getAttribute('aria-controls')).toBe(columnList?.id);
