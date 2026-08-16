@@ -210,6 +210,8 @@ export function NodePropertiesTabs({
           forceMount={
             section.id === 'code' &&
             (sectionBeforeChildren?.code != null || sectionAfterChildren?.code != null)
+              ? true
+              : undefined
           }
           data-slot={`${slots.sectionPrefix}-${section.id}-content`}
           className="m-0 data-[state=inactive]:hidden"

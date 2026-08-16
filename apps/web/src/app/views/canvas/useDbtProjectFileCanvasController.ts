@@ -33,6 +33,7 @@ import { refreshCanvasExecutionSelectionAuthority } from './canvasExecutionSelec
 import type { SqlContextWorkbenchTarget } from './sqlContextWorkbenchModel';
 import { useCanvasExecutionSelectionRecovery } from './useCanvasExecutionSelectionRecovery';
 import { projectDbtCodeReconciliationOutcome } from './dbtProjectCodeReconciliation';
+import type { WorkspaceFileCodeEditorHandle } from '../code/WorkspaceFileCodeEditor';
 
 const EMPTY_NODE_POSITIONS: Record<string, { x: number; y: number }> = {};
 const EMPTY_FROZEN_NODE_IDS: readonly string[] = [];
@@ -137,7 +138,7 @@ export function useDbtProjectFileCanvasController(
   const [codeWorkbenchTarget, setCodeWorkbenchTarget] = useState<SqlContextWorkbenchTarget | null>(
     null
   );
-  const codeWorkbenchReturnNodeIdRef = useRef<string | null>(null);
+  const nodeCodeEditorRef = useRef<WorkspaceFileCodeEditorHandle>(null);
   const [importedNodeFocusIds, setImportedNodeFocusIds] = useState<string[]>([]);
   const layoutKey = useMemo(
     () => buildLayoutKey(workspaceLayoutKey, authorityBinding),
@@ -293,9 +294,20 @@ export function useDbtProjectFileCanvasController(
     refreshAnalysis: refreshExecutionSelectionAnalysis,
   });
 
+  const flushActiveNodeCode = useCallback(
+    async (): Promise<boolean> => (await nodeCodeEditorRef.current?.flush()) ?? true,
+    []
+  );
+
   const openNodeWorkbench = useCallback(
-    (nodeId: string, preferredTabId?: 'general' | 'inputs-outputs' | 'tests' | 'code' | null) => {
+    async (
+      nodeId: string,
+      preferredTabId?: 'general' | 'inputs-outputs' | 'tests' | 'code' | null
+    ) => {
       if (!canonicalNodesById.has(nodeId)) {
+        return;
+      }
+      if (!(await flushActiveNodeCode())) {
         return;
       }
 
@@ -303,35 +315,17 @@ export function useDbtProjectFileCanvasController(
       setInspectorNode(nodeId, preferredTabId ?? 'general');
       showInspectorPanel();
     },
-    [canonicalNodesById, setInspectorNode, showInspectorPanel]
+    [canonicalNodesById, flushActiveNodeCode, setInspectorNode, showInspectorPanel]
   );
-  const openNodeCodeEditor = useCallback(
-    (nodeId: string) => {
-      const node = canonicalNodesById.get(nodeId);
-      if (node?.path == null) {
-        return;
-      }
-
-      codeWorkbenchReturnNodeIdRef.current = node.id;
-      setCodeWorkbenchTarget({ kind: 'node', nodeId: node.id, initialPath: node.path });
-    },
-    [canonicalNodesById]
-  );
-  const openProjectCode = useCallback(() => {
-    codeWorkbenchReturnNodeIdRef.current = null;
-    setCodeWorkbenchTarget({ kind: 'project' });
-  }, []);
-  const closeCodeWorkbench = useCallback(() => {
-    const returnNodeId = codeWorkbenchReturnNodeIdRef.current;
-    codeWorkbenchReturnNodeIdRef.current = null;
-    setCodeWorkbenchTarget(null);
-    if (returnNodeId == null || !canonicalNodesById.has(returnNodeId)) {
+  const openProjectCode = useCallback(async () => {
+    if (!(await flushActiveNodeCode())) {
       return;
     }
-
-    setInspectorNode(returnNodeId, 'code');
-    showInspectorPanel();
-  }, [canonicalNodesById, setInspectorNode, showInspectorPanel]);
+    setCodeWorkbenchTarget({ kind: 'project' });
+  }, [flushActiveNodeCode]);
+  const closeCodeWorkbench = useCallback(() => {
+    setCodeWorkbenchTarget(null);
+  }, []);
   const nodesWithCommands = useMemo<Node[]>(
     () =>
       graphModel.nodes.map((node) => ({
@@ -343,7 +337,12 @@ export function useDbtProjectFileCanvasController(
           selectedForExecution: selectedNodeIds.includes(node.id),
           onInspectNode: openNodeWorkbench,
           canOpenNodeCode: node.data.path != null,
-          onOpenNodeCode: node.data.path == null ? undefined : openNodeCodeEditor,
+          onOpenNodeCode:
+            node.data.path == null
+              ? undefined
+              : (nodeId: string) => {
+                  void openNodeWorkbench(nodeId, 'code');
+                },
           onToggleNodeSelection:
             execution.canSelectExecution &&
             canOfferDbtExecutionSelectionToggle({
@@ -367,7 +366,6 @@ export function useDbtProjectFileCanvasController(
       executionSelectableNodeIds,
       executionScope.requestedNodeIds,
       graphModel.nodes,
-      openNodeCodeEditor,
       openNodeWorkbench,
       selectedNodeIds,
       store.setExecutionSelectionIntent,
@@ -423,6 +421,7 @@ export function useDbtProjectFileCanvasController(
     projection,
     projectionErrorMessage: query.isError ? buildProjectionErrorMessage(query.error) : null,
     layoutKey,
+    nodeCodeEditorRef,
     codeWorkbenchTarget,
     openProjectCode,
     closeCodeWorkbench,
@@ -475,7 +474,13 @@ export function useDbtProjectFileCanvasController(
       onImportedNodeFocusComplete: () => setImportedNodeFocusIds([]),
     },
     chromeCommands: {
-      onHideInspector: hideInspectorPanel,
+      onHideInspector: () => {
+        void flushActiveNodeCode().then((persisted) => {
+          if (persisted) {
+            hideInspectorPanel();
+          }
+        });
+      },
       onShowInspector: showInspectorPanel,
       onAutoLayout: () => unsupportedSemanticMutation('Automatic semantic layout'),
       onToggleCostOverlay: () => unsupportedSemanticMutation('Cost overlay'),
