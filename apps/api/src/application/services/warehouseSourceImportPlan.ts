@@ -36,6 +36,7 @@ export type WarehouseSourceImportCommandContext = Readonly<{
   connection: WarehouseConnection;
   databaseUser?: string;
   sourceObjects: readonly ConnectedRelationalSourceObject[];
+  catalogSourceObjects: readonly ConnectedRelationalSourceObject[];
   groupingStrategy: SourceImportGrouping;
   includeColumns: boolean;
   addTests: boolean;
@@ -153,7 +154,12 @@ async function buildExistingDbtSourceFilePlan(input: {
       document = readExistingSourceDocument(previous.content);
       documentsByRelativePath.set(target.filePath, document);
     }
-    assertTargetMatchesSourceObject(document, target, sourceObject);
+    assertTargetMatchesSourceObject(
+      document,
+      target,
+      sourceObject,
+      input.context.catalogSourceObjects
+    );
     documentsByRelativePath.set(
       target.filePath,
       upsertSourceTable(document, sourceObject, {
@@ -188,17 +194,26 @@ async function buildExistingDbtSourceFilePlan(input: {
 function assertTargetMatchesSourceObject(
   document: ReturnType<typeof readExistingSourceDocument>,
   target: ExistingDbtSourceTarget,
-  sourceObject: ConnectedRelationalSourceObject
+  sourceObject: ConnectedRelationalSourceObject,
+  catalogSourceObjects: readonly ConnectedRelationalSourceObject[]
 ): void {
   const source = document.sources.find((candidate) => candidate.name === target.sourceName);
   const table = source?.tables.find((candidate) => candidate.name === target.tableName);
   const physicalTableName = table?.identifier ?? table?.name;
+  const catalogMatches = catalogSourceObjects.filter(
+    (candidate) =>
+      physicalTableName === candidate.locator.name &&
+      (source?.database === undefined || source.database === candidate.locator.catalog) &&
+      (source?.schema === undefined || source.schema === candidate.locator.schema)
+  );
   if (
     source === undefined ||
     table === undefined ||
     physicalTableName !== sourceObject.locator.name ||
     (source.database !== undefined && source.database !== sourceObject.locator.catalog) ||
-    (source.schema !== undefined && source.schema !== sourceObject.locator.schema)
+    (source.schema !== undefined && source.schema !== sourceObject.locator.schema) ||
+    catalogMatches.length !== 1 ||
+    catalogMatches[0]?.objectId !== sourceObject.objectId
   ) {
     throw new InvalidWarehouseSourceImportRequestError(
       `The selected warehouse object does not match dbt source ${target.sourceUniqueId}.`

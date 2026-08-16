@@ -177,6 +177,57 @@ describe('DbtProjectFilesWarehouseSourceImportStrategy', () => {
     ).rejects.toBeInstanceOf(InvalidWarehouseSourceImportRequestError);
   });
 
+  it('rejects an underqualified dbt source when the live catalog match is ambiguous', async () => {
+    const existingContent = [
+      'version: 2',
+      '',
+      'sources:',
+      '  - name: raw',
+      '    tables:',
+      '      - name: orders',
+      '',
+    ].join('\n');
+    const batchMutation = createBatchMutation();
+    const strategy = new DbtProjectFilesWarehouseSourceImportStrategy({
+      workspaceFiles: createWorkspaceFiles({
+        'analytics/models/sources.yml': existingContent,
+      }),
+      batchMutation,
+      projectGraph: { execute: vi.fn(async () => createProjection()) },
+    });
+    const selectedSourceObject = CONTEXT.sourceObjects[0];
+    if (selectedSourceObject === undefined) throw new Error('Missing source object fixture.');
+    const ambiguousSourceObject = {
+      ...selectedSourceObject,
+      objectId: 'relation/analytics/finance/orders',
+      locator: {
+        ...selectedSourceObject.locator,
+        schema: 'finance',
+      },
+    };
+
+    await expect(
+      strategy.execute(
+        {
+          ...CONTEXT,
+          databaseUser: 'warehouse_reader',
+          catalogSourceObjects: [selectedSourceObject, ambiguousSourceObject],
+          existingDbtSourceTargets: [
+            {
+              objectId: selectedSourceObject.objectId,
+              sourceUniqueId: 'source.analytics.raw.orders',
+              filePath: 'models/sources.yml',
+              sourceName: 'raw',
+              tableName: 'orders',
+            },
+          ],
+        },
+        AUTHORITY
+      )
+    ).rejects.toBeInstanceOf(InvalidWarehouseSourceImportRequestError);
+    expect(batchMutation.apply).not.toHaveBeenCalled();
+  });
+
   it('rolls back YAML and rejects success when the refreshed projection is not fresh', async () => {
     const batchMutation = createBatchMutation();
     const projectGraph = {
@@ -248,6 +299,13 @@ const CONTEXT: WarehouseSourceImportCommandContext = {
     database: 'analytics',
   },
   sourceObjects: [
+    {
+      ...SOURCE_OBJECT,
+      locator: SOURCE_OBJECT.locator as Extract<SourceObject['locator'], { kind: 'relation' }>,
+      connectionId: 'warehouse-prod',
+    },
+  ],
+  catalogSourceObjects: [
     {
       ...SOURCE_OBJECT,
       locator: SOURCE_OBJECT.locator as Extract<SourceObject['locator'], { kind: 'relation' }>,

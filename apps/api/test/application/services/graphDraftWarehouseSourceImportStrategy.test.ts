@@ -448,6 +448,13 @@ const CONTEXT: WarehouseSourceImportCommandContext = {
       connectionId: 'warehouse-prod',
     },
   ],
+  catalogSourceObjects: [
+    {
+      ...SOURCE_OBJECT,
+      locator: SOURCE_OBJECT.locator as Extract<SourceObject['locator'], { kind: 'relation' }>,
+      connectionId: 'warehouse-prod',
+    },
+  ],
   groupingStrategy: 'schema',
   includeColumns: true,
   addTests: false,

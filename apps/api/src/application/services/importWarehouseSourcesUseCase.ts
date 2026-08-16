@@ -86,6 +86,9 @@ export class ImportWarehouseSourcesUseCase {
       }
       return { ...sourceObject, connectionId: request.data.connectionId };
     });
+    const relationalCatalogSourceObjects = catalogSourceObjects
+      .filter(isRelationalSourceObject)
+      .map((sourceObject) => ({ ...sourceObject, connectionId: request.data.connectionId }));
     const context: WarehouseSourceImportCommandContext = {
       scope: input.scope,
       canvasId: request.data.canvasId,
@@ -93,6 +96,7 @@ export class ImportWarehouseSourcesUseCase {
       connection,
       ...(databaseUser === undefined ? {} : { databaseUser }),
       sourceObjects,
+      catalogSourceObjects: relationalCatalogSourceObjects,
       groupingStrategy: request.data.groupingStrategy,
       includeColumns: request.data.includeColumns,
       addTests: request.data.addTests,
