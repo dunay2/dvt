@@ -17,7 +17,7 @@ type CanvasViewportState = CanvasPosition & {
   zoom: number;
 };
 
-export type CanvasContextualWorkbenchId = 'node-code' | 'project-code';
+export type CanvasContextualWorkbenchId = 'project-code';
 
 type WorkspaceCanvasLayout = {
   viewport: CanvasViewportState | null;

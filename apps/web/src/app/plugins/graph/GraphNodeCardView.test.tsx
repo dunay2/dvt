@@ -264,7 +264,7 @@ describe('GraphNodeCardView', () => {
   });
 
   it('forwards the canonical node id through the generic graph renderer file action', () => {
-    const onOpenNodeCode = vi.fn();
+    const onInspectNode = vi.fn();
     const node: CanonicalNode = {
       id: 'source.auth_audit_events',
       name: 'auth_audit_events',
@@ -287,7 +287,7 @@ describe('GraphNodeCardView', () => {
           badges={[]}
           graphNodeCardStrategies={[dvtGraphNodeCardStrategy]}
           data={{
-            onOpenNodeCode,
+            onInspectNode,
             presentationTruth: {
               columns: { visibleCount: 0, visibleProvenance: 'none' },
               code: {
@@ -308,7 +308,7 @@ describe('GraphNodeCardView', () => {
       fireEvent.click(fileAction!);
     });
 
-    expect(onOpenNodeCode).toHaveBeenCalledWith('source.auth_audit_events');
+    expect(onInspectNode).toHaveBeenCalledWith('source.auth_audit_events', 'code');
   });
 
   it('reveals the structured source identity from the table title on keyboard focus', async () => {

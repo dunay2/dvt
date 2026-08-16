@@ -30,7 +30,6 @@ import {
   resolveCanvasExecutionSelectionLastPreviewRevision,
 } from './canvasExecutionSelectionRecovery';
 import { refreshCanvasExecutionSelectionAuthority } from './canvasExecutionSelectionRecoveryAuthorityAdapter';
-import type { SqlContextWorkbenchTarget } from './sqlContextWorkbenchModel';
 import { useCanvasExecutionSelectionRecovery } from './useCanvasExecutionSelectionRecovery';
 import { projectDbtCodeReconciliationOutcome } from './dbtProjectCodeReconciliation';
 import type { WorkspaceFileCodeEditorHandle } from '../code/WorkspaceFileCodeEditor';
@@ -135,9 +134,7 @@ export function useDbtProjectFileCanvasController(
     toggleImpactOverlay,
     workspaceLayoutKey,
   } = store;
-  const [codeWorkbenchTarget, setCodeWorkbenchTarget] = useState<SqlContextWorkbenchTarget | null>(
-    null
-  );
+  const [projectCodeWorkbenchOpen, setProjectCodeWorkbenchOpen] = useState(false);
   const nodeCodeEditorRef = useRef<WorkspaceFileCodeEditorHandle>(null);
   const [importedNodeFocusIds, setImportedNodeFocusIds] = useState<string[]>([]);
   const layoutKey = useMemo(
@@ -311,7 +308,7 @@ export function useDbtProjectFileCanvasController(
         return;
       }
 
-      setCodeWorkbenchTarget(null);
+      setProjectCodeWorkbenchOpen(false);
       setInspectorNode(nodeId, preferredTabId ?? 'general');
       showInspectorPanel();
     },
@@ -321,10 +318,10 @@ export function useDbtProjectFileCanvasController(
     if (!(await flushActiveNodeCode())) {
       return;
     }
-    setCodeWorkbenchTarget({ kind: 'project' });
+    setProjectCodeWorkbenchOpen(true);
   }, [flushActiveNodeCode]);
   const closeCodeWorkbench = useCallback(() => {
-    setCodeWorkbenchTarget(null);
+    setProjectCodeWorkbenchOpen(false);
   }, []);
   const nodesWithCommands = useMemo<Node[]>(
     () =>
@@ -337,12 +334,6 @@ export function useDbtProjectFileCanvasController(
           selectedForExecution: selectedNodeIds.includes(node.id),
           onInspectNode: openNodeWorkbench,
           canOpenNodeCode: node.data.path != null,
-          onOpenNodeCode:
-            node.data.path == null
-              ? undefined
-              : (nodeId: string) => {
-                  void openNodeWorkbench(nodeId, 'code');
-                },
           onToggleNodeSelection:
             execution.canSelectExecution &&
             canOfferDbtExecutionSelectionToggle({
@@ -422,7 +413,7 @@ export function useDbtProjectFileCanvasController(
     projectionErrorMessage: query.isError ? buildProjectionErrorMessage(query.error) : null,
     layoutKey,
     nodeCodeEditorRef,
-    codeWorkbenchTarget,
+    projectCodeWorkbenchOpen,
     openProjectCode,
     closeCodeWorkbench,
     refreshProjectGraphAfterMutation,

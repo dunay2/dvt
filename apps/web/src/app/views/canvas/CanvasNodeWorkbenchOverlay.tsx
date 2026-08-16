@@ -29,7 +29,6 @@ export type CanvasNodeWorkbenchOverlayProps = Readonly<{
     | 'registeredPlugins'
   >;
   onHide: CanvasShellChromeCommands['onHideInspector'];
-  onOpenNodeCode?: () => void;
 }>;
 
 function CanvasNodeWorkbenchOverlaySurface({
@@ -73,7 +72,6 @@ export function CanvasNodeWorkbenchOverlay({
   layout,
   panels,
   onHide,
-  onOpenNodeCode,
 }: CanvasNodeWorkbenchOverlayProps): JSX.Element | null {
   const surfaceStrategy = layout.surfaceStrategy;
   const visible = isCanvasNodeWorkbenchVisible({
@@ -156,7 +154,6 @@ export function CanvasNodeWorkbenchOverlay({
         onClose={hideAndRestoreNodeFocus}
         authoring={panels.inspectorAuthoring}
         contributions={panels.inspectorWorkbenchContributions}
-        onOpenNodeCode={onOpenNodeCode}
         dragHandleProps={{
           'aria-label': copy.nodeWorkbenchMoveLabel,
           'data-slot': 'canvas-node-workbench-drag-handle',

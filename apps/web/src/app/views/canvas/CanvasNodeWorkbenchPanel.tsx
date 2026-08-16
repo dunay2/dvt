@@ -50,7 +50,6 @@ export type CanvasNodeWorkbenchPanelProps = Readonly<{
   authoring: CanvasInspectorAuthoringContract;
   contributions?: readonly CanvasNodeWorkbenchContribution[];
   dragHandleProps?: CanvasNodeWorkbenchDragHandleProps;
-  onOpenNodeCode?: () => void;
   onClose: () => void;
 }>;
 
@@ -220,7 +219,6 @@ export function CanvasNodeWorkbenchPanel({
   authoring,
   contributions = [],
   dragHandleProps,
-  onOpenNodeCode,
   onClose,
 }: CanvasNodeWorkbenchPanelProps): JSX.Element {
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
@@ -256,7 +254,7 @@ export function CanvasNodeWorkbenchPanel({
   const sectionModel = resolveCanvasNodeWorkbenchSectionModel({
     nodeKind: node.kind,
     canEditNode: authoring.canEditNode,
-    canOpenNodeCode: onOpenNodeCode != null,
+    canOpenNodeCode: contributedSectionIds.has('code'),
     strategySectionIds: primarySectionIds ?? [
       'code',
       'properties',
@@ -297,26 +295,6 @@ export function CanvasNodeWorkbenchPanel({
   const handleActiveTabChange = (nextTabId: string): void => {
     setActiveTab(nextTabId);
   };
-
-  if (onOpenNodeCode != null && !authoring.canEditNode && !contributedSectionIds.has('code')) {
-    sectionBeforeChildren.code = (
-      <>
-        <div className="flex justify-end pb-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            data-slot="canvas-node-workbench-open-code-editor"
-            aria-label={copy.nodeWorkbenchEditCodeFileDescription}
-            onClick={onOpenNodeCode}
-          >
-            {copy.nodeWorkbenchEditCodeFileLabel}
-          </Button>
-        </div>
-        {sectionBeforeChildren.code}
-      </>
-    );
-  }
 
   if (authoring.canEditNode) {
     sectionBeforeChildren.general = (
@@ -418,6 +396,7 @@ export function CanvasNodeWorkbenchPanel({
             panels={panels}
             activeTab={resolvedActiveTab}
             primarySectionIds={resolvedPrimarySectionIds}
+            persistentSectionIds={contributedSectionIds.has('code') ? ['code'] : undefined}
             sectionBeforeChildren={sectionBeforeChildren}
             sectionAfterChildren={sectionAfterChildren}
             moreLabel={copy.nodeWorkbenchMoreLabel}

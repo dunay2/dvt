@@ -266,18 +266,6 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.nodeWorkbench.moreLabel',
     fallback: 'More',
   },
-  nodeWorkbenchEditCodeFileLabel: {
-    key: 'canvas.nodeWorkbench.editCodeFileLabel',
-    fallback: 'Edit SQL file',
-  },
-  nodeWorkbenchEditCodeFileDescription: {
-    key: 'canvas.nodeWorkbench.editCodeFileDescription',
-    fallback: 'Edit this file-backed SQL in the contextual editor.',
-  },
-  sqlContextWorkbenchNodeTitle: {
-    key: 'canvas.sqlContextWorkbench.nodeTitle',
-    fallback: 'Node code',
-  },
   sqlContextWorkbenchProjectTitle: {
     key: 'canvas.sqlContextWorkbench.projectTitle',
     fallback: 'Project code',

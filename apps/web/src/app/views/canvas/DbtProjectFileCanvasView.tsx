@@ -163,7 +163,7 @@ export function DbtProjectFileCanvasView({
     onClose: controller.closeCodeWorkbench,
     reconcilePersistedFile: controller.reconcileCodeFilePersistence,
     projectRoot,
-    target: controller.codeWorkbenchTarget,
+    open: controller.projectCodeWorkbenchOpen,
   });
   const shellProps: CanvasShellProps = {
     layout: {

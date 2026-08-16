@@ -1027,7 +1027,6 @@ describe('Canvas workbench screen composition', () => {
     cy.get('[data-slot="canvas-node-workbench-tab-code"]')
       .should('be.visible')
       .and('have.attr', 'aria-selected', 'true');
-    cy.get('[data-slot="canvas-node-workbench-open-code-editor"]').should('not.exist');
     cy.get('[data-slot="canvas-node-workbench-overlay"]').should('be.visible');
     cy.get('[data-testid="monaco-code-editor"]')
       .find('.view-line')
@@ -1058,7 +1057,6 @@ describe('Canvas workbench screen composition', () => {
     cy.get('[data-slot="canvas-node-workbench-tab-code"]')
       .should('be.visible')
       .and('have.attr', 'aria-selected', 'true');
-    cy.get('[data-slot="canvas-node-workbench-open-code-editor"]').should('not.exist');
     cy.get('[data-testid="monaco-code-editor"]')
       .find('.view-line')
       .should(($lines) => {
@@ -1073,7 +1071,6 @@ describe('Canvas workbench screen composition', () => {
     cy.get('.react-flow__node[data-id="src_orders"]')
       .find('[data-slot="canvas-node-shell"]')
       .dblclick();
-    cy.get('[data-slot="canvas-node-workbench-open-code-editor"]').should('not.exist');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
 
     assertNoSeriousAccessibilityViolations('[data-slot="canvas-viewport-context-surface"]');

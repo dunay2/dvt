@@ -86,9 +86,6 @@ export const canvasViewAuthoringCopyEs = {
   nodeWorkbenchCloseLabel: 'Cerrar',
   nodeWorkbenchMoveLabel: 'Mover banco de trabajo del nodo',
   nodeWorkbenchMoreLabel: 'Más',
-  nodeWorkbenchEditCodeFileLabel: 'Editar archivo SQL',
-  nodeWorkbenchEditCodeFileDescription: 'Edita este archivo SQL en el editor contextual.',
-  sqlContextWorkbenchNodeTitle: 'Código del nodo',
   sqlContextWorkbenchProjectTitle: 'Código del proyecto',
   sqlContextWorkbenchProjectDescription:
     'Archivos del workspace en el alcance del proyecto activo.',

@@ -131,6 +131,7 @@ describe('NodePropertiesTabs primary sections', () => {
           panels={[]}
           activeTab="general"
           moreLabel="More"
+          persistentSectionIds={['code']}
           sectionBeforeChildren={{
             code: <textarea data-slot="inline-code-editor-session" defaultValue="select 1" />,
           }}

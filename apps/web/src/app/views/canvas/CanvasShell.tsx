@@ -230,11 +230,6 @@ export default function CanvasShell({
           data: {
             ...data,
             canOpenNodeCode,
-            onOpenNodeCode: canOpenNodeCode
-              ? (nodeId: string) => {
-                  data.onInspectNode?.(nodeId, 'code');
-                }
-              : undefined,
           },
         };
       }),

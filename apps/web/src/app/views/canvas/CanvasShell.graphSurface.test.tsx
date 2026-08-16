@@ -71,10 +71,17 @@ describe('CanvasShell graph base surface', () => {
 
     const forwardedNode = (
       getCanvasShellState().canvasViewportProps?.nodesWithImpact as
-        Array<{ data: { onOpenNodeCode?: (nodeId: string) => void } }> | undefined
+        | Array<{
+            data: {
+              canOpenNodeCode?: boolean;
+              onInspectNode?: (nodeId: string, preferredTabId?: string) => void;
+            };
+          }>
+        | undefined
     )?.[0];
-    forwardedNode?.data.onOpenNodeCode?.('dbt-model-1');
+    forwardedNode?.data.onInspectNode?.('dbt-model-1', 'code');
 
+    expect(forwardedNode?.data.canOpenNodeCode).toBe(true);
     expect(onInspectNode).toHaveBeenCalledWith('dbt-model-1', 'code');
     expect(container.querySelector('[data-testid="sql-context-workbench"]')).toBeNull();
   });
@@ -105,12 +112,19 @@ describe('CanvasShell graph base surface', () => {
 
     const forwardedNode = (
       getCanvasShellState().canvasViewportProps?.nodesWithImpact as
-        Array<{ data: { onOpenNodeCode?: (nodeId: string) => void } }> | undefined
+        | Array<{
+            data: {
+              canOpenNodeCode?: boolean;
+              onInspectNode?: (nodeId: string, preferredTabId?: string) => void;
+            };
+          }>
+        | undefined
     )?.[0];
     await act(async () => {
-      forwardedNode?.data.onOpenNodeCode?.('dbt-model-1');
+      forwardedNode?.data.onInspectNode?.('dbt-model-1', 'code');
     });
 
+    expect(forwardedNode?.data.canOpenNodeCode).toBe(true);
     expect(onInspectNode).toHaveBeenCalledWith('dbt-model-1', 'code');
     expect(onHideInspector).not.toHaveBeenCalled();
     expect(onShowInspector).not.toHaveBeenCalled();

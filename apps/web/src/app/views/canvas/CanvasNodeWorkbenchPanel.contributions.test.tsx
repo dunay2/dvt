@@ -110,7 +110,6 @@ describe('CanvasNodeWorkbenchPanel contextual contributions', () => {
               content: <div data-slot="workspace-file-editor-contribution">Editor</div>,
             },
           ]}
-          onOpenNodeCode={vi.fn()}
           onClose={vi.fn()}
         />
       );
@@ -120,9 +119,6 @@ describe('CanvasNodeWorkbenchPanel contextual contributions', () => {
     expect(
       codeSection?.querySelector('[data-slot="workspace-file-editor-contribution"]')
     ).not.toBeNull();
-    expect(
-      codeSection?.querySelector('[data-slot="canvas-node-workbench-open-code-editor"]')
-    ).toBeNull();
     expect(codeSection?.textContent).not.toContain(FILE_BACKED_NODE.path);
   });
 

@@ -297,7 +297,7 @@ describe('DbtNodeRenderer history panel', () => {
   });
 
   it('opens the authoritative dbt file from the card File metric', async () => {
-    const onOpenNodeCode = vi.fn();
+    const onInspectNode = vi.fn();
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
@@ -317,7 +317,7 @@ describe('DbtNodeRenderer history panel', () => {
           badges={[]}
           graphNodeCardStrategies={[dbtGraphNodeCardStrategy]}
           data={{
-            onOpenNodeCode,
+            onInspectNode,
             presentationTruth: {
               columns: { visibleCount: 0, visibleProvenance: 'none' },
               code: {
@@ -338,7 +338,7 @@ describe('DbtNodeRenderer history panel', () => {
       fireEvent.click(fileAction!);
     });
 
-    expect(onOpenNodeCode).toHaveBeenCalledWith('model_orders');
+    expect(onInspectNode).toHaveBeenCalledWith('model_orders', 'code');
   });
 
   it('does not expose execution selection as a node-card header button', async () => {
