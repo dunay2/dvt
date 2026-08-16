@@ -34,6 +34,17 @@ const VALIDATION_REPORT = DbtProjectImportValidationReportSchema.parse({
     ],
   },
   diagnostics: [],
+  sourceTableDeclarations: [
+    {
+      uniqueId: 'source.warehouse_analytics.raw.orders',
+      filePath: 'models/sources.yml',
+      sourceName: 'raw',
+      tableName: 'orders',
+      database: 'RAW',
+      schema: 'ERP',
+      identifier: 'ORDERS',
+    },
+  ],
   receipt: {
     schemaVersion: 'dbt-project-import-validation-receipt.v1',
     projectRoot: 'analytics',
@@ -154,7 +165,10 @@ describe('DbtProjectImportDialog', () => {
         idempotencyKey: 'dbt-project-import:warehouse-analytics:fixed-uuid',
         validationReceipt: VALIDATION_REPORT.status === 'accepted' && VALIDATION_REPORT.receipt,
       });
-      expect(onImported).toHaveBeenCalledWith(IMPORT_RESULT);
+      expect(onImported).toHaveBeenCalledWith(
+        IMPORT_RESULT,
+        VALIDATION_REPORT.status === 'accepted' ? VALIDATION_REPORT.sourceTableDeclarations : []
+      );
     });
   });
 });

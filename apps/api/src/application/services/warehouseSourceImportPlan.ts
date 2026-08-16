@@ -1,6 +1,10 @@
-import type { ImportSourceObjectsResultV2 } from '@dvt/contracts';
+import type { ExistingDbtSourceTarget, ImportSourceObjectsResultV2 } from '@dvt/contracts';
 
-import type { SourceImportGrouping, WarehouseConnection } from '../ports/warehouseSourceImport.js';
+import {
+  InvalidWarehouseSourceImportRequestError,
+  type SourceImportGrouping,
+  type WarehouseConnection,
+} from '../ports/warehouseSourceImport.js';
 import type {
   IWorkspaceFileBatchMutationPort,
   IWorkspaceFileRepository,
@@ -17,6 +21,10 @@ import {
   buildWarehouseSourceYamlBindings,
   buildWarehouseSourceYamlUpdates,
   groupSourceObjectsForYaml,
+  readExistingSourceDocument,
+  serializeSourceDocument,
+  sourceObjectIdentity,
+  upsertSourceTable,
   type ConnectedRelationalSourceObject,
   type WarehouseSourceYamlBinding,
 } from './warehouseSourceYaml.js';
@@ -28,10 +36,12 @@ export type WarehouseSourceImportCommandContext = Readonly<{
   connection: WarehouseConnection;
   databaseUser?: string;
   sourceObjects: readonly ConnectedRelationalSourceObject[];
+  catalogSourceObjects: readonly ConnectedRelationalSourceObject[];
   groupingStrategy: SourceImportGrouping;
   includeColumns: boolean;
   addTests: boolean;
   addFreshness: boolean;
+  existingDbtSourceTargets?: readonly ExistingDbtSourceTarget[];
 }>;
 
 export type WarehouseSourceImportFilePlan = Readonly<{
@@ -52,6 +62,9 @@ export async function buildWarehouseSourceImportFilePlan(input: {
   readonly workspaceFiles: IWorkspaceFileRepository;
   readonly authorityProjectRoot: string | null;
 }): Promise<WarehouseSourceImportFilePlan> {
+  if (input.context.existingDbtSourceTargets !== undefined) {
+    return buildExistingDbtSourceFilePlan(input);
+  }
   const relativePaths = Array.from(
     groupSourceObjectsForYaml(input.context.sourceObjects, input.context.groupingStrategy).keys()
   );
@@ -95,6 +108,117 @@ export async function buildWarehouseSourceImportFilePlan(input: {
     })),
     previousFiles,
   };
+}
+
+async function buildExistingDbtSourceFilePlan(input: {
+  readonly context: WarehouseSourceImportCommandContext;
+  readonly workspaceFiles: IWorkspaceFileRepository;
+  readonly authorityProjectRoot: string | null;
+}): Promise<WarehouseSourceImportFilePlan> {
+  if (input.context.databaseUser === undefined) {
+    throw new InvalidWarehouseSourceImportRequestError(
+      'The governed database user is required to bind imported dbt sources.'
+    );
+  }
+  const previousFiles = new Map<string, WorkspaceFileContent>();
+  const documentsByRelativePath = new Map<string, ReturnType<typeof readExistingSourceDocument>>();
+  const targetsByObjectId = new Map(
+    input.context.existingDbtSourceTargets?.map((target) => [target.objectId, target]) ?? []
+  );
+  const bindings = new Map<string, WarehouseSourceYamlBinding>();
+
+  for (const sourceObject of input.context.sourceObjects) {
+    const target = targetsByObjectId.get(sourceObject.objectId);
+    if (target === undefined) {
+      throw new InvalidWarehouseSourceImportRequestError(
+        `Missing exact dbt source target for ${sourceObject.objectId}.`
+      );
+    }
+    const authorityPath = toAuthorityPath(input.authorityProjectRoot, target.filePath);
+    let previous = previousFiles.get(authorityPath);
+    if (previous === undefined) {
+      try {
+        previous = await input.workspaceFiles.getFileContent(input.context.scope, authorityPath);
+      } catch (error) {
+        if (error instanceof WorkspaceFileNotFoundError) {
+          throw new InvalidWarehouseSourceImportRequestError(
+            `The imported dbt source file does not exist: ${target.filePath}.`
+          );
+        }
+        throw error;
+      }
+      previousFiles.set(authorityPath, previous);
+    }
+    let document = documentsByRelativePath.get(target.filePath);
+    if (document === undefined) {
+      document = readExistingSourceDocument(previous.content);
+      documentsByRelativePath.set(target.filePath, document);
+    }
+    assertTargetMatchesSourceObject(
+      document,
+      target,
+      sourceObject,
+      input.context.catalogSourceObjects
+    );
+    documentsByRelativePath.set(
+      target.filePath,
+      upsertSourceTable(document, sourceObject, {
+        includeColumns: input.context.includeColumns,
+        databaseUser: input.context.databaseUser,
+        addTests: input.context.addTests,
+        addFreshness: input.context.addFreshness,
+        sourceName: target.sourceName,
+        tableName: target.tableName,
+      })
+    );
+    bindings.set(sourceObjectIdentity(sourceObject), {
+      path: target.filePath,
+      sourceName: target.sourceName,
+      tableName: target.tableName,
+    });
+  }
+
+  return {
+    authorityProjectRoot: input.authorityProjectRoot,
+    bindings,
+    updates: [...documentsByRelativePath.entries()]
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([relativePath, document]) => ({
+        path: toAuthorityPath(input.authorityProjectRoot, relativePath),
+        content: serializeSourceDocument(document),
+      })),
+    previousFiles,
+  };
+}
+
+function assertTargetMatchesSourceObject(
+  document: ReturnType<typeof readExistingSourceDocument>,
+  target: ExistingDbtSourceTarget,
+  sourceObject: ConnectedRelationalSourceObject,
+  catalogSourceObjects: readonly ConnectedRelationalSourceObject[]
+): void {
+  const source = document.sources.find((candidate) => candidate.name === target.sourceName);
+  const table = source?.tables.find((candidate) => candidate.name === target.tableName);
+  const physicalTableName = table?.identifier ?? table?.name;
+  const catalogMatches = catalogSourceObjects.filter(
+    (candidate) =>
+      physicalTableName === candidate.locator.name &&
+      (source?.database === undefined || source.database === candidate.locator.catalog) &&
+      (source?.schema === undefined || source.schema === candidate.locator.schema)
+  );
+  if (
+    source === undefined ||
+    table === undefined ||
+    physicalTableName !== sourceObject.locator.name ||
+    (source.database !== undefined && source.database !== sourceObject.locator.catalog) ||
+    (source.schema !== undefined && source.schema !== sourceObject.locator.schema) ||
+    catalogMatches.length !== 1 ||
+    catalogMatches[0]?.objectId !== sourceObject.objectId
+  ) {
+    throw new InvalidWarehouseSourceImportRequestError(
+      `The selected warehouse object does not match dbt source ${target.sourceUniqueId}.`
+    );
+  }
 }
 
 export async function applyWarehouseSourceImportFilePlan(input: {

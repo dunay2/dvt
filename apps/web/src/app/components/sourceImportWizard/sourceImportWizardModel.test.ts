@@ -17,6 +17,7 @@ import {
   resolveStepForSection,
   toggleSourceImportDatabaseSelection,
   toggleSourceImportSchemaSelection,
+  matchRequestedDbtSourceTargets,
 } from './sourceImportWizardModel';
 
 describe('sourceImportWizardModel', () => {
@@ -211,6 +212,55 @@ describe('sourceImportWizardModel', () => {
     expect(canProceedForStep('connection', 'conn-1', 0)).toBe(true);
     expect(canProceedForStep('selection', 'conn-1', 0)).toBe(false);
     expect(canProceedForStep('selection', 'conn-1', 1)).toBe(true);
+  });
+
+  it('matches each imported dbt source table to one exact relational catalog object', () => {
+    const match = matchRequestedDbtSourceTargets(
+      [
+        {
+          uniqueId: 'source.analytics.raw.orders',
+          filePath: 'models/sources.yml',
+          sourceName: 'raw',
+          tableName: 'orders',
+          database: 'RAW',
+          schema: 'ERP',
+          identifier: 'ORDERS',
+        },
+        {
+          uniqueId: 'source.analytics.raw.customers',
+          filePath: 'models/sources.yml',
+          sourceName: 'raw',
+          tableName: 'customers',
+          database: 'RAW',
+          schema: 'ERP',
+          identifier: 'CUSTOMERS',
+        },
+      ],
+      [
+        buildTable({ database: 'RAW', schema: 'ERP', table: 'ORDERS' }),
+        buildTable({ database: 'RAW', schema: 'ERP', table: 'CUSTOMERS' }),
+        buildTable({ database: 'RAW', schema: 'ERP', table: 'PAYMENTS' }),
+      ]
+    );
+
+    expect(match.unmatchedSourceUniqueIds).toEqual([]);
+    expect(match.objectIds).toEqual(['relation/RAW/ERP/CUSTOMERS', 'relation/RAW/ERP/ORDERS']);
+    expect(match.targets).toEqual([
+      {
+        objectId: 'relation/RAW/ERP/CUSTOMERS',
+        sourceUniqueId: 'source.analytics.raw.customers',
+        filePath: 'models/sources.yml',
+        sourceName: 'raw',
+        tableName: 'customers',
+      },
+      {
+        objectId: 'relation/RAW/ERP/ORDERS',
+        sourceUniqueId: 'source.analytics.raw.orders',
+        filePath: 'models/sources.yml',
+        sourceName: 'raw',
+        tableName: 'orders',
+      },
+    ]);
   });
 
   it('navigates wizard steps in both directions', () => {

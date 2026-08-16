@@ -4,7 +4,7 @@
 import { ReactFlowProvider, useReactFlow, type Edge, type Node } from '@xyflow/react';
 import { useCallback, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
-import type { DbtProjectImportResult } from '@dvt/contracts';
+import type { DbtProjectImportResult, DbtProjectSourceTableDeclaration } from '@dvt/contracts';
 
 import CanvasModalHost from './canvas/CanvasModalHost';
 import CanvasShell from './canvas/CanvasShell';
@@ -25,15 +25,19 @@ import {
   type CanvasUnavailableLegacySurfaceId,
 } from './canvas/canvasLegacyRouteIntent';
 import { resolveCanvasViewCopy } from './canvas/canvasCopyCatalog';
-import type { CanvasShellRouteIntentRequest } from './canvas/canvasShell.types';
+import type { CanvasShellProps, CanvasShellRouteIntentRequest } from './canvas/canvasShell.types';
 import { useCanvasRunControlSurface } from './canvas/useCanvasRunControlSurface';
 import { useApplicationLanguageStore } from '../stores/applicationLanguageStore';
+import {
+  resolveDbtSourceImportContinuation,
+  useCanvasDbtSourceImportContinuationStore,
+} from './canvas/canvasDbtSourceImportContinuationStore';
 
 function GraphDraftCanvasContent({
   onDbtProjectImported,
   routeIntentRequest,
 }: Readonly<{
-  onDbtProjectImported: (result: DbtProjectImportResult) => void;
+  onDbtProjectImported: NonNullable<CanvasShellProps['onDbtProjectImported']>;
   routeIntentRequest?: CanvasShellRouteIntentRequest;
 }>): JSX.Element {
   const reactFlow = useReactFlow<Node, Edge>();
@@ -77,15 +81,30 @@ function CanvasContent(): JSX.Element {
   const [searchParams, setSearchParams] = useSearchParams();
   const feedback = useShellFeedback();
   const copy = resolveCanvasViewCopy(applicationLanguage);
+  const pendingSourceImport = useCanvasDbtSourceImportContinuationStore((state) => state.pending);
+  const enqueueSourceImport = useCanvasDbtSourceImportContinuationStore((state) => state.enqueue);
+  const consumeSourceImport = useCanvasDbtSourceImportContinuationStore((state) => state.consume);
   const authorityResolution = useMemo(
     () => resolveCanvasRouteAuthority(searchParams),
     [searchParams]
   );
   const onDbtProjectImported = useCallback(
-    (result: DbtProjectImportResult) => {
+    (
+      result: DbtProjectImportResult,
+      sourceTableDeclarations: readonly DbtProjectSourceTableDeclaration[]
+    ) => {
+      if (result.authorityBinding.authority.kind === 'dbt-project-files') {
+        enqueueSourceImport(
+          {
+            ...result.authorityBinding,
+            authority: result.authorityBinding.authority,
+          },
+          sourceTableDeclarations
+        );
+      }
       void navigate(buildDbtProjectFileCanvasPath(result.authorityBinding));
     },
-    [navigate]
+    [enqueueSourceImport, navigate]
   );
   const routeIntent = useMemo(() => resolveCanvasRouteIntent(searchParams), [searchParams]);
   const onUnavailableLegacySurface = useCallback(
@@ -128,14 +147,23 @@ function CanvasContent(): JSX.Element {
           routeIntentRequest={routeIntentRequest}
         />
       );
-    case 'dbt-project-files':
+    case 'dbt-project-files': {
+      const sourceImportInitialSelection = resolveDbtSourceImportContinuation(
+        pendingSourceImport,
+        authorityResolution.binding
+      );
       return (
         <DbtProjectFileCanvas
           authorityBinding={authorityResolution.binding}
           onDbtProjectImported={onDbtProjectImported}
+          sourceImportInitialSelection={sourceImportInitialSelection}
+          onSourceImportInitialSelectionConsumed={() =>
+            consumeSourceImport(authorityResolution.binding)
+          }
           routeIntentRequest={routeIntentRequest}
         />
       );
+    }
     case 'invalid':
       return <InvalidCanvasAuthority message={authorityResolution.message} />;
   }

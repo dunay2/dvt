@@ -1,4 +1,4 @@
-import type { DbtProjectGraphProjection } from '@dvt/contracts';
+import type { DbtProjectGraphProjection, DbtProjectSourceTableDeclaration } from '@dvt/contracts';
 
 import type { WorkspaceStorageScope } from './workspaceFiles.js';
 
@@ -24,6 +24,7 @@ export type DbtProjectAnalysisResource = Omit<
   Readonly<{
     codeOnlyReasons: readonly string[];
     sourceIdentityRef?: DbtProjectSourceIdentityRef;
+    sourceTableDeclaration?: DbtProjectSourceTableDeclaration;
   }>;
 
 export type DbtProjectAnalysisDependency = Omit<ProjectedEdge, 'id'>;

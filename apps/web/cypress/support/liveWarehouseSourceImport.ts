@@ -50,6 +50,21 @@ export function importLivePostgresSource(
   cy.contains('[role="dialog"]', 'Connection passed', { timeout: 20_000 }).should('be.visible');
   cy.contains('[role="dialog"]', 'objects reachable').should('be.visible');
 
+  if (expectedAuthority.kind === 'dbt-project-files') {
+    cy.contains('[role="dialog"]', 'Selected: 1', { timeout: 20_000 }).should('be.visible');
+    cy.contains('button', 'Attach sources to canvas').should('be.enabled').click();
+    cy.contains('[role="dialog"]', 'Sources imported', { timeout: 60_000 }).should('be.visible');
+    cy.contains('[role="dialog"]', 'Source files updated').should('be.visible');
+    cy.contains('[role="dialog"]', `[file] ${expectedAuthority.expectedYamlPath}`).should(
+      'be.visible'
+    );
+    cy.contains('[role="dialog"]', 'file-backed graph projection will refresh').should(
+      'be.visible'
+    );
+    cy.contains('[role="dialog"] button', 'Done').click();
+    return;
+  }
+
   cy.contains('[role="tab"]', 'Browse').click();
   cy.get('[data-slot="source-import-object-search"]', { timeout: 20_000 })
     .should('be.visible')
@@ -105,16 +120,6 @@ export function importLivePostgresSource(
 
   cy.contains('[role="dialog"]', 'Sources imported', { timeout: 60_000 }).should('be.visible');
 
-  if (expectedAuthority.kind === 'dbt-project-files') {
-    cy.contains('[role="dialog"]', 'Source files updated').should('be.visible');
-    cy.contains('[role="dialog"]', `[file] ${expectedAuthority.expectedYamlPath}`).should(
-      'be.visible'
-    );
-    cy.contains('[role="dialog"]', 'file-backed graph projection will refresh').should(
-      'be.visible'
-    );
-  } else {
-    cy.contains('[role="dialog"]', 'governed draft authority refreshes').should('be.visible');
-  }
+  cy.contains('[role="dialog"]', 'governed draft authority refreshes').should('be.visible');
   cy.contains('[role="dialog"] button', 'Done').click();
 }

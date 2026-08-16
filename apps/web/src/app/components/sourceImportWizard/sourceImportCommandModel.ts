@@ -12,6 +12,15 @@ export type SourceImportCommandIdentity = Readonly<{
 type CreateIdempotencyKey = () => string;
 
 function buildCommandSignature(command: SourceImportCommandDraft): string {
+  const exactTargets = [...(command.existingDbtSourceTargets ?? [])]
+    .sort((left, right) => left.sourceUniqueId.localeCompare(right.sourceUniqueId))
+    .map((target) => ({
+      objectId: target.objectId,
+      sourceUniqueId: target.sourceUniqueId,
+      filePath: target.filePath,
+      sourceName: target.sourceName,
+      tableName: target.tableName,
+    }));
   return JSON.stringify({
     canvasId: command.canvasId,
     connectionId: command.connectionId,
@@ -20,6 +29,7 @@ function buildCommandSignature(command: SourceImportCommandDraft): string {
     includeColumns: command.includeColumns,
     addTests: command.addTests,
     addFreshness: command.addFreshness,
+    exactTargets,
   });
 }
 

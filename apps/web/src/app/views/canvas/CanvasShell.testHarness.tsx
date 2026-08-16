@@ -78,6 +78,8 @@ export type CanvasShellPropsOverrides = {
   workspaceCommands?: CanvasShellWorkspaceCommands;
   routeIntentRequest?: CanvasShellRouteIntentRequest;
   warehouseSourceImport?: IWarehouseSourceImportPort;
+  sourceImportInitialSelection?: CanvasShellProps['sourceImportInitialSelection'];
+  onSourceImportInitialSelectionConsumed?: CanvasShellProps['onSourceImportInitialSelectionConsumed'];
   onDbtProjectImported?: CanvasShellProps['onDbtProjectImported'];
   runControls?: CanvasShellProps['runControls'];
 };
@@ -242,6 +244,8 @@ export function buildCanvasShellProps(overrides?: CanvasShellPropsOverrides): Ca
     workspaceCommands: overrides?.workspaceCommands,
     routeIntentRequest: overrides?.routeIntentRequest,
     warehouseSourceImport: overrides?.warehouseSourceImport,
+    sourceImportInitialSelection: overrides?.sourceImportInitialSelection,
+    onSourceImportInitialSelectionConsumed: overrides?.onSourceImportInitialSelectionConsumed,
     onDbtProjectImported: overrides?.onDbtProjectImported,
   };
 }

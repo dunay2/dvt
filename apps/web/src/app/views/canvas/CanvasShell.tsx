@@ -12,7 +12,11 @@ import { CanvasSourceImportDialogHost } from './CanvasSourceImportDialogHost';
 import { DbtProjectImportDialog } from '../../components/dbtProjectImport/DbtProjectImportDialog';
 import { useCanvasSourceImportDialogState } from './useCanvasSourceImportDialogState';
 import { useCanvasContextMenuPresenter } from './useCanvasContextMenuPresenter';
-import type { CanvasShellContextualWorkbench, CanvasShellProps } from './canvasShell.types';
+import type {
+  CanvasShellContextualWorkbench,
+  CanvasShellOpenDataRegistryCommand,
+  CanvasShellProps,
+} from './canvasShell.types';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { SqlContextWorkbench, type SqlContextWorkbenchHandle } from './SqlContextWorkbench';
 import { useCanvasRouteIntentHandler } from './useCanvasRouteIntentHandler';
@@ -57,6 +61,8 @@ export default function CanvasShell({
   workspaceCommands,
   routeIntentRequest,
   canvasContextScreenToFlowPosition,
+  sourceImportInitialSelection,
+  onSourceImportInitialSelectionConsumed,
   onDbtProjectImported,
 }: CanvasShellProps): JSX.Element {
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
@@ -155,6 +161,19 @@ export default function CanvasShell({
   const canBrowseDataRegistry = layout.canOpenSourceImport && sourceImportContributions.length > 0;
   const canOpenDataRegistry = canBrowseDataRegistry;
   const sourceImportDialog = useCanvasSourceImportDialogState(canOpenDataRegistry);
+  useEffect(() => {
+    if (sourceImportInitialSelection == null || sourceImportDialog.openCommand == null) {
+      return;
+    }
+    sourceImportDialog.openCommand(sourceImportInitialSelection);
+  }, [sourceImportDialog.openCommand, sourceImportInitialSelection]);
+  const openSourceImport = useMemo<CanvasShellOpenDataRegistryCommand | undefined>(() => {
+    const openCommand = sourceImportDialog.openCommand;
+    return openCommand == null
+      ? undefined
+      : (initialSelection, placement) =>
+          openCommand(initialSelection ?? sourceImportInitialSelection, placement);
+  }, [sourceImportDialog.openCommand, sourceImportInitialSelection]);
   useEffect(() => {
     if (contextualWorkbenchId != null && scopedContextualWorkbenchId == null) {
       closeContextualWorkbench();
@@ -332,7 +351,7 @@ export default function CanvasShell({
         chromeState={chromeState}
         graphCommands={graphCommands}
         chromeCommands={chromeCommands}
-        onOpenSourceImport={sourceImportDialog.openCommand}
+        onOpenSourceImport={openSourceImport}
         onOpenProjectExplorer={onOpenProjectExplorer}
         onOpenProjectCode={onOpenProjectCode}
         onImportDbtProject={onDbtProjectImported == null ? undefined : openDbtProjectImport}
@@ -345,7 +364,12 @@ export default function CanvasShell({
           canvasId={panels.activeCanvasId}
           onClose={sourceImportDialog.close}
           onRestoreFocus={contextMenuPresenter.restoreContextMenuOpenerFocus}
-          onComplete={graphCommands.onSourceImportComplete}
+          onComplete={(result, placement) => {
+            graphCommands.onSourceImportComplete(result, placement);
+            if (sourceImportInitialSelection?.kind === 'dbt-source-binding') {
+              onSourceImportInitialSelectionConsumed?.();
+            }
+          }}
           sourceImportOptions={sourceImportOptions}
           initialSelection={sourceImportDialog.initialSelection}
           placement={sourceImportDialog.placement}
@@ -389,9 +413,9 @@ export default function CanvasShell({
         open={dbtProjectImportOpen}
         onClose={() => setDbtProjectImportOpen(false)}
         onRestoreFocus={restoreProjectExplorerFocus}
-        onImported={(result) => {
+        onImported={(result, sourceTableDeclarations) => {
           setDbtProjectImportOpen(false);
-          onDbtProjectImported?.(result);
+          onDbtProjectImported?.(result, sourceTableDeclarations);
         }}
       />
     </ResizablePanelGroup>

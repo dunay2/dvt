@@ -13,6 +13,8 @@ import {
 } from './CanvasShell.testHarness';
 import { useCanvasWorkspaceMenuContributionStore } from './canvasWorkspaceMenuContributionStore';
 import type { CanvasShellProps } from './canvasShell.types';
+import type { ImportSourcesResult } from '../../ports/workspace';
+import { buildGraphDraftSourceImportResult } from '../../../testing/sourceImportTestFixtures';
 
 const shellState = getCanvasShellState();
 type DialogViewportCommand = 'onOpenCanvasSettings';
@@ -179,14 +181,85 @@ describe('CanvasShell contextual dialogs', () => {
     expect(shellState.dbtProjectImportDialogProps).toMatchObject({ open: true });
     expect(container.querySelector('[data-testid="dbt-project-import-dialog"]')).not.toBeNull();
 
+    const sourceTableDeclarations = [
+      {
+        uniqueId: 'source.analytics.raw.orders',
+        filePath: 'models/sources.yml',
+        sourceName: 'raw',
+        tableName: 'orders',
+        database: 'RAW',
+        schema: 'ERP',
+        identifier: 'ORDERS',
+      },
+    ] as const;
     await act(async () => {
       const onImported = shellState.dbtProjectImportDialogProps?.onImported as
-        ((receipt: typeof result) => void) | undefined;
-      onImported?.(result);
+        | ((receipt: typeof result, declarations: typeof sourceTableDeclarations) => void)
+        | undefined;
+      onImported?.(result, sourceTableDeclarations);
     });
 
-    expect(onDbtProjectImported).toHaveBeenCalledWith(result);
+    expect(onDbtProjectImported).toHaveBeenCalledWith(result, sourceTableDeclarations);
     expect(shellState.dbtProjectImportDialogProps).toMatchObject({ open: false });
+    expect(shellState.sourceImportWizardProps).toMatchObject({ open: false });
+  });
+
+  it('retains a dbt source-binding continuation until a successful source import', async () => {
+    const onConsumed = vi.fn();
+    const sourceTableDeclarations = [
+      {
+        uniqueId: 'source.analytics.raw.orders',
+        filePath: 'models/sources.yml',
+        sourceName: 'raw',
+        tableName: 'orders',
+        database: 'RAW',
+        schema: 'ERP',
+        identifier: 'ORDERS',
+      },
+    ] as const;
+
+    await renderShell({
+      sourceImportInitialSelection: {
+        kind: 'dbt-source-binding',
+        sourceTableDeclarations,
+      },
+      onSourceImportInitialSelectionConsumed: onConsumed,
+    });
+
+    expect(shellState.sourceImportWizardProps).toMatchObject({
+      open: true,
+      initialSelection: {
+        kind: 'dbt-source-binding',
+        sourceTableDeclarations,
+      },
+    });
+    expect(onConsumed).not.toHaveBeenCalled();
+
+    await act(async () => {
+      const close = shellState.sourceImportWizardProps?.onClose as (() => void) | undefined;
+      close?.();
+    });
+    expect(shellState.sourceImportWizardProps).toMatchObject({ open: false });
+    expect(onConsumed).not.toHaveBeenCalled();
+
+    await act(async () => {
+      const reopen = shellState.canvasViewportProps?.onOpenSourceImport as (() => void) | undefined;
+      reopen?.();
+    });
+    expect(shellState.sourceImportWizardProps).toMatchObject({
+      open: true,
+      initialSelection: {
+        kind: 'dbt-source-binding',
+        sourceTableDeclarations,
+      },
+    });
+
+    await act(async () => {
+      const complete = shellState.sourceImportWizardProps?.onComplete as
+        ((result: ImportSourcesResult) => void) | undefined;
+      complete?.(buildGraphDraftSourceImportResult());
+    });
+    expect(onConsumed).toHaveBeenCalledTimes(1);
   });
 
   it('opens contextual project Code from a one-shot route intent', async () => {

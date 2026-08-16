@@ -10,7 +10,10 @@
 import { z } from 'zod';
 
 import { isSha256HexString, SHA256_HEX_STRING_MESSAGE } from '../../utils/contractPrimitives.js';
-import { CanvasAuthoringAuthorityBindingSchema } from '../planner/CanvasAuthoringAuthorityBinding.v1.js';
+import {
+  CanvasAuthoringAuthorityBindingSchema,
+  WorkspaceRelativeProjectRootSchema,
+} from '../planner/CanvasAuthoringAuthorityBinding.v1.js';
 import { DbtProjectRevisionSchema } from '../planner/DbtProjectGraphProjection.v1.js';
 
 import {
@@ -41,11 +44,71 @@ const UniqueNonBlankStringListSchema = z
     });
   });
 
+const WorkspaceRelativeFilePathSchema = WorkspaceRelativeProjectRootSchema.refine(
+  (value) => value !== '.',
+  'Expected a workspace-relative file path.'
+);
+
+export const ExistingDbtSourceTargetSchema = z
+  .object({
+    objectId: NonBlankStringSchema,
+    sourceUniqueId: NonBlankStringSchema,
+    filePath: WorkspaceRelativeFilePathSchema,
+    sourceName: NonBlankStringSchema,
+    tableName: NonBlankStringSchema,
+  })
+  .strict();
+
+const ExistingDbtSourceTargetListSchema = z
+  .array(ExistingDbtSourceTargetSchema)
+  .min(1)
+  .superRefine((targets, context) => {
+    const objectIds = new Set<string>();
+    const sourceUniqueIds = new Set<string>();
+    targets.forEach((target, index) => {
+      if (objectIds.has(target.objectId)) {
+        context.addIssue({
+          code: 'custom',
+          message: `Duplicate exact source object target: ${target.objectId}`,
+          path: [index, 'objectId'],
+        });
+      }
+      if (sourceUniqueIds.has(target.sourceUniqueId)) {
+        context.addIssue({
+          code: 'custom',
+          message: `Duplicate dbt source target: ${target.sourceUniqueId}`,
+          path: [index, 'sourceUniqueId'],
+        });
+      }
+      objectIds.add(target.objectId);
+      sourceUniqueIds.add(target.sourceUniqueId);
+    });
+  });
+
 export const ImportSourceObjectsRequestV2Schema = ImportSourceObjectsRequestSchema.extend({
   schemaVersion: z.literal('source-import-request.v2'),
   canvasId: NonBlankStringSchema,
   idempotencyKey: NonBlankStringSchema,
-}).strict();
+  existingDbtSourceTargets: ExistingDbtSourceTargetListSchema.optional(),
+})
+  .strict()
+  .superRefine((request, context) => {
+    if (request.existingDbtSourceTargets === undefined) return;
+    const selectedObjectIds = new Set(request.objects.map(({ objectId }) => objectId));
+    const targetObjectIds = new Set(
+      request.existingDbtSourceTargets.map(({ objectId }) => objectId)
+    );
+    if (
+      selectedObjectIds.size !== targetObjectIds.size ||
+      [...selectedObjectIds].some((objectId) => !targetObjectIds.has(objectId))
+    ) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Exact dbt source targets must cover every selected source object once.',
+        path: ['existingDbtSourceTargets'],
+      });
+    }
+  });
 
 const GraphDraftSourceImportOutcomeSchema = z
   .object({
@@ -126,4 +189,5 @@ export const ImportSourceObjectsResultV2Schema = z
   });
 
 export type ImportSourceObjectsRequestV2 = z.infer<typeof ImportSourceObjectsRequestV2Schema>;
+export type ExistingDbtSourceTarget = z.infer<typeof ExistingDbtSourceTargetSchema>;
 export type ImportSourceObjectsResultV2 = z.infer<typeof ImportSourceObjectsResultV2Schema>;

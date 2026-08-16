@@ -8,6 +8,7 @@ import {
 } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
+import { InvalidWarehouseSourceImportRequestError } from '../../../src/application/ports/warehouseSourceImport.js';
 import type {
   IWorkspaceFileBatchMutationPort,
   IWorkspaceFileRepository,
@@ -67,6 +68,164 @@ describe('DbtProjectFilesWarehouseSourceImportStrategy', () => {
         projectedSourceUniqueIds: ['source.analytics.warehouse_prod_analytics_erp.orders'],
       },
     });
+  });
+
+  it('enriches the exact imported source table instead of generating a parallel YAML file', async () => {
+    const existingContent = [
+      'version: 2',
+      '',
+      'sources:',
+      '  - name: raw',
+      '    database: analytics',
+      '    schema: erp',
+      '    description: Existing source metadata',
+      '    tables:',
+      '      - name: orders',
+      '        description: Existing table metadata',
+      '',
+    ].join('\n');
+    const batchMutation = createBatchMutation();
+    const projectGraph = {
+      execute: vi.fn(async () =>
+        createProjection({
+          uniqueId: 'source.analytics.raw.orders',
+          sourceName: 'raw',
+          originalFilePath: 'models/sources.yml',
+        })
+      ),
+    };
+    const strategy = new DbtProjectFilesWarehouseSourceImportStrategy({
+      workspaceFiles: createWorkspaceFiles({
+        'analytics/models/sources.yml': existingContent,
+      }),
+      batchMutation,
+      projectGraph,
+    });
+    const context: WarehouseSourceImportCommandContext = {
+      ...CONTEXT,
+      databaseUser: 'warehouse_reader',
+      existingDbtSourceTargets: [
+        {
+          objectId: SOURCE_OBJECT.objectId,
+          sourceUniqueId: 'source.analytics.raw.orders',
+          filePath: 'models/sources.yml',
+          sourceName: 'raw',
+          tableName: 'orders',
+        },
+      ],
+    };
+
+    const result = await strategy.execute(context, AUTHORITY);
+
+    expect(batchMutation.apply).toHaveBeenCalledWith(
+      SCOPE,
+      expect.objectContaining({
+        writes: [
+          expect.objectContaining({
+            path: 'analytics/models/sources.yml',
+            content: expect.stringMatching(
+              /description: Existing source metadata[\s\S]*description: Existing table metadata[\s\S]*connection_id: warehouse-prod/
+            ),
+          }),
+        ],
+      })
+    );
+    expect(result.yamlFiles).toEqual(['analytics/models/sources.yml']);
+    expect(result.outcome).toMatchObject({
+      kind: 'dbt-project-files',
+      projectedSourceUniqueIds: ['source.analytics.raw.orders'],
+    });
+  });
+
+  it('rejects an exact dbt source binding when the governed database user is unavailable', async () => {
+    const existingContent = [
+      'version: 2',
+      '',
+      'sources:',
+      '  - name: raw',
+      '    database: analytics',
+      '    schema: erp',
+      '    tables:',
+      '      - name: orders',
+      '',
+    ].join('\n');
+    const strategy = new DbtProjectFilesWarehouseSourceImportStrategy({
+      workspaceFiles: createWorkspaceFiles({
+        'analytics/models/sources.yml': existingContent,
+      }),
+      batchMutation: createBatchMutation(),
+      projectGraph: { execute: vi.fn(async () => createProjection()) },
+    });
+    const { databaseUser: _databaseUser, ...contextWithoutDatabaseUser } = CONTEXT;
+
+    await expect(
+      strategy.execute(
+        {
+          ...contextWithoutDatabaseUser,
+          existingDbtSourceTargets: [
+            {
+              objectId: SOURCE_OBJECT.objectId,
+              sourceUniqueId: 'source.analytics.raw.orders',
+              filePath: 'models/sources.yml',
+              sourceName: 'raw',
+              tableName: 'orders',
+            },
+          ],
+        },
+        AUTHORITY
+      )
+    ).rejects.toBeInstanceOf(InvalidWarehouseSourceImportRequestError);
+  });
+
+  it('rejects an underqualified dbt source when the live catalog match is ambiguous', async () => {
+    const existingContent = [
+      'version: 2',
+      '',
+      'sources:',
+      '  - name: raw',
+      '    tables:',
+      '      - name: orders',
+      '',
+    ].join('\n');
+    const batchMutation = createBatchMutation();
+    const strategy = new DbtProjectFilesWarehouseSourceImportStrategy({
+      workspaceFiles: createWorkspaceFiles({
+        'analytics/models/sources.yml': existingContent,
+      }),
+      batchMutation,
+      projectGraph: { execute: vi.fn(async () => createProjection()) },
+    });
+    const selectedSourceObject = CONTEXT.sourceObjects[0];
+    if (selectedSourceObject === undefined) throw new Error('Missing source object fixture.');
+    const ambiguousSourceObject = {
+      ...selectedSourceObject,
+      objectId: 'relation/analytics/finance/orders',
+      locator: {
+        ...selectedSourceObject.locator,
+        schema: 'finance',
+      },
+    };
+
+    await expect(
+      strategy.execute(
+        {
+          ...CONTEXT,
+          databaseUser: 'warehouse_reader',
+          catalogSourceObjects: [selectedSourceObject, ambiguousSourceObject],
+          existingDbtSourceTargets: [
+            {
+              objectId: selectedSourceObject.objectId,
+              sourceUniqueId: 'source.analytics.raw.orders',
+              filePath: 'models/sources.yml',
+              sourceName: 'raw',
+              tableName: 'orders',
+            },
+          ],
+        },
+        AUTHORITY
+      )
+    ).rejects.toBeInstanceOf(InvalidWarehouseSourceImportRequestError);
+    expect(batchMutation.apply).not.toHaveBeenCalled();
   });
 
   it('rolls back YAML and rejects success when the refreshed projection is not fresh', async () => {
@@ -146,6 +305,13 @@ const CONTEXT: WarehouseSourceImportCommandContext = {
       connectionId: 'warehouse-prod',
     },
   ],
+  catalogSourceObjects: [
+    {
+      ...SOURCE_OBJECT,
+      locator: SOURCE_OBJECT.locator as Extract<SourceObject['locator'], { kind: 'relation' }>,
+      connectionId: 'warehouse-prod',
+    },
+  ],
   groupingStrategy: 'schema',
   includeColumns: true,
   addTests: false,
@@ -163,10 +329,23 @@ function createStrategy(
   });
 }
 
-function createWorkspaceFiles(): IWorkspaceFileRepository {
+function createWorkspaceFiles(
+  contents: Readonly<Record<string, string>> = {}
+): IWorkspaceFileRepository {
   return {
     listFiles: vi.fn(async () => []),
     getFileContent: vi.fn(async (_scope, filePath) => {
+      const content = contents[filePath];
+      if (content !== undefined) {
+        return {
+          path: filePath,
+          name: filePath.split('/').at(-1) ?? filePath,
+          language: 'yaml',
+          content,
+          contentSha256: sha256(content),
+          lastModified: '2026-07-14T00:00:00.000Z',
+        };
+      }
       throw new WorkspaceFileNotFoundError(filePath);
     }),
     saveFileContent: vi.fn(),
@@ -192,7 +371,17 @@ function createBatchMutation(
   };
 }
 
-function createProjection(): DbtProjectGraphProjection {
+function createProjection(
+  source: Readonly<{
+    uniqueId: string;
+    sourceName: string;
+    originalFilePath: string;
+  }> = {
+    uniqueId: 'source.analytics.warehouse_prod_analytics_erp.orders',
+    sourceName: 'warehouse_prod_analytics_erp',
+    originalFilePath: 'models/sources/src_erp.yml',
+  }
+): DbtProjectGraphProjection {
   return DbtProjectGraphProjectionSchema.parse({
     schemaVersion: 'dbt-project-graph-projection.v1',
     authorityBinding: AUTHORITY,
@@ -208,12 +397,12 @@ function createProjection(): DbtProjectGraphProjection {
     analysisSha256: 'b'.repeat(64),
     nodes: [
       {
-        uniqueId: 'source.analytics.warehouse_prod_analytics_erp.orders',
+        uniqueId: source.uniqueId,
         resourceType: 'source',
         name: 'orders',
         packageName: 'analytics',
-        sourceName: 'warehouse_prod_analytics_erp',
-        originalFilePath: 'models/sources/src_erp.yml',
+        sourceName: source.sourceName,
+        originalFilePath: source.originalFilePath,
         columns: [],
         tags: [],
         visualEditability: { status: 'code_only', reasons: ['source definition'] },

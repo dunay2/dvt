@@ -9,6 +9,7 @@ import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { ImportSourcesResult, WorkspaceFileSaveReceipt } from '../../ports/workspace';
 import { createCanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
 import { useDbtProjectGraphQuery } from '../../queries/dbtProjectQueries';
+import { useCapabilitiesQuery } from '../../queries/useCapabilitiesQuery';
 import {
   buildDbtProjectFileInitialNodePositions,
   mergeDbtProjectFileNodePositions,
@@ -97,6 +98,8 @@ export function resolveDbtProjectFileSourceImportFocus(
 export function useDbtProjectFileCanvasController(
   authorityBinding: DbtProjectFilesAuthorityBinding
 ) {
+  const capabilitiesQuery = useCapabilitiesQuery();
+  const runtimeCapabilities = capabilitiesQuery.data;
   const query = useDbtProjectGraphQuery(authorityBinding);
   const store = useCanvasStoreFacade();
   const {
@@ -454,7 +457,8 @@ export function useDbtProjectFileCanvasController(
     executionSelectionRecovery: executionSelectionRecovery.model,
     currentPlan: store.currentPlan,
     activeRunId: store.currentRun?.runId ?? null,
-    registeredPlugins: getRegisteredPluginIds(),
+    registeredPlugins: getRegisteredPluginIds(runtimeCapabilities),
+    runtimeCapabilities,
     graphCommands: {
       onNodesChange: graphModel.onNodesChange,
       onNodeDrag: persistence.handleNodeDrag,

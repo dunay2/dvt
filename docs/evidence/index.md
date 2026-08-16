@@ -122,6 +122,7 @@ Evidence documents that justify or validate relevant changes.
 - [ED 20260813 Stored Plan Materialization Boundary](ED-20260813-stored-plan-materialization-boundary.md)
 - [ED 20260815 Governed Source Identity Projection](ED-20260815-governed-source-identity-projection.md)
 - [ED 20260815 Warehouse Connection Rename](ED-20260815-warehouse-connection-rename.md)
+- [ED 20260816 Dbt Source Connection Binding](ED-20260816-dbt-source-connection-binding.md)
 - [ED-20260402 RC-G1 governance startup and health reconciliation](ED-20260402-rc-g1-governance-startup-reconciliation.md)
 - [ED-20260402 S05 envelope boundary hardening](ED-20260402-s05-envelope-boundary-hardening.md)
 - [ED-20260402 S08 contract-layer hardening](ED-20260402-s08-contract-layer-hardening.md)

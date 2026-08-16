@@ -1,10 +1,11 @@
 /** Owned concern: load warehouse source import choices through the source import port. */
 import { useEffect, type Dispatch, type SetStateAction } from 'react';
 
-import { isRelationalSourceObject } from '@dvt/contracts';
+import { isRelationalSourceObject, type DbtProjectSourceTableDeclaration } from '@dvt/contracts';
 
 import type { IWarehouseSourceImportPort, SourceObject } from '../../ports/workspace';
 import { buildSourceObjectIdentityKey } from './sourceImportCatalogModel';
+import { matchRequestedDbtSourceTargets } from './sourceImportWizardModel';
 import { buildSourceImportFailure, type SourceImportWizardState } from './types';
 
 interface LoaderParams {
@@ -53,6 +54,7 @@ export function useConnectionsLoader({ open, warehouseSourceImport, setState }: 
 interface SourceObjectsLoaderParams extends LoaderParams {
   selectedConnection: string | null;
   initiallySelectedSourceObjects?: readonly SourceObject[];
+  requestedDbtSourceDeclarations?: readonly DbtProjectSourceTableDeclaration[];
 }
 
 const emptyInitiallySelectedSourceObjects: readonly SourceObject[] = [];
@@ -61,6 +63,7 @@ export function useSourceObjectsLoader({
   open,
   selectedConnection,
   initiallySelectedSourceObjects = emptyInitiallySelectedSourceObjects,
+  requestedDbtSourceDeclarations,
   warehouseSourceImport,
   setState,
 }: SourceObjectsLoaderParams) {
@@ -75,14 +78,24 @@ export function useSourceObjectsLoader({
         const discoveredSourceObjects =
           await warehouseSourceImport.listSourceObjects(selectedConnection);
         if (!cancelled) {
+          const requestedMatch =
+            requestedDbtSourceDeclarations === undefined
+              ? null
+              : matchRequestedDbtSourceTargets(
+                  requestedDbtSourceDeclarations,
+                  discoveredSourceObjects
+                );
           const selectedObjectKeys = new Set(
-            initiallySelectedSourceObjects.map(buildSourceObjectIdentityKey)
+            requestedMatch?.objectIds ??
+              initiallySelectedSourceObjects.map(buildSourceObjectIdentityKey)
           );
           const selectableSourceObjects = discoveredSourceObjects.map((sourceObject) => ({
             ...sourceObject,
             selected:
               isRelationalSourceObject(sourceObject) &&
-              selectedObjectKeys.has(buildSourceObjectIdentityKey(sourceObject)),
+              (requestedMatch == null
+                ? selectedObjectKeys.has(buildSourceObjectIdentityKey(sourceObject))
+                : selectedObjectKeys.has(sourceObject.objectId)),
           }));
           const selectedSourceObject = selectableSourceObjects.find(
             (sourceObject) => sourceObject.selected
@@ -94,6 +107,10 @@ export function useSourceObjectsLoader({
               ? buildSourceObjectIdentityKey(selectedSourceObject)
               : selectableSourceObjects[0]
                 ? buildSourceObjectIdentityKey(selectableSourceObjects[0])
+                : null,
+            loadError:
+              requestedMatch != null && requestedMatch.unmatchedSourceUniqueIds.length > 0
+                ? buildSourceImportFailure('match-dbt-source-tables')
                 : null,
           }));
         }
@@ -116,5 +133,12 @@ export function useSourceObjectsLoader({
     return () => {
       cancelled = true;
     };
-  }, [initiallySelectedSourceObjects, open, selectedConnection, setState, warehouseSourceImport]);
+  }, [
+    initiallySelectedSourceObjects,
+    open,
+    requestedDbtSourceDeclarations,
+    selectedConnection,
+    setState,
+    warehouseSourceImport,
+  ]);
 }

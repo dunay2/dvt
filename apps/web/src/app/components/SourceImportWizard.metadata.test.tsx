@@ -117,6 +117,79 @@ describe('SourceImportWizard metadata exploration', () => {
     expect(document.body.textContent).toContain('Choose database, schema, table, and write mode');
   });
 
+  it('binds every imported dbt source table through the selected governed connection', async () => {
+    const importSources = vi.fn(buildWarehouseSourceImportPort().importSources);
+    await harness.renderWizard({
+      initialSelection: {
+        kind: 'dbt-source-binding',
+        sourceTableDeclarations: [
+          {
+            uniqueId: 'source.analytics.raw.customers',
+            filePath: 'models/sources.yml',
+            sourceName: 'raw',
+            tableName: 'customers',
+            database: 'RAW',
+            schema: 'ERP',
+            identifier: 'CUSTOMERS',
+          },
+          {
+            uniqueId: 'source.analytics.raw.orders',
+            filePath: 'models/sources.yml',
+            sourceName: 'raw',
+            tableName: 'orders',
+            database: 'RAW',
+            schema: 'ERP',
+            identifier: 'ORDERS',
+          },
+        ],
+      },
+      warehouseSourceImport: buildWarehouseSourceImportPort({
+        listSourceObjects: async () => [
+          buildSourceObject({ database: 'RAW', schema: 'ERP', table: 'ORDERS' }),
+          buildSourceObject({ database: 'RAW', schema: 'ERP', table: 'CUSTOMERS' }),
+          buildSourceObject({ database: 'RAW', schema: 'ERP', table: 'PAYMENTS' }),
+        ],
+        importSources,
+      }),
+    });
+
+    await harness.clickConnectionOption('Local Postgres proof');
+    await harness.flushPendingWork();
+
+    expect(document.body.textContent).toContain('Browse source objects');
+    expect(document.body.textContent).toContain('Selected: 2');
+    expect(harness.findButtonContaining('Attach sources to canvas')?.disabled).toBe(false);
+
+    await harness.clickButtonContaining('Attach sources to canvas');
+
+    expect(importSources).toHaveBeenCalledWith(
+      expect.objectContaining({
+        canvasId: 'canvas-orders',
+        connectionId: 'conn-1',
+        objects: [
+          { objectId: 'relation/RAW/ERP/ORDERS' },
+          { objectId: 'relation/RAW/ERP/CUSTOMERS' },
+        ],
+        existingDbtSourceTargets: [
+          {
+            objectId: 'relation/RAW/ERP/CUSTOMERS',
+            sourceUniqueId: 'source.analytics.raw.customers',
+            filePath: 'models/sources.yml',
+            sourceName: 'raw',
+            tableName: 'customers',
+          },
+          {
+            objectId: 'relation/RAW/ERP/ORDERS',
+            sourceUniqueId: 'source.analytics.raw.orders',
+            filePath: 'models/sources.yml',
+            sourceName: 'raw',
+            tableName: 'orders',
+          },
+        ],
+      })
+    );
+  });
+
   it('does not carry explorer preselection into a different warehouse connection', async () => {
     const listSourceObjects = vi.fn(async () => [buildSourceObject({ table: 'CUSTOMERS' })]);
 

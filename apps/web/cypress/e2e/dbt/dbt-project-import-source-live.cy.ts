@@ -2,21 +2,13 @@
  * Owned concern: prove project import and file-backed Source Import through the
  * real protected browser, API, workspace-file, dbt analyzer, and Postgres rails.
  */
-import {
-  clickCanvasAddCatalogAction,
-  clickCanvasContextMenuAction,
-  openCanvasContextMenuAt,
-} from '../../support/canvasExecutionSelection';
 import { skipWhenFirstAuthoringLiveEnvIsMissing } from '../../support/canvasFirstAuthoring';
 import {
   readLiveGraphDraft,
   readLiveWorkspaceFile,
   resolveLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
-import {
-  expectedLivePostgresSourceName,
-  importLivePostgresSource,
-} from '../../support/liveWarehouseSourceImport';
+import { importLivePostgresSource } from '../../support/liveWarehouseSourceImport';
 import { seedE2eWorkspaceSession, type E2eWorkspaceSession } from '../../support/workspaceSession';
 
 const PROJECT_ROOT = 'analytics';
@@ -35,9 +27,10 @@ clean-targets: ['target', 'dbt_packages']
 version: 2
 sources:
   - name: raw
+    database: dvt
     schema: public
     tables:
-      - name: orders
+      - name: source_1
 models:
   - name: orders
     columns:
@@ -45,7 +38,7 @@ models:
         data_type: integer
 `,
   [`${PROJECT_ROOT}/models/orders.sql`]: `
-select 1::integer as order_id from {{ source('raw', 'orders') }}
+select order_id from {{ source('raw', 'source_1') }}
 `,
   [`${PROJECT_ROOT}/target/manifest.json`]: '{"generated":true}',
 };
@@ -112,11 +105,10 @@ describe('dbt project import and file-backed Source Import live vertical', () =>
     return seedDbtProjectFiles(session);
   });
 
-  it('imports a real project, adds a source as YAML, refreshes projection, and never creates a draft node', () => {
+  it('imports a real project, binds its source file, refreshes projection, and never creates a draft node', () => {
     const session = resolveLiveWorkspaceSession();
-    const expectedSourceName = expectedLivePostgresSourceName();
-    const expectedSourceUniqueId = `source.analytics.${expectedSourceName}.source_1`;
-    const expectedYamlPath = `${PROJECT_ROOT}/models/sources/src_public.yml`;
+    const expectedSourceUniqueId = 'source.analytics.raw.source_1';
+    const expectedYamlPath = `${PROJECT_ROOT}/models/schema.yml`;
 
     readLiveGraphDraft(session, { failOnStatusCode: false }).then((response) => {
       expect(response.status).to.equal(404);
@@ -164,14 +156,11 @@ describe('dbt project import and file-backed Source Import live vertical', () =>
       .should('contain', 'authority=dbt-project-files')
       .and('contain', `canvasId=${CANVAS_ID}`)
       .and('contain', `projectRoot=${PROJECT_ROOT}`);
-    cy.get('.react-flow__node[data-id="source.analytics.raw.orders"]', {
+    cy.get(`.react-flow__node[data-id="${expectedSourceUniqueId}"]`, {
       timeout: 60_000,
     }).should('be.visible');
     cy.get('.react-flow__node[data-id="model.analytics.orders"]').should('be.visible');
 
-    openCanvasContextMenuAt(420, 280);
-    clickCanvasContextMenuAction('open-add-node-catalog');
-    clickCanvasAddCatalogAction('open-source-import', 'dbt:source');
     importLivePostgresSource({ kind: 'dbt-project-files', expectedYamlPath });
 
     cy.get(`.react-flow__node[data-id="${expectedSourceUniqueId}"]`, {
@@ -185,8 +174,9 @@ describe('dbt project import and file-backed Source Import live vertical', () =>
     readLiveWorkspaceFile(expectedYamlPath, session).then((response) => {
       expect(response.status).to.equal(200);
       const content = (response.body as { content: string }).content;
-      expect(content).to.contain(`name: ${expectedSourceName}`);
+      expect(content).to.contain('name: raw');
       expect(content).to.contain('name: source_1');
+      expect(content).to.contain('dvt_source_identity');
       expect(content).to.contain('order_id');
       expect(content).to.contain('customer');
       expect(content).to.contain('amount');

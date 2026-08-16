@@ -1,5 +1,10 @@
 import { WIZARD_STEPS } from './constants';
-import { isRelationalSourceObject } from '@dvt/contracts';
+import {
+  isRelationalSourceObject,
+  type DbtProjectSourceTableDeclaration,
+  type ExistingDbtSourceTarget,
+  type SourceObject,
+} from '@dvt/contracts';
 import type { SourceImportOptionContribution, SourceImportOptionId } from '../../plugins/registry';
 import { buildSourceObjectIdentityKey } from './sourceImportCatalogModel';
 import type {
@@ -23,6 +28,55 @@ export const SOURCE_IMPORT_SECTIONS: readonly {
 
 export function getSelectedCount(sourceObjects: SelectableSourceObject[]): number {
   return getSelectedSourceObjects(sourceObjects).length;
+}
+
+export type RequestedDbtSourceTargetMatch = Readonly<{
+  objectIds: readonly string[];
+  targets: readonly ExistingDbtSourceTarget[];
+  unmatchedSourceUniqueIds: readonly string[];
+}>;
+
+export function matchRequestedDbtSourceTargets(
+  declarations: readonly DbtProjectSourceTableDeclaration[],
+  sourceObjects: readonly SourceObject[]
+): RequestedDbtSourceTargetMatch {
+  const claimedObjectIds = new Set<string>();
+  const targets: ExistingDbtSourceTarget[] = [];
+  const unmatchedSourceUniqueIds: string[] = [];
+
+  for (const declaration of [...declarations].sort((left, right) =>
+    left.uniqueId.localeCompare(right.uniqueId)
+  )) {
+    const physicalTableName = declaration.identifier ?? declaration.tableName;
+    const candidates = sourceObjects.filter(
+      (sourceObject) =>
+        isRelationalSourceObject(sourceObject) &&
+        !claimedObjectIds.has(sourceObject.objectId) &&
+        (declaration.database === undefined ||
+          sourceObject.locator.catalog === declaration.database) &&
+        (declaration.schema === undefined || sourceObject.locator.schema === declaration.schema) &&
+        sourceObject.locator.name === physicalTableName
+    );
+    if (candidates.length !== 1) {
+      unmatchedSourceUniqueIds.push(declaration.uniqueId);
+      continue;
+    }
+    const sourceObject = candidates[0]!;
+    claimedObjectIds.add(sourceObject.objectId);
+    targets.push({
+      objectId: sourceObject.objectId,
+      sourceUniqueId: declaration.uniqueId,
+      filePath: declaration.filePath,
+      sourceName: declaration.sourceName,
+      tableName: declaration.tableName,
+    });
+  }
+
+  return {
+    objectIds: targets.map(({ objectId }) => objectId),
+    targets,
+    unmatchedSourceUniqueIds,
+  };
 }
 
 export function toggleSourceImportSchemaSelection(

@@ -46,6 +46,9 @@ export class ImportWarehouseSourcesUseCase {
       includeColumns: input.includeColumns,
       addTests: input.addTests,
       addFreshness: input.addFreshness,
+      ...(input.existingDbtSourceTargets === undefined
+        ? {}
+        : { existingDbtSourceTargets: input.existingDbtSourceTargets }),
     });
     if (!request.success) {
       throw new InvalidWarehouseSourceImportRequestError(
@@ -57,6 +60,14 @@ export class ImportWarehouseSourcesUseCase {
       ...input.scope,
       canvasId: request.data.canvasId,
     });
+    if (
+      request.data.existingDbtSourceTargets !== undefined &&
+      authorityBinding.authority.kind !== 'dbt-project-files'
+    ) {
+      throw new InvalidWarehouseSourceImportRequestError(
+        'Exact dbt source targets require file-backed dbt project authority.'
+      );
+    }
     const {
       connection,
       databaseUser,
@@ -75,6 +86,9 @@ export class ImportWarehouseSourcesUseCase {
       }
       return { ...sourceObject, connectionId: request.data.connectionId };
     });
+    const relationalCatalogSourceObjects = catalogSourceObjects
+      .filter(isRelationalSourceObject)
+      .map((sourceObject) => ({ ...sourceObject, connectionId: request.data.connectionId }));
     const context: WarehouseSourceImportCommandContext = {
       scope: input.scope,
       canvasId: request.data.canvasId,
@@ -82,10 +96,14 @@ export class ImportWarehouseSourcesUseCase {
       connection,
       ...(databaseUser === undefined ? {} : { databaseUser }),
       sourceObjects,
+      catalogSourceObjects: relationalCatalogSourceObjects,
       groupingStrategy: request.data.groupingStrategy,
       includeColumns: request.data.includeColumns,
       addTests: request.data.addTests,
       addFreshness: request.data.addFreshness,
+      ...(request.data.existingDbtSourceTargets === undefined
+        ? {}
+        : { existingDbtSourceTargets: request.data.existingDbtSourceTargets }),
     };
 
     let strategyResult: WarehouseSourceImportStrategyResult;

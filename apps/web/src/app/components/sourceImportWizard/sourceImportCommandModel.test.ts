@@ -65,4 +65,45 @@ describe('sourceImportCommandModel', () => {
     expect(differentOptions.idempotencyKey).toBe('import-3');
     expect(createIdempotencyKey).toHaveBeenCalledTimes(3);
   });
+
+  it('rotates command identity when the exact imported dbt target changes', () => {
+    const createIdempotencyKey = vi
+      .fn<() => string>()
+      .mockReturnValueOnce('import-1')
+      .mockReturnValueOnce('import-2');
+    const withTarget: SourceImportCommandDraft = {
+      ...COMMAND_DRAFT,
+      existingDbtSourceTargets: [
+        {
+          objectId: 'relation/analytics/erp/orders',
+          sourceUniqueId: 'source.analytics.raw.orders',
+          filePath: 'models/sources.yml',
+          sourceName: 'raw',
+          tableName: 'orders',
+        },
+        {
+          objectId: 'relation/analytics/erp/customers',
+          sourceUniqueId: 'source.analytics.raw.customers',
+          filePath: 'models/sources.yml',
+          sourceName: 'raw',
+          tableName: 'customers',
+        },
+      ],
+    };
+    const first = resolveSourceImportCommandIdentity(withTarget, null, createIdempotencyKey);
+    const changed = resolveSourceImportCommandIdentity(
+      {
+        ...withTarget,
+        existingDbtSourceTargets: withTarget.existingDbtSourceTargets?.map((target) =>
+          target.sourceUniqueId.endsWith('.orders')
+            ? { ...target, tableName: 'orders_renamed' }
+            : target
+        ),
+      },
+      first,
+      createIdempotencyKey
+    );
+
+    expect(changed.idempotencyKey).toBe('import-2');
+  });
 });
