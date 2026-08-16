@@ -203,7 +203,6 @@ noHumanDecisionsRemaining: true
 implementationPlan: docs/planning/proposals/mandatory/frontend-and-ux/dbt-source-connection-binding-plan-20260816.md
 componentGuides:
   - docs/architecture/components/web/graph/dbt-project-import-and-source-authority-component.md
-  - docs/.manifest.json
 userStories:
   - https://github.com/dunay2/dvt/issues/2397
 governingSources:
@@ -214,6 +213,7 @@ governingSources:
   - docs/adr/ADR-0060-dbt-project-authoring-authority.md
   - docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md
 allowedImplementationSurfaces:
+  - docs/.manifest.json
   - apps/api/src/application/ports/dbtProjectAnalysis.ts
   - apps/api/src/application/services/importWarehouseSourcesUseCase.ts
   - apps/api/src/application/services/validateDbtProjectImportUseCase.ts
