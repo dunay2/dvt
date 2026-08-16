@@ -203,6 +203,7 @@ noHumanDecisionsRemaining: true
 implementationPlan: docs/planning/proposals/mandatory/frontend-and-ux/dbt-source-connection-binding-plan-20260816.md
 componentGuides:
   - docs/architecture/components/web/graph/dbt-project-import-and-source-authority-component.md
+  - docs/.manifest.json
 userStories:
   - https://github.com/dunay2/dvt/issues/2397
 governingSources:

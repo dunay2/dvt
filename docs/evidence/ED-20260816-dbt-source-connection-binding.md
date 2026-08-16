@@ -41,7 +41,7 @@ semantics and rejects partial, ambiguous, duplicate, stale, cross-database, or
 graph-draft targets before mutation.
 
 The dbt analyzer remains the graph authority and projects one node per manifest
-source. Browser acceptance covers two tables in English at 1366x768 and Spanish
+source. Browser acceptance covers three tables in English at 1366x768 and Spanish
 at 1920x1080, including WCAG A/AA serious and critical checks. No connection is
 inferred from YAML, no credential material is persisted, and no parallel source
 file, command rail, migration, compatibility store, stub, or fake success path
