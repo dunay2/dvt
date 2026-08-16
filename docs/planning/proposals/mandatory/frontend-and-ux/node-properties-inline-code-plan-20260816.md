@@ -160,9 +160,11 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/sql/**
   - apps/web/cypress/e2e/canvas/**
   - apps/web/cypress/e2e/dbt/**
+  - apps/web/cypress/e2e/shell/**
   - docs/architecture/components/web/code-workbench-workspace-files-component.md
   - docs/architecture/components/web/frontend-component-inventory.md
   - docs/planning/proposals/mandatory/frontend-and-ux/node-properties-inline-code-plan-20260816.md
+  - tools/planning-db/state/canonical-state.json
 forbiddenImplementationSurfaces:
   - apps/api/**
   - packages/@dvt/contracts/**
@@ -195,6 +197,56 @@ domainObjects:
     type: transient UI state
     owner: Shared known-file editor
 symbols:
+  - path: apps/web/src/app/stores/canvasInteractionStore.ts
+    name: CanvasContextualWorkbenchId
+    kind: type
+    exported: true
+    dddOwner: Canvas interaction presentation
+    cqRails: [InspectCanvasNode]
+    fowlerSignals: [Duplicated UI semantics, Temporary field]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas]
+  - path: apps/web/src/app/views/canvas/dbtWorkspaceFileCodeContribution.tsx
+    name: BuildDbtWorkspaceFileCodeContributionsOptions
+    kind: type
+    exported: true
+    dddOwner: Node Properties presentation
+    cqRails: [GetWorkspaceFileContent, SaveWorkspaceFileContent]
+    fowlerSignals: [Divergent change, Duplicated UI semantics]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas]
+  - path: apps/web/src/app/views/canvas/dbtWorkspaceFileCodeContribution.tsx
+    name: buildDbtWorkspaceFileCodeContributions
+    kind: function
+    exported: true
+    dddOwner: Node Properties presentation
+    cqRails: [GetWorkspaceFileContent, SaveWorkspaceFileContent]
+    fowlerSignals: [Divergent change, Duplicated UI semantics]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas]
+  - path: apps/web/src/app/views/canvas/graphDraftWorkspaceFileCodeContribution.tsx
+    name: BuildGraphDraftWorkspaceFileCodeContributionsOptions
+    kind: type
+    exported: true
+    dddOwner: Node Properties presentation
+    cqRails: [GetWorkspaceFileContent]
+    fowlerSignals: [Divergent change, Duplicated UI semantics]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas]
+  - path: apps/web/src/app/views/canvas/graphDraftWorkspaceFileCodeContribution.tsx
+    name: buildGraphDraftWorkspaceFileCodeContributions
+    kind: function
+    exported: true
+    dddOwner: Node Properties presentation
+    cqRails: [GetWorkspaceFileContent]
+    fowlerSignals: [Divergent change, Duplicated UI semantics]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas]
   - path: apps/web/src/app/views/code/WorkspaceFileCodeEditor.tsx
     name: WorkspaceFileCodeEditor
     kind: component
@@ -204,6 +256,46 @@ symbols:
     fowlerSignals: [Divergent change, Duplicated UI semantics]
     architectureGuard: pnpm --filter @dvt/web test:canvas
     cypressCoverage: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test]
+  - path: apps/web/src/app/views/code/WorkspaceFileCodeEditor.tsx
+    name: WorkspaceFileCodeAuthority
+    kind: type
+    exported: true
+    dddOwner: Workspace file code presentation
+    cqRails: [GetWorkspaceFileContent, SaveWorkspaceFileContent]
+    fowlerSignals: [Divergent change]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test]
+  - path: apps/web/src/app/views/code/WorkspaceFileCodeEditor.tsx
+    name: WorkspaceFileCodeEditorHandle
+    kind: type
+    exported: true
+    dddOwner: Workspace file code presentation
+    cqRails: [SaveWorkspaceFileContent]
+    fowlerSignals: [Divergent change]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test]
+  - path: apps/web/src/app/views/code/WorkspaceFileCodeEditor.tsx
+    name: WorkspaceFileCodeEditorProps
+    kind: type
+    exported: true
+    dddOwner: Workspace file code presentation
+    cqRails: [GetWorkspaceFileContent, SaveWorkspaceFileContent]
+    fowlerSignals: [Divergent change]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test]
+  - path: apps/web/src/app/views/code/WorkspaceFileCodeEditor.tsx
+    name: EMPTY_GRAPH_OWNED_PATHS
+    kind: constant
+    exported: false
+    dddOwner: Workspace file code presentation
+    cqRails: [GetWorkspaceFileContent]
+    fowlerSignals: [Divergent change]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
     unitTests: [pnpm --filter @dvt/web test]
   - path: apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx
     name: CanvasNodeWorkbenchPanel
