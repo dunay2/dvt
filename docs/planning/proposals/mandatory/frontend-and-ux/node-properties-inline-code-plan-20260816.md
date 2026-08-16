@@ -172,7 +172,6 @@ forbiddenImplementationSurfaces:
   - packages/@dvt/planner/**
   - packages/@dvt/adapter-*/**
   - infra/db/**
-  - tools/planning-db/**
 commandQueryRails:
   - name: InspectCanvasNode
     type: command
