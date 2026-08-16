@@ -47,6 +47,7 @@ export const graphNodeMetricRowClasses = {
   item: 'inline-flex items-baseline gap-1',
   label: 'text-slate-500',
   value: 'font-medium text-slate-200',
+  interactiveValue: 'nodrag nopan',
   valueTone: {
     neutral: 'text-slate-200',
     info: 'text-blue-200',
@@ -55,10 +56,6 @@ export const graphNodeMetricRowClasses = {
     danger: 'text-red-200',
     running: 'text-sky-200',
   },
-} as const;
-
-export const graphNodeMetricHotspotClasses = {
-  interactive: 'nodrag nopan',
 } as const;
 
 export const graphNodeTagListClasses = {

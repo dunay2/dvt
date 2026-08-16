@@ -7,7 +7,7 @@ import {
   type MetricEvidenceTone,
 } from '../../components/metrics/MetricEvidenceHotspot';
 import type { GraphNodeCardStatusTone } from './graphNodeCardStrategyContracts';
-import { graphNodeMetricHotspotClasses } from './graphVisualTokens';
+import { graphNodeMetricRowClasses } from './graphVisualTokens';
 
 export type GraphNodeMetricHotspotProps = Readonly<{
   className?: string;
@@ -58,7 +58,7 @@ export function GraphNodeMetricHotspot({
       className={
         onActivate == null
           ? className
-          : `${className ?? ''} ${graphNodeMetricHotspotClasses.interactive}`.trim()
+          : `${className ?? ''} ${graphNodeMetricRowClasses.interactiveValue}`.trim()
       }
     />
   );
