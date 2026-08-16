@@ -136,8 +136,17 @@ export function GraphNodeCardView({
   const operationalDetail = cardModel.operationalDetail;
   const interactiveOperationalDetail =
     operationalDetail != null && operationalDetail.rows.length > 0 ? operationalDetail : null;
+  const backingPath = cardModel.path;
+  const pathIsRepresentedByCodeMetric =
+    backingPath != null &&
+    cardModel.metrics.some(
+      (metric) => metric.id === 'code' && metric.detail?.includes(backingPath) === true
+    );
   const visibleSubtitle =
-    cardModel.subtitle != null && cardModel.subtitle !== cardModel.path ? cardModel.subtitle : null;
+    cardModel.subtitle != null &&
+    (cardModel.subtitle !== cardModel.path || !pathIsRepresentedByCodeMetric)
+      ? cardModel.subtitle
+      : null;
 
   return (
     <div

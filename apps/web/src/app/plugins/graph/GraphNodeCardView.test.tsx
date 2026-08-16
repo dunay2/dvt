@@ -182,6 +182,49 @@ describe('GraphNodeCardView', () => {
     expect(container.textContent).toContain('42 MB/min');
   });
 
+  it('preserves a relation-only subtitle when no file-backed Code metric represents it', () => {
+    act(() => {
+      root.render(
+        <GraphNodeCardView
+          {...BASE_PROPS}
+          cardModel={{
+            ...BASE_PROPS.cardModel,
+            subtitle: 'RAW.ERP.ORDERS',
+            path: 'RAW.ERP.ORDERS',
+            metrics: [{ id: 'columns', label: 'Columns', value: '3' }],
+          }}
+        />
+      );
+    });
+
+    expect(container.textContent).toContain('RAW.ERP.ORDERS');
+  });
+
+  it('suppresses a repeated file subtitle when the Code metric already owns the path', () => {
+    act(() => {
+      root.render(
+        <GraphNodeCardView
+          {...BASE_PROPS}
+          cardModel={{
+            ...BASE_PROPS.cardModel,
+            subtitle: 'models/marts/orders.sql',
+            path: 'models/marts/orders.sql',
+            metrics: [
+              {
+                id: 'code',
+                label: 'Code',
+                value: 'File',
+                detail: 'Code lives in models/marts/orders.sql.',
+              },
+            ],
+          }}
+        />
+      );
+    });
+
+    expect(container.textContent).not.toContain('models/marts/orders.sql');
+  });
+
   it('opens Code from the file metric without bubbling to the node card', () => {
     const onOpenCode = vi.fn();
     const onCardClick = vi.fn();
