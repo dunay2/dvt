@@ -145,6 +145,7 @@ userStories:
   - As a keyboard user, I press Enter on the focused node to enter the same Properties surface.
   - As a Canvas author, I use the card ellipsis only for node operations.
   - As a Canvas author, I select or deselect execution through node operations without a misleading Play/Pause control in the card header.
+  - As a Canvas author, Impact Highlight follows visual node focus and never treats execution selection as presentation focus.
   - As a file-backed dbt author, I open the authoritative editor from Properties Code and return to the same node context.
 governingSources:
   - AGENTS.md
@@ -188,6 +189,9 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx
   - apps/web/src/app/views/canvas/CanvasShell.graphSurface.test.tsx
   - apps/web/src/app/views/canvas/CanvasShell.tsx
+  - apps/web/src/app/views/canvas/useCanvasController.core.test.tsx
+  - apps/web/src/app/views/canvas/useCanvasController.ts
+  - apps/web/src/app/views/canvas/useCanvasOverlayModel.ts
   - apps/web/src/app/views/canvas/canvasCopy.types.ts
   - apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.es.ts
   - apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.ts
@@ -490,6 +494,7 @@ fowlerSignals:
   - duplicate node gestures and adjacent action surfaces
   - split Code versus Workbench node-entry semantics
   - Play/Pause versus execution-selection semantic conflation resolved by #2381: retain the command and retire only the misleading card adapter
+  - Impact Highlight versus execution-selection semantic conflation corrected by #2389: visual focus owns transient graph dimming while execution selection remains unchanged
   - displaced floating-toolbar state and tests
 architectureGuards:
   - pnpm docs:feature-mechanization:implementation --feature W4-CANVAS-NODE-WORKBENCH-HARDENING-20260808
@@ -504,6 +509,14 @@ completionGate:
   - pnpm governance:refresh
   - pnpm verify:prepush
 redGreenCycles:
+  - id: impact-visual-focus-separation
+    redTest: apps/web/src/app/views/canvas/useCanvasController.core.test.tsx
+    expectedFailure: Impact Highlight receives execution-selected node ids, so graph dimming survives ordinary visual focus changes and pane deselection.
+    patchSurfaces:
+      - apps/web/src/app/views/canvas/useCanvasController.core.test.tsx
+      - apps/web/src/app/views/canvas/useCanvasController.ts
+      - apps/web/src/app/views/canvas/useCanvasOverlayModel.ts
+    greenTest: apps/web/src/app/views/canvas/useCanvasController.core.test.tsx
   - id: single-node-properties-entry
     redTest: apps/web/src/app/components/canvas/CanvasNodeShell.test.tsx
     expectedFailure: Previous node entry split Code and Workbench, duplicated node right-click, and lacked keyboard parity.
