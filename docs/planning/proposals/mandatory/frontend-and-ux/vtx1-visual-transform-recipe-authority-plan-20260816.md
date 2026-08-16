@@ -224,6 +224,7 @@ allowedImplementationSurfaces:
   - apps/web/src/app/services/workspace/workspaceGraphDraftProjection.test.ts
   - apps/web/src/app/views/canvas/canvasDraftAuthoring.test.ts
   - docs/architecture/components/web/graph/canvas-inspector-authoring-component.md
+  - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
   - docs/evidence/**
   - docs/risk-register/quality/**
   - docs/planning/proposals/mandatory/frontend-and-ux/vtx1-visual-transform-recipe-authority-plan-20260816.md
@@ -268,11 +269,10 @@ cypressFlows:
   - N/A - contract and persistence slice with no user-facing surface in #2383
 completionGate:
   - pnpm --filter @dvt/contracts test
-  - pnpm --filter dvt-web test
-  - pnpm --filter @dvt/contracts lint
-  - pnpm --filter dvt-web lint
+  - pnpm --filter @dvt/web test:canvas:run -- src/app/views/canvas/canvasDvtTransformAuthoringAuthority.test.ts src/app/services/workspace/workspaceGraphDraftProjection.test.ts src/app/views/canvas/canvasDraftAuthoring.test.ts
+  - pnpm --filter @dvt/web lint
   - pnpm --filter @dvt/contracts typecheck
-  - pnpm --filter dvt-web typecheck
+  - pnpm --filter @dvt/web typecheck
   - pnpm docs:feature-mechanization:implementation -- --feature VTX1-VISUAL-TRANSFORM-RECIPE-AUTHORITY
   - pnpm verify:prepush
 redGreenCycles:
@@ -284,16 +284,17 @@ redGreenCycles:
       - packages/@dvt/contracts/test/visual-transform-recipe.contract.test.ts
     greenTest: pnpm --filter @dvt/contracts test -- visual-transform-recipe.contract.test.ts
   - id: dvt-authority-roundtrip
-    redTest: pnpm --filter dvt-web test -- canvasDvtTransformAuthoringAuthority.test.ts workspaceGraphDraftProjection.test.ts canvasDraftAuthoring.test.ts
+    redTest: pnpm --filter @dvt/web test:canvas:run -- src/app/views/canvas/canvasDvtTransformAuthoringAuthority.test.ts src/app/services/workspace/workspaceGraphDraftProjection.test.ts src/app/views/canvas/canvasDraftAuthoring.test.ts
     expectedFailure: Visual authority and recipe do not have a governed metadata roundtrip.
     patchSurfaces:
       - apps/web/src/app/views/canvas/canvasDvtTransformAuthoringAuthority.ts
       - apps/web/src/app/views/canvas/canvasDvtTransformAuthoringAuthority.test.ts
       - apps/web/src/app/services/workspace/workspaceGraphDraftProjection.test.ts
       - apps/web/src/app/views/canvas/canvasDraftAuthoring.test.ts
-    greenTest: pnpm --filter dvt-web test -- canvasDvtTransformAuthoringAuthority.test.ts workspaceGraphDraftProjection.test.ts canvasDraftAuthoring.test.ts
+    greenTest: pnpm --filter @dvt/web test:canvas:run -- src/app/views/canvas/canvasDvtTransformAuthoringAuthority.test.ts src/app/services/workspace/workspaceGraphDraftProjection.test.ts src/app/views/canvas/canvasDraftAuthoring.test.ts
 symbols:
-  - name: VisualTransformRecipeV1Schema
+  - &contractSymbol
+    name: VisualTransformRecipeV1Schema
     path: packages/@dvt/contracts/src/contracts/planner/VisualTransformRecipe.v1.ts
     dddOwner: VisualTransformRecipeV1
     cqRails: [ConfigureCanvasDvtNode, SaveCanvasAuthoringDraft]
@@ -301,7 +302,68 @@ symbols:
     architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature VTX1-VISUAL-TRANSFORM-RECIPE-AUTHORITY
     cypressCoverage: N/A - contract and persistence slice
     unitTests: [packages/@dvt/contracts/test/visual-transform-recipe.contract.test.ts]
-  - name: readDvtTransformAuthoringAuthority
+  - <<: *contractSymbol
+    name: DVT_TRANSFORM_AUTHORING_MODE
+  - <<: *contractSymbol
+    name: DvtTransformAuthoringAuthorityV1
+  - <<: *contractSymbol
+    name: DvtTransformAuthoringAuthorityV1Schema
+  - <<: *contractSymbol
+    name: JsonScalarSchema
+  - <<: *contractSymbol
+    name: NonBlankStringSchema
+  - <<: *contractSymbol
+    name: NullComparisonFilterV1Schema
+  - <<: *contractSymbol
+    name: SqlTransformAuthoringAuthorityV1Schema
+  - <<: *contractSymbol
+    name: VISUAL_TRANSFORM_FILTER_OPERATOR
+  - <<: *contractSymbol
+    name: VISUAL_TRANSFORM_FUNCTION_ID
+  - <<: *contractSymbol
+    name: VISUAL_TRANSFORM_RECIPE_VERSION
+  - <<: *contractSymbol
+    name: ValueComparisonFilterV1Schema
+  - <<: *contractSymbol
+    name: VisualTransformAuthoringAuthorityV1Schema
+  - <<: *contractSymbol
+    name: VisualTransformCastOperationV1Schema
+  - <<: *contractSymbol
+    name: VisualTransformColumnInputRefV1
+  - <<: *contractSymbol
+    name: VisualTransformColumnInputRefV1Schema
+  - <<: *contractSymbol
+    name: VisualTransformConstantOperationV1Schema
+  - <<: *contractSymbol
+    name: VisualTransformExpressionV1
+  - <<: *contractSymbol
+    name: VisualTransformExpressionV1Schema
+  - <<: *contractSymbol
+    name: VisualTransformFilterV1
+  - <<: *contractSymbol
+    name: VisualTransformFilterV1Schema
+  - <<: *contractSymbol
+    name: VisualTransformFunctionOperationV1Schema
+  - <<: *contractSymbol
+    name: VisualTransformOperationV1
+  - <<: *contractSymbol
+    name: VisualTransformOperationV1Schema
+  - <<: *contractSymbol
+    name: VisualTransformOutputColumnV1
+  - <<: *contractSymbol
+    name: VisualTransformOutputColumnV1Schema
+  - <<: *contractSymbol
+    name: VisualTransformPassthroughOperationV1Schema
+  - <<: *contractSymbol
+    name: VisualTransformRecipeV1
+  - <<: *contractSymbol
+    name: addDuplicateIdIssues
+  - <<: *contractSymbol
+    name: canonicalizeVisualTransformRecipeV1
+  - <<: *contractSymbol
+    name: serializeVisualTransformRecipeV1
+  - &authoritySymbol
+    name: readDvtTransformAuthoringAuthority
     path: apps/web/src/app/views/canvas/canvasDvtTransformAuthoringAuthority.ts
     dddOwner: DvtTransformAuthoringAuthority
     cqRails: [ConfigureCanvasDvtNode, ProjectCanvasAuthoringDraft]
@@ -309,4 +371,20 @@ symbols:
     architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature VTX1-VISUAL-TRANSFORM-RECIPE-AUTHORITY
     cypressCoverage: N/A - no UI in #2383
     unitTests: [apps/web/src/app/views/canvas/canvasDvtTransformAuthoringAuthority.test.ts]
+  - <<: *authoritySymbol
+    name: DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY
+  - <<: *authoritySymbol
+    name: DvtTransformAuthoringAuthority
+  - <<: *authoritySymbol
+    name: applyDvtVisualTransformRecipe
+  - <<: *authoritySymbol
+    name: assertDvtTransformNode
+  - <<: *authoritySymbol
+    name: convertDvtVisualTransformToSql
+  - <<: *authoritySymbol
+    name: hasEditableSqlMetadata
+  - <<: *authoritySymbol
+    name: isRecord
+  - <<: *authoritySymbol
+    name: removeEditableSqlMetadata
 ```
