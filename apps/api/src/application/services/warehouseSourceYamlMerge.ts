@@ -86,9 +86,19 @@ export function buildGovernedSourceMetadata(
   connectionId: string,
   databaseUser: string | undefined
 ): Readonly<Record<string, unknown>> {
-  const existingMeta = isRecord(existingMetadata.meta) ? existingMetadata.meta : {};
-  const { dvt_source_identity: _ownedIdentity, ...userMeta } = existingMeta;
-  const { meta: _existingMeta, ...metadataWithoutMeta } = existingMetadata;
+  const legacyMeta = isRecord(existingMetadata.meta) ? existingMetadata.meta : {};
+  const existingConfig = isRecord(existingMetadata.config) ? existingMetadata.config : {};
+  const existingConfigMeta = isRecord(existingConfig.meta) ? existingConfig.meta : {};
+  const { dvt_source_identity: _ownedIdentity, ...userMeta } = {
+    ...legacyMeta,
+    ...existingConfigMeta,
+  };
+  const { meta: _existingConfigMeta, ...configWithoutMeta } = existingConfig;
+  const {
+    config: _existingConfig,
+    meta: _legacyMeta,
+    ...metadataWithoutConfigOrLegacyMeta
+  } = existingMetadata;
   const nextMeta = {
     ...userMeta,
     ...(databaseUser === undefined
@@ -100,10 +110,14 @@ export function buildGovernedSourceMetadata(
           },
         }),
   };
+  const nextConfig = {
+    ...configWithoutMeta,
+    ...(Object.keys(nextMeta).length === 0 ? {} : { meta: nextMeta }),
+  };
 
   return {
-    ...metadataWithoutMeta,
-    ...(Object.keys(nextMeta).length === 0 ? {} : { meta: nextMeta }),
+    ...metadataWithoutConfigOrLegacyMeta,
+    ...(Object.keys(nextConfig).length === 0 ? {} : { config: nextConfig }),
   };
 }
 
