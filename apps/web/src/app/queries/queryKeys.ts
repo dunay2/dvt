@@ -48,6 +48,8 @@ export const queryKeys = {
     audit: (workspaceLayoutKey: string) => ['workspace', 'audit', workspaceLayoutKey] as const,
     fileTree: (workspaceLayoutKey: string) =>
       ['workspace', 'file-tree', workspaceLayoutKey] as const,
+    fileContentRoot: (workspaceLayoutKey: string) =>
+      ['workspace', 'file-content', workspaceLayoutKey] as const,
     fileContent: (workspaceLayoutKey: string, path: string) =>
       ['workspace', 'file-content', workspaceLayoutKey, path] as const,
     fileHistory: (workspaceLayoutKey: string, path: string) =>

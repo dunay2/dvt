@@ -56,6 +56,7 @@ export type BuildCommandArgsResult = {
   draftQueryCache: {
     fetchLatestRemoteDraftState: ReturnType<typeof vi.fn>;
     fetchLatestRemoteDraft: ReturnType<typeof vi.fn>;
+    refreshWorkspaceFilesAfterSourceRemoval: ReturnType<typeof vi.fn>;
     replaceRemoteDraftState: ReturnType<typeof vi.fn>;
   };
   setDraftSession: ReturnType<typeof vi.fn>;
@@ -94,6 +95,7 @@ export function buildCommandArgs(overrides: BuildCommandOverrides = {}): BuildCo
   const draftQueryCache = {
     fetchLatestRemoteDraftState: vi.fn(),
     fetchLatestRemoteDraft: vi.fn(),
+    refreshWorkspaceFilesAfterSourceRemoval: vi.fn(),
     replaceRemoteDraftState: vi.fn(),
   };
   const setDraftSession = vi.fn();

@@ -51,6 +51,7 @@ function buildHookArgs(overrides: Partial<HookArgs> = {}): HookArgs {
     draftQueryCache: {
       fetchLatestRemoteDraftState: vi.fn(),
       fetchLatestRemoteDraft: vi.fn(),
+      refreshWorkspaceFilesAfterSourceRemoval: vi.fn(),
       replaceRemoteDraftState: vi.fn(),
     },
     graphDraftState: buildDraftState('rev-1'),

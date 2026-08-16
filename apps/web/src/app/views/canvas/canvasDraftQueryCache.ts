@@ -8,12 +8,14 @@ import {
 type CanvasDraftQueryClient = {
   cancelQueries: (args: { queryKey: readonly unknown[] }) => Promise<unknown>;
   fetchQuery: <T>(args: { queryKey: readonly unknown[]; queryFn: () => Promise<T> }) => Promise<T>;
+  invalidateQueries: (args: { queryKey: readonly unknown[] }) => Promise<unknown>;
   setQueryData: (queryKey: readonly unknown[], value: unknown) => void;
 };
 
 export type CanvasDraftQueryCache = {
   fetchLatestRemoteDraftState: () => Promise<CanvasAuthoringDraftReadModel>;
   fetchLatestRemoteDraft: () => Promise<CanvasAuthoringDraftRecord | null>;
+  refreshWorkspaceFilesAfterSourceRemoval: () => Promise<void>;
   replaceRemoteDraftState: (state: CanvasAuthoringDraftReadModel) => void;
 };
 
@@ -40,6 +42,16 @@ export function createCanvasDraftQueryCache(
           queryFn: () => draftRepository.readGraphDraftState(),
         })
       ).record;
+    },
+    refreshWorkspaceFilesAfterSourceRemoval: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.workspace.fileTree(workspaceLayoutKey),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.workspace.fileContentRoot(workspaceLayoutKey),
+        }),
+      ]);
     },
     replaceRemoteDraftState: (state) => {
       queryClient.setQueryData(graphDraftKey, state);
