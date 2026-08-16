@@ -307,6 +307,19 @@ test('emit-scope workflow mode routes executable CI tool contracts only for inst
   assert.equal(packageScriptScope.ci_tool_executable_contracts_relevant, true);
 });
 
+test('emit-scope workflow mode keeps product evidence out of CI self-test authority', () => {
+  const scope = computeWorkflowModeScopeOutputs('workflow', [
+    'apps/web/src/app/views/canvas/canvasColumnLineageProjection.ts',
+    'docs/.manifest.json',
+    'docs/evidence/ED-20991231-web-feature-proof.md',
+  ]);
+
+  assert.equal(scope.changed_file_validation_relevant, false);
+  assert.equal(scope.ci_tool_executable_contracts_relevant, false);
+  assert.equal(scope.docs_changed, true);
+  assert.equal(scope.any_code, true);
+});
+
 test('emit-scope workflow mode routes traceability only for ADRs and governed source', () => {
   const adrScope = computeWorkflowModeScopeOutputs('workflow', [
     'docs/adr/ADR-0056-web-ui-authority-is-server-projected.md',
