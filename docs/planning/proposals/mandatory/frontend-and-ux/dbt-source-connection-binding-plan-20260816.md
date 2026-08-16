@@ -219,14 +219,17 @@ allowedImplementationSurfaces:
   - apps/api/src/application/services/warehouseSourceImportPlan.ts
   - apps/api/src/application/services/dbtProjectFilesWarehouseSourceImportStrategy.ts
   - apps/api/src/infrastructure/dbt/dbtManifestProjection.ts
-  - apps/api/test/application/importWarehouseSourcesUseCase.test.ts
+  - apps/api/test/application/services/importWarehouseSourcesUseCase.test.ts
+  - apps/api/test/application/services/dbtProjectFilesWarehouseSourceImportStrategy.test.ts
   - apps/api/test/application/projectDbtGraphFromFilesUseCase.test.ts
   - apps/api/test/application/dbtProjectImportUseCases.test.ts
   - apps/api/test/application/dbtProjectImportSourceBinding.test.ts
+  - apps/api/test/entrypoints/http/dbtProjectImportRoutes.test.ts
   - apps/api/test/infrastructure/dbt/dbtManifestProjection.test.ts
   - apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
   - apps/web/src/app/components/SourceImportWizard.tsx
   - apps/web/src/app/components/SourceImportWizard.test.tsx
+  - apps/web/src/app/components/SourceImportWizard.metadata.test.tsx
   - apps/web/src/app/components/dbtProjectImport/**
   - apps/web/src/app/components/sourceImportWizard/**
   - apps/web/src/app/views/canvas/CanvasShell.tsx
@@ -234,10 +237,11 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.tsx
   - apps/web/src/app/views/canvas/canvasShell.types.ts
   - apps/web/src/app/views/canvas/useCanvasSourceImportDialogState.ts
+  - apps/web/src/app/services/dbtProject/dbtProjectImport.api.test.ts
   - packages/@dvt/contracts/src/contracts/dbt-project/DbtProjectImport.v1.ts
   - packages/@dvt/contracts/src/contracts/source-import/SourceImportOperations.v2.ts
   - packages/@dvt/contracts/test/dbt-project-import.contract.test.ts
-  - packages/@dvt/contracts/test/source-import-operations-v2.contract.test.ts
+  - packages/@dvt/contracts/test/source-import/SourceImportOperations.v2.test.ts
   - docs/architecture/components/web/graph/dbt-project-import-and-source-authority-component.md
   - docs/evidence/**
   - docs/risk-register/quality/**
@@ -342,6 +346,28 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
     unitTests:
       - packages/@dvt/contracts/test/dbt-project-import.contract.test.ts
+  - name: DbtProjectSourceTableDeclaration
+    path: packages/@dvt/contracts/src/contracts/dbt-project/DbtProjectImport.v1.ts
+    dddOwner: DbtProjectImportValidationReport
+    cqRails:
+      - ValidateDbtProjectImport
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
+    unitTests:
+      - packages/@dvt/contracts/test/dbt-project-import.contract.test.ts
+  - name: DbtProjectSourceTableDeclarationListSchema
+    path: packages/@dvt/contracts/src/contracts/dbt-project/DbtProjectImport.v1.ts
+    dddOwner: DbtProjectImportValidationReport
+    cqRails:
+      - ValidateDbtProjectImport
+    fowlerSignals:
+      - Duplicate semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
+    unitTests:
+      - packages/@dvt/contracts/test/dbt-project-import.contract.test.ts
   - name: ExistingDbtSourceTargetSchema
     path: packages/@dvt/contracts/src/contracts/source-import/SourceImportOperations.v2.ts
     dddOwner: WarehouseSourceImport
@@ -352,7 +378,40 @@ symbols:
     architectureGuard: pnpm docs:feature-mechanization:implementation
     cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
     unitTests:
-      - packages/@dvt/contracts/test/source-import-operations-v2.contract.test.ts
+      - packages/@dvt/contracts/test/source-import/SourceImportOperations.v2.test.ts
+  - name: ExistingDbtSourceTarget
+    path: packages/@dvt/contracts/src/contracts/source-import/SourceImportOperations.v2.ts
+    dddOwner: WarehouseSourceImport
+    cqRails:
+      - ImportWarehouseSources
+    fowlerSignals:
+      - Primitive obsession
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
+    unitTests:
+      - packages/@dvt/contracts/test/source-import/SourceImportOperations.v2.test.ts
+  - name: ExistingDbtSourceTargetListSchema
+    path: packages/@dvt/contracts/src/contracts/source-import/SourceImportOperations.v2.ts
+    dddOwner: WarehouseSourceImport
+    cqRails:
+      - ImportWarehouseSources
+    fowlerSignals:
+      - Duplicate semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
+    unitTests:
+      - packages/@dvt/contracts/test/source-import/SourceImportOperations.v2.test.ts
+  - name: WorkspaceRelativeFilePathSchema
+    path: packages/@dvt/contracts/src/contracts/source-import/SourceImportOperations.v2.ts
+    dddOwner: WarehouseSourceImport
+    cqRails:
+      - ImportWarehouseSources
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
+    unitTests:
+      - packages/@dvt/contracts/test/source-import/SourceImportOperations.v2.test.ts
   - name: projectSourceTableDeclaration
     path: apps/api/src/infrastructure/dbt/dbtManifestProjection.ts
     dddOwner: dbt Project Analysis
@@ -375,6 +434,17 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
     unitTests:
       - apps/api/test/application/dbtProjectImportSourceBinding.test.ts
+  - name: assertTargetMatchesSourceObject
+    path: apps/api/src/application/services/warehouseSourceImportPlan.ts
+    dddOwner: WarehouseSourceImportFilePlan
+    cqRails:
+      - ImportWarehouseSources
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
+    unitTests:
+      - apps/api/test/application/services/dbtProjectFilesWarehouseSourceImportStrategy.test.ts
   - name: matchRequestedDbtSourceTargets
     path: apps/web/src/app/components/sourceImportWizard/sourceImportWizardModel.ts
     dddOwner: SourceImportWizardPresentationModel
@@ -386,4 +456,26 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
     unitTests:
       - apps/web/src/app/components/sourceImportWizard/sourceImportWizardModel.test.ts
+  - name: RequestedDbtSourceTargetMatch
+    path: apps/web/src/app/components/sourceImportWizard/sourceImportWizardModel.ts
+    dddOwner: SourceImportWizardPresentationModel
+    cqRails:
+      - ImportWarehouseSources
+    fowlerSignals:
+      - Primitive obsession
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
+    unitTests:
+      - apps/web/src/app/components/sourceImportWizard/sourceImportWizardModel.test.ts
+  - name: SourceImportInitialSelection
+    path: apps/web/src/app/components/sourceImportWizard/types.ts
+    dddOwner: SourceImportWizardPresentationModel
+    cqRails:
+      - ImportWarehouseSources
+    fowlerSignals:
+      - Duplicate semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
+    unitTests:
+      - apps/web/src/app/components/SourceImportWizard.metadata.test.tsx
 ```
