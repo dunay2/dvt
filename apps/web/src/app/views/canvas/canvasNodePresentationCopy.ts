@@ -167,6 +167,7 @@ export function buildCanvasNodePresentationCopy(
     columnsLabel: copy.nodePresentationColumnsLabel,
     declaredColumnsDetailTemplate: copy.nodePresentationDeclaredColumnsDetailTemplate,
     inheritedColumnsDetailTemplate: copy.nodePresentationInheritedColumnsDetailTemplate,
+    mixedColumnsDetailTemplate: copy.nodePresentationMixedColumnsDetailTemplate,
     noColumnsDetail: copy.nodePresentationNoColumnsDetail,
     codeLabel: copy.nodePresentationCodeLabel,
     workspaceCodeDetailTemplate: copy.nodePresentationWorkspaceCodeDetailTemplate,

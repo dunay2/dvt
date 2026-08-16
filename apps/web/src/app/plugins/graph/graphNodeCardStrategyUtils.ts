@@ -409,7 +409,14 @@ export function resolveColumnMetricPresentation(
       ? interpolateCount(copy.declaredColumnsDetailTemplate, count)
       : truth.columns.visibleProvenance === 'inherited'
         ? interpolateCount(copy.inheritedColumnsDetailTemplate, count)
-        : copy.noColumnsDetail;
+        : truth.columns.visibleProvenance === 'mixed'
+          ? copy.mixedColumnsDetailTemplate
+              .replace('{declared}', String(truth.columns.declaredCount))
+              .replace(
+                '{available}',
+                String(truth.columns.visibleCount - truth.columns.declaredCount)
+              )
+          : copy.noColumnsDetail;
 
   return { count, label: copy.columnsLabel, detail };
 }

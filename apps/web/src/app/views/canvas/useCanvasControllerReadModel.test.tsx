@@ -60,6 +60,7 @@ function buildReadModelArgs(
       nodes: [graphNode],
       edges: [],
       canonicalNodesById: new Map([[testNode.id, testNode]]),
+      onEdgesChange: vi.fn(),
     },
     visibleScope: {
       canonicalNodes: [testNode],
@@ -235,6 +236,7 @@ describe('useCanvasControllerReadModel', () => {
         nodes: graphNodes,
         edges: [],
         canonicalNodesById: new Map([sourceNode, modelNode].map((node) => [node.id, node])),
+        onEdgesChange: vi.fn(),
       },
       visibleScope: {
         canonicalNodes: [sourceNode, modelNode],
@@ -254,6 +256,7 @@ describe('useCanvasControllerReadModel', () => {
         type: 'columnLineage',
         source: sourceNode.id,
         target: modelNode.id,
+        ariaLabel: 'order_id → order_id',
         data: { kind: 'column-lineage', removable: true },
       });
       const onRemove = state?.edgesWithImpact[0]?.data?.onRemove;
@@ -261,6 +264,20 @@ describe('useCanvasControllerReadModel', () => {
       (onRemove as () => void)();
       expect(args.graphHandlers.handleRemoveColumnMapping).toHaveBeenCalledTimes(1);
       expect(args.graphModel.edges).toEqual([]);
+
+      await act(async () => {
+        state?.handleEdgesChange([
+          { id: state.edgesWithImpact[0]?.id ?? '', type: 'select', selected: true },
+        ]);
+      });
+      expect(mounted.readState()?.edgesWithImpact[0]?.selected).toBe(true);
+
+      await act(async () => {
+        mounted
+          .readState()
+          ?.handleEdgesChange([{ id: state?.edgesWithImpact[0]?.id ?? '', type: 'remove' }]);
+      });
+      expect(args.graphHandlers.handleRemoveColumnMapping).toHaveBeenCalledTimes(2);
 
       const sourceData = state?.nodesWithImpact[0]?.data as ReadModelNodeData;
       expect(sourceData.onColumnPortActivate).toBe(args.graphHandlers.handleColumnPortActivate);
@@ -292,6 +309,7 @@ describe('useCanvasControllerReadModel', () => {
         nodes: [graphNode],
         edges: [],
         canonicalNodesById: new Map([[sourceNode.id, sourceNode]]),
+        onEdgesChange: vi.fn(),
       },
       visibleScope: {
         canonicalNodes: [sourceNode],
@@ -362,6 +380,7 @@ describe('useCanvasControllerReadModel', () => {
         ),
         edges: [],
         canonicalNodesById: new Map(canonicalNodes.map((node) => [node.id, node])),
+        onEdgesChange: vi.fn(),
       },
       visibleScope: { canonicalNodes, canonicalEdges: [] },
       executionScope: {
@@ -399,6 +418,7 @@ describe('useCanvasControllerReadModel', () => {
         ],
         edges: [],
         canonicalNodesById: new Map([[sourceNode.id, sourceNode]]),
+        onEdgesChange: vi.fn(),
       },
       visibleScope: { canonicalNodes: [sourceNode], canonicalEdges: [] },
       executionScope: { selectedNodeIds: [sourceNode.id], workspaceNodeIds: [sourceNode.id] },
@@ -438,6 +458,7 @@ describe('useCanvasControllerReadModel', () => {
         nodes: graphNodes,
         edges: [],
         canonicalNodesById: new Map([[sourceNode.id, sourceNode]]),
+        onEdgesChange: vi.fn(),
       },
       visibleScope: { canonicalNodes: [sourceNode], canonicalEdges: [] },
       executionScope: { selectedNodeIds: [], workspaceNodeIds: [sourceNode.id] },

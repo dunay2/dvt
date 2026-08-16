@@ -192,6 +192,10 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.nodePresentation.inheritedColumnsDetailTemplate',
     fallback: '{count} columns inherited from connected inputs; none declared by this node.',
   },
+  nodePresentationMixedColumnsDetailTemplate: {
+    key: 'canvas.nodePresentation.mixedColumnsDetailTemplate',
+    fallback: 'Mapped columns: {declared}. Available input columns: {available}.',
+  },
   nodePresentationNoColumnsDetail: {
     key: 'canvas.nodePresentation.noColumnsDetail',
     fallback: 'No declared or inherited columns are available for this node.',

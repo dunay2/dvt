@@ -346,6 +346,7 @@ export type CanvasViewCopy = {
   readonly nodePresentationColumnsLabel: string;
   readonly nodePresentationDeclaredColumnsDetailTemplate: string;
   readonly nodePresentationInheritedColumnsDetailTemplate: string;
+  readonly nodePresentationMixedColumnsDetailTemplate: string;
   readonly nodePresentationNoColumnsDetail: string;
   readonly nodePresentationCodeLabel: string;
   readonly nodePresentationWorkspaceCodeDetailTemplate: string;

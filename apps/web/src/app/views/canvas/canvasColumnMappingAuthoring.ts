@@ -141,7 +141,7 @@ export function resolveCanvasColumnMappingTarget(
     if (authority.mode === DVT_TRANSFORM_AUTHORING_MODE.visual) {
       const output = authority.recipe.outputs.find((candidate) => candidate.id === columnId);
       return output == null
-        ? null
+        ? { nodeId: targetNode.id, columnName: columnId }
         : {
             nodeId: targetNode.id,
             outputId: output.id,
@@ -149,12 +149,11 @@ export function resolveCanvasColumnMappingTarget(
             ...(output.dataType == null ? {} : { dataType: output.dataType }),
           };
     }
+    const targetColumn = readColumns(targetNode).find((column) => column.name === columnId);
     return {
       nodeId: targetNode.id,
       columnName: columnId,
-      ...(readColumns(targetNode).find((column) => column.name === columnId)?.type == null
-        ? {}
-        : { dataType: readColumns(targetNode).find((column) => column.name === columnId)?.type }),
+      ...(targetColumn?.type == null ? {} : { dataType: targetColumn.type }),
     };
   } catch {
     return null;

@@ -7,6 +7,7 @@ import {
   applyCanvasColumnMapping,
   automapCanvasColumns,
   removeCanvasColumnMapping,
+  resolveCanvasColumnMappingTarget,
 } from './canvasColumnMappingAuthoring';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 
@@ -239,6 +240,10 @@ describe('Canvas column mapping authoring', () => {
     const authority = readDvtTransformAuthoringAuthority(updated);
     if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.visual) return;
     expect(authority.recipe.outputs).toEqual([]);
+    expect(resolveCanvasColumnMappingTarget(updated, 'event_id')).toEqual({
+      nodeId: 'model',
+      columnName: 'event_id',
+    });
     expect(removed.draftSession.workingSet.visibleEdges).toEqual([
       { sourceId: 'source', targetId: 'model' },
     ]);

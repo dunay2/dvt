@@ -720,7 +720,9 @@ export function buildNodePropertiesReadModel({
   const columnRows = localizePropertyTableRows(
     presentationTruth.columns.visibleProvenance === 'declared'
       ? buildColumnRows(columns)
-      : buildInheritedColumnRows(presentationTruth.columns.inherited),
+      : presentationTruth.columns.visibleProvenance === 'mixed'
+        ? buildInheritedColumnRows(presentationTruth.columns.visible)
+        : buildInheritedColumnRows(presentationTruth.columns.inherited),
     presentationCopy
   );
   const keyRows = localizePropertyTableRows(buildKeyRows(metadata, columns), presentationCopy);
@@ -751,7 +753,14 @@ export function buildNodePropertiesReadModel({
           ? interpolatePresentationTemplate(presentationCopy.inheritedColumnsDetailTemplate, {
               count: String(presentationTruth.columns.visibleCount),
             })
-          : presentationCopy.noColumnsDetail;
+          : presentationTruth.columns.visibleProvenance === 'mixed'
+            ? interpolatePresentationTemplate(presentationCopy.mixedColumnsDetailTemplate, {
+                declared: String(presentationTruth.columns.declaredCount),
+                available: String(
+                  presentationTruth.columns.visibleCount - presentationTruth.columns.declaredCount
+                ),
+              })
+            : presentationCopy.noColumnsDetail;
   const codeDescription =
     presentationCopy == null
       ? undefined

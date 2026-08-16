@@ -47,16 +47,28 @@ export function projectCanvasNodePresentationTruth(
       provenance: 'declared' as const,
       reference: output.id,
     }));
+    const declaredNames = new Set(declared.map((column) => column.name));
+    const prospective = baseTruth.columns.inherited.filter(
+      (column) => !declaredNames.has(column.name)
+    );
+    const visible = [...declared, ...prospective];
     return {
       ...baseTruth,
       columns: {
         declared,
         inherited: baseTruth.columns.inherited,
-        visible: declared,
+        visible,
         declaredCount: declared.length,
         inheritedCount: baseTruth.columns.inheritedCount,
-        visibleCount: declared.length,
-        visibleProvenance: declared.length > 0 ? 'declared' : 'none',
+        visibleCount: visible.length,
+        visibleProvenance:
+          declared.length > 0 && prospective.length > 0
+            ? 'mixed'
+            : declared.length > 0
+              ? 'declared'
+              : prospective.length > 0
+                ? 'inherited'
+                : 'none',
       },
     };
   } catch {

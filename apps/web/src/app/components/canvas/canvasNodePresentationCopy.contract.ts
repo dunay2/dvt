@@ -3,6 +3,7 @@ export type CanvasNodePresentationCopy = Readonly<{
   columnsLabel: string;
   declaredColumnsDetailTemplate: string;
   inheritedColumnsDetailTemplate: string;
+  mixedColumnsDetailTemplate: string;
   noColumnsDetail: string;
   codeLabel: string;
   workspaceCodeDetailTemplate: string;
@@ -31,6 +32,7 @@ export function isCanvasNodePresentationCopy(value: unknown): value is CanvasNod
     typeof value.columnsLabel === 'string' &&
     typeof value.declaredColumnsDetailTemplate === 'string' &&
     typeof value.inheritedColumnsDetailTemplate === 'string' &&
+    typeof value.mixedColumnsDetailTemplate === 'string' &&
     typeof value.noColumnsDetail === 'string' &&
     typeof value.codeLabel === 'string' &&
     typeof value.workspaceCodeDetailTemplate === 'string' &&

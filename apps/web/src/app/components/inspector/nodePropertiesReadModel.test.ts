@@ -13,6 +13,7 @@ const presentationCopy = {
   columnsLabel: 'Columns',
   declaredColumnsDetailTemplate: '{count} declared columns.',
   inheritedColumnsDetailTemplate: '{count} inherited columns.',
+  mixedColumnsDetailTemplate: '{declared} mapped and {available} available columns.',
   noColumnsDetail: 'No columns.',
   codeLabel: 'Code',
   workspaceCodeDetailTemplate: 'Code lives at {path}.',

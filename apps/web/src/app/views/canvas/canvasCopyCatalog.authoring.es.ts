@@ -68,6 +68,8 @@ export const canvasViewAuthoringCopyEs = {
   nodePresentationDeclaredColumnsDetailTemplate: '{count} columnas declaradas por este nodo.',
   nodePresentationInheritedColumnsDetailTemplate:
     '{count} columnas heredadas de las entradas conectadas; ninguna declarada por este nodo.',
+  nodePresentationMixedColumnsDetailTemplate:
+    'Columnas asignadas: {declared}. Columnas de entrada disponibles: {available}.',
   nodePresentationNoColumnsDetail:
     'No hay columnas declaradas ni heredadas disponibles para este nodo.',
   nodePresentationCodeLabel: 'Código',

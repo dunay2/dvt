@@ -151,11 +151,12 @@ function buildCanvasInteractionViewModel(args: CanvasControllerViewModelArgs) {
     graphHandlers,
     overlayModel,
     authoringRuntime: { handleCreateCanvasDocument },
+    readModel,
   } = args;
 
   return {
     onNodesChange: mutationHandlers.handleNodesChange,
-    onEdgesChange: mutationHandlers.handleEdgesChange,
+    onEdgesChange: readModel.handleEdgesChange,
     onConnect: graphHandlers.onConnect,
     onReconnect: graphHandlers.onReconnect,
     handleViewportChange: persistence.handleViewportChange,

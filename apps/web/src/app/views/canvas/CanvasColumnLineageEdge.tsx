@@ -69,7 +69,7 @@ export function CanvasColumnLineageEdge({
               event.stopPropagation();
               data.onRemove?.();
             }}
-            className="pointer-events-auto absolute rounded border border-purple-400/70 bg-slate-950 px-2 py-1 text-[10px] font-semibold text-purple-100 shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400"
+            className="pointer-events-auto absolute z-50 rounded border border-purple-400/70 bg-slate-950 px-2 py-1 text-[10px] font-semibold text-purple-100 shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400"
             style={{ transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)` }}
           >
             {language === 'es' ? 'Eliminar' : 'Remove'}

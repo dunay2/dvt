@@ -19,7 +19,7 @@ export type CanvasNodeColumnTruth = Readonly<{
   declaredCount: number;
   inheritedCount: number;
   visibleCount: number;
-  visibleProvenance: CanvasNodePresentationColumnProvenance | 'none';
+  visibleProvenance: CanvasNodePresentationColumnProvenance | 'mixed' | 'none';
 }>;
 
 export type CanvasNodeCodeLanguage = 'sql' | 'yaml' | 'json' | 'text';
@@ -66,6 +66,7 @@ export function isCanvasNodePresentationTruth(
     typeof value.columns.visibleCount === 'number' &&
     (value.columns.visibleProvenance === 'declared' ||
       value.columns.visibleProvenance === 'inherited' ||
+      value.columns.visibleProvenance === 'mixed' ||
       value.columns.visibleProvenance === 'none') &&
     (value.code.kind === 'inline' ||
       value.code.kind === 'workspace-file' ||
