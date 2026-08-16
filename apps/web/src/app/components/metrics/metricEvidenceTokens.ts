@@ -2,6 +2,7 @@
 export const metricEvidenceHotspotClasses = {
   trigger:
     'cursor-help rounded-sm underline decoration-dotted underline-offset-2 outline-none focus-visible:ring-2 focus-visible:ring-sky-400',
+  interactive: 'cursor-pointer',
   tone: {
     neutral: 'text-slate-200 decoration-slate-500/70',
     measured: 'text-green-300 decoration-green-500/70',

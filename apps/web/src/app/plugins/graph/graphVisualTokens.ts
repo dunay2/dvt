@@ -57,6 +57,10 @@ export const graphNodeMetricRowClasses = {
   },
 } as const;
 
+export const graphNodeMetricHotspotClasses = {
+  interactive: 'nodrag nopan',
+} as const;
+
 export const graphNodeTagListClasses = {
   root: 'mt-3 flex flex-wrap gap-1.5',
   tag: 'rounded border border-slate-700 bg-slate-900 px-2 py-0.5 text-xs text-slate-300',

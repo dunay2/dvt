@@ -13,6 +13,7 @@ import { graphNodeMetricRowClasses } from './graphVisualTokens';
 
 export type GraphNodeMetricRowProps = Readonly<{
   metrics: readonly GraphNodeCardMetric[];
+  onOpenCode?: () => void;
 }>;
 
 function resolveMetricValueClassName(tone: GraphNodeCardStatusTone | undefined): string {
@@ -21,7 +22,10 @@ function resolveMetricValueClassName(tone: GraphNodeCardStatusTone | undefined):
     : `${graphNodeMetricRowClasses.value} ${graphNodeMetricRowClasses.valueTone[tone]}`;
 }
 
-export function GraphNodeMetricRow({ metrics }: GraphNodeMetricRowProps): ReactElement | null {
+export function GraphNodeMetricRow({
+  metrics,
+  onOpenCode,
+}: GraphNodeMetricRowProps): ReactElement | null {
   if (metrics.length === 0) {
     return null;
   }
@@ -34,6 +38,7 @@ export function GraphNodeMetricRow({ metrics }: GraphNodeMetricRowProps): ReactE
           <GraphNodeMetricHotspot
             className={resolveMetricValueClassName(metric.tone)}
             detail={metric.detail ?? `${metric.label}: ${metric.value}`}
+            onActivate={metric.id === 'code' ? onOpenCode : undefined}
             tone={resolveGraphNodeMetricEvidenceTone(metric.tone)}
             value={metric.value}
           />
