@@ -142,6 +142,28 @@ describe('Canvas column mapping authoring', () => {
     ]);
   });
 
+  it('keeps the source type when a prospective target has no declared type yet', () => {
+    const source = buildNode('source', 'dvt:source', 'input', [{ name: 'customer', type: 'text' }]);
+    const model = buildNode('model', 'dvt:sql_transform', 'transform');
+    const session = buildSession([source, model], [{ sourceId: source.id, targetId: model.id }]);
+
+    const mapped = readMappedTransform(
+      applyCanvasColumnMapping({
+        draftSession: session,
+        canonicalNodesById: new Map([
+          [source.id, source],
+          [model.id, model],
+        ]),
+        source: { nodeId: source.id, columnName: 'customer' },
+        target: { nodeId: model.id, columnName: 'customer' },
+      })
+    );
+    const authority = readDvtTransformAuthoringAuthority(mapped);
+
+    if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.visual) return;
+    expect(authority.recipe.outputs[0]?.dataType).toBe('text');
+  });
+
   it('fails closed rather than discarding nonblank SQL authority', () => {
     const source = buildNode('source', 'dvt:source', 'input', [
       { name: 'event_id', type: 'integer' },

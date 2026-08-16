@@ -189,7 +189,10 @@ export function applyCanvasColumnMapping(args: {
   if (!hasStageDependency(args.draftSession, sourceNode.id, targetNode.id)) {
     return { outcome: 'rejected', reason: 'source_not_connected' };
   }
-  if (!readColumns(sourceNode).some((column) => column.name === args.source.columnName)) {
+  const sourceColumn = readColumns(sourceNode).find(
+    (column) => column.name === args.source.columnName
+  );
+  if (sourceColumn == null) {
     return { outcome: 'rejected', reason: 'source_column_not_found' };
   }
 
@@ -208,8 +211,8 @@ export function applyCanvasColumnMapping(args: {
   const nextOutput: VisualTransformOutputColumnV1 = {
     id: currentOutput?.id ?? args.target.outputId ?? createOutputId(args.target.columnName),
     name: currentOutput?.name ?? args.target.columnName,
-    ...(currentOutput?.dataType != null || args.target.dataType != null
-      ? { dataType: currentOutput?.dataType ?? args.target.dataType }
+    ...(currentOutput?.dataType != null || args.target.dataType != null || sourceColumn.type != null
+      ? { dataType: currentOutput?.dataType ?? args.target.dataType ?? sourceColumn.type }
       : {}),
     expression: {
       inputs: [args.source],
