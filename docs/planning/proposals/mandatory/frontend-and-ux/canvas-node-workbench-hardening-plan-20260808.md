@@ -128,6 +128,73 @@ removed. This is contract and localization cleanup, not a compatibility alias.
 
 GitHub issue #2255 remains the independent live-product/product-owner acceptance gate.
 
+## Bounded card-column disclosure — #2391
+
+### Pre-implementation brief
+
+- **Mode:** Full. This changes visible card interaction and localized product copy.
+- **Outcome:** an expanded card shows at most five columns until the author explicitly
+  requests the remainder.
+- **Existing owner:** `GraphNodeColumnSection`; no second list, popover, store or
+  persistence surface is introduced.
+- **Query rail:** reuse `ProjectGraphNodeCardReadModel`. The component receives the
+  already-authorized column projection and owns only transient disclosure state.
+- **Language:** the existing graph-card copy resolver owns English and Spanish labels;
+  no literal product copy remains in the component.
+- **Accessibility:** both disclosure controls are real buttons with keyboard parity,
+  visible focus and explicit expanded state. Embedded-control boundaries prevent node
+  selection or drag from becoming a second meaning of the action.
+
+Current mechanism:
+
+```mermaid
+flowchart LR
+  A[ProjectGraphNodeCardReadModel] --> B[GraphNodeColumnSection]
+  B --> C[Complete list inside max-height scroll]
+  C --> D[Additional columns have no textual discovery action]
+```
+
+Target mechanism:
+
+```mermaid
+flowchart LR
+  A[ProjectGraphNodeCardReadModel] --> B[GraphNodeColumnSection]
+  B --> C[First five columns]
+  C -->|remaining count greater than zero| D[Localized reveal action]
+  D --> E[All columns]
+  E --> F[Localized show-first-five action]
+```
+
+| Fowler signal        | Current mechanism                           | MVP correction                                       | Proof                       |
+| -------------------- | ------------------------------------------- | ---------------------------------------------------- | --------------------------- |
+| Hidden authority     | `max-h-32` silently defines discoverability | explicit five-row projection and remaining count     | component test              |
+| Published language   | `Columnas` is hard-coded                    | existing graph-card ES/EN copy resolver              | locale test                 |
+| Primitive obsession  | scrollbar means “there are more”            | semantic reversible button                           | DOM and keyboard assertions |
+| Test-only confidence | no greater-than-five scenario               | five-to-all-to-five cycle plus visible browser proof | Vitest and agent-browser    |
+
+Rejected alternatives:
+
+- Keep the internal scrollbar and add helper text: it preserves the hidden interaction.
+- Add pagination or a modal: disproportionate mechanism for a local disclosure.
+- Persist expanded state: presentation preference does not belong to Graph Draft or a
+  new store.
+
+### Closeout evidence
+
+- The red component test failed because the old component exposed no bounded rows or
+  localized remainder action; the implemented component suite passes all four tests.
+- The related graph-card projection suite passes 38 tests and the full Canvas regression
+  passes 1,154 tests across 283 files.
+- Headed-browser proof against a real ten-column source showed five rows plus
+  `Ver columnas restantes (5)`, ten rows after keyboard activation, and a reversible
+  `Mostrar solo las 5 primeras` action. The same session exposed `Columns (10)` and
+  `Show remaining columns (5)` after switching to English.
+- The transient action uses the shared embedded-control boundary and both disclosure
+  buttons own the column-list region through `aria-controls` and `aria-expanded`.
+- Baseline blocker #2392 restored the missing QueryClient provider in the CanvasShell
+  test composition root and was integrated independently through PR #2393 before this
+  slice continued.
+
 ## Feature Mechanization
 
 ```feature-mechanization
@@ -146,6 +213,7 @@ userStories:
   - As a Canvas author, I use the card ellipsis only for node operations.
   - As a Canvas author, I select or deselect execution through node operations without a misleading Play/Pause control in the card header.
   - As a Canvas author, Impact Highlight follows visual node focus and never treats execution selection as presentation focus.
+  - As a Canvas author, I see five card columns first and can explicitly reveal or hide the remaining columns.
   - As a file-backed dbt author, I open the authoritative editor from Properties Code and return to the same node context.
 governingSources:
   - AGENTS.md
@@ -182,7 +250,10 @@ allowedImplementationSurfaces:
   - apps/web/src/app/plugins/graphStrategyRegistry.test.ts
   - apps/web/src/app/plugins/graph/GraphNodeCardView.test.tsx
   - apps/web/src/app/plugins/graph/GraphNodeCardView.tsx
+  - apps/web/src/app/plugins/graph/GraphNodeColumnSection.test.tsx
+  - apps/web/src/app/plugins/graph/GraphNodeColumnSection.tsx
   - apps/web/src/app/plugins/graph/GraphNodeRenderer.tsx
+  - apps/web/src/app/plugins/graph/graphNodeCardCopyTokens.ts
   - apps/web/src/app/plugins/graph/graphVisualTokens.ts
   - apps/web/src/app/views/canvas/CanvasNodeFloatingToolbarView.test.tsx
   - apps/web/src/app/views/canvas/CanvasNodeFloatingToolbarView.tsx
@@ -243,6 +314,15 @@ forbiddenImplementationSurfaces:
   - tools/planning-db/**/*.ts
   - apps/web/src/app/plugins/graph/graphNodeCardActions*
 commandQueryRails:
+  - name: ProjectGraphNodeCardReadModel
+    type: query
+    status: implemented
+    dddOwner: CanvasGraphPresentation
+    applicationPort: Graph node card strategy
+    adapterSurface: GraphNodeColumnSection
+    authorizationScope: authorized Canvas column projection already admitted to the browser
+    negativeTests:
+      - revealing columns does not select, move or persist the node
   - name: InspectCanvasNode
     type: command
     status: implemented
@@ -269,6 +349,9 @@ commandQueryRails:
     negativeTests:
       - node card header does not expose execution selection as Play or Pause
 domainObjects:
+  - name: GraphNodeColumnDisclosureState
+    type: transient presentation state
+    owner: CanvasGraphPresentation
   - name: CanvasDraftSession
     type: aggregate
     owner: Web Canvas authoring
@@ -288,6 +371,26 @@ domainObjects:
     type: command state
     owner: Canvas execution-selection intent
 symbols:
+  - path: apps/web/src/app/plugins/graph/GraphNodeColumnSection.tsx
+    name: MAX_PREVIEW_COLUMNS
+    kind: constant
+    exported: false
+    dddOwner: CanvasGraphPresentation
+    cqRails: [ProjectGraphNodeCardReadModel]
+    fowlerSignals: [Hidden authority]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- GraphNodeColumnSection.test.tsx]
+  - path: apps/web/src/app/plugins/graph/GraphNodeColumnSection.tsx
+    name: GraphNodeColumnSection
+    kind: function
+    exported: true
+    dddOwner: CanvasGraphPresentation
+    cqRails: [ProjectGraphNodeCardReadModel]
+    fowlerSignals: [Hidden authority, Published language, Primitive obsession]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- GraphNodeColumnSection.test.tsx]
   - path: apps/web/cypress/support/canvasExecutionSelection.ts
     name: openCanvasNodeOperations
     kind: function
@@ -503,10 +606,12 @@ fowlerSignals:
   - split Code versus Workbench node-entry semantics
   - Play/Pause versus execution-selection semantic conflation resolved by #2381: retain the command and retire only the misleading card adapter
   - Impact Highlight versus execution-selection semantic conflation corrected by #2389: visual focus owns transient graph dimming while execution selection remains unchanged
+  - card-column discoverability corrected by #2391: five visible rows and a localized reversible disclosure replace implicit internal scrolling
   - displaced floating-toolbar state and tests
 architectureGuards:
   - pnpm docs:feature-mechanization:implementation --feature W4-CANVAS-NODE-WORKBENCH-HARDENING-20260808
 cypressFlows:
+  - apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
   - apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
   - apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
 completionGate:
@@ -517,6 +622,15 @@ completionGate:
   - pnpm governance:refresh
   - pnpm verify:prepush
 redGreenCycles:
+  - id: bounded-card-column-disclosure
+    redTest: apps/web/src/app/plugins/graph/GraphNodeColumnSection.test.tsx
+    expectedFailure: Expanding a card renders every column inside an implicit scroll region and exposes no localized action for the remainder.
+    patchSurfaces:
+      - apps/web/src/app/plugins/graph/GraphNodeColumnSection.test.tsx
+      - apps/web/src/app/plugins/graph/GraphNodeColumnSection.tsx
+      - apps/web/src/app/plugins/graph/graphNodeCardCopyTokens.ts
+      - apps/web/src/app/plugins/graph/graphVisualTokens.ts
+    greenTest: apps/web/src/app/plugins/graph/GraphNodeColumnSection.test.tsx
   - id: impact-visual-focus-separation
     redTest: apps/web/src/app/views/canvas/useCanvasController.core.test.tsx
     expectedFailure: Impact Highlight receives execution-selected node ids, so graph dimming survives ordinary visual focus changes and pane deselection.

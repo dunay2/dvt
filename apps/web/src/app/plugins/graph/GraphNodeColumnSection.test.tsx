@@ -5,9 +5,20 @@ import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { GraphNodeColumnSection } from './GraphNodeColumnSection';
 
 describe('GraphNodeColumnSection', () => {
+  const EIGHT_COLUMNS = [
+    { name: 'column_1', type: 'text' },
+    { name: 'column_2', type: 'text' },
+    { name: 'column_3', type: 'text' },
+    { name: 'column_4', type: 'text' },
+    { name: 'column_5', type: 'text' },
+    { name: 'column_6', type: 'text' },
+    { name: 'column_7', type: 'text' },
+    { name: 'column_8', type: 'text' },
+  ] as const;
   let container: HTMLDivElement;
   let root: Root;
   let previousActEnvironment: boolean | undefined;
@@ -19,6 +30,71 @@ describe('GraphNodeColumnSection', () => {
     container = document.createElement('div');
     document.body.append(container);
     root = createRoot(container);
+    useApplicationLanguageStore.setState({ language: 'es' });
+  });
+
+  it('shows five columns before explicitly revealing and hiding the remainder', () => {
+    act(() => {
+      root.render(<GraphNodeColumnSection columns={EIGHT_COLUMNS} />);
+    });
+
+    const sectionToggle = container.querySelector<HTMLButtonElement>(
+      '[data-slot="graph-node-column-toggle"]'
+    );
+    act(() => {
+      fireEvent.click(sectionToggle!);
+    });
+
+    expect(container.querySelectorAll('[data-slot="graph-node-column-row"]')).toHaveLength(5);
+    expect(container.textContent).toContain('column_5');
+    expect(container.textContent).not.toContain('column_6');
+
+    const remainderToggle = container.querySelector<HTMLButtonElement>(
+      '[data-slot="graph-node-column-remainder-toggle"]'
+    );
+    const columnList = container.querySelector<HTMLElement>('[data-slot="graph-node-column-list"]');
+    expect(remainderToggle?.textContent).toContain('Ver columnas restantes (3)');
+    expect(remainderToggle?.getAttribute('aria-expanded')).toBe('false');
+    expect(remainderToggle?.getAttribute('aria-controls')).toBe(columnList?.id);
+    expect(remainderToggle?.hasAttribute('data-canvas-node-control')).toBe(true);
+    expect(remainderToggle?.classList.contains('nodrag')).toBe(true);
+    expect(remainderToggle?.classList.contains('nopan')).toBe(true);
+    expect(sectionToggle?.getAttribute('aria-controls')).toBe(columnList?.id);
+
+    act(() => {
+      fireEvent.click(remainderToggle!);
+    });
+
+    expect(container.querySelectorAll('[data-slot="graph-node-column-row"]')).toHaveLength(8);
+    expect(container.textContent).toContain('column_8');
+    expect(remainderToggle?.textContent).toContain('Mostrar solo las 5 primeras');
+    expect(remainderToggle?.getAttribute('aria-expanded')).toBe('true');
+
+    act(() => {
+      fireEvent.click(remainderToggle!);
+    });
+
+    expect(container.querySelectorAll('[data-slot="graph-node-column-row"]')).toHaveLength(5);
+    expect(container.textContent).not.toContain('column_6');
+  });
+
+  it('localizes the column disclosure and omits a redundant remainder action', () => {
+    useApplicationLanguageStore.setState({ language: 'en' });
+    act(() => {
+      root.render(<GraphNodeColumnSection columns={EIGHT_COLUMNS.slice(0, 5)} />);
+    });
+
+    const sectionToggle = container.querySelector<HTMLButtonElement>(
+      '[data-slot="graph-node-column-toggle"]'
+    );
+    expect(sectionToggle?.textContent).toContain('Columns (5)');
+
+    act(() => {
+      fireEvent.click(sectionToggle!);
+    });
+
+    expect(container.querySelectorAll('[data-slot="graph-node-column-row"]')).toHaveLength(5);
+    expect(container.querySelector('[data-slot="graph-node-column-remainder-toggle"]')).toBeNull();
   });
 
   afterEach(() => {

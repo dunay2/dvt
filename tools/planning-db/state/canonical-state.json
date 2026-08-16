@@ -13939,6 +13939,20 @@
         "updated_at": "2026-08-07T00:52:45.205967+00:00"
       },
       {
+        "design_id": "W4-CARD-COLUMN-DISCLOSURE-20260816",
+        "work_item_id": "2391",
+        "title": "Canvas card five-column disclosure",
+        "owner": "Frontend / Canvas",
+        "status": "implemented",
+        "rationale": "Replace implicit internal scrolling with a localized accessible five-row disclosure while reusing the existing graph-node card query and component.",
+        "fowler_signal": "hidden_authority",
+        "rail_ref": "ProjectGraphNodeCardReadModel",
+        "approved_at": "2026-08-16T03:54:27.298+00:00",
+        "supersedes_id": null,
+        "created_at": "2026-08-16T03:13:54.793+00:00",
+        "updated_at": "2026-08-16T03:54:29.884+00:00"
+      },
+      {
         "design_id": "W4-IMPACT-VISUAL-FOCUS-SEPARATION-20260816",
         "work_item_id": "2389",
         "title": "Canvas impact visual focus separation",
@@ -91092,6 +91106,14 @@
         "created_at": "2026-08-07T00:52:45.205967+00:00"
       },
       {
+        "design_id": "W4-CARD-COLUMN-DISCLOSURE-20260816",
+        "subject_kind": "component",
+        "subject_id": "web.component.canvas.GraphNodeColumnSection",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-16T03:13:54.793+00:00"
+      },
+      {
         "design_id": "W4-IMPACT-VISUAL-FOCUS-SEPARATION-20260816",
         "subject_kind": "component",
         "subject_id": "SYS-WEB-CANVAS-CONTROLLER-PRESENTATION-POLICY",
@@ -100853,6 +100875,27 @@
         "created_at": "2026-08-12T19:12:40.133+00:00"
       },
       {
+        "operation_id": "6d876670-e874-4a3d-a884-f4c51eef57e9",
+        "idempotency_key": "architecture_design_transition:codex:W4-CARD-COLUMN-DISCLOSURE-20260816:4d9940f3d1a130fe",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "W4-CARD-COLUMN-DISCLOSURE-20260816",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2391",
+        "source_content_sha256": "effdc6ba727a98818cc4a60b883a563c3e2f6e9c7480fe25bbdda264cc87cfbd",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The approved design was implemented through the existing GraphNodeColumnSection and ProjectGraphNodeCardReadModel rail.",
+          "designId": "W4-CARD-COLUMN-DISCLOSURE-20260816",
+          "toStatus": "implementing",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2391",
+          "fromStatus": "approved",
+          "sourceContentSha256": "effdc6ba727a98818cc4a60b883a563c3e2f6e9c7480fe25bbdda264cc87cfbd"
+        },
+        "created_at": "2026-08-16T03:54:28.591+00:00"
+      },
+      {
         "operation_id": "6da85e32-9087-472d-9359-6f400b8c3d94",
         "idempotency_key": "issue-2274-ev-pth14-v3-design-auth",
         "operation_type": "architecture_evidence_record",
@@ -106326,6 +106369,40 @@
         "created_at": "2026-08-13T13:22:17.039+00:00"
       },
       {
+        "operation_id": "aaebb76f-2e9e-46fb-b577-58f8225512f9",
+        "idempotency_key": "architecture_design_create:codex:W4-CARD-COLUMN-DISCLOSURE-20260816:e77c1ad8d2cd697b",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "W4-CARD-COLUMN-DISCLOSURE-20260816",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2391",
+        "source_content_sha256": "effdc6ba727a98818cc4a60b883a563c3e2f6e9c7480fe25bbdda264cc87cfbd",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "Frontend / Canvas",
+          "title": "Canvas card five-column disclosure",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "web.component.canvas.GraphNodeColumnSection",
+              "subjectKind": "component"
+            }
+          ],
+          "status": "review",
+          "railRef": "ProjectGraphNodeCardReadModel",
+          "designId": "W4-CARD-COLUMN-DISCLOSURE-20260816",
+          "rationale": "Replace implicit internal scrolling with a localized accessible five-row disclosure while reusing the existing graph-node card query and component.",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2391",
+          "workItemId": "2391",
+          "fowlerSignal": "hidden_authority",
+          "supersedesId": null,
+          "sourceContentSha256": "effdc6ba727a98818cc4a60b883a563c3e2f6e9c7480fe25bbdda264cc87cfbd"
+        },
+        "created_at": "2026-08-16T03:13:54.793+00:00"
+      },
+      {
         "operation_id": "ab3208bc-dc33-459f-a825-7099081fa6b1",
         "idempotency_key": "gh-2167-validation-test-sys-api-tests-module-composition-3-v1",
         "operation_type": "architecture_test_record",
@@ -106363,6 +106440,27 @@
         "resulting_revision": 0,
         "payload": {},
         "created_at": "2026-08-11T11:55:42.555+00:00"
+      },
+      {
+        "operation_id": "acbb68fe-6227-4355-88dd-21d5d1ebbe7f",
+        "idempotency_key": "architecture_design_transition:codex:W4-CARD-COLUMN-DISCLOSURE-20260816:5671deef3cf5f304",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "W4-CARD-COLUMN-DISCLOSURE-20260816",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2391",
+        "source_content_sha256": "effdc6ba727a98818cc4a60b883a563c3e2f6e9c7480fe25bbdda264cc87cfbd",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The bounded five-column disclosure, localized reversible action, accessible ownership, full Canvas regression, and headed browser proof are complete.",
+          "designId": "W4-CARD-COLUMN-DISCLOSURE-20260816",
+          "toStatus": "implemented",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2391",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "effdc6ba727a98818cc4a60b883a563c3e2f6e9c7480fe25bbdda264cc87cfbd"
+        },
+        "created_at": "2026-08-16T03:54:29.884+00:00"
       },
       {
         "operation_id": "ad1e5eaf-55a3-4bea-bb5c-73221f9ca0fa",
@@ -113134,6 +113232,27 @@
           "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95"
         },
         "created_at": "2026-08-13T13:52:55.122+00:00"
+      },
+      {
+        "operation_id": "f2b5d2ca-242b-481b-a004-004fa75ff27b",
+        "idempotency_key": "architecture_design_transition:codex:W4-CARD-COLUMN-DISCLOSURE-20260816:95b685062905afb1",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "W4-CARD-COLUMN-DISCLOSURE-20260816",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2391",
+        "source_content_sha256": "effdc6ba727a98818cc4a60b883a563c3e2f6e9c7480fe25bbdda264cc87cfbd",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The issue DoR, bounded plan, existing query rail, and user-visible acceptance target are approved.",
+          "designId": "W4-CARD-COLUMN-DISCLOSURE-20260816",
+          "toStatus": "approved",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2391",
+          "fromStatus": "review",
+          "sourceContentSha256": "effdc6ba727a98818cc4a60b883a563c3e2f6e9c7480fe25bbdda264cc87cfbd"
+        },
+        "created_at": "2026-08-16T03:54:27.298+00:00"
       },
       {
         "operation_id": "f32a6337-479c-4a56-a186-f0cb80a28b32",
