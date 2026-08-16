@@ -1,0 +1,34 @@
+---
+id: R-20260816-DBT-SOURCE-BINDING-DRIFT
+title: Imported dbt sources could bind ambiguously or create duplicate declarations
+status: Closed
+date: 2026-08-16
+owners:
+  - packages/@dvt/contracts
+  - apps/api
+  - apps/web
+severity: High
+probability: Low
+context: >
+  Third-party dbt source YAML declares physical tables but does not carry DVT connection authority
+  or credential references.
+risk: >
+  Inferring a connection or generating another source YAML after project import could bind the wrong
+  warehouse, leak authority, duplicate dbt source resources, or project a misleading graph.
+mitigations:
+  - Project validation reports deterministic source-table declarations without secret data.
+  - The user explicitly selects or creates one governed connection through the existing rail.
+  - Live catalog matching requires complete unique database, schema, and table coverage.
+  - The API revalidates exact targets and the governed database user before file mutation.
+  - File-backed import enriches the original YAML table and never writes graph-draft semantics.
+  - Route-scoped continuation survives the authority remount and is consumed after dialog open.
+  - Contract, API, Web, headed ES/EN, accessibility, and live regression tests cover the boundary.
+closure_evidence:
+  - docs/evidence/ED-20260816-dbt-source-connection-binding.md
+  - packages/@dvt/contracts/test/dbt-project-import.contract.test.ts
+  - packages/@dvt/contracts/test/source-import/SourceImportOperations.v2.test.ts
+  - apps/api/test/application/services/importWarehouseSourcesUseCase.test.ts
+  - apps/api/test/application/services/dbtProjectFilesWarehouseSourceImportStrategy.test.ts
+  - apps/web/src/app/components/SourceImportWizard.metadata.test.tsx
+  - apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
+---

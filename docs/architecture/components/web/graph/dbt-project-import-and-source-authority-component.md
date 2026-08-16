@@ -2,7 +2,7 @@
 title: dbt Project Import And Source Authority Component
 status: Active
 owner: dbt Project Authoring / Canvas
-last_reviewed: 2026-07-14
+last_reviewed: 2026-08-16
 planning_type: architecture
 task_id: E-DBT-PROJECT-ROUNDTRIP-1
 ---
@@ -78,6 +78,14 @@ lease-guarded completion or compensation.
 service resolves the active authority and delegates only the mode-specific
 semantic mutation.
 
+When project validation reports dbt source-table declarations, the route-level
+Canvas composition carries those typed declarations across the authority
+change. The file-authoritative Canvas then opens the existing Source Import
+dialog. Selecting one governed connection matches each declaration to one live
+warehouse object by database, schema, and table. The command enriches the same
+declared YAML table with non-secret `dvt_source_identity` metadata; it does not
+generate a parallel source file or a second logical source.
+
 ## Target Boundary
 
 ```mermaid
@@ -140,6 +148,7 @@ sequenceDiagram
   participant Import as ImportDbtProject
   participant Process as Import process store
   participant Graph as ProjectDbtGraphFromFiles
+  participant Source as ImportWarehouseSources
 
   User->>UI: enter workspace-relative project root
   UI->>Validate: validate root
@@ -168,6 +177,12 @@ sequenceDiagram
     end
   end
   Import-->>UI: command receipt
+  opt accepted report declares source tables
+    UI->>UI: preserve typed continuation across authority route remount
+    UI->>Source: exact existing source targets plus governed connection
+    Source->>Graph: refresh the same file-authoritative projection
+    Graph-->>UI: one source node per declared table
+  end
 ```
 
 ## File-Backed Source Import Sequence
@@ -183,13 +198,17 @@ sequenceDiagram
   participant Draft as Graph draft store
 
   User->>UI: select source objects
-  UI->>Command: canvas id plus idempotency key
+  UI->>Command: canvas id, idempotency key, and optional exact declared targets
   Command->>Authority: resolve binding
   alt graph-draft
     Command->>Batch: write source YAML
     Command->>Draft: append semantic source nodes under the shared authority lock
   else dbt-project-files
-    Command->>Batch: write source YAML below project root
+    alt exact targets supplied by dbt project import
+      Command->>Batch: enrich each existing declared YAML table
+    else ordinary source import
+      Command->>Batch: write canonical source YAML below project root
+    end
     Command->>Analyzer: refresh project
     Note over Command,Draft: no graph-draft write
   end
@@ -253,6 +272,15 @@ sequenceDiagram
   changes affect project revision while generated output changes do not.
 - Browser components consume typed ports and presentation models; they do not
   parse dbt, mutate files directly, or synthesize success.
+- A dbt import source-binding continuation is ephemeral route-composition
+  state scoped by Canvas id and project root. It carries no credential and is
+  consumed only after the file-authoritative Source Import dialog opens.
+- Exact binding requires complete and unique coverage of the validation report.
+  Missing, ambiguous, duplicate, cross-database, stale, or userless connection
+  matches fail closed before file mutation.
+- Exact binding preserves the imported source name, table name, path, columns,
+  tests, descriptions, tags, freshness, and unrelated metadata. It adds only
+  the governed non-secret identity needed by later projection.
 
 ## Observability Ownership
 
