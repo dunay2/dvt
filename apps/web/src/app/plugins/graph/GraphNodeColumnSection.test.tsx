@@ -256,4 +256,40 @@ describe('GraphNodeColumnSection', () => {
     });
     expect(onAutomap).toHaveBeenCalledTimes(1);
   });
+
+  it('renders only target ports for terminal output columns', () => {
+    act(() => {
+      root.render(
+        <ReactFlowProvider>
+          <GraphNodeColumnSection
+            nodeId="sink"
+            columns={[
+              {
+                id: 'order_id',
+                name: 'order_id',
+                type: 'integer',
+                sourceHandleId: 'column:source:sink:order_id',
+                targetHandleId: 'column:target:sink:order_id',
+              },
+            ]}
+            portDirections={['target']}
+            onColumnPortActivate={vi.fn()}
+          />
+        </ReactFlowProvider>
+      );
+    });
+
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>('[data-slot="graph-node-column-toggle"]')!
+      );
+    });
+
+    const handles = container.querySelectorAll<HTMLElement>(
+      '[data-slot="canvas-node-port-handle"]'
+    );
+    expect(handles).toHaveLength(1);
+    expect(handles[0]?.getAttribute('data-port')).toBe('target');
+    expect(handles[0]?.getAttribute('aria-label')).toBe('Asignar a order_id');
+  });
 });
