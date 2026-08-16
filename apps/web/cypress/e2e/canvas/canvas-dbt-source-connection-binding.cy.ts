@@ -22,6 +22,7 @@ const CONNECTION_ID = 'warehouse-governed';
 const SOURCE_UNIQUE_IDS = [
   'source.warehouse_analytics.raw.customers',
   'source.warehouse_analytics.raw.orders',
+  'source.warehouse_analytics.raw.products',
 ] as const;
 
 const SOURCE_DECLARATIONS = [
@@ -42,6 +43,15 @@ const SOURCE_DECLARATIONS = [
     database: 'RAW',
     schema: 'ERP',
     identifier: 'ORDERS',
+  },
+  {
+    uniqueId: SOURCE_UNIQUE_IDS[2],
+    filePath: 'models/sources.yml',
+    sourceName: 'raw',
+    tableName: 'products',
+    database: 'RAW',
+    schema: 'ERP',
+    identifier: 'PRODUCTS',
   },
 ] as const;
 
@@ -72,7 +82,7 @@ function buildMetricEvidence(rowCount: number): Readonly<Record<string, unknown>
 }
 
 function buildSourceObject(
-  table: 'CUSTOMERS' | 'ORDERS',
+  table: 'CUSTOMERS' | 'ORDERS' | 'PRODUCTS',
   rowCount: number
 ): Readonly<Record<string, unknown>> {
   return {
@@ -88,7 +98,8 @@ function buildSourceObject(
     metricEvidence: buildMetricEvidence(rowCount),
     columns: [
       {
-        name: table === 'ORDERS' ? 'order_id' : 'customer_id',
+        name:
+          table === 'ORDERS' ? 'order_id' : table === 'CUSTOMERS' ? 'customer_id' : 'product_id',
         type: 'INTEGER',
         nullable: false,
       },
@@ -135,7 +146,7 @@ function buildProjectGraph(bound: boolean): Readonly<Record<string, unknown>> {
     })),
     edges: [],
     diagnostics: [],
-    capabilities: { canPreview: false, canRun: false, codeOnlyResourceCount: 2 },
+    capabilities: { canPreview: false, canRun: false, codeOnlyResourceCount: 3 },
   };
 }
 
@@ -210,7 +221,7 @@ function stubDbtSourceBindingFlow(): void {
       analyzerVersion: 'dbt-cli-v1',
     },
     analysisSha256: '2'.repeat(64),
-    projectedResourceCount: 2,
+    projectedResourceCount: 3,
     importedAt: '2026-08-16T08:00:02.000Z',
   });
 
@@ -226,7 +237,11 @@ function stubDbtSourceBindingFlow(): void {
   ]);
   stubE2eJsonApi('GET', `/workspace/warehouse/connections/${CONNECTION_ID}/objects`, {
     contractVersion: 1,
-    objects: [buildSourceObject('ORDERS', 42), buildSourceObject('CUSTOMERS', 12)],
+    objects: [
+      buildSourceObject('ORDERS', 42),
+      buildSourceObject('CUSTOMERS', 12),
+      buildSourceObject('PRODUCTS', 24),
+    ],
   });
   stubE2eApi('POST', '/workspace/sources/import', ({ body }) => {
     const command = body as {
@@ -241,7 +256,7 @@ function stubDbtSourceBindingFlow(): void {
         idempotencyKey: command.idempotencyKey,
         authorityBinding: AUTHORITY_BINDING,
         sourcesCreated: 1,
-        objectsImported: 2,
+        objectsImported: 3,
         yamlFiles: [`${PROJECT_ROOT}/models/sources.yml`],
         grouping: 'schema',
         options: { includeColumns: true, addTests: false, addFreshness: false },
@@ -319,7 +334,7 @@ describe('dbt source connection binding', () => {
 
     cy.contains('[role="dialog"]', 'Add source', { timeout: 20_000 }).should('be.visible');
     cy.contains('[data-slot="source-import-connection-option"]', 'Governed warehouse').click();
-    cy.contains('[role="dialog"]', 'Selected: 2', { timeout: 20_000 }).should('be.visible');
+    cy.contains('[role="dialog"]', 'Selected: 3', { timeout: 20_000 }).should('be.visible');
     assertSeriousAccessibility();
     cy.contains('button', 'Attach sources to canvas').should('be.enabled').click();
 
@@ -348,6 +363,7 @@ describe('dbt source connection binding', () => {
       expect(command.objects.map(({ objectId }) => objectId)).to.deep.equal([
         'relation/RAW/ERP/ORDERS',
         'relation/RAW/ERP/CUSTOMERS',
+        'relation/RAW/ERP/PRODUCTS',
       ]);
       expect(command.existingDbtSourceTargets).to.deep.equal([
         {
@@ -364,6 +380,13 @@ describe('dbt source connection binding', () => {
           sourceName: 'raw',
           tableName: 'orders',
         },
+        {
+          objectId: 'relation/RAW/ERP/PRODUCTS',
+          sourceUniqueId: SOURCE_UNIQUE_IDS[2],
+          filePath: 'models/sources.yml',
+          sourceName: 'raw',
+          tableName: 'products',
+        },
       ]);
     });
   });
@@ -376,7 +399,7 @@ describe('dbt source connection binding', () => {
 
     cy.contains('[role="dialog"]', 'Añadir origen', { timeout: 20_000 }).should('be.visible');
     cy.contains('[data-slot="source-import-connection-option"]', 'Governed warehouse').click();
-    cy.contains('[role="dialog"]', 'Seleccionados: 2', { timeout: 20_000 }).should('be.visible');
+    cy.contains('[role="dialog"]', 'Seleccionados: 3', { timeout: 20_000 }).should('be.visible');
     cy.contains('button', 'Adjuntar orígenes al canvas').should('be.enabled');
     assertSeriousAccessibility();
   });
