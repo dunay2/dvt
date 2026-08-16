@@ -1,6 +1,6 @@
 /** Owned concern: render graph-node card markup from an already-projected card model. */
 import { type CSSProperties, type MouseEvent as ReactMouseEvent, type ReactElement } from 'react';
-import { MoreHorizontal, Pause, Play } from 'lucide-react';
+import { MoreHorizontal } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 import { canvasNodeEmbeddedControlProps } from '../../components/canvas/canvasNodeInteractionBoundary';
@@ -11,7 +11,6 @@ import { GraphNodeMetricRow } from './GraphNodeMetricRow';
 import { GraphNodeOperationalRail } from './GraphNodeOperationalRail';
 import { GraphNodeStatusChip } from './GraphNodeStatusChip';
 import { GraphNodeTagList } from './GraphNodeTagList';
-import type { GraphNodeCardPlayAction } from './graphNodeCardActions';
 import type {
   GraphNodeCardReadModel,
   GraphNodeOperationalDetail,
@@ -37,7 +36,6 @@ export type GraphNodeCardViewProps = Readonly<{
   hovered: boolean;
   dimmed: boolean;
   overlayStyle?: CSSProperties;
-  playAction?: GraphNodeCardPlayAction | null;
   onOpenOperationalDetails?: (
     detail: GraphNodeOperationalDetail,
     anchorElement: HTMLElement
@@ -129,7 +127,6 @@ export function GraphNodeCardView({
   hovered,
   dimmed,
   overlayStyle,
-  playAction,
   onOpenOperationalDetails,
   onSelectTag,
   getSelectTagLabel,
@@ -169,34 +166,6 @@ export function GraphNodeCardView({
           </div>
           <div className={graphNodeCardLayoutClasses.headerActions}>
             <GraphNodeStatusChip status={cardModel.status} />
-            {playAction ? (
-              <button
-                type="button"
-                data-slot="graph-node-card-play"
-                data-state={playAction.visualState}
-                {...canvasNodeEmbeddedControlProps}
-                aria-label={playAction.label}
-                title={playAction.label}
-                disabled={playAction.disabled}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  playAction.onPress();
-                }}
-                className={graphNodeCardLayoutClasses.playButton}
-              >
-                {playAction.visualState === 'deselect' ? (
-                  <Pause
-                    data-slot="graph-node-card-pause-icon"
-                    className={graphNodeCardLayoutClasses.playIcon}
-                  />
-                ) : (
-                  <Play
-                    data-slot="graph-node-card-play-icon"
-                    className={graphNodeCardLayoutClasses.playIcon}
-                  />
-                )}
-              </button>
-            ) : null}
             <button
               type="button"
               data-slot="graph-node-card-actions"

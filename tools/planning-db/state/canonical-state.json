@@ -13939,6 +13939,20 @@
         "updated_at": "2026-08-07T00:52:45.205967+00:00"
       },
       {
+        "design_id": "W4-NODE-EXECUTION-TOGGLE-LOCAL-RAIL-RETIREMENT-20260816",
+        "work_item_id": "2381",
+        "title": "Retire superseded local execution-selection rail overlay",
+        "owner": "Web / Canvas",
+        "status": "implemented",
+        "rationale": "The imported mandatory plan now contains the complete SelectCanvasExecutionNode rail. Retiring its older local overlay removes duplicate authority and the superseded Play/Pause user story while preserving the command.",
+        "fowler_signal": "hidden_authority",
+        "rail_ref": "SelectCanvasExecutionNode",
+        "approved_at": "2026-08-16T00:49:22.264+00:00",
+        "supersedes_id": null,
+        "created_at": "2026-08-16T00:48:58.054+00:00",
+        "updated_at": "2026-08-16T00:49:24.984+00:00"
+      },
+      {
         "design_id": "WEB-BOTTOM-OPERATIONAL-DRAWER-20260618",
         "work_item_id": "UXDB-BOTTOM-OPERATIONAL-DRAWER-P0-1",
         "title": "Web bottom operational drawer vocabulary",
@@ -91064,6 +91078,14 @@
         "created_at": "2026-08-07T00:52:45.205967+00:00"
       },
       {
+        "design_id": "W4-NODE-EXECUTION-TOGGLE-LOCAL-RAIL-RETIREMENT-20260816",
+        "subject_kind": "decision",
+        "subject_id": "local#W4-CANVAS-NODE-WORKBENCH-HARDENING-20260808#command#selectcanvasexecutionnode",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-16T00:48:58.054+00:00"
+      },
+      {
         "design_id": "WEB-CANVAS-CONTEXT-MENU-VIEW-MODEL-20260627",
         "subject_kind": "component",
         "subject_id": "web.component.canvas.CanvasContextMenu",
@@ -96948,6 +96970,27 @@
         "created_at": "2026-08-13T03:47:44.735+00:00"
       },
       {
+        "operation_id": "46c3b9ca-8366-42ea-a170-e808e793cf68",
+        "idempotency_key": "architecture_design_transition:codex:W4-NODE-EXECUTION-TOGGLE-LOCAL-RAIL-RETIREMENT-20260816:16eaaafeb66adc87",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "W4-NODE-EXECUTION-TOGGLE-LOCAL-RAIL-RETIREMENT-20260816",
+        "source_ref": "docs/planning/proposals/mandatory/frontend-and-ux/canvas-node-workbench-hardening-plan-20260808.md",
+        "source_content_sha256": "4b8d22e20aa0ddc00b182ccbf1a5d863e97276446847bdb9cde86e2c25b68883",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Execute the approved hard cut of the duplicate local rail overlay.",
+          "designId": "W4-NODE-EXECUTION-TOGGLE-LOCAL-RAIL-RETIREMENT-20260816",
+          "toStatus": "implementing",
+          "sourceRef": "docs/planning/proposals/mandatory/frontend-and-ux/canvas-node-workbench-hardening-plan-20260808.md",
+          "fromStatus": "approved",
+          "sourceContentSha256": "4b8d22e20aa0ddc00b182ccbf1a5d863e97276446847bdb9cde86e2c25b68883"
+        },
+        "created_at": "2026-08-16T00:49:23.599+00:00"
+      },
+      {
         "operation_id": "46cbce5d-01ab-4f34-a6a7-e1a368cf0d33",
         "idempotency_key": "architecture_design_transition:codex:R1-1C-STORED-PLAN-AUTHORITY-20260812:8ded76fde707d2ec",
         "operation_type": "architecture_design_transition",
@@ -98697,6 +98740,40 @@
           "sourceContentSha256": "10ad018e65819d6ace50f6d70d4ff91671574cccb3aa1af768eaea661caba292"
         },
         "created_at": "2026-08-10T21:04:51.118+00:00"
+      },
+      {
+        "operation_id": "58d3c75d-1fcf-458c-8fec-a3aefab7e9c7",
+        "idempotency_key": "architecture_design_create:codex:W4-NODE-EXECUTION-TOGGLE-LOCAL-RAIL-RETIREMENT-20260816:6e3a64eff32e5002",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "W4-NODE-EXECUTION-TOGGLE-LOCAL-RAIL-RETIREMENT-20260816",
+        "source_ref": "docs/planning/proposals/mandatory/frontend-and-ux/canvas-node-workbench-hardening-plan-20260808.md",
+        "source_content_sha256": "4b8d22e20aa0ddc00b182ccbf1a5d863e97276446847bdb9cde86e2c25b68883",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "Web / Canvas",
+          "title": "Retire superseded local execution-selection rail overlay",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "local#W4-CANVAS-NODE-WORKBENCH-HARDENING-20260808#command#selectcanvasexecutionnode",
+              "subjectKind": "decision"
+            }
+          ],
+          "status": "review",
+          "railRef": "SelectCanvasExecutionNode",
+          "designId": "W4-NODE-EXECUTION-TOGGLE-LOCAL-RAIL-RETIREMENT-20260816",
+          "rationale": "The imported mandatory plan now contains the complete SelectCanvasExecutionNode rail. Retiring its older local overlay removes duplicate authority and the superseded Play/Pause user story while preserving the command.",
+          "sourceRef": "docs/planning/proposals/mandatory/frontend-and-ux/canvas-node-workbench-hardening-plan-20260808.md",
+          "workItemId": "2381",
+          "fowlerSignal": "hidden_authority",
+          "supersedesId": null,
+          "sourceContentSha256": "4b8d22e20aa0ddc00b182ccbf1a5d863e97276446847bdb9cde86e2c25b68883"
+        },
+        "created_at": "2026-08-16T00:48:58.054+00:00"
       },
       {
         "operation_id": "597133e2-ee8d-40b6-aa37-31928dc843e0",
@@ -104193,6 +104270,27 @@
         "created_at": "2026-08-13T06:55:55.601+00:00"
       },
       {
+        "operation_id": "961918dd-3a38-4e5c-a283-7bf8e060a73e",
+        "idempotency_key": "architecture_design_transition:codex:W4-NODE-EXECUTION-TOGGLE-LOCAL-RAIL-RETIREMENT-20260816:b88bd3f8288090f5",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "W4-NODE-EXECUTION-TOGGLE-LOCAL-RAIL-RETIREMENT-20260816",
+        "source_ref": "docs/planning/proposals/mandatory/frontend-and-ux/canvas-node-workbench-hardening-plan-20260808.md",
+        "source_content_sha256": "4b8d22e20aa0ddc00b182ccbf1a5d863e97276446847bdb9cde86e2c25b68883",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The local overlay is retired and the imported SelectCanvasExecutionNode rail is the sole current authority.",
+          "designId": "W4-NODE-EXECUTION-TOGGLE-LOCAL-RAIL-RETIREMENT-20260816",
+          "toStatus": "implemented",
+          "sourceRef": "docs/planning/proposals/mandatory/frontend-and-ux/canvas-node-workbench-hardening-plan-20260808.md",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "4b8d22e20aa0ddc00b182ccbf1a5d863e97276446847bdb9cde86e2c25b68883"
+        },
+        "created_at": "2026-08-16T00:49:24.984+00:00"
+      },
+      {
         "operation_id": "96294da1-352c-4556-9349-0847d617b092",
         "idempotency_key": "architecture_component_record:codex:db-canvas-context-menu-component-retirement-2310-v1:SYS-WEB-CANVAS-CONTEXT-MENU-PRIMITIVES:9721c1484c8488c1",
         "operation_type": "architecture_component_record",
@@ -106653,6 +106751,27 @@
           "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
         },
         "created_at": "2026-08-14T08:42:44.018+00:00"
+      },
+      {
+        "operation_id": "b1943884-ebad-4eb6-871e-91f7a982636a",
+        "idempotency_key": "architecture_design_transition:codex:W4-NODE-EXECUTION-TOGGLE-LOCAL-RAIL-RETIREMENT-20260816:64e513cf596ee88b",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "W4-NODE-EXECUTION-TOGGLE-LOCAL-RAIL-RETIREMENT-20260816",
+        "source_ref": "docs/planning/proposals/mandatory/frontend-and-ux/canvas-node-workbench-hardening-plan-20260808.md",
+        "source_content_sha256": "4b8d22e20aa0ddc00b182ccbf1a5d863e97276446847bdb9cde86e2c25b68883",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The review finding confirms that the duplicate local overlay must be retired in favor of the imported mandatory plan.",
+          "designId": "W4-NODE-EXECUTION-TOGGLE-LOCAL-RAIL-RETIREMENT-20260816",
+          "toStatus": "approved",
+          "sourceRef": "docs/planning/proposals/mandatory/frontend-and-ux/canvas-node-workbench-hardening-plan-20260808.md",
+          "fromStatus": "review",
+          "sourceContentSha256": "4b8d22e20aa0ddc00b182ccbf1a5d863e97276446847bdb9cde86e2c25b68883"
+        },
+        "created_at": "2026-08-16T00:49:22.264+00:00"
       },
       {
         "operation_id": "b1f455b8-16a7-4ffa-80d7-e079aa5774cf",
@@ -209657,6 +209776,296 @@
         ]
       },
       "createdAt": "2026-08-15T23:13:14.268Z"
+    },
+    {
+      "operationId": "976be46d-64ce-4899-9553-3057677ae540",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:W4-CANVAS-NODE-WORKBENCH-HARDENING-20260808:command:selectcanvasexecutionnode:latest:3114fcabe09d66b5",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#W4-CANVAS-NODE-WORKBENCH-HARDENING-20260808#command#selectcanvasexecutionnode",
+      "sourcePath": "docs/planning/proposals/mandatory/frontend-and-ux/canvas-node-workbench-hardening-plan-20260808.md",
+      "sourceContentSha256": "2cc1f392b9a40c624392ee8dfdf0fa4583061b5614489a6b5c0e6fe3dc3c3429",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "apps/web/src/app/views/canvas/canvasNodeWorkbenchHardening.architecture.test.ts",
+        "dddOwner": "Canvas execution-selection intent",
+        "railName": "SelectCanvasExecutionNode",
+        "railType": "command",
+        "featureId": "W4-CANVAS-NODE-WORKBENCH-HARDENING-20260808",
+        "greenTest": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+        "sourceRef": "docs/planning/proposals/mandatory/frontend-and-ux/canvas-node-workbench-hardening-plan-20260808.md",
+        "unitTests": [
+          "apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": [
+          "docs/planning/proposals/mandatory/frontend-and-ux/canvas-node-workbench-hardening-plan-20260808.md"
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts"
+        ],
+        "domainObjects": ["CanvasExecutionSelection"],
+        "fowlerSignals": [
+          "Retire the duplicate card adapter while preserving one explicit execution-selection command rail."
+        ],
+        "negativeTests": [
+          "node card header does not expose execution selection as Play or Pause"
+        ],
+        "patchSurfaces": [],
+        "adapterSurface": "Canvas node operations menu",
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation --feature W4-CANVAS-NODE-WORKBENCH-HARDENING-20260808",
+          "pnpm --filter @dvt/web lint",
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "Canvas node execution-selection command handler",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "node card header still exposes the retired execution-selection adapter or the menu command is missing",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/planning/proposals/mandatory/frontend-and-ux/canvas-node-workbench-hardening-plan-20260808.md"
+        ],
+        "architectureGuards": [
+          "pnpm --dir apps/web exec vitest run src/app/views/canvas/canvasNodeWorkbenchHardening.architecture.test.ts"
+        ],
+        "authorizationScope": "authorized mutable Canvas nodes with execution-selection capability",
+        "implementationPlan": "docs/planning/proposals/mandatory/frontend-and-ux/canvas-node-workbench-hardening-plan-20260808.md",
+        "implementationRefs": [
+          "apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts#CanvasNodeModelerActionId",
+          "apps/web/src/app/components/canvas/DbtNodeComponent.tsx#contextMenuModel",
+          "apps/web/src/app/plugins/graph/GraphNodeCardView.tsx#contextMenuEvent",
+          "apps/web/cypress/support/canvasExecutionSelection.ts#openCanvasNodeOperations"
+        ],
+        "normalizedRailName": "selectcanvasexecutionnode",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "2cc1f392b9a40c624392ee8dfdf0fa4583061b5614489a6b5c0e6fe3dc3c3429",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": true,
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts",
+          "apps/web/src/app/components/canvas/CanvasNodeContextMenuView.tsx",
+          "apps/web/src/app/components/canvas/DbtNodeComponent.tsx",
+          "apps/web/src/app/plugins/graph/GraphNodeCardView.tsx",
+          "apps/web/cypress/support/canvasExecutionSelection.ts",
+          "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/web/src/app/plugins/graph/graphNodeCardActions*"
+        ]
+      },
+      "createdAt": "2026-08-16T00:12:04.095Z"
+    },
+    {
+      "operationId": "82b5977d-c220-40fb-8043-87f10fbbba59",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:W4-CANVAS-NODE-WORKBENCH-HARDENING-20260808:command:selectcanvasexecutionnode:0:3d65563aea9e6adf",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#W4-CANVAS-NODE-WORKBENCH-HARDENING-20260808#command#selectcanvasexecutionnode",
+      "sourcePath": "docs/planning/proposals/mandatory/frontend-and-ux/canvas-node-workbench-hardening-plan-20260808.md",
+      "sourceContentSha256": "4b8d22e20aa0ddc00b182ccbf1a5d863e97276446847bdb9cde86e2c25b68883",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "apps/web/src/app/views/canvas/canvasNodeWorkbenchHardening.architecture.test.ts",
+        "dddOwner": "Canvas execution-selection intent",
+        "railName": "SelectCanvasExecutionNode",
+        "railType": "command",
+        "featureId": "W4-CANVAS-NODE-WORKBENCH-HARDENING-20260808",
+        "greenTest": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+        "sourceRef": "docs/planning/proposals/mandatory/frontend-and-ux/canvas-node-workbench-hardening-plan-20260808.md",
+        "unitTests": [
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm --filter @dvt/web test:canvas",
+          "node --test scripts/run-selected-closure-live-proof.test.cjs"
+        ],
+        "railStatus": "implemented",
+        "userStories": [
+          "As a file-backed dbt author, I open the authoritative editor from Properties Code and return to the same node context."
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+          "apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts"
+        ],
+        "domainObjects": [
+          "CanvasDraftSession",
+          "WorkspaceGraphAuthoringDraft",
+          "CanvasInspectorNodeDraft",
+          "NodePropertiesReadModel",
+          "CanvasNodeModelerActionModel",
+          "CanvasExecutionSelection"
+        ],
+        "fowlerSignals": [
+          "duplicate node gestures and adjacent action surfaces",
+          "split Code versus Workbench node-entry semantics",
+          "Play/Pause versus execution-selection semantic conflation resolved by",
+          "displaced floating-toolbar state and tests"
+        ],
+        "negativeTests": [
+          "node card header does not expose execution selection as Play or Pause"
+        ],
+        "patchSurfaces": [
+          "apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts",
+          "apps/web/src/app/components/canvas/DbtNodeComponent.tsx",
+          "apps/web/src/app/plugins/graph/GraphNodeCardView.tsx",
+          "apps/web/cypress/support/canvasExecutionSelection.ts",
+          "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts"
+        ],
+        "adapterSurface": "Canvas node operations menu",
+        "completionGate": [
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm --filter @dvt/web lint",
+          "pnpm --filter @dvt/web test",
+          "pnpm docs:feature-mechanization:implementation --feature W4-CANVAS-NODE-WORKBENCH-HARDENING-20260808",
+          "pnpm governance:refresh",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "Canvas node execution-selection command handler",
+        "componentGuides": [
+          "docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-canon-plan-20260524.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "expectedFailure": "Node card header still exposes the retired execution-selection adapter or the menu command is missing.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/guides/ai-work-protocol.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/planning/proposals/mandatory/frontend-and-ux/canvas-node-workbench-hardening-plan-20260808.md"
+        ],
+        "architectureGuards": [
+          "pnpm docs:feature-mechanization:implementation --feature W4-CANVAS-NODE-WORKBENCH-HARDENING-20260808"
+        ],
+        "authorizationScope": "authorized mutable Canvas nodes with execution-selection capability",
+        "implementationPlan": "docs/planning/proposals/mandatory/frontend-and-ux/canvas-node-workbench-hardening-plan-20260808.md",
+        "implementationRefs": [
+          "apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts#CanvasNodeModelerActionId",
+          "apps/web/src/app/components/canvas/DbtNodeComponent.tsx#contextMenuModel",
+          "apps/web/src/app/plugins/graph/GraphNodeCardView.tsx#contextMenuEvent",
+          "apps/web/cypress/support/canvasExecutionSelection.ts#openCanvasNodeOperations"
+        ],
+        "normalizedRailName": "selectcanvasexecutionnode",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "4b8d22e20aa0ddc00b182ccbf1a5d863e97276446847bdb9cde86e2c25b68883",
+        "replaceArchitectureGuards": true,
+        "replaceImplementationRefs": true,
+        "allowedImplementationSurfaces": [
+          "apps/web/cypress/support/canvasExecutionSelection.ts",
+          "apps/web/cypress/support/test/canvasPreviewRunPersisted.ts",
+          "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts",
+          "apps/web/cypress/e2e/canvas/canvas-dbt-selection-recovery-live.cy.ts",
+          "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+          "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+          "apps/web/cypress/e2e/dbt/dbt-project-yaml-description-edit-live.cy.ts",
+          "apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts",
+          "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
+          "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
+          "apps/web/src/app/components/canvas/CanvasNodeContextMenuView.test.tsx",
+          "apps/web/src/app/components/canvas/CanvasNodeShell.doubleClick.test.ts",
+          "apps/web/src/app/components/canvas/CanvasNodeShell.test.tsx",
+          "apps/web/src/app/components/canvas/CanvasNodeShell.tsx",
+          "apps/web/src/app/components/canvas/DbtNodeComponent.architecture.test.ts",
+          "apps/web/src/app/components/canvas/DbtNodeComponent.failureContainment.test.tsx",
+          "apps/web/src/app/components/canvas/DbtNodeComponent.tsx",
+          "apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts",
+          "apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts",
+          "apps/web/src/app/plugins/dbt/DbtNodeRenderer.test.tsx",
+          "apps/web/src/app/plugins/dbt/DbtNodeRenderer.tsx",
+          "apps/web/src/app/plugins/canvasSurfaceStrategyContracts.ts",
+          "apps/web/src/app/plugins/dbt/dbtCanvasSurfaceStrategy.ts",
+          "apps/web/src/app/plugins/dbt/dbtProjectFileCanvasSurfaceStrategy.ts",
+          "apps/web/src/app/plugins/dvt/dvtCanvasSurfaceStrategy.ts",
+          "apps/web/src/app/plugins/graphStrategyRegistry.test.ts",
+          "apps/web/src/app/plugins/graph/GraphNodeCardView.test.tsx",
+          "apps/web/src/app/plugins/graph/GraphNodeCardView.tsx",
+          "apps/web/src/app/plugins/graph/GraphNodeRenderer.tsx",
+          "apps/web/src/app/plugins/graph/graphVisualTokens.ts",
+          "apps/web/src/app/views/canvas/CanvasNodeFloatingToolbarView.test.tsx",
+          "apps/web/src/app/views/canvas/CanvasNodeFloatingToolbarView.tsx",
+          "apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx",
+          "apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx",
+          "apps/web/src/app/views/canvas/CanvasShell.graphSurface.test.tsx",
+          "apps/web/src/app/views/canvas/CanvasShell.tsx",
+          "apps/web/src/app/views/canvas/canvasCopy.types.ts",
+          "apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.es.ts",
+          "apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.ts",
+          "apps/web/src/app/views/canvas/canvasCopyCatalog.toolbar.es.ts",
+          "apps/web/src/app/views/canvas/canvasCopyCatalog.toolbar.ts",
+          "apps/web/src/app/views/canvas/canvasNodeMapper.ts",
+          "apps/web/src/app/views/canvas/CanvasViewport.architecture.test.ts",
+          "apps/web/src/app/views/canvas/CanvasViewport.keyboardNodeEntry.test.ts",
+          "apps/web/src/app/views/canvas/CanvasViewport.nodeFloatingToolbar.test.tsx",
+          "apps/web/src/app/views/canvas/CanvasViewport.tsx",
+          "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx",
+          "apps/web/src/app/views/canvas/canvasNodeContextSurfaceModel.test.ts",
+          "apps/web/src/app/views/canvas/canvasNodeContextSurfaceModel.ts",
+          "apps/web/src/app/views/canvas/canvasNodeFloatingToolbarModel.test.ts",
+          "apps/web/src/app/views/canvas/canvasNodeFloatingToolbarModel.ts",
+          "apps/web/src/app/views/canvas/canvasNodeFloatingToolbarTokens.ts",
+          "apps/web/src/app/views/canvas/canvasNodeWorkbenchHardening.architecture.test.ts",
+          "apps/web/src/app/views/canvas/dbtYamlDescriptionWorkbenchContribution.test.tsx",
+          "apps/web/src/app/views/canvas/dbtYamlDescriptionWorkbenchContribution.tsx",
+          "apps/web/src/app/views/canvas/dbtProjectFileProjection.architecture.test.ts",
+          "apps/web/src/app/views/canvas/useDbtProjectFileCanvasController.ts",
+          "docs/concepts/repository-map.md",
+          "docs/.manifest.json",
+          "docs/planning/proposals/mandatory/frontend-and-ux/canvas-node-workbench-hardening-plan-20260808.md",
+          "docs/planning/status/system-governance-unit-index.units.yaml",
+          "scripts/run-selected-closure-live-proof.cjs",
+          "scripts/run-selected-closure-live-proof.test.cjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "packages/@dvt/contracts/**",
+          "packages/@dvt/engine/**",
+          "packages/@dvt/planner/**",
+          "packages/@dvt/adapter-*/**",
+          "infra/db/**",
+          "tools/planning-db/**/*.cjs",
+          "tools/planning-db/**/*.js",
+          "tools/planning-db/**/*.mjs",
+          "tools/planning-db/**/*.sql",
+          "tools/planning-db/**/*.ts",
+          "apps/web/src/app/plugins/graph/graphNodeCardActions*"
+        ]
+      },
+      "createdAt": "2026-08-16T00:30:07.689Z"
+    },
+    {
+      "operationId": "6ecbebcf-2936-4831-8f15-54e597db6cf4",
+      "idempotencyKey": "feature_mechanization_rail_retire:codex:W4-CANVAS-NODE-WORKBENCH-HARDENING-20260808:command:selectcanvasexecutionnode:1:2110a478e0e27d65",
+      "operationType": "feature_mechanization_rail_retire",
+      "actor": "codex",
+      "railId": "local#W4-CANVAS-NODE-WORKBENCH-HARDENING-20260808#command#selectcanvasexecutionnode",
+      "sourcePath": "docs/planning/proposals/mandatory/frontend-and-ux/canvas-node-workbench-hardening-plan-20260808.md",
+      "sourceContentSha256": "4b8d22e20aa0ddc00b182ccbf1a5d863e97276446847bdb9cde86e2c25b68883",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "railId": "local#W4-CANVAS-NODE-WORKBENCH-HARDENING-20260808#command#selectcanvasexecutionnode",
+        "reason": "Retire the duplicate local rail overlay now that the imported mandatory plan owns the complete current rail without the superseded Play/Pause story.",
+        "designId": "W4-NODE-EXECUTION-TOGGLE-LOCAL-RAIL-RETIREMENT-20260816",
+        "railName": "SelectCanvasExecutionNode",
+        "railType": "command",
+        "featureId": "W4-CANVAS-NODE-WORKBENCH-HARDENING-20260808",
+        "sourceRef": "docs/planning/proposals/mandatory/frontend-and-ux/canvas-node-workbench-hardening-plan-20260808.md",
+        "expectedRevision": 1,
+        "normalizedRailName": "selectcanvasexecutionnode",
+        "sourceContentSha256": "4b8d22e20aa0ddc00b182ccbf1a5d863e97276446847bdb9cde86e2c25b68883"
+      },
+      "createdAt": "2026-08-16T00:49:08.041Z"
     }
   ],
   "governanceComponentDefinitions": [

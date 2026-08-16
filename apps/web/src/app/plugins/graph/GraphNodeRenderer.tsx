@@ -4,7 +4,6 @@ import type { CSSProperties, ReactElement } from 'react';
 import { resolveNodeKindRegistration } from '../nodeTypeRegistry';
 import type { NodeRendererProps } from '../contracts/NodeRendering';
 import { graphStatusRingClasses } from './graphVisualTokens';
-import { buildGraphNodeCardPlayAction } from './graphNodeCardActions';
 import { buildGraphNodeCardReadModel } from './graphNodeCardReadModel';
 import type { GraphNodeOperationalDetail } from './graphNodeCardStrategyContracts';
 import { GraphNodeCardView } from './GraphNodeCardView';
@@ -63,7 +62,6 @@ export function GraphNodeRenderer({
         ? data.type
         : kindMeta.label;
   const cardModel = buildGraphNodeCardReadModel(node, data, graphNodeCardStrategies);
-  const playAction = buildGraphNodeCardPlayAction({ nodeId: node.id, data });
   const openOperationalDetails = data.onOpenOperationalDetails;
   const columns = resolveColumns(data, node.metadata);
   const showColumns =
@@ -95,7 +93,6 @@ export function GraphNodeRenderer({
       hovered={hovered}
       dimmed={dimmed}
       overlayStyle={overlayProps.style}
-      playAction={playAction}
       {...tagActionProps}
       onOpenOperationalDetails={
         typeof openOperationalDetails === 'function'

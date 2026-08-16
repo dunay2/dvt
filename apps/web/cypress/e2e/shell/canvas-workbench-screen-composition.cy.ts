@@ -13,6 +13,7 @@ import {
 import { buildCanvasAuthoringDraft } from '../../support/canvasDraftAuthoring';
 import {
   openCanvasContextMenuAt,
+  openCanvasNodeOperations,
   revealOperationalDrawer,
 } from '../../support/canvasExecutionSelection';
 import {
@@ -450,7 +451,7 @@ describe('Canvas workbench screen composition', () => {
     cy.get('[data-slot="shell-top-bar"]').as('topBar');
     cy.get('@topBar').should('contain.text', 'Raven');
     cy.get('@topBar').should('contain.text', 'Vista');
-    cy.get('@topBar').should('contain.text', 'Proyecto: e2e-project');
+    cy.get('@topBar').should('contain.text', 'Proyecto: E2E Project');
     cy.get('@topBar').find('[data-slot="shell-project-identity-badge"]').should('not.exist');
     cy.get('@topBar').find('[data-slot="shell-workspace-context-trigger"]').should('not.exist');
     cy.get('@topBar').find('[data-slot="shell-git-ref"]').should('not.exist');
@@ -574,7 +575,7 @@ describe('Canvas workbench screen composition', () => {
     ).click();
     cy.get('[data-slot="shell-workspace-menu-trigger"]').should(
       'contain.text',
-      'Proyecto: e2e-project-alt'
+      'Proyecto: Alternate Project'
     );
     cy.get('[data-slot="shell-active-canvas-identity"]')
       .should('contain.text', 'Alternate staging canvas')
@@ -584,9 +585,19 @@ describe('Canvas workbench screen composition', () => {
     cy.get('[data-slot="shell-run-status-indicator"]')
       .invoke('attr', 'aria-label')
       .should('contain', 'Vista previa obligatoria');
-    cy.get('.react-flow__node[data-id="source-1"] [data-slot="graph-node-card-play"]')
-      .click()
-      .should('have.attr', 'data-state', 'deselect');
+    cy.get('.react-flow__node[data-id="source-1"] [data-slot="graph-node-card-play"]').should(
+      'not.exist'
+    );
+    openCanvasNodeOperations('source-1');
+    cy.contains(
+      '[data-slot="canvas-node-context-menu-item"]',
+      'Seleccionar para ejecución'
+    ).click();
+    openCanvasNodeOperations('source-1');
+    cy.contains('[data-slot="canvas-node-context-menu-item"]', 'Quitar de la ejecución').should(
+      'be.visible'
+    );
+    cy.get('body').type('{esc}');
 
     cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
     cy.get('[data-slot="canvas-workspace-open-project-code-command"]').click();
@@ -963,21 +974,18 @@ describe('Canvas workbench screen composition', () => {
     assertDirectionalMarkers();
 
     cy.get('.react-flow__node[data-id="model_orders"]').as('modelNode').should('be.visible');
-    cy.get('@modelNode')
-      .find('[data-slot="graph-node-card-play"]')
-      .should('have.attr', 'data-state', 'select')
-      .find('[data-slot="graph-node-card-play-icon"]')
-      .should('exist');
-    cy.get('@modelNode').find('[data-slot="graph-node-card-play"]').click();
-    cy.get('@modelNode')
-      .find('[data-slot="graph-node-card-play"]')
-      .should('have.attr', 'data-state', 'deselect')
-      .and('have.attr', 'aria-label', 'Quitar de la ejecución')
-      .find('[data-slot="graph-node-card-pause-icon"]')
-      .should('exist');
-    cy.get('@modelNode')
-      .find('[data-slot="graph-node-card-play"]')
-      .should('have.attr', 'title', 'Quitar de la ejecución');
+    cy.get('@modelNode').find('[data-slot="graph-node-card-play"]').should('not.exist');
+    openCanvasNodeOperations('model_orders');
+    cy.contains(
+      '[data-slot="canvas-node-context-menu-item"]',
+      'Seleccionar para ejecución'
+    ).click();
+    openCanvasNodeOperations('model_orders');
+    cy.contains('[data-slot="canvas-node-context-menu-item"]', 'Quitar de la ejecución').should(
+      'be.visible'
+    );
+    cy.get('body').type('{esc}');
+    cy.get('@modelNode').find('[data-slot="graph-node-card-play"]').should('not.exist');
     assertDirectionalMarkers();
 
     cy.get('[data-slot="canvas-viewport-context-surface"]').type('{ctrl}f');
@@ -992,7 +1000,14 @@ describe('Canvas workbench screen composition', () => {
       .and('have.attr', 'aria-selected', 'true');
     cy.get('[data-slot="canvas-node-workbench-open-code-editor"]').should('not.exist');
     cy.get('[data-slot="canvas-node-workbench-overlay"]').should('be.visible');
-    cy.get('textarea[name="dvt-transform-sql"]').should('have.value', MODEL_SQL);
+    cy.get('[data-testid="monaco-code-editor"]')
+      .find('.view-line')
+      .should(($lines) => {
+        const renderedLines = [...$lines].map((line) =>
+          (line.textContent ?? '').replaceAll('\u00a0', ' ').trimEnd()
+        );
+        expect(renderedLines.join('\n')).to.equal(MODEL_SQL);
+      });
 
     cy.get('[data-slot="canvas-node-workbench-overlay"]')
       .invoke('attr', 'style')
@@ -1015,9 +1030,15 @@ describe('Canvas workbench screen composition', () => {
       .should('be.visible')
       .and('have.attr', 'aria-selected', 'true');
     cy.get('[data-slot="canvas-node-workbench-open-code-editor"]').should('not.exist');
-    cy.get('textarea[name="dvt-transform-sql"]')
-      .should('have.value', ORPHAN_SQL)
-      .and('not.have.value', MODEL_SQL);
+    cy.get('[data-testid="monaco-code-editor"]')
+      .find('.view-line')
+      .should(($lines) => {
+        const renderedLines = [...$lines].map((line) =>
+          (line.textContent ?? '').replaceAll('\u00a0', ' ').trimEnd()
+        );
+        expect(renderedLines.join('\n')).to.equal(ORPHAN_SQL);
+        expect(renderedLines.join('\n')).not.to.equal(MODEL_SQL);
+      });
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
 
     cy.get('.react-flow__node[data-id="src_orders"]')
