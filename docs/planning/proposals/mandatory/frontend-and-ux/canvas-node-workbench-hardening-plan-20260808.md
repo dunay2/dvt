@@ -2,7 +2,7 @@
 title: Canvas Node Workbench Hardening Plan
 status: Active
 owner: Frontend / Product / Architecture
-last_reviewed: 2026-08-10
+last_reviewed: 2026-08-16
 planning_type: mandatory
 issue: 2277
 ---
@@ -17,7 +17,7 @@ This plan supersedes the multi-surface node interaction merged by #2266.
 left click node       -> visual selection/focus only
 double click node     -> enter node / Properties
 Enter on focused node -> same node-entry gesture
-card Play/Pause       -> retained direct node affordance; not classified as duplicate of ellipsis
+card execution toggle -> retired by #2381; selection remains an ellipsis operation
 card ellipsis (…)     -> node operations only
 right click node      -> no DVT-specific action
 right click canvas    -> existing Canvas/Add Component context
@@ -29,18 +29,25 @@ Code-capable nodes enter Properties with Code preferred. Embedded controls keep 
 
 For file-backed dbt, the authoritative revisioned editor is launched from inside the Code section and closing it returns to the same focused node Properties context.
 
-### Product-owner correction — Play/Pause
+### Superseding product-owner correction — #2381
 
-Play/Pause was incorrectly classified as a duplicate of execution-selection operations during #2278 hardening. That removal was not authorized and is reverted.
+The safeguard added during #2278 correctly prevented an unevidenced removal of the
+card Play/Pause affordance. Issue #2381 is the separate execution-control decision
+required by that safeguard and supersedes only its presentation conclusion.
 
-Play/Pause remains a distinct visible affordance and must not be retired merely because the current baseline implementation derives it from `onToggleNodeSelection`. That implementation detail is evidence of a possible semantic conflation, not proof that the product intents are identical. Any change to the Play/Pause command semantics belongs to a separately evidenced run/execution-control audit; this W4.2 cut preserves the capability.
+The card control was not a runtime Play/Pause command: it invoked
+`SelectCanvasExecutionNode`, duplicating the localized execution-selection operation
+already available from the card ellipsis. The card-only adapter, icons and tokens are
+therefore retired. The command, selection state and contextual-menu operation remain
+unchanged. A future runtime Play/Pause capability must use explicit run-control
+semantics and a separately governed command surface.
 
 ## Retain
 
 - `CanvasNodeShell` as node-entry gesture boundary;
 - `CanvasNodeWorkbenchPanel` + `NodePropertiesTabs` as Properties surface;
 - `CanvasNodeModelerActionModel` as operations-only ellipsis model;
-- card Play/Pause affordance, its model, visual tokens and current command wiring until a separate execution-control decision replaces it;
+- `SelectCanvasExecutionNode` and its localized contextual-menu operation;
 - visual selection separate from execution selection;
 - Graph Draft and file-backed persistence authorities;
 - distinct operational-health detail;
@@ -52,6 +59,7 @@ Play/Pause remains a distinct visible affordance and must not be retired merely 
 - split `open-code | open-workbench` double-click policy;
 - native node right-click product menu;
 - visible `inspect-node`/Workbench navigation in node operations;
+- card-only execution-selection adapter, Play/Pause icons and visual tokens;
 - topology tests that require the retired surfaces.
 
 ## Acceptance invariants
@@ -61,7 +69,7 @@ Play/Pause remains a distinct visible affordance and must not be retired merely 
 3. Embedded controls do not trigger node entry.
 4. Code-capable nodes prefer Code; other nodes use their default/general section.
 5. Ellipsis contains operations only: execution selection, duplicate and remove when supported.
-6. Play/Pause remains available when the node-card action model exposes it; this slice does not remove or silently redefine it.
+6. Node-card headers do not expose execution selection as Play/Pause; the ellipsis retains the localized selection command.
 7. Native right-click on a node does not expose DVT node actions.
 8. Empty-Canvas right-click still exposes the existing Canvas context.
 9. No floating toolbar remains.
@@ -75,7 +83,6 @@ Play/Pause remains a distinct visible affordance and must not be retired merely 
 - `canvasNodeContextMenuModel.test.ts`
 - `CanvasNodeContextMenuView.test.tsx`
 - `GraphNodeCardView.test.tsx`
-- `graphNodeCardActions.test.ts`
 - `DbtNodeComponent.architecture.test.ts`
 - `canvasNodeWorkbenchHardening.architecture.test.ts`
 - `canvasNodeContextSurfaceModel.test.ts`
@@ -137,7 +144,7 @@ userStories:
   - As a Canvas author, I enter a node through one Properties surface with Code preferred when available.
   - As a keyboard user, I press Enter on the focused node to enter the same Properties surface.
   - As a Canvas author, I use the card ellipsis only for node operations.
-  - As a Canvas author, I retain the direct Play/Pause affordance and do not lose it as a side effect of simplifying node navigation.
+  - As a Canvas author, I select or deselect execution through node operations without a misleading Play/Pause control in the card header.
   - As a file-backed dbt author, I open the authoritative editor from Properties Code and return to the same node context.
 governingSources:
   - AGENTS.md
@@ -164,6 +171,7 @@ allowedImplementationSurfaces:
   - apps/web/src/app/components/canvas/DbtNodeComponent.tsx
   - apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts
   - apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts
+  - apps/web/src/app/plugins/dbt/DbtNodeRenderer.test.tsx
   - apps/web/src/app/plugins/dbt/DbtNodeRenderer.tsx
   - apps/web/src/app/plugins/canvasSurfaceStrategyContracts.ts
   - apps/web/src/app/plugins/dbt/dbtCanvasSurfaceStrategy.ts
@@ -173,8 +181,6 @@ allowedImplementationSurfaces:
   - apps/web/src/app/plugins/graph/GraphNodeCardView.test.tsx
   - apps/web/src/app/plugins/graph/GraphNodeCardView.tsx
   - apps/web/src/app/plugins/graph/GraphNodeRenderer.tsx
-  - apps/web/src/app/plugins/graph/graphNodeCardActions.test.ts
-  - apps/web/src/app/plugins/graph/graphNodeCardActions.ts
   - apps/web/src/app/plugins/graph/graphVisualTokens.ts
   - apps/web/src/app/views/canvas/CanvasNodeFloatingToolbarView.test.tsx
   - apps/web/src/app/views/canvas/CanvasNodeFloatingToolbarView.tsx
@@ -204,16 +210,24 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/dbtProjectFileProjection.architecture.test.ts
   - apps/web/src/app/views/canvas/useDbtProjectFileCanvasController.ts
   - docs/concepts/repository-map.md
+  - docs/.manifest.json
   - docs/planning/proposals/mandatory/frontend-and-ux/canvas-node-workbench-hardening-plan-20260808.md
+  - docs/planning/status/system-governance-unit-index.units.yaml
   - scripts/run-selected-closure-live-proof.cjs
   - scripts/run-selected-closure-live-proof.test.cjs
+  - tools/planning-db/state/canonical-state.json
 forbiddenImplementationSurfaces:
   - packages/@dvt/contracts/**
   - packages/@dvt/engine/**
   - packages/@dvt/planner/**
   - packages/@dvt/adapter-*/**
   - infra/db/**
-  - tools/planning-db/**
+  - tools/planning-db/**/*.cjs
+  - tools/planning-db/**/*.js
+  - tools/planning-db/**/*.mjs
+  - tools/planning-db/**/*.sql
+  - tools/planning-db/**/*.ts
+  - apps/web/src/app/plugins/graph/graphNodeCardActions*
 commandQueryRails:
   - name: InspectCanvasNode
     type: command
@@ -235,6 +249,11 @@ commandQueryRails:
     type: command
     status: implemented
     dddOwner: Canvas execution-selection intent
+    applicationPort: Canvas node execution-selection command handler
+    adapterSurface: Canvas node operations menu
+    authorizationScope: authorized mutable Canvas nodes with execution-selection capability
+    negativeTests:
+      - node card header does not expose execution selection as Play or Pause
 domainObjects:
   - name: CanvasDraftSession
     type: aggregate
@@ -251,6 +270,9 @@ domainObjects:
   - name: CanvasNodeModelerActionModel
     type: operation read model
     owner: Canvas node interaction presentation
+  - name: CanvasExecutionSelection
+    type: command state
+    owner: Canvas execution-selection intent
 symbols:
   - path: apps/web/cypress/support/canvasExecutionSelection.ts
     name: openCanvasNodeOperations
@@ -465,7 +487,7 @@ symbols:
 fowlerSignals:
   - duplicate node gestures and adjacent action surfaces
   - split Code versus Workbench node-entry semantics
-  - possible Play/Pause versus execution-selection semantic conflation; preserve the affordance and audit separately rather than deleting it
+  - Play/Pause versus execution-selection semantic conflation resolved by #2381: retain the command and retire only the misleading card adapter
   - displaced floating-toolbar state and tests
 architectureGuards:
   - pnpm docs:feature-mechanization:implementation --feature W4-CANVAS-NODE-WORKBENCH-HARDENING-20260808
@@ -577,10 +599,23 @@ redGreenCycles:
       - apps/web/src/app/views/canvas/canvasNodeMapper.ts
       - apps/web/src/app/views/canvas/canvasNodeWorkbenchHardening.architecture.test.ts
     greenTest: apps/web/src/app/views/canvas/canvasNodeWorkbenchHardening.architecture.test.ts
+  - id: selectcanvasexecutionnode-record
+    redTest: apps/web/src/app/views/canvas/canvasNodeWorkbenchHardening.architecture.test.ts
+    expectedFailure: Node card header still exposes the retired execution-selection adapter or the menu command is missing.
+    patchSurfaces:
+      - apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts
+      - apps/web/src/app/components/canvas/DbtNodeComponent.tsx
+      - apps/web/src/app/plugins/graph/GraphNodeCardView.tsx
+      - apps/web/cypress/support/canvasExecutionSelection.ts
+      - apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    greenTest: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
 ```
 
 ## Completion rule
 
 The implementation cut is complete only when the exact PR head passes the applicable Web, documentation, governance and repository gates and review has no unresolved finding. This is separate from #2255 product-owner acceptance.
 
-Play/Pause command semantics are not silently redefined by this cut. Their current baseline wiring is preserved while W5/run-control work determines whether the product intent should map to run/start/pause/resume or another explicit execution control.
+`SelectCanvasExecutionNode` semantics are not redefined by #2381. Only its duplicate
+card presentation is retired. W5/run-control work remains responsible for any future
+run/start/pause/resume capability and must expose that intent through an explicit,
+separately governed command surface.
