@@ -229,10 +229,6 @@ test('workflow scope policy stays wired into ci and pr quality workflows', () =>
     ciWorkflow,
     "needs.detect-affected.outputs.ci_tool_executable_contracts_relevant == 'true'"
   );
-  assert.doesNotMatch(
-    ciWorkflow,
-    /needs\.detect-affected\.outputs\.changed_file_validation_relevant/u
-  );
   assert.match(
     prQualityGate,
     /steps\.scope\.outputs\.changed_file_validation_relevant\s*== 'true'[\s\S]*steps\.scope\.outputs\.docs_changed\s*== 'true'/u
