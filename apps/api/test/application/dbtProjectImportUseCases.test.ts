@@ -61,7 +61,30 @@ function validAnalyzer(): IDbtProjectAnalyzerPort {
       },
       analysisSha256: 'b'.repeat(64),
       adapterType: 'postgres',
-      resources: [],
+      resources: [
+        {
+          uniqueId: 'source.analytics.raw.orders',
+          resourceType: 'source',
+          name: 'orders',
+          identifier: 'orders_table',
+          packageName: 'analytics',
+          originalFilePath: 'models/sources.yml',
+          descriptionFilePath: 'models/sources.yml',
+          sourceName: 'raw',
+          columns: [],
+          tags: [],
+          codeOnlyReasons: ['phase_two_read_only_projection'],
+          sourceTableDeclaration: {
+            uniqueId: 'source.analytics.raw.orders',
+            filePath: 'models/sources.yml',
+            sourceName: 'raw',
+            tableName: 'orders',
+            database: 'analytics',
+            schema: 'raw',
+            identifier: 'orders_table',
+          },
+        },
+      ],
       dependencies: [],
       diagnostics: [],
     }),
@@ -101,6 +124,17 @@ describe('ValidateDbtProjectImportUseCase', () => {
       },
     });
     expect(report.receipt.validationSha256).toMatch(/^[a-f0-9]{64}$/);
+    expect(report.sourceTableDeclarations).toEqual([
+      {
+        uniqueId: 'source.analytics.raw.orders',
+        filePath: 'models/sources.yml',
+        sourceName: 'raw',
+        tableName: 'orders',
+        database: 'analytics',
+        schema: 'raw',
+        identifier: 'orders_table',
+      },
+    ]);
   });
 
   it('does not invoke dbt for a project rejected by filesystem policy', async () => {

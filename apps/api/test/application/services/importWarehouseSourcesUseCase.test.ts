@@ -158,6 +158,37 @@ describe('ImportWarehouseSourcesUseCase', () => {
     });
   });
 
+  it('passes exact existing dbt targets only to file-backed authority', async () => {
+    const exactInput: ImportWarehouseSourcesInput = {
+      ...INPUT,
+      existingDbtSourceTargets: [
+        {
+          objectId: SOURCE_OBJECT.objectId,
+          sourceUniqueId: 'source.analytics.raw.orders',
+          filePath: 'models/sources.yml',
+          sourceName: 'raw',
+          tableName: 'orders',
+        },
+      ],
+    };
+    const fileHarness = createHarness(FILE_AUTHORITY);
+
+    await fileHarness.useCase.execute(exactInput);
+
+    expect(fileHarness.dbtProjectFilesStrategy.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        existingDbtSourceTargets: exactInput.existingDbtSourceTargets,
+      }),
+      FILE_AUTHORITY
+    );
+
+    const graphHarness = createHarness(GRAPH_AUTHORITY);
+    await expect(graphHarness.useCase.execute(exactInput)).rejects.toBeInstanceOf(
+      InvalidWarehouseSourceImportRequestError
+    );
+    expect(graphHarness.graphDraftStrategy.execute).not.toHaveBeenCalled();
+  });
+
   it('rejects an invalid V2 request before catalog or authority access', async () => {
     const harness = createHarness(GRAPH_AUTHORITY);
 

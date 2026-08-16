@@ -99,6 +99,15 @@ describe('projectDbtManifest', () => {
           identifier: 'orders-physical',
           originalFilePath: 'models/sources/src_raw.yml',
           descriptionFilePath: 'models/sources/src_raw.yml',
+          sourceTableDeclaration: {
+            uniqueId: 'source.analytics.raw.orders',
+            filePath: 'models/sources/src_raw.yml',
+            sourceName: 'raw',
+            tableName: 'orders',
+            database: 'analytics',
+            schema: 'raw',
+            identifier: 'orders-physical',
+          },
           sourceIdentityRef: {
             database: 'analytics',
             connectionId: 'warehouse-prod',

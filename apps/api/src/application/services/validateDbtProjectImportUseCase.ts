@@ -66,6 +66,11 @@ export class ValidateDbtProjectImportUseCase {
 
     const validatedAt = this.deps.now().toISOString();
     const adapterType = analysis.adapterType ?? inspection.adapterType;
+    const sourceTableDeclarations = analysis.resources
+      .flatMap((resource) =>
+        resource.sourceTableDeclaration === undefined ? [] : [resource.sourceTableDeclaration]
+      )
+      .sort((left, right) => left.uniqueId.localeCompare(right.uniqueId));
     const validationSha256 = sha256({
       policyVersion: 'dbt-project-import-policy.v1',
       projectRoot: request.projectRoot,
@@ -74,6 +79,7 @@ export class ValidateDbtProjectImportUseCase {
       inventory: inspection.inventory,
       contentSetSha256: analysis.projectRevision.contentSetSha256,
       analysisSha256: analysis.analysisSha256,
+      sourceTableDeclarations,
     });
     return DbtProjectImportValidationReportSchema.parse({
       schemaVersion: 'dbt-project-import-validation-report.v1',
@@ -83,6 +89,7 @@ export class ValidateDbtProjectImportUseCase {
       ...(adapterType === undefined ? {} : { adapterType }),
       inventory: inspection.inventory,
       diagnostics: inspection.diagnostics,
+      sourceTableDeclarations,
       receipt: {
         schemaVersion: 'dbt-project-import-validation-receipt.v1',
         projectRoot: request.projectRoot,

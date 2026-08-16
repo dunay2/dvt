@@ -212,6 +212,16 @@ function projectResource(
   const testMetadata = projectedType === 'test' ? projectTestMetadata(resource) : undefined;
   const sourceIdentityRef = projectSourceIdentityRef(resource, projectedType);
   const identifier = projectedType === 'source' ? stringValue(resource.identifier) : undefined;
+  const sourceTableDeclaration = projectSourceTableDeclaration({
+    resource,
+    resourceType: projectedType,
+    rootProjectName,
+    uniqueId,
+    name,
+    packageName,
+    normalizedOriginalFilePath,
+    identifier,
+  });
 
   return {
     uniqueId,
@@ -234,7 +244,42 @@ function projectResource(
     tags: [...new Set(stringArray(resource.tags))].sort(),
     ...(testMetadata === undefined ? {} : { testMetadata }),
     ...(sourceIdentityRef === undefined ? {} : { sourceIdentityRef }),
+    ...(sourceTableDeclaration === undefined ? {} : { sourceTableDeclaration }),
     codeOnlyReasons: ['phase_two_read_only_projection'],
+  };
+}
+
+function projectSourceTableDeclaration(
+  input: Readonly<{
+    resource: Record<string, unknown>;
+    resourceType: DbtProjectAnalysisResource['resourceType'];
+    rootProjectName: string;
+    uniqueId: string;
+    name: string;
+    packageName: string;
+    normalizedOriginalFilePath: string | undefined;
+    identifier: string | undefined;
+  }>
+): DbtProjectAnalysisResource['sourceTableDeclaration'] {
+  if (
+    input.resourceType !== 'source' ||
+    input.packageName !== input.rootProjectName ||
+    input.normalizedOriginalFilePath === undefined
+  ) {
+    return undefined;
+  }
+  const sourceName = stringValue(input.resource.source_name);
+  if (sourceName === undefined) return undefined;
+  const database = stringValue(input.resource.database);
+  const schema = stringValue(input.resource.schema);
+  return {
+    uniqueId: input.uniqueId,
+    filePath: input.normalizedOriginalFilePath,
+    sourceName,
+    tableName: input.name,
+    ...(database === undefined ? {} : { database }),
+    ...(schema === undefined ? {} : { schema }),
+    ...(input.identifier === undefined ? {} : { identifier: input.identifier }),
   };
 }
 

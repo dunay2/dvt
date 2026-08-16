@@ -69,6 +69,73 @@ describe('DbtProjectFilesWarehouseSourceImportStrategy', () => {
     });
   });
 
+  it('enriches the exact imported source table instead of generating a parallel YAML file', async () => {
+    const existingContent = [
+      'version: 2',
+      '',
+      'sources:',
+      '  - name: raw',
+      '    database: analytics',
+      '    schema: erp',
+      '    description: Existing source metadata',
+      '    tables:',
+      '      - name: orders',
+      '        description: Existing table metadata',
+      '',
+    ].join('\n');
+    const batchMutation = createBatchMutation();
+    const projectGraph = {
+      execute: vi.fn(async () =>
+        createProjection({
+          uniqueId: 'source.analytics.raw.orders',
+          sourceName: 'raw',
+          originalFilePath: 'models/sources.yml',
+        })
+      ),
+    };
+    const strategy = new DbtProjectFilesWarehouseSourceImportStrategy({
+      workspaceFiles: createWorkspaceFiles({
+        'analytics/models/sources.yml': existingContent,
+      }),
+      batchMutation,
+      projectGraph,
+    });
+    const context: WarehouseSourceImportCommandContext = {
+      ...CONTEXT,
+      databaseUser: 'warehouse_reader',
+      existingDbtSourceTargets: [
+        {
+          objectId: SOURCE_OBJECT.objectId,
+          sourceUniqueId: 'source.analytics.raw.orders',
+          filePath: 'models/sources.yml',
+          sourceName: 'raw',
+          tableName: 'orders',
+        },
+      ],
+    };
+
+    const result = await strategy.execute(context, AUTHORITY);
+
+    expect(batchMutation.apply).toHaveBeenCalledWith(
+      SCOPE,
+      expect.objectContaining({
+        writes: [
+          expect.objectContaining({
+            path: 'analytics/models/sources.yml',
+            content: expect.stringMatching(
+              /description: Existing source metadata[\s\S]*description: Existing table metadata[\s\S]*connection_id: warehouse-prod/
+            ),
+          }),
+        ],
+      })
+    );
+    expect(result.yamlFiles).toEqual(['analytics/models/sources.yml']);
+    expect(result.outcome).toMatchObject({
+      kind: 'dbt-project-files',
+      projectedSourceUniqueIds: ['source.analytics.raw.orders'],
+    });
+  });
+
   it('rolls back YAML and rejects success when the refreshed projection is not fresh', async () => {
     const batchMutation = createBatchMutation();
     const projectGraph = {
@@ -163,10 +230,23 @@ function createStrategy(
   });
 }
 
-function createWorkspaceFiles(): IWorkspaceFileRepository {
+function createWorkspaceFiles(
+  contents: Readonly<Record<string, string>> = {}
+): IWorkspaceFileRepository {
   return {
     listFiles: vi.fn(async () => []),
     getFileContent: vi.fn(async (_scope, filePath) => {
+      const content = contents[filePath];
+      if (content !== undefined) {
+        return {
+          path: filePath,
+          name: filePath.split('/').at(-1) ?? filePath,
+          language: 'yaml',
+          content,
+          contentSha256: sha256(content),
+          lastModified: '2026-07-14T00:00:00.000Z',
+        };
+      }
       throw new WorkspaceFileNotFoundError(filePath);
     }),
     saveFileContent: vi.fn(),
@@ -192,7 +272,17 @@ function createBatchMutation(
   };
 }
 
-function createProjection(): DbtProjectGraphProjection {
+function createProjection(
+  source: Readonly<{
+    uniqueId: string;
+    sourceName: string;
+    originalFilePath: string;
+  }> = {
+    uniqueId: 'source.analytics.warehouse_prod_analytics_erp.orders',
+    sourceName: 'warehouse_prod_analytics_erp',
+    originalFilePath: 'models/sources/src_erp.yml',
+  }
+): DbtProjectGraphProjection {
   return DbtProjectGraphProjectionSchema.parse({
     schemaVersion: 'dbt-project-graph-projection.v1',
     authorityBinding: AUTHORITY,
@@ -208,12 +298,12 @@ function createProjection(): DbtProjectGraphProjection {
     analysisSha256: 'b'.repeat(64),
     nodes: [
       {
-        uniqueId: 'source.analytics.warehouse_prod_analytics_erp.orders',
+        uniqueId: source.uniqueId,
         resourceType: 'source',
         name: 'orders',
         packageName: 'analytics',
-        sourceName: 'warehouse_prod_analytics_erp',
-        originalFilePath: 'models/sources/src_erp.yml',
+        sourceName: source.sourceName,
+        originalFilePath: source.originalFilePath,
         columns: [],
         tags: [],
         visualEditability: { status: 'code_only', reasons: ['source definition'] },
