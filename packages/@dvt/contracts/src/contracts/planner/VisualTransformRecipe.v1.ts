@@ -8,6 +8,7 @@
  *
  * @decision Keep visual intent as one small, strict value object and derive presentation from it.
  * @consequence Existing SQL nodes remain SQL-authoritative while visual nodes persist no editable SQL.
+ * @baseline ADR-0035: Planner Public Contract Evolution Protocol
  * @version 1.0.0
  */
 import { z } from 'zod';
