@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { act } from 'react';
 import { describe, expect, it } from 'vitest';
 
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
@@ -10,6 +11,35 @@ import {
 } from './useCanvasViewportGraphModel.test.support';
 
 describe('useCanvasViewportGraphModel node data', () => {
+  it('preserves transient column disclosure across semantic node reprojection', async () => {
+    const args = buildViewportGraphModelArgs({
+      visibleNodeIds: ['source-node'],
+      visibleEdges: [],
+      draftSemanticGraph: {
+        canonicalNodes: [buildCanonicalNode('source-node', 'dvt:source', 'input')],
+        canonicalEdges: [],
+      },
+    });
+    const mounted = await renderViewportGraphModel(args);
+
+    try {
+      await act(async () => {
+        mounted.readState()?.setNodes((nodes) =>
+          nodes.map((node) => ({
+            ...node,
+            data: { ...node.data, columnDisclosureExpanded: true },
+          }))
+        );
+      });
+      expect(mounted.readState()?.nodes[0]?.data.columnDisclosureExpanded).toBe(true);
+
+      await mounted.rerender(args);
+      expect(mounted.readState()?.nodes[0]?.data.columnDisclosureExpanded).toBe(true);
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
   it('projects governed port compatibility into visible node data', async () => {
     const mounted = await renderViewportGraphModel(
       buildViewportGraphModelArgs({

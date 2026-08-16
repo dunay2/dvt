@@ -1,6 +1,6 @@
 /** Owned concern: render canonical Canvas nodes with plugin decorations and governed node-shell gestures. */
-import type { Node, NodeProps } from '@xyflow/react';
-import { memo, type DragEvent } from 'react';
+import { useUpdateNodeInternals, type Node, type NodeProps } from '@xyflow/react';
+import { memo, useCallback, type DragEvent } from 'react';
 
 import type {
   BadgeContext,
@@ -26,6 +26,11 @@ import { CanvasNodeShell } from './CanvasNodeShell';
 import type { CanvasNodePortCompatibilityView, CanvasNodePortTone } from './CanvasNodePortHandle';
 import type { CanvasNodePresentationCopy } from './canvasNodePresentationCopy.contract';
 import type { CanvasNodePresentationTruth } from './canvasNodePresentationTruth.contract';
+import type {
+  GraphNodeColumn,
+  GraphNodeColumnPortDirection,
+  GraphNodeColumnPortIdentity,
+} from '../../plugins/graph/GraphNodeColumnSection';
 import {
   buildCanvasNodeModelerActionModel,
   type CanvasNodeContextMenuCopy,
@@ -53,7 +58,7 @@ export interface DbtNodeData extends Record<string, unknown> {
   /** Plugin-projected overlay decoration. */
   overlayDecoration?: MergedNodeDecoration | null;
   showColumns?: boolean;
-  columns?: Array<{ name: string; type: string }>;
+  columns?: GraphNodeColumn[];
   tags?: string[];
   displayTags?: Array<{ value: string; label: string }>;
   path?: string;
@@ -86,6 +91,13 @@ export interface DbtNodeData extends Record<string, unknown> {
   }>;
   contextMenuCopy?: CanvasNodeContextMenuCopy;
   executionSelectionCopy?: Readonly<{ selectLabel: string; deselectLabel: string }>;
+  columnDisclosureExpanded?: boolean;
+  activeColumnHandleId?: string | null;
+  onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
+  columnPortDirections?: readonly GraphNodeColumnPortDirection[];
+  onColumnDisclosureChange?: (nodeId: string, expanded: boolean) => void;
+  onColumnLayoutChange?: () => void;
+  onAutomapColumns?: (nodeId: string, columns: readonly GraphNodeColumn[]) => void;
 }
 
 type DbtFlowNode = Node<DbtNodeData, 'dbtNode'>;
@@ -180,6 +192,11 @@ function buildCanonicalNode(
 function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
   const data = props.data as DbtNodeData;
   const { id, selected } = props;
+  const updateNodeInternals = useUpdateNodeInternals();
+  const handleColumnLayoutChange = useCallback(
+    () => updateNodeInternals(id),
+    [id, updateNodeInternals]
+  );
   const selectedForExecution = data.selectedForExecution ?? selected;
   const pluginKind =
     data.pluginKind ??
@@ -209,7 +226,7 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
     overlayDecoration: data.overlayDecoration ?? null,
     badges,
     graphNodeCardStrategies,
-    data,
+    data: { ...data, onColumnLayoutChange: handleColumnLayoutChange },
   };
 
   const shouldShowSourceHandle = kindRegistration.allowsOutgoing;

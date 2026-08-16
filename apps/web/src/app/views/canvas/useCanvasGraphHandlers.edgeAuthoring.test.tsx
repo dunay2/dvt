@@ -4,6 +4,8 @@ import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { canvasViewCopy } from './copy';
+import { createCanvasColumnHandleId } from './canvasColumnLineageProjection';
+import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import {
   buildDraftSession,
   buildCanonicalNode,
@@ -40,6 +42,116 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     expect(toastState.error).toHaveBeenCalledWith(canvasViewCopy.mutationUnavailableMessage);
     expect(harness.latest()?.confirmEdgeModal).toEqual({ open: false, edge: null });
 
+    harness.cleanup();
+  });
+
+  it('routes a pointer column connection into recipe authority without opening node-edge confirmation', async () => {
+    const source = {
+      ...buildCanonicalNode('source-node', 'input'),
+      kind: 'dvt:source' as const,
+      metadata: { columns: [{ name: 'order_id', type: 'integer' }] },
+    };
+    const model = {
+      ...buildCanonicalNode('model-node', 'transform'),
+      kind: 'dvt:sql_transform' as const,
+    };
+    const draftSession = {
+      ...buildDraftSession(),
+      workingSet: {
+        visibleNodeIds: [source.id, model.id],
+        visibleEdges: [{ sourceId: source.id, targetId: model.id }],
+        pendingExplicitNodeIds: [],
+      },
+    };
+    const setDraftSession = vi.fn();
+    const harness = renderGraphHandlersHook({
+      canEditEdges: true,
+      canonicalNodes: [source, model],
+      draftSession,
+      setDraftSession,
+    });
+    await harness.render();
+
+    act(() => {
+      harness.latest()?.onConnect({
+        source: source.id,
+        sourceHandle: createCanvasColumnHandleId({
+          direction: 'source',
+          nodeId: source.id,
+          columnId: 'order_id',
+        }),
+        target: model.id,
+        targetHandle: createCanvasColumnHandleId({
+          direction: 'target',
+          nodeId: model.id,
+          columnId: 'order_id',
+        }),
+      });
+    });
+
+    expect(harness.latest()?.confirmEdgeModal).toEqual({ open: false, edge: null });
+    expect(setDraftSession).toHaveBeenCalledTimes(1);
+    const nextSession = setDraftSession.mock.calls[0]?.[0];
+    expect(typeof nextSession).toBe('object');
+    const mapped = nextSession.localNodeCatalog?.[model.id];
+    expect(mapped).toBeDefined();
+    expect(readDvtTransformAuthoringAuthority(mapped).mode).toBe('visual');
+    expect(toastState.success).toHaveBeenCalledWith(canvasViewCopy.columnMappingAddedMessage);
+    harness.cleanup();
+  });
+
+  it('uses the same mapping command for source and target handle keyboard activation', async () => {
+    const source = {
+      ...buildCanonicalNode('source-node', 'input'),
+      kind: 'dvt:source' as const,
+      metadata: { columns: [{ name: 'order_id', type: 'integer' }] },
+    };
+    const model = {
+      ...buildCanonicalNode('model-node', 'transform'),
+      kind: 'dvt:sql_transform' as const,
+    };
+    const setDraftSession = vi.fn();
+    const harness = renderGraphHandlersHook({
+      canEditEdges: true,
+      canonicalNodes: [source, model],
+      draftSession: {
+        ...buildDraftSession(),
+        workingSet: {
+          visibleNodeIds: [source.id, model.id],
+          visibleEdges: [{ sourceId: source.id, targetId: model.id }],
+          pendingExplicitNodeIds: [],
+        },
+      },
+      setDraftSession,
+    });
+    await harness.render();
+
+    act(() => {
+      harness.latest()?.handleColumnPortActivate({
+        direction: 'source',
+        nodeId: source.id,
+        columnId: 'order_id',
+      });
+    });
+    expect(harness.latest()?.activeColumnHandleId).toBe(
+      createCanvasColumnHandleId({
+        direction: 'source',
+        nodeId: source.id,
+        columnId: 'order_id',
+      })
+    );
+    act(() => {
+      harness.latest()?.handleColumnPortActivate({
+        direction: 'target',
+        nodeId: model.id,
+        columnId: 'order_id',
+      });
+    });
+
+    expect(setDraftSession).toHaveBeenCalledTimes(1);
+    expect(toastState.info).toHaveBeenCalledWith(
+      canvasViewCopy.columnMappingSourceSelectedTemplate.replace('{column}', 'order_id')
+    );
     harness.cleanup();
   });
 

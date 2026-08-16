@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
 
 import { fireEvent } from '@testing-library/dom';
+import { ReactFlowProvider } from '@xyflow/react';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { GraphNodeColumnSection } from './GraphNodeColumnSection';
@@ -158,5 +159,137 @@ describe('GraphNodeColumnSection', () => {
     expect(container.textContent).toContain('customer');
     expect(container.textContent).toContain('text');
     expect(container.textContent).not.toContain('unknown');
+  });
+
+  it('renders source output ports and activates the semantic column identity by keyboard', () => {
+    const onColumnPortActivate = vi.fn();
+    const onDisclosureChange = vi.fn();
+    const onColumnLayoutChange = vi.fn();
+    act(() => {
+      root.render(
+        <ReactFlowProvider>
+          <GraphNodeColumnSection
+            nodeId="orders"
+            columns={[
+              {
+                id: 'order_id',
+                name: 'order_id',
+                type: 'integer',
+                sourceHandleId: 'column:source:orders:order_id',
+              },
+            ]}
+            portDirections={['source']}
+            onColumnPortActivate={onColumnPortActivate}
+            onDisclosureChange={onDisclosureChange}
+            onColumnLayoutChange={onColumnLayoutChange}
+          />
+        </ReactFlowProvider>
+      );
+    });
+
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>('[data-slot="graph-node-column-toggle"]')!
+      );
+    });
+
+    const handles = container.querySelectorAll<HTMLElement>(
+      '[data-slot="canvas-node-port-handle"]'
+    );
+    expect(handles).toHaveLength(1);
+    expect(handles[0]?.getAttribute('data-port')).toBe('source');
+    expect(handles[0]?.getAttribute('aria-label')).toBe('Conectar salida de order_id');
+    expect(onDisclosureChange).toHaveBeenCalledWith(true);
+    expect(onColumnLayoutChange).toHaveBeenCalled();
+
+    act(() => {
+      fireEvent.keyDown(handles[0]!, { key: 'Enter' });
+    });
+    expect(onColumnPortActivate).toHaveBeenCalledWith({
+      direction: 'source',
+      nodeId: 'orders',
+      columnId: 'order_id',
+    });
+  });
+
+  it('renders both model directions and offers explicit deterministic automap', () => {
+    const onAutomap = vi.fn();
+    act(() => {
+      root.render(
+        <ReactFlowProvider>
+          <GraphNodeColumnSection
+            nodeId="model"
+            columns={[
+              {
+                id: 'output:order_id',
+                name: 'order_id',
+                type: 'integer',
+                sourceHandleId: 'column:source:model:output%3Aorder_id',
+                targetHandleId: 'column:target:model:output%3Aorder_id',
+              },
+            ]}
+            portDirections={['target', 'source']}
+            onColumnPortActivate={vi.fn()}
+            onAutomap={onAutomap}
+          />
+        </ReactFlowProvider>
+      );
+    });
+
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>('[data-slot="graph-node-column-toggle"]')!
+      );
+    });
+
+    expect(
+      [...container.querySelectorAll('[data-slot="canvas-node-port-handle"]')].map((handle) =>
+        handle.getAttribute('data-port')
+      )
+    ).toEqual(['target', 'source']);
+    const automap = container.querySelector<HTMLButtonElement>(
+      '[data-slot="graph-node-column-automap"]'
+    );
+    expect(automap?.textContent).toBe('Asignar columnas compatibles');
+    act(() => {
+      fireEvent.click(automap!);
+    });
+    expect(onAutomap).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders only target ports for terminal output columns', () => {
+    act(() => {
+      root.render(
+        <ReactFlowProvider>
+          <GraphNodeColumnSection
+            nodeId="sink"
+            columns={[
+              {
+                id: 'order_id',
+                name: 'order_id',
+                type: 'integer',
+                sourceHandleId: 'column:source:sink:order_id',
+                targetHandleId: 'column:target:sink:order_id',
+              },
+            ]}
+            portDirections={['target']}
+            onColumnPortActivate={vi.fn()}
+          />
+        </ReactFlowProvider>
+      );
+    });
+
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>('[data-slot="graph-node-column-toggle"]')!
+      );
+    });
+
+    const handles = container.querySelectorAll<HTMLElement>(
+      '[data-slot="canvas-node-port-handle"]'
+    );
+    expect(handles).toHaveLength(1);
+    expect(handles[0]?.getAttribute('data-port')).toBe('target');
+    expect(handles[0]?.getAttribute('aria-label')).toBe('Asignar a order_id');
   });
 });

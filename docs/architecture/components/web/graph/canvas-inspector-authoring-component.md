@@ -16,6 +16,7 @@ Use it for:
 
 - governed node-detail editing in the Inspector
 - governed dbt card configuration and model-origin selection
+- recipe-backed column mapping and derived lineage projection on Canvas cards
 - the local Inspector DTO, validation, dirty state, and apply/cancel posture
 - the command seam that writes edited node details back into the draft
   aggregate
@@ -41,6 +42,8 @@ inspector contract.
 | Value Object        | `DvtNodeAuthoringMetadata`           | normalized source, SQL transform, and sink config for DVT transformation nodes |
 | Value Object        | `VisualTransformRecipeV1`            | versioned visual output, input, operation, and filter intent                   |
 | Policy Object       | `DvtTransformAuthoringAuthority`     | admits exactly one SQL or visual recipe authority per transform                |
+| Projection          | `CanvasColumnLineage`                | derives visible column handles and edges from recipe and dependency truth      |
+| Application command | `CanvasColumnMapping`                | updates recipe inputs through the existing Graph Draft aggregate               |
 | Policy Object       | `DbtSourceRelationshipSelection`     | dbt model origins must come from the visible connected dbt graph               |
 | Domain policy       | `canvasInspectorAuthoringModel.ts`   | validation and normalization are explicit and pure                             |
 | Presentation policy | Canvas i18n copy catalog             | visible labels and validation messages are resolved at render time             |
@@ -115,6 +118,13 @@ write surface lives one level up in the route-owned wrapper.
 - Visual recipes are the sole semantic source for later column-lineage
   projection. React Flow column edges are derived read models and must not be
   persisted as a second authority.
+- Source cards expose output column ports, transform cards expose input and
+  output ports, and sink cards expose input ports. Their stable IDs are
+  presentation identities, not persisted graph-edge records.
+- Pointer and keyboard column gestures must invoke the same mapping command.
+  Automap is limited to unique exact-name columns with known compatible types.
+- Collapsing or revealing more columns changes only transient viewport state;
+  React Flow node internals are recalculated without changing recipe truth.
 - Historical `config.selectedColumns` metadata is preserved as inert
   compatibility data; it is not editable and must not be interpreted as a
   visual recipe.
@@ -179,6 +189,10 @@ write surface lives one level up in the route-owned wrapper.
 | `canvasDbtAuthoringModel.ts`                 | dbt card metadata value object and origin-selection policy          | React hooks, services, or persistence               |
 | `canvasDvtAuthoringModel.ts`                 | DVT source, SQL transform, and sink config value object             | React hooks, services, or persistence               |
 | `canvasDvtTransformAuthoringAuthority.ts`    | exclusive SQL/visual authority and Graph Draft metadata projection  | React Flow edges, UI state, or SQL generation       |
+| `canvasColumnMappingAuthoring.ts`            | mapping, remapping, removal, and deterministic automap commands     | React Flow geometry or a second mapping store       |
+| `canvasColumnLineageProjection.ts`           | stable column handles and recipe-derived lineage edges              | recipe mutation or edge persistence                 |
+| `CanvasColumnLineageEdge.tsx`                | accessible custom lineage-edge presentation and remove action       | semantic mapping ownership                          |
+| `GraphNodeColumnSection.tsx`                 | role-correct ports, disclosure, and automap affordance              | recipe persistence or stage-edge admission          |
 | `VisualTransformRecipe.v1.ts`                | strict recipe schema, value objects, and deterministic serializer   | UI state, graph geometry, or runtime execution      |
 | `canvasInspectorAuthoringCommand.ts`         | aggregate mutation from validated Inspector draft                   | UI state or passive panel composition               |
 | `useCanvasInspectorCommands.ts`              | route callback bridge into the aggregate                            | validation rules or persistence timing              |
@@ -218,7 +232,11 @@ flowchart LR
   Metadata --> Persist["Workspace draft persistence"]
   Recipe["VisualTransformRecipeV1"] --> Authority["DVT transform authority"]
   Authority --> Metadata
-  Authority -. "derives in #2384" .-> ColumnLineage["React Flow column lineage"]
+  MappingGesture["Pointer / keyboard column gesture"] --> MappingCommand["Canvas column mapping command"]
+  MappingCommand --> Authority
+  Authority --> ColumnProjection["Column lineage projection"]
+  ColumnProjection --> ColumnLineage["React Flow column handles + edges"]
+  Disclosure["Transient column disclosure"] --> ColumnProjection
   Bootstrap["bootstrap / reload"] --> Baseline["serializeCanvasDraftAuthoringBaselineSignature"]
   Baseline --> Autosave
   Signature --> Autosave["draft autosave scheduling"]
@@ -310,6 +328,11 @@ sequenceDiagram
 - [canvasDbtAuthoringModel.test.ts](../../../../../apps/web/src/app/views/canvas/canvasDbtAuthoringModel.test.ts)
 - [canvasDraftAuthoring.test.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftAuthoring.test.ts)
 - [canvasDvtTransformAuthoringAuthority.test.ts](../../../../../apps/web/src/app/views/canvas/canvasDvtTransformAuthoringAuthority.test.ts)
+- [canvasColumnMappingAuthoring.test.ts](../../../../../apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.test.ts)
+- [canvasColumnLineageProjection.test.ts](../../../../../apps/web/src/app/views/canvas/canvasColumnLineageProjection.test.ts)
+- [CanvasColumnLineageEdge.test.tsx](../../../../../apps/web/src/app/views/canvas/CanvasColumnLineageEdge.test.tsx)
+- [GraphNodeColumnSection.test.tsx](../../../../../apps/web/src/app/plugins/graph/GraphNodeColumnSection.test.tsx)
+- [canvasAuthoringProjection.architecture.test.ts](../../../../../apps/web/src/app/views/canvas/canvasAuthoringProjection.architecture.test.ts)
 - [visual-transform-recipe.contract.test.ts](../../../../../packages/@dvt/contracts/test/visual-transform-recipe.contract.test.ts)
 - [useCanvasController.activeDraftMutations.test.tsx](../../../../../apps/web/src/app/views/canvas/useCanvasController.activeDraftMutations.test.tsx)
 - [canvasDuplicateNodeCommand.test.ts](../../../../../apps/web/src/app/views/canvas/canvasDuplicateNodeCommand.test.ts)
@@ -331,6 +354,8 @@ sequenceDiagram
 - accepting visual recipe and editable SQL as simultaneous transform authority
 - treating historical `config.selectedColumns` as visual recipe authority
 - persisting React Flow column edges instead of deriving them from the recipe
+- routing column-handle gestures through the stage-edge admission policy
+- allowing automap to guess unknown, incompatible, or ambiguous columns
 - importing Monaco directly into Canvas or creating a parallel SQL editor
 - using the Inspector form as a second persistence model
 - using a structural-only dirty signature that cannot see node name,

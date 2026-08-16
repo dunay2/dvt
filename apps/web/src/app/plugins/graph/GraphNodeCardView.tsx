@@ -7,6 +7,10 @@ import { canvasNodeEmbeddedControlProps } from '../../components/canvas/canvasNo
 import { cn } from '../../components/ui/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip';
 import { GraphNodeColumnSection, type GraphNodeColumn } from './GraphNodeColumnSection';
+import type {
+  GraphNodeColumnPortDirection,
+  GraphNodeColumnPortIdentity,
+} from './GraphNodeColumnSection';
 import { GraphNodeMetricRow } from './GraphNodeMetricRow';
 import { GraphNodeOperationalRail } from './GraphNodeOperationalRail';
 import { GraphNodeStatusChip } from './GraphNodeStatusChip';
@@ -43,6 +47,13 @@ export type GraphNodeCardViewProps = Readonly<{
   onOpenCode?: () => void;
   onSelectTag?: (tag: string) => void;
   getSelectTagLabel?: (tag: string) => string;
+  nodeId?: string;
+  columnPortDirections?: readonly GraphNodeColumnPortDirection[];
+  activeColumnHandleId?: string | null;
+  onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
+  onColumnDisclosureChange?: (nodeId: string, expanded: boolean) => void;
+  onColumnLayoutChange?: () => void;
+  onAutomapColumns?: (nodeId: string, columns: readonly GraphNodeCardColumn[]) => void;
 }>;
 
 function openGovernedNodeActions(event: ReactMouseEvent<HTMLButtonElement>): void {
@@ -132,6 +143,13 @@ export function GraphNodeCardView({
   onOpenCode,
   onSelectTag,
   getSelectTagLabel,
+  nodeId,
+  columnPortDirections,
+  activeColumnHandleId,
+  onColumnPortActivate,
+  onColumnDisclosureChange,
+  onColumnLayoutChange,
+  onAutomapColumns,
 }: GraphNodeCardViewProps): ReactElement {
   const operationalDetail = cardModel.operationalDetail;
   const interactiveOperationalDetail =
@@ -208,7 +226,26 @@ export function GraphNodeCardView({
           getSelectTagLabel={getSelectTagLabel}
         />
 
-        {showColumns && <GraphNodeColumnSection columns={columns} />}
+        {showColumns && (
+          <GraphNodeColumnSection
+            columns={columns}
+            nodeId={nodeId}
+            portDirections={columnPortDirections}
+            activeColumnHandleId={activeColumnHandleId}
+            onColumnPortActivate={onColumnPortActivate}
+            onDisclosureChange={
+              nodeId == null || onColumnDisclosureChange == null
+                ? undefined
+                : (expanded) => onColumnDisclosureChange(nodeId, expanded)
+            }
+            onColumnLayoutChange={onColumnLayoutChange}
+            onAutomap={
+              nodeId == null || onAutomapColumns == null
+                ? undefined
+                : () => onAutomapColumns(nodeId, columns)
+            }
+          />
+        )}
       </div>
 
       {onOpenOperationalDetails == null || interactiveOperationalDetail == null ? (

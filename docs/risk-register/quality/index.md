@@ -212,6 +212,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Tsconfig baseUrl deprecation migration can regress package alias resolution](R-20260403-TSCONFIG-BASEURL-DEPRECATION-MIGRATION.yaml)
 - [Turbo affected-task routing could diverge from required repository gates](R-20260423-RC-C2-TURBO-CI-GOVERNANCE.yaml)
 - [Turbo build cache or orchestration drift could hide missing dependency rebuilds](R-20260418-TURBO-BUILD-ORCHESTRATION-CACHE-DRIFT.yaml)
+- [Visual column edges could diverge from transform recipe authority](R-20260816-VTX1-COLUMN-LINEAGE-PROJECTION.yaml)
 - [Warehouse connection rename could change identity or bypass workspace authorization](R-20260815-WAREHOUSE-CONNECTION-RENAME.yaml)
 - [WE-HX parent closure can hide future engine decomposition work](R-20260522-WE-HX-PARENT-HARDCUT-CLOSEOUT.yaml)
 - [Web workspace file-missing handling depends on a future backend canonical reason](R-20260411-WEB-WORKSPACE-FILE-NOT-FOUND-CONTRACT-GAP.yaml)

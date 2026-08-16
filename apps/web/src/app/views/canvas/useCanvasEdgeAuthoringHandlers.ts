@@ -24,6 +24,19 @@ import type {
 } from './canvasGraphHandlerContracts';
 import { canvasViewCopy, formatCanvasConnectionRejection } from './copy';
 import {
+  applyCanvasColumnMapping,
+  automapCanvasColumns,
+  removeCanvasColumnMapping,
+  resolveCanvasColumnMappingTarget,
+  type CanvasColumnMappingRejection,
+} from './canvasColumnMappingAuthoring';
+import {
+  createCanvasColumnHandleId,
+  parseCanvasColumnHandleId,
+  type CanvasColumnHandleIdentity,
+  type CanvasColumnLineageEdgeData,
+} from './canvasColumnLineageProjection';
+import {
   useCanvasEdgeCommandRunner,
   type CanvasEdgeCommandRunner,
 } from './useCanvasEdgeCommandRunner';
@@ -36,6 +49,13 @@ type UseCanvasEdgeAuthoringHandlersResult = {
   onConnect: NonNullable<ReactFlowProps<Node, Edge>['onConnect']>;
   onReconnect: NonNullable<ReactFlowProps<Node, Edge>['onReconnect']>;
   confirmEdgeCreation: () => void;
+  activeColumnHandleId: string | null;
+  handleColumnPortActivate: (identity: CanvasColumnHandleIdentity) => void;
+  handleAutomapCanvasColumns: (
+    nodeId: string,
+    columns: readonly Readonly<{ name: string; type: string }>[]
+  ) => void;
+  handleRemoveColumnMapping: (mapping: CanvasColumnLineageEdgeData) => void;
 };
 
 type PendingConnection = Parameters<NonNullable<ReactFlowProps<Node, Edge>['onConnect']>>[0];
@@ -99,6 +119,167 @@ function notifyRejectedConnection(
   rejection: Parameters<typeof formatCanvasConnectionRejection>[0]
 ) {
   toast.error(formatCanvasConnectionRejection(rejection));
+}
+
+function formatColumnMappingRejection(reason: CanvasColumnMappingRejection): string {
+  if (reason === 'source_not_connected') {
+    return canvasViewCopy.columnMappingRequiresDependencyMessage;
+  }
+  if (reason === 'sql_authority_not_empty') {
+    return canvasViewCopy.columnMappingSqlAuthorityMessage;
+  }
+  if (reason === 'complex_expression_not_editable') {
+    return canvasViewCopy.columnMappingComplexExpressionMessage;
+  }
+  if (reason === 'no_compatible_mappings') {
+    return canvasViewCopy.columnMappingNoCompatibleColumnsMessage;
+  }
+  return canvasViewCopy.columnMappingUnavailableMessage;
+}
+
+function resolveCurrentNode(
+  state: CanvasEdgeAuthoringState,
+  nodeId: string
+): CanonicalNode | undefined {
+  return state.draftSession.localNodeCatalog?.[nodeId] ?? state.canonicalNodesById.get(nodeId);
+}
+
+function useCanvasColumnMappingHandlers({ state, effects, policy }: CanvasEdgeAuthoringContracts) {
+  const [pendingSource, setPendingSource] = useState<CanvasColumnHandleIdentity | null>(null);
+
+  const tryColumnConnection = useCallback(
+    (connection: PendingConnection): boolean => {
+      const sourceHandle = parseCanvasColumnHandleId(connection.sourceHandle);
+      const targetHandle = parseCanvasColumnHandleId(connection.targetHandle);
+      if (sourceHandle == null && targetHandle == null) return false;
+      if (
+        !policy.canEditEdges ||
+        sourceHandle?.direction !== 'source' ||
+        targetHandle?.direction !== 'target' ||
+        sourceHandle.nodeId !== connection.source ||
+        targetHandle.nodeId !== connection.target
+      ) {
+        toast.error(
+          policy.canEditEdges
+            ? canvasViewCopy.columnMappingUnavailableMessage
+            : canvasViewCopy.mutationUnavailableMessage
+        );
+        return true;
+      }
+      const targetNode = resolveCurrentNode(state, targetHandle.nodeId);
+      const target =
+        targetNode == null
+          ? null
+          : resolveCanvasColumnMappingTarget(targetNode, targetHandle.columnId);
+      if (target == null) {
+        toast.error(canvasViewCopy.columnMappingUnavailableMessage);
+        return true;
+      }
+      const result = applyCanvasColumnMapping({
+        draftSession: state.draftSession,
+        canonicalNodesById: state.canonicalNodesById,
+        source: { nodeId: sourceHandle.nodeId, columnName: sourceHandle.columnId },
+        target,
+      });
+      if (result.outcome === 'rejected') {
+        toast.error(formatColumnMappingRejection(result.reason));
+        return true;
+      }
+      effects.setDraftSession(result.draftSession);
+      setPendingSource(null);
+      toast.success(canvasViewCopy.columnMappingAddedMessage);
+      return true;
+    },
+    [effects, policy.canEditEdges, state]
+  );
+
+  const handleColumnPortActivate = useCallback(
+    (identity: CanvasColumnHandleIdentity) => {
+      if (identity.direction === 'source') {
+        setPendingSource(identity);
+        toast.info(
+          canvasViewCopy.columnMappingSourceSelectedTemplate.replace('{column}', identity.columnId)
+        );
+        return;
+      }
+      if (pendingSource == null) {
+        toast.error(canvasViewCopy.columnMappingUnavailableMessage);
+        return;
+      }
+      tryColumnConnection({
+        source: pendingSource.nodeId,
+        sourceHandle: createCanvasColumnHandleId(pendingSource),
+        target: identity.nodeId,
+        targetHandle: createCanvasColumnHandleId(identity),
+      });
+    },
+    [pendingSource, tryColumnConnection]
+  );
+
+  const handleAutomapCanvasColumns = useCallback(
+    (nodeId: string, columns: readonly Readonly<{ name: string; type: string }>[]) => {
+      if (!policy.canEditEdges) {
+        toast.error(canvasViewCopy.mutationUnavailableMessage);
+        return;
+      }
+      const result = automapCanvasColumns({
+        draftSession: state.draftSession,
+        canonicalNodesById: state.canonicalNodesById,
+        targetNodeId: nodeId,
+        targetColumns: columns,
+      });
+      if (result.outcome === 'rejected') {
+        toast.error(formatColumnMappingRejection(result.reason));
+        return;
+      }
+      effects.setDraftSession(result.draftSession);
+      toast.success(
+        canvasViewCopy.columnMappingAutomapSummaryTemplate.replace(
+          '{count}',
+          String(result.appliedCount)
+        )
+      );
+    },
+    [effects, policy.canEditEdges, state]
+  );
+
+  const handleRemoveColumnMapping = useCallback(
+    (mapping: CanvasColumnLineageEdgeData) => {
+      if (!policy.canEditEdges || !mapping.removable) {
+        toast.error(canvasViewCopy.mutationUnavailableMessage);
+        return;
+      }
+      const targetNode = resolveCurrentNode(state, mapping.targetNodeId);
+      if (targetNode == null) {
+        toast.error(canvasViewCopy.columnMappingUnavailableMessage);
+        return;
+      }
+      const result = removeCanvasColumnMapping({
+        draftSession: state.draftSession,
+        targetNode,
+        outputId: mapping.outputId,
+        source: {
+          nodeId: mapping.sourceNodeId,
+          columnName: mapping.sourceColumnName,
+        },
+      });
+      if (result.outcome === 'rejected') {
+        toast.error(formatColumnMappingRejection(result.reason));
+        return;
+      }
+      effects.setDraftSession(result.draftSession);
+      toast.success(canvasViewCopy.columnMappingRemovedMessage);
+    },
+    [effects, policy.canEditEdges, state]
+  );
+
+  return {
+    tryColumnConnection,
+    activeColumnHandleId: pendingSource == null ? null : createCanvasColumnHandleId(pendingSource),
+    handleColumnPortActivate,
+    handleAutomapCanvasColumns,
+    handleRemoveColumnMapping,
+  };
 }
 
 function useCanvasConnectionProposalHandler({
@@ -237,14 +418,23 @@ export function useCanvasEdgeAuthoringHandlers({
     effects,
     pluginPortMap,
   });
+  const columnMappingHandlers = useCanvasColumnMappingHandlers({ state, effects, policy });
 
-  const onConnect = useCanvasConnectionProposalHandler({
+  const proposeNodeConnection = useCanvasConnectionProposalHandler({
     state,
     policy,
     pluginPortMap,
     pendingConnectionRef,
     setConfirmEdgeModal,
   });
+  const onConnect = useCallback<NonNullable<ReactFlowProps<Node, Edge>['onConnect']>>(
+    (connection) => {
+      if (!columnMappingHandlers.tryColumnConnection(connection)) {
+        proposeNodeConnection(connection);
+      }
+    },
+    [columnMappingHandlers.tryColumnConnection, proposeNodeConnection]
+  );
 
   const confirmEdgeCreation = useCanvasConnectionConfirmationHandler({
     edgeCommandRunner,
@@ -263,5 +453,9 @@ export function useCanvasEdgeAuthoringHandlers({
     onConnect,
     onReconnect,
     confirmEdgeCreation,
+    activeColumnHandleId: columnMappingHandlers.activeColumnHandleId,
+    handleColumnPortActivate: columnMappingHandlers.handleColumnPortActivate,
+    handleAutomapCanvasColumns: columnMappingHandlers.handleAutomapCanvasColumns,
+    handleRemoveColumnMapping: columnMappingHandlers.handleRemoveColumnMapping,
   };
 }

@@ -29,6 +29,7 @@ export type StubCanvasDraftReadOptions = {
   emptyCanvas?: boolean;
   importedWarehouseSource?: boolean;
   authoringGenerated?: boolean;
+  columnMapping?: boolean;
   title?: string;
   readOnly?: boolean;
   largeGraph?: boolean;
@@ -50,6 +51,7 @@ export function buildCanvasAuthoringDraft({
   emptyCanvas = false,
   importedWarehouseSource = false,
   authoringGenerated = false,
+  columnMapping = false,
   title,
   largeGraph = false,
 }: StubCanvasDraftReadOptions = {}): CanvasAuthoringDraft {
@@ -203,6 +205,69 @@ export function buildCanvasAuthoringDraft({
     throw new Error(
       'Canvas e2e draft fixtures only support non-empty transformation canvases or empty typed canvases.'
     );
+  }
+
+  if (columnMapping) {
+    const columns = [
+      { name: 'order_id', type: 'integer' },
+      { name: 'customer', type: 'text' },
+      { name: 'amount', type: 'numeric' },
+    ];
+    return buildWorkspaceGraphAuthoringDraft({
+      canvas,
+      nodeIds: ['source-orders', 'model-orders', 'sink-orders'],
+      nodePositions: {
+        'source-orders': { x: 40, y: 140 },
+        'model-orders': { x: 420, y: 140 },
+        'sink-orders': { x: 800, y: 140 },
+      },
+      nodes: [
+        {
+          id: 'source-orders',
+          name: 'Orders source',
+          pluginId: 'dvt',
+          kind: 'dvt:source',
+          role: 'input',
+          status: 'idle',
+          tags: ['source'],
+          metadata: { columns },
+        },
+        {
+          id: 'model-orders',
+          name: 'Orders model',
+          pluginId: 'dvt',
+          kind: 'dvt:sql_transform',
+          role: 'transform',
+          status: 'idle',
+          tags: ['transform'],
+          metadata: {},
+        },
+        {
+          id: 'sink-orders',
+          name: 'Orders sink',
+          pluginId: 'dvt',
+          kind: 'dvt:sink',
+          role: 'output',
+          status: 'idle',
+          tags: ['sink'],
+          metadata: { columns },
+        },
+      ],
+      edges: [
+        {
+          id: 'edge-source-model',
+          sourceId: 'source-orders',
+          targetId: 'model-orders',
+          relation: 'lineage',
+        },
+        {
+          id: 'edge-model-sink',
+          sourceId: 'model-orders',
+          targetId: 'sink-orders',
+          relation: 'lineage',
+        },
+      ],
+    });
   }
 
   if (authoringGenerated) {

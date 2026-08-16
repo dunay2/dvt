@@ -3,6 +3,8 @@ import { buildCanvasNodePresentationTruth } from '../../components/canvas/canvas
 import type { CanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { projectDbtModelArtifact } from './canvasDbtModelArtifactProjection';
+import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
+import { DVT_TRANSFORM_AUTHORING_MODE } from '@dvt/contracts';
 
 export function projectCanvasNodePresentationTruth(
   args: Readonly<{
@@ -21,7 +23,7 @@ export function projectCanvasNodePresentationTruth(
       ? artifactProjection.artifact
       : null;
 
-  return buildCanvasNodePresentationTruth({
+  const baseTruth = buildCanvasNodePresentationTruth({
     ...args,
     ...(generatedArtifact == null
       ? {}
@@ -33,4 +35,43 @@ export function projectCanvasNodePresentationTruth(
           },
         }),
   });
+  if (args.node.pluginId !== 'dvt' || args.node.kind !== 'dvt:sql_transform') {
+    return baseTruth;
+  }
+  try {
+    const authority = readDvtTransformAuthoringAuthority(args.node);
+    if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.visual) return baseTruth;
+    const declared = authority.recipe.outputs.map((output) => ({
+      name: output.name,
+      type: output.dataType ?? 'unknown',
+      provenance: 'declared' as const,
+      reference: output.id,
+    }));
+    const declaredNames = new Set(declared.map((column) => column.name));
+    const prospective = baseTruth.columns.inherited.filter(
+      (column) => !declaredNames.has(column.name)
+    );
+    const visible = [...declared, ...prospective];
+    return {
+      ...baseTruth,
+      columns: {
+        declared,
+        inherited: baseTruth.columns.inherited,
+        visible,
+        declaredCount: declared.length,
+        inheritedCount: baseTruth.columns.inheritedCount,
+        visibleCount: visible.length,
+        visibleProvenance:
+          declared.length > 0 && prospective.length > 0
+            ? 'mixed'
+            : declared.length > 0
+              ? 'declared'
+              : prospective.length > 0
+                ? 'inherited'
+                : 'none',
+      },
+    };
+  } catch {
+    return baseTruth;
+  }
 }

@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import type { Edge, Node } from '@xyflow/react';
+import { useCallback, useMemo, useState } from 'react';
+import type { Edge, EdgeChange, Node } from '@xyflow/react';
 
 import { buildCanvasNodeInteractionPresentation } from './canvasNodeInteractionPresentation';
 import { validateTransformationGraph } from './transformationGraphValidation';
@@ -10,12 +10,56 @@ import {
   canOfferDbtExecutionSelectionToggle,
   isDbtExecutionSelectableNode,
 } from './dbtExecutionScopePolicy';
+import {
+  createCanvasColumnHandleId,
+  projectCanvasColumnLineage,
+  resolveCanvasColumnPortDirections,
+  type CanvasColumnLineageEdgeData,
+} from './canvasColumnLineageProjection';
+import type { InteractiveCanvasColumnLineageEdgeData } from './CanvasColumnLineageEdge';
+import type { CanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
+import type { GraphNodeColumn } from '../../plugins/graph/GraphNodeColumnSection';
+
+function projectInteractiveColumns(node: Node): GraphNodeColumn[] {
+  const columns = Array.isArray(node.data.columns)
+    ? node.data.columns.filter(
+        (column): column is Readonly<{ name: string; type: string }> =>
+          typeof column === 'object' &&
+          column != null &&
+          typeof (column as { name?: unknown }).name === 'string' &&
+          typeof (column as { type?: unknown }).type === 'string'
+      )
+    : [];
+  const presentationTruth = node.data.presentationTruth as CanvasNodePresentationTruth | undefined;
+  return columns.map((column, index) => {
+    const presentationColumn = presentationTruth?.columns.visible[index];
+    const id =
+      presentationColumn?.provenance === 'declared'
+        ? (presentationColumn.reference ?? column.name)
+        : column.name;
+    return {
+      ...column,
+      id,
+      sourceHandleId: createCanvasColumnHandleId({
+        direction: 'source',
+        nodeId: node.id,
+        columnId: id,
+      }),
+      targetHandleId: createCanvasColumnHandleId({
+        direction: 'target',
+        nodeId: node.id,
+        columnId: id,
+      }),
+    };
+  });
+}
 
 type UseCanvasControllerReadModelArgs = {
   graphModel: {
     nodes: Node[];
     edges: Edge[];
     canonicalNodesById: Map<string, CanonicalNode>;
+    onEdgesChange: (changes: EdgeChange<Edge>[]) => void;
   };
   visibleScope: {
     canonicalNodes: CanonicalNode[];
@@ -41,6 +85,11 @@ type UseCanvasControllerReadModelArgs = {
     | 'handleRemoveNode'
     | 'handleToggleNodeSelection'
     | 'handleAttachSchemaToNode'
+    | 'activeColumnHandleId'
+    | 'handleColumnPortActivate'
+    | 'handleColumnDisclosureChange'
+    | 'handleAutomapCanvasColumns'
+    | 'handleRemoveColumnMapping'
   >;
   onToggleExecutionSelection: (nodeId: string, shouldSelect: boolean) => void;
   activeCanvasKind: string;
@@ -64,6 +113,9 @@ export function useCanvasControllerReadModel({
   canSelectExecution,
   columnLevelLineageEnabled,
 }: UseCanvasControllerReadModelArgs) {
+  const [selectedColumnLineageEdgeId, setSelectedColumnLineageEdgeId] = useState<string | null>(
+    null
+  );
   const transformationValidation = useMemo(
     () =>
       validateTransformationGraph({
@@ -93,6 +145,9 @@ export function useCanvasControllerReadModel({
           onRemoveNode: canMutateGraph ? graphHandlers.handleRemoveNode : undefined,
           onToggleNodeSelection: canSelectExecution ? onToggleExecutionSelection : undefined,
           onAttachSchemaToNode: canMutateGraph ? graphHandlers.handleAttachSchemaToNode : undefined,
+          onColumnPortActivate: canMutateGraph ? graphHandlers.handleColumnPortActivate : undefined,
+          onColumnDisclosureChange: graphHandlers.handleColumnDisclosureChange,
+          onAutomapColumns: canMutateGraph ? graphHandlers.handleAutomapCanvasColumns : undefined,
         },
       }).map((node) => {
         const canonicalNode = graphModel.canonicalNodesById.get(node.id);
@@ -116,6 +171,15 @@ export function useCanvasControllerReadModel({
             runStatusByNodeId: overlayModel.runStatusByNodeId,
             overlayDecoration: overlayModel.overlayDecorations.get(node.id) ?? null,
             runtimeCapabilities,
+            activeColumnHandleId: graphHandlers.activeColumnHandleId,
+            columns:
+              activeCanvasKind === 'transformation'
+                ? projectInteractiveColumns(node)
+                : node.data.columns,
+            columnPortDirections:
+              activeCanvasKind === 'transformation' && canonicalNode != null
+                ? resolveCanvasColumnPortDirections(canonicalNode.role)
+                : [],
           },
         };
       }),
@@ -127,6 +191,10 @@ export function useCanvasControllerReadModel({
       graphHandlers.handleDuplicateNode,
       graphHandlers.handleRemoveNode,
       graphHandlers.handleAttachSchemaToNode,
+      graphHandlers.activeColumnHandleId,
+      graphHandlers.handleAutomapCanvasColumns,
+      graphHandlers.handleColumnDisclosureChange,
+      graphHandlers.handleColumnPortActivate,
       onToggleExecutionSelection,
       graphModel.canonicalNodesById,
       graphModel.nodes,
@@ -139,6 +207,91 @@ export function useCanvasControllerReadModel({
     ]
   );
 
+  const edgesWithImpact = useMemo(() => {
+    if (activeCanvasKind !== 'transformation') return graphModel.edges;
+    const expandedNodeIds = new Set(
+      graphModel.nodes
+        .filter((node) => node.data.columnDisclosureExpanded === true)
+        .map((node) => node.id)
+    );
+    const lineageEdges = projectCanvasColumnLineage({
+      nodes: visibleScope.canonicalNodes,
+      edges: visibleScope.canonicalEdges,
+      expandedNodeIds,
+    }).map((edge) => ({
+      ...edge,
+      selected: edge.id === selectedColumnLineageEdgeId,
+      ariaLabel: `${edge.data?.sourceColumnName ?? ''} → ${edge.data?.targetColumnName ?? ''}`,
+      data: {
+        ...(edge.data as CanvasColumnLineageEdgeData),
+        onRemove:
+          edge.data?.removable === true
+            ? () =>
+                graphHandlers.handleRemoveColumnMapping(edge.data as CanvasColumnLineageEdgeData)
+            : undefined,
+      } satisfies InteractiveCanvasColumnLineageEdgeData,
+    }));
+    return [...graphModel.edges, ...lineageEdges];
+  }, [
+    activeCanvasKind,
+    graphHandlers.handleRemoveColumnMapping,
+    graphModel.edges,
+    graphModel.nodes,
+    selectedColumnLineageEdgeId,
+    visibleScope.canonicalEdges,
+    visibleScope.canonicalNodes,
+  ]);
+
+  const columnLineageEdgesById = useMemo(
+    () =>
+      new Map(
+        edgesWithImpact
+          .filter((edge) => edge.type === 'columnLineage')
+          .map((edge) => [edge.id, edge] as const)
+      ),
+    [edgesWithImpact]
+  );
+
+  const handleEdgesChange = useCallback(
+    (changes: EdgeChange<Edge>[]) => {
+      const baseEdgeChanges: EdgeChange<Edge>[] = [];
+
+      for (const change of changes) {
+        if (change.type === 'add' || change.type === 'replace') {
+          baseEdgeChanges.push(change);
+          continue;
+        }
+        const lineageEdge = columnLineageEdgesById.get(change.id);
+        if (lineageEdge == null) {
+          baseEdgeChanges.push(change);
+          continue;
+        }
+
+        if (change.type === 'select') {
+          setSelectedColumnLineageEdgeId((currentId) =>
+            change.selected ? change.id : currentId === change.id ? null : currentId
+          );
+          continue;
+        }
+
+        if (change.type === 'remove') {
+          const data = lineageEdge.data as InteractiveCanvasColumnLineageEdgeData | undefined;
+          if (data?.removable === true) {
+            data.onRemove?.();
+          }
+          setSelectedColumnLineageEdgeId((currentId) =>
+            currentId === change.id ? null : currentId
+          );
+        }
+      }
+
+      if (baseEdgeChanges.length > 0) {
+        graphModel.onEdgesChange(baseEdgeChanges);
+      }
+    },
+    [columnLineageEdgesById, graphModel]
+  );
+
   const inspectorNode = uiScope.inspectorNodeId
     ? (graphModel.canonicalNodesById.get(uiScope.inspectorNodeId) ?? null)
     : null;
@@ -146,6 +299,8 @@ export function useCanvasControllerReadModel({
   return {
     transformationValidation,
     nodesWithImpact,
+    edgesWithImpact,
+    handleEdgesChange,
     inspectorNode,
   };
 }

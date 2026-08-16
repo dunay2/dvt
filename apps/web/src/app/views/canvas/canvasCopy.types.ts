@@ -65,6 +65,15 @@ export type CanvasViewCopy = {
   readonly missingRemoteDraftMessage: string;
   readonly reloadLatestDraftLabel: string;
   readonly dependencyAddedMessage: string;
+  readonly columnMappingAddedMessage: string;
+  readonly columnMappingRemovedMessage: string;
+  readonly columnMappingSourceSelectedTemplate: string;
+  readonly columnMappingAutomapSummaryTemplate: string;
+  readonly columnMappingRequiresDependencyMessage: string;
+  readonly columnMappingSqlAuthorityMessage: string;
+  readonly columnMappingComplexExpressionMessage: string;
+  readonly columnMappingUnavailableMessage: string;
+  readonly columnMappingNoCompatibleColumnsMessage: string;
   readonly layoutAppliedMessage: string;
   readonly toolbarWorkflowRecoveryLabel: string;
   readonly toolbarWorkflowReadOnlyLabel: string;
@@ -337,6 +346,7 @@ export type CanvasViewCopy = {
   readonly nodePresentationColumnsLabel: string;
   readonly nodePresentationDeclaredColumnsDetailTemplate: string;
   readonly nodePresentationInheritedColumnsDetailTemplate: string;
+  readonly nodePresentationMixedColumnsDetailTemplate: string;
   readonly nodePresentationNoColumnsDetail: string;
   readonly nodePresentationCodeLabel: string;
   readonly nodePresentationWorkspaceCodeDetailTemplate: string;

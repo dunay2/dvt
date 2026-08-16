@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import { applyDvtVisualTransformRecipe } from './canvasDvtTransformAuthoringAuthority';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 
 const source: CanonicalNode = {
@@ -75,6 +76,82 @@ describe('projectCanvasNodePresentationTruth', () => {
       kind: 'inline',
       content: "select order_id from {{ source('raw', 'orders') }}",
       language: 'sql',
+    });
+  });
+
+  it('keeps unmapped inherited columns visible as visual-recipe mapping targets', () => {
+    const sourceWithTwoColumns: CanonicalNode = {
+      ...source,
+      metadata: {
+        ...source.metadata,
+        columns: [
+          { name: 'order_id', type: 'integer' },
+          { name: 'customer_id', type: 'text' },
+        ],
+      },
+    };
+    const dvtModel: CanonicalNode = {
+      ...model,
+      id: 'transform.orders',
+      pluginId: 'dvt',
+      kind: 'dvt:sql_transform',
+      metadata: {},
+    };
+    const mappedModel = applyDvtVisualTransformRecipe(dvtModel, {
+      version: 'v1',
+      outputs: [
+        {
+          id: 'output:order_id',
+          name: 'order_id',
+          dataType: 'integer',
+          expression: {
+            inputs: [{ nodeId: sourceWithTwoColumns.id, columnName: 'order_id' }],
+            operations: [{ kind: 'passthrough' }],
+          },
+        },
+      ],
+      filters: [],
+    });
+    const dependency = { ...edge, targetId: mappedModel.id };
+
+    const truth = projectCanvasNodePresentationTruth({
+      node: mappedModel,
+      nodes: [sourceWithTwoColumns, mappedModel],
+      edges: [dependency],
+    });
+
+    expect(truth.columns.visible).toEqual([
+      expect.objectContaining({ name: 'order_id', provenance: 'declared' }),
+      expect.objectContaining({ name: 'customer_id', provenance: 'inherited' }),
+    ]);
+    expect(truth.columns.visibleProvenance).toBe('mixed');
+  });
+
+  it('restores inherited mapping targets after the last visual output is removed', () => {
+    const dvtModel = applyDvtVisualTransformRecipe(
+      {
+        ...model,
+        id: 'transform.empty',
+        pluginId: 'dvt',
+        kind: 'dvt:sql_transform',
+        metadata: {},
+      },
+      { version: 'v1', outputs: [], filters: [] }
+    );
+
+    const truth = projectCanvasNodePresentationTruth({
+      node: dvtModel,
+      nodes: [source, dvtModel],
+      edges: [{ ...edge, targetId: dvtModel.id }],
+    });
+
+    expect(truth.columns).toMatchObject({
+      visibleCount: 1,
+      visibleProvenance: 'inherited',
+    });
+    expect(truth.columns.visible[0]).toMatchObject({
+      name: 'order_id',
+      provenance: 'inherited',
     });
   });
 });

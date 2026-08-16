@@ -64,7 +64,7 @@ function projectViewportNodes(args: {
     const liveGesturePosition =
       fallbackNode?.dragging === undefined ? undefined : fallbackNode.position;
 
-    return mapCanonicalNodeToCanvasNode({
+    const projectedNode = mapCanonicalNodeToCanvasNode({
       canonicalNode,
       index,
       showColumns: columnLevelLineageEnabled,
@@ -79,6 +79,13 @@ function projectViewportNodes(args: {
         liveGesturePosition ?? persistedNodePositions[canonicalNode.id] ?? fallbackNode?.position,
       locale,
     });
+    return {
+      ...projectedNode,
+      data: {
+        ...projectedNode.data,
+        columnDisclosureExpanded: fallbackNode?.data.columnDisclosureExpanded === true,
+      },
+    };
   });
 }
 
@@ -212,6 +219,7 @@ function viewportNodeDataEqual(left: Node['data'], right: Node['data']): boolean
 
   return (
     left.showColumns === right.showColumns &&
+    left.columnDisclosureExpanded === right.columnDisclosureExpanded &&
     left.name === right.name &&
     left.description === right.description &&
     left.path === right.path &&

@@ -2,6 +2,11 @@
 import type { CSSProperties, ReactElement } from 'react';
 
 import { resolveNodeKindRegistration } from '../nodeTypeRegistry';
+import type {
+  GraphNodeColumn,
+  GraphNodeColumnPortDirection,
+  GraphNodeColumnPortIdentity,
+} from './GraphNodeColumnSection';
 import type { NodeRendererProps } from '../contracts/NodeRendering';
 import { graphStatusRingClasses } from './graphVisualTokens';
 import { buildGraphNodeCardReadModel } from './graphNodeCardReadModel';
@@ -95,6 +100,35 @@ export function GraphNodeRenderer({
       dimmed={dimmed}
       overlayStyle={overlayProps.style}
       {...tagActionProps}
+      nodeId={node.id}
+      columnPortDirections={
+        Array.isArray(data.columnPortDirections)
+          ? (data.columnPortDirections as readonly GraphNodeColumnPortDirection[])
+          : []
+      }
+      activeColumnHandleId={
+        typeof data.activeColumnHandleId === 'string' ? data.activeColumnHandleId : null
+      }
+      onColumnPortActivate={
+        typeof data.onColumnPortActivate === 'function'
+          ? (data.onColumnPortActivate as (identity: GraphNodeColumnPortIdentity) => void)
+          : undefined
+      }
+      onColumnDisclosureChange={
+        typeof data.onColumnDisclosureChange === 'function'
+          ? (data.onColumnDisclosureChange as (nodeId: string, expanded: boolean) => void)
+          : undefined
+      }
+      onColumnLayoutChange={
+        typeof data.onColumnLayoutChange === 'function'
+          ? (data.onColumnLayoutChange as () => void)
+          : undefined
+      }
+      onAutomapColumns={
+        node.role === 'transform' && typeof data.onAutomapColumns === 'function'
+          ? (data.onAutomapColumns as (nodeId: string, columns: readonly GraphNodeColumn[]) => void)
+          : undefined
+      }
       onOpenCode={
         data.canOpenNodeCode !== false && typeof inspectNode === 'function'
           ? () => inspectNode(node.id, 'code')

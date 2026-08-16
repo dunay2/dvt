@@ -1,6 +1,21 @@
 import type { CanvasViewCopy } from './canvasCopy.types';
 
 export const canvasViewAuthoringCopyEs = {
+  columnMappingAddedMessage: 'Asignación de columna añadida.',
+  columnMappingRemovedMessage: 'Asignación de columna eliminada.',
+  columnMappingSourceSelectedTemplate:
+    'Se ha seleccionado {column}. Elige una columna de destino en el Modelo.',
+  columnMappingAutomapSummaryTemplate: 'Se han asignado {count} columnas compatibles.',
+  columnMappingRequiresDependencyMessage:
+    'Conecta el Origen con este Modelo antes de asignar columnas.',
+  columnMappingSqlAuthorityMessage:
+    'Este Modelo contiene SQL escrita. Conviértelo a edición visual antes de asignar columnas.',
+  columnMappingComplexExpressionMessage:
+    'Edita esta columna calculada en Propiedades del Modelo en lugar de sustituir aquí sus entradas.',
+  columnMappingUnavailableMessage:
+    'Esta asignación de columna no está disponible para los nodos seleccionados.',
+  columnMappingNoCompatibleColumnsMessage:
+    'No se encontraron columnas únicas con el mismo nombre y tipos conocidos compatibles.',
   connectionIncompleteMessage: 'La conexión está incompleta.',
   nodeNotFoundInGraphMessage: 'No se ha encontrado el nodo en el grafo.',
   nodeAlreadyOnCanvasMessage: 'El nodo ya está en el canvas',
@@ -53,6 +68,8 @@ export const canvasViewAuthoringCopyEs = {
   nodePresentationDeclaredColumnsDetailTemplate: '{count} columnas declaradas por este nodo.',
   nodePresentationInheritedColumnsDetailTemplate:
     '{count} columnas heredadas de las entradas conectadas; ninguna declarada por este nodo.',
+  nodePresentationMixedColumnsDetailTemplate:
+    'Columnas asignadas: {declared}. Columnas de entrada disponibles: {available}.',
   nodePresentationNoColumnsDetail:
     'No hay columnas declaradas ni heredadas disponibles para este nodo.',
   nodePresentationCodeLabel: 'Código',

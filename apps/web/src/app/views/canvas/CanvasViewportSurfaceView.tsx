@@ -23,8 +23,10 @@ import type { CanvasViewCopy } from './canvasCopy.types';
 import type { CanvasContextMenuPresenter } from './useCanvasContextMenuPresenter';
 import type { CanvasGraphSearchController } from './useCanvasGraphSearchController';
 import type { CanvasGraphFilterController } from './useCanvasGraphFilterController';
+import { CanvasColumnLineageEdge } from './CanvasColumnLineageEdge';
 
 const CANVAS_FIT_VIEW_OPTIONS = { padding: 0.32, maxZoom: 0.82 } as const;
+const CANVAS_EDGE_TYPES = { columnLineage: CanvasColumnLineageEdge } as const;
 
 type CanvasViewportSurfaceViewProps = Readonly<{
   viewportRef: RefObject<HTMLDivElement>;
@@ -228,6 +230,7 @@ function CanvasViewportReactFlowSurface({
         onNodeDrag={handleNodeDrag}
         onNodeDragStop={handleNodeDragStop}
         nodeTypes={nodeTypes}
+        edgeTypes={CANVAS_EDGE_TYPES}
         nodesDraggable={canMoveNodes}
         nodesConnectable={canEditEdges}
         snapToGrid={canvasSnapToGrid}
