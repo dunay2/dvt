@@ -179,6 +179,22 @@ Rejected alternatives:
 - Persist expanded state: presentation preference does not belong to Graph Draft or a
   new store.
 
+### Closeout evidence
+
+- The red component test failed because the old component exposed no bounded rows or
+  localized remainder action; the implemented component suite passes all four tests.
+- The related graph-card projection suite passes 38 tests and the full Canvas regression
+  passes 1,154 tests across 283 files.
+- Headed-browser proof against a real ten-column source showed five rows plus
+  `Ver columnas restantes (5)`, ten rows after keyboard activation, and a reversible
+  `Mostrar solo las 5 primeras` action. The same session exposed `Columns (10)` and
+  `Show remaining columns (5)` after switching to English.
+- The transient action uses the shared embedded-control boundary and both disclosure
+  buttons own the column-list region through `aria-controls` and `aria-expanded`.
+- Baseline blocker #2392 restored the missing QueryClient provider in the CanvasShell
+  test composition root and was integrated independently through PR #2393 before this
+  slice continued.
+
 ## Feature Mechanization
 
 ```feature-mechanization
@@ -355,6 +371,16 @@ domainObjects:
     type: command state
     owner: Canvas execution-selection intent
 symbols:
+  - path: apps/web/src/app/plugins/graph/GraphNodeColumnSection.tsx
+    name: MAX_PREVIEW_COLUMNS
+    kind: constant
+    exported: false
+    dddOwner: CanvasGraphPresentation
+    cqRails: [ProjectGraphNodeCardReadModel]
+    fowlerSignals: [Hidden authority]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- GraphNodeColumnSection.test.tsx]
   - path: apps/web/src/app/plugins/graph/GraphNodeColumnSection.tsx
     name: GraphNodeColumnSection
     kind: function
