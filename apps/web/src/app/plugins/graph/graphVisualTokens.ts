@@ -123,10 +123,13 @@ export const graphNodeColumnClasses = {
     'flex w-full items-center justify-between text-xs text-slate-300 transition-colors hover:text-white',
   toggleLabel: 'flex items-center gap-1',
   toggleIcon: 'size-3',
-  list: 'mt-2 max-h-32 space-y-1 overflow-y-auto',
+  disclosure: 'mt-2',
+  list: 'space-y-1',
   row: 'flex items-center justify-between rounded bg-slate-950 px-2 py-1 text-xs',
   name: 'truncate font-mono text-white',
   type: 'ml-2 shrink-0 text-slate-400',
+  remainderToggle:
+    'mt-2 w-full cursor-pointer rounded border border-slate-700 bg-slate-900 px-2 py-1.5 text-left text-xs font-medium text-blue-200 transition hover:border-blue-400/60 hover:bg-slate-800 hover:text-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400',
 } as const;
 
 export const graphNodeStatusChipClasses = {

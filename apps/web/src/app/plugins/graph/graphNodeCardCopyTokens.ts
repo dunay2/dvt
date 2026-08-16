@@ -1,6 +1,9 @@
 /** Owned concern: centralize localized GraphNodeCard copy consumed by card read-model strategies. */
 type GraphNodeCardCopy = Readonly<{
   nodeActionsLabel: string;
+  columnsLabel: string;
+  remainingColumnsLabelTemplate: string;
+  showFirstFiveColumnsLabel: string;
   sourceIdentityAriaLabelTemplate: string;
   sourceIdentityDatabaseLabel: string;
   sourceIdentityConnectionLabel: string;
@@ -10,6 +13,9 @@ type GraphNodeCardCopy = Readonly<{
 
 const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   nodeActionsLabel: 'More node actions',
+  columnsLabel: 'Columns',
+  remainingColumnsLabelTemplate: 'Show remaining columns ({count})',
+  showFirstFiveColumnsLabel: 'Show first 5 columns',
   sourceIdentityAriaLabelTemplate: 'View source identity for {table}',
   sourceIdentityDatabaseLabel: 'Database',
   sourceIdentityConnectionLabel: 'Connection',
@@ -19,6 +25,9 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
 
 const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   nodeActionsLabel: 'Más acciones del nodo',
+  columnsLabel: 'Columnas',
+  remainingColumnsLabelTemplate: 'Ver columnas restantes ({count})',
+  showFirstFiveColumnsLabel: 'Mostrar solo las 5 primeras',
   sourceIdentityAriaLabelTemplate: 'Ver identidad de origen de {table}',
   sourceIdentityDatabaseLabel: 'Base de datos',
   sourceIdentityConnectionLabel: 'Conexión',
