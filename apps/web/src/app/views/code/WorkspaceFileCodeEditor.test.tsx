@@ -41,6 +41,11 @@ vi.mock('../../components/monaco/MonacoCodeViewer', () => ({
 
 const FILE_PATH = 'models/sources/src_raw.yml';
 
+type RenderEditorResult = Readonly<{
+  handle: React.RefObject<WorkspaceFileCodeEditorHandle>;
+  saveFileContent: ReturnType<typeof vi.fn>;
+}>;
+
 function buildWorkspaceFilesQueryPort(): IWorkspaceFilesQueryPort {
   return {
     listFiles: async () => [],
@@ -72,7 +77,7 @@ describe('WorkspaceFileCodeEditor', () => {
   async function renderEditor(
     props: Partial<React.ComponentProps<typeof WorkspaceFileCodeEditor>> = {},
     handle = createRef<WorkspaceFileCodeEditorHandle>()
-  ) {
+  ): Promise<RenderEditorResult> {
     const saveFileContent = vi.fn(async (): Promise<WorkspaceFileSaveReceipt> => ({
       kind: 'saved',
       disposition: 'updated',
