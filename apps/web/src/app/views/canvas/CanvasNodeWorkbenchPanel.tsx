@@ -125,12 +125,14 @@ function buildNodeWorkbenchReadModel({
   canEditNode,
   supersededRowIdsBySection,
   supersededSectionIds,
+  contributedSectionIds,
 }: Readonly<{
   model: NodePropertiesReadModel;
   node: CanonicalNode;
   canEditNode: boolean;
   supersededRowIdsBySection: ReadonlyMap<NodePropertySectionId, ReadonlySet<NodePropertyRowId>>;
   supersededSectionIds: ReadonlySet<NodePropertySectionId>;
+  contributedSectionIds: ReadonlySet<NodePropertySectionId>;
 }>): NodePropertiesReadModel {
   const hiddenGeneralRowIds = resolveNodeWorkbenchHiddenGeneralRowIds(node, canEditNode);
   const hiddenRowIdsBySection = new Map(supersededRowIdsBySection);
@@ -148,10 +150,9 @@ function buildNodeWorkbenchReadModel({
       .filter((section) => !supersededSectionIds.has(section.id))
       .map((section) => {
         const resolvedSection =
-          canEditNode &&
-          node.pluginId === 'dbt' &&
-          node.kind === 'dbt:model' &&
-          section.id === 'code'
+          section.id === 'code' &&
+          (contributedSectionIds.has(section.id) ||
+            (canEditNode && node.pluginId === 'dbt' && node.kind === 'dbt:model'))
             ? (() => {
                 const {
                   code: _passiveCode,
@@ -239,18 +240,19 @@ export function CanvasNodeWorkbenchPanel({
     presentationTruth,
   });
   const contributionModel = resolveCanvasNodeWorkbenchContributions(node.id, contributions);
+  const contributedSectionIds = new Set<NodePropertySectionId>([
+    ...contributionModel.beforeBodyBySection.keys(),
+    ...contributionModel.afterBodyBySection.keys(),
+  ]);
   const unfilteredModel = buildNodeWorkbenchReadModel({
     model: baseModel,
     node,
     canEditNode: authoring.canEditNode,
     supersededRowIdsBySection: contributionModel.supersededRowIdsBySection,
     supersededSectionIds: contributionModel.supersededSectionIds,
+    contributedSectionIds,
   });
   const panels = getInspectorPanels(node, { activeRunId, registeredPlugins });
-  const contributedSectionIds = new Set<NodePropertySectionId>([
-    ...contributionModel.beforeBodyBySection.keys(),
-    ...contributionModel.afterBodyBySection.keys(),
-  ]);
   const sectionModel = resolveCanvasNodeWorkbenchSectionModel({
     nodeKind: node.kind,
     canEditNode: authoring.canEditNode,
@@ -296,7 +298,7 @@ export function CanvasNodeWorkbenchPanel({
     setActiveTab(nextTabId);
   };
 
-  if (onOpenNodeCode != null && !authoring.canEditNode) {
+  if (onOpenNodeCode != null && !authoring.canEditNode && !contributedSectionIds.has('code')) {
     sectionBeforeChildren.code = (
       <>
         <div className="flex justify-end pb-2">

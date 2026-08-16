@@ -204,7 +204,16 @@ export function NodePropertiesTabs({
       </div>
 
       {model.sections.map((section) => (
-        <TabsContent key={section.id} value={section.id} className="m-0">
+        <TabsContent
+          key={section.id}
+          value={section.id}
+          forceMount={
+            section.id === 'code' &&
+            (sectionBeforeChildren?.code != null || sectionAfterChildren?.code != null)
+          }
+          data-slot={`${slots.sectionPrefix}-${section.id}-content`}
+          className="m-0 data-[state=inactive]:hidden"
+        >
           <NodePropertySectionView
             section={section}
             slots={slots}
