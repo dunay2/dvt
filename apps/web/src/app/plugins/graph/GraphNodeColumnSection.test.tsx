@@ -57,6 +57,8 @@ describe('GraphNodeColumnSection', () => {
     expect(remainderToggle?.getAttribute('aria-expanded')).toBe('false');
     expect(remainderToggle?.getAttribute('aria-controls')).toBe(columnList?.id);
     expect(remainderToggle?.hasAttribute('data-canvas-node-control')).toBe(true);
+    expect(remainderToggle?.classList.contains('nodrag')).toBe(true);
+    expect(remainderToggle?.classList.contains('nopan')).toBe(true);
     expect(sectionToggle?.getAttribute('aria-controls')).toBe(columnList?.id);
 
     act(() => {
