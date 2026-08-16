@@ -1,7 +1,10 @@
+// @vitest-environment jsdom
+
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import type { DbtProjectFilesAuthorityBinding } from '../../ports/dbtProjectGraph';
 import {
+  CANVAS_DBT_SOURCE_IMPORT_CONTINUATION_STORAGE_KEY,
   resolveDbtSourceImportContinuation,
   useCanvasDbtSourceImportContinuationStore,
 } from './canvasDbtSourceImportContinuationStore';
@@ -26,6 +29,7 @@ const DECLARATIONS = [
 
 describe('Canvas dbt source import continuation store', () => {
   beforeEach(() => {
+    window.sessionStorage.clear();
     useCanvasDbtSourceImportContinuationStore.setState({ pending: null });
   });
 
@@ -47,5 +51,30 @@ describe('Canvas dbt source import continuation store', () => {
     useCanvasDbtSourceImportContinuationStore.getState().consume(AUTHORITY);
 
     expect(useCanvasDbtSourceImportContinuationStore.getState().pending).toBeNull();
+  });
+
+  it('rehydrates an unfinished continuation after a browser reload', async () => {
+    useCanvasDbtSourceImportContinuationStore.getState().enqueue(AUTHORITY, DECLARATIONS);
+    const persisted = window.sessionStorage.getItem(
+      CANVAS_DBT_SOURCE_IMPORT_CONTINUATION_STORAGE_KEY
+    );
+    expect(persisted).not.toBeNull();
+
+    useCanvasDbtSourceImportContinuationStore.setState({ pending: null });
+    window.sessionStorage.setItem(
+      CANVAS_DBT_SOURCE_IMPORT_CONTINUATION_STORAGE_KEY,
+      persisted ?? ''
+    );
+    await useCanvasDbtSourceImportContinuationStore.persist.rehydrate();
+
+    expect(
+      resolveDbtSourceImportContinuation(
+        useCanvasDbtSourceImportContinuationStore.getState().pending,
+        AUTHORITY
+      )
+    ).toEqual({
+      kind: 'dbt-source-binding',
+      sourceTableDeclarations: DECLARATIONS,
+    });
   });
 });
