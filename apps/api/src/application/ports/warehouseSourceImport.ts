@@ -16,6 +16,8 @@ import type {
   SourceObject,
   SourceImportGrouping as ContractSourceImportGrouping,
   RenameWarehouseConnectionRequest,
+  SourceDataSampleRequest,
+  SourceDataSampleResponse,
   TestWarehouseConnectionResult as ContractTestWarehouseConnectionResult,
   WarehouseConnection as ContractWarehouseConnection,
   WarehouseConnectionTestFailureReason as ContractWarehouseConnectionTestFailureReason,
@@ -118,6 +120,26 @@ export interface IWarehouseConnectionProbe {
   testConnection(input: WarehouseConnectionCatalogEntry): Promise<TestWarehouseConnectionResult>;
 }
 
+export type PreviewWarehouseSourceObjectRowsInput = SourceDataSampleRequest & {
+  readonly scope: WorkspaceGraphDraftScope;
+};
+
+export type WarehouseSourceDataSampleProbeTarget = WarehouseConnectionProbeTarget & {
+  readonly objectId: string;
+  readonly limit: number;
+};
+
+export type WarehouseSourceDataSampleProbeResult = Omit<
+  SourceDataSampleResponse,
+  'contractVersion' | 'connectionId' | 'objectId' | 'limit'
+>;
+
+export interface IWarehouseSourceDataSampleProbe {
+  previewSourceObjectRows(
+    input: WarehouseSourceDataSampleProbeTarget
+  ): Promise<WarehouseSourceDataSampleProbeResult>;
+}
+
 export class WarehouseConnectionNotFoundError extends Error {
   public constructor(connectionId: string) {
     super(`Warehouse connection not found: ${connectionId}`);
@@ -179,6 +201,13 @@ export class WarehouseSourceDiscoveryFailedError extends Error {
   ) {
     super(message);
     this.name = 'WarehouseSourceDiscoveryFailedError';
+  }
+}
+
+export class WarehouseSourceDataSampleFailedError extends Error {
+  public constructor() {
+    super('The governed warehouse source data sample could not be read.');
+    this.name = 'WarehouseSourceDataSampleFailedError';
   }
 }
 

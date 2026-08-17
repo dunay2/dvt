@@ -12,10 +12,19 @@ import { Client } from 'pg';
 
 import type {
   IWarehouseConnectionProbe,
+  IWarehouseSourceDataSampleProbe,
   InspectWarehouseConnectionResult,
   TestWarehouseConnectionResult,
   WarehouseConnectionCatalogEntry,
   WarehouseConnectionProbeTarget,
+  WarehouseSourceDataSampleProbeResult,
+  WarehouseSourceDataSampleProbeTarget,
+} from '../../application/ports/warehouseSourceImport.js';
+import {
+  SourceObjectNotFoundError,
+  UnsupportedWarehouseAdapterError,
+  WarehouseSourceDataSampleFailedError,
+  WarehouseSourceDiscoveryFailedError,
 } from '../../application/ports/warehouseSourceImport.js';
 
 import {
@@ -54,6 +63,10 @@ type PostgresObjectCountRow = {
   readonly object_count: number | string;
 };
 
+type PostgresRelationAuthorizationRow = {
+  readonly relation_kind: 'r' | 'p' | 'v' | 'm' | 'f';
+};
+
 type PostgresQueryResult<T> = {
   readonly rows: readonly T[];
   readonly fields?: readonly PostgresField[];
@@ -67,8 +80,11 @@ type PostgresField = {
 type PostgresExplainRow = Readonly<Record<'QUERY PLAN', unknown>>;
 
 const EXACT_ROW_COUNT_TIMEOUT_MS = 2000;
+const SOURCE_DATA_SAMPLE_TIMEOUT_MS = 3000;
 
-export class WorkspaceWarehouseConnectionProbe implements IWarehouseConnectionProbe {
+export class WorkspaceWarehouseConnectionProbe
+  implements IWarehouseConnectionProbe, IWarehouseSourceDataSampleProbe
+{
   public constructor(
     private readonly options: {
       readonly credentialResolver: IPostgresCredentialBindingResolver;
@@ -127,6 +143,89 @@ export class WorkspaceWarehouseConnectionProbe implements IWarehouseConnectionPr
       checkedAt: this.checkedAt(),
       objectCount: connection.objectCount,
     };
+  }
+
+  public async previewSourceObjectRows(
+    input: WarehouseSourceDataSampleProbeTarget
+  ): Promise<WarehouseSourceDataSampleProbeResult> {
+    if (input.type !== 'postgres') {
+      throw new UnsupportedWarehouseAdapterError(input.type);
+    }
+    const locator = parseRelationalSourceObjectId(input.objectId);
+    if (locator === null || locator.catalog !== input.database) {
+      throw new SourceObjectNotFoundError(input.objectId);
+    }
+    const connectionString = await this.options.credentialResolver.resolveCredential(
+      input.credentialRef
+    );
+    if (connectionString === null || connectionString.trim().length === 0) {
+      throw new WarehouseSourceDiscoveryFailedError(
+        'invalid_credentials',
+        'Credential reference could not be resolved.'
+      );
+    }
+
+    const client = new Client({ connectionString });
+    let transactionStarted = false;
+    try {
+      await client.connect();
+      await client.query('begin transaction read only');
+      transactionStarted = true;
+      await client.query(`set local statement_timeout = '${SOURCE_DATA_SAMPLE_TIMEOUT_MS}ms'`);
+      const authorized = await client.query<PostgresRelationAuthorizationRow>(
+        [
+          'select relation.relkind as relation_kind',
+          'from pg_class relation',
+          'join pg_namespace namespace on namespace.oid = relation.relnamespace',
+          'where current_database() = $1 and namespace.nspname = $2 and relation.relname = $3',
+          "and relation.relkind in ('r', 'p', 'v', 'm', 'f')",
+          "and has_table_privilege(relation.oid, 'SELECT')",
+          'limit 1',
+        ].join(' '),
+        [locator.catalog, locator.schema, locator.name]
+      );
+      if (authorized.rows.length === 0) {
+        throw new SourceObjectNotFoundError(input.objectId);
+      }
+
+      const result = (await client.query(
+        `select * from ${toPostgresQualifiedTableName({
+          table_schema: locator.schema,
+          table_name: locator.name,
+        })} limit ${input.limit + 1}`
+      )) as PostgresQueryResult<Readonly<Record<string, unknown>>>;
+      const fields = result.fields ?? [];
+      const truncated = result.rows.length > input.limit;
+      const rows = result.rows.slice(0, input.limit).map((row) => ({
+        values: fields.map((field) => serializePostgresSampleCell(row[field.name])),
+      }));
+      await client.query('commit');
+      transactionStarted = false;
+      return {
+        columns: fields.map((field) => ({
+          name: field.name,
+          type: postgresTypeNameFromDataTypeId(field.dataTypeID),
+          nullable: true,
+        })),
+        rows,
+        truncated,
+        sampledAt: this.checkedAt(),
+      };
+    } catch (error) {
+      if (transactionStarted) {
+        await client.query('rollback').catch(() => undefined);
+      }
+      if (
+        error instanceof SourceObjectNotFoundError ||
+        error instanceof WarehouseSourceDiscoveryFailedError ||
+        error instanceof UnsupportedWarehouseAdapterError
+      ) {
+        throw error;
+      }
+      throw new WarehouseSourceDataSampleFailedError();
+    } finally {
+      await client.end().catch(() => undefined);
+    }
   }
 
   private async loadPostgresSourceObjects(
@@ -502,6 +601,40 @@ function quotePostgresIdentifier(value: string): string {
 
 function quotePostgresLiteral(value: string): string {
   return `'${value.replace(/'/g, "''")}'`;
+}
+
+type RelationalSourceObjectId = Readonly<{
+  catalog: string;
+  schema: string;
+  name: string;
+}>;
+
+function parseRelationalSourceObjectId(objectId: string): RelationalSourceObjectId | null {
+  const segments = objectId.split('/');
+  if (segments.length !== 4 || segments[0] !== 'relation') {
+    return null;
+  }
+  try {
+    const [catalog, schema, name] = segments.slice(1).map((segment) => decodeURIComponent(segment));
+    if (!catalog || !schema || !name) {
+      return null;
+    }
+    return { catalog, schema, name };
+  } catch (_error) {
+    return null;
+  }
+}
+
+function serializePostgresSampleCell(value: unknown): string | null {
+  if (value === null || value === undefined) return null;
+  if (value instanceof Date) return value.toISOString();
+  if (Buffer.isBuffer(value)) return `\\x${value.toString('hex')}`;
+  if (typeof value === 'object') {
+    return JSON.stringify(value, (_key, nested) =>
+      typeof nested === 'bigint' ? nested.toString() : nested
+    );
+  }
+  return String(value);
 }
 
 function postgresTypeNameFromDataTypeId(dataTypeId: number | undefined): string {
