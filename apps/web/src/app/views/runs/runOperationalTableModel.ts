@@ -3,6 +3,7 @@
  * from presentation-facing run summaries without owning runtime read authority.
  */
 import type { RunControlAvailability, RunSummaryItem, UiRunStatus } from '../../ports/runs';
+import type { ApplicationLanguage } from '../../stores/applicationLanguageStore';
 import { isKnownRunField } from './runStatesModel';
 
 const RUN_STATUS_FILTERS = [
@@ -63,12 +64,12 @@ export const DEFAULT_RUN_OPERATIONAL_TABLE_STATE: RunOperationalTableState = {
   sort: { columnId: 'startedAt', direction: 'desc' },
 };
 
-function formatDateTime(value: string | null): string {
+function formatDateTime(value: string | null, language: ApplicationLanguage): string {
   if (!value) {
     return '-';
   }
 
-  return new Date(value).toLocaleString();
+  return new Date(value).toLocaleString(language === 'es' ? 'es-ES' : 'en-US');
 }
 
 function formatDuration(durationMs: number | null): string {
@@ -136,7 +137,10 @@ function isSortDirection(value: string | null): value is RunOperationalSortDirec
   return value === 'asc' || value === 'desc';
 }
 
-export function buildRunOperationalRows(runs: readonly RunSummaryItem[]): RunOperationalRow[] {
+export function buildRunOperationalRows(
+  runs: readonly RunSummaryItem[],
+  language: ApplicationLanguage = 'en'
+): RunOperationalRow[] {
   return runs.map((run) => {
     const startedAt = run.startedAt ?? null;
     const completedAt = run.completedAt ?? null;
@@ -154,8 +158,8 @@ export function buildRunOperationalRows(runs: readonly RunSummaryItem[]): RunOpe
       gitSha: isKnownRunField(run.gitSha) ? run.gitSha : null,
       startedAt,
       completedAt,
-      startedAtLabel: formatDateTime(startedAt),
-      completedAtLabel: formatDateTime(completedAt),
+      startedAtLabel: formatDateTime(startedAt, language),
+      completedAtLabel: formatDateTime(completedAt, language),
       durationMs,
       durationLabel: formatDuration(durationMs),
       controls: run.controls,

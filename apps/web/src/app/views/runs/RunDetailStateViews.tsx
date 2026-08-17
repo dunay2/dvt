@@ -9,16 +9,17 @@ import {
   WorkbenchErrorState,
   WorkbenchLoadingState,
 } from '../../components/workbench/state/WorkbenchStates';
-import { runStatesCopy as copy } from './runStatesCopy';
+import { useRunStatesCopy } from './runStatesCopy';
 
 type RunsEmptyStateProps = {
   title?: string;
 };
 
-export function RunsEmptyStateView({ title = copy.runsTitle }: RunsEmptyStateProps) {
+export function RunsEmptyStateView({ title }: RunsEmptyStateProps) {
+  const { copy } = useRunStatesCopy();
   return (
     <WorkbenchEmptyState
-      frameTitle={title}
+      frameTitle={title ?? copy.runsTitle}
       slotPrefix="runs-state"
       dataSlot="runs-empty-state"
       title={copy.emptyRunsTitle}
@@ -38,6 +39,7 @@ type RunMissingStateProps = {
 };
 
 export function RunMissingStateView({ runId }: RunMissingStateProps) {
+  const { copy } = useRunStatesCopy();
   return (
     <WorkbenchEmptyState
       frameTitle={copy.runsTitle}
@@ -58,6 +60,7 @@ type RunsErrorStateProps = {
 };
 
 export function RunsErrorStateView({ message }: RunsErrorStateProps) {
+  const { copy } = useRunStatesCopy();
   return (
     <WorkbenchErrorState
       frameTitle={copy.runsTitle}
@@ -74,9 +77,10 @@ type RunDetailLoadingStateProps = {
 };
 
 export function RunDetailLoadingStateView({ runId }: RunDetailLoadingStateProps) {
+  const { copy } = useRunStatesCopy();
   return (
     <WorkbenchLoadingState
-      frameTitle={`Run ${runId}`}
+      frameTitle={copy.runTitle(runId)}
       slotPrefix="runs-state"
       dataSlot="run-detail-loading-state"
       message={copy.runWorkspaceLoading}
@@ -90,9 +94,10 @@ type RunDetailErrorStateProps = {
 };
 
 export function RunDetailErrorStateView({ runId, message }: RunDetailErrorStateProps) {
+  const { copy } = useRunStatesCopy();
   return (
     <WorkbenchErrorState
-      frameTitle={`Run ${runId}`}
+      frameTitle={copy.runTitle(runId)}
       slotPrefix="runs-state"
       dataSlot="run-detail-error-state"
       title={copy.runWorkspaceUnavailable}

@@ -2,8 +2,12 @@
  * Owned concern: derive dense run event table rows from shared timeline
  * presentation semantics without owning event fetching or snapshot truth.
  */
-import { buildRunEventPresentationModel } from '../../services/runs/runEventPresentationModel';
+import {
+  buildRunEventPresentationModel,
+  type RunEventLevel,
+} from '../../services/runs/runEventPresentationModel';
 import { resolveRunEventHeadline } from '../../services/runs/runEventPresentationCopy';
+import type { ApplicationLanguage } from '../../stores/applicationLanguageStore';
 import type { RunEvent } from '../../types/engine';
 
 export type RunEventTableRow = {
@@ -12,13 +16,16 @@ export type RunEventTableRow = {
   readonly runSeq: number;
   readonly emittedAt: string;
   readonly emittedAtLabel: string;
-  readonly level: string;
+  readonly level: RunEventLevel;
   readonly headline: string;
   readonly detail: string | null;
   readonly stepId: string | null;
 };
 
-export function buildRunEventTableRows(events: readonly RunEvent[]): RunEventTableRow[] {
+export function buildRunEventTableRows(
+  events: readonly RunEvent[],
+  language: ApplicationLanguage = 'en'
+): RunEventTableRow[] {
   return events.map((event) => {
     const presentation = buildRunEventPresentationModel(event);
 
@@ -27,9 +34,15 @@ export function buildRunEventTableRows(events: readonly RunEvent[]): RunEventTab
       eventType: event.eventType,
       runSeq: event.runSeq,
       emittedAt: event.emittedAt,
-      emittedAtLabel: new Date(event.emittedAt).toLocaleString(),
+      emittedAtLabel: new Date(event.emittedAt).toLocaleString(
+        language === 'es' ? 'es-ES' : 'en-US'
+      ),
       level: presentation.level,
-      headline: resolveRunEventHeadline(presentation.headlineKey, presentation.fallbackHeadline),
+      headline: resolveRunEventHeadline(
+        presentation.headlineKey,
+        presentation.fallbackHeadline,
+        language
+      ),
       detail: presentation.detail,
       stepId: presentation.stepId,
     };

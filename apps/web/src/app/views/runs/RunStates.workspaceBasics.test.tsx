@@ -5,12 +5,17 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import type { RunWorkspaceViewModel } from '../../services/runs/runWorkspaceModel';
 import { RunWorkspaceState } from './RunStates';
-import { buildWorkspace, createRunStatesHarness } from './test/RunStatesHarness';
+import {
+  buildWorkspace,
+  createRunStatesHarness,
+  setRunStatesLanguage,
+} from './test/RunStatesHarness';
 
 describe('RunStates workspace basics', () => {
   let harness: ReturnType<typeof createRunStatesHarness>;
 
   beforeEach(() => {
+    setRunStatesLanguage('en');
     harness = createRunStatesHarness();
   });
 
@@ -151,5 +156,58 @@ describe('RunStates workspace basics', () => {
     expect(harness.container.textContent).toContain('analytics.orders_daily');
     expect(harness.container.querySelector('a[href="/canvas"]')).toBeTruthy();
     expect(harness.container.querySelector('a[href="/runs"]')).toBeTruthy();
+  });
+
+  it('renders the complete run workspace in Spanish from one copy authority', async () => {
+    setRunStatesLanguage('es');
+
+    await harness.render(
+      <RunWorkspaceState
+        workspace={buildWorkspace({
+          snapshot: {
+            runId: 'run_123',
+            planId: 'plan_123',
+            status: 'completed',
+            executor: 'postgres',
+            startedAt: '2026-03-28T10:00:00.000Z',
+            completedAt: '2026-03-28T10:00:30.000Z',
+            environment: 'dev',
+            diagnostics: {
+              runId: 'run_123',
+              status: 'completed',
+              pointers: [
+                { kind: 'trace', label: 'Trace query', value: 'trace runId=run_123' },
+                { kind: 'log', label: 'Log query', value: 'logs runId=run_123' },
+              ],
+            },
+            planSummary: {
+              executor: 'postgres',
+              nodeCount: 3,
+              stepCount: 3,
+              sourceTables: ['raw.orders'],
+              sinkTables: ['analytics.orders_daily'],
+            },
+          } as RunWorkspaceViewModel['snapshot'],
+        })}
+      />
+    );
+
+    const content = harness.container.textContent ?? '';
+    expect(content).toContain('Ejecución run_123');
+    expect(content).toContain('Itinerario de la ejecución');
+    expect(content).toContain('Completada');
+    expect(content).toContain('Vista previa de ejecución');
+    expect(content).toContain('Instantánea de ejecución');
+    expect(content).toContain('Campos de la instantánea');
+    expect(content).toContain('Cronología de eventos');
+    expect(content).toContain('Paso iniciado');
+    expect(content).toContain('EstadoCompletada');
+    expect(content).toContain('Consulta de trazas');
+    expect(content).toContain('Consulta de registros');
+    expect(content).not.toContain('Trace query');
+    expect(content).not.toContain('Log query');
+    expect(content).not.toContain('Run itinerary');
+    expect(content).not.toContain('Runtime snapshot');
+    expect(content).not.toContain('Event timeline');
   });
 });

@@ -27,7 +27,12 @@ describe('resolveRunEventFeedHealthCopy', () => {
         complete: 'Completo',
         failed: 'Fallido',
       },
-      runLabel: 'Ejecucion',
+      messages: {
+        idle: 'Inicia una ejecución para ver aquí sus eventos en directo.',
+        loading: 'Cargando eventos de ejecución...',
+        live: 'Los eventos de ejecución están en directo.',
+      },
+      runLabel: 'Ejecución',
       terminalLoading: 'Cargando terminal...',
       retryAction: 'Reintentar eventos',
     });

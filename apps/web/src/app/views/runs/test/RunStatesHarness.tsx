@@ -8,6 +8,14 @@ import type { RunSummaryItem } from '../../../ports/runs';
 import type { RunWorkspaceViewModel } from '../../../services/runs/runWorkspaceModel';
 import { iso, stepId } from '../../../testing/contractTestUtils';
 import type { RunEvent } from '../../../types/engine';
+import {
+  type ApplicationLanguage,
+  useApplicationLanguageStore,
+} from '../../../stores/applicationLanguageStore';
+
+export function setRunStatesLanguage(language: ApplicationLanguage): void {
+  useApplicationLanguageStore.getState().configureApplicationLanguage(language);
+}
 
 export function buildSummary(overrides?: Partial<RunSummaryItem>): RunSummaryItem {
   return {
