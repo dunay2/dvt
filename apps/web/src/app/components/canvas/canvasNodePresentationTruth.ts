@@ -20,6 +20,7 @@ type BuildCanvasNodePresentationTruthArgs = Readonly<{
   node: CanonicalNode;
   nodes: readonly CanonicalNode[];
   edges: readonly CanvasNodePresentationEdge[];
+  generatedCodeIsAuthoritative?: boolean;
   generatedCode?: Readonly<{
     content: string;
     path: string;
@@ -121,13 +122,23 @@ function resolveCodeLanguage(path: string | undefined): CanvasNodeCodeLanguage {
 
 function buildCodeTruth(
   node: CanonicalNode,
-  generatedCode: BuildCanvasNodePresentationTruthArgs['generatedCode']
+  generatedCode: BuildCanvasNodePresentationTruthArgs['generatedCode'],
+  generatedCodeIsAuthoritative: boolean
 ): CanvasNodeCodeTruth {
   const metadata = isRecord(node.metadata) ? node.metadata : {};
   const config = isRecord(metadata.config) ? metadata.config : {};
   const path = node.path ?? readString(metadata.path);
   const inlineCode =
     readString(metadata.compiledSql) ?? readString(config.sql) ?? readString(metadata.sql);
+
+  if (generatedCodeIsAuthoritative && generatedCode != null) {
+    return {
+      kind: 'generated',
+      content: generatedCode.content,
+      path: generatedCode.path,
+      language: generatedCode.language,
+    };
+  }
 
   if (path != null) {
     return {
@@ -175,6 +186,6 @@ export function buildCanvasNodePresentationTruth(
       visibleProvenance:
         declared.length > 0 ? 'declared' : inherited.length > 0 ? 'inherited' : 'none',
     },
-    code: buildCodeTruth(args.node, args.generatedCode),
+    code: buildCodeTruth(args.node, args.generatedCode, args.generatedCodeIsAuthoritative === true),
   };
 }

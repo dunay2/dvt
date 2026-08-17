@@ -1,6 +1,7 @@
 /** Owned concern: render the Canvas-owned contextual node workbench panel. */
 import { CircleHelp, X } from 'lucide-react';
 import { useEffect, useMemo, useState, type HTMLAttributes, type ReactNode } from 'react';
+import { DVT_TRANSFORM_AUTHORING_MODE } from '@dvt/contracts';
 
 import { getInspectorPanels } from '../../plugins/registry';
 import { PluginContributionBoundary } from '../../plugins/PluginContributionBoundary';
@@ -37,6 +38,7 @@ import { buildCanvasNodePresentationCopy } from './canvasNodePresentationCopy';
 import { canvasNodeWorkbenchVisualTokens } from './canvasNodeWorkbenchVisualTokens';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 import { useCanvasNodeWorkbenchDraftController } from './useCanvasNodeWorkbenchDraftController';
+import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 
 export type CanvasNodeWorkbenchPanelProps = Readonly<{
   node: CanonicalNode;
@@ -116,6 +118,15 @@ function resolveNodeWorkbenchHiddenGeneralRowIds(
   }
 
   return rowIds;
+}
+
+function hasVisualDvtTransformAuthority(node: CanonicalNode): boolean {
+  if (node.pluginId !== 'dvt' || node.kind !== 'dvt:sql_transform') return false;
+  try {
+    return readDvtTransformAuthoringAuthority(node).mode === DVT_TRANSFORM_AUTHORING_MODE.visual;
+  } catch {
+    return false;
+  }
 }
 
 function buildNodeWorkbenchReadModel({
@@ -230,6 +241,7 @@ export function CanvasNodeWorkbenchPanel({
     () => projectCanvasNodePresentationTruth({ node, nodes, edges }),
     [edges, node, nodes]
   );
+  const visualDvtTransformAuthority = hasVisualDvtTransformAuthority(node);
   const baseModel = buildNodePropertiesReadModel({
     node,
     nodes,
@@ -304,6 +316,7 @@ export function CanvasNodeWorkbenchPanel({
       </>
     );
     for (const sectionId of ['code', 'sink'] as const) {
+      if (sectionId === 'code' && visualDvtTransformAuthority) continue;
       sectionAfterChildren[sectionId] = (
         <>
           {sectionAfterChildren[sectionId]}

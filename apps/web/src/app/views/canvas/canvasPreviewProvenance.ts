@@ -1,6 +1,6 @@
 /** Owned concern: resolve plan preview provenance through workspace file read/write ports. */
 import type { GitArtifactRef, TransformationGitArtifactsProvenance } from '@dvt/contracts';
-import { asSha256HexString } from '@dvt/contracts';
+import { DVT_TRANSFORM_AUTHORING_MODE, asSha256HexString } from '@dvt/contracts';
 import type { WorkspaceScope } from '../../ports/sessionContext';
 import type {
   IWorkspaceFileContentCommandPort,
@@ -27,6 +27,8 @@ import {
   readTransformationSqlMirrorState,
   resolveExecutableSqlText,
 } from './canvasTransformationSqlMirror';
+import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
+import { compileDvtVisualTransformNodeToPostgresSql } from './canvasVisualTransformSql';
 
 export type PreviewProvenanceResolution =
   | {
@@ -116,6 +118,16 @@ function resolveTransformArtifactSource(
   }
 
   const workspacePath = normalizeNonBlankString(transformNode.path);
+  if (transformNode.pluginId === 'dvt' && transformNode.kind === 'dvt:sql_transform') {
+    const authority = readDvtTransformAuthoringAuthority(transformNode);
+    if (authority.mode === DVT_TRANSFORM_AUTHORING_MODE.visual) {
+      return {
+        kind: 'authoring-generated',
+        node: transformNode,
+        path: workspacePath ?? resolveAuthoringSqlArtifactPath(transformNode),
+      };
+    }
+  }
   if (workspacePath) {
     return {
       kind: 'workspace-file',
@@ -267,6 +279,17 @@ function buildAuthoringPreviewSql({
   canonicalNodes: readonly CanonicalNode[];
   scopedNodeIds: readonly string[];
 }): string {
+  if (transformNode.pluginId === 'dvt' && transformNode.kind === 'dvt:sql_transform') {
+    const authority = readDvtTransformAuthoringAuthority(transformNode);
+    if (authority.mode === DVT_TRANSFORM_AUTHORING_MODE.visual) {
+      const scopedNodes = resolveScopedTransformationNodes(canonicalNodes, scopedNodeIds);
+      return compileDvtVisualTransformNodeToPostgresSql({
+        transformNode,
+        sourceNode: scopedNodes.source,
+      });
+    }
+  }
+
   const explicitSql = resolveExecutableSqlText(transformNode);
   if (!explicitSql.ok) {
     throw new Error(explicitSql.message);

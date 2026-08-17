@@ -127,6 +127,76 @@ describe('projectCanvasNodePresentationTruth', () => {
     expect(truth.columns.visibleProvenance).toBe('mixed');
   });
 
+  it('projects visual recipe SQL as generated read-only code from the connected source binding', () => {
+    const dvtSource: CanonicalNode = {
+      id: 'source.orders',
+      name: 'Raw orders',
+      pluginId: 'dvt.warehouse-source',
+      kind: 'dvt:source',
+      role: 'input',
+      status: 'idle',
+      tags: [],
+      metadata: {
+        connectedSourceRef: {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef: {
+            schemaVersion: 'connection-ref.v1',
+            connectionId: 'warehouse-prod',
+            provider: 'postgres',
+          },
+          sourceObjectId: 'relation/warehouse/raw/orders',
+        },
+        schema: 'raw',
+        tableName: 'orders',
+        sourceName: 'raw_orders',
+        columns: [{ name: 'order_id', type: 'integer' }],
+      },
+    };
+    const dvtModel = applyDvtVisualTransformRecipe(
+      {
+        ...model,
+        id: 'transform.orders',
+        path: 'models/stale-visual-orders.sql',
+        pluginId: 'dvt',
+        kind: 'dvt:sql_transform',
+        metadata: {},
+      },
+      {
+        version: 'v1',
+        outputs: [
+          {
+            id: 'output:order_id',
+            name: 'order_id',
+            dataType: 'integer',
+            expression: {
+              inputs: [{ nodeId: dvtSource.id, columnName: 'order_id' }],
+              operations: [{ kind: 'passthrough' }],
+            },
+          },
+        ],
+        filters: [],
+      }
+    );
+
+    const truth = projectCanvasNodePresentationTruth({
+      node: dvtModel,
+      nodes: [dvtSource, dvtModel],
+      edges: [{ ...edge, sourceId: dvtSource.id, targetId: dvtModel.id }],
+    });
+
+    expect(truth.code).toEqual({
+      kind: 'generated',
+      content: [
+        'select',
+        '  "raw_orders"."order_id" as "order_id"',
+        'from "raw"."orders" as "raw_orders";',
+        '',
+      ].join('\n'),
+      path: 'models/transform-orders.sql',
+      language: 'sql',
+    });
+  });
+
   it('restores inherited mapping targets after the last visual output is removed', () => {
     const dvtModel = applyDvtVisualTransformRecipe(
       {
