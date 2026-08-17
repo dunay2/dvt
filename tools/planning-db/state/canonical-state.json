@@ -1875,6 +1875,22 @@
         "updated_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
+        "component_id": "SYS-API-WAREHOUSE-SOURCE-DATA-SAMPLE",
+        "name": "Warehouse source data sample query",
+        "kind": "service",
+        "layer": "application",
+        "owner": "API / Warehouse source import",
+        "repo_path": "apps/api/src/application/services/previewWarehouseSourceObjectRowsUseCase.ts",
+        "public_contract": "CONTRACT-WAREHOUSE-SOURCE-DATA-SAMPLE-V1",
+        "runtime": "node",
+        "criticality": "high",
+        "status": "implemented",
+        "maturity_score": null,
+        "parent_component_id": "SYS-API-ROOT",
+        "created_at": "2026-08-17T12:15:02.396+00:00",
+        "updated_at": "2026-08-17T12:15:02.396+00:00"
+      },
+      {
         "component_id": "SYS-CI-GOVERNANCE-GITHUB",
         "name": "GitHub workflow and repository collaboration governance",
         "kind": "module",
@@ -8659,6 +8675,22 @@
         "updated_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
+        "component_id": "SYS-WEB-CANVAS-SOURCE-DATA-SAMPLE",
+        "name": "Canvas source data sample",
+        "kind": "ui-view",
+        "layer": "ui",
+        "owner": "Frontend / Canvas",
+        "repo_path": "apps/web/src/app/views/canvas",
+        "public_contract": "PORT-OPEN-CANVAS-SOURCE-SAMPLE",
+        "runtime": "browser",
+        "criticality": "medium",
+        "status": "implemented",
+        "maturity_score": null,
+        "parent_component_id": "SYS-WEB-ROOT",
+        "created_at": "2026-08-17T12:14:58.731+00:00",
+        "updated_at": "2026-08-17T12:14:58.731+00:00"
+      },
+      {
         "component_id": "SYS-WEB-CANVAS-SOURCE-IMPORT-CATALOG-VIEW",
         "name": "Canvas source import catalog view",
         "kind": "ui-view",
@@ -13995,6 +14027,20 @@
         "updated_at": "2026-08-16T00:49:24.984+00:00"
       },
       {
+        "design_id": "W4-SOURCE-DATA-SAMPLE-20260817-V2",
+        "work_item_id": "GH-2417",
+        "title": "Bounded Canvas warehouse source data sample",
+        "owner": "Web / API / Contracts",
+        "status": "implemented",
+        "rationale": "Reuse the existing Canvas operational drawer and add one bounded authorized query instead of duplicating panels or overloading catalog discovery.",
+        "fowler_signal": "evolutionary_architecture",
+        "rail_ref": "PreviewWarehouseSourceObjectRows;OpenCanvasSourceSample",
+        "approved_at": "2026-08-17T12:17:11.245+00:00",
+        "supersedes_id": null,
+        "created_at": "2026-08-17T12:14:38.053+00:00",
+        "updated_at": "2026-08-17T12:18:47.678+00:00"
+      },
+      {
         "design_id": "WEB-BOTTOM-OPERATIONAL-DRAWER-20260618",
         "work_item_id": "UXDB-BOTTOM-OPERATIONAL-DRAWER-P0-1",
         "title": "Web bottom operational drawer vocabulary",
@@ -14236,6 +14282,20 @@
         "result_state": "pass",
         "recorded_at": "2026-08-12T18:53:52.689+00:00",
         "source_content_sha256": "bbc8ea1611154619bf136c2ba07254a4dca90bc9d006cf3589fdd3c2f849beb5",
+        "implementation_content_sha256": null
+      },
+      {
+        "evidence_id": "EV-CANVAS-SOURCE-SAMPLE-WEB-LOCAL",
+        "design_id": "W4-SOURCE-DATA-SAMPLE-20260817-V2",
+        "subject_kind": "test",
+        "subject_id": "apps/web/src/app/plugins/graph/GraphNodeOperationalRail.test.tsx",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "local://2026-08-17/source-data-sample-web-and-browser-tests",
+        "source_path": "apps/web/src/app/plugins/graph/GraphNodeOperationalRail.test.tsx",
+        "result_state": "pass",
+        "recorded_at": "2026-08-17T12:17:45.14+00:00",
+        "source_content_sha256": "ab8f88f137f56713d1b801eba0fb643a0a45f9c83f4bce6c0887feb6d736b2ae",
         "implementation_content_sha256": null
       },
       {
@@ -15538,6 +15598,20 @@
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
         "source_content_sha256": null,
+        "implementation_content_sha256": null
+      },
+      {
+        "evidence_id": "EV-WAREHOUSE-SOURCE-SAMPLE-API-LOCAL",
+        "design_id": "W4-SOURCE-DATA-SAMPLE-20260817-V2",
+        "subject_kind": "test",
+        "subject_id": "apps/api/test/application/services/previewWarehouseSourceObjectRowsUseCase.test.ts",
+        "evidence_kind": "test",
+        "evidence_origin": "local_execution",
+        "source_ref": "local://2026-08-17/source-data-sample-api-tests",
+        "source_path": "apps/api/test/application/services/previewWarehouseSourceObjectRowsUseCase.test.ts",
+        "result_state": "pass",
+        "recorded_at": "2026-08-17T12:17:41.699+00:00",
+        "source_content_sha256": "82214cfbe20db57b3bcb322e053cbea14b3155e6a906440dd0bedadb9bbe4b64",
         "implementation_content_sha256": null
       },
       {
@@ -18988,6 +19062,17 @@
         "validation_command": "node --test --test-name-pattern \"Web UI primitives\" scripts/planning-db-schema.test.cjs",
         "created_at": "2026-08-07T00:49:55.642226+00:00",
         "updated_at": "2026-08-07T00:49:55.642226+00:00"
+      },
+      {
+        "contract_id": "CONTRACT-WAREHOUSE-SOURCE-DATA-SAMPLE-V1",
+        "contract_kind": "api",
+        "owner_component_id": "SYS-API-WAREHOUSE-SOURCE-DATA-SAMPLE",
+        "contract_ref": "packages/@dvt/contracts/src/contracts/source-import/SourceDataSample.v1.ts",
+        "compatibility": "additive",
+        "status": "implemented",
+        "validation_command": "pnpm exec vitest run packages/@dvt/contracts/test/source-import/SourceDataSample.v1.test.ts",
+        "created_at": "2026-08-17T12:15:25.91+00:00",
+        "updated_at": "2026-08-17T12:15:25.91+00:00"
       },
       {
         "contract_id": "CONTRACT-WEB-DBT-SELECTION-RECOVERY",
@@ -25414,6 +25499,21 @@
         "status": "implemented",
         "created_at": "2026-08-07T00:49:55.642226+00:00",
         "updated_at": "2026-08-07T00:49:55.642226+00:00"
+      },
+      {
+        "relation_id": "REL-CANVAS-SOURCE-SAMPLE-QUERY",
+        "source_component_id": "SYS-WEB-CANVAS-SOURCE-DATA-SAMPLE",
+        "target_component_id": "SYS-API-WAREHOUSE-SOURCE-DATA-SAMPLE",
+        "relation_type": "calls",
+        "direction": "outbound",
+        "sync_async": "sync",
+        "contract_id": "CONTRACT-WAREHOUSE-SOURCE-DATA-SAMPLE-V1",
+        "failure_mode": "The drawer exposes localized loading, empty, authorization, provider, timeout, and unknown states without retaining stale rows.",
+        "authorization_scope": "workspace tenant, project, and environment plus source-import view capability and governed connection ownership",
+        "source_refs": ["https://github.com/dunay2/dvt/issues/2417"],
+        "status": "implemented",
+        "created_at": "2026-08-17T12:16:01.853+00:00",
+        "updated_at": "2026-08-17T12:16:01.853+00:00"
       },
       {
         "relation_id": "REL-CANVAS-VIEWPORT-USES-NODE-INTERACTION-BOUNDARY",
@@ -38228,6 +38328,15 @@
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
+        "responsibility_id": "RESP-API-WAREHOUSE-SOURCE-SAMPLE",
+        "component_id": "SYS-API-WAREHOUSE-SOURCE-DATA-SAMPLE",
+        "responsibility": "Authorize and return a bounded read-only sample for one governed relational object",
+        "reason_to_change": "Warehouse sample authorization, safety, or response semantics change",
+        "ddd_owner": "WarehouseSourceDataSampleReadModel",
+        "status": "implemented",
+        "created_at": "2026-08-17T12:15:02.396+00:00"
+      },
+      {
         "responsibility_id": "RESP-AUTHORITY-AWARE-WAREHOUSE-SOURCE-IMPORT",
         "component_id": "SYS-API-APPLICATION-WAREHOUSE-SOURCE-IMPORT",
         "responsibility": "Resolve persisted Canvas authority and dispatch one validated ImportWarehouseSources command.",
@@ -43761,6 +43870,15 @@
         "ddd_owner": "CanvasNodeWorkbenchDraftController",
         "status": "implemented",
         "created_at": "2026-08-07T00:52:41.568192+00:00"
+      },
+      {
+        "responsibility_id": "RESP-WEB-CANVAS-SOURCE-SAMPLE",
+        "component_id": "SYS-WEB-CANVAS-SOURCE-DATA-SAMPLE",
+        "responsibility": "Open and render a bounded relational source sample in the existing Canvas bottom drawer",
+        "reason_to_change": "The Canvas source-sample interaction or presentation changes",
+        "ddd_owner": "CanvasSourceDataSample",
+        "status": "implemented",
+        "created_at": "2026-08-17T12:14:58.731+00:00"
       },
       {
         "responsibility_id": "RESP-WEB-CODE-WORKING-TREE-SYNC",
@@ -54419,6 +54537,34 @@
         ],
         "status": "implemented",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
+      },
+      {
+        "port_id": "PORT-OPEN-CANVAS-SOURCE-SAMPLE",
+        "component_id": "SYS-WEB-CANVAS-SOURCE-DATA-SAMPLE",
+        "port_name": "OpenCanvasSourceSample",
+        "port_kind": "ui-action",
+        "direction": "inbound",
+        "input_contract_id": null,
+        "output_contract_id": "CONTRACT-WAREHOUSE-SOURCE-DATA-SAMPLE-V1",
+        "negative_tests": [
+          "Ignore non-relational nodes and stale responses; preserve the node double-click and single-click health behaviors."
+        ],
+        "status": "implemented",
+        "created_at": "2026-08-17T12:15:47.875+00:00"
+      },
+      {
+        "port_id": "PORT-PREVIEW-WAREHOUSE-SOURCE-ROWS",
+        "component_id": "SYS-API-WAREHOUSE-SOURCE-DATA-SAMPLE",
+        "port_name": "PreviewWarehouseSourceObjectRows",
+        "port_kind": "query",
+        "direction": "inbound",
+        "input_contract_id": "CONTRACT-WAREHOUSE-SOURCE-DATA-SAMPLE-V1",
+        "output_contract_id": "CONTRACT-WAREHOUSE-SOURCE-DATA-SAMPLE-V1",
+        "negative_tests": [
+          "Reject unsupported objects, missing governed connections, unauthorized scope, invalid limit, timeout, and provider failure."
+        ],
+        "status": "implemented",
+        "created_at": "2026-08-17T12:15:44.44+00:00"
       },
       {
         "port_id": "PORT-SYS-ADAPTERS-POSTGRES-OUTBOX-MAINTENANCE-PRIMARY",
@@ -91208,6 +91354,70 @@
         "created_at": "2026-08-16T00:48:58.054+00:00"
       },
       {
+        "design_id": "W4-SOURCE-DATA-SAMPLE-20260817-V2",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-WAREHOUSE-SOURCE-DATA-SAMPLE",
+        "scope_kind": "may_create",
+        "required": true,
+        "created_at": "2026-08-17T12:14:38.053+00:00"
+      },
+      {
+        "design_id": "W4-SOURCE-DATA-SAMPLE-20260817-V2",
+        "subject_kind": "component",
+        "subject_id": "SYS-WEB-CANVAS-SOURCE-DATA-SAMPLE",
+        "scope_kind": "may_create",
+        "required": true,
+        "created_at": "2026-08-17T12:14:38.053+00:00"
+      },
+      {
+        "design_id": "W4-SOURCE-DATA-SAMPLE-20260817-V2",
+        "subject_kind": "contract",
+        "subject_id": "CONTRACT-WAREHOUSE-SOURCE-DATA-SAMPLE-V1",
+        "scope_kind": "may_create",
+        "required": true,
+        "created_at": "2026-08-17T12:14:38.053+00:00"
+      },
+      {
+        "design_id": "W4-SOURCE-DATA-SAMPLE-20260817-V2",
+        "subject_kind": "port",
+        "subject_id": "PORT-OPEN-CANVAS-SOURCE-SAMPLE",
+        "scope_kind": "may_create",
+        "required": true,
+        "created_at": "2026-08-17T12:14:38.053+00:00"
+      },
+      {
+        "design_id": "W4-SOURCE-DATA-SAMPLE-20260817-V2",
+        "subject_kind": "port",
+        "subject_id": "PORT-PREVIEW-WAREHOUSE-SOURCE-ROWS",
+        "scope_kind": "may_create",
+        "required": true,
+        "created_at": "2026-08-17T12:14:38.053+00:00"
+      },
+      {
+        "design_id": "W4-SOURCE-DATA-SAMPLE-20260817-V2",
+        "subject_kind": "relation",
+        "subject_id": "REL-CANVAS-SOURCE-SAMPLE-QUERY",
+        "scope_kind": "may_create",
+        "required": true,
+        "created_at": "2026-08-17T12:14:38.053+00:00"
+      },
+      {
+        "design_id": "W4-SOURCE-DATA-SAMPLE-20260817-V2",
+        "subject_kind": "test",
+        "subject_id": "apps/api/test/application/services/previewWarehouseSourceObjectRowsUseCase.test.ts",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-17T12:14:38.053+00:00"
+      },
+      {
+        "design_id": "W4-SOURCE-DATA-SAMPLE-20260817-V2",
+        "subject_kind": "test",
+        "subject_id": "apps/web/src/app/plugins/graph/GraphNodeOperationalRail.test.tsx",
+        "scope_kind": "must_prove",
+        "required": true,
+        "created_at": "2026-08-17T12:14:38.053+00:00"
+      },
+      {
         "design_id": "WEB-CANVAS-CONTEXT-MENU-VIEW-MODEL-20260627",
         "subject_kind": "component",
         "subject_id": "web.component.canvas.CanvasContextMenu",
@@ -91645,6 +91855,82 @@
           "sourceContentSha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598"
         },
         "created_at": "2026-08-11T13:02:34.37+00:00"
+      },
+      {
+        "operation_id": "029b70ef-38b9-4fec-a1a9-c05073dd37cb",
+        "idempotency_key": "rehydrate-w4-source-data-sample-v2-20260817",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "W4-SOURCE-DATA-SAMPLE-20260817-V2",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2417",
+        "source_content_sha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "Web / API / Contracts",
+          "title": "Bounded Canvas warehouse source data sample",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_create",
+              "subjectId": "SYS-WEB-CANVAS-SOURCE-DATA-SAMPLE",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_create",
+              "subjectId": "SYS-API-WAREHOUSE-SOURCE-DATA-SAMPLE",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_create",
+              "subjectId": "CONTRACT-WAREHOUSE-SOURCE-DATA-SAMPLE-V1",
+              "subjectKind": "contract"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_create",
+              "subjectId": "PORT-PREVIEW-WAREHOUSE-SOURCE-ROWS",
+              "subjectKind": "port"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_create",
+              "subjectId": "PORT-OPEN-CANVAS-SOURCE-SAMPLE",
+              "subjectKind": "port"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_create",
+              "subjectId": "REL-CANVAS-SOURCE-SAMPLE-QUERY",
+              "subjectKind": "relation"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "apps/api/test/application/services/previewWarehouseSourceObjectRowsUseCase.test.ts",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "must_prove",
+              "subjectId": "apps/web/src/app/plugins/graph/GraphNodeOperationalRail.test.tsx",
+              "subjectKind": "test"
+            }
+          ],
+          "status": "review",
+          "railRef": "PreviewWarehouseSourceObjectRows;OpenCanvasSourceSample",
+          "designId": "W4-SOURCE-DATA-SAMPLE-20260817-V2",
+          "rationale": "Reuse the existing Canvas operational drawer and add one bounded authorized query instead of duplicating panels or overloading catalog discovery.",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2417",
+          "workItemId": "GH-2417",
+          "fowlerSignal": "evolutionary_architecture",
+          "supersedesId": null,
+          "sourceContentSha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179"
+        },
+        "created_at": "2026-08-17T12:14:38.053+00:00"
       },
       {
         "operation_id": "02d4f750-5a81-4877-b13a-36e65ea1d55f",
@@ -93636,6 +93922,31 @@
           "sourceContentSha256": "edd379482987387b160119fae60df9981a6c682fb7be03c826d447e15e9f4a7e"
         },
         "created_at": "2026-08-11T18:33:29.584+00:00"
+      },
+      {
+        "operation_id": "1909ddf7-8e23-487c-a0e9-26247735c5e9",
+        "idempotency_key": "w4-source-sample-api-local-evidence-20260817",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "W4-SOURCE-DATA-SAMPLE-20260817-V2",
+        "source_ref": "local://2026-08-17/source-data-sample-api-tests",
+        "source_content_sha256": "82214cfbe20db57b3bcb322e053cbea14b3155e6a906440dd0bedadb9bbe4b64",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "W4-SOURCE-DATA-SAMPLE-20260817-V2",
+          "sourceRef": "local://2026-08-17/source-data-sample-api-tests",
+          "subjectId": "apps/api/test/application/services/previewWarehouseSourceObjectRowsUseCase.test.ts",
+          "evidenceId": "EV-WAREHOUSE-SOURCE-SAMPLE-API-LOCAL",
+          "sourcePath": "apps/api/test/application/services/previewWarehouseSourceObjectRowsUseCase.test.ts",
+          "resultState": "pass",
+          "subjectKind": "test",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "82214cfbe20db57b3bcb322e053cbea14b3155e6a906440dd0bedadb9bbe4b64"
+        },
+        "created_at": "2026-08-17T12:17:41.699+00:00"
       },
       {
         "operation_id": "193a63db-f02a-47dc-8c31-bb832da55392",
@@ -100642,6 +100953,43 @@
         "created_at": "2026-08-11T18:22:11.783+00:00"
       },
       {
+        "operation_id": "6a2e70e7-310e-4fdb-869a-b073b08a22b4",
+        "idempotency_key": "rehydrate-w4-source-sample-web-20260817",
+        "operation_type": "architecture_component_record",
+        "actor": "codex",
+        "design_id": "W4-SOURCE-DATA-SAMPLE-20260817-V2",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2417",
+        "source_content_sha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "kind": "ui-view",
+          "name": "Canvas source data sample",
+          "layer": "ui",
+          "owner": "Frontend / Canvas",
+          "status": "implemented",
+          "runtime": "browser",
+          "designId": "W4-SOURCE-DATA-SAMPLE-20260817-V2",
+          "repoPath": "apps/web/src/app/views/canvas",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2417",
+          "componentId": "SYS-WEB-CANVAS-SOURCE-DATA-SAMPLE",
+          "criticality": "medium",
+          "publicContract": "PORT-OPEN-CANVAS-SOURCE-SAMPLE",
+          "responsibilities": [
+            {
+              "dddOwner": "CanvasSourceDataSample",
+              "reasonToChange": "The Canvas source-sample interaction or presentation changes",
+              "responsibility": "Open and render a bounded relational source sample in the existing Canvas bottom drawer",
+              "responsibilityId": "RESP-WEB-CANVAS-SOURCE-SAMPLE"
+            }
+          ],
+          "parentComponentId": "SYS-WEB-ROOT",
+          "sourceContentSha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179"
+        },
+        "created_at": "2026-08-17T12:14:58.731+00:00"
+      },
+      {
         "operation_id": "6a724ced-cefc-43fb-8868-7d2e1dbaf5e4",
         "idempotency_key": "architecture_design_create:codex:PTH2-RUN-CONTEXT-AUTHORITY-CLOSEOUT-20260814:c40e87b0aae4efc8",
         "operation_type": "architecture_design_create",
@@ -103686,6 +104034,43 @@
         "created_at": "2026-08-11T18:22:17.053+00:00"
       },
       {
+        "operation_id": "8dbc2e50-af86-4b81-99ef-a110963b914b",
+        "idempotency_key": "rehydrate-w4-source-sample-api-20260817",
+        "operation_type": "architecture_component_record",
+        "actor": "codex",
+        "design_id": "W4-SOURCE-DATA-SAMPLE-20260817-V2",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2417",
+        "source_content_sha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "kind": "service",
+          "name": "Warehouse source data sample query",
+          "layer": "application",
+          "owner": "API / Warehouse source import",
+          "status": "implemented",
+          "runtime": "node",
+          "designId": "W4-SOURCE-DATA-SAMPLE-20260817-V2",
+          "repoPath": "apps/api/src/application/services/previewWarehouseSourceObjectRowsUseCase.ts",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2417",
+          "componentId": "SYS-API-WAREHOUSE-SOURCE-DATA-SAMPLE",
+          "criticality": "high",
+          "publicContract": "CONTRACT-WAREHOUSE-SOURCE-DATA-SAMPLE-V1",
+          "responsibilities": [
+            {
+              "dddOwner": "WarehouseSourceDataSampleReadModel",
+              "reasonToChange": "Warehouse sample authorization, safety, or response semantics change",
+              "responsibility": "Authorize and return a bounded read-only sample for one governed relational object",
+              "responsibilityId": "RESP-API-WAREHOUSE-SOURCE-SAMPLE"
+            }
+          ],
+          "parentComponentId": "SYS-API-ROOT",
+          "sourceContentSha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179"
+        },
+        "created_at": "2026-08-17T12:15:02.396+00:00"
+      },
+      {
         "operation_id": "8e276218-78df-4e9c-957b-e47854ba6073",
         "idempotency_key": "architecture_evidence_record:codex-gh-2168-qa:GH-2168-PLAN-LIFECYCLE-HARDCUT-20260813:EV-GH2168-PREVIEW-GUARD-HARDCUT:628b4cb2fd59f5b9",
         "operation_type": "architecture_evidence_record",
@@ -103895,6 +104280,35 @@
           "sourceContentSha256": "a095b22199bc35663876c10c5abaddbb85cca70227f06be99a74d3161a23bde6"
         },
         "created_at": "2026-08-11T04:25:10.602+00:00"
+      },
+      {
+        "operation_id": "9090935a-d7ef-41e6-8470-d7d2bd0669f5",
+        "idempotency_key": "rehydrate-w4-source-sample-ui-port-20260817",
+        "operation_type": "architecture_port_record",
+        "actor": "codex",
+        "design_id": "W4-SOURCE-DATA-SAMPLE-20260817-V2",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2417",
+        "source_content_sha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "portId": "PORT-OPEN-CANVAS-SOURCE-SAMPLE",
+          "status": "implemented",
+          "designId": "W4-SOURCE-DATA-SAMPLE-20260817-V2",
+          "portKind": "ui-action",
+          "portName": "OpenCanvasSourceSample",
+          "direction": "inbound",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2417",
+          "componentId": "SYS-WEB-CANVAS-SOURCE-DATA-SAMPLE",
+          "negativeTests": [
+            "Ignore non-relational nodes and stale responses; preserve the node double-click and single-click health behaviors."
+          ],
+          "inputContractId": null,
+          "outputContractId": "CONTRACT-WAREHOUSE-SOURCE-DATA-SAMPLE-V1",
+          "sourceContentSha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179"
+        },
+        "created_at": "2026-08-17T12:15:47.875+00:00"
       },
       {
         "operation_id": "90d59dce-5b71-4e8f-ab4d-2c96469add17",
@@ -105293,6 +105707,34 @@
         "created_at": "2026-08-13T13:22:00.743+00:00"
       },
       {
+        "operation_id": "9dc23326-3d0b-4dd1-8429-57dc3eef3a6d",
+        "idempotency_key": "rehydrate-w4-source-sample-relation-20260817",
+        "operation_type": "architecture_relation_record",
+        "actor": "codex",
+        "design_id": "W4-SOURCE-DATA-SAMPLE-20260817-V2",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2417",
+        "source_content_sha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "status": "implemented",
+          "designId": "W4-SOURCE-DATA-SAMPLE-20260817-V2",
+          "direction": "outbound",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2417",
+          "syncAsync": "sync",
+          "contractId": "CONTRACT-WAREHOUSE-SOURCE-DATA-SAMPLE-V1",
+          "relationId": "REL-CANVAS-SOURCE-SAMPLE-QUERY",
+          "failureMode": "The drawer exposes localized loading, empty, authorization, provider, timeout, and unknown states without retaining stale rows.",
+          "relationType": "calls",
+          "sourceComponentId": "SYS-WEB-CANVAS-SOURCE-DATA-SAMPLE",
+          "targetComponentId": "SYS-API-WAREHOUSE-SOURCE-DATA-SAMPLE",
+          "authorizationScope": "workspace tenant, project, and environment plus source-import view capability and governed connection ownership",
+          "sourceContentSha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179"
+        },
+        "created_at": "2026-08-17T12:16:01.853+00:00"
+      },
+      {
         "operation_id": "9dcfeed7-ddd7-4279-8888-42a6f7b2b97e",
         "idempotency_key": "create-api-h2-4-v4-retired-test-authority",
         "operation_type": "architecture_design_create",
@@ -105827,6 +106269,27 @@
           "sourceContentSha256": "e28985b1ca75e440faea834e1ed5e1774a3bef4f1c15e7e2118a5629fbdeb532"
         },
         "created_at": "2026-08-14T08:42:58.154+00:00"
+      },
+      {
+        "operation_id": "a6b122fd-19e5-49af-8697-7f124b1fc04a",
+        "idempotency_key": "rehydrate-w4-source-sample-implemented-20260817",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "W4-SOURCE-DATA-SAMPLE-20260817-V2",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2417",
+        "source_content_sha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The bounded query, Canvas drawer interaction, negative-path tests, real browser data proof, keyboard path, i18n, and accessibility audit are complete.",
+          "designId": "W4-SOURCE-DATA-SAMPLE-20260817-V2",
+          "toStatus": "implemented",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2417",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179"
+        },
+        "created_at": "2026-08-17T12:18:47.678+00:00"
       },
       {
         "operation_id": "a6d25920-95e1-42ac-96ed-9a88f8f9e40d",
@@ -106915,6 +107378,31 @@
           "sourceContentSha256": "995ad5790791389c3241e330d1234373d6f4b7ec130b2502896fd55acdbedd10"
         },
         "created_at": "2026-08-11T05:28:39.35+00:00"
+      },
+      {
+        "operation_id": "afb555b5-1a3b-4ea5-a315-33dd71d77710",
+        "idempotency_key": "w4-source-sample-web-local-evidence-20260817",
+        "operation_type": "architecture_evidence_record",
+        "actor": "codex",
+        "design_id": "W4-SOURCE-DATA-SAMPLE-20260817-V2",
+        "source_ref": "local://2026-08-17/source-data-sample-web-and-browser-tests",
+        "source_content_sha256": "ab8f88f137f56713d1b801eba0fb643a0a45f9c83f4bce6c0887feb6d736b2ae",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "designId": "W4-SOURCE-DATA-SAMPLE-20260817-V2",
+          "sourceRef": "local://2026-08-17/source-data-sample-web-and-browser-tests",
+          "subjectId": "apps/web/src/app/plugins/graph/GraphNodeOperationalRail.test.tsx",
+          "evidenceId": "EV-CANVAS-SOURCE-SAMPLE-WEB-LOCAL",
+          "sourcePath": "apps/web/src/app/plugins/graph/GraphNodeOperationalRail.test.tsx",
+          "resultState": "pass",
+          "subjectKind": "test",
+          "evidenceKind": "test",
+          "evidenceOrigin": "local_execution",
+          "sourceContentSha256": "ab8f88f137f56713d1b801eba0fb643a0a45f9c83f4bce6c0887feb6d736b2ae"
+        },
+        "created_at": "2026-08-17T12:17:45.14+00:00"
       },
       {
         "operation_id": "afeaae65-8553-47fa-8565-b70a0cd76b7f",
@@ -111022,6 +111510,35 @@
         "created_at": "2026-08-10T20:08:53.967+00:00"
       },
       {
+        "operation_id": "d5a31e27-00c6-422f-b3d9-b21cef3b7ddc",
+        "idempotency_key": "rehydrate-w4-source-sample-query-port-20260817",
+        "operation_type": "architecture_port_record",
+        "actor": "codex",
+        "design_id": "W4-SOURCE-DATA-SAMPLE-20260817-V2",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2417",
+        "source_content_sha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "portId": "PORT-PREVIEW-WAREHOUSE-SOURCE-ROWS",
+          "status": "implemented",
+          "designId": "W4-SOURCE-DATA-SAMPLE-20260817-V2",
+          "portKind": "query",
+          "portName": "PreviewWarehouseSourceObjectRows",
+          "direction": "inbound",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2417",
+          "componentId": "SYS-API-WAREHOUSE-SOURCE-DATA-SAMPLE",
+          "negativeTests": [
+            "Reject unsupported objects, missing governed connections, unauthorized scope, invalid limit, timeout, and provider failure."
+          ],
+          "inputContractId": "CONTRACT-WAREHOUSE-SOURCE-DATA-SAMPLE-V1",
+          "outputContractId": "CONTRACT-WAREHOUSE-SOURCE-DATA-SAMPLE-V1",
+          "sourceContentSha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179"
+        },
+        "created_at": "2026-08-17T12:15:44.44+00:00"
+      },
+      {
         "operation_id": "d5b015e9-8e81-4bf8-aacd-d4d470f4d011",
         "idempotency_key": "architecture_design_transition:codex:API-H2-4-CI-EVIDENCE-AUTHENTICITY-V2-20260811:6d6dcdc0b1006200",
         "operation_type": "architecture_design_transition",
@@ -111460,6 +111977,27 @@
           "sourceContentSha256": "40394bf597d05b78bd90cb96948d691d711afa9f1aa38c721f54a830ce8b0ca0"
         },
         "created_at": "2026-08-11T08:57:01.234+00:00"
+      },
+      {
+        "operation_id": "dbcb6926-f0aa-41b0-bc04-6a388feaa555",
+        "idempotency_key": "rehydrate-w4-source-sample-approved-20260817",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "W4-SOURCE-DATA-SAMPLE-20260817-V2",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2417",
+        "source_content_sha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The issue DoR, bounded query rail, component ownership, contract, ports, relation, and negative paths are explicit.",
+          "designId": "W4-SOURCE-DATA-SAMPLE-20260817-V2",
+          "toStatus": "approved",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2417",
+          "fromStatus": "review",
+          "sourceContentSha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179"
+        },
+        "created_at": "2026-08-17T12:17:11.245+00:00"
       },
       {
         "operation_id": "dc5177ec-ede3-4b3e-a69c-1d12772e2e12",
@@ -113096,6 +113634,27 @@
         "created_at": "2026-08-10T21:04:11.586+00:00"
       },
       {
+        "operation_id": "efaf278e-b8ca-4c7d-8d8a-2bb3c689b7e1",
+        "idempotency_key": "rehydrate-w4-source-sample-implementing-20260817",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "W4-SOURCE-DATA-SAMPLE-20260817-V2",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2417",
+        "source_content_sha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Production code, focused tests, and headed browser proof now implement the approved bounded sample design.",
+          "designId": "W4-SOURCE-DATA-SAMPLE-20260817-V2",
+          "toStatus": "implementing",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2417",
+          "fromStatus": "approved",
+          "sourceContentSha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179"
+        },
+        "created_at": "2026-08-17T12:17:14.507+00:00"
+      },
+      {
         "operation_id": "f06df955-39cd-42dd-ab61-fe06e78724f8",
         "idempotency_key": "architecture_observability_record:codex:R1-1D-API-GOVERNANCE-DB-CLEANUP-20260810:SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS:7bbc535b10eb5818",
         "operation_type": "architecture_observability_record",
@@ -113882,6 +114441,31 @@
           "sourceContentSha256": "c4f5149bc59558c83ce69c1b9de447d6b23075c82aee53e40b78f4025b39003b"
         },
         "created_at": "2026-08-10T21:04:27.458+00:00"
+      },
+      {
+        "operation_id": "f6b5ba00-b3da-4a9d-816a-07b67ff438f9",
+        "idempotency_key": "rehydrate-w4-source-sample-contract-20260817",
+        "operation_type": "architecture_contract_record",
+        "actor": "codex",
+        "design_id": "W4-SOURCE-DATA-SAMPLE-20260817-V2",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2417",
+        "source_content_sha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "status": "implemented",
+          "designId": "W4-SOURCE-DATA-SAMPLE-20260817-V2",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2417",
+          "contractId": "CONTRACT-WAREHOUSE-SOURCE-DATA-SAMPLE-V1",
+          "contractRef": "packages/@dvt/contracts/src/contracts/source-import/SourceDataSample.v1.ts",
+          "contractKind": "api",
+          "compatibility": "additive",
+          "ownerComponentId": "SYS-API-WAREHOUSE-SOURCE-DATA-SAMPLE",
+          "validationCommand": "pnpm exec vitest run packages/@dvt/contracts/test/source-import/SourceDataSample.v1.test.ts",
+          "sourceContentSha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179"
+        },
+        "created_at": "2026-08-17T12:15:25.91+00:00"
       },
       {
         "operation_id": "f707f33d-5c67-46be-aa1e-d0d0fc4b1289",
@@ -117049,7 +117633,7 @@
         "pnpm --filter @dvt/web test:unit:run -- src/app/services/workspace/workspacePorts.api.test.ts"
       ],
       "sourcePath": "apps/web/src/app/services/workspace/workspacePorts.api.ts",
-      "sourceContentSha256": "7f86058d2834a24953a3b5242b012eca55f8441d29eef3c0bfe32835586a3827",
+      "sourceContentSha256": "03796a556ceb8761334475d4539c402b0bb1a4451caea854f71ebf1a9b2dbd9b",
       "rawRail": {
         "name": "ListAdminAuditLog",
         "type": "query",
@@ -117117,7 +117701,7 @@
         "pnpm --filter @dvt/web test:unit:run -- src/app/services/workspace/workspacePorts.api.test.ts"
       ],
       "sourcePath": "apps/web/src/app/services/workspace/workspacePorts.api.ts",
-      "sourceContentSha256": "7f86058d2834a24953a3b5242b012eca55f8441d29eef3c0bfe32835586a3827",
+      "sourceContentSha256": "03796a556ceb8761334475d4539c402b0bb1a4451caea854f71ebf1a9b2dbd9b",
       "rawRail": {
         "name": "ListAdminRoles",
         "type": "query",
@@ -170593,6 +171177,223 @@
       "createdAt": "2026-08-02T14:27:31.157Z"
     },
     {
+      "railId": "local#W4-SOURCE-DATA-SAMPLE#query#previewwarehousesourceobjectrows",
+      "featureId": "W4-SOURCE-DATA-SAMPLE",
+      "mechanizationStatus": "implemented",
+      "railName": "PreviewWarehouseSourceObjectRows",
+      "normalizedRailName": "previewwarehousesourceobjectrows",
+      "railType": "query",
+      "dddOwner": "WarehouseSourceDataSampleReadModel",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "packages/@dvt/contracts/src/contracts/source-import/SourceDataSample.v1.ts#SourceDataSampleResponseSchema",
+        "apps/api/src/application/services/previewWarehouseSourceObjectRowsUseCase.ts#PreviewWarehouseSourceObjectRowsUseCase",
+        "apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.ts#WorkspaceWarehouseConnectionProbe",
+        "apps/web/src/app/views/canvas/canvasSourceDataSample.ts#resolveCanvasSourceDataSampleTarget",
+        "apps/web/src/app/plugins/graph/GraphNodeOperationalRail.tsx#GraphNodeOperationalRail"
+      ],
+      "implementationRefs": [
+        "packages/@dvt/contracts/src/contracts/source-import/SourceDataSample.v1.ts#SourceDataSampleResponseSchema",
+        "apps/api/src/application/services/previewWarehouseSourceObjectRowsUseCase.ts#PreviewWarehouseSourceObjectRowsUseCase",
+        "apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.ts#WorkspaceWarehouseConnectionProbe",
+        "apps/web/src/app/views/canvas/canvasSourceDataSample.ts#resolveCanvasSourceDataSampleTarget",
+        "apps/web/src/app/plugins/graph/GraphNodeOperationalRail.tsx#GraphNodeOperationalRail"
+      ],
+      "documentationRefs": ["docs/evidence/ED-20260817-source-data-sample.md"],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md",
+        "docs/guides/ai-work-protocol.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "packages/@dvt/contracts/src/contracts/source-import/SourceDataSample.v1.ts",
+        "apps/api/src/application/services/previewWarehouseSourceObjectRowsUseCase.ts",
+        "apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.ts",
+        "apps/web/src/app/views/canvas",
+        "apps/web/src/app/plugins/graph/GraphNodeOperationalRail.tsx"
+      ],
+      "architectureGuards": [
+        "SourceDataSample schemas reject SQL and credential-shaped fields and cap responses at 50 rows."
+      ],
+      "completionGate": [
+        "pnpm exec vitest run packages/@dvt/contracts/test/source-import/SourceDataSample.v1.test.ts",
+        "pnpm exec vitest run --config apps/api/vitest.config.ts apps/api/test/application/services/previewWarehouseSourceObjectRowsUseCase.test.ts apps/api/test/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.test.ts apps/api/test/entrypoints/http/workspaceWarehouseConnections.test.ts",
+        "pnpm exec vitest run --config apps/web/vitest.config.ts apps/web/src/app/plugins/graph/GraphNodeOperationalRail.test.tsx apps/web/src/app/views/canvas/CanvasViewport.nodeOperationalRail.test.tsx apps/web/src/app/components/shell/OperationalDrawerPanels.test.tsx",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2417",
+      "sourceContentSha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179",
+      "rawRail": {
+        "name": "PreviewWarehouseSourceObjectRows",
+        "type": "query",
+        "status": "implemented",
+        "dddOwner": "WarehouseSourceDataSampleReadModel",
+        "negativeTests": [
+          "Reject invalid limits, unsupported or absent relations, missing connections, unauthorized workspaces, timeout, provider failure, client SQL, and credential-shaped payloads."
+        ],
+        "adapterSurface": "GET /workspace/warehouse/connections/:connectionId/source-data-sample and workspace source-data-sample query port",
+        "applicationPort": "PreviewWarehouseSourceObjectRowsUseCase through IWarehouseSourceDataSampleProbe",
+        "authorizationScope": "active tenant, project, environment, workspace:source-import:view, governed connection, relational object SELECT privilege"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "SourceDataSampleResponseSchema",
+            "path": "packages/@dvt/contracts/src/contracts/source-import/SourceDataSample.v1.ts",
+            "cqRails": ["PreviewWarehouseSourceObjectRows"],
+            "dddOwner": "WarehouseSourceDataSampleReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/source-import/SourceDataSample.v1.test.ts",
+              "apps/api/test/application/services/previewWarehouseSourceObjectRowsUseCase.test.ts",
+              "apps/web/src/app/plugins/graph/GraphNodeOperationalRail.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Reuse BottomOperationalDrawer and keep catalog discovery separate from bounded row sampling."
+            ],
+            "cypressCoverage": "Headed agent-browser verifies health click, double-click sample, Enter sample, real rows, ES copy, and drawer-scoped axe audit.",
+            "architectureGuard": "SourceDataSample schemas reject SQL and credential-shaped fields and cap responses at 50 rows."
+          },
+          {
+            "name": "PreviewWarehouseSourceObjectRowsUseCase",
+            "path": "apps/api/src/application/services/previewWarehouseSourceObjectRowsUseCase.ts",
+            "cqRails": ["PreviewWarehouseSourceObjectRows"],
+            "dddOwner": "WarehouseSourceDataSampleReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/source-import/SourceDataSample.v1.test.ts",
+              "apps/api/test/application/services/previewWarehouseSourceObjectRowsUseCase.test.ts",
+              "apps/web/src/app/plugins/graph/GraphNodeOperationalRail.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Reuse BottomOperationalDrawer and keep catalog discovery separate from bounded row sampling."
+            ],
+            "cypressCoverage": "Headed agent-browser verifies health click, double-click sample, Enter sample, real rows, ES copy, and drawer-scoped axe audit.",
+            "architectureGuard": "SourceDataSample schemas reject SQL and credential-shaped fields and cap responses at 50 rows."
+          },
+          {
+            "name": "WorkspaceWarehouseConnectionProbe",
+            "path": "apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.ts",
+            "cqRails": ["PreviewWarehouseSourceObjectRows"],
+            "dddOwner": "WarehouseSourceDataSampleReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/source-import/SourceDataSample.v1.test.ts",
+              "apps/api/test/application/services/previewWarehouseSourceObjectRowsUseCase.test.ts",
+              "apps/web/src/app/plugins/graph/GraphNodeOperationalRail.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Reuse BottomOperationalDrawer and keep catalog discovery separate from bounded row sampling."
+            ],
+            "cypressCoverage": "Headed agent-browser verifies health click, double-click sample, Enter sample, real rows, ES copy, and drawer-scoped axe audit.",
+            "architectureGuard": "SourceDataSample schemas reject SQL and credential-shaped fields and cap responses at 50 rows."
+          },
+          {
+            "name": "resolveCanvasSourceDataSampleTarget",
+            "path": "apps/web/src/app/views/canvas/canvasSourceDataSample.ts",
+            "cqRails": ["PreviewWarehouseSourceObjectRows"],
+            "dddOwner": "WarehouseSourceDataSampleReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/source-import/SourceDataSample.v1.test.ts",
+              "apps/api/test/application/services/previewWarehouseSourceObjectRowsUseCase.test.ts",
+              "apps/web/src/app/plugins/graph/GraphNodeOperationalRail.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Reuse BottomOperationalDrawer and keep catalog discovery separate from bounded row sampling."
+            ],
+            "cypressCoverage": "Headed agent-browser verifies health click, double-click sample, Enter sample, real rows, ES copy, and drawer-scoped axe audit.",
+            "architectureGuard": "SourceDataSample schemas reject SQL and credential-shaped fields and cap responses at 50 rows."
+          },
+          {
+            "name": "GraphNodeOperationalRail",
+            "path": "apps/web/src/app/plugins/graph/GraphNodeOperationalRail.tsx",
+            "cqRails": ["PreviewWarehouseSourceObjectRows"],
+            "dddOwner": "WarehouseSourceDataSampleReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/source-import/SourceDataSample.v1.test.ts",
+              "apps/api/test/application/services/previewWarehouseSourceObjectRowsUseCase.test.ts",
+              "apps/web/src/app/plugins/graph/GraphNodeOperationalRail.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Reuse BottomOperationalDrawer and keep catalog discovery separate from bounded row sampling."
+            ],
+            "cypressCoverage": "Headed agent-browser verifies health click, double-click sample, Enter sample, real rows, ES copy, and drawer-scoped axe audit.",
+            "architectureGuard": "SourceDataSample schemas reject SQL and credential-shaped fields and cap responses at 50 rows."
+          }
+        ],
+        "version": 1,
+        "featureId": "W4-SOURCE-DATA-SAMPLE",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2417"],
+        "cypressFlows": [
+          "Headed agent-browser verifies health click, double-click sample, Enter sample, real rows, ES copy, and drawer-scoped axe audit."
+        ],
+        "domainObjects": ["SourceDataSample", "GovernedRelationalSourceObject"],
+        "fowlerSignals": [
+          "Reuse BottomOperationalDrawer and keep catalog discovery separate from bounded row sampling."
+        ],
+        "completionGate": [
+          "pnpm exec vitest run packages/@dvt/contracts/test/source-import/SourceDataSample.v1.test.ts",
+          "pnpm exec vitest run --config apps/api/vitest.config.ts apps/api/test/application/services/previewWarehouseSourceObjectRowsUseCase.test.ts apps/api/test/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.test.ts apps/api/test/entrypoints/http/workspaceWarehouseConnections.test.ts",
+          "pnpm exec vitest run --config apps/web/vitest.config.ts apps/web/src/app/plugins/graph/GraphNodeOperationalRail.test.tsx apps/web/src/app/views/canvas/CanvasViewport.nodeOperationalRail.test.tsx apps/web/src/app/components/shell/OperationalDrawerPanels.test.tsx",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "previewwarehousesourceobjectrows-record",
+            "redTest": "Focused tests fail when the query is absent, the gesture propagates, the health popover remains open, or stale rows survive a node change.",
+            "greenTest": "Focused contract, API, HTTP, web interaction, drawer, and headed browser validations pass with real dvt.public.pth2_orders rows.",
+            "patchSurfaces": [
+              "packages/@dvt/contracts/src/contracts/source-import/SourceDataSample.v1.ts",
+              "apps/api/src/application/services/previewWarehouseSourceObjectRowsUseCase.ts",
+              "apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.ts",
+              "apps/web/src/app/views/canvas/CanvasViewport.tsx",
+              "apps/web/src/app/components/shell/OperationalDrawerPanels.tsx"
+            ],
+            "expectedFailure": "No authorized bounded row query exists and double-clicking the gray metrics rail cannot open real source rows in the existing drawer."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/guides/ai-work-protocol.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "PreviewWarehouseSourceObjectRows",
+            "type": "query",
+            "status": "implemented",
+            "dddOwner": "WarehouseSourceDataSampleReadModel",
+            "negativeTests": [
+              "Reject invalid limits, unsupported or absent relations, missing connections, unauthorized workspaces, timeout, provider failure, client SQL, and credential-shaped payloads."
+            ],
+            "adapterSurface": "GET /workspace/warehouse/connections/:connectionId/source-data-sample and workspace source-data-sample query port",
+            "applicationPort": "PreviewWarehouseSourceObjectRowsUseCase through IWarehouseSourceDataSampleProbe",
+            "authorizationScope": "active tenant, project, environment, workspace:source-import:view, governed connection, relational object SELECT privilege"
+          }
+        ],
+        "architectureGuards": [
+          "SourceDataSample schemas reject SQL and credential-shaped fields and cap responses at 50 rows."
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2417",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/contracts/src/contracts/source-import/SourceDataSample.v1.ts",
+          "apps/api/src/application/services/previewWarehouseSourceObjectRowsUseCase.ts",
+          "apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.ts",
+          "apps/web/src/app/views/canvas",
+          "apps/web/src/app/plugins/graph/GraphNodeOperationalRail.tsx"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "client-authored SQL or credential values",
+          "parallel modal, drawer, or global row-sample store"
+        ]
+      },
+      "revision": 0,
+      "createdBy": "codex",
+      "createdAt": "2026-08-17T12:18:34.852Z"
+    },
+    {
       "railId": "local#WEB-API-AUTHORITY-HARDCUT-20260510#query#getruntimecapabilities",
       "featureId": "WEB-API-AUTHORITY-HARDCUT-20260510",
       "mechanizationStatus": "implemented",
@@ -210521,6 +211322,100 @@
         "sourceContentSha256": "4b8d22e20aa0ddc00b182ccbf1a5d863e97276446847bdb9cde86e2c25b68883"
       },
       "createdAt": "2026-08-16T00:49:08.041Z"
+    },
+    {
+      "operationId": "c7da1869-0053-4eae-8761-f4b57fd9d332",
+      "idempotencyKey": "w4-source-data-sample-mechanization-20260817",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#W4-SOURCE-DATA-SAMPLE#query#previewwarehousesourceobjectrows",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2417",
+      "sourceContentSha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "Focused tests fail when the query is absent, the gesture propagates, the health popover remains open, or stale rows survive a node change.",
+        "dddOwner": "WarehouseSourceDataSampleReadModel",
+        "railName": "PreviewWarehouseSourceObjectRows",
+        "railType": "query",
+        "featureId": "W4-SOURCE-DATA-SAMPLE",
+        "greenTest": "Focused contract, API, HTTP, web interaction, drawer, and headed browser validations pass with real dvt.public.pth2_orders rows.",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2417",
+        "unitTests": [
+          "packages/@dvt/contracts/test/source-import/SourceDataSample.v1.test.ts",
+          "apps/api/test/application/services/previewWarehouseSourceObjectRowsUseCase.test.ts",
+          "apps/web/src/app/plugins/graph/GraphNodeOperationalRail.test.tsx"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2417"],
+        "cypressFlows": [
+          "Headed agent-browser verifies health click, double-click sample, Enter sample, real rows, ES copy, and drawer-scoped axe audit."
+        ],
+        "domainObjects": ["SourceDataSample", "GovernedRelationalSourceObject"],
+        "fowlerSignals": [
+          "Reuse BottomOperationalDrawer and keep catalog discovery separate from bounded row sampling."
+        ],
+        "negativeTests": [
+          "Reject invalid limits, unsupported or absent relations, missing connections, unauthorized workspaces, timeout, provider failure, client SQL, and credential-shaped payloads."
+        ],
+        "patchSurfaces": [
+          "packages/@dvt/contracts/src/contracts/source-import/SourceDataSample.v1.ts",
+          "apps/api/src/application/services/previewWarehouseSourceObjectRowsUseCase.ts",
+          "apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.ts",
+          "apps/web/src/app/views/canvas/CanvasViewport.tsx",
+          "apps/web/src/app/components/shell/OperationalDrawerPanels.tsx"
+        ],
+        "adapterSurface": "GET /workspace/warehouse/connections/:connectionId/source-data-sample and workspace source-data-sample query port",
+        "completionGate": [
+          "pnpm exec vitest run packages/@dvt/contracts/test/source-import/SourceDataSample.v1.test.ts",
+          "pnpm exec vitest run --config apps/api/vitest.config.ts apps/api/test/application/services/previewWarehouseSourceObjectRowsUseCase.test.ts apps/api/test/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.test.ts apps/api/test/entrypoints/http/workspaceWarehouseConnections.test.ts",
+          "pnpm exec vitest run --config apps/web/vitest.config.ts apps/web/src/app/plugins/graph/GraphNodeOperationalRail.test.tsx apps/web/src/app/views/canvas/CanvasViewport.nodeOperationalRail.test.tsx apps/web/src/app/components/shell/OperationalDrawerPanels.test.tsx",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "PreviewWarehouseSourceObjectRowsUseCase through IWarehouseSourceDataSampleProbe",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "No authorized bounded row query exists and double-clicking the gray metrics rail cannot open real source rows in the existing drawer.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/guides/ai-work-protocol.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260817-source-data-sample.md"
+        ],
+        "architectureGuards": [
+          "SourceDataSample schemas reject SQL and credential-shaped fields and cap responses at 50 rows."
+        ],
+        "authorizationScope": "active tenant, project, environment, workspace:source-import:view, governed connection, relational object SELECT privilege",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2417",
+        "implementationRefs": [
+          "packages/@dvt/contracts/src/contracts/source-import/SourceDataSample.v1.ts#SourceDataSampleResponseSchema",
+          "apps/api/src/application/services/previewWarehouseSourceObjectRowsUseCase.ts#PreviewWarehouseSourceObjectRowsUseCase",
+          "apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.ts#WorkspaceWarehouseConnectionProbe",
+          "apps/web/src/app/views/canvas/canvasSourceDataSample.ts#resolveCanvasSourceDataSampleTarget",
+          "apps/web/src/app/plugins/graph/GraphNodeOperationalRail.tsx#GraphNodeOperationalRail"
+        ],
+        "normalizedRailName": "previewwarehousesourceobjectrows",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/contracts/src/contracts/source-import/SourceDataSample.v1.ts",
+          "apps/api/src/application/services/previewWarehouseSourceObjectRowsUseCase.ts",
+          "apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.ts",
+          "apps/web/src/app/views/canvas",
+          "apps/web/src/app/plugins/graph/GraphNodeOperationalRail.tsx"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "client-authored SQL or credential values",
+          "parallel modal, drawer, or global row-sample store"
+        ]
+      },
+      "createdAt": "2026-08-17T12:18:34.852Z"
     }
   ],
   "governanceComponentDefinitions": [
