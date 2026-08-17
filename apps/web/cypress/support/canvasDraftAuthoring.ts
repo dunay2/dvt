@@ -212,14 +212,17 @@ export function buildCanvasAuthoringDraft({
       { name: 'order_id', type: 'integer' },
       { name: 'customer', type: 'text' },
       { name: 'amount', type: 'numeric' },
+      { name: 'status', type: 'text' },
+      { name: 'created_at', type: 'timestamp' },
+      { name: 'region', type: 'text' },
     ];
     return buildWorkspaceGraphAuthoringDraft({
       canvas,
       nodeIds: ['source-orders', 'model-orders', 'sink-orders'],
       nodePositions: {
         'source-orders': { x: 40, y: 140 },
-        'model-orders': { x: 420, y: 140 },
-        'sink-orders': { x: 800, y: 140 },
+        'model-orders': { x: 620, y: 140 },
+        'sink-orders': { x: 1200, y: 140 },
       },
       nodes: [
         {

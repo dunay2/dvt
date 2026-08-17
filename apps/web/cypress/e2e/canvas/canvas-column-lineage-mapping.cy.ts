@@ -84,11 +84,22 @@ describe('Canvas column lineage mapping', () => {
   });
 
   it('creates, changes, collapses, restores, and removes recipe-derived mappings', () => {
+    cy.viewport(1920, 1080);
     visitColumnMappingCanvas('en');
 
     cy.get('.react-flow__edge-columnLineage').should('not.exist');
     toggleColumns('source-orders');
     toggleColumns('model-orders');
+    canvasNode('source-orders')
+      .find('[data-slot="graph-node-column-row"]')
+      .should('have.length', 5);
+    canvasNode('model-orders').find('[data-slot="graph-node-column-row"]').should('have.length', 5);
+    canvasNode('source-orders').contains('button', 'Show remaining columns (1)').click();
+    canvasNode('model-orders').contains('button', 'Show remaining columns (1)').click();
+    canvasNode('source-orders')
+      .find('[data-slot="graph-node-column-row"]')
+      .should('have.length', 6);
+    canvasNode('model-orders').find('[data-slot="graph-node-column-row"]').should('have.length', 6);
     cy.get(
       '.react-flow__edge[data-id="edge-source-model"]:not(.react-flow__edge-columnLineage) .react-flow__edge-path'
     ).should(($edgePath) => {
@@ -167,7 +178,7 @@ describe('Canvas column lineage mapping', () => {
       .find('[data-slot="canvas-node-port-handle"][aria-label="Map into customer"]')
       .click();
     cy.get('.react-flow__edge-columnLineage[aria-label="customer → customer"]').should('exist');
-    canvasNode('model-orders').find('[data-slot="graph-node-column-row"]').should('have.length', 3);
+    canvasNode('model-orders').find('[data-slot="graph-node-column-row"]').should('have.length', 6);
 
     canvasNode('source-orders')
       .find('[data-slot="canvas-node-port-handle"][aria-label="Connect customer output"]')
