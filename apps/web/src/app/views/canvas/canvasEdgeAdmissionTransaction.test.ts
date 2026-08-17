@@ -5,7 +5,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { getPluginPortMap } from '../../plugins/registry';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasDraftSession } from './canvasDraftSession';
-import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
+import {
+  applyDvtVisualTransformRecipe,
+  readDvtTransformAuthoringAuthority,
+} from './canvasDvtTransformAuthoringAuthority';
 import {
   resolveCanvasEdgeConfirmationTransaction,
   resolveCanvasEdgeReconnectTransaction,
@@ -224,6 +227,103 @@ describe('canvasEdgeAdmissionTransaction', () => {
     expect(authority.recipe.outputs.flatMap((output) => output.expression.inputs)).toEqual([
       { nodeId: firstSource.id, columnName: 'first_only' },
       { nodeId: secondSource.id, columnName: 'second_only' },
+    ]);
+  });
+
+  it('preserves declared mappings when a new stage link exposes a matching column name', () => {
+    const firstSource = {
+      ...buildCanonicalNode('source-node', 'input', 'dvt:source'),
+      metadata: { columns: [{ name: 'customer', type: 'text' }] },
+    };
+    const secondSource = {
+      ...buildCanonicalNode('second-source', 'input', 'dvt:source'),
+      metadata: {
+        columns: [
+          { name: 'customer_label', type: 'text' },
+          { name: 'amount', type: 'numeric' },
+        ],
+      },
+    };
+    const transform = applyDvtVisualTransformRecipe(
+      buildCanonicalNode('transform-node', 'transform', 'dvt:sql_transform'),
+      {
+        version: 'v1',
+        outputs: [
+          {
+            id: 'output:customer_label',
+            name: 'customer_label',
+            dataType: 'text',
+            expression: {
+              inputs: [{ nodeId: firstSource.id, columnName: 'customer' }],
+              operations: [{ kind: 'passthrough' }],
+            },
+          },
+        ],
+        filters: [],
+      }
+    );
+    const canonicalNodesById = new Map<string, CanonicalNode>([
+      [firstSource.id, firstSource],
+      [secondSource.id, secondSource],
+      [transform.id, transform],
+    ]);
+    const firstEdge: Edge = {
+      id: 'first-source-to-transform',
+      source: firstSource.id,
+      target: transform.id,
+    };
+    const draftSession: CanvasDraftSession = {
+      ...buildDraftSession([{ sourceId: firstSource.id, targetId: transform.id }]),
+      localNodeCatalog: { [transform.id]: transform },
+      workingSet: {
+        visibleNodeIds: [firstSource.id, secondSource.id, transform.id],
+        visibleEdges: [{ sourceId: firstSource.id, targetId: transform.id }],
+        pendingExplicitNodeIds: [],
+      },
+    };
+
+    const transaction = resolveCanvasEdgeConfirmationTransaction({
+      canonicalNodesById,
+      connection: {
+        source: secondSource.id,
+        sourceHandle: null,
+        target: transform.id,
+        targetHandle: null,
+      },
+      draftSession,
+      edges: [firstEdge],
+      pluginPortMap,
+    });
+
+    expect(transaction.outcome).toBe('confirmed');
+    if (transaction.outcome !== 'confirmed') {
+      throw new Error('Expected a confirmed edge transaction');
+    }
+    const mappedTransform = transaction.draftSession.localNodeCatalog?.[transform.id];
+    if (mappedTransform == null) throw new Error('Expected the transform recipe to remain local');
+    const authority = readDvtTransformAuthoringAuthority(mappedTransform);
+    if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.visual) {
+      throw new Error('Expected visual transform authority');
+    }
+    expect(authority.recipe.outputs).toEqual([
+      {
+        id: 'output:customer_label',
+        name: 'customer_label',
+        dataType: 'text',
+        expression: {
+          inputs: [{ nodeId: firstSource.id, columnName: 'customer' }],
+          operations: [{ kind: 'passthrough' }],
+        },
+      },
+      {
+        id: 'output:amount',
+        name: 'amount',
+        dataType: 'numeric',
+        expression: {
+          inputs: [{ nodeId: secondSource.id, columnName: 'amount' }],
+          operations: [{ kind: 'passthrough' }],
+        },
+      },
     ]);
   });
 

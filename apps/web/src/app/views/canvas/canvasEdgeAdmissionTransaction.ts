@@ -85,7 +85,9 @@ function applyConfirmedConnectionColumnMappings(args: {
     node: targetNode,
     nodes,
     edges: args.transaction.draftSession.workingSet.visibleEdges,
-  }).columns.visible.map((column) => ({ name: column.name, type: column.type }));
+  }).columns.visible.flatMap((column) =>
+    column.provenance === 'declared' ? [] : [{ name: column.name, type: column.type }]
+  );
   const mappingResult = automapCanvasColumns({
     draftSession: args.transaction.draftSession,
     canonicalNodesById: args.canonicalNodesById,

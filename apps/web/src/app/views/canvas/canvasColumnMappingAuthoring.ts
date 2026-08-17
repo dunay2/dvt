@@ -259,12 +259,27 @@ export function automapCanvasColumns(args: {
   targetNodeId: string;
   targetColumns: readonly Column[];
 }): CanvasColumnAutomapResult {
+  const targetNode = resolveSessionNode(
+    args.draftSession,
+    args.canonicalNodesById,
+    args.targetNodeId
+  );
+  if (targetNode == null) return { outcome: 'rejected', reason: 'target_node_not_found' };
+  const recipeResult = readEditableRecipe(targetNode);
+  if (recipeResult.outcome === 'rejected') return recipeResult;
+  const mappedInputs = new Set(
+    recipeResult.recipe.outputs.flatMap((output) =>
+      output.expression.inputs.map((input) => `${input.nodeId}\u0000${input.columnName}`)
+    )
+  );
   const upstreamNodes = args.draftSession.workingSet.visibleEdges
     .filter((edge) => edge.targetId === args.targetNodeId)
     .map((edge) => resolveSessionNode(args.draftSession, args.canonicalNodesById, edge.sourceId))
     .filter((node): node is CanonicalNode => node != null);
   const candidates = upstreamNodes.flatMap((node) =>
-    readColumns(node).map((column) => ({ node, column }))
+    readColumns(node).flatMap((column) =>
+      mappedInputs.has(`${node.id}\u0000${column.name}`) ? [] : [{ node, column }]
+    )
   );
   let draftSession = args.draftSession;
   let appliedCount = 0;
