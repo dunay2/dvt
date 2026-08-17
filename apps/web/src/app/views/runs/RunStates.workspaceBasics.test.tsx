@@ -39,12 +39,19 @@ describe('RunStates workspace basics', () => {
     );
 
     expect(harness.container.textContent).toContain('snapshot-only');
-    expect(harness.container.textContent).toContain(
-      'No runtime events are available yet for this run.'
-    );
     expect(harness.container.textContent).toContain('Runtime snapshot');
     expect(harness.container.textContent).toContain('Current step');
     expect(harness.container.textContent).toContain('step-transform');
+
+    await act(async () => {
+      harness.container
+        .querySelectorAll<HTMLButtonElement>('[role="tab"]')[3]
+        ?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }));
+    });
+
+    expect(harness.container.textContent).toContain(
+      'No runtime events are available yet for this run.'
+    );
   });
 
   it('renders snapshot-plus-events run detail state', async () => {
@@ -52,6 +59,13 @@ describe('RunStates workspace basics', () => {
 
     expect(harness.container.textContent).toContain('snapshot+timeline');
     expect(harness.container.textContent).toContain('Runtime snapshot');
+
+    await act(async () => {
+      harness.container
+        .querySelectorAll<HTMLButtonElement>('[role="tab"]')[3]
+        ?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }));
+    });
+
     expect(harness.container.textContent).toContain('Event timeline');
     expect(harness.container.textContent).toContain('StepStarted');
     expect(harness.container.textContent).toContain('INFO');
@@ -81,6 +95,12 @@ describe('RunStates workspace basics', () => {
           )}
         />
       );
+
+      await act(async () => {
+        harness.container
+          .querySelectorAll<HTMLButtonElement>('[role="tab"]')[3]
+          ?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }));
+      });
 
       expect(harness.container.textContent).toContain(message);
       expect(harness.container.textContent).not.toContain(
@@ -199,13 +219,21 @@ describe('RunStates workspace basics', () => {
     expect(content).toContain('Vista previa de ejecución');
     expect(content).toContain('Instantánea de ejecución');
     expect(content).toContain('Campos de la instantánea');
-    expect(content).toContain('Cronología de eventos');
-    expect(content).toContain('Paso iniciado');
-    expect(content).toContain('EstadoCompletada');
-    expect(content).toContain('Consulta de trazas');
-    expect(content).toContain('Consulta de registros');
-    expect(content).not.toContain('Trace query');
-    expect(content).not.toContain('Log query');
+
+    await act(async () => {
+      harness.container
+        .querySelectorAll<HTMLButtonElement>('[role="tab"]')[3]
+        ?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }));
+    });
+
+    const diagnosticsContent = harness.container.textContent ?? '';
+    expect(diagnosticsContent).toContain('Cronología de eventos');
+    expect(diagnosticsContent).toContain('Paso iniciado');
+    expect(diagnosticsContent).toContain('EstadoCompletada');
+    expect(diagnosticsContent).toContain('Consulta de trazas');
+    expect(diagnosticsContent).toContain('Consulta de registros');
+    expect(diagnosticsContent).not.toContain('Trace query');
+    expect(diagnosticsContent).not.toContain('Log query');
     expect(content).not.toContain('Run itinerary');
     expect(content).not.toContain('Runtime snapshot');
     expect(content).not.toContain('Event timeline');
@@ -257,7 +285,24 @@ describe('RunStates workspace basics', () => {
     expect(harness.container.textContent).not.toContain('Event timeline');
 
     await act(async () => {
-      tabs[3]?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      tabs[1]?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }));
+    });
+
+    expect(tabs[1]?.getAttribute('aria-selected')).toBe('true');
+    expect(harness.container.textContent).toContain('Materialization evidence');
+    expect(harness.container.textContent).not.toContain('Run itinerary');
+
+    await act(async () => {
+      tabs[2]?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }));
+    });
+
+    expect(tabs[2]?.getAttribute('aria-selected')).toBe('true');
+    expect(harness.container.textContent).toContain('Execution Preview and authoring provenance');
+    expect(harness.container.textContent).toContain('Execution provenance');
+    expect(harness.container.textContent).not.toContain('Materialization evidence');
+
+    await act(async () => {
+      tabs[3]?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }));
     });
 
     expect(tabs[3]?.getAttribute('aria-selected')).toBe('true');
