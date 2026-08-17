@@ -147,10 +147,10 @@ describe('BottomOperationalDrawer', () => {
     ).toContain('Operaciones');
     expect(
       document.body.querySelector('[data-slot="bottom-operational-drawer-run-badge"]')?.textContent
-    ).toBe('Ejecucion run-42');
+    ).toBe('Ejecución run-42');
     expect(
       document.body.querySelector('[data-slot="bottom-operational-feed-health"]')?.textContent
-    ).toContain('La actualizacion de eventos esta degradada temporalmente.');
+    ).toContain('La actualización de eventos está degradada temporalmente.');
     expect(
       document.body.querySelector('[data-slot="bottom-operational-feed-retry"]')?.textContent
     ).toBe('Reintentar eventos');
