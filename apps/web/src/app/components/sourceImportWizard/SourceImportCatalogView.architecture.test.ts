@@ -5,6 +5,10 @@ import { describe, expect, it } from 'vitest';
 
 const CATALOG_VIEW_PATH = resolve(import.meta.dirname, 'SourceImportCatalogView.tsx');
 const CATALOG_PRIMITIVES_PATH = resolve(import.meta.dirname, 'SourceImportCatalogPrimitives.tsx');
+const ACTIVE_OBJECT_METADATA_PATH = resolve(
+  import.meta.dirname,
+  'SourceImportActiveObjectMetadata.tsx'
+);
 const CATALOG_MODEL_PATH = resolve(import.meta.dirname, 'sourceImportCatalogModel.ts');
 const WIZARD_MODEL_PATH = resolve(import.meta.dirname, 'sourceImportWizardModel.ts');
 const WIZARD_FRAME_PATH = resolve(import.meta.dirname, 'SourceImportWizardFrame.tsx');
@@ -13,6 +17,7 @@ describe('SourceImportCatalogView architecture', () => {
   it('delegates Add Source catalog presentation to component primitives', () => {
     const source = readFileSync(CATALOG_VIEW_PATH, 'utf8');
     const primitives = readFileSync(CATALOG_PRIMITIVES_PATH, 'utf8');
+    const activeObjectMetadata = readFileSync(ACTIVE_OBJECT_METADATA_PATH, 'utf8');
 
     expect(source).toContain("from './SourceImportCatalogPrimitives'");
     expect(source).not.toContain("from 'lucide-react'");
@@ -22,7 +27,10 @@ describe('SourceImportCatalogView architecture', () => {
     expect(primitives).toContain('sourceImportCatalogClassNames');
     expect(primitives).toContain('SourceImportObjectCard');
     expect(primitives).toContain('SourceImportSchemaHeader');
-    expect(primitives).toContain('SourceImportColumnPreviewList');
+    expect(primitives).not.toContain('SourceImportColumnPreviewList');
+    expect(primitives).not.toContain('MetricEvidenceHotspot');
+    expect(activeObjectMetadata).toContain('MetricEvidenceHotspot');
+    expect(activeObjectMetadata).toContain('data-source-import-metadata-column');
   });
 
   it('keeps the catalog read model separate from wizard flow policy', () => {
