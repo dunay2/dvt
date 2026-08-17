@@ -157,6 +157,133 @@ describe('useCanvasExecutionActions plan preview provenance', () => {
     expect(harness.shellFeedback.success).toHaveBeenCalledWith(canvasViewCopy.planCreatedMessage);
   });
 
+  it('previews exactly the SQL compiled from the visual recipe authority', async () => {
+    const plansService = createPlansServiceMock();
+    const sourceNode: CanonicalNode = {
+      id: 'source-orders',
+      name: 'Orders',
+      pluginId: 'dvt',
+      kind: 'dvt:source',
+      role: 'input',
+      status: 'idle',
+      tags: ['authoring'],
+      metadata: {
+        connectionRef: buildTestPostgresConnectionRef(),
+        config: { schema: 'raw', table: 'orders', alias: 'orders_source' },
+      },
+    };
+    const transformNode: CanonicalNode = {
+      id: 'visual-orders',
+      name: 'Visual orders',
+      pluginId: 'dvt',
+      kind: 'dvt:sql_transform',
+      role: 'transform',
+      status: 'idle',
+      tags: ['authoring'],
+      metadata: {
+        transformAuthoring: {
+          version: 'v1',
+          mode: 'visual',
+          recipe: {
+            version: 'v1',
+            outputs: [
+              {
+                id: 'output:order_id',
+                name: 'order_id',
+                dataType: 'integer',
+                expression: {
+                  inputs: [{ nodeId: sourceNode.id, columnName: 'order_id' }],
+                  operations: [{ kind: 'passthrough' }],
+                },
+              },
+              {
+                id: 'output:customer_name',
+                name: 'customer_name',
+                dataType: 'text',
+                expression: {
+                  inputs: [{ nodeId: sourceNode.id, columnName: 'customer' }],
+                  operations: [{ kind: 'function', functionId: 'upper', args: [] }],
+                },
+              },
+            ],
+            filters: [
+              {
+                id: 'filter:active',
+                input: { nodeId: sourceNode.id, columnName: 'active' },
+                operator: 'equals',
+                value: true,
+              },
+            ],
+          },
+        },
+      },
+    };
+    const sinkNode: CanonicalNode = {
+      id: 'sink-orders',
+      name: 'Orders output',
+      pluginId: 'dvt',
+      kind: 'dvt:sink',
+      role: 'output',
+      status: 'idle',
+      tags: ['authoring'],
+      metadata: { typeLabel: 'Sink' },
+    };
+    const canonicalNodes = [sourceNode, transformNode, sinkNode];
+    const canonicalEdges: CanonicalEdge[] = [
+      {
+        id: 'source-transform',
+        sourceId: sourceNode.id,
+        targetId: transformNode.id,
+        relation: 'lineage',
+      },
+      {
+        id: 'transform-sink',
+        sourceId: transformNode.id,
+        targetId: sinkNode.id,
+        relation: 'lineage',
+      },
+    ];
+    const workspaceFilePorts = createWorkspaceFilePortMocks({});
+    const expectedSql = [
+      'select',
+      '  "orders_source"."order_id" as "order_id",',
+      '  upper("orders_source"."customer") as "customer_name"',
+      'from "raw"."orders" as "orders_source"',
+      'where "orders_source"."active" = true;',
+      '',
+    ].join('\n');
+
+    harness = renderExecutionActionsHarness({
+      plansService,
+      runsService: createRunsServiceMock(),
+      ...workspaceFilePorts,
+      canonicalNodes,
+      canonicalEdges,
+      workspaceNodeIds: canonicalNodes.map((node) => node.id),
+      previewProvenanceConfig: { gitBranch: 'detached', gitSha: 'unknown' },
+    });
+    await harness.render();
+    await harness.clickPlan();
+
+    expect(workspaceFilePorts.workspaceFileContentCommand.saveFileContent).toHaveBeenCalledWith({
+      path: 'models/visual-orders.sql',
+      content: expectedSql,
+      expectedRevision: { kind: 'absent' },
+    });
+    expect(plansService.previewPlan).toHaveBeenCalledWith(
+      expect.objectContaining({
+        graphSource: expect.objectContaining({
+          nodes: expect.arrayContaining([
+            expect.objectContaining({
+              nodeId: transformNode.id,
+              stepTypeConfig: expect.objectContaining({ sql: expectedSql }),
+            }),
+          ]),
+        }),
+      })
+    );
+  });
+
   it('validates the flushed draft graph before previewing an authoring-generated workflow', async () => {
     const plansService = createPlansServiceMock();
     const authoringNodes: CanonicalNode[] = [

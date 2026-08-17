@@ -1,6 +1,6 @@
 /** Owned concern: resolve plan preview provenance through workspace file read/write ports. */
 import type { GitArtifactRef, TransformationGitArtifactsProvenance } from '@dvt/contracts';
-import { asSha256HexString } from '@dvt/contracts';
+import { DVT_TRANSFORM_AUTHORING_MODE, asSha256HexString } from '@dvt/contracts';
 import type { WorkspaceScope } from '../../ports/sessionContext';
 import type {
   IWorkspaceFileContentCommandPort,
@@ -27,6 +27,8 @@ import {
   readTransformationSqlMirrorState,
   resolveExecutableSqlText,
 } from './canvasTransformationSqlMirror';
+import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
+import { compileVisualTransformRecipeToPostgresSql } from './canvasVisualTransformSqlCompiler';
 
 export type PreviewProvenanceResolution =
   | {
@@ -267,6 +269,23 @@ function buildAuthoringPreviewSql({
   canonicalNodes: readonly CanonicalNode[];
   scopedNodeIds: readonly string[];
 }): string {
+  if (transformNode.pluginId === 'dvt' && transformNode.kind === 'dvt:sql_transform') {
+    const authority = readDvtTransformAuthoringAuthority(transformNode);
+    if (authority.mode === DVT_TRANSFORM_AUTHORING_MODE.visual) {
+      const scopedNodes = resolveScopedTransformationNodes(canonicalNodes, scopedNodeIds);
+      const source = requireSourcePayload(scopedNodes.source);
+      return compileVisualTransformRecipeToPostgresSql({
+        recipe: authority.recipe,
+        sourceBinding: {
+          nodeId: scopedNodes.source.id,
+          schema: source.payload.schema,
+          table: source.payload.table,
+          alias: source.payload.alias,
+        },
+      });
+    }
+  }
+
   const explicitSql = resolveExecutableSqlText(transformNode);
   if (!explicitSql.ok) {
     throw new Error(explicitSql.message);
