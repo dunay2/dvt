@@ -1,0 +1,15 @@
+{
+  "name": "Raven",
+  "short_name": "Raven",
+  "icons": [
+    {
+      "src": "/favicon/raven-icon.png",
+      "sizes": "1254x1254",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "theme_color": "#040712",
+  "background_color": "#040712",
+  "display": "standalone"
+}
