@@ -5,7 +5,10 @@ import { resolveNodeKindRegistration } from '../../plugins/nodeTypeRegistry';
 import type { MergedNodeDecoration } from '../../plugins/contracts/NodeRendering';
 import { createGraphFlowEdgeStyle, graphFlowPalette } from '../../plugins/graph/graphVisualTokens';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import type { CanvasNodePortCompatibilityView } from '../../components/canvas/CanvasNodePortHandle';
+import type {
+  CanvasNodePortCompatibilityView,
+  CanvasNodePortHandleKind,
+} from '../../components/canvas/CanvasNodePortHandle';
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 import type { CanvasNodePortCompatibilityByDirection } from './canvasConnectionCompatibilityPresenter';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
@@ -166,6 +169,8 @@ export function createCanvasDirectionalEdge({
     id,
     source,
     target,
+    sourceHandle: 'source' satisfies CanvasNodePortHandleKind,
+    targetHandle: 'target' satisfies CanvasNodePortHandleKind,
     ariaLabel,
     type: 'smoothstep',
     animated: false,
