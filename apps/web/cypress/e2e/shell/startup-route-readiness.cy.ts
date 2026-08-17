@@ -21,6 +21,50 @@ describe('Startup route readiness', () => {
     cy.get('#app-loading-screen').should('not.be.visible');
   });
 
+  it('serves the Raven browser icons with their declared formats', () => {
+    cy.visit('/login?returnTo=%2F');
+
+    cy.document().then((document) => {
+      expect(
+        Array.from(document.querySelectorAll<HTMLLinkElement>('link[rel="icon"]')).map(
+          ({ type, href }) => ({ type, path: new URL(href).pathname })
+        )
+      ).to.deep.equal([
+        { type: 'image/x-icon', path: '/favicon/favicon.ico' },
+        { type: 'image/png', path: '/favicon/raven-icon.png' },
+      ]);
+      expect(
+        document.querySelector<HTMLLinkElement>('link[rel="apple-touch-icon"]')?.href
+      ).to.include('/favicon/raven-icon.png');
+      expect(document.querySelector<HTMLLinkElement>('link[rel="manifest"]')?.href).to.include(
+        '/favicon/site.webmanifest'
+      );
+    });
+
+    cy.request<string>({ url: '/favicon/favicon.ico', encoding: 'binary' }).then((response) => {
+      expect(response.headers['content-type']).to.include('image/x-icon');
+      expect(Array.from(response.body.slice(0, 4), (value) => value.charCodeAt(0))).to.deep.equal([
+        0, 0, 1, 0,
+      ]);
+    });
+    cy.request<string>({ url: '/favicon/raven-icon.png', encoding: 'binary' }).then((response) => {
+      expect(response.headers['content-type']).to.include('image/png');
+      expect(Array.from(response.body.slice(0, 4), (value) => value.charCodeAt(0))).to.deep.equal([
+        0x89, 0x50, 0x4e, 0x47,
+      ]);
+    });
+    cy.request('/favicon/site.webmanifest')
+      .its('body.icons')
+      .should('deep.equal', [
+        {
+          src: '/favicon/raven-icon.png',
+          sizes: '1254x1254',
+          type: 'image/png',
+          purpose: 'any',
+        },
+      ]);
+  });
+
   it('keeps the fifth startup check pending until capabilities settle', () => {
     let releaseCapabilities: () => void = () => undefined;
     stubE2eApi(
