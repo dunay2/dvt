@@ -578,7 +578,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     );
     expect(codeViewer).not.toBeNull();
     expect(codeViewer?.dataset.language).toBe('sql');
-    expect(codeViewer?.dataset.path).toBe('models/dvt-sql-transform-1.sql');
+    expect(codeViewer?.dataset.path).toBe('models/transform-orders.sql');
     expect(codeViewer?.textContent).toBe(
       [
         'select',

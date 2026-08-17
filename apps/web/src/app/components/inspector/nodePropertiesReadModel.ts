@@ -4,6 +4,7 @@ import { ConnectedSourceRefSchema } from '@dvt/contracts';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasNodePresentationCopy } from '../canvas/canvasNodePresentationCopy.contract';
 import type {
+  CanvasNodeCodeLanguage,
   CanvasNodePresentationColumn,
   CanvasNodePresentationTruth,
 } from '../canvas/canvasNodePresentationTruth.contract';
@@ -83,6 +84,8 @@ export type NodePropertySection = Readonly<{
   emptyState?: string;
   description?: string;
   code?: string;
+  codeLanguage?: CanvasNodeCodeLanguage;
+  codePath?: string;
   columnLabels?: Readonly<Record<string, string>>;
 }>;
 
@@ -683,6 +686,8 @@ function createSection({
   emptyState,
   description,
   code,
+  codeLanguage,
+  codePath,
   columnLabels,
 }: Readonly<{
   id: NodePropertySectionId;
@@ -692,6 +697,8 @@ function createSection({
   emptyState?: string;
   description?: string;
   code?: string;
+  codeLanguage?: CanvasNodeCodeLanguage;
+  codePath?: string;
   columnLabels?: Readonly<Record<string, string>>;
 }>): NodePropertySection {
   return {
@@ -702,6 +709,8 @@ function createSection({
     ...(emptyState != null ? { emptyState } : {}),
     ...(description != null ? { description } : {}),
     ...(code != null ? { code } : {}),
+    ...(codeLanguage != null ? { codeLanguage } : {}),
+    ...(codePath != null ? { codePath } : {}),
     ...(columnLabels != null ? { columnLabels } : {}),
   };
 }
@@ -738,9 +747,9 @@ export function buildNodePropertiesReadModel({
     presentationCopy
   );
   const sinkRows = localizePropertyRows(buildSinkRows(node, metadata), presentationCopy);
-  const code =
+  const codeTruth =
     presentationTruth.code.kind === 'inline' || presentationTruth.code.kind === 'generated'
-      ? presentationTruth.code.content
+      ? presentationTruth.code
       : undefined;
   const columnsDescription =
     presentationCopy == null
@@ -890,7 +899,9 @@ export function buildNodePropertiesReadModel({
       createSection({
         id: 'code',
         label: sectionLabels?.code ?? presentationCopy?.codeLabel ?? 'Code',
-        code,
+        code: codeTruth?.content,
+        codeLanguage: codeTruth?.language,
+        codePath: codeTruth?.path,
         description: codeDescription,
         emptyState:
           presentationTruth.code.kind === 'unavailable'

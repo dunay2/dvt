@@ -9,6 +9,12 @@ import type { InspectorPanelContribution } from '../../plugins/contracts/PluginM
 import { NodePropertiesTabs } from './NodePropertiesTabs';
 import type { NodePropertiesReadModel } from './nodePropertiesReadModel';
 
+vi.mock('../monaco/MonacoCodeViewer', () => ({
+  MonacoCodeViewer: ({ value }: { value: string }) => (
+    <div data-testid="monaco-code-viewer">{value}</div>
+  ),
+}));
+
 const node: CanonicalNode = {
   id: 'src-orders',
   name: 'Orders Source',
@@ -95,7 +101,7 @@ describe('NodePropertiesTabs section content', () => {
     expect(columnsSection?.textContent).toContain('not null');
   });
 
-  it('renders code sections as a bounded code block', () => {
+  it('renders code sections through the bounded Monaco viewer', () => {
     const model: NodePropertiesReadModel = {
       nodeId: node.id,
       nodeName: node.name,
@@ -108,7 +114,10 @@ describe('NodePropertiesTabs section content', () => {
     ({ container, root } = renderNodePropertiesTabs(model, 'code'));
     const codeSection = container.querySelector('[data-slot="node-inspector-code-section"]');
 
-    expect(codeSection?.querySelector('pre')?.textContent).toBe('select * from orders');
+    expect(codeSection?.querySelector('[data-testid="monaco-code-viewer"]')?.textContent).toBe(
+      'select * from orders'
+    );
+    expect(codeSection?.querySelector('pre')).toBeNull();
     expect(codeSection?.textContent).toContain('select * from orders');
   });
 

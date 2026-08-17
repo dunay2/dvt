@@ -861,6 +861,8 @@ describe('nodePropertiesReadModel', () => {
 
     expect(sectionById(model, 'code')).toMatchObject({
       code: 'select * from raw_orders',
+      codeLanguage: 'sql',
+      codePath: 'models/orders.sql',
       description: 'Generated code at models/orders.sql.',
     });
   });
