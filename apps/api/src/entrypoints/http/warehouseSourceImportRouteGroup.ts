@@ -7,6 +7,7 @@ import { GraphDraftWarehouseSourceImportStrategy } from '../../application/servi
 import { ImportWarehouseSourcesUseCase } from '../../application/services/importWarehouseSourcesUseCase.js';
 import { ListWarehouseConnectionSourceObjectsUseCase } from '../../application/services/listWarehouseConnectionSourceObjectsUseCase.js';
 import { ListWarehouseConnectionsUseCase } from '../../application/services/listWarehouseConnectionsUseCase.js';
+import { PreviewWarehouseSourceObjectRowsUseCase } from '../../application/services/previewWarehouseSourceObjectRowsUseCase.js';
 import { RenameWarehouseConnectionUseCase } from '../../application/services/renameWarehouseConnectionUseCase.js';
 import { TestWarehouseConnectionUseCase } from '../../application/services/testWarehouseConnectionUseCase.js';
 import { WarehouseConnectionSourceObjectReader } from '../../application/services/WarehouseConnectionSourceObjectReader.js';
@@ -44,6 +45,7 @@ export function registerProtectedWarehouseSourceImportRouteGroup(
     ...options.runtimeAuth,
     listConnectionsUseCase: new ListWarehouseConnectionsUseCase(catalog),
     listSourceObjectsUseCase: new ListWarehouseConnectionSourceObjectsUseCase(sourceObjectReader),
+    previewSourceRowsUseCase: new PreviewWarehouseSourceObjectRowsUseCase(catalog, probe),
     createConnectionUseCase: new CreateWarehouseConnectionUseCase(catalog, probe),
     renameConnectionUseCase: new RenameWarehouseConnectionUseCase(catalog),
     testConnectionUseCase: new TestWarehouseConnectionUseCase(catalog, probe),

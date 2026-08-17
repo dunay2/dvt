@@ -21,6 +21,8 @@ export const RUNTIME_ROUTE_PATH = {
   warehouseConnections: '/workspace/warehouse/connections',
   warehouseConnection: '/workspace/warehouse/connections/:connectionId',
   warehouseConnectionSourceObjects: '/workspace/warehouse/connections/:connectionId/objects',
+  warehouseConnectionSourceDataSample:
+    '/workspace/warehouse/connections/:connectionId/source-data-sample',
   warehouseConnectionTest: '/workspace/warehouse/connections/:connectionId/test',
   warehouseSourcesImport: '/workspace/sources/import',
   workspaceFiles: '/workspace/files',

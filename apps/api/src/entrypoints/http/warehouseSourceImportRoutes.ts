@@ -3,6 +3,7 @@ import {
   CreateWarehouseConnectionRequestSchema,
   ImportSourceObjectsRequestV2Schema,
   RenameWarehouseConnectionRequestSchema,
+  SourceDataSampleRequestSchema,
 } from '@dvt/contracts';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 
@@ -21,9 +22,12 @@ import {
   WarehouseSourceImportIdempotencyMismatchError,
   SourceObjectNotFoundError,
   UnsupportedSourceObjectImportError,
+  UnsupportedWarehouseAdapterError,
   WarehouseSourceDiscoveryFailedError,
+  WarehouseSourceDataSampleFailedError,
   type CreateWarehouseConnectionInput,
   type ImportWarehouseSourcesInput,
+  type PreviewWarehouseSourceObjectRowsInput,
   type RenameWarehouseConnectionInput,
   type WarehouseConnectionType,
 } from '../../application/ports/warehouseSourceImport.js';
@@ -36,6 +40,7 @@ import { WarehouseSourceImportCanvasNotFoundError } from '../../application/serv
 import type { ImportWarehouseSourcesUseCase } from '../../application/services/importWarehouseSourcesUseCase.js';
 import type { ListWarehouseConnectionSourceObjectsUseCase } from '../../application/services/listWarehouseConnectionSourceObjectsUseCase.js';
 import type { ListWarehouseConnectionsUseCase } from '../../application/services/listWarehouseConnectionsUseCase.js';
+import type { PreviewWarehouseSourceObjectRowsUseCase } from '../../application/services/previewWarehouseSourceObjectRowsUseCase.js';
 import type { RenameWarehouseConnectionUseCase } from '../../application/services/renameWarehouseConnectionUseCase.js';
 import type { TestWarehouseConnectionUseCase } from '../../application/services/testWarehouseConnectionUseCase.js';
 import { EnvironmentId, ProjectId, TenantId } from '../../domain/auth/types.js';
@@ -51,6 +56,11 @@ type WarehouseSourceImportQuery = {
   readonly tenantId?: string;
   readonly projectId?: string;
   readonly environmentId?: string;
+};
+
+type WarehouseSourceDataSampleQuery = WarehouseSourceImportQuery & {
+  readonly objectId?: string;
+  readonly limit?: string;
 };
 
 type WarehouseConnectionParams = {
@@ -85,6 +95,7 @@ type WarehouseSourceImportRouteDeps = {
   readonly authorizer: AuthorizeCommandScopeService;
   readonly listConnectionsUseCase: ListWarehouseConnectionsUseCase;
   readonly listSourceObjectsUseCase: ListWarehouseConnectionSourceObjectsUseCase;
+  readonly previewSourceRowsUseCase: PreviewWarehouseSourceObjectRowsUseCase;
   readonly createConnectionUseCase: CreateWarehouseConnectionUseCase;
   readonly renameConnectionUseCase: RenameWarehouseConnectionUseCase;
   readonly testConnectionUseCase: TestWarehouseConnectionUseCase;
@@ -135,6 +146,61 @@ export function registerWarehouseSourceImportRoutes(
         if (error instanceof WarehouseSourceDiscoveryFailedError) {
           reply.code(422).send({
             error: { type: 'unprocessable_entity', reason: 'warehouse_source_discovery_failed' },
+          });
+          return;
+        }
+        throw error;
+      }
+    }
+  );
+
+  app.get<{ Params: WarehouseConnectionParams; Querystring: WarehouseSourceDataSampleQuery }>(
+    RUNTIME_ROUTE_PATH.warehouseConnectionSourceDataSample,
+    { config: { rateLimit: deps.rateLimit } },
+    async (request, reply) => {
+      const authorized = await authorizeWarehouseSourceImportRequest(request, reply, deps);
+      if (!authorized) return;
+
+      const parsed = parseSourceDataSampleQuery(
+        request.params.connectionId,
+        request.query,
+        authorized.scope
+      );
+      if (!parsed.ok) {
+        httpErrorTranslation.respond(reply, httpErrorTranslation.parse.issue(parsed.issue));
+        return;
+      }
+
+      try {
+        reply.code(200).send(await deps.previewSourceRowsUseCase.execute(parsed.value));
+      } catch (error) {
+        if (error instanceof WarehouseConnectionNotFoundError) {
+          reply.code(404).send({
+            error: { type: 'not_found', reason: 'warehouse_connection_not_found' },
+          });
+          return;
+        }
+        if (error instanceof SourceObjectNotFoundError) {
+          reply.code(404).send({
+            error: { type: 'not_found', reason: 'source_object_not_found' },
+          });
+          return;
+        }
+        if (error instanceof UnsupportedWarehouseAdapterError) {
+          reply.code(422).send({
+            error: { type: 'unprocessable_entity', reason: 'unsupported_warehouse_adapter' },
+          });
+          return;
+        }
+        if (
+          error instanceof WarehouseSourceDiscoveryFailedError ||
+          error instanceof WarehouseSourceDataSampleFailedError
+        ) {
+          reply.code(422).send({
+            error: {
+              type: 'unprocessable_entity',
+              reason: HTTP_ERROR_REASON.warehouseSourceDataSampleFailed,
+            },
           });
           return;
         }
@@ -455,6 +521,31 @@ function parseRenameWarehouseConnectionBody(
     value: {
       scope: toDraftScope(scope),
       connectionId,
+      ...parsed.data,
+    },
+  };
+}
+
+function parseSourceDataSampleQuery(
+  connectionId: string,
+  query: WarehouseSourceDataSampleQuery,
+  scope: ReturnType<typeof buildEnvironmentAccessScope>
+): RouteParseResult<PreviewWarehouseSourceObjectRowsInput> {
+  const parsed = SourceDataSampleRequestSchema.safeParse({
+    connectionId,
+    objectId: query.objectId,
+    ...(query.limit === undefined ? {} : { limit: Number(query.limit) }),
+  });
+  if (!parsed.success) {
+    return {
+      ok: false,
+      issue: badRequestIssue(HTTP_ERROR_REASON.invalidSelection, { target: 'query' }),
+    };
+  }
+  return {
+    ok: true,
+    value: {
+      scope: toDraftScope(scope),
       ...parsed.data,
     },
   };
