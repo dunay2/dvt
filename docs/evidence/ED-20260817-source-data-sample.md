@@ -20,9 +20,8 @@ code_refs:
 evidence:
   tests:
     - pnpm exec vitest run packages/@dvt/contracts/test/source-import/SourceDataSample.v1.test.ts
-    - pnpm exec vitest run --config apps/api/vitest.config.ts apps/api/test/application/services/previewWarehouseSourceObjectRowsUseCase.test.ts apps/api/test/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.test.ts
-    - pnpm exec vitest run --config apps/api/vitest.config.ts apps/api/test/entrypoints/http/warehouseSourceImportRoutes.test.ts
-    - pnpm exec vitest run --config apps/web/vitest.config.ts apps/web/src/app/plugins/graph/GraphNodeOperationalRail.test.tsx apps/web/src/app/components/shell/OperationalDrawerPanels.test.tsx
+    - pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/previewWarehouseSourceObjectRowsUseCase.test.ts test/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.test.ts test/entrypoints/http/warehouseSourceImportRoutes.test.ts
+    - pnpm --filter @dvt/web exec vitest run --config vitest.config.ts src/app/plugins/graph/GraphNodeOperationalRail.test.tsx src/app/views/canvas/CanvasViewport.nodeOperationalRail.test.tsx src/app/components/shell/OperationalDrawerPanels.test.tsx
     - pnpm verify:prepush
 ---
 
