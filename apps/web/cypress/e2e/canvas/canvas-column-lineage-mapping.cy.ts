@@ -55,47 +55,48 @@ function canvasNode(nodeId: string): Cypress.Chainable<JQuery<HTMLElement>> {
 function assertStageEdgeAttached(edgeId: string, sourceNodeId: string, targetNodeId: string): void {
   const handleSelector = '[data-slot="canvas-node-port-handle"][data-port-variant="node"]';
 
-  canvasNode(sourceNodeId)
-    .find(`${handleSelector}[data-port="source"]`)
-    .then(($sourceHandle) => {
-      canvasNode(targetNodeId)
-        .find(`${handleSelector}[data-port="target"]`)
-        .then(($targetHandle) => {
-          cy.get(
-            `.react-flow__edge[data-id="${edgeId}"]:not(.react-flow__edge-columnLineage) .react-flow__edge-path`
-          ).then(($edgePath) => {
-            const path = $edgePath[0] as SVGPathElement;
-            const screenMatrix = path.getScreenCTM();
-            expect(screenMatrix, 'stage edge screen transform').not.to.be.null;
+  cy.get(
+    `.react-flow__edge[data-id="${edgeId}"]:not(.react-flow__edge-columnLineage) .react-flow__edge-path`
+  ).should(($edgePath) => {
+    const sourceHandle = Cypress.$(
+      `.react-flow__node[data-id="${sourceNodeId}"] ${handleSelector}[data-port="source"]`
+    )[0] as HTMLElement | undefined;
+    const targetHandle = Cypress.$(
+      `.react-flow__node[data-id="${targetNodeId}"] ${handleSelector}[data-port="target"]`
+    )[0] as HTMLElement | undefined;
+    expect(sourceHandle, 'source node handle').not.to.be.undefined;
+    expect(targetHandle, 'target node handle').not.to.be.undefined;
 
-            const pointOnScreen = (length: number): DOMPoint => {
-              const point = path.getPointAtLength(length);
-              return new DOMPoint(point.x, point.y).matrixTransform(screenMatrix!);
-            };
-            const sourceRect = $sourceHandle[0]!.getBoundingClientRect();
-            const targetRect = $targetHandle[0]!.getBoundingClientRect();
-            const sourceCenter = new DOMPoint(
-              sourceRect.left + sourceRect.width / 2,
-              sourceRect.top + sourceRect.height / 2
-            );
-            const targetCenter = new DOMPoint(
-              targetRect.left + targetRect.width / 2,
-              targetRect.top + targetRect.height / 2
-            );
-            const pathStart = pointOnScreen(0);
-            const pathEnd = pointOnScreen(path.getTotalLength());
-            const distance = (left: DOMPoint, right: DOMPoint): number =>
-              Math.hypot(left.x - right.x, left.y - right.y);
+    const path = $edgePath[0] as SVGPathElement;
+    const screenMatrix = path.getScreenCTM();
+    expect(screenMatrix, 'stage edge screen transform').not.to.be.null;
 
-            expect(distance(pathStart, sourceCenter), 'source endpoint attachment').to.be.lte(
-              sourceRect.width / 2 + 1
-            );
-            expect(distance(pathEnd, targetCenter), 'target endpoint attachment').to.be.lte(
-              targetRect.width / 2 + 1
-            );
-          });
-        });
-    });
+    const pointOnScreen = (length: number): DOMPoint => {
+      const point = path.getPointAtLength(length);
+      return new DOMPoint(point.x, point.y).matrixTransform(screenMatrix!);
+    };
+    const sourceRect = sourceHandle!.getBoundingClientRect();
+    const targetRect = targetHandle!.getBoundingClientRect();
+    const sourceCenter = new DOMPoint(
+      sourceRect.left + sourceRect.width / 2,
+      sourceRect.top + sourceRect.height / 2
+    );
+    const targetCenter = new DOMPoint(
+      targetRect.left + targetRect.width / 2,
+      targetRect.top + targetRect.height / 2
+    );
+    const pathStart = pointOnScreen(0);
+    const pathEnd = pointOnScreen(path.getTotalLength());
+    const distance = (left: DOMPoint, right: DOMPoint): number =>
+      Math.hypot(left.x - right.x, left.y - right.y);
+
+    expect(distance(pathStart, sourceCenter), 'source endpoint attachment').to.be.lte(
+      sourceRect.width / 2 + 1
+    );
+    expect(distance(pathEnd, targetCenter), 'target endpoint attachment').to.be.lte(
+      targetRect.width / 2 + 1
+    );
+  });
 }
 
 function toggleColumns(nodeId: string): void {
