@@ -527,6 +527,46 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(codeSection?.querySelector('input[name="dvt-transform-column"]')).toBeNull();
   });
 
+  it('shows visual transform generated SQL read-only without a second SQL editor', () => {
+    const visualTransform: CanonicalNode = {
+      ...DVT_TRANSFORM_NODE,
+      metadata: {
+        transformAuthoring: {
+          version: 'v1',
+          mode: 'visual',
+          recipe: {
+            version: 'v1',
+            outputs: [
+              {
+                id: 'output:order_id',
+                name: 'order_id',
+                dataType: 'integer',
+                expression: {
+                  inputs: [{ nodeId: SOURCE_NODE.id, columnName: 'order_id' }],
+                  operations: [{ kind: 'passthrough' }],
+                },
+              },
+            ],
+            filters: [],
+          },
+        },
+      },
+    };
+
+    renderNodePanel(root, visualTransform, 'code');
+
+    const codeSection = container.querySelector('[data-slot="canvas-node-workbench-code-section"]');
+    expect(codeSection?.querySelector('[data-testid="dvt-transform-sql-editor"]')).toBeNull();
+    expect(codeSection?.querySelector('pre')?.textContent).toBe(
+      [
+        'select',
+        '  "orders"."order_id" as "order_id"',
+        'from "raw"."orders" as "orders";',
+        '',
+      ].join('\n')
+    );
+  });
+
   it('renders one DBT model editor in Code without duplicating passive generated SQL', () => {
     renderNodePanel(root, MODEL_NODE, 'code');
 

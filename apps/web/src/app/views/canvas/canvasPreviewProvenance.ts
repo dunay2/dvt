@@ -28,7 +28,7 @@ import {
   resolveExecutableSqlText,
 } from './canvasTransformationSqlMirror';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
-import { compileVisualTransformRecipeToPostgresSql } from './canvasVisualTransformSqlCompiler';
+import { compileDvtVisualTransformNodeToPostgresSql } from './canvasVisualTransformSql';
 
 export type PreviewProvenanceResolution =
   | {
@@ -273,15 +273,9 @@ function buildAuthoringPreviewSql({
     const authority = readDvtTransformAuthoringAuthority(transformNode);
     if (authority.mode === DVT_TRANSFORM_AUTHORING_MODE.visual) {
       const scopedNodes = resolveScopedTransformationNodes(canonicalNodes, scopedNodeIds);
-      const source = requireSourcePayload(scopedNodes.source);
-      return compileVisualTransformRecipeToPostgresSql({
-        recipe: authority.recipe,
-        sourceBinding: {
-          nodeId: scopedNodes.source.id,
-          schema: source.payload.schema,
-          table: source.payload.table,
-          alias: source.payload.alias,
-        },
+      return compileDvtVisualTransformNodeToPostgresSql({
+        transformNode,
+        sourceNode: scopedNodes.source,
       });
     }
   }
