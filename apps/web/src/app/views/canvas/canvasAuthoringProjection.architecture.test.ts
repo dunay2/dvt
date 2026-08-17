@@ -25,6 +25,18 @@ const COLUMN_MAPPING_AUTHORING_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'canvasColumnMappingAuthoring.ts'
 );
+const VISUAL_SQL_ADAPTER_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'canvasVisualTransformSql.ts'
+);
+const VISUAL_SQL_COMPILER_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'canvasVisualTransformSqlCompiler.ts'
+);
+const PREVIEW_PROVENANCE_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'canvasPreviewProvenance.ts'
+);
 const DRAFT_READ_MODEL_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'canvasDraftReadModel.ts'
@@ -92,5 +104,18 @@ describe('canvas authoring projection component architecture', () => {
     expect(COLUMN_MAPPING_AUTHORING_SOURCE).toContain('canvasDraftSession.workingSet.upsertNode(');
     expect(COLUMN_MAPPING_AUTHORING_SOURCE).not.toContain('useEdgesState(');
     expect(COLUMN_MAPPING_AUTHORING_SOURCE).not.toContain('localStorage');
+  });
+
+  it('derives generated SQL and Preview from the same recipe authority without a parallel planner or store', () => {
+    expect(COLUMN_LINEAGE_PROJECTION_SOURCE).toContain('readDvtTransformAuthoringAuthority(');
+    expect(VISUAL_SQL_ADAPTER_SOURCE).toContain('readDvtTransformAuthoringAuthority(');
+    expect(VISUAL_SQL_ADAPTER_SOURCE).toContain('compileVisualTransformRecipeToPostgresSql(');
+    expect(PREVIEW_PROVENANCE_SOURCE).toContain('compileDvtVisualTransformNodeToPostgresSql(');
+    expect(VISUAL_SQL_COMPILER_SOURCE).toContain(
+      'compile the bounded visual transform recipe into deterministic PostgreSQL SQL'
+    );
+    expect(VISUAL_SQL_COMPILER_SOURCE).not.toContain('localStorage');
+    expect(VISUAL_SQL_COMPILER_SOURCE).not.toContain('useState(');
+    expect(VISUAL_SQL_COMPILER_SOURCE).not.toContain('PlanRef');
   });
 });
