@@ -4,6 +4,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent } from '@testing-library/dom';
 import { act } from 'react';
+import type { ConnectedSourceRef } from '@dvt/contracts';
 
 import {
   createCanvasShellHarness,
@@ -217,7 +218,7 @@ describe('CanvasShell graph base surface', () => {
           resolvers.set(objectId, resolve);
         })
     );
-    const connectedSourceRef = (table: string) => ({
+    const connectedSourceRef = (table: string): ConnectedSourceRef => ({
       schemaVersion: 'connected-source-ref.v1',
       connectionRef: {
         schemaVersion: 'connection-ref.v1',
