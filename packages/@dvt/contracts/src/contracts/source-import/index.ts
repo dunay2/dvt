@@ -11,3 +11,4 @@ export * from './SourceObjectCatalog.v1.js';
 export * from './SourceImportOperations.v1.js';
 export * from './SourceImportOperations.v2.js';
 export * from './ConnectedSourceRef.v1.js';
+export * from './SourceDataSample.v1.js';

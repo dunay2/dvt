@@ -13,6 +13,7 @@ export type { PlanPreviewInput } from './plans';
 
 export type {
   IWarehouseSourceImportPort,
+  IWarehouseSourceDataSampleQueryPort,
   IWorkspaceAdminReadPort,
   IWorkspaceDiffQueryPort,
   IWorkspaceFileContentCommandPort,
@@ -30,6 +31,8 @@ export type {
   SourceImportGrouping,
   ImportSourcesInput,
   ImportSourcesResult,
+  PreviewSourceObjectRowsInput,
+  SourceDataSample,
 } from './workspace';
 export type { IWorkspaceGraphDraftAuthoringPort } from './workspaceGraphDraftAuthoring';
 export type {

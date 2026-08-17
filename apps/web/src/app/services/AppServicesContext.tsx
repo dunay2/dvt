@@ -11,6 +11,7 @@ import type { ShellFeedbackPort } from '../ports/shellFeedback';
 import type { WorkspaceScopeSelectionPort } from '../ports/workspaceScopeSelection';
 import type {
   IWarehouseSourceImportPort,
+  IWarehouseSourceDataSampleQueryPort,
   IWorkspaceAdminReadPort,
   IWorkspaceDiffQueryPort,
   IWorkspaceFileContentCommandPort,
@@ -58,6 +59,7 @@ export function AppServicesProvider({ children, overrides }: AppServicesProvider
       overrides?.workspacePluginCatalogQuery,
       overrides?.workspaceAdminRead,
       overrides?.warehouseSourceImport,
+      overrides?.warehouseSourceDataSampleQuery,
       overrides?.workspaceFileContentCommand,
       overrides?.graphDbtWorkspaceArtifactPublicationCommand,
       overrides?.workspaceGraphDraftAuthoringPort,
@@ -109,6 +111,10 @@ export function useWorkspaceAdminReadPort(): IWorkspaceAdminReadPort {
 
 export function useWarehouseSourceImportPort(): IWarehouseSourceImportPort {
   return useRequiredAppServicesContext().warehouseSourceImport;
+}
+
+export function useWarehouseSourceDataSampleQueryPort(): IWarehouseSourceDataSampleQueryPort {
+  return useRequiredAppServicesContext().warehouseSourceDataSampleQuery;
 }
 
 export function useOptionalWarehouseSourceImportPort(): IWarehouseSourceImportPort | undefined {

@@ -7,6 +7,7 @@ import type { PlanRunReadinessBlocker } from './canvasPlanReadiness';
 import type { CanvasShellPanels, CanvasShellChromeState } from './canvasShell.types';
 import type { CanvasExecutionSelectionRecoveryCommands } from '../../types/canvasExecutionSelectionRecovery';
 import type { OperationalDrawerRunControls } from '../../components/shell/operationalDrawerContributionStore';
+import type { OperationalDrawerDataSample } from '../../components/shell/operationalDrawerContributionStore';
 import { buildCanvasOperationalDrawerContribution } from './canvasOperationalDrawerContribution';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
@@ -19,6 +20,7 @@ type CanvasOperationalDrawerContributionRegistrarProps = Readonly<{
   onPreviewExecutionPlan: () => void;
   onStartRun: () => void;
   selectionRecoveryCommands: CanvasExecutionSelectionRecoveryCommands | null;
+  dataSample: OperationalDrawerDataSample;
 }>;
 
 export function CanvasOperationalDrawerContributionRegistrar({
@@ -29,6 +31,7 @@ export function CanvasOperationalDrawerContributionRegistrar({
   runControls,
   chromeState,
   selectionRecoveryCommands,
+  dataSample,
 }: CanvasOperationalDrawerContributionRegistrarProps): null {
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const copy = useMemo(() => resolveCanvasViewCopy(applicationLanguage), [applicationLanguage]);
@@ -40,14 +43,14 @@ export function CanvasOperationalDrawerContributionRegistrar({
   );
   const latestCommandsRef = useRef({ onPreviewExecutionPlan, onStartRun });
   latestCommandsRef.current = { onPreviewExecutionPlan, onStartRun };
-  const [logTab, problemsTab, runsTab, previewTab] = policy.tabs;
+  const [logTab, problemsTab, runsTab, previewTab, dataTab] = policy.tabs;
   const blockerKey = chromeState.planRunReadiness.blockers.join('|');
   const contribution = useMemo(
     () =>
       buildCanvasOperationalDrawerContribution({
         policy: {
           placement: policy.placement,
-          tabs: [logTab, problemsTab, runsTab, previewTab],
+          tabs: [logTab, problemsTab, runsTab, previewTab, dataTab],
         },
         canPlan: panels.userPermissions.canPlan,
         activeRunId: panels.activeRunId ?? null,
@@ -65,6 +68,7 @@ export function CanvasOperationalDrawerContributionRegistrar({
         selectionRecovery: chromeState.executionSelectionRecovery,
         selectionRecoveryCommands,
         selectionRecoveryMessages: copy,
+        dataSample,
         copy,
         onPreviewExecutionPlan: () => latestCommandsRef.current.onPreviewExecutionPlan(),
         onStartRun: () => latestCommandsRef.current.onStartRun(),
@@ -79,6 +83,8 @@ export function CanvasOperationalDrawerContributionRegistrar({
       chromeState.planStatusSummary,
       chromeState.executionSelectionRecovery,
       copy,
+      dataSample,
+      dataTab,
       logTab,
       panels.activeRunId,
       panels.userPermissions.canPlan,

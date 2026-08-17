@@ -273,6 +273,7 @@ export type CanvasViewCopy = {
   readonly operationalDrawerProblemsTab: string;
   readonly operationalDrawerRunsTab: string;
   readonly operationalDrawerPreviewTab: string;
+  readonly operationalDrawerDataTab: string;
   readonly operationalDrawerProblemsAriaLabel: string;
   readonly operationalDrawerNoProblemsMessage: string;
   readonly operationalDrawerRunsAriaLabel: string;
@@ -285,6 +286,18 @@ export type CanvasViewCopy = {
   readonly operationalDrawerPreviewAction: string;
   readonly operationalDrawerPreviewReadyStatus: string;
   readonly operationalDrawerPreviewBlockedStatus: string;
+  readonly operationalDrawerDataAriaLabel: string;
+  readonly operationalDrawerDataIdleMessage: string;
+  readonly operationalDrawerDataLoadingTemplate: string;
+  readonly operationalDrawerDataEmptyTemplate: string;
+  readonly operationalDrawerDataConnectionNotFoundTemplate: string;
+  readonly operationalDrawerDataSourceObjectNotFoundTemplate: string;
+  readonly operationalDrawerDataUnavailableTemplate: string;
+  readonly operationalDrawerDataUnknownErrorTemplate: string;
+  readonly operationalDrawerDataTruncatedTemplate: string;
+  readonly operationalDrawerDataCaptionTemplate: string;
+  readonly operationalDrawerDataNullValue: string;
+  readonly sourceDataSampleInteractionLabel: string;
   readonly operationalDrawerTabsAriaLabel: string;
   readonly operationalDrawerInfoSeverity: string;
   readonly operationalDrawerWarningSeverity: string;

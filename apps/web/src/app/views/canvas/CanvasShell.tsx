@@ -24,6 +24,15 @@ import { useCanvasInteractionStore } from '../../stores/canvasInteractionStore';
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { buildGraphDraftWorkspaceFileCodeContributions } from './graphDraftWorkspaceFileCodeContribution';
+import { useUiLayoutStore } from '../../stores/uiLayoutStore';
+import { useOperationalDrawerContributionStore } from '../../components/shell/operationalDrawerContributionStore';
+import type { OperationalDrawerDataSample } from '../../components/shell/operationalDrawerContributionStore';
+import {
+  CANVAS_SOURCE_DATA_SAMPLE_LIMIT,
+  resolveCanvasSourceDataSampleError,
+  resolveCanvasSourceDataSampleTarget,
+  type CanvasSourceDataSampleTarget,
+} from './canvasSourceDataSample';
 
 type WorkbenchOpener = Readonly<{
   element: HTMLElement | null;
@@ -59,12 +68,19 @@ export default function CanvasShell({
   sourceImportInitialSelection,
   onSourceImportInitialSelectionConsumed,
   onDbtProjectImported,
+  warehouseSourceDataSampleQuery,
 }: CanvasShellProps): JSX.Element {
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCanvasViewCopy(applicationLanguage);
   const [projectExplorerOpen, setProjectExplorerOpen] = useState(false);
   const [canvasSettingsOpen, setCanvasSettingsOpen] = useState(false);
   const [dbtProjectImportOpen, setDbtProjectImportOpen] = useState(false);
+  const [dataSample, setDataSample] = useState<OperationalDrawerDataSample>({ status: 'idle' });
+  const dataSampleRequestIdRef = useRef(0);
+  const showBottomDrawer = useUiLayoutStore((state) => state.showBottomDrawer);
+  const selectOperationalDrawerTab = useOperationalDrawerContributionStore(
+    (state) => state.selectOperationalDrawerTab
+  );
   const workbenchOpenerRef = useRef<WorkbenchOpener | null>(null);
   const contextualWorkbenchId = useCanvasInteractionStore((state) => state.contextualWorkbenchId);
   const contextualWorkbenchOwnerKey = useCanvasInteractionStore(
@@ -210,6 +226,49 @@ export default function CanvasShell({
     captureWorkbenchOpener('[data-slot="shell-workspace-menu-trigger"]');
     (workspaceCommands?.onOpenProjectCode ?? openProjectCodeWorkbench)();
   }, [captureWorkbenchOpener, openProjectCodeWorkbench, workspaceCommands?.onOpenProjectCode]);
+  const openSourceDataSample = useCallback(
+    (target: CanvasSourceDataSampleTarget) => {
+      if (warehouseSourceDataSampleQuery == null) {
+        return;
+      }
+
+      const requestId = ++dataSampleRequestIdRef.current;
+      setDataSample({ status: 'loading', nodeName: target.nodeName });
+      selectOperationalDrawerTab('data');
+      showBottomDrawer(300);
+      window.requestAnimationFrame(() => {
+        document
+          .querySelector<HTMLButtonElement>(
+            '[data-slot="bottom-operational-drawer-tab"][data-tab="data"]'
+          )
+          ?.focus({ preventScroll: true });
+      });
+
+      void warehouseSourceDataSampleQuery
+        .previewSourceObjectRows({
+          connectionId: target.connectionId,
+          objectId: target.objectId,
+          limit: CANVAS_SOURCE_DATA_SAMPLE_LIMIT,
+        })
+        .then((sample) => {
+          if (dataSampleRequestIdRef.current === requestId) {
+            setDataSample({ status: 'ready', nodeName: target.nodeName, sample });
+          }
+        })
+        .catch((error: unknown) => {
+          if (dataSampleRequestIdRef.current === requestId) {
+            setDataSample(resolveCanvasSourceDataSampleError(error, target.nodeName));
+          }
+        });
+    },
+    [selectOperationalDrawerTab, showBottomDrawer, warehouseSourceDataSampleQuery]
+  );
+  useEffect(
+    () => () => {
+      dataSampleRequestIdRef.current += 1;
+    },
+    []
+  );
   const graphWithCanonicalCodeCommands = useMemo(
     () => ({
       ...graph,
@@ -224,17 +283,31 @@ export default function CanvasShell({
             codeTruthKind === 'inline' ||
             codeTruthKind === 'generated');
         const canOpenNodeCode = data.canOpenNodeCode !== false && canInspectNodeCode;
+        const sourceDataSampleTarget = resolveCanvasSourceDataSampleTarget(data);
+        const canOpenSourceDataSample =
+          sourceDataSampleTarget != null && warehouseSourceDataSampleQuery != null;
 
         return {
           ...node,
           data: {
             ...data,
             canOpenNodeCode,
+            onOpenSourceDataSample: canOpenSourceDataSample
+              ? () => openSourceDataSample(sourceDataSampleTarget)
+              : undefined,
+            sourceDataSampleInteractionLabel: canOpenSourceDataSample
+              ? copy.sourceDataSampleInteractionLabel
+              : undefined,
           },
         };
       }),
     }),
-    [graph]
+    [
+      copy.sourceDataSampleInteractionLabel,
+      graph,
+      openSourceDataSample,
+      warehouseSourceDataSampleQuery,
+    ]
   );
   const graphOwnedPaths = useMemo(
     () =>
@@ -314,6 +387,7 @@ export default function CanvasShell({
           onPreviewExecutionPlan={chromeCommands.onPreviewExecutionPlan}
           onStartRun={chromeCommands.onRun}
           selectionRecoveryCommands={chromeCommands.executionSelectionRecovery}
+          dataSample={dataSample}
         />
       )}
       <CanvasShellMainPanel

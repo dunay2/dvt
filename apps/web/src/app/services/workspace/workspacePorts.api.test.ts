@@ -397,6 +397,35 @@ describe('workspace ports api warehouse source import', () => {
     );
   });
 
+  it('loads a bounded source data sample through its dedicated scoped query port', async () => {
+    const scope = buildWorkspaceScope();
+    setWorkspaceScope(scope);
+    const sample = {
+      contractVersion: 1,
+      connectionId: 'warehouse-prod',
+      objectId: 'relation/analytics/erp/orders',
+      columns: [{ name: 'order_id', type: 'integer', nullable: false }],
+      rows: [{ values: ['1'] }],
+      limit: 20,
+      truncated: false,
+      sampledAt: '2026-08-17T10:00:00.000Z',
+    };
+    const { getJson, warehouseSourceDataSampleQuery } = createApiWorkspacePortHarness({
+      getJson: async <TResponse>() => sample as TResponse,
+    });
+
+    await expect(
+      warehouseSourceDataSampleQuery.previewSourceObjectRows({
+        connectionId: 'warehouse-prod',
+        objectId: 'relation/analytics/erp/orders',
+        limit: 20,
+      })
+    ).resolves.toEqual(sample);
+    expect(getJson).toHaveBeenCalledWith(
+      `/workspace/warehouse/connections/warehouse-prod/source-data-sample?tenantId=${scope.tenantId}&projectId=${scope.projectId}&environmentId=${scope.environmentId}&objectId=${encodeURIComponent('relation/analytics/erp/orders')}&limit=20`
+    );
+  });
+
   it('rejects an unversioned source-object catalog response', async () => {
     const scope = buildWorkspaceScope();
     setWorkspaceScope(scope);

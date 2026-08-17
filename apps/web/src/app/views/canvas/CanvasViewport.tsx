@@ -153,6 +153,10 @@ function CanvasViewportWithPresenter({
           typeof nodeData.onInspectNode === 'function'
             ? (nodeData.onInspectNode as (...args: unknown[]) => void)
             : null;
+        const openSourceDataSample =
+          typeof nodeData.onOpenSourceDataSample === 'function'
+            ? (nodeData.onOpenSourceDataSample as (...args: unknown[]) => void)
+            : null;
         return {
           ...node,
           data: {
@@ -163,6 +167,14 @@ function CanvasViewportWithPresenter({
                   onInspectNode: (...args: unknown[]) => {
                     closeNodeHealthPopover();
                     inspectNode(...args);
+                  },
+                }),
+            ...(openSourceDataSample == null
+              ? {}
+              : {
+                  onOpenSourceDataSample: (...args: unknown[]) => {
+                    closeNodeHealthPopover(false);
+                    openSourceDataSample(...args);
                   },
                 }),
             onOpenOperationalDetails: (

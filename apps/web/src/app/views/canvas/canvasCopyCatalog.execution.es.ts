@@ -71,6 +71,7 @@ export const canvasViewExecutionCopyEs = {
   operationalDrawerProblemsTab: 'Problemas',
   operationalDrawerRunsTab: 'Ejecuciones',
   operationalDrawerPreviewTab: 'Vista previa',
+  operationalDrawerDataTab: 'Datos',
   operationalDrawerProblemsAriaLabel: 'Problemas del Canvas',
   operationalDrawerNoProblemsMessage: 'No hay problemas actuales en el Canvas.',
   operationalDrawerRunsAriaLabel: 'Ejecuciones del Canvas',
@@ -84,6 +85,22 @@ export const canvasViewExecutionCopyEs = {
   operationalDrawerPreviewAction: 'Crear Execution Preview',
   operationalDrawerPreviewReadyStatus: 'Vista previa lista',
   operationalDrawerPreviewBlockedStatus: 'Vista previa bloqueada',
+  operationalDrawerDataAriaLabel: 'Muestra de datos del origen',
+  operationalDrawerDataIdleMessage:
+    'Haz doble clic en la zona de filas y tamaño de un origen importado para ver una muestra.',
+  operationalDrawerDataLoadingTemplate: 'Cargando una muestra de datos de {nodeName}…',
+  operationalDrawerDataEmptyTemplate: '{nodeName} no ha devuelto filas.',
+  operationalDrawerDataConnectionNotFoundTemplate:
+    'La conexión gobernada de {nodeName} ya no está disponible.',
+  operationalDrawerDataSourceObjectNotFoundTemplate:
+    'El objeto de origen de {nodeName} ya no está disponible.',
+  operationalDrawerDataUnavailableTemplate: 'No se ha podido leer la muestra de {nodeName}.',
+  operationalDrawerDataUnknownErrorTemplate: 'No se ha podido cargar la muestra de {nodeName}.',
+  operationalDrawerDataTruncatedTemplate: 'Se muestran las primeras {limit} filas.',
+  operationalDrawerDataCaptionTemplate: 'Muestra de datos de {nodeName}',
+  operationalDrawerDataNullValue: 'NULO',
+  sourceDataSampleInteractionLabel:
+    'Haz doble clic en esta zona de métricas o pulsa Intro para abrir una muestra de datos.',
   operationalDrawerTabsAriaLabel: 'Cajón operativo del Canvas',
   operationalDrawerInfoSeverity: 'Información',
   operationalDrawerWarningSeverity: 'Advertencia',

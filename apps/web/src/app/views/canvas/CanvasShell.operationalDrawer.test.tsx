@@ -59,6 +59,7 @@ describe('CanvasShell operational drawer registration', () => {
         { id: 'problems', label: 'Problems' },
         { id: 'runs', label: 'Runs' },
         { id: 'preview', label: 'Preview' },
+        { id: 'data', label: 'Data' },
       ],
       runs: {
         activeRunId: 'run-42',

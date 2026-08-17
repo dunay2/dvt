@@ -5,7 +5,11 @@ import type { Edge, Node, NodeTypes, ReactFlowProps } from '@xyflow/react';
 import type React from 'react';
 import type { DbtProjectImportResult, DbtProjectSourceTableDeclaration } from '@dvt/contracts';
 
-import type { ImportSourcesResult, IWarehouseSourceImportPort } from '../../ports/workspace';
+import type {
+  ImportSourcesResult,
+  IWarehouseSourceDataSampleQueryPort,
+  IWarehouseSourceImportPort,
+} from '../../ports/workspace';
 import type { SourceImportInitialSelection } from '../../components/sourceImportWizard/types';
 import type {
   CanvasGraphAuthoringMode,
@@ -195,6 +199,7 @@ export type CanvasShellProps = Readonly<{
   workspaceCommands?: CanvasShellWorkspaceCommands;
   routeIntentRequest?: CanvasShellRouteIntentRequest;
   warehouseSourceImport?: IWarehouseSourceImportPort;
+  warehouseSourceDataSampleQuery?: IWarehouseSourceDataSampleQueryPort;
   canvasContextScreenToFlowPosition?: (
     screenPosition: CanvasContextMenuPosition
   ) => CanvasContextMenuPosition;

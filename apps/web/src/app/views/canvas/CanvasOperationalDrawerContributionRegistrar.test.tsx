@@ -35,6 +35,7 @@ describe('CanvasOperationalDrawerContributionRegistrar', () => {
   it('keeps one registered snapshot while equivalent shell contracts are reallocated', async () => {
     const shell = buildCanvasShellProps();
     const policy = shell.layout.surfaceStrategy!.operationalDrawer!;
+    const dataSample = { status: 'idle' } as const;
     const renderRegistrar = (onPreviewExecutionPlan: () => void): JSX.Element => (
       <CanvasOperationalDrawerContributionRegistrar
         policy={{ ...policy, tabs: [...policy.tabs] }}
@@ -50,6 +51,7 @@ describe('CanvasOperationalDrawerContributionRegistrar', () => {
         onPreviewExecutionPlan={onPreviewExecutionPlan}
         onStartRun={vi.fn()}
         selectionRecoveryCommands={shell.chromeCommands.executionSelectionRecovery}
+        dataSample={dataSample}
       />
     );
 
@@ -81,6 +83,7 @@ describe('CanvasOperationalDrawerContributionRegistrar', () => {
           onPreviewExecutionPlan={vi.fn()}
           onStartRun={vi.fn()}
           selectionRecoveryCommands={shell.chromeCommands.executionSelectionRecovery}
+          dataSample={{ status: 'idle' }}
         />
       );
     });
@@ -101,6 +104,7 @@ describe('CanvasOperationalDrawerContributionRegistrar', () => {
         { id: 'problems', label: 'Problemas' },
         { id: 'runs', label: 'Ejecuciones' },
         { id: 'preview', label: 'Vista previa' },
+        { id: 'data', label: 'Datos' },
       ],
       copy: {
         previewAction: 'Crear Execution Preview',

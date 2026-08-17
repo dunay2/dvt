@@ -1,6 +1,7 @@
 /** Owned concern: compose workspace capability ports for the web composition root. */
 import type {
   IWarehouseSourceImportPort,
+  IWarehouseSourceDataSampleQueryPort,
   IWorkspaceAdminReadPort,
   IWorkspaceDiffQueryPort,
   IWorkspaceFileContentCommandPort,
@@ -14,6 +15,7 @@ import type { ApiClient } from '../api/createApiClient';
 import { createApiWorkspacePluginCatalogQueryPort } from './workspacePluginCatalog.api';
 import {
   createApiWarehouseSourceImportPort,
+  createApiWarehouseSourceDataSampleQueryPort,
   createApiWorkspaceAdminReadPort,
   createApiWorkspaceDiffQueryPort,
   createApiWorkspaceFileContentCommandPort,
@@ -44,6 +46,7 @@ export type WorkspacePorts = {
   readonly workspacePluginCatalogQuery: IWorkspacePluginCatalogQueryPort;
   readonly workspaceAdminRead: IWorkspaceAdminReadPort;
   readonly warehouseSourceImport: IWarehouseSourceImportPort;
+  readonly warehouseSourceDataSampleQuery: IWarehouseSourceDataSampleQueryPort;
   readonly workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
 };
 
@@ -59,6 +62,10 @@ export function createWorkspacePorts(
     workspacePluginCatalogQuery: createApiWorkspacePluginCatalogQueryPort(apiClient),
     workspaceAdminRead: createApiWorkspaceAdminReadPort(),
     warehouseSourceImport: createApiWarehouseSourceImportPort(apiClient, frontendOperabilitySink),
+    warehouseSourceDataSampleQuery: createApiWarehouseSourceDataSampleQueryPort(
+      apiClient,
+      frontendOperabilitySink
+    ),
     workspaceFileContentCommand: createApiWorkspaceFileContentCommandPort(apiClient),
   };
 }

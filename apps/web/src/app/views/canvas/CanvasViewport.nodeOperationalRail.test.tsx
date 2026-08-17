@@ -123,6 +123,38 @@ describe('CanvasViewport node operational rail', () => {
     expect(document.activeElement).toBe(anchor);
   });
 
+  it('closes health details before opening a source data sample', async () => {
+    const onOpenSourceDataSample = vi.fn();
+    await renderViewport({
+      nodesWithImpact: [
+        {
+          id: 'source_orders',
+          position: { x: 40, y: 80 },
+          data: {
+            name: 'Orders source',
+            selectedForExecution: false,
+            onOpenSourceDataSample,
+          },
+          type: 'dbtNode',
+        },
+      ] as CanvasViewportProps['nodesWithImpact'],
+    });
+
+    await openOperationalDetails('source_orders');
+    const node = (
+      xyflowState.lastReactFlowProps?.nodes as CanvasViewportProps['nodesWithImpact']
+    )[0];
+    const openSourceDataSample = (node?.data as Record<string, unknown>).onOpenSourceDataSample as
+      ((nodeId: string) => void) | undefined;
+
+    await act(async () => {
+      openSourceDataSample?.('source_orders');
+    });
+
+    expect(container.querySelector('[data-slot="graph-node-health-popover"]')).toBeNull();
+    expect(onOpenSourceDataSample).toHaveBeenCalledWith('source_orders');
+  });
+
   it('does not replace health details when an embedded node control emits a node click', async () => {
     await renderViewport({
       nodesWithImpact: [

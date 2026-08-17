@@ -45,6 +45,8 @@ export type GraphNodeCardViewProps = Readonly<{
     anchorElement: HTMLElement
   ) => void;
   onOpenCode?: () => void;
+  onOpenDataSample?: () => void;
+  dataSampleInteractionLabel?: string;
   onSelectTag?: (tag: string) => void;
   getSelectTagLabel?: (tag: string) => string;
   nodeId?: string;
@@ -141,6 +143,8 @@ export function GraphNodeCardView({
   overlayStyle,
   onOpenOperationalDetails,
   onOpenCode,
+  onOpenDataSample,
+  dataSampleInteractionLabel,
   onSelectTag,
   getSelectTagLabel,
   nodeId,
@@ -254,6 +258,8 @@ export function GraphNodeCardView({
         <GraphNodeOperationalRail
           metrics={cardModel.operationalMetrics}
           ariaLabel={interactiveOperationalDetail.ariaLabel}
+          dataSampleInteractionLabel={dataSampleInteractionLabel}
+          onOpenDataSample={onOpenDataSample}
           onOpen={(anchorElement) =>
             onOpenOperationalDetails(interactiveOperationalDetail, anchorElement)
           }

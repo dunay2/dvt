@@ -4,6 +4,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent } from '@testing-library/dom';
 import { act } from 'react';
+import type { ConnectedSourceRef } from '@dvt/contracts';
 
 import {
   createCanvasShellHarness,
@@ -12,8 +13,11 @@ import {
 } from './CanvasShell.testHarness';
 import { useCanvasInteractionStore } from '../../stores/canvasInteractionStore';
 import type { CanvasShellProps } from './canvasShell.types';
+import type { SourceDataSample } from '../../ports/workspace';
 import { canvasViewCopy } from './copy';
 import { resolveWorkspaceFilePath } from './CanvasShell';
+import { useOperationalDrawerContributionStore } from '../../components/shell/operationalDrawerContributionStore';
+import { useUiLayoutStore } from '../../stores/uiLayoutStore';
 
 describe('CanvasShell graph base surface', () => {
   let container: HTMLDivElement;
@@ -129,6 +133,148 @@ describe('CanvasShell graph base surface', () => {
     expect(onHideInspector).not.toHaveBeenCalled();
     expect(onShowInspector).not.toHaveBeenCalled();
     expect(container.querySelector('[data-slot="canvas-contextual-workbench-close"]')).toBeNull();
+  });
+
+  it('opens a bounded source sample in the bottom drawer from an imported source node', async () => {
+    const previewSourceObjectRows = vi.fn().mockResolvedValue({
+      contractVersion: 1,
+      connectionId: 'postgresql-local',
+      objectId: 'relation/dvt/public/orders',
+      columns: [{ name: 'order_id', type: 'integer', nullable: false }],
+      rows: [{ values: ['1'] }],
+      limit: 20,
+      truncated: false,
+      sampledAt: '2026-08-17T10:00:00.000Z',
+    });
+    await renderShell({
+      warehouseSourceDataSampleQuery: { previewSourceObjectRows },
+      graph: {
+        nodesWithImpact: [
+          {
+            id: 'source-orders',
+            type: 'dbtNode',
+            position: { x: 0, y: 0 },
+            data: {
+              name: 'orders',
+              status: 'idle',
+              metadata: {
+                connectedSourceRef: {
+                  schemaVersion: 'connected-source-ref.v1',
+                  connectionRef: {
+                    schemaVersion: 'connection-ref.v1',
+                    connectionId: 'postgresql-local',
+                    provider: 'postgres',
+                  },
+                  sourceObjectId: 'relation/dvt/public/orders',
+                },
+              },
+            },
+          },
+        ],
+      },
+    });
+
+    const forwardedNode = (
+      getCanvasShellState().canvasViewportProps?.nodesWithImpact as
+        | Array<{
+            data: {
+              onOpenSourceDataSample?: (nodeId: string) => void;
+              sourceDataSampleInteractionLabel?: string;
+            };
+          }>
+        | undefined
+    )?.[0];
+    await act(async () => {
+      forwardedNode?.data.onOpenSourceDataSample?.('source-orders');
+      await Promise.resolve();
+    });
+
+    expect(previewSourceObjectRows).toHaveBeenCalledWith({
+      connectionId: 'postgresql-local',
+      objectId: 'relation/dvt/public/orders',
+      limit: 20,
+    });
+    expect(forwardedNode?.data.sourceDataSampleInteractionLabel).toContain('Double-click');
+    expect(useOperationalDrawerContributionStore.getState()).toMatchObject({
+      activeTab: 'data',
+      contribution: {
+        dataSample: {
+          status: 'ready',
+          nodeName: 'orders',
+        },
+      },
+    });
+    expect(useUiLayoutStore.getState()).toMatchObject({
+      bottomDrawerVisible: true,
+      bottomDrawerHeight: 300,
+    });
+  });
+
+  it('ignores a stale sample response after the user opens another source', async () => {
+    const resolvers = new Map<string, (sample: SourceDataSample) => void>();
+    const previewSourceObjectRows = vi.fn(
+      ({ objectId }: { objectId: string }) =>
+        new Promise<SourceDataSample>((resolve) => {
+          resolvers.set(objectId, resolve);
+        })
+    );
+    const connectedSourceRef = (table: string): ConnectedSourceRef => ({
+      schemaVersion: 'connected-source-ref.v1',
+      connectionRef: {
+        schemaVersion: 'connection-ref.v1',
+        connectionId: 'postgresql-local',
+        provider: 'postgres',
+      },
+      sourceObjectId: `relation/dvt/public/${table}`,
+    });
+    await renderShell({
+      warehouseSourceDataSampleQuery: { previewSourceObjectRows },
+      graph: {
+        nodesWithImpact: ['orders', 'customers'].map((name) => ({
+          id: `source-${name}`,
+          type: 'dbtNode',
+          position: { x: 0, y: 0 },
+          data: {
+            name,
+            status: 'idle',
+            metadata: { connectedSourceRef: connectedSourceRef(name) },
+          },
+        })),
+      },
+    });
+
+    const forwardedNodes = getCanvasShellState().canvasViewportProps?.nodesWithImpact as Array<{
+      data: { onOpenSourceDataSample?: (nodeId: string) => void };
+    }>;
+    await act(async () => {
+      forwardedNodes[0]?.data.onOpenSourceDataSample?.('source-orders');
+      forwardedNodes[1]?.data.onOpenSourceDataSample?.('source-customers');
+    });
+
+    const sample = (table: string): SourceDataSample => ({
+      contractVersion: 1,
+      connectionId: 'postgresql-local',
+      objectId: `relation/dvt/public/${table}`,
+      columns: [{ name: 'id', type: 'integer', nullable: false }],
+      rows: [{ values: ['1'] }],
+      limit: 20,
+      truncated: false,
+      sampledAt: '2026-08-17T10:00:00.000Z',
+    });
+    await act(async () => {
+      resolvers.get('relation/dvt/public/customers')?.(sample('customers'));
+      await Promise.resolve();
+      resolvers.get('relation/dvt/public/orders')?.(sample('orders'));
+      await Promise.resolve();
+    });
+
+    expect(useOperationalDrawerContributionStore.getState().contribution?.dataSample).toMatchObject(
+      {
+        status: 'ready',
+        nodeName: 'customers',
+        sample: { objectId: 'relation/dvt/public/customers' },
+      }
+    );
   });
 
   it('keeps plain node click out of the application shell command contract', async () => {

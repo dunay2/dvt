@@ -7,6 +7,8 @@ import {
   type ImportSourceObjectsRequestV2,
   type ImportSourceObjectsResultV2,
   type RenameWarehouseConnectionRequest,
+  type SourceDataSampleRequest,
+  type SourceDataSampleResponse,
   type SourceObject,
   type TestWarehouseConnectionResult as ContractTestWarehouseConnectionResult,
   type WarehouseConnection as ContractWarehouseConnection,
@@ -111,6 +113,10 @@ export type ImportSourcesInput = ImportSourceObjectsRequestV2;
 
 export type ImportSourcesResult = ImportSourceObjectsResultV2;
 
+export type PreviewSourceObjectRowsInput = SourceDataSampleRequest;
+
+export type SourceDataSample = SourceDataSampleResponse;
+
 // ---------------------------------------------------------------------------
 // Workspace port — presentation-layer contract for workspace operations
 // ---------------------------------------------------------------------------
@@ -165,6 +171,11 @@ export interface IWarehouseSourceImportPort {
   ) => Promise<WarehouseConnection>;
   testWarehouseConnection: (connectionId: string) => Promise<TestWarehouseConnectionResult>;
   importSources: (input: ImportSourcesInput) => Promise<ImportSourcesResult>;
+}
+
+/** Owns the bounded, read-only warehouse source data sample query. */
+export interface IWarehouseSourceDataSampleQueryPort {
+  previewSourceObjectRows: (input: PreviewSourceObjectRowsInput) => Promise<SourceDataSample>;
 }
 
 /** Owns workspace file content writes when an accepted backend command exists. */

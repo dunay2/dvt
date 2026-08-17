@@ -5,7 +5,10 @@ const pgMock = vi.hoisted(() => {
   const connect = vi.fn<() => Promise<void>>();
   const end = vi.fn<() => Promise<void>>();
   const query = vi.fn<
-    (sql: string) => Promise<{
+    (
+      sql: string,
+      values?: readonly unknown[]
+    ) => Promise<{
       rows: readonly Record<string, unknown>[];
       fields?: readonly { name: string; dataTypeID?: number }[];
     }>
@@ -19,6 +22,7 @@ vi.mock('pg', () => ({
   Client: pgMock.Client,
 }));
 
+import { SourceObjectNotFoundError } from '../../../src/application/ports/warehouseSourceImport.js';
 import { WorkspaceWarehouseConnectionProbe } from '../../../src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.js';
 
 function expectedRelationIdentity(
@@ -51,6 +55,80 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
     pgMock.query.mockReset();
     pgMock.connect.mockResolvedValue(undefined);
     pgMock.end.mockResolvedValue(undefined);
+  });
+
+  it('samples an authorized relation inside a bounded read-only transaction', async () => {
+    pgMock.query
+      .mockResolvedValueOnce({ rows: [] })
+      .mockResolvedValueOnce({ rows: [] })
+      .mockResolvedValueOnce({ rows: [{ relation_kind: 'r' }] })
+      .mockResolvedValueOnce({
+        rows: [
+          { order_id: 1, customer: 'Ada' },
+          { order_id: 2, customer: null },
+          { order_id: 3, customer: 'Grace' },
+        ],
+        fields: [
+          { name: 'order_id', dataTypeID: 23 },
+          { name: 'customer', dataTypeID: 25 },
+        ],
+      })
+      .mockResolvedValueOnce({ rows: [] });
+    const probe = new WorkspaceWarehouseConnectionProbe({
+      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
+      now: () => new Date('2026-08-17T10:00:00.000Z'),
+    });
+
+    await expect(
+      probe.previewSourceObjectRows({
+        type: 'postgres',
+        database: 'dvt',
+        credentialRef: 'postgres:warehouse',
+        objectId: 'relation/dvt/public/Order%20Lines',
+        limit: 2,
+      })
+    ).resolves.toEqual({
+      columns: [
+        { name: 'order_id', type: 'integer', nullable: true },
+        { name: 'customer', type: 'text', nullable: true },
+      ],
+      rows: [{ values: ['1', 'Ada'] }, { values: ['2', null] }],
+      truncated: true,
+      sampledAt: '2026-08-17T10:00:00.000Z',
+    });
+    expect(pgMock.query.mock.calls[0]?.[0]).toBe('begin transaction read only');
+    expect(pgMock.query.mock.calls[1]?.[0]).toContain('set local statement_timeout');
+    expect(pgMock.query.mock.calls[2]?.[1]).toEqual(['dvt', 'public', 'Order Lines']);
+    expect(pgMock.query.mock.calls[3]?.[0]).toBe('select * from "public"."Order Lines" limit 3');
+    expect(pgMock.query.mock.calls[4]?.[0]).toBe('commit');
+    expect(pgMock.end).toHaveBeenCalledOnce();
+  });
+
+  it('fails closed when the governed connection cannot select the requested relation', async () => {
+    pgMock.query
+      .mockResolvedValueOnce({ rows: [] })
+      .mockResolvedValueOnce({ rows: [] })
+      .mockResolvedValueOnce({ rows: [] })
+      .mockResolvedValueOnce({ rows: [] });
+    const probe = new WorkspaceWarehouseConnectionProbe({
+      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
+      now: () => new Date('2026-08-17T10:00:00.000Z'),
+    });
+
+    await expect(
+      probe.previewSourceObjectRows({
+        type: 'postgres',
+        database: 'dvt',
+        credentialRef: 'postgres:warehouse',
+        objectId: 'relation/dvt/private/hidden',
+        limit: 20,
+      })
+    ).rejects.toBeInstanceOf(SourceObjectNotFoundError);
+    expect(pgMock.query.mock.calls.map(([sql]) => sql)).not.toContain(
+      'select * from "private"."hidden" limit 21'
+    );
+    expect(pgMock.query.mock.calls.at(-1)?.[0]).toBe('rollback');
+    expect(pgMock.end).toHaveBeenCalledOnce();
   });
 
   it('returns Postgres relation metrics and column metadata as source objects', async () => {

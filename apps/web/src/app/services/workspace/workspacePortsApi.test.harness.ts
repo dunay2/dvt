@@ -3,6 +3,7 @@ import { vi } from 'vitest';
 
 import {
   createApiWarehouseSourceImportPort,
+  createApiWarehouseSourceDataSampleQueryPort,
   createApiWorkspaceAdminReadPort,
   createApiWorkspaceDiffQueryPort,
   createApiWorkspaceFileContentCommandPort,
@@ -31,6 +32,10 @@ export function createApiWorkspacePortHarness(
     workspacePluginCatalogQuery: createApiWorkspacePluginCatalogQueryPort(apiClient),
     workspaceAdminRead: createApiWorkspaceAdminReadPort(),
     warehouseSourceImport: createApiWarehouseSourceImportPort(apiClient, frontendOperabilitySink),
+    warehouseSourceDataSampleQuery: createApiWarehouseSourceDataSampleQueryPort(
+      apiClient,
+      frontendOperabilitySink
+    ),
     workspaceFileContentCommand: createApiWorkspaceFileContentCommandPort(apiClient),
   };
 }

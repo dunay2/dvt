@@ -14,6 +14,10 @@ const BOOTSTRAP_REASON_CODES = [
   'route-boundary-activated',
 ] as const;
 const SURFACE_STATES = ['stale', 'probe-unavailable', 'partial'] as const;
+const CONTRACT_OPERATIONS = [
+  'ListWarehouseConnectionSourceObjects',
+  'PreviewWarehouseSourceObjectRows',
+] as const;
 
 export type FrontendOperabilityTransitionChannel =
   'root.bootstrap' | 'root.platform-health' | 'route.bootstrap' | 'route.boundary';
@@ -117,7 +121,7 @@ function parseFrontendOperabilityEvent(candidate: unknown): FrontendOperabilityE
           }
         : null;
     case 'frontend.contract.failed':
-      return candidate.operation === 'ListWarehouseConnectionSourceObjects' &&
+      return isAllowedLiteral(candidate.operation, CONTRACT_OPERATIONS) &&
         candidate.reasonCode === 'response-contract-rejected'
         ? {
             type: candidate.type,

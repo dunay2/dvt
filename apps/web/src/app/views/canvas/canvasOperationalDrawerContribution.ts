@@ -1,6 +1,7 @@
 /** Owned concern: project Canvas execution posture into the bottom operational drawer. */
 import type {
   OperationalDrawerContribution,
+  OperationalDrawerDataSample,
   OperationalDrawerProblem,
   OperationalDrawerRunControls,
   OperationalDrawerTabId,
@@ -29,6 +30,7 @@ type BuildCanvasOperationalDrawerContributionArgs = Readonly<{
   copy?: CanvasViewCopy;
   onPreviewExecutionPlan: () => void;
   onStartRun: () => void;
+  dataSample?: OperationalDrawerDataSample;
 }>;
 
 function buildReadinessProblems({
@@ -82,6 +84,7 @@ export function buildCanvasOperationalDrawerContribution({
   selectionRecovery = null,
   selectionRecoveryCommands = null,
   selectionRecoveryMessages = canvasViewCopy,
+  dataSample = { status: 'idle' },
 }: BuildCanvasOperationalDrawerContributionArgs): OperationalDrawerContribution {
   const selectionRecoveryBlocked = selectionRecovery?.status === 'blocked';
   const canPreviewExecutionPlan = canPlan && canPlanGraph && !selectionRecoveryBlocked;
@@ -104,6 +107,7 @@ export function buildCanvasOperationalDrawerContribution({
     problems: copy.operationalDrawerProblemsTab,
     runs: copy.operationalDrawerRunsTab,
     preview: copy.operationalDrawerPreviewTab,
+    data: copy.operationalDrawerDataTab,
   } satisfies Record<OperationalDrawerTabId, string>;
   const readinessBlockers: readonly PlanRunReadinessBlocker[] =
     planRunReadiness.status === 'ready'
@@ -153,6 +157,17 @@ export function buildCanvasOperationalDrawerContribution({
       previewAction: copy.operationalDrawerPreviewAction,
       previewReadyStatus: copy.operationalDrawerPreviewReadyStatus,
       previewBlockedStatus: copy.operationalDrawerPreviewBlockedStatus,
+      dataAriaLabel: copy.operationalDrawerDataAriaLabel,
+      dataIdleMessage: copy.operationalDrawerDataIdleMessage,
+      dataLoadingTemplate: copy.operationalDrawerDataLoadingTemplate,
+      dataEmptyTemplate: copy.operationalDrawerDataEmptyTemplate,
+      dataConnectionNotFoundTemplate: copy.operationalDrawerDataConnectionNotFoundTemplate,
+      dataSourceObjectNotFoundTemplate: copy.operationalDrawerDataSourceObjectNotFoundTemplate,
+      dataUnavailableTemplate: copy.operationalDrawerDataUnavailableTemplate,
+      dataUnknownErrorTemplate: copy.operationalDrawerDataUnknownErrorTemplate,
+      dataTruncatedTemplate: copy.operationalDrawerDataTruncatedTemplate,
+      dataCaptionTemplate: copy.operationalDrawerDataCaptionTemplate,
+      dataNullValue: copy.operationalDrawerDataNullValue,
       tabsAriaLabel: copy.operationalDrawerTabsAriaLabel,
       severity: {
         info: copy.operationalDrawerInfoSeverity,
@@ -170,7 +185,9 @@ export function buildCanvasOperationalDrawerContribution({
             ? 1
             : id === 'preview' && previewStatus === 'blocked'
               ? Math.max(1, previewBlockers.length)
-              : null,
+              : id === 'data' && dataSample.status === 'ready'
+                ? dataSample.sample.rows.length
+                : null,
     })),
     problems: {
       items: problems,
@@ -205,5 +222,6 @@ export function buildCanvasOperationalDrawerContribution({
               messages: selectionRecoveryMessages,
             },
     },
+    dataSample,
   };
 }

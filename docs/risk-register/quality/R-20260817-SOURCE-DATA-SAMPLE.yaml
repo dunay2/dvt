@@ -1,0 +1,18 @@
+---
+id: R-20260817-SOURCE-DATA-SAMPLE
+title: Governed warehouse source samples can expose sensitive row values
+status: Open
+date: 2026-08-17
+owners:
+  - '@dvt/contracts'
+  - dvt-api
+  - '@dvt/web'
+severity: Medium
+probability: Low
+---
+The source sample intentionally exposes bounded row values to an authorized workspace user. Residual
+sensitivity depends on the selected governed relation. The API mitigates the risk by resolving
+credentials server-side, accepting only relation identifiers, checking SELECT privilege, using a
+read-only transaction with a local statement timeout, enforcing a maximum of 50 rows, and returning
+only strings or nulls. The UI requests 20 rows. Workspace authorization and governed connection
+scope remain mandatory controls.

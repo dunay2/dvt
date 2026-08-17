@@ -22,6 +22,7 @@ import type {
   CreateWarehouseConnectionCatalogInput,
   IWarehouseConnectionCatalog,
   IWarehouseConnectionProbe,
+  IWarehouseSourceDataSampleProbe,
   InspectWarehouseConnectionResult,
   TestWarehouseConnectionResult,
   WarehouseConnection,
@@ -48,6 +49,7 @@ import { GraphDraftWarehouseSourceImportStrategy } from '../../../src/applicatio
 import { ImportWarehouseSourcesUseCase } from '../../../src/application/services/importWarehouseSourcesUseCase.js';
 import { ListWarehouseConnectionSourceObjectsUseCase } from '../../../src/application/services/listWarehouseConnectionSourceObjectsUseCase.js';
 import { ListWarehouseConnectionsUseCase } from '../../../src/application/services/listWarehouseConnectionsUseCase.js';
+import { PreviewWarehouseSourceObjectRowsUseCase } from '../../../src/application/services/previewWarehouseSourceObjectRowsUseCase.js';
 import { RenameWarehouseConnectionUseCase } from '../../../src/application/services/renameWarehouseConnectionUseCase.js';
 import { TestWarehouseConnectionUseCase } from '../../../src/application/services/testWarehouseConnectionUseCase.js';
 import { WarehouseConnectionSourceObjectReader } from '../../../src/application/services/WarehouseConnectionSourceObjectReader.js';
@@ -237,7 +239,9 @@ type TestWarehouseConnectionProbeFailure = Omit<
   readonly checkedAt?: string;
 };
 
-class TestWarehouseConnectionProbe implements IWarehouseConnectionProbe {
+class TestWarehouseConnectionProbe
+  implements IWarehouseConnectionProbe, IWarehouseSourceDataSampleProbe
+{
   public constructor(
     private readonly result: TestWarehouseConnectionProbeFailure | null,
     private readonly resolveSourceObjects: (
@@ -275,6 +279,20 @@ class TestWarehouseConnectionProbe implements IWarehouseConnectionProbe {
       status: 'passed',
       checkedAt: '2026-05-30T00:00:01.000Z',
       objectCount: input.sourceObjects.length,
+    };
+  }
+
+  public async previewSourceObjectRows(
+    input: Parameters<IWarehouseSourceDataSampleProbe['previewSourceObjectRows']>[0]
+  ): ReturnType<IWarehouseSourceDataSampleProbe['previewSourceObjectRows']> {
+    return {
+      columns: [
+        { name: 'order_id', type: 'integer', nullable: false },
+        { name: 'customer', type: 'text', nullable: true },
+      ],
+      rows: [{ values: ['1', 'Ada'] }, { values: ['2', null] }].slice(0, input.limit),
+      truncated: input.limit < 2,
+      sampledAt: '2026-08-17T10:00:00.000Z',
     };
   }
 }
@@ -516,6 +534,7 @@ function buildApp(
     authorizer: { authorize } as never,
     listConnectionsUseCase: new ListWarehouseConnectionsUseCase(catalog),
     listSourceObjectsUseCase: new ListWarehouseConnectionSourceObjectsUseCase(sourceObjectReader),
+    previewSourceRowsUseCase: new PreviewWarehouseSourceObjectRowsUseCase(catalog, probe),
     createConnectionUseCase: new CreateWarehouseConnectionUseCase(catalog, probe),
     renameConnectionUseCase: new RenameWarehouseConnectionUseCase(catalog),
     testConnectionUseCase: new TestWarehouseConnectionUseCase(catalog, probe),
@@ -549,6 +568,67 @@ function sha256(content: string): string {
 }
 
 describe('warehouseSourceImportRoutes', () => {
+  it('returns a bounded source data sample through the protected view query', async () => {
+    const { app, authorize } = buildApp();
+    const objectId = encodeURIComponent('relation/analytics/erp/orders');
+
+    const response = await app.inject({
+      method: 'GET',
+      url: `/workspace/warehouse/connections/warehouse-prod/source-data-sample?${SCOPE_QUERY}&objectId=${objectId}&limit=1`,
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual({
+      contractVersion: 1,
+      connectionId: 'warehouse-prod',
+      objectId: 'relation/analytics/erp/orders',
+      columns: [
+        { name: 'order_id', type: 'integer', nullable: false },
+        { name: 'customer', type: 'text', nullable: true },
+      ],
+      rows: [{ values: ['1', 'Ada'] }],
+      limit: 1,
+      truncated: true,
+      sampledAt: '2026-08-17T10:00:00.000Z',
+    });
+    expect(response.json()).not.toHaveProperty('credentialRef');
+    expect(authorize).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        action: { kind: 'query', name: 'workspace:source-import:view' },
+      }),
+      expect.any(String)
+    );
+  });
+
+  it('rejects missing object identity and limits above the governed source sample bound', async () => {
+    const { app } = buildApp();
+    const missingObject = await app.inject({
+      method: 'GET',
+      url: `/workspace/warehouse/connections/warehouse-prod/source-data-sample?${SCOPE_QUERY}`,
+    });
+    const outOfRange = await app.inject({
+      method: 'GET',
+      url: `/workspace/warehouse/connections/warehouse-prod/source-data-sample?${SCOPE_QUERY}&objectId=${encodeURIComponent('relation/analytics/erp/orders')}&limit=51`,
+    });
+
+    expect(missingObject.statusCode).toBe(400);
+    expect(outOfRange.statusCode).toBe(400);
+  });
+
+  it('does not collapse an unknown governed connection into a generic sample failure', async () => {
+    const { app } = buildApp();
+    const response = await app.inject({
+      method: 'GET',
+      url: `/workspace/warehouse/connections/missing/source-data-sample?${SCOPE_QUERY}&objectId=${encodeURIComponent('relation/analytics/erp/orders')}`,
+    });
+
+    expect(response.statusCode).toBe(404);
+    expect(response.json()).toEqual({
+      error: { type: 'not_found', reason: 'warehouse_connection_not_found' },
+    });
+  });
+
   it('renames a warehouse connection through a dedicated protected command rail', async () => {
     const { app, authorize } = buildApp();
 
