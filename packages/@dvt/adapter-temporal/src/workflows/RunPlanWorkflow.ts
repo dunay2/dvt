@@ -101,15 +101,15 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
   } catch (error) {
     // Native Temporal cancellation can interrupt the paused wait path directly,
     // so the root catch remains the canonical place to emit terminal cancellation.
-    const nativeCancellationFinalized = await finalizeNativeCancellationIfNeeded({
+    const nativeCancellationError = await finalizeNativeCancellationIfNeeded({
       error,
       state,
       ctx,
       planRef,
       continuedAsNewCount: ctrl.continuedAsNewCount,
     });
-    if (nativeCancellationFinalized) {
-      throw error;
+    if (nativeCancellationError !== null) {
+      throw nativeCancellationError;
     }
 
     await markWorkflowFailedIfNeeded(state, ctx, planRef, runtimeExecutor, error);
