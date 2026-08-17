@@ -83,6 +83,8 @@ describe('canvasNodeMapper', () => {
       height: 28,
     });
     expect(edge.style).toMatchObject({ strokeWidth: 2.5 });
+    expect(edge.sourceHandle).toBe('source');
+    expect(edge.targetHandle).toBe('target');
   });
 
   it('preserves specialized source plugin identity in React Flow node data', () => {
