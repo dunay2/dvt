@@ -24,6 +24,7 @@ type GraphNodeCardCopy = Readonly<{
   durationLabel: string;
   costLabel: string;
   testsLabel: string;
+  testStatusLabels: Readonly<Record<string, string>>;
   healthTitleTemplate: string;
   healthAriaLabelTemplate: string;
   remainingColumnsLabelTemplate: string;
@@ -63,6 +64,20 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   durationLabel: 'Duration',
   costLabel: 'Cost',
   testsLabel: 'Tests',
+  testStatusLabels: {
+    pass: 'Passed',
+    passed: 'Passed',
+    success: 'Passed',
+    succeeded: 'Passed',
+    fail: 'Failed',
+    failed: 'Failed',
+    error: 'Failed',
+    running: 'Running',
+    skip: 'Skipped',
+    skipped: 'Skipped',
+    warn: 'Warning',
+    warning: 'Warning',
+  },
   healthTitleTemplate: '{title} health',
   healthAriaLabelTemplate: 'Open {title} health metrics',
   remainingColumnsLabelTemplate: 'Show remaining columns ({count})',
@@ -102,6 +117,20 @@ const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   durationLabel: 'Duración',
   costLabel: 'Coste',
   testsLabel: 'Pruebas',
+  testStatusLabels: {
+    pass: 'Aprobadas',
+    passed: 'Aprobadas',
+    success: 'Aprobadas',
+    succeeded: 'Aprobadas',
+    fail: 'Fallidas',
+    failed: 'Fallidas',
+    error: 'Fallidas',
+    running: 'En curso',
+    skip: 'Omitidas',
+    skipped: 'Omitidas',
+    warn: 'Con avisos',
+    warning: 'Con avisos',
+  },
   healthTitleTemplate: 'Estado de {title}',
   healthAriaLabelTemplate: 'Abrir métricas de estado de {title}',
   remainingColumnsLabelTemplate: 'Ver columnas restantes ({count})',

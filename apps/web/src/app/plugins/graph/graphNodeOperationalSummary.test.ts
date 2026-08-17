@@ -357,9 +357,35 @@ describe('buildGraphNodeOperationalSummary', () => {
       { id: 'duration', label: 'Duration', value: '32s', icon: 'timer' },
       { id: 'rows', label: 'Rows', value: '2.1M', icon: 'rows' },
       { id: 'cost', label: 'Cost', value: '$0.18', icon: 'cost' },
-      { id: 'tests', label: 'Tests', value: 'passed' },
+      { id: 'tests', label: 'Tests', value: 'Passed' },
     ]);
     expect(summary.detail).toBeNull();
+  });
+
+  it('localizes supported test statuses without inventing copy for unknown values', () => {
+    const spanishSummary = buildGraphNodeOperationalSummary({
+      projectionKind: 'execution',
+      title: 'Modelo de pedidos',
+      metadata: { testStatus: 'passed' },
+      data: {},
+      volumeMetricProjection: projectRuntimeVolume(null, null, null),
+      columnCount: null,
+      locale: 'es',
+    });
+    const unknownSummary = buildGraphNodeOperationalSummary({
+      projectionKind: 'execution',
+      title: 'Orders model',
+      metadata: { testStatus: 'provider-specific' },
+      data: {},
+      volumeMetricProjection: projectRuntimeVolume(null, null, null),
+      columnCount: null,
+      locale: 'en',
+    });
+
+    expect(spanishSummary.metrics).toEqual([{ id: 'tests', label: 'Pruebas', value: 'Aprobadas' }]);
+    expect(unknownSummary.metrics).toEqual([
+      { id: 'tests', label: 'Tests', value: 'provider-specific' },
+    ]);
   });
 
   it('projects model execution cost from the canonical lastCost field', () => {

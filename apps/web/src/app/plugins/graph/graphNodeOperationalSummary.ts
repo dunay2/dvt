@@ -78,6 +78,11 @@ function formatCost(value: number): string {
   return `$${value.toFixed(2)}`;
 }
 
+function localizeTestStatus(value: string | null, copy: GraphNodeCardCopy): string | null {
+  if (value == null) return null;
+  return copy.testStatusLabels[value.trim().toLowerCase()] ?? value;
+}
+
 function firstRuntimeNumericValue(
   metadata: Record<string, unknown>,
   data: Record<string, unknown>,
@@ -427,7 +432,7 @@ function buildModelExecutionMetrics(
       icon: 'cost',
     }
   );
-  pushOperationalMetric(metrics, 'tests', copy.testsLabel, testStatus);
+  pushOperationalMetric(metrics, 'tests', copy.testsLabel, localizeTestStatus(testStatus, copy));
 
   return metrics;
 }
