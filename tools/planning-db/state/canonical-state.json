@@ -171336,8 +171336,8 @@
       ],
       "completionGate": [
         "pnpm exec vitest run packages/@dvt/contracts/test/source-import/SourceDataSample.v1.test.ts",
-        "pnpm exec vitest run --config apps/api/vitest.config.ts apps/api/test/application/services/previewWarehouseSourceObjectRowsUseCase.test.ts apps/api/test/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.test.ts apps/api/test/entrypoints/http/warehouseSourceImportRoutes.test.ts",
-        "pnpm exec vitest run --config apps/web/vitest.config.ts apps/web/src/app/plugins/graph/GraphNodeOperationalRail.test.tsx apps/web/src/app/views/canvas/CanvasViewport.nodeOperationalRail.test.tsx apps/web/src/app/components/shell/OperationalDrawerPanels.test.tsx",
+        "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/previewWarehouseSourceObjectRowsUseCase.test.ts test/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.test.ts test/entrypoints/http/warehouseSourceImportRoutes.test.ts",
+        "pnpm --filter @dvt/web exec vitest run --config vitest.config.ts src/app/plugins/graph/GraphNodeOperationalRail.test.tsx src/app/views/canvas/CanvasViewport.nodeOperationalRail.test.tsx src/app/components/shell/OperationalDrawerPanels.test.tsx",
         "pnpm verify:prepush"
       ],
       "sourcePath": "https://github.com/dunay2/dvt/issues/2417",
@@ -171449,8 +171449,8 @@
         ],
         "completionGate": [
           "pnpm exec vitest run packages/@dvt/contracts/test/source-import/SourceDataSample.v1.test.ts",
-          "pnpm exec vitest run --config apps/api/vitest.config.ts apps/api/test/application/services/previewWarehouseSourceObjectRowsUseCase.test.ts apps/api/test/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.test.ts apps/api/test/entrypoints/http/warehouseSourceImportRoutes.test.ts",
-          "pnpm exec vitest run --config apps/web/vitest.config.ts apps/web/src/app/plugins/graph/GraphNodeOperationalRail.test.tsx apps/web/src/app/views/canvas/CanvasViewport.nodeOperationalRail.test.tsx apps/web/src/app/components/shell/OperationalDrawerPanels.test.tsx",
+          "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/previewWarehouseSourceObjectRowsUseCase.test.ts test/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.test.ts test/entrypoints/http/warehouseSourceImportRoutes.test.ts",
+          "pnpm --filter @dvt/web exec vitest run --config vitest.config.ts src/app/plugins/graph/GraphNodeOperationalRail.test.tsx src/app/views/canvas/CanvasViewport.nodeOperationalRail.test.tsx src/app/components/shell/OperationalDrawerPanels.test.tsx",
           "pnpm verify:prepush"
         ],
         "redGreenCycles": [
@@ -171510,7 +171510,7 @@
       },
       "revision": 0,
       "createdBy": "codex",
-      "createdAt": "2026-08-17T12:32:42.462Z"
+      "createdAt": "2026-08-17T12:47:11.227Z"
     },
     {
       "railId": "local#WEB-API-AUTHORITY-HARDCUT-20260510#query#getruntimecapabilities",
@@ -211654,6 +211654,125 @@
         ]
       },
       "createdAt": "2026-08-17T12:32:42.462Z"
+    },
+    {
+      "operationId": "13bfac22-34ca-4c22-9e93-624c3393c7a6",
+      "idempotencyKey": "w4-source-sample-retire-rooted-gates-20260817",
+      "operationType": "feature_mechanization_rail_retire",
+      "actor": "codex",
+      "railId": "local#W4-SOURCE-DATA-SAMPLE#query#previewwarehousesourceobjectrows",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2417",
+      "sourceContentSha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "railId": "local#W4-SOURCE-DATA-SAMPLE#query#previewwarehousesourceobjectrows",
+        "reason": "Replace the rail so Vitest executes from the owning package roots rather than filtering with monorepo-relative paths.",
+        "designId": "W4-SOURCE-DATA-SAMPLE-RAIL-CORRECTION-20260817",
+        "railName": "PreviewWarehouseSourceObjectRows",
+        "railType": "query",
+        "featureId": "W4-SOURCE-DATA-SAMPLE",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2417",
+        "expectedRevision": 0,
+        "normalizedRailName": "previewwarehousesourceobjectrows",
+        "sourceContentSha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179"
+      },
+      "createdAt": "2026-08-17T12:46:37.083Z"
+    },
+    {
+      "operationId": "b46d5b76-4d20-4da1-b8e5-2d7191015187",
+      "idempotencyKey": "w4-source-data-sample-mechanization-rooted-gates-20260817",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#W4-SOURCE-DATA-SAMPLE#query#previewwarehousesourceobjectrows",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2417",
+      "sourceContentSha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "Focused tests fail when the query is absent, the gesture propagates, the health popover remains open, or stale rows survive a node change.",
+        "dddOwner": "WarehouseSourceDataSampleReadModel",
+        "railName": "PreviewWarehouseSourceObjectRows",
+        "railType": "query",
+        "featureId": "W4-SOURCE-DATA-SAMPLE",
+        "greenTest": "Focused contract, API, HTTP, web interaction, drawer, and headed browser validations pass with real dvt.public.pth2_orders rows.",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2417",
+        "unitTests": [
+          "packages/@dvt/contracts/test/source-import/SourceDataSample.v1.test.ts",
+          "apps/api/test/application/services/previewWarehouseSourceObjectRowsUseCase.test.ts",
+          "apps/web/src/app/plugins/graph/GraphNodeOperationalRail.test.tsx"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2417"],
+        "cypressFlows": [
+          "Headed agent-browser verifies health click, double-click sample, Enter sample, real rows, ES copy, and drawer-scoped axe audit."
+        ],
+        "domainObjects": ["SourceDataSample", "GovernedRelationalSourceObject"],
+        "fowlerSignals": [
+          "Reuse BottomOperationalDrawer and keep catalog discovery separate from bounded row sampling."
+        ],
+        "negativeTests": [
+          "Reject invalid limits, unsupported or absent relations, missing connections, unauthorized workspaces, timeout, provider failure, client SQL, and credential-shaped payloads."
+        ],
+        "patchSurfaces": [
+          "packages/@dvt/contracts/src/contracts/source-import/SourceDataSample.v1.ts",
+          "apps/api/src/application/services/previewWarehouseSourceObjectRowsUseCase.ts",
+          "apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.ts",
+          "apps/web/src/app/views/canvas/CanvasViewport.tsx",
+          "apps/web/src/app/components/shell/OperationalDrawerPanels.tsx"
+        ],
+        "adapterSurface": "GET /workspace/warehouse/connections/:connectionId/source-data-sample and workspace source-data-sample query port",
+        "completionGate": [
+          "pnpm exec vitest run packages/@dvt/contracts/test/source-import/SourceDataSample.v1.test.ts",
+          "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/previewWarehouseSourceObjectRowsUseCase.test.ts test/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.test.ts test/entrypoints/http/warehouseSourceImportRoutes.test.ts",
+          "pnpm --filter @dvt/web exec vitest run --config vitest.config.ts src/app/plugins/graph/GraphNodeOperationalRail.test.tsx src/app/views/canvas/CanvasViewport.nodeOperationalRail.test.tsx src/app/components/shell/OperationalDrawerPanels.test.tsx",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "PreviewWarehouseSourceObjectRowsUseCase through IWarehouseSourceDataSampleProbe",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "No authorized bounded row query exists and double-clicking the gray metrics rail cannot open real source rows in the existing drawer.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/guides/ai-work-protocol.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260817-source-data-sample.md"
+        ],
+        "architectureGuards": [
+          "SourceDataSample schemas reject SQL and credential-shaped fields and cap responses at 50 rows."
+        ],
+        "authorizationScope": "active tenant, project, environment, workspace:source-import:view, governed connection, relational object SELECT privilege",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2417",
+        "implementationRefs": [
+          "packages/@dvt/contracts/src/contracts/source-import/SourceDataSample.v1.ts#SourceDataSampleResponseSchema",
+          "apps/api/src/application/services/previewWarehouseSourceObjectRowsUseCase.ts#PreviewWarehouseSourceObjectRowsUseCase",
+          "apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.ts#WorkspaceWarehouseConnectionProbe",
+          "apps/web/src/app/views/canvas/canvasSourceDataSample.ts#resolveCanvasSourceDataSampleTarget",
+          "apps/web/src/app/plugins/graph/GraphNodeOperationalRail.tsx#GraphNodeOperationalRail"
+        ],
+        "normalizedRailName": "previewwarehousesourceobjectrows",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/contracts/src/contracts/source-import/SourceDataSample.v1.ts",
+          "apps/api/src/application/services/previewWarehouseSourceObjectRowsUseCase.ts",
+          "apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.ts",
+          "apps/web/src/app/views/canvas",
+          "apps/web/src/app/plugins/graph/GraphNodeOperationalRail.tsx"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "client-authored SQL or credential values",
+          "parallel modal, drawer, or global row-sample store"
+        ]
+      },
+      "createdAt": "2026-08-17T12:47:11.227Z"
     }
   ],
   "governanceComponentDefinitions": [
