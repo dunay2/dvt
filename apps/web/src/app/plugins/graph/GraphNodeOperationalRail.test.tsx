@@ -193,4 +193,63 @@ describe('GraphNodeOperationalRail', () => {
     expect(onOpen).toHaveBeenCalledOnce();
     expect(onOpen).toHaveBeenCalledWith(rail);
   });
+
+  it('opens the source data sample on double click without bubbling to the card', () => {
+    const onOpen = vi.fn();
+    const onOpenDataSample = vi.fn();
+    const onCardDoubleClick = vi.fn();
+
+    act(() => {
+      root.render(
+        <div onDoubleClick={onCardDoubleClick}>
+          <GraphNodeOperationalRail
+            metrics={[{ id: 'rows', label: 'Rows', value: '3' }]}
+            ariaLabel="Open source health metrics"
+            dataSampleInteractionLabel="Double-click or press Enter to open a data sample."
+            onOpen={onOpen}
+            onOpenDataSample={onOpenDataSample}
+          />
+        </div>
+      );
+    });
+
+    const rail = container.querySelector<HTMLButtonElement>(
+      'button[data-slot="graph-node-operational-rail"]'
+    );
+    act(() => {
+      fireEvent.doubleClick(rail!);
+    });
+
+    expect(onOpenDataSample).toHaveBeenCalledOnce();
+    expect(onCardDoubleClick).not.toHaveBeenCalled();
+  });
+
+  it('uses Enter as the accessible source data sample gesture without opening health', () => {
+    const onOpen = vi.fn();
+    const onOpenDataSample = vi.fn();
+
+    act(() => {
+      root.render(
+        <GraphNodeOperationalRail
+          metrics={[{ id: 'rows', label: 'Rows', value: '3' }]}
+          ariaLabel="Open source health metrics"
+          dataSampleInteractionLabel="Double-click or press Enter to open a data sample."
+          onOpen={onOpen}
+          onOpenDataSample={onOpenDataSample}
+        />
+      );
+    });
+
+    const rail = container.querySelector<HTMLButtonElement>(
+      'button[data-slot="graph-node-operational-rail"]'
+    );
+    act(() => {
+      fireEvent.keyDown(rail!, { key: 'Enter' });
+    });
+
+    expect(onOpenDataSample).toHaveBeenCalledOnce();
+    expect(onOpen).not.toHaveBeenCalled();
+    const descriptionId = rail?.getAttribute('aria-describedby');
+    expect(document.getElementById(descriptionId!)?.textContent).toContain('Double-click');
+  });
 });

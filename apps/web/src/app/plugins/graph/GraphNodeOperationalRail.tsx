@@ -1,5 +1,5 @@
 /** Owned concern: render graph-node operational metrics as an optional detail affordance. */
-import { useId, type MouseEvent, type ReactElement } from 'react';
+import { useId, type KeyboardEvent, type MouseEvent, type ReactElement } from 'react';
 import {
   Activity,
   AlertTriangle,
@@ -39,6 +39,8 @@ const metricIconByName: Record<GraphNodeCardMetricIcon, LucideIcon> = {
 
 type GraphNodeOperationalRailBaseProps = Readonly<{
   metrics: readonly GraphNodeCardMetric[];
+  dataSampleInteractionLabel?: string;
+  onOpenDataSample?: () => void;
 }>;
 
 type GraphNodeOperationalRailStaticProps = GraphNodeOperationalRailBaseProps &
@@ -54,8 +56,7 @@ type GraphNodeOperationalRailInteractiveProps = GraphNodeOperationalRailBaseProp
   }>;
 
 export type GraphNodeOperationalRailProps =
-  | GraphNodeOperationalRailStaticProps
-  | GraphNodeOperationalRailInteractiveProps;
+  GraphNodeOperationalRailStaticProps | GraphNodeOperationalRailInteractiveProps;
 
 function stopAndOpen(
   event: MouseEvent<HTMLElement>,
@@ -63,6 +64,15 @@ function stopAndOpen(
 ): void {
   event.stopPropagation();
   onOpen(event.currentTarget);
+}
+
+function openDataSample(
+  event: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>,
+  onOpenDataSample: () => void
+): void {
+  event.preventDefault();
+  event.stopPropagation();
+  onOpenDataSample();
 }
 
 function renderMetrics(metrics: readonly GraphNodeCardMetric[]): ReactElement[] {
@@ -108,7 +118,9 @@ function renderMetrics(metrics: readonly GraphNodeCardMetric[]): ReactElement[] 
 export function GraphNodeOperationalRail({
   metrics,
   ariaLabel,
+  dataSampleInteractionLabel,
   onOpen,
+  onOpenDataSample,
 }: GraphNodeOperationalRailProps): ReactElement | null {
   const descriptionId = useId();
   if (metrics.length === 0) {
@@ -132,10 +144,23 @@ export function GraphNodeOperationalRail({
       aria-describedby={descriptionId}
       className={graphNodeOperationalRailClasses.button}
       onClick={(event) => stopAndOpen(event, onOpen)}
+      onDoubleClick={
+        onOpenDataSample == null ? undefined : (event) => openDataSample(event, onOpenDataSample)
+      }
+      onKeyDown={
+        onOpenDataSample == null
+          ? undefined
+          : (event) => {
+              if (event.key === 'Enter') {
+                openDataSample(event, onOpenDataSample);
+              }
+            }
+      }
     >
       {renderMetrics(metrics)}
       <span id={descriptionId} className={graphNodeOperationalRailClasses.accessibleDescription}>
         {metrics.map((metric) => metric.detail ?? `${metric.label}: ${metric.value}`).join(' ')}
+        {dataSampleInteractionLabel == null ? null : ` ${dataSampleInteractionLabel}`}
       </span>
     </button>
   );

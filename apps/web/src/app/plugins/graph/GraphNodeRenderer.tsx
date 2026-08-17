@@ -134,6 +134,16 @@ export function GraphNodeRenderer({
           ? () => inspectNode(node.id, 'code')
           : undefined
       }
+      onOpenDataSample={
+        typeof data.onOpenSourceDataSample === 'function'
+          ? () => (data.onOpenSourceDataSample as (nodeId: string) => void)(node.id)
+          : undefined
+      }
+      dataSampleInteractionLabel={
+        typeof data.sourceDataSampleInteractionLabel === 'string'
+          ? data.sourceDataSampleInteractionLabel
+          : undefined
+      }
       onOpenOperationalDetails={
         typeof openOperationalDetails === 'function'
           ? (detail: GraphNodeOperationalDetail, anchorElement: HTMLElement) => {
