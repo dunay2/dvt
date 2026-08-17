@@ -166,6 +166,8 @@ export function createCanvasDirectionalEdge({
     id,
     source,
     target,
+    sourceHandle: 'source',
+    targetHandle: 'target',
     ariaLabel,
     type: 'smoothstep',
     animated: false,
