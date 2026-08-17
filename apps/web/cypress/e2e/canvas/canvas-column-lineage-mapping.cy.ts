@@ -1,5 +1,6 @@
 /** Owned concern: prove the VTX1 column-mapping story through the governed Canvas draft rail. */
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
+import { connectCanvasNodes } from '../../support/canvasGraphAuthoring';
 import { stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
 import {
   E2E_PROJECT_WORKSPACE,
@@ -7,7 +8,7 @@ import {
   visitWithE2eWorkspaceSession,
 } from '../../support/workspaceSession';
 
-function stubColumnMappingCanvas(): void {
+function stubColumnMappingCanvas(disconnected = false): void {
   stubShellBootstrapApis({
     scopes: ['workspace:graph-draft:view', 'workspace:graph-draft:save'],
   });
@@ -20,7 +21,11 @@ function stubColumnMappingCanvas(): void {
     minFrontendVersion: '0.0.1',
     plugins: { dvt: { available: true } },
   });
-  stubStatefulCanvasDraftAuthoring({ canvasKind: 'transformation', columnMapping: true });
+  stubStatefulCanvasDraftAuthoring({
+    canvasKind: 'transformation',
+    columnMapping: true,
+    columnMappingDisconnected: disconnected,
+  });
 }
 
 function visitColumnMappingCanvas(language: 'en' | 'es' = 'en'): void {
@@ -79,12 +84,34 @@ function assertNoSeriousAccessibilityViolations(): void {
 }
 
 describe('Canvas column lineage mapping', () => {
-  beforeEach(() => {
-    stubColumnMappingCanvas();
+  it('creates deterministic mappings when the stage dependency is confirmed', () => {
+    cy.viewport(1920, 1080);
+    stubColumnMappingCanvas(true);
+    visitColumnMappingCanvas('en');
+
+    cy.get('.react-flow__edge-columnLineage').should('not.exist');
+    connectCanvasNodes('Orders Source', 'Orders Model');
+    cy.contains('[role="alertdialog"]', 'Confirm Dependency').should('be.visible');
+    cy.contains('[role="alertdialog"] button', 'Confirm').click();
+    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+
+    toggleColumns('source-orders');
+    toggleColumns('model-orders');
+    canvasNode('source-orders').contains('button', 'Show remaining columns (1)').click();
+    canvasNode('model-orders').contains('button', 'Show remaining columns (1)').click();
+    cy.get('.react-flow__edge-columnLineage').should('have.length', 6);
+    cy.get('.react-flow__edge-columnLineage[aria-label="order_id → order_id"]').should('exist');
+    cy.get('.react-flow__edge-columnLineage[aria-label="customer → customer"]').should('exist');
+    cy.get('.react-flow__edge-columnLineage[aria-label="amount → amount"]').should('exist');
+    cy.get('.react-flow__edge-columnLineage[aria-label="status → status"]').should('exist');
+    cy.get('.react-flow__edge-columnLineage[aria-label="created_at → created_at"]').should('exist');
+    cy.get('.react-flow__edge-columnLineage[aria-label="region → region"]').should('exist');
+    cy.get('.react-flow__edge:not(.react-flow__edge-columnLineage)').should('have.length', 2);
   });
 
   it('creates, changes, collapses, restores, and removes recipe-derived mappings', () => {
     cy.viewport(1920, 1080);
+    stubColumnMappingCanvas();
     visitColumnMappingCanvas('en');
 
     cy.get('.react-flow__edge-columnLineage').should('not.exist');
@@ -218,6 +245,7 @@ describe('Canvas column lineage mapping', () => {
   });
 
   it('localizes the mapping controls in a constrained Spanish viewport', () => {
+    stubColumnMappingCanvas();
     cy.viewport(720, 600);
     visitColumnMappingCanvas('es');
     toggleColumns('source-orders');

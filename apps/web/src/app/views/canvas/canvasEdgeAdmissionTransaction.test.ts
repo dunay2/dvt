@@ -1,9 +1,14 @@
 import type { Connection, Edge } from '@xyflow/react';
+import { DVT_TRANSFORM_AUTHORING_MODE } from '@dvt/contracts';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { getPluginPortMap } from '../../plugins/registry';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasDraftSession } from './canvasDraftSession';
+import {
+  applyDvtVisualTransformRecipe,
+  readDvtTransformAuthoringAuthority,
+} from './canvasDvtTransformAuthoringAuthority';
 import {
   resolveCanvasEdgeConfirmationTransaction,
   resolveCanvasEdgeReconnectTransaction,
@@ -84,6 +89,281 @@ describe('canvasEdgeAdmissionTransaction', () => {
     expect(transaction.draftSession.workingSet.visibleEdges).toEqual([
       { sourceId: 'source-node', targetId: 'transform-node' },
     ]);
+  });
+
+  it('creates deterministic column mappings in the same transaction as the stage edge', () => {
+    const source = {
+      ...buildCanonicalNode('source-node', 'input', 'dvt:source'),
+      metadata: {
+        columns: [
+          { name: 'order_id', type: 'integer' },
+          { name: 'customer', type: 'text' },
+        ],
+      },
+    };
+    const transform = buildCanonicalNode('transform-node', 'transform', 'dvt:sql_transform');
+    const canonicalNodesById = new Map<string, CanonicalNode>([
+      [source.id, source],
+      [transform.id, transform],
+    ]);
+
+    const transaction = resolveCanvasEdgeConfirmationTransaction({
+      canonicalNodesById,
+      connection: {
+        source: source.id,
+        sourceHandle: null,
+        target: transform.id,
+        targetHandle: null,
+      },
+      draftSession: buildDraftSession(),
+      edges: [],
+      pluginPortMap,
+    });
+
+    expect(transaction.outcome).toBe('confirmed');
+    if (transaction.outcome !== 'confirmed') {
+      throw new Error('Expected a confirmed edge transaction');
+    }
+    expect(transaction.draftSession.workingSet.visibleEdges).toEqual([
+      { sourceId: source.id, targetId: transform.id },
+    ]);
+    const mappedTransform = transaction.draftSession.localNodeCatalog?.[transform.id];
+    if (mappedTransform == null) {
+      throw new Error('Expected the confirmed transaction to update the transform recipe');
+    }
+    const authority = readDvtTransformAuthoringAuthority(mappedTransform);
+    expect(authority.mode).toBe(DVT_TRANSFORM_AUTHORING_MODE.visual);
+    if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.visual) return;
+    expect(authority.recipe.outputs).toEqual([
+      {
+        id: 'output:order_id',
+        name: 'order_id',
+        dataType: 'integer',
+        expression: {
+          inputs: [{ nodeId: source.id, columnName: 'order_id' }],
+          operations: [{ kind: 'passthrough' }],
+        },
+      },
+      {
+        id: 'output:customer',
+        name: 'customer',
+        dataType: 'text',
+        expression: {
+          inputs: [{ nodeId: source.id, columnName: 'customer' }],
+          operations: [{ kind: 'passthrough' }],
+        },
+      },
+    ]);
+  });
+
+  it('skips ambiguous names instead of choosing a source column at random', () => {
+    const firstSource = {
+      ...buildCanonicalNode('source-node', 'input', 'dvt:source'),
+      metadata: {
+        columns: [
+          { name: 'shared_id', type: 'integer' },
+          { name: 'first_only', type: 'text' },
+        ],
+      },
+    };
+    const secondSource = {
+      ...buildCanonicalNode('second-source', 'input', 'dvt:source'),
+      metadata: {
+        columns: [
+          { name: 'shared_id', type: 'integer' },
+          { name: 'second_only', type: 'numeric' },
+        ],
+      },
+    };
+    const transform = buildCanonicalNode('transform-node', 'transform', 'dvt:sql_transform');
+    const canonicalNodesById = new Map([
+      [firstSource.id, firstSource],
+      [secondSource.id, secondSource],
+      [transform.id, transform],
+    ]);
+    const firstEdge: Edge = {
+      id: 'first-source-to-transform',
+      source: firstSource.id,
+      target: transform.id,
+    };
+    const draftSession = {
+      ...buildDraftSession([{ sourceId: firstSource.id, targetId: transform.id }]),
+      workingSet: {
+        visibleNodeIds: [firstSource.id, secondSource.id, transform.id],
+        visibleEdges: [{ sourceId: firstSource.id, targetId: transform.id }],
+        pendingExplicitNodeIds: [],
+      },
+    };
+
+    const transaction = resolveCanvasEdgeConfirmationTransaction({
+      canonicalNodesById,
+      connection: {
+        source: secondSource.id,
+        sourceHandle: null,
+        target: transform.id,
+        targetHandle: null,
+      },
+      draftSession,
+      edges: [firstEdge],
+      pluginPortMap,
+    });
+
+    expect(transaction.outcome).toBe('confirmed');
+    if (transaction.outcome !== 'confirmed') {
+      throw new Error('Expected a confirmed edge transaction');
+    }
+    const mappedTransform = transaction.draftSession.localNodeCatalog?.[transform.id];
+    if (mappedTransform == null) {
+      throw new Error('Expected unambiguous columns to be mapped');
+    }
+    const authority = readDvtTransformAuthoringAuthority(mappedTransform);
+    if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.visual) {
+      throw new Error('Expected visual transform authority');
+    }
+    expect(authority.recipe.outputs.map((output) => output.name)).toEqual([
+      'first_only',
+      'second_only',
+    ]);
+    expect(authority.recipe.outputs.flatMap((output) => output.expression.inputs)).toEqual([
+      { nodeId: firstSource.id, columnName: 'first_only' },
+      { nodeId: secondSource.id, columnName: 'second_only' },
+    ]);
+  });
+
+  it('preserves declared mappings when a new stage link exposes a matching column name', () => {
+    const firstSource = {
+      ...buildCanonicalNode('source-node', 'input', 'dvt:source'),
+      metadata: { columns: [{ name: 'customer', type: 'text' }] },
+    };
+    const secondSource = {
+      ...buildCanonicalNode('second-source', 'input', 'dvt:source'),
+      metadata: {
+        columns: [
+          { name: 'customer_label', type: 'text' },
+          { name: 'amount', type: 'numeric' },
+        ],
+      },
+    };
+    const transform = applyDvtVisualTransformRecipe(
+      buildCanonicalNode('transform-node', 'transform', 'dvt:sql_transform'),
+      {
+        version: 'v1',
+        outputs: [
+          {
+            id: 'output:customer_label',
+            name: 'customer_label',
+            dataType: 'text',
+            expression: {
+              inputs: [{ nodeId: firstSource.id, columnName: 'customer' }],
+              operations: [{ kind: 'passthrough' }],
+            },
+          },
+        ],
+        filters: [],
+      }
+    );
+    const canonicalNodesById = new Map<string, CanonicalNode>([
+      [firstSource.id, firstSource],
+      [secondSource.id, secondSource],
+      [transform.id, transform],
+    ]);
+    const firstEdge: Edge = {
+      id: 'first-source-to-transform',
+      source: firstSource.id,
+      target: transform.id,
+    };
+    const draftSession: CanvasDraftSession = {
+      ...buildDraftSession([{ sourceId: firstSource.id, targetId: transform.id }]),
+      localNodeCatalog: { [transform.id]: transform },
+      workingSet: {
+        visibleNodeIds: [firstSource.id, secondSource.id, transform.id],
+        visibleEdges: [{ sourceId: firstSource.id, targetId: transform.id }],
+        pendingExplicitNodeIds: [],
+      },
+    };
+
+    const transaction = resolveCanvasEdgeConfirmationTransaction({
+      canonicalNodesById,
+      connection: {
+        source: secondSource.id,
+        sourceHandle: null,
+        target: transform.id,
+        targetHandle: null,
+      },
+      draftSession,
+      edges: [firstEdge],
+      pluginPortMap,
+    });
+
+    expect(transaction.outcome).toBe('confirmed');
+    if (transaction.outcome !== 'confirmed') {
+      throw new Error('Expected a confirmed edge transaction');
+    }
+    const mappedTransform = transaction.draftSession.localNodeCatalog?.[transform.id];
+    if (mappedTransform == null) throw new Error('Expected the transform recipe to remain local');
+    const authority = readDvtTransformAuthoringAuthority(mappedTransform);
+    if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.visual) {
+      throw new Error('Expected visual transform authority');
+    }
+    expect(authority.recipe.outputs).toEqual([
+      {
+        id: 'output:customer_label',
+        name: 'customer_label',
+        dataType: 'text',
+        expression: {
+          inputs: [{ nodeId: firstSource.id, columnName: 'customer' }],
+          operations: [{ kind: 'passthrough' }],
+        },
+      },
+      {
+        id: 'output:amount',
+        name: 'amount',
+        dataType: 'numeric',
+        expression: {
+          inputs: [{ nodeId: secondSource.id, columnName: 'amount' }],
+          operations: [{ kind: 'passthrough' }],
+        },
+      },
+    ]);
+  });
+
+  it('keeps nonblank SQL authority intact while still confirming the stage edge', () => {
+    const source = {
+      ...buildCanonicalNode('source-node', 'input', 'dvt:source'),
+      metadata: { columns: [{ name: 'order_id', type: 'integer' }] },
+    };
+    const transform = {
+      ...buildCanonicalNode('transform-node', 'transform', 'dvt:sql_transform'),
+      metadata: { sql: 'select order_id from existing_authority' },
+    };
+    const canonicalNodesById = new Map<string, CanonicalNode>([
+      [source.id, source],
+      [transform.id, transform],
+    ]);
+
+    const transaction = resolveCanvasEdgeConfirmationTransaction({
+      canonicalNodesById,
+      connection: {
+        source: source.id,
+        sourceHandle: null,
+        target: transform.id,
+        targetHandle: null,
+      },
+      draftSession: buildDraftSession(),
+      edges: [],
+      pluginPortMap,
+    });
+
+    expect(transaction.outcome).toBe('confirmed');
+    if (transaction.outcome !== 'confirmed') {
+      throw new Error('Expected a confirmed edge transaction');
+    }
+    expect(transaction.draftSession.localNodeCatalog?.[transform.id]).toBeUndefined();
+    expect(readDvtTransformAuthoringAuthority(transform)).toEqual({
+      version: 'v1',
+      mode: 'sql',
+      sql: 'select order_id from existing_authority',
+    });
   });
 
   it('rejects confirmation when an endpoint is missing from the canonical graph', () => {
