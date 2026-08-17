@@ -30,6 +30,7 @@ export type StubCanvasDraftReadOptions = {
   importedWarehouseSource?: boolean;
   authoringGenerated?: boolean;
   columnMapping?: boolean;
+  columnMappingDisconnected?: boolean;
   title?: string;
   readOnly?: boolean;
   largeGraph?: boolean;
@@ -52,6 +53,7 @@ export function buildCanvasAuthoringDraft({
   importedWarehouseSource = false,
   authoringGenerated = false,
   columnMapping = false,
+  columnMappingDisconnected = false,
   title,
   largeGraph = false,
 }: StubCanvasDraftReadOptions = {}): CanvasAuthoringDraft {
@@ -257,12 +259,16 @@ export function buildCanvasAuthoringDraft({
         },
       ],
       edges: [
-        {
-          id: 'edge-source-model',
-          sourceId: 'source-orders',
-          targetId: 'model-orders',
-          relation: 'lineage',
-        },
+        ...(columnMappingDisconnected
+          ? []
+          : [
+              {
+                id: 'edge-source-model',
+                sourceId: 'source-orders',
+                targetId: 'model-orders',
+                relation: 'lineage' as const,
+              },
+            ]),
         {
           id: 'edge-model-sink',
           sourceId: 'model-orders',
