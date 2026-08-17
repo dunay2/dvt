@@ -5,7 +5,6 @@ import type { ReactNode } from 'react';
 import { Badge } from '../ui/badge';
 import { Card } from '../ui/card';
 import { Checkbox } from '../ui/checkbox';
-import { MetricEvidenceHotspot } from '../metrics/MetricEvidenceHotspot';
 import type {
   SourceImportCatalogFilterId,
   SourceImportCatalogFilterViewModel,
@@ -31,24 +30,17 @@ export const sourceImportCatalogClassNames = {
   schemaTitle: 'text-sm font-medium',
   objectList: 'ml-6 space-y-1',
   objectCard:
-    'rounded border border-slate-700 bg-slate-950/30 p-3 outline-none hover:bg-slate-950 focus-visible:border-sky-400 focus-visible:ring-2 focus-visible:ring-sky-400/40',
+    'rounded border border-slate-700 bg-slate-950/30 px-2.5 py-2 outline-none hover:bg-slate-950 focus-visible:border-sky-400 focus-visible:ring-2 focus-visible:ring-sky-400/40',
   selectedObjectCard: 'border-sky-400 bg-sky-950/30 shadow-[0_0_0_1px_rgba(56,189,248,0.35)]',
-  objectHeader: 'flex items-start justify-between gap-3',
-  objectIdentity: 'flex min-w-0 items-start gap-2',
+  objectHeader: 'flex items-center justify-between gap-2',
+  objectIdentity: 'flex min-w-0 items-center gap-2',
   objectInspectButton:
-    'flex min-w-0 cursor-pointer items-start gap-2 rounded text-left outline-none focus-visible:ring-2 focus-visible:ring-sky-400/40',
-  objectIcon: 'mt-0.5 size-4 shrink-0 text-slate-300',
+    'flex min-w-0 cursor-pointer items-center gap-2 rounded text-left outline-none focus-visible:ring-2 focus-visible:ring-sky-400/40',
+  objectIcon: 'size-4 shrink-0 text-slate-300',
   objectNameBlock: 'min-w-0',
   objectName: 'block truncate font-mono text-sm',
   objectCanonicalName: 'block truncate font-mono text-xs text-slate-400',
-  objectMetrics: 'shrink-0 text-right text-xs text-slate-400',
   importability: 'mt-2 text-[11px] leading-4 text-amber-300',
-  columnList: 'mt-3 grid gap-1',
-  columnRow:
-    'grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 rounded border border-slate-800 bg-slate-950/60 px-2 py-1.5',
-  columnName: 'truncate font-mono text-xs text-slate-100',
-  columnType: 'font-mono text-[11px] text-slate-300',
-  columnNullability: 'text-[11px] text-slate-400',
 } as const;
 
 const sourceObjectIconByKind: Readonly<
@@ -226,31 +218,6 @@ export function SourceImportObjectList({
   return <div className={sourceImportCatalogClassNames.objectList}>{children}</div>;
 }
 
-export function SourceImportColumnPreviewList({
-  sourceObject,
-}: Readonly<{ sourceObject: SourceImportObjectViewModel }>): JSX.Element | null {
-  if (sourceObject.columns.length === 0) {
-    return null;
-  }
-
-  return (
-    <div className={sourceImportCatalogClassNames.columnList}>
-      {sourceObject.columns.slice(0, 4).map((column) => (
-        <div
-          key={`${sourceObject.identityKey}.${column.name}`}
-          className={sourceImportCatalogClassNames.columnRow}
-        >
-          <span className={sourceImportCatalogClassNames.columnName}>{column.name}</span>
-          <span className={sourceImportCatalogClassNames.columnType}>{column.type}</span>
-          <span className={sourceImportCatalogClassNames.columnNullability}>
-            {column.nullabilityLabel}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 export function SourceImportObjectCard({
   sourceObject,
   onActivate,
@@ -289,36 +256,12 @@ export function SourceImportObjectCard({
             </span>
           </button>
         </div>
-        <div className={sourceImportCatalogClassNames.objectMetrics}>
-          <Badge variant="secondary">{sourceObject.kindLabel}</Badge>
-          {sourceObject.selected ? (
-            <Badge variant="outline">{sourceObject.selectedLabel}</Badge>
-          ) : null}
-          <div>
-            <MetricEvidenceHotspot
-              detail={sourceObject.rowCountDetail}
-              focusable={false}
-              tone={sourceObject.rowCountTone}
-              value={sourceObject.rowCountLabel}
-            />
-          </div>
-          <div>
-            <MetricEvidenceHotspot
-              detail={sourceObject.byteSizeDetail}
-              focusable={false}
-              tone={sourceObject.byteSizeTone}
-              value={sourceObject.byteSizeLabel}
-            />
-          </div>
-          <div>{sourceObject.columnCountLabel}</div>
-        </div>
       </div>
       {sourceObject.importabilityLabel ? (
         <p className={sourceImportCatalogClassNames.importability}>
           {sourceObject.importabilityLabel}
         </p>
       ) : null}
-      <SourceImportColumnPreviewList sourceObject={sourceObject} />
     </article>
   );
 }

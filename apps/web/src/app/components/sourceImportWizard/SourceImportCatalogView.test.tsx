@@ -71,10 +71,9 @@ describe('SourceImportCatalogView', () => {
     });
 
     expect(container.textContent).toContain('RAW.ERP.ORDERS');
-    expect(container.textContent).toContain('1,500 rows');
-    expect(container.textContent).toContain('3.9 MB');
-    expect(container.textContent).toContain('1 column');
-    expect(container.querySelectorAll('[data-slot="metric-evidence-hotspot"]')).toHaveLength(2);
+    expect(container.textContent).not.toContain('order_id');
+    expect(container.textContent).not.toContain('INTEGER');
+    expect(container.querySelectorAll('[data-slot="metric-evidence-hotspot"]')).toHaveLength(0);
 
     const inspectAction = getByRole(container, 'button', {
       name: 'Inspect source object RAW.ERP.ORDERS metadata. 1,500 rows. 3.9 MB. 1 column.',
