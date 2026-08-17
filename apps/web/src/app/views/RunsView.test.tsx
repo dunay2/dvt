@@ -16,6 +16,7 @@ import type { RunEvent } from '../types/engine';
 import { iso, makeRunContext, stepId } from '../testing/contractTestUtils';
 import { withTestQueryClient, waitForReactQuery } from '../../testing/reactQueryHarness';
 import RunsView from './RunsView';
+import { selectRunDetailTab } from './runs/test/RunStatesHarness';
 
 function buildSessionContext(): SessionContextPort {
   const workspaceScope = {
@@ -198,10 +199,10 @@ describe('RunsView', () => {
       </AppServicesProvider>
     );
 
-    await waitForReactQuery(
-      () => mounted?.container.textContent?.includes('Materialization evidence') ?? false,
-      { description: 'run detail materialization evidence' }
-    );
+    await waitForReactQuery(() => mounted?.container.querySelector('[role="tab"]') != null, {
+      description: 'run detail tabs',
+    });
+    await selectRunDetailTab(mounted.container, 'Result');
 
     expect(mounted.container.textContent).toContain('Run run_completed');
     expect(mounted.container.textContent).toContain('Materialization evidence');
@@ -245,15 +246,17 @@ describe('RunsView', () => {
       </AppServicesProvider>
     );
 
-    await waitForReactQuery(
-      () => mounted?.container.textContent?.includes('Failure diagnostics') ?? false,
-      { description: 'run detail failure diagnostics' }
-    );
+    await waitForReactQuery(() => mounted?.container.querySelector('[role="tab"]') != null, {
+      description: 'run detail tabs',
+    });
 
     expect(mounted.container.textContent).toContain('Run run_failed');
-    expect(mounted.container.textContent).toContain('Failure diagnostics');
     expect(mounted.container.textContent).toContain('Executor');
     expect(mounted.container.textContent).toContain('postgres');
+
+    await selectRunDetailTab(mounted.container, 'Diagnostics and events');
+
+    expect(mounted.container.textContent).toContain('Failure diagnostics');
     expect(mounted.container.textContent).toContain('step-transform');
     expect(mounted.container.textContent).toContain('STEP_FAILURE');
   });
@@ -409,10 +412,10 @@ describe('RunsView', () => {
       </AppServicesProvider>
     );
 
-    await waitForReactQuery(
-      () => mounted?.container.querySelector('[data-slot="run-event-timeline-table"]') != null,
-      { description: 'run event timeline table' }
-    );
+    await waitForReactQuery(() => mounted?.container.querySelector('[role="tab"]') != null, {
+      description: 'run detail tabs',
+    });
+    await selectRunDetailTab(mounted.container, 'Diagnostics and events');
 
     expect(mounted.container.textContent).toContain('Event timeline');
     expect(mounted.container.textContent).toContain('Step started');

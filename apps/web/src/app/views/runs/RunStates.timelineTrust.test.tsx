@@ -10,6 +10,7 @@ import {
   buildStepStartedEvent,
   buildWorkspace,
   createRunStatesHarness,
+  selectRunDetailTab,
 } from './test/RunStatesHarness';
 
 describe('RunStates timeline trust boundaries', () => {
@@ -65,6 +66,8 @@ describe('RunStates timeline trust boundaries', () => {
         )}
       />
     );
+
+    await selectRunDetailTab(harness.container, 'Result');
 
     expect(harness.container.textContent).toContain('Materialization evidence');
     expect(harness.container.textContent).toContain(
@@ -152,8 +155,13 @@ describe('RunStates timeline trust boundaries', () => {
       />
     );
 
+    await selectRunDetailTab(harness.container, 'Diagnostics and events');
+
     expect(harness.container.textContent).not.toContain('Failure diagnostics');
     expect(harness.container.textContent).not.toContain('OLD_ATTEMPT_FAILURE');
+
+    await selectRunDetailTab(harness.container, 'Result');
+
     expect(harness.container.textContent).not.toContain('analytics.old_attempt');
     expect(harness.container.textContent).toContain(
       'Result evidence is not available yet for this run snapshot.'
@@ -194,6 +202,8 @@ describe('RunStates timeline trust boundaries', () => {
         })}
       />
     );
+
+    await selectRunDetailTab(harness.container, 'Provenance');
 
     expect(harness.container.textContent).toContain('Execution provenance');
     expect(
@@ -244,6 +254,8 @@ describe('RunStates timeline trust boundaries', () => {
         )}
       />
     );
+
+    await selectRunDetailTab(harness.container, 'Diagnostics and events');
 
     expect(harness.container.textContent).not.toContain('Failure diagnostics');
     expect(harness.container.textContent).not.toContain('SINK_WRITE_FAILED');
@@ -300,6 +312,8 @@ describe('RunStates timeline trust boundaries', () => {
       />
     );
 
+    await selectRunDetailTab(harness.container, 'Diagnostics and events');
+
     expect(harness.container.textContent).not.toContain('Failure diagnostics');
     expect(harness.container.textContent).not.toContain('CURRENT_ATTEMPT_FAILURE');
     expect(harness.container.textContent).not.toContain('OLD_ATTEMPT_FAILURE');
@@ -324,6 +338,8 @@ describe('RunStates timeline trust boundaries', () => {
         )}
       />
     );
+
+    await selectRunDetailTab(harness.container, 'Diagnostics and events');
 
     expect(harness.container.textContent).toContain('Degraded');
     expect(harness.container.textContent).toContain('step-buffered');
