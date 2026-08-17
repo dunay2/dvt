@@ -106,6 +106,21 @@ describe('runPlanWorkflow cancellation finalization', () => {
     expect(nonCancellable).toHaveBeenCalledTimes(1);
     expectCancellationTerminalEvents();
   });
+
+  it('finalizes native cancellation when the workflow scope is already cancelled', async () => {
+    currentScope.consideredCancelled = true;
+
+    const result = await finalizeNativeCancellationIfNeeded({
+      ...createCancellationArgs({
+        state: createRuntimeState(),
+      }),
+      error: new Error('unrecognized cancellation shape'),
+    });
+
+    expect(result).toBe(true);
+    expect(nonCancellable).toHaveBeenCalledTimes(1);
+    expectCancellationTerminalEvents();
+  });
 });
 
 function createCancellationArgs(args: { state: RuntimeWorkflowState }): {
