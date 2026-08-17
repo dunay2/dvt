@@ -205,4 +205,50 @@ describe('Visual transform PostgreSQL compiler', () => {
       expect(error).toMatchObject({ code: 'constant_with_inputs' });
     }
   });
+
+  it('compiles null equality with PostgreSQL null semantics', () => {
+    const sql = compileVisualTransformRecipeToPostgresSql({
+      recipe: {
+        ...RECIPE,
+        filters: [
+          {
+            id: 'filter-null',
+            input: { nodeId: 'source-orders', columnName: 'deleted_at' },
+            operator: 'equals',
+            value: null,
+          },
+          {
+            id: 'filter-not-null',
+            input: { nodeId: 'source-orders', columnName: 'processed_at' },
+            operator: 'not_equals',
+            value: null,
+          },
+        ],
+      },
+      sourceBinding: SOURCE_BINDING,
+    });
+
+    expect(sql).toContain('where "source orders"."deleted_at" is null');
+    expect(sql).toContain('  and "source orders"."processed_at" is not null;');
+    expect(sql).not.toContain('= null');
+    expect(sql).not.toContain('<> null');
+  });
+
+  it('fails closed when an ordered comparison receives null', () => {
+    const recipe: VisualTransformRecipeV1 = {
+      ...RECIPE,
+      filters: [
+        {
+          id: 'filter-invalid-null',
+          input: { nodeId: 'source-orders', columnName: 'created_at' },
+          operator: 'greater_than',
+          value: null,
+        },
+      ],
+    };
+
+    expect(() =>
+      compileVisualTransformRecipeToPostgresSql({ recipe, sourceBinding: SOURCE_BINDING })
+    ).toThrowError(expect.objectContaining({ code: 'invalid_filter_value' }));
+  });
 });

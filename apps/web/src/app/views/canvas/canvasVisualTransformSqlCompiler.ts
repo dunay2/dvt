@@ -19,6 +19,7 @@ export type VisualTransformSqlCompilationErrorCode =
   | 'invalid_expression'
   | 'constant_with_inputs'
   | 'unsupported_cast_type'
+  | 'invalid_filter_value'
   | 'invalid_function_arguments';
 
 export class VisualTransformSqlCompilationError extends Error {
@@ -175,6 +176,14 @@ function compileFilter(
     );
   }
   const input = `${quoteIdentifier(sourceBinding.alias)}.${quoteIdentifier(filter.input.columnName)}`;
+  if ('value' in filter && filter.value === null) {
+    if (filter.operator === 'equals') return `${input} is null`;
+    if (filter.operator === 'not_equals') return `${input} is not null`;
+    return fail(
+      'invalid_filter_value',
+      `Visual SQL filter ${filter.operator} cannot compare an ordered value with null.`
+    );
+  }
   switch (filter.operator) {
     case 'equals':
       return `${input} = ${quoteLiteral(filter.value)}`;
