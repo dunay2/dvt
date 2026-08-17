@@ -7,7 +7,7 @@ import type { Connection, Edge } from '@xyflow/react';
 import type { PluginPortMap } from '../../plugins/contracts/ConnectionRules';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasConnectionRejection } from './canvasConnectionAggregate';
-import type { CanvasDraftSession } from './canvasDraftSession';
+import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
 import { canvasGraphLifecycle } from './canvasGraphLifecycle';
 import {
   resolveCanvasEdgeConfirmationTransaction,
@@ -60,19 +60,26 @@ export type CanvasEdgeCommandRunner = {
 
 function applyAcceptedEdgeTransaction(args: {
   transaction: Extract<CanvasEdgeAdmissionTransaction, { outcome: 'confirmed' | 'reconnected' }>;
+  baselineDraftSession: CanvasDraftSession;
   latestEdgesRef: MutableRefObject<Edge[]>;
   latestDraftSessionRef: MutableRefObject<CanvasDraftSession>;
   setEdges: Dispatch<SetStateAction<Edge[]>>;
   setDraftSession: Dispatch<SetStateAction<CanvasDraftSession>>;
 }) {
+  const changedNodes = Object.entries(args.transaction.draftSession.localNodeCatalog ?? {})
+    .filter(([nodeId, node]) => args.baselineDraftSession.localNodeCatalog?.[nodeId] !== node)
+    .map(([, node]) => node);
   args.latestEdgesRef.current = args.transaction.edges;
   args.latestDraftSessionRef.current = args.transaction.draftSession;
   args.setEdges(args.transaction.edges);
   args.setDraftSession((currentDraftSession) => {
-    const nextDraftSession = canvasGraphLifecycle.edge.replaceVisible(
+    let nextDraftSession = canvasGraphLifecycle.edge.replaceVisible(
       currentDraftSession,
       args.transaction.edges
     );
+    for (const node of changedNodes) {
+      nextDraftSession = canvasDraftSession.workingSet.upsertNode(nextDraftSession, node);
+    }
     args.latestDraftSessionRef.current = nextDraftSession;
     return nextDraftSession;
   });
@@ -92,10 +99,11 @@ export function useCanvasEdgeCommandRunner({
 
   const confirmConnectionCommand = useCallback<RunCanvasEdgeConfirmationCommand>(
     ({ connection, onNoop, onConfirmed }) => {
+      const baselineDraftSession = latestDraftSessionRef.current;
       const transaction = resolveCanvasEdgeConfirmationTransaction({
         canonicalNodesById,
         connection,
-        draftSession: latestDraftSessionRef.current,
+        draftSession: baselineDraftSession,
         edges: latestEdgesRef.current,
         pluginPortMap,
       });
@@ -107,6 +115,7 @@ export function useCanvasEdgeCommandRunner({
 
       applyAcceptedEdgeTransaction({
         transaction,
+        baselineDraftSession,
         latestEdgesRef,
         latestDraftSessionRef,
         setDraftSession,
@@ -120,10 +129,11 @@ export function useCanvasEdgeCommandRunner({
 
   const reconnectEdgeCommand = useCallback<RunCanvasEdgeReconnectCommand>(
     ({ edge, connection, onNoop, onReconnected }) => {
+      const baselineDraftSession = latestDraftSessionRef.current;
       const transaction = resolveCanvasEdgeReconnectTransaction({
         canonicalNodesById,
         connection,
-        draftSession: latestDraftSessionRef.current,
+        draftSession: baselineDraftSession,
         edge,
         edges: latestEdgesRef.current,
         pluginPortMap,
@@ -136,6 +146,7 @@ export function useCanvasEdgeCommandRunner({
 
       applyAcceptedEdgeTransaction({
         transaction,
+        baselineDraftSession,
         latestEdgesRef,
         latestDraftSessionRef,
         setDraftSession,

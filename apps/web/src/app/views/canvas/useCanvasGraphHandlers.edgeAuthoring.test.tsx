@@ -207,6 +207,66 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     harness.cleanup();
   });
 
+  it('commits the deterministic mappings produced by stage-edge confirmation', async () => {
+    const source = {
+      ...buildCanonicalNode('source-node', 'input'),
+      metadata: {
+        columns: [
+          { name: 'order_id', type: 'integer' },
+          { name: 'customer', type: 'text' },
+        ],
+      },
+    };
+    const transform = {
+      ...buildCanonicalNode('transform-node', 'transform'),
+      kind: 'dvt:sql_transform' as const,
+    };
+    const draftSession = {
+      ...buildDraftSession(),
+      workingSet: {
+        visibleNodeIds: [source.id, transform.id],
+        visibleEdges: [],
+        pendingExplicitNodeIds: [],
+      },
+    };
+    const setDraftSession = vi.fn();
+    const harness = renderGraphHandlersHook({
+      canEditEdges: true,
+      canonicalNodes: [source, transform],
+      draftSession,
+      setDraftSession,
+    });
+    await harness.render();
+
+    act(() => {
+      harness.latest()?.onConnect({
+        source: source.id,
+        sourceHandle: null,
+        target: transform.id,
+        targetHandle: null,
+      });
+      harness.latest()?.confirmEdgeCreation();
+    });
+
+    expect(setDraftSession).toHaveBeenCalledTimes(1);
+    const updateDraftSession = setDraftSession.mock.calls[0]?.[0];
+    expect(typeof updateDraftSession).toBe('function');
+    const nextDraftSession = updateDraftSession(draftSession);
+    const mappedTransform = nextDraftSession.localNodeCatalog?.[transform.id];
+    if (mappedTransform == null) {
+      throw new Error('Expected the edge command to commit the mapped transform');
+    }
+    const authority = readDvtTransformAuthoringAuthority(mappedTransform);
+    expect(authority.mode).toBe('visual');
+    if (authority.mode !== 'visual') return;
+    expect(authority.recipe.outputs.map((output) => output.expression.inputs)).toEqual([
+      [{ nodeId: source.id, columnName: 'order_id' }],
+      [{ nodeId: source.id, columnName: 'customer' }],
+    ]);
+
+    harness.cleanup();
+  });
+
   it('formats cross-plugin bridge rejections at the adapter boundary', async () => {
     rejectGraphHandlerConnectionWith({
       allowed: false,

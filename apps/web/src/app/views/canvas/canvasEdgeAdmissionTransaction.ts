@@ -8,8 +8,10 @@ import {
   confirmReconnect,
   type CanvasConnectionRejection,
 } from './canvasConnectionAggregate';
+import { automapCanvasColumns } from './canvasColumnMappingAuthoring';
 import { canvasGraphLifecycle } from './canvasGraphLifecycle';
 import type { CanvasDraftSession } from './canvasDraftSession';
+import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 
 type CanvasEdgeAdmissionTransactionState = {
   canonicalNodesById: Map<string, CanonicalNode>;
@@ -18,10 +20,9 @@ type CanvasEdgeAdmissionTransactionState = {
   pluginPortMap: PluginPortMap;
 };
 
-type ResolveCanvasEdgeConfirmationTransactionArgs =
-  CanvasEdgeAdmissionTransactionState & {
-    connection: Connection;
-  };
+type ResolveCanvasEdgeConfirmationTransactionArgs = CanvasEdgeAdmissionTransactionState & {
+  connection: Connection;
+};
 
 type ResolveCanvasEdgeReconnectTransactionArgs = CanvasEdgeAdmissionTransactionState & {
   edge: Edge;
@@ -39,6 +40,11 @@ export type CanvasEdgeAdmissionTransaction =
       draftSession: CanvasDraftSession;
     };
 
+type AcceptedCanvasEdgeAdmissionTransaction = Exclude<
+  CanvasEdgeAdmissionTransaction,
+  { outcome: 'noop' }
+>;
+
 function buildAcceptedEdgeTransaction(args: {
   outcome: 'confirmed' | 'reconnected';
   draftSession: CanvasDraftSession;
@@ -47,11 +53,49 @@ function buildAcceptedEdgeTransaction(args: {
   return {
     outcome: args.outcome,
     edges: args.nextEdges,
-    draftSession: canvasGraphLifecycle.edge.replaceVisible(
-      args.draftSession,
-      args.nextEdges
-    ),
+    draftSession: canvasGraphLifecycle.edge.replaceVisible(args.draftSession, args.nextEdges),
   };
+}
+
+function resolveDraftNodes(
+  draftSession: CanvasDraftSession,
+  canonicalNodesById: ReadonlyMap<string, CanonicalNode>
+): CanonicalNode[] {
+  const nodesById = new Map(canonicalNodesById);
+  for (const node of Object.values(draftSession.localNodeCatalog ?? {})) {
+    nodesById.set(node.id, node);
+  }
+  return draftSession.workingSet.visibleNodeIds.flatMap((nodeId) => {
+    const node = nodesById.get(nodeId);
+    return node == null ? [] : [node];
+  });
+}
+
+function applyConfirmedConnectionColumnMappings(args: {
+  transaction: AcceptedCanvasEdgeAdmissionTransaction;
+  canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
+  targetNodeId: string;
+}): AcceptedCanvasEdgeAdmissionTransaction {
+  const nodes = resolveDraftNodes(args.transaction.draftSession, args.canonicalNodesById);
+  const targetNode = nodes.find((node) => node.id === args.targetNodeId);
+  if (targetNode?.pluginId !== 'dvt' || targetNode.kind !== 'dvt:sql_transform') {
+    return args.transaction;
+  }
+  const targetColumns = projectCanvasNodePresentationTruth({
+    node: targetNode,
+    nodes,
+    edges: args.transaction.draftSession.workingSet.visibleEdges,
+  }).columns.visible.map((column) => ({ name: column.name, type: column.type }));
+  const mappingResult = automapCanvasColumns({
+    draftSession: args.transaction.draftSession,
+    canonicalNodesById: args.canonicalNodesById,
+    targetNodeId: targetNode.id,
+    targetColumns,
+  });
+
+  return mappingResult.outcome === 'applied'
+    ? { ...args.transaction, draftSession: mappingResult.draftSession }
+    : args.transaction;
 }
 
 export function resolveCanvasEdgeConfirmationTransaction({
@@ -75,10 +119,18 @@ export function resolveCanvasEdgeConfirmationTransaction({
     };
   }
 
-  return buildAcceptedEdgeTransaction({
+  const transaction = buildAcceptedEdgeTransaction({
     outcome: 'confirmed',
     draftSession,
     nextEdges: result.nextEdges,
+  });
+  if (transaction.outcome !== 'confirmed' || connection.target == null) {
+    return transaction;
+  }
+  return applyConfirmedConnectionColumnMappings({
+    transaction,
+    canonicalNodesById,
+    targetNodeId: connection.target,
   });
 }
 
