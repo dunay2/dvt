@@ -52,53 +52,6 @@ function canvasNode(nodeId: string): Cypress.Chainable<JQuery<HTMLElement>> {
   return cy.get(`.react-flow__node[data-id="${nodeId}"]`);
 }
 
-function assertStageEdgeAttached(edgeId: string, sourceNodeId: string, targetNodeId: string): void {
-  const handleSelector = '[data-slot="canvas-node-port-handle"][data-port-variant="node"]';
-
-  cy.get(
-    `.react-flow__edge[data-id="${edgeId}"]:not(.react-flow__edge-columnLineage) .react-flow__edge-path`
-  ).should(($edgePath) => {
-    const sourceHandle = Cypress.$(
-      `.react-flow__node[data-id="${sourceNodeId}"] ${handleSelector}[data-port="source"]`
-    )[0] as HTMLElement | undefined;
-    const targetHandle = Cypress.$(
-      `.react-flow__node[data-id="${targetNodeId}"] ${handleSelector}[data-port="target"]`
-    )[0] as HTMLElement | undefined;
-    expect(sourceHandle, 'source node handle').not.to.be.undefined;
-    expect(targetHandle, 'target node handle').not.to.be.undefined;
-
-    const path = $edgePath[0] as SVGPathElement;
-    const screenMatrix = path.getScreenCTM();
-    expect(screenMatrix, 'stage edge screen transform').not.to.be.null;
-
-    const pointOnScreen = (length: number): DOMPoint => {
-      const point = path.getPointAtLength(length);
-      return new DOMPoint(point.x, point.y).matrixTransform(screenMatrix!);
-    };
-    const sourceRect = sourceHandle!.getBoundingClientRect();
-    const targetRect = targetHandle!.getBoundingClientRect();
-    const sourceCenter = new DOMPoint(
-      sourceRect.left + sourceRect.width / 2,
-      sourceRect.top + sourceRect.height / 2
-    );
-    const targetCenter = new DOMPoint(
-      targetRect.left + targetRect.width / 2,
-      targetRect.top + targetRect.height / 2
-    );
-    const pathStart = pointOnScreen(0);
-    const pathEnd = pointOnScreen(path.getTotalLength());
-    const distance = (left: DOMPoint, right: DOMPoint): number =>
-      Math.hypot(left.x - right.x, left.y - right.y);
-
-    expect(distance(pathStart, sourceCenter), 'source endpoint attachment').to.be.lte(
-      sourceRect.width / 2 + 1
-    );
-    expect(distance(pathEnd, targetCenter), 'target endpoint attachment').to.be.lte(
-      targetRect.width / 2 + 1
-    );
-  });
-}
-
 function toggleColumns(nodeId: string): void {
   canvasNode(nodeId)
     .find('button[aria-expanded]')
@@ -136,7 +89,49 @@ describe('Canvas column lineage mapping', () => {
     cy.get('.react-flow__edge-columnLineage').should('not.exist');
     toggleColumns('source-orders');
     toggleColumns('model-orders');
-    assertStageEdgeAttached('edge-source-model', 'source-orders', 'model-orders');
+    cy.get(
+      '.react-flow__edge[data-id="edge-source-model"]:not(.react-flow__edge-columnLineage) .react-flow__edge-path'
+    ).should(($edgePath) => {
+      const handleSelector = '[data-slot="canvas-node-port-handle"][data-port-variant="node"]';
+      const sourceHandle = Cypress.$(
+        `.react-flow__node[data-id="source-orders"] ${handleSelector}[data-port="source"]`
+      )[0] as HTMLElement | undefined;
+      const targetHandle = Cypress.$(
+        `.react-flow__node[data-id="model-orders"] ${handleSelector}[data-port="target"]`
+      )[0] as HTMLElement | undefined;
+      expect(sourceHandle, 'source node handle').not.to.be.undefined;
+      expect(targetHandle, 'target node handle').not.to.be.undefined;
+
+      const path = $edgePath[0] as SVGPathElement;
+      const screenMatrix = path.getScreenCTM();
+      expect(screenMatrix, 'stage edge screen transform').not.to.be.null;
+
+      const pointOnScreen = (length: number): DOMPoint => {
+        const point = path.getPointAtLength(length);
+        return new DOMPoint(point.x, point.y).matrixTransform(screenMatrix!);
+      };
+      const sourceRect = sourceHandle!.getBoundingClientRect();
+      const targetRect = targetHandle!.getBoundingClientRect();
+      const sourceCenter = new DOMPoint(
+        sourceRect.left + sourceRect.width / 2,
+        sourceRect.top + sourceRect.height / 2
+      );
+      const targetCenter = new DOMPoint(
+        targetRect.left + targetRect.width / 2,
+        targetRect.top + targetRect.height / 2
+      );
+      const pathStart = pointOnScreen(0);
+      const pathEnd = pointOnScreen(path.getTotalLength());
+      const distance = (left: DOMPoint, right: DOMPoint): number =>
+        Math.hypot(left.x - right.x, left.y - right.y);
+
+      expect(distance(pathStart, sourceCenter), 'source endpoint attachment').to.be.lte(
+        sourceRect.width / 2 + 1
+      );
+      expect(distance(pathEnd, targetCenter), 'target endpoint attachment').to.be.lte(
+        targetRect.width / 2 + 1
+      );
+    });
 
     canvasNode('source-orders')
       .find('[data-slot="canvas-node-port-handle"][aria-label="Connect order_id output"]')
