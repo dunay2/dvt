@@ -10,19 +10,19 @@ arc_level: ARC-2
 breaking: false
 code_refs:
   - packages/@dvt/contracts/src/contracts/source-import/SourceDataSample.v1.ts
-  - apps/api/src/application/ports/IWarehouseSourceDataSampleQueryPort.ts
+  - apps/api/src/application/ports/warehouseSourceImport.ts
   - apps/api/src/application/services/previewWarehouseSourceObjectRowsUseCase.ts
-  - apps/api/src/infrastructure/adapters/PostgresWarehouseSourceDataSampleQueryAdapter.ts
-  - apps/api/src/interfaces/http/routes/workspaceWarehouseConnections.ts
+  - apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.ts
+  - apps/api/src/entrypoints/http/warehouseSourceImportRoutes.ts
   - apps/web/src/app/views/canvas/canvasSourceDataSample.ts
   - apps/web/src/app/views/canvas/CanvasViewport.tsx
-  - apps/web/src/features/canvas/nodes/GraphNodeOperationalRail.tsx
+  - apps/web/src/app/plugins/graph/GraphNodeOperationalRail.tsx
 evidence:
   tests:
-    - pnpm exec vitest run packages/@dvt/contracts/test/contracts/source-import/SourceDataSample.v1.test.ts
-    - pnpm exec vitest run --config apps/api/vitest.config.ts apps/api/test/application/previewWarehouseSourceObjectRowsUseCase.test.ts apps/api/test/infrastructure/PostgresWarehouseSourceDataSampleQueryAdapter.test.ts
-    - pnpm exec vitest run --config apps/api/vitest.config.ts apps/api/test/http/workspaceWarehouseConnections.test.ts
-    - pnpm exec vitest run --config apps/web/vitest.config.ts apps/web/src/features/canvas/nodes/GraphNodeOperationalRail.test.tsx apps/web/src/app/views/canvas/OperationalDrawerPanels.test.tsx
+    - pnpm exec vitest run packages/@dvt/contracts/test/source-import/SourceDataSample.v1.test.ts
+    - pnpm exec vitest run --config apps/api/vitest.config.ts apps/api/test/application/services/previewWarehouseSourceObjectRowsUseCase.test.ts apps/api/test/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.test.ts
+    - pnpm exec vitest run --config apps/api/vitest.config.ts apps/api/test/entrypoints/http/warehouseSourceImportRoutes.test.ts
+    - pnpm exec vitest run --config apps/web/vitest.config.ts apps/web/src/app/plugins/graph/GraphNodeOperationalRail.test.tsx apps/web/src/app/components/shell/OperationalDrawerPanels.test.tsx
     - pnpm verify:prepush
 ---
 
