@@ -2,11 +2,29 @@
  * Owned concern: own all user-visible copy strings for runs route states,
  * keeping presentation text out of the state model and view logic.
  */
-import { resolveRunEventFeedHealthCopy } from '../../services/runs/runEventFeedHealthCopy';
+import type { UiRunStatus } from '../../ports/runs';
+import type { RunEventLevel } from '../../services/runs/runEventPresentationModel';
+import {
+  resolveRunEventFeedHealthCopy,
+  type RunEventFeedHealthCopy,
+} from '../../services/runs/runEventFeedHealthCopy';
+import {
+  type ApplicationLanguage,
+  useApplicationLanguageStore,
+} from '../../stores/applicationLanguageStore';
 
-export const runStatesCopy = {
+type WidenCopy<T> = T extends (...args: infer Arguments) => infer Result
+  ? (...args: Arguments) => WidenCopy<Result>
+  : T extends string
+    ? string
+    : T extends object
+      ? { readonly [Key in keyof T]: WidenCopy<T[Key]> }
+      : T;
+
+const RUN_STATES_COPY_EN = {
   eventFeedHealth: resolveRunEventFeedHealthCopy('en'),
   runsTitle: 'Runs',
+  runTitle: (runId: string) => `Run ${runId}`,
   emptyRuns: 'No runs yet.',
   emptyRunsTitle: 'No runs available',
   emptyRunsLink: 'Go to canvas to preview and start a run',
@@ -17,6 +35,35 @@ export const runStatesCopy = {
   runTableSearchPlaceholder: 'Filter by run, preview, environment, git SHA, or substatus',
   runTableAllStatuses: 'All statuses',
   runTableEmptyFiltered: 'No runs match the current filters.',
+  runTableHeaders: {
+    runId: 'Run ID',
+    status: 'Status',
+    started: 'Started',
+    duration: 'Duration',
+    environment: 'Environment',
+    gitSha: 'Git SHA',
+  },
+  statusLabels: {
+    unknown: 'unknown',
+    pending: 'pending',
+    running: 'running',
+    completed: 'completed',
+    failed: 'failed',
+    cancelled: 'cancelled',
+  } satisfies Readonly<Record<UiRunStatus, string>>,
+  eventTableHeaders: {
+    level: 'Level',
+    emitted: 'Emitted',
+    event: 'Event',
+    step: 'Step',
+    type: 'Type',
+  },
+  eventLevelLabels: {
+    INFO: 'INFO',
+    WARN: 'WARN',
+    ERROR: 'ERROR',
+    SUCCESS: 'SUCCESS',
+  } satisfies Readonly<Record<RunEventLevel, string>>,
   environmentLabel: 'Environment:',
   runMissingTitle: 'Run not found',
   runMissingMessagePrefix: 'No data is available for run',
@@ -94,4 +141,158 @@ export const runStatesCopy = {
   eventTimelineTitle: 'Event timeline',
   emptyTimeline: 'No runtime events are available yet for this run.',
   stepLabel: 'Step:',
+  routePreparingRuns: 'Preparing Runs route',
+  routePreparingRunDetail: 'Preparing Run detail route',
+  routeLoadingRun: (runId: string) => `Loading run ${runId}`,
+  routeLoadingRuns: 'Loading runs for the route',
+  routeRunsReady: 'Runs route is ready',
+  routeRunsReadyEmpty: 'Runs route is ready with no runs',
+  routeRunMissing: (runId: string) => `Run ${runId} was not found`,
+  routeRunDetailReady: 'Run detail route is ready',
 } as const;
+
+export type RunStatesCopy = WidenCopy<typeof RUN_STATES_COPY_EN> & {
+  readonly eventFeedHealth: RunEventFeedHealthCopy;
+};
+
+const RUN_STATES_COPY_ES = {
+  eventFeedHealth: resolveRunEventFeedHealthCopy('es'),
+  runsTitle: 'Ejecuciones',
+  runTitle: (runId: string) => `Ejecución ${runId}`,
+  emptyRuns: 'Todavía no hay ejecuciones.',
+  emptyRunsTitle: 'No hay ejecuciones disponibles',
+  emptyRunsLink: 'Ir al canvas para generar una vista previa e iniciar una ejecución',
+  runsUnavailableTitle: 'La lista de ejecuciones no está disponible',
+  loadingRuns: 'Cargando ejecuciones...',
+  viewDetails: 'Ver detalles',
+  runTableSearchLabel: 'Filtrar ejecuciones',
+  runTableSearchPlaceholder: 'Filtrar por ejecución, vista previa, entorno, SHA de Git o subestado',
+  runTableAllStatuses: 'Todos los estados',
+  runTableEmptyFiltered: 'Ninguna ejecución coincide con los filtros actuales.',
+  runTableHeaders: {
+    runId: 'ID de ejecución',
+    status: 'Estado',
+    started: 'Inicio',
+    duration: 'Duración',
+    environment: 'Entorno',
+    gitSha: 'SHA de Git',
+  },
+  statusLabels: {
+    unknown: 'Desconocida',
+    pending: 'Pendiente',
+    running: 'En ejecución',
+    completed: 'Completada',
+    failed: 'Fallida',
+    cancelled: 'Cancelada',
+  },
+  eventTableHeaders: {
+    level: 'Nivel',
+    emitted: 'Emitido',
+    event: 'Evento',
+    step: 'Paso',
+    type: 'Tipo',
+  },
+  eventLevelLabels: {
+    INFO: 'Información',
+    WARN: 'Aviso',
+    ERROR: 'Error',
+    SUCCESS: 'Correcto',
+  },
+  environmentLabel: 'Entorno:',
+  runMissingTitle: 'Ejecución no encontrada',
+  runMissingMessagePrefix: 'No hay datos disponibles para la ejecución',
+  runWorkspaceLoading: 'Cargando el espacio de trabajo de la ejecución...',
+  runWorkspaceUnavailable: 'El espacio de trabajo de la ejecución no está disponible',
+  runtimeSnapshotTitle: 'Instantánea de ejecución',
+  snapshotTimelineBadge: 'instantánea + cronología',
+  snapshotOnlyBadge: 'solo instantánea',
+  runItineraryTitle: 'Itinerario de la ejecución',
+  runItineraryNote:
+    'Ámbito de ejecución persistido. Las tablas de origen y destino proceden de la instantánea de la vista previa; las filas resultantes proceden de la evidencia de materialización.',
+  backToCanvasAction: 'Volver al canvas',
+  allRunsAction: 'Todas las ejecuciones',
+  planLabel: 'Vista previa de ejecución',
+  stepsLabel: 'Pasos',
+  stepsUnit: 'pasos',
+  nodesUnit: 'nodos',
+  sourceTablesLabel: 'Tablas de origen',
+  sinkTablesLabel: 'Tablas de destino',
+  scopeUnavailable: 'No disponible en esta instantánea de ejecución',
+  noPlanScopeEvidence:
+    'La instantánea no incluye el ámbito persistido de tablas de origen y destino de la vista previa.',
+  snapshotReadModelNote:
+    'Esta vista usa los modelos de lectura persistidos para mostrar la procedencia de la vista previa y el resultado de la ejecución. La cronología conserva el orden y las referencias de artefactos; los resultados y diagnósticos proceden exclusivamente de la instantánea.',
+  snapshotFieldsTitle: 'Campos de la instantánea',
+  diagnosticsTitle: 'Diagnósticos',
+  diagnosticsRunIdLabel: 'ID de ejecución',
+  diagnosticsPlanIdLabel: 'ID de vista previa',
+  diagnosticsPlanShaLabel: 'SHA de vista previa',
+  diagnosticsStepIdLabel: 'ID de paso',
+  diagnosticsAttemptIdLabel: 'ID de intento',
+  diagnosticsAdapterLabel: 'Adaptador',
+  diagnosticsStatusLabel: 'Estado',
+  diagnosticsErrorCodeLabel: 'Código de error',
+  diagnosticsPointersLabel: 'Referencias de trazas y registros',
+  planProvenanceTitle: 'Procedencia de la vista previa y de la autoría',
+  planRecordLabel: 'Registro de vista previa',
+  planVersionLabel: 'Versión de vista previa',
+  planSourceRefLabel: 'Referencia de origen de la vista previa',
+  canonicalPlanShaLabel: 'SHA-256 canónico de la vista previa',
+  graphArtifactTitle: 'Artefacto del grafo',
+  sqlArtifactTitle: 'Artefacto SQL',
+  artifactRepoPathLabel: 'Repositorio y ruta',
+  artifactGitRefLabel: 'Referencia Git',
+  artifactCommitShaLabel: 'SHA del commit',
+  artifactContentShaLabel: 'SHA-256 del contenido',
+  noPlanProvenance:
+    'La procedencia de la vista previa todavía no está disponible en esta instantánea. La relación con la autoría solo puede mostrarse cuando existen la procedencia y la identidad persistida de la vista previa.',
+  currentStepLabel: 'Paso actual',
+  failedStepLabel: 'Paso fallido',
+  errorReasonLabel: 'Motivo del error',
+  errorMessageLabel: 'Mensaje de error',
+  failedAtLabel: 'Fallo registrado',
+  startedLabel: 'Inicio',
+  completedLabel: 'Finalización',
+  gitShaLabel: 'SHA de Git',
+  snapshotHashLabel: 'Hash de la instantánea',
+  materializationTitle: 'Evidencia de materialización',
+  executorLabel: 'Ejecutor',
+  sinkTableLabel: 'Tabla de destino',
+  rowsWrittenLabel: 'Filas escritas',
+  durationLabel: 'Duración',
+  noResultEvidence:
+    'La evidencia del resultado todavía no está disponible en esta instantánea. Esta vista solo muestra campos persistidos devueltos por las superficies de lectura del runtime.',
+  provenanceTitle: 'Procedencia de la ejecución',
+  artifactKindLabel: 'Tipo de artefacto',
+  artifactUriLabel: 'URI del artefacto',
+  artifactShaLabel: 'SHA-256 del artefacto',
+  artifactSizeLabel: 'Tamaño del artefacto',
+  artifactEncodingLabel: 'Codificación del artefacto',
+  compiledCodeArtifactKind: 'compiled-code',
+  noProvenanceEvidence:
+    'La procedencia de la ejecución todavía no está disponible en esta cronología. Esta vista solo muestra las referencias de artefactos emitidas por los eventos de los pasos.',
+  failureDiagnosticsTitle: 'Diagnósticos del fallo',
+  eventTimelineTitle: 'Cronología de eventos',
+  emptyTimeline: 'Todavía no hay eventos de runtime disponibles para esta ejecución.',
+  stepLabel: 'Paso:',
+  routePreparingRuns: 'Preparando la ruta de ejecuciones',
+  routePreparingRunDetail: 'Preparando el detalle de la ejecución',
+  routeLoadingRun: (runId: string) => `Cargando la ejecución ${runId}`,
+  routeLoadingRuns: 'Cargando las ejecuciones de la ruta',
+  routeRunsReady: 'La ruta de ejecuciones está lista',
+  routeRunsReadyEmpty: 'La ruta de ejecuciones está lista y no contiene ejecuciones',
+  routeRunMissing: (runId: string) => `No se encontró la ejecución ${runId}`,
+  routeRunDetailReady: 'El detalle de la ejecución está listo',
+} satisfies RunStatesCopy;
+
+export function resolveRunStatesCopy(language: ApplicationLanguage): RunStatesCopy {
+  return language === 'es' ? RUN_STATES_COPY_ES : RUN_STATES_COPY_EN;
+}
+
+export function useRunStatesCopy(): Readonly<{
+  copy: RunStatesCopy;
+  language: ApplicationLanguage;
+}> {
+  const language = useApplicationLanguageStore((state) => state.language);
+  return { copy: resolveRunStatesCopy(language), language };
+}

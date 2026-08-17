@@ -41,15 +41,15 @@ const COPY_ES: RunEventFeedHealthCopy = {
     failed: 'Fallido',
   },
   messages: {
-    idle: 'Inicia una ejecucion para ver aqui sus eventos en directo.',
-    loading: 'Cargando eventos de ejecucion...',
-    live: 'Los eventos de ejecucion estan en directo.',
+    idle: 'Inicia una ejecución para ver aquí sus eventos en directo.',
+    loading: 'Cargando eventos de ejecución...',
+    live: 'Los eventos de ejecución están en directo.',
     degraded:
-      'La actualizacion de eventos esta degradada temporalmente. Los eventos recibidos siguen visibles.',
-    complete: 'El flujo de eventos de ejecucion esta completo.',
-    failed: 'No se pudieron cargar los eventos de ejecucion.',
+      'La actualización de eventos está degradada temporalmente. Los eventos recibidos siguen visibles.',
+    complete: 'El flujo de eventos de ejecución está completo.',
+    failed: 'No se pudieron cargar los eventos de ejecución.',
   },
-  runLabel: 'Ejecucion',
+  runLabel: 'Ejecución',
   terminalLoading: 'Cargando terminal...',
   retryAction: 'Reintentar eventos',
 };
