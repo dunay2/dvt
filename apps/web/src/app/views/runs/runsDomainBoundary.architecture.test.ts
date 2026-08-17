@@ -383,8 +383,16 @@ describe('Runs domain boundary', () => {
 
     expect(copySource).toContain('useApplicationLanguageStore');
     expect(copySource).toContain('resolveRunStatesCopy');
+    expect(copySource).toContain("runSummaryTabLabel: 'Summary'");
+    expect(copySource).toContain("runSummaryTabLabel: 'Resumen'");
     expect(listSource).toContain('useRunStatesCopy');
     expect(workspaceSource).toContain('useRunStatesCopy');
+    expect(workspaceSource).toContain('<Tabs');
+    expect(workspaceSource).toContain('<TabsList');
+    expect(workspaceSource).toContain('routeWorkbenchTabListClassName');
+    expect(workspaceSource).toContain('routeWorkbenchTabTriggerClassName');
+    expect(workspaceSource).toContain('aria-label={copy.runDetailSectionsLabel}');
+    expect(workspaceSource).not.toContain('role="tablist"');
     expect(runTableSource).toContain('copy.runTableHeaders');
     expect(runTableSource).not.toContain("header: 'Run ID'");
     expect(eventTableSource).toContain('copy.eventTableHeaders');

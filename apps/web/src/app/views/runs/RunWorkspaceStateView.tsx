@@ -8,7 +8,12 @@ import { Link } from 'react-router';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { RunControlActions } from '../../components/runs/RunControlActions';
+import {
+  routeWorkbenchTabListClassName,
+  routeWorkbenchTabTriggerClassName,
+} from '../../components/workbench/RouteWorkbenchFrame';
 import { WorkbenchStateFrame } from '../../components/workbench/state/WorkbenchStates';
 import type {
   MaterializationEvidence,
@@ -412,315 +417,356 @@ export function RunWorkspaceStateView({
 
   return (
     <WorkbenchStateFrame title={copy.runTitle(snapshot.runId)} slotPrefix="runs-state">
-      <div className="mx-auto max-w-4xl space-y-4">
-        <RunItineraryCard
-          workspace={workspace}
-          executor={executor}
-          materializationEvidence={materializationEvidence}
-          runControls={runControls}
-        />
+      <Tabs defaultValue="summary" className="mx-auto w-full max-w-4xl" data-slot="run-detail-tabs">
+        <div className="overflow-x-auto pb-1">
+          <TabsList
+            aria-label={copy.runDetailSectionsLabel}
+            className={`${routeWorkbenchTabListClassName} min-w-max`}
+          >
+            <TabsTrigger value="summary" className={routeWorkbenchTabTriggerClassName}>
+              {copy.runSummaryTabLabel}
+            </TabsTrigger>
+            <TabsTrigger
+              value="result"
+              className={routeWorkbenchTabTriggerClassName}
+              disabled={!showMaterializationSection}
+            >
+              {copy.runResultTabLabel}
+            </TabsTrigger>
+            <TabsTrigger value="provenance" className={routeWorkbenchTabTriggerClassName}>
+              {copy.runProvenanceTabLabel}
+            </TabsTrigger>
+            <TabsTrigger value="diagnostics" className={routeWorkbenchTabTriggerClassName}>
+              {copy.runDiagnosticsEventsTabLabel}
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
-        <Card className="border-slate-700 bg-slate-900 p-5">
-          <div className="mb-3 flex flex-wrap items-center gap-2">
-            <h2 className="text-base font-semibold">{copy.runtimeSnapshotTitle}</h2>
-            <Badge className="bg-blue-600">{copy.statusLabels[snapshot.status]}</Badge>
-            {snapshot.substatus ? <Badge variant="outline">{snapshot.substatus}</Badge> : null}
-            <Badge variant="outline">
-              {detailState === 'snapshot-plus-events'
-                ? copy.snapshotTimelineBadge
-                : copy.snapshotOnlyBadge}
-            </Badge>
-          </div>
-
-          <p className="text-sm text-slate-300">{copy.snapshotReadModelNote}</p>
-
-          {snapshot.message ? (
-            <p className="mt-3 rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200">
-              {snapshot.message}
-            </p>
-          ) : null}
-        </Card>
-
-        <Card data-slot="run-snapshot-fields-card" className="border-slate-700 bg-slate-900 p-5">
-          <h3 className="mb-3 text-sm font-semibold">{copy.snapshotFieldsTitle}</h3>
-          <div className="grid gap-3 text-sm text-slate-300 md:grid-cols-2">
-            <div>
-              <span className="text-slate-400">{copy.startedLabel}</span>
-              <div>
-                {snapshot.startedAt
-                  ? new Date(snapshot.startedAt).toLocaleString(locale)
-                  : copy.scopeUnavailable}
-              </div>
-            </div>
-            {snapshot.completedAt ? (
-              <div>
-                <span className="text-slate-400">{copy.completedLabel}</span>
-                <div>{new Date(snapshot.completedAt).toLocaleString(locale)}</div>
-              </div>
-            ) : null}
-            {isKnownRunField(snapshot.environment) ? (
-              <div>
-                <span className="text-slate-400">{copy.environmentLabel}</span>
-                <div>{snapshot.environment}</div>
-              </div>
-            ) : null}
-            {executor ? (
-              <div>
-                <span className="text-slate-400">{copy.executorLabel}</span>
-                <div>{executor}</div>
-              </div>
-            ) : null}
-            <div>
-              <span className="text-slate-400">{copy.durationLabel}</span>
-              <div>
-                {snapshot.durationMs === undefined
-                  ? copy.scopeUnavailable
-                  : `${(snapshot.durationMs / 1000).toFixed(1)} s`}
-              </div>
-            </div>
-            {isKnownRunField(snapshot.gitSha) ? (
-              <div>
-                <span className="text-slate-400">{copy.gitShaLabel}</span>
-                <div className="font-mono">{snapshot.gitSha}</div>
-              </div>
-            ) : null}
-            {isKnownRunField(snapshot.currentStepId) ? (
-              <div>
-                <span className="text-slate-400">{copy.currentStepLabel}</span>
-                <div className="font-mono">{snapshot.currentStepId}</div>
-              </div>
-            ) : isKnownRunField(snapshot.execution?.activeStepId) ? (
-              <div>
-                <span className="text-slate-400">{copy.currentStepLabel}</span>
-                <div className="font-mono">{snapshot.execution?.activeStepId}</div>
-              </div>
-            ) : null}
-            {isKnownRunField(snapshot.hash) ? (
-              <div className="md:col-span-2">
-                <span className="text-slate-400">{copy.snapshotHashLabel}</span>
-                <div className="break-all font-mono text-xs">{snapshot.hash}</div>
-              </div>
-            ) : null}
-          </div>
-        </Card>
-
-        {snapshot.diagnostics ? <RunDiagnosticsCard diagnostics={snapshot.diagnostics} /> : null}
-
-        {showMaterializationSection ? (
-          <Card data-slot="run-materialization-card" className="border-slate-700 bg-slate-900 p-5">
-            <h3 className="mb-3 text-sm font-semibold">{copy.materializationTitle}</h3>
-            {materializationEvidence ? (
-              <div className="grid gap-3 text-sm text-slate-300 md:grid-cols-2">
-                <div>
-                  <span className="text-slate-400">{copy.executorLabel}</span>
-                  <div>{materializationEvidence.executor}</div>
-                </div>
-                <div>
-                  <span className="text-slate-400">{copy.environmentLabel}</span>
-                  <div>{materializationEvidence.environmentId}</div>
-                </div>
-                <div>
-                  <span className="text-slate-400">{copy.sinkTableLabel}</span>
-                  <div className="font-mono">{materializationEvidence.sinkTable}</div>
-                </div>
-                <div>
-                  <span className="text-slate-400">{copy.rowsWrittenLabel}</span>
-                  <div>{materializationEvidence.rowsWritten.toLocaleString(locale)}</div>
-                </div>
-                <div>
-                  <span className="text-slate-400">{copy.startedLabel}</span>
-                  <div>{new Date(materializationEvidence.startedAt).toLocaleString(locale)}</div>
-                </div>
-                <div>
-                  <span className="text-slate-400">{copy.completedLabel}</span>
-                  <div>{new Date(materializationEvidence.completedAt).toLocaleString(locale)}</div>
-                </div>
-                <div>
-                  <span className="text-slate-400">{copy.durationLabel}</span>
-                  <div>{formatDuration(materializationEvidence.durationMs)}</div>
-                </div>
-              </div>
-            ) : (
-              <p className="text-sm text-slate-400">{copy.noResultEvidence}</p>
-            )}
-          </Card>
-        ) : null}
-
-        <Card data-slot="run-plan-provenance-card" className="border-slate-700 bg-slate-900 p-5">
-          <h3 className="mb-3 text-sm font-semibold">{copy.planProvenanceTitle}</h3>
-          {planProvenance ? (
-            <div className="space-y-4 text-sm text-slate-300">
-              <div className="grid gap-3 md:grid-cols-2">
-                <div className="min-w-0">
-                  <span className="text-slate-400">{copy.planRecordLabel}</span>
-                  <div data-slot="run-plan-record-value" className="break-all font-mono text-xs">
-                    {planProvenance.persistedPlan.planRecordId}
-                  </div>
-                </div>
-                <div>
-                  <span className="text-slate-400">{copy.planVersionLabel}</span>
-                  <div>{planProvenance.persistedPlan.planVersion}</div>
-                </div>
-                <div className="md:col-span-2">
-                  <span className="text-slate-400">{copy.planSourceRefLabel}</span>
-                  <div className="break-all font-mono text-xs">
-                    {planProvenance.persistedPlan.sourceRef}
-                  </div>
-                </div>
-                <div className="md:col-span-2">
-                  <span className="text-slate-400">{copy.canonicalPlanShaLabel}</span>
-                  <div className="break-all font-mono text-xs">
-                    {planProvenance.persistedPlan.canonicalPlanSha256}
-                  </div>
-                </div>
-              </div>
-
-              {authoringArtifacts.length > 0 ? (
-                <div className="space-y-3">
-                  {authoringArtifacts.map((artifact) => (
-                    <div
-                      key={`${artifact.title}-${artifact.repo}-${artifact.path}`}
-                      className="rounded border border-slate-700 bg-slate-950 p-3"
-                    >
-                      <div className="mb-2 flex flex-wrap items-center gap-2">
-                        <Badge variant="outline">{artifact.title}</Badge>
-                      </div>
-                      <div className="grid gap-3 md:grid-cols-2">
-                        <div className="md:col-span-2">
-                          <span className="text-slate-400">{copy.artifactRepoPathLabel}</span>
-                          <div className="break-all font-mono text-xs">
-                            {artifact.repo}:{artifact.path}
-                          </div>
-                        </div>
-                        {artifact.ref ? (
-                          <div>
-                            <span className="text-slate-400">{copy.artifactGitRefLabel}</span>
-                            <div className="break-all font-mono text-xs">{artifact.ref}</div>
-                          </div>
-                        ) : null}
-                        {artifact.commitSha ? (
-                          <div>
-                            <span className="text-slate-400">{copy.artifactCommitShaLabel}</span>
-                            <div className="break-all font-mono text-xs">{artifact.commitSha}</div>
-                          </div>
-                        ) : null}
-                        {artifact.contentSha256 ? (
-                          <div className="md:col-span-2">
-                            <span className="text-slate-400">{copy.artifactContentShaLabel}</span>
-                            <div className="break-all font-mono text-xs">
-                              {artifact.contentSha256}
-                            </div>
-                          </div>
-                        ) : null}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : null}
-            </div>
-          ) : (
-            <p className="text-sm text-slate-400">{copy.noPlanProvenance}</p>
-          )}
-        </Card>
-
-        <Card
-          data-slot="run-execution-provenance-card"
-          className="border-slate-700 bg-slate-900 p-5"
-        >
-          <h3 className="mb-3 text-sm font-semibold">{copy.provenanceTitle}</h3>
-          {executionProvenance.length > 0 ? (
-            <div className="space-y-3">
-              {executionProvenance.map((artifact) => (
-                <div
-                  key={`${artifact.stepId}-${artifact.storageUri}-${artifact.sha256}`}
-                  className="rounded border border-slate-700 bg-slate-950 p-3 text-sm text-slate-300"
-                >
-                  <div className="mb-2 flex flex-wrap items-center gap-2">
-                    <Badge variant="outline">{copy.stepLabel.replace(':', '')}</Badge>
-                    <span className="font-mono text-xs">{artifact.stepId}</span>
-                    <Badge variant="outline">{artifact.artifactKind}</Badge>
-                    <span className="text-xs text-slate-400">
-                      {new Date(artifact.emittedAt).toLocaleString(locale)}
-                    </span>
-                  </div>
-                  <div className="grid gap-3 md:grid-cols-2">
-                    <div>
-                      <span className="text-slate-400">{copy.artifactKindLabel}</span>
-                      <div>{artifact.artifactKind}</div>
-                    </div>
-                    <div>
-                      <span className="text-slate-400">{copy.artifactSizeLabel}</span>
-                      <div>{formatByteSize(artifact.sizeBytes)}</div>
-                    </div>
-                    <div className="md:col-span-2">
-                      <span className="text-slate-400">{copy.artifactUriLabel}</span>
-                      <div className="break-all font-mono text-xs">{artifact.storageUri}</div>
-                    </div>
-                    <div className="md:col-span-2">
-                      <span className="text-slate-400">{copy.artifactShaLabel}</span>
-                      <div className="break-all font-mono text-xs">{artifact.sha256}</div>
-                    </div>
-                    {artifact.encoding ? (
-                      <div>
-                        <span className="text-slate-400">{copy.artifactEncodingLabel}</span>
-                        <div>{artifact.encoding}</div>
-                      </div>
-                    ) : null}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-slate-400">{copy.noProvenanceEvidence}</p>
-          )}
-        </Card>
-
-        {failureDiagnostics.failedStepId ||
-        failureDiagnostics.errorReason ||
-        failureDiagnostics.failureEmittedAt ? (
-          <Card className="border-slate-700 bg-slate-900 p-5">
-            <h3 className="mb-3 text-sm font-semibold">{copy.failureDiagnosticsTitle}</h3>
-            <div className="grid gap-3 text-sm text-slate-300 md:grid-cols-2">
-              {failureDiagnostics.failedStepId ? (
-                <div>
-                  <span className="text-slate-400">{copy.failedStepLabel}</span>
-                  <div className="font-mono">{failureDiagnostics.failedStepId}</div>
-                </div>
-              ) : null}
-              {failureDiagnostics.errorReason ? (
-                <div>
-                  <span className="text-slate-400">{copy.errorReasonLabel}</span>
-                  <div>{failureDiagnostics.errorReason}</div>
-                </div>
-              ) : null}
-              {failureDiagnostics.failureEmittedAt ? (
-                <div>
-                  <span className="text-slate-400">{copy.failedAtLabel}</span>
-                  <div>{new Date(failureDiagnostics.failureEmittedAt).toLocaleString(locale)}</div>
-                </div>
-              ) : null}
-            </div>
-          </Card>
-        ) : null}
-
-        <Card className="border-slate-700 bg-slate-900 p-5">
-          <h3 className="mb-3 text-sm font-semibold">{copy.eventTimelineTitle}</h3>
-
-          <RunEventFeedHealthView
-            copy={copy.eventFeedHealth}
-            health={workspace.eventFeedHealth}
-            onRetry={onRetryEventFeed}
+        <TabsContent value="summary" className="mt-2 space-y-4">
+          <RunItineraryCard
+            workspace={workspace}
+            executor={executor}
+            materializationEvidence={materializationEvidence}
+            runControls={runControls}
           />
 
-          {timeline.state === 'empty' ? (
-            <p className="text-sm text-slate-400">{copy.emptyTimeline}</p>
+          <Card className="border-slate-700 bg-slate-900 p-5">
+            <div className="mb-3 flex flex-wrap items-center gap-2">
+              <h2 className="text-base font-semibold">{copy.runtimeSnapshotTitle}</h2>
+              <Badge className="bg-blue-600">{copy.statusLabels[snapshot.status]}</Badge>
+              {snapshot.substatus ? <Badge variant="outline">{snapshot.substatus}</Badge> : null}
+              <Badge variant="outline">
+                {detailState === 'snapshot-plus-events'
+                  ? copy.snapshotTimelineBadge
+                  : copy.snapshotOnlyBadge}
+              </Badge>
+            </div>
+
+            <p className="text-sm text-slate-300">{copy.snapshotReadModelNote}</p>
+
+            {snapshot.message ? (
+              <p className="mt-3 rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200">
+                {snapshot.message}
+              </p>
+            ) : null}
+          </Card>
+
+          <Card data-slot="run-snapshot-fields-card" className="border-slate-700 bg-slate-900 p-5">
+            <h3 className="mb-3 text-sm font-semibold">{copy.snapshotFieldsTitle}</h3>
+            <div className="grid gap-3 text-sm text-slate-300 md:grid-cols-2">
+              <div>
+                <span className="text-slate-400">{copy.startedLabel}</span>
+                <div>
+                  {snapshot.startedAt
+                    ? new Date(snapshot.startedAt).toLocaleString(locale)
+                    : copy.scopeUnavailable}
+                </div>
+              </div>
+              {snapshot.completedAt ? (
+                <div>
+                  <span className="text-slate-400">{copy.completedLabel}</span>
+                  <div>{new Date(snapshot.completedAt).toLocaleString(locale)}</div>
+                </div>
+              ) : null}
+              {isKnownRunField(snapshot.environment) ? (
+                <div>
+                  <span className="text-slate-400">{copy.environmentLabel}</span>
+                  <div>{snapshot.environment}</div>
+                </div>
+              ) : null}
+              {executor ? (
+                <div>
+                  <span className="text-slate-400">{copy.executorLabel}</span>
+                  <div>{executor}</div>
+                </div>
+              ) : null}
+              <div>
+                <span className="text-slate-400">{copy.durationLabel}</span>
+                <div>
+                  {snapshot.durationMs === undefined
+                    ? copy.scopeUnavailable
+                    : `${(snapshot.durationMs / 1000).toFixed(1)} s`}
+                </div>
+              </div>
+              {isKnownRunField(snapshot.gitSha) ? (
+                <div>
+                  <span className="text-slate-400">{copy.gitShaLabel}</span>
+                  <div className="font-mono">{snapshot.gitSha}</div>
+                </div>
+              ) : null}
+              {isKnownRunField(snapshot.currentStepId) ? (
+                <div>
+                  <span className="text-slate-400">{copy.currentStepLabel}</span>
+                  <div className="font-mono">{snapshot.currentStepId}</div>
+                </div>
+              ) : isKnownRunField(snapshot.execution?.activeStepId) ? (
+                <div>
+                  <span className="text-slate-400">{copy.currentStepLabel}</span>
+                  <div className="font-mono">{snapshot.execution?.activeStepId}</div>
+                </div>
+              ) : null}
+              {isKnownRunField(snapshot.hash) ? (
+                <div className="md:col-span-2">
+                  <span className="text-slate-400">{copy.snapshotHashLabel}</span>
+                  <div className="break-all font-mono text-xs">{snapshot.hash}</div>
+                </div>
+              ) : null}
+            </div>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="result" className="mt-2 space-y-4">
+          {showMaterializationSection ? (
+            <Card
+              data-slot="run-materialization-card"
+              className="border-slate-700 bg-slate-900 p-5"
+            >
+              <h3 className="mb-3 text-sm font-semibold">{copy.materializationTitle}</h3>
+              {materializationEvidence ? (
+                <div className="grid gap-3 text-sm text-slate-300 md:grid-cols-2">
+                  <div>
+                    <span className="text-slate-400">{copy.executorLabel}</span>
+                    <div>{materializationEvidence.executor}</div>
+                  </div>
+                  <div>
+                    <span className="text-slate-400">{copy.environmentLabel}</span>
+                    <div>{materializationEvidence.environmentId}</div>
+                  </div>
+                  <div>
+                    <span className="text-slate-400">{copy.sinkTableLabel}</span>
+                    <div className="font-mono">{materializationEvidence.sinkTable}</div>
+                  </div>
+                  <div>
+                    <span className="text-slate-400">{copy.rowsWrittenLabel}</span>
+                    <div>{materializationEvidence.rowsWritten.toLocaleString(locale)}</div>
+                  </div>
+                  <div>
+                    <span className="text-slate-400">{copy.startedLabel}</span>
+                    <div>{new Date(materializationEvidence.startedAt).toLocaleString(locale)}</div>
+                  </div>
+                  <div>
+                    <span className="text-slate-400">{copy.completedLabel}</span>
+                    <div>
+                      {new Date(materializationEvidence.completedAt).toLocaleString(locale)}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-slate-400">{copy.durationLabel}</span>
+                    <div>{formatDuration(materializationEvidence.durationMs)}</div>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-slate-400">{copy.noResultEvidence}</p>
+              )}
+            </Card>
+          ) : null}
+        </TabsContent>
+
+        <TabsContent value="provenance" className="mt-2 space-y-4">
+          <Card data-slot="run-plan-provenance-card" className="border-slate-700 bg-slate-900 p-5">
+            <h3 className="mb-3 text-sm font-semibold">{copy.planProvenanceTitle}</h3>
+            {planProvenance ? (
+              <div className="space-y-4 text-sm text-slate-300">
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div className="min-w-0">
+                    <span className="text-slate-400">{copy.planRecordLabel}</span>
+                    <div data-slot="run-plan-record-value" className="break-all font-mono text-xs">
+                      {planProvenance.persistedPlan.planRecordId}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-slate-400">{copy.planVersionLabel}</span>
+                    <div>{planProvenance.persistedPlan.planVersion}</div>
+                  </div>
+                  <div className="md:col-span-2">
+                    <span className="text-slate-400">{copy.planSourceRefLabel}</span>
+                    <div className="break-all font-mono text-xs">
+                      {planProvenance.persistedPlan.sourceRef}
+                    </div>
+                  </div>
+                  <div className="md:col-span-2">
+                    <span className="text-slate-400">{copy.canonicalPlanShaLabel}</span>
+                    <div className="break-all font-mono text-xs">
+                      {planProvenance.persistedPlan.canonicalPlanSha256}
+                    </div>
+                  </div>
+                </div>
+
+                {authoringArtifacts.length > 0 ? (
+                  <div className="space-y-3">
+                    {authoringArtifacts.map((artifact) => (
+                      <div
+                        key={`${artifact.title}-${artifact.repo}-${artifact.path}`}
+                        className="rounded border border-slate-700 bg-slate-950 p-3"
+                      >
+                        <div className="mb-2 flex flex-wrap items-center gap-2">
+                          <Badge variant="outline">{artifact.title}</Badge>
+                        </div>
+                        <div className="grid gap-3 md:grid-cols-2">
+                          <div className="md:col-span-2">
+                            <span className="text-slate-400">{copy.artifactRepoPathLabel}</span>
+                            <div className="break-all font-mono text-xs">
+                              {artifact.repo}:{artifact.path}
+                            </div>
+                          </div>
+                          {artifact.ref ? (
+                            <div>
+                              <span className="text-slate-400">{copy.artifactGitRefLabel}</span>
+                              <div className="break-all font-mono text-xs">{artifact.ref}</div>
+                            </div>
+                          ) : null}
+                          {artifact.commitSha ? (
+                            <div>
+                              <span className="text-slate-400">{copy.artifactCommitShaLabel}</span>
+                              <div className="break-all font-mono text-xs">
+                                {artifact.commitSha}
+                              </div>
+                            </div>
+                          ) : null}
+                          {artifact.contentSha256 ? (
+                            <div className="md:col-span-2">
+                              <span className="text-slate-400">{copy.artifactContentShaLabel}</span>
+                              <div className="break-all font-mono text-xs">
+                                {artifact.contentSha256}
+                              </div>
+                            </div>
+                          ) : null}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-400">{copy.noPlanProvenance}</p>
+            )}
+          </Card>
+
+          <Card
+            data-slot="run-execution-provenance-card"
+            className="border-slate-700 bg-slate-900 p-5"
+          >
+            <h3 className="mb-3 text-sm font-semibold">{copy.provenanceTitle}</h3>
+            {executionProvenance.length > 0 ? (
+              <div className="space-y-3">
+                {executionProvenance.map((artifact) => (
+                  <div
+                    key={`${artifact.stepId}-${artifact.storageUri}-${artifact.sha256}`}
+                    className="rounded border border-slate-700 bg-slate-950 p-3 text-sm text-slate-300"
+                  >
+                    <div className="mb-2 flex flex-wrap items-center gap-2">
+                      <Badge variant="outline">{copy.stepLabel.replace(':', '')}</Badge>
+                      <span className="font-mono text-xs">{artifact.stepId}</span>
+                      <Badge variant="outline">{artifact.artifactKind}</Badge>
+                      <span className="text-xs text-slate-400">
+                        {new Date(artifact.emittedAt).toLocaleString(locale)}
+                      </span>
+                    </div>
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <div>
+                        <span className="text-slate-400">{copy.artifactKindLabel}</span>
+                        <div>{artifact.artifactKind}</div>
+                      </div>
+                      <div>
+                        <span className="text-slate-400">{copy.artifactSizeLabel}</span>
+                        <div>{formatByteSize(artifact.sizeBytes)}</div>
+                      </div>
+                      <div className="md:col-span-2">
+                        <span className="text-slate-400">{copy.artifactUriLabel}</span>
+                        <div className="break-all font-mono text-xs">{artifact.storageUri}</div>
+                      </div>
+                      <div className="md:col-span-2">
+                        <span className="text-slate-400">{copy.artifactShaLabel}</span>
+                        <div className="break-all font-mono text-xs">{artifact.sha256}</div>
+                      </div>
+                      {artifact.encoding ? (
+                        <div>
+                          <span className="text-slate-400">{copy.artifactEncodingLabel}</span>
+                          <div>{artifact.encoding}</div>
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-400">{copy.noProvenanceEvidence}</p>
+            )}
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="diagnostics" className="mt-2 space-y-4">
+          {snapshot.diagnostics ? <RunDiagnosticsCard diagnostics={snapshot.diagnostics} /> : null}
+
+          {failureDiagnostics.failedStepId ||
+          failureDiagnostics.errorReason ||
+          failureDiagnostics.failureEmittedAt ? (
+            <Card className="border-slate-700 bg-slate-900 p-5">
+              <h3 className="mb-3 text-sm font-semibold">{copy.failureDiagnosticsTitle}</h3>
+              <div className="grid gap-3 text-sm text-slate-300 md:grid-cols-2">
+                {failureDiagnostics.failedStepId ? (
+                  <div>
+                    <span className="text-slate-400">{copy.failedStepLabel}</span>
+                    <div className="font-mono">{failureDiagnostics.failedStepId}</div>
+                  </div>
+                ) : null}
+                {failureDiagnostics.errorReason ? (
+                  <div>
+                    <span className="text-slate-400">{copy.errorReasonLabel}</span>
+                    <div>{failureDiagnostics.errorReason}</div>
+                  </div>
+                ) : null}
+                {failureDiagnostics.failureEmittedAt ? (
+                  <div>
+                    <span className="text-slate-400">{copy.failedAtLabel}</span>
+                    <div>
+                      {new Date(failureDiagnostics.failureEmittedAt).toLocaleString(locale)}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            </Card>
           ) : null}
 
-          {timeline.state === 'available' ? (
-            <RunEventTimelineTable events={timeline.events} />
-          ) : null}
-        </Card>
-      </div>
+          <Card className="border-slate-700 bg-slate-900 p-5">
+            <h3 className="mb-3 text-sm font-semibold">{copy.eventTimelineTitle}</h3>
+
+            <RunEventFeedHealthView
+              copy={copy.eventFeedHealth}
+              health={workspace.eventFeedHealth}
+              onRetry={onRetryEventFeed}
+            />
+
+            {timeline.state === 'empty' ? (
+              <p className="text-sm text-slate-400">{copy.emptyTimeline}</p>
+            ) : null}
+
+            {timeline.state === 'available' ? (
+              <RunEventTimelineTable events={timeline.events} />
+            ) : null}
+          </Card>
+        </TabsContent>
+      </Tabs>
     </WorkbenchStateFrame>
   );
 }

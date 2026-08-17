@@ -5,7 +5,11 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import type { RunWorkspaceViewModel } from '../../services/runs/runWorkspaceModel';
 import { RunWorkspaceState } from './RunStates';
-import { buildWorkspace, createRunStatesHarness } from './test/RunStatesHarness';
+import {
+  buildWorkspace,
+  createRunStatesHarness,
+  selectRunDetailTab,
+} from './test/RunStatesHarness';
 
 describe('RunStates snapshot evidence', () => {
   let harness: ReturnType<typeof createRunStatesHarness>;
@@ -56,6 +60,8 @@ describe('RunStates snapshot evidence', () => {
       />
     );
 
+    await selectRunDetailTab(harness.container, 'Provenance');
+
     expect(harness.container.textContent).toContain('Execution Preview and authoring provenance');
     expect(harness.container.textContent).not.toContain('Plan and authoring provenance');
     expect(
@@ -100,6 +106,8 @@ describe('RunStates snapshot evidence', () => {
         })}
       />
     );
+
+    await selectRunDetailTab(harness.container, 'Result');
 
     expect(harness.container.textContent).toContain('Materialization evidence');
     expect(
@@ -152,6 +160,9 @@ describe('RunStates snapshot evidence', () => {
     expect(harness.container.textContent).not.toContain('analytics.orders_daily');
     expect(harness.container.textContent).toContain('Executor');
     expect(harness.container.textContent).toContain('postgres');
+
+    await selectRunDetailTab(harness.container, 'Diagnostics and events');
+
     expect(harness.container.textContent).toContain('Failure diagnostics');
     expect(harness.container.textContent).toContain('step-transform');
     expect(harness.container.textContent).toContain('STEP_FAILURE');
@@ -197,6 +208,8 @@ describe('RunStates snapshot evidence', () => {
         })}
       />
     );
+
+    await selectRunDetailTab(harness.container, 'Diagnostics and events');
 
     expect(harness.container.textContent).toContain('Diagnostics');
     expect(harness.container.querySelector('[data-slot="run-diagnostics-card"]')).not.toBeNull();

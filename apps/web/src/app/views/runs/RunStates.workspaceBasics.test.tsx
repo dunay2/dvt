@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import React from 'react';
+import React, { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import type { RunWorkspaceViewModel } from '../../services/runs/runWorkspaceModel';
@@ -39,12 +39,19 @@ describe('RunStates workspace basics', () => {
     );
 
     expect(harness.container.textContent).toContain('snapshot-only');
-    expect(harness.container.textContent).toContain(
-      'No runtime events are available yet for this run.'
-    );
     expect(harness.container.textContent).toContain('Runtime snapshot');
     expect(harness.container.textContent).toContain('Current step');
     expect(harness.container.textContent).toContain('step-transform');
+
+    await act(async () => {
+      harness.container
+        .querySelectorAll<HTMLButtonElement>('[role="tab"]')[3]
+        ?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }));
+    });
+
+    expect(harness.container.textContent).toContain(
+      'No runtime events are available yet for this run.'
+    );
   });
 
   it('renders snapshot-plus-events run detail state', async () => {
@@ -52,6 +59,13 @@ describe('RunStates workspace basics', () => {
 
     expect(harness.container.textContent).toContain('snapshot+timeline');
     expect(harness.container.textContent).toContain('Runtime snapshot');
+
+    await act(async () => {
+      harness.container
+        .querySelectorAll<HTMLButtonElement>('[role="tab"]')[3]
+        ?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }));
+    });
+
     expect(harness.container.textContent).toContain('Event timeline');
     expect(harness.container.textContent).toContain('StepStarted');
     expect(harness.container.textContent).toContain('INFO');
@@ -81,6 +95,12 @@ describe('RunStates workspace basics', () => {
           )}
         />
       );
+
+      await act(async () => {
+        harness.container
+          .querySelectorAll<HTMLButtonElement>('[role="tab"]')[3]
+          ?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }));
+      });
 
       expect(harness.container.textContent).toContain(message);
       expect(harness.container.textContent).not.toContain(
@@ -199,15 +219,111 @@ describe('RunStates workspace basics', () => {
     expect(content).toContain('Vista previa de ejecución');
     expect(content).toContain('Instantánea de ejecución');
     expect(content).toContain('Campos de la instantánea');
-    expect(content).toContain('Cronología de eventos');
-    expect(content).toContain('Paso iniciado');
-    expect(content).toContain('EstadoCompletada');
-    expect(content).toContain('Consulta de trazas');
-    expect(content).toContain('Consulta de registros');
-    expect(content).not.toContain('Trace query');
-    expect(content).not.toContain('Log query');
+
+    await act(async () => {
+      harness.container
+        .querySelectorAll<HTMLButtonElement>('[role="tab"]')[3]
+        ?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }));
+    });
+
+    const diagnosticsContent = harness.container.textContent ?? '';
+    expect(diagnosticsContent).toContain('Cronología de eventos');
+    expect(diagnosticsContent).toContain('Paso iniciado');
+    expect(diagnosticsContent).toContain('EstadoCompletada');
+    expect(diagnosticsContent).toContain('Consulta de trazas');
+    expect(diagnosticsContent).toContain('Consulta de registros');
+    expect(diagnosticsContent).not.toContain('Trace query');
+    expect(diagnosticsContent).not.toContain('Log query');
     expect(content).not.toContain('Run itinerary');
     expect(content).not.toContain('Runtime snapshot');
     expect(content).not.toContain('Event timeline');
+  });
+
+  it('organizes a completed run into semantic tabs without exposing every section at once', async () => {
+    await harness.render(
+      <RunWorkspaceState
+        workspace={buildWorkspace({
+          snapshot: {
+            runId: 'run_123',
+            planId: 'plan_123',
+            status: 'completed',
+            executor: 'postgres',
+            startedAt: '2026-03-28T10:00:00.000Z',
+            completedAt: '2026-03-28T10:00:30.000Z',
+            environment: 'dev',
+            diagnostics: {
+              runId: 'run_123',
+              status: 'completed',
+              pointers: [],
+            },
+            execution: {
+              materialization: {
+                executor: 'postgres',
+                environmentId: 'env-1',
+                sinkTable: 'analytics.orders_daily',
+                rowsWritten: 42,
+                startedAt: '2026-03-28T10:00:05.000Z',
+                completedAt: '2026-03-28T10:00:25.000Z',
+                durationMs: 20000,
+              },
+            },
+          } as RunWorkspaceViewModel['snapshot'],
+        })}
+      />
+    );
+
+    const tabs = Array.from(harness.container.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
+    expect(tabs.map((tab) => tab.textContent)).toEqual([
+      'Summary',
+      'Result',
+      'Provenance',
+      'Diagnostics and events',
+    ]);
+    expect(tabs[0]?.getAttribute('aria-selected')).toBe('true');
+    expect(harness.container.textContent).toContain('Run itinerary');
+    expect(harness.container.textContent).not.toContain('Materialization evidence');
+    expect(harness.container.textContent).not.toContain('Event timeline');
+
+    await act(async () => {
+      tabs[1]?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }));
+    });
+
+    expect(tabs[1]?.getAttribute('aria-selected')).toBe('true');
+    expect(harness.container.textContent).toContain('Materialization evidence');
+    expect(harness.container.textContent).not.toContain('Run itinerary');
+
+    await act(async () => {
+      tabs[2]?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }));
+    });
+
+    expect(tabs[2]?.getAttribute('aria-selected')).toBe('true');
+    expect(harness.container.textContent).toContain('Execution Preview and authoring provenance');
+    expect(harness.container.textContent).toContain('Execution provenance');
+    expect(harness.container.textContent).not.toContain('Materialization evidence');
+
+    await act(async () => {
+      tabs[3]?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }));
+    });
+
+    expect(tabs[3]?.getAttribute('aria-selected')).toBe('true');
+    expect(harness.container.textContent).toContain('Diagnostics');
+    expect(harness.container.textContent).toContain('Event timeline');
+    expect(harness.container.textContent).not.toContain('Run itinerary');
+    expect(harness.container.textContent).not.toContain('Materialization evidence');
+  });
+
+  it('renders the semantic run-detail tab labels in Spanish', async () => {
+    setRunStatesLanguage('es');
+
+    await harness.render(<RunWorkspaceState workspace={buildWorkspace()} />);
+
+    const tabs = Array.from(harness.container.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
+    expect(tabs.map((tab) => tab.textContent)).toEqual([
+      'Resumen',
+      'Resultado',
+      'Procedencia',
+      'Diagnóstico y eventos',
+    ]);
+    expect(tabs[1]?.hasAttribute('disabled')).toBe(true);
   });
 });

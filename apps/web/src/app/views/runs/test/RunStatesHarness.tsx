@@ -17,6 +17,20 @@ export function setRunStatesLanguage(language: ApplicationLanguage): void {
   useApplicationLanguageStore.getState().configureApplicationLanguage(language);
 }
 
+export async function selectRunDetailTab(container: HTMLElement, label: string): Promise<void> {
+  const tab = Array.from(container.querySelectorAll<HTMLButtonElement>('[role="tab"]')).find(
+    (candidate) => candidate.textContent === label
+  );
+
+  if (!tab) {
+    throw new Error(`Run detail tab not found: ${label}`);
+  }
+
+  await act(async () => {
+    tab.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }));
+  });
+}
+
 export function buildSummary(overrides?: Partial<RunSummaryItem>): RunSummaryItem {
   return {
     runId: 'run_123',
