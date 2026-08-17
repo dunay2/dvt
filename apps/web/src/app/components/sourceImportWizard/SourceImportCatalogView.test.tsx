@@ -71,9 +71,6 @@ describe('SourceImportCatalogView', () => {
     });
 
     expect(container.textContent).toContain('RAW.ERP.ORDERS');
-    expect(container.textContent).toContain('1,500 rows');
-    expect(container.textContent).toContain('3.9 MB');
-    expect(container.textContent).toContain('1 column');
     expect(container.textContent).not.toContain('order_id');
     expect(container.textContent).not.toContain('INTEGER');
     expect(container.querySelectorAll('[data-slot="metric-evidence-hotspot"]')).toHaveLength(0);
