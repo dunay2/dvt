@@ -74,7 +74,7 @@ export async function finalizeNativeCancellationIfNeeded(
     error: unknown;
   }
 ): Promise<boolean> {
-  if (!isCancellation(args.error)) {
+  if (!isCancellation(args.error) && !CancellationScope.current().consideredCancelled) {
     return false;
   }
 
