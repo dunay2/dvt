@@ -7,6 +7,7 @@ import { CanvasNodeContextMenuView } from './CanvasNodeContextMenuView';
 import {
   CanvasNodePortHandle,
   type CanvasNodePortCompatibilityView,
+  type CanvasNodePortHandleKind,
   type CanvasNodePortTone,
 } from './CanvasNodePortHandle';
 import type {
@@ -85,7 +86,7 @@ export function CanvasNodeShell({
         >
           {shouldShowTargetHandle && (
             <CanvasNodePortHandle
-              id="target"
+              id={'target' satisfies CanvasNodePortHandleKind}
               kind="target"
               tone={targetHandleTone}
               label={targetPortLabel}
@@ -97,7 +98,7 @@ export function CanvasNodeShell({
 
           {shouldShowSourceHandle && (
             <CanvasNodePortHandle
-              id="source"
+              id={'source' satisfies CanvasNodePortHandleKind}
               kind="source"
               tone={sourceHandleTone}
               label={sourcePortLabel}
