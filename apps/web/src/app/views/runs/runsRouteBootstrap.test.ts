@@ -56,4 +56,19 @@ describe('runsRouteBootstrap', () => {
       detail: 'Runs unavailable',
     });
   });
+
+  it('publishes route bootstrap posture in Spanish when the application language is Spanish', () => {
+    expect(
+      deriveRunsRouteBootstrapPresentation(
+        {
+          kind: 'run-missing',
+          runId: 'run_404',
+        },
+        'es'
+      )
+    ).toEqual({
+      status: 'complete',
+      detail: 'No se encontró la ejecución run_404',
+    });
+  });
 });

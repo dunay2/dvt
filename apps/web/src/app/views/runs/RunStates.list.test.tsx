@@ -4,12 +4,17 @@ import React from 'react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { RunListState, RunsEmptyState } from './RunStates';
-import { buildSummary, createRunStatesHarness } from './test/RunStatesHarness';
+import {
+  buildSummary,
+  createRunStatesHarness,
+  setRunStatesLanguage,
+} from './test/RunStatesHarness';
 
 describe('RunStates list states', () => {
   let harness: ReturnType<typeof createRunStatesHarness>;
 
   beforeEach(() => {
+    setRunStatesLanguage('en');
     harness = createRunStatesHarness();
   });
 
@@ -51,5 +56,28 @@ describe('RunStates list states', () => {
 
     expect(harness.container.textContent).toContain('No runs available');
     expect(harness.container.textContent).toContain('Go to canvas to preview and start a run');
+  });
+
+  it('renders list copy and known statuses in Spanish from the application language', async () => {
+    setRunStatesLanguage('es');
+
+    await harness.render(
+      <RunListState
+        runs={[
+          buildSummary({ status: 'running' }),
+          buildSummary({ runId: 'run_456', status: 'failed' }),
+        ]}
+      />
+    );
+
+    const content = harness.container.textContent ?? '';
+    expect(content).toContain('Ejecuciones');
+    expect(content).toContain('ID de ejecución');
+    expect(content).toContain('Entorno');
+    expect(content).toContain('En ejecución');
+    expect(content).toContain('Fallida');
+    expect(content).toContain('Ver detalles');
+    expect(content).not.toContain('View Details');
+    expect(content).not.toContain('Environment');
   });
 });

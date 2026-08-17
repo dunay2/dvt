@@ -11,4 +11,10 @@ describe('resolveRunEventHeadline', () => {
   it('falls back to the runtime event type for unknown events', () => {
     expect(resolveRunEventHeadline('fallback', 'CustomEvent')).toBe('CustomEvent');
   });
+
+  it('resolves known event headlines in Spanish without translating unknown technical types', () => {
+    expect(resolveRunEventHeadline('stepStarted', undefined, 'es')).toBe('Paso iniciado');
+    expect(resolveRunEventHeadline('runCompleted', undefined, 'es')).toBe('Ejecución completada');
+    expect(resolveRunEventHeadline('fallback', 'CustomEvent', 'es')).toBe('CustomEvent');
+  });
 });
