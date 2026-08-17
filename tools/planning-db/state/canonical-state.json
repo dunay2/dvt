@@ -14041,6 +14041,20 @@
         "updated_at": "2026-08-17T12:18:47.678+00:00"
       },
       {
+        "design_id": "W4-SOURCE-DATA-SAMPLE-RAIL-CORRECTION-20260817",
+        "work_item_id": "GH-2417",
+        "title": "Correct source sample mechanization validation path",
+        "owner": "Architecture / Planning DB",
+        "status": "implemented",
+        "rationale": "Retire and recreate the local rail so its completion gate names the real HTTP test without retaining an obsolete path.",
+        "fowler_signal": "hidden_authority",
+        "rail_ref": "RetireFeatureMechanizationRail",
+        "approved_at": "2026-08-17T12:33:00.289+00:00",
+        "supersedes_id": null,
+        "created_at": "2026-08-17T12:31:55.022+00:00",
+        "updated_at": "2026-08-17T12:33:05.979+00:00"
+      },
+      {
         "design_id": "WEB-BOTTOM-OPERATIONAL-DRAWER-20260618",
         "work_item_id": "UXDB-BOTTOM-OPERATIONAL-DRAWER-P0-1",
         "title": "Web bottom operational drawer vocabulary",
@@ -91418,6 +91432,14 @@
         "created_at": "2026-08-17T12:14:38.053+00:00"
       },
       {
+        "design_id": "W4-SOURCE-DATA-SAMPLE-RAIL-CORRECTION-20260817",
+        "subject_kind": "decision",
+        "subject_id": "local#W4-SOURCE-DATA-SAMPLE#query#previewwarehousesourceobjectrows",
+        "scope_kind": "may_delete",
+        "required": true,
+        "created_at": "2026-08-17T12:31:55.022+00:00"
+      },
+      {
         "design_id": "WEB-CANVAS-CONTEXT-MENU-VIEW-MODEL-20260627",
         "subject_kind": "component",
         "subject_id": "web.component.canvas.CanvasContextMenu",
@@ -98793,6 +98815,27 @@
         "created_at": "2026-08-11T10:13:48.254+00:00"
       },
       {
+        "operation_id": "54e29173-ac7f-4b58-9872-388ac9451a80",
+        "idempotency_key": "w4-source-sample-correction-implementing-20260817",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "W4-SOURCE-DATA-SAMPLE-RAIL-CORRECTION-20260817",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2417",
+        "source_content_sha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The stale rail was retired and the same canonical rail was recreated with the real HTTP test path.",
+          "designId": "W4-SOURCE-DATA-SAMPLE-RAIL-CORRECTION-20260817",
+          "toStatus": "implementing",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2417",
+          "fromStatus": "approved",
+          "sourceContentSha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179"
+        },
+        "created_at": "2026-08-17T12:33:03.302+00:00"
+      },
+      {
         "operation_id": "555f8d13-477d-42cf-b04b-250cc6e5d5e9",
         "idempotency_key": "gh-2168-legacy-pattern-implemented-v1",
         "operation_type": "architecture_design_transition",
@@ -98833,6 +98876,27 @@
           "sourceContentSha256": "09fb9403d86457b7694013a02e98bd9ee0db6e02288654526691fc4bf6bc4f95"
         },
         "created_at": "2026-08-13T13:22:15.83+00:00"
+      },
+      {
+        "operation_id": "55a131b2-6d3f-4309-8dc2-1118bdddfff2",
+        "idempotency_key": "w4-source-sample-correction-approved-20260817",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "W4-SOURCE-DATA-SAMPLE-RAIL-CORRECTION-20260817",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2417",
+        "source_content_sha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The correction hard-cuts the inaccurate validation path without introducing a duplicate rail.",
+          "designId": "W4-SOURCE-DATA-SAMPLE-RAIL-CORRECTION-20260817",
+          "toStatus": "approved",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2417",
+          "fromStatus": "review",
+          "sourceContentSha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179"
+        },
+        "created_at": "2026-08-17T12:33:00.289+00:00"
       },
       {
         "operation_id": "56cb4906-f1b0-4953-bb32-2ae4c57c34e8",
@@ -98942,6 +99006,40 @@
           "sourceContentSha256": "3e103b92310327c50ad13de9702c492abd3dbcbe1c696c98965a33ce244accec"
         },
         "created_at": "2026-08-11T14:09:48.127+00:00"
+      },
+      {
+        "operation_id": "57170ba8-9526-40fe-870d-5dfe115082b4",
+        "idempotency_key": "w4-source-sample-rail-correction-design-20260817",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "W4-SOURCE-DATA-SAMPLE-RAIL-CORRECTION-20260817",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2417",
+        "source_content_sha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "Architecture / Planning DB",
+          "title": "Correct source sample mechanization validation path",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_delete",
+              "subjectId": "local#W4-SOURCE-DATA-SAMPLE#query#previewwarehousesourceobjectrows",
+              "subjectKind": "decision"
+            }
+          ],
+          "status": "review",
+          "railRef": "RetireFeatureMechanizationRail",
+          "designId": "W4-SOURCE-DATA-SAMPLE-RAIL-CORRECTION-20260817",
+          "rationale": "Retire and recreate the local rail so its completion gate names the real HTTP test without retaining an obsolete path.",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2417",
+          "workItemId": "GH-2417",
+          "fowlerSignal": "hidden_authority",
+          "supersedesId": null,
+          "sourceContentSha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179"
+        },
+        "created_at": "2026-08-17T12:31:55.022+00:00"
       },
       {
         "operation_id": "573f7b7a-8751-45a2-8edd-d35104bfaf89",
@@ -111781,6 +111879,27 @@
           "sourceContentSha256": "6b5954e8c6313cd8265c56c45560f3f9eb6b8487dad9bfc0274f58842f8f7df1"
         },
         "created_at": "2026-08-10T21:04:44.182+00:00"
+      },
+      {
+        "operation_id": "d74b8e23-a124-497c-bc42-fe6086c52a07",
+        "idempotency_key": "w4-source-sample-correction-implemented-20260817",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "W4-SOURCE-DATA-SAMPLE-RAIL-CORRECTION-20260817",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2417",
+        "source_content_sha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Planning DB now exposes one implemented PreviewWarehouseSourceObjectRows rail with only real completion-gate paths.",
+          "designId": "W4-SOURCE-DATA-SAMPLE-RAIL-CORRECTION-20260817",
+          "toStatus": "implemented",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2417",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179"
+        },
+        "created_at": "2026-08-17T12:33:05.979+00:00"
       },
       {
         "operation_id": "d7964f0e-da61-4f65-a70d-27dd42c6a532",
@@ -171217,7 +171336,7 @@
       ],
       "completionGate": [
         "pnpm exec vitest run packages/@dvt/contracts/test/source-import/SourceDataSample.v1.test.ts",
-        "pnpm exec vitest run --config apps/api/vitest.config.ts apps/api/test/application/services/previewWarehouseSourceObjectRowsUseCase.test.ts apps/api/test/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.test.ts apps/api/test/entrypoints/http/workspaceWarehouseConnections.test.ts",
+        "pnpm exec vitest run --config apps/api/vitest.config.ts apps/api/test/application/services/previewWarehouseSourceObjectRowsUseCase.test.ts apps/api/test/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.test.ts apps/api/test/entrypoints/http/warehouseSourceImportRoutes.test.ts",
         "pnpm exec vitest run --config apps/web/vitest.config.ts apps/web/src/app/plugins/graph/GraphNodeOperationalRail.test.tsx apps/web/src/app/views/canvas/CanvasViewport.nodeOperationalRail.test.tsx apps/web/src/app/components/shell/OperationalDrawerPanels.test.tsx",
         "pnpm verify:prepush"
       ],
@@ -171330,7 +171449,7 @@
         ],
         "completionGate": [
           "pnpm exec vitest run packages/@dvt/contracts/test/source-import/SourceDataSample.v1.test.ts",
-          "pnpm exec vitest run --config apps/api/vitest.config.ts apps/api/test/application/services/previewWarehouseSourceObjectRowsUseCase.test.ts apps/api/test/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.test.ts apps/api/test/entrypoints/http/workspaceWarehouseConnections.test.ts",
+          "pnpm exec vitest run --config apps/api/vitest.config.ts apps/api/test/application/services/previewWarehouseSourceObjectRowsUseCase.test.ts apps/api/test/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.test.ts apps/api/test/entrypoints/http/warehouseSourceImportRoutes.test.ts",
           "pnpm exec vitest run --config apps/web/vitest.config.ts apps/web/src/app/plugins/graph/GraphNodeOperationalRail.test.tsx apps/web/src/app/views/canvas/CanvasViewport.nodeOperationalRail.test.tsx apps/web/src/app/components/shell/OperationalDrawerPanels.test.tsx",
           "pnpm verify:prepush"
         ],
@@ -171391,7 +171510,7 @@
       },
       "revision": 0,
       "createdBy": "codex",
-      "createdAt": "2026-08-17T12:18:34.852Z"
+      "createdAt": "2026-08-17T12:32:42.462Z"
     },
     {
       "railId": "local#WEB-API-AUTHORITY-HARDCUT-20260510#query#getruntimecapabilities",
@@ -211416,6 +211535,125 @@
         ]
       },
       "createdAt": "2026-08-17T12:18:34.852Z"
+    },
+    {
+      "operationId": "39070794-a909-437a-890d-bbf6e1a46cb2",
+      "idempotencyKey": "w4-source-sample-retire-invalid-gate-20260817",
+      "operationType": "feature_mechanization_rail_retire",
+      "actor": "codex",
+      "railId": "local#W4-SOURCE-DATA-SAMPLE#query#previewwarehousesourceobjectrows",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2417",
+      "sourceContentSha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "railId": "local#W4-SOURCE-DATA-SAMPLE#query#previewwarehousesourceobjectrows",
+        "reason": "Replace the rail atomically so the completion gate references warehouseSourceImportRoutes.test.ts instead of a nonexistent route test.",
+        "designId": "W4-SOURCE-DATA-SAMPLE-RAIL-CORRECTION-20260817",
+        "railName": "PreviewWarehouseSourceObjectRows",
+        "railType": "query",
+        "featureId": "W4-SOURCE-DATA-SAMPLE",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2417",
+        "expectedRevision": 0,
+        "normalizedRailName": "previewwarehousesourceobjectrows",
+        "sourceContentSha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179"
+      },
+      "createdAt": "2026-08-17T12:32:10.036Z"
+    },
+    {
+      "operationId": "e2bba848-cccb-43f2-b59a-065b17782db4",
+      "idempotencyKey": "w4-source-data-sample-mechanization-corrected-20260817",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#W4-SOURCE-DATA-SAMPLE#query#previewwarehousesourceobjectrows",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2417",
+      "sourceContentSha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "Focused tests fail when the query is absent, the gesture propagates, the health popover remains open, or stale rows survive a node change.",
+        "dddOwner": "WarehouseSourceDataSampleReadModel",
+        "railName": "PreviewWarehouseSourceObjectRows",
+        "railType": "query",
+        "featureId": "W4-SOURCE-DATA-SAMPLE",
+        "greenTest": "Focused contract, API, HTTP, web interaction, drawer, and headed browser validations pass with real dvt.public.pth2_orders rows.",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2417",
+        "unitTests": [
+          "packages/@dvt/contracts/test/source-import/SourceDataSample.v1.test.ts",
+          "apps/api/test/application/services/previewWarehouseSourceObjectRowsUseCase.test.ts",
+          "apps/web/src/app/plugins/graph/GraphNodeOperationalRail.test.tsx"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2417"],
+        "cypressFlows": [
+          "Headed agent-browser verifies health click, double-click sample, Enter sample, real rows, ES copy, and drawer-scoped axe audit."
+        ],
+        "domainObjects": ["SourceDataSample", "GovernedRelationalSourceObject"],
+        "fowlerSignals": [
+          "Reuse BottomOperationalDrawer and keep catalog discovery separate from bounded row sampling."
+        ],
+        "negativeTests": [
+          "Reject invalid limits, unsupported or absent relations, missing connections, unauthorized workspaces, timeout, provider failure, client SQL, and credential-shaped payloads."
+        ],
+        "patchSurfaces": [
+          "packages/@dvt/contracts/src/contracts/source-import/SourceDataSample.v1.ts",
+          "apps/api/src/application/services/previewWarehouseSourceObjectRowsUseCase.ts",
+          "apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.ts",
+          "apps/web/src/app/views/canvas/CanvasViewport.tsx",
+          "apps/web/src/app/components/shell/OperationalDrawerPanels.tsx"
+        ],
+        "adapterSurface": "GET /workspace/warehouse/connections/:connectionId/source-data-sample and workspace source-data-sample query port",
+        "completionGate": [
+          "pnpm exec vitest run packages/@dvt/contracts/test/source-import/SourceDataSample.v1.test.ts",
+          "pnpm exec vitest run --config apps/api/vitest.config.ts apps/api/test/application/services/previewWarehouseSourceObjectRowsUseCase.test.ts apps/api/test/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.test.ts apps/api/test/entrypoints/http/warehouseSourceImportRoutes.test.ts",
+          "pnpm exec vitest run --config apps/web/vitest.config.ts apps/web/src/app/plugins/graph/GraphNodeOperationalRail.test.tsx apps/web/src/app/views/canvas/CanvasViewport.nodeOperationalRail.test.tsx apps/web/src/app/components/shell/OperationalDrawerPanels.test.tsx",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "PreviewWarehouseSourceObjectRowsUseCase through IWarehouseSourceDataSampleProbe",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "No authorized bounded row query exists and double-clicking the gray metrics rail cannot open real source rows in the existing drawer.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/guides/ai-work-protocol.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260817-source-data-sample.md"
+        ],
+        "architectureGuards": [
+          "SourceDataSample schemas reject SQL and credential-shaped fields and cap responses at 50 rows."
+        ],
+        "authorizationScope": "active tenant, project, environment, workspace:source-import:view, governed connection, relational object SELECT privilege",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2417",
+        "implementationRefs": [
+          "packages/@dvt/contracts/src/contracts/source-import/SourceDataSample.v1.ts#SourceDataSampleResponseSchema",
+          "apps/api/src/application/services/previewWarehouseSourceObjectRowsUseCase.ts#PreviewWarehouseSourceObjectRowsUseCase",
+          "apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.ts#WorkspaceWarehouseConnectionProbe",
+          "apps/web/src/app/views/canvas/canvasSourceDataSample.ts#resolveCanvasSourceDataSampleTarget",
+          "apps/web/src/app/plugins/graph/GraphNodeOperationalRail.tsx#GraphNodeOperationalRail"
+        ],
+        "normalizedRailName": "previewwarehousesourceobjectrows",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/contracts/src/contracts/source-import/SourceDataSample.v1.ts",
+          "apps/api/src/application/services/previewWarehouseSourceObjectRowsUseCase.ts",
+          "apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.ts",
+          "apps/web/src/app/views/canvas",
+          "apps/web/src/app/plugins/graph/GraphNodeOperationalRail.tsx"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "client-authored SQL or credential values",
+          "parallel modal, drawer, or global row-sample store"
+        ]
+      },
+      "createdAt": "2026-08-17T12:32:42.462Z"
     }
   ],
   "governanceComponentDefinitions": [
