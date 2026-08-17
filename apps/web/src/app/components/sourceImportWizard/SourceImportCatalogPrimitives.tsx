@@ -5,7 +5,6 @@ import type { ReactNode } from 'react';
 import { Badge } from '../ui/badge';
 import { Card } from '../ui/card';
 import { Checkbox } from '../ui/checkbox';
-import { MetricEvidenceHotspot } from '../metrics/MetricEvidenceHotspot';
 import type {
   SourceImportCatalogFilterId,
   SourceImportCatalogFilterViewModel,
@@ -41,7 +40,6 @@ export const sourceImportCatalogClassNames = {
   objectNameBlock: 'min-w-0',
   objectName: 'block truncate font-mono text-sm',
   objectCanonicalName: 'block truncate font-mono text-xs text-slate-400',
-  objectMetrics: 'flex shrink-0 items-center gap-1.5 text-right text-xs text-slate-400',
   importability: 'mt-2 text-[11px] leading-4 text-amber-300',
 } as const;
 
@@ -257,29 +255,6 @@ export function SourceImportObjectCard({
               </span>
             </span>
           </button>
-        </div>
-        <div className={sourceImportCatalogClassNames.objectMetrics}>
-          <Badge variant="secondary">{sourceObject.kindLabel}</Badge>
-          {sourceObject.selected ? (
-            <Badge variant="outline">{sourceObject.selectedLabel}</Badge>
-          ) : null}
-          <div>
-            <MetricEvidenceHotspot
-              detail={sourceObject.rowCountDetail}
-              focusable={false}
-              tone={sourceObject.rowCountTone}
-              value={sourceObject.rowCountLabel}
-            />
-          </div>
-          <div>
-            <MetricEvidenceHotspot
-              detail={sourceObject.byteSizeDetail}
-              focusable={false}
-              tone={sourceObject.byteSizeTone}
-              value={sourceObject.byteSizeLabel}
-            />
-          </div>
-          <div>{sourceObject.columnCountLabel}</div>
         </div>
       </div>
       {sourceObject.importabilityLabel ? (
