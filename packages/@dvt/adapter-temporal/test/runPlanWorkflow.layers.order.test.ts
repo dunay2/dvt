@@ -76,7 +76,7 @@ describe('executePlanLayers lifecycle ordering', () => {
     vi.clearAllMocks();
     selectExecutableLayer.mockReturnValue([{ stepId: 's-1', kind: 'DBT_MODEL', dependsOn: [] }]);
     finalizeCancellationIfRequested.mockResolvedValue(null);
-    finalizeNativeCancellationIfNeeded.mockResolvedValue(false);
+    finalizeNativeCancellationIfNeeded.mockResolvedValue(null);
     markWorkflowFailedIfNeeded.mockResolvedValue(undefined);
     maybeBuildContinueAsNewOutcome.mockReturnValue(null);
   });

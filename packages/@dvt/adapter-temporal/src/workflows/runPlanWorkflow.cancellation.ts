@@ -8,7 +8,12 @@
  * @consequence Operator cancellation remains observable without making Temporal the semantic lifecycle authority
  * @version 1.2.0
  */
-import { CancellationScope, condition, isCancellation } from '@temporalio/workflow';
+import {
+  CancelledFailure,
+  CancellationScope,
+  condition,
+  isCancellation,
+} from '@temporalio/workflow';
 
 import { eventActivities, terminalEventActivities } from './runPlanWorkflow.activities.js';
 import type {
@@ -73,15 +78,22 @@ export async function finalizeNativeCancellationIfNeeded(
   args: CancellationArgs & {
     error: unknown;
   }
-): Promise<boolean> {
-  if (!isCancellation(args.error) && !CancellationScope.current().consideredCancelled) {
-    return false;
+): Promise<unknown | null> {
+  const errorIsCancellation = isCancellation(args.error);
+  if (!errorIsCancellation && !CancellationScope.current().consideredCancelled) {
+    return null;
   }
 
   await CancellationScope.nonCancellable(async () => {
     await emitTerminalCancellation(args, { includeRequestEvent: !args.state.cancelRequested });
   });
-  return true;
+  return errorIsCancellation
+    ? args.error
+    : new CancelledFailure(
+        'Workflow cancellation requested',
+        [],
+        args.error instanceof Error ? args.error : undefined
+      );
 }
 
 async function emitTerminalCancellation(
