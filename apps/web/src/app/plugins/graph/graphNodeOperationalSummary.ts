@@ -8,6 +8,7 @@ import type {
   GraphNodeSizeEvidenceProjection,
   GraphNodeVolumeMetricProjection,
 } from './graphNodeSourceMetricProjection';
+import { resolveGraphNodeCardCopy } from './graphNodeCardCopyTokens';
 import {
   buildGraphNodeOperationalDetail,
   formatBytes,
@@ -24,6 +25,8 @@ export type GraphNodeOperationalSummary = Readonly<{
   detail: GraphNodeOperationalDetail | null;
 }>;
 
+type GraphNodeCardCopy = ReturnType<typeof resolveGraphNodeCardCopy>;
+
 export type GraphNodeOperationalSummaryInput = Readonly<{
   projectionKind: 'source' | 'execution';
   title: string;
@@ -32,6 +35,7 @@ export type GraphNodeOperationalSummaryInput = Readonly<{
   runtimeData?: Record<string, unknown>;
   volumeMetricProjection: GraphNodeVolumeMetricProjection;
   columnCount: number | null;
+  locale?: string;
 }>;
 
 function firstNumericValue(
@@ -52,19 +56,22 @@ function formatMinutes(value: number): string {
   return `${formatCompactNumber(value)} min`;
 }
 
-function formatCadenceMinutes(value: number): string {
-  return `Every ${formatCompactNumber(value)} min`;
+function formatCadenceMinutes(value: number, copy: GraphNodeCardCopy): string {
+  return copy.cadenceValueTemplate.replace('{minutes}', formatCompactNumber(value));
 }
 
-function formatThroughputBytesPerMinute(value: number): string {
-  return `${formatBytes(value)}/min`;
+function formatThroughputBytesPerMinute(value: number, locale?: string): string {
+  return `${formatBytes(value, locale)}/min`;
 }
 
-function formatAverageBytes(value: number): string {
+function formatAverageBytes(value: number, locale?: string): string {
   if (Math.abs(value) < 1024) {
-    return `${value.toFixed(1).replace(/\.0$/, '')} B`;
+    return `${new Intl.NumberFormat(
+      locale?.trim().toLowerCase().startsWith('es') ? 'es-ES' : 'en-US',
+      { maximumFractionDigits: 1 }
+    ).format(value)} B`;
   }
-  return formatBytes(value);
+  return formatBytes(value, locale);
 }
 
 function formatCost(value: number): string {
@@ -114,7 +121,8 @@ function sizeEvidenceTone(sizeEvidence: GraphNodeSizeEvidenceProjection): GraphN
 
 function resolveSchemaDriftProjection(
   metadata: Record<string, unknown>,
-  data: Record<string, unknown>
+  data: Record<string, unknown>,
+  copy: GraphNodeCardCopy
 ): SchemaDriftProjection | null {
   const driftStatus =
     stringValue(metadata.schemaDriftStatus) ??
@@ -131,13 +139,13 @@ function resolveSchemaDriftProjection(
     case 'none':
     case 'no-drift':
     case 'no_drift':
-      return { label: 'No drift detected', tone: 'success' };
+      return { label: copy.noDriftDetectedLabel, tone: 'success' };
     case 'detected':
     case 'drift':
     case 'drifted':
     case 'warning':
     case 'warn':
-      return { label: 'Drift detected', tone: 'warning' };
+      return { label: copy.driftDetectedLabel, tone: 'warning' };
     default:
       return { label: driftStatus, tone: 'neutral' };
   }
@@ -147,7 +155,8 @@ function buildSourceHealthRows(
   metadata: Record<string, unknown>,
   data: Record<string, unknown>,
   volumeMetricProjection: GraphNodeVolumeMetricProjection,
-  columnCount: number | null
+  columnCount: number | null,
+  locale?: string
 ): {
   railMetrics: GraphNodeCardMetric[];
   detailRows: GraphNodeCardMetric[];
@@ -171,40 +180,41 @@ function buildSourceHealthRows(
   const sizeMetric = volumeMetricProjection.metrics.find(
     (metric) => metric.id === 'bytes' || metric.id === 'estimated-bytes'
   );
-  const schemaDrift = resolveSchemaDriftProjection(metadata, data);
+  const copy = resolveGraphNodeCardCopy(locale);
+  const schemaDrift = resolveSchemaDriftProjection(metadata, data, copy);
   const railMetrics: GraphNodeCardMetric[] = [];
   const detailRows: GraphNodeCardMetric[] = [];
 
   pushOperationalMetric(
     railMetrics,
     'freshness',
-    'Freshness',
+    copy.freshnessLabel,
     freshnessMinutes == null ? null : formatMinutes(freshnessMinutes),
     { icon: 'clock' }
   );
-  pushOperationalMetric(railMetrics, 'last-refresh', 'Last refresh', lastRefreshAt, {
+  pushOperationalMetric(railMetrics, 'last-refresh', copy.lastRefreshLabel, lastRefreshAt, {
     icon: 'refresh',
   });
   pushOperationalMetric(
     railMetrics,
     'cadence',
-    'Cadence',
-    cadenceMinutes == null ? null : formatCadenceMinutes(cadenceMinutes),
+    copy.cadenceLabel,
+    cadenceMinutes == null ? null : formatCadenceMinutes(cadenceMinutes, copy),
     { icon: 'refresh' }
   );
   pushOperationalMetric(
     railMetrics,
     'throughput',
-    'Throughput',
+    copy.throughputLabel,
     throughputBytesPerMinute == null
       ? null
-      : formatThroughputBytesPerMinute(throughputBytesPerMinute),
+      : formatThroughputBytesPerMinute(throughputBytesPerMinute, locale),
     { icon: 'throughput' }
   );
   pushOperationalMetric(
     railMetrics,
     'rows',
-    'Rows',
+    copy.rowsLabel,
     rowCount == null || sizeEvidence == null ? null : formatCompactNumber(rowCount),
     {
       icon: 'rows',
@@ -215,8 +225,8 @@ function buildSourceHealthRows(
   pushOperationalMetric(
     railMetrics,
     'size',
-    sizeEvidence?.provenance === 'estimated' ? 'Est. size' : 'Size',
-    sizeEvidence == null ? null : formatBytes(sizeEvidence.bytes),
+    sizeEvidence?.provenance === 'estimated' ? copy.estimatedSizeLabel : copy.sizeLabel,
+    sizeEvidence == null ? null : formatBytes(sizeEvidence.bytes, locale),
     sizeEvidence == null
       ? { icon: 'database' }
       : {
@@ -228,7 +238,7 @@ function buildSourceHealthRows(
 
   const schemaDriftRailOnly = railMetrics.length === 0 && schemaDrift !== null;
   if (schemaDriftRailOnly) {
-    pushOperationalMetric(railMetrics, 'schema-drift', 'Schema drift', schemaDrift.label, {
+    pushOperationalMetric(railMetrics, 'schema-drift', copy.schemaDriftLabel, schemaDrift.label, {
       icon: 'drift',
       tone: schemaDrift.tone,
     });
@@ -239,17 +249,17 @@ function buildSourceHealthRows(
     pushOperationalMetric(
       detailRows,
       'columns',
-      'Columns',
+      copy.columnsLabel,
       columnCount == null ? null : formatCompactNumber(columnCount),
       { icon: 'columns' }
     );
   }
-  pushByteLevelDetailRows(detailRows, rowCount, sizeEvidence, sizeMetric?.detail);
+  pushByteLevelDetailRows(detailRows, rowCount, sizeEvidence, sizeMetric?.detail, locale);
   if (!railMetrics.some((metric) => metric.id === 'rows')) {
     pushOperationalMetric(
       detailRows,
       'rows',
-      'Rows',
+      copy.rowsLabel,
       rowCount == null || sizeEvidence == null ? null : formatCompactNumber(rowCount),
       {
         icon: 'rows',
@@ -262,7 +272,7 @@ function buildSourceHealthRows(
     pushOperationalMetric(
       detailRows,
       'schema-drift',
-      'Schema drift',
+      copy.schemaDriftLabel,
       schemaDrift?.label ?? null,
       schemaDrift == null ? undefined : { icon: 'drift', tone: schemaDrift.tone }
     );
@@ -271,27 +281,34 @@ function buildSourceHealthRows(
   return { railMetrics, detailRows };
 }
 
-function detailedSizeLabel(sizeEvidence: GraphNodeSizeEvidenceProjection | null): string {
+function detailedSizeLabel(
+  sizeEvidence: GraphNodeSizeEvidenceProjection | null,
+  copy: GraphNodeCardCopy
+): string {
   if (sizeEvidence?.basis === 'physical-allocation') {
-    return 'Allocated size';
+    return copy.allocatedSizeLabel;
   }
   if (sizeEvidence?.basis === 'lower-bound') {
-    return 'Minimum size';
+    return copy.minimumSizeLabel;
   }
-  return sizeEvidence?.provenance === 'estimated' ? 'Estimated payload size' : 'Dataset size';
+  return sizeEvidence?.provenance === 'estimated'
+    ? copy.estimatedPayloadSizeLabel
+    : copy.datasetSizeLabel;
 }
 
 function pushByteLevelDetailRows(
   detailRows: GraphNodeCardMetric[],
   rowCount: number | null,
   sizeEvidence: GraphNodeSizeEvidenceProjection | null,
-  detail?: string
+  detail?: string,
+  locale?: string
 ): void {
+  const copy = resolveGraphNodeCardCopy(locale);
   pushOperationalMetric(
     detailRows,
     'dataset-size',
-    detailedSizeLabel(sizeEvidence),
-    sizeEvidence == null ? null : formatBytes(sizeEvidence.bytes),
+    detailedSizeLabel(sizeEvidence, copy),
+    sizeEvidence == null ? null : formatBytes(sizeEvidence.bytes, locale),
     sizeEvidence == null
       ? { icon: 'database' }
       : {
@@ -300,9 +317,15 @@ function pushByteLevelDetailRows(
           ...(detail == null ? {} : { detail }),
         }
   );
-  pushOperationalMetric(detailRows, 'observed-at', 'Observed', sizeEvidence?.observedAt ?? null, {
-    icon: 'clock',
-  });
+  pushOperationalMetric(
+    detailRows,
+    'observed-at',
+    copy.observedLabel,
+    sizeEvidence?.observedAt ?? null,
+    {
+      icon: 'clock',
+    }
+  );
 
   const averageRowSize =
     rowCount == null ||
@@ -314,8 +337,10 @@ function pushByteLevelDetailRows(
   pushOperationalMetric(
     detailRows,
     'avg-row-size',
-    sizeEvidence?.provenance === 'estimated' ? 'Est. avg row size' : 'Avg row size',
-    averageRowSize == null ? null : formatAverageBytes(averageRowSize),
+    sizeEvidence?.provenance === 'estimated'
+      ? copy.estimatedAverageRowSizeLabel
+      : copy.averageRowSizeLabel,
+    averageRowSize == null ? null : formatAverageBytes(averageRowSize, locale),
     sizeEvidence == null
       ? { icon: 'throughput' }
       : { icon: 'throughput', tone: sizeEvidenceTone(sizeEvidence) }
@@ -325,19 +350,24 @@ function pushByteLevelDetailRows(
 function buildAdditionalOperationalDetail(
   title: string,
   railMetrics: readonly GraphNodeCardMetric[],
-  detailRows: readonly GraphNodeCardMetric[]
+  detailRows: readonly GraphNodeCardMetric[],
+  locale?: string
 ): GraphNodeOperationalDetail | null {
   const railMetricIds = new Set(railMetrics.map((metric) => metric.id));
   const additionalRows = detailRows.filter((row) => !railMetricIds.has(row.id));
-  return additionalRows.length > 0 ? buildGraphNodeOperationalDetail(title, additionalRows) : null;
+  return additionalRows.length > 0
+    ? buildGraphNodeOperationalDetail(title, additionalRows, locale)
+    : null;
 }
 
 function buildModelExecutionMetrics(
   metadata: Record<string, unknown>,
   data: Record<string, unknown>,
   runtimeData: Record<string, unknown>,
-  rowCount: number | null
+  rowCount: number | null,
+  locale?: string
 ): GraphNodeCardMetric[] {
+  const copy = resolveGraphNodeCardCopy(locale);
   const lastRunMinutesAgo = firstRuntimeNumericValue(metadata, data, runtimeData, [
     'lastRunMinutesAgo',
     'lastRunAgeMinutes',
@@ -376,28 +406,28 @@ function buildModelExecutionMetrics(
   pushOperationalMetric(
     metrics,
     'last-run',
-    'Last run',
+    copy.lastRunLabel,
     lastRunMinutesAgo == null ? lastRunAt : formatMinutes(lastRunMinutesAgo),
     { icon: 'clock' }
   );
-  pushOperationalMetric(metrics, 'duration', 'Duration', durationLabel, { icon: 'timer' });
+  pushOperationalMetric(metrics, 'duration', copy.durationLabel, durationLabel, { icon: 'timer' });
   pushOperationalMetric(
     metrics,
     'rows',
-    'Rows',
+    copy.rowsLabel,
     rowCount == null ? null : formatCompactNumber(rowCount),
     { icon: 'rows' }
   );
   pushOperationalMetric(
     metrics,
     'cost',
-    'Cost',
+    copy.costLabel,
     costUsd == null ? costLabel : formatCost(costUsd),
     {
       icon: 'cost',
     }
   );
-  pushOperationalMetric(metrics, 'tests', 'Tests', testStatus);
+  pushOperationalMetric(metrics, 'tests', copy.testsLabel, testStatus);
 
   return metrics;
 }
@@ -410,15 +440,29 @@ export function buildGraphNodeOperationalSummary({
   runtimeData = data,
   volumeMetricProjection,
   columnCount,
+  locale,
 }: GraphNodeOperationalSummaryInput): GraphNodeOperationalSummary {
+  const copy = resolveGraphNodeCardCopy(locale);
   const metrics: GraphNodeCardMetric[] = [];
   const { rowCount, sizeEvidence } = volumeMetricProjection;
   const volumeRowMetric = volumeMetricProjection.metrics.find((metric) => metric.id === 'rows');
   const volumeSizeMetric = volumeMetricProjection.metrics.find(
     (metric) => metric.id === 'bytes' || metric.id === 'estimated-bytes'
   );
-  const sourceHealth = buildSourceHealthRows(metadata, data, volumeMetricProjection, columnCount);
-  const modelExecutionMetrics = buildModelExecutionMetrics(metadata, data, runtimeData, rowCount);
+  const sourceHealth = buildSourceHealthRows(
+    metadata,
+    data,
+    volumeMetricProjection,
+    columnCount,
+    locale
+  );
+  const modelExecutionMetrics = buildModelExecutionMetrics(
+    metadata,
+    data,
+    runtimeData,
+    rowCount,
+    locale
+  );
 
   if (projectionKind === 'source') {
     return {
@@ -426,7 +470,8 @@ export function buildGraphNodeOperationalSummary({
       detail: buildAdditionalOperationalDetail(
         title,
         sourceHealth.railMetrics,
-        sourceHealth.detailRows
+        sourceHealth.detailRows,
+        locale
       ),
     };
   }
@@ -438,7 +483,7 @@ export function buildGraphNodeOperationalSummary({
     pushOperationalMetric(
       metrics,
       'rows',
-      'Rows',
+      copy.rowsLabel,
       rowCount == null || sizeEvidence == null ? null : formatCompactNumber(rowCount),
       {
         icon: 'rows',
@@ -449,8 +494,8 @@ export function buildGraphNodeOperationalSummary({
     pushOperationalMetric(
       metrics,
       'size',
-      sizeEvidence?.provenance === 'estimated' ? 'Est. size' : 'Size',
-      sizeEvidence == null ? null : formatBytes(sizeEvidence.bytes),
+      sizeEvidence?.provenance === 'estimated' ? copy.estimatedSizeLabel : copy.sizeLabel,
+      sizeEvidence == null ? null : formatBytes(sizeEvidence.bytes, locale),
       sizeEvidence == null
         ? { icon: 'database' }
         : {
@@ -466,15 +511,21 @@ export function buildGraphNodeOperationalSummary({
     pushOperationalMetric(
       staticDetailRows,
       'columns',
-      'Columns',
+      copy.columnsLabel,
       columnCount == null ? null : formatCompactNumber(columnCount),
       { icon: 'columns' }
     );
-    pushByteLevelDetailRows(staticDetailRows, rowCount, sizeEvidence, volumeSizeMetric?.detail);
+    pushByteLevelDetailRows(
+      staticDetailRows,
+      rowCount,
+      sizeEvidence,
+      volumeSizeMetric?.detail,
+      locale
+    );
   }
 
   return {
     metrics,
-    detail: buildGraphNodeOperationalDetail(title, staticDetailRows),
+    detail: buildGraphNodeOperationalDetail(title, staticDetailRows, locale),
   };
 }

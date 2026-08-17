@@ -226,7 +226,7 @@ describe('buildGraphNodeCardReadModel', () => {
         icon: 'rows',
         tone: 'warning',
         detail:
-          '1.500 filas. Estimado mediante estadísticas del proveedor. Confianza: media. Instantánea observada: 2026-07-10T21:00:00.000Z.',
+          '1500 filas. Estimado mediante estadísticas del proveedor. Confianza: media. Instantánea observada: 2026-07-10T21:00:00.000Z.',
       },
       {
         id: 'size',
