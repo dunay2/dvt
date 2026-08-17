@@ -8680,7 +8680,7 @@
         "kind": "ui-view",
         "layer": "ui",
         "owner": "Frontend / Canvas",
-        "repo_path": "apps/web/src/app/views/canvas",
+        "repo_path": "apps/web/src/app/views/canvas/canvasSourceDataSample.ts",
         "public_contract": "PORT-OPEN-CANVAS-SOURCE-SAMPLE",
         "runtime": "browser",
         "criticality": "medium",
@@ -8688,7 +8688,7 @@
         "maturity_score": null,
         "parent_component_id": "SYS-WEB-ROOT",
         "created_at": "2026-08-17T12:14:58.731+00:00",
-        "updated_at": "2026-08-17T12:14:58.731+00:00"
+        "updated_at": "2026-08-17T13:00:47.389+00:00"
       },
       {
         "component_id": "SYS-WEB-CANVAS-SOURCE-IMPORT-CATALOG-VIEW",
@@ -14039,6 +14039,20 @@
         "supersedes_id": null,
         "created_at": "2026-08-17T12:14:38.053+00:00",
         "updated_at": "2026-08-17T12:18:47.678+00:00"
+      },
+      {
+        "design_id": "W4-SOURCE-DATA-SAMPLE-MATURITY-CORRECTION-20260817",
+        "work_item_id": "GH-2417",
+        "title": "Complete source sample component maturity",
+        "owner": "Web / API / Architecture",
+        "status": "implemented",
+        "rationale": "Use one precise web repo path and attach the real API/web tests plus inherited HTTP observability to the new architecture components.",
+        "fowler_signal": "boundary_drift",
+        "rail_ref": "RecordArchitectureComponent;RecordArchitectureTestEvidence;RecordArchitectureObservabilityEvidence",
+        "approved_at": "2026-08-17T13:01:44.304+00:00",
+        "supersedes_id": null,
+        "created_at": "2026-08-17T13:00:34.752+00:00",
+        "updated_at": "2026-08-17T13:01:50.762+00:00"
       },
       {
         "design_id": "W4-SOURCE-DATA-SAMPLE-RAIL-CORRECTION-20260817",
@@ -22932,6 +22946,15 @@
         "required": true,
         "status": "implemented",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
+      },
+      {
+        "observability_id": "OBS-WAREHOUSE-SOURCE-SAMPLE-HTTP",
+        "component_id": "SYS-API-WAREHOUSE-SOURCE-DATA-SAMPLE",
+        "signal_name": "Protected HTTP request status and stable source-sample failure reason",
+        "signal_kind": "trace",
+        "required": true,
+        "status": "implemented",
+        "created_at": "2026-08-17T13:01:25.101+00:00"
       },
       {
         "observability_id": "OBS-WEB-BROWSER-IDEMPOTENCY-IDENTITY",
@@ -44361,6 +44384,16 @@
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
+        "test_id": "TEST-CANVAS-SOURCE-SAMPLE-INTERACTION",
+        "component_id": "SYS-WEB-CANVAS-SOURCE-DATA-SAMPLE",
+        "test_path": "apps/web/src/app/plugins/graph/GraphNodeOperationalRail.test.tsx",
+        "test_kind": "integration",
+        "coverage_level": "flow",
+        "required": true,
+        "validation_command": "pnpm --filter @dvt/web exec vitest run --config vitest.config.ts src/app/plugins/graph/GraphNodeOperationalRail.test.tsx src/app/views/canvas/CanvasViewport.nodeOperationalRail.test.tsx src/app/components/shell/OperationalDrawerPanels.test.tsx",
+        "created_at": "2026-08-17T13:01:09.391+00:00"
+      },
+      {
         "test_id": "TEST-CI-API-PRODUCTION-REACHABILITY",
         "component_id": "SYS-CI-GOVERNANCE-TOOLS-CI-ARCHITECTURE-BOUNDARIES",
         "test_path": "tools/ci/architecture-dependency-guard.test.mjs",
@@ -51869,6 +51902,16 @@
         "required": true,
         "validation_command": "pnpm --filter dvt-api exec vitest run test/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.test.ts",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
+      },
+      {
+        "test_id": "TEST-WAREHOUSE-SOURCE-SAMPLE-API",
+        "component_id": "SYS-API-WAREHOUSE-SOURCE-DATA-SAMPLE",
+        "test_path": "apps/api/test/application/services/previewWarehouseSourceObjectRowsUseCase.test.ts",
+        "test_kind": "integration",
+        "coverage_level": "negative",
+        "required": true,
+        "validation_command": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/previewWarehouseSourceObjectRowsUseCase.test.ts test/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.test.ts test/entrypoints/http/warehouseSourceImportRoutes.test.ts",
+        "created_at": "2026-08-17T13:01:07.201+00:00"
       },
       {
         "test_id": "TEST-WEB-APP-BOOTSTRAP",
@@ -91432,6 +91475,54 @@
         "created_at": "2026-08-17T12:14:38.053+00:00"
       },
       {
+        "design_id": "W4-SOURCE-DATA-SAMPLE-MATURITY-CORRECTION-20260817",
+        "subject_kind": "component",
+        "subject_id": "SYS-API-WAREHOUSE-SOURCE-DATA-SAMPLE",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-17T13:00:34.752+00:00"
+      },
+      {
+        "design_id": "W4-SOURCE-DATA-SAMPLE-MATURITY-CORRECTION-20260817",
+        "subject_kind": "component",
+        "subject_id": "SYS-WEB-CANVAS-SOURCE-DATA-SAMPLE",
+        "scope_kind": "may_reference",
+        "required": true,
+        "created_at": "2026-08-17T13:00:34.752+00:00"
+      },
+      {
+        "design_id": "W4-SOURCE-DATA-SAMPLE-MATURITY-CORRECTION-20260817",
+        "subject_kind": "component",
+        "subject_id": "SYS-WEB-CANVAS-SOURCE-DATA-SAMPLE",
+        "scope_kind": "may_update",
+        "required": true,
+        "created_at": "2026-08-17T13:00:34.752+00:00"
+      },
+      {
+        "design_id": "W4-SOURCE-DATA-SAMPLE-MATURITY-CORRECTION-20260817",
+        "subject_kind": "evidence",
+        "subject_id": "OBS-WAREHOUSE-SOURCE-SAMPLE-HTTP",
+        "scope_kind": "may_create",
+        "required": true,
+        "created_at": "2026-08-17T13:00:34.752+00:00"
+      },
+      {
+        "design_id": "W4-SOURCE-DATA-SAMPLE-MATURITY-CORRECTION-20260817",
+        "subject_kind": "test",
+        "subject_id": "TEST-CANVAS-SOURCE-SAMPLE-INTERACTION",
+        "scope_kind": "may_create",
+        "required": true,
+        "created_at": "2026-08-17T13:00:34.752+00:00"
+      },
+      {
+        "design_id": "W4-SOURCE-DATA-SAMPLE-MATURITY-CORRECTION-20260817",
+        "subject_kind": "test",
+        "subject_id": "TEST-WAREHOUSE-SOURCE-SAMPLE-API",
+        "scope_kind": "may_create",
+        "required": true,
+        "created_at": "2026-08-17T13:00:34.752+00:00"
+      },
+      {
         "design_id": "W4-SOURCE-DATA-SAMPLE-RAIL-CORRECTION-20260817",
         "subject_kind": "decision",
         "subject_id": "local#W4-SOURCE-DATA-SAMPLE#query#previewwarehousesourceobjectrows",
@@ -92015,6 +92106,27 @@
           "sourceContentSha256": "e7a485ecf0c935632b2989fa27a4ce2eab3fe8a749d65d25d639394fb1b455b0"
         },
         "created_at": "2026-08-10T21:04:41.689+00:00"
+      },
+      {
+        "operation_id": "035f777c-d158-433c-b8b1-a01434199863",
+        "idempotency_key": "w4-source-sample-maturity-implementing-20260817",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "W4-SOURCE-DATA-SAMPLE-MATURITY-CORRECTION-20260817",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2417",
+        "source_content_sha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The precise repo path and maturity evidence have been recorded against the existing components.",
+          "designId": "W4-SOURCE-DATA-SAMPLE-MATURITY-CORRECTION-20260817",
+          "toStatus": "implementing",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2417",
+          "fromStatus": "approved",
+          "sourceContentSha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179"
+        },
+        "created_at": "2026-08-17T13:01:47.493+00:00"
       },
       {
         "operation_id": "03ae141c-5055-40c0-b556-4fccbd0436ad",
@@ -94176,6 +94288,43 @@
         "created_at": "2026-08-14T07:46:03.294+00:00"
       },
       {
+        "operation_id": "1bcc4f3e-aee1-43f8-bb62-4df4a73933cb",
+        "idempotency_key": "w4-source-sample-web-precise-path-20260817",
+        "operation_type": "architecture_component_record",
+        "actor": "codex",
+        "design_id": "W4-SOURCE-DATA-SAMPLE-MATURITY-CORRECTION-20260817",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2417",
+        "source_content_sha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "kind": "ui-view",
+          "name": "Canvas source data sample",
+          "layer": "ui",
+          "owner": "Frontend / Canvas",
+          "status": "implemented",
+          "runtime": "browser",
+          "designId": "W4-SOURCE-DATA-SAMPLE-MATURITY-CORRECTION-20260817",
+          "repoPath": "apps/web/src/app/views/canvas/canvasSourceDataSample.ts",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2417",
+          "componentId": "SYS-WEB-CANVAS-SOURCE-DATA-SAMPLE",
+          "criticality": "medium",
+          "publicContract": "PORT-OPEN-CANVAS-SOURCE-SAMPLE",
+          "responsibilities": [
+            {
+              "dddOwner": "CanvasSourceDataSample",
+              "reasonToChange": "The Canvas source-sample interaction or presentation changes",
+              "responsibility": "Open and render a bounded relational source sample in the existing Canvas bottom drawer",
+              "responsibilityId": "RESP-WEB-CANVAS-SOURCE-SAMPLE"
+            }
+          ],
+          "parentComponentId": "SYS-WEB-ROOT",
+          "sourceContentSha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179"
+        },
+        "created_at": "2026-08-17T13:00:47.389+00:00"
+      },
+      {
         "operation_id": "1c064d69-f9bf-4d5d-bcd1-d61802c4d0e0",
         "idempotency_key": "gh-2167-validation-test-sys-api-http-error-translation-3-v1",
         "operation_type": "architecture_test_record",
@@ -94416,6 +94565,31 @@
           "sourceContentSha256": "445d0a77a2208b4198a706920223128ba7051884116b3ec95250a2c30232d691"
         },
         "created_at": "2026-08-11T03:06:54.705+00:00"
+      },
+      {
+        "operation_id": "21ac6eab-dbd3-4dbe-b0e7-7c11e4db2bf2",
+        "idempotency_key": "w4-source-sample-web-test-authority-20260817",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "W4-SOURCE-DATA-SAMPLE-MATURITY-CORRECTION-20260817",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2417",
+        "source_content_sha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-CANVAS-SOURCE-SAMPLE-INTERACTION",
+          "designId": "W4-SOURCE-DATA-SAMPLE-MATURITY-CORRECTION-20260817",
+          "required": true,
+          "testKind": "integration",
+          "testPath": "apps/web/src/app/plugins/graph/GraphNodeOperationalRail.test.tsx",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2417",
+          "componentId": "SYS-WEB-CANVAS-SOURCE-DATA-SAMPLE",
+          "coverageLevel": "flow",
+          "validationCommand": "pnpm --filter @dvt/web exec vitest run --config vitest.config.ts src/app/plugins/graph/GraphNodeOperationalRail.test.tsx src/app/views/canvas/CanvasViewport.nodeOperationalRail.test.tsx src/app/components/shell/OperationalDrawerPanels.test.tsx",
+          "sourceContentSha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179"
+        },
+        "created_at": "2026-08-17T13:01:09.391+00:00"
       },
       {
         "operation_id": "2200cc10-b353-434c-8603-8ceafcc4ae6c",
@@ -96846,6 +97020,31 @@
           "sourceContentSha256": "45bf878ab2adee3163836bc159d75b55bc8251fc2c6e0b27e223481af67f1eac"
         },
         "created_at": "2026-08-13T01:36:03.542+00:00"
+      },
+      {
+        "operation_id": "3f9cf004-4794-4a48-a37a-9783ffdce9bf",
+        "idempotency_key": "w4-source-sample-api-test-authority-20260817",
+        "operation_type": "architecture_test_record",
+        "actor": "codex",
+        "design_id": "W4-SOURCE-DATA-SAMPLE-MATURITY-CORRECTION-20260817",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2417",
+        "source_content_sha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "testId": "TEST-WAREHOUSE-SOURCE-SAMPLE-API",
+          "designId": "W4-SOURCE-DATA-SAMPLE-MATURITY-CORRECTION-20260817",
+          "required": true,
+          "testKind": "integration",
+          "testPath": "apps/api/test/application/services/previewWarehouseSourceObjectRowsUseCase.test.ts",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2417",
+          "componentId": "SYS-API-WAREHOUSE-SOURCE-DATA-SAMPLE",
+          "coverageLevel": "negative",
+          "validationCommand": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/previewWarehouseSourceObjectRowsUseCase.test.ts test/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.test.ts test/entrypoints/http/warehouseSourceImportRoutes.test.ts",
+          "sourceContentSha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179"
+        },
+        "created_at": "2026-08-17T13:01:07.201+00:00"
       },
       {
         "operation_id": "3fa0e6bb-0c9b-4e47-a82c-b335598e49e8",
@@ -99597,6 +99796,30 @@
           "sourceContentSha256": "76dc7134d826169f42fc824f2aac69dd158a23a28d4e719ca1ff9f8c90755e8a"
         },
         "created_at": "2026-08-11T07:40:03.269+00:00"
+      },
+      {
+        "operation_id": "5b23d287-e1ec-4758-bfcc-6ce87b7016fa",
+        "idempotency_key": "w4-source-sample-http-observability-20260817",
+        "operation_type": "architecture_observability_record",
+        "actor": "codex",
+        "design_id": "W4-SOURCE-DATA-SAMPLE-MATURITY-CORRECTION-20260817",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2417",
+        "source_content_sha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "status": "implemented",
+          "designId": "W4-SOURCE-DATA-SAMPLE-MATURITY-CORRECTION-20260817",
+          "required": true,
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2417",
+          "signalKind": "trace",
+          "signalName": "Protected HTTP request status and stable source-sample failure reason",
+          "componentId": "SYS-API-WAREHOUSE-SOURCE-DATA-SAMPLE",
+          "observabilityId": "OBS-WAREHOUSE-SOURCE-SAMPLE-HTTP",
+          "sourceContentSha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179"
+        },
+        "created_at": "2026-08-17T13:01:25.101+00:00"
       },
       {
         "operation_id": "5b6ee361-0242-4e67-8734-c8dd21291102",
@@ -107478,6 +107701,27 @@
         "created_at": "2026-08-11T05:28:39.35+00:00"
       },
       {
+        "operation_id": "afad7e02-f9e1-4045-b8a6-c57546fd67de",
+        "idempotency_key": "w4-source-sample-maturity-approved-20260817",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "W4-SOURCE-DATA-SAMPLE-MATURITY-CORRECTION-20260817",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2417",
+        "source_content_sha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "The component path, required test evidence, and inherited HTTP observability are explicit and executable.",
+          "designId": "W4-SOURCE-DATA-SAMPLE-MATURITY-CORRECTION-20260817",
+          "toStatus": "approved",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2417",
+          "fromStatus": "review",
+          "sourceContentSha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179"
+        },
+        "created_at": "2026-08-17T13:01:44.304+00:00"
+      },
+      {
         "operation_id": "afb555b5-1a3b-4ea5-a315-33dd71d77710",
         "idempotency_key": "w4-source-sample-web-local-evidence-20260817",
         "operation_type": "architecture_evidence_record",
@@ -110075,6 +110319,70 @@
           "sourceContentSha256": "4c5a2323d64b5cef787d9eb97ec9f14550f84b54abc78a8ffade84b0a998e598"
         },
         "created_at": "2026-08-11T13:02:24.335+00:00"
+      },
+      {
+        "operation_id": "c49cbc3e-5643-4884-a789-f95760ae2eab",
+        "idempotency_key": "w4-source-sample-maturity-correction-design-20260817",
+        "operation_type": "architecture_design_create",
+        "actor": "codex",
+        "design_id": "W4-SOURCE-DATA-SAMPLE-MATURITY-CORRECTION-20260817",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2417",
+        "source_content_sha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "owner": "Web / API / Architecture",
+          "title": "Complete source sample component maturity",
+          "scopes": [
+            {
+              "required": true,
+              "scopeKind": "may_update",
+              "subjectId": "SYS-WEB-CANVAS-SOURCE-DATA-SAMPLE",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-WEB-CANVAS-SOURCE-DATA-SAMPLE",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_reference",
+              "subjectId": "SYS-API-WAREHOUSE-SOURCE-DATA-SAMPLE",
+              "subjectKind": "component"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_create",
+              "subjectId": "TEST-WAREHOUSE-SOURCE-SAMPLE-API",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_create",
+              "subjectId": "TEST-CANVAS-SOURCE-SAMPLE-INTERACTION",
+              "subjectKind": "test"
+            },
+            {
+              "required": true,
+              "scopeKind": "may_create",
+              "subjectId": "OBS-WAREHOUSE-SOURCE-SAMPLE-HTTP",
+              "subjectKind": "evidence"
+            }
+          ],
+          "status": "review",
+          "railRef": "RecordArchitectureComponent;RecordArchitectureTestEvidence;RecordArchitectureObservabilityEvidence",
+          "designId": "W4-SOURCE-DATA-SAMPLE-MATURITY-CORRECTION-20260817",
+          "rationale": "Use one precise web repo path and attach the real API/web tests plus inherited HTTP observability to the new architecture components.",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2417",
+          "workItemId": "GH-2417",
+          "fowlerSignal": "boundary_drift",
+          "supersedesId": null,
+          "sourceContentSha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179"
+        },
+        "created_at": "2026-08-17T13:00:34.752+00:00"
       },
       {
         "operation_id": "c4b6e326-e62e-48bd-81d4-52b936301893",
@@ -114847,6 +115155,27 @@
           "sourceContentSha256": "03017c4df7ea930c83e34f4d1f0061c704b4c208458c570e145afe2bbbf849c9"
         },
         "created_at": "2026-08-13T02:51:17.29+00:00"
+      },
+      {
+        "operation_id": "f95c5187-96d6-424a-b38b-aaf853e8f6f3",
+        "idempotency_key": "w4-source-sample-maturity-implemented-20260817",
+        "operation_type": "architecture_design_transition",
+        "actor": "codex",
+        "design_id": "W4-SOURCE-DATA-SAMPLE-MATURITY-CORRECTION-20260817",
+        "source_ref": "https://github.com/dunay2/dvt/issues/2417",
+        "source_content_sha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179",
+        "expected_revision": null,
+        "previous_revision": 0,
+        "resulting_revision": 0,
+        "payload": {
+          "reason": "Component maturity and unique path integrity now satisfy the Planning DB baseline.",
+          "designId": "W4-SOURCE-DATA-SAMPLE-MATURITY-CORRECTION-20260817",
+          "toStatus": "implemented",
+          "sourceRef": "https://github.com/dunay2/dvt/issues/2417",
+          "fromStatus": "implementing",
+          "sourceContentSha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179"
+        },
+        "created_at": "2026-08-17T13:01:50.762+00:00"
       },
       {
         "operation_id": "f990207f-a2e1-4631-b56e-2c1a3ce92f3e",
@@ -171340,8 +171669,8 @@
         "pnpm --filter @dvt/web exec vitest run --config vitest.config.ts src/app/plugins/graph/GraphNodeOperationalRail.test.tsx src/app/views/canvas/CanvasViewport.nodeOperationalRail.test.tsx src/app/components/shell/OperationalDrawerPanels.test.tsx",
         "pnpm verify:prepush"
       ],
-      "sourcePath": "https://github.com/dunay2/dvt/issues/2417",
-      "sourceContentSha256": "e04883aeb7742df05287d1f75fff30eca2c18b1da7987c30149b75b734652179",
+      "sourcePath": "docs/evidence/ED-20260817-source-data-sample.md",
+      "sourceContentSha256": "7d6a3394f3c16e1c9ea5a95ec9d9d6c08f09ce78e47bcc933f9d00a3c565429e",
       "rawRail": {
         "name": "PreviewWarehouseSourceObjectRows",
         "type": "query",
@@ -171510,7 +171839,7 @@
       },
       "revision": 0,
       "createdBy": "codex",
-      "createdAt": "2026-08-17T12:47:11.227Z"
+      "createdAt": "2026-08-17T13:02:45.075Z"
     },
     {
       "railId": "local#WEB-API-AUTHORITY-HARDCUT-20260510#query#getruntimecapabilities",
@@ -211773,6 +212102,125 @@
         ]
       },
       "createdAt": "2026-08-17T12:47:11.227Z"
+    },
+    {
+      "operationId": "4b08c6aa-d548-444b-9ceb-2d1c83402ed4",
+      "idempotencyKey": "w4-source-sample-retire-url-source-20260817",
+      "operationType": "feature_mechanization_rail_retire",
+      "actor": "codex",
+      "railId": "local#W4-SOURCE-DATA-SAMPLE#query#previewwarehousesourceobjectrows",
+      "sourcePath": "docs/evidence/ED-20260817-source-data-sample.md",
+      "sourceContentSha256": "7d6a3394f3c16e1c9ea5a95ec9d9d6c08f09ce78e47bcc933f9d00a3c565429e",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "railId": "local#W4-SOURCE-DATA-SAMPLE#query#previewwarehousesourceobjectrows",
+        "reason": "Repoint the rail source authority from the GitHub work item to the tracked ARC evidence document; the issue remains the user-story reference.",
+        "designId": "W4-SOURCE-DATA-SAMPLE-RAIL-CORRECTION-20260817",
+        "railName": "PreviewWarehouseSourceObjectRows",
+        "railType": "query",
+        "featureId": "W4-SOURCE-DATA-SAMPLE",
+        "sourceRef": "docs/evidence/ED-20260817-source-data-sample.md",
+        "expectedRevision": 0,
+        "normalizedRailName": "previewwarehousesourceobjectrows",
+        "sourceContentSha256": "7d6a3394f3c16e1c9ea5a95ec9d9d6c08f09ce78e47bcc933f9d00a3c565429e"
+      },
+      "createdAt": "2026-08-17T13:02:16.257Z"
+    },
+    {
+      "operationId": "ceb87a84-d5e0-4849-98ac-fa2a538b3d61",
+      "idempotencyKey": "w4-source-data-sample-mechanization-tracked-source-20260817",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#W4-SOURCE-DATA-SAMPLE#query#previewwarehousesourceobjectrows",
+      "sourcePath": "docs/evidence/ED-20260817-source-data-sample.md",
+      "sourceContentSha256": "7d6a3394f3c16e1c9ea5a95ec9d9d6c08f09ce78e47bcc933f9d00a3c565429e",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "Focused tests fail when the query is absent, the gesture propagates, the health popover remains open, or stale rows survive a node change.",
+        "dddOwner": "WarehouseSourceDataSampleReadModel",
+        "railName": "PreviewWarehouseSourceObjectRows",
+        "railType": "query",
+        "featureId": "W4-SOURCE-DATA-SAMPLE",
+        "greenTest": "Focused contract, API, HTTP, web interaction, drawer, and headed browser validations pass with real dvt.public.pth2_orders rows.",
+        "sourceRef": "docs/evidence/ED-20260817-source-data-sample.md",
+        "unitTests": [
+          "packages/@dvt/contracts/test/source-import/SourceDataSample.v1.test.ts",
+          "apps/api/test/application/services/previewWarehouseSourceObjectRowsUseCase.test.ts",
+          "apps/web/src/app/plugins/graph/GraphNodeOperationalRail.test.tsx"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2417"],
+        "cypressFlows": [
+          "Headed agent-browser verifies health click, double-click sample, Enter sample, real rows, ES copy, and drawer-scoped axe audit."
+        ],
+        "domainObjects": ["SourceDataSample", "GovernedRelationalSourceObject"],
+        "fowlerSignals": [
+          "Reuse BottomOperationalDrawer and keep catalog discovery separate from bounded row sampling."
+        ],
+        "negativeTests": [
+          "Reject invalid limits, unsupported or absent relations, missing connections, unauthorized workspaces, timeout, provider failure, client SQL, and credential-shaped payloads."
+        ],
+        "patchSurfaces": [
+          "packages/@dvt/contracts/src/contracts/source-import/SourceDataSample.v1.ts",
+          "apps/api/src/application/services/previewWarehouseSourceObjectRowsUseCase.ts",
+          "apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.ts",
+          "apps/web/src/app/views/canvas/CanvasViewport.tsx",
+          "apps/web/src/app/components/shell/OperationalDrawerPanels.tsx"
+        ],
+        "adapterSurface": "GET /workspace/warehouse/connections/:connectionId/source-data-sample and workspace source-data-sample query port",
+        "completionGate": [
+          "pnpm exec vitest run packages/@dvt/contracts/test/source-import/SourceDataSample.v1.test.ts",
+          "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/previewWarehouseSourceObjectRowsUseCase.test.ts test/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.test.ts test/entrypoints/http/warehouseSourceImportRoutes.test.ts",
+          "pnpm --filter @dvt/web exec vitest run --config vitest.config.ts src/app/plugins/graph/GraphNodeOperationalRail.test.tsx src/app/views/canvas/CanvasViewport.nodeOperationalRail.test.tsx src/app/components/shell/OperationalDrawerPanels.test.tsx",
+          "pnpm verify:prepush"
+        ],
+        "applicationPort": "PreviewWarehouseSourceObjectRowsUseCase through IWarehouseSourceDataSampleProbe",
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "No authorized bounded row query exists and double-clicking the gray metrics rail cannot open real source rows in the existing drawer.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/guides/ai-work-protocol.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260817-source-data-sample.md"
+        ],
+        "architectureGuards": [
+          "SourceDataSample schemas reject SQL and credential-shaped fields and cap responses at 50 rows."
+        ],
+        "authorizationScope": "active tenant, project, environment, workspace:source-import:view, governed connection, relational object SELECT privilege",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2417",
+        "implementationRefs": [
+          "packages/@dvt/contracts/src/contracts/source-import/SourceDataSample.v1.ts#SourceDataSampleResponseSchema",
+          "apps/api/src/application/services/previewWarehouseSourceObjectRowsUseCase.ts#PreviewWarehouseSourceObjectRowsUseCase",
+          "apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.ts#WorkspaceWarehouseConnectionProbe",
+          "apps/web/src/app/views/canvas/canvasSourceDataSample.ts#resolveCanvasSourceDataSampleTarget",
+          "apps/web/src/app/plugins/graph/GraphNodeOperationalRail.tsx#GraphNodeOperationalRail"
+        ],
+        "normalizedRailName": "previewwarehousesourceobjectrows",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "7d6a3394f3c16e1c9ea5a95ec9d9d6c08f09ce78e47bcc933f9d00a3c565429e",
+        "replaceArchitectureGuards": false,
+        "replaceImplementationRefs": false,
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/contracts/src/contracts/source-import/SourceDataSample.v1.ts",
+          "apps/api/src/application/services/previewWarehouseSourceObjectRowsUseCase.ts",
+          "apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.ts",
+          "apps/web/src/app/views/canvas",
+          "apps/web/src/app/plugins/graph/GraphNodeOperationalRail.tsx"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "client-authored SQL or credential values",
+          "parallel modal, drawer, or global row-sample store"
+        ]
+      },
+      "createdAt": "2026-08-17T13:02:45.075Z"
     }
   ],
   "governanceComponentDefinitions": [
