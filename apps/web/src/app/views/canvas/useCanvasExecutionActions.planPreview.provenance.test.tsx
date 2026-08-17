@@ -180,6 +180,7 @@ describe('useCanvasExecutionActions plan preview provenance', () => {
       role: 'transform',
       status: 'idle',
       tags: ['authoring'],
+      path: 'models/visual-orders.sql',
       metadata: {
         transformAuthoring: {
           version: 'v1',
@@ -243,7 +244,10 @@ describe('useCanvasExecutionActions plan preview provenance', () => {
         relation: 'lineage',
       },
     ];
-    const workspaceFilePorts = createWorkspaceFilePortMocks({});
+    const staleWorkspaceSql = 'select stale_column from old_authority';
+    const workspaceFilePorts = createWorkspaceFilePortMocks({
+      'models/visual-orders.sql': staleWorkspaceSql,
+    });
     const expectedSql = [
       'select',
       '  "orders_source"."order_id" as "order_id",',
@@ -268,7 +272,10 @@ describe('useCanvasExecutionActions plan preview provenance', () => {
     expect(workspaceFilePorts.workspaceFileContentCommand.saveFileContent).toHaveBeenCalledWith({
       path: 'models/visual-orders.sql',
       content: expectedSql,
-      expectedRevision: { kind: 'absent' },
+      expectedRevision: {
+        kind: 'content_sha256',
+        value: sha256HexUtf8(staleWorkspaceSql),
+      },
     });
     expect(plansService.previewPlan).toHaveBeenCalledWith(
       expect.objectContaining({

@@ -118,6 +118,16 @@ function resolveTransformArtifactSource(
   }
 
   const workspacePath = normalizeNonBlankString(transformNode.path);
+  if (transformNode.pluginId === 'dvt' && transformNode.kind === 'dvt:sql_transform') {
+    const authority = readDvtTransformAuthoringAuthority(transformNode);
+    if (authority.mode === DVT_TRANSFORM_AUTHORING_MODE.visual) {
+      return {
+        kind: 'authoring-generated',
+        node: transformNode,
+        path: workspacePath ?? resolveAuthoringSqlArtifactPath(transformNode),
+      };
+    }
+  }
   if (workspacePath) {
     return {
       kind: 'workspace-file',
