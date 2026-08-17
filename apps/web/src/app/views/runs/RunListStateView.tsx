@@ -17,7 +17,7 @@ import {
   type RunOperationalTableFilters,
   type RunOperationalTableSort,
 } from './runOperationalTableModel';
-import { runStatesCopy as copy } from './runStatesCopy';
+import { useRunStatesCopy } from './runStatesCopy';
 import type { RunControlCommandController } from './useRunControlCommands';
 
 type RunListStateProps = {
@@ -27,6 +27,7 @@ type RunListStateProps = {
 };
 
 export function RunListStateView({ runs, isLoading, runControls }: RunListStateProps) {
+  const { copy, language } = useRunStatesCopy();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const tableState = useMemo(
@@ -34,10 +35,10 @@ export function RunListStateView({ runs, isLoading, runControls }: RunListStateP
     [searchParams]
   );
   const rows = useMemo(() => {
-    const builtRows = buildRunOperationalRows(runs);
+    const builtRows = buildRunOperationalRows(runs, language);
     const filteredRows = filterRunOperationalRows(builtRows, tableState.filters);
     return sortRunOperationalRows(filteredRows, tableState.sort);
-  }, [runs, tableState.filters, tableState.sort]);
+  }, [language, runs, tableState.filters, tableState.sort]);
   const updateTableState = (filters: RunOperationalTableFilters, sort: RunOperationalTableSort) => {
     setSearchParams(serializeRunOperationalTableSearchParams({ filters, sort }));
   };

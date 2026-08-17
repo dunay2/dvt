@@ -27,7 +27,7 @@ import {
   type RunOperationalTableFilters,
   type RunOperationalTableSort,
 } from './runOperationalTableModel';
-import { runStatesCopy as copy } from './runStatesCopy';
+import { useRunStatesCopy } from './runStatesCopy';
 import type { RunControlCommandController } from './useRunControlCommands';
 
 type RunOperationalTableProps = {
@@ -62,20 +62,21 @@ export function RunOperationalTable({
   runControls,
   isLoading,
 }: RunOperationalTableProps) {
+  const { copy } = useRunStatesCopy();
   const columns = useMemo<ColumnDef<RunOperationalRow>[]>(
     () => [
       {
         accessorKey: 'runId',
-        header: 'Run ID',
+        header: copy.runTableHeaders.runId,
         cell: ({ row }) => <span className="font-mono text-xs">{row.original.runId}</span>,
       },
       {
         accessorKey: 'status',
-        header: 'Status',
+        header: copy.runTableHeaders.status,
         cell: ({ row }) => (
           <div className="flex items-center gap-2">
             <Badge className={cn(getRunStatusTone(row.original.status))}>
-              {row.original.status}
+              {copy.statusLabels[row.original.status]}
             </Badge>
             {row.original.substatus ? (
               <Badge variant="outline">{row.original.substatus}</Badge>
@@ -85,22 +86,22 @@ export function RunOperationalTable({
       },
       {
         accessorKey: 'startedAt',
-        header: 'Started',
+        header: copy.runTableHeaders.started,
         cell: ({ row }) => row.original.startedAtLabel,
       },
       {
         accessorKey: 'duration',
-        header: 'Duration',
+        header: copy.runTableHeaders.duration,
         cell: ({ row }) => row.original.durationLabel,
       },
       {
         accessorKey: 'environment',
-        header: 'Environment',
+        header: copy.runTableHeaders.environment,
         cell: ({ row }) => row.original.environment ?? '-',
       },
       {
         accessorKey: 'gitSha',
-        header: 'Git SHA',
+        header: copy.runTableHeaders.gitSha,
         cell: ({ row }) => <span className="font-mono text-xs">{row.original.gitSha ?? '-'}</span>,
       },
       {
@@ -126,7 +127,7 @@ export function RunOperationalTable({
         ),
       },
     ],
-    [onOpenRun, runControls]
+    [copy, onOpenRun, runControls]
   );
   const table = useReactTable({
     data: rows,
@@ -168,12 +169,12 @@ export function RunOperationalTable({
           className={routeWorkbenchDenseTableClasses.field}
         >
           <option value="all">{copy.runTableAllStatuses}</option>
-          <option value="pending">pending</option>
-          <option value="running">running</option>
-          <option value="completed">completed</option>
-          <option value="failed">failed</option>
-          <option value="cancelled">cancelled</option>
-          <option value="unknown">unknown</option>
+          <option value="pending">{copy.statusLabels.pending}</option>
+          <option value="running">{copy.statusLabels.running}</option>
+          <option value="completed">{copy.statusLabels.completed}</option>
+          <option value="failed">{copy.statusLabels.failed}</option>
+          <option value="cancelled">{copy.statusLabels.cancelled}</option>
+          <option value="unknown">{copy.statusLabels.unknown}</option>
         </select>
       </div>
 

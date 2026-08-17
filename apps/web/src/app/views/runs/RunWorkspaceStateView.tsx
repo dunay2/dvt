@@ -19,8 +19,8 @@ import type {
 import type { RunWorkspaceViewModel } from '../../services/runs/runWorkspaceModel';
 import { RunEventTimelineTable } from './RunEventTimelineTable';
 import { RunEventFeedHealthView } from './RunEventFeedHealthView';
-import { runStatesCopy as copy } from './runStatesCopy';
-import { getDetailStateBadge, isKnownRunField } from './runStatesModel';
+import { useRunStatesCopy } from './runStatesCopy';
+import { isKnownRunField } from './runStatesModel';
 import type { RunControlCommandController } from './useRunControlCommands';
 
 type RunWorkspaceStateProps = {
@@ -68,8 +68,11 @@ function formatByteSize(sizeBytes: number): string {
   return `${(sizeBytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function formatRunScopeList(values: readonly string[] | undefined): string {
-  return values && values.length > 0 ? values.join(', ') : copy.scopeUnavailable;
+function formatRunScopeList(
+  values: readonly string[] | undefined,
+  scopeUnavailable: string
+): string {
+  return values && values.length > 0 ? values.join(', ') : scopeUnavailable;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -119,7 +122,10 @@ function deriveExecutor(workspace: RunWorkspaceViewModel): RunExecutor | undefin
   return workspace.snapshot.executor;
 }
 
-function deriveExecutionProvenance(workspace: RunWorkspaceViewModel): ProvenanceArtifact[] {
+function deriveExecutionProvenance(
+  workspace: RunWorkspaceViewModel,
+  compiledCodeArtifactKind: string
+): ProvenanceArtifact[] {
   const seen = new Set<string>();
   const provenance: ProvenanceArtifact[] = [];
 
@@ -144,7 +150,7 @@ function deriveExecutionProvenance(workspace: RunWorkspaceViewModel): Provenance
           }
         : compiledCodeRef
           ? {
-              artifactKind: copy.compiledCodeArtifactKind,
+              artifactKind: compiledCodeArtifactKind,
               ...compiledCodeRef,
             }
           : null;
@@ -169,20 +175,24 @@ function deriveExecutionProvenance(workspace: RunWorkspaceViewModel): Provenance
   return provenance;
 }
 
-function deriveAuthoringArtifacts(workspace: RunWorkspaceViewModel): AuthoringArtifact[] {
+function deriveAuthoringArtifacts(
+  workspace: RunWorkspaceViewModel,
+  graphArtifactTitle: string,
+  sqlArtifactTitle: string
+): AuthoringArtifact[] {
   const authoring = workspace.snapshot.provenance?.authoring;
   const artifacts: AuthoringArtifact[] = [];
 
   if (authoring?.graphArtifact) {
     artifacts.push({
-      title: copy.graphArtifactTitle,
+      title: graphArtifactTitle,
       ...authoring.graphArtifact,
     });
   }
 
   if (authoring?.sqlArtifact) {
     artifacts.push({
-      title: copy.sqlArtifactTitle,
+      title: sqlArtifactTitle,
       ...authoring.sqlArtifact,
     });
   }
@@ -223,11 +233,12 @@ function RunItineraryCard({
   materializationEvidence: MaterializationEvidence | undefined;
   runControls?: RunControlCommandController;
 }>) {
+  const { copy } = useRunStatesCopy();
   const { snapshot } = workspace;
   const planSummary: RunPlanExecutionSummary | undefined = snapshot.planSummary;
   const sinkScope =
     planSummary?.sinkTables && planSummary.sinkTables.length > 0
-      ? formatRunScopeList(planSummary.sinkTables)
+      ? formatRunScopeList(planSummary.sinkTables, copy.scopeUnavailable)
       : (materializationEvidence?.sinkTable ?? copy.scopeUnavailable);
 
   return (
@@ -236,7 +247,7 @@ function RunItineraryCard({
         <div className="min-w-0">
           <div className="mb-2 flex flex-wrap items-center gap-2">
             <h2 className="text-base font-semibold">{copy.runItineraryTitle}</h2>
-            <Badge className="bg-blue-600">{snapshot.status}</Badge>
+            <Badge className="bg-blue-600">{copy.statusLabels[snapshot.status]}</Badge>
           </div>
           <p className="text-sm text-slate-300">{copy.runItineraryNote}</p>
         </div>
@@ -303,7 +314,7 @@ function RunItineraryCard({
         <div>
           <span className="text-slate-400">{copy.sourceTablesLabel}</span>
           <div className="break-all font-mono text-xs">
-            {formatRunScopeList(planSummary?.sourceTables)}
+            {formatRunScopeList(planSummary?.sourceTables, copy.scopeUnavailable)}
           </div>
         </div>
         <div>
@@ -325,6 +336,7 @@ function RunDiagnosticsCard({
 }: Readonly<{
   diagnostics: RunDiagnostics;
 }>) {
+  const { copy } = useRunStatesCopy();
   const fields = [
     [copy.diagnosticsRunIdLabel, diagnostics.runId, true],
     [copy.diagnosticsPlanIdLabel, diagnostics.planId, true],
@@ -381,17 +393,23 @@ export function RunWorkspaceStateView({
   onRetryEventFeed,
   runControls,
 }: RunWorkspaceStateProps) {
+  const { copy, language } = useRunStatesCopy();
+  const locale = language === 'es' ? 'es-ES' : 'en-US';
   const { snapshot, timeline, detailState } = workspace;
   const executor = deriveExecutor(workspace);
   const failureDiagnostics = deriveFailureDiagnostics(workspace);
   const planProvenance = snapshot.provenance;
-  const authoringArtifacts = deriveAuthoringArtifacts(workspace);
-  const executionProvenance = deriveExecutionProvenance(workspace);
+  const authoringArtifacts = deriveAuthoringArtifacts(
+    workspace,
+    copy.graphArtifactTitle,
+    copy.sqlArtifactTitle
+  );
+  const executionProvenance = deriveExecutionProvenance(workspace, copy.compiledCodeArtifactKind);
   const materializationEvidence = deriveMaterializationEvidence(workspace);
   const showMaterializationSection = snapshot.status === 'completed';
 
   return (
-    <WorkbenchStateFrame title={`Run ${snapshot.runId}`} slotPrefix="runs-state">
+    <WorkbenchStateFrame title={copy.runTitle(snapshot.runId)} slotPrefix="runs-state">
       <div className="mx-auto max-w-4xl space-y-4">
         <RunItineraryCard
           workspace={workspace}
@@ -403,9 +421,13 @@ export function RunWorkspaceStateView({
         <Card className="border-slate-700 bg-slate-900 p-5">
           <div className="mb-3 flex flex-wrap items-center gap-2">
             <h2 className="text-base font-semibold">{copy.runtimeSnapshotTitle}</h2>
-            <Badge className="bg-blue-600">{snapshot.status}</Badge>
+            <Badge className="bg-blue-600">{copy.statusLabels[snapshot.status]}</Badge>
             {snapshot.substatus ? <Badge variant="outline">{snapshot.substatus}</Badge> : null}
-            <Badge variant="outline">{getDetailStateBadge(detailState)}</Badge>
+            <Badge variant="outline">
+              {detailState === 'snapshot-plus-events'
+                ? copy.snapshotTimelineBadge
+                : copy.snapshotOnlyBadge}
+            </Badge>
           </div>
 
           <p className="text-sm text-slate-300">{copy.snapshotReadModelNote}</p>
@@ -424,14 +446,14 @@ export function RunWorkspaceStateView({
               <span className="text-slate-400">{copy.startedLabel}</span>
               <div>
                 {snapshot.startedAt
-                  ? new Date(snapshot.startedAt).toLocaleString()
+                  ? new Date(snapshot.startedAt).toLocaleString(locale)
                   : copy.scopeUnavailable}
               </div>
             </div>
             {snapshot.completedAt ? (
               <div>
                 <span className="text-slate-400">{copy.completedLabel}</span>
-                <div>{new Date(snapshot.completedAt).toLocaleString()}</div>
+                <div>{new Date(snapshot.completedAt).toLocaleString(locale)}</div>
               </div>
             ) : null}
             {isKnownRunField(snapshot.environment) ? (
@@ -501,15 +523,15 @@ export function RunWorkspaceStateView({
                 </div>
                 <div>
                   <span className="text-slate-400">{copy.rowsWrittenLabel}</span>
-                  <div>{materializationEvidence.rowsWritten.toLocaleString()}</div>
+                  <div>{materializationEvidence.rowsWritten.toLocaleString(locale)}</div>
                 </div>
                 <div>
                   <span className="text-slate-400">{copy.startedLabel}</span>
-                  <div>{new Date(materializationEvidence.startedAt).toLocaleString()}</div>
+                  <div>{new Date(materializationEvidence.startedAt).toLocaleString(locale)}</div>
                 </div>
                 <div>
                   <span className="text-slate-400">{copy.completedLabel}</span>
-                  <div>{new Date(materializationEvidence.completedAt).toLocaleString()}</div>
+                  <div>{new Date(materializationEvidence.completedAt).toLocaleString(locale)}</div>
                 </div>
                 <div>
                   <span className="text-slate-400">{copy.durationLabel}</span>
@@ -616,7 +638,7 @@ export function RunWorkspaceStateView({
                     <span className="font-mono text-xs">{artifact.stepId}</span>
                     <Badge variant="outline">{artifact.artifactKind}</Badge>
                     <span className="text-xs text-slate-400">
-                      {new Date(artifact.emittedAt).toLocaleString()}
+                      {new Date(artifact.emittedAt).toLocaleString(locale)}
                     </span>
                   </div>
                   <div className="grid gap-3 md:grid-cols-2">
@@ -672,7 +694,7 @@ export function RunWorkspaceStateView({
               {failureDiagnostics.failureEmittedAt ? (
                 <div>
                   <span className="text-slate-400">{copy.failedAtLabel}</span>
-                  <div>{new Date(failureDiagnostics.failureEmittedAt).toLocaleString()}</div>
+                  <div>{new Date(failureDiagnostics.failureEmittedAt).toLocaleString(locale)}</div>
                 </div>
               ) : null}
             </div>

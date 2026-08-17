@@ -21,6 +21,7 @@ import {
 } from '../../components/workbench/routeWorkbenchTableTokens';
 import type { RunEvent } from '../../types/engine';
 import { buildRunEventTableRows, type RunEventTableRow } from './runEventTableModel';
+import { useRunStatesCopy } from './runStatesCopy';
 
 type RunEventTimelineTableProps = {
   events: RunEvent[];
@@ -40,7 +41,8 @@ function levelTone(level: string): string {
 }
 
 export function RunEventTimelineTable({ events }: RunEventTimelineTableProps) {
-  const rows = useMemo(() => buildRunEventTableRows(events), [events]);
+  const { copy, language } = useRunStatesCopy();
+  const rows = useMemo(() => buildRunEventTableRows(events, language), [events, language]);
   const columns = useMemo<ColumnDef<RunEventTableRow>[]>(
     () => [
       {
@@ -50,19 +52,21 @@ export function RunEventTimelineTable({ events }: RunEventTimelineTableProps) {
       },
       {
         accessorKey: 'level',
-        header: 'Level',
+        header: copy.eventTableHeaders.level,
         cell: ({ row }) => (
-          <Badge className={levelTone(row.original.level)}>{row.original.level}</Badge>
+          <Badge className={levelTone(row.original.level)}>
+            {copy.eventLevelLabels[row.original.level]}
+          </Badge>
         ),
       },
       {
         accessorKey: 'emittedAt',
-        header: 'Emitted',
+        header: copy.eventTableHeaders.emitted,
         cell: ({ row }) => row.original.emittedAtLabel,
       },
       {
         accessorKey: 'headline',
-        header: 'Event',
+        header: copy.eventTableHeaders.event,
         cell: ({ row }) => (
           <div className="min-w-[16rem]">
             <div>{row.original.headline}</div>
@@ -76,7 +80,7 @@ export function RunEventTimelineTable({ events }: RunEventTimelineTableProps) {
       },
       {
         accessorKey: 'stepId',
-        header: 'Step',
+        header: copy.eventTableHeaders.step,
         cell: ({ row }) =>
           row.original.stepId ? (
             <span className="font-mono text-xs">{row.original.stepId}</span>
@@ -86,11 +90,11 @@ export function RunEventTimelineTable({ events }: RunEventTimelineTableProps) {
       },
       {
         accessorKey: 'eventType',
-        header: 'Type',
+        header: copy.eventTableHeaders.type,
         cell: ({ row }) => <span className="font-mono text-xs">{row.original.eventType}</span>,
       },
     ],
-    []
+    [copy]
   );
   const table = useReactTable({
     data: rows,

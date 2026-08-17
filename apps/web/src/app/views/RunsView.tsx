@@ -13,6 +13,7 @@ import {
   RunWorkspaceState,
 } from './runs/RunStates';
 import { useExecutionStore } from '../stores/executionStore';
+import { useApplicationLanguageStore } from '../stores/applicationLanguageStore';
 import type { Run } from '../types/dbt';
 import { useRunWorkspace } from './runs/useRunWorkspace';
 import {
@@ -61,6 +62,7 @@ export function RunsWorkbenchSurface({ resolveRouteBootstrapId }: RunsWorkbenchS
     },
   });
   const setCurrentRun = useExecutionStore((state) => state.setCurrentRun);
+  const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const observedRunId = useExecutionStore((state) => state.currentRun?.runId);
   const {
     runs,
@@ -105,7 +107,7 @@ export function RunsWorkbenchSurface({ resolveRouteBootstrapId }: RunsWorkbenchS
   });
   usePublishedRouteBootstrap(
     resolveRouteBootstrapId(runId),
-    deriveRunsRouteBootstrapPresentation(state)
+    deriveRunsRouteBootstrapPresentation(state, applicationLanguage)
   );
 
   switch (state.kind) {
