@@ -17,6 +17,8 @@ risk: >
 mitigations:
   - Native cancellation finalization also recognizes a workflow scope that Temporal considers
     cancelled.
+  - Scope-only detection is normalized to Temporal's CancelledFailure before the workflow rethrows
+    it.
   - Terminal RunCancelRequested and RunCancelled events remain emitted by the workflow inside a
     non-cancellable scope.
   - Focused regression coverage includes an unrecognized error shape under a cancelled workflow

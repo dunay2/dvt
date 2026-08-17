@@ -11,7 +11,7 @@ code_refs:
   - packages/@dvt/adapter-temporal/test/runPlanWorkflow.cancellation.test.ts
 evidence:
   tests:
-    - pnpm --filter @dvt/adapter-temporal exec vitest run test/runPlanWorkflow.cancellation.test.ts
+    - pnpm --filter @dvt/adapter-temporal exec vitest run test/runPlanWorkflow.cancellation.test.ts test/runPlanWorkflow.layers.order.test.ts
     - pnpm --filter @dvt/adapter-temporal exec vitest run test/integration.time-skipping.test.ts -t "native Temporal handle cancellation"
     - pnpm --filter @dvt/adapter-temporal typecheck
     - pnpm verify:prepush
@@ -29,14 +29,17 @@ remained `RUNNING` with cancellation pending because neither
 
 The workflow catch-path finalizer now classifies a native cancellation when
 either Temporal recognizes the caught error or the current workflow
-`CancellationScope` is already considered cancelled. Canonical terminal events
-remain runtime-owned and are emitted in the existing non-cancellable scope.
+`CancellationScope` is already considered cancelled. It returns the recognized
+error or normalizes the scope-only case to Temporal's `CancelledFailure` before
+the workflow rethrows it. Canonical terminal events remain runtime-owned and
+are emitted in the existing non-cancellable scope.
 
 No API, Engine, UI, contract, store, planner, or provider-reconciliation path
 was added. Provider status remains diagnostic rather than canonical authority.
 
 ## Regression boundary
 
-The focused unit test fixes the observed edge case: a cancelled workflow scope
-whose caught error shape is not recognized by `isCancellation`. Existing
-cooperative and recognized native cancellation cases retain their semantics.
+Focused unit tests fix the observed edge case—a cancelled workflow scope whose
+caught error shape is not recognized by `isCancellation`—and prove that the
+workflow boundary rethrows the normalized cancellation. Existing cooperative
+and recognized native cancellation cases retain their semantics.
