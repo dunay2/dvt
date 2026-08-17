@@ -156,6 +156,7 @@ describe('projectCanvasNodePresentationTruth', () => {
       {
         ...model,
         id: 'transform.orders',
+        path: 'models/stale-visual-orders.sql',
         pluginId: 'dvt',
         kind: 'dvt:sql_transform',
         metadata: {},

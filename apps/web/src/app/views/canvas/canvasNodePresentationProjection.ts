@@ -65,6 +65,7 @@ export function projectCanvasNodePresentationTruth(
 
   const baseTruth = buildCanvasNodePresentationTruth({
     ...args,
+    generatedCodeIsAuthoritative: visualGeneratedCode != null,
     ...(generatedArtifact == null && visualGeneratedCode == null
       ? {}
       : {
