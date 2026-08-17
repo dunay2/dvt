@@ -1,0 +1,25 @@
+---
+id: R-20260817-TEMPORAL-NATIVE-CANCEL-EVENT-LOSS
+title: Native Temporal cancellation can lose canonical terminal events
+status: Closed
+date: 2026-08-17
+owners:
+  - packages/@dvt/adapter-temporal
+severity: High
+probability: Low
+context: >
+  Provider-native cancellation can race the workflow finalization window after the final step has
+  completed and before RunCompleted is emitted.
+risk: >
+  If cancellation classification depends only on the caught error shape, Temporal can close the
+  workflow as CANCELLED while the canonical DVT event stream remains RUNNING with only a
+  RunCancelSubmitted receipt. Operators then cannot cancel or recover the execution.
+mitigations:
+  - Native cancellation finalization also recognizes a workflow scope that Temporal considers
+    cancelled.
+  - Terminal RunCancelRequested and RunCancelled events remain emitted by the workflow inside a
+    non-cancellable scope.
+  - Focused regression coverage includes an unrecognized error shape under a cancelled workflow
+    scope.
+  - Existing Temporal integration coverage protects provider-native cancellation ordering.
+---
