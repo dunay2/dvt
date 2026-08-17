@@ -32,6 +32,15 @@ describe('useUiLayoutStore', () => {
     expect(useUiLayoutStore.getState().canvasPalette).toBe(DEFAULT_CANVAS_PALETTE_ID);
   });
 
+  it('opens the bottom drawer at a usable requested height', () => {
+    useUiLayoutStore.getState().showBottomDrawer(300);
+
+    expect(useUiLayoutStore.getState()).toMatchObject({
+      bottomDrawerVisible: true,
+      bottomDrawerHeight: 300,
+    });
+  });
+
   it('falls back to the canonical palette when persisted state contains a named alias', async () => {
     localStorage.setItem(
       UI_LAYOUT_STORAGE_KEY,

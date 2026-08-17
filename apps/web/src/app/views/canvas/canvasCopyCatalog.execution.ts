@@ -221,6 +221,10 @@ export const canvasViewExecutionCopyByKey = {
     key: 'canvas.operationalDrawer.previewTab',
     fallback: 'Preview',
   },
+  operationalDrawerDataTab: {
+    key: 'canvas.operationalDrawer.dataTab',
+    fallback: 'Data',
+  },
   operationalDrawerProblemsAriaLabel: {
     key: 'canvas.operationalDrawer.problemsAriaLabel',
     fallback: 'Canvas problems',
@@ -268,6 +272,54 @@ export const canvasViewExecutionCopyByKey = {
   operationalDrawerPreviewBlockedStatus: {
     key: 'canvas.operationalDrawer.previewBlockedStatus',
     fallback: 'Preview blocked',
+  },
+  operationalDrawerDataAriaLabel: {
+    key: 'canvas.operationalDrawer.dataAriaLabel',
+    fallback: 'Source data sample',
+  },
+  operationalDrawerDataIdleMessage: {
+    key: 'canvas.operationalDrawer.dataIdleMessage',
+    fallback: 'Double-click the rows and size area of an imported source to inspect a sample.',
+  },
+  operationalDrawerDataLoadingTemplate: {
+    key: 'canvas.operationalDrawer.dataLoadingTemplate',
+    fallback: 'Loading a data sample from {nodeName}…',
+  },
+  operationalDrawerDataEmptyTemplate: {
+    key: 'canvas.operationalDrawer.dataEmptyTemplate',
+    fallback: '{nodeName} returned no rows.',
+  },
+  operationalDrawerDataConnectionNotFoundTemplate: {
+    key: 'canvas.operationalDrawer.dataConnectionNotFoundTemplate',
+    fallback: 'The governed connection for {nodeName} is no longer available.',
+  },
+  operationalDrawerDataSourceObjectNotFoundTemplate: {
+    key: 'canvas.operationalDrawer.dataSourceObjectNotFoundTemplate',
+    fallback: 'The source object for {nodeName} is no longer available.',
+  },
+  operationalDrawerDataUnavailableTemplate: {
+    key: 'canvas.operationalDrawer.dataUnavailableTemplate',
+    fallback: 'The data sample for {nodeName} could not be read.',
+  },
+  operationalDrawerDataUnknownErrorTemplate: {
+    key: 'canvas.operationalDrawer.dataUnknownErrorTemplate',
+    fallback: 'The data sample for {nodeName} could not be loaded.',
+  },
+  operationalDrawerDataTruncatedTemplate: {
+    key: 'canvas.operationalDrawer.dataTruncatedTemplate',
+    fallback: 'Showing the first {limit} rows.',
+  },
+  operationalDrawerDataCaptionTemplate: {
+    key: 'canvas.operationalDrawer.dataCaptionTemplate',
+    fallback: 'Data sample from {nodeName}',
+  },
+  operationalDrawerDataNullValue: {
+    key: 'canvas.operationalDrawer.dataNullValue',
+    fallback: 'NULL',
+  },
+  sourceDataSampleInteractionLabel: {
+    key: 'canvas.sourceDataSample.interactionLabel',
+    fallback: 'Double-click this metrics area or press Enter to open a data sample.',
   },
   operationalDrawerTabsAriaLabel: {
     key: 'canvas.operationalDrawer.tabsAriaLabel',

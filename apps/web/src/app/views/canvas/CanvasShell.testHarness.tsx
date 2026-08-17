@@ -22,9 +22,13 @@ import type {
 } from './canvasShell.types';
 import { canvasViewCopy } from './copy';
 import { useOperationalDrawerContributionStore } from '../../components/shell/operationalDrawerContributionStore';
-import type { IWarehouseSourceImportPort } from '../../ports/workspace';
+import type {
+  IWarehouseSourceDataSampleQueryPort,
+  IWarehouseSourceImportPort,
+} from '../../ports/workspace';
 import { dvtCanvasSurfaceStrategy } from '../../plugins/dvt/dvtCanvasSurfaceStrategy';
 import { useCanvasInteractionStore } from '../../stores/canvasInteractionStore';
+import { useUiLayoutStore } from '../../stores/uiLayoutStore';
 
 const shellState = vi.hoisted(() => ({
   canvasViewportProps: null as null | Record<string, unknown>,
@@ -78,6 +82,7 @@ export type CanvasShellPropsOverrides = {
   workspaceCommands?: CanvasShellWorkspaceCommands;
   routeIntentRequest?: CanvasShellRouteIntentRequest;
   warehouseSourceImport?: IWarehouseSourceImportPort;
+  warehouseSourceDataSampleQuery?: IWarehouseSourceDataSampleQueryPort;
   sourceImportInitialSelection?: CanvasShellProps['sourceImportInitialSelection'];
   onSourceImportInitialSelectionConsumed?: CanvasShellProps['onSourceImportInitialSelectionConsumed'];
   onDbtProjectImported?: CanvasShellProps['onDbtProjectImported'];
@@ -244,6 +249,7 @@ export function buildCanvasShellProps(overrides?: CanvasShellPropsOverrides): Ca
     workspaceCommands: overrides?.workspaceCommands,
     routeIntentRequest: overrides?.routeIntentRequest,
     warehouseSourceImport: overrides?.warehouseSourceImport,
+    warehouseSourceDataSampleQuery: overrides?.warehouseSourceDataSampleQuery,
     sourceImportInitialSelection: overrides?.sourceImportInitialSelection,
     onSourceImportInitialSelectionConsumed: overrides?.onSourceImportInitialSelectionConsumed,
     onDbtProjectImported: overrides?.onDbtProjectImported,
@@ -275,6 +281,7 @@ export function createCanvasShellHarness(): {
     contextualWorkbenchId: null,
     contextualWorkbenchOwnerKey: null,
   });
+  useUiLayoutStore.setState({ bottomDrawerHeight: 0, bottomDrawerVisible: false });
 
   return {
     container,
@@ -303,6 +310,7 @@ export function createCanvasShellHarness(): {
         root.unmount();
       });
       useOperationalDrawerContributionStore.setState({ activeTab: 'log', contribution: null });
+      useUiLayoutStore.setState({ bottomDrawerHeight: 0, bottomDrawerVisible: false });
       useCanvasInteractionStore.setState({
         contextualWorkbenchId: null,
         contextualWorkbenchOwnerKey: null,

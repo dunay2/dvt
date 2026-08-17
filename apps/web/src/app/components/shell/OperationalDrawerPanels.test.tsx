@@ -28,6 +28,17 @@ function buildCanvasOperationalDrawerContribution(
       previewAction: 'Create Execution Preview',
       previewReadyStatus: 'Preview ready',
       previewBlockedStatus: 'Preview blocked',
+      dataAriaLabel: 'Source data sample',
+      dataIdleMessage: 'Open a source sample.',
+      dataLoadingTemplate: 'Loading {nodeName}.',
+      dataEmptyTemplate: '{nodeName} returned no rows.',
+      dataConnectionNotFoundTemplate: 'Connection missing for {nodeName}.',
+      dataSourceObjectNotFoundTemplate: 'Object missing for {nodeName}.',
+      dataUnavailableTemplate: 'Sample unavailable for {nodeName}.',
+      dataUnknownErrorTemplate: 'Sample failed for {nodeName}.',
+      dataTruncatedTemplate: 'Showing {limit} rows.',
+      dataCaptionTemplate: 'Sample from {nodeName}',
+      dataNullValue: 'NULL',
       tabsAriaLabel: 'Canvas operational drawer',
       severity: { info: 'Info', warning: 'Warning', error: 'Error' },
     },
@@ -36,6 +47,7 @@ function buildCanvasOperationalDrawerContribution(
       { id: 'problems', label: 'Problems', count: 1 },
       { id: 'runs', label: 'Runs', count: 1 },
       { id: 'preview', label: 'Preview', count: 1 },
+      { id: 'data', label: 'Data', count: null },
     ],
     problems: {
       items: [
@@ -63,6 +75,7 @@ function buildCanvasOperationalDrawerContribution(
       onPreviewExecutionPlan: vi.fn(),
       selectionRecovery: null,
     },
+    dataSample: { status: 'idle' },
     ...overrides,
   };
 }
@@ -110,9 +123,10 @@ describe('OperationalDrawerPanels', () => {
       'Problems 1',
       'Runs 1',
       'Preview 1',
+      'Data',
     ]);
     expect(tabs[0]?.getAttribute('aria-selected')).toBe('true');
-    expect(tabs.map((tab) => tab.tabIndex)).toEqual([0, -1, -1, -1]);
+    expect(tabs.map((tab) => tab.tabIndex)).toEqual([0, -1, -1, -1, -1]);
     expect(tabs[0]?.getAttribute('aria-controls')).toBe('bottom-operational-drawer-panel-log');
 
     tabs[0]?.focus();
@@ -127,14 +141,126 @@ describe('OperationalDrawerPanels', () => {
       fireEvent.keyDown(tabs[1]!, { key: 'End' });
     });
 
-    expect(onSelectTab).toHaveBeenLastCalledWith('preview');
-    expect(tabs[3]).toBe(document.activeElement);
+    expect(onSelectTab).toHaveBeenLastCalledWith('data');
+    expect(tabs[4]).toBe(document.activeElement);
 
     await act(async () => {
-      fireEvent.click(tabs[3]!);
+      fireEvent.click(tabs[4]!);
     });
 
-    expect(onSelectTab).toHaveBeenCalledWith('preview');
+    expect(onSelectTab).toHaveBeenCalledWith('data');
+  });
+
+  it('renders a bounded source sample as an accessible data table', async () => {
+    const contribution = buildCanvasOperationalDrawerContribution({
+      tabs: [
+        { id: 'log', label: 'Log', count: null },
+        { id: 'problems', label: 'Problems', count: 0 },
+        { id: 'runs', label: 'Runs', count: null },
+        { id: 'preview', label: 'Preview', count: null },
+        { id: 'data', label: 'Data', count: 2 },
+      ],
+      dataSample: {
+        status: 'ready',
+        nodeName: 'orders',
+        sample: {
+          contractVersion: 1,
+          connectionId: 'postgresql-local',
+          objectId: 'relation/dvt/public/orders',
+          columns: [
+            { name: 'order_id', type: 'integer', nullable: false },
+            { name: 'customer', type: 'text', nullable: true },
+          ],
+          rows: [{ values: ['1', 'Ada'] }, { values: ['2', null] }],
+          limit: 20,
+          truncated: true,
+          sampledAt: '2026-08-17T10:00:00.000Z',
+        },
+      },
+    });
+
+    await act(async () => {
+      root.render(
+        <BottomOperationalDrawerBody activeTab="data" contribution={contribution} logBody={null} />
+      );
+    });
+
+    const table = container.querySelector<HTMLTableElement>(
+      '[data-slot="bottom-operational-data-table"]'
+    );
+    expect(table).not.toBeNull();
+    expect(table?.querySelector('caption')?.textContent).toBe('Sample from orders');
+    expect(
+      Array.from(table?.querySelectorAll('th[scope="col"]') ?? []).map((cell) => cell.textContent)
+    ).toEqual(['order_id', 'customer']);
+    expect(table?.textContent).toContain('Ada');
+    expect(table?.textContent).toContain('NULL');
+    expect(container.textContent).toContain('Showing 20 rows.');
+  });
+
+  it('announces loading, empty, and governed failure states in the data panel', async () => {
+    const baseContribution = buildCanvasOperationalDrawerContribution();
+
+    await act(async () => {
+      root.render(
+        <BottomOperationalDrawerBody
+          activeTab="data"
+          contribution={{
+            ...baseContribution,
+            dataSample: { status: 'loading', nodeName: 'orders' },
+          }}
+          logBody={null}
+        />
+      );
+    });
+    expect(container.querySelector('[role="status"]')?.textContent).toBe('Loading orders.');
+
+    await act(async () => {
+      root.render(
+        <BottomOperationalDrawerBody
+          activeTab="data"
+          contribution={{
+            ...baseContribution,
+            dataSample: {
+              status: 'ready',
+              nodeName: 'orders',
+              sample: {
+                contractVersion: 1,
+                connectionId: 'postgresql-local',
+                objectId: 'relation/dvt/public/orders',
+                columns: [{ name: 'order_id', type: 'integer', nullable: false }],
+                rows: [],
+                limit: 20,
+                truncated: false,
+                sampledAt: '2026-08-17T10:00:00.000Z',
+              },
+            },
+          }}
+          logBody={null}
+        />
+      );
+    });
+    expect(container.textContent).toContain('orders returned no rows.');
+
+    await act(async () => {
+      root.render(
+        <BottomOperationalDrawerBody
+          activeTab="data"
+          contribution={{
+            ...baseContribution,
+            dataSample: {
+              status: 'error',
+              nodeName: 'orders',
+              reason: 'source_object_not_found',
+            },
+          }}
+          logBody={null}
+        />
+      );
+    });
+    expect(container.querySelector('[role="alert"]')?.textContent).toBe(
+      'Object missing for orders.'
+    );
   });
 
   it('renders problems, runs, and preview bodies from the route contribution', async () => {
@@ -247,6 +373,17 @@ describe('OperationalDrawerPanels', () => {
         previewAction: 'Crear Execution Preview',
         previewReadyStatus: 'Vista previa lista',
         previewBlockedStatus: 'Vista previa bloqueada',
+        dataAriaLabel: 'Muestra de datos',
+        dataIdleMessage: 'Abre una muestra.',
+        dataLoadingTemplate: 'Cargando {nodeName}.',
+        dataEmptyTemplate: '{nodeName} no tiene filas.',
+        dataConnectionNotFoundTemplate: 'Falta la conexión de {nodeName}.',
+        dataSourceObjectNotFoundTemplate: 'Falta el objeto de {nodeName}.',
+        dataUnavailableTemplate: 'No disponible para {nodeName}.',
+        dataUnknownErrorTemplate: 'Error para {nodeName}.',
+        dataTruncatedTemplate: 'Se muestran {limit} filas.',
+        dataCaptionTemplate: 'Muestra de {nodeName}',
+        dataNullValue: 'NULO',
         tabsAriaLabel: 'Cajón operativo del Canvas',
         severity: { info: 'Información', warning: 'Advertencia', error: 'Error' },
       },
@@ -255,6 +392,7 @@ describe('OperationalDrawerPanels', () => {
         { id: 'problems', label: 'Problemas', count: 1 },
         { id: 'runs', label: 'Ejecuciones', count: 1 },
         { id: 'preview', label: 'Vista previa', count: 1 },
+        { id: 'data', label: 'Datos', count: null },
       ],
       problems: {
         items: [
@@ -299,7 +437,7 @@ describe('OperationalDrawerPanels', () => {
     expect(tabList?.getAttribute('aria-orientation')).toBe('horizontal');
     expect(tabList?.className).toContain('flex-wrap');
     expect(tabList?.className).not.toContain('overflow-x-auto');
-    expect(tabs).toHaveLength(4);
+    expect(tabs).toHaveLength(5);
     expect(container.textContent).toContain('Registro');
     expect(container.textContent).toContain('Vista previa');
 

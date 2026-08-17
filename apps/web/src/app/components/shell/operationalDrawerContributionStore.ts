@@ -11,8 +11,19 @@ import type {
   RunControlCommandRequest,
 } from '../../services/runs/runControlCommandModel';
 import type { OperationalDrawerSelectionRecoveryMessages } from './operationalDrawerSelectionRecoveryMessages';
+import type { SourceDataSample } from '../../ports/workspace';
 
-export type OperationalDrawerTabId = 'log' | 'problems' | 'runs' | 'preview';
+export type OperationalDrawerTabId = 'log' | 'problems' | 'runs' | 'preview' | 'data';
+
+export type OperationalDrawerDataSample =
+  | Readonly<{ status: 'idle' }>
+  | Readonly<{ status: 'loading'; nodeName: string }>
+  | Readonly<{ status: 'ready'; nodeName: string; sample: SourceDataSample }>
+  | Readonly<{
+      status: 'error';
+      nodeName: string;
+      reason: 'connection_not_found' | 'source_object_not_found' | 'unavailable' | 'unknown';
+    }>;
 
 export type OperationalDrawerTab = Readonly<{
   id: OperationalDrawerTabId;
@@ -55,6 +66,17 @@ export type OperationalDrawerContribution = Readonly<{
     previewAction: string;
     previewReadyStatus: string;
     previewBlockedStatus: string;
+    dataAriaLabel: string;
+    dataIdleMessage: string;
+    dataLoadingTemplate: string;
+    dataEmptyTemplate: string;
+    dataConnectionNotFoundTemplate: string;
+    dataSourceObjectNotFoundTemplate: string;
+    dataUnavailableTemplate: string;
+    dataUnknownErrorTemplate: string;
+    dataTruncatedTemplate: string;
+    dataCaptionTemplate: string;
+    dataNullValue: string;
     tabsAriaLabel: string;
     severity: Readonly<Record<OperationalDrawerProblem['severity'], string>>;
   }>;
@@ -82,6 +104,7 @@ export type OperationalDrawerContribution = Readonly<{
       messages: OperationalDrawerSelectionRecoveryMessages;
     }> | null;
   }>;
+  dataSample: OperationalDrawerDataSample;
 }>;
 
 type OperationalDrawerContributionState = {

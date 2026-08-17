@@ -29,6 +29,7 @@ interface UiLayoutState {
   toggleFocusMode: () => void;
   toggleInspectorPanel: () => void;
   toggleBottomDrawer: () => void;
+  showBottomDrawer: (height?: number) => void;
   hideBottomDrawer: () => void;
   showInspectorPanel: () => void;
   hideInspectorPanel: () => void;
@@ -84,6 +85,8 @@ export const useUiLayoutStore = create<UiLayoutState>()(
           const next = !state.bottomDrawerVisible;
           return { bottomDrawerVisible: next, bottomDrawerHeight: next ? 160 : 0 };
         }),
+      showBottomDrawer: (height = 300) =>
+        set({ bottomDrawerVisible: true, bottomDrawerHeight: Math.max(160, height) }),
       hideBottomDrawer: () => set({ bottomDrawerVisible: false, bottomDrawerHeight: 0 }),
       showInspectorPanel: () => set({ inspectorPanelVisible: true }),
       hideInspectorPanel: () => set({ inspectorPanelVisible: false }),

@@ -85,6 +85,17 @@ describe('ShellTopBar workspace context', () => {
         previewAction: 'Create Execution Preview',
         previewReadyStatus: 'Preview ready',
         previewBlockedStatus: 'Preview blocked',
+        dataAriaLabel: 'Source data sample',
+        dataIdleMessage: 'Open a source sample.',
+        dataLoadingTemplate: 'Loading {nodeName}.',
+        dataEmptyTemplate: '{nodeName} returned no rows.',
+        dataConnectionNotFoundTemplate: 'Connection missing for {nodeName}.',
+        dataSourceObjectNotFoundTemplate: 'Object missing for {nodeName}.',
+        dataUnavailableTemplate: 'Sample unavailable for {nodeName}.',
+        dataUnknownErrorTemplate: 'Sample failed for {nodeName}.',
+        dataTruncatedTemplate: 'Showing {limit} rows.',
+        dataCaptionTemplate: 'Sample from {nodeName}',
+        dataNullValue: 'NULL',
         tabsAriaLabel: 'Canvas operational drawer',
         severity: { info: 'Info', warning: 'Warning', error: 'Error' },
       },
@@ -93,6 +104,7 @@ describe('ShellTopBar workspace context', () => {
         { id: 'problems', label: 'Problems', count: 1 },
         { id: 'runs', label: 'Runs', count: 1 },
         { id: 'preview', label: 'Preview', count: 1 },
+        { id: 'data', label: 'Data', count: null },
       ],
       problems: {
         items: [],
@@ -113,6 +125,7 @@ describe('ShellTopBar workspace context', () => {
         onPreviewExecutionPlan: vi.fn(),
         selectionRecovery: null,
       },
+      dataSample: { status: 'idle' },
       ...overrides,
     };
   }
@@ -317,6 +330,7 @@ describe('ShellTopBar workspace context', () => {
           { id: 'problems', label: 'Problems', count: 0 },
           { id: 'runs', label: 'Runs', count: null },
           { id: 'preview', label: 'Preview', count: null },
+          { id: 'data', label: 'Data', count: null },
         ],
         runs: {
           activeRunId: null,

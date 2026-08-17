@@ -18,7 +18,11 @@ import {
 import { DbtProjectFileCanvas, InvalidCanvasAuthority } from './canvas/DbtProjectFileCanvas';
 import { useCanvasRoutePresentationSync } from './canvas/useCanvasRoutePresentationSync';
 import { useCanvasController } from './canvas/useCanvasController';
-import { useShellFeedback, useWarehouseSourceImportPort } from '../services/AppServicesContext';
+import {
+  useShellFeedback,
+  useWarehouseSourceDataSampleQueryPort,
+  useWarehouseSourceImportPort,
+} from '../services/AppServicesContext';
 import {
   removeCanvasRouteIntent,
   resolveCanvasRouteIntent,
@@ -42,6 +46,7 @@ function GraphDraftCanvasContent({
 }>): JSX.Element {
   const reactFlow = useReactFlow<Node, Edge>();
   const warehouseSourceImport = useWarehouseSourceImportPort();
+  const warehouseSourceDataSampleQuery = useWarehouseSourceDataSampleQueryPort();
   const controller = useCanvasController();
   const runControls = useCanvasRunControlSurface(
     controller.workspaceLayoutKey,
@@ -64,6 +69,7 @@ function GraphDraftCanvasContent({
       <CanvasShell
         {...shellProps}
         warehouseSourceImport={warehouseSourceImport}
+        warehouseSourceDataSampleQuery={warehouseSourceDataSampleQuery}
         canvasContextScreenToFlowPosition={(screenPosition) =>
           reactFlow.screenToFlowPosition(screenPosition)
         }
