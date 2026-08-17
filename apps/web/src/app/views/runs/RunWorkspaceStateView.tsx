@@ -345,7 +345,7 @@ function RunDiagnosticsCard({
     [copy.diagnosticsAttemptIdLabel, diagnostics.attemptId, true],
     [copy.diagnosticsAdapterLabel, diagnostics.adapter, false],
     [copy.durationLabel, diagnostics.durationMs, false],
-    [copy.diagnosticsStatusLabel, diagnostics.status, false],
+    [copy.diagnosticsStatusLabel, copy.statusLabels[diagnostics.status], false],
     [copy.diagnosticsErrorCodeLabel, diagnostics.errorCode, false],
   ] as const;
 
@@ -378,7 +378,9 @@ function RunDiagnosticsCard({
               key={`${pointer.kind}-${pointer.value}`}
               className="rounded border border-slate-700 bg-slate-950 p-3 text-sm text-slate-300"
             >
-              <Badge variant="outline">{pointer.label}</Badge>
+              <Badge variant="outline">
+                {pointer.kind === 'trace' ? copy.traceQueryLabel : copy.logQueryLabel}
+              </Badge>
               <div className="mt-2 break-all font-mono text-xs">{pointer.value}</div>
             </div>
           ))}

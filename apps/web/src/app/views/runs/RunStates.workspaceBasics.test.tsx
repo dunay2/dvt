@@ -172,6 +172,14 @@ describe('RunStates workspace basics', () => {
             startedAt: '2026-03-28T10:00:00.000Z',
             completedAt: '2026-03-28T10:00:30.000Z',
             environment: 'dev',
+            diagnostics: {
+              runId: 'run_123',
+              status: 'completed',
+              pointers: [
+                { kind: 'trace', label: 'Trace query', value: 'trace runId=run_123' },
+                { kind: 'log', label: 'Log query', value: 'logs runId=run_123' },
+              ],
+            },
             planSummary: {
               executor: 'postgres',
               nodeCount: 3,
@@ -193,6 +201,11 @@ describe('RunStates workspace basics', () => {
     expect(content).toContain('Campos de la instantánea');
     expect(content).toContain('Cronología de eventos');
     expect(content).toContain('Paso iniciado');
+    expect(content).toContain('EstadoCompletada');
+    expect(content).toContain('Consulta de trazas');
+    expect(content).toContain('Consulta de registros');
+    expect(content).not.toContain('Trace query');
+    expect(content).not.toContain('Log query');
     expect(content).not.toContain('Run itinerary');
     expect(content).not.toContain('Runtime snapshot');
     expect(content).not.toContain('Event timeline');
