@@ -7,7 +7,11 @@ import type {
   SourceObjectMetricProvenance,
 } from '@dvt/contracts';
 import { readSourceObjectMetricEvidence } from '../../services/workspace/sourceObjectMetricEvidence';
-import { describeSourceObjectMetricEvidence } from '../../services/workspace/sourceObjectMetricEvidencePresentation';
+import {
+  describeSourceObjectMetricEvidence,
+  formatSourceObjectMetricByteDetail,
+} from '../../services/workspace/sourceObjectMetricEvidencePresentation';
+import { resolveGraphNodeCardCopy } from './graphNodeCardCopyTokens';
 import type { GraphNodeCardMetric } from './graphNodeCardStrategyContracts';
 import { formatBytes, formatCompactNumber, numericValue } from './graphNodeCardStrategyUtils';
 
@@ -31,27 +35,25 @@ type GraphNodeVolumeMetricProjectionInput = Readonly<{
   isSourceObject: boolean;
   metadata: Record<string, unknown>;
   data: Record<string, unknown>;
+  locale?: string;
 }>;
-
-function formatFullNumber(value: number): string {
-  return new Intl.NumberFormat('en-US').format(value);
-}
-
-function formatByteDetail(value: number): string {
-  const exact = `${formatFullNumber(Math.round(value))} B`;
-  const compact = formatBytes(value);
-  return exact === compact ? exact : `${exact} (${compact})`;
-}
 
 function buildSourceProjection(
   metadata: Record<string, unknown>,
-  data: Record<string, unknown>
+  data: Record<string, unknown>,
+  locale?: string
 ): GraphNodeVolumeMetricProjection {
   const evidence = readSourceObjectMetricEvidence(metadata.sourceMetricEvidence);
   if (evidence === null) {
     return { rowCount: null, sizeEvidence: null, metrics: [] };
   }
   const { rowCount: rowEvidence, byteSize: byteEvidence } = evidence;
+  const copy = resolveGraphNodeCardCopy(locale);
+  const numberFormatter = new Intl.NumberFormat(
+    locale?.trim().toLowerCase().startsWith('es') ? 'es-ES' : 'en-US'
+  );
+  const formattedRowCount = numberFormatter.format(rowEvidence.value);
+  const formattedByteSize = formatSourceObjectMetricByteDetail(byteEvidence.value, numberFormatter);
 
   const rowTone = rowEvidence.provenance === 'measured' ? 'success' : 'warning';
   const sizeTone = byteEvidence.provenance === 'measured' ? 'success' : 'warning';
@@ -69,25 +71,27 @@ function buildSourceProjection(
     metrics: [
       {
         id: 'rows',
-        label: 'Rows',
+        label: copy.rowsLabel,
         value: formatCompactNumber(rowEvidence.value),
         tone: rowTone,
         detail: describeSourceObjectMetricEvidence({
           metric: rowEvidence,
-          subject: `${formatFullNumber(rowEvidence.value)} rows`,
+          subject: `${formattedRowCount} ${copy.rowsLabel.toLocaleLowerCase(locale)}`,
           evidence,
+          locale,
         }),
       },
       {
         id: byteEvidence.provenance === 'measured' ? 'bytes' : 'estimated-bytes',
-        label: byteEvidence.provenance === 'measured' ? 'Size' : 'Est. size',
-        value: formatBytes(byteEvidence.value),
+        label: byteEvidence.provenance === 'measured' ? copy.sizeLabel : copy.estimatedSizeLabel,
+        value: formatBytes(byteEvidence.value, locale),
         tone: sizeTone,
         detail: describeSourceObjectMetricEvidence({
           metric: byteEvidence,
-          subject: formatByteDetail(byteEvidence.value),
+          subject: formattedByteSize,
           evidence,
           basis: byteEvidence.basis,
+          locale,
         }),
       },
     ],
@@ -96,8 +100,13 @@ function buildSourceProjection(
 
 function buildRuntimeProjection(
   metadata: Record<string, unknown>,
-  data: Record<string, unknown>
+  data: Record<string, unknown>,
+  locale?: string
 ): GraphNodeVolumeMetricProjection {
+  const copy = resolveGraphNodeCardCopy(locale);
+  const numberFormatter = new Intl.NumberFormat(
+    locale?.trim().toLowerCase().startsWith('es') ? 'es-ES' : 'en-US'
+  );
   const rowCount =
     numericValue(metadata.rowCount) ??
     numericValue(metadata.rows) ??
@@ -125,18 +134,18 @@ function buildRuntimeProjection(
   if (rowCount !== null) {
     metrics.push({
       id: 'rows',
-      label: 'Rows',
+      label: copy.rowsLabel,
       value: formatCompactNumber(rowCount),
-      detail: `${formatFullNumber(rowCount)} rows.`,
+      detail: `${numberFormatter.format(rowCount)} ${copy.rowsLabel.toLocaleLowerCase(locale)}.`,
     });
   }
   if (sizeEvidence !== null) {
     metrics.push({
       id: sizeEvidence.provenance === 'measured' ? 'bytes' : 'estimated-bytes',
-      label: sizeEvidence.provenance === 'measured' ? 'Size' : 'Est. size',
-      value: formatBytes(sizeEvidence.bytes),
+      label: sizeEvidence.provenance === 'measured' ? copy.sizeLabel : copy.estimatedSizeLabel,
+      value: formatBytes(sizeEvidence.bytes, locale),
       tone: sizeEvidence.provenance === 'measured' ? 'success' : 'warning',
-      detail: `${formatByteDetail(sizeEvidence.bytes)}.`,
+      detail: `${formatSourceObjectMetricByteDetail(sizeEvidence.bytes, numberFormatter)}.`,
     });
   }
 
@@ -147,8 +156,9 @@ export function buildGraphNodeVolumeMetricProjection({
   isSourceObject,
   metadata,
   data,
+  locale,
 }: GraphNodeVolumeMetricProjectionInput): GraphNodeVolumeMetricProjection {
   return isSourceObject
-    ? buildSourceProjection(metadata, data)
-    : buildRuntimeProjection(metadata, data);
+    ? buildSourceProjection(metadata, data, locale)
+    : buildRuntimeProjection(metadata, data, locale);
 }

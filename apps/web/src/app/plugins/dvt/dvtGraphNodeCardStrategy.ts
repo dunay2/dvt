@@ -74,14 +74,15 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
   const metadata = metadataOf(node);
   const metrics: GraphNodeCardMetric[] = [];
   const isSourceObject = node.role === 'input' || node.kind.endsWith(':source');
+  const presentationCopy = isCanvasNodePresentationCopy(data.presentationCopy)
+    ? data.presentationCopy
+    : null;
   const volumeMetricProjection = buildGraphNodeVolumeMetricProjection({
     isSourceObject,
     metadata,
     data,
+    locale: presentationCopy?.locale,
   });
-  const presentationCopy = isCanvasNodePresentationCopy(data.presentationCopy)
-    ? data.presentationCopy
-    : null;
   const columnPresentation = resolveColumnMetricPresentation(metadata, data);
   const codePresentation = resolveCodeMetricPresentation(data);
   const columnCount = columnPresentation.count;
@@ -114,6 +115,7 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     runtimeData,
     volumeMetricProjection,
     columnCount,
+    locale: presentationCopy?.locale,
   });
 
   return {

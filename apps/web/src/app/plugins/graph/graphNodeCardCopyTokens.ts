@@ -2,6 +2,31 @@
 type GraphNodeCardCopy = Readonly<{
   nodeActionsLabel: string;
   columnsLabel: string;
+  rowsLabel: string;
+  sizeLabel: string;
+  estimatedSizeLabel: string;
+  freshnessLabel: string;
+  lastRefreshLabel: string;
+  cadenceLabel: string;
+  cadenceValueTemplate: string;
+  throughputLabel: string;
+  schemaDriftLabel: string;
+  noDriftDetectedLabel: string;
+  driftDetectedLabel: string;
+  allocatedSizeLabel: string;
+  minimumSizeLabel: string;
+  estimatedPayloadSizeLabel: string;
+  datasetSizeLabel: string;
+  observedLabel: string;
+  estimatedAverageRowSizeLabel: string;
+  averageRowSizeLabel: string;
+  lastRunLabel: string;
+  durationLabel: string;
+  costLabel: string;
+  testsLabel: string;
+  testStatusLabels: Readonly<Record<string, string>>;
+  healthTitleTemplate: string;
+  healthAriaLabelTemplate: string;
   remainingColumnsLabelTemplate: string;
   showFirstFiveColumnsLabel: string;
   automapColumnsLabel: string;
@@ -17,6 +42,44 @@ type GraphNodeCardCopy = Readonly<{
 const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   nodeActionsLabel: 'More node actions',
   columnsLabel: 'Columns',
+  rowsLabel: 'Rows',
+  sizeLabel: 'Size',
+  estimatedSizeLabel: 'Est. size',
+  freshnessLabel: 'Freshness',
+  lastRefreshLabel: 'Last refresh',
+  cadenceLabel: 'Cadence',
+  cadenceValueTemplate: 'Every {minutes} min',
+  throughputLabel: 'Throughput',
+  schemaDriftLabel: 'Schema drift',
+  noDriftDetectedLabel: 'No drift detected',
+  driftDetectedLabel: 'Drift detected',
+  allocatedSizeLabel: 'Allocated size',
+  minimumSizeLabel: 'Minimum size',
+  estimatedPayloadSizeLabel: 'Estimated payload size',
+  datasetSizeLabel: 'Dataset size',
+  observedLabel: 'Observed',
+  estimatedAverageRowSizeLabel: 'Est. avg row size',
+  averageRowSizeLabel: 'Avg row size',
+  lastRunLabel: 'Last run',
+  durationLabel: 'Duration',
+  costLabel: 'Cost',
+  testsLabel: 'Tests',
+  testStatusLabels: {
+    pass: 'Passed',
+    passed: 'Passed',
+    success: 'Passed',
+    succeeded: 'Passed',
+    fail: 'Failed',
+    failed: 'Failed',
+    error: 'Failed',
+    running: 'Running',
+    skip: 'Skipped',
+    skipped: 'Skipped',
+    warn: 'Warning',
+    warning: 'Warning',
+  },
+  healthTitleTemplate: '{title} health',
+  healthAriaLabelTemplate: 'Open {title} health metrics',
   remainingColumnsLabelTemplate: 'Show remaining columns ({count})',
   showFirstFiveColumnsLabel: 'Show first 5 columns',
   automapColumnsLabel: 'Map compatible columns',
@@ -32,6 +95,44 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
 const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   nodeActionsLabel: 'Más acciones del nodo',
   columnsLabel: 'Columnas',
+  rowsLabel: 'Filas',
+  sizeLabel: 'Tamaño',
+  estimatedSizeLabel: 'Tamaño estimado',
+  freshnessLabel: 'Actualización',
+  lastRefreshLabel: 'Última actualización',
+  cadenceLabel: 'Frecuencia',
+  cadenceValueTemplate: 'Cada {minutes} min',
+  throughputLabel: 'Rendimiento',
+  schemaDriftLabel: 'Cambios de esquema',
+  noDriftDetectedLabel: 'Sin cambios detectados',
+  driftDetectedLabel: 'Cambios detectados',
+  allocatedSizeLabel: 'Tamaño asignado',
+  minimumSizeLabel: 'Tamaño mínimo',
+  estimatedPayloadSizeLabel: 'Tamaño estimado de datos',
+  datasetSizeLabel: 'Tamaño del conjunto',
+  observedLabel: 'Observado',
+  estimatedAverageRowSizeLabel: 'Tamaño medio estimado por fila',
+  averageRowSizeLabel: 'Tamaño medio por fila',
+  lastRunLabel: 'Última ejecución',
+  durationLabel: 'Duración',
+  costLabel: 'Coste',
+  testsLabel: 'Pruebas',
+  testStatusLabels: {
+    pass: 'Aprobadas',
+    passed: 'Aprobadas',
+    success: 'Aprobadas',
+    succeeded: 'Aprobadas',
+    fail: 'Fallidas',
+    failed: 'Fallidas',
+    error: 'Fallidas',
+    running: 'En curso',
+    skip: 'Omitidas',
+    skipped: 'Omitidas',
+    warn: 'Con avisos',
+    warning: 'Con avisos',
+  },
+  healthTitleTemplate: 'Estado de {title}',
+  healthAriaLabelTemplate: 'Abrir métricas de estado de {title}',
   remainingColumnsLabelTemplate: 'Ver columnas restantes ({count})',
   showFirstFiveColumnsLabel: 'Mostrar solo las 5 primeras',
   automapColumnsLabel: 'Asignar columnas compatibles',

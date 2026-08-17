@@ -196,6 +196,72 @@ describe('buildGraphNodeCardReadModel', () => {
     ]);
   });
 
+  it('localizes imported source operational facts through the active Canvas language', () => {
+    const model = buildGraphNodeCardReadModel(
+      buildNode({
+        kind: 'dvt:source',
+        pluginId: 'dvt.warehouse-source',
+        name: 'src_local_postgres_dvt_public_source_1',
+        metadata: {
+          database: 'dvt',
+          schema: 'public',
+          tableName: 'source_1',
+          sourceMetricEvidence: sourceMetricEvidence(1500),
+          columns: [
+            { name: 'order_id', type: 'integer' },
+            { name: 'customer', type: 'text' },
+            { name: 'amount', type: 'numeric' },
+          ],
+        },
+      }),
+      { presentationCopy: { ...SPANISH_PRESENTATION_COPY, locale: 'es' } },
+      [dvtGraphNodeCardStrategy]
+    );
+
+    expect(model.operationalMetrics).toEqual([
+      {
+        id: 'rows',
+        label: 'Filas',
+        value: '1.5k',
+        icon: 'rows',
+        tone: 'warning',
+        detail:
+          '1500 filas. Estimado mediante estadísticas del proveedor. Confianza: media. Instantánea observada: 2026-07-10T21:00:00.000Z.',
+      },
+      {
+        id: 'size',
+        label: 'Tamaño',
+        value: '3,9 MB',
+        icon: 'database',
+        tone: 'success',
+        detail:
+          '4.096.000 B (3,9 MB). Medido mediante metadatos de almacenamiento del proveedor. Asignación física. Confianza: exacta. Instantánea observada: 2026-07-10T21:00:00.000Z.',
+      },
+    ]);
+    expect(model.operationalDetail).toEqual({
+      title: 'Estado de source_1',
+      ariaLabel: 'Abrir métricas de estado de source_1',
+      rows: [
+        { id: 'columns', label: 'Columnas', value: '3', icon: 'columns' },
+        {
+          id: 'dataset-size',
+          label: 'Tamaño asignado',
+          value: '3,9 MB',
+          icon: 'database',
+          tone: 'success',
+          detail:
+            '4.096.000 B (3,9 MB). Medido mediante metadatos de almacenamiento del proveedor. Asignación física. Confianza: exacta. Instantánea observada: 2026-07-10T21:00:00.000Z.',
+        },
+        {
+          id: 'observed-at',
+          label: 'Observado',
+          value: SOURCE_METRICS_OBSERVED_AT,
+          icon: 'clock',
+        },
+      ],
+    });
+  });
+
   it('uses imported DVT source table metadata in the technical path', () => {
     const model = buildGraphNodeCardReadModel(
       buildNode({

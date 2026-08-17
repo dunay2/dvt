@@ -66,14 +66,15 @@ function buildDbtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     (composedTestTarget.length > 0 ? composedTestTarget : null);
   const severity = stringValue(metadata.severity) ?? stringValue(data.severity);
   const isSource = node.kind === 'dbt:source';
+  const presentationCopy = isCanvasNodePresentationCopy(data.presentationCopy)
+    ? data.presentationCopy
+    : null;
   const volumeMetricProjection = buildGraphNodeVolumeMetricProjection({
     isSourceObject: isSource || node.role === 'input',
     metadata,
     data,
+    locale: presentationCopy?.locale,
   });
-  const presentationCopy = isCanvasNodePresentationCopy(data.presentationCopy)
-    ? data.presentationCopy
-    : null;
 
   pushMetric(metrics, 'materialization', 'Mat.', materialization);
   pushMetric(metrics, 'dependencies', 'Deps', arrayCount(metadata.dependencies));
@@ -101,6 +102,7 @@ function buildDbtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     data,
     volumeMetricProjection,
     columnCount,
+    locale: presentationCopy?.locale,
   });
 
   return {

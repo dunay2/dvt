@@ -80,7 +80,12 @@ export function formatCompactNumber(value: number): string {
   return String(value);
 }
 
-export const formatBytes = formatSourceObjectMetricByteSize;
+export function formatBytes(value: number, locale?: string): string {
+  const numberFormatter = new Intl.NumberFormat(
+    locale?.trim().toLowerCase().startsWith('es') ? 'es-ES' : 'en-US'
+  );
+  return formatSourceObjectMetricByteSize(value, numberFormatter);
+}
 
 export function formatDurationMs(value: number): string {
   const totalSeconds = Math.max(0, Math.round(value / 1000));
@@ -200,15 +205,18 @@ export function pushOperationalMetric(
 
 export function buildGraphNodeOperationalDetail(
   title: string,
-  metrics: readonly GraphNodeCardMetric[]
+  metrics: readonly GraphNodeCardMetric[],
+  locale?: string
 ): GraphNodeOperationalDetail | null {
   if (metrics.length === 0) {
     return null;
   }
 
+  const copy = resolveGraphNodeCardCopy(locale);
+
   return {
-    title: `${title} health`,
-    ariaLabel: `Open ${title} health metrics`,
+    title: copy.healthTitleTemplate.replace('{title}', title),
+    ariaLabel: copy.healthAriaLabelTemplate.replace('{title}', title),
     rows: metrics,
   };
 }
