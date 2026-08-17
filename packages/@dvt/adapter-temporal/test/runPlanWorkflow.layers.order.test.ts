@@ -179,4 +179,36 @@ describe('executePlanLayers lifecycle ordering', () => {
     expect(bootstrapFirstExecutionIfNeeded).not.toHaveBeenCalled();
     expect(markWorkflowFailedIfNeeded).toHaveBeenCalledTimes(1);
   });
+
+  it('rethrows the cancellation error normalized by the native finalizer', async () => {
+    const { runPlanWorkflow } = await import('../src/workflows/RunPlanWorkflow.js');
+    const originalError = new Error('unrecognized cancellation shape');
+    const normalizedCancellation = new Error('recognized cancellation');
+
+    segmentActivities.resolveExecutionSegment.mockRejectedValue(originalError);
+    finalizeNativeCancellationIfNeeded.mockResolvedValue(normalizedCancellation);
+
+    await expect(
+      runPlanWorkflow({
+        planRef: createPlanRef({
+          uri: 'file://plan.json',
+          sha256: 'a'.repeat(64),
+          planId: 'plan-1',
+        }),
+        ctx: createResolvedRunContext({
+          tenantId: 'tenant-1',
+          projectId: 'project-1',
+          environmentId: 'env-1',
+          runId: 'run-1',
+        }),
+        maxContinueAsNewPayloadBytes: 1_024,
+        continueAsNewAfterLayerCount: 1,
+      })
+    ).rejects.toBe(normalizedCancellation);
+
+    expect(finalizeNativeCancellationIfNeeded).toHaveBeenCalledWith(
+      expect.objectContaining({ error: originalError })
+    );
+    expect(markWorkflowFailedIfNeeded).not.toHaveBeenCalled();
+  });
 });

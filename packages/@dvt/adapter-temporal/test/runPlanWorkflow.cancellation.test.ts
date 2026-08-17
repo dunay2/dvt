@@ -18,21 +18,30 @@ import { createPlanRef, createResolvedRunContext } from './helpers/contractFixtu
 
 const {
   currentScope,
+  MockCancelledFailure,
   nonCancellable,
   condition,
   isCancellation,
   eventEmitEvent,
   terminalEmitEvent,
-} = vi.hoisted(() => ({
-  currentScope: { consideredCancelled: false },
-  nonCancellable: vi.fn(async <T>(fn: () => Promise<T>) => await fn()),
-  condition: vi.fn(async () => undefined),
-  isCancellation: vi.fn((error: unknown) => error === 'cancelled'),
-  eventEmitEvent: vi.fn(async () => undefined),
-  terminalEmitEvent: vi.fn(async () => undefined),
-}));
+} = vi.hoisted(() => {
+  class MockCancelledFailure extends Error {}
+
+  return {
+    currentScope: { consideredCancelled: false },
+    MockCancelledFailure,
+    nonCancellable: vi.fn(async <T>(fn: () => Promise<T>) => await fn()),
+    condition: vi.fn(async () => undefined),
+    isCancellation: vi.fn(
+      (error: unknown) => error === 'cancelled' || error instanceof MockCancelledFailure
+    ),
+    eventEmitEvent: vi.fn(async () => undefined),
+    terminalEmitEvent: vi.fn(async () => undefined),
+  };
+});
 
 vi.mock('@temporalio/workflow', () => ({
+  CancelledFailure: MockCancelledFailure,
   CancellationScope: {
     current: vi.fn(() => currentScope),
     nonCancellable,
@@ -102,7 +111,7 @@ describe('runPlanWorkflow cancellation finalization', () => {
       error: 'cancelled',
     });
 
-    expect(result).toBe(true);
+    expect(isCancellation(result)).toBe(true);
     expect(nonCancellable).toHaveBeenCalledTimes(1);
     expectCancellationTerminalEvents();
   });
@@ -117,7 +126,7 @@ describe('runPlanWorkflow cancellation finalization', () => {
       error: new Error('unrecognized cancellation shape'),
     });
 
-    expect(result).toBe(true);
+    expect(isCancellation(result)).toBe(true);
     expect(nonCancellable).toHaveBeenCalledTimes(1);
     expectCancellationTerminalEvents();
   });
