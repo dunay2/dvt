@@ -31,11 +31,15 @@ describe('Startup route readiness', () => {
         )
       ).to.deep.equal([
         { type: 'image/x-icon', path: '/favicon/favicon.ico' },
+        { type: 'image/svg+xml', path: '/favicon/raven-icon.svg' },
         { type: 'image/png', path: '/favicon/raven-icon.png' },
       ]);
       expect(
         document.querySelector<HTMLLinkElement>('link[rel="apple-touch-icon"]')?.href
-      ).to.include('/favicon/raven-icon.png');
+      ).to.include('/favicon/raven-maskable-192.png');
+      expect(document.querySelector<HTMLImageElement>('#app-loading-logo')?.src).to.include(
+        '/favicon/raven-icon.svg'
+      );
       expect(document.querySelector<HTMLLinkElement>('link[rel="manifest"]')?.href).to.include(
         '/favicon/site.webmanifest'
       );
@@ -53,6 +57,10 @@ describe('Startup route readiness', () => {
         0x89, 0x50, 0x4e, 0x47,
       ]);
     });
+    cy.request<string>({ url: '/favicon/raven-icon.svg', encoding: 'binary' }).then((response) => {
+      expect(response.headers['content-type']).to.include('image/svg+xml');
+      expect(response.body.length).to.be.lessThan(10_000);
+    });
     cy.request('/favicon/site.webmanifest')
       .its('body.icons')
       .should('deep.equal', [
@@ -61,6 +69,18 @@ describe('Startup route readiness', () => {
           sizes: '1254x1254',
           type: 'image/png',
           purpose: 'any',
+        },
+        {
+          src: '/favicon/raven-maskable-192.png',
+          sizes: '192x192',
+          type: 'image/png',
+          purpose: 'maskable',
+        },
+        {
+          src: '/favicon/raven-maskable-512.png',
+          sizes: '512x512',
+          type: 'image/png',
+          purpose: 'maskable',
         },
       ]);
   });
