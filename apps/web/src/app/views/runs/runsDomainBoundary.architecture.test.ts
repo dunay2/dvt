@@ -373,6 +373,25 @@ describe('Runs domain boundary', () => {
     expect(runTableModelSource).toContain('isKnownRunField');
   });
 
+  it('keeps Runs presentation copy on the application-language token authority', () => {
+    const copySource = readAppSource('views/runs/runStatesCopy.ts');
+    const listSource = readAppSource('views/runs/RunListStateView.tsx');
+    const workspaceSource = readAppSource('views/runs/RunWorkspaceStateView.tsx');
+    const runTableSource = readAppSource('views/runs/RunOperationalTable.tsx');
+    const eventTableSource = readAppSource('views/runs/RunEventTimelineTable.tsx');
+    const routeBootstrapSource = readAppSource('views/runs/runsRouteBootstrap.ts');
+
+    expect(copySource).toContain('useApplicationLanguageStore');
+    expect(copySource).toContain('resolveRunStatesCopy');
+    expect(listSource).toContain('useRunStatesCopy');
+    expect(workspaceSource).toContain('useRunStatesCopy');
+    expect(runTableSource).toContain('copy.runTableHeaders');
+    expect(runTableSource).not.toContain("header: 'Run ID'");
+    expect(eventTableSource).toContain('copy.eventTableHeaders');
+    expect(eventTableSource).not.toContain("header: 'Level'");
+    expect(routeBootstrapSource).toContain('resolveRunStatesCopy');
+  });
+
   it('keeps dense table visual styling behind the route workbench token component', () => {
     const tokenSource = readAppSource('components/workbench/routeWorkbenchTableTokens.ts');
     const runStatusSource = readAppSource('views/runs/runStatesModel.ts');
