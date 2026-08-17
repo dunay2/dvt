@@ -2,6 +2,7 @@
 import type { ReactNode } from 'react';
 
 import { MetricEvidenceHotspot } from '../metrics/MetricEvidenceHotspot';
+import { MonacoCodeViewer } from '../monaco/MonacoCodeViewer';
 import { inspectorVisualClasses } from './inspectorVisualTokens';
 import { Badge } from '../ui/badge';
 import { cn } from '../ui/utils';
@@ -31,15 +32,15 @@ function renderSectionBody(
 ): JSX.Element | null {
   if (section.code != null) {
     return (
-      <pre
-        data-slot={slots.code}
-        className={cn(
-          surface === 'workbench' ? 'max-h-80 overflow-auto p-3' : 'max-h-72 overflow-auto p-2',
-          inspectorVisualClasses.inspectorCodeBlock
-        )}
-      >
-        {section.code}
-      </pre>
+      <div data-slot={slots.code}>
+        <MonacoCodeViewer
+          ariaLabel={section.label}
+          language={section.codeLanguage ?? 'text'}
+          loadingLabel={section.label}
+          path={section.codePath}
+          value={section.code}
+        />
+      </div>
     );
   }
 

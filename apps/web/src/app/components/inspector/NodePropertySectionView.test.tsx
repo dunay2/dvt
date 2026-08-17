@@ -2,10 +2,26 @@
 
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { NodePropertySectionView } from './NodePropertySectionView';
 import { NODE_PROPERTY_ROW_ID, type NodePropertySection } from './nodePropertiesReadModel';
+
+vi.mock('../monaco/MonacoCodeViewer', () => ({
+  MonacoCodeViewer: ({
+    language,
+    path,
+    value,
+  }: {
+    language: string;
+    path?: string;
+    value: string;
+  }) => (
+    <div data-language={language} data-path={path} data-testid="monaco-code-viewer">
+      {value}
+    </div>
+  ),
+}));
 
 function renderSection(section: NodePropertySection): {
   container: HTMLDivElement;
@@ -76,7 +92,7 @@ describe('NodePropertySectionView', () => {
     ).toBe('2 columns inherited from the connected source.');
   });
 
-  it('renders scalar rows and code blocks without involving the tabs coordinator', () => {
+  it('renders scalar rows and code through shared Monaco without involving the tabs coordinator', () => {
     ({ container, root } = renderSection({
       id: 'general',
       label: 'General',
@@ -96,6 +112,8 @@ describe('NodePropertySectionView', () => {
             rows: [],
             tableRows: [],
             code: 'select * from orders',
+            codeLanguage: 'sql',
+            codePath: 'models/orders.sql',
           }}
           slots={{ code: 'node-section-code', sectionPrefix: 'node-section' }}
           surface="workbench"
@@ -103,9 +121,11 @@ describe('NodePropertySectionView', () => {
       );
     });
 
-    expect(container.querySelector('[data-slot="node-section-code"]')?.textContent).toBe(
-      'select * from orders'
-    );
+    const codeViewer = container.querySelector<HTMLElement>('[data-testid="monaco-code-viewer"]');
+    expect(codeViewer?.textContent).toBe('select * from orders');
+    expect(codeViewer?.dataset.language).toBe('sql');
+    expect(codeViewer?.dataset.path).toBe('models/orders.sql');
+    expect(container.querySelector('pre')).toBeNull();
   });
 
   it('renders compact metric values as accessible evidence hotspots', () => {

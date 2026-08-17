@@ -37,6 +37,22 @@ vi.mock('../../components/monaco/MonacoCodeEditor', () => ({
   ),
 }));
 
+vi.mock('../../components/monaco/MonacoCodeViewer', () => ({
+  MonacoCodeViewer: ({
+    language,
+    path,
+    value,
+  }: {
+    language: string;
+    path?: string;
+    value: string;
+  }) => (
+    <div data-language={language} data-path={path} data-testid="monaco-code-viewer">
+      {value}
+    </div>
+  ),
+}));
+
 const SOURCE_NODE: CanonicalNode = {
   id: 'source.orders',
   name: 'Orders Source',
@@ -527,7 +543,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(codeSection?.querySelector('input[name="dvt-transform-column"]')).toBeNull();
   });
 
-  it('shows visual transform generated SQL read-only without a second SQL editor', () => {
+  it('shows visual transform generated SQL in the shared read-only Monaco surface', () => {
     const visualTransform: CanonicalNode = {
       ...DVT_TRANSFORM_NODE,
       metadata: {
@@ -557,7 +573,13 @@ describe('CanvasNodeWorkbenchPanel', () => {
 
     const codeSection = container.querySelector('[data-slot="canvas-node-workbench-code-section"]');
     expect(codeSection?.querySelector('[data-testid="dvt-transform-sql-editor"]')).toBeNull();
-    expect(codeSection?.querySelector('pre')?.textContent).toBe(
+    const codeViewer = codeSection?.querySelector<HTMLElement>(
+      '[data-testid="monaco-code-viewer"]'
+    );
+    expect(codeViewer).not.toBeNull();
+    expect(codeViewer?.dataset.language).toBe('sql');
+    expect(codeViewer?.dataset.path).toBe('models/transform-orders.sql');
+    expect(codeViewer?.textContent).toBe(
       [
         'select',
         '  "orders"."order_id" as "order_id"',
@@ -565,6 +587,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
         '',
       ].join('\n')
     );
+    expect(codeSection?.querySelector('pre')).toBeNull();
   });
 
   it('renders one DBT model editor in Code without duplicating passive generated SQL', () => {
