@@ -2,6 +2,7 @@
 import {
   ImportSourceObjectsResultV2Schema,
   SourceObjectCatalogResponseSchema,
+  SourceDataSampleResponseSchema,
   TestWarehouseConnectionResultSchema,
   WarehouseConnectionListSchema,
   WarehouseConnectionSchema,
@@ -11,6 +12,7 @@ import {
 import type {
   FileContent,
   IWarehouseSourceImportPort,
+  IWarehouseSourceDataSampleQueryPort,
   IWorkspaceAdminReadPort,
   IWorkspaceDiffQueryPort,
   IWorkspaceFileContentCommandPort,
@@ -31,6 +33,7 @@ import {
 } from '../operability/frontendOperabilityRecorder';
 import {
   WorkspaceApiCapabilityUnsupportedError,
+  WarehouseSourceDataSampleQueryError,
   WorkspaceFileLoadError,
   WorkspaceFileRevisionConflictError,
   type WorkspaceApiUnsupportedCapability,
@@ -162,6 +165,21 @@ function buildWarehouseConnectionSourceObjectsEndpoint(connectionId: string): st
   )}&environmentId=${encodeURIComponent(scope.environmentId)}`;
 }
 
+function buildWarehouseConnectionSourceDataSampleEndpoint(
+  connectionId: string,
+  objectId: string,
+  limit: number
+): string {
+  const scope = readWorkspaceGraphDraftScope();
+  return `/workspace/warehouse/connections/${encodeURIComponent(
+    connectionId
+  )}/source-data-sample?tenantId=${encodeURIComponent(
+    scope.tenantId
+  )}&projectId=${encodeURIComponent(scope.projectId)}&environmentId=${encodeURIComponent(
+    scope.environmentId
+  )}&objectId=${encodeURIComponent(objectId)}&limit=${limit}`;
+}
+
 function buildWarehouseConnectionEndpoint(connectionId: string): string {
   const scope = readWorkspaceGraphDraftScope();
   return `/workspace/warehouse/connections/${encodeURIComponent(
@@ -237,6 +255,48 @@ export function createApiWarehouseSourceImportPort(
       ImportSourceObjectsResultV2Schema.parse(
         await apiClient.postJson(buildWarehouseSourcesImportEndpoint(), input)
       ),
+  };
+}
+
+export function createApiWarehouseSourceDataSampleQueryPort(
+  apiClient: ApiClient,
+  frontendOperabilitySink: FrontendOperabilitySink
+): IWarehouseSourceDataSampleQueryPort {
+  return {
+    previewSourceObjectRows: async (input) => {
+      const endpoint = buildWarehouseConnectionSourceDataSampleEndpoint(
+        input.connectionId,
+        input.objectId,
+        input.limit
+      );
+      try {
+        const response = await apiClient.getJson(endpoint);
+        const parsed = SourceDataSampleResponseSchema.safeParse(response);
+        if (!parsed.success) {
+          recordFrontendOperabilityEvent(
+            frontendOperabilitySink,
+            createContractFailureEvent(
+              'PreviewWarehouseSourceObjectRows',
+              'response-contract-rejected'
+            )
+          );
+          throw parsed.error;
+        }
+        return parsed.data;
+      } catch (error) {
+        if (error instanceof ApiError && isWorkspaceHttpErrorEnvelope(error.responseBody)) {
+          switch (error.responseBody.error.reason) {
+            case 'warehouse_connection_not_found':
+              throw new WarehouseSourceDataSampleQueryError('connection_not_found');
+            case 'source_object_not_found':
+              throw new WarehouseSourceDataSampleQueryError('source_object_not_found');
+            case 'warehouse_source_data_sample_failed':
+              throw new WarehouseSourceDataSampleQueryError('unavailable');
+          }
+        }
+        throw error;
+      }
+    },
   };
 }
 

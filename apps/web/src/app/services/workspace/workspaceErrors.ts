@@ -1,5 +1,15 @@
 export type WorkspaceFileLoadErrorKind = 'not_found';
 
+export type WarehouseSourceDataSampleQueryErrorReason =
+  'connection_not_found' | 'source_object_not_found' | 'unavailable';
+
+export class WarehouseSourceDataSampleQueryError extends Error {
+  public constructor(readonly reason: WarehouseSourceDataSampleQueryErrorReason) {
+    super(`Warehouse source data sample failed: ${reason}`);
+    this.name = 'WarehouseSourceDataSampleQueryError';
+  }
+}
+
 export type WorkspaceApiUnsupportedCapability =
   | 'workspace.diffChanges'
   | 'workspace.adminRoles'

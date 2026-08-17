@@ -10,6 +10,7 @@ import type { ShellFeedbackPort } from '../../ports/shellFeedback';
 import type { WorkspaceScopeSelectionPort } from '../../ports/workspaceScopeSelection';
 import type {
   IWarehouseSourceImportPort,
+  IWarehouseSourceDataSampleQueryPort,
   IWorkspaceAdminReadPort,
   IWorkspaceDiffQueryPort,
   IWorkspaceFileContentCommandPort,
@@ -51,6 +52,7 @@ export interface AppServices {
   readonly workspacePluginCatalogQuery: IWorkspacePluginCatalogQueryPort;
   readonly workspaceAdminRead: IWorkspaceAdminReadPort;
   readonly warehouseSourceImport: IWarehouseSourceImportPort;
+  readonly warehouseSourceDataSampleQuery: IWarehouseSourceDataSampleQueryPort;
   readonly workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
   readonly graphDbtWorkspaceArtifactPublicationCommand: IGraphDbtWorkspaceArtifactPublicationCommandPort;
   readonly workspaceGraphDraftAuthoringPort: IWorkspaceGraphDraftAuthoringPort;
@@ -76,6 +78,7 @@ export interface AppServicesOverrides {
   readonly workspacePluginCatalogQuery?: IWorkspacePluginCatalogQueryPort;
   readonly workspaceAdminRead?: IWorkspaceAdminReadPort;
   readonly warehouseSourceImport?: IWarehouseSourceImportPort;
+  readonly warehouseSourceDataSampleQuery?: IWarehouseSourceDataSampleQueryPort;
   readonly workspaceFileContentCommand?: IWorkspaceFileContentCommandPort;
   readonly graphDbtWorkspaceArtifactPublicationCommand?: IGraphDbtWorkspaceArtifactPublicationCommandPort;
   readonly workspaceGraphDraftAuthoringPort?: IWorkspaceGraphDraftAuthoringPort;
@@ -113,6 +116,8 @@ export function buildAppServices(overrides: AppServicesOverrides = {}): AppServi
   const workspaceAdminRead = overrides.workspaceAdminRead ?? workspacePorts.workspaceAdminRead;
   const warehouseSourceImport =
     overrides.warehouseSourceImport ?? workspacePorts.warehouseSourceImport;
+  const warehouseSourceDataSampleQuery =
+    overrides.warehouseSourceDataSampleQuery ?? workspacePorts.warehouseSourceDataSampleQuery;
   const workspaceFileContentCommand =
     overrides.workspaceFileContentCommand ?? workspacePorts.workspaceFileContentCommand;
   const graphDbtWorkspaceArtifactPublicationCommand =
@@ -137,6 +142,7 @@ export function buildAppServices(overrides: AppServicesOverrides = {}): AppServi
     workspacePluginCatalogQuery,
     workspaceAdminRead,
     warehouseSourceImport,
+    warehouseSourceDataSampleQuery,
     workspaceFileContentCommand,
     graphDbtWorkspaceArtifactPublicationCommand,
     workspaceGraphDraftAuthoringPort,
