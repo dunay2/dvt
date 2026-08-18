@@ -49,6 +49,12 @@ const PROVENANCE: DbtProjectFilesProvenance = {
     provider: 'temporal',
     adapter: 'postgres',
     targetName: 'analysis',
+    connectionRef: {
+      schemaVersion: 'connection-ref.v1',
+      connectionId: 'warehouse-analysis',
+      provider: 'postgres',
+    },
+    resolutionSource: 'environment-default',
     credentialRef: 'env:DVT_DBT_EXECUTION_PROFILE',
   },
 };

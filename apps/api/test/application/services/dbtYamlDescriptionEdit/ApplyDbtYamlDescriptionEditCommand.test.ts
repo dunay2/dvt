@@ -159,6 +159,12 @@ function createHarness(options: { changeDuringAnalysis?: boolean } = {}): {
           provider: 'temporal',
           adapter: 'postgres',
           targetName: 'dev',
+          connectionRef: {
+            schemaVersion: 'connection-ref.v1',
+            connectionId: 'warehouse-dev',
+            provider: 'postgres',
+          },
+          resolutionSource: 'environment-default',
           credentialRef: 'env:DBT_PROFILES_DIR',
         },
         capabilities: { canPreview: true, canRun: true, codeOnlyResourceCount: 0 },

@@ -310,7 +310,7 @@ describe('ProjectDbtGraphFromFilesUseCase', () => {
       },
       diagnostic: 'dbt_execution_target_adapter_mismatch',
     },
-  ])(
+  ] as const)(
     'blocks execution with actionable target diagnostic $diagnostic',
     async ({ target, diagnostic }) => {
       const { useCase } = buildUseCase(
