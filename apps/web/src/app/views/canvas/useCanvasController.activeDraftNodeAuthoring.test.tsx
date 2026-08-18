@@ -235,7 +235,7 @@ describe('useCanvasController active draft node authoring', () => {
       nodes: remoteDraft.draft.nodes.map((node) =>
         node.id === 'node_2' ? { ...node, metadata: visualTransformMetadata } : node
       ),
-      canvases: remoteDraft.draft.canvases.map((canvas) => ({
+      canvases: (remoteDraft.draft.canvases ?? []).map((canvas) => ({
         ...canvas,
         nodes: canvas.nodes.map((node) =>
           node.id === 'node_2' ? { ...node, metadata: visualTransformMetadata } : node
