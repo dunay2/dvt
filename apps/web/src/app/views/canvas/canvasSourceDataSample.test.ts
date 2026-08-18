@@ -99,6 +99,22 @@ describe('canvas source data sample projection', () => {
       resolveCanvasSinkDataSampleTarget(
         {
           ...sink,
+          metadata: { typeLabel: 'Sink' },
+        },
+        snapshot
+      )
+    ).toEqual({
+      runId: 'run-1',
+      nodeName: 'Sink 1',
+      rowsWritten: 118,
+      completedAt: '2026-08-18T10:00:01.500Z',
+      durationMs: 1_500,
+      status: 'completed',
+    });
+    expect(
+      resolveCanvasSinkDataSampleTarget(
+        {
+          ...sink,
           metadata: { config: { schema: 'public', table: 'another_sink' } },
         },
         snapshot

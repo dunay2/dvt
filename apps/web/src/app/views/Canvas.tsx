@@ -42,22 +42,22 @@ import { useRunSnapshotQuery } from '../queries/runsQueries';
 function GraphDraftCanvasContent({
   onDbtProjectImported,
   routeIntentRequest,
+  referencedRunId,
 }: Readonly<{
   onDbtProjectImported: NonNullable<CanvasShellProps['onDbtProjectImported']>;
   routeIntentRequest?: CanvasShellRouteIntentRequest;
+  referencedRunId?: string;
 }>): JSX.Element {
   const reactFlow = useReactFlow<Node, Edge>();
   const warehouseSourceImport = useWarehouseSourceImportPort();
   const warehouseSourceDataSampleQuery = useWarehouseSourceDataSampleQueryPort();
   const runsService = useRunsService();
   const controller = useCanvasController();
-  const runSnapshotQuery = useRunSnapshotQuery(
-    controller.workspaceLayoutKey,
-    controller.activeRunId ?? undefined
-  );
+  const effectiveRunId = referencedRunId ?? controller.activeRunId ?? undefined;
+  const runSnapshotQuery = useRunSnapshotQuery(controller.workspaceLayoutKey, effectiveRunId);
   const runControls = useCanvasRunControlSurface(
     controller.workspaceLayoutKey,
-    controller.activeRunId
+    effectiveRunId ?? null
   );
   const routeViewState = deriveCanvasRouteViewState(controller);
   const { presentationState } = routeViewState;
@@ -122,6 +122,7 @@ function CanvasContent(): JSX.Element {
     [enqueueSourceImport, navigate]
   );
   const routeIntent = useMemo(() => resolveCanvasRouteIntent(searchParams), [searchParams]);
+  const referencedRunId = searchParams.get('runId')?.trim() || undefined;
   const onUnavailableLegacySurface = useCallback(
     (surfaceId: CanvasUnavailableLegacySurfaceId) => {
       const message =
@@ -160,6 +161,7 @@ function CanvasContent(): JSX.Element {
         <GraphDraftCanvasContent
           onDbtProjectImported={onDbtProjectImported}
           routeIntentRequest={routeIntentRequest}
+          referencedRunId={referencedRunId}
         />
       );
     case 'dbt-project-files': {

@@ -40,19 +40,20 @@ const metricIconByName: Record<GraphNodeCardMetricIcon, LucideIcon> = {
 type GraphNodeOperationalRailBaseProps = Readonly<{
   metrics: readonly GraphNodeCardMetric[];
   dataSampleInteractionLabel?: string;
-  onOpenDataSample?: () => void;
 }>;
 
 type GraphNodeOperationalRailStaticProps = GraphNodeOperationalRailBaseProps &
   Readonly<{
     ariaLabel?: never;
     onOpen?: undefined;
+    onOpenDataSample?: undefined;
   }>;
 
 type GraphNodeOperationalRailInteractiveProps = GraphNodeOperationalRailBaseProps &
   Readonly<{
     ariaLabel: string;
-    onOpen: (anchorElement: HTMLElement) => void;
+    onOpen?: (anchorElement: HTMLElement) => void;
+    onOpenDataSample?: () => void;
   }>;
 
 export type GraphNodeOperationalRailProps =
@@ -127,7 +128,7 @@ export function GraphNodeOperationalRail({
     return null;
   }
 
-  if (onOpen == null) {
+  if (onOpen == null && onOpenDataSample == null) {
     return (
       <div data-slot="graph-node-operational-rail" className={graphNodeOperationalRailClasses.root}>
         {renderMetrics(metrics)}
@@ -143,7 +144,7 @@ export function GraphNodeOperationalRail({
       aria-label={ariaLabel}
       aria-describedby={descriptionId}
       className={graphNodeOperationalRailClasses.button}
-      onClick={(event) => stopAndOpen(event, onOpen)}
+      onClick={onOpen == null ? undefined : (event) => stopAndOpen(event, onOpen)}
       onDoubleClick={
         onOpenDataSample == null ? undefined : (event) => openDataSample(event, onOpenDataSample)
       }

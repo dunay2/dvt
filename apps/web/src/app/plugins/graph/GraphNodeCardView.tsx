@@ -252,16 +252,22 @@ export function GraphNodeCardView({
         )}
       </div>
 
-      {onOpenOperationalDetails == null || interactiveOperationalDetail == null ? (
+      {(onOpenOperationalDetails == null || interactiveOperationalDetail == null) &&
+      onOpenDataSample == null ? (
         <GraphNodeOperationalRail metrics={cardModel.operationalMetrics} />
       ) : (
         <GraphNodeOperationalRail
           metrics={cardModel.operationalMetrics}
-          ariaLabel={interactiveOperationalDetail.ariaLabel}
+          ariaLabel={
+            interactiveOperationalDetail?.ariaLabel ?? dataSampleInteractionLabel ?? typeLabel
+          }
           dataSampleInteractionLabel={dataSampleInteractionLabel}
           onOpenDataSample={onOpenDataSample}
-          onOpen={(anchorElement) =>
-            onOpenOperationalDetails(interactiveOperationalDetail, anchorElement)
+          onOpen={
+            onOpenOperationalDetails == null || interactiveOperationalDetail == null
+              ? undefined
+              : (anchorElement) =>
+                  onOpenOperationalDetails(interactiveOperationalDetail, anchorElement)
           }
         />
       )}
