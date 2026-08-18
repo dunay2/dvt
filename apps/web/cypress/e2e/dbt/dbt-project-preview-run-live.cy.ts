@@ -5,6 +5,8 @@
 import {
   clickButtonNatively,
   clickPreviewExecutionPlanFromOperationalDrawer,
+  openCanvasNodeOperations,
+  selectCanvasClosure,
 } from '../../support/canvasExecutionSelection';
 import {
   adoptLiveDbtProjectFileAuthority,
@@ -118,18 +120,6 @@ function waitForCompletedDbtRun(runId: string, attempt = 0): Cypress.Chainable<L
   });
 }
 
-function selectResourceForExecution(uniqueId: string): void {
-  cy.get(`.react-flow__node[data-id="${uniqueId}"]`, { timeout: 60_000 })
-    .should('be.visible')
-    .within(() => {
-      cy.get('button[aria-label="Select for execution"]')
-        .should('be.visible')
-        .should('be.enabled')
-        .click();
-      cy.get('button[aria-label="Deselect for execution"]').should('be.visible');
-    });
-}
-
 function visitProjectWithRequestObservations(observedRequests: ObservedRequest[]): void {
   cy.viewport(1500, 900);
   visitWithLiveWorkspaceSession(
@@ -240,14 +230,15 @@ describe('dbt project file Preview and Run live vertical', () => {
       .and('not.contain.text', 'DBT_PROFILES_DIR');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
-    cy.get(`.react-flow__node[data-id="${SOURCE_UNIQUE_ID}"]`).within(() => {
-      cy.get('button[aria-label="Select for execution"]').should('not.exist');
-      cy.get('button[aria-label="Deselect for execution"]').should('not.exist');
-    });
+    openCanvasNodeOperations(SOURCE_UNIQUE_ID);
+    cy.get('[data-slot="canvas-node-context-menu"]')
+      .should('not.contain.text', 'Select for execution')
+      .and('not.contain.text', 'Select node');
+    cy.get('body').type('{esc}');
     cy.get(`.react-flow__node[data-id="${SUMMARY_MODEL_UNIQUE_ID}"]`)
       .should('be.visible')
-      .and('contain.text', 'order_summary');
-    selectResourceForExecution(SUMMARY_MODEL_UNIQUE_ID);
+      .and('contain.text', 'Order Summary Model');
+    selectCanvasClosure([SUMMARY_MODEL_UNIQUE_ID]);
 
     clickPreviewExecutionPlanFromOperationalDrawer();
 
@@ -357,15 +348,17 @@ describe('dbt project file Preview and Run live vertical', () => {
     const observedRequests: ObservedRequest[] = [];
     visitProjectWithRequestObservations(observedRequests);
 
-    cy.get(`.react-flow__node[data-id="${SOURCE_UNIQUE_ID}"]`, { timeout: 60_000 })
-      .should('be.visible')
-      .within(() => {
-        cy.get('button[aria-label="Select for execution"]').should('not.exist');
-        cy.get('button[aria-label="Deselect for execution"]').should('not.exist');
-      });
-    cy.get(`.react-flow__node[data-id="${MODEL_UNIQUE_ID}"]`).within(() => {
-      cy.get('button[aria-label="Select for execution"]').should('be.visible').and('be.enabled');
-    });
+    openCanvasNodeOperations(SOURCE_UNIQUE_ID);
+    cy.get('[data-slot="canvas-node-context-menu"]')
+      .should('not.contain.text', 'Select for execution')
+      .and('not.contain.text', 'Select node');
+    cy.get('body').type('{esc}');
+    openCanvasNodeOperations(MODEL_UNIQUE_ID);
+    cy.contains(
+      '[data-slot="canvas-node-context-menu-item"]',
+      /^(Select for execution|Select node)$/
+    ).should('be.visible');
+    cy.get('body').type('{esc}');
 
     cy.wrap(null).should(() => {
       expect(
