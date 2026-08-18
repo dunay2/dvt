@@ -198,6 +198,20 @@ No new command, query, store, route, or adapter is introduced.
 - feature mechanization/governance checks;
 - `pnpm verify:prepush`.
 
+## Follow-up bounded editor slice (#2385)
+
+Issue #2385 realizes the already-governed visual recipe through the existing
+contextual Node Properties surface. It reuses `ConfigureCanvasDvtNode` and the
+current Apply/Cancel Graph Draft lifecycle; it adds no store, route, planner,
+graph, persisted mapping, form engine, or SQL authority. Connected column
+choices are derived from the current semantic graph, while generated SQL stays
+read-only in the existing Code section.
+
+The V1 editor covers output inclusion and rename, ordered closed-set
+operations, multi-input expressions, and simple filters. Pointer and keyboard
+controls share the same commands, validation reuses `VisualTransformRecipeV1`,
+and ES/EN copy remains in the existing Canvas copy catalog.
+
 ```feature-mechanization
 version: 1
 featureId: VTX1-VISUAL-TRANSFORM-RECIPE-AUTHORITY
@@ -208,6 +222,7 @@ componentGuides:
   - docs/architecture/components/web/graph/canvas-inspector-authoring-component.md
 userStories:
   - https://github.com/dunay2/dvt/issues/2383
+  - https://github.com/dunay2/dvt/issues/2385
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -223,6 +238,18 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/canvasDvtTransformAuthoringAuthority.test.ts
   - apps/web/src/app/services/workspace/workspaceGraphDraftProjection.test.ts
   - apps/web/src/app/views/canvas/canvasDraftAuthoring.test.ts
+  - apps/web/src/app/views/canvas/CanvasInspectorAuthoringSection.tsx
+  - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx
+  - apps/web/src/app/views/canvas/DvtAuthoringFields.test.tsx
+  - apps/web/src/app/views/canvas/DvtAuthoringFields.tsx
+  - apps/web/src/app/views/canvas/DvtVisualTransformRecipeAuthoringSection.tsx
+  - apps/web/src/app/views/canvas/canvasCopy.types.ts
+  - apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.es.ts
+  - apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.ts
+  - apps/web/src/app/views/canvas/canvasCopyFormatting.ts
+  - apps/web/src/app/views/canvas/canvasDvtAuthoringModel.ts
+  - apps/web/src/app/views/canvas/canvasInspectorAuthoringErrorCodes.ts
+  - apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.test.ts
   - docs/architecture/components/web/graph/canvas-inspector-authoring-component.md
   - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
   - docs/evidence/**
@@ -272,10 +299,11 @@ fowlerSignals:
 architectureGuards:
   - pnpm docs:feature-mechanization:implementation -- --feature VTX1-VISUAL-TRANSFORM-RECIPE-AUTHORITY
 cypressFlows:
-  - N/A - contract and persistence slice with no user-facing surface in #2383
+  - Agent-browser /canvas Node Properties visual recipe Apply, Cancel, reload, ES/EN, keyboard, and narrow viewport proof for #2385
 completionGate:
   - pnpm --filter @dvt/contracts test
   - pnpm --filter @dvt/web test:canvas:run -- src/app/views/canvas/canvasDvtTransformAuthoringAuthority.test.ts src/app/views/canvas/canvasDraftAuthoring.test.ts
+  - pnpm --filter @dvt/web test:canvas:run -- src/app/views/canvas/DvtAuthoringFields.test.tsx src/app/views/canvas/canvasInspectorAuthoringModel.test.ts src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx
   - pnpm --filter @dvt/web test:workspace-services:run -- src/app/services/workspace/workspaceGraphDraftProjection.test.ts
   - pnpm --filter @dvt/web lint
   - pnpm --filter @dvt/contracts typecheck
@@ -299,6 +327,16 @@ redGreenCycles:
       - apps/web/src/app/services/workspace/workspaceGraphDraftProjection.test.ts
       - apps/web/src/app/views/canvas/canvasDraftAuthoring.test.ts
     greenTest: pnpm --filter @dvt/web test:canvas:run -- src/app/views/canvas/canvasDvtTransformAuthoringAuthority.test.ts src/app/views/canvas/canvasDraftAuthoring.test.ts
+  - id: visual-recipe-contextual-editor
+    redTest: pnpm --filter @dvt/web test:canvas:run -- src/app/views/canvas/DvtAuthoringFields.test.tsx src/app/views/canvas/canvasInspectorAuthoringModel.test.ts
+    expectedFailure: Node Properties cannot edit and validate the persisted visual recipe authority.
+    patchSurfaces:
+      - apps/web/src/app/views/canvas/DvtVisualTransformRecipeAuthoringSection.tsx
+      - apps/web/src/app/views/canvas/DvtAuthoringFields.tsx
+      - apps/web/src/app/views/canvas/canvasDvtAuthoringModel.ts
+      - apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.ts
+      - apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.es.ts
+    greenTest: pnpm --filter @dvt/web test:canvas:run -- src/app/views/canvas/DvtAuthoringFields.test.tsx src/app/views/canvas/canvasInspectorAuthoringModel.test.ts src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx
 symbols:
   - &contractSymbol
     name: VisualTransformRecipeV1Schema
@@ -394,4 +432,52 @@ symbols:
     name: isRecord
   - <<: *authoritySymbol
     name: removeEditableSqlMetadata
+  - &visualEditorSymbol
+    name: DvtVisualTransformRecipeAuthoringSection
+    path: apps/web/src/app/views/canvas/DvtVisualTransformRecipeAuthoringSection.tsx
+    dddOwner: DvtTransformAuthoringMetadata
+    cqRails: [ConfigureCanvasDvtNode, ProjectCanvasAuthoringDraft]
+    fowlerSignals: [Duplicated state, Speculative generality]
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature VTX1-VISUAL-TRANSFORM-RECIPE-AUTHORITY
+    cypressCoverage: Agent-browser Node Properties visual recipe proof
+    unitTests: [apps/web/src/app/views/canvas/DvtAuthoringFields.test.tsx]
+  - <<: *visualEditorSymbol
+    name: CAST_TYPES
+  - <<: *visualEditorSymbol
+    name: FILTER_OPERATORS
+  - <<: *visualEditorSymbol
+    name: InputColumn
+  - <<: *visualEditorSymbol
+    name: OperationKind
+  - <<: *visualEditorSymbol
+    name: createOperation
+  - <<: *visualEditorSymbol
+    name: isRecord
+  - <<: *visualEditorSymbol
+    name: nextStableId
+  - <<: *visualEditorSymbol
+    name: normalizeExpression
+  - <<: *visualEditorSymbol
+    name: operationKind
+  - <<: *visualEditorSymbol
+    name: readColumns
+  - <<: *visualEditorSymbol
+    name: readString
+  - <<: *visualEditorSymbol
+    name: resolveInputColumns
+  - <<: *visualEditorSymbol
+    name: updateFilter
+  - <<: *visualEditorSymbol
+    name: updateOutput
+  - &visualEditorModelSymbol
+    name: DvtVisualTransformAuthoringMetadata
+    path: apps/web/src/app/views/canvas/canvasDvtAuthoringModel.ts
+    dddOwner: DvtTransformAuthoringMetadata
+    cqRails: [ConfigureCanvasDvtNode, ProjectCanvasAuthoringDraft]
+    fowlerSignals: [Hidden authority, Boundary drift]
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature VTX1-VISUAL-TRANSFORM-RECIPE-AUTHORITY
+    cypressCoverage: Agent-browser Node Properties visual recipe proof
+    unitTests: [apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.test.ts]
+  - <<: *visualEditorModelSymbol
+    name: createSqlTransformMetadata
 ```

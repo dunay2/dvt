@@ -536,6 +536,7 @@ describe('canvasInspectorAuthoringModel', () => {
       tags: ['authoring'],
       dvt: {
         kind: 'sql_transform' as const,
+        mode: 'sql' as const,
         sql: 'select order_id from raw.orders',
       },
     };
@@ -567,6 +568,7 @@ describe('canvasInspectorAuthoringModel', () => {
       tags: ['authoring'],
       dvt: {
         kind: 'sql_transform' as const,
+        mode: 'sql' as const,
         sql: 'select order_id, customer from raw.orders',
       },
     };
@@ -583,6 +585,75 @@ describe('canvasInspectorAuthoringModel', () => {
         sql: 'select order_id, customer from raw.orders',
       },
     });
+  });
+
+  it('projects and applies the existing visual recipe through the inspector draft', () => {
+    const recipe = {
+      version: 'v1' as const,
+      outputs: [
+        {
+          id: 'output:customer_name',
+          name: 'customer_name',
+          dataType: 'text',
+          expression: {
+            inputs: [{ nodeId: 'source_orders', columnName: 'customer' }],
+            operations: [
+              { kind: 'passthrough' as const },
+              { kind: 'function' as const, functionId: 'trim' as const, args: [] },
+            ],
+          },
+        },
+      ],
+      filters: [],
+    };
+    const node = buildDvtNode('dvt:sql_transform', {
+      transformAuthoring: { version: 'v1', mode: 'visual', recipe },
+    });
+
+    const draft = createCanvasInspectorNodeDraft(node);
+
+    expect(draft.dvt).toEqual({ kind: 'sql_transform', mode: 'visual', recipe });
+    expect(applyCanvasInspectorNodeDraft(node, draft)).toEqual(node);
+  });
+
+  it('rejects an invalid visual recipe before the inspector can apply it', () => {
+    const node = buildDvtNode('dvt:sql_transform', {
+      transformAuthoring: {
+        version: 'v1',
+        mode: 'visual',
+        recipe: {
+          version: 'v1',
+          outputs: [
+            {
+              id: 'output:id',
+              name: 'id',
+              expression: {
+                inputs: [{ nodeId: 'source_orders', columnName: 'id' }],
+                operations: [{ kind: 'passthrough' }],
+              },
+            },
+          ],
+          filters: [],
+        },
+      },
+    });
+    const draft = createCanvasInspectorNodeDraft(node);
+    if (draft.dvt?.kind !== 'sql_transform' || draft.dvt.mode !== 'visual') {
+      throw new Error('Expected a visual transform draft.');
+    }
+
+    expect(
+      validateCanvasInspectorNodeDraft({
+        ...draft,
+        dvt: {
+          ...draft.dvt,
+          recipe: {
+            ...draft.dvt.recipe,
+            outputs: [{ ...draft.dvt.recipe.outputs[0]!, name: '   ' }],
+          },
+        },
+      })
+    ).toEqual({ dvt: { recipe: 'dvt_visual_recipe_invalid' } });
   });
 
   it('routes object-file load drafts through their plugin-owned authoring model', () => {

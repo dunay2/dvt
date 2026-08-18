@@ -10,8 +10,9 @@ import type {
   TestWarehouseConnectionResult,
 } from '../../ports/workspace';
 import { AppServicesProvider } from '../../services/AppServicesContext';
-import type { CanonicalNode } from '../../types/canonical';
+import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { createAppServicesTestOverrides } from '../../../testing/appServicesTestDoubles';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import {
   createCanvasInspectorNodeDraft,
   validateCanvasInspectorNodeDraft,
@@ -82,10 +83,16 @@ function buildImportedWarehouseSourceNode(): CanonicalNode {
 
 function DvtAuthoringFieldsHarness({
   node,
+  nodes,
+  edges,
+  section,
   warehouseSourceImport,
   externalConnectionId,
 }: Readonly<{
   node: CanonicalNode;
+  nodes?: readonly CanonicalNode[];
+  edges?: readonly CanonicalEdge[];
+  section?: 'all' | 'general' | 'columns' | 'code';
   warehouseSourceImport?: IWarehouseSourceImportPort;
   externalConnectionId?: string;
 }>): JSX.Element {
@@ -121,9 +128,12 @@ function DvtAuthoringFieldsHarness({
       ) : null}
       <DvtAuthoringFields
         node={node}
+        nodes={nodes}
+        edges={edges}
         disabled={false}
         draft={draft}
         errors={errors}
+        section={section}
         onChange={setDraft}
       />
       <output data-slot="dvt-draft-json">{JSON.stringify(draft.dvt)}</output>
@@ -148,6 +158,7 @@ describe('DvtAuthoringFields', () => {
   let root: Root;
 
   beforeEach(() => {
+    useApplicationLanguageStore.setState({ language: 'en' });
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
@@ -161,18 +172,25 @@ describe('DvtAuthoringFields', () => {
       root.unmount();
     });
     container.remove();
+    useApplicationLanguageStore.setState({ language: 'en' });
     vi.clearAllMocks();
   });
 
   function renderFields(
     node: CanonicalNode,
     warehouseSourceImport?: IWarehouseSourceImportPort,
-    externalConnectionId?: string
+    externalConnectionId?: string,
+    nodes?: readonly CanonicalNode[],
+    edges?: readonly CanonicalEdge[],
+    section?: 'all' | 'general' | 'columns' | 'code'
   ): void {
     act(() => {
       root.render(
         <DvtAuthoringFieldsHarness
           node={node}
+          nodes={nodes}
+          edges={edges}
+          section={section}
           warehouseSourceImport={warehouseSourceImport}
           externalConnectionId={externalConnectionId}
         />
@@ -278,6 +296,170 @@ describe('DvtAuthoringFields', () => {
 
     expect(container.querySelector('input[name="dvt-transform-column"]')).toBeNull();
     expect(draftJson()).not.toContain('selectedColumns');
+  });
+
+  it('edits the visual recipe from source inputs without creating another SQL editor', () => {
+    const source = buildImportedWarehouseSourceNode();
+    const transform = buildDvtNode('dvt:sql_transform', {
+      transformAuthoring: {
+        version: 'v1',
+        mode: 'visual',
+        recipe: {
+          version: 'v1',
+          outputs: [
+            {
+              id: 'output:id',
+              name: 'id',
+              dataType: 'number',
+              expression: {
+                inputs: [{ nodeId: source.id, columnName: 'id' }],
+                operations: [{ kind: 'passthrough' }],
+              },
+            },
+          ],
+          filters: [],
+        },
+      },
+    });
+    const edges: readonly CanonicalEdge[] = [
+      {
+        id: 'source-transform',
+        sourceId: source.id,
+        targetId: transform.id,
+        relation: 'lineage',
+      },
+    ];
+    renderFields(transform, undefined, undefined, [source, transform], edges, 'columns');
+
+    const outputName = container.querySelector<HTMLInputElement>(
+      '[data-slot="dvt-visual-output-name"]'
+    );
+    expect(container.querySelector('[data-slot="dvt-visual-recipe-authoring"]')).not.toBeNull();
+    expect(container.textContent).toContain('Visual recipe');
+    expect(outputName?.value).toBe('id');
+    expect(container.querySelector('[data-testid="dvt-transform-sql-editor"]')).toBeNull();
+
+    act(() => {
+      fireEvent.input(outputName!, { target: { value: 'order_id' } });
+      fireEvent.click(container.querySelector('[data-action="add-visual-operation"]')!);
+    });
+
+    const operations = container.querySelectorAll<HTMLSelectElement>(
+      '[data-slot="dvt-visual-operation-kind"]'
+    );
+    expect(operations).toHaveLength(2);
+    expect(operations[1]?.value).toBe('trim');
+
+    act(() => {
+      fireEvent.change(operations[1]!, { target: { value: 'upper' } });
+      fireEvent.click(container.querySelector('[data-action="add-visual-filter"]')!);
+    });
+
+    const resolvedDraft = JSON.parse(draftJson()) as {
+      recipe: {
+        outputs: Array<{ name: string; expression: { operations: Array<unknown> } }>;
+        filters: Array<{ operator: string }>;
+      };
+    };
+    expect(resolvedDraft.recipe.outputs[0]?.name).toBe('order_id');
+    expect(resolvedDraft.recipe.outputs[0]?.expression.operations).toEqual([
+      { kind: 'passthrough' },
+      { kind: 'function', functionId: 'upper', args: [] },
+    ]);
+    expect(resolvedDraft.recipe.filters).toEqual([
+      expect.objectContaining({ operator: 'is_not_null' }),
+    ]);
+  });
+
+  it('localizes and reorders a multi-input recipe without persisting a second mapping', () => {
+    useApplicationLanguageStore.setState({ language: 'es' });
+    const baseSource = buildImportedWarehouseSourceNode();
+    const source: CanonicalNode = {
+      ...baseSource,
+      metadata: {
+        ...baseSource.metadata,
+        columns: [
+          { name: 'id', type: 'number' },
+          { name: 'customer', type: 'text' },
+        ],
+      },
+    };
+    const transform = buildDvtNode('dvt:sql_transform', {
+      transformAuthoring: {
+        version: 'v1',
+        mode: 'visual',
+        recipe: {
+          version: 'v1',
+          outputs: [
+            {
+              id: 'output:id',
+              name: 'id',
+              dataType: 'number',
+              expression: {
+                inputs: [{ nodeId: source.id, columnName: 'id' }],
+                operations: [
+                  { kind: 'passthrough' },
+                  { kind: 'function', functionId: 'trim', args: [] },
+                  { kind: 'function', functionId: 'upper', args: [] },
+                ],
+              },
+            },
+          ],
+          filters: [],
+        },
+      },
+    });
+    const edges: readonly CanonicalEdge[] = [
+      {
+        id: 'source-transform',
+        sourceId: source.id,
+        targetId: transform.id,
+        relation: 'lineage',
+      },
+    ];
+    renderFields(transform, undefined, undefined, [source, transform], edges, 'columns');
+
+    expect(container.textContent).toContain('Receta visual');
+    expect(container.textContent).not.toContain('Visual recipe');
+    const inputCheckboxes = container.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
+    expect(inputCheckboxes).toHaveLength(2);
+
+    act(() => {
+      fireEvent.click(inputCheckboxes[1]!);
+    });
+
+    const moveUpButtons = container.querySelectorAll<HTMLButtonElement>(
+      'button[aria-label="Subir operación"]'
+    );
+    act(() => {
+      fireEvent.click(moveUpButtons[2]!);
+    });
+
+    let resolvedDraft = JSON.parse(draftJson()) as {
+      recipe: {
+        outputs: Array<{
+          expression: { inputs: Array<{ columnName: string }>; operations: Array<unknown> };
+        }>;
+      };
+    };
+    expect(resolvedDraft.recipe.outputs[0]?.expression.inputs).toEqual([
+      expect.objectContaining({ columnName: 'id' }),
+      expect.objectContaining({ columnName: 'customer' }),
+    ]);
+    expect(resolvedDraft.recipe.outputs[0]?.expression.operations).toEqual([
+      { kind: 'function', functionId: 'concat', args: [' '] },
+      { kind: 'function', functionId: 'upper', args: [] },
+      { kind: 'function', functionId: 'trim', args: [] },
+    ]);
+
+    const excludeButton = Array.from(container.querySelectorAll('button')).find(
+      (button) => button.textContent === 'Excluir salida'
+    );
+    act(() => {
+      fireEvent.click(excludeButton!);
+    });
+    resolvedDraft = JSON.parse(draftJson()) as typeof resolvedDraft;
+    expect(resolvedDraft.recipe.outputs).toEqual([]);
   });
 
   it('renders sink destination posture and updates materialization controls', () => {

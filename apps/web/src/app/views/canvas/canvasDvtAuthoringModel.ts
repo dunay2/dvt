@@ -1,11 +1,19 @@
 /** Owned concern: derive and apply route-owned DVT transformation authoring metadata. */
-import { ConnectedSourceRefSchema, ConnectionRefSchema, type ConnectionRef } from '@dvt/contracts';
+import {
+  ConnectedSourceRefSchema,
+  ConnectionRefSchema,
+  DVT_TRANSFORM_AUTHORING_MODE,
+  VisualTransformRecipeV1Schema,
+  type ConnectionRef,
+  type VisualTransformRecipeV1,
+} from '@dvt/contracts';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {
-  buildDvtSqlTransformMetadata,
-  readTransformationSqlMirrorState,
-} from './canvasTransformationSqlMirror';
+  applyDvtVisualTransformRecipe,
+  readDvtTransformAuthoringAuthority,
+} from './canvasDvtTransformAuthoringAuthority';
+import { buildDvtSqlTransformMetadata } from './canvasTransformationSqlMirror';
 import type { CanvasInspectorNodeDraftErrorCode } from './canvasInspectorAuthoringErrorCodes';
 
 export type DvtSourceAuthoringMetadata = Readonly<{
@@ -18,7 +26,14 @@ export type DvtSourceAuthoringMetadata = Readonly<{
 
 export type DvtSqlTransformAuthoringMetadata = Readonly<{
   kind: 'sql_transform';
+  mode: typeof DVT_TRANSFORM_AUTHORING_MODE.sql;
   sql: string;
+}>;
+
+export type DvtVisualTransformAuthoringMetadata = Readonly<{
+  kind: 'sql_transform';
+  mode: typeof DVT_TRANSFORM_AUTHORING_MODE.visual;
+  recipe: VisualTransformRecipeV1;
 }>;
 
 export type DvtSinkAuthoringMetadata = Readonly<{
@@ -30,11 +45,21 @@ export type DvtSinkAuthoringMetadata = Readonly<{
 }>;
 
 export type DvtNodeAuthoringMetadata =
-  DvtSourceAuthoringMetadata | DvtSqlTransformAuthoringMetadata | DvtSinkAuthoringMetadata;
+  | DvtSourceAuthoringMetadata
+  | DvtSqlTransformAuthoringMetadata
+  | DvtVisualTransformAuthoringMetadata
+  | DvtSinkAuthoringMetadata;
 
 export type DvtNodeAuthoringMetadataErrors = Partial<
   Record<
-    'schema' | 'table' | 'alias' | 'connectionRef' | 'sql' | 'materialization' | 'writeMode',
+    | 'schema'
+    | 'table'
+    | 'alias'
+    | 'connectionRef'
+    | 'sql'
+    | 'recipe'
+    | 'materialization'
+    | 'writeMode',
     CanvasInspectorNodeDraftErrorCode
   >
 >;
@@ -173,13 +198,14 @@ export function resolveInheritedDvtConnectionRef(args: {
   return undefined;
 }
 
-function createSqlTransformMetadata(node: CanonicalNode): DvtSqlTransformAuthoringMetadata {
-  const mirrorState = readTransformationSqlMirrorState(node);
+function createSqlTransformMetadata(
+  node: CanonicalNode
+): DvtSqlTransformAuthoringMetadata | DvtVisualTransformAuthoringMetadata {
+  const authority = readDvtTransformAuthoringAuthority(node);
 
-  return {
-    kind: 'sql_transform',
-    sql: mirrorState.draftSql ?? mirrorState.compiledSql ?? '',
-  };
+  return authority.mode === DVT_TRANSFORM_AUTHORING_MODE.visual
+    ? { kind: 'sql_transform', mode: authority.mode, recipe: authority.recipe }
+    : { kind: 'sql_transform', mode: authority.mode, sql: authority.sql };
 }
 
 function createSinkMetadata(node: CanonicalNode): DvtSinkAuthoringMetadata {
@@ -241,6 +267,13 @@ export function validateDvtNodeAuthoringMetadata(
   }
   if (metadata.kind === 'source' && metadata.connectionRef === undefined) {
     errors.connectionRef = 'dvt_connection_required';
+  }
+  if (
+    metadata.kind === 'sql_transform' &&
+    metadata.mode === DVT_TRANSFORM_AUTHORING_MODE.visual &&
+    !VisualTransformRecipeV1Schema.safeParse(metadata.recipe).success
+  ) {
+    errors.recipe = 'dvt_visual_recipe_invalid';
   }
 
   if (
@@ -315,6 +348,9 @@ export function applyDvtNodeAuthoringMetadata(
   }
 
   if (metadata.kind === 'sql_transform') {
+    if (metadata.mode === DVT_TRANSFORM_AUTHORING_MODE.visual) {
+      return applyDvtVisualTransformRecipe(node, metadata.recipe);
+    }
     const transformMetadata = buildDvtSqlTransformMetadata(node, metadata.sql);
     return {
       ...node,

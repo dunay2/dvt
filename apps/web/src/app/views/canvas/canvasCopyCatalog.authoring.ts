@@ -552,6 +552,94 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.dvtSqlLinePluralLabel',
     fallback: 'lines',
   },
+  inspectorDvtVisualRecipeTitle: {
+    key: 'canvas.inspector.authoring.dvtVisualRecipeTitle',
+    fallback: 'Visual recipe',
+  },
+  inspectorDvtVisualOutputLabel: {
+    key: 'canvas.inspector.authoring.dvtVisualOutputLabel',
+    fallback: 'Output',
+  },
+  inspectorDvtVisualOutputNameLabel: {
+    key: 'canvas.inspector.authoring.dvtVisualOutputNameLabel',
+    fallback: 'Output name',
+  },
+  inspectorDvtVisualInputsLabel: {
+    key: 'canvas.inspector.authoring.dvtVisualInputsLabel',
+    fallback: 'Input columns',
+  },
+  inspectorDvtVisualOperationsLabel: {
+    key: 'canvas.inspector.authoring.dvtVisualOperationsLabel',
+    fallback: 'Operations',
+  },
+  inspectorDvtVisualOperationLabel: {
+    key: 'canvas.inspector.authoring.dvtVisualOperationLabel',
+    fallback: 'Operation',
+  },
+  inspectorDvtVisualAddOutputLabel: {
+    key: 'canvas.inspector.authoring.dvtVisualAddOutputLabel',
+    fallback: 'Add output',
+  },
+  inspectorDvtVisualExcludeOutputLabel: {
+    key: 'canvas.inspector.authoring.dvtVisualExcludeOutputLabel',
+    fallback: 'Exclude output',
+  },
+  inspectorDvtVisualAddOperationLabel: {
+    key: 'canvas.inspector.authoring.dvtVisualAddOperationLabel',
+    fallback: 'Add operation',
+  },
+  inspectorDvtVisualRemoveOperationLabel: {
+    key: 'canvas.inspector.authoring.dvtVisualRemoveOperationLabel',
+    fallback: 'Remove operation',
+  },
+  inspectorDvtVisualMoveOperationUpLabel: {
+    key: 'canvas.inspector.authoring.dvtVisualMoveOperationUpLabel',
+    fallback: 'Move operation up',
+  },
+  inspectorDvtVisualMoveOperationDownLabel: {
+    key: 'canvas.inspector.authoring.dvtVisualMoveOperationDownLabel',
+    fallback: 'Move operation down',
+  },
+  inspectorDvtVisualPassthroughLabel: {
+    key: 'canvas.inspector.authoring.dvtVisualPassthroughLabel',
+    fallback: 'Direct',
+  },
+  inspectorDvtVisualConstantLabel: {
+    key: 'canvas.inspector.authoring.dvtVisualConstantLabel',
+    fallback: 'Constant',
+  },
+  inspectorDvtVisualCastTypeLabel: {
+    key: 'canvas.inspector.authoring.dvtVisualCastTypeLabel',
+    fallback: 'Cast type',
+  },
+  inspectorDvtVisualArgumentLabel: {
+    key: 'canvas.inspector.authoring.dvtVisualArgumentLabel',
+    fallback: 'Argument',
+  },
+  inspectorDvtVisualFiltersLabel: {
+    key: 'canvas.inspector.authoring.dvtVisualFiltersLabel',
+    fallback: 'Filters',
+  },
+  inspectorDvtVisualAddFilterLabel: {
+    key: 'canvas.inspector.authoring.dvtVisualAddFilterLabel',
+    fallback: 'Add filter',
+  },
+  inspectorDvtVisualRemoveFilterLabel: {
+    key: 'canvas.inspector.authoring.dvtVisualRemoveFilterLabel',
+    fallback: 'Remove filter',
+  },
+  inspectorDvtVisualFilterColumnLabel: {
+    key: 'canvas.inspector.authoring.dvtVisualFilterColumnLabel',
+    fallback: 'Filter column',
+  },
+  inspectorDvtVisualFilterOperatorLabel: {
+    key: 'canvas.inspector.authoring.dvtVisualFilterOperatorLabel',
+    fallback: 'Filter operator',
+  },
+  inspectorDvtVisualFilterValueLabel: {
+    key: 'canvas.inspector.authoring.dvtVisualFilterValueLabel',
+    fallback: 'Filter value',
+  },
   inspectorDvtDestinationTargetLabel: {
     key: 'canvas.inspector.authoring.dvtDestinationTargetLabel',
     fallback: 'Destination target',
@@ -771,6 +859,10 @@ export const canvasViewAuthoringCopyByKey = {
   inspectorErrorDvtConnectionRequired: {
     key: 'canvas.inspector.authoring.errorDvtConnectionRequired',
     fallback: 'Select a PostgreSQL connection.',
+  },
+  inspectorErrorDvtVisualRecipeInvalid: {
+    key: 'canvas.inspector.authoring.errorDvtVisualRecipeInvalid',
+    fallback: 'Complete every visual output before applying the recipe.',
   },
   inspectorErrorDvtMaterializationInvalid: {
     key: 'canvas.inspector.authoring.errorDvtMaterializationInvalid',

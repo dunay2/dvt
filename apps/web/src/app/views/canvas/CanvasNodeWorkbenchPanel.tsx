@@ -284,7 +284,9 @@ export function CanvasNodeWorkbenchPanel({
   const dotClass = inspectorStatusDotClasses[node.status] ?? inspectorStatusDotClasses.idle;
   const preferredTabKey =
     preferredTabId == null ? null : `${node.id}:${preferredTabId}:${preferredTabRequestId}`;
-  const renderAuthoringSection = (section: 'general' | 'code' | 'sink'): JSX.Element => (
+  const renderAuthoringSection = (
+    section: 'general' | 'columns' | 'code' | 'sink'
+  ): JSX.Element => (
     <div data-slot="canvas-node-workbench-authoring" className="space-y-3 pt-1">
       <CanvasInspectorAuthoringSection
         node={node}
@@ -321,6 +323,14 @@ export function CanvasNodeWorkbenchPanel({
         <>
           {sectionAfterChildren[sectionId]}
           {renderAuthoringSection(sectionId)}
+        </>
+      );
+    }
+    if (visualDvtTransformAuthority) {
+      sectionAfterChildren.columns = (
+        <>
+          {sectionAfterChildren.columns}
+          {renderAuthoringSection('columns')}
         </>
       );
     }
