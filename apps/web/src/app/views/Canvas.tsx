@@ -20,6 +20,7 @@ import { useCanvasRoutePresentationSync } from './canvas/useCanvasRoutePresentat
 import { useCanvasController } from './canvas/useCanvasController';
 import {
   useShellFeedback,
+  useRunsService,
   useWarehouseSourceDataSampleQueryPort,
   useWarehouseSourceImportPort,
 } from '../services/AppServicesContext';
@@ -36,6 +37,7 @@ import {
   resolveDbtSourceImportContinuation,
   useCanvasDbtSourceImportContinuationStore,
 } from './canvas/canvasDbtSourceImportContinuationStore';
+import { useRunSnapshotQuery } from '../queries/runsQueries';
 
 function GraphDraftCanvasContent({
   onDbtProjectImported,
@@ -47,7 +49,12 @@ function GraphDraftCanvasContent({
   const reactFlow = useReactFlow<Node, Edge>();
   const warehouseSourceImport = useWarehouseSourceImportPort();
   const warehouseSourceDataSampleQuery = useWarehouseSourceDataSampleQueryPort();
+  const runsService = useRunsService();
   const controller = useCanvasController();
+  const runSnapshotQuery = useRunSnapshotQuery(
+    controller.workspaceLayoutKey,
+    controller.activeRunId ?? undefined
+  );
   const runControls = useCanvasRunControlSurface(
     controller.workspaceLayoutKey,
     controller.activeRunId
@@ -70,6 +77,8 @@ function GraphDraftCanvasContent({
         {...shellProps}
         warehouseSourceImport={warehouseSourceImport}
         warehouseSourceDataSampleQuery={warehouseSourceDataSampleQuery}
+        runSnapshot={runSnapshotQuery.data ?? null}
+        runMaterializationSampleQuery={runsService.getRunMaterializationSample}
         canvasContextScreenToFlowPosition={(screenPosition) =>
           reactFlow.screenToFlowPosition(screenPosition)
         }

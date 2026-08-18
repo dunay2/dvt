@@ -83,6 +83,8 @@ export type CanvasShellPropsOverrides = {
   routeIntentRequest?: CanvasShellRouteIntentRequest;
   warehouseSourceImport?: IWarehouseSourceImportPort;
   warehouseSourceDataSampleQuery?: IWarehouseSourceDataSampleQueryPort;
+  runSnapshot?: CanvasShellProps['runSnapshot'];
+  runMaterializationSampleQuery?: CanvasShellProps['runMaterializationSampleQuery'];
   sourceImportInitialSelection?: CanvasShellProps['sourceImportInitialSelection'];
   onSourceImportInitialSelectionConsumed?: CanvasShellProps['onSourceImportInitialSelectionConsumed'];
   onDbtProjectImported?: CanvasShellProps['onDbtProjectImported'];
@@ -250,6 +252,8 @@ export function buildCanvasShellProps(overrides?: CanvasShellPropsOverrides): Ca
     routeIntentRequest: overrides?.routeIntentRequest,
     warehouseSourceImport: overrides?.warehouseSourceImport,
     warehouseSourceDataSampleQuery: overrides?.warehouseSourceDataSampleQuery,
+    runSnapshot: overrides?.runSnapshot,
+    runMaterializationSampleQuery: overrides?.runMaterializationSampleQuery,
     sourceImportInitialSelection: overrides?.sourceImportInitialSelection,
     onSourceImportInitialSelectionConsumed: overrides?.onSourceImportInitialSelectionConsumed,
     onDbtProjectImported: overrides?.onDbtProjectImported,

@@ -15,6 +15,19 @@ export function projectCanvasNodePresentationTruth(
     edges: readonly Pick<CanonicalEdge, 'sourceId' | 'targetId'>[];
   }>
 ): CanvasNodePresentationTruth {
+  return projectCanvasNodePresentationTruthInternal(args, new Set());
+}
+
+function projectCanvasNodePresentationTruthInternal(
+  args: Readonly<{
+    node: CanonicalNode;
+    nodes: readonly CanonicalNode[];
+    edges: readonly Pick<CanonicalEdge, 'sourceId' | 'targetId'>[];
+  }>,
+  ancestorNodeIds: ReadonlySet<string>
+): CanvasNodePresentationTruth {
+  const nextAncestorNodeIds = new Set(ancestorNodeIds);
+  nextAncestorNodeIds.add(args.node.id);
   const artifactProjection = projectDbtModelArtifact({
     modelNode: args.node,
     nodes: args.nodes,
@@ -78,6 +91,42 @@ export function projectCanvasNodePresentationTruth(
             } as const),
         }),
   });
+  if (args.node.role === 'output') {
+    const upstreamNodeIds = new Set(
+      args.edges.filter((edge) => edge.targetId === args.node.id).map((edge) => edge.sourceId)
+    );
+    const inherited = args.nodes
+      .filter((node) => upstreamNodeIds.has(node.id) && !nextAncestorNodeIds.has(node.id))
+      .flatMap((node) =>
+        projectCanvasNodePresentationTruthInternal(
+          { node, nodes: args.nodes, edges: args.edges },
+          nextAncestorNodeIds
+        ).columns.visible.map((column) => ({
+          ...column,
+          provenance: 'inherited' as const,
+          sourceNodeId: column.sourceNodeId ?? node.id,
+          sourceNodeName: column.sourceNodeName ?? node.name,
+        }))
+      );
+    const visible = baseTruth.columns.declared.length > 0 ? baseTruth.columns.declared : inherited;
+    return {
+      ...baseTruth,
+      columns: {
+        declared: baseTruth.columns.declared,
+        inherited,
+        visible,
+        declaredCount: baseTruth.columns.declaredCount,
+        inheritedCount: inherited.length,
+        visibleCount: visible.length,
+        visibleProvenance:
+          baseTruth.columns.declared.length > 0
+            ? 'declared'
+            : inherited.length > 0
+              ? 'inherited'
+              : 'none',
+      },
+    };
+  }
   if (visualRecipe == null) {
     return baseTruth;
   }
