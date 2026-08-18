@@ -206,60 +206,90 @@ export function DvtSourceAuthoringSection({
             </div>
           ) : null}
         </div>
-        <div className="space-y-2">
-          <Label htmlFor={`inspector-dvt-source-schema-${node.id}`}>
-            {canvasViewCopy.inspectorDvtSchemaLabel}
-          </Label>
-          <Input
-            id={`inspector-dvt-source-schema-${node.id}`}
-            name="dvt-source-schema"
-            value={draft.schema}
-            disabled={disabled}
-            aria-invalid={errors?.schema ? 'true' : undefined}
-            onChange={(event) =>
-              onChange((currentDraft) =>
-                currentDraft.dvt?.kind === 'source'
-                  ? {
-                      ...currentDraft,
-                      dvt: { ...currentDraft.dvt, schema: event.target.value },
-                    }
-                  : currentDraft
-              )
-            }
-          />
-          {errors?.schema ? (
-            <p className={inspectorVisualClasses.inspectorErrorText}>
-              {formatCanvasInspectorNodeDraftError(errors.schema, canvasViewCopy)}
-            </p>
-          ) : null}
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor={`inspector-dvt-source-table-${node.id}`}>
-            {canvasViewCopy.inspectorDvtTableLabel}
-          </Label>
-          <Input
-            id={`inspector-dvt-source-table-${node.id}`}
-            name="dvt-source-table"
-            value={draft.table}
-            disabled={disabled}
-            aria-invalid={errors?.table ? 'true' : undefined}
-            onChange={(event) =>
-              onChange((currentDraft) =>
-                currentDraft.dvt?.kind === 'source'
-                  ? {
-                      ...currentDraft,
-                      dvt: { ...currentDraft.dvt, table: event.target.value },
-                    }
-                  : currentDraft
-              )
-            }
-          />
-          {errors?.table ? (
-            <p className={inspectorVisualClasses.inspectorErrorText}>
-              {formatCanvasInspectorNodeDraftError(errors.table, canvasViewCopy)}
-            </p>
-          ) : null}
-        </div>
+        {isImportedSource ? (
+          <div className="space-y-2">
+            <span className="block text-sm font-medium">
+              {canvasViewCopy.inspectorDvtSchemaLabel}
+            </span>
+            <code
+              data-slot="dvt-source-schema-readonly"
+              aria-label={`${canvasViewCopy.inspectorDvtSchemaLabel}: ${draft.schema || '-'}`}
+              className="block rounded border border-[color:var(--border-default)] bg-[var(--surface-elevated)] px-3 py-2 text-xs text-(--text-default)"
+            >
+              {draft.schema || '-'}
+            </code>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <Label htmlFor={`inspector-dvt-source-schema-${node.id}`}>
+              {canvasViewCopy.inspectorDvtSchemaLabel}
+            </Label>
+            <Input
+              id={`inspector-dvt-source-schema-${node.id}`}
+              name="dvt-source-schema"
+              value={draft.schema}
+              disabled={disabled}
+              aria-invalid={errors?.schema ? 'true' : undefined}
+              onChange={(event) =>
+                onChange((currentDraft) =>
+                  currentDraft.dvt?.kind === 'source'
+                    ? {
+                        ...currentDraft,
+                        dvt: { ...currentDraft.dvt, schema: event.target.value },
+                      }
+                    : currentDraft
+                )
+              }
+            />
+            {errors?.schema ? (
+              <p className={inspectorVisualClasses.inspectorErrorText}>
+                {formatCanvasInspectorNodeDraftError(errors.schema, canvasViewCopy)}
+              </p>
+            ) : null}
+          </div>
+        )}
+        {isImportedSource ? (
+          <div className="space-y-2">
+            <span className="block text-sm font-medium">
+              {canvasViewCopy.inspectorDvtTableLabel}
+            </span>
+            <code
+              data-slot="dvt-source-table-readonly"
+              aria-label={`${canvasViewCopy.inspectorDvtTableLabel}: ${draft.table || '-'}`}
+              className="block rounded border border-[color:var(--border-default)] bg-[var(--surface-elevated)] px-3 py-2 text-xs text-(--text-default)"
+            >
+              {draft.table || '-'}
+            </code>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <Label htmlFor={`inspector-dvt-source-table-${node.id}`}>
+              {canvasViewCopy.inspectorDvtTableLabel}
+            </Label>
+            <Input
+              id={`inspector-dvt-source-table-${node.id}`}
+              name="dvt-source-table"
+              value={draft.table}
+              disabled={disabled}
+              aria-invalid={errors?.table ? 'true' : undefined}
+              onChange={(event) =>
+                onChange((currentDraft) =>
+                  currentDraft.dvt?.kind === 'source'
+                    ? {
+                        ...currentDraft,
+                        dvt: { ...currentDraft.dvt, table: event.target.value },
+                      }
+                    : currentDraft
+                )
+              }
+            />
+            {errors?.table ? (
+              <p className={inspectorVisualClasses.inspectorErrorText}>
+                {formatCanvasInspectorNodeDraftError(errors.table, canvasViewCopy)}
+              </p>
+            ) : null}
+          </div>
+        )}
         <div className="space-y-2">
           <Label htmlFor={`inspector-dvt-source-alias-${node.id}`}>
             {canvasViewCopy.inspectorDvtAliasLabel}

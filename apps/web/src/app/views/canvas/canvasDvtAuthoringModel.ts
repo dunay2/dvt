@@ -88,14 +88,19 @@ function createSourceMetadata(node: CanonicalNode): DvtSourceAuthoringMetadata {
   const importedSourceName = readString(node.metadata?.sourceName);
   const importedSchema = readString(node.metadata?.schema);
   const importedTableName = readString(node.metadata?.tableName);
+  const isImportedSource = node.pluginId === DVT_WAREHOUSE_SOURCE_PLUGIN_ID;
   const table = normalizeIdentifier(
-    readString(config?.table) ?? importedTableName ?? readString(config?.alias) ?? node.name,
+    (isImportedSource ? importedTableName : (readString(config?.table) ?? importedTableName)) ??
+      readString(config?.alias) ??
+      node.name,
     'source_table'
   );
 
   return {
     kind: 'source',
-    schema: readString(config?.schema) ?? importedSchema ?? DEFAULT_SCHEMA_NAME,
+    schema:
+      (isImportedSource ? importedSchema : (readString(config?.schema) ?? importedSchema)) ??
+      DEFAULT_SCHEMA_NAME,
     table,
     alias: normalizeIdentifier(readString(config?.alias) ?? importedSourceName ?? table, table),
     connectionRef: resolveEffectiveDvtConnectionRef(node),
@@ -282,6 +287,19 @@ export function applyDvtNodeAuthoringMetadata(
 
   if (metadata.kind === 'source') {
     const table = normalizeIdentifier(metadata.table, 'source_table');
+    if (node.pluginId === DVT_WAREHOUSE_SOURCE_PLUGIN_ID) {
+      const mutableConfig = Object.fromEntries(
+        Object.entries(existingConfig).filter(([key]) => key !== 'schema' && key !== 'table')
+      );
+      const importedTable = normalizeIdentifier(
+        readString(node.metadata?.tableName) ?? node.name,
+        'source_table'
+      );
+      return withConfig(node, {
+        ...mutableConfig,
+        alias: normalizeIdentifier(metadata.alias, importedTable),
+      });
+    }
     return withConfig(
       node,
       {
