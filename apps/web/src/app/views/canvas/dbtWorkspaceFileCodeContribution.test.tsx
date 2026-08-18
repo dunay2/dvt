@@ -13,7 +13,7 @@ const NODE: CanonicalNode = {
   role: 'transform',
   status: 'idle',
   tags: [],
-  path: 'analytics/models/orders.sql',
+  path: 'models/orders.sql',
 };
 
 describe('buildDbtWorkspaceFileCodeContributions', () => {
@@ -22,6 +22,7 @@ describe('buildDbtWorkspaceFileCodeContributions', () => {
     const reconcilePersistedFile = vi.fn();
     const contributions = buildDbtWorkspaceFileCodeContributions({
       node: NODE,
+      projectRoot: 'analytics',
       editorRef,
       reconcilePersistedFile,
     });
@@ -39,7 +40,7 @@ describe('buildDbtWorkspaceFileCodeContributions', () => {
     }
     expect(contributions[0].content.props).toMatchObject({
       authority: 'dbt-project-files',
-      path: NODE.path,
+      path: 'analytics/models/orders.sql',
       reconcilePersistedFile,
     });
   });
@@ -48,6 +49,7 @@ describe('buildDbtWorkspaceFileCodeContributions', () => {
     expect(
       buildDbtWorkspaceFileCodeContributions({
         node: { ...NODE, path: undefined },
+        projectRoot: 'analytics',
         editorRef: createRef<WorkspaceFileCodeEditorHandle>(),
         reconcilePersistedFile: vi.fn(),
       })

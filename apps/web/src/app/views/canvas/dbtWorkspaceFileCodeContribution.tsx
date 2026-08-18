@@ -12,6 +12,7 @@ import type { CanvasNodeWorkbenchContribution } from './canvasNodeWorkbenchContr
 
 type BuildDbtWorkspaceFileCodeContributionsOptions = Readonly<{
   node: CanonicalNode | null;
+  projectRoot: string;
   editorRef: RefObject<WorkspaceFileCodeEditorHandle>;
   reconcilePersistedFile: (
     receipt: WorkspaceFileSaveReceipt
@@ -20,12 +21,25 @@ type BuildDbtWorkspaceFileCodeContributionsOptions = Readonly<{
 
 export function buildDbtWorkspaceFileCodeContributions({
   node,
+  projectRoot,
   editorRef,
   reconcilePersistedFile,
 }: BuildDbtWorkspaceFileCodeContributionsOptions): readonly CanvasNodeWorkbenchContribution[] {
   if (node == null || node.pluginId !== 'dbt' || node.path == null) {
     return [];
   }
+  const normalizedProjectRoot = projectRoot
+    .replaceAll('\\', '/')
+    .replace(/^\.\//, '')
+    .replace(/\/+$/, '');
+  const normalizedNodePath = node.path.replaceAll('\\', '/').replace(/^\.\//, '');
+  const workspaceFilePath =
+    normalizedProjectRoot.length === 0 ||
+    normalizedProjectRoot === '.' ||
+    normalizedNodePath === normalizedProjectRoot ||
+    normalizedNodePath.startsWith(`${normalizedProjectRoot}/`)
+      ? normalizedNodePath
+      : `${normalizedProjectRoot}/${normalizedNodePath}`;
 
   return [
     {
@@ -35,11 +49,11 @@ export function buildDbtWorkspaceFileCodeContributions({
       placement: 'before-body',
       content: (
         <WorkspaceFileCodeEditor
-          key={`${node.id}:${node.path}`}
+          key={`${node.id}:${workspaceFilePath}`}
           ref={editorRef}
           authority="dbt-project-files"
           className="min-h-[30rem]"
-          path={node.path}
+          path={workspaceFilePath}
           reconcilePersistedFile={reconcilePersistedFile}
         />
       ),
