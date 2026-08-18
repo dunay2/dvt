@@ -179,7 +179,17 @@ describe('dbt project file Preview and Run live vertical', () => {
         freshness: string;
         projectRevision: { contentSetSha256: string; dbtVersion?: string };
         analysisSha256: string;
-        executionTarget?: { provider: string; adapter: string; targetName: string };
+        executionTarget?: {
+          provider: string;
+          adapter: string;
+          targetName: string;
+          connectionRef: {
+            schemaVersion: string;
+            connectionId: string;
+            provider: string;
+          };
+          resolutionSource: string;
+        };
         capabilities: { canPreview: boolean; canRun: boolean };
       };
 
@@ -192,6 +202,12 @@ describe('dbt project file Preview and Run live vertical', () => {
         provider: 'temporal',
         adapter: 'postgres',
         targetName: 'analysis',
+        connectionRef: {
+          schemaVersion: 'connection-ref.v1',
+          connectionId: 'local-postgres-proof',
+          provider: 'postgres',
+        },
+        resolutionSource: 'environment-default',
       });
       expect(projection.capabilities).to.deep.include({ canPreview: true, canRun: true });
     });
@@ -206,6 +222,20 @@ describe('dbt project file Preview and Run live vertical', () => {
     cy.get(`.react-flow__node[data-id="${MODEL_UNIQUE_ID}"]`)
       .should('be.visible')
       .and('contain.text', 'Orders');
+    cy.get(
+      `.react-flow__node[data-id="${MODEL_UNIQUE_ID}"] [data-slot="canvas-node-shell"]`
+    ).dblclick();
+    cy.get('[data-slot="canvas-node-workbench-tab-general"]', { timeout: 20_000 })
+      .should('be.visible')
+      .click();
+    cy.get('[data-slot="dbt-execution-target-binding"]')
+      .should('be.visible')
+      .and('contain.text', 'analysis')
+      .and('contain.text', 'postgres / local-postgres-proof')
+      .and('contain.text', 'Environment default')
+      .and('not.contain.text', 'DBT_PROFILES_DIR');
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
+    cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
     cy.get(`.react-flow__node[data-id="${SOURCE_UNIQUE_ID}"]`).within(() => {
       cy.get('button[aria-label="Select for execution"]').should('not.exist');
       cy.get('button[aria-label="Deselect for execution"]').should('not.exist');
@@ -244,10 +274,14 @@ describe('dbt project file Preview and Run live vertical', () => {
         cy.get('[aria-label="Authorized execution scope value"]')
           .should('contain.text', MODEL_UNIQUE_ID)
           .and('contain.text', SUMMARY_MODEL_UNIQUE_ID);
-        cy.get('[aria-label="Execution target value"]').should(
-          'contain.text',
-          'temporal / postgres / analysis'
+        cy.get('[aria-label="Executor value"]').should('have.text', 'temporal');
+        cy.get('[aria-label="Adapter value"]').should('have.text', 'postgres');
+        cy.get('[aria-label="Target value"]').should('have.text', 'analysis');
+        cy.get('[aria-label="Connection value"]').should(
+          'have.text',
+          'postgres / local-postgres-proof'
         );
+        cy.get('[aria-label="Resolved by value"]').should('have.text', 'Environment default');
         cy.root().should('not.contain.text', 'DBT_PROFILES_DIR');
       });
     cy.wrap(null).should(() => {
