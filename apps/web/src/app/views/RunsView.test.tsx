@@ -312,6 +312,79 @@ describe('RunsView', () => {
     expect(useExecutionStore.getState().currentRun?.runId).toBe('run_console_observed');
   });
 
+  it('restores current plan step status from authoritative run evidence for Canvas cards', async () => {
+    useExecutionStore.setState({
+      currentPlan: {
+        planId: 'plan-canvas-status',
+        planVersion: '1.0.0',
+        generatedAt: '2026-04-07T00:00:00.000Z',
+        adapter: 'postgres',
+        target: 'env-1',
+        capabilities: [],
+        steps: [
+          {
+            id: 'step-transform',
+            type: 'SQL_TRANSFORM',
+            name: 'Transform orders',
+            nodes: ['dvt-sql-transform-1'],
+            policies: {},
+          },
+        ],
+      },
+      currentRun: null,
+    });
+
+    mounted = await withTestQueryClient(
+      <AppServicesProvider
+        overrides={{
+          ...createAppServicesTestOverrides(),
+          runsService: buildRunsService({
+            getRunSnapshot: async () => ({
+              runId: 'run_canvas_status',
+              planId: 'plan-canvas-status',
+              status: 'completed',
+              executor: 'postgres',
+              environment: 'env-1',
+              startedAt: '2026-04-07T00:00:00.000Z',
+              completedAt: '2026-04-07T00:00:10.000Z',
+            }),
+            listRunEvents: async () => ({
+              events: [
+                buildRunEvent({
+                  eventId: 'evt-step-completed',
+                  eventType: 'StepCompleted',
+                  runId: 'run_canvas_status',
+                  stepId: stepId('step-transform'),
+                  payload: { gatewayDecision: true },
+                }),
+              ],
+            }),
+          }),
+          sessionContext: buildSessionContext(),
+        }}
+      >
+        <MemoryRouter initialEntries={['/runs/run_canvas_status']}>
+          <Routes>
+            <Route path="/runs/:runId" element={<RunsView />} />
+          </Routes>
+        </MemoryRouter>
+      </AppServicesProvider>
+    );
+
+    await waitForReactQuery(
+      () => useExecutionStore.getState().currentRun?.steps[0]?.status === 'success',
+      { description: 'completed plan step restored for Canvas runtime projection' }
+    );
+
+    expect(useExecutionStore.getState().currentRun?.steps).toEqual([
+      expect.objectContaining({
+        id: 'step-transform',
+        nodes: ['dvt-sql-transform-1'],
+        status: 'success',
+      }),
+    ]);
+  });
+
   it('clears the shell console observed run when another run detail has no workspace', async () => {
     mounted = await withTestQueryClient(
       <AppServicesProvider
