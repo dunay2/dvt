@@ -115,12 +115,6 @@ interface PlanPreviewModalProps {
   onStartRun: () => void;
 }
 
-function formatPlanCost(estimatedCost: number | undefined, notEstimatedValue: string): string {
-  return typeof estimatedCost === 'number' && Number.isFinite(estimatedCost)
-    ? `$${estimatedCost.toFixed(2)}`
-    : notEstimatedValue;
-}
-
 function PlanPreviewSection({
   title,
   caption,
@@ -419,7 +413,9 @@ export function PlanPreviewModal({
                       typeof plan.estimatedCost === 'number' ? 'text-green-300' : 'text-slate-300'
                     }
                   >
-                    {formatPlanCost(plan.estimatedCost, messages.planPreviewNotEstimatedValue)}
+                    {typeof plan.estimatedCost === 'number' && Number.isFinite(plan.estimatedCost)
+                      ? `$${plan.estimatedCost.toFixed(2)}`
+                      : messages.planPreviewNotEstimatedValue}
                   </span>
                 </PlanPreviewField>
               </div>
