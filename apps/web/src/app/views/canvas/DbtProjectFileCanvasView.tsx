@@ -153,6 +153,7 @@ export function DbtProjectFileCanvasView({
     }),
     ...buildDbtWorkspaceFileCodeContributions({
       node: controller.inspectorNode,
+      projectRoot,
       editorRef: controller.nodeCodeEditorRef,
       reconcilePersistedFile: controller.reconcileCodeFilePersistence,
     }),

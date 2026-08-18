@@ -13,7 +13,7 @@ const NODE: CanonicalNode = {
   role: 'transform',
   status: 'idle',
   tags: [],
-  path: 'analytics/models/orders.sql',
+  path: 'models/orders.sql',
 };
 
 describe('buildDbtWorkspaceFileCodeContributions', () => {
@@ -22,6 +22,7 @@ describe('buildDbtWorkspaceFileCodeContributions', () => {
     const reconcilePersistedFile = vi.fn();
     const contributions = buildDbtWorkspaceFileCodeContributions({
       node: NODE,
+      projectRoot: 'analytics',
       editorRef,
       reconcilePersistedFile,
     });
@@ -39,15 +40,56 @@ describe('buildDbtWorkspaceFileCodeContributions', () => {
     }
     expect(contributions[0].content.props).toMatchObject({
       authority: 'dbt-project-files',
-      path: NODE.path,
+      path: 'analytics/models/orders.sql',
       reconcilePersistedFile,
     });
+  });
+
+  it.each([
+    { projectRoot: '.', nodePath: 'models/orders.sql', expected: 'models/orders.sql' },
+    {
+      projectRoot: 'models',
+      nodePath: 'models/orders.sql',
+      expected: 'models/models/orders.sql',
+    },
+  ])('keeps canonical workspace path $expected stable', ({ projectRoot, nodePath, expected }) => {
+    const contributions = buildDbtWorkspaceFileCodeContributions({
+      node: { ...NODE, path: nodePath },
+      projectRoot,
+      editorRef: createRef<WorkspaceFileCodeEditorHandle>(),
+      reconcilePersistedFile: vi.fn(),
+    });
+
+    expect(contributions).toHaveLength(1);
+    if (!isValidElement(contributions[0]?.content)) {
+      throw new Error('expected a workspace file editor contribution');
+    }
+    expect(contributions[0].content.props).toMatchObject({ path: expected });
+  });
+
+  it('does not expose the editable workspace file rail for an external dbt package', () => {
+    expect(
+      buildDbtWorkspaceFileCodeContributions({
+        node: {
+          ...NODE,
+          id: 'model.dbt_utils.orders',
+          metadata: {
+            packageName: 'dbt_utils',
+            visualEditability: { status: 'code_only', reasons: ['external_package'] },
+          },
+        },
+        projectRoot: 'analytics',
+        editorRef: createRef<WorkspaceFileCodeEditorHandle>(),
+        reconcilePersistedFile: vi.fn(),
+      })
+    ).toEqual([]);
   });
 
   it('does not invent a Code file for a pathless node', () => {
     expect(
       buildDbtWorkspaceFileCodeContributions({
         node: { ...NODE, path: undefined },
+        projectRoot: 'analytics',
         editorRef: createRef<WorkspaceFileCodeEditorHandle>(),
         reconcilePersistedFile: vi.fn(),
       })
