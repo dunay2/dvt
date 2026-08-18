@@ -105,6 +105,47 @@ test('seedLocalProtectedRuntimeGrant preserves the project catalog referent for 
   assert.equal(queries[3].sql, 'COMMIT');
 });
 
+test('seedLocalProtectedRuntimeGrant rolls back when project catalog seeding fails', async () => {
+  const queries = [];
+  const client = {
+    connect: async () => undefined,
+    end: async () => {
+      queries.push({ sql: 'END', params: [] });
+    },
+    query: async (sql, params = []) => {
+      queries.push({ sql, params });
+      if (sql.includes('.projects')) {
+        throw new Error('project catalog unavailable');
+      }
+    },
+  };
+
+  await assert.rejects(
+    seedLocalProtectedRuntimeGrant(
+      {
+        databaseUrl: 'postgresql://proof:proof@127.0.0.1:5432/proof',
+        schema: 'proof_schema',
+        principalId: 'principal-proof',
+        tenantActions: ['workspace:graph-draft:view'],
+        workspaceScope: {
+          tenantId: 'tenant-proof',
+          projectId: 'project-proof',
+          environmentId: 'dev',
+        },
+      },
+      {
+        createClient: () => client,
+      }
+    ),
+    /project catalog unavailable/
+  );
+
+  assert.equal(queries[0].sql, 'BEGIN');
+  assert.match(queries[1].sql, /INSERT INTO "proof_schema"\.projects/);
+  assert.equal(queries[2].sql, 'ROLLBACK');
+  assert.equal(queries[3].sql, 'END');
+});
+
 test('startLocalProtectedRuntimeAuth provides OIDC env and a bearer token for the coordinated dev stack', async () => {
   const bootstrap = await startLocalProtectedRuntimeAuth({
     env: {
