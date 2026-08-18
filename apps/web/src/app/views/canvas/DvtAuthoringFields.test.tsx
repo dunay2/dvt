@@ -10,7 +10,7 @@ import type {
   TestWarehouseConnectionResult,
 } from '../../ports/workspace';
 import { AppServicesProvider } from '../../services/AppServicesContext';
-import type { CanonicalNode } from '../../types/canonical';
+import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { createAppServicesTestOverrides } from '../../../testing/appServicesTestDoubles';
 import {
   createCanvasInspectorNodeDraft,
@@ -82,10 +82,16 @@ function buildImportedWarehouseSourceNode(): CanonicalNode {
 
 function DvtAuthoringFieldsHarness({
   node,
+  nodes,
+  edges,
+  section,
   warehouseSourceImport,
   externalConnectionId,
 }: Readonly<{
   node: CanonicalNode;
+  nodes?: readonly CanonicalNode[];
+  edges?: readonly CanonicalEdge[];
+  section?: 'all' | 'general' | 'columns' | 'code';
   warehouseSourceImport?: IWarehouseSourceImportPort;
   externalConnectionId?: string;
 }>): JSX.Element {
@@ -121,9 +127,12 @@ function DvtAuthoringFieldsHarness({
       ) : null}
       <DvtAuthoringFields
         node={node}
+        nodes={nodes}
+        edges={edges}
         disabled={false}
         draft={draft}
         errors={errors}
+        section={section}
         onChange={setDraft}
       />
       <output data-slot="dvt-draft-json">{JSON.stringify(draft.dvt)}</output>
@@ -167,12 +176,18 @@ describe('DvtAuthoringFields', () => {
   function renderFields(
     node: CanonicalNode,
     warehouseSourceImport?: IWarehouseSourceImportPort,
-    externalConnectionId?: string
+    externalConnectionId?: string,
+    nodes?: readonly CanonicalNode[],
+    edges?: readonly CanonicalEdge[],
+    section?: 'all' | 'general' | 'columns' | 'code'
   ): void {
     act(() => {
       root.render(
         <DvtAuthoringFieldsHarness
           node={node}
+          nodes={nodes}
+          edges={edges}
+          section={section}
           warehouseSourceImport={warehouseSourceImport}
           externalConnectionId={externalConnectionId}
         />
@@ -278,6 +293,79 @@ describe('DvtAuthoringFields', () => {
 
     expect(container.querySelector('input[name="dvt-transform-column"]')).toBeNull();
     expect(draftJson()).not.toContain('selectedColumns');
+  });
+
+  it('edits the visual recipe from source inputs without creating another SQL editor', () => {
+    const source = buildImportedWarehouseSourceNode();
+    const transform = buildDvtNode('dvt:sql_transform', {
+      transformAuthoring: {
+        version: 'v1',
+        mode: 'visual',
+        recipe: {
+          version: 'v1',
+          outputs: [
+            {
+              id: 'output:id',
+              name: 'id',
+              dataType: 'number',
+              expression: {
+                inputs: [{ nodeId: source.id, columnName: 'id' }],
+                operations: [{ kind: 'passthrough' }],
+              },
+            },
+          ],
+          filters: [],
+        },
+      },
+    });
+    const edges: readonly CanonicalEdge[] = [
+      {
+        id: 'source-transform',
+        sourceId: source.id,
+        targetId: transform.id,
+        relation: 'lineage',
+      },
+    ];
+    renderFields(transform, undefined, undefined, [source, transform], edges, 'columns');
+
+    const outputName = container.querySelector<HTMLInputElement>(
+      '[data-slot="dvt-visual-output-name"]'
+    );
+    expect(container.querySelector('[data-slot="dvt-visual-recipe-authoring"]')).not.toBeNull();
+    expect(container.textContent).toContain('Visual recipe');
+    expect(outputName?.value).toBe('id');
+    expect(container.querySelector('[data-testid="dvt-transform-sql-editor"]')).toBeNull();
+
+    act(() => {
+      fireEvent.input(outputName!, { target: { value: 'order_id' } });
+      fireEvent.click(container.querySelector('[data-action="add-visual-operation"]')!);
+    });
+
+    const operations = container.querySelectorAll<HTMLSelectElement>(
+      '[data-slot="dvt-visual-operation-kind"]'
+    );
+    expect(operations).toHaveLength(2);
+    expect(operations[1]?.value).toBe('trim');
+
+    act(() => {
+      fireEvent.change(operations[1]!, { target: { value: 'upper' } });
+      fireEvent.click(container.querySelector('[data-action="add-visual-filter"]')!);
+    });
+
+    const resolvedDraft = JSON.parse(draftJson()) as {
+      recipe: {
+        outputs: Array<{ name: string; expression: { operations: Array<unknown> } }>;
+        filters: Array<{ operator: string }>;
+      };
+    };
+    expect(resolvedDraft.recipe.outputs[0]?.name).toBe('order_id');
+    expect(resolvedDraft.recipe.outputs[0]?.expression.operations).toEqual([
+      { kind: 'passthrough' },
+      { kind: 'function', functionId: 'upper', args: [] },
+    ]);
+    expect(resolvedDraft.recipe.filters).toEqual([
+      expect.objectContaining({ operator: 'is_not_null' }),
+    ]);
   });
 
   it('renders sink destination posture and updates materialization controls', () => {
