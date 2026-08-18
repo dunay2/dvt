@@ -115,6 +115,7 @@ export async function registerProtectedRuntimeRoutes(
     runtimeAuth: dependencies.runtimeAuth,
     connectionProbe: dependencies.warehouseConnectionProbe,
     previewSourceRowsUseCase: dependencies.previewWarehouseSourceObjectRowsUseCase,
+    validatePostgresTransformSqlUseCase: dependencies.validatePostgresTransformSqlUseCase,
   });
   registerWorkspaceFileHistoryRoutes(app, {
     ...dependencies.runtimeAuth,

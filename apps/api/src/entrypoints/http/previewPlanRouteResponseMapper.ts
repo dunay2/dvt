@@ -60,6 +60,17 @@ export function mapPreviewPlanUseCaseResult(
   result: PreviewPlanUseCaseResult,
   parsedRequest: ParsedPreviewPlanRequest
 ): PreviewPlanRouteResultResponse {
+  if (result.kind === 'sql-not-ready') {
+    return {
+      kind: 'rejected',
+      response: createHttpErrorResponse({
+        type: HTTP_ERROR_TYPE.unprocessable,
+        reason: HTTP_ERROR_REASON.postgresTransformSqlNotReady,
+        details: { validation: result.validation },
+      }),
+    };
+  }
+
   if (result.kind !== 'accepted') {
     const outcome = buildRejectedOutcome(result, parsedRequest);
     return {
@@ -85,7 +96,10 @@ export function mapPreviewPlanUseCaseResult(
 }
 
 function buildRejectedOutcome(
-  result: Exclude<PreviewPlanUseCaseResult, { readonly kind: 'accepted' }>,
+  result: Extract<
+    PreviewPlanUseCaseResult,
+    { readonly kind: 'selection-rejected' | 'plan-invalid' }
+  >,
   parsedRequest: ParsedPreviewPlanRequest
 ): PlanPreviewRejectedOutcome {
   if (result.kind === 'selection-rejected') {

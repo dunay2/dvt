@@ -25,6 +25,7 @@ export type ProtectedWarehouseSourceImportRouteGroupOptions = {
   readonly protectedModule: ProtectedRuntimeModule;
   readonly connectionProbe: ProtectedRuntimeRouteDependencies['warehouseConnectionProbe'];
   readonly previewSourceRowsUseCase: ProtectedRuntimeRouteDependencies['previewWarehouseSourceObjectRowsUseCase'];
+  readonly validatePostgresTransformSqlUseCase: ProtectedRuntimeRouteDependencies['validatePostgresTransformSqlUseCase'];
 };
 
 export function registerProtectedWarehouseSourceImportRouteGroup(
@@ -47,6 +48,7 @@ export function registerProtectedWarehouseSourceImportRouteGroup(
     createConnectionUseCase: new CreateWarehouseConnectionUseCase(catalog, probe),
     renameConnectionUseCase: new RenameWarehouseConnectionUseCase(catalog),
     testConnectionUseCase: new TestWarehouseConnectionUseCase(catalog, probe),
+    validatePostgresTransformSqlUseCase: options.validatePostgresTransformSqlUseCase,
     importSourcesUseCase: new ImportWarehouseSourcesUseCase({
       sourceObjectReader,
       authorityPolicy: options.protectedModule.canvasAuthoringAuthorityPolicy,

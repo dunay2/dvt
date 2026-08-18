@@ -1,5 +1,6 @@
 /** Owned concern: adapt warehouse source import command/query rails to HTTP. */
 import {
+  ConnectionRefSchema,
   CreateWarehouseConnectionRequestSchema,
   ImportSourceObjectsRequestV2Schema,
   RenameWarehouseConnectionRequestSchema,
@@ -43,6 +44,7 @@ import type { ListWarehouseConnectionsUseCase } from '../../application/services
 import type { PreviewWarehouseSourceObjectRowsUseCase } from '../../application/services/previewWarehouseSourceObjectRowsUseCase.js';
 import type { RenameWarehouseConnectionUseCase } from '../../application/services/renameWarehouseConnectionUseCase.js';
 import type { TestWarehouseConnectionUseCase } from '../../application/services/testWarehouseConnectionUseCase.js';
+import type { ValidatePostgresTransformSqlUseCase } from '../../application/services/validatePostgresTransformSqlUseCase.js';
 import { EnvironmentId, ProjectId, TenantId } from '../../domain/auth/types.js';
 
 import { authorizeExecutionScope } from './authorizeExecutionScope.js';
@@ -90,6 +92,11 @@ type ImportWarehouseSourcesBody = {
   readonly addFreshness?: unknown;
 };
 
+type ValidatePostgresTransformSqlBody = {
+  readonly connectionRef?: unknown;
+  readonly sql?: unknown;
+};
+
 type WarehouseSourceImportRouteDeps = {
   readonly authenticator: IAuthenticator;
   readonly authorizer: AuthorizeCommandScopeService;
@@ -99,6 +106,7 @@ type WarehouseSourceImportRouteDeps = {
   readonly createConnectionUseCase: CreateWarehouseConnectionUseCase;
   readonly renameConnectionUseCase: RenameWarehouseConnectionUseCase;
   readonly testConnectionUseCase: TestWarehouseConnectionUseCase;
+  readonly validatePostgresTransformSqlUseCase: ValidatePostgresTransformSqlUseCase;
   readonly importSourcesUseCase: ImportWarehouseSourcesUseCase;
   readonly rateLimit: { readonly max: number; readonly timeWindow: number };
 };
@@ -107,6 +115,26 @@ export function registerWarehouseSourceImportRoutes(
   app: FastifyInstance,
   deps: WarehouseSourceImportRouteDeps
 ): void {
+  app.post<{
+    Querystring: WarehouseSourceImportQuery;
+    Body: ValidatePostgresTransformSqlBody;
+  }>(
+    RUNTIME_ROUTE_PATH.warehousePostgresSqlValidation,
+    { config: { rateLimit: deps.rateLimit } },
+    async (request, reply) => {
+      const authorized = await authorizeWarehouseSourceImportRequest(request, reply, deps);
+      if (!authorized) return;
+
+      const parsed = parseValidatePostgresTransformSqlBody(request.body, authorized.scope);
+      if (!parsed.ok) {
+        httpErrorTranslation.respond(reply, httpErrorTranslation.parse.issue(parsed.issue));
+        return;
+      }
+
+      reply.code(200).send(await deps.validatePostgresTransformSqlUseCase.execute(parsed.value));
+    }
+  );
+
   app.get<{ Querystring: WarehouseSourceImportQuery }>(
     RUNTIME_ROUTE_PATH.warehouseConnections,
     { config: { rateLimit: deps.rateLimit } },
@@ -595,6 +623,25 @@ function parseImportWarehouseSourcesBody(
         ...toDraftScope(scope),
       },
       ...parsed.data,
+    },
+  };
+}
+
+function parseValidatePostgresTransformSqlBody(
+  body: ValidatePostgresTransformSqlBody | undefined,
+  scope: ReturnType<typeof buildEnvironmentAccessScope>
+) {
+  const connectionRef = ConnectionRefSchema.safeParse(body?.connectionRef);
+  if (!connectionRef.success || typeof body?.sql !== 'string') {
+    return invalidBody();
+  }
+
+  return {
+    ok: true as const,
+    value: {
+      scope: toDraftScope(scope),
+      connectionRef: connectionRef.data,
+      sql: body.sql,
     },
   };
 }
