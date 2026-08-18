@@ -210,6 +210,95 @@ describe('CanvasShell graph base surface', () => {
     });
   });
 
+  it('projects a completed run result onto its exact sink and opens the existing data drawer', async () => {
+    const getRunMaterializationSample = vi.fn().mockResolvedValue({
+      contractVersion: 1,
+      connectionId: 'postgresql-local',
+      objectId: 'relation/dvt/public/sink_1',
+      columns: [{ name: 'order_id', type: 'integer', nullable: false }],
+      rows: [{ values: ['1'] }],
+      limit: 20,
+      truncated: false,
+      sampledAt: '2026-08-18T10:00:02.000Z',
+    });
+    await renderShell({
+      panels: { activeRunId: 'run-1' },
+      runSnapshot: {
+        runId: 'run-1',
+        status: 'completed',
+        materialization: {
+          executor: 'postgres',
+          environmentId: 'dev',
+          sinkTable: 'public.sink_1',
+          rowsWritten: 118,
+          startedAt: '2026-08-18T10:00:00.000Z',
+          completedAt: '2026-08-18T10:00:01.500Z',
+          durationMs: 1_500,
+        },
+      },
+      runMaterializationSampleQuery: getRunMaterializationSample,
+      graph: {
+        nodesWithImpact: [
+          {
+            id: 'sink-1',
+            type: 'dbtNode',
+            position: { x: 0, y: 0 },
+            data: {
+              name: 'Sink 1',
+              status: 'idle',
+              role: 'output',
+              pluginKind: 'dvt:sink',
+              metadata: {
+                config: {
+                  schema: 'public',
+                  table: 'sink_1',
+                  materialization: 'table',
+                  writeMode: 'replace',
+                },
+              },
+            },
+          },
+        ],
+      },
+    } as unknown as CanvasShellPropsOverrides);
+
+    const forwardedNode = (
+      getCanvasShellState().canvasViewportProps?.nodesWithImpact as
+        | Array<{
+            id: string;
+            data: {
+              rows?: number;
+              durationMs?: number;
+              lastRunAt?: string;
+              runStatusByNodeId?: ReadonlyMap<string, string>;
+              onOpenSourceDataSample?: (nodeId: string) => void;
+            };
+          }>
+        | undefined
+    )?.[0];
+    await act(async () => {
+      forwardedNode?.data.onOpenSourceDataSample?.('sink-1');
+      await Promise.resolve();
+    });
+
+    expect(forwardedNode?.data).toMatchObject({
+      rows: 118,
+      durationMs: 1_500,
+      lastRunAt: '2026-08-18T10:00:01.500Z',
+    });
+    expect(forwardedNode?.data.runStatusByNodeId?.get('sink-1')).toBe('completed');
+    expect(getRunMaterializationSample).toHaveBeenCalledWith('run-1', 20);
+    expect(useOperationalDrawerContributionStore.getState()).toMatchObject({
+      activeTab: 'data',
+      contribution: {
+        dataSample: {
+          status: 'ready',
+          nodeName: 'Sink 1',
+        },
+      },
+    });
+  });
+
   it('ignores a stale sample response after the user opens another source', async () => {
     const resolvers = new Map<string, (sample: SourceDataSample) => void>();
     const previewSourceObjectRows = vi.fn(
