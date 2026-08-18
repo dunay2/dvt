@@ -15,6 +15,7 @@ import {
   OperationalDrawerRunActiveSummary,
   OperationalDrawerRunLayout,
   OperationalDrawerRunStatusSummary,
+  OperationalDrawerTabPanel,
   OperationalDrawerTabs,
 } from './OperationalDrawerPanelPrimitives';
 import type {
@@ -276,19 +277,9 @@ export function BottomOperationalDrawerBody({
   return (
     <>
       {contribution.tabs.map((tab) => (
-        <div
-          key={tab.id}
-          id={`bottom-operational-drawer-panel-${tab.id}`}
-          role="tabpanel"
-          aria-labelledby={`bottom-operational-drawer-tab-${tab.id}`}
-          tabIndex={activeTab === tab.id ? 0 : -1}
-          hidden={activeTab !== tab.id}
-          data-slot="bottom-operational-drawer-panel"
-          data-tab={tab.id}
-          className="min-w-0 flex-1"
-        >
-          {activeTab === tab.id ? activeBody : null}
-        </div>
+        <OperationalDrawerTabPanel key={tab.id} active={activeTab === tab.id} tabId={tab.id}>
+          {activeBody}
+        </OperationalDrawerTabPanel>
       ))}
     </>
   );

@@ -33,6 +33,7 @@ const operationalDrawerPanelClassNames = {
     'flex shrink-0 flex-wrap items-center gap-1 border-b border-[color:var(--border-default)] px-3',
   tabButton:
     'h-9 border-b-2 border-transparent px-2 text-xs font-semibold text-[var(--text-muted)] data-[active=true]:border-[color:var(--focus-ring)] data-[active=true]:text-[var(--text-strong)]',
+  tabPanel: 'min-w-0 flex-1',
   dataTableFrame:
     'w-full max-w-full min-w-0 overflow-auto rounded border border-[color:var(--border-default)]',
   dataTable: 'w-max min-w-full border-collapse text-left font-mono text-xs',
@@ -417,6 +418,31 @@ export function OperationalDrawerTabs({
           {tab.count == null ? null : <span> {tab.count}</span>}
         </button>
       ))}
+    </div>
+  );
+}
+
+export function OperationalDrawerTabPanel({
+  active,
+  children,
+  tabId,
+}: Readonly<{
+  active: boolean;
+  children: ReactNode;
+  tabId: OperationalDrawerTabId;
+}>): JSX.Element {
+  return (
+    <div
+      id={`bottom-operational-drawer-panel-${tabId}`}
+      role="tabpanel"
+      aria-labelledby={`bottom-operational-drawer-tab-${tabId}`}
+      tabIndex={active ? 0 : -1}
+      hidden={!active}
+      data-slot="bottom-operational-drawer-panel"
+      data-tab={tabId}
+      className={operationalDrawerPanelClassNames.tabPanel}
+    >
+      {active ? children : null}
     </div>
   );
 }
