@@ -12,12 +12,13 @@ code_refs:
   - packages/@dvt/contracts/src/contracts/planner/PlanPreviewProvenance.v1.ts
   - apps/api/src/application/services/projectDbtGraphFromFilesUseCase.ts
   - apps/api/src/application/services/RunExecutionContextBindingUseCase.ts
+  - apps/api/src/infrastructure/dbt/ConfiguredDbtExecutionConnectionBindingVerifier.ts
   - apps/web/src/app/components/dbtExecutionTargetBinding.ts
   - apps/web/src/app/views/canvas/dbtExecutionTargetWorkbenchContribution.tsx
 evidence:
   tests:
     - pnpm --filter @dvt/contracts exec vitest run test/plan-preview-provenance.contract.test.ts test/dbt-project-file-projection.contract.test.ts
-    - pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/projectDbtGraphFromFilesUseCase.test.ts test/application/services/dbtPlanExecutionBinding.test.ts test/application/services/RunExecutionContextBindingUseCase.test.ts test/infrastructure/dbt/ConfiguredDbtExecutionTargetResolver.test.ts
+    - pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/projectDbtGraphFromFilesUseCase.test.ts test/application/services/dbtPlanExecutionBinding.test.ts test/application/services/RunExecutionContextBindingUseCase.test.ts test/infrastructure/dbt/ConfiguredDbtExecutionTargetResolver.test.ts test/infrastructure/dbt/ConfiguredDbtExecutionConnectionBindingVerifier.test.ts
     - pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/dbtExecutionTargetWorkbenchContribution.test.tsx src/app/views/canvas/canvasPlanReadiness.test.ts src/app/views/canvas/dbtProjectFileExecutionStrategy.test.ts
     - pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/components/PlanPreviewModal.test.tsx
     - node --test scripts/run-selected-closure-live-proof.test.cjs
@@ -34,11 +35,14 @@ connection provider must match the dbt adapter. Credential values remain
 outside the projection and execution plan.
 
 The project graph query resolves the configured connection against the
-authorized workspace catalog before declaring Preview or Run ready. Run repeats
-that catalog lookup and rejects a missing, changed, or cross-workspace binding
-before creating the dbt bundle or dispatching execution. It also compares the
-persisted Preview target with the current server target, so configuration drift
-requires a new Preview.
+authorized workspace catalog before declaring Preview or Run ready. It also
+resolves the effective dbt profile and verifies that every concrete output with
+the selected target name identifies the same host, port, user, and database as
+the governed catalog credential. Missing, ambiguous, templated, or divergent
+profiles fail closed. Run repeats both checks and rejects drift before creating
+the dbt bundle or dispatching execution. It also compares the persisted Preview
+target with the current server target, so configuration drift requires a new
+Preview.
 
 Canvas Workbench and Execution Preview use one secret-free read model to show
 the effective target, connection identity, and resolution source in English or

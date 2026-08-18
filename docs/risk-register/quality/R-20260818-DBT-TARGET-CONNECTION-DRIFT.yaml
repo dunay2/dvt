@@ -23,9 +23,11 @@ mitigations:
     catalog.
   - Run repeats the catalog lookup and compares the persisted target with current server
     configuration.
+  - Preview and Run resolve the effective dbt profile and require its concrete host, port, user, and
+    database to match the governed catalog credential before execution is ready.
   - Canvas and Preview share one projection that omits the opaque credential reference.
-  - Missing, mismatched, changed, and partially configured targets fail closed with deterministic
-    tests.
+  - Missing, mismatched, changed, ambiguous, templated, and partially configured targets fail closed
+    with deterministic tests.
   - The live proof derives the isolated dbt profile and governed connection from the same database
     URL.
 monitoring:
