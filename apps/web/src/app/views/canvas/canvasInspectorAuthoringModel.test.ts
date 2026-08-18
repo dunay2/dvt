@@ -616,6 +616,46 @@ describe('canvasInspectorAuthoringModel', () => {
     expect(applyCanvasInspectorNodeDraft(node, draft)).toEqual(node);
   });
 
+  it('rejects an invalid visual recipe before the inspector can apply it', () => {
+    const node = buildDvtNode('dvt:sql_transform', {
+      transformAuthoring: {
+        version: 'v1',
+        mode: 'visual',
+        recipe: {
+          version: 'v1',
+          outputs: [
+            {
+              id: 'output:id',
+              name: 'id',
+              expression: {
+                inputs: [{ nodeId: 'source_orders', columnName: 'id' }],
+                operations: [{ kind: 'passthrough' }],
+              },
+            },
+          ],
+          filters: [],
+        },
+      },
+    });
+    const draft = createCanvasInspectorNodeDraft(node);
+    if (draft.dvt?.kind !== 'sql_transform' || draft.dvt.mode !== 'visual') {
+      throw new Error('Expected a visual transform draft.');
+    }
+
+    expect(
+      validateCanvasInspectorNodeDraft({
+        ...draft,
+        dvt: {
+          ...draft.dvt,
+          recipe: {
+            ...draft.dvt.recipe,
+            outputs: [{ ...draft.dvt.recipe.outputs[0]!, name: '   ' }],
+          },
+        },
+      })
+    ).toEqual({ dvt: { recipe: 'dvt_visual_recipe_invalid' } });
+  });
+
   it('routes object-file load drafts through their plugin-owned authoring model', () => {
     const node: CanonicalNode = {
       id: 'load-orders',
