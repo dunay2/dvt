@@ -11,11 +11,10 @@ export type TransformationSqlMirrorState = Readonly<{
 }>;
 
 export type ExecutableSqlResolution =
-  | Readonly<{ ok: true; sql: string | null }>
-  | Readonly<{ ok: false; message: string }>;
+  Readonly<{ ok: true; sql: string | null }> | Readonly<{ ok: false; message: string }>;
 
 function readString(value: unknown): string | null {
-  return typeof value === 'string' && value.trim().length > 0 ? value.trim() : null;
+  return typeof value === 'string' && value.trim().length > 0 ? value : null;
 }
 
 function readMetadataConfig(metadata: CanonicalNode['metadata']): Record<string, unknown> {
@@ -86,7 +85,7 @@ export function buildDvtSqlTransformMetadata(
   node: CanonicalNode,
   nextSql: string
 ): Record<string, unknown> {
-  const sql = nextSql.trim();
+  const hasSql = nextSql.trim().length > 0;
   const { sql: _existingConfigSql, ...configWithoutSql } = readMetadataConfig(node.metadata);
   const {
     sql: _existingSql,
@@ -97,10 +96,10 @@ export function buildDvtSqlTransformMetadata(
 
   return {
     ...metadataWithoutSql,
-    ...(sql.length > 0 ? { sql } : {}),
+    ...(hasSql ? { sql: nextSql } : {}),
     config: {
       ...configWithoutSql,
-      ...(sql.length > 0 ? { sql } : {}),
+      ...(hasSql ? { sql: nextSql } : {}),
     },
   };
 }
