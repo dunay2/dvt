@@ -224,6 +224,31 @@ describe('GraphNodeOperationalRail', () => {
     expect(onCardDoubleClick).not.toHaveBeenCalled();
   });
 
+  it('keeps completed sink metrics operable when data inspection is the only action', () => {
+    const onOpenDataSample = vi.fn();
+
+    act(() => {
+      root.render(
+        <GraphNodeOperationalRail
+          metrics={[{ id: 'rows', label: 'Rows', value: '3' }]}
+          ariaLabel="Open materialized result"
+          dataSampleInteractionLabel="Double-click or press Enter to open the result."
+          onOpenDataSample={onOpenDataSample}
+        />
+      );
+    });
+
+    const rail = container.querySelector<HTMLButtonElement>(
+      'button[data-slot="graph-node-operational-rail"]'
+    );
+    expect(rail).not.toBeNull();
+    act(() => {
+      fireEvent.doubleClick(rail!);
+    });
+
+    expect(onOpenDataSample).toHaveBeenCalledOnce();
+  });
+
   it('uses Enter as the accessible source data sample gesture without opening health', () => {
     const onOpen = vi.fn();
     const onOpenDataSample = vi.fn();

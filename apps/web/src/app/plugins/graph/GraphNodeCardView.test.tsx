@@ -526,4 +526,33 @@ describe('GraphNodeCardView', () => {
     expect(onOpenOperationalDetails).not.toHaveBeenCalled();
     expect(onCardClick).toHaveBeenCalledOnce();
   });
+
+  it('exposes a completed sink result when data inspection is the only rail action', () => {
+    const onOpenDataSample = vi.fn();
+
+    act(() => {
+      root.render(
+        <GraphNodeCardView
+          {...BASE_PROPS}
+          cardModel={{
+            ...BASE_PROPS.cardModel,
+            operationalMetrics: [{ id: 'rows', label: 'Rows', value: '3' }],
+            operationalDetail: undefined,
+          }}
+          dataSampleInteractionLabel="Double-click or press Enter to open the result."
+          onOpenDataSample={onOpenDataSample}
+        />
+      );
+    });
+
+    const rail = container.querySelector<HTMLButtonElement>(
+      'button[data-slot="graph-node-operational-rail"]'
+    );
+    expect(rail).not.toBeNull();
+    act(() => {
+      fireEvent.doubleClick(rail!);
+    });
+
+    expect(onOpenDataSample).toHaveBeenCalledOnce();
+  });
 });
