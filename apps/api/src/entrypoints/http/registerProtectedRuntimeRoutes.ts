@@ -113,6 +113,8 @@ export async function registerProtectedRuntimeRoutes(
     env,
     protectedModule,
     runtimeAuth: dependencies.runtimeAuth,
+    connectionProbe: dependencies.warehouseConnectionProbe,
+    previewSourceRowsUseCase: dependencies.previewWarehouseSourceObjectRowsUseCase,
   });
   registerWorkspaceFileHistoryRoutes(app, {
     ...dependencies.runtimeAuth,

@@ -7,23 +7,24 @@ import { GraphDraftWarehouseSourceImportStrategy } from '../../application/servi
 import { ImportWarehouseSourcesUseCase } from '../../application/services/importWarehouseSourcesUseCase.js';
 import { ListWarehouseConnectionSourceObjectsUseCase } from '../../application/services/listWarehouseConnectionSourceObjectsUseCase.js';
 import { ListWarehouseConnectionsUseCase } from '../../application/services/listWarehouseConnectionsUseCase.js';
-import { PreviewWarehouseSourceObjectRowsUseCase } from '../../application/services/previewWarehouseSourceObjectRowsUseCase.js';
 import { RenameWarehouseConnectionUseCase } from '../../application/services/renameWarehouseConnectionUseCase.js';
 import { TestWarehouseConnectionUseCase } from '../../application/services/testWarehouseConnectionUseCase.js';
 import { WarehouseConnectionSourceObjectReader } from '../../application/services/WarehouseConnectionSourceObjectReader.js';
-import { WorkspaceWarehouseConnectionProbe } from '../../infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.js';
 import { LocalWorkspaceFileBatchMutationGateway } from '../../infrastructure/workspaceFiles/LocalWorkspaceFileBatchMutationGateway.js';
 import { LocalWorkspaceFileRepository } from '../../infrastructure/workspaceFiles/LocalWorkspaceFileRepository.js';
 import type { ProtectedRuntimeModule } from '../../modules/types.js';
 import type { Env } from '../../plugins/env.js';
 
 import type { RuntimeAuth } from './protectedRuntimeRouteDependencies.js';
+import type { ProtectedRuntimeRouteDependencies } from './protectedRuntimeRouteDependencies.js';
 import { registerWarehouseSourceImportRoutes } from './warehouseSourceImportRoutes.js';
 
 export type ProtectedWarehouseSourceImportRouteGroupOptions = {
   readonly env: Env;
   readonly runtimeAuth: RuntimeAuth;
   readonly protectedModule: ProtectedRuntimeModule;
+  readonly connectionProbe: ProtectedRuntimeRouteDependencies['warehouseConnectionProbe'];
+  readonly previewSourceRowsUseCase: ProtectedRuntimeRouteDependencies['previewWarehouseSourceObjectRowsUseCase'];
 };
 
 export function registerProtectedWarehouseSourceImportRouteGroup(
@@ -36,16 +37,13 @@ export function registerProtectedWarehouseSourceImportRouteGroup(
   });
   const batchMutation = new LocalWorkspaceFileBatchMutationGateway({ root: workspaceFilesRoot });
   const catalog = options.protectedModule.warehouseConnectionCatalog;
-  const probe = new WorkspaceWarehouseConnectionProbe({
-    credentialResolver: options.protectedModule.postgresCredentialResolver,
-    now: () => new Date(),
-  });
+  const probe = options.connectionProbe;
   const sourceObjectReader = new WarehouseConnectionSourceObjectReader(catalog, probe);
   registerWarehouseSourceImportRoutes(app, {
     ...options.runtimeAuth,
     listConnectionsUseCase: new ListWarehouseConnectionsUseCase(catalog),
     listSourceObjectsUseCase: new ListWarehouseConnectionSourceObjectsUseCase(sourceObjectReader),
-    previewSourceRowsUseCase: new PreviewWarehouseSourceObjectRowsUseCase(catalog, probe),
+    previewSourceRowsUseCase: options.previewSourceRowsUseCase,
     createConnectionUseCase: new CreateWarehouseConnectionUseCase(catalog, probe),
     renameConnectionUseCase: new RenameWarehouseConnectionUseCase(catalog),
     testConnectionUseCase: new TestWarehouseConnectionUseCase(catalog, probe),
