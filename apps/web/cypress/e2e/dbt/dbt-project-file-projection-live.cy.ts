@@ -17,7 +17,6 @@ const PROJECT_ROOT = 'analytics';
 const INVALID_PROJECT_ROOT = 'analytics-invalid';
 const CANVAS_ID = 'analytics-files';
 const INVALID_CANVAS_ID = 'analytics-invalid-files';
-const APPLICATION_LANGUAGE_STORAGE_KEY = 'dvt-web-application-language';
 
 const INVALID_PROJECT_CONFIG = `
 name: analytics_invalid
@@ -166,13 +165,6 @@ function expectProjectedCardsNotToOverlap(): void {
   });
 }
 
-function seedEnglishPresentation(window: Window): void {
-  window.localStorage.setItem(
-    APPLICATION_LANGUAGE_STORAGE_KEY,
-    JSON.stringify({ state: { language: 'en' }, version: 0 })
-  );
-}
-
 describe('dbt project file projection live vertical', () => {
   before(function () {
     if (!hasLiveProtectedRuntimeEnv()) {
@@ -203,7 +195,10 @@ describe('dbt project file projection live vertical', () => {
       `/canvas?authority=dbt-project-files&canvasId=${CANVAS_ID}&projectRoot=${PROJECT_ROOT}`,
       {
         onBeforeLoad(window) {
-          seedEnglishPresentation(window);
+          window.localStorage.setItem(
+            'dvt-web-application-language',
+            JSON.stringify({ state: { language: 'en' }, version: 0 })
+          );
           const originalFetch = window.fetch.bind(window);
           window.fetch = (input, init) => {
             observedRequests.push(
@@ -344,7 +339,10 @@ describe('dbt project file projection live vertical', () => {
       `/canvas?authority=dbt-project-files&canvasId=${INVALID_CANVAS_ID}&projectRoot=${INVALID_PROJECT_ROOT}`,
       {
         onBeforeLoad(window) {
-          seedEnglishPresentation(window);
+          window.localStorage.setItem(
+            'dvt-web-application-language',
+            JSON.stringify({ state: { language: 'en' }, version: 0 })
+          );
           const originalFetch = window.fetch.bind(window);
           window.fetch = (input, init) => {
             observedRequests.push(
