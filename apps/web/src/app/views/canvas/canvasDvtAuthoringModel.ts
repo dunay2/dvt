@@ -56,7 +56,7 @@ function readString(value: unknown): string | undefined {
 }
 
 function readNodeMetadataRecord(
-  node: Pick<CanonicalNode, 'metadata'>,
+  node: CanonicalNode,
   key: string
 ): Record<string, unknown> | undefined {
   const value = node.metadata?.[key];
@@ -182,9 +182,7 @@ function createSqlTransformMetadata(node: CanonicalNode): DvtSqlTransformAuthori
   };
 }
 
-export function createDvtSinkAuthoringMetadata(
-  node: Pick<CanonicalNode, 'name' | 'metadata'>
-): DvtSinkAuthoringMetadata {
+function createSinkMetadata(node: CanonicalNode): DvtSinkAuthoringMetadata {
   const config = readNodeMetadataRecord(node, 'config');
 
   return {
@@ -218,9 +216,7 @@ export function createDvtNodeAuthoringMetadata(
         ? createSqlTransformMetadata(node)
         : undefined;
     case 'dvt:sink':
-      return node.pluginId === DVT_AUTHORING_PLUGIN_ID
-        ? createDvtSinkAuthoringMetadata(node)
-        : undefined;
+      return node.pluginId === DVT_AUTHORING_PLUGIN_ID ? createSinkMetadata(node) : undefined;
     default:
       return undefined;
   }

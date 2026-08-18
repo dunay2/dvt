@@ -5,7 +5,7 @@ import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 import type { OperationalDrawerDataSample } from '../../components/shell/operationalDrawerContributionStore';
 import type { RunSnapshot } from '../../ports/runs';
 import { WarehouseSourceDataSampleQueryError } from '../../services/workspace/workspaceErrors';
-import { createDvtSinkAuthoringMetadata } from './canvasDvtAuthoringModel';
+import { createDvtNodeAuthoringMetadata } from './canvasDvtAuthoringModel';
 
 export const CANVAS_SOURCE_DATA_SAMPLE_LIMIT = 20 as const;
 
@@ -75,18 +75,23 @@ export function resolveCanvasSinkDataSampleTarget(
   snapshot: RunSnapshot | null | undefined
 ): CanvasSinkDataSampleTarget | null {
   const materialization = snapshot?.materialization ?? snapshot?.execution?.materialization;
-  const sinkMetadata = createDvtSinkAuthoringMetadata({
+  const sinkMetadata = createDvtNodeAuthoringMetadata({
+    id: data.name,
     name: data.name,
+    pluginId: 'dvt',
+    kind: 'dvt:sink',
+    role: 'output',
+    status: 'idle',
+    tags: ['authoring'],
     metadata: data.metadata,
   });
-  const nodeRelation = `${sinkMetadata.schema}.${sinkMetadata.table}`;
   if (
     data.role !== 'output' ||
     data.pluginKind !== 'dvt:sink' ||
+    sinkMetadata?.kind !== 'sink' ||
     snapshot?.status !== 'completed' ||
     materialization == null ||
-    nodeRelation == null ||
-    !relationsMatch(nodeRelation, materialization.sinkTable)
+    !relationsMatch(`${sinkMetadata.schema}.${sinkMetadata.table}`, materialization.sinkTable)
   ) {
     return null;
   }

@@ -3,7 +3,7 @@
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { RouterProvider, createMemoryRouter } from 'react-router';
-import { notifyManager, QueryClientProvider, type QueryClient } from '@tanstack/react-query';
+import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
 import { expect, vi } from 'vitest';
 
 import { DVT_AUTHORING_NODE_KINDS } from '../plugins/dvt/dvtNodeTypeCatalog';
@@ -27,7 +27,6 @@ import { useCanvasController } from './canvas/useCanvasController';
 import { buildController, type CanvasController } from './Canvas.test.controller';
 import { createAppServicesTestOverrides } from '../../testing/appServicesTestDoubles';
 import { createTestQueryClient } from '../../testing/reactQueryHarness';
-import type { AppServicesOverrides } from '../services/composition/appServices';
 export { buildController } from './Canvas.test.controller';
 
 export const CANVAS_ROUTE_BOOTSTRAP_REGISTRATION = getRouteBootstrapRegistration('dbt.canvas', {
@@ -90,11 +89,7 @@ export function currentCanvasRouteState() {
   return canvasRouteState;
 }
 
-async function renderCanvasRoute(
-  root: Root,
-  queryClient: QueryClient,
-  serviceOverrides: AppServicesOverrides
-): Promise<void> {
+async function renderCanvasRoute(root: Root, queryClient: QueryClient): Promise<void> {
   const router = createMemoryRouter(
     [
       {
@@ -115,9 +110,7 @@ async function renderCanvasRoute(
   await act(async () => {
     root.render(
       <QueryClientProvider client={queryClient}>
-        <AppServicesProvider
-          overrides={{ ...createAppServicesTestOverrides(), ...serviceOverrides }}
-        >
+        <AppServicesProvider overrides={createAppServicesTestOverrides()}>
           <RouterProvider router={router} />
         </AppServicesProvider>
       </QueryClientProvider>
@@ -125,7 +118,7 @@ async function renderCanvasRoute(
   });
 }
 
-export function createCanvasRouteHarness(serviceOverrides: AppServicesOverrides = {}) {
+export function createCanvasRouteHarness() {
   const container = document.createElement('div');
   document.body.appendChild(container);
   const root = createRoot(container);
@@ -133,9 +126,6 @@ export function createCanvasRouteHarness(serviceOverrides: AppServicesOverrides 
   (
     globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
   ).IS_REACT_ACT_ENVIRONMENT = true;
-  notifyManager.setNotifyFunction((notify) => {
-    act(notify);
-  });
 
   mockedUseCanvasController.mockReset();
   canvasRouteState.viewportProps = null;
@@ -149,7 +139,7 @@ export function createCanvasRouteHarness(serviceOverrides: AppServicesOverrides 
     container,
     async render(initialEntry?: string) {
       canvasRouteState.initialEntry = initialEntry ?? '/canvas';
-      await renderCanvasRoute(root, queryClient, serviceOverrides);
+      await renderCanvasRoute(root, queryClient);
     },
     cleanup() {
       act(() => {
@@ -159,9 +149,6 @@ export function createCanvasRouteHarness(serviceOverrides: AppServicesOverrides 
       resetRouteBootstrapPresentation(CANVAS_ROUTE_BOOTSTRAP_REGISTRATION);
       useCanvasWorkspaceMenuContributionStore.setState({ contribution: null });
       queryClient.clear();
-      notifyManager.setNotifyFunction((notify) => {
-        notify();
-      });
       canvasRouteState.router = null;
       container.remove();
     },
