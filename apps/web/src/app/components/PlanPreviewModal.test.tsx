@@ -225,6 +225,12 @@ describe('PlanPreviewModal', () => {
             provider: 'server-config',
             adapter: 'postgres',
             targetName: 'development',
+            connectionRef: {
+              schemaVersion: 'connection-ref.v1',
+              connectionId: 'warehouse-development',
+              provider: 'postgres',
+            },
+            resolutionSource: 'environment-default',
             credentialRef: 'vault:dbt/development',
           },
         },
@@ -258,9 +264,12 @@ describe('PlanPreviewModal', () => {
     expect(document.querySelector('[aria-label="Authorized execution scope"]')?.textContent).toBe(
       'model.analytics.orders, test.analytics.orders_not_null'
     );
-    expect(bodyText).toContain('server-config / postgres / development');
-    expect(document.querySelector('[aria-label="Execution target"]')?.textContent).toBe(
-      'server-config / postgres / development'
+    expect(document.querySelector('[aria-label="Target"]')?.textContent).toBe('development');
+    expect(document.querySelector('[aria-label="Connection"]')?.textContent).toBe(
+      'postgres / warehouse-development'
+    );
+    expect(document.querySelector('[aria-label="Resolved by"]')?.textContent).toBe(
+      'Environment default'
     );
     expect(bodyText).not.toContain('vault:dbt/development');
   });

@@ -257,6 +257,9 @@ export type CanvasViewCopy = {
   readonly planPreviewAdapterLabel: string;
   readonly planPreviewUnknownValue: string;
   readonly planPreviewTargetLabel: string;
+  readonly planPreviewConnectionLabel: string;
+  readonly planPreviewResolutionSourceLabel: string;
+  readonly planPreviewEnvironmentDefaultValue: string;
   readonly planPreviewCapabilitiesLabel: string;
   readonly planPreviewSummaryTitle: string;
   readonly planPreviewSummaryCaption: string;

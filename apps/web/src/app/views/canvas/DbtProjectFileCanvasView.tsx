@@ -12,6 +12,7 @@ import { buildDbtProjectFileCodeWorkbench } from './dbtProjectFileCodeWorkbench'
 import type { SqlContextWorkbenchHandle } from './SqlContextWorkbench';
 import { buildDbtYamlDescriptionWorkbenchContributions } from './dbtYamlDescriptionWorkbenchContribution';
 import { buildDbtWorkspaceFileCodeContributions } from './dbtWorkspaceFileCodeContribution';
+import { buildDbtExecutionTargetWorkbenchContributions } from './dbtExecutionTargetWorkbenchContribution';
 import { useCanvasRunControlSurface } from './useCanvasRunControlSurface';
 import type { useDbtProjectFileCanvasController } from './useDbtProjectFileCanvasController';
 
@@ -145,6 +146,11 @@ export function DbtProjectFileCanvasView({
   };
   const centerSurface = resolveCenterSurface(controller);
   const inspectorWorkbenchContributions = [
+    ...buildDbtExecutionTargetWorkbenchContributions({
+      node: controller.inspectorNode,
+      target: controller.query.data?.executionTarget,
+      language: applicationLanguage,
+    }),
     ...buildDbtYamlDescriptionWorkbenchContributions({
       canvasId: activeCanvas.id,
       node: controller.inspectorNode,

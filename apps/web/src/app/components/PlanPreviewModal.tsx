@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 
 import type { PlanPreviewOutcome } from '../ports/plans';
 import type { PlanPreviewSelectionIntentViewModel, PlanViewModel } from '../types/plans';
+import { projectDbtExecutionTargetBinding } from './dbtExecutionTargetBinding';
 
 import { PlanExecutionDecisionView } from './PlanExecutionDecisionView';
 import { Badge } from './ui/badge';
@@ -36,6 +37,9 @@ export type PlanPreviewModalMessages = Readonly<{
   planPreviewAdapterLabel: string;
   planPreviewUnknownValue: string;
   planPreviewTargetLabel: string;
+  planPreviewConnectionLabel: string;
+  planPreviewResolutionSourceLabel: string;
+  planPreviewEnvironmentDefaultValue: string;
   planPreviewCapabilitiesLabel: string;
   planPreviewSummaryTitle: string;
   planPreviewSummaryCaption: string;
@@ -337,6 +341,13 @@ export function PlanPreviewModal({
   const persistedPreview = plan.preview?.persisted;
   const provenance = plan.preview?.provenance;
   const selectionIntent = plan.preview?.selectionIntent;
+  const dbtExecutionTarget =
+    provenance?.kind === 'dbt-project-files'
+      ? projectDbtExecutionTargetBinding(
+          provenance.executionTarget,
+          messages.planPreviewEnvironmentDefaultValue
+        )
+      : null;
 
   return (
     <Dialog
@@ -427,16 +438,29 @@ export function PlanPreviewModal({
             >
               <div className="grid min-w-0 gap-3 md:grid-cols-3">
                 <PlanPreviewField label={messages.planPreviewExecutorLabel}>
-                  {previewSummary?.executor ?? messages.planPreviewNotReportedValue}
+                  {dbtExecutionTarget?.executor ??
+                    previewSummary?.executor ??
+                    messages.planPreviewNotReportedValue}
                 </PlanPreviewField>
                 <PlanPreviewField label={messages.planPreviewAdapterLabel}>
-                  {plan.adapter && plan.adapter !== 'unknown'
-                    ? plan.adapter
-                    : messages.planPreviewUnknownValue}
+                  {dbtExecutionTarget?.adapter ??
+                    (plan.adapter && plan.adapter !== 'unknown'
+                      ? plan.adapter
+                      : messages.planPreviewUnknownValue)}
                 </PlanPreviewField>
                 <PlanPreviewField label={messages.planPreviewTargetLabel}>
-                  <Badge variant="secondary">{plan.target}</Badge>
+                  <Badge variant="secondary">{dbtExecutionTarget?.target ?? plan.target}</Badge>
                 </PlanPreviewField>
+                {dbtExecutionTarget ? (
+                  <>
+                    <PlanPreviewField label={messages.planPreviewConnectionLabel}>
+                      {dbtExecutionTarget.connection}
+                    </PlanPreviewField>
+                    <PlanPreviewField label={messages.planPreviewResolutionSourceLabel}>
+                      {dbtExecutionTarget.resolution}
+                    </PlanPreviewField>
+                  </>
+                ) : null}
               </div>
               {plan.capabilities.length > 0 ? (
                 <div className="mt-4 flex min-w-0 flex-wrap gap-2">
@@ -553,9 +577,6 @@ export function PlanPreviewModal({
                           {provenance.selectedUniqueIds.join(', ')}
                         </PlanPreviewField>
                       ) : null}
-                      <PlanPreviewField label={messages.planPreviewExecutionTargetTitle}>
-                        {`${provenance.executionTarget.provider} / ${provenance.executionTarget.adapter} / ${provenance.executionTarget.targetName}`}
-                      </PlanPreviewField>
                     </>
                   ) : (
                     <>

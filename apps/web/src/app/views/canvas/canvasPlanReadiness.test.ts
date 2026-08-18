@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { mockExecutionPlan } from '../../../testing/fixtures/mockDbtData';
 import { makePlanRef } from '../../testing/contractTestUtils';
+import type { PlanViewModel } from '../../types/plans';
 import { canvasViewCopy, resolveCanvasViewCopy } from './copy';
 import {
   observePlanRunReadiness,
@@ -28,7 +29,7 @@ describe('canvasPlanReadiness', () => {
   });
 
   it('accepts persisted preview proof when plan identity aligns even if canonical and executable hashes differ', () => {
-    const plan = {
+    const plan: PlanViewModel = {
       ...mockExecutionPlan,
       planId: 'plan_live_1',
       planRef: makePlanRef({
@@ -205,7 +206,7 @@ describe('canvasPlanReadiness', () => {
   });
 
   it('blocks a persisted dbt project preview when its authoritative revision is stale', () => {
-    const plan = {
+    const plan: PlanViewModel = {
       ...mockExecutionPlan,
       planId: 'plan_dbt_files_1',
       planRef: makePlanRef({
@@ -231,6 +232,12 @@ describe('canvasPlanReadiness', () => {
             provider: 'server-config',
             adapter: 'postgres',
             targetName: 'development',
+            connectionRef: {
+              schemaVersion: 'connection-ref.v1',
+              connectionId: 'warehouse-development',
+              provider: 'postgres',
+            },
+            resolutionSource: 'environment-default',
             credentialRef: 'vault:dbt/development',
           },
         },
@@ -264,6 +271,12 @@ describe('canvasPlanReadiness', () => {
           provider: 'server-config',
           adapter: 'postgres',
           targetName: 'development',
+          connectionRef: {
+            schemaVersion: 'connection-ref.v1',
+            connectionId: 'warehouse-development',
+            provider: 'postgres',
+          },
+          resolutionSource: 'environment-default',
           credentialRef: 'vault:dbt/development',
         },
       },
@@ -314,6 +327,12 @@ describe('canvasPlanReadiness', () => {
           provider: 'server-config',
           adapter: 'postgres',
           targetName: 'development',
+          connectionRef: {
+            schemaVersion: 'connection-ref.v1',
+            connectionId: 'warehouse-development',
+            provider: 'postgres',
+          },
+          resolutionSource: 'environment-default',
           credentialRef: 'vault:dbt/development',
         },
       },

@@ -1,5 +1,5 @@
 /** Owned concern: declare execution posture for registered Canvas runtimes. */
-import type { GenericGraphSourceV1 } from '@dvt/contracts';
+import type { DbtExecutionTargetIdentity, GenericGraphSourceV1 } from '@dvt/contracts';
 
 export type CanvasExecutionStrategy =
   | {
@@ -21,12 +21,7 @@ export type CanvasExecutionStrategy =
       analysisSha256: string;
       dbtVersion: string;
       plannerGraphSource: GenericGraphSourceV1;
-      executionTarget: {
-        provider: string;
-        adapter: string;
-        targetName: string;
-        credentialRef: string;
-      };
+      executionTarget: DbtExecutionTargetIdentity;
     }
   | {
       kind: 'not_executable';

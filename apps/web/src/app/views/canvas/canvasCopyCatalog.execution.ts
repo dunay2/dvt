@@ -155,6 +155,18 @@ export const canvasViewExecutionCopyByKey = {
     key: 'canvas.planPreview.targetLabel',
     fallback: 'Target',
   },
+  planPreviewConnectionLabel: {
+    key: 'canvas.planPreview.connectionLabel',
+    fallback: 'Connection',
+  },
+  planPreviewResolutionSourceLabel: {
+    key: 'canvas.planPreview.resolutionSourceLabel',
+    fallback: 'Resolved by',
+  },
+  planPreviewEnvironmentDefaultValue: {
+    key: 'canvas.planPreview.environmentDefaultValue',
+    fallback: 'Environment default',
+  },
   planPreviewCapabilitiesLabel: {
     key: 'canvas.planPreview.capabilitiesLabel',
     fallback: 'Capabilities',
