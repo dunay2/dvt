@@ -565,6 +565,46 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.dvtSqlLinePluralLabel',
     fallback: 'lines',
   },
+  inspectorDvtSqlValidationCheckingLabel: {
+    key: 'canvas.inspector.authoring.dvtSqlValidationCheckingLabel',
+    fallback: 'Checking SQL…',
+  },
+  inspectorDvtSqlValidationValidLabel: {
+    key: 'canvas.inspector.authoring.dvtSqlValidationValidLabel',
+    fallback: 'SQL is ready for Preview.',
+  },
+  inspectorDvtSqlValidationUnavailableLabel: {
+    key: 'canvas.inspector.authoring.dvtSqlValidationUnavailableLabel',
+    fallback: 'SQL could not be checked with the governed connection.',
+  },
+  inspectorDvtSqlRequiredMessage: {
+    key: 'canvas.inspector.authoring.dvtSqlRequiredMessage',
+    fallback: 'Enter a SQL query.',
+  },
+  inspectorDvtSqlSyntaxErrorMessage: {
+    key: 'canvas.inspector.authoring.dvtSqlSyntaxErrorMessage',
+    fallback: 'Fix the PostgreSQL syntax.',
+  },
+  inspectorDvtSqlMultipleStatementsMessage: {
+    key: 'canvas.inspector.authoring.dvtSqlMultipleStatementsMessage',
+    fallback: 'Use a single SQL statement.',
+  },
+  inspectorDvtSqlUnsupportedStatementMessage: {
+    key: 'canvas.inspector.authoring.dvtSqlUnsupportedStatementMessage',
+    fallback: 'Use a SELECT statement.',
+  },
+  inspectorDvtSqlUndefinedTableMessage: {
+    key: 'canvas.inspector.authoring.dvtSqlUndefinedTableMessage',
+    fallback: 'PostgreSQL cannot find this table.',
+  },
+  inspectorDvtSqlUndefinedColumnMessage: {
+    key: 'canvas.inspector.authoring.dvtSqlUndefinedColumnMessage',
+    fallback: 'PostgreSQL cannot find this column.',
+  },
+  inspectorDvtSqlPostgresErrorMessage: {
+    key: 'canvas.inspector.authoring.dvtSqlPostgresErrorMessage',
+    fallback: 'PostgreSQL rejected this query.',
+  },
   inspectorDvtVisualRecipeTitle: {
     key: 'canvas.inspector.authoring.dvtVisualRecipeTitle',
     fallback: 'Visual recipe',

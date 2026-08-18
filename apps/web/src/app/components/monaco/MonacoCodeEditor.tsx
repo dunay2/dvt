@@ -11,6 +11,13 @@ type MonacoCodeEditorProps = Readonly<{
   path?: string;
   readOnly?: boolean;
   value: string;
+  diagnostics?: readonly MonacoCodeDiagnostic[];
+}>;
+
+export type MonacoCodeDiagnostic = Readonly<{
+  message: string;
+  startOffset?: number;
+  endOffset?: number;
 }>;
 
 export function MonacoCodeEditor({
@@ -22,6 +29,7 @@ export function MonacoCodeEditor({
   path,
   readOnly = false,
   value,
+  diagnostics = [],
 }: MonacoCodeEditorProps) {
   const MonacoCodeSurface = useMonacoCodeSurface();
   if (MonacoCodeSurface == null) {
@@ -37,6 +45,7 @@ export function MonacoCodeEditor({
       path={path}
       readOnly={readOnly}
       value={value}
+      diagnostics={diagnostics}
     />
   );
 }

@@ -1,6 +1,9 @@
 /** Owned concern: bind Monaco Editor as the shared code surface for viewer and local editor modes. */
-import Editor from '@monaco-editor/react';
+import Editor, { type Monaco, type OnMount } from '@monaco-editor/react';
+import { useEffect, useRef } from 'react';
+import type { editor } from 'monaco-editor';
 
+import type { MonacoCodeDiagnostic } from './MonacoCodeEditor';
 import { DEFAULT_MONACO_CONTAINER_CLASS_NAME } from './MonacoViewerFallback';
 import { configureMonacoLocalWorkers } from './monacoLocalWorkers';
 import { createMonacoCodeOptions, monacoTheme } from './monacoVisualTokens';
@@ -13,6 +16,7 @@ export type MonacoCodeSurfaceProps = Readonly<{
   path?: string;
   readOnly?: boolean;
   value: string;
+  diagnostics?: readonly MonacoCodeDiagnostic[];
 }>;
 
 configureMonacoLocalWorkers();
@@ -25,8 +29,47 @@ export default function MonacoCodeSurface({
   path,
   readOnly = true,
   value,
+  diagnostics = [],
 }: MonacoCodeSurfaceProps) {
   const isReadOnly = readOnly;
+  const modelRef = useRef<editor.ITextModel | null>(null);
+  const monacoRef = useRef<Monaco | null>(null);
+
+  useEffect(() => {
+    const model = modelRef.current;
+    const monaco = monacoRef.current;
+    if (model == null || monaco == null) return;
+    monaco.editor.setModelMarkers(
+      model,
+      'dvt-postgres-sql-readiness',
+      diagnostics.map((diagnostic) => {
+        const start = model.getPositionAt(diagnostic.startOffset ?? 0);
+        const end = model.getPositionAt(
+          Math.max(diagnostic.startOffset ?? 0, diagnostic.endOffset ?? 1)
+        );
+        return {
+          severity: monaco.MarkerSeverity.Error,
+          message: diagnostic.message,
+          startLineNumber: start.lineNumber,
+          startColumn: start.column,
+          endLineNumber: end.lineNumber,
+          endColumn: end.column,
+        };
+      })
+    );
+    return () => {
+      monaco.editor.setModelMarkers(model, 'dvt-postgres-sql-readiness', []);
+    };
+  }, [diagnostics, value]);
+
+  const handleMount: OnMount = (editorInstance, monaco) => {
+    modelRef.current = editorInstance.getModel();
+    monacoRef.current = monaco;
+    const model = editorInstance.getModel();
+    if (model != null) {
+      monaco.editor.setModelMarkers(model, 'dvt-postgres-sql-readiness', []);
+    }
+  };
 
   return (
     <div
@@ -44,6 +87,7 @@ export default function MonacoCodeSurface({
               }
         }
         options={createMonacoCodeOptions({ ariaLabel, readOnly: isReadOnly })}
+        onMount={handleMount}
         path={path}
         theme={monacoTheme}
         value={value}

@@ -43,11 +43,11 @@ export function DvtAuthoringFields({
     return null;
   }
 
-  const inheritedConnectionId = resolveInheritedDvtConnectionRef({
+  const inheritedConnectionRef = resolveInheritedDvtConnectionRef({
     node,
     nodes,
     edges,
-  })?.connectionId;
+  });
 
   if (draft.dvt.kind === 'source') {
     if (section !== 'all' && section !== 'general') {
@@ -95,7 +95,7 @@ export function DvtAuthoringFields({
         draft={draft.dvt}
         errors={errors.dvt}
         section={section === 'code' ? 'code' : 'all'}
-        inheritedConnectionId={inheritedConnectionId}
+        inheritedConnectionRef={inheritedConnectionRef}
         onChange={onChange}
       />
     );
@@ -112,7 +112,7 @@ export function DvtAuthoringFields({
       draft={draft.dvt}
       errors={errors.dvt}
       destinationTarget={formatQualifiedTarget([draft.dvt.schema, draft.dvt.table])}
-      inheritedConnectionId={inheritedConnectionId}
+      inheritedConnectionId={inheritedConnectionRef?.connectionId}
       onChange={onChange}
     />
   );

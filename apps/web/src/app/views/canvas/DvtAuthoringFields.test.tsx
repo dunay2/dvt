@@ -12,6 +12,7 @@ import type {
 import { AppServicesProvider } from '../../services/AppServicesContext';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { createAppServicesTestOverrides } from '../../../testing/appServicesTestDoubles';
+import { createMockWarehouseSourceImportPort } from '../../../testing/workspacePortDoubles';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import {
   createCanvasInspectorNodeDraft,
@@ -26,18 +27,21 @@ vi.mock('../../components/monaco/MonacoCodeEditor', () => ({
     onChange,
     path,
     value,
+    diagnostics = [],
   }: {
     ariaLabel: string;
     language: string;
     onChange: (value: string) => void;
     path?: string;
     value: string;
+    diagnostics?: readonly { message: string }[];
   }) => (
     <textarea
       aria-label={ariaLabel}
       data-language={language}
       data-path={path}
       data-testid="dvt-transform-sql-editor"
+      data-diagnostics={JSON.stringify(diagnostics)}
       onChange={(event) => onChange(event.currentTarget.value)}
       value={value}
     />
@@ -174,6 +178,7 @@ describe('DvtAuthoringFields', () => {
     container.remove();
     useApplicationLanguageStore.setState({ language: 'en' });
     vi.clearAllMocks();
+    vi.useRealTimers();
   });
 
   function renderFields(
@@ -281,6 +286,89 @@ describe('DvtAuthoringFields', () => {
     });
 
     expect(draftJson()).toContain('"sql":"select id from public.orders"');
+  });
+
+  it('keeps only the latest governed SQL validation and localizes its diagnostic', async () => {
+    vi.useFakeTimers();
+    useApplicationLanguageStore.setState({ language: 'es' });
+    let resolveFirst: ((value: { status: 'valid' }) => void) | undefined;
+    const validatePostgresTransformSql = vi
+      .fn()
+      .mockImplementationOnce(
+        () =>
+          new Promise<{ status: 'valid' }>((resolve) => {
+            resolveFirst = resolve;
+          })
+      )
+      .mockResolvedValueOnce({
+        status: 'invalid',
+        diagnostics: [
+          {
+            code: 'undefined_column',
+            source: 'postgres',
+            message: 'column missing_column does not exist',
+            startOffset: 7,
+            endOffset: 21,
+          },
+        ],
+      });
+    const warehouseSourceImport = {
+      ...createMockWarehouseSourceImportPort(),
+      validatePostgresTransformSql,
+    };
+    const baseSource = buildImportedWarehouseSourceNode();
+    const source: CanonicalNode = {
+      ...baseSource,
+      metadata: {
+        ...baseSource.metadata,
+        connectedSourceRef: {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef: {
+            schemaVersion: 'connection-ref.v1',
+            provider: 'postgres',
+            connectionId: 'warehouse-prod',
+          },
+          sourceObjectId: 'relation/analytics/erp/orders',
+        },
+      },
+    };
+    const transform = buildDvtNode('dvt:sql_transform', {
+      config: { sql: 'select order_id from analytics.erp.orders' },
+    });
+    const edges: readonly CanonicalEdge[] = [
+      { id: 'source-transform', sourceId: source.id, targetId: transform.id, relation: 'lineage' },
+    ];
+
+    renderFields(transform, warehouseSourceImport, undefined, [source, transform], edges, 'code');
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(400);
+    });
+
+    const editor = container.querySelector(
+      '[data-testid="dvt-transform-sql-editor"]'
+    ) as HTMLTextAreaElement;
+    act(() => {
+      fireEvent.input(editor, {
+        target: { value: 'select missing_column from analytics.erp.orders' },
+      });
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(400);
+    });
+
+    expect(container.textContent).toContain('PostgreSQL no encuentra esta columna.');
+    expect(editor.dataset.diagnostics).toContain('PostgreSQL no encuentra esta columna.');
+
+    await act(async () => {
+      resolveFirst?.({ status: 'valid' });
+      await Promise.resolve();
+    });
+    expect(container.textContent).toContain('PostgreSQL no encuentra esta columna.');
+    expect(validatePostgresTransformSql).toHaveBeenLastCalledWith({
+      connectionRef: expect.objectContaining({ connectionId: 'warehouse-prod' }),
+      sql: 'select missing_column from analytics.erp.orders',
+    });
+    vi.useRealTimers();
   });
 
   it('does not present connected source columns as editable DVT transform inputs', () => {

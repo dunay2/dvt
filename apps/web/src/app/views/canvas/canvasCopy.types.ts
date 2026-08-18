@@ -516,6 +516,16 @@ export type CanvasViewCopy = {
   readonly inspectorDvtSqlBodyLabel: string;
   readonly inspectorDvtSqlLineSingularLabel: string;
   readonly inspectorDvtSqlLinePluralLabel: string;
+  readonly inspectorDvtSqlValidationCheckingLabel: string;
+  readonly inspectorDvtSqlValidationValidLabel: string;
+  readonly inspectorDvtSqlValidationUnavailableLabel: string;
+  readonly inspectorDvtSqlRequiredMessage: string;
+  readonly inspectorDvtSqlSyntaxErrorMessage: string;
+  readonly inspectorDvtSqlMultipleStatementsMessage: string;
+  readonly inspectorDvtSqlUnsupportedStatementMessage: string;
+  readonly inspectorDvtSqlUndefinedTableMessage: string;
+  readonly inspectorDvtSqlUndefinedColumnMessage: string;
+  readonly inspectorDvtSqlPostgresErrorMessage: string;
   readonly inspectorDvtVisualRecipeTitle: string;
   readonly inspectorDvtVisualOutputLabel: string;
   readonly inspectorDvtVisualOutputNameLabel: string;
