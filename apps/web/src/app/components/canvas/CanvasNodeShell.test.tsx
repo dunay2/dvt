@@ -325,8 +325,8 @@ describe('CanvasNodeShell', () => {
   it('uses grab cursors for graph connection ports', () => {
     const componentCss = readFileSync(canvasNodeShellCssPath, 'utf8');
 
-    expect(componentCss).toMatch(/\.portHandle\s*\{[^}]*cursor:\s*grab;/su);
-    expect(componentCss).toMatch(/\.portHandle:active\s*\{[^}]*cursor:\s*grabbing;/su);
+    expect(componentCss).toMatch(/\.portHandle\s*\{[^}]*cursor:\s*grab\s*!important;/su);
+    expect(componentCss).toMatch(/\.portHandle:active\s*\{[^}]*cursor:\s*grabbing\s*!important;/su);
     expect(componentCss).not.toContain('cursor: crosshair;');
   });
 });
