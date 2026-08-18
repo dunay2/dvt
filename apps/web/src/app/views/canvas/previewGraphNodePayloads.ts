@@ -80,10 +80,15 @@ export function requireSourcePayload(
   const importedSchema = readMetadataString(node, 'schema');
   const importedTableName = readMetadataString(node, 'tableName');
   const importedSourceName = readMetadataString(node, 'sourceName');
+  const isImportedSource = node.pluginId === 'dvt.warehouse-source';
   const schema =
-    readConfigString(config, 'schema') ?? importedSchema ?? readAuthoringDefaultSchema(node);
+    (isImportedSource ? importedSchema : (readConfigString(config, 'schema') ?? importedSchema)) ??
+    readAuthoringDefaultSchema(node);
   const table =
-    readConfigString(config, 'table') ?? importedTableName ?? readAuthoringDefaultTable(node);
+    (isImportedSource
+      ? importedTableName
+      : (readConfigString(config, 'table') ?? importedTableName)) ??
+    readAuthoringDefaultTable(node);
   const alias = readConfigString(config, 'alias') ?? importedSourceName ?? table;
   const connectionRef = resolveEffectiveDvtConnectionRef(node);
 
