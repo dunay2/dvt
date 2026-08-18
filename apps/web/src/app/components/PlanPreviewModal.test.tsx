@@ -146,6 +146,55 @@ describe('PlanPreviewModal', () => {
     expect(longValues.every((value) => value.className.includes('break-all'))).toBe(true);
   });
 
+  it('renders the complete accepted preview surface in Spanish without English UI copy', async () => {
+    await act(async () => {
+      root.render(
+        <PlanPreviewModal
+          open={true}
+          onClose={vi.fn()}
+          plan={mockExecutionPlan}
+          outcome={{ kind: 'accepted', plan: mockExecutionPlan }}
+          messages={resolveCanvasViewCopy('es')}
+          startRunMessage="La vista previa actual está lista para iniciar la ejecución."
+          onStartRun={vi.fn()}
+        />
+      );
+    });
+
+    const modal = document.querySelector('[data-testid="plan-preview-modal"]');
+    const text = modal?.textContent ?? '';
+
+    expect(text).toContain('Vista previa de ejecución');
+    expect(text).toContain('Solo lectura');
+    expect(text).toContain('Identidad de la vista previa');
+    expect(text).toContain('Destino de ejecución');
+    expect(text).toContain('Resumen de la vista previa persistida');
+    expect(text).toContain('Evidencia de persistencia');
+    expect(text).toContain('Procedencia');
+    expect(text).toContain('Pasos de ejecución');
+    expect(text).toContain('Exportar JSON');
+    expect(text).toContain('Iniciar ejecución');
+    expect(document.querySelector('[aria-label="ID de vista previa"]')?.textContent).toBe(
+      mockExecutionPlan.planId
+    );
+
+    for (const englishCopy of [
+      'Execution Preview identity',
+      'Read-only',
+      'Execution target',
+      'Persisted preview summary',
+      'Persistence evidence',
+      'Execution steps',
+      'Export JSON',
+      'Start Run',
+      'Not reported',
+      'Unknown',
+      'Not estimated',
+    ]) {
+      expect(text).not.toContain(englishCopy);
+    }
+  });
+
   it('shows authoritative dbt file provenance without exposing the credential reference', async () => {
     const plan = {
       ...mockExecutionPlan,
