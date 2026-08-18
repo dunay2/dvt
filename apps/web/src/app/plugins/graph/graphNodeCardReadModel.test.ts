@@ -41,7 +41,8 @@ function sourceMetricEvidence(rowCount: number): SourceObjectMetricEvidence {
 
 function buildNode(partial: Partial<CanonicalNode>): CanonicalNode {
   return {
-    id: 'node-1',
+    id:
+      partial.pluginId === 'dvt.warehouse-source' && partial.name != null ? partial.name : 'node-1',
     name: 'Node 1',
     pluginId: 'dvt',
     kind: 'dvt:source',

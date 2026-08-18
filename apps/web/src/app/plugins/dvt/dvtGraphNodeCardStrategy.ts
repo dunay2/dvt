@@ -93,6 +93,10 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     metadata,
     data,
   });
+  const title =
+    node.pluginId === 'dvt.warehouse-source' && node.kind === 'dvt:source' && node.name !== node.id
+      ? node.name
+      : titlePresentation.title;
   const runtimeData = {
     ...data,
     durationMs: numericValue(data.durationMs) ?? resolveCanonicalDurationMs(node, metadata, data),
@@ -109,7 +113,7 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
 
   const operationalSummary = buildGraphNodeOperationalSummary({
     projectionKind: isSourceObject ? 'source' : 'execution',
-    title: titlePresentation.title,
+    title,
     metadata,
     data,
     runtimeData,
@@ -119,7 +123,7 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
   });
 
   return {
-    title: titlePresentation.title,
+    title,
     technicalName: titlePresentation.technicalName,
     subtitle: buildDvtSubtitle(metadata, data, node.path),
     path: buildDvtArtifactPath(metadata, data, node.path),
@@ -136,12 +140,7 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     metrics,
     operationalMetrics: operationalSummary.metrics,
     operationalDetail: operationalSummary.detail,
-    sourceIdentity: buildGraphNodeSourceIdentity(
-      node,
-      metadata,
-      titlePresentation.title,
-      presentationCopy?.locale
-    ),
+    sourceIdentity: buildGraphNodeSourceIdentity(node, metadata, title, presentationCopy?.locale),
     nodeActionsLabel:
       presentationCopy?.nodeActionsLabel ?? graphNodeCardCopyTokens.nodeActionsLabel,
   };
