@@ -19,6 +19,7 @@ import {
 import type { InteractiveCanvasColumnLineageEdgeData } from './CanvasColumnLineageEdge';
 import type { CanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
 import type { GraphNodeColumn } from '../../plugins/graph/GraphNodeColumnSection';
+import { canAuthorCanvasColumnMappings } from './canvasColumnMappingAuthoring';
 
 function projectInteractiveColumns(node: Node): GraphNodeColumn[] {
   const columns = Array.isArray(node.data.columns)
@@ -151,6 +152,8 @@ export function useCanvasControllerReadModel({
         },
       }).map((node) => {
         const canonicalNode = graphModel.canonicalNodesById.get(node.id);
+        const canAuthorColumnMappings =
+          canonicalNode?.role !== 'transform' || canAuthorCanvasColumnMappings(canonicalNode);
         const selectedForExecution = uiScope.selectedNodeIds.includes(node.id);
         const canSelectNode =
           canSelectExecution &&
@@ -172,13 +175,16 @@ export function useCanvasControllerReadModel({
             overlayDecoration: overlayModel.overlayDecorations.get(node.id) ?? null,
             runtimeCapabilities,
             activeColumnHandleId: graphHandlers.activeColumnHandleId,
+            onAutomapColumns: canAuthorColumnMappings ? node.data.onAutomapColumns : undefined,
             columns:
               activeCanvasKind === 'transformation'
                 ? projectInteractiveColumns(node)
                 : node.data.columns,
             columnPortDirections:
               activeCanvasKind === 'transformation' && canonicalNode != null
-                ? resolveCanvasColumnPortDirections(canonicalNode.role)
+                ? canonicalNode.role === 'transform' && !canAuthorColumnMappings
+                  ? []
+                  : resolveCanvasColumnPortDirections(canonicalNode.role)
                 : [],
           },
         };

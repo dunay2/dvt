@@ -285,6 +285,9 @@ describe('useCanvasControllerReadModel', () => {
       expect(sourceData.onColumnDisclosureChange).toBe(
         args.graphHandlers.handleColumnDisclosureChange
       );
+      const modelData = state?.nodesWithImpact[1]?.data as ReadModelNodeData;
+      expect(modelData.columnPortDirections).toEqual(['target', 'source']);
+      expect(modelData.onAutomapColumns).toBe(args.graphHandlers.handleAutomapCanvasColumns);
     } finally {
       await mounted.cleanup();
     }
