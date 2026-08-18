@@ -17,6 +17,13 @@ const SPANISH_PRESENTATION_COPY = {
   workspaceCodeDetailTemplate: 'Código en {path}',
   generatedCodeDetailTemplate: 'Código generado en {path}',
   codeUnavailableMessage: 'Código no disponible',
+  draftStatusLabel: 'Borrador',
+  valueLabels: {
+    running: 'En ejecución',
+    success: 'Correcto',
+    failed: 'Fallido',
+    skipped: 'Omitido',
+  },
 } as const;
 
 function sourceMetricEvidence(rowCount: number): SourceObjectMetricEvidence {
@@ -516,6 +523,72 @@ describe('buildGraphNodeCardReadModel', () => {
     );
 
     expect(model.status).toEqual({ label: 'Running', tone: 'running' });
+  });
+
+  it('projects the current run task status instead of a stale editorial fallback', () => {
+    const node = buildNode({
+      id: 'transform-1',
+      kind: 'dvt:sql_transform',
+      pluginId: 'dvt',
+      role: 'transform',
+      name: 'customer_rollup',
+      metadata: {
+        runStatus: 'completed',
+      },
+    });
+
+    const model = buildGraphNodeCardReadModel(
+      node,
+      {
+        presentationCopy: SPANISH_PRESENTATION_COPY,
+        runStatusByNodeId: new Map([[node.id, 'running']]),
+      },
+      [dvtGraphNodeCardStrategy]
+    );
+
+    expect(model.status).toEqual({ label: 'En ejecución', tone: 'running' });
+  });
+
+  it('projects a successful current run task with localized operational copy', () => {
+    const node = buildNode({
+      id: 'sink-1',
+      kind: 'dvt:sink',
+      pluginId: 'dvt',
+      role: 'output',
+      name: 'orders_sink',
+    });
+
+    const model = buildGraphNodeCardReadModel(
+      node,
+      {
+        presentationCopy: SPANISH_PRESENTATION_COPY,
+        runStatusByNodeId: new Map([[node.id, 'success']]),
+      },
+      [dvtGraphNodeCardStrategy]
+    );
+
+    expect(model.status).toEqual({ label: 'Correcto', tone: 'success' });
+  });
+
+  it('does not project a runtime task status that belongs to another node', () => {
+    const node = buildNode({
+      id: 'transform-1',
+      kind: 'dvt:sql_transform',
+      pluginId: 'dvt',
+      role: 'transform',
+      name: 'customer_rollup',
+    });
+
+    const model = buildGraphNodeCardReadModel(
+      node,
+      {
+        presentationCopy: SPANISH_PRESENTATION_COPY,
+        runStatusByNodeId: new Map([['transform-2', 'running']]),
+      },
+      [dvtGraphNodeCardStrategy]
+    );
+
+    expect(model.status).toEqual({ label: 'Borrador', tone: 'warning' });
   });
 
   it('uses a DBT card strategy for model context instead of DVT table ownership', () => {
