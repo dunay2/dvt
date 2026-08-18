@@ -321,4 +321,12 @@ describe('CanvasNodeShell', () => {
     expect(themeCss).toContain('--canvas-node-port-output-ring');
     expect(themeCss).toContain('--canvas-node-port-control-ring');
   });
+
+  it('uses grab cursors for graph connection ports', () => {
+    const componentCss = readFileSync(canvasNodeShellCssPath, 'utf8');
+
+    expect(componentCss).toMatch(/\.portHandle\s*\{[^}]*cursor:\s*grab\s*!important;/su);
+    expect(componentCss).toMatch(/\.portHandle:active\s*\{[^}]*cursor:\s*grabbing\s*!important;/su);
+    expect(componentCss).not.toContain('cursor: crosshair;');
+  });
 });
