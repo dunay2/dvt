@@ -537,7 +537,7 @@ describe('GraphNodeCardView', () => {
           cardModel={{
             ...BASE_PROPS.cardModel,
             operationalMetrics: [{ id: 'rows', label: 'Rows', value: '3' }],
-            operationalDetail: undefined,
+            operationalDetail: null,
           }}
           dataSampleInteractionLabel="Double-click or press Enter to open the result."
           onOpenDataSample={onOpenDataSample}
