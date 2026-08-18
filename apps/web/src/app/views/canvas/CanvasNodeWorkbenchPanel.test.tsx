@@ -565,6 +565,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(sqlEditor?.value).toBe('select order_id from source.orders');
     expect(sqlEditor?.dataset.language).toBe('sql');
     expect(sqlEditor?.dataset.path).toBe('canvas/transform.orders.sql');
+    expect(codeSection?.querySelector('[data-testid="monaco-code-viewer"]')).toBeNull();
     expect(codeSection?.querySelector('input[name="dvt-transform-column"]')).toBeNull();
   });
 
