@@ -204,6 +204,42 @@ describe('runsService runtime contract', () => {
     });
   });
 
+  it('loads a bounded materialization sample using only run identity and limit', async () => {
+    const apiClient = createApiClientMock();
+    vi.mocked(apiClient.getJson).mockResolvedValue({
+      contractVersion: 1,
+      connectionId: 'warehouse-a',
+      objectId: 'relation/analytics_db/public/sink_1',
+      columns: [{ name: 'id', type: 'integer', nullable: false }],
+      rows: [{ values: ['1'] }],
+      limit: 20,
+      truncated: true,
+      sampledAt: '2026-08-18T00:01:00.000Z',
+    });
+
+    const service = createRunsService(apiClient);
+    const result = await service.getRunMaterializationSample?.('run_abc', 20);
+
+    expect(apiClient.getJson).toHaveBeenCalledWith(
+      '/runs/run_abc/materialization-rows?tenantId=tenant-1&limit=20'
+    );
+    expect(result).toEqual(
+      expect.objectContaining({
+        objectId: 'relation/analytics_db/public/sink_1',
+        rows: [{ values: ['1'] }],
+      })
+    );
+  });
+
+  it('rejects malformed materialization sample responses', async () => {
+    const apiClient = createApiClientMock();
+    vi.mocked(apiClient.getJson).mockResolvedValue({ rows: 'not-a-row-array' });
+
+    const service = createRunsService(apiClient);
+
+    await expect(service.getRunMaterializationSample?.('run_abc', 20)).rejects.toThrow();
+  });
+
   it('uses backend-owned cancel and recover command contracts', async () => {
     const apiClient = createApiClientMock();
     vi.mocked(apiClient.postJson)
@@ -661,12 +697,14 @@ describe('runsService runtime contract', () => {
 
     expect(service).toHaveProperty('listRunSummaries');
     expect(service).toHaveProperty('getRunSnapshot');
+    expect(service).toHaveProperty('getRunMaterializationSample');
     expect(service).toHaveProperty('startRun');
     expect(service).toHaveProperty('listRunEvents');
     expect(service).toHaveProperty('cancelRun');
     expect(service).toHaveProperty('recoverRun');
     expect(typeof service.listRunSummaries).toBe('function');
     expect(typeof service.getRunSnapshot).toBe('function');
+    expect(typeof service.getRunMaterializationSample).toBe('function');
     expect(typeof service.startRun).toBe('function');
     expect(typeof service.listRunEvents).toBe('function');
     expect(typeof service.cancelRun).toBe('function');
