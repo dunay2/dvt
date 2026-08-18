@@ -17,9 +17,10 @@ function buildClient(query: ReturnType<typeof vi.fn>): {
 describe('WorkspacePostgresTransformSqlValidator', () => {
   it('plans valid SQL in a read-only transaction and always rolls it back', async () => {
     const client = buildClient(vi.fn().mockResolvedValue({ rows: [] }));
+    const clientFactory = vi.fn().mockReturnValue(client);
     const validator = new WorkspacePostgresTransformSqlValidator({
       credentialResolver: { resolveCredential: vi.fn().mockResolvedValue('postgresql://resolved') },
-      clientFactory: vi.fn().mockReturnValue(client),
+      clientFactory,
     });
 
     await expect(
@@ -35,13 +36,18 @@ describe('WorkspacePostgresTransformSqlValidator', () => {
       'explain (format json) select * from public.source_1',
       'rollback',
     ]);
+    expect(clientFactory).toHaveBeenCalledWith({
+      connectionString: 'postgresql://resolved',
+      connectionTimeoutMillis: 3000,
+      query_timeout: 3000,
+    });
     expect(client.end).toHaveBeenCalledTimes(1);
   });
 
   it('returns a positioned PostgreSQL column diagnostic and rolls back', async () => {
     const postgresError = Object.assign(new Error('column "missing" does not exist'), {
       code: '42703',
-      position: '8',
+      position: String('explain (format json) '.length + 8),
     });
     const query = vi
       .fn()
@@ -77,9 +83,15 @@ describe('WorkspacePostgresTransformSqlValidator', () => {
 
     await expect(
       validator.validate({ credentialRef: 'postgres:warehouse-a', sql: 'select 1' })
-    ).resolves.toMatchObject({
+    ).resolves.toEqual({
       status: 'unavailable',
-      diagnostics: [{ code: 'connection_unavailable', source: 'connection' }],
+      diagnostics: [
+        {
+          code: 'connection_unavailable',
+          source: 'connection',
+          message: 'The governed PostgreSQL connection is unavailable.',
+        },
+      ],
     });
     expect(client.query).not.toHaveBeenCalled();
     expect(client.end).toHaveBeenCalledTimes(1);

@@ -64,7 +64,7 @@ describe('ValidatePostgresTransformSqlUseCase', () => {
     expect(harness.catalog.getConnection).toHaveBeenCalledWith(scope, 'warehouse-a');
     expect(harness.semanticValidator.validate).toHaveBeenCalledWith({
       credentialRef: 'postgres:warehouse-a',
-      sql: 'select * from public.source_1',
+      sql: ['SELECT *', 'FROM public.source_1'].join('\n'),
     });
   });
 

@@ -1,5 +1,6 @@
 /** Owned concern: enforce the PostgreSQL SQL-first structural policy with the PostgreSQL parser. */
 import { hasSqlDetails, parse } from 'libpg-query';
+import { deparse } from 'pgsql-deparser';
 
 import {
   POSTGRES_TRANSFORM_SQL_DIAGNOSTIC_CODE,
@@ -12,9 +13,13 @@ type PostgresParseResult = Readonly<{
   }>[];
 }>;
 
+type PostgresTransformSqlStructuralResult =
+  | Extract<PostgresTransformSqlValidationResult, { status: 'invalid' }>
+  | Readonly<{ status: 'valid'; canonicalSql: string }>;
+
 export async function validatePostgresTransformSqlStructure(
   sql: string
-): Promise<PostgresTransformSqlValidationResult> {
+): Promise<PostgresTransformSqlStructuralResult> {
   if (sql.trim().length === 0) {
     return invalidPolicy(POSTGRES_TRANSFORM_SQL_DIAGNOSTIC_CODE.sqlRequired, 'SQL is required.');
   }
@@ -54,7 +59,10 @@ export async function validatePostgresTransformSqlStructure(
     );
   }
 
-  return { status: 'valid' };
+  return {
+    status: 'valid',
+    canonicalSql: await deparse(parsed as Parameters<typeof deparse>[0]),
+  };
 }
 
 function hasSelectStatement(statement: Readonly<Record<string, unknown>> | undefined): boolean {
@@ -67,7 +75,7 @@ function invalidPolicy(
     | typeof POSTGRES_TRANSFORM_SQL_DIAGNOSTIC_CODE.multipleStatements
     | typeof POSTGRES_TRANSFORM_SQL_DIAGNOSTIC_CODE.unsupportedStatement,
   message: string
-): PostgresTransformSqlValidationResult {
+): Extract<PostgresTransformSqlValidationResult, { status: 'invalid' }> {
   return {
     status: 'invalid',
     diagnostics: [{ code, source: 'policy', message }],

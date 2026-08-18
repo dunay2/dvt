@@ -51,7 +51,7 @@ export class ValidatePostgresTransformSqlUseCase {
 
     return this.deps.semanticValidator.validate({
       credentialRef: connection.credentialRef,
-      sql: input.sql,
+      sql: structural.canonicalSql,
     });
   }
 }

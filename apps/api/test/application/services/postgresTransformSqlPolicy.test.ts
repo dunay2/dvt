@@ -4,11 +4,16 @@ import { validatePostgresTransformSqlStructure } from '../../../src/application/
 
 describe('validatePostgresTransformSqlStructure', () => {
   it('accepts one PostgreSQL SELECT statement', async () => {
-    await expect(
-      validatePostgresTransformSqlStructure(
-        'select order_id, customer, amount from public.source_1'
-      )
-    ).resolves.toEqual({ status: 'valid' });
+    const result = await validatePostgresTransformSqlStructure(
+      'select order_id, customer, amount from public.source_1'
+    );
+
+    expect(result).toMatchObject({ status: 'valid' });
+    if (result.status === 'valid') {
+      expect(result.canonicalSql).toBe(
+        ['SELECT', '  order_id,', '  customer,', '  amount', 'FROM public.source_1'].join('\n')
+      );
+    }
   });
 
   it('accepts a SELECT statement introduced by a CTE', async () => {
@@ -16,7 +21,7 @@ describe('validatePostgresTransformSqlStructure', () => {
       validatePostgresTransformSqlStructure(
         'with source_rows as (select * from public.source_1) select * from source_rows'
       )
-    ).resolves.toEqual({ status: 'valid' });
+    ).resolves.toMatchObject({ status: 'valid' });
   });
 
   it('rejects more than one statement', async () => {

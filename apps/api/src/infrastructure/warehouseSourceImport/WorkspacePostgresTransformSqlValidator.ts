@@ -1,6 +1,6 @@
 /** Owned concern: ask the governed PostgreSQL server to analyze SQL without executing it. */
 import type { IPostgresCredentialBindingResolver } from '@dvt/adapter-postgres';
-import { Client } from 'pg';
+import { Client, type ClientConfig } from 'pg';
 
 import {
   POSTGRES_TRANSFORM_SQL_DIAGNOSTIC_CODE,
@@ -12,18 +12,18 @@ import {
 type PostgresValidationClient = Pick<Client, 'connect' | 'query' | 'end'>;
 
 const POSTGRES_SQL_VALIDATION_TIMEOUT_MS = 3000;
+const POSTGRES_EXPLAIN_PREFIX = 'explain (format json) ';
 
 export class WorkspacePostgresTransformSqlValidator implements IPostgresTransformSqlSemanticValidator {
-  private readonly clientFactory: (connectionString: string) => PostgresValidationClient;
+  private readonly clientFactory: (config: ClientConfig) => PostgresValidationClient;
 
   public constructor(
     private readonly options: {
       credentialResolver: IPostgresCredentialBindingResolver;
-      clientFactory?: (connectionString: string) => PostgresValidationClient;
+      clientFactory?: (config: ClientConfig) => PostgresValidationClient;
     }
   ) {
-    this.clientFactory =
-      options.clientFactory ?? ((connectionString) => new Client({ connectionString }));
+    this.clientFactory = options.clientFactory ?? ((config) => new Client(config));
   }
 
   public async validate(input: {
@@ -36,13 +36,17 @@ export class WorkspacePostgresTransformSqlValidator implements IPostgresTransfor
         input.credentialRef
       );
     } catch (error) {
-      return unavailable(error);
+      return unavailable();
     }
     if (connectionString === null || connectionString.trim().length === 0) {
-      return unavailable(new Error('Credential reference could not be resolved.'));
+      return unavailable();
     }
 
-    const client = this.clientFactory(connectionString);
+    const client = this.clientFactory({
+      connectionString,
+      connectionTimeoutMillis: POSTGRES_SQL_VALIDATION_TIMEOUT_MS,
+      query_timeout: POSTGRES_SQL_VALIDATION_TIMEOUT_MS,
+    });
     let connected = false;
     let transactionStarted = false;
     try {
@@ -51,11 +55,11 @@ export class WorkspacePostgresTransformSqlValidator implements IPostgresTransfor
       await client.query('begin transaction read only');
       transactionStarted = true;
       await client.query(`set local statement_timeout = '${POSTGRES_SQL_VALIDATION_TIMEOUT_MS}ms'`);
-      await client.query(`explain (format json) ${input.sql}`);
+      await client.query(`${POSTGRES_EXPLAIN_PREFIX}${input.sql}`);
       return { status: 'valid' };
     } catch (error) {
       return !connected || isConnectionFailure(error)
-        ? unavailable(error)
+        ? unavailable()
         : invalidPostgresSql(error, input.sql);
     } finally {
       if (transactionStarted) {
@@ -68,7 +72,7 @@ export class WorkspacePostgresTransformSqlValidator implements IPostgresTransfor
 
 function invalidPostgresSql(error: unknown, sql: string): PostgresTransformSqlValidationResult {
   const code = postgresDiagnosticCode(error);
-  const startOffset = postgresErrorOffset(error, sql);
+  const startOffset = postgresErrorOffset(error, sql, POSTGRES_EXPLAIN_PREFIX.length);
   return {
     status: 'invalid',
     diagnostics: [
@@ -84,17 +88,14 @@ function invalidPostgresSql(error: unknown, sql: string): PostgresTransformSqlVa
   };
 }
 
-function unavailable(error: unknown): PostgresTransformSqlValidationResult {
+function unavailable(): PostgresTransformSqlValidationResult {
   return {
     status: 'unavailable',
     diagnostics: [
       {
         code: POSTGRES_TRANSFORM_SQL_DIAGNOSTIC_CODE.connectionUnavailable,
         source: 'connection',
-        message:
-          error instanceof Error
-            ? error.message
-            : 'The governed PostgreSQL connection is unavailable.',
+        message: 'The governed PostgreSQL connection is unavailable.',
       },
     ],
   };
@@ -108,7 +109,11 @@ function postgresDiagnosticCode(error: unknown): PostgresTransformSqlDiagnosticC
   return POSTGRES_TRANSFORM_SQL_DIAGNOSTIC_CODE.postgresError;
 }
 
-function postgresErrorOffset(error: unknown, sql: string): number | undefined {
+function postgresErrorOffset(
+  error: unknown,
+  sql: string,
+  prefixLength: number
+): number | undefined {
   if (typeof error !== 'object' || error === null || !('position' in error)) {
     return undefined;
   }
@@ -116,7 +121,11 @@ function postgresErrorOffset(error: unknown, sql: string): number | undefined {
   if (!Number.isSafeInteger(position) || position <= 0) {
     return undefined;
   }
-  return Math.min(position - 1, Math.max(0, sql.length - 1));
+  const sqlOffset = position - 1 - prefixLength;
+  if (sqlOffset < 0) {
+    return undefined;
+  }
+  return Math.min(sqlOffset, Math.max(0, sql.length - 1));
 }
 
 function isConnectionFailure(error: unknown): boolean {
