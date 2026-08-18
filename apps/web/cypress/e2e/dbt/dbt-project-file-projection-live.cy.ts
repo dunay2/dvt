@@ -195,6 +195,10 @@ describe('dbt project file projection live vertical', () => {
       `/canvas?authority=dbt-project-files&canvasId=${CANVAS_ID}&projectRoot=${PROJECT_ROOT}`,
       {
         onBeforeLoad(window) {
+          window.localStorage.setItem(
+            'dvt-web-application-language',
+            JSON.stringify({ state: { language: 'en' }, version: 0 })
+          );
           const originalFetch = window.fetch.bind(window);
           window.fetch = (input, init) => {
             observedRequests.push(
@@ -335,6 +339,10 @@ describe('dbt project file projection live vertical', () => {
       `/canvas?authority=dbt-project-files&canvasId=${INVALID_CANVAS_ID}&projectRoot=${INVALID_PROJECT_ROOT}`,
       {
         onBeforeLoad(window) {
+          window.localStorage.setItem(
+            'dvt-web-application-language',
+            JSON.stringify({ state: { language: 'en' }, version: 0 })
+          );
           const originalFetch = window.fetch.bind(window);
           window.fetch = (input, init) => {
             observedRequests.push(
