@@ -4,3 +4,11 @@ import type { DbtExecutionTargetIdentity } from '@dvt/contracts';
 export interface IDbtExecutionTargetResolver {
   resolve(): DbtExecutionTargetIdentity | null;
 }
+
+export interface IDbtExecutionConnectionBindingVerifier {
+  verify(input: {
+    readonly runtimeCredentialRef: string;
+    readonly targetProfile: string;
+    readonly connectionCredentialRef: string;
+  }): Promise<boolean>;
+}

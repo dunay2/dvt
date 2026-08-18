@@ -217,16 +217,30 @@ describe('stored plan authority flow', () => {
       executionTargetResolver: {
         resolve: () => ({
           provider: 'temporal',
-          adapter: 'temporal',
+          adapter: 'postgres',
           targetName: 'production',
+          connectionRef: {
+            schemaVersion: 'connection-ref.v1',
+            connectionId: 'warehouse-production',
+            provider: 'postgres',
+          },
+          resolutionSource: 'environment-default',
           credentialRef: 'vault:dbt/production',
         }),
       },
+      executionConnectionBindingVerifier: { verify: vi.fn(async () => true) },
       stepTypeRegistry: harness.stepTypeRegistry,
       warehouseConnectionCatalog: {
         listConnections: vi.fn(),
         listSourceObjects: vi.fn(),
-        getConnection: vi.fn(),
+        getConnection: vi.fn(async () => ({
+          id: 'warehouse-production',
+          name: 'Production warehouse',
+          type: 'postgres' as const,
+          database: 'analytics',
+          credentialRef: 'postgres:warehouse-production',
+          sourceObjects: [],
+        })),
         createConnection: vi.fn(),
         renameConnection: vi.fn(),
       },

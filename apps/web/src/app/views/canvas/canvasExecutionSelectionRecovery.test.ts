@@ -240,6 +240,12 @@ describe('resolveCanvasExecutionSelectionLastPreviewRevision', () => {
               provider: 'postgres',
               adapter: 'dbt-postgres',
               targetName: 'dev',
+              connectionRef: {
+                schemaVersion: 'connection-ref.v1',
+                connectionId: 'warehouse-dev',
+                provider: 'dbt-postgres',
+              },
+              resolutionSource: 'environment-default',
               credentialRef: 'credential-ref',
             },
           },

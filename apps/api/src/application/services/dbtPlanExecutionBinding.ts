@@ -13,6 +13,7 @@ export type DbtPlanExecutionBinding =
       projectRoot: string;
       expectedContentSetSha256?: string;
       targetProfile: string;
+      connectionRef: DbtExecutionTargetIdentity['connectionRef'];
       credentialRef: string;
     }>
   | Readonly<{ ok: false; reason: string }>;
@@ -41,6 +42,7 @@ export function resolveDbtPlanExecutionBinding(input: {
       ok: true,
       projectRoot: '.',
       targetProfile: input.executionTarget.targetName,
+      connectionRef: input.executionTarget.connectionRef,
       credentialRef: input.executionTarget.credentialRef,
     };
   }
@@ -67,6 +69,7 @@ export function resolveDbtPlanExecutionBinding(input: {
     projectRoot: parsedProvenance.data.projectRoot,
     expectedContentSetSha256: parsedProvenance.data.contentSetSha256,
     targetProfile: input.executionTarget.targetName,
+    connectionRef: input.executionTarget.connectionRef,
     credentialRef: input.executionTarget.credentialRef,
   };
 }
@@ -79,6 +82,10 @@ function sameExecutionTarget(
     left.provider === right.provider &&
     left.adapter === right.adapter &&
     left.targetName === right.targetName &&
+    left.connectionRef.schemaVersion === right.connectionRef.schemaVersion &&
+    left.connectionRef.connectionId === right.connectionRef.connectionId &&
+    left.connectionRef.provider === right.connectionRef.provider &&
+    left.resolutionSource === right.resolutionSource &&
     left.credentialRef === right.credentialRef
   );
 }

@@ -57,6 +57,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [DBT runtime credentials could escape the worker boundary or survive execution](R-20260803-DBT-RUNTIME-CREDENTIALS.yaml)
 - [dbt YAML description edits could alter unrelated project bytes](R-20260717-DBT-YAML-DESCRIPTION-ROUNDTRIP.yaml)
 - [Delivery-owned in-memory outbox core can mask durable adapter parity gaps](R-20260514-AR-A7-IN-MEMORY-OUTBOX-OWNERSHIP.yaml)
+- [Displayed dbt target could diverge from its governed execution connection](R-20260818-DBT-TARGET-CONNECTION-DRIFT.yaml)
 - [Documentary misalignment risk for snapshot ownership and fallback polling traceability](R-20260402-SNAPSHOT-RETRY-FALLBACK-CADENCE.yaml)
 - [Documentation could overstate implemented workflow providers](R-20260810-ACTIVE-PROVIDER-DOCUMENTATION-DRIFT.yaml)
 - [Downstream consumers may still depend on retired status helper exports or mixed status semantics](R-20260413-AR-A12-B-STATUS-MODEL-CONSUMER-DRIFT.yaml)

@@ -21,7 +21,10 @@ import {
 } from '@dvt/contracts';
 
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
-import type { IDbtExecutionTargetResolver } from '../ports/dbtExecutionTarget.js';
+import type {
+  IDbtExecutionConnectionBindingVerifier,
+  IDbtExecutionTargetResolver,
+} from '../ports/dbtExecutionTarget.js';
 import type {
   DbtProjectBundleBuildResult,
   IDbtProjectBundleBuilder,
@@ -48,6 +51,7 @@ export class RunExecutionContextBindingUseCase implements IStartRunUseCase {
       readonly bundleBuilder: IDbtProjectBundleBuilder;
       readonly contextWriter: IRunExecutionContextWriter;
       readonly executionTargetResolver: IDbtExecutionTargetResolver;
+      readonly executionConnectionBindingVerifier: IDbtExecutionConnectionBindingVerifier;
       readonly stepTypeRegistry: IStepTypeRegistry;
       readonly warehouseConnectionCatalog: IWarehouseConnectionCatalog;
       readonly postgresCredentialResolver: IPostgresCredentialBindingResolver;
@@ -95,6 +99,15 @@ export class RunExecutionContextBindingUseCase implements IStartRunUseCase {
         executionTarget: this.deps.executionTargetResolver.resolve(),
       });
       if (!sourceBinding.ok) return rejectRunExecutionContext(sourceBinding.reason);
+      const executionConnection = await this.resolveDbtExecutionConnection(
+        scope,
+        sourceBinding.connectionRef,
+        sourceBinding.targetProfile,
+        sourceBinding.credentialRef
+      );
+      if (!executionConnection.ok) {
+        return rejectRunExecutionContext(executionConnection.reason);
+      }
 
       const bundle = await this.deps.bundleBuilder.build({
         scope,
@@ -147,6 +160,54 @@ export class RunExecutionContextBindingUseCase implements IStartRunUseCase {
       { ...commandWithPlanRef, runExecutionContextRef: writtenContext.ref },
       context
     );
+  }
+
+  private async resolveDbtExecutionConnection(
+    scope: WorkspaceStorageScope,
+    connectionRef: ConnectionRef,
+    targetProfile: string,
+    runtimeCredentialRef: string
+  ): Promise<{ readonly ok: true } | { readonly ok: false; readonly reason: string }> {
+    let connection: Awaited<ReturnType<IWarehouseConnectionCatalog['getConnection']>>;
+    try {
+      connection = await this.deps.warehouseConnectionCatalog.getConnection(
+        scope,
+        connectionRef.connectionId
+      );
+    } catch (error) {
+      if (error instanceof WarehouseConnectionNotFoundError) {
+        return {
+          ok: false,
+          reason: 'The Preview-bound DBT connection is not in this workspace.',
+        };
+      }
+      throw error;
+    }
+
+    if (
+      connection.id !== connectionRef.connectionId ||
+      connection.type !== connectionRef.provider
+    ) {
+      return {
+        ok: false,
+        reason: 'The Preview-bound DBT connection identity is invalid.',
+      };
+    }
+    if (
+      connection.credentialRef === undefined ||
+      !(await this.deps.executionConnectionBindingVerifier.verify({
+        runtimeCredentialRef,
+        targetProfile,
+        connectionCredentialRef: connection.credentialRef,
+      }))
+    ) {
+      return {
+        ok: false,
+        reason:
+          'The Preview-bound DBT profile does not resolve to its governed workspace connection.',
+      };
+    }
+    return { ok: true };
   }
 
   private async resolvePostgresPluginContext(

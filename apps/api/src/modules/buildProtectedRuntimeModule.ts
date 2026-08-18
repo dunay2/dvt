@@ -12,6 +12,7 @@ import type { Logger } from 'pino';
 import { getPgPool } from '../db/pool.js';
 import { ArtifactBackedRunExecutionContextInheritanceWriter } from '../infrastructure/dbt/ArtifactBackedRunExecutionContextInheritanceWriter.js';
 import { ArtifactBackedRunExecutionContextReferenceReader } from '../infrastructure/dbt/ArtifactBackedRunExecutionContextReferenceReader.js';
+import { ConfiguredDbtExecutionConnectionBindingVerifier } from '../infrastructure/dbt/ConfiguredDbtExecutionConnectionBindingVerifier.js';
 import { ConfiguredDbtExecutionTargetResolver } from '../infrastructure/dbt/ConfiguredDbtExecutionTargetResolver.js';
 import { DbtCliProjectAnalyzer } from '../infrastructure/dbt/DbtCliProjectAnalyzer.js';
 import { LocalDbtProjectImportInspector } from '../infrastructure/dbt/LocalDbtProjectImportInspector.js';
@@ -130,12 +131,22 @@ export async function buildProtectedRuntimeModule(
     ...(env.DVT_DBT_EXECUTION_TARGET_NAME === undefined
       ? {}
       : { targetName: env.DVT_DBT_EXECUTION_TARGET_NAME }),
+    ...(env.DVT_DBT_EXECUTION_CONNECTION_ID === undefined
+      ? {}
+      : { connectionId: env.DVT_DBT_EXECUTION_CONNECTION_ID }),
     ...(env.DVT_DBT_EXECUTION_CREDENTIAL_REF === undefined
       ? {}
       : { credentialRef: env.DVT_DBT_EXECUTION_CREDENTIAL_REF }),
   });
+  const dbtExecutionConnectionBindingVerifier = new ConfiguredDbtExecutionConnectionBindingVerifier(
+    {
+      environment: process.env,
+      postgresCredentialResolver: storageRuntime.postgresCredentialResolver,
+    }
+  );
   const dbtProjectImport = buildDbtProjectImportRuntime({
     analyzer: dbtProjectAnalyzer,
+    executionConnectionBindingVerifier: dbtExecutionConnectionBindingVerifier,
     executionTargetResolver: dbtExecutionTargetResolver,
     inspector: new LocalDbtProjectImportInspector({
       workspaceFilesRoot: storageRuntime.workspaceFilesRoot,
@@ -173,6 +184,7 @@ export async function buildProtectedRuntimeModule(
           runExecutionContextReferenceStore: storageRuntime.runExecutionContextReferenceStore,
         }),
     dbtExecutionTargetResolver,
+    dbtExecutionConnectionBindingVerifier,
     warehouseConnectionCatalog: storageRuntime.warehouseConnectionCatalog,
     postgresCredentialResolver: storageRuntime.postgresCredentialResolver,
   });

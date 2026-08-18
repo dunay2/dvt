@@ -1,0 +1,36 @@
+---
+id: R-20260818-DBT-TARGET-CONNECTION-DRIFT
+title: Displayed dbt target could diverge from its governed execution connection
+status: Open
+date: 2026-08-18
+owners:
+  - packages/@dvt/contracts
+  - apps/api
+  - apps/web
+severity: High
+probability: Low
+context: >
+  The supported dbt runtime resolves an environment-owned target profile while Canvas also needs a
+  user-visible warehouse connection identity for the same execution posture.
+risk: >
+  If Preview merely displays a connection label without binding it to authorized catalog state, Run
+  could execute with stale configuration, use a connection outside the workspace, or expose a
+  credential reference as if it were a user-facing connection.
+mitigations:
+  - The strict Preview provenance binds target, adapter, stable ConnectionRef, and resolution
+    source.
+  - Preview readiness requires the referenced connection to exist in the authorized workspace
+    catalog.
+  - Run repeats the catalog lookup and compares the persisted target with current server
+    configuration.
+  - Preview and Run resolve the effective dbt profile and require its concrete host, port, user, and
+    database to match the governed catalog credential before execution is ready.
+  - Canvas and Preview share one projection that omits the opaque credential reference.
+  - Missing, mismatched, changed, ambiguous, templated, and partially configured targets fail closed
+    with deterministic tests.
+  - The live proof derives the isolated dbt profile and governed connection from the same database
+    URL.
+monitoring:
+  - Keep the protected dbt Preview and Run live proof in the selected-closure acceptance rail.
+  - Reassess this risk before adding editable targets or another dbt adapter.
+---

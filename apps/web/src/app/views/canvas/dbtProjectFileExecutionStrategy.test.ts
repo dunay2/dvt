@@ -48,6 +48,12 @@ function buildProjection(overrides: Record<string, unknown> = {}): DbtProjectGra
       adapter: 'postgres',
       targetName: 'development',
       credentialRef: 'vault:dbt/development',
+      connectionRef: {
+        schemaVersion: 'connection-ref.v1',
+        connectionId: 'warehouse-development',
+        provider: 'postgres',
+      },
+      resolutionSource: 'environment-default',
     },
     capabilities: { canPreview: true, canRun: true, codeOnlyResourceCount: 0 },
     ...overrides,
@@ -70,6 +76,12 @@ describe('dbt project file execution strategy', () => {
         adapter: 'postgres',
         targetName: 'development',
         credentialRef: 'vault:dbt/development',
+        connectionRef: {
+          schemaVersion: 'connection-ref.v1',
+          connectionId: 'warehouse-development',
+          provider: 'postgres',
+        },
+        resolutionSource: 'environment-default',
       },
       plannerGraphSource: {
         kind: 'generic-graph-v1',
@@ -205,6 +217,12 @@ describe('dbt project file execution strategy', () => {
         adapter: 'postgres',
         targetName: 'development',
         credentialRef: 'vault:dbt/development',
+        connectionRef: {
+          schemaVersion: 'connection-ref.v1',
+          connectionId: 'warehouse-development',
+          provider: 'postgres',
+        },
+        resolutionSource: 'environment-default',
       },
     });
   });

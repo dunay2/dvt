@@ -34,9 +34,16 @@ describe('DBT runtime binding security boundary', () => {
           provider: 'temporal',
           adapter: 'postgres',
           targetName: 'production',
+          connectionRef: {
+            schemaVersion: 'connection-ref.v1',
+            connectionId: 'warehouse-production',
+            provider: 'postgres',
+          },
+          resolutionSource: 'environment-default',
           credentialRef: 'vault:dbt/production',
         }),
       },
+      executionConnectionBindingVerifier: { verify: vi.fn(async () => true) },
       stepTypeRegistry: createDefaultStepTypeRegistry(),
       warehouseConnectionCatalog: {
         listConnections: vi.fn(),

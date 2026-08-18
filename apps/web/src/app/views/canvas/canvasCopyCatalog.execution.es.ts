@@ -49,6 +49,9 @@ export const canvasViewExecutionCopyEs = {
   planPreviewAdapterLabel: 'Adaptador',
   planPreviewUnknownValue: 'Desconocido',
   planPreviewTargetLabel: 'Destino',
+  planPreviewConnectionLabel: 'Conexión',
+  planPreviewResolutionSourceLabel: 'Resuelto por',
+  planPreviewEnvironmentDefaultValue: 'Predeterminado del entorno',
   planPreviewCapabilitiesLabel: 'Capacidades',
   planPreviewSummaryTitle: 'Resumen de la vista previa persistida',
   planPreviewSummaryCaption:

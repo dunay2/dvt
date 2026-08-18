@@ -14,6 +14,7 @@ import {
   isSha256HexString,
   SHA256_HEX_STRING_MESSAGE,
 } from '../../utils/contractPrimitives.js';
+import { ConnectionRefSchema } from '../source-import/ConnectedSourceRef.v1.js';
 
 import { WorkspaceRelativeProjectRootSchema } from './CanvasAuthoringAuthorityBinding.v1.js';
 
@@ -45,9 +46,20 @@ export const DbtExecutionTargetIdentitySchema = z
     provider: NonBlankStringSchema,
     adapter: NonBlankStringSchema,
     targetName: NonBlankStringSchema,
+    connectionRef: ConnectionRefSchema,
+    resolutionSource: z.literal('environment-default'),
     credentialRef: CredentialReferenceSchema,
   })
-  .strict();
+  .strict()
+  .superRefine((target, ctx) => {
+    if (target.connectionRef.provider !== target.adapter) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['connectionRef', 'provider'],
+        message: 'DBT execution connection provider must match the target adapter.',
+      });
+    }
+  });
 
 const TransformationGitArtifactsProvenanceSchema = z
   .object({

@@ -1,3 +1,5 @@
+import type { DbtExecutionTargetIdentity } from '@dvt/contracts';
+
 import type { PlanRef } from './engine';
 
 export interface PlanStepPoliciesViewModel {
@@ -63,12 +65,7 @@ export type PlanPreviewProvenanceViewModel =
       analysisSha256: string;
       dbtVersion: string;
       selectedUniqueIds: string[];
-      executionTarget: {
-        provider: string;
-        adapter: string;
-        targetName: string;
-        credentialRef: string;
-      };
+      executionTarget: DbtExecutionTargetIdentity;
     };
 
 export interface PlanPreviewViewModel {

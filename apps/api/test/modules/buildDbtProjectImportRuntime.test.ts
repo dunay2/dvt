@@ -36,11 +36,18 @@ describe('buildDbtProjectImportRuntime', () => {
     };
     const runtime = buildDbtProjectImportRuntime({
       analyzer,
+      executionConnectionBindingVerifier: { verify: vi.fn(async () => true) },
       executionTargetResolver: {
         resolve: () => ({
           provider: 'temporal',
           adapter: 'postgres',
           targetName: 'production',
+          connectionRef: {
+            schemaVersion: 'connection-ref.v1',
+            connectionId: 'warehouse-production',
+            provider: 'postgres',
+          },
+          resolutionSource: 'environment-default',
           credentialRef: 'env:DBT_PROFILES_DIR',
         }),
       },
@@ -68,7 +75,15 @@ describe('buildDbtProjectImportRuntime', () => {
       authorityPolicy: new CanvasAuthoringAuthorityPolicy(authorityStore as never, {
         read: vi.fn().mockResolvedValue(null),
       }),
-      warehouseConnectionCatalog: { getConnection: vi.fn() } as never,
+      warehouseConnectionCatalog: {
+        getConnection: vi.fn(async () => ({
+          id: 'warehouse-production',
+          name: 'Production warehouse',
+          type: 'postgres',
+          database: 'analytics',
+          sourceObjects: [],
+        })),
+      } as never,
       processStore: {} as never,
       now: () => new Date('2026-07-14T10:00:00.000Z'),
       createLeaseToken: () => 'lease-a',

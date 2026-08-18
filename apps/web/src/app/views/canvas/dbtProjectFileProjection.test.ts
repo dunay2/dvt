@@ -26,6 +26,12 @@ function buildProjection(): DbtProjectGraphProjection {
       adapter: 'postgres',
       targetName: 'analysis',
       credentialRef: 'env:DBT_PROFILES_DIR',
+      connectionRef: {
+        schemaVersion: 'connection-ref.v1',
+        connectionId: 'local-postgres-proof',
+        provider: 'postgres',
+      },
+      resolutionSource: 'environment-default',
     },
     analysisSha256: '2'.repeat(64),
     nodes: [

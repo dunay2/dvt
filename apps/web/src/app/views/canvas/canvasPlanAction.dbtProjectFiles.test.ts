@@ -52,7 +52,7 @@ describe('executeCanvasPlanAction file-backed dbt branch', () => {
       plan: { ...persistedPlan, planRef: makePlanRef({ planId: persistedPlan.planId }) },
     });
     const saveFileContent = vi.fn();
-    const strategy: CanvasExecutionStrategy = {
+    const strategy: Extract<CanvasExecutionStrategy, { kind: 'dbt_project_file_preview' }> = {
       kind: 'dbt_project_file_preview',
       previewProfile: 'planner-generic-v1',
       sourceFamily: 'dbt',
@@ -90,6 +90,12 @@ describe('executeCanvasPlanAction file-backed dbt branch', () => {
         provider: 'server-config',
         adapter: 'postgres',
         targetName: 'development',
+        connectionRef: {
+          schemaVersion: 'connection-ref.v1',
+          connectionId: 'warehouse-development',
+          provider: 'postgres',
+        },
+        resolutionSource: 'environment-default',
         credentialRef: 'vault:dbt/development',
       },
     };
@@ -182,7 +188,7 @@ describe('executeCanvasPlanAction file-backed dbt branch', () => {
 
   it('does not widen an explicit source-only selection into the executable project', async () => {
     const previewPlan = vi.fn<IPlansPort['previewPlan']>();
-    const strategy: CanvasExecutionStrategy = {
+    const strategy: Extract<CanvasExecutionStrategy, { kind: 'dbt_project_file_preview' }> = {
       kind: 'dbt_project_file_preview',
       previewProfile: 'planner-generic-v1',
       sourceFamily: 'dbt',
@@ -207,6 +213,12 @@ describe('executeCanvasPlanAction file-backed dbt branch', () => {
         provider: 'server-config',
         adapter: 'postgres',
         targetName: 'development',
+        connectionRef: {
+          schemaVersion: 'connection-ref.v1',
+          connectionId: 'warehouse-development',
+          provider: 'postgres',
+        },
+        resolutionSource: 'environment-default',
         credentialRef: 'vault:dbt/development',
       },
     };
@@ -250,7 +262,7 @@ describe('executeCanvasPlanAction file-backed dbt branch', () => {
 
   it('rejects a mixed explicit selection instead of dropping its source member', async () => {
     const previewPlan = vi.fn<IPlansPort['previewPlan']>();
-    const strategy: CanvasExecutionStrategy = {
+    const strategy: Extract<CanvasExecutionStrategy, { kind: 'dbt_project_file_preview' }> = {
       kind: 'dbt_project_file_preview',
       previewProfile: 'planner-generic-v1',
       sourceFamily: 'dbt',
@@ -269,6 +281,12 @@ describe('executeCanvasPlanAction file-backed dbt branch', () => {
         provider: 'server-config',
         adapter: 'postgres',
         targetName: 'development',
+        connectionRef: {
+          schemaVersion: 'connection-ref.v1',
+          connectionId: 'warehouse-development',
+          provider: 'postgres',
+        },
+        resolutionSource: 'environment-default',
         credentialRef: 'vault:dbt/development',
       },
     };

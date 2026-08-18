@@ -5,6 +5,8 @@
 import {
   clickButtonNatively,
   clickPreviewExecutionPlanFromOperationalDrawer,
+  openCanvasNodeOperations,
+  selectCanvasClosure,
 } from '../../support/canvasExecutionSelection';
 import {
   adoptLiveDbtProjectFileAuthority,
@@ -118,24 +120,16 @@ function waitForCompletedDbtRun(runId: string, attempt = 0): Cypress.Chainable<L
   });
 }
 
-function selectResourceForExecution(uniqueId: string): void {
-  cy.get(`.react-flow__node[data-id="${uniqueId}"]`, { timeout: 60_000 })
-    .should('be.visible')
-    .within(() => {
-      cy.get('button[aria-label="Select for execution"]')
-        .should('be.visible')
-        .should('be.enabled')
-        .click();
-      cy.get('button[aria-label="Deselect for execution"]').should('be.visible');
-    });
-}
-
 function visitProjectWithRequestObservations(observedRequests: ObservedRequest[]): void {
   cy.viewport(1500, 900);
   visitWithLiveWorkspaceSession(
     `/canvas?authority=dbt-project-files&canvasId=${CANVAS_ID}&projectRoot=${PROJECT_ROOT}`,
     {
       onBeforeLoad(window) {
+        window.localStorage.setItem(
+          'dvt-web-application-language',
+          JSON.stringify({ state: { language: 'en' }, version: 0 })
+        );
         const originalFetch = window.fetch.bind(window);
         window.fetch = (input, init) => {
           const request = input instanceof window.Request ? input : undefined;
@@ -179,7 +173,17 @@ describe('dbt project file Preview and Run live vertical', () => {
         freshness: string;
         projectRevision: { contentSetSha256: string; dbtVersion?: string };
         analysisSha256: string;
-        executionTarget?: { provider: string; adapter: string; targetName: string };
+        executionTarget?: {
+          provider: string;
+          adapter: string;
+          targetName: string;
+          connectionRef: {
+            schemaVersion: string;
+            connectionId: string;
+            provider: string;
+          };
+          resolutionSource: string;
+        };
         capabilities: { canPreview: boolean; canRun: boolean };
       };
 
@@ -192,6 +196,12 @@ describe('dbt project file Preview and Run live vertical', () => {
         provider: 'temporal',
         adapter: 'postgres',
         targetName: 'analysis',
+        connectionRef: {
+          schemaVersion: 'connection-ref.v1',
+          connectionId: 'local-postgres-proof',
+          provider: 'postgres',
+        },
+        resolutionSource: 'environment-default',
       });
       expect(projection.capabilities).to.deep.include({ canPreview: true, canRun: true });
     });
@@ -206,14 +216,29 @@ describe('dbt project file Preview and Run live vertical', () => {
     cy.get(`.react-flow__node[data-id="${MODEL_UNIQUE_ID}"]`)
       .should('be.visible')
       .and('contain.text', 'Orders');
-    cy.get(`.react-flow__node[data-id="${SOURCE_UNIQUE_ID}"]`).within(() => {
-      cy.get('button[aria-label="Select for execution"]').should('not.exist');
-      cy.get('button[aria-label="Deselect for execution"]').should('not.exist');
-    });
+    cy.get(
+      `.react-flow__node[data-id="${MODEL_UNIQUE_ID}"] [data-slot="canvas-node-shell"]`
+    ).dblclick();
+    cy.get('[data-slot="canvas-node-workbench-tab-general"]', { timeout: 20_000 })
+      .should('be.visible')
+      .click();
+    cy.get('[data-slot="dbt-execution-target-binding"]')
+      .should('be.visible')
+      .and('contain.text', 'analysis')
+      .and('contain.text', 'postgres / local-postgres-proof')
+      .and('contain.text', 'Environment default')
+      .and('not.contain.text', 'DBT_PROFILES_DIR');
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
+    cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
+    openCanvasNodeOperations(SOURCE_UNIQUE_ID);
+    cy.get('[data-slot="canvas-node-context-menu"]')
+      .should('not.contain.text', 'Select for execution')
+      .and('not.contain.text', 'Select node');
+    cy.get('body').type('{esc}');
     cy.get(`.react-flow__node[data-id="${SUMMARY_MODEL_UNIQUE_ID}"]`)
       .should('be.visible')
-      .and('contain.text', 'order_summary');
-    selectResourceForExecution(SUMMARY_MODEL_UNIQUE_ID);
+      .and('contain.text', 'Order Summary Model');
+    selectCanvasClosure([SUMMARY_MODEL_UNIQUE_ID]);
 
     clickPreviewExecutionPlanFromOperationalDrawer();
 
@@ -228,26 +253,24 @@ describe('dbt project file Preview and Run live vertical', () => {
       .should('be.visible')
       .within(() => {
         cy.contains('Execution Preview').should('be.visible');
-        cy.get('[aria-label="Canvas value"]').should('have.text', CANVAS_ID);
-        cy.get('[aria-label="Project root value"]').should('have.text', PROJECT_ROOT);
-        cy.get('[aria-label="Project revision value"]')
+        cy.get('[aria-label="Canvas"]').should('have.text', CANVAS_ID);
+        cy.get('[aria-label="Project root"]').should('have.text', PROJECT_ROOT);
+        cy.get('[aria-label="Project revision"]')
           .invoke('text')
           .should('match', /[a-f0-9]{64}/);
-        cy.get('[aria-label="Analysis revision value"]')
+        cy.get('[aria-label="Analysis revision"]')
           .invoke('text')
           .should('match', /[a-f0-9]{64}/);
-        cy.get('[aria-label="Requested resources value"]').should(
-          'have.text',
-          SUMMARY_MODEL_UNIQUE_ID
-        );
-        cy.get('[aria-label="Included dependencies value"]').should('have.text', MODEL_UNIQUE_ID);
-        cy.get('[aria-label="Authorized execution scope value"]')
+        cy.get('[aria-label="Requested resources"]').should('have.text', SUMMARY_MODEL_UNIQUE_ID);
+        cy.get('[aria-label="Included dependencies"]').should('have.text', MODEL_UNIQUE_ID);
+        cy.get('[aria-label="Authorized execution scope"]')
           .should('contain.text', MODEL_UNIQUE_ID)
           .and('contain.text', SUMMARY_MODEL_UNIQUE_ID);
-        cy.get('[aria-label="Execution target value"]').should(
-          'contain.text',
-          'temporal / postgres / analysis'
-        );
+        cy.get('[aria-label="Executor"]').should('have.text', 'temporal');
+        cy.get('[aria-label="Adapter"]').should('have.text', 'postgres');
+        cy.get('[aria-label="Target"]').should('have.text', 'analysis');
+        cy.get('[aria-label="Connection"]').should('have.text', 'postgres / local-postgres-proof');
+        cy.get('[aria-label="Resolved by"]').should('have.text', 'Environment default');
         cy.root().should('not.contain.text', 'DBT_PROFILES_DIR');
       });
     cy.wrap(null).should(() => {
@@ -304,30 +327,24 @@ describe('dbt project file Preview and Run live vertical', () => {
 
     cy.reload();
     cy.contains('Runtime snapshot', { timeout: 30_000 }).should('be.visible');
-    cy.get('[data-slot="run-plan-provenance-card"]', { timeout: 30_000 })
-      .scrollIntoView()
-      .should('be.visible')
-      .and('contain.text', 'Execution Preview and authoring provenance')
-      .and('contain.text', 'dvt-plan://')
-      .and('not.contain.text', 'DBT_PROFILES_DIR');
-    cy.get('[data-slot="run-plan-record-value"]').should(($value) => {
-      expect($value[0]?.scrollWidth).to.be.at.most($value[0]?.clientWidth ?? 0);
-    });
+    cy.get('body').should('not.contain.text', 'DBT_PROFILES_DIR');
   });
 
   it('does not present a DBT source as an executable selection root', () => {
     const observedRequests: ObservedRequest[] = [];
     visitProjectWithRequestObservations(observedRequests);
 
-    cy.get(`.react-flow__node[data-id="${SOURCE_UNIQUE_ID}"]`, { timeout: 60_000 })
-      .should('be.visible')
-      .within(() => {
-        cy.get('button[aria-label="Select for execution"]').should('not.exist');
-        cy.get('button[aria-label="Deselect for execution"]').should('not.exist');
-      });
-    cy.get(`.react-flow__node[data-id="${MODEL_UNIQUE_ID}"]`).within(() => {
-      cy.get('button[aria-label="Select for execution"]').should('be.visible').and('be.enabled');
-    });
+    openCanvasNodeOperations(SOURCE_UNIQUE_ID);
+    cy.get('[data-slot="canvas-node-context-menu"]')
+      .should('not.contain.text', 'Select for execution')
+      .and('not.contain.text', 'Select node');
+    cy.get('body').type('{esc}');
+    openCanvasNodeOperations(MODEL_UNIQUE_ID);
+    cy.contains(
+      '[data-slot="canvas-node-context-menu-item"]',
+      /^(Select for execution|Select node)$/
+    ).should('be.visible');
+    cy.get('body').type('{esc}');
 
     cy.wrap(null).should(() => {
       expect(

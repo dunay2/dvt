@@ -128,6 +128,12 @@ describe('DbtProjectGraphProjection.v1', () => {
         provider: 'temporal',
         adapter: 'postgres',
         targetName: 'production',
+        connectionRef: {
+          schemaVersion: 'connection-ref.v1',
+          connectionId: 'warehouse-production',
+          provider: 'postgres',
+        },
+        resolutionSource: 'environment-default',
         credentialRef: 'env:DBT_PROFILES_DIR',
       },
       capabilities: {

@@ -1,6 +1,9 @@
 import { DbtProjectGraphProjectionSchema, type DbtProjectGraphProjection } from '@dvt/contracts';
 
-import type { IDbtExecutionTargetResolver } from '../ports/dbtExecutionTarget.js';
+import type {
+  IDbtExecutionConnectionBindingVerifier,
+  IDbtExecutionTargetResolver,
+} from '../ports/dbtExecutionTarget.js';
 import type {
   DbtProjectAnalysisResource,
   DbtProjectSourceIdentityRef,
@@ -25,6 +28,7 @@ export class ProjectDbtGraphFromFilesUseCase {
       readonly analyzer: IDbtProjectAnalyzerPort;
       readonly authorityPolicy: Pick<CanvasAuthoringAuthorityPolicy, 'resolve'>;
       readonly executionTargetResolver: IDbtExecutionTargetResolver;
+      readonly executionConnectionBindingVerifier: IDbtExecutionConnectionBindingVerifier;
       readonly connectionCatalog: Pick<IWarehouseConnectionCatalog, 'getConnection'>;
     }
   ) {}
@@ -83,11 +87,15 @@ export class ProjectDbtGraphFromFilesUseCase {
       }))
       .sort((left, right) => left.id.localeCompare(right.id));
     const executionTarget = this.deps.executionTargetResolver.resolve();
-    const executionDiagnostics = resolveExecutionDiagnostics({
+    const executionDiagnostics = await resolveExecutionDiagnostics({
       analysisStatus: analysis.status,
       adapterType: analysis.adapterType,
       dbtVersion: analysis.projectRevision.dbtVersion,
       executionTarget,
+      executionConnectionBindingVerifier: this.deps.executionConnectionBindingVerifier,
+      scope: input.scope,
+      connectionCatalog: this.deps.connectionCatalog,
+      connectionLookups,
     });
     const executable = analysis.status === 'valid' && executionDiagnostics.length === 0;
 
@@ -143,12 +151,12 @@ export async function resolveSourceIdentity(
   if (identityRef === undefined) return undefined;
 
   try {
-    let connectionLookup = connectionLookups?.get(identityRef.connectionId);
-    if (connectionLookup === undefined) {
-      connectionLookup = connectionCatalog.getConnection(scope, identityRef.connectionId);
-      connectionLookups?.set(identityRef.connectionId, connectionLookup);
-    }
-    const connection = await connectionLookup;
+    const connection = await getCatalogConnection(
+      identityRef.connectionId,
+      scope,
+      connectionCatalog,
+      connectionLookups
+    );
     return {
       database: identityRef.database,
       connectionName: connection.name,
@@ -194,17 +202,25 @@ function resolveVisualEditability(
   };
 }
 
-function resolveExecutionDiagnostics({
+async function resolveExecutionDiagnostics({
   analysisStatus,
   adapterType,
   dbtVersion,
   executionTarget,
+  executionConnectionBindingVerifier,
+  scope,
+  connectionCatalog,
+  connectionLookups,
 }: Readonly<{
   analysisStatus: 'valid' | 'invalid' | 'unavailable';
   adapterType?: string | undefined;
   dbtVersion?: string | undefined;
   executionTarget: ReturnType<IDbtExecutionTargetResolver['resolve']>;
-}>): DbtProjectGraphProjection['diagnostics'] {
+  executionConnectionBindingVerifier: IDbtExecutionConnectionBindingVerifier;
+  scope: WorkspaceStorageScope;
+  connectionCatalog: Pick<IWarehouseConnectionCatalog, 'getConnection'>;
+  connectionLookups: Map<string, ReturnType<IWarehouseConnectionCatalog['getConnection']>>;
+}>): Promise<DbtProjectGraphProjection['diagnostics']> {
   if (analysisStatus !== 'valid') return [];
 
   if (adapterType === undefined) {
@@ -243,5 +259,69 @@ function resolveExecutionDiagnostics({
       },
     ];
   }
+
+  try {
+    const connection = await getCatalogConnection(
+      executionTarget.connectionRef.connectionId,
+      scope,
+      connectionCatalog,
+      connectionLookups
+    );
+    if (
+      connection.id !== executionTarget.connectionRef.connectionId ||
+      connection.type !== executionTarget.connectionRef.provider
+    ) {
+      return [
+        {
+          code: 'dbt_execution_connection_invalid',
+          severity: 'error',
+          message:
+            'The configured dbt execution connection does not match its workspace catalog entry.',
+        },
+      ];
+    }
+    if (
+      connection.credentialRef === undefined ||
+      !(await executionConnectionBindingVerifier.verify({
+        runtimeCredentialRef: executionTarget.credentialRef,
+        targetProfile: executionTarget.targetName,
+        connectionCredentialRef: connection.credentialRef,
+      }))
+    ) {
+      return [
+        {
+          code: 'dbt_execution_connection_binding_invalid',
+          severity: 'error',
+          message:
+            'The configured dbt profile does not resolve to its governed workspace connection.',
+        },
+      ];
+    }
+  } catch (error) {
+    if (error instanceof WarehouseConnectionNotFoundError) {
+      return [
+        {
+          code: 'dbt_execution_connection_missing',
+          severity: 'error',
+          message: 'The configured dbt execution connection is not available in this workspace.',
+        },
+      ];
+    }
+    throw error;
+  }
   return [];
+}
+
+async function getCatalogConnection(
+  connectionId: string,
+  scope: WorkspaceStorageScope,
+  connectionCatalog: Pick<IWarehouseConnectionCatalog, 'getConnection'>,
+  connectionLookups?: Map<string, ReturnType<IWarehouseConnectionCatalog['getConnection']>>
+): ReturnType<IWarehouseConnectionCatalog['getConnection']> {
+  let connectionLookup = connectionLookups?.get(connectionId);
+  if (connectionLookup === undefined) {
+    connectionLookup = connectionCatalog.getConnection(scope, connectionId);
+    connectionLookups?.set(connectionId, connectionLookup);
+  }
+  return connectionLookup;
 }
