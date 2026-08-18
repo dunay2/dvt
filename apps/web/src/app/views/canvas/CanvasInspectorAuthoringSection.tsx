@@ -54,6 +54,7 @@ export function CanvasInspectorAuthoringSection({
     (section === 'all' ||
       (section === 'general' && draft.dvt.kind === 'source') ||
       (section === 'code' && draft.dvt.kind === 'sql_transform') ||
+      (section === 'columns' && draft.dvt.kind === 'sql_transform') ||
       (section === 'sink' && draft.dvt.kind === 'sink'));
   const showDbtAuthoring =
     (draft.dbt != null || draft.dbtTest != null) &&
@@ -64,7 +65,14 @@ export function CanvasInspectorAuthoringSection({
     draft.objectFilePostgres != null && (section === 'all' || section === 'general');
   const showHttpJsonArtifactAuthoring =
     draft.httpJsonArtifact != null && (section === 'all' || section === 'general');
-  const dvtAuthoringSection = section === 'code' ? 'code' : section === 'all' ? 'all' : 'general';
+  const dvtAuthoringSection =
+    section === 'code'
+      ? 'code'
+      : section === 'columns'
+        ? 'columns'
+        : section === 'all'
+          ? 'all'
+          : 'general';
 
   if (
     !showGeneral &&

@@ -3,6 +3,7 @@ import {
   ConnectedSourceRefSchema,
   ConnectionRefSchema,
   DVT_TRANSFORM_AUTHORING_MODE,
+  VisualTransformRecipeV1Schema,
   type ConnectionRef,
   type VisualTransformRecipeV1,
 } from '@dvt/contracts';
@@ -51,7 +52,14 @@ export type DvtNodeAuthoringMetadata =
 
 export type DvtNodeAuthoringMetadataErrors = Partial<
   Record<
-    'schema' | 'table' | 'alias' | 'connectionRef' | 'sql' | 'materialization' | 'writeMode',
+    | 'schema'
+    | 'table'
+    | 'alias'
+    | 'connectionRef'
+    | 'sql'
+    | 'recipe'
+    | 'materialization'
+    | 'writeMode',
     CanvasInspectorNodeDraftErrorCode
   >
 >;
@@ -259,6 +267,13 @@ export function validateDvtNodeAuthoringMetadata(
   }
   if (metadata.kind === 'source' && metadata.connectionRef === undefined) {
     errors.connectionRef = 'dvt_connection_required';
+  }
+  if (
+    metadata.kind === 'sql_transform' &&
+    metadata.mode === DVT_TRANSFORM_AUTHORING_MODE.visual &&
+    !VisualTransformRecipeV1Schema.safeParse(metadata.recipe).success
+  ) {
+    errors.recipe = 'dvt_visual_recipe_invalid';
   }
 
   if (

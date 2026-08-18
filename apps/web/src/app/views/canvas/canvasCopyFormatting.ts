@@ -108,6 +108,8 @@ export function formatCanvasInspectorNodeDraftError(
       return copy.inspectorErrorDvtAliasRequired;
     case 'dvt_connection_required':
       return copy.inspectorErrorDvtConnectionRequired;
+    case 'dvt_visual_recipe_invalid':
+      return copy.inspectorErrorDvtVisualRecipeInvalid;
     case 'dvt_materialization_invalid':
       return copy.inspectorErrorDvtMaterializationInvalid;
     case 'dvt_write_mode_invalid':

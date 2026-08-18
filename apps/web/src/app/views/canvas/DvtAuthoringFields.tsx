@@ -11,6 +11,7 @@ import { resolveInheritedDvtConnectionRef } from './canvasDvtAuthoringModel';
 import { DvtSinkAuthoringSection } from './DvtSinkAuthoringSection';
 import { DvtSourceAuthoringSection } from './DvtSourceAuthoringSection';
 import { DvtSqlTransformAuthoringSection } from './DvtSqlTransformAuthoringSection';
+import { DvtVisualTransformRecipeAuthoringSection } from './DvtVisualTransformRecipeAuthoringSection';
 
 type DvtAuthoringFieldsProps = Readonly<{
   node: CanonicalNode;
@@ -19,7 +20,7 @@ type DvtAuthoringFieldsProps = Readonly<{
   disabled: boolean;
   draft: ReturnType<typeof createCanvasInspectorNodeDraft>;
   errors: ReturnType<typeof validateCanvasInspectorNodeDraft>;
-  section?: 'all' | 'general' | 'code';
+  section?: 'all' | 'general' | 'columns' | 'code';
   onChange: Dispatch<SetStateAction<ReturnType<typeof createCanvasInspectorNodeDraft>>>;
 }>;
 
@@ -66,11 +67,24 @@ export function DvtAuthoringFields({
   }
 
   if (draft.dvt.kind === 'sql_transform') {
-    if (section !== 'all' && section !== 'code') {
-      return null;
+    if (draft.dvt.mode === DVT_TRANSFORM_AUTHORING_MODE.visual) {
+      if (section !== 'all' && section !== 'columns') {
+        return null;
+      }
+      return (
+        <DvtVisualTransformRecipeAuthoringSection
+          node={node}
+          nodes={nodes}
+          edges={edges}
+          disabled={disabled}
+          draft={draft.dvt}
+          error={errors.dvt?.recipe}
+          onChange={onChange}
+        />
+      );
     }
 
-    if (draft.dvt.mode === DVT_TRANSFORM_AUTHORING_MODE.visual) {
+    if (section !== 'all' && section !== 'code') {
       return null;
     }
 
