@@ -45,6 +45,28 @@ describe('buildDbtWorkspaceFileCodeContributions', () => {
     });
   });
 
+  it.each([
+    { projectRoot: '.', nodePath: 'models/orders.sql', expected: 'models/orders.sql' },
+    {
+      projectRoot: 'analytics',
+      nodePath: 'analytics/models/orders.sql',
+      expected: 'analytics/models/orders.sql',
+    },
+  ])('keeps canonical workspace path $expected stable', ({ projectRoot, nodePath, expected }) => {
+    const contributions = buildDbtWorkspaceFileCodeContributions({
+      node: { ...NODE, path: nodePath },
+      projectRoot,
+      editorRef: createRef<WorkspaceFileCodeEditorHandle>(),
+      reconcilePersistedFile: vi.fn(),
+    });
+
+    expect(contributions).toHaveLength(1);
+    if (!isValidElement(contributions[0]?.content)) {
+      throw new Error('expected a workspace file editor contribution');
+    }
+    expect(contributions[0].content.props).toMatchObject({ path: expected });
+  });
+
   it('does not invent a Code file for a pathless node', () => {
     expect(
       buildDbtWorkspaceFileCodeContributions({
