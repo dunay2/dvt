@@ -87,6 +87,7 @@ type BuildImportArgsResult = {
   draftQueryCache: {
     fetchLatestRemoteDraftState: ReturnType<typeof vi.fn>;
     fetchLatestRemoteDraft: ReturnType<typeof vi.fn>;
+    refreshWorkspaceFilesAfterSourceRemoval: ReturnType<typeof vi.fn>;
     replaceRemoteDraftState: ReturnType<typeof vi.fn>;
   };
   setDraftSession: ReturnType<typeof vi.fn>;
@@ -124,6 +125,7 @@ function buildImportArgs(overrides: BuildImportArgsOverrides = {}): BuildImportA
   const draftQueryCache = {
     fetchLatestRemoteDraftState: vi.fn(),
     fetchLatestRemoteDraft: vi.fn(),
+    refreshWorkspaceFilesAfterSourceRemoval: vi.fn(),
     replaceRemoteDraftState: vi.fn(),
   };
   const refs = overrides.refs ?? createDraftAttemptRefs();

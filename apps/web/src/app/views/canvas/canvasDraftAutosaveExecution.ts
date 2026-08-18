@@ -25,6 +25,7 @@ type SaveResolutionContext = {
   setDraftSession: SetDraftSession;
   setDraftSaveStatus: SetDraftSaveStatus;
   currentDraftPayloadSignature: string;
+  refreshWorkspaceFilesAfterSave: boolean;
 };
 
 type SaveFailureContext = {
@@ -45,6 +46,7 @@ export type PerformCanvasDraftAutosaveArgs = {
   setDraftSaveStatus: SetDraftSaveStatus;
   draftQueryCache: CanvasDraftQueryCache;
   currentDraftPayloadSignature: string;
+  refreshWorkspaceFilesAfterSave: boolean;
 };
 
 function resolveDraftSaveSuccess(
@@ -56,6 +58,7 @@ function resolveDraftSaveSuccess(
     setDraftSession,
     setDraftSaveStatus,
     currentDraftPayloadSignature,
+    refreshWorkspaceFilesAfterSave,
   }: SaveResolutionContext
 ) {
   if (isStaleSaveResolution(refs, saveAttempt)) {
@@ -82,6 +85,9 @@ function resolveDraftSaveSuccess(
     setDraftSaveStatus: (status) => setDraftSaveStatus(status),
     remoteDraftState: result.remoteDraftState,
   });
+  if (refreshWorkspaceFilesAfterSave) {
+    void draftQueryCache.refreshWorkspaceFilesAfterSourceRemoval().catch(() => undefined);
+  }
 }
 
 function resolveDraftSaveFailure({
@@ -111,6 +117,7 @@ export function performCanvasDraftAutosave({
   setDraftSaveStatus,
   draftQueryCache,
   currentDraftPayloadSignature,
+  refreshWorkspaceFilesAfterSave,
 }: PerformCanvasDraftAutosaveArgs) {
   const saveAttempt = startNextSaveAttempt(refs);
   markDraftSaving(setDraftSession);
@@ -130,6 +137,7 @@ export function performCanvasDraftAutosave({
         setDraftSession,
         setDraftSaveStatus,
         currentDraftPayloadSignature,
+        refreshWorkspaceFilesAfterSave,
       })
     )
     .catch(() =>

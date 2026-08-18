@@ -16,6 +16,7 @@ import {
   shouldWaitForPersistenceReadiness,
 } from './canvasDraftPersistenceRuntime';
 import { performCanvasDraftAutosave } from './canvasDraftAutosaveExecution';
+import { hasRemovedImportedWarehouseSource } from './canvasDraftWorkspaceFileRefresh';
 
 type SetDraftSession = Dispatch<SetStateAction<CanvasDraftSession>>;
 type SetDraftSaveStatus = Dispatch<SetStateAction<DraftSaveStatus>>;
@@ -126,6 +127,7 @@ function scheduleCanvasDraftAutosave(args: {
   setDraftSaveStatus: SetDraftSaveStatus;
   draftQueryCache: CanvasDraftQueryCache;
   currentDraftPayloadSignature: string;
+  refreshWorkspaceFilesAfterSave: boolean;
 }): () => void {
   clearSaveDebounce(args.refs);
 
@@ -140,6 +142,7 @@ function scheduleCanvasDraftAutosave(args: {
       setDraftSaveStatus: args.setDraftSaveStatus,
       draftQueryCache: args.draftQueryCache,
       currentDraftPayloadSignature: args.currentDraftPayloadSignature,
+      refreshWorkspaceFilesAfterSave: args.refreshWorkspaceFilesAfterSave,
     });
   }, DRAFT_SAVE_DEBOUNCE_MS);
 
@@ -180,5 +183,9 @@ export function runCanvasDraftAutosaveEffect(
     setDraftSaveStatus: args.setDraftSaveStatus,
     draftQueryCache: args.draftQueryCache,
     currentDraftPayloadSignature: args.currentDraftPayloadSignature,
+    refreshWorkspaceFilesAfterSave: hasRemovedImportedWarehouseSource(
+      args.graphDraftQuery.data?.record?.draft ?? null,
+      args.currentDraftPayload
+    ),
   });
 }
