@@ -253,30 +253,24 @@ describe('dbt project file Preview and Run live vertical', () => {
       .should('be.visible')
       .within(() => {
         cy.contains('Execution Preview').should('be.visible');
-        cy.get('[aria-label="Canvas value"]').should('have.text', CANVAS_ID);
-        cy.get('[aria-label="Project root value"]').should('have.text', PROJECT_ROOT);
-        cy.get('[aria-label="Project revision value"]')
+        cy.get('[aria-label="Canvas"]').should('have.text', CANVAS_ID);
+        cy.get('[aria-label="Project root"]').should('have.text', PROJECT_ROOT);
+        cy.get('[aria-label="Project revision"]')
           .invoke('text')
           .should('match', /[a-f0-9]{64}/);
-        cy.get('[aria-label="Analysis revision value"]')
+        cy.get('[aria-label="Analysis revision"]')
           .invoke('text')
           .should('match', /[a-f0-9]{64}/);
-        cy.get('[aria-label="Requested resources value"]').should(
-          'have.text',
-          SUMMARY_MODEL_UNIQUE_ID
-        );
-        cy.get('[aria-label="Included dependencies value"]').should('have.text', MODEL_UNIQUE_ID);
-        cy.get('[aria-label="Authorized execution scope value"]')
+        cy.get('[aria-label="Requested resources"]').should('have.text', SUMMARY_MODEL_UNIQUE_ID);
+        cy.get('[aria-label="Included dependencies"]').should('have.text', MODEL_UNIQUE_ID);
+        cy.get('[aria-label="Authorized execution scope"]')
           .should('contain.text', MODEL_UNIQUE_ID)
           .and('contain.text', SUMMARY_MODEL_UNIQUE_ID);
-        cy.get('[aria-label="Executor value"]').should('have.text', 'temporal');
-        cy.get('[aria-label="Adapter value"]').should('have.text', 'postgres');
-        cy.get('[aria-label="Target value"]').should('have.text', 'analysis');
-        cy.get('[aria-label="Connection value"]').should(
-          'have.text',
-          'postgres / local-postgres-proof'
-        );
-        cy.get('[aria-label="Resolved by value"]').should('have.text', 'Environment default');
+        cy.get('[aria-label="Executor"]').should('have.text', 'temporal');
+        cy.get('[aria-label="Adapter"]').should('have.text', 'postgres');
+        cy.get('[aria-label="Target"]').should('have.text', 'analysis');
+        cy.get('[aria-label="Connection"]').should('have.text', 'postgres / local-postgres-proof');
+        cy.get('[aria-label="Resolved by"]').should('have.text', 'Environment default');
         cy.root().should('not.contain.text', 'DBT_PROFILES_DIR');
       });
     cy.wrap(null).should(() => {
