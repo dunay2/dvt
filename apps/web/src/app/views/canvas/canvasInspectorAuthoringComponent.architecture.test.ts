@@ -98,6 +98,8 @@ describe('canvas inspector authoring component architecture', () => {
       'Owned concern: expose route-owned Inspector mutation commands over the Canvas draft aggregate.'
     );
     expect(HOOK_SOURCE).toContain('applyCanvasInspectorNodeDraftToSession');
+    expect(HOOK_SOURCE).toContain('convertDvtVisualTransformToSql');
+    expect(HOOK_SOURCE).toContain('canvasDraftSession.workingSet.upsertNode');
     expect(HOOK_SOURCE).not.toContain('workspaceService');
 
     expect(SECTION_SOURCE).toContain(
