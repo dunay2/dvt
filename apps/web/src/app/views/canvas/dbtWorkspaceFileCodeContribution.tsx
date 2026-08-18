@@ -25,7 +25,14 @@ export function buildDbtWorkspaceFileCodeContributions({
   editorRef,
   reconcilePersistedFile,
 }: BuildDbtWorkspaceFileCodeContributionsOptions): readonly CanvasNodeWorkbenchContribution[] {
-  if (node == null || node.pluginId !== 'dbt' || node.path == null) {
+  const visualEditability = node?.metadata?.visualEditability;
+  const isExternalPackage =
+    typeof visualEditability === 'object' &&
+    visualEditability !== null &&
+    'reasons' in visualEditability &&
+    Array.isArray(visualEditability.reasons) &&
+    visualEditability.reasons.includes('external_package');
+  if (node == null || node.pluginId !== 'dbt' || node.path == null || isExternalPackage) {
     return [];
   }
   const normalizedProjectRoot = projectRoot
@@ -34,10 +41,7 @@ export function buildDbtWorkspaceFileCodeContributions({
     .replace(/\/+$/, '');
   const normalizedNodePath = node.path.replaceAll('\\', '/').replace(/^\.\//, '');
   const workspaceFilePath =
-    normalizedProjectRoot.length === 0 ||
-    normalizedProjectRoot === '.' ||
-    normalizedNodePath === normalizedProjectRoot ||
-    normalizedNodePath.startsWith(`${normalizedProjectRoot}/`)
+    normalizedProjectRoot.length === 0 || normalizedProjectRoot === '.'
       ? normalizedNodePath
       : `${normalizedProjectRoot}/${normalizedNodePath}`;
 

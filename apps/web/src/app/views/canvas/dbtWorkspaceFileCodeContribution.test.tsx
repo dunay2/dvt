@@ -48,9 +48,9 @@ describe('buildDbtWorkspaceFileCodeContributions', () => {
   it.each([
     { projectRoot: '.', nodePath: 'models/orders.sql', expected: 'models/orders.sql' },
     {
-      projectRoot: 'analytics',
-      nodePath: 'analytics/models/orders.sql',
-      expected: 'analytics/models/orders.sql',
+      projectRoot: 'models',
+      nodePath: 'models/orders.sql',
+      expected: 'models/models/orders.sql',
     },
   ])('keeps canonical workspace path $expected stable', ({ projectRoot, nodePath, expected }) => {
     const contributions = buildDbtWorkspaceFileCodeContributions({
@@ -65,6 +65,24 @@ describe('buildDbtWorkspaceFileCodeContributions', () => {
       throw new Error('expected a workspace file editor contribution');
     }
     expect(contributions[0].content.props).toMatchObject({ path: expected });
+  });
+
+  it('does not expose the editable workspace file rail for an external dbt package', () => {
+    expect(
+      buildDbtWorkspaceFileCodeContributions({
+        node: {
+          ...NODE,
+          id: 'model.dbt_utils.orders',
+          metadata: {
+            packageName: 'dbt_utils',
+            visualEditability: { status: 'code_only', reasons: ['external_package'] },
+          },
+        },
+        projectRoot: 'analytics',
+        editorRef: createRef<WorkspaceFileCodeEditorHandle>(),
+        reconcilePersistedFile: vi.fn(),
+      })
+    ).toEqual([]);
   });
 
   it('does not invent a Code file for a pathless node', () => {
