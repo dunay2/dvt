@@ -1,6 +1,6 @@
 /** Owned concern: bind Monaco Editor as the shared code surface for viewer and local editor modes. */
-import Editor, { type Monaco, type OnMount } from '@monaco-editor/react';
-import { useEffect, useRef } from 'react';
+import Editor, { useMonaco } from '@monaco-editor/react';
+import { useEffect } from 'react';
 import type { editor } from 'monaco-editor';
 
 import type { MonacoCodeDiagnostic } from './MonacoCodeEditor';
@@ -32,44 +32,48 @@ export default function MonacoCodeSurface({
   diagnostics = [],
 }: MonacoCodeSurfaceProps) {
   const isReadOnly = readOnly;
-  const modelRef = useRef<editor.ITextModel | null>(null);
-  const monacoRef = useRef<Monaco | null>(null);
+  const monaco = useMonaco();
 
   useEffect(() => {
-    const model = modelRef.current;
-    const monaco = monacoRef.current;
-    if (model == null || monaco == null) return;
-    monaco.editor.setModelMarkers(
-      model,
-      'dvt-postgres-sql-readiness',
-      diagnostics.map((diagnostic) => {
-        const start = model.getPositionAt(diagnostic.startOffset ?? 0);
-        const end = model.getPositionAt(
-          Math.max(diagnostic.startOffset ?? 0, diagnostic.endOffset ?? 1)
-        );
-        return {
-          severity: monaco.MarkerSeverity.Error,
-          message: diagnostic.message,
-          startLineNumber: start.lineNumber,
-          startColumn: start.column,
-          endLineNumber: end.lineNumber,
-          endColumn: end.column,
-        };
-      })
-    );
-    return () => {
-      monaco.editor.setModelMarkers(model, 'dvt-postgres-sql-readiness', []);
+    if (monaco == null || path == null) return;
+    const modelUri = monaco.Uri.parse(path);
+    const applyDiagnostics = (model: editor.ITextModel) => {
+      monaco.editor.setModelMarkers(
+        model,
+        'dvt-postgres-sql-readiness',
+        diagnostics.map((diagnostic) => {
+          const start = model.getPositionAt(diagnostic.startOffset ?? 0);
+          const end = model.getPositionAt(
+            Math.max(diagnostic.startOffset ?? 0, diagnostic.endOffset ?? 1)
+          );
+          return {
+            severity: monaco.MarkerSeverity.Error,
+            message: diagnostic.message,
+            startLineNumber: start.lineNumber,
+            startColumn: start.column,
+            endLineNumber: end.lineNumber,
+            endColumn: end.column,
+          };
+        })
+      );
     };
-  }, [diagnostics, value]);
-
-  const handleMount: OnMount = (editorInstance, monaco) => {
-    modelRef.current = editorInstance.getModel();
-    monacoRef.current = monaco;
-    const model = editorInstance.getModel();
-    if (model != null) {
-      monaco.editor.setModelMarkers(model, 'dvt-postgres-sql-readiness', []);
+    const currentModel = monaco.editor.getModel(modelUri);
+    if (currentModel != null) {
+      applyDiagnostics(currentModel);
     }
-  };
+    const modelSubscription = monaco.editor.onDidCreateModel((model) => {
+      if (model.uri.toString() === modelUri.toString()) {
+        applyDiagnostics(model);
+      }
+    });
+    return () => {
+      modelSubscription.dispose();
+      const model = monaco.editor.getModel(modelUri);
+      if (model != null) {
+        monaco.editor.setModelMarkers(model, 'dvt-postgres-sql-readiness', []);
+      }
+    };
+  }, [diagnostics, monaco, path, value]);
 
   return (
     <div
@@ -87,7 +91,6 @@ export default function MonacoCodeSurface({
               }
         }
         options={createMonacoCodeOptions({ ariaLabel, readOnly: isReadOnly })}
-        onMount={handleMount}
         path={path}
         theme={monacoTheme}
         value={value}
