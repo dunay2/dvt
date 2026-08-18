@@ -14,7 +14,10 @@ import type { EngineRunRef, IProviderAdapter, IWorkflowEngine } from '@dvt/engin
 import type { IObservability } from '@dvt/observability';
 import { PlannerFacade } from '@dvt/planner';
 
-import type { IDbtExecutionTargetResolver } from '../../application/ports/dbtExecutionTarget.js';
+import type {
+  IDbtExecutionConnectionBindingVerifier,
+  IDbtExecutionTargetResolver,
+} from '../../application/ports/dbtExecutionTarget.js';
 import type { DuplicateRunProbe } from '../../application/ports/DuplicateRunProbe.js';
 import type { IAdmissionGuard } from '../../application/ports/IAdmissionGuard.js';
 import type { AdmissionMode } from '../../application/ports/IAdmissionMode.js';
@@ -56,6 +59,7 @@ export type BuildProtectedStartRunRuntimeDeps = {
   readonly runExecutionContextStore: DbtProjectBundleArtifactStore;
   readonly runExecutionContextReferenceStore?: IRunExecutionContextReferenceStore;
   readonly dbtExecutionTargetResolver: IDbtExecutionTargetResolver;
+  readonly dbtExecutionConnectionBindingVerifier: IDbtExecutionConnectionBindingVerifier;
   readonly warehouseConnectionCatalog: IWarehouseConnectionCatalog;
   readonly postgresCredentialResolver: IPostgresCredentialBindingResolver;
 };
@@ -100,6 +104,7 @@ export function buildProtectedStartRunRuntime(
       deps.runExecutionContextReferenceStore
     ),
     executionTargetResolver: deps.dbtExecutionTargetResolver,
+    executionConnectionBindingVerifier: deps.dbtExecutionConnectionBindingVerifier,
     stepTypeRegistry: deps.stepTypeRegistry,
     warehouseConnectionCatalog: deps.warehouseConnectionCatalog,
     postgresCredentialResolver: deps.postgresCredentialResolver,

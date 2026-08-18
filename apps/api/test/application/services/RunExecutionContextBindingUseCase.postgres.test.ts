@@ -55,6 +55,7 @@ describe('RunExecutionContextBindingUseCase PostgreSQL authority', () => {
       bundleBuilder,
       contextWriter,
       executionTargetResolver: { resolve: () => null },
+      executionConnectionBindingVerifier: { verify: vi.fn(async () => true) },
       stepTypeRegistry: createDefaultStepTypeRegistry(),
       warehouseConnectionCatalog: catalog,
       postgresCredentialResolver: credentialResolver,
@@ -99,6 +100,7 @@ describe('RunExecutionContextBindingUseCase PostgreSQL authority', () => {
       bundleBuilder: { build: vi.fn() },
       contextWriter,
       executionTargetResolver: { resolve: () => null },
+      executionConnectionBindingVerifier: { verify: vi.fn(async () => true) },
       stepTypeRegistry: createDefaultStepTypeRegistry(),
       warehouseConnectionCatalog: catalog,
       postgresCredentialResolver: { resolveCredential: vi.fn() },
@@ -132,6 +134,7 @@ describe('RunExecutionContextBindingUseCase PostgreSQL authority', () => {
       bundleBuilder: { build: vi.fn() },
       contextWriter,
       executionTargetResolver: { resolve: () => null },
+      executionConnectionBindingVerifier: { verify: vi.fn(async () => true) },
       stepTypeRegistry: createDefaultStepTypeRegistry(),
       warehouseConnectionCatalog: makeCatalog(),
       postgresCredentialResolver: {

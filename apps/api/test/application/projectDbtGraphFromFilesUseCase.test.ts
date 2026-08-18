@@ -130,7 +130,8 @@ function buildUseCase(
     },
     resolutionSource: 'environment-default',
     credentialRef: 'env:DBT_PROFILES_DIR',
-  }
+  },
+  verifyExecutionBinding: () => Promise<boolean> = async () => true
 ): {
   readonly useCase: ProjectDbtGraphFromFilesUseCase;
   readonly resolve: ReturnType<typeof vi.fn>;
@@ -145,12 +146,14 @@ function buildUseCase(
         : 'Current production warehouse',
     type: 'postgres' as const,
     database: 'analytics',
+    credentialRef: 'env:DBT_PROFILES_DIR',
     sourceObjects: [],
   }));
   return {
     useCase: new ProjectDbtGraphFromFilesUseCase({
       analyzer: { analyze },
       authorityPolicy: { resolve },
+      executionConnectionBindingVerifier: { verify: vi.fn(verifyExecutionBinding) },
       executionTargetResolver: { resolve: () => executionTarget },
       connectionCatalog: { getConnection },
     }),
@@ -338,6 +341,25 @@ describe('ProjectDbtGraphFromFilesUseCase', () => {
     expect(projection.diagnostics).toContainEqual(
       expect.objectContaining({
         code: 'dbt_execution_connection_missing',
+        severity: 'error',
+      })
+    );
+  });
+
+  it('fails closed when the dbt profile does not resolve to the governed connection', async () => {
+    const { useCase } = buildUseCase(
+      vi.fn().mockResolvedValue(analyzerResult()),
+      FILE_AUTHORITY,
+      undefined,
+      async () => false
+    );
+
+    const projection = await useCase.execute({ scope: SCOPE, canvasId: FILE_AUTHORITY.canvasId });
+
+    expect(projection.capabilities).toMatchObject({ canPreview: false, canRun: false });
+    expect(projection.diagnostics).toContainEqual(
+      expect.objectContaining({
+        code: 'dbt_execution_connection_binding_invalid',
         severity: 'error',
       })
     );

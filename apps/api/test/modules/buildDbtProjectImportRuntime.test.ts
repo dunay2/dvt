@@ -36,6 +36,7 @@ describe('buildDbtProjectImportRuntime', () => {
     };
     const runtime = buildDbtProjectImportRuntime({
       analyzer,
+      executionConnectionBindingVerifier: { verify: vi.fn(async () => true) },
       executionTargetResolver: {
         resolve: () => ({
           provider: 'temporal',

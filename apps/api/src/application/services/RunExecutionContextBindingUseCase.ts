@@ -21,7 +21,10 @@ import {
 } from '@dvt/contracts';
 
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
-import type { IDbtExecutionTargetResolver } from '../ports/dbtExecutionTarget.js';
+import type {
+  IDbtExecutionConnectionBindingVerifier,
+  IDbtExecutionTargetResolver,
+} from '../ports/dbtExecutionTarget.js';
 import type {
   DbtProjectBundleBuildResult,
   IDbtProjectBundleBuilder,
@@ -48,6 +51,7 @@ export class RunExecutionContextBindingUseCase implements IStartRunUseCase {
       readonly bundleBuilder: IDbtProjectBundleBuilder;
       readonly contextWriter: IRunExecutionContextWriter;
       readonly executionTargetResolver: IDbtExecutionTargetResolver;
+      readonly executionConnectionBindingVerifier: IDbtExecutionConnectionBindingVerifier;
       readonly stepTypeRegistry: IStepTypeRegistry;
       readonly warehouseConnectionCatalog: IWarehouseConnectionCatalog;
       readonly postgresCredentialResolver: IPostgresCredentialBindingResolver;
@@ -97,7 +101,9 @@ export class RunExecutionContextBindingUseCase implements IStartRunUseCase {
       if (!sourceBinding.ok) return rejectRunExecutionContext(sourceBinding.reason);
       const executionConnection = await this.resolveDbtExecutionConnection(
         scope,
-        sourceBinding.connectionRef
+        sourceBinding.connectionRef,
+        sourceBinding.targetProfile,
+        sourceBinding.credentialRef
       );
       if (!executionConnection.ok) {
         return rejectRunExecutionContext(executionConnection.reason);
@@ -158,7 +164,9 @@ export class RunExecutionContextBindingUseCase implements IStartRunUseCase {
 
   private async resolveDbtExecutionConnection(
     scope: WorkspaceStorageScope,
-    connectionRef: ConnectionRef
+    connectionRef: ConnectionRef,
+    targetProfile: string,
+    runtimeCredentialRef: string
   ): Promise<{ readonly ok: true } | { readonly ok: false; readonly reason: string }> {
     let connection: Awaited<ReturnType<IWarehouseConnectionCatalog['getConnection']>>;
     try {
@@ -183,6 +191,20 @@ export class RunExecutionContextBindingUseCase implements IStartRunUseCase {
       return {
         ok: false,
         reason: 'The Preview-bound DBT connection identity is invalid.',
+      };
+    }
+    if (
+      connection.credentialRef === undefined ||
+      !(await this.deps.executionConnectionBindingVerifier.verify({
+        runtimeCredentialRef,
+        targetProfile,
+        connectionCredentialRef: connection.credentialRef,
+      }))
+    ) {
+      return {
+        ok: false,
+        reason:
+          'The Preview-bound DBT profile does not resolve to its governed workspace connection.',
       };
     }
     return { ok: true };

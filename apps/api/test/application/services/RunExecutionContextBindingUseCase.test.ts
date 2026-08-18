@@ -248,6 +248,78 @@ describe('RunExecutionContextBindingUseCase', () => {
     expect(bundleBuilder.build).not.toHaveBeenCalled();
     expect(delegate.execute).not.toHaveBeenCalled();
   });
+
+  it('rejects Run when the dbt profile does not resolve to the preview-bound connection', async () => {
+    const delegate = makeDelegate();
+    const bundleBuilder = { build: vi.fn() };
+    const verify = vi.fn(async () => false);
+    const useCase = new RunExecutionContextBindingUseCase({
+      delegate,
+      bundleBuilder,
+      contextWriter: { write: vi.fn() },
+      executionTargetResolver: { resolve: () => TARGET },
+      stepTypeRegistry: STEP_TYPE_REGISTRY,
+      ...dbtBindingDependencies(),
+      executionConnectionBindingVerifier: { verify },
+    });
+
+    const result = await useCase.executeAdmitted(
+      { ...buildCommand(), planRef: PLAN_REF },
+      buildContext(),
+      makeAdmission('DBT_MODEL', DBT_PROVENANCE)
+    );
+
+    expect(verify).toHaveBeenCalledWith({
+      runtimeCredentialRef: TARGET.credentialRef,
+      targetProfile: TARGET.targetName,
+      connectionCredentialRef: TARGET.credentialRef,
+    });
+    expect(result).toMatchObject({
+      value: {
+        reason:
+          'The Preview-bound DBT profile does not resolve to its governed workspace connection.',
+      },
+    });
+    expect(bundleBuilder.build).not.toHaveBeenCalled();
+    expect(delegate.execute).not.toHaveBeenCalled();
+  });
+
+  it('rejects Run when the governed connection has no credential reference', async () => {
+    const delegate = makeDelegate();
+    const bundleBuilder = { build: vi.fn() };
+    const verify = vi.fn(async () => true);
+    const useCase = new RunExecutionContextBindingUseCase({
+      delegate,
+      bundleBuilder,
+      contextWriter: { write: vi.fn() },
+      executionTargetResolver: { resolve: () => TARGET },
+      stepTypeRegistry: STEP_TYPE_REGISTRY,
+      ...dbtBindingDependencies(async (_scope, connectionId) => ({
+        id: connectionId,
+        name: 'DBT execution warehouse',
+        type: 'postgres',
+        database: 'analytics',
+        sourceObjects: [],
+      })),
+      executionConnectionBindingVerifier: { verify },
+    });
+
+    const result = await useCase.executeAdmitted(
+      { ...buildCommand(), planRef: PLAN_REF },
+      buildContext(),
+      makeAdmission('DBT_MODEL', DBT_PROVENANCE)
+    );
+
+    expect(result).toMatchObject({
+      value: {
+        reason:
+          'The Preview-bound DBT profile does not resolve to its governed workspace connection.',
+      },
+    });
+    expect(verify).not.toHaveBeenCalled();
+    expect(bundleBuilder.build).not.toHaveBeenCalled();
+    expect(delegate.execute).not.toHaveBeenCalled();
+  });
 });
 
 const DBT_PROVENANCE = {
@@ -279,13 +351,18 @@ function dbtBindingDependencies(
     name: 'DBT execution warehouse',
     type: 'postgres',
     database: 'analytics',
+    credentialRef: TARGET.credentialRef,
     sourceObjects: [],
   })
-): Pick<BindingDependencies, 'warehouseConnectionCatalog' | 'postgresCredentialResolver'> {
+): Pick<
+  BindingDependencies,
+  'executionConnectionBindingVerifier' | 'warehouseConnectionCatalog' | 'postgresCredentialResolver'
+> {
   const unexpected = async (): Promise<never> => {
     throw new Error('Unexpected PostgreSQL binding for a DBT-only plan');
   };
   return {
+    executionConnectionBindingVerifier: { verify: vi.fn(async () => true) },
     warehouseConnectionCatalog: {
       listConnections: unexpected,
       listSourceObjects: unexpected,

@@ -1,6 +1,9 @@
 import { DbtProjectGraphProjectionSchema, type DbtProjectGraphProjection } from '@dvt/contracts';
 
-import type { IDbtExecutionTargetResolver } from '../ports/dbtExecutionTarget.js';
+import type {
+  IDbtExecutionConnectionBindingVerifier,
+  IDbtExecutionTargetResolver,
+} from '../ports/dbtExecutionTarget.js';
 import type {
   DbtProjectAnalysisResource,
   DbtProjectSourceIdentityRef,
@@ -25,6 +28,7 @@ export class ProjectDbtGraphFromFilesUseCase {
       readonly analyzer: IDbtProjectAnalyzerPort;
       readonly authorityPolicy: Pick<CanvasAuthoringAuthorityPolicy, 'resolve'>;
       readonly executionTargetResolver: IDbtExecutionTargetResolver;
+      readonly executionConnectionBindingVerifier: IDbtExecutionConnectionBindingVerifier;
       readonly connectionCatalog: Pick<IWarehouseConnectionCatalog, 'getConnection'>;
     }
   ) {}
@@ -88,6 +92,7 @@ export class ProjectDbtGraphFromFilesUseCase {
       adapterType: analysis.adapterType,
       dbtVersion: analysis.projectRevision.dbtVersion,
       executionTarget,
+      executionConnectionBindingVerifier: this.deps.executionConnectionBindingVerifier,
       scope: input.scope,
       connectionCatalog: this.deps.connectionCatalog,
       connectionLookups,
@@ -202,6 +207,7 @@ async function resolveExecutionDiagnostics({
   adapterType,
   dbtVersion,
   executionTarget,
+  executionConnectionBindingVerifier,
   scope,
   connectionCatalog,
   connectionLookups,
@@ -210,6 +216,7 @@ async function resolveExecutionDiagnostics({
   adapterType?: string | undefined;
   dbtVersion?: string | undefined;
   executionTarget: ReturnType<IDbtExecutionTargetResolver['resolve']>;
+  executionConnectionBindingVerifier: IDbtExecutionConnectionBindingVerifier;
   scope: WorkspaceStorageScope;
   connectionCatalog: Pick<IWarehouseConnectionCatalog, 'getConnection'>;
   connectionLookups: Map<string, ReturnType<IWarehouseConnectionCatalog['getConnection']>>;
@@ -270,6 +277,23 @@ async function resolveExecutionDiagnostics({
           severity: 'error',
           message:
             'The configured dbt execution connection does not match its workspace catalog entry.',
+        },
+      ];
+    }
+    if (
+      connection.credentialRef === undefined ||
+      !(await executionConnectionBindingVerifier.verify({
+        runtimeCredentialRef: executionTarget.credentialRef,
+        targetProfile: executionTarget.targetName,
+        connectionCredentialRef: connection.credentialRef,
+      }))
+    ) {
+      return [
+        {
+          code: 'dbt_execution_connection_binding_invalid',
+          severity: 'error',
+          message:
+            'The configured dbt profile does not resolve to its governed workspace connection.',
         },
       ];
     }

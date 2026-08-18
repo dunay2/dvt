@@ -43,6 +43,7 @@ describe('DBT runtime binding security boundary', () => {
           credentialRef: 'vault:dbt/production',
         }),
       },
+      executionConnectionBindingVerifier: { verify: vi.fn(async () => true) },
       stepTypeRegistry: createDefaultStepTypeRegistry(),
       warehouseConnectionCatalog: {
         listConnections: vi.fn(),

@@ -228,6 +228,7 @@ describe('stored plan authority flow', () => {
           credentialRef: 'vault:dbt/production',
         }),
       },
+      executionConnectionBindingVerifier: { verify: vi.fn(async () => true) },
       stepTypeRegistry: harness.stepTypeRegistry,
       warehouseConnectionCatalog: {
         listConnections: vi.fn(),
@@ -237,6 +238,7 @@ describe('stored plan authority flow', () => {
           name: 'Production warehouse',
           type: 'postgres' as const,
           database: 'analytics',
+          credentialRef: 'postgres:warehouse-production',
           sourceObjects: [],
         })),
         createConnection: vi.fn(),
