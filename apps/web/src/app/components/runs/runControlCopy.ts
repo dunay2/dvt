@@ -13,52 +13,53 @@ export type RunControlCopy = Readonly<{
 
 const EN_COPY: RunControlCopy = {
   cancel: 'Cancel run',
-  recover: 'Recover run',
+  recover: 'Run plan again',
   cancellationRequested: 'Cancellation requested.',
   cancellationAlreadyRequested: 'Cancellation was already requested.',
   cancellationAlreadyCompleted: 'The run is already cancelled.',
-  recoveryStarted: (runId) => `Recovery started as ${runId}.`,
+  recoveryStarted: (runId) => `New run started: ${runId}.`,
   failure: (message) => `Run command failed: ${message}`,
   unavailableReason: {
     cancellation_pending: 'Cancellation is already pending.',
     dispatch_pending: 'Cancellation is available after runtime dispatch completes.',
-    run_active: 'Recovery is available only after a run fails or is cancelled.',
+    run_active: 'The plan can be run again only after the current run fails or is cancelled.',
     run_cancelled: 'The run is already cancelled.',
-    run_completed: 'Completed runs cannot be cancelled or recovered.',
+    run_completed: 'Completed runs cannot be cancelled or run again.',
     run_terminal: 'This terminal run cannot be cancelled.',
-    recovery_evidence_unknown: 'Open the run to verify whether recovery is available.',
+    recovery_evidence_unknown: 'Open the run to verify whether the plan can be run again.',
     source_adapter_unavailable:
-      'Recovery is unavailable because the original runtime adapter is not configured.',
+      'The plan cannot be run again because the original runtime adapter is not configured.',
     source_plan_unavailable:
-      'Recovery is unavailable because the original execution plan is no longer available.',
+      'The plan cannot be run again because the original execution plan is no longer available.',
     source_context_untrusted:
-      'Recovery is unavailable because the original execution context cannot be verified.',
+      'The plan cannot be run again because the original execution context cannot be verified.',
   },
 };
 
 const ES_COPY: RunControlCopy = {
   cancel: 'Cancelar ejecución',
-  recover: 'Recuperar ejecución',
+  recover: 'Ejecutar el plan de nuevo',
   cancellationRequested: 'Cancelación solicitada.',
   cancellationAlreadyRequested: 'La cancelación ya estaba solicitada.',
   cancellationAlreadyCompleted: 'La ejecución ya está cancelada.',
-  recoveryStarted: (runId) => `Recuperación iniciada como ${runId}.`,
+  recoveryStarted: (runId) => `Nueva ejecución iniciada: ${runId}.`,
   failure: (message) => `El comando de ejecución ha fallado: ${message}`,
   unavailableReason: {
     cancellation_pending: 'La cancelación ya está pendiente.',
     dispatch_pending: 'La cancelación estará disponible al finalizar el envío al runtime.',
-    run_active: 'La recuperación solo está disponible tras un fallo o cancelación.',
+    run_active:
+      'El plan solo se puede ejecutar de nuevo después de que la ejecución falle o se cancele.',
     run_cancelled: 'La ejecución ya está cancelada.',
-    run_completed: 'Las ejecuciones completadas no se pueden cancelar ni recuperar.',
+    run_completed: 'Las ejecuciones completadas no se pueden cancelar ni ejecutar de nuevo.',
     run_terminal: 'Esta ejecución terminal no se puede cancelar.',
     recovery_evidence_unknown:
-      'Abre la ejecución para comprobar si la recuperación está disponible.',
+      'Abre la ejecución para comprobar si el plan se puede ejecutar de nuevo.',
     source_adapter_unavailable:
-      'La recuperación no está disponible porque el adaptador de ejecución original no está configurado.',
+      'El plan no se puede ejecutar de nuevo porque el adaptador de ejecución original no está configurado.',
     source_plan_unavailable:
-      'La recuperación no está disponible porque el plan de ejecución original ya no está disponible.',
+      'El plan no se puede ejecutar de nuevo porque el plan de ejecución original ya no está disponible.',
     source_context_untrusted:
-      'La recuperación no está disponible porque no se puede verificar el contexto de ejecución original.',
+      'El plan no se puede ejecutar de nuevo porque no se puede verificar el contexto de ejecución original.',
   },
 };
 

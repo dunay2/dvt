@@ -494,11 +494,11 @@ describe('RunsView', () => {
     );
 
     await waitForReactQuery(
-      () => mounted?.container.querySelector('[aria-label="Recover run"]') != null,
-      { description: 'recover control in run detail' }
+      () => mounted?.container.querySelector('[aria-label="Run plan again"]') != null,
+      { description: 'run-again control in run detail' }
     );
     await act(async () => {
-      fireEvent.click(mounted!.container.querySelector('[aria-label="Recover run"]')!);
+      fireEvent.click(mounted!.container.querySelector('[aria-label="Run plan again"]')!);
     });
 
     await waitForReactQuery(
