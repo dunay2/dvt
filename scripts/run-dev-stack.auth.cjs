@@ -264,7 +264,10 @@ async function startLocalProtectedRuntimeAuth(options = {}) {
   };
 }
 
-async function seedLocalProtectedRuntimeGrant(args) {
+async function seedLocalProtectedRuntimeGrant(
+  args,
+  deps = { createClient: (options) => new Client(options) }
+) {
   const schema = readNonEmptyEnv(args.schema) ?? 'dvt';
   const tenantAccess = JSON.stringify([
     {
@@ -284,11 +287,24 @@ async function seedLocalProtectedRuntimeGrant(args) {
       ],
     },
   ]);
-  const client = new Client({ connectionString: args.databaseUrl });
+  const client = deps.createClient({ connectionString: args.databaseUrl });
 
   await client.connect();
 
   try {
+    await client.query('BEGIN');
+    await client.query(
+      `INSERT INTO ${quoteIdentifier(schema)}.projects
+         (tenant_id, project_id, name, created_by_id, created_by_type)
+       VALUES ($1, $2, $3, $4, 'user')
+       ON CONFLICT (tenant_id, project_id) DO NOTHING`,
+      [
+        args.workspaceScope.tenantId,
+        args.workspaceScope.projectId,
+        args.workspaceScope.projectId,
+        args.principalId,
+      ]
+    );
     await client.query(
       `INSERT INTO ${quoteIdentifier(schema)}.principal_grants
          (principal_id, principal_type, suspended, tenant_access)
@@ -299,6 +315,10 @@ async function seedLocalProtectedRuntimeGrant(args) {
                      updated_at = NOW()`,
       [args.principalId, tenantAccess]
     );
+    await client.query('COMMIT');
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
   } finally {
     await client.end();
   }

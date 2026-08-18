@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const {
   LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS,
   resolveDevWorkspaceScope,
+  seedLocalProtectedRuntimeGrant,
   shouldBootstrapLocalProtectedRuntimeAuth,
   startLocalProtectedRuntimeAuth,
 } = require('./run-dev-stack.auth.cjs');
@@ -62,6 +63,46 @@ test('local protected-runtime tenant actions include workspace authoring, files,
   assert.ok(LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS.includes('workspace:source-connection:rename'));
   assert.ok(LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS.includes('workspace:source-connection:test'));
   assert.ok(LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS.includes('workspace:source-import:import'));
+});
+
+test('seedLocalProtectedRuntimeGrant preserves the project catalog referent for the granted workspace', async () => {
+  const queries = [];
+  const client = {
+    connect: async () => undefined,
+    end: async () => undefined,
+    query: async (sql, params = []) => {
+      queries.push({ sql, params });
+    },
+  };
+
+  await seedLocalProtectedRuntimeGrant(
+    {
+      databaseUrl: 'postgresql://proof:proof@127.0.0.1:5432/proof',
+      schema: 'proof_schema',
+      principalId: 'principal-proof',
+      tenantActions: ['workspace:graph-draft:view'],
+      workspaceScope: {
+        tenantId: 'tenant-proof',
+        projectId: 'project-proof',
+        environmentId: 'dev',
+      },
+    },
+    {
+      createClient: () => client,
+    }
+  );
+
+  assert.equal(queries.length, 4);
+  assert.equal(queries[0].sql, 'BEGIN');
+  assert.match(queries[1].sql, /INSERT INTO "proof_schema"\.projects/);
+  assert.deepEqual(queries[1].params, [
+    'tenant-proof',
+    'project-proof',
+    'project-proof',
+    'principal-proof',
+  ]);
+  assert.match(queries[2].sql, /INSERT INTO "proof_schema"\.principal_grants/);
+  assert.equal(queries[3].sql, 'COMMIT');
 });
 
 test('startLocalProtectedRuntimeAuth provides OIDC env and a bearer token for the coordinated dev stack', async () => {
