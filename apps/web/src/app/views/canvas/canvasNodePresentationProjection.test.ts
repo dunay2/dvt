@@ -224,4 +224,123 @@ describe('projectCanvasNodePresentationTruth', () => {
       provenance: 'inherited',
     });
   });
+
+  it('projects the direct upstream effective schema onto an undeclared output', () => {
+    const sourceWithTwoColumns: CanonicalNode = {
+      ...source,
+      metadata: {
+        ...source.metadata,
+        columns: [
+          { name: 'order_id', type: 'integer' },
+          { name: 'customer_id', type: 'text' },
+        ],
+      },
+    };
+    const transform: CanonicalNode = {
+      ...model,
+      id: 'transform.orders',
+      metadata: {},
+    };
+    const sink: CanonicalNode = {
+      id: 'sink.orders',
+      name: 'Orders sink',
+      pluginId: 'dvt',
+      kind: 'dvt:sink',
+      role: 'output',
+      status: 'idle',
+      tags: [],
+      metadata: {
+        config: {
+          schema: 'analytics',
+          table: 'orders',
+          materialization: 'table',
+          writeMode: 'replace',
+        },
+      },
+    };
+    const edges: CanonicalEdge[] = [
+      { ...edge, sourceId: sourceWithTwoColumns.id, targetId: transform.id },
+      {
+        ...edge,
+        id: 'transform.orders->sink.orders',
+        sourceId: transform.id,
+        targetId: sink.id,
+      },
+    ];
+
+    const truth = projectCanvasNodePresentationTruth({
+      node: sink,
+      nodes: [sourceWithTwoColumns, transform, sink],
+      edges,
+    });
+
+    expect(truth.columns).toMatchObject({
+      declaredCount: 0,
+      inheritedCount: 2,
+      visibleCount: 2,
+      visibleProvenance: 'inherited',
+    });
+    expect(truth.columns.visible).toEqual([
+      expect.objectContaining({ name: 'order_id', type: 'integer', provenance: 'inherited' }),
+      expect.objectContaining({ name: 'customer_id', type: 'text', provenance: 'inherited' }),
+    ]);
+  });
+
+  it('keeps output-declared columns authoritative over the upstream schema', () => {
+    const sink: CanonicalNode = {
+      id: 'sink.orders',
+      name: 'Orders sink',
+      pluginId: 'dvt',
+      kind: 'dvt:sink',
+      role: 'output',
+      status: 'idle',
+      tags: [],
+      metadata: {
+        columns: [{ name: 'declared_id', type: 'uuid' }],
+      },
+    };
+
+    const truth = projectCanvasNodePresentationTruth({
+      node: sink,
+      nodes: [source, sink],
+      edges: [{ ...edge, targetId: sink.id }],
+    });
+
+    expect(truth.columns).toMatchObject({
+      declaredCount: 1,
+      inheritedCount: 1,
+      visibleCount: 1,
+      visibleProvenance: 'declared',
+    });
+    expect(truth.columns.visible[0]).toMatchObject({
+      name: 'declared_id',
+      provenance: 'declared',
+    });
+  });
+
+  it('does not invent an output schema without a direct upstream node', () => {
+    const sink: CanonicalNode = {
+      id: 'sink.empty',
+      name: 'Empty sink',
+      pluginId: 'dvt',
+      kind: 'dvt:sink',
+      role: 'output',
+      status: 'idle',
+      tags: [],
+      metadata: {},
+    };
+
+    const truth = projectCanvasNodePresentationTruth({
+      node: sink,
+      nodes: [source, sink],
+      edges: [],
+    });
+
+    expect(truth.columns).toMatchObject({
+      declaredCount: 0,
+      inheritedCount: 0,
+      visibleCount: 0,
+      visibleProvenance: 'none',
+    });
+  });
 });
