@@ -12,6 +12,7 @@ import type {
 import { AppServicesProvider } from '../../services/AppServicesContext';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { createAppServicesTestOverrides } from '../../../testing/appServicesTestDoubles';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import {
   createCanvasInspectorNodeDraft,
   validateCanvasInspectorNodeDraft,
@@ -157,6 +158,7 @@ describe('DvtAuthoringFields', () => {
   let root: Root;
 
   beforeEach(() => {
+    useApplicationLanguageStore.setState({ language: 'en' });
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
@@ -170,6 +172,7 @@ describe('DvtAuthoringFields', () => {
       root.unmount();
     });
     container.remove();
+    useApplicationLanguageStore.setState({ language: 'en' });
     vi.clearAllMocks();
   });
 
@@ -366,6 +369,97 @@ describe('DvtAuthoringFields', () => {
     expect(resolvedDraft.recipe.filters).toEqual([
       expect.objectContaining({ operator: 'is_not_null' }),
     ]);
+  });
+
+  it('localizes and reorders a multi-input recipe without persisting a second mapping', () => {
+    useApplicationLanguageStore.setState({ language: 'es' });
+    const baseSource = buildImportedWarehouseSourceNode();
+    const source: CanonicalNode = {
+      ...baseSource,
+      metadata: {
+        ...baseSource.metadata,
+        columns: [
+          { name: 'id', type: 'number' },
+          { name: 'customer', type: 'text' },
+        ],
+      },
+    };
+    const transform = buildDvtNode('dvt:sql_transform', {
+      transformAuthoring: {
+        version: 'v1',
+        mode: 'visual',
+        recipe: {
+          version: 'v1',
+          outputs: [
+            {
+              id: 'output:id',
+              name: 'id',
+              dataType: 'number',
+              expression: {
+                inputs: [{ nodeId: source.id, columnName: 'id' }],
+                operations: [
+                  { kind: 'passthrough' },
+                  { kind: 'function', functionId: 'trim', args: [] },
+                  { kind: 'function', functionId: 'upper', args: [] },
+                ],
+              },
+            },
+          ],
+          filters: [],
+        },
+      },
+    });
+    const edges: readonly CanonicalEdge[] = [
+      {
+        id: 'source-transform',
+        sourceId: source.id,
+        targetId: transform.id,
+        relation: 'lineage',
+      },
+    ];
+    renderFields(transform, undefined, undefined, [source, transform], edges, 'columns');
+
+    expect(container.textContent).toContain('Receta visual');
+    expect(container.textContent).not.toContain('Visual recipe');
+    const inputCheckboxes = container.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
+    expect(inputCheckboxes).toHaveLength(2);
+
+    act(() => {
+      fireEvent.click(inputCheckboxes[1]!);
+    });
+
+    const moveUpButtons = container.querySelectorAll<HTMLButtonElement>(
+      'button[aria-label="Subir operación"]'
+    );
+    act(() => {
+      fireEvent.click(moveUpButtons[2]!);
+    });
+
+    let resolvedDraft = JSON.parse(draftJson()) as {
+      recipe: {
+        outputs: Array<{
+          expression: { inputs: Array<{ columnName: string }>; operations: Array<unknown> };
+        }>;
+      };
+    };
+    expect(resolvedDraft.recipe.outputs[0]?.expression.inputs).toEqual([
+      expect.objectContaining({ columnName: 'id' }),
+      expect.objectContaining({ columnName: 'customer' }),
+    ]);
+    expect(resolvedDraft.recipe.outputs[0]?.expression.operations).toEqual([
+      { kind: 'function', functionId: 'concat', args: [' '] },
+      { kind: 'function', functionId: 'upper', args: [] },
+      { kind: 'function', functionId: 'trim', args: [] },
+    ]);
+
+    const excludeButton = Array.from(container.querySelectorAll('button')).find(
+      (button) => button.textContent === 'Excluir salida'
+    );
+    act(() => {
+      fireEvent.click(excludeButton!);
+    });
+    resolvedDraft = JSON.parse(draftJson()) as typeof resolvedDraft;
+    expect(resolvedDraft.recipe.outputs).toEqual([]);
   });
 
   it('renders sink destination posture and updates materialization controls', () => {
