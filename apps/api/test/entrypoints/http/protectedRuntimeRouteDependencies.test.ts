@@ -2,6 +2,16 @@ import { asNonBlankString, type PlannerBuildResultV1 } from '@dvt/contracts';
 import type { IObservability } from '@dvt/observability';
 import { describe, expect, it, vi } from 'vitest';
 
+const postgresClient = vi.hoisted(() => ({
+  connect: vi.fn(async () => undefined),
+  query: vi.fn(async () => ({ rows: [] })),
+  end: vi.fn(async () => undefined),
+}));
+
+vi.mock('pg', () => ({
+  Client: vi.fn(() => postgresClient),
+}));
+
 import {
   AUTHORIZATION_ACTION,
   buildEnvironmentAccessScope,
@@ -148,6 +158,9 @@ describe('buildProtectedRuntimeRouteDependencies', () => {
       planner: {},
       planStore: {},
       planValidator: {},
+      postgresCredentialResolver: {
+        resolveCredential: vi.fn(async () => 'postgresql://governed-test-connection'),
+      },
       runEnrichmentService: {},
       runHealthService: {},
       saveWorkspaceGraphDraftUseCase: {},
@@ -160,6 +173,12 @@ describe('buildProtectedRuntimeRouteDependencies', () => {
       workspaceContextQuery: {},
       workspaceGraphDraftCapabilityService: {},
       workspaceGraphDraftStore: {},
+      warehouseConnectionCatalog: {
+        getConnection: vi.fn(async () => ({
+          credentialRef: 'postgres:test',
+          type: 'postgres',
+        })),
+      },
       ...overrides,
     } as unknown as ProtectedRuntimeModule;
   }
