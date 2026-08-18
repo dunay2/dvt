@@ -470,7 +470,7 @@ export const canvasViewAuthoringCopyByKey = {
   },
   inspectorDvtConnectionLabel: {
     key: 'canvas.inspector.authoring.dvtConnectionLabel',
-    fallback: 'PostgreSQL connection',
+    fallback: 'Connection',
   },
   inspectorDvtConnectionPlaceholder: {
     key: 'canvas.inspector.authoring.dvtConnectionPlaceholder',
@@ -498,7 +498,7 @@ export const canvasViewAuthoringCopyByKey = {
   },
   inspectorDvtInheritedConnectionLabel: {
     key: 'canvas.inspector.authoring.dvtInheritedConnectionLabel',
-    fallback: 'Inherited PostgreSQL connection',
+    fallback: 'Inherited connection',
   },
   inspectorDvtSqlTransformTitle: {
     key: 'canvas.inspector.authoring.dvtSqlTransformTitle',
