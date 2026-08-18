@@ -18,6 +18,67 @@ import {
 } from './ui/dialog';
 
 export type PlanPreviewModalMessages = Readonly<{
+  planPreviewTitle: string;
+  planPreviewReadOnlyLabel: string;
+  planPreviewDescription: string;
+  planPreviewNotEstimatedValue: string;
+  planPreviewIdentityTitle: string;
+  planPreviewIdentityCaption: string;
+  planPreviewIdLabel: string;
+  planPreviewVersionLabel: string;
+  planPreviewRefLabel: string;
+  planPreviewGeneratedLabel: string;
+  planPreviewEstimatedCostLabel: string;
+  planPreviewExecutionTargetTitle: string;
+  planPreviewExecutionTargetCaption: string;
+  planPreviewExecutorLabel: string;
+  planPreviewNotReportedValue: string;
+  planPreviewAdapterLabel: string;
+  planPreviewUnknownValue: string;
+  planPreviewTargetLabel: string;
+  planPreviewCapabilitiesLabel: string;
+  planPreviewSummaryTitle: string;
+  planPreviewSummaryCaption: string;
+  planPreviewNodesLabel: string;
+  planPreviewStepsLabel: string;
+  planPreviewSourceTablesLabel: string;
+  planPreviewSinkTablesLabel: string;
+  planPreviewUnavailableValue: string;
+  planPreviewPersistenceTitle: string;
+  planPreviewPersistenceCaption: string;
+  planPreviewRecordLabel: string;
+  planPreviewCanonicalShaLabel: string;
+  planPreviewSelectionTitle: string;
+  planPreviewSelectionCaption: string;
+  planPreviewSelectionModeLabel: string;
+  planPreviewSelectionExplicitValue: string;
+  planPreviewSelectionWorkspaceDefaultValue: string;
+  planPreviewRequestedResourcesLabel: string;
+  planPreviewIncludedDependenciesLabel: string;
+  planPreviewNoneValue: string;
+  planPreviewAuthorizedScopeLabel: string;
+  planPreviewProvenanceTitle: string;
+  planPreviewDbtProvenanceCaption: string;
+  planPreviewRepositoryProvenanceCaption: string;
+  planPreviewCanvasLabel: string;
+  planPreviewProjectRootLabel: string;
+  planPreviewDbtVersionLabel: string;
+  planPreviewProjectRevisionLabel: string;
+  planPreviewAnalysisRevisionLabel: string;
+  planPreviewSelectedResourcesLabel: string;
+  planPreviewGraphArtifactLabel: string;
+  planPreviewSqlArtifactLabel: string;
+  planPreviewExecutionStepsTitle: string;
+  planPreviewExecutionStepsCaption: string;
+  planPreviewStepLabel: string;
+  planPreviewNodeSuffix: string;
+  planPreviewNodesSuffix: string;
+  planPreviewTimeoutLabel: string;
+  planPreviewRetriesLabel: string;
+  planPreviewConcurrencyLabel: string;
+  planPreviewWarehouseLabel: string;
+  planPreviewExportJsonAction: string;
+  planPreviewStartRunAction: string;
   planPreviewSelectionRejectedTitle: string;
   planPreviewSelectionRejectedDescription: string;
   planPreviewPlanInvalidTitle: string;
@@ -54,10 +115,10 @@ interface PlanPreviewModalProps {
   onStartRun: () => void;
 }
 
-function formatPlanCost(estimatedCost: number | undefined): string {
+function formatPlanCost(estimatedCost: number | undefined, notEstimatedValue: string): string {
   return typeof estimatedCost === 'number' && Number.isFinite(estimatedCost)
     ? `$${estimatedCost.toFixed(2)}`
-    : 'Not estimated';
+    : notEstimatedValue;
 }
 
 function PlanPreviewSection({
@@ -101,7 +162,7 @@ function PlanPreviewField({
     <div className="min-w-0 rounded-md border border-slate-800 bg-slate-950/45 px-3 py-2">
       <div className="text-[11px] font-medium uppercase tracking-wide text-slate-400">{label}</div>
       <div
-        aria-label={`${label} value`}
+        aria-label={label}
         data-testid={long ? 'plan-preview-long-value' : undefined}
         className={`mt-1 ${valueClassName}`}
       >
@@ -155,23 +216,29 @@ function PlanPreviewRejectionPanel({
 
 function PlanPreviewSelectionReview({
   selectionIntent,
-}: Readonly<{ selectionIntent: PlanPreviewSelectionIntentViewModel }>) {
+  messages,
+}: Readonly<{
+  selectionIntent: PlanPreviewSelectionIntentViewModel;
+  messages: PlanPreviewModalMessages;
+}>) {
   return (
     <PlanPreviewSection
-      title="Execution selection"
-      caption="Requested execution roots and dependencies included by the governed closure policy."
+      title={messages.planPreviewSelectionTitle}
+      caption={messages.planPreviewSelectionCaption}
     >
       <div className="grid min-w-0 gap-3 md:grid-cols-2">
-        <PlanPreviewField label="Selection mode">
-          {selectionIntent.mode === 'explicit' ? 'Explicit' : 'Workspace default'}
+        <PlanPreviewField label={messages.planPreviewSelectionModeLabel}>
+          {selectionIntent.mode === 'explicit'
+            ? messages.planPreviewSelectionExplicitValue
+            : messages.planPreviewSelectionWorkspaceDefaultValue}
         </PlanPreviewField>
-        <PlanPreviewField label="Requested resources" long>
+        <PlanPreviewField label={messages.planPreviewRequestedResourcesLabel} long>
           {selectionIntent.requestedRootNodeIds.join(', ')}
         </PlanPreviewField>
-        <PlanPreviewField label="Included dependencies" long>
-          {selectionIntent.derivedDependencyNodeIds.join(', ') || 'None'}
+        <PlanPreviewField label={messages.planPreviewIncludedDependenciesLabel} long>
+          {selectionIntent.derivedDependencyNodeIds.join(', ') || messages.planPreviewNoneValue}
         </PlanPreviewField>
-        <PlanPreviewField label="Authorized execution scope" long>
+        <PlanPreviewField label={messages.planPreviewAuthorizedScopeLabel} long>
           {selectionIntent.authorizedScopeNodeIds.join(', ')}
         </PlanPreviewField>
       </div>
@@ -201,6 +268,7 @@ function SelectionRejectedPlanPreviewModal({
     >
       <DialogContent
         data-testid="plan-preview-modal"
+        closeLabel={messages.planPreviewCloseLabel}
         className="min-w-0 max-h-[92vh] w-[calc(100vw-2rem)] gap-0 overflow-hidden border-slate-700 bg-slate-950 p-0 text-slate-50 shadow-2xl sm:max-w-2xl"
       >
         <DialogHeader className="min-w-0 border-b border-slate-800 px-4 py-4 sm:px-6 sm:py-5">
@@ -287,18 +355,19 @@ export function PlanPreviewModal({
     >
       <DialogContent
         data-testid="plan-preview-modal"
+        closeLabel={messages.planPreviewCloseLabel}
         className="min-w-0 max-h-[92vh] w-[calc(100vw-2rem)] gap-0 overflow-hidden border-slate-700 bg-slate-950 p-0 text-slate-50 shadow-2xl sm:max-w-4xl"
       >
         <DialogHeader className="min-w-0 border-b border-slate-800 px-4 py-4 sm:px-6 sm:py-5">
           <DialogTitle className="flex min-w-0 flex-wrap items-center gap-2 pr-8 text-lg text-slate-50 sm:text-xl">
-            {validation == null ? 'Execution Preview' : messages.planPreviewPlanInvalidTitle}
+            {validation == null ? messages.planPreviewTitle : messages.planPreviewPlanInvalidTitle}
             <Badge variant="outline" className="border-blue-400/50 bg-blue-500/10 text-blue-100">
-              Read-only
+              {messages.planPreviewReadOnlyLabel}
             </Badge>
           </DialogTitle>
           <DialogDescription className="text-slate-200">
             {validation == null
-              ? 'Review the immutable execution preview before starting a run.'
+              ? messages.planPreviewDescription
               : messages.planPreviewPlanInvalidDescription}
           </DialogDescription>
         </DialogHeader>
@@ -324,46 +393,52 @@ export function PlanPreviewModal({
             ) : null}
 
             <PlanPreviewSection
-              title="Execution Preview identity"
-              caption="Immutable identifiers for the persisted preview."
+              title={messages.planPreviewIdentityTitle}
+              caption={messages.planPreviewIdentityCaption}
             >
               <div className="grid min-w-0 gap-3 md:grid-cols-2">
-                <PlanPreviewField label="Preview ID" long>
+                <PlanPreviewField label={messages.planPreviewIdLabel} long>
                   {plan.planId}
                 </PlanPreviewField>
-                <PlanPreviewField label="Version">{plan.planVersion}</PlanPreviewField>
+                <PlanPreviewField label={messages.planPreviewVersionLabel}>
+                  {plan.planVersion}
+                </PlanPreviewField>
                 {plan.planRef ? (
                   <div className="md:col-span-2">
-                    <PlanPreviewField label="Preview Ref" long>
+                    <PlanPreviewField label={messages.planPreviewRefLabel} long>
                       {plan.planRef.uri}
                     </PlanPreviewField>
                   </div>
                 ) : null}
-                <PlanPreviewField label="Generated" mono>
+                <PlanPreviewField label={messages.planPreviewGeneratedLabel} mono>
                   {new Date(plan.generatedAt).toLocaleString()}
                 </PlanPreviewField>
-                <PlanPreviewField label="Estimated cost">
+                <PlanPreviewField label={messages.planPreviewEstimatedCostLabel}>
                   <span
                     className={
                       typeof plan.estimatedCost === 'number' ? 'text-green-300' : 'text-slate-300'
                     }
                   >
-                    {formatPlanCost(plan.estimatedCost)}
+                    {formatPlanCost(plan.estimatedCost, messages.planPreviewNotEstimatedValue)}
                   </span>
                 </PlanPreviewField>
               </div>
             </PlanPreviewSection>
 
             <PlanPreviewSection
-              title="Execution target"
-              caption="Runtime posture that will be used when the run starts."
+              title={messages.planPreviewExecutionTargetTitle}
+              caption={messages.planPreviewExecutionTargetCaption}
             >
               <div className="grid min-w-0 gap-3 md:grid-cols-3">
-                <PlanPreviewField label="Executor">
-                  {previewSummary?.executor ?? 'Not reported'}
+                <PlanPreviewField label={messages.planPreviewExecutorLabel}>
+                  {previewSummary?.executor ?? messages.planPreviewNotReportedValue}
                 </PlanPreviewField>
-                <PlanPreviewField label="Adapter">{plan.adapter || 'Unknown'}</PlanPreviewField>
-                <PlanPreviewField label="Target">
+                <PlanPreviewField label={messages.planPreviewAdapterLabel}>
+                  {plan.adapter && plan.adapter !== 'unknown'
+                    ? plan.adapter
+                    : messages.planPreviewUnknownValue}
+                </PlanPreviewField>
+                <PlanPreviewField label={messages.planPreviewTargetLabel}>
                   <Badge variant="secondary">{plan.target}</Badge>
                 </PlanPreviewField>
               </div>
@@ -371,7 +446,7 @@ export function PlanPreviewModal({
                 <div className="mt-4 flex min-w-0 flex-wrap gap-2">
                   <span className="flex items-center gap-1 text-xs font-medium uppercase tracking-wide text-slate-400">
                     <Zap className="size-3.5 text-yellow-300" />
-                    Capabilities
+                    {messages.planPreviewCapabilitiesLabel}
                   </span>
                   {plan.capabilities.map((capability) => (
                     <Badge
@@ -388,17 +463,21 @@ export function PlanPreviewModal({
 
             {previewSummary ? (
               <PlanPreviewSection
-                title="Persisted preview summary"
-                caption="Graph size and table scope captured by the execution preview."
+                title={messages.planPreviewSummaryTitle}
+                caption={messages.planPreviewSummaryCaption}
               >
                 <div className="grid min-w-0 gap-3 md:grid-cols-2">
-                  <PlanPreviewField label="Nodes">{previewSummary.nodeCount}</PlanPreviewField>
-                  <PlanPreviewField label="Steps">{previewSummary.stepCount}</PlanPreviewField>
-                  <PlanPreviewField label="Source tables">
-                    {previewSummary.sourceTables.join(', ') || 'n/a'}
+                  <PlanPreviewField label={messages.planPreviewNodesLabel}>
+                    {previewSummary.nodeCount}
                   </PlanPreviewField>
-                  <PlanPreviewField label="Sink tables">
-                    {previewSummary.sinkTables.join(', ') || 'n/a'}
+                  <PlanPreviewField label={messages.planPreviewStepsLabel}>
+                    {previewSummary.stepCount}
+                  </PlanPreviewField>
+                  <PlanPreviewField label={messages.planPreviewSourceTablesLabel}>
+                    {previewSummary.sourceTables.join(', ') || messages.planPreviewUnavailableValue}
+                  </PlanPreviewField>
+                  <PlanPreviewField label={messages.planPreviewSinkTablesLabel}>
+                    {previewSummary.sinkTables.join(', ') || messages.planPreviewUnavailableValue}
                   </PlanPreviewField>
                 </div>
               </PlanPreviewSection>
@@ -406,14 +485,14 @@ export function PlanPreviewModal({
 
             {persistedPreview ? (
               <PlanPreviewSection
-                title="Persistence evidence"
-                caption="Proof that this preview is backed by a stored canonical preview."
+                title={messages.planPreviewPersistenceTitle}
+                caption={messages.planPreviewPersistenceCaption}
               >
                 <div className="grid min-w-0 gap-3 md:grid-cols-2">
-                  <PlanPreviewField label="Preview record" long>
+                  <PlanPreviewField label={messages.planPreviewRecordLabel} long>
                     {persistedPreview.planRecordId}
                   </PlanPreviewField>
-                  <PlanPreviewField label="Canonical preview SHA" long>
+                  <PlanPreviewField label={messages.planPreviewCanonicalShaLabel} long>
                     {persistedPreview.canonicalPlanSha256}
                   </PlanPreviewField>
                 </div>
@@ -421,7 +500,7 @@ export function PlanPreviewModal({
             ) : null}
 
             {selectionIntent ? (
-              <PlanPreviewSelectionReview selectionIntent={selectionIntent} />
+              <PlanPreviewSelectionReview selectionIntent={selectionIntent} messages={messages} />
             ) : null}
 
             {plan.decisions ? (
@@ -448,49 +527,49 @@ export function PlanPreviewModal({
 
             {provenance ? (
               <PlanPreviewSection
-                title="Provenance"
+                title={messages.planPreviewProvenanceTitle}
                 caption={
                   provenance.kind === 'dbt-project-files'
-                    ? 'Authoritative dbt project revision and server-owned execution target.'
-                    : 'Repository artifacts used to generate the preview.'
+                    ? messages.planPreviewDbtProvenanceCaption
+                    : messages.planPreviewRepositoryProvenanceCaption
                 }
               >
                 <div className="grid min-w-0 gap-3 md:grid-cols-2">
                   {provenance.kind === 'dbt-project-files' ? (
                     <>
-                      <PlanPreviewField label="Canvas" long>
+                      <PlanPreviewField label={messages.planPreviewCanvasLabel} long>
                         {provenance.canvasId}
                       </PlanPreviewField>
-                      <PlanPreviewField label="Project root" long>
+                      <PlanPreviewField label={messages.planPreviewProjectRootLabel} long>
                         {provenance.projectRoot}
                       </PlanPreviewField>
-                      <PlanPreviewField label="dbt version">
+                      <PlanPreviewField label={messages.planPreviewDbtVersionLabel}>
                         {provenance.dbtVersion}
                       </PlanPreviewField>
-                      <PlanPreviewField label="Project revision" long>
+                      <PlanPreviewField label={messages.planPreviewProjectRevisionLabel} long>
                         {provenance.contentSetSha256}
                       </PlanPreviewField>
-                      <PlanPreviewField label="Analysis revision" long>
+                      <PlanPreviewField label={messages.planPreviewAnalysisRevisionLabel} long>
                         {provenance.analysisSha256}
                       </PlanPreviewField>
                       {!selectionIntent ? (
-                        <PlanPreviewField label="Selected resources" long>
+                        <PlanPreviewField label={messages.planPreviewSelectedResourcesLabel} long>
                           {provenance.selectedUniqueIds.join(', ')}
                         </PlanPreviewField>
                       ) : null}
-                      <PlanPreviewField label="Execution target">
+                      <PlanPreviewField label={messages.planPreviewExecutionTargetTitle}>
                         {`${provenance.executionTarget.provider} / ${provenance.executionTarget.adapter} / ${provenance.executionTarget.targetName}`}
                       </PlanPreviewField>
                     </>
                   ) : (
                     <>
                       {provenance.graphArtifact ? (
-                        <PlanPreviewField label="Graph artifact" long>
+                        <PlanPreviewField label={messages.planPreviewGraphArtifactLabel} long>
                           {provenance.graphArtifact.repo}: {provenance.graphArtifact.path}
                         </PlanPreviewField>
                       ) : null}
                       {provenance.sqlArtifact ? (
-                        <PlanPreviewField label="SQL artifact" long>
+                        <PlanPreviewField label={messages.planPreviewSqlArtifactLabel} long>
                           {provenance.sqlArtifact.repo}: {provenance.sqlArtifact.path}
                         </PlanPreviewField>
                       ) : null}
@@ -501,8 +580,8 @@ export function PlanPreviewModal({
             ) : null}
 
             <PlanPreviewSection
-              title="Execution steps"
-              caption="Step order and policy settings that will be submitted to the runtime."
+              title={messages.planPreviewExecutionStepsTitle}
+              caption={messages.planPreviewExecutionStepsCaption}
             >
               <ol className="space-y-3">
                 {plan.steps.map((step, index) => (
@@ -513,7 +592,9 @@ export function PlanPreviewModal({
                     <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-xs text-slate-400">Step {index + 1}</span>
+                          <span className="text-xs text-slate-400">
+                            {messages.planPreviewStepLabel} {index + 1}
+                          </span>
                           <span className="font-medium text-slate-50">{step.name}</span>
                           <Badge variant="secondary" className="text-xs">
                             {step.type}
@@ -523,28 +604,33 @@ export function PlanPreviewModal({
                           {step.id}
                         </div>
                       </div>
-                      <span className="text-xs text-slate-300">{step.nodes.length} nodes</span>
+                      <span className="text-xs text-slate-300">
+                        {step.nodes.length}{' '}
+                        {step.nodes.length === 1
+                          ? messages.planPreviewNodeSuffix
+                          : messages.planPreviewNodesSuffix}
+                      </span>
                     </div>
                     <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-300">
                       {step.policies.timeout ? (
                         <span className="inline-flex items-center gap-1 rounded border border-slate-700 px-2 py-1">
                           <Clock className="size-3" />
-                          Timeout {step.policies.timeout}s
+                          {messages.planPreviewTimeoutLabel} {step.policies.timeout}s
                         </span>
                       ) : null}
                       {step.policies.retries ? (
                         <span className="rounded border border-slate-700 px-2 py-1">
-                          Retries {step.policies.retries}
+                          {messages.planPreviewRetriesLabel} {step.policies.retries}
                         </span>
                       ) : null}
                       {step.policies.concurrency ? (
                         <span className="rounded border border-slate-700 px-2 py-1">
-                          Concurrency {step.policies.concurrency}
+                          {messages.planPreviewConcurrencyLabel} {step.policies.concurrency}
                         </span>
                       ) : null}
                       {step.policies.warehouse ? (
                         <span className="rounded border border-slate-700 px-2 py-1">
-                          Warehouse {step.policies.warehouse}
+                          {messages.planPreviewWarehouseLabel} {step.policies.warehouse}
                         </span>
                       ) : null}
                     </div>
@@ -558,7 +644,7 @@ export function PlanPreviewModal({
         <DialogFooter className="min-w-0 border-t border-slate-800 bg-slate-950/95 px-4 py-4 sm:px-6">
           <Button variant="outline" onClick={onClose}>
             <Download className="size-4 mr-2" />
-            Export JSON
+            {messages.planPreviewExportJsonAction}
           </Button>
           <Button
             disabled={startRunDisabled || validation != null}
@@ -566,7 +652,7 @@ export function PlanPreviewModal({
               onStartRun();
             }}
           >
-            Start Run
+            {messages.planPreviewStartRunAction}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -93,7 +93,8 @@ describe('PlanPreviewModal rejected outcomes', () => {
 
     const modal = document.querySelector('[data-testid="plan-preview-modal"]');
     const diagnosticBody = modal?.querySelector('[data-slot="plan-preview-scroll-region"]');
-    const reason = modal?.querySelector('[aria-label="Reason value"]');
+    const longValues = modal?.querySelectorAll('[data-testid="plan-preview-long-value"]');
+    const reason = longValues?.item((longValues?.length ?? 1) - 1);
 
     expect(modal?.className).toContain('max-h-[92vh]');
     expect(diagnosticBody?.className).toContain('overflow-y-auto');

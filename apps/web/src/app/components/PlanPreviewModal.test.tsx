@@ -147,13 +147,15 @@ describe('PlanPreviewModal', () => {
   });
 
   it('renders the complete accepted preview surface in Spanish without English UI copy', async () => {
+    const acceptedPlan = { ...mockExecutionPlan, planRef: mockExecutionPlan.planRef! };
+
     await act(async () => {
       root.render(
         <PlanPreviewModal
           open={true}
           onClose={vi.fn()}
-          plan={mockExecutionPlan}
-          outcome={{ kind: 'accepted', plan: mockExecutionPlan }}
+          plan={acceptedPlan}
+          outcome={{ kind: 'accepted', plan: acceptedPlan }}
           messages={resolveCanvasViewCopy('es')}
           startRunMessage="La vista previa actual está lista para iniciar la ejecución."
           onStartRun={vi.fn()}
@@ -172,10 +174,11 @@ describe('PlanPreviewModal', () => {
     expect(text).toContain('Evidencia de persistencia');
     expect(text).toContain('Procedencia');
     expect(text).toContain('Pasos de ejecución');
+    expect(text).toContain('4 nodos');
     expect(text).toContain('Exportar JSON');
     expect(text).toContain('Iniciar ejecución');
     expect(document.querySelector('[aria-label="ID de vista previa"]')?.textContent).toBe(
-      mockExecutionPlan.planId
+      acceptedPlan.planId
     );
 
     for (const englishCopy of [
@@ -189,7 +192,11 @@ describe('PlanPreviewModal', () => {
       'Start Run',
       'Not reported',
       'Unknown',
+      'unknown',
       'Not estimated',
+      '4 nodes',
+      'Motivo del planner',
+      'enviarán al runtime',
     ]) {
       expect(text).not.toContain(englishCopy);
     }
@@ -239,22 +246,20 @@ describe('PlanPreviewModal', () => {
 
     const bodyText = document.body.textContent ?? '';
     expect(bodyText).toContain('Authoritative dbt project revision');
-    expect(document.querySelector('[aria-label="Canvas value"]')?.textContent).toBe(
-      'analytics-canvas'
-    );
+    expect(document.querySelector('[aria-label="Canvas"]')?.textContent).toBe('analytics-canvas');
     expect(bodyText).toContain('analytics');
     expect(bodyText).toContain('model.analytics.orders');
-    expect(document.querySelector('[aria-label="Requested resources value"]')?.textContent).toBe(
+    expect(document.querySelector('[aria-label="Requested resources"]')?.textContent).toBe(
       'test.analytics.orders_not_null'
     );
-    expect(document.querySelector('[aria-label="Included dependencies value"]')?.textContent).toBe(
+    expect(document.querySelector('[aria-label="Included dependencies"]')?.textContent).toBe(
       'model.analytics.orders'
     );
-    expect(
-      document.querySelector('[aria-label="Authorized execution scope value"]')?.textContent
-    ).toBe('model.analytics.orders, test.analytics.orders_not_null');
+    expect(document.querySelector('[aria-label="Authorized execution scope"]')?.textContent).toBe(
+      'model.analytics.orders, test.analytics.orders_not_null'
+    );
     expect(bodyText).toContain('server-config / postgres / development');
-    expect(document.querySelector('[aria-label="Execution target value"]')?.textContent).toBe(
+    expect(document.querySelector('[aria-label="Execution target"]')?.textContent).toBe(
       'server-config / postgres / development'
     );
     expect(bodyText).not.toContain('vault:dbt/development');
