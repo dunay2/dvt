@@ -33,15 +33,21 @@ const operationalDrawerPanelClassNames = {
     'flex shrink-0 flex-wrap items-center gap-1 border-b border-[color:var(--border-default)] px-3',
   tabButton:
     'h-9 border-b-2 border-transparent px-2 text-xs font-semibold text-[var(--text-muted)] data-[active=true]:border-[color:var(--focus-ring)] data-[active=true]:text-[var(--text-strong)]',
-  dataTableFrame: 'min-w-0 overflow-auto rounded border border-[color:var(--border-default)]',
+  tabPanel: 'min-w-0 flex-1',
+  dataTableFrame:
+    'w-full max-w-full min-w-0 overflow-auto rounded border border-[color:var(--border-default)]',
   dataTable: 'w-max min-w-full border-collapse text-left font-mono text-xs',
   dataTableHeader:
     'sticky top-0 z-10 border-b border-[color:var(--border-default)] bg-[var(--surface-raised)] text-[var(--text-strong)]',
-  dataTableHeaderCell: 'whitespace-nowrap px-3 py-2 font-semibold',
-  dataTableRow: 'border-b border-[color:var(--border-muted)] last:border-b-0',
-  dataTableCell: 'max-w-80 whitespace-nowrap px-3 py-2 text-[var(--text-default)]',
+  dataTableHeaderCell:
+    'min-w-32 max-w-80 overflow-hidden border-r border-[color:var(--border-default)] px-3 py-2 font-semibold text-ellipsis whitespace-nowrap last:border-r-0',
+  dataTableRow: 'last:[&>td]:border-b-0',
+  dataTableCell:
+    'min-w-32 max-w-80 overflow-hidden border-r border-b border-[color:var(--border-muted)] px-3 py-2 text-[var(--text-default)] last:border-r-0',
+  dataTableValue: 'block max-w-80 truncate',
   dataTableNull: 'italic text-[var(--text-muted)]',
   dataNotice: 'mb-2 text-xs text-[var(--text-muted)]',
+  screenReaderOnly: 'sr-only',
 } as const;
 
 export function OperationalDrawerPanelSurface({
@@ -102,7 +108,7 @@ export function OperationalDrawerDataTable({
         data-slot="bottom-operational-data-table"
         className={operationalDrawerPanelClassNames.dataTable}
       >
-        <caption className="sr-only">{caption}</caption>
+        <caption className={operationalDrawerPanelClassNames.screenReaderOnly}>{caption}</caption>
         <thead className={operationalDrawerPanelClassNames.dataTableHeader}>
           <tr>
             {columns.map((column) => (
@@ -126,7 +132,14 @@ export function OperationalDrawerDataTable({
                       {nullValueLabel}
                     </span>
                   ) : (
-                    value
+                    <span
+                      data-slot="bottom-operational-data-value"
+                      className={operationalDrawerPanelClassNames.dataTableValue}
+                      title={value}
+                      aria-label={value}
+                    >
+                      {value}
+                    </span>
                   )}
                 </td>
               ))}
@@ -406,6 +419,31 @@ export function OperationalDrawerTabs({
           {tab.count == null ? null : <span> {tab.count}</span>}
         </button>
       ))}
+    </div>
+  );
+}
+
+export function OperationalDrawerTabPanel({
+  active,
+  children,
+  tabId,
+}: Readonly<{
+  active: boolean;
+  children: ReactNode;
+  tabId: OperationalDrawerTabId;
+}>): JSX.Element {
+  return (
+    <div
+      id={`bottom-operational-drawer-panel-${tabId}`}
+      role="tabpanel"
+      aria-labelledby={`bottom-operational-drawer-tab-${tabId}`}
+      tabIndex={active ? 0 : -1}
+      hidden={!active}
+      data-slot="bottom-operational-drawer-panel"
+      data-tab={tabId}
+      className={operationalDrawerPanelClassNames.tabPanel}
+    >
+      {active ? children : null}
     </div>
   );
 }
