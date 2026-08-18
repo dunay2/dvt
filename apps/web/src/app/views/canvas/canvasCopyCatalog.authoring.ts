@@ -352,6 +352,19 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.applyLabel',
     fallback: 'Apply',
   },
+  inspectorVisualTransformConvertToSqlLabel: {
+    key: 'canvas.inspector.authoring.visualTransformConvertToSqlLabel',
+    fallback: 'Convert to SQL',
+  },
+  inspectorVisualTransformConvertToSqlTitle: {
+    key: 'canvas.inspector.authoring.visualTransformConvertToSqlTitle',
+    fallback: 'Convert this visual transform to SQL?',
+  },
+  inspectorVisualTransformConvertToSqlDescription: {
+    key: 'canvas.inspector.authoring.visualTransformConvertToSqlDescription',
+    fallback:
+      'This replaces the visual recipe as the editing authority. Returning from SQL to Visual is not automatic.',
+  },
   inspectorDbtCardTitle: {
     key: 'canvas.inspector.authoring.dbtCardTitle',
     fallback: 'dbt card',

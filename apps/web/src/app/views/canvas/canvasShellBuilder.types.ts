@@ -64,6 +64,7 @@ export type CanvasShellPanelsBuilderArgs = Readonly<{
     | 'inspectorGraphEdges'
     | 'canEditInspectorNode'
     | 'applyInspectorNodeDraft'
+    | 'convertInspectorVisualTransformToSql'
     | 'activeRunId'
     | 'registeredPlugins'
     | 'runtimeCapabilities'

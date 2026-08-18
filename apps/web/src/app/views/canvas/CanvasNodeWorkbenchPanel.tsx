@@ -10,6 +10,17 @@ import {
   inspectorVisualClasses,
 } from '../../components/inspector/inspectorVisualTokens';
 import { Button } from '../../components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '../../components/ui/alert-dialog';
 import { ScrollArea } from '../../components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip';
 import { cn } from '../../components/ui/utils';
@@ -333,6 +344,48 @@ export function CanvasNodeWorkbenchPanel({
           {renderAuthoringSection('columns')}
         </>
       );
+      if (
+        presentationTruth.code.kind === 'generated' &&
+        authoring.onConvertVisualTransformToSql != null
+      ) {
+        const generatedSql = presentationTruth.code.content;
+        sectionAfterChildren.code = (
+          <>
+            {sectionAfterChildren.code}
+            <div className="flex justify-end pt-1">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    data-slot="canvas-node-workbench-convert-visual-to-sql"
+                  >
+                    {copy.inspectorVisualTransformConvertToSqlLabel}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      {copy.inspectorVisualTransformConvertToSqlTitle}
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      {copy.inspectorVisualTransformConvertToSqlDescription}
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>{copy.inspectorCancelLabel}</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => authoring.onConvertVisualTransformToSql?.(generatedSql)}
+                    >
+                      {copy.inspectorVisualTransformConvertToSqlLabel}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </>
+        );
+      }
     }
   }
 

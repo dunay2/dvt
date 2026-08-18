@@ -140,6 +140,8 @@ function buildCanvasShellViewModel(args: CanvasControllerViewModelArgs) {
     frozenNodeIds: store.frozenNodeIds,
     canEditInspectorNode: runtimePolicy.commands.canEditInspectorNode,
     applyInspectorNodeDraft: args.inspectorCommands.applyInspectorNodeDraft,
+    convertInspectorVisualTransformToSql:
+      args.inspectorCommands.convertInspectorVisualTransformToSql,
   };
 }
 

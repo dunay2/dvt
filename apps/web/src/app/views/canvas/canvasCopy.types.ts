@@ -463,6 +463,9 @@ export type CanvasViewCopy = {
   readonly inspectorNodeReadOnlyMessage: string;
   readonly inspectorCancelLabel: string;
   readonly inspectorApplyLabel: string;
+  readonly inspectorVisualTransformConvertToSqlLabel: string;
+  readonly inspectorVisualTransformConvertToSqlTitle: string;
+  readonly inspectorVisualTransformConvertToSqlDescription: string;
   readonly inspectorDbtCardTitle: string;
   readonly inspectorDbtPackageLabel: string;
   readonly inspectorDbtSourceLabel: string;

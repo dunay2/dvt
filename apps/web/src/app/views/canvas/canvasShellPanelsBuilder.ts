@@ -59,6 +59,7 @@ export function buildCanvasShellPanels({
     inspectorAuthoring: {
       canEditNode: panelState.canEditInspectorNode,
       onApplyNodeDraft: panelState.applyInspectorNodeDraft,
+      onConvertVisualTransformToSql: panelState.convertInspectorVisualTransformToSql,
     },
     inspectorWorkbenchContributions: [],
     activeRunId: panelState.activeRunId,

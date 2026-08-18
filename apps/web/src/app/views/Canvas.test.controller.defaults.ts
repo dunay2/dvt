@@ -290,6 +290,7 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
   | 'handleExportProjectSnapshot'
   | 'handleImportProjectSnapshotFile'
   | 'applyInspectorNodeDraft'
+  | 'convertInspectorVisualTransformToSql'
   | 'handleDuplicateNode'
   | 'handleToggleNodeSelection'
   | 'handleToggleFrozenNode'
@@ -335,6 +336,7 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
     handleExportProjectSnapshot: vi.fn(),
     handleImportProjectSnapshotFile: vi.fn(),
     applyInspectorNodeDraft: vi.fn(),
+    convertInspectorVisualTransformToSql: vi.fn(),
     handleDuplicateNode: vi.fn(),
     handleToggleNodeSelection: vi.fn(),
     handleToggleFrozenNode: vi.fn(),

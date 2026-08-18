@@ -4,7 +4,8 @@ import type { Dispatch, SetStateAction } from 'react';
 
 import { applyCanvasInspectorNodeDraftToSession } from './canvasInspectorAuthoringCommand';
 import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types';
-import type { CanvasDraftSession } from './canvasDraftSession';
+import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
+import { convertDvtVisualTransformToSql } from './canvasDvtTransformAuthoringAuthority';
 import type { CanonicalNode } from '../../types/canonical';
 
 type UseCanvasInspectorCommandsArgs = {
@@ -33,7 +34,22 @@ export function useCanvasInspectorCommands({
     [inspectorNode, setDraftSession]
   );
 
+  const convertInspectorVisualTransformToSql = useCallback(
+    (generatedSql: string) => {
+      if (inspectorNode == null) {
+        return;
+      }
+
+      const sqlNode = convertDvtVisualTransformToSql(inspectorNode, generatedSql);
+      setDraftSession((currentSession) =>
+        canvasDraftSession.workingSet.upsertNode(currentSession, sqlNode)
+      );
+    },
+    [inspectorNode, setDraftSession]
+  );
+
   return {
     applyInspectorNodeDraft,
+    convertInspectorVisualTransformToSql,
   };
 }
