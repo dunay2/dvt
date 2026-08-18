@@ -2,6 +2,7 @@ import { DbtProjectGraphProjectionSchema, type DbtProjectGraphProjection } from 
 
 import type { IDbtExecutionTargetResolver } from '../ports/dbtExecutionTarget.js';
 import type {
+  DbtProjectAnalysisResource,
   DbtProjectSourceIdentityRef,
   IDbtProjectAnalyzerPort,
 } from '../ports/dbtProjectAnalysis.js';
@@ -47,25 +48,26 @@ export class ProjectDbtGraphFromFilesUseCase {
     >();
     const nodes = (
       await Promise.all(
-        analysis.resources.map(async ({ codeOnlyReasons, sourceIdentityRef, ...resource }) => {
+        analysis.resources.map(async (resource) => {
           const sourceIdentity =
             input.includeGovernedSourceIdentity === true
               ? await resolveSourceIdentity(
-                  sourceIdentityRef,
+                  resource.sourceIdentityRef,
                   input.scope,
                   this.deps.connectionCatalog,
                   connectionLookups
                 )
               : undefined;
+          const projectedResource = projectAnalysisResource(resource);
           return {
-            ...resource,
+            ...projectedResource,
             ...(sourceIdentity === undefined ? {} : { sourceIdentity }),
             visualEditability: resolveVisualEditability({
-              codeOnlyReasons,
-              packageName: resource.packageName,
-              ...(resource.descriptionFilePath === undefined
+              codeOnlyReasons: resource.codeOnlyReasons,
+              packageName: projectedResource.packageName,
+              ...(projectedResource.descriptionFilePath === undefined
                 ? {}
-                : { descriptionFilePath: resource.descriptionFilePath }),
+                : { descriptionFilePath: projectedResource.descriptionFilePath }),
               ...(analysis.projectRevision.projectName === undefined
                 ? {}
                 : { projectName: analysis.projectRevision.projectName }),
@@ -108,6 +110,28 @@ export class ProjectDbtGraphFromFilesUseCase {
       },
     });
   }
+}
+
+function projectAnalysisResource(resource: DbtProjectAnalysisResource) {
+  return {
+    uniqueId: resource.uniqueId,
+    resourceType: resource.resourceType,
+    name: resource.name,
+    ...(resource.identifier === undefined ? {} : { identifier: resource.identifier }),
+    packageName: resource.packageName,
+    ...(resource.originalFilePath === undefined
+      ? {}
+      : { originalFilePath: resource.originalFilePath }),
+    ...(resource.descriptionFilePath === undefined
+      ? {}
+      : { descriptionFilePath: resource.descriptionFilePath }),
+    ...(resource.sourceName === undefined ? {} : { sourceName: resource.sourceName }),
+    ...(resource.description === undefined ? {} : { description: resource.description }),
+    ...(resource.materialized === undefined ? {} : { materialized: resource.materialized }),
+    columns: resource.columns,
+    tags: resource.tags,
+    ...(resource.testMetadata === undefined ? {} : { testMetadata: resource.testMetadata }),
+  };
 }
 
 export async function resolveSourceIdentity(

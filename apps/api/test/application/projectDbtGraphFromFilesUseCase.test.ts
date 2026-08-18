@@ -49,6 +49,14 @@ function analyzerResult(status: 'valid' | 'invalid' | 'unavailable' = 'valid'): 
                 schema: 'raw',
                 databaseUser: 'warehouse_reader',
               },
+              sourceTableDeclaration: {
+                uniqueId: 'source.analytics.raw.orders',
+                filePath: 'models/sources.yml',
+                sourceName: 'raw',
+                tableName: 'orders',
+                database: 'analytics',
+                schema: 'raw',
+              },
               columns: [{ name: 'order_id', dataType: 'integer' }],
               tags: ['raw'],
               codeOnlyReasons: ['phase_two_read_only_projection'],
@@ -183,6 +191,15 @@ describe('ProjectDbtGraphFromFilesUseCase', () => {
           }),
         }),
       ])
+    );
+    expect(projection.nodes.find((node) => node.resourceType === 'source')).toMatchObject({
+      uniqueId: 'source.analytics.raw.orders',
+      name: 'orders',
+      sourceName: 'raw',
+      originalFilePath: 'models/sources.yml',
+    });
+    expect(projection.nodes.find((node) => node.resourceType === 'source')).not.toHaveProperty(
+      'sourceTableDeclaration'
     );
     expect(projection.capabilities).toEqual({
       canPreview: true,
