@@ -116,6 +116,10 @@ export const canvasViewAuthoringCopyEs = {
     'Los detalles del nodo son de solo lectura para este estado del workspace.',
   inspectorCancelLabel: 'Cancelar',
   inspectorApplyLabel: 'Aplicar',
+  inspectorVisualTransformConvertToSqlLabel: 'Convertir a SQL',
+  inspectorVisualTransformConvertToSqlTitle: '¿Convertir esta transformación visual a SQL?',
+  inspectorVisualTransformConvertToSqlDescription:
+    'Esto sustituye la receta visual como autoridad de edición. Volver de SQL a Visual no es automático.',
   inspectorDbtCardTitle: 'Ficha dbt',
   inspectorDbtPackageLabel: 'Paquete',
   inspectorDbtSourceLabel: 'Origen',

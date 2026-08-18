@@ -120,15 +120,14 @@ export function convertDvtVisualTransformToSql(
     throw new Error('Visual to SQL conversion requires current visual authority.');
   }
 
-  const sql = generatedSql.trim();
-  if (sql.length === 0) {
+  if (generatedSql.trim().length === 0) {
     throw new Error('Visual to SQL conversion requires nonblank generated SQL.');
   }
 
   return {
     ...node,
     metadata: {
-      ...buildDvtSqlTransformMetadata(node, sql),
+      ...buildDvtSqlTransformMetadata(node, generatedSql),
       [DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY]: {
         version: VISUAL_TRANSFORM_RECIPE_VERSION,
         mode: DVT_TRANSFORM_AUTHORING_MODE.sql,

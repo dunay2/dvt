@@ -212,6 +212,20 @@ operations, multi-input expressions, and simple filters. Pointer and keyboard
 controls share the same commands, validation reuses `VisualTransformRecipeV1`,
 and ES/EN copy remains in the existing Canvas copy catalog.
 
+## Follow-up explicit Visual to SQL transfer (#2386)
+
+Issue #2386 exposes the existing `convertDvtVisualTransformToSql` policy in the
+contextual Code section. The generated SQL remains read-only until the user
+confirms the irreversible authority change; confirmation writes that exact SQL
+through `ConfigureCanvasDvtNode` into the existing Graph Draft aggregate. The
+same SQL editor already used by SQL-authoritative transforms then becomes the
+editing surface.
+
+This slice adds no SQL parser, reverse SQL-to-Visual conversion, store,
+planner, graph, persisted intermediate representation, workspace service call,
+or runtime validation. PostgreSQL validation remains owned by #2333 and the
+end-to-end Preview proof remains owned by #2387.
+
 ```feature-mechanization
 version: 1
 featureId: VTX1-VISUAL-TRANSFORM-RECIPE-AUTHORITY
@@ -223,6 +237,7 @@ componentGuides:
 userStories:
   - https://github.com/dunay2/dvt/issues/2383
   - https://github.com/dunay2/dvt/issues/2385
+  - https://github.com/dunay2/dvt/issues/2386
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -236,10 +251,23 @@ allowedImplementationSurfaces:
   - packages/@dvt/contracts/test/visual-transform-recipe.contract.test.ts
   - apps/web/src/app/views/canvas/canvasDvtTransformAuthoringAuthority.ts
   - apps/web/src/app/views/canvas/canvasDvtTransformAuthoringAuthority.test.ts
+  - apps/web/src/app/views/canvas/canvasTransformationSqlMirror.ts
+  - apps/web/src/app/views/canvas/canvasTransformationSqlMirror.test.ts
   - apps/web/src/app/services/workspace/workspaceGraphDraftProjection.test.ts
   - apps/web/src/app/views/canvas/canvasDraftAuthoring.test.ts
+  - apps/web/src/app/views/Canvas.test.controller.defaults.ts
+  - apps/web/src/app/views/canvas/useCanvasInspectorCommands.ts
+  - apps/web/src/app/views/canvas/useCanvasController.activeDraftNodeAuthoring.test.tsx
+  - apps/web/src/app/views/canvas/canvasControllerViewModel.ts
+  - apps/web/src/app/views/canvas/canvasInspectorAuthoring.types.ts
+  - apps/web/src/app/views/canvas/canvasShellBuilder.types.ts
+  - apps/web/src/app/views/canvas/canvasShellPanelsBuilder.ts
+  - apps/web/src/app/views/canvas/canvasShellPanelsBuilder.test.ts
+  - apps/web/src/app/views/canvas/canvasShellPropsBuilder.tsx
   - apps/web/src/app/views/canvas/CanvasInspectorAuthoringSection.tsx
   - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx
+  - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx
+  - apps/web/src/app/views/canvas/canvasInspectorAuthoringComponent.architecture.test.ts
   - apps/web/src/app/views/canvas/DvtAuthoringFields.test.tsx
   - apps/web/src/app/views/canvas/DvtAuthoringFields.tsx
   - apps/web/src/app/views/canvas/DvtVisualTransformRecipeAuthoringSection.tsx
@@ -300,11 +328,14 @@ architectureGuards:
   - pnpm docs:feature-mechanization:implementation -- --feature VTX1-VISUAL-TRANSFORM-RECIPE-AUTHORITY
 cypressFlows:
   - Agent-browser /canvas Node Properties visual recipe Apply, Cancel, reload, ES/EN, keyboard, and narrow viewport proof for #2385
+  - Agent-browser /canvas generated SQL Convert to SQL confirm, cancel, reload, ES/EN, and editor authority proof for #2386
 completionGate:
   - pnpm --filter @dvt/contracts test
   - pnpm --filter @dvt/web test:canvas:run -- src/app/views/canvas/canvasDvtTransformAuthoringAuthority.test.ts src/app/views/canvas/canvasDraftAuthoring.test.ts
   - pnpm --filter @dvt/web test:canvas:run -- src/app/views/canvas/DvtAuthoringFields.test.tsx src/app/views/canvas/canvasInspectorAuthoringModel.test.ts src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx
   - pnpm --filter @dvt/web test:workspace-services:run -- src/app/services/workspace/workspaceGraphDraftProjection.test.ts
+  - pnpm --filter @dvt/web test:canvas-presentation:run -- CanvasNodeWorkbenchPanel.test.tsx useCanvasController.activeDraftNodeAuthoring.test.tsx
+  - pnpm --filter @dvt/web test:canvas-architecture:run -- canvasInspectorAuthoringComponent.architecture.test.ts
   - pnpm --filter @dvt/web lint
   - pnpm --filter @dvt/contracts typecheck
   - pnpm --filter @dvt/web typecheck
@@ -337,6 +368,15 @@ redGreenCycles:
       - apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.ts
       - apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.es.ts
     greenTest: pnpm --filter @dvt/web test:canvas:run -- src/app/views/canvas/DvtAuthoringFields.test.tsx src/app/views/canvas/canvasInspectorAuthoringModel.test.ts src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx
+  - id: explicit-visual-to-sql-authority-transfer
+    redTest: pnpm --filter @dvt/web test:canvas-presentation:run -- CanvasNodeWorkbenchPanel.test.tsx useCanvasController.activeDraftNodeAuthoring.test.tsx
+    expectedFailure: Generated SQL has no explicit confirmed route into the existing SQL authority.
+    patchSurfaces:
+      - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx
+      - apps/web/src/app/views/canvas/useCanvasInspectorCommands.ts
+      - apps/web/src/app/views/canvas/canvasDvtTransformAuthoringAuthority.ts
+      - apps/web/src/app/views/canvas/canvasTransformationSqlMirror.ts
+    greenTest: pnpm --filter @dvt/web test:canvas-presentation:run -- CanvasNodeWorkbenchPanel.test.tsx useCanvasController.activeDraftNodeAuthoring.test.tsx
 symbols:
   - &contractSymbol
     name: VisualTransformRecipeV1Schema

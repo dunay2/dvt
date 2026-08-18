@@ -166,6 +166,31 @@ const DVT_TRANSFORM_NODE: CanonicalNode = {
   },
 };
 
+const DVT_VISUAL_TRANSFORM_NODE: CanonicalNode = {
+  ...DVT_TRANSFORM_NODE,
+  metadata: {
+    transformAuthoring: {
+      version: 'v1',
+      mode: 'visual',
+      recipe: {
+        version: 'v1',
+        outputs: [
+          {
+            id: 'output:order_id',
+            name: 'order_id',
+            dataType: 'integer',
+            expression: {
+              inputs: [{ nodeId: SOURCE_NODE.id, columnName: 'order_id' }],
+              operations: [{ kind: 'passthrough' }],
+            },
+          },
+        ],
+        filters: [],
+      },
+    },
+  },
+};
+
 const DVT_SINK_NODE: CanonicalNode = {
   id: 'sink.orders',
   name: 'Orders Sink',
@@ -540,36 +565,12 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(sqlEditor?.value).toBe('select order_id from source.orders');
     expect(sqlEditor?.dataset.language).toBe('sql');
     expect(sqlEditor?.dataset.path).toBe('canvas/transform.orders.sql');
+    expect(codeSection?.querySelector('[data-testid="monaco-code-viewer"]')).toBeNull();
     expect(codeSection?.querySelector('input[name="dvt-transform-column"]')).toBeNull();
   });
 
   it('shows visual transform generated SQL in the shared read-only Monaco surface', () => {
-    const visualTransform: CanonicalNode = {
-      ...DVT_TRANSFORM_NODE,
-      metadata: {
-        transformAuthoring: {
-          version: 'v1',
-          mode: 'visual',
-          recipe: {
-            version: 'v1',
-            outputs: [
-              {
-                id: 'output:order_id',
-                name: 'order_id',
-                dataType: 'integer',
-                expression: {
-                  inputs: [{ nodeId: SOURCE_NODE.id, columnName: 'order_id' }],
-                  operations: [{ kind: 'passthrough' }],
-                },
-              },
-            ],
-            filters: [],
-          },
-        },
-      },
-    };
-
-    renderNodePanel(root, visualTransform, 'code');
+    renderNodePanel(root, DVT_VISUAL_TRANSFORM_NODE, 'code');
 
     const codeSection = container.querySelector('[data-slot="canvas-node-workbench-code-section"]');
     expect(codeSection?.querySelector('[data-testid="dvt-transform-sql-editor"]')).toBeNull();
@@ -588,6 +589,58 @@ describe('CanvasNodeWorkbenchPanel', () => {
       ].join('\n')
     );
     expect(codeSection?.querySelector('pre')).toBeNull();
+  });
+
+  it('requires explicit confirmation before transferring visual authority to generated SQL', () => {
+    const onConvertVisualTransformToSql = vi.fn();
+    const authoring = {
+      canEditNode: true,
+      onApplyNodeDraft: vi.fn(),
+      onConvertVisualTransformToSql,
+    };
+    const generatedSql = [
+      'select',
+      '  "orders"."order_id" as "order_id"',
+      'from "raw"."orders" as "orders";',
+      '',
+    ].join('\n');
+
+    renderNodePanel(root, DVT_VISUAL_TRANSFORM_NODE, 'code', authoring);
+
+    const convertButton = Array.from(container.querySelectorAll('button')).find(
+      (button) => button.textContent?.trim() === 'Convert to SQL'
+    );
+    expect(convertButton).toBeDefined();
+
+    act(() => {
+      fireEvent.click(convertButton!);
+    });
+
+    expect(document.body.textContent).toContain('Convert this visual transform to SQL?');
+    expect(document.body.textContent).toContain('Returning from SQL to Visual is not automatic.');
+    expect(onConvertVisualTransformToSql).not.toHaveBeenCalled();
+
+    const cancelButton = Array.from(document.body.querySelectorAll('button')).find(
+      (button) => button.textContent?.trim() === 'Cancel'
+    );
+    act(() => {
+      fireEvent.click(cancelButton!);
+    });
+    expect(onConvertVisualTransformToSql).not.toHaveBeenCalled();
+
+    act(() => {
+      fireEvent.click(convertButton!);
+    });
+    const dialog = document.body.querySelector('[data-slot="alert-dialog-content"]');
+    const confirmButton = Array.from(dialog?.querySelectorAll('button') ?? []).find(
+      (button) => button.textContent?.trim() === 'Convert to SQL'
+    );
+    act(() => {
+      fireEvent.click(confirmButton!);
+    });
+
+    expect(onConvertVisualTransformToSql).toHaveBeenCalledOnce();
+    expect(onConvertVisualTransformToSql).toHaveBeenCalledWith(generatedSql);
   });
 
   it('renders one DBT model editor in Code without duplicating passive generated SQL', () => {
