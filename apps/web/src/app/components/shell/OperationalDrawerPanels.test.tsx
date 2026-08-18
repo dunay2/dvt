@@ -204,9 +204,10 @@ describe('OperationalDrawerPanels', () => {
         cell.className.includes('border-r')
       )
     ).toBe(true);
-    const longValue = table?.querySelector<HTMLElement>(
-      '[data-slot="bottom-operational-data-value"][title]'
-    );
+    const longValue = Array.from(
+      table?.querySelectorAll<HTMLElement>('[data-slot="bottom-operational-data-value"][title]') ??
+        []
+    ).find((value) => value.getAttribute('title') === longPayload);
     expect(longValue?.textContent).toBe(longPayload);
     expect(longValue?.getAttribute('title')).toBe(longPayload);
     expect(longValue?.getAttribute('aria-label')).toBe(longPayload);

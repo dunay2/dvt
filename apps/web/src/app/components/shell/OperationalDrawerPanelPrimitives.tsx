@@ -37,9 +37,12 @@ const operationalDrawerPanelClassNames = {
   dataTable: 'w-max min-w-full border-collapse text-left font-mono text-xs',
   dataTableHeader:
     'sticky top-0 z-10 border-b border-[color:var(--border-default)] bg-[var(--surface-raised)] text-[var(--text-strong)]',
-  dataTableHeaderCell: 'whitespace-nowrap px-3 py-2 font-semibold',
-  dataTableRow: 'border-b border-[color:var(--border-muted)] last:border-b-0',
-  dataTableCell: 'max-w-80 whitespace-nowrap px-3 py-2 text-[var(--text-default)]',
+  dataTableHeaderCell:
+    'min-w-32 max-w-80 overflow-hidden border-r border-[color:var(--border-default)] px-3 py-2 font-semibold text-ellipsis whitespace-nowrap last:border-r-0',
+  dataTableRow: 'last:[&>td]:border-b-0',
+  dataTableCell:
+    'min-w-32 max-w-80 overflow-hidden border-r border-b border-[color:var(--border-muted)] px-3 py-2 text-[var(--text-default)] last:border-r-0',
+  dataTableValue: 'block max-w-80 truncate',
   dataTableNull: 'italic text-[var(--text-muted)]',
   dataNotice: 'mb-2 text-xs text-[var(--text-muted)]',
 } as const;
@@ -126,7 +129,14 @@ export function OperationalDrawerDataTable({
                       {nullValueLabel}
                     </span>
                   ) : (
-                    value
+                    <span
+                      data-slot="bottom-operational-data-value"
+                      className={operationalDrawerPanelClassNames.dataTableValue}
+                      title={value}
+                      aria-label={value}
+                    >
+                      {value}
+                    </span>
                   )}
                 </td>
               ))}
