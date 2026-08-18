@@ -174,9 +174,7 @@ describe('RunStates workspace basics', () => {
     expect(harness.container.textContent).toContain('raw.orders');
     expect(harness.container.textContent).toContain('Sink tables');
     expect(harness.container.textContent).toContain('analytics.orders_daily');
-    expect(
-      harness.container.querySelector('a[href="/canvas?runId=run_123"]')
-    ).toBeTruthy();
+    expect(harness.container.querySelector('a[href="/canvas?runId=run_123"]')).toBeTruthy();
     expect(harness.container.querySelector('a[href="/runs"]')).toBeTruthy();
   });
 

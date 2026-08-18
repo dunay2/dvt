@@ -3,7 +3,7 @@
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { RouterProvider, createMemoryRouter } from 'react-router';
-import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
+import { notifyManager, QueryClientProvider, type QueryClient } from '@tanstack/react-query';
 import { expect, vi } from 'vitest';
 
 import { DVT_AUTHORING_NODE_KINDS } from '../plugins/dvt/dvtNodeTypeCatalog';
@@ -133,6 +133,9 @@ export function createCanvasRouteHarness(serviceOverrides: AppServicesOverrides 
   (
     globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
   ).IS_REACT_ACT_ENVIRONMENT = true;
+  notifyManager.setNotifyFunction((notify) => {
+    act(notify);
+  });
 
   mockedUseCanvasController.mockReset();
   canvasRouteState.viewportProps = null;
@@ -156,6 +159,9 @@ export function createCanvasRouteHarness(serviceOverrides: AppServicesOverrides 
       resetRouteBootstrapPresentation(CANVAS_ROUTE_BOOTSTRAP_REGISTRATION);
       useCanvasWorkspaceMenuContributionStore.setState({ contribution: null });
       queryClient.clear();
+      notifyManager.setNotifyFunction((notify) => {
+        notify();
+      });
       canvasRouteState.router = null;
       container.remove();
     },

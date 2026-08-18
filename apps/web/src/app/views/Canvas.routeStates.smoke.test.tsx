@@ -1,7 +1,9 @@
 import { waitFor } from '@testing-library/dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { RunSnapshot } from '../ports/runs';
 import { createMockRunsService } from '../../testing/runsPortDoubles';
+import type { CanvasController } from './Canvas.test.controller';
 
 import {
   createCanvasRouteHarness,
@@ -76,22 +78,12 @@ describe('Canvas persisted run reference', () => {
   });
 
   it('restores the exact completed sink result from the run referenced by the route', async () => {
-    const getRunSnapshot = vi.fn(async (runId: string) =>
-      runId === 'run-returned'
-        ? {
-            runId,
-            status: 'completed' as const,
-            materialization: {
-              executor: 'postgres' as const,
-              environmentId: 'dev',
-              sinkTable: 'public.sink_1',
-              rowsWritten: 3,
-              startedAt: '2026-08-18T17:35:00.000Z',
-              completedAt: '2026-08-18T17:35:00.016Z',
-              durationMs: 16,
-            },
-          }
-        : null
+    let resolveRunSnapshot: (snapshot: RunSnapshot | null) => void = () => undefined;
+    const runSnapshotPromise = new Promise<RunSnapshot | null>((resolve) => {
+      resolveRunSnapshot = resolve;
+    });
+    const getRunSnapshot = vi.fn((runId: string) =>
+      runId === 'run-returned' ? runSnapshotPromise : Promise.resolve(null)
     );
     harness = createCanvasRouteHarness({
       runsService: {
@@ -117,10 +109,25 @@ describe('Canvas persisted run reference', () => {
               metadata: { typeLabel: 'Sink' },
             },
           },
-        ],
+        ] as unknown as CanvasController['nodesWithImpact'],
       },
       { initialEntry: '/canvas?runId=run-returned' }
     );
+
+    expect(getRunSnapshot).toHaveBeenCalledWith('run-returned');
+    resolveRunSnapshot({
+      runId: 'run-returned',
+      status: 'completed',
+      materialization: {
+        executor: 'postgres',
+        environmentId: 'dev',
+        sinkTable: 'public.sink_1',
+        rowsWritten: 3,
+        startedAt: '2026-08-18T17:35:00.000Z',
+        completedAt: '2026-08-18T17:35:00.016Z',
+        durationMs: 16,
+      },
+    });
 
     await waitFor(() => {
       const sink = (
@@ -129,6 +136,5 @@ describe('Canvas persisted run reference', () => {
       )?.find((node) => node.data?.rows === 3);
       expect(sink?.data?.rows).toBe(3);
     });
-    expect(getRunSnapshot).toHaveBeenCalledWith('run-returned');
   });
 });

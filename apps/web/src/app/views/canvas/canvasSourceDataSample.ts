@@ -4,8 +4,8 @@ import { ConnectedSourceRefSchema } from '@dvt/contracts';
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 import type { OperationalDrawerDataSample } from '../../components/shell/operationalDrawerContributionStore';
 import type { RunSnapshot } from '../../ports/runs';
-import { resolveGraphNodeRelationPath } from '../../plugins/graph/graphNodeCardStrategyUtils';
 import { WarehouseSourceDataSampleQueryError } from '../../services/workspace/workspaceErrors';
+import { createDvtSinkAuthoringMetadata } from './canvasDvtAuthoringModel';
 
 export const CANVAS_SOURCE_DATA_SAMPLE_LIMIT = 20 as const;
 
@@ -75,7 +75,11 @@ export function resolveCanvasSinkDataSampleTarget(
   snapshot: RunSnapshot | null | undefined
 ): CanvasSinkDataSampleTarget | null {
   const materialization = snapshot?.materialization ?? snapshot?.execution?.materialization;
-  const nodeRelation = resolveGraphNodeRelationPath(data.metadata ?? {}, data);
+  const sinkMetadata = createDvtSinkAuthoringMetadata({
+    name: data.name,
+    metadata: data.metadata,
+  });
+  const nodeRelation = `${sinkMetadata.schema}.${sinkMetadata.table}`;
   if (
     data.role !== 'output' ||
     data.pluginKind !== 'dvt:sink' ||

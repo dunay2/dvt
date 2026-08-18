@@ -282,7 +282,7 @@ function RunItineraryCard({
         </div>
         <div className="flex flex-wrap gap-2">
           <Button asChild variant="outline" size="sm">
-            <Link to="/canvas">
+            <Link to={`/canvas?runId=${encodeURIComponent(snapshot.runId)}`}>
               <ArrowLeft aria-hidden="true" className="size-4" />
               {copy.backToCanvasAction}
             </Link>
