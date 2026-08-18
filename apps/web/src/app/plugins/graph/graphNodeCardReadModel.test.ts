@@ -41,7 +41,8 @@ function sourceMetricEvidence(rowCount: number): SourceObjectMetricEvidence {
 
 function buildNode(partial: Partial<CanonicalNode>): CanonicalNode {
   return {
-    id: 'node-1',
+    id:
+      partial.pluginId === 'dvt.warehouse-source' && partial.name != null ? partial.name : 'node-1',
     name: 'Node 1',
     pluginId: 'dvt',
     kind: 'dvt:source',
@@ -287,6 +288,28 @@ describe('buildGraphNodeCardReadModel', () => {
     expect(model.technicalName).toBe('src_erp_orders');
     expect(model.subtitle).toBe('warehouse.erp.orders');
     expect(model.path).toBe('models/sources/src_erp.yml');
+  });
+
+  it('uses an imported source renamed display name without changing its physical relation', () => {
+    const model = buildGraphNodeCardReadModel(
+      buildNode({
+        id: 'src_local_postgres_dvt_dvt_outbox',
+        kind: 'dvt:source',
+        pluginId: 'dvt.warehouse-source',
+        name: 'outbox2',
+        metadata: {
+          tableIdentifier: 'outbox',
+          database: 'dvt',
+          schema: 'dvt',
+          tableName: 'outbox',
+        },
+      }),
+      {},
+      [dvtGraphNodeCardStrategy]
+    );
+
+    expect(model.title).toBe('outbox2');
+    expect(model.subtitle).toBe('dvt.dvt.outbox');
   });
 
   it('projects a localized governed identity for an imported physical source table', () => {
