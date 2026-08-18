@@ -45,6 +45,10 @@ describe('useCanvasExecutionActions plan preview source metadata', () => {
               tableName: 'orders',
               database: 'analytics',
               schema: 'erp',
+              config: {
+                schema: 'stale_schema',
+                table: 'stale_table',
+              },
               columns: [{ name: 'id', type: 'number', nullable: false }],
             },
           }
