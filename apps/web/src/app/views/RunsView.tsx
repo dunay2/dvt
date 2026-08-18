@@ -14,7 +14,8 @@ import {
 } from './runs/RunStates';
 import { useExecutionStore } from '../stores/executionStore';
 import { useApplicationLanguageStore } from '../stores/applicationLanguageStore';
-import type { Run } from '../types/dbt';
+import type { ExecutionStep, NodeStatus, Run } from '../types/dbt';
+import type { PlanViewModel } from '../types/plans';
 import { useRunWorkspace } from './runs/useRunWorkspace';
 import {
   deriveRunsRouteBootstrapPresentation,
@@ -28,11 +29,94 @@ type RunsWorkbenchSurfaceProps = Readonly<{
   resolveRouteBootstrapId: (runId: string | undefined) => string;
 }>;
 
-function toFocusedRunModel(workspace: RunWorkspaceViewModel): Run | null {
+function toExecutionStepType(type: string): ExecutionStep['type'] {
+  switch (type) {
+    case 'DBT_COMPILE':
+    case 'DBT_RUN':
+    case 'DBT_TEST':
+    case 'CUSTOM_PLUGIN_STEP':
+      return type;
+    default:
+      return 'CUSTOM_PLUGIN_STEP';
+  }
+}
+
+function resolveStepStatus(
+  workspace: RunWorkspaceViewModel,
+  stepId: string
+): NodeStatus | undefined {
+  let latestStatus: { runSeq: number; status: NodeStatus } | null = null;
+
+  for (const event of workspace.timeline.events) {
+    if (event.stepId !== stepId) {
+      continue;
+    }
+
+    const status = (() => {
+      switch (event.eventType) {
+        case 'StepStarted':
+          return 'running';
+        case 'StepCompleted':
+          return 'success';
+        case 'StepFailed':
+          return 'failed';
+        case 'StepSkipped':
+          return 'skipped';
+        default:
+          return null;
+      }
+    })();
+
+    if (status && (latestStatus == null || event.runSeq > latestStatus.runSeq)) {
+      latestStatus = { runSeq: event.runSeq, status };
+    }
+  }
+
+  if (latestStatus) {
+    return latestStatus.status;
+  }
+  if (workspace.snapshot.failedStepId === stepId) {
+    return 'failed';
+  }
+  if (workspace.snapshot.status === 'completed') {
+    return 'success';
+  }
+  return undefined;
+}
+
+function restoreCurrentPlanSteps(
+  workspace: RunWorkspaceViewModel,
+  currentPlan: PlanViewModel | null
+): ExecutionStep[] | null {
+  const { snapshot } = workspace;
+  if (
+    currentPlan == null ||
+    snapshot.planId !== currentPlan.planId ||
+    (snapshot.planVersion != null && snapshot.planVersion !== currentPlan.planVersion)
+  ) {
+    return null;
+  }
+
+  return currentPlan.steps.map((step) => ({
+    id: step.id,
+    type: toExecutionStepType(step.type),
+    name: step.name,
+    nodes: [...step.nodes],
+    policies: { ...step.policies },
+    status: resolveStepStatus(workspace, step.id),
+  }));
+}
+
+function toFocusedRunModel(
+  workspace: RunWorkspaceViewModel,
+  currentPlan: PlanViewModel | null
+): Run | null {
   const { snapshot } = workspace;
   if (!snapshot.planId || !snapshot.environment) {
     return null;
   }
+
+  const restoredSteps = restoreCurrentPlanSteps(workspace, currentPlan);
 
   const focusedRun: Run = {
     runId: snapshot.runId,
@@ -44,13 +128,12 @@ function toFocusedRunModel(workspace: RunWorkspaceViewModel): Run | null {
     endTime: snapshot.completedAt,
     duration: snapshot.durationMs === undefined ? undefined : snapshot.durationMs / 1000,
     events: [],
-    steps: [],
+    steps: restoredSteps ?? [],
   };
 
-  return {
-    ...focusedRun,
-    runtimeDetail: { level: 'snapshot' },
-  } as Run;
+  return restoredSteps == null
+    ? ({ ...focusedRun, runtimeDetail: { level: 'snapshot' } } as Run)
+    : focusedRun;
 }
 
 export function RunsWorkbenchSurface({ resolveRouteBootstrapId }: RunsWorkbenchSurfaceProps) {
@@ -62,6 +145,7 @@ export function RunsWorkbenchSurface({ resolveRouteBootstrapId }: RunsWorkbenchS
     },
   });
   const setCurrentRun = useExecutionStore((state) => state.setCurrentRun);
+  const currentPlan = useExecutionStore((state) => state.currentPlan);
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const observedRunId = useExecutionStore((state) => state.currentRun?.runId);
   const {
@@ -77,7 +161,7 @@ export function RunsWorkbenchSurface({ resolveRouteBootstrapId }: RunsWorkbenchS
     retryEventFeed,
   } = useRunWorkspace(runId);
 
-  const focusedRunModel = runId && workspace ? toFocusedRunModel(workspace) : null;
+  const focusedRunModel = runId && workspace ? toFocusedRunModel(workspace, currentPlan) : null;
 
   useEffect(() => {
     if (focusedRunModel) {
