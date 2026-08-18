@@ -13,6 +13,8 @@ import type {
 import type { PlanRef, RunEvent } from '../types/engine';
 import type { WorkspaceScope } from './sessionContext';
 
+export type { SourceDataSampleResponse };
+
 // ---------------------------------------------------------------------------
 // Presentation-facing DTOs for the runs domain
 // ---------------------------------------------------------------------------

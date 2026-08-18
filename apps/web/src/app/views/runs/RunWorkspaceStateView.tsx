@@ -3,11 +3,21 @@
  * diagnostics, and timeline read model.
  */
 import { ArrowLeft, ListChecks } from 'lucide-react';
+import { useState } from 'react';
 import { Link } from 'react-router';
 
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '../../components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { RunControlActions } from '../../components/runs/RunControlActions';
 import {
@@ -20,11 +30,12 @@ import type {
   RunDiagnostics,
   RunExecutor,
   RunPlanExecutionSummary,
+  SourceDataSampleResponse,
 } from '../../ports/runs';
 import type { RunWorkspaceViewModel } from '../../services/runs/runWorkspaceModel';
 import { RunEventTimelineTable } from './RunEventTimelineTable';
 import { RunEventFeedHealthView } from './RunEventFeedHealthView';
-import { useRunStatesCopy } from './runStatesCopy';
+import { type RunStatesCopy, useRunStatesCopy } from './runStatesCopy';
 import { isKnownRunField } from './runStatesModel';
 import type { RunControlCommandController } from './useRunControlCommands';
 
@@ -32,7 +43,20 @@ type RunWorkspaceStateProps = {
   workspace: RunWorkspaceViewModel;
   onRetryEventFeed?: () => void;
   runControls?: RunControlCommandController;
+  loadMaterializationSample?: (runId: string, limit: number) => Promise<SourceDataSampleResponse>;
 };
+
+const RUN_MATERIALIZATION_SAMPLE_LIMIT = 20;
+
+type MaterializationSampleState =
+  | { readonly kind: 'idle' }
+  | { readonly kind: 'loading'; readonly runId: string }
+  | {
+      readonly kind: 'loaded';
+      readonly runId: string;
+      readonly sample: SourceDataSampleResponse;
+    }
+  | { readonly kind: 'error'; readonly runId: string };
 
 type ProvenanceArtifact = {
   stepId: string;
@@ -395,10 +419,137 @@ function RunDiagnosticsCard({
   );
 }
 
+function RunMaterializationSample({
+  copy,
+  loadSample,
+  locale,
+  rowsWritten,
+  runId,
+}: Readonly<{
+  copy: RunStatesCopy;
+  loadSample: (runId: string, limit: number) => Promise<SourceDataSampleResponse>;
+  locale: string;
+  rowsWritten: number;
+  runId: string;
+}>): JSX.Element {
+  const [state, setState] = useState<MaterializationSampleState>({ kind: 'idle' });
+  const currentState: MaterializationSampleState =
+    state.kind !== 'idle' && state.runId !== runId ? { kind: 'idle' } : state;
+
+  const loadCurrentSample = async () => {
+    setState({ kind: 'loading', runId });
+    try {
+      const sample = await loadSample(runId, RUN_MATERIALIZATION_SAMPLE_LIMIT);
+      setState({ kind: 'loaded', runId, sample });
+    } catch {
+      setState({ kind: 'error', runId });
+    }
+  };
+
+  return (
+    <section
+      data-slot="run-result-sample"
+      className="mt-5 border-t border-slate-700 pt-4"
+      aria-labelledby="run-result-sample-title"
+    >
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="space-y-1">
+          <h4 id="run-result-sample-title" className="text-sm font-semibold">
+            {copy.resultSampleTitle}
+          </h4>
+          <p className="max-w-2xl text-xs text-slate-400">{copy.resultSampleDescription}</p>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={currentState.kind === 'loading'}
+          onClick={() => void loadCurrentSample()}
+        >
+          {currentState.kind === 'loading' ? copy.resultSampleLoading : copy.viewResultDataAction}
+        </Button>
+      </div>
+
+      <div className="mt-3" aria-live="polite">
+        {currentState.kind === 'error' ? (
+          <p
+            role="alert"
+            className="rounded border border-red-500/60 bg-red-950/40 px-3 py-2 text-sm text-red-100"
+          >
+            {copy.resultSampleUnavailable}
+          </p>
+        ) : null}
+
+        {currentState.kind === 'loaded' ? (
+          <div className="space-y-3">
+            <div className="space-y-1 text-xs text-slate-400">
+              <p>{copy.resultSampleSummary(currentState.sample.rows.length, rowsWritten)}</p>
+              {currentState.sample.truncated ? (
+                <p>{copy.resultSampleTruncated(currentState.sample.limit)}</p>
+              ) : null}
+              <p>
+                {copy.resultSampleObservedAt}{' '}
+                {new Date(currentState.sample.sampledAt).toLocaleString(locale)}
+              </p>
+            </div>
+
+            {currentState.sample.rows.length === 0 ? (
+              <p className="text-sm text-slate-400">{copy.resultSampleEmpty}</p>
+            ) : (
+              <Table
+                data-slot="run-result-sample-table"
+                className="w-max min-w-full border-collapse font-mono text-xs"
+              >
+                <TableCaption className="sr-only">{copy.resultSampleTableCaption}</TableCaption>
+                <TableHeader className="sticky top-0 bg-slate-950">
+                  <TableRow>
+                    {currentState.sample.columns.map((column) => (
+                      <TableHead
+                        key={column.name}
+                        scope="col"
+                        className="min-w-32 border-r border-slate-700 last:border-r-0"
+                      >
+                        {column.name}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {currentState.sample.rows.map((row, rowIndex) => (
+                    <TableRow key={rowIndex}>
+                      {row.values.map((value, columnIndex) => (
+                        <TableCell
+                          key={columnIndex}
+                          className="max-w-80 border-r border-slate-800 last:border-r-0"
+                        >
+                          {value == null ? (
+                            <span className="italic text-slate-500">
+                              {copy.resultSampleNullValue}
+                            </span>
+                          ) : (
+                            <span className="block max-w-80 truncate" title={value}>
+                              {value}
+                            </span>
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </div>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
 export function RunWorkspaceStateView({
   workspace,
   onRetryEventFeed,
   runControls,
+  loadMaterializationSample,
 }: RunWorkspaceStateProps) {
   const { copy, language } = useRunStatesCopy();
   const locale = language === 'es' ? 'es-ES' : 'en-US';
@@ -578,6 +729,15 @@ export function RunWorkspaceStateView({
               ) : (
                 <p className="text-sm text-slate-400">{copy.noResultEvidence}</p>
               )}
+              {materializationEvidence && loadMaterializationSample ? (
+                <RunMaterializationSample
+                  copy={copy}
+                  loadSample={loadMaterializationSample}
+                  locale={locale}
+                  rowsWritten={materializationEvidence.rowsWritten}
+                  runId={snapshot.runId}
+                />
+              ) : null}
             </Card>
           ) : null}
         </TabsContent>
