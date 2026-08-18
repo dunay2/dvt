@@ -83,6 +83,250 @@ export const canvasViewExecutionCopyByKey = {
     key: 'canvas.plan.createdMessage',
     fallback: 'Execution Preview created',
   },
+  planPreviewTitle: {
+    key: 'canvas.planPreview.title',
+    fallback: 'Execution Preview',
+  },
+  planPreviewReadOnlyLabel: {
+    key: 'canvas.planPreview.readOnlyLabel',
+    fallback: 'Read-only',
+  },
+  planPreviewDescription: {
+    key: 'canvas.planPreview.description',
+    fallback: 'Review the immutable execution preview before starting a run.',
+  },
+  planPreviewNotEstimatedValue: {
+    key: 'canvas.planPreview.notEstimatedValue',
+    fallback: 'Not estimated',
+  },
+  planPreviewIdentityTitle: {
+    key: 'canvas.planPreview.identityTitle',
+    fallback: 'Execution Preview identity',
+  },
+  planPreviewIdentityCaption: {
+    key: 'canvas.planPreview.identityCaption',
+    fallback: 'Immutable identifiers for the persisted preview.',
+  },
+  planPreviewIdLabel: {
+    key: 'canvas.planPreview.idLabel',
+    fallback: 'Preview ID',
+  },
+  planPreviewVersionLabel: {
+    key: 'canvas.planPreview.versionLabel',
+    fallback: 'Version',
+  },
+  planPreviewRefLabel: {
+    key: 'canvas.planPreview.refLabel',
+    fallback: 'Preview Ref',
+  },
+  planPreviewGeneratedLabel: {
+    key: 'canvas.planPreview.generatedLabel',
+    fallback: 'Generated',
+  },
+  planPreviewEstimatedCostLabel: {
+    key: 'canvas.planPreview.estimatedCostLabel',
+    fallback: 'Estimated cost',
+  },
+  planPreviewExecutionTargetTitle: {
+    key: 'canvas.planPreview.executionTargetTitle',
+    fallback: 'Execution target',
+  },
+  planPreviewExecutionTargetCaption: {
+    key: 'canvas.planPreview.executionTargetCaption',
+    fallback: 'Runtime posture that will be used when the run starts.',
+  },
+  planPreviewExecutorLabel: {
+    key: 'canvas.planPreview.executorLabel',
+    fallback: 'Executor',
+  },
+  planPreviewNotReportedValue: {
+    key: 'canvas.planPreview.notReportedValue',
+    fallback: 'Not reported',
+  },
+  planPreviewAdapterLabel: {
+    key: 'canvas.planPreview.adapterLabel',
+    fallback: 'Adapter',
+  },
+  planPreviewUnknownValue: {
+    key: 'canvas.planPreview.unknownValue',
+    fallback: 'Unknown',
+  },
+  planPreviewTargetLabel: {
+    key: 'canvas.planPreview.targetLabel',
+    fallback: 'Target',
+  },
+  planPreviewCapabilitiesLabel: {
+    key: 'canvas.planPreview.capabilitiesLabel',
+    fallback: 'Capabilities',
+  },
+  planPreviewSummaryTitle: {
+    key: 'canvas.planPreview.summaryTitle',
+    fallback: 'Persisted preview summary',
+  },
+  planPreviewSummaryCaption: {
+    key: 'canvas.planPreview.summaryCaption',
+    fallback: 'Graph size and table scope captured by the execution preview.',
+  },
+  planPreviewNodesLabel: {
+    key: 'canvas.planPreview.nodesLabel',
+    fallback: 'Nodes',
+  },
+  planPreviewStepsLabel: {
+    key: 'canvas.planPreview.stepsLabel',
+    fallback: 'Steps',
+  },
+  planPreviewSourceTablesLabel: {
+    key: 'canvas.planPreview.sourceTablesLabel',
+    fallback: 'Source tables',
+  },
+  planPreviewSinkTablesLabel: {
+    key: 'canvas.planPreview.sinkTablesLabel',
+    fallback: 'Sink tables',
+  },
+  planPreviewUnavailableValue: {
+    key: 'canvas.planPreview.unavailableValue',
+    fallback: 'n/a',
+  },
+  planPreviewPersistenceTitle: {
+    key: 'canvas.planPreview.persistenceTitle',
+    fallback: 'Persistence evidence',
+  },
+  planPreviewPersistenceCaption: {
+    key: 'canvas.planPreview.persistenceCaption',
+    fallback: 'Proof that this preview is backed by a stored canonical preview.',
+  },
+  planPreviewRecordLabel: {
+    key: 'canvas.planPreview.recordLabel',
+    fallback: 'Preview record',
+  },
+  planPreviewCanonicalShaLabel: {
+    key: 'canvas.planPreview.canonicalShaLabel',
+    fallback: 'Canonical preview SHA',
+  },
+  planPreviewSelectionTitle: {
+    key: 'canvas.planPreview.selectionTitle',
+    fallback: 'Execution selection',
+  },
+  planPreviewSelectionCaption: {
+    key: 'canvas.planPreview.selectionCaption',
+    fallback: 'Requested execution roots and dependencies included by the governed closure policy.',
+  },
+  planPreviewSelectionModeLabel: {
+    key: 'canvas.planPreview.selectionModeLabel',
+    fallback: 'Selection mode',
+  },
+  planPreviewSelectionExplicitValue: {
+    key: 'canvas.planPreview.selectionExplicitValue',
+    fallback: 'Explicit',
+  },
+  planPreviewSelectionWorkspaceDefaultValue: {
+    key: 'canvas.planPreview.selectionWorkspaceDefaultValue',
+    fallback: 'Workspace default',
+  },
+  planPreviewRequestedResourcesLabel: {
+    key: 'canvas.planPreview.requestedResourcesLabel',
+    fallback: 'Requested resources',
+  },
+  planPreviewIncludedDependenciesLabel: {
+    key: 'canvas.planPreview.includedDependenciesLabel',
+    fallback: 'Included dependencies',
+  },
+  planPreviewNoneValue: {
+    key: 'canvas.planPreview.noneValue',
+    fallback: 'None',
+  },
+  planPreviewAuthorizedScopeLabel: {
+    key: 'canvas.planPreview.authorizedScopeLabel',
+    fallback: 'Authorized execution scope',
+  },
+  planPreviewProvenanceTitle: {
+    key: 'canvas.planPreview.provenanceTitle',
+    fallback: 'Provenance',
+  },
+  planPreviewDbtProvenanceCaption: {
+    key: 'canvas.planPreview.dbtProvenanceCaption',
+    fallback: 'Authoritative dbt project revision and server-owned execution target.',
+  },
+  planPreviewRepositoryProvenanceCaption: {
+    key: 'canvas.planPreview.repositoryProvenanceCaption',
+    fallback: 'Repository artifacts used to generate the preview.',
+  },
+  planPreviewCanvasLabel: {
+    key: 'canvas.planPreview.canvasLabel',
+    fallback: 'Canvas',
+  },
+  planPreviewProjectRootLabel: {
+    key: 'canvas.planPreview.projectRootLabel',
+    fallback: 'Project root',
+  },
+  planPreviewDbtVersionLabel: {
+    key: 'canvas.planPreview.dbtVersionLabel',
+    fallback: 'dbt version',
+  },
+  planPreviewProjectRevisionLabel: {
+    key: 'canvas.planPreview.projectRevisionLabel',
+    fallback: 'Project revision',
+  },
+  planPreviewAnalysisRevisionLabel: {
+    key: 'canvas.planPreview.analysisRevisionLabel',
+    fallback: 'Analysis revision',
+  },
+  planPreviewSelectedResourcesLabel: {
+    key: 'canvas.planPreview.selectedResourcesLabel',
+    fallback: 'Selected resources',
+  },
+  planPreviewGraphArtifactLabel: {
+    key: 'canvas.planPreview.graphArtifactLabel',
+    fallback: 'Graph artifact',
+  },
+  planPreviewSqlArtifactLabel: {
+    key: 'canvas.planPreview.sqlArtifactLabel',
+    fallback: 'SQL artifact',
+  },
+  planPreviewExecutionStepsTitle: {
+    key: 'canvas.planPreview.executionStepsTitle',
+    fallback: 'Execution steps',
+  },
+  planPreviewExecutionStepsCaption: {
+    key: 'canvas.planPreview.executionStepsCaption',
+    fallback: 'Step order and policy settings that will be submitted to the runtime.',
+  },
+  planPreviewStepLabel: {
+    key: 'canvas.planPreview.stepLabel',
+    fallback: 'Step',
+  },
+  planPreviewNodeSuffix: {
+    key: 'canvas.planPreview.nodeSuffix',
+    fallback: 'node',
+  },
+  planPreviewNodesSuffix: {
+    key: 'canvas.planPreview.nodesSuffix',
+    fallback: 'nodes',
+  },
+  planPreviewTimeoutLabel: {
+    key: 'canvas.planPreview.timeoutLabel',
+    fallback: 'Timeout',
+  },
+  planPreviewRetriesLabel: {
+    key: 'canvas.planPreview.retriesLabel',
+    fallback: 'Retries',
+  },
+  planPreviewConcurrencyLabel: {
+    key: 'canvas.planPreview.concurrencyLabel',
+    fallback: 'Concurrency',
+  },
+  planPreviewWarehouseLabel: {
+    key: 'canvas.planPreview.warehouseLabel',
+    fallback: 'Warehouse',
+  },
+  planPreviewExportJsonAction: {
+    key: 'canvas.planPreview.exportJsonAction',
+    fallback: 'Export JSON',
+  },
+  planPreviewStartRunAction: {
+    key: 'canvas.planPreview.startRunAction',
+    fallback: 'Start Run',
+  },
   planPreviewSelectionRejectedTitle: {
     key: 'canvas.planPreview.selectionRejectedTitle',
     fallback: 'Execution Preview rejected',
