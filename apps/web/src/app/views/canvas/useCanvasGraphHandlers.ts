@@ -1,7 +1,5 @@
 /** Owned concern: compose graph interaction handlers over the local contract-builder component. */
 
-import { useCallback } from 'react';
-
 import type {
   CanvasGraphInteractionContracts,
   CanvasGraphInteractionEffects,
@@ -81,18 +79,15 @@ export function useCanvasGraphHandlers({
   const edgeAuthoringHandlers = useCanvasEdgeAuthoringHandlers(
     canvasGraphHandlerContractBuilders.edgeAuthoring(interactionContracts)
   );
-  const handleColumnDisclosureChange = useCallback(
-    (nodeId: string, expanded: boolean) => {
-      setNodes((currentNodes) =>
-        currentNodes.map((node) =>
-          node.id === nodeId
-            ? { ...node, data: { ...node.data, columnDisclosureExpanded: expanded } }
-            : node
-        )
-      );
-    },
-    [setNodes]
-  );
+  const handleColumnDisclosureChange = (nodeId: string, expanded: boolean) => {
+    setNodes((currentNodes) =>
+      currentNodes.map((node) =>
+        node.id === nodeId
+          ? { ...node, data: { ...node.data, columnDisclosureExpanded: expanded } }
+          : node
+      )
+    );
+  };
   const selectionHandlers = useCanvasSelectionHandlers(
     canvasGraphHandlerContractBuilders.selection(interactionContracts)
   );
