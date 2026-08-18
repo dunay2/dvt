@@ -7,6 +7,12 @@ const TARGET = {
   provider: 'temporal',
   adapter: 'postgres',
   targetName: 'production',
+  connectionRef: {
+    schemaVersion: 'connection-ref.v1',
+    connectionId: 'warehouse-production',
+    provider: 'postgres',
+  },
+  resolutionSource: 'environment-default',
   credentialRef: 'vault:dbt/production',
 } as const;
 
@@ -23,6 +29,7 @@ describe('resolveDbtPlanExecutionBinding', () => {
       projectRoot: 'analytics',
       expectedContentSetSha256: '1'.repeat(64),
       targetProfile: 'production',
+      connectionRef: TARGET.connectionRef,
       credentialRef: 'vault:dbt/production',
     });
   });
@@ -68,6 +75,7 @@ describe('resolveDbtPlanExecutionBinding', () => {
       ok: true,
       projectRoot: '.',
       targetProfile: 'production',
+      connectionRef: TARGET.connectionRef,
       credentialRef: 'vault:dbt/production',
     });
   });

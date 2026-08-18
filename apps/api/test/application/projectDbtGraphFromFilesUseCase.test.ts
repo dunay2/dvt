@@ -5,6 +5,7 @@ import type {
   DbtProjectAnalysis,
   IDbtProjectAnalyzerPort,
 } from '../../src/application/ports/dbtProjectAnalysis.js';
+import { WarehouseConnectionNotFoundError } from '../../src/application/ports/warehouseSourceImport.js';
 import { ProjectDbtGraphFromFilesUseCase } from '../../src/application/services/projectDbtGraphFromFilesUseCase.js';
 
 const SCOPE = {
@@ -111,11 +112,23 @@ function buildUseCase(
     readonly provider: string;
     readonly adapter: string;
     readonly targetName: string;
+    readonly connectionRef: {
+      readonly schemaVersion: 'connection-ref.v1';
+      readonly connectionId: string;
+      readonly provider: string;
+    };
+    readonly resolutionSource: 'environment-default';
     readonly credentialRef: string;
   } | null = {
     provider: 'temporal',
     adapter: 'postgres',
     targetName: 'production',
+    connectionRef: {
+      schemaVersion: 'connection-ref.v1',
+      connectionId: 'execution-warehouse',
+      provider: 'postgres',
+    },
+    resolutionSource: 'environment-default',
     credentialRef: 'env:DBT_PROFILES_DIR',
   }
 ): {
@@ -124,9 +137,12 @@ function buildUseCase(
   readonly getConnection: ReturnType<typeof vi.fn>;
 } {
   const resolve = vi.fn().mockResolvedValue(binding);
-  const getConnection = vi.fn(async () => ({
-    id: 'warehouse-prod',
-    name: 'Current production warehouse',
+  const getConnection = vi.fn(async (_scope, connectionId: string) => ({
+    id: connectionId,
+    name:
+      connectionId === 'execution-warehouse'
+        ? 'DBT execution warehouse'
+        : 'Current production warehouse',
     type: 'postgres' as const,
     database: 'analytics',
     sourceObjects: [],
@@ -211,6 +227,12 @@ describe('ProjectDbtGraphFromFilesUseCase', () => {
       provider: 'temporal',
       adapter: 'postgres',
       targetName: 'production',
+      connectionRef: {
+        schemaVersion: 'connection-ref.v1',
+        connectionId: 'execution-warehouse',
+        provider: 'postgres',
+      },
+      resolutionSource: 'environment-default',
       credentialRef: 'env:DBT_PROFILES_DIR',
     });
   });
@@ -234,21 +256,22 @@ describe('ProjectDbtGraphFromFilesUseCase', () => {
       includeGovernedSourceIdentity: true,
     });
 
-    expect(getConnection).toHaveBeenCalledTimes(1);
+    expect(getConnection).toHaveBeenCalledTimes(2);
     expect(getConnection).toHaveBeenCalledWith(SCOPE, 'warehouse-prod');
+    expect(getConnection).toHaveBeenCalledWith(SCOPE, 'execution-warehouse');
   });
 
-  it('keeps legacy projections independent from the warehouse connection catalog', async () => {
+  it('resolves only the execution connection when governed source identity is omitted', async () => {
     const analyze = vi.fn().mockResolvedValue(analyzerResult());
     const { useCase, getConnection } = buildUseCase(analyze);
-    getConnection.mockRejectedValue(new Error('WAREHOUSE_CONNECTION_CATALOG_MALFORMED'));
 
     const projection = await useCase.execute({
       scope: SCOPE,
       canvasId: FILE_AUTHORITY.canvasId,
     });
 
-    expect(getConnection).not.toHaveBeenCalled();
+    expect(getConnection).toHaveBeenCalledTimes(1);
+    expect(getConnection).toHaveBeenCalledWith(SCOPE, 'execution-warehouse');
     expect(projection.nodes).toEqual([
       expect.objectContaining({ uniqueId: 'model.analytics.orders' }),
       expect.not.objectContaining({ sourceIdentity: expect.anything() }),
@@ -277,6 +300,12 @@ describe('ProjectDbtGraphFromFilesUseCase', () => {
         provider: 'temporal',
         adapter: 'snowflake',
         targetName: 'production',
+        connectionRef: {
+          schemaVersion: 'connection-ref.v1',
+          connectionId: 'snowflake-execution',
+          provider: 'snowflake',
+        },
+        resolutionSource: 'environment-default',
         credentialRef: 'env:DBT_PROFILES_DIR',
       },
       diagnostic: 'dbt_execution_target_adapter_mismatch',
@@ -298,6 +327,21 @@ describe('ProjectDbtGraphFromFilesUseCase', () => {
       );
     }
   );
+
+  it('fails closed when the configured execution connection is absent from the workspace', async () => {
+    const { useCase, getConnection } = buildUseCase(vi.fn().mockResolvedValue(analyzerResult()));
+    getConnection.mockRejectedValue(new WarehouseConnectionNotFoundError('execution-warehouse'));
+
+    const projection = await useCase.execute({ scope: SCOPE, canvasId: FILE_AUTHORITY.canvasId });
+
+    expect(projection.capabilities).toMatchObject({ canPreview: false, canRun: false });
+    expect(projection.diagnostics).toContainEqual(
+      expect.objectContaining({
+        code: 'dbt_execution_connection_missing',
+        severity: 'error',
+      })
+    );
+  });
 
   it('rejects graph-draft authority instead of inferring file authority', async () => {
     const analyze = vi.fn();

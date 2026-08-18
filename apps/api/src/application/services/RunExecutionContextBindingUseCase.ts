@@ -95,6 +95,13 @@ export class RunExecutionContextBindingUseCase implements IStartRunUseCase {
         executionTarget: this.deps.executionTargetResolver.resolve(),
       });
       if (!sourceBinding.ok) return rejectRunExecutionContext(sourceBinding.reason);
+      const executionConnection = await this.resolveDbtExecutionConnection(
+        scope,
+        sourceBinding.connectionRef
+      );
+      if (!executionConnection.ok) {
+        return rejectRunExecutionContext(executionConnection.reason);
+      }
 
       const bundle = await this.deps.bundleBuilder.build({
         scope,
@@ -147,6 +154,38 @@ export class RunExecutionContextBindingUseCase implements IStartRunUseCase {
       { ...commandWithPlanRef, runExecutionContextRef: writtenContext.ref },
       context
     );
+  }
+
+  private async resolveDbtExecutionConnection(
+    scope: WorkspaceStorageScope,
+    connectionRef: ConnectionRef
+  ): Promise<{ readonly ok: true } | { readonly ok: false; readonly reason: string }> {
+    let connection: Awaited<ReturnType<IWarehouseConnectionCatalog['getConnection']>>;
+    try {
+      connection = await this.deps.warehouseConnectionCatalog.getConnection(
+        scope,
+        connectionRef.connectionId
+      );
+    } catch (error) {
+      if (error instanceof WarehouseConnectionNotFoundError) {
+        return {
+          ok: false,
+          reason: 'The Preview-bound DBT connection is not in this workspace.',
+        };
+      }
+      throw error;
+    }
+
+    if (
+      connection.id !== connectionRef.connectionId ||
+      connection.type !== connectionRef.provider
+    ) {
+      return {
+        ok: false,
+        reason: 'The Preview-bound DBT connection identity is invalid.',
+      };
+    }
+    return { ok: true };
   }
 
   private async resolvePostgresPluginContext(
