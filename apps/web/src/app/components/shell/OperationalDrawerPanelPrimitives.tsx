@@ -33,7 +33,8 @@ const operationalDrawerPanelClassNames = {
     'flex shrink-0 flex-wrap items-center gap-1 border-b border-[color:var(--border-default)] px-3',
   tabButton:
     'h-9 border-b-2 border-transparent px-2 text-xs font-semibold text-[var(--text-muted)] data-[active=true]:border-[color:var(--focus-ring)] data-[active=true]:text-[var(--text-strong)]',
-  dataTableFrame: 'min-w-0 overflow-auto rounded border border-[color:var(--border-default)]',
+  dataTableFrame:
+    'w-full max-w-full min-w-0 overflow-auto rounded border border-[color:var(--border-default)]',
   dataTable: 'w-max min-w-full border-collapse text-left font-mono text-xs',
   dataTableHeader:
     'sticky top-0 z-10 border-b border-[color:var(--border-default)] bg-[var(--surface-raised)] text-[var(--text-strong)]',

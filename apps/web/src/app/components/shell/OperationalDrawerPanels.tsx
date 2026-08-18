@@ -285,6 +285,7 @@ export function BottomOperationalDrawerBody({
           hidden={activeTab !== tab.id}
           data-slot="bottom-operational-drawer-panel"
           data-tab={tab.id}
+          className="min-w-0 flex-1"
         >
           {activeTab === tab.id ? activeBody : null}
         </div>
