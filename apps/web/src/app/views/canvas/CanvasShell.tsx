@@ -27,10 +27,13 @@ import { buildGraphDraftWorkspaceFileCodeContributions } from './graphDraftWorks
 import { useUiLayoutStore } from '../../stores/uiLayoutStore';
 import { useOperationalDrawerContributionStore } from '../../components/shell/operationalDrawerContributionStore';
 import type { OperationalDrawerDataSample } from '../../components/shell/operationalDrawerContributionStore';
+import type { SourceDataSample } from '../../ports/workspace';
 import {
   CANVAS_SOURCE_DATA_SAMPLE_LIMIT,
+  resolveCanvasSinkDataSampleTarget,
   resolveCanvasSourceDataSampleError,
   resolveCanvasSourceDataSampleTarget,
+  type CanvasSinkDataSampleTarget,
   type CanvasSourceDataSampleTarget,
 } from './canvasSourceDataSample';
 
@@ -69,6 +72,8 @@ export default function CanvasShell({
   onSourceImportInitialSelectionConsumed,
   onDbtProjectImported,
   warehouseSourceDataSampleQuery,
+  runSnapshot,
+  runMaterializationSampleQuery,
 }: CanvasShellProps): JSX.Element {
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCanvasViewCopy(applicationLanguage);
@@ -226,14 +231,10 @@ export default function CanvasShell({
     captureWorkbenchOpener('[data-slot="shell-workspace-menu-trigger"]');
     (workspaceCommands?.onOpenProjectCode ?? openProjectCodeWorkbench)();
   }, [captureWorkbenchOpener, openProjectCodeWorkbench, workspaceCommands?.onOpenProjectCode]);
-  const openSourceDataSample = useCallback(
-    (target: CanvasSourceDataSampleTarget) => {
-      if (warehouseSourceDataSampleQuery == null) {
-        return;
-      }
-
+  const openDataSample = useCallback(
+    (nodeName: string, load: () => Promise<SourceDataSample>) => {
       const requestId = ++dataSampleRequestIdRef.current;
-      setDataSample({ status: 'loading', nodeName: target.nodeName });
+      setDataSample({ status: 'loading', nodeName });
       selectOperationalDrawerTab('data');
       showBottomDrawer(300);
       window.requestAnimationFrame(() => {
@@ -244,24 +245,47 @@ export default function CanvasShell({
           ?.focus({ preventScroll: true });
       });
 
-      void warehouseSourceDataSampleQuery
-        .previewSourceObjectRows({
-          connectionId: target.connectionId,
-          objectId: target.objectId,
-          limit: CANVAS_SOURCE_DATA_SAMPLE_LIMIT,
-        })
+      void load()
         .then((sample) => {
           if (dataSampleRequestIdRef.current === requestId) {
-            setDataSample({ status: 'ready', nodeName: target.nodeName, sample });
+            setDataSample({ status: 'ready', nodeName, sample });
           }
         })
         .catch((error: unknown) => {
           if (dataSampleRequestIdRef.current === requestId) {
-            setDataSample(resolveCanvasSourceDataSampleError(error, target.nodeName));
+            setDataSample(resolveCanvasSourceDataSampleError(error, nodeName));
           }
         });
     },
-    [selectOperationalDrawerTab, showBottomDrawer, warehouseSourceDataSampleQuery]
+    [selectOperationalDrawerTab, showBottomDrawer]
+  );
+  const openSourceDataSample = useCallback(
+    (target: CanvasSourceDataSampleTarget) => {
+      if (warehouseSourceDataSampleQuery == null) {
+        return;
+      }
+
+      openDataSample(target.nodeName, () =>
+        warehouseSourceDataSampleQuery.previewSourceObjectRows({
+          connectionId: target.connectionId,
+          objectId: target.objectId,
+          limit: CANVAS_SOURCE_DATA_SAMPLE_LIMIT,
+        })
+      );
+    },
+    [openDataSample, warehouseSourceDataSampleQuery]
+  );
+  const openSinkDataSample = useCallback(
+    (target: CanvasSinkDataSampleTarget) => {
+      if (runMaterializationSampleQuery == null) {
+        return;
+      }
+
+      openDataSample(target.nodeName, () =>
+        runMaterializationSampleQuery(target.runId, CANVAS_SOURCE_DATA_SAMPLE_LIMIT)
+      );
+    },
+    [openDataSample, runMaterializationSampleQuery]
   );
   useEffect(
     () => () => {
@@ -284,18 +308,36 @@ export default function CanvasShell({
             codeTruthKind === 'generated');
         const canOpenNodeCode = data.canOpenNodeCode !== false && canInspectNodeCode;
         const sourceDataSampleTarget = resolveCanvasSourceDataSampleTarget(data);
+        const sinkDataSampleTarget = resolveCanvasSinkDataSampleTarget(data, runSnapshot);
         const canOpenSourceDataSample =
           sourceDataSampleTarget != null && warehouseSourceDataSampleQuery != null;
+        const canOpenSinkDataSample =
+          sinkDataSampleTarget != null && runMaterializationSampleQuery != null;
+        const canOpenDataSample = canOpenSourceDataSample || canOpenSinkDataSample;
+        const runStatusByNodeId =
+          sinkDataSampleTarget == null
+            ? data.runStatusByNodeId
+            : new Map(data.runStatusByNodeId).set(node.id, sinkDataSampleTarget.status);
 
         return {
           ...node,
           data: {
             ...data,
             canOpenNodeCode,
+            ...(sinkDataSampleTarget == null
+              ? {}
+              : {
+                  rows: sinkDataSampleTarget.rowsWritten,
+                  durationMs: sinkDataSampleTarget.durationMs,
+                  lastRunAt: sinkDataSampleTarget.completedAt,
+                  runStatusByNodeId,
+                }),
             onOpenSourceDataSample: canOpenSourceDataSample
               ? () => openSourceDataSample(sourceDataSampleTarget)
-              : undefined,
-            sourceDataSampleInteractionLabel: canOpenSourceDataSample
+              : canOpenSinkDataSample
+                ? () => openSinkDataSample(sinkDataSampleTarget)
+                : undefined,
+            sourceDataSampleInteractionLabel: canOpenDataSample
               ? copy.sourceDataSampleInteractionLabel
               : undefined,
           },
@@ -305,7 +347,10 @@ export default function CanvasShell({
     [
       copy.sourceDataSampleInteractionLabel,
       graph,
+      openSinkDataSample,
       openSourceDataSample,
+      runMaterializationSampleQuery,
+      runSnapshot,
       warehouseSourceDataSampleQuery,
     ]
   );

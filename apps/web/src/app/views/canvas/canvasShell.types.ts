@@ -39,6 +39,7 @@ import type {
   CanvasUnavailableLegacySurfaceId,
 } from './canvasLegacyRouteIntent';
 import type { OperationalDrawerRunControls } from '../../components/shell/operationalDrawerContributionStore';
+import type { IRunsPort, RunSnapshot } from '../../ports/runs';
 
 export type UserPermissions = {
   canPlan: boolean;
@@ -200,6 +201,8 @@ export type CanvasShellProps = Readonly<{
   routeIntentRequest?: CanvasShellRouteIntentRequest;
   warehouseSourceImport?: IWarehouseSourceImportPort;
   warehouseSourceDataSampleQuery?: IWarehouseSourceDataSampleQueryPort;
+  runSnapshot?: RunSnapshot | null;
+  runMaterializationSampleQuery?: IRunsPort['getRunMaterializationSample'];
   canvasContextScreenToFlowPosition?: (
     screenPosition: CanvasContextMenuPosition
   ) => CanvasContextMenuPosition;
