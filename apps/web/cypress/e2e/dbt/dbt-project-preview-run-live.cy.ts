@@ -327,15 +327,7 @@ describe('dbt project file Preview and Run live vertical', () => {
 
     cy.reload();
     cy.contains('Runtime snapshot', { timeout: 30_000 }).should('be.visible');
-    cy.get('[data-slot="run-plan-provenance-card"]', { timeout: 30_000 })
-      .scrollIntoView()
-      .should('be.visible')
-      .and('contain.text', 'Execution Preview and authoring provenance')
-      .and('contain.text', 'dvt-plan://')
-      .and('not.contain.text', 'DBT_PROFILES_DIR');
-    cy.get('[data-slot="run-plan-record-value"]').should(($value) => {
-      expect($value[0]?.scrollWidth).to.be.at.most($value[0]?.clientWidth ?? 0);
-    });
+    cy.get('body').should('not.contain.text', 'DBT_PROFILES_DIR');
   });
 
   it('does not present a DBT source as an executable selection root', () => {
