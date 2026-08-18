@@ -76,9 +76,22 @@ describe('canvas copy catalog', () => {
 
     expect(canvasViewCopy.inspectorDbtPackageLabel).toBe('Package');
     expect(canvasViewCopy.inspectorErrorDbtPackageRequired).toBe('Package is required.');
+    expect(canvasViewCopy.inspectorDvtConnectionLabel).toBe('Connection');
+    expect(canvasViewCopy.inspectorDvtInheritedConnectionLabel).toBe('Inherited connection');
     expect(spanishCopy.inspectorDbtPackageLabel).toBe('Paquete');
     expect(spanishCopy.inspectorErrorDbtPackageRequired).toBe('El paquete es obligatorio.');
+    expect(spanishCopy.inspectorDvtConnectionLabel).toBe('Conexión');
+    expect(spanishCopy.inspectorDvtInheritedConnectionLabel).toBe('Conexión heredada');
     expect(spanishCopy.inspectorDvtWriteModeLabel).toBe('Modo de escritura');
+
+    expect(
+      [
+        canvasViewCopy.inspectorDvtConnectionLabel,
+        canvasViewCopy.inspectorDvtInheritedConnectionLabel,
+        spanishCopy.inspectorDvtConnectionLabel,
+        spanishCopy.inspectorDvtInheritedConnectionLabel,
+      ].join(' ')
+    ).not.toMatch(/PostgreSQL/iu);
   });
 
   it('formats Canvas Inspector authoring validation errors from locale copy', () => {
