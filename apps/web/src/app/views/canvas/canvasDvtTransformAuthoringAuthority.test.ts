@@ -165,6 +165,21 @@ describe('DVT transform authoring authority', () => {
     });
   });
 
+  it('preserves the exact generated SQL when transferring authority', () => {
+    const visualNode = applyDvtVisualTransformRecipe(buildTransformNode(), RECIPE);
+    const generatedSql = 'select\n  "orders"."order_id" as "order_id"\nfrom "raw"."orders";\n';
+
+    const sqlNode = convertDvtVisualTransformToSql(visualNode, generatedSql);
+
+    expect(sqlNode.metadata?.sql).toBe(generatedSql);
+    expect(sqlNode.metadata?.config).toMatchObject({ sql: generatedSql });
+    expect(readDvtTransformAuthoringAuthority(sqlNode)).toEqual({
+      version: 'v1',
+      mode: 'sql',
+      sql: generatedSql,
+    });
+  });
+
   it('rejects visual-to-SQL conversion when visual authority is not current', () => {
     expect(() =>
       convertDvtVisualTransformToSql(
