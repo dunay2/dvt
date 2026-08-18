@@ -47,6 +47,7 @@ const operationalDrawerPanelClassNames = {
   dataTableValue: 'block max-w-80 truncate',
   dataTableNull: 'italic text-[var(--text-muted)]',
   dataNotice: 'mb-2 text-xs text-[var(--text-muted)]',
+  screenReaderOnly: 'sr-only',
 } as const;
 
 export function OperationalDrawerPanelSurface({
@@ -107,7 +108,7 @@ export function OperationalDrawerDataTable({
         data-slot="bottom-operational-data-table"
         className={operationalDrawerPanelClassNames.dataTable}
       >
-        <caption className="sr-only">{caption}</caption>
+        <caption className={operationalDrawerPanelClassNames.screenReaderOnly}>{caption}</caption>
         <thead className={operationalDrawerPanelClassNames.dataTableHeader}>
           <tr>
             {columns.map((column) => (
