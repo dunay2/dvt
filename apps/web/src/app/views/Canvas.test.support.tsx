@@ -27,6 +27,7 @@ import { useCanvasController } from './canvas/useCanvasController';
 import { buildController, type CanvasController } from './Canvas.test.controller';
 import { createAppServicesTestOverrides } from '../../testing/appServicesTestDoubles';
 import { createTestQueryClient } from '../../testing/reactQueryHarness';
+import type { AppServicesOverrides } from '../services/composition/appServices';
 export { buildController } from './Canvas.test.controller';
 
 export const CANVAS_ROUTE_BOOTSTRAP_REGISTRATION = getRouteBootstrapRegistration('dbt.canvas', {
@@ -89,7 +90,11 @@ export function currentCanvasRouteState() {
   return canvasRouteState;
 }
 
-async function renderCanvasRoute(root: Root, queryClient: QueryClient): Promise<void> {
+async function renderCanvasRoute(
+  root: Root,
+  queryClient: QueryClient,
+  serviceOverrides: AppServicesOverrides
+): Promise<void> {
   const router = createMemoryRouter(
     [
       {
@@ -110,7 +115,9 @@ async function renderCanvasRoute(root: Root, queryClient: QueryClient): Promise<
   await act(async () => {
     root.render(
       <QueryClientProvider client={queryClient}>
-        <AppServicesProvider overrides={createAppServicesTestOverrides()}>
+        <AppServicesProvider
+          overrides={{ ...createAppServicesTestOverrides(), ...serviceOverrides }}
+        >
           <RouterProvider router={router} />
         </AppServicesProvider>
       </QueryClientProvider>
@@ -118,7 +125,7 @@ async function renderCanvasRoute(root: Root, queryClient: QueryClient): Promise<
   });
 }
 
-export function createCanvasRouteHarness() {
+export function createCanvasRouteHarness(serviceOverrides: AppServicesOverrides = {}) {
   const container = document.createElement('div');
   document.body.appendChild(container);
   const root = createRoot(container);
@@ -139,7 +146,7 @@ export function createCanvasRouteHarness() {
     container,
     async render(initialEntry?: string) {
       canvasRouteState.initialEntry = initialEntry ?? '/canvas';
-      await renderCanvasRoute(root, queryClient);
+      await renderCanvasRoute(root, queryClient, serviceOverrides);
     },
     cleanup() {
       act(() => {

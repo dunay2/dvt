@@ -1,10 +1,14 @@
-import { afterEach, beforeEach, describe, it } from 'vitest';
+import { waitFor } from '@testing-library/dom';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { createMockRunsService } from '../../testing/runsPortDoubles';
 
 import {
   createCanvasRouteHarness,
   expectCanvasBootstrapState,
   expectCanvasSurfaceState,
   renderCanvasRouteWithController,
+  currentCanvasRouteState,
   type CanvasRouteHarness,
 } from './Canvas.test.support';
 
@@ -61,5 +65,78 @@ describe('Canvas route state smoke', () => {
       viewportVisible: surface.viewportVisible,
     });
     expectCanvasBootstrapState(bootstrap);
+  });
+});
+
+describe('Canvas persisted run reference', () => {
+  let harness: CanvasRouteHarness;
+
+  afterEach(() => {
+    harness.cleanup();
+  });
+
+  it('restores the exact completed sink result from the run referenced by the route', async () => {
+    const getRunSnapshot = vi.fn(async (runId: string) =>
+      runId === 'run-returned'
+        ? {
+            runId,
+            status: 'completed' as const,
+            materialization: {
+              executor: 'postgres' as const,
+              environmentId: 'dev',
+              sinkTable: 'public.sink_1',
+              rowsWritten: 3,
+              startedAt: '2026-08-18T17:35:00.000Z',
+              completedAt: '2026-08-18T17:35:00.016Z',
+              durationMs: 16,
+            },
+          }
+        : null
+    );
+    harness = createCanvasRouteHarness({
+      runsService: {
+        ...createMockRunsService(),
+        getRunSnapshot,
+      },
+    });
+
+    await renderCanvasRouteWithController(
+      harness,
+      {
+        activeRunId: null,
+        nodesWithImpact: [
+          {
+            id: 'sink-1',
+            type: 'dbtNode',
+            position: { x: 0, y: 0 },
+            data: {
+              name: 'Sink 1',
+              status: 'idle',
+              role: 'output',
+              pluginKind: 'dvt:sink',
+              metadata: {
+                config: {
+                  schema: 'public',
+                  table: 'sink_1',
+                  materialization: 'table',
+                  writeMode: 'replace',
+                },
+              },
+            },
+          },
+        ],
+      },
+      { initialEntry: '/canvas?runId=run-returned' }
+    );
+
+    await waitFor(() => {
+      const sink = (
+        currentCanvasRouteState().viewportProps?.nodesWithImpact as
+          | Array<{ data?: { rows?: number } }>
+          | undefined
+      )?.find((node) => node.data?.rows === 3);
+      expect(sink?.data?.rows).toBe(3);
+    });
+    expect(getRunSnapshot).toHaveBeenCalledWith('run-returned');
   });
 });
