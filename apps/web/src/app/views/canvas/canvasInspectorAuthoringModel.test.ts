@@ -536,6 +536,7 @@ describe('canvasInspectorAuthoringModel', () => {
       tags: ['authoring'],
       dvt: {
         kind: 'sql_transform' as const,
+        mode: 'sql' as const,
         sql: 'select order_id from raw.orders',
       },
     };
@@ -567,6 +568,7 @@ describe('canvasInspectorAuthoringModel', () => {
       tags: ['authoring'],
       dvt: {
         kind: 'sql_transform' as const,
+        mode: 'sql' as const,
         sql: 'select order_id, customer from raw.orders',
       },
     };

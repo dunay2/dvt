@@ -1,4 +1,5 @@
 /** Owned concern: render DVT-specific Canvas Inspector authoring fields. */
+import { DVT_TRANSFORM_AUTHORING_MODE } from '@dvt/contracts';
 import type { Dispatch, SetStateAction } from 'react';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
@@ -66,6 +67,10 @@ export function DvtAuthoringFields({
 
   if (draft.dvt.kind === 'sql_transform') {
     if (section !== 'all' && section !== 'code') {
+      return null;
+    }
+
+    if (draft.dvt.mode === DVT_TRANSFORM_AUTHORING_MODE.visual) {
       return null;
     }
 
