@@ -78,7 +78,12 @@ describe('RunControlActions', () => {
     });
 
     expect(container?.textContent).toContain('Cancelar ejecución');
-    expect(container?.textContent).toContain('Recuperar ejecución');
+    expect(container?.textContent).toContain('Ejecutar el plan de nuevo');
+    expect(
+      container
+        ?.querySelector<HTMLButtonElement>('[data-slot="run-recover-action"]')
+        ?.getAttribute('aria-label')
+    ).toBe('Ejecutar el plan de nuevo');
     expect(
       container?.querySelector<HTMLButtonElement>('[data-slot="run-cancel-action"]')?.disabled
     ).toBe(true);
@@ -87,17 +92,43 @@ describe('RunControlActions', () => {
   it('reacts to the application language when no local locale override is supplied', async () => {
     await renderActions({ compact: false });
     expect(container?.textContent).toContain('Cancel run');
+    expect(container?.textContent).toContain('Run plan again');
 
     await act(async () => {
       useApplicationLanguageStore.getState().configureApplicationLanguage('es');
     });
 
     expect(container?.textContent).toContain('Cancelar ejecución');
+    expect(container?.textContent).toContain('Ejecutar el plan de nuevo');
     expect(
       container
         ?.querySelector<HTMLButtonElement>('[data-slot="run-recover-action"]')
         ?.getAttribute('aria-description')
-    ).toContain('recuperación');
+    ).toContain('plan');
+  });
+
+  it('announces the new run identity without implying that the source run resumed', async () => {
+    await renderActions({
+      locale: 'es',
+      availability: {
+        cancel: { available: false, reason: 'run_terminal' },
+        recover: { available: true },
+      },
+      outcome: {
+        action: 'recover',
+        runId: 'run_1',
+        receipt: {
+          contractVersion: 'v1',
+          sourceRunId: 'run_1',
+          recoveryRunId: 'run_2',
+          accepted: true,
+        },
+      },
+    });
+
+    expect(container?.querySelector('[data-slot="run-control-feedback"]')?.textContent).toBe(
+      'Nueva ejecución iniciada: run_2.'
+    );
   });
 
   it('explains when recovery context integrity cannot be verified', async () => {
