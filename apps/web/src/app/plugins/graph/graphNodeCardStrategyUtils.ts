@@ -230,26 +230,49 @@ export function resolveRuntimeDurationLabel(
 }
 
 export function resolveRunStatusLabel(
+  nodeId: string,
   metadata: Record<string, unknown>,
   data: Record<string, unknown>
 ): GraphNodeCardStatus | null {
-  const runStatus = stringValue(metadata.runStatus) ?? stringValue(data.runStatus);
+  const runStatusByNodeId = data.runStatusByNodeId;
+  const currentTaskStatus =
+    runStatusByNodeId instanceof Map ? stringValue(runStatusByNodeId.get(nodeId)) : null;
+  const runStatus =
+    currentTaskStatus ?? stringValue(metadata.runStatus) ?? stringValue(data.runStatus);
   if (!runStatus) {
     return null;
   }
 
+  const presentationCopy = isCanvasNodePresentationCopy(data.presentationCopy)
+    ? data.presentationCopy
+    : null;
+  const localizedLabel = (key: string, fallback: string): string =>
+    stringValue(presentationCopy?.valueLabels?.[key]) ?? fallback;
+
   switch (runStatus.toLowerCase()) {
+    case 'pending':
+      return { label: localizedLabel('pending', 'Pending'), tone: 'info' };
     case 'completed':
     case 'success':
     case 'succeeded':
-      return { label: 'Completed', tone: 'success' };
+      return { label: localizedLabel('success', 'Completed'), tone: 'success' };
     case 'running':
-      return { label: 'Running', tone: 'running' };
+      return { label: localizedLabel('running', 'Running'), tone: 'running' };
     case 'failed':
     case 'error':
-      return { label: 'Failed', tone: 'danger' };
+      return { label: localizedLabel('failed', 'Failed'), tone: 'danger' };
+    case 'skipped':
+      return { label: localizedLabel('skipped', 'Skipped'), tone: 'warning' };
+    case 'warn':
+    case 'warning':
+      return { label: localizedLabel('warn', 'Warning'), tone: 'warning' };
+    case 'cancelled':
+    case 'canceled':
+      return { label: localizedLabel('cancelled', 'Cancelled'), tone: 'neutral' };
     case 'blocked':
-      return { label: 'Blocked', tone: 'danger' };
+      return { label: localizedLabel('blocked', 'Blocked'), tone: 'danger' };
+    case 'idle':
+      return { label: localizedLabel('idle', 'Inactive'), tone: 'neutral' };
     default:
       return { label: runStatus, tone: 'neutral' };
   }
@@ -261,7 +284,7 @@ export function resolveNodeCardStatus(
   data: Record<string, unknown>,
   fallback: GraphNodeCardStatus = { label: 'Draft', tone: 'warning' }
 ): GraphNodeCardStatus {
-  const runtimeStatus = resolveRunStatusLabel(metadata, data);
+  const runtimeStatus = resolveRunStatusLabel(node.id, metadata, data);
   if (runtimeStatus) {
     return runtimeStatus;
   }

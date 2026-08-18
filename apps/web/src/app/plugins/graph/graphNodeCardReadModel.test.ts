@@ -570,6 +570,33 @@ describe('buildGraphNodeCardReadModel', () => {
     expect(model.status).toEqual({ label: 'Correcto', tone: 'success' });
   });
 
+  it.each([
+    ['failed', 'Fallido', 'danger'],
+    ['skipped', 'Omitido', 'warning'],
+  ] as const)(
+    'projects the localized %s status of the current run task',
+    (runStatus, label, tone) => {
+      const node = buildNode({
+        id: 'transform-1',
+        kind: 'dvt:sql_transform',
+        pluginId: 'dvt',
+        role: 'transform',
+        name: 'customer_rollup',
+      });
+
+      const model = buildGraphNodeCardReadModel(
+        node,
+        {
+          presentationCopy: SPANISH_PRESENTATION_COPY,
+          runStatusByNodeId: new Map([[node.id, runStatus]]),
+        },
+        [dvtGraphNodeCardStrategy]
+      );
+
+      expect(model.status).toEqual({ label, tone });
+    }
+  );
+
   it('does not project a runtime task status that belongs to another node', () => {
     const node = buildNode({
       id: 'transform-1',
