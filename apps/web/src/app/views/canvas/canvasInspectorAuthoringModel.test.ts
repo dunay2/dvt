@@ -585,6 +585,35 @@ describe('canvasInspectorAuthoringModel', () => {
     });
   });
 
+  it('projects and applies the existing visual recipe through the inspector draft', () => {
+    const recipe = {
+      version: 'v1' as const,
+      outputs: [
+        {
+          id: 'output:customer_name',
+          name: 'customer_name',
+          dataType: 'text',
+          expression: {
+            inputs: [{ nodeId: 'source_orders', columnName: 'customer' }],
+            operations: [
+              { kind: 'passthrough' as const },
+              { kind: 'function' as const, functionId: 'trim' as const, args: [] },
+            ],
+          },
+        },
+      ],
+      filters: [],
+    };
+    const node = buildDvtNode('dvt:sql_transform', {
+      transformAuthoring: { version: 'v1', mode: 'visual', recipe },
+    });
+
+    const draft = createCanvasInspectorNodeDraft(node);
+
+    expect(draft.dvt).toEqual({ kind: 'sql_transform', mode: 'visual', recipe });
+    expect(applyCanvasInspectorNodeDraft(node, draft)).toEqual(node);
+  });
+
   it('routes object-file load drafts through their plugin-owned authoring model', () => {
     const node: CanonicalNode = {
       id: 'load-orders',
