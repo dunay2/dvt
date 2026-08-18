@@ -131,6 +131,10 @@ function readEditableRecipe(
   }
 }
 
+export function canAuthorCanvasColumnMappings(targetNode: CanonicalNode): boolean {
+  return readEditableRecipe(targetNode).outcome === 'ready';
+}
+
 export function resolveCanvasColumnMappingTarget(
   targetNode: CanonicalNode,
   columnId: string
