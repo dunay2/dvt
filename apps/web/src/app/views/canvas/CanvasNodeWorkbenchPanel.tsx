@@ -173,7 +173,11 @@ function buildNodeWorkbenchReadModel({
         const resolvedSection =
           section.id === 'code' &&
           (contributedSectionIds.has(section.id) ||
-            (canEditNode && node.pluginId === 'dbt' && node.kind === 'dbt:model'))
+            (canEditNode && node.pluginId === 'dbt' && node.kind === 'dbt:model') ||
+            (canEditNode &&
+              node.pluginId === 'dvt' &&
+              node.kind === 'dvt:sql_transform' &&
+              !hasVisualDvtTransformAuthority(node)))
             ? (() => {
                 const {
                   code: _passiveCode,
