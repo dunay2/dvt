@@ -217,6 +217,7 @@ describe('AppServicesProvider', () => {
         checkedAt: '2026-06-08T00:00:00.000Z',
         objectCount: 0,
       }),
+      validatePostgresTransformSql: async () => ({ status: 'valid' }),
       importSources: async (input) =>
         buildGraphDraftSourceImportResult({
           canvasId: input.canvasId,

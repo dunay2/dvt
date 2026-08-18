@@ -3,6 +3,7 @@ import {
   SOURCE_IMPORT_GROUPING,
   WAREHOUSE_CONNECTION_TYPE,
   type CanvasAuthoringAuthorityResolution,
+  type ConnectionRef,
   type CreateWarehouseConnectionRequest,
   type ImportSourceObjectsRequestV2,
   type ImportSourceObjectsResultV2,
@@ -117,6 +118,36 @@ export type PreviewSourceObjectRowsInput = SourceDataSampleRequest;
 
 export type SourceDataSample = SourceDataSampleResponse;
 
+export type PostgresTransformSqlDiagnosticCode =
+  | 'sql_required'
+  | 'syntax_error'
+  | 'multiple_statements'
+  | 'unsupported_statement'
+  | 'undefined_table'
+  | 'undefined_column'
+  | 'postgres_error'
+  | 'connection_unavailable';
+
+export type PostgresTransformSqlDiagnostic = Readonly<{
+  code: PostgresTransformSqlDiagnosticCode;
+  source: 'policy' | 'parser' | 'postgres' | 'connection';
+  message: string;
+  startOffset?: number;
+  endOffset?: number;
+}>;
+
+export type PostgresTransformSqlValidationResult =
+  | Readonly<{ status: 'valid' }>
+  | Readonly<{
+      status: 'invalid' | 'unavailable';
+      diagnostics: readonly PostgresTransformSqlDiagnostic[];
+    }>;
+
+export type ValidatePostgresTransformSqlInput = Readonly<{
+  connectionRef: ConnectionRef;
+  sql: string;
+}>;
+
 // ---------------------------------------------------------------------------
 // Workspace port — presentation-layer contract for workspace operations
 // ---------------------------------------------------------------------------
@@ -170,6 +201,9 @@ export interface IWarehouseSourceImportPort {
     input: RenameWarehouseConnectionInput
   ) => Promise<WarehouseConnection>;
   testWarehouseConnection: (connectionId: string) => Promise<TestWarehouseConnectionResult>;
+  validatePostgresTransformSql: (
+    input: ValidatePostgresTransformSqlInput
+  ) => Promise<PostgresTransformSqlValidationResult>;
   importSources: (input: ImportSourcesInput) => Promise<ImportSourcesResult>;
 }
 

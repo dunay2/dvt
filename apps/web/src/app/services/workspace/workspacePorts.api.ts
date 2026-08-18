@@ -19,6 +19,8 @@ import type {
   IWorkspaceFileHistoryQueryPort,
   IWorkspaceFilesQueryPort,
   IWorkspaceGraphSnapshotQueryPort,
+  PostgresTransformSqlDiagnostic,
+  PostgresTransformSqlValidationResult,
   SaveWorkspaceFileContentInput,
   WorkspaceFileEntry,
   WorkspaceFileSaveReceipt,
@@ -207,6 +209,15 @@ function buildWarehouseSourcesImportEndpoint(): string {
   )}`;
 }
 
+function buildWarehousePostgresSqlValidationEndpoint(): string {
+  const scope = readWorkspaceGraphDraftScope();
+  return `/workspace/warehouse/sql-validation?tenantId=${encodeURIComponent(
+    scope.tenantId
+  )}&projectId=${encodeURIComponent(scope.projectId)}&environmentId=${encodeURIComponent(
+    scope.environmentId
+  )}`;
+}
+
 export function createApiWarehouseSourceImportPort(
   apiClient: ApiClient,
   frontendOperabilitySink: FrontendOperabilitySink
@@ -251,11 +262,67 @@ export function createApiWarehouseSourceImportPort(
       TestWarehouseConnectionResultSchema.parse(
         await apiClient.postJson(buildWarehouseConnectionTestEndpoint(connectionId), {})
       ),
+    validatePostgresTransformSql: async (input) =>
+      parsePostgresTransformSqlValidationResult(
+        await apiClient.postJson(buildWarehousePostgresSqlValidationEndpoint(), input)
+      ),
     importSources: async (input) =>
       ImportSourceObjectsResultV2Schema.parse(
         await apiClient.postJson(buildWarehouseSourcesImportEndpoint(), input)
       ),
   };
+}
+
+function parsePostgresTransformSqlValidationResult(
+  value: unknown
+): PostgresTransformSqlValidationResult {
+  if (!isRecord(value)) {
+    throw new TypeError('PostgreSQL SQL validation response is invalid.');
+  }
+  if (value.status === 'valid') {
+    return { status: 'valid' };
+  }
+  if (
+    (value.status === 'invalid' || value.status === 'unavailable') &&
+    Array.isArray(value.diagnostics) &&
+    value.diagnostics.every(isPostgresTransformSqlDiagnostic)
+  ) {
+    return { status: value.status, diagnostics: value.diagnostics };
+  }
+  throw new TypeError('PostgreSQL SQL validation response is invalid.');
+}
+
+function isPostgresTransformSqlDiagnostic(value: unknown): value is PostgresTransformSqlDiagnostic {
+  return (
+    isRecord(value) &&
+    POSTGRES_TRANSFORM_SQL_DIAGNOSTIC_CODES.has(String(value.code)) &&
+    POSTGRES_TRANSFORM_SQL_DIAGNOSTIC_SOURCES.has(String(value.source)) &&
+    typeof value.message === 'string' &&
+    (value.startOffset === undefined || typeof value.startOffset === 'number') &&
+    (value.endOffset === undefined || typeof value.endOffset === 'number')
+  );
+}
+
+const POSTGRES_TRANSFORM_SQL_DIAGNOSTIC_CODES = new Set([
+  'sql_required',
+  'syntax_error',
+  'multiple_statements',
+  'unsupported_statement',
+  'undefined_table',
+  'undefined_column',
+  'postgres_error',
+  'connection_unavailable',
+]);
+
+const POSTGRES_TRANSFORM_SQL_DIAGNOSTIC_SOURCES = new Set([
+  'policy',
+  'parser',
+  'postgres',
+  'connection',
+]);
+
+function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
+  return typeof value === 'object' && value !== null;
 }
 
 export function createApiWarehouseSourceDataSampleQueryPort(

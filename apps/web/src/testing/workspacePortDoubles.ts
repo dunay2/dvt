@@ -775,6 +775,7 @@ export function createMockWarehouseSourceImportPort(
       checkedAt: '2026-06-08T00:00:00.000Z',
       objectCount: mockRelationDefinitionsByConnectionId[connectionId]?.length ?? 0,
     }),
+    validatePostgresTransformSql: async () => ({ status: 'valid' }),
     importSources: async (input) => importMockSources(state, input),
   };
 }
