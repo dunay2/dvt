@@ -9,6 +9,7 @@ describe('ConfiguredDbtExecutionTargetResolver', () => {
       provider: 'temporal',
       adapter: 'postgres',
       targetName: 'production',
+      connectionId: 'warehouse-production',
       credentialRef: 'env:DBT_PROFILES_DIR',
     });
 
@@ -16,6 +17,12 @@ describe('ConfiguredDbtExecutionTargetResolver', () => {
       provider: 'temporal',
       adapter: 'postgres',
       targetName: 'production',
+      connectionRef: {
+        schemaVersion: 'connection-ref.v1',
+        connectionId: 'warehouse-production',
+        provider: 'postgres',
+      },
+      resolutionSource: 'environment-default',
       credentialRef: 'env:DBT_PROFILES_DIR',
     });
   });
@@ -27,6 +34,7 @@ describe('ConfiguredDbtExecutionTargetResolver', () => {
         provider: 'temporal',
         adapter: 'postgres',
         targetName: 'production',
+        connectionId: 'warehouse-production',
         credentialRef: 'env:DBT_PROFILES_DIR',
       }).resolve()
     ).toBeNull();
@@ -42,6 +50,7 @@ describe('ConfiguredDbtExecutionTargetResolver', () => {
           enabled: true,
           provider: 'temporal',
           adapter: 'postgres',
+          connectionId: 'warehouse-production',
         })
     ).toThrow('all be configured together');
     expect(
@@ -51,6 +60,7 @@ describe('ConfiguredDbtExecutionTargetResolver', () => {
           provider: 'temporal',
           adapter: 'postgres',
           targetName: 'production',
+          connectionId: 'warehouse-production',
           credentialRef: 'postgres://user:secret@db',
         })
     ).toThrow('credentialRef');

@@ -16,6 +16,12 @@ const EXECUTION_TARGET = {
   provider: 'temporal',
   adapter: 'postgres',
   targetName: 'production',
+  connectionRef: {
+    schemaVersion: 'connection-ref.v1',
+    connectionId: 'warehouse-production',
+    provider: 'postgres',
+  },
+  resolutionSource: 'environment-default',
   credentialRef: 'env:DBT_PROFILES_DIR',
 } as const;
 
@@ -69,6 +75,14 @@ describe('PlanPreviewProvenance.v1', () => {
     {
       ...DBT_PROVENANCE,
       executionTarget: { ...EXECUTION_TARGET, password: 'secret' },
+    },
+    {
+      ...DBT_PROVENANCE,
+      executionTarget: { ...EXECUTION_TARGET, connectionRef: undefined },
+    },
+    {
+      ...DBT_PROVENANCE,
+      executionTarget: { ...EXECUTION_TARGET, resolutionSource: 'hidden-default' },
     },
   ])('rejects unsafe or secret-bearing dbt provenance', (provenance) => {
     expect(PlanPreviewProvenanceSchema.safeParse(provenance).success).toBe(false);

@@ -7,6 +7,7 @@ export type ConfiguredDbtExecutionTarget = Readonly<{
   provider: string;
   adapter?: string | undefined;
   targetName?: string | undefined;
+  connectionId?: string | undefined;
   credentialRef?: string | undefined;
 }>;
 
@@ -19,14 +20,19 @@ export class ConfiguredDbtExecutionTargetResolver implements IDbtExecutionTarget
       return;
     }
 
-    const targetFields = [config.adapter, config.targetName, config.credentialRef];
+    const targetFields = [
+      config.adapter,
+      config.targetName,
+      config.connectionId,
+      config.credentialRef,
+    ];
     if (targetFields.every((value) => value === undefined)) {
       this.#target = null;
       return;
     }
     if (targetFields.some((value) => value === undefined)) {
       throw new Error(
-        'DVT_DBT_EXECUTION_ADAPTER, DVT_DBT_EXECUTION_TARGET_NAME, and DVT_DBT_EXECUTION_CREDENTIAL_REF must all be configured together.'
+        'DVT_DBT_EXECUTION_ADAPTER, DVT_DBT_EXECUTION_TARGET_NAME, DVT_DBT_EXECUTION_CONNECTION_ID, and DVT_DBT_EXECUTION_CREDENTIAL_REF must all be configured together.'
       );
     }
 
@@ -34,6 +40,12 @@ export class ConfiguredDbtExecutionTargetResolver implements IDbtExecutionTarget
       provider: config.provider,
       adapter: config.adapter,
       targetName: config.targetName,
+      connectionRef: {
+        schemaVersion: 'connection-ref.v1',
+        connectionId: config.connectionId,
+        provider: config.adapter,
+      },
+      resolutionSource: 'environment-default',
       credentialRef: config.credentialRef,
     });
   }

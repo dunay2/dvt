@@ -130,6 +130,9 @@ export async function buildProtectedRuntimeModule(
     ...(env.DVT_DBT_EXECUTION_TARGET_NAME === undefined
       ? {}
       : { targetName: env.DVT_DBT_EXECUTION_TARGET_NAME }),
+    ...(env.DVT_DBT_EXECUTION_CONNECTION_ID === undefined
+      ? {}
+      : { connectionId: env.DVT_DBT_EXECUTION_CONNECTION_ID }),
     ...(env.DVT_DBT_EXECUTION_CREDENTIAL_REF === undefined
       ? {}
       : { credentialRef: env.DVT_DBT_EXECUTION_CREDENTIAL_REF }),

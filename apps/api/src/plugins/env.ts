@@ -73,6 +73,7 @@ const EnvSchema = z.object({
   DVT_DBT_ANALYZER_MAX_OUTPUT_BYTES: z.coerce.number().int().positive().default(1000000),
   DVT_DBT_EXECUTION_ADAPTER: z.string().trim().min(1).optional(),
   DVT_DBT_EXECUTION_TARGET_NAME: z.string().trim().min(1).optional(),
+  DVT_DBT_EXECUTION_CONNECTION_ID: z.string().trim().min(1).optional(),
   DVT_DBT_EXECUTION_CREDENTIAL_REF: z.string().trim().min(1).optional(),
   DVT_POSTGRES_CREDENTIAL_BINDINGS: z.string().trim().min(2).optional(),
   // OIDC / auth -- all three required together when auth is enabled
