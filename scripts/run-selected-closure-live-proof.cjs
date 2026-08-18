@@ -13,12 +13,13 @@ const readline = require('node:readline');
 const { pathToFileURL } = require('node:url');
 const yaml = require('js-yaml');
 
-const { defaultPgUrl } = require('./run-temporal-postgres-proof.cjs');
 const {
   buildCoordinatedTemporalWorkerEnv,
   buildLocalDbtArtifactEnv,
   ensureLocalWarehouseConnectionViaApi,
+  resolveDatabaseUrl,
   seedLocalPostgresProofData,
+  shouldBootstrapLocalPostgres,
   waitForUrlOrProcessExit,
 } = require('./run-dev-stack.cjs');
 const {
@@ -126,7 +127,11 @@ async function waitForUrl(url, validator, label) {
   );
 }
 
-function ensureLocalPostgresReady() {
+function ensureLocalPostgresReady(shouldBootstrap) {
+  if (!shouldBootstrap) {
+    return;
+  }
+
   const result = spawnSync(process.execPath, [POSTGRES_BOOTSTRAP_SCRIPT, 'up'], {
     stdio: 'inherit',
     env: process.env,
@@ -140,6 +145,14 @@ function ensureLocalPostgresReady() {
   if (result.status !== 0) {
     throw new Error(`Local Postgres bootstrap failed with exit code ${result.status}`);
   }
+}
+
+function resolveLiveProofDatabaseUrl(sourceEnv = process.env) {
+  const options = { skipPostgres: false };
+  return {
+    databaseUrl: resolveDatabaseUrl(options, sourceEnv),
+    shouldBootstrap: shouldBootstrapLocalPostgres(options, sourceEnv),
+  };
 }
 
 async function loadTemporalTesting() {
@@ -365,6 +378,46 @@ function buildLiveProofCypressDockerInvocation(
   ];
 }
 
+function buildLiveProofCypressNativeInvocation(args) {
+  const specPrefix = '/repo/apps/web/';
+  if (!args.specPath.startsWith(specPrefix)) {
+    throw new Error('Native Cypress live proof requires a governed web spec path.');
+  }
+
+  return {
+    command: PNPM_COMMAND,
+    args: [
+      '--filter',
+      '@dvt/web',
+      'exec',
+      'cypress',
+      'run',
+      '--config-file',
+      'cypress.config.ts',
+      '--browser',
+      'chrome',
+      '--spec',
+      args.specPath.slice(specPrefix.length),
+    ],
+    env: {
+      CYPRESS_baseUrl: `http://127.0.0.1:${args.webPort}`,
+      CYPRESS_apiBaseUrl: `http://127.0.0.1:${args.apiPort}`,
+      CYPRESS_apiBearerToken: args.apiBearerToken,
+      CYPRESS_workspaceTenantId: args.workspaceScope.tenantId,
+      CYPRESS_workspaceProjectId: args.workspaceScope.projectId,
+      CYPRESS_workspaceEnvironmentId: args.workspaceScope.environmentId,
+    },
+  };
+}
+
+function resolveLiveProofCypressRuntime(sourceEnv = process.env) {
+  const runtime = readNonEmptyEnv(sourceEnv.DVT_SELECTED_CLOSURE_CYPRESS_RUNTIME) ?? 'docker';
+  if (runtime !== 'docker' && runtime !== 'native') {
+    throw new Error('DVT_SELECTED_CLOSURE_CYPRESS_RUNTIME must be docker or native.');
+  }
+  return runtime;
+}
+
 function resolveLiveProofWorkspaceFilesRoot(liveProofSchema, sourceEnv = process.env) {
   return (
     readNonEmptyEnv(sourceEnv.DVT_WORKSPACE_FILES_ROOT) ??
@@ -534,11 +587,21 @@ async function seedSelectedClosureLocalWarehouseProof(
   await deps.seedLocalPostgresProofData(databaseUrl);
 }
 
-async function runCypress(args) {
-  const child = spawn('docker', buildLiveProofCypressDockerInvocation(args), {
-    stdio: 'inherit',
-    windowsHide: true,
-  });
+async function runCypress(args, runtime) {
+  const nativeInvocation =
+    runtime === 'native' ? buildLiveProofCypressNativeInvocation(args) : undefined;
+  const childEnv = { ...process.env, ...(nativeInvocation?.env ?? {}) };
+  delete childEnv.ELECTRON_RUN_AS_NODE;
+  const child = spawn(
+    nativeInvocation?.command ?? 'docker',
+    nativeInvocation?.args ?? buildLiveProofCypressDockerInvocation(args),
+    {
+      stdio: 'inherit',
+      env: childEnv,
+      shell: runtime === 'native' && process.platform === 'win32',
+      windowsHide: true,
+    }
+  );
 
   const exitCode = await new Promise((resolve, reject) => {
     child.once('error', reject);
@@ -559,7 +622,9 @@ async function runCypress(args) {
 async function main() {
   const specPath = resolveLiveProofSpecPath();
   const dbtExecutable = resolveLiveProofDbtExecutable();
-  ensureLocalPostgresReady();
+  const cypressRuntime = resolveLiveProofCypressRuntime();
+  const { databaseUrl, shouldBootstrap } = resolveLiveProofDatabaseUrl();
+  ensureLocalPostgresReady(shouldBootstrap);
 
   const { TestWorkflowEnvironment } = await loadTemporalTesting();
   const timeSkippingOptions = buildLiveProofTemporalTimeSkippingOptions();
@@ -584,7 +649,7 @@ async function main() {
     const hasExternallyManagedAnalyzerProfile =
       readNonEmptyEnv(process.env.DVT_DBT_ANALYZER_PROFILES_DIR) !== undefined;
     const apiEnv = buildLiveProofApiEnv({
-      databaseUrl: defaultPgUrl,
+      databaseUrl,
       dbtExecutable,
       liveProofSchema,
       temporalWorkerAdminPort: await allocateFreePort(LOCAL_AUTH_HOST),
@@ -622,7 +687,7 @@ async function main() {
     );
 
     await seedLocalProtectedRuntimeGrant({
-      databaseUrl: defaultPgUrl,
+      databaseUrl,
       schema: liveProofSchema,
       principalId: localProtectedRuntimeAuth.principalId,
       tenantActions: LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS,
@@ -672,7 +737,9 @@ async function main() {
         '--strictPort',
       ],
       {
-        VITE_API_BASE_URL: `http://host.docker.internal:${DEFAULT_API_PORT}`,
+        VITE_API_BASE_URL: `http://${
+          cypressRuntime === 'native' ? '127.0.0.1' : 'host.docker.internal'
+        }:${DEFAULT_API_PORT}`,
         ...localProtectedRuntimeAuth.webEnv,
         VITE_DEFAULT_TENANT_ID: localProtectedRuntimeAuth.workspaceScope.tenantId,
         VITE_DEFAULT_PROJECT_ID: localProtectedRuntimeAuth.workspaceScope.projectId,
@@ -692,16 +759,19 @@ async function main() {
       'Web dev server'
     );
 
-    await runCypress({
-      apiPort: DEFAULT_API_PORT,
-      webPort: DEFAULT_WEB_PORT,
-      apiBearerToken: localProtectedRuntimeAuth.webEnv.VITE_API_BEARER_TOKEN,
-      workspaceScope: localProtectedRuntimeAuth.workspaceScope,
-      specPath,
-    });
+    await runCypress(
+      {
+        apiPort: DEFAULT_API_PORT,
+        webPort: DEFAULT_WEB_PORT,
+        apiBearerToken: localProtectedRuntimeAuth.webEnv.VITE_API_BEARER_TOKEN,
+        workspaceScope: localProtectedRuntimeAuth.workspaceScope,
+        specPath,
+      },
+      cypressRuntime
+    );
   } finally {
     await shutdown();
-    await dropSchemaIfExists(defaultPgUrl, liveProofSchema);
+    await dropSchemaIfExists(databaseUrl, liveProofSchema);
     await rm(path.join(SELECTED_CLOSURE_LIVE_PROOF_ROOT, liveProofSchema), {
       recursive: true,
       force: true,
@@ -711,11 +781,14 @@ async function main() {
 
 module.exports = {
   buildLiveProofCypressDockerInvocation,
+  buildLiveProofCypressNativeInvocation,
   buildLiveProofApiEnv,
   buildLiveProofTemporalWorkerEnv,
   buildLiveProofTemporalTimeSkippingOptions,
   prepareLiveProofDbtAnalyzerProfile,
   resolveLiveProofDbtExecutable,
+  resolveLiveProofDatabaseUrl,
+  resolveLiveProofCypressRuntime,
   resolveLiveProofSpecPath,
   seedSelectedClosureLocalWarehouseProof,
 };

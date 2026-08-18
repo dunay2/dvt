@@ -5,6 +5,7 @@ Baseline: `main@32cfaf6d31fa5ca789bdb390def95d27f5d71f59`
 Governing epic: #2254
 Working issues: #2255, #2256, #2257
 Related owners: #2195, #2170, #2171, #2173, #2174, #2176
+Fowler governance: [Fowler opportunity planning governance](../../../architecture/fowler-opportunity-planning-governance.md)
 
 ## 1. Purpose
 

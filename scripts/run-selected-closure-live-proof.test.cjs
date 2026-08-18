@@ -7,11 +7,14 @@ const yaml = require('js-yaml');
 
 const {
   buildLiveProofCypressDockerInvocation,
+  buildLiveProofCypressNativeInvocation,
   buildLiveProofApiEnv,
   buildLiveProofTemporalWorkerEnv,
   buildLiveProofTemporalTimeSkippingOptions,
   prepareLiveProofDbtAnalyzerProfile,
   resolveLiveProofDbtExecutable,
+  resolveLiveProofDatabaseUrl,
+  resolveLiveProofCypressRuntime,
   resolveLiveProofSpecPath,
   seedSelectedClosureLocalWarehouseProof,
 } = require('./run-selected-closure-live-proof.cjs');
@@ -127,6 +130,69 @@ test('buildLiveProofCypressDockerInvocation mirrors Windows junction targets rea
     '-w',
     '/repo/apps/web',
   ]);
+});
+
+test('buildLiveProofCypressNativeInvocation targets the already running host stack', () => {
+  assert.deepEqual(
+    buildLiveProofCypressNativeInvocation({
+      apiPort: 3300,
+      webPort: 4174,
+      apiBearerToken: 'proof-token',
+      specPath: '/repo/apps/web/cypress/e2e/dbt/dbt-project-import-source-live.cy.ts',
+      workspaceScope: {
+        tenantId: 'tenant',
+        projectId: 'project',
+        environmentId: 'dev',
+      },
+    }),
+    {
+      command: process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm',
+      args: [
+        '--filter',
+        '@dvt/web',
+        'exec',
+        'cypress',
+        'run',
+        '--config-file',
+        'cypress.config.ts',
+        '--browser',
+        'chrome',
+        '--spec',
+        'cypress/e2e/dbt/dbt-project-import-source-live.cy.ts',
+      ],
+      env: {
+        CYPRESS_baseUrl: 'http://127.0.0.1:4174',
+        CYPRESS_apiBaseUrl: 'http://127.0.0.1:3300',
+        CYPRESS_apiBearerToken: 'proof-token',
+        CYPRESS_workspaceTenantId: 'tenant',
+        CYPRESS_workspaceProjectId: 'project',
+        CYPRESS_workspaceEnvironmentId: 'dev',
+      },
+    }
+  );
+});
+
+test('live proof selects Docker by default and native Cypress only when explicitly requested', () => {
+  assert.equal(resolveLiveProofCypressRuntime({}), 'docker');
+  assert.equal(
+    resolveLiveProofCypressRuntime({ DVT_SELECTED_CLOSURE_CYPRESS_RUNTIME: 'native' }),
+    'native'
+  );
+  assert.throws(
+    () => resolveLiveProofCypressRuntime({ DVT_SELECTED_CLOSURE_CYPRESS_RUNTIME: 'remote' }),
+    /must be docker or native/
+  );
+});
+
+test('live proof reuses an explicit database and otherwise keeps local bootstrap behavior', () => {
+  assert.deepEqual(resolveLiveProofDatabaseUrl({ DATABASE_URL: 'postgresql://host/proof' }), {
+    databaseUrl: 'postgresql://host/proof',
+    shouldBootstrap: false,
+  });
+  assert.deepEqual(resolveLiveProofDatabaseUrl({}), {
+    databaseUrl: defaultPgUrl,
+    shouldBootstrap: true,
+  });
 });
 
 test('resolveLiveProofSpecPath rejects paths outside the governed Cypress E2E surface', () => {
