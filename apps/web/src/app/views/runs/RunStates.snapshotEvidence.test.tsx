@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
-import React from 'react';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import React, { act } from 'react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { RunWorkspaceViewModel } from '../../services/runs/runWorkspaceModel';
 import { RunWorkspaceState } from './RunStates';
@@ -9,12 +9,14 @@ import {
   buildWorkspace,
   createRunStatesHarness,
   selectRunDetailTab,
+  setRunStatesLanguage,
 } from './test/RunStatesHarness';
 
 describe('RunStates snapshot evidence', () => {
   let harness: ReturnType<typeof createRunStatesHarness>;
 
   beforeEach(() => {
+    setRunStatesLanguage('en');
     harness = createRunStatesHarness();
   });
 
@@ -117,6 +119,120 @@ describe('RunStates snapshot evidence', () => {
     expect(harness.container.textContent).toContain('postgres');
     expect(harness.container.textContent).toContain('analytics.orders_daily');
     expect(harness.container.textContent).toContain('42');
+  });
+
+  it('loads a bounded current destination sample from persisted materialization evidence', async () => {
+    const loadMaterializationSample = vi.fn().mockResolvedValue({
+      contractVersion: 1,
+      connectionId: 'postgresql-local',
+      objectId: 'relation/dvt/public/sink_1',
+      columns: [
+        { name: 'order_id', type: 'integer', nullable: false },
+        { name: 'customer', type: 'text', nullable: true },
+      ],
+      rows: [{ values: ['1', 'Ada'] }, { values: ['2', null] }],
+      limit: 20,
+      truncated: true,
+      sampledAt: '2026-08-18T10:00:00.000Z',
+    });
+
+    await harness.render(
+      <RunWorkspaceState
+        workspace={buildWorkspace({
+          snapshot: {
+            runId: 'run_123',
+            status: 'completed',
+            executor: 'postgres',
+            startedAt: '2026-08-18T09:59:00.000Z',
+            completedAt: '2026-08-18T10:00:00.000Z',
+            environment: 'dev',
+            execution: {
+              materialization: {
+                executor: 'postgres',
+                environmentId: 'env-1',
+                sinkTable: 'public.sink_1',
+                rowsWritten: 118,
+                startedAt: '2026-08-18T09:59:30.000Z',
+                completedAt: '2026-08-18T10:00:00.000Z',
+                durationMs: 30000,
+              },
+            },
+          },
+        })}
+        loadMaterializationSample={loadMaterializationSample}
+      />
+    );
+
+    await selectRunDetailTab(harness.container, 'Result');
+    expect(loadMaterializationSample).not.toHaveBeenCalled();
+
+    const loadButton = Array.from(harness.container.querySelectorAll('button')).find(
+      (button) => button.textContent === 'View result data'
+    );
+    expect(loadButton).toBeDefined();
+
+    await act(async () => {
+      loadButton?.click();
+    });
+
+    expect(loadMaterializationSample).toHaveBeenCalledWith('run_123', 20);
+    expect(harness.container.textContent).toContain('Current destination sample');
+    expect(harness.container.textContent).toContain('Showing 2 of 118 written rows.');
+    expect(harness.container.textContent).toContain(
+      'This is a current sample of the destination and may differ after later writes.'
+    );
+    expect(harness.container.textContent).toContain('Only the first 20 rows are shown.');
+    expect(harness.container.querySelector('[data-slot="run-result-sample-table"]')).not.toBeNull();
+    expect(harness.container.textContent).toContain('order_id');
+    expect(harness.container.textContent).toContain('customer');
+    expect(harness.container.textContent).toContain('Ada');
+    expect(harness.container.textContent).toContain('NULL');
+  });
+
+  it('translates a result sample load failure without hiding persisted evidence', async () => {
+    setRunStatesLanguage('es');
+    const loadMaterializationSample = vi.fn().mockRejectedValue(new Error('transport detail'));
+
+    await harness.render(
+      <RunWorkspaceState
+        workspace={buildWorkspace({
+          snapshot: {
+            runId: 'run_123',
+            status: 'completed',
+            startedAt: '2026-08-18T09:59:00.000Z',
+            completedAt: '2026-08-18T10:00:00.000Z',
+            execution: {
+              materialization: {
+                executor: 'postgres',
+                environmentId: 'env-1',
+                sinkTable: 'public.sink_1',
+                rowsWritten: 118,
+                startedAt: '2026-08-18T09:59:30.000Z',
+                completedAt: '2026-08-18T10:00:00.000Z',
+                durationMs: 30000,
+              },
+            },
+          },
+        })}
+        loadMaterializationSample={loadMaterializationSample}
+      />
+    );
+
+    await selectRunDetailTab(harness.container, 'Resultado');
+    const loadButton = Array.from(harness.container.querySelectorAll('button')).find(
+      (button) => button.textContent === 'Ver datos resultantes'
+    );
+
+    await act(async () => {
+      loadButton?.click();
+    });
+
+    expect(harness.container.textContent).toContain('Filas escritas');
+    expect(harness.container.textContent).toContain('118');
+    expect(harness.container.textContent).toContain(
+      'No se pudo cargar la muestra actual del destino.'
+    );
+    expect(harness.container.textContent).not.toContain('transport detail');
   });
 
   it('renders failure diagnostics without materialization evidence on failed snapshots', async () => {

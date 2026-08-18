@@ -133,6 +133,19 @@ const RUN_STATES_COPY_EN = {
   sinkTableLabel: 'Sink table',
   rowsWrittenLabel: 'Rows written',
   durationLabel: 'Duration',
+  resultSampleTitle: 'Current destination sample',
+  resultSampleDescription:
+    'This is a current sample of the destination and may differ after later writes.',
+  viewResultDataAction: 'View result data',
+  resultSampleLoading: 'Loading result data...',
+  resultSampleSummary: (shownRows: number, writtenRows: number) =>
+    `Showing ${shownRows.toLocaleString('en-US')} of ${writtenRows.toLocaleString('en-US')} written rows.`,
+  resultSampleTruncated: (limit: number) => `Only the first ${limit} rows are shown.`,
+  resultSampleObservedAt: 'Sample observed:',
+  resultSampleEmpty: 'The destination currently contains no rows.',
+  resultSampleUnavailable: 'The current destination sample could not be loaded.',
+  resultSampleTableCaption: 'Current destination row sample',
+  resultSampleNullValue: 'NULL',
   noResultEvidence:
     'Result evidence is not available yet for this run snapshot. This view only shows persisted fields returned by runtime read surfaces.',
   provenanceTitle: 'Execution provenance',
@@ -274,6 +287,19 @@ const RUN_STATES_COPY_ES = {
   sinkTableLabel: 'Tabla de destino',
   rowsWrittenLabel: 'Filas escritas',
   durationLabel: 'Duración',
+  resultSampleTitle: 'Muestra actual del destino',
+  resultSampleDescription:
+    'Es una muestra actual del destino y puede variar si se realizan escrituras posteriores.',
+  viewResultDataAction: 'Ver datos resultantes',
+  resultSampleLoading: 'Cargando datos resultantes...',
+  resultSampleSummary: (shownRows: number, writtenRows: number) =>
+    `Se muestran ${shownRows.toLocaleString('es-ES')} de ${writtenRows.toLocaleString('es-ES')} filas escritas.`,
+  resultSampleTruncated: (limit: number) => `Solo se muestran las primeras ${limit} filas.`,
+  resultSampleObservedAt: 'Muestra observada:',
+  resultSampleEmpty: 'El destino no contiene filas actualmente.',
+  resultSampleUnavailable: 'No se pudo cargar la muestra actual del destino.',
+  resultSampleTableCaption: 'Muestra actual de filas del destino',
+  resultSampleNullValue: 'NULO',
   noResultEvidence:
     'La evidencia del resultado todavía no está disponible en esta instantánea. Esta vista solo muestra campos persistidos devueltos por las superficies de lectura del runtime.',
   provenanceTitle: 'Procedencia de la ejecución',

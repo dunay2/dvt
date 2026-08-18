@@ -3,7 +3,7 @@
  * while keeping platform-owned run identity out of client requests.
  */
 import type { ExecutionSelection } from '@dvt/contracts';
-import { parseRunEventRecord } from '@dvt/contracts';
+import { parseRunEventRecord, SourceDataSampleResponseSchema } from '@dvt/contracts';
 
 import type {
   IRunsPort,
@@ -103,6 +103,15 @@ export function createApiRunsService(
         .map(mapSnapshotToSummary);
     },
     getRunSnapshot: getRunSnapshotById,
+    getRunMaterializationSample: async (runId, limit) => {
+      const scopeQuery = new URLSearchParams(buildTenantScopeQuery(sessionContext, false));
+      scopeQuery.set('limit', String(limit));
+      return SourceDataSampleResponseSchema.parse(
+        await apiClient.getJson<unknown>(
+          `/runs/${runId}/materialization-rows?${scopeQuery.toString()}`
+        )
+      );
+    },
     cancelRun: async (runId) => {
       const { tenantId } = sessionContext.getWorkspaceScope();
       try {
