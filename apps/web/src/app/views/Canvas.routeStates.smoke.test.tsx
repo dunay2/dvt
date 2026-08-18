@@ -114,14 +114,7 @@ describe('Canvas persisted run reference', () => {
               status: 'idle',
               role: 'output',
               pluginKind: 'dvt:sink',
-              metadata: {
-                config: {
-                  schema: 'public',
-                  table: 'sink_1',
-                  materialization: 'table',
-                  writeMode: 'replace',
-                },
-              },
+              metadata: { typeLabel: 'Sink' },
             },
           },
         ],
@@ -132,8 +125,7 @@ describe('Canvas persisted run reference', () => {
     await waitFor(() => {
       const sink = (
         currentCanvasRouteState().viewportProps?.nodesWithImpact as
-          | Array<{ data?: { rows?: number } }>
-          | undefined
+          Array<{ data?: { rows?: number } }> | undefined
       )?.find((node) => node.data?.rows === 3);
       expect(sink?.data?.rows).toBe(3);
     });
