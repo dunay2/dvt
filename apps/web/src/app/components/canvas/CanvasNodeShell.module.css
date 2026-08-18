@@ -8,9 +8,13 @@
   height: 1.75rem !important;
   border: 0 !important;
   background: transparent !important;
-  cursor: crosshair;
+  cursor: grab;
   --node-port-ring: var(--canvas-node-port-control-ring);
   --node-port-fill: var(--canvas-node-port-control-fill);
+}
+
+.portHandle:active {
+  cursor: grabbing;
 }
 
 .portHandle::before {
