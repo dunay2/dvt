@@ -187,12 +187,8 @@ describe('DvtAuthoringFields', () => {
   it('renders imported source target metadata and updates the source alias draft', () => {
     renderFields(buildImportedWarehouseSourceNode());
 
-    const schemaInput = container.querySelector(
-      'input[name="dvt-source-schema"]'
-    ) as HTMLInputElement | null;
-    const tableInput = container.querySelector(
-      'input[name="dvt-source-table"]'
-    ) as HTMLInputElement | null;
+    const schemaFact = container.querySelector('[data-slot="dvt-source-schema-readonly"]');
+    const tableFact = container.querySelector('[data-slot="dvt-source-table-readonly"]');
     const aliasInput = container.querySelector(
       'input[name="dvt-source-alias"]'
     ) as HTMLInputElement | null;
@@ -201,8 +197,12 @@ describe('DvtAuthoringFields', () => {
     expect(container.textContent).toContain('erp.orders');
     expect(container.textContent).not.toContain('analytics.erp.orders');
     expect(container.querySelector('input[name="dvt-source-database"]')).toBeNull();
-    expect(schemaInput?.value).toBe('erp');
-    expect(tableInput?.value).toBe('orders');
+    expect(container.querySelector('input[name="dvt-source-schema"]')).toBeNull();
+    expect(container.querySelector('input[name="dvt-source-table"]')).toBeNull();
+    expect(schemaFact?.textContent).toBe('erp');
+    expect(schemaFact?.getAttribute('aria-label')).toBe('Schema: erp');
+    expect(tableFact?.textContent).toBe('orders');
+    expect(tableFact?.getAttribute('aria-label')).toBe('Table: orders');
     expect(aliasInput?.value).toBe('warehouse_prod_analytics_erp');
 
     act(() => {
@@ -210,6 +210,32 @@ describe('DvtAuthoringFields', () => {
     });
 
     expect(draftJson()).toContain('"alias":"orders_src"');
+  });
+
+  it('keeps manually authored source schema and table editable', () => {
+    renderFields(
+      buildDvtNode('dvt:source', {
+        config: { schema: 'raw', table: 'orders', alias: 'raw_orders' },
+      })
+    );
+
+    const schemaInput = container.querySelector(
+      'input[name="dvt-source-schema"]'
+    ) as HTMLInputElement | null;
+    const tableInput = container.querySelector(
+      'input[name="dvt-source-table"]'
+    ) as HTMLInputElement | null;
+
+    expect(schemaInput?.value).toBe('raw');
+    expect(tableInput?.value).toBe('orders');
+
+    act(() => {
+      fireEvent.input(schemaInput!, { target: { value: 'curated' } });
+      fireEvent.input(tableInput!, { target: { value: 'orders_daily' } });
+    });
+
+    expect(draftJson()).toContain('"schema":"curated"');
+    expect(draftJson()).toContain('"table":"orders_daily"');
   });
 
   it('renders SQL transform feedback and updates the SQL draft', () => {

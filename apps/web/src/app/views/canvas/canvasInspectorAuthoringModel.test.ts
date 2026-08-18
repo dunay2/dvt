@@ -374,7 +374,7 @@ describe('canvasInspectorAuthoringModel', () => {
     });
   });
 
-  it('applies imported warehouse source edits without dropping server-owned metadata', () => {
+  it('applies imported warehouse source edits without changing its physical identity', () => {
     const node = buildImportedWarehouseSourceNode();
     const draft = {
       name: 'Warehouse Orders',
@@ -396,8 +396,6 @@ describe('canvasInspectorAuthoringModel', () => {
       metadata: {
         ...node.metadata,
         config: {
-          schema: 'warehouse_raw',
-          table: 'orders_final',
           alias: 'orders_src',
         },
       },
