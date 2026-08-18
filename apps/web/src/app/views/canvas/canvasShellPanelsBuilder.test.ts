@@ -32,6 +32,7 @@ function buildArgs(
       inspectorGraphEdges: [],
       canEditInspectorNode: true,
       applyInspectorNodeDraft: vi.fn(),
+      convertInspectorVisualTransformToSql: vi.fn(),
       activeRunId: null,
       registeredPlugins: new Set(['dvt']),
       runtimeCapabilities: undefined,
@@ -127,12 +128,14 @@ describe('buildCanvasShellPanels', () => {
 
   it('projects only the authoring authority consumed by the contextual Workbench', () => {
     const onApplyNodeDraft = vi.fn();
+    const onConvertVisualTransformToSql = vi.fn();
     const panels = buildCanvasShellPanels(
       buildArgs({
         panelState: {
           ...buildArgs().panelState,
           inspectorNode: buildInspectorNode(),
           applyInspectorNodeDraft: onApplyNodeDraft,
+          convertInspectorVisualTransformToSql: onConvertVisualTransformToSql,
         },
       })
     );
@@ -140,6 +143,7 @@ describe('buildCanvasShellPanels', () => {
     expect(panels.inspectorAuthoring).toEqual({
       canEditNode: true,
       onApplyNodeDraft,
+      onConvertVisualTransformToSql,
     });
   });
 

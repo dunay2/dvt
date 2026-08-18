@@ -630,7 +630,8 @@ describe('CanvasNodeWorkbenchPanel', () => {
     act(() => {
       fireEvent.click(convertButton!);
     });
-    const confirmButton = Array.from(document.body.querySelectorAll('button')).find(
+    const dialog = document.body.querySelector('[data-slot="alert-dialog-content"]');
+    const confirmButton = Array.from(dialog?.querySelectorAll('button') ?? []).find(
       (button) => button.textContent?.trim() === 'Convert to SQL'
     );
     act(() => {
