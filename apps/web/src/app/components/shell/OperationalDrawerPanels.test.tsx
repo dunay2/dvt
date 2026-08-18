@@ -152,6 +152,7 @@ describe('OperationalDrawerPanels', () => {
   });
 
   it('renders a bounded source sample as an accessible data table', async () => {
+    const longPayload = '{"runId":"run_019fc867-d439-7319-995f-4af3457311ba","planId":"5579993a"}';
     const contribution = buildCanvasOperationalDrawerContribution({
       tabs: [
         { id: 'log', label: 'Log', count: null },
@@ -171,7 +172,7 @@ describe('OperationalDrawerPanels', () => {
             { name: 'order_id', type: 'integer', nullable: false },
             { name: 'customer', type: 'text', nullable: true },
           ],
-          rows: [{ values: ['1', 'Ada'] }, { values: ['2', null] }],
+          rows: [{ values: ['1', longPayload] }, { values: ['2', null] }],
           limit: 20,
           truncated: true,
           sampledAt: '2026-08-17T10:00:00.000Z',
@@ -193,7 +194,24 @@ describe('OperationalDrawerPanels', () => {
     expect(
       Array.from(table?.querySelectorAll('th[scope="col"]') ?? []).map((cell) => cell.textContent)
     ).toEqual(['order_id', 'customer']);
-    expect(table?.textContent).toContain('Ada');
+    expect(
+      Array.from(table?.querySelectorAll('th[scope="col"]') ?? []).every((cell) =>
+        cell.className.includes('border-r')
+      )
+    ).toBe(true);
+    expect(
+      Array.from(table?.querySelectorAll('td') ?? []).every((cell) =>
+        cell.className.includes('border-r')
+      )
+    ).toBe(true);
+    const longValue = table?.querySelector<HTMLElement>(
+      '[data-slot="bottom-operational-data-value"][title]'
+    );
+    expect(longValue?.textContent).toBe(longPayload);
+    expect(longValue?.getAttribute('title')).toBe(longPayload);
+    expect(longValue?.getAttribute('aria-label')).toBe(longPayload);
+    expect(longValue?.className).toContain('truncate');
+    expect(longValue?.className).toContain('max-w-');
     expect(table?.textContent).toContain('NULL');
     expect(container.textContent).toContain('Showing 20 rows.');
   });
