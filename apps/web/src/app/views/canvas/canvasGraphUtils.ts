@@ -28,7 +28,12 @@ function resolveLayoutPosition(
 export function getLayoutedElements(nodes: Node[], edges: Edge[], options: LayoutOptions = {}) {
   const dagreGraph = new dagre.graphlib.Graph();
   dagreGraph.setDefaultEdgeLabel(() => ({}));
-  dagreGraph.setGraph({ rankdir: 'LR', ranksep: 150, nodesep: 100 });
+  dagreGraph.setGraph({
+    rankdir: 'LR',
+    ranker: 'longest-path',
+    ranksep: 150,
+    nodesep: 100,
+  });
 
   nodes.forEach((node) => {
     dagreGraph.setNode(node.id, { width: 200, height: 80 });

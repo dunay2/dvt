@@ -66,6 +66,20 @@ describe('large Canvas graph regression fixture', () => {
       expect(new Set(layouted.nodes.map((node) => node.id)).size).toBe(LARGE_GRAPH_NODE_COUNT);
       expect(layouted.edges).toHaveLength(LARGE_GRAPH_EDGE_COUNT);
       expect(layouted.edges).toEqual(graph.edges);
+      const positionsByNodeId = new Map(
+        layouted.nodes.map((node) => [node.id, node.position] as const)
+      );
+      expect(
+        layouted.edges.every((edge) => {
+          const sourcePosition = positionsByNodeId.get(edge.source);
+          const targetPosition = positionsByNodeId.get(edge.target);
+          return (
+            sourcePosition !== undefined &&
+            targetPosition !== undefined &&
+            sourcePosition.x < targetPosition.x
+          );
+        })
+      ).toBe(true);
       expect(
         layouted.nodes.every((node) =>
           [node.position.x, node.position.y].every(
