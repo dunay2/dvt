@@ -605,7 +605,7 @@ describe('warehouseSourceImportRoutes', () => {
     expect(response.json()).toEqual({ status: 'valid' });
     expect(validateSql).toHaveBeenCalledWith({
       credentialRef: 'postgres:warehouse',
-      sql: 'select * from public.orders',
+      sql: ['SELECT *', 'FROM public.orders'].join('\n'),
     });
   });
 
