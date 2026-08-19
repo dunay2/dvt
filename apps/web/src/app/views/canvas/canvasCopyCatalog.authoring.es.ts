@@ -289,7 +289,7 @@ export const canvasViewAuthoringCopyEs = {
   inspectorErrorHttpJsonSha256Invalid:
     'El SHA-256 debe contener exactamente 64 caracteres hexadecimales.',
   inspectorErrorHttpJsonSizeInvalid:
-    'El tamaño esperado debe ser un número de bytes positivo y admitido.',
+    'El tamaño esperado debe ser positivo, no superar 50000000 bytes y no superar el tamaño máximo.',
   inspectorErrorHttpJsonMaxBytesInvalid:
     'El tamaño máximo debe ser positivo, no superar 50000000 bytes y no ser inferior al tamaño esperado.',
   inspectorErrorHttpJsonStorageUriInvalid:
