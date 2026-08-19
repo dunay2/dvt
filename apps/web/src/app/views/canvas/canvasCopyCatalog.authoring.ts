@@ -1117,11 +1117,13 @@ export const canvasViewAuthoringCopyByKey = {
   },
   inspectorErrorObjectFileSizeInvalid: {
     key: 'canvas.inspector.objectFile.errorSizeInvalid',
-    fallback: 'Object size must be a positive admitted byte count.',
+    fallback:
+      'Object size must be positive, no greater than 50000000 bytes, and no greater than maximum size.',
   },
   inspectorErrorObjectFileMaxBytesInvalid: {
     key: 'canvas.inspector.objectFile.errorMaxBytesInvalid',
-    fallback: 'Maximum size must be positive, bounded, and not smaller than object size.',
+    fallback:
+      'Maximum size must be positive, no greater than 50000000 bytes, and at least object size.',
   },
   inspectorErrorObjectFileSourceCredentialInvalid: {
     key: 'canvas.inspector.objectFile.errorSourceCredentialInvalid',
