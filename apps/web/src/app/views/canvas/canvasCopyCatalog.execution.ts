@@ -27,6 +27,11 @@ export const canvasViewExecutionCopyByKey = {
     fallback:
       'Preview stopped because this Canvas does not have exclusive graph-draft authority. Open the file-authoritative project or resolve the Canvas authority conflict.',
   },
+  planGraphDbtCompilationFailedMessage: {
+    key: 'canvas.plan.graphDbtCompilationFailedMessage',
+    fallback:
+      'Preview stopped because native DBT compilation did not validate the generated models. Review the model SQL and target configuration.',
+  },
   previewProvenanceTransformPathRequiredMessage: {
     key: 'canvas.preview.transformPathRequiredMessage',
     fallback:
