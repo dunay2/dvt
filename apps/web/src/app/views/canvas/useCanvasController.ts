@@ -52,6 +52,7 @@ export function useCanvasController() {
     navigationActions,
     store,
   } = environment;
+  const workspaceScope = sessionContext.getWorkspaceScopeSnapshot();
   const previousWorkspaceLayoutKeyRef = useRef(store.workspaceLayoutKey);
   const [impactFocusNodeId, setImpactFocusNodeId] = useState<string | null>(null);
 
@@ -94,7 +95,7 @@ export function useCanvasController() {
     inspectorNodeId: store.inspectorNodeId,
     canPersistGraphDraftTransport: store.userPermissions.canPersistGraphDraft,
     canMutateGraphTransport: store.userPermissions.canEditEdges,
-    workspaceScope: sessionContext.getWorkspaceScopeSnapshot(),
+    workspaceScope,
     previewProvenanceConfig: workspaceBootstrapConfig,
     setCanvasNodePositions: store.setCanvasNodePositions,
   });
@@ -395,6 +396,7 @@ export function useCanvasController() {
   const inspectorCommands = useCanvasInspectorCommands({
     inspectorNode,
     setDraftSession,
+    workspaceScope,
   });
 
   return buildCanvasControllerViewModel({

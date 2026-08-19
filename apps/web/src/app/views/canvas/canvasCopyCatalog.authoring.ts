@@ -1006,7 +1006,7 @@ export const canvasViewAuthoringCopyByKey = {
   },
   inspectorErrorHttpJsonStorageUriInvalid: {
     key: 'canvas.inspector.httpJson.errorStorageUriInvalid',
-    fallback: 'Enter the content-addressed S3 URI for the immutable artifact.',
+    fallback: 'Use s3://<bucket>/tenants/<tenant>/<sha256> for the immutable artifact.',
   },
   inspectorErrorHttpJsonArtifactCredentialRefInvalid: {
     key: 'canvas.inspector.httpJson.errorArtifactCredentialRefInvalid',

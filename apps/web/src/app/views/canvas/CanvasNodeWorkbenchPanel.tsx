@@ -251,7 +251,7 @@ export function CanvasNodeWorkbenchPanel({
   const copy = resolveCanvasViewCopy(applicationLanguage);
   const [activeTab, setActiveTab] = useState<string | undefined>(() => preferredTabId ?? undefined);
   const [appliedPreferredTabKey, setAppliedPreferredTabKey] = useState<string | null>(null);
-  const draftController = useCanvasNodeWorkbenchDraftController(node);
+  const draftController = useCanvasNodeWorkbenchDraftController(node, authoring.workspaceScope);
   const presentationTruth = useMemo(
     () => projectCanvasNodePresentationTruth({ node, nodes, edges }),
     [edges, node, nodes]

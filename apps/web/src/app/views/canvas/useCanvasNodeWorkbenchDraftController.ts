@@ -9,6 +9,7 @@ import {
 } from 'react';
 
 import type { CanonicalNode } from '../../types/canonical';
+import type { WorkspaceScope } from '../../ports/sessionContext';
 import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types';
 import {
   areCanvasInspectorNodeDraftsEqual,
@@ -47,7 +48,11 @@ type DraftControllerAction =
       type: 'tags-text-changed';
       update: SetStateAction<string>;
     }>
-  | Readonly<{ type: 'draft-submitted'; node: CanonicalNode }>
+  | Readonly<{
+      type: 'draft-submitted';
+      node: CanonicalNode;
+      workspaceScope: WorkspaceScope | undefined;
+    }>
   | Readonly<{ type: 'reset-requested' }>;
 
 function tagsTextFromDraft(draft: CanvasInspectorNodeDraft): string {
@@ -146,7 +151,11 @@ function reduceDraftControllerState(
     case 'draft-submitted':
       return {
         ...state,
-        submittedDraft: canonicalizeCanvasInspectorNodeDraft(action.node, state.draft),
+        submittedDraft: canonicalizeCanvasInspectorNodeDraft(
+          action.node,
+          state.draft,
+          action.workspaceScope
+        ),
       };
     case 'reset-requested':
       return createDraftControllerState(state.nodeId, state.authoritativeDraft);
@@ -154,7 +163,8 @@ function reduceDraftControllerState(
 }
 
 export function useCanvasNodeWorkbenchDraftController(
-  node: CanonicalNode
+  node: CanonicalNode,
+  workspaceScope?: WorkspaceScope
 ): CanvasNodeWorkbenchDraftController {
   const authoritativeDraft = useMemo(() => createCanvasInspectorNodeDraft(node), [node]);
   const [state, dispatch] = useReducer(
@@ -178,7 +188,10 @@ export function useCanvasNodeWorkbenchDraftController(
     (update) => dispatch({ type: 'tags-text-changed', update }),
     []
   );
-  const onDraftSubmitted = useCallback(() => dispatch({ type: 'draft-submitted', node }), [node]);
+  const onDraftSubmitted = useCallback(
+    () => dispatch({ type: 'draft-submitted', node, workspaceScope }),
+    [node, workspaceScope]
+  );
   const onResetDraft = useCallback(() => dispatch({ type: 'reset-requested' }), []);
 
   return useMemo(

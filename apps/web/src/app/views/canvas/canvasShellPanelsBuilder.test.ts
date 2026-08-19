@@ -48,6 +48,12 @@ function buildArgs(
       canManageRBAC: false,
     },
     routePresentation: {
+      workspaceScope: {
+        tenantId: 'tenant',
+        projectId: 'project',
+        environmentId: 'dev',
+        targetAdapter: 'temporal',
+      },
       canvasDocument: {
         id: 'transformation-canvas',
         kind: 'transformation',
@@ -100,6 +106,7 @@ describe('buildCanvasShellPanels', () => {
     const panels = buildCanvasShellPanels(
       buildArgs({
         routePresentation: {
+          workspaceScope: buildArgs().routePresentation.workspaceScope,
           canvasDocument: {
             id: 'transformation-canvas',
             kind: ' Transformation ',
@@ -142,6 +149,7 @@ describe('buildCanvasShellPanels', () => {
 
     expect(panels.inspectorAuthoring).toEqual({
       canEditNode: true,
+      workspaceScope: buildArgs().routePresentation.workspaceScope,
       onApplyNodeDraft,
       onConvertVisualTransformToSql,
     });

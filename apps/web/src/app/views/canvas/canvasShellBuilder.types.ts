@@ -74,7 +74,11 @@ export type CanvasShellPanelsBuilderArgs = Readonly<{
   userPermissions: CanvasRouteViewState['effectiveUserPermissions'];
   routePresentation: Pick<
     CanvasRouteViewState,
-    'canvasDocument' | 'canvasDocuments' | 'activeCanvasId' | 'availableCanvasKinds'
+    | 'workspaceScope'
+    | 'canvasDocument'
+    | 'canvasDocuments'
+    | 'activeCanvasId'
+    | 'availableCanvasKinds'
   >;
 }>;
 

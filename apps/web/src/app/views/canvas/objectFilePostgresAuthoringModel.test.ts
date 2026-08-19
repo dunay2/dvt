@@ -125,7 +125,7 @@ describe('object-file PostgreSQL authoring model', () => {
     expect(draft).not.toBeNull();
     if (draft == null) return;
 
-    expect(validateObjectFilePostgresAuthoringDraft(draft)).toEqual({
+    expect(validateObjectFilePostgresAuthoringDraft(draft, scope)).toEqual({
       ok: true,
       metadata: expect.objectContaining({
         source: expect.objectContaining({ sha256: 'a'.repeat(64) }),
@@ -134,7 +134,7 @@ describe('object-file PostgreSQL authoring model', () => {
     });
     expect(
       (
-        applyObjectFilePostgresAuthoringDraft(objectFileNode, draft).metadata
+        applyObjectFilePostgresAuthoringDraft(objectFileNode, draft, scope).metadata
           ?.objectFilePostgres as Record<string, unknown>
       ).scope
     ).toBeUndefined();
@@ -166,7 +166,7 @@ describe('object-file PostgreSQL authoring model', () => {
     expect(draft).not.toBeNull();
     if (draft == null) return;
 
-    expect(validateObjectFilePostgresAuthoringDraft(draft)).toEqual({
+    expect(validateObjectFilePostgresAuthoringDraft(draft, scope)).toEqual({
       ok: false,
       errors: expect.objectContaining({
         storageUri: 'object_file_storage_uri_invalid',
@@ -186,35 +186,50 @@ describe('object-file PostgreSQL authoring model', () => {
     if (draft == null) return;
 
     expect(
-      validateObjectFilePostgresAuthoringDraft({
-        ...draft,
-        sizeBytes: String(LOAD_OBJECT_FILE_TO_POSTGRES_MAX_BYTES + 1),
-      })
+      validateObjectFilePostgresAuthoringDraft(
+        {
+          ...draft,
+          sizeBytes: String(LOAD_OBJECT_FILE_TO_POSTGRES_MAX_BYTES + 1),
+        },
+        scope
+      )
     ).toMatchObject({ ok: false, errors: { sizeBytes: 'object_file_size_invalid' } });
     expect(
-      validateObjectFilePostgresAuthoringDraft({
-        ...draft,
-        maxBytes: String(LOAD_OBJECT_FILE_TO_POSTGRES_MAX_BYTES + 1),
-      })
+      validateObjectFilePostgresAuthoringDraft(
+        {
+          ...draft,
+          maxBytes: String(LOAD_OBJECT_FILE_TO_POSTGRES_MAX_BYTES + 1),
+        },
+        scope
+      )
     ).toMatchObject({ ok: false, errors: { maxBytes: 'object_file_max_bytes_invalid' } });
     expect(
-      validateObjectFilePostgresAuthoringDraft({
-        ...draft,
-        sizeBytes: '1001',
-        maxBytes: '1000',
-      })
+      validateObjectFilePostgresAuthoringDraft(
+        {
+          ...draft,
+          sizeBytes: '1001',
+          maxBytes: '1000',
+        },
+        scope
+      )
     ).toMatchObject({ ok: false, errors: { sizeBytes: 'object_file_size_invalid' } });
     expect(
-      validateObjectFilePostgresAuthoringDraft({
-        ...draft,
-        sizeBytes: '1.5',
-      })
+      validateObjectFilePostgresAuthoringDraft(
+        {
+          ...draft,
+          sizeBytes: '1.5',
+        },
+        scope
+      )
     ).toMatchObject({ ok: false, errors: { sizeBytes: 'object_file_size_invalid' } });
     expect(
-      validateObjectFilePostgresAuthoringDraft({
-        ...draft,
-        maxBytes: '1.5',
-      })
+      validateObjectFilePostgresAuthoringDraft(
+        {
+          ...draft,
+          maxBytes: '1.5',
+        },
+        scope
+      )
     ).toMatchObject({ ok: false, errors: { maxBytes: 'object_file_max_bytes_invalid' } });
   });
 });

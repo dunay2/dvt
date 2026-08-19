@@ -152,9 +152,9 @@ export function createObjectFilePostgresAuthoringDraft(
 }
 
 export function validateObjectFilePostgresAuthoringDraft(
-  draft: ObjectFilePostgresAuthoringDraft
+  draft: ObjectFilePostgresAuthoringDraft,
+  workspaceScope: ObjectFilePostgresExecutionScope
 ): ObjectFilePostgresAuthoringValidation {
-  const tenantId = resolveTenantId(draft.storageUri);
   const sourceCommon = {
     storageUri: draft.storageUri.trim(),
     sha256: draft.sha256.trim(),
@@ -179,9 +179,9 @@ export function validateObjectFilePostgresAuthoringDraft(
         };
   const parsed = LoadObjectFileToPostgresStepTypeConfigSchema.safeParse({
     scope: {
-      tenantId,
-      projectId: 'authoring',
-      environmentId: 'authoring',
+      tenantId: workspaceScope.tenantId,
+      projectId: workspaceScope.projectId,
+      environmentId: workspaceScope.environmentId,
     },
     source,
     target: {
@@ -211,9 +211,10 @@ export function validateObjectFilePostgresAuthoringDraft(
 
 export function applyObjectFilePostgresAuthoringDraft(
   node: CanonicalNode,
-  draft: ObjectFilePostgresAuthoringDraft
+  draft: ObjectFilePostgresAuthoringDraft,
+  workspaceScope: ObjectFilePostgresExecutionScope
 ): CanonicalNode {
-  const validation = validateObjectFilePostgresAuthoringDraft(draft);
+  const validation = validateObjectFilePostgresAuthoringDraft(draft, workspaceScope);
   if (!validation.ok) return node;
 
   return {
@@ -230,7 +231,11 @@ export function resolveObjectFilePostgresAuthoringMetadata(
 ): ObjectFilePostgresAuthoringMetadata | null {
   const draft = createObjectFilePostgresAuthoringDraft(node);
   if (draft == null) return null;
-  const validation = validateObjectFilePostgresAuthoringDraft(draft);
+  const validation = validateObjectFilePostgresAuthoringDraft(draft, {
+    tenantId: resolveTenantId(draft.storageUri),
+    projectId: 'artifact-projection',
+    environmentId: 'artifact-projection',
+  });
   return validation.ok ? validation.metadata : null;
 }
 
