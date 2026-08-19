@@ -262,6 +262,7 @@ export async function executeCanvasPlanAction({
 
     const graphSource = buildPreviewGraphSource({
       nodes: canonicalNodes,
+      edges: canonicalEdges,
       scopedNodeIds: selectedForPlan,
       sqlArtifact: previewProvenance.sqlArtifact,
       sqlText: previewProvenance.sqlText,

@@ -4,7 +4,7 @@ import {
   type TransformationSqlFirstCompilerGraphSourceV2,
 } from '@dvt/contracts';
 
-import type { CanonicalNode } from '../../types/canonical';
+import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 
 import {
   buildPreviewMetadata,
@@ -16,10 +16,21 @@ import {
 
 export type PreviewGraphSourceArgs = {
   nodes: readonly CanonicalNode[];
+  edges: readonly CanonicalEdge[];
   scopedNodeIds: readonly string[];
   sqlArtifact: GitArtifactRef;
   sqlText: string;
 };
+
+function resolveScopedDependencies(
+  targetNodeId: string,
+  edges: readonly CanonicalEdge[],
+  scopedNodeIds: readonly string[]
+): string[] {
+  return scopedNodeIds.filter((sourceNodeId) =>
+    edges.some((edge) => edge.sourceId === sourceNodeId && edge.targetId === targetNodeId)
+  );
+}
 
 export function buildPreviewGraphSource(
   args: PreviewGraphSourceArgs
@@ -37,7 +48,7 @@ export function buildPreviewGraphSource(
       {
         nodeId: source.id,
         stepKind: TRANSFORMATION_STEP_KIND.preparePostgresTransform,
-        dependsOn: [],
+        dependsOn: resolveScopedDependencies(source.id, args.edges, args.scopedNodeIds),
         stepTypeConfig: {
           connectionRef: source.payload.connectionRef,
           targetSchema: sink.payload.schema,
@@ -50,7 +61,7 @@ export function buildPreviewGraphSource(
       {
         nodeId: transform.id,
         stepKind: TRANSFORMATION_STEP_KIND.postgresSqlTransform,
-        dependsOn: [source.id],
+        dependsOn: resolveScopedDependencies(transform.id, args.edges, args.scopedNodeIds),
         stepTypeConfig: {
           connectionRef: source.payload.connectionRef,
           dialect: 'postgres',
@@ -70,7 +81,7 @@ export function buildPreviewGraphSource(
       {
         nodeId: sink.id,
         stepKind: TRANSFORMATION_STEP_KIND.captureMaterializationEvidence,
-        dependsOn: [transform.id],
+        dependsOn: resolveScopedDependencies(sink.id, args.edges, args.scopedNodeIds),
         stepTypeConfig: {
           connectionRef: source.payload.connectionRef,
           sinkSchema: sink.payload.schema,
