@@ -344,6 +344,71 @@ describe('useCanvasControllerReadModel', () => {
     }
   });
 
+  it('renders read-only column anchors for SQL converted from an exact visual recipe', async () => {
+    const sqlTransform = {
+      ...testNode,
+      id: 'converted-sql-transform-orders',
+      name: 'Converted orders SQL',
+      kind: 'dvt:sql_transform',
+      role: 'transform',
+      metadata: {
+        sql: 'select order_id from public.orders',
+        columns: [{ name: 'order_id', type: 'integer' }],
+        transformAuthoring: { version: 'v1', mode: 'sql' },
+        transformLineageProvenance: {
+          version: 'v1',
+          outputs: [
+            {
+              id: 'output:order_id',
+              name: 'order_id',
+              dataType: 'integer',
+              expression: {
+                inputs: [{ nodeId: testNode.id, columnName: 'order_id' }],
+                operations: [{ kind: 'passthrough' }],
+              },
+            },
+          ],
+          filters: [],
+        },
+      },
+    } satisfies CanonicalNode;
+    const graphNode = mapCanonicalNodeToCanvasNode({
+      canonicalNode: sqlTransform,
+      index: 0,
+      showColumns: true,
+    });
+    const base = buildReadModelArgs({ canMutateGraph: true });
+    const args: ReadModelArgs = {
+      ...base,
+      graphModel: {
+        nodes: [graphNode],
+        edges: [],
+        canonicalNodesById: new Map([[sqlTransform.id, sqlTransform]]),
+        onEdgesChange: vi.fn(),
+      },
+      visibleScope: {
+        canonicalNodes: [sqlTransform],
+        canonicalEdges: [],
+      },
+      executionScope: {
+        selectedNodeIds: [],
+        workspaceNodeIds: [sqlTransform.id],
+      },
+      columnLevelLineageEnabled: true,
+    };
+    const mounted = await renderReadModel(args);
+
+    try {
+      const nodeData = readProjectedNodeData(mounted.readState());
+
+      expect(nodeData?.columnPortDirections).toEqual(['target', 'source']);
+      expect(nodeData?.onColumnPortActivate).toBeUndefined();
+      expect(nodeData?.onAutomapColumns).toBeUndefined();
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
   it('preserves recorded column visibility through impact decoration when lineage overlay is off', async () => {
     const columns = [
       { name: 'order_id', type: 'integer' },

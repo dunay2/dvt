@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import { applyDvtVisualTransformRecipe } from './canvasDvtTransformAuthoringAuthority';
+import {
+  applyDvtVisualTransformRecipe,
+  convertDvtVisualTransformToSql,
+} from './canvasDvtTransformAuthoringAuthority';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 
 const source: CanonicalNode = {
@@ -193,6 +196,56 @@ describe('projectCanvasNodePresentationTruth', () => {
         '',
       ].join('\n'),
       path: 'models/transform-orders.sql',
+      language: 'sql',
+    });
+  });
+
+  it('keeps converted SQL output identities for read-only lineage anchors', () => {
+    const dvtModel = applyDvtVisualTransformRecipe(
+      {
+        ...model,
+        id: 'transform.converted',
+        pluginId: 'dvt',
+        kind: 'dvt:sql_transform',
+        metadata: {},
+      },
+      {
+        version: 'v1',
+        outputs: [
+          {
+            id: 'output:order_id',
+            name: 'order_id',
+            dataType: 'integer',
+            expression: {
+              inputs: [{ nodeId: source.id, columnName: 'order_id' }],
+              operations: [{ kind: 'passthrough' }],
+            },
+          },
+        ],
+        filters: [],
+      }
+    );
+    const convertedModel = convertDvtVisualTransformToSql(
+      dvtModel,
+      'select order_id from raw.orders'
+    );
+
+    const truth = projectCanvasNodePresentationTruth({
+      node: convertedModel,
+      nodes: [source, convertedModel],
+      edges: [{ ...edge, targetId: convertedModel.id }],
+    });
+
+    expect(truth.columns.visible).toEqual([
+      expect.objectContaining({
+        name: 'order_id',
+        provenance: 'declared',
+        reference: 'output:order_id',
+      }),
+    ]);
+    expect(truth.code).toEqual({
+      kind: 'inline',
+      content: 'select order_id from raw.orders',
       language: 'sql',
     });
   });

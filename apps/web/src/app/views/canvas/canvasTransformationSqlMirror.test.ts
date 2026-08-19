@@ -86,6 +86,11 @@ describe('canvasTransformationSqlMirror', () => {
         sql: 'select stale_column from old_orders',
       },
       owner: 'finance',
+      transformLineageProvenance: {
+        version: 'v1',
+        outputs: [],
+        filters: [],
+      },
     });
 
     expect(buildDvtSqlTransformMetadata(node, 'select order_id from raw.orders')).toEqual({

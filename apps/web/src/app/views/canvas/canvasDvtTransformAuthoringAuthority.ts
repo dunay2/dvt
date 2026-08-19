@@ -8,7 +8,11 @@ import {
 } from '@dvt/contracts';
 
 import type { CanonicalNode } from '../../types/canonical';
-import { buildDvtSqlTransformMetadata, readDraftSqlText } from './canvasTransformationSqlMirror';
+import {
+  DVT_TRANSFORM_LINEAGE_PROVENANCE_METADATA_KEY,
+  buildDvtSqlTransformMetadata,
+  readDraftSqlText,
+} from './canvasTransformationSqlMirror';
 
 export const DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY = 'transformAuthoring' as const;
 
@@ -48,6 +52,7 @@ function removeEditableSqlMetadata(node: CanonicalNode): Record<string, unknown>
     compiledSql: _compiledSql,
     config: rawConfig,
     [DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY]: _authority,
+    [DVT_TRANSFORM_LINEAGE_PROVENANCE_METADATA_KEY]: _lineageProvenance,
     ...metadataWithoutTransformAuthority
   } = node.metadata ?? {};
   const { sql: _configSql, ...configWithoutSql } = isRecord(rawConfig) ? rawConfig : {};
@@ -128,6 +133,7 @@ export function convertDvtVisualTransformToSql(
     ...node,
     metadata: {
       ...buildDvtSqlTransformMetadata(node, generatedSql),
+      [DVT_TRANSFORM_LINEAGE_PROVENANCE_METADATA_KEY]: currentAuthority.recipe,
       [DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY]: {
         version: VISUAL_TRANSFORM_RECIPE_VERSION,
         mode: DVT_TRANSFORM_AUTHORING_MODE.sql,

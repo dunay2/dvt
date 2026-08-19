@@ -65,6 +65,7 @@ describe('DVT transform authoring authority', () => {
         sql: 'select stale from raw.orders',
         selectedColumns: ['source-orders.order_id'],
       },
+      transformLineageProvenance: RECIPE,
     });
 
     const updated = applyDvtVisualTransformRecipe(node, RECIPE);
@@ -156,6 +157,7 @@ describe('DVT transform authoring authority', () => {
     expect(sqlNode.metadata).toEqual({
       sql: 'select order_id from raw.orders',
       config: { sql: 'select order_id from raw.orders' },
+      transformLineageProvenance: RECIPE,
       transformAuthoring: { version: 'v1', mode: 'sql' },
     });
     expect(readDvtTransformAuthoringAuthority(sqlNode)).toEqual({
@@ -173,10 +175,31 @@ describe('DVT transform authoring authority', () => {
 
     expect(sqlNode.metadata?.sql).toBe(generatedSql);
     expect(sqlNode.metadata?.config).toMatchObject({ sql: generatedSql });
+    expect(sqlNode.metadata?.transformLineageProvenance).toEqual(RECIPE);
     expect(readDvtTransformAuthoringAuthority(sqlNode)).toEqual({
       version: 'v1',
       mode: 'sql',
       sql: generatedSql,
+    });
+  });
+
+  it('persists converted SQL lineage provenance through the graph draft roundtrip', () => {
+    const visualNode = applyDvtVisualTransformRecipe(buildTransformNode(), RECIPE);
+    const sqlNode = convertDvtVisualTransformToSql(visualNode, 'select order_id from raw.orders');
+    const draft = WorkspaceGraphAuthoringDraftSchema.parse({
+      canvas: { id: 'canvas-1', kind: 'transformation', title: 'Transformation' },
+      nodeIds: [sqlNode.id],
+      nodePositions: { [sqlNode.id]: { x: 40, y: 80 } },
+      nodes: [projectCanonicalNodeToAuthoringNode(sqlNode)],
+      edges: [],
+    });
+    const reopenedNode = projectWorkspaceGraphAuthoringDraftSemanticGraph(draft).canonicalNodes[0];
+
+    expect(reopenedNode?.metadata?.transformLineageProvenance).toEqual(RECIPE);
+    expect(readDvtTransformAuthoringAuthority(reopenedNode!)).toEqual({
+      version: 'v1',
+      mode: 'sql',
+      sql: 'select order_id from raw.orders',
     });
   });
 
