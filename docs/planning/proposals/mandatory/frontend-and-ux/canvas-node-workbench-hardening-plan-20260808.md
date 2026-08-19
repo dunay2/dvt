@@ -54,93 +54,108 @@ not a missing feature or missing persistence rail.
 
 ### Proposed model
 
-Use one discriminated capability for **node-draft mutation**, rather than a global
-Workbench editability boolean:
+Do not place plugin-specific commands inside the common authoring contract. Use a
+minimal nullable port for the single common intent: applying a transient node draft
+to the Graph Draft aggregate.
 
 ```ts
-export type CanvasInspectorNodeDraftAuthoring =
-  | Readonly<{
-      status: 'available';
-      apply: (draft: CanvasInspectorNodeDraft) => void;
-      convertVisualTransformToSql?: (generatedSql: string) => void;
-    }>
-  | Readonly<{
-      status: 'unavailable';
-    }>;
+export type CanvasNodeDraftAuthoringPort = Readonly<{
+  apply: (draft: CanvasInspectorNodeDraft) => void;
+}>;
 
 export type CanvasInspectorAuthoringContract = Readonly<{
-  nodeDraft: CanvasInspectorNodeDraftAuthoring;
+  nodeDraftAuthoring: CanvasNodeDraftAuthoringPort | null;
 }>;
 ```
 
-The exact field names may be refined during implementation, but the discriminant and
-invariant are mandatory:
+The invariant is structural:
 
 ```text
-status = available   => Apply command exists
-status = unavailable => Apply command cannot exist
+nodeDraftAuthoring exists => Graph Draft Apply is supported
+nodeDraftAuthoring is null => no Graph Draft Apply command exists
 ```
 
-File-backed contributions do not enter this union. They already carry their own
-content and mutation callbacks through the SQL working-tree and dbt YAML contribution
-rails. Consequently, `status: 'unavailable'` means only that the common Graph Draft
-node DTO cannot be applied; it does not claim that every Workbench section is passive.
+There is no `canEditNode` boolean and no unavailable callback. The presence of the
+port is the capability.
 
-### Authority matrix
+DVT visual-to-SQL conversion must not be a member of
+`CanvasNodeDraftAuthoringPort`. It is a distinct DVT-owned semantic command and must
+be projected through the existing contextual Workbench contribution/action boundary.
+The same rule applies to workspace SQL and dbt YAML mutation: each contribution keeps
+its own owner and command. The common Node Properties contract coordinates none of
+them.
 
-| Surface | Authority | Proposed posture | Mutation rail |
+### Authority and port matrix
+
+| Surface | Authority | Independent inbound port | Common contract dependency |
 | --- | --- | --- | --- |
-| Graph Draft common/plugin fields | `CanvasDraftSession` | `nodeDraft.status = available` | existing Inspector Apply command |
-| Graph Draft visual-to-SQL conversion | `CanvasDraftSession` | optional command on available variant | existing conversion plus `workingSet.upsertNode` |
-| dbt project SQL | workspace file | independent editable contribution | existing file content command/CAS |
-| dbt YAML description | dbt YAML file | independent editable contribution | existing YAML mutation command |
-| dbt artifact/analysis facts | derived projection | passive | none |
-| unsupported Graph Draft mutation | no authority | `nodeDraft.status = unavailable` | none; no callback |
+| Graph Draft common/plugin fields | `CanvasDraftSession` | `CanvasNodeDraftAuthoringPort.apply` | nullable port only |
+| DVT visual-to-SQL conversion | DVT transform authority + `CanvasDraftSession` | existing DVT conversion command contribution | none |
+| dbt project SQL | workspace file | existing file content command/CAS contribution | none |
+| dbt YAML description | dbt YAML file | existing YAML mutation contribution | none |
+| dbt artifact/analysis facts | derived projection | none; passive query/read model | none |
+| unsupported Graph Draft mutation | no authority | no port | `nodeDraftAuthoring: null` |
+
+### Coupling rule
+
+The Workbench may compose several contributions visually, but composition does not
+create semantic coupling:
+
+- the common node-draft port does not import DVT, dbt, SQL-file or YAML command types;
+- DVT conversion does not depend on the generic Apply callback;
+- SQL/YAML contributions do not depend on Graph Draft editability;
+- the Workbench panel receives independently constructed capabilities and renders
+  them; it does not become their command owner;
+- removing one contribution cannot require a compatibility callback in another.
 
 ### Current and target flow
 
 ```mermaid
 flowchart TD
-    A["Canvas mode"] --> B{"canEditNode"}
-    B -->|true| C["Mandatory Apply callback"]
-    B -->|false| D["Mandatory throwing callback"]
-    D --> E["File-backed contributions edit elsewhere"]
+    A["Common authoring contract"] --> B["canEditNode"]
+    B --> C["Apply callback"]
+    C --> D["DVT conversion callback"]
+    B --> E["Throwing file-backed callback"]
 ```
 
 ```mermaid
 flowchart TD
-    A["Canvas authority"] --> B{"Node-draft capability"}
-    B -->|available| C["Existing Graph Draft Apply command"]
-    B -->|unavailable| D["No node-draft command"]
-    A --> E["File-backed contributions"]
-    E --> F["Existing SQL or YAML command"]
+    A["Workbench composition"] --> B["Node-draft port"]
+    A --> C["DVT conversion contribution"]
+    A --> D["SQL contribution"]
+    A --> E["YAML contribution"]
+    B --> F["Graph Draft aggregate"]
 ```
 
 ### Options considered
 
-1. **Discriminated node-draft capability — selected.**
-   It makes the invalid callback state unrepresentable and leaves independent
-   file-backed contributions intact.
-2. **Optional callback with the existing boolean — rejected.**
+1. **Minimal nullable node-draft port plus independent contributions — selected.**
+   It removes the boolean and impossible callback without coupling unrelated
+   commands into a capability union.
+2. **Discriminated union containing Apply and DVT conversion — rejected.**
+   It makes availability explicit but still couples a plugin-specific command to the
+   generic node-draft contract.
+3. **Optional callback plus editability boolean — rejected.**
    It permits contradictory states such as `true + undefined` and
    `false + callback`.
-3. **Per-field generic capability schema — rejected.**
+4. **Per-field generic capability schema — rejected.**
    Current measured duplication does not justify a form engine or new schema
    subsystem.
-4. **Move file-backed edits into Graph Draft — rejected.**
+5. **Move file-backed edits into Graph Draft — rejected.**
    It creates a second source of truth and violates file authority.
-5. **Keep the throwing callback as a guard — rejected.**
+6. **Keep the throwing callback as a guard — rejected.**
    An impossible production callback is hidden debt, not fail-closed modeling.
 
 ### Fowler opportunity matrix
 
 | Signal | Current mechanism | Correction | Owner | Proof |
 | --- | --- | --- | --- | --- |
-| Primitive obsession | `canEditNode` controls heterogeneous authority | discriminated node-draft capability | Canvas authoring presentation | type/component tests |
-| Invalid state | unavailable mode still requires Apply callback | unavailable variant has no callback | `CanvasInspectorAuthoringContract` | architecture test |
-| Hidden authority | file-backed edits coexist with global read-only boolean | keep SQL/YAML contributions independently authoritative | workspace/dbt files | browser roundtrip |
+| Primitive obsession | `canEditNode` controls heterogeneous authority | presence/absence of one minimal port | Canvas authoring presentation | type/component tests |
+| Invalid state | unavailable mode still requires Apply callback | absent port means no callback | `CanvasInspectorAuthoringContract` | architecture test |
+| Inappropriate intimacy | generic contract knows DVT conversion | DVT-owned contextual contribution | DVT authoring | architecture/component tests |
+| Hidden authority | file-backed edits coexist with global read-only boolean | independent SQL/YAML ports | workspace/dbt files | browser roundtrip |
 | Dead defensive path | throwing file-projection callback must never execute | delete callback and helper | file-backed Canvas composition | source guard |
-| Duplicate semantics | global editability attempts to describe section authority | capability describes only node-draft mutation | Node Properties | component tests |
+| Feature envy | Workbench contract aggregates unrelated commands | Workbench composes views; owners retain commands | Node Properties presentation | dependency guard |
 
 ### Pre-implementation brief
 
@@ -149,8 +164,8 @@ flowchart TD
 - **Issue:** #2532; parent #2195.
 - **Scope:** authoring contract, Graph Draft shell composition, file-backed dbt
   composition, Node Properties authoring section and focused tests.
-- **Expected outcome:** one fewer impossible callback and a type that states the
-  actual authority.
+- **Expected outcome:** one fewer impossible callback, no generic-to-DVT coupling and
+  one minimal Graph Draft Apply port.
 - **Risk:** accidentally hiding valid SQL/YAML editors. Mitigation: retain contribution
   rails unchanged and prove both file-backed sections.
 - **Out of scope:** #2533 handler-builder reduction, Workbench decomposition,
@@ -163,12 +178,12 @@ flowchart TD
 
 ### Red/green implementation sequence
 
-1. Add architecture/type evidence that an unavailable node-draft posture contains no
-   Apply callback.
+1. Add architecture/type evidence that an absent node-draft port contains no Apply
+   callback and that the common contract imports no DVT/file/YAML command type.
 2. Add component evidence that Graph Draft still renders and invokes Apply.
 3. Add file-backed evidence that no Graph Draft Apply seam exists while SQL/YAML
    contributions remain active.
-4. Replace the boolean-plus-callback contract with the discriminated capability.
+4. Replace the boolean-plus-callback contract with the minimal nullable Apply port.
 5. Delete `unsupportedFileProjectionCommand` when the consumer audit remains singular.
 6. Run focused and repository validation; record removed symbols and no-debt evidence.
 
