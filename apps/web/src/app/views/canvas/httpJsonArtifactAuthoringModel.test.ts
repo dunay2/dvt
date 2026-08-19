@@ -113,6 +113,12 @@ describe('HTTP JSON artifact Canvas authoring', () => {
     expect(
       validateHttpJsonArtifactAuthoringDraft({
         ...draft,
+        expectedSizeBytes: '1.5',
+      })
+    ).toMatchObject({ ok: false, errors: { expectedSizeBytes: 'http_json_size_invalid' } });
+    expect(
+      validateHttpJsonArtifactAuthoringDraft({
+        ...draft,
         expectedSizeBytes: String(ACQUIRE_HTTP_JSON_ARTIFACT_MAX_BYTES + 1),
       })
     ).toMatchObject({ ok: false, errors: { expectedSizeBytes: 'http_json_size_invalid' } });
