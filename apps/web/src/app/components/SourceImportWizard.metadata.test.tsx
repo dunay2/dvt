@@ -336,6 +336,9 @@ describe('SourceImportWizard metadata exploration', () => {
     expect(document.body.textContent).toContain('2 objects available');
     expect(document.body.textContent).toContain('Source metadata');
     expect(document.body.textContent).toContain('RAW.ERP.ORDERS');
+    expect(document.querySelector('[data-source-import-catalog-scroll]')?.className).toContain(
+      '[&_[data-slot=scroll-area-viewport]>div]:!block'
+    );
 
     await act(async () => {
       if (search) {

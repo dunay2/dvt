@@ -116,7 +116,10 @@ export function SelectionStep({
                 {catalogViewModel.resultCountLabel}
               </div>
             </div>
-            <ScrollArea className="h-96">
+            <ScrollArea
+              data-source-import-catalog-scroll
+              className="h-96 min-w-0 [&_[data-slot=scroll-area-viewport]>div]:!block"
+            >
               <SourceImportCatalogView
                 catalog={catalogViewModel}
                 emptyLabel={copy.selection.empty}
