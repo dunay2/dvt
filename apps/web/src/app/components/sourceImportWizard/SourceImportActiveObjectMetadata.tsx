@@ -4,6 +4,7 @@ import { Card } from '../ui/card';
 import { ScrollArea } from '../ui/scroll-area';
 import { MetricEvidenceHotspot } from '../metrics/MetricEvidenceHotspot';
 import { useSourceImportLocalization } from './copy';
+import { SourceImportConstraintMarkers } from './SourceImportConstraintMarkers';
 import { buildSourceImportObjectViewModel } from './sourceImportCatalogModel';
 import type { SelectableSourceObject } from './types';
 
@@ -18,15 +19,15 @@ export const sourceImportActiveMetadataClassNames = {
   card: 'border-slate-600 p-4',
   summary: 'mb-3 flex flex-wrap items-start justify-between gap-3',
   identity: 'min-w-0',
-  objectName: 'font-mono text-sm text-slate-100',
+  objectName: 'break-words font-mono text-sm text-slate-100',
   metrics: 'mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-400',
   columnList: 'space-y-2',
   columnRow:
-    'grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 rounded border border-slate-800 bg-slate-950/50 px-3 py-2',
+    'grid grid-cols-[minmax(0,1fr)_minmax(0,45%)] items-start gap-3 rounded border border-slate-800 bg-slate-950/50 px-3 py-2',
   columnIdentity: 'min-w-0',
   columnName: 'truncate font-mono text-xs text-slate-100',
   constraintList: 'mt-1 flex flex-wrap gap-1',
-  columnType: 'font-mono text-[11px] text-slate-300',
+  columnType: 'break-words text-right font-mono text-[11px] text-slate-300',
   unavailable: 'rounded border border-slate-800 bg-slate-950/40 p-3 text-sm text-slate-300',
   importability: 'rounded border border-amber-500/40 bg-amber-950/20 p-3 text-sm text-amber-200',
 } as const;
@@ -104,11 +105,7 @@ export function SourceImportActiveObjectMetadata({
                       {column.name}
                     </div>
                     <div className={sourceImportActiveMetadataClassNames.constraintList}>
-                      {column.constraintLabels.map((label) => (
-                        <Badge key={`${column.name}.${label}`} variant="outline">
-                          {label}
-                        </Badge>
-                      ))}
+                      <SourceImportConstraintMarkers markers={column.constraintMarkers} />
                     </div>
                   </div>
                   <span className={sourceImportActiveMetadataClassNames.columnType}>

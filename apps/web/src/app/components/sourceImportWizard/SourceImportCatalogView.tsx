@@ -1,3 +1,5 @@
+import { useEffect, useMemo, useState } from 'react';
+
 import {
   SourceImportCatalogFilterList,
   SourceImportCatalogEmptyState,
@@ -7,7 +9,9 @@ import {
   SourceImportLocatorGroup,
   SourceImportObjectCard,
   SourceImportObjectList,
+  SourceImportSchemaDisclosure,
   SourceImportSchemaHeader,
+  SourceImportSchemaObjects,
 } from './SourceImportCatalogPrimitives';
 import {
   buildSourceImportSchemaKey,
@@ -24,6 +28,7 @@ type SourceImportCatalogViewProps = Readonly<{
   onToggleDatabase: (database: SourceImportDatabaseIdentity) => void;
   onToggleSchema: (schema: SourceImportSchemaIdentity) => void;
   onToggleSourceObject: (index: number) => void;
+  revealMatchingSchemas?: boolean;
 }>;
 
 export function SourceImportCatalogView({
@@ -34,7 +39,54 @@ export function SourceImportCatalogView({
   onToggleDatabase,
   onToggleSchema,
   onToggleSourceObject,
+  revealMatchingSchemas = false,
 }: SourceImportCatalogViewProps): JSX.Element {
+  const selectedSchemaKeys = useMemo(
+    () =>
+      catalog.databaseGroups.flatMap((databaseGroup) =>
+        databaseGroup.schemaGroups
+          .filter((schemaGroup) => schemaGroup.selected)
+          .map((schemaGroup) =>
+            buildSourceImportSchemaKey({
+              database: databaseGroup.database,
+              schema: schemaGroup.schema,
+            })
+          )
+      ),
+    [catalog.databaseGroups]
+  );
+  const [expandedSchemaKeys, setExpandedSchemaKeys] = useState<ReadonlySet<string>>(
+    () => new Set(selectedSchemaKeys)
+  );
+
+  useEffect(() => {
+    if (selectedSchemaKeys.length === 0) {
+      return;
+    }
+    setExpandedSchemaKeys((currentKeys) => {
+      const nextKeys = new Set(currentKeys);
+      let changed = false;
+      selectedSchemaKeys.forEach((key) => {
+        if (!nextKeys.has(key)) {
+          nextKeys.add(key);
+          changed = true;
+        }
+      });
+      return changed ? nextKeys : currentKeys;
+    });
+  }, [selectedSchemaKeys]);
+
+  const setSchemaExpanded = (schemaKey: string, expanded: boolean) => {
+    setExpandedSchemaKeys((currentKeys) => {
+      const nextKeys = new Set(currentKeys);
+      if (expanded) {
+        nextKeys.add(schemaKey);
+      } else {
+        nextKeys.delete(schemaKey);
+      }
+      return nextKeys;
+    });
+  };
   const filterList = (
     <SourceImportCatalogFilterList
       label={catalog.filterListLabel}
@@ -69,36 +121,48 @@ export function SourceImportCatalogView({
                 selectedLabel={databaseGroup.selectedLabel}
                 onToggle={() => onToggleDatabase({ database: databaseGroup.database })}
               />
-              {databaseGroup.schemaGroups.map((schemaGroup) => (
-                <div key={`${databaseGroup.database}.${schemaGroup.schema}`}>
-                  <SourceImportSchemaHeader
-                    schema={schemaGroup.schema}
-                    accessibilityLabel={schemaGroup.accessibilityLabel}
-                    schemaIdentityKey={buildSourceImportSchemaKey({
-                      database: databaseGroup.database,
-                      schema: schemaGroup.schema,
-                    })}
-                    selected={schemaGroup.selected}
-                    objectCountLabel={schemaGroup.objectCountLabel}
-                    onToggle={() =>
-                      onToggleSchema({
-                        database: databaseGroup.database,
-                        schema: schemaGroup.schema,
-                      })
-                    }
-                  />
-                  <SourceImportObjectList>
-                    {schemaGroup.sourceObjects.map((sourceObject) => (
-                      <SourceImportObjectCard
-                        key={sourceObject.identityKey}
-                        sourceObject={sourceObject}
-                        onActivate={() => onActivateSourceObject(sourceObject.index)}
-                        onToggle={() => onToggleSourceObject(sourceObject.index)}
-                      />
-                    ))}
-                  </SourceImportObjectList>
-                </div>
-              ))}
+              {databaseGroup.schemaGroups.map((schemaGroup) => {
+                const schemaIdentity = {
+                  database: databaseGroup.database,
+                  schema: schemaGroup.schema,
+                };
+                const schemaKey = buildSourceImportSchemaKey(schemaIdentity);
+                const expanded = revealMatchingSchemas || expandedSchemaKeys.has(schemaKey);
+
+                return (
+                  <SourceImportSchemaDisclosure
+                    key={schemaKey}
+                    expanded={expanded}
+                    onExpandedChange={(nextExpanded) => setSchemaExpanded(schemaKey, nextExpanded)}
+                  >
+                    <SourceImportSchemaHeader
+                      schema={schemaGroup.schema}
+                      canonicalName={schemaGroup.canonicalName}
+                      accessibilityLabel={schemaGroup.accessibilityLabel}
+                      expandAccessibilityLabel={schemaGroup.expandAccessibilityLabel}
+                      collapseAccessibilityLabel={schemaGroup.collapseAccessibilityLabel}
+                      schemaIdentityKey={schemaKey}
+                      expanded={expanded}
+                      selected={schemaGroup.selected}
+                      objectCountLabel={schemaGroup.objectCountLabel}
+                      onToggle={() => {
+                        setSchemaExpanded(schemaKey, true);
+                        onToggleSchema(schemaIdentity);
+                      }}
+                    />
+                    <SourceImportSchemaObjects>
+                      {schemaGroup.sourceObjects.map((sourceObject) => (
+                        <SourceImportObjectCard
+                          key={sourceObject.identityKey}
+                          sourceObject={sourceObject}
+                          onActivate={() => onActivateSourceObject(sourceObject.index)}
+                          onToggle={() => onToggleSourceObject(sourceObject.index)}
+                        />
+                      ))}
+                    </SourceImportSchemaObjects>
+                  </SourceImportSchemaDisclosure>
+                );
+              })}
             </SourceImportCatalogGroup>
           ))}
         </SourceImportLocatorGroup>

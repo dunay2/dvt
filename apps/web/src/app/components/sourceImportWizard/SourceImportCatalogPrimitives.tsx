@@ -1,10 +1,20 @@
 /** Owned concern: present Add Source catalog structure without owning selection state. */
-import { Database, FileJson, Globe2, RadioTower, Table2, type LucideIcon } from 'lucide-react';
+import {
+  ChevronDown,
+  ChevronRight,
+  Database,
+  FileJson,
+  Globe2,
+  RadioTower,
+  Table2,
+  type LucideIcon,
+} from 'lucide-react';
 import type { ReactNode } from 'react';
 
 import { Badge } from '../ui/badge';
 import { Card } from '../ui/card';
 import { Checkbox } from '../ui/checkbox';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../ui/collapsible';
 import type {
   SourceImportCatalogFilterId,
   SourceImportCatalogFilterViewModel,
@@ -19,23 +29,25 @@ export const sourceImportCatalogClassNames = {
   groupHeader: 'rounded border border-slate-700 bg-slate-950/50 px-3 py-2 text-sm text-slate-100',
   groupHeaderContent: 'flex min-w-0 items-center justify-between gap-3',
   groupIdentity: 'flex min-w-0 items-center gap-2',
-  groupTitle: 'font-mono font-medium',
+  groupTitle: 'truncate font-mono font-medium',
   groupMetrics: 'flex max-w-full min-w-0 flex-wrap justify-end gap-2 text-xs text-slate-400',
   filterList: 'flex flex-wrap gap-2',
   filterButton:
     'rounded border border-slate-700 bg-slate-950/50 px-2.5 py-1 text-xs text-slate-300 transition hover:border-sky-500 hover:text-slate-100 disabled:cursor-not-allowed disabled:opacity-40',
   activeFilterButton: 'border-sky-400 bg-sky-950/40 text-sky-100',
   filterCount: 'ml-1 text-slate-500',
-  schemaHeader: 'mb-2 flex items-center gap-2',
-  schemaTitle: 'text-sm font-medium',
+  schemaHeader: 'mb-2 flex min-w-0 items-center gap-2',
+  schemaDisclosure:
+    'flex min-w-0 flex-1 cursor-pointer items-center gap-1 rounded text-left outline-none focus-visible:ring-2 focus-visible:ring-sky-400/40',
+  schemaTitle: 'min-w-0 truncate text-sm font-medium',
   objectList: 'ml-6 space-y-1',
   objectCard:
-    'rounded border border-slate-700 bg-slate-950/30 px-2.5 py-2 outline-none hover:bg-slate-950 focus-visible:border-sky-400 focus-visible:ring-2 focus-visible:ring-sky-400/40',
+    'overflow-hidden rounded border border-slate-700 bg-slate-950/30 px-2.5 py-2 outline-none hover:bg-slate-950 focus-visible:border-sky-400 focus-visible:ring-2 focus-visible:ring-sky-400/40',
   selectedObjectCard: 'border-sky-400 bg-sky-950/30 shadow-[0_0_0_1px_rgba(56,189,248,0.35)]',
   objectHeader: 'flex items-center justify-between gap-2',
-  objectIdentity: 'flex min-w-0 items-center gap-2',
+  objectIdentity: 'flex min-w-0 flex-1 items-center gap-2 overflow-hidden',
   objectInspectButton:
-    'flex min-w-0 cursor-pointer items-center gap-2 rounded text-left outline-none focus-visible:ring-2 focus-visible:ring-sky-400/40',
+    'flex min-w-0 flex-1 cursor-pointer items-center gap-2 overflow-hidden rounded text-left outline-none focus-visible:ring-2 focus-visible:ring-sky-400/40',
   objectIcon: 'size-4 shrink-0 text-slate-300',
   objectNameBlock: 'min-w-0',
   objectName: 'block truncate font-mono text-sm',
@@ -54,11 +66,21 @@ const sourceObjectIconByKind: Readonly<
 
 type SourceImportSchemaHeaderProps = Readonly<{
   schema: string;
+  canonicalName: string;
   accessibilityLabel: string;
+  expandAccessibilityLabel: string;
+  collapseAccessibilityLabel: string;
   schemaIdentityKey: string;
+  expanded: boolean;
   selected: boolean;
   objectCountLabel: string;
   onToggle: () => void;
+}>;
+
+type SourceImportSchemaDisclosureProps = Readonly<{
+  children: ReactNode;
+  expanded: boolean;
+  onExpandedChange: (expanded: boolean) => void;
 }>;
 
 type SourceImportDatabaseHeaderProps = Readonly<{
@@ -195,8 +217,12 @@ export function SourceImportLocatorGroup({
 
 export function SourceImportSchemaHeader({
   schema,
+  canonicalName,
   accessibilityLabel,
+  expandAccessibilityLabel,
+  collapseAccessibilityLabel,
   schemaIdentityKey,
+  expanded,
   selected,
   objectCountLabel,
   onToggle,
@@ -207,11 +233,48 @@ export function SourceImportSchemaHeader({
       className={sourceImportCatalogClassNames.schemaHeader}
     >
       <Checkbox aria-label={accessibilityLabel} checked={selected} onCheckedChange={onToggle} />
-      <h4 className={sourceImportCatalogClassNames.schemaTitle}>{schema}</h4>
+      <CollapsibleTrigger asChild>
+        <button
+          type="button"
+          aria-label={expanded ? collapseAccessibilityLabel : expandAccessibilityLabel}
+          className={sourceImportCatalogClassNames.schemaDisclosure}
+        >
+          {expanded ? (
+            <ChevronDown className="size-4 shrink-0" aria-hidden="true" />
+          ) : (
+            <ChevronRight className="size-4 shrink-0" aria-hidden="true" />
+          )}
+          <h4 className={sourceImportCatalogClassNames.schemaTitle} title={canonicalName}>
+            {schema}
+          </h4>
+        </button>
+      </CollapsibleTrigger>
       <Badge variant="secondary" className="text-xs">
         {objectCountLabel}
       </Badge>
     </div>
+  );
+}
+
+export function SourceImportSchemaDisclosure({
+  children,
+  expanded,
+  onExpandedChange,
+}: SourceImportSchemaDisclosureProps): JSX.Element {
+  return (
+    <Collapsible open={expanded} onOpenChange={onExpandedChange}>
+      {children}
+    </Collapsible>
+  );
+}
+
+export function SourceImportSchemaObjects({
+  children,
+}: Readonly<{ children: ReactNode }>): JSX.Element {
+  return (
+    <CollapsibleContent>
+      <SourceImportObjectList>{children}</SourceImportObjectList>
+    </CollapsibleContent>
   );
 }
 
@@ -253,9 +316,11 @@ export function SourceImportObjectCard({
               <span className={sourceImportCatalogClassNames.objectName}>
                 {sourceObject.displayName}
               </span>
-              <span className={sourceImportCatalogClassNames.objectCanonicalName}>
-                {sourceObject.canonicalName}
-              </span>
+              {sourceObject.locatorKind === 'relation' ? null : (
+                <span className={sourceImportCatalogClassNames.objectCanonicalName}>
+                  {sourceObject.canonicalName}
+                </span>
+              )}
             </span>
           </button>
         </div>

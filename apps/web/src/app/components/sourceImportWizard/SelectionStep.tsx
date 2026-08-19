@@ -128,6 +128,9 @@ export function SelectionStep({
                 onToggleDatabase={onToggleDatabase}
                 onToggleSchema={onToggleSchema}
                 onToggleSourceObject={onToggleSourceObject}
+                revealMatchingSchemas={
+                  sourceObjectSearchQuery.trim().length > 0 || catalogFilterId !== 'all'
+                }
               />
             </ScrollArea>
           </div>

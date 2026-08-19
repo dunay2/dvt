@@ -15,11 +15,18 @@ import {
   formatSourceObjectMetricByteSize,
 } from '../../services/workspace/sourceObjectMetricEvidencePresentation';
 
+export type SourceImportColumnConstraintMarkerKind = 'primary-key' | 'unique' | 'not-null';
+
+export type SourceImportColumnConstraintMarker = Readonly<{
+  kind: SourceImportColumnConstraintMarkerKind;
+  shortLabel: 'PK' | 'UQ' | 'NN';
+  label: string;
+}>;
+
 export type SourceImportColumnViewModel = Readonly<{
   name: string;
   type: string;
-  nullabilityLabel: string;
-  constraintLabels: readonly string[];
+  constraintMarkers: readonly SourceImportColumnConstraintMarker[];
 }>;
 
 export type SourceImportObjectViewModel = Readonly<{
@@ -58,7 +65,10 @@ export type SourceImportCatalogFilterViewModel = Readonly<{
 
 export type SourceImportSchemaGroupViewModel = Readonly<{
   schema: string;
+  canonicalName: string;
   accessibilityLabel: string;
+  expandAccessibilityLabel: string;
+  collapseAccessibilityLabel: string;
   objectCountLabel: string;
   selected: boolean;
   sourceObjects: readonly SourceImportObjectViewModel[];
@@ -101,6 +111,8 @@ export type SourceImportCatalogCopy = Readonly<{
   selectSourceObject: string;
   selectSourceDatabase: string;
   selectSourceSchema: string;
+  expandSourceSchema: string;
+  collapseSourceSchema: string;
   inSourceDatabase: string;
   inspectSourceObjectMetadata: string;
   metadata: string;
@@ -114,8 +126,7 @@ export type SourceImportCatalogCopy = Readonly<{
   schemaSingular: string;
   schemaPlural: string;
   allSelected: string;
-  nullable: string;
-  required: string;
+  notNull: string;
   primaryKey: string;
   unique: string;
   available: string;
@@ -308,13 +319,6 @@ function buildSourceImportCatalogFilters({
   });
 }
 
-export function formatSourceImportNullability(
-  nullable: boolean,
-  copy: SourceImportCatalogCopy
-): string {
-  return nullable ? copy.nullable : copy.required;
-}
-
 export function buildSourceImportObjectViewModel(
   sourceObject: SelectableSourceObject,
   index: number,
@@ -375,22 +379,25 @@ export function buildSourceImportObjectViewModel(
     importabilityLabel: selectable ? null : copy.unsupportedImport,
     columns:
       sourceObject.columns?.map((column) => {
-        const nullabilityLabel = formatSourceImportNullability(column.nullable, copy);
         const constraintSemantics = resolveSourceObjectColumnConstraintSemantics(
           sourceObject,
           column.name
         );
-        const constraintLabels = [
-          ...(constraintSemantics.primaryKey ? [copy.primaryKey] : []),
-          ...(constraintSemantics.independentlyUnique ? [copy.unique] : []),
-          nullabilityLabel,
+        const constraintMarkers: SourceImportColumnConstraintMarker[] = [
+          ...(constraintSemantics.primaryKey
+            ? [{ kind: 'primary-key' as const, shortLabel: 'PK' as const, label: copy.primaryKey }]
+            : constraintSemantics.independentlyUnique
+              ? [{ kind: 'unique' as const, shortLabel: 'UQ' as const, label: copy.unique }]
+              : []),
+          ...(!column.nullable && !constraintSemantics.primaryKey
+            ? [{ kind: 'not-null' as const, shortLabel: 'NN' as const, label: copy.notNull }]
+            : []),
         ];
 
         return {
           name: column.name,
           type: column.type,
-          nullabilityLabel,
-          constraintLabels,
+          constraintMarkers,
         };
       }) ?? [],
   };
@@ -564,14 +571,20 @@ function buildSourceImportSchemaGroup(
   copy: SourceImportCatalogCopy,
   numberFormatter: Intl.NumberFormat
 ): SourceImportSchemaGroupViewModel {
+  const objectCountLabel = formatSourceImportObjectCount(
+    groupObjects.length,
+    copy,
+    numberFormatter
+  );
+  const schemaLocationLabel = `${schema}. ${copy.inSourceDatabase} ${database}. ${objectCountLabel}.`;
+
   return {
     schema,
-    accessibilityLabel: `${copy.selectSourceSchema} ${schema}. ${copy.inSourceDatabase} ${database}. ${formatSourceImportObjectCount(
-      groupObjects.length,
-      copy,
-      numberFormatter
-    )}.`,
-    objectCountLabel: formatSourceImportObjectCount(groupObjects.length, copy, numberFormatter),
+    canonicalName: `${database}.${schema}`,
+    accessibilityLabel: `${copy.selectSourceSchema} ${schemaLocationLabel}`,
+    expandAccessibilityLabel: `${copy.expandSourceSchema} ${schemaLocationLabel}`,
+    collapseAccessibilityLabel: `${copy.collapseSourceSchema} ${schemaLocationLabel}`,
+    objectCountLabel,
     selected:
       groupObjects.length > 0 && groupObjects.every((sourceObject) => sourceObject.selected),
     sourceObjects: groupObjects,

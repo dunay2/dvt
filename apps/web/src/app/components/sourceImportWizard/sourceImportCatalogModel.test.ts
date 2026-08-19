@@ -51,9 +51,13 @@ describe('sourceImportCatalogModel relational catalog', () => {
       selected: true,
       columns: [
         { name: 'order_id', type: 'INTEGER', nullable: false },
+        { name: 'external_id', type: 'TEXT', nullable: false },
         { name: 'discount_code', type: 'TEXT', nullable: true },
       ],
-      constraints: [{ name: 'orders_pkey', kind: 'primary-key', columns: ['order_id'] }],
+      constraints: [
+        { name: 'orders_pkey', kind: 'primary-key', columns: ['order_id'] },
+        { name: 'orders_external_id_key', kind: 'unique', columns: ['external_id'] },
+      ],
     });
 
     const catalog = buildSourceImportCatalogViewModel({
@@ -70,18 +74,25 @@ describe('sourceImportCatalogModel relational catalog', () => {
         rowCountTone: 'estimated',
         byteSizeLabel: '3.9 MB',
         byteSizeTone: 'measured',
-        columnCountLabel: '2 columns',
+        columnCountLabel: '3 columns',
         selected: true,
         selectable: true,
         importabilityLabel: null,
         columns: [
           expect.objectContaining({
             name: 'order_id',
-            constraintLabels: ['Primary key', 'Unique', 'Required'],
+            constraintMarkers: [{ kind: 'primary-key', shortLabel: 'PK', label: 'Primary key' }],
+          }),
+          expect.objectContaining({
+            name: 'external_id',
+            constraintMarkers: [
+              { kind: 'unique', shortLabel: 'UQ', label: 'Unique' },
+              { kind: 'not-null', shortLabel: 'NN', label: 'Not null' },
+            ],
           }),
           expect.objectContaining({
             name: 'discount_code',
-            constraintLabels: ['Nullable'],
+            constraintMarkers: [],
           }),
         ],
       })

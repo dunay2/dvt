@@ -54,11 +54,10 @@ describe('SourceImportWizard metadata exploration', () => {
     expect(document.body.textContent).toContain('3 columns');
     expect(document.body.textContent).toContain('order_id');
     expect(document.body.textContent).toContain('INTEGER');
-    expect(document.body.textContent).toContain('Primary key');
-    expect(document.body.textContent).toContain('Required');
+    expect(document.body.textContent).toContain('PK');
     expect(document.body.textContent).toContain('discount_code');
-    expect(document.body.textContent).toContain('Unique');
-    expect(document.body.textContent).toContain('Nullable');
+    expect(document.body.textContent).toContain('UQ');
+    expect(document.body.textContent).not.toContain('Nullable');
     expect(document.body.textContent).toContain('Metadata Options');
 
     const metadataText = document.body.textContent ?? '';
@@ -108,9 +107,9 @@ describe('SourceImportWizard metadata exploration', () => {
     expect(document.body.textContent).toContain('45,000 rows');
     expect(document.body.textContent).toContain('customer_id');
     expect(document.body.textContent).toContain('NUMBER');
-    expect(document.body.textContent).toContain('Required');
+    expect(document.body.textContent).toContain('NN');
     expect(document.body.textContent).toContain('email');
-    expect(document.body.textContent).toContain('Nullable');
+    expect(document.body.textContent).not.toContain('Nullable');
     expect(document.body.textContent).not.toContain(
       'Output target is selected on a DVT Sink node after sources are attached.'
     );
@@ -354,7 +353,7 @@ describe('SourceImportWizard metadata exploration', () => {
     expect(document.body.textContent).toContain('7 MB');
     expect(document.body.textContent).toContain('email');
     expect(document.body.textContent).toContain('VARCHAR');
-    expect(document.body.textContent).toContain('Unique');
+    expect(document.body.textContent).toContain('UQ');
   });
 
   it('keeps a selected-source basket visible while browsing before import', async () => {
