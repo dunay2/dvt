@@ -37,7 +37,7 @@ describe('evaluateConnection', () => {
     expect(connection).toEqual({ allowed: true });
   });
 
-  it('allows the dbt source -> dvt sql_transform -> dvt sink authoring path', () => {
+  it('rejects dbt sources as DVT inputs without changing DVT-local authoring', () => {
     const pluginPortMap = getPluginPortMap();
 
     const sourceToTransform = evaluateConnection(
@@ -53,7 +53,14 @@ describe('evaluateConnection', () => {
       pluginPortMap
     );
 
-    expect(sourceToTransform).toEqual({ allowed: true });
+    expect(sourceToTransform).toEqual({
+      allowed: false,
+      reasonCode: 'cross_plugin_bridge_missing',
+      sourcePluginId: 'dbt',
+      sourceRole: 'input',
+      targetPluginId: 'dvt',
+      targetRole: 'transform',
+    });
     expect(transformToSink).toEqual({ allowed: true });
   });
 
