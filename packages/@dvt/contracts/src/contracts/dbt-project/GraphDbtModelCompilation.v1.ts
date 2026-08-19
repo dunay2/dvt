@@ -103,6 +103,4 @@ export const GraphDbtModelCompilationResultSchema = z.union([
 ]);
 
 export type CompileGraphDbtModelsRequest = z.infer<typeof CompileGraphDbtModelsRequestSchema>;
-export type GraphDbtModelCompilationResult = z.infer<
-  typeof GraphDbtModelCompilationResultSchema
->;
+export type GraphDbtModelCompilationResult = z.infer<typeof GraphDbtModelCompilationResultSchema>;

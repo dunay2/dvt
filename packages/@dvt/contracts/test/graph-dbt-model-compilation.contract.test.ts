@@ -1,8 +1,9 @@
+import { describe, expect, it } from 'vitest';
+
 import {
   CompileGraphDbtModelsRequestSchema,
   GraphDbtModelCompilationResultSchema,
 } from '@dvt/contracts';
-import { describe, expect, it } from 'vitest';
 
 const SHA = 'a'.repeat(64);
 
