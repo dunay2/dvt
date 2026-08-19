@@ -11,6 +11,8 @@ import type { CanvasAuthoringDraftRecord } from './canvasDraftReadModel';
 import { canvasDraftSession } from './canvasDraftSession';
 import { buildCanvasAuthoringGraphProjection } from './canvasAuthoringGraphProjection';
 import { canvasGraphLifecycle } from './canvasGraphLifecycle';
+import { createCanvasDraftRepository } from './canvasDraftRepository';
+import { buildAuthoringPort } from './canvasDraftRepository.test.fixtures';
 
 function buildRemoteDraftRecord(
   overrides?: Partial<CanvasAuthoringDraftRecord>
@@ -605,7 +607,7 @@ describe('canvasDraftSession', () => {
     ]);
   });
 
-  it('keeps a removed edge absent from persistence, reload, and Inputs/Outputs', () => {
+  it('keeps a removed edge absent from persistence, reload, and Inputs/Outputs', async () => {
     const canonicalNodes = [
       {
         id: 'source_node',
@@ -682,18 +684,28 @@ describe('canvasDraftSession', () => {
       canonicalNodes,
       canonicalEdges,
     });
-    const savedRecord = buildRemoteDraftRecord({
-      revision: 'rev-after-removal',
+    const authoringPort = buildAuthoringPort();
+    const draftRepository = createCanvasDraftRepository(authoringPort);
+    const saveResult = await draftRepository.saveGraphDraft({
+      expectedRevision: initialSession.draftRevision,
+      idempotencyKey: 'remove-edge-1',
       draft: persistedAfterRemoval,
     });
+    expect(saveResult.outcome).toBe('saved');
+    if (saveResult.outcome !== 'saved') {
+      throw new Error('Expected removed-edge draft to persist.');
+    }
+    const reloadedRemoteState = await draftRepository.readGraphDraftState();
+    const reloadedRemoteRecord = reloadedRemoteState.record;
+    expect(reloadedRemoteRecord).toBeDefined();
     const savedSession = canvasDraftSession.machine.applySaveSuccess(
       canvasDraftSession.machine.markSaving(removedState.draftSession),
-      savedRecord
+      saveResult.record
     );
-    const reloadedSession = canvasDraftSession.machine.reloadFromRemote(savedSession, {
-      ...savedRecord,
-      revision: 'rev-after-reload',
-    });
+    const reloadedSession = canvasDraftSession.machine.reloadFromRemote(
+      savedSession,
+      reloadedRemoteRecord!
+    );
     const reloadedDraft = reloadedSession.baseline.record?.draft;
     expect(reloadedDraft).toBeDefined();
     const semanticGraph = projectWorkspaceGraphAuthoringDraftSemanticGraph(reloadedDraft!);
@@ -722,6 +734,11 @@ describe('canvasDraftSession', () => {
     expect(removedState.draftSession.workingSet.visibleEdges).toEqual([]);
     expect(persistedAfterRemoval.nodeIds).toEqual(['source_node', 'transform_node']);
     expect(persistedAfterRemoval.edges).toEqual([]);
+    expect(authoringPort.saveGraphDraft).toHaveBeenCalledWith(
+      expect.objectContaining({ draft: expect.objectContaining({ edges: [] }) })
+    );
+    expect(authoringPort.readGraphDraft).toHaveBeenCalledTimes(2);
+    expect(reloadedRemoteRecord?.draft.edges).toEqual([]);
     expect(reloadedSession.workingSet.visibleEdges).toEqual([]);
     expect(projection.canonicalEdges).toEqual([]);
     expect(readInputsOutputs('source_node')?.tableRows ?? []).toEqual([]);
