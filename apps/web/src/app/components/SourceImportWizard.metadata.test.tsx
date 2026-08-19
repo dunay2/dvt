@@ -111,10 +111,12 @@ describe('SourceImportWizard metadata exploration', () => {
     expect(document.body.textContent).toContain('Required');
     expect(document.body.textContent).toContain('email');
     expect(document.body.textContent).toContain('Nullable');
-    expect(document.body.textContent).toContain(
+    expect(document.body.textContent).not.toContain(
       'Output target is selected on a DVT Sink node after sources are attached.'
     );
-    expect(document.body.textContent).toContain('Choose database, schema, table, and write mode');
+    expect(document.body.textContent).not.toContain(
+      'Choose database, schema, table, and write mode'
+    );
   });
 
   it('binds every imported dbt source table through the selected governed connection', async () => {
