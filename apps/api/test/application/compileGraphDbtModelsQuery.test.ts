@@ -139,7 +139,11 @@ describe('CompileGraphDbtModelsQuery', () => {
   });
 });
 
-function resource(uniqueId: string, name: string, compiledSql: string) {
+function resource(
+  uniqueId: string,
+  name: string,
+  compiledSql: string
+): DbtProjectAnalysis['resources'][number] {
   return {
     uniqueId,
     resourceType: 'model' as const,
