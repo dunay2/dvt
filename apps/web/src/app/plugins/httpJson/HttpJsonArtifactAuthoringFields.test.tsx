@@ -103,7 +103,7 @@ describe('HttpJsonArtifactAuthoringFields', () => {
       'Expected size must be a positive integer, no greater than 50000000 bytes, and no greater than maximum size.'
     );
     expect(container.textContent).toContain(
-      'Maximum size must be positive, no greater than 50000000 bytes, and not smaller than expected size.'
+      'Maximum size must be a positive integer, no greater than 50000000 bytes, and not smaller than expected size.'
     );
     expect(container.textContent).toContain(
       'Enter the content-addressed S3 URI for the immutable artifact.'
@@ -137,6 +137,9 @@ describe('HttpJsonArtifactAuthoringFields', () => {
     expect(container.textContent).toContain('Usa una referencia opaca http-endpoint:<id>.');
     expect(container.textContent).toContain(
       'El máximo de redirecciones debe ser un entero entre 0 y 5.'
+    );
+    expect(container.textContent).toContain(
+      'El tamaño máximo debe ser un número entero positivo, no superar 50000000 bytes y no ser inferior al tamaño esperado.'
     );
     expect(container.textContent).not.toContain('Use an opaque http-endpoint:<id> reference.');
   });

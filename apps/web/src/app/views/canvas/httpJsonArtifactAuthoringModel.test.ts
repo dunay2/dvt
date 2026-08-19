@@ -129,5 +129,11 @@ describe('HTTP JSON artifact Canvas authoring', () => {
         maxBytes: '1000',
       })
     ).toMatchObject({ ok: false, errors: { expectedSizeBytes: 'http_json_size_invalid' } });
+    expect(
+      validateHttpJsonArtifactAuthoringDraft({
+        ...draft,
+        maxBytes: '1.5',
+      })
+    ).toMatchObject({ ok: false, errors: { maxBytes: 'http_json_max_bytes_invalid' } });
   });
 });

@@ -106,22 +106,28 @@ describe('canvas copy catalog', () => {
     expect(spanishCopy.inspectorDvtInheritedConnectionLabel).toBe('Conexión heredada');
     expect(spanishCopy.inspectorDvtWriteModeLabel).toBe('Modo de escritura');
     expect(canvasViewCopy.inspectorErrorObjectFileSizeInvalid).toBe(
-      'Object size must be positive, no greater than 50000000 bytes, and no greater than maximum size.'
+      'Object size must be a positive integer, no greater than 50000000 bytes, and no greater than maximum size.'
     );
     expect(canvasViewCopy.inspectorErrorObjectFileMaxBytesInvalid).toBe(
-      'Maximum size must be positive, no greater than 50000000 bytes, and at least object size.'
+      'Maximum size must be a positive integer, no greater than 50000000 bytes, and at least object size.'
     );
     expect(spanishCopy.inspectorErrorObjectFileSizeInvalid).toBe(
-      'El tamaño del objeto debe ser positivo, no superar 50000000 bytes y no superar el tamaño máximo.'
+      'El tamaño del objeto debe ser un número entero positivo, no superar 50000000 bytes y no superar el tamaño máximo.'
     );
     expect(spanishCopy.inspectorErrorObjectFileMaxBytesInvalid).toBe(
-      'El tamaño máximo debe ser positivo, no superar 50000000 bytes y ser al menos el tamaño del objeto.'
+      'El tamaño máximo debe ser un número entero positivo, no superar 50000000 bytes y ser al menos el tamaño del objeto.'
     );
     expect(canvasViewCopy.inspectorErrorHttpJsonSizeInvalid).toBe(
       'Expected size must be a positive integer, no greater than 50000000 bytes, and no greater than maximum size.'
     );
     expect(spanishCopy.inspectorErrorHttpJsonSizeInvalid).toBe(
       'El tamaño esperado debe ser un número entero positivo, no superar 50000000 bytes y no superar el tamaño máximo.'
+    );
+    expect(canvasViewCopy.inspectorErrorHttpJsonMaxBytesInvalid).toBe(
+      'Maximum size must be a positive integer, no greater than 50000000 bytes, and not smaller than expected size.'
+    );
+    expect(spanishCopy.inspectorErrorHttpJsonMaxBytesInvalid).toBe(
+      'El tamaño máximo debe ser un número entero positivo, no superar 50000000 bytes y no ser inferior al tamaño esperado.'
     );
 
     expect(
