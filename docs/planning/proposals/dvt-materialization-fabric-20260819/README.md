@@ -1,296 +1,244 @@
 ---
 title: DVT Materialization Fabric research programme
-status: Draft research proposal
+status: Complete slice study; implementation gated
 owner: Architecture / Planner / Engine / Artifacts / Research
-baseline_commit: c82cfeb733de1c0bed2f869904b8f9252c97db2e
+baseline_commit: af2a7f85ea5a2cfb5a5e9a888f702c078814b426
 created: 2026-08-19
-related_issues:
-  - 2152
-  - 2154
-  - 2156
-  - 2157
-  - 2158
-  - 2159
-  - 2161
-  - 2171
-  - 2185
-  - 2473
+programme_epic: 2486
+study_pr: 2484
+parent_research_epic: 2152
 ---
 
 # DVT Materialization Fabric
 
-## Verifiable, exact reuse of heterogeneous executions
+## Verifiable exact reuse of heterogeneous executions
 
-## 1. Classification and decision under study
-
-This document is a **research and architecture proposal**, not evidence that result reuse is already delivered.
-
-The decision under study is:
+## Decision under study
 
 > DVT should execute a step only when it cannot verify that an exact, authorized and still-valid materialization of the same invocation already exists.
 
-The proposed differentiator is not a generic cache and not merely content-addressed storage. It is a **verifiable materialization fabric** that binds a previous result to:
+This is not a generic cache and not merely content-addressed storage. The proposed product boundary binds a prior result to:
 
 - the exact executable recipe;
 - exact input snapshots;
-- every relevant execution-contract dependency;
-- the output contract and semantic profile;
+- every result-affecting execution-contract dependency;
+- the output contract and governed semantic profile;
 - immutable result and validation evidence;
-- the authorized tenant/trust scope in which reuse is permitted.
+- output presence, integrity, retention and quarantine state;
+- the authorized tenant/trust scope.
 
-A false miss wastes work. A false hit can silently return incorrect data. The design therefore optimizes for **zero false reuse decisions**, not for maximum hit ratio.
+A false miss wastes work. A false hit can silently return incorrect data. The primary design objective is therefore **zero false-safe reuse decisions**, not maximum hit ratio.
 
-This programme extends the existing safe-partial-execution research owned by [#2152](https://github.com/dunay2/dvt/issues/2152). It must not create a second planner, graph model, state authority, artifact store, event model, research registry or user-interface authority.
+The research decomposition is complete in [#2486](https://github.com/dunay2/dvt/issues/2486) and this PR. Production implementation is not claimed.
 
-## 2. Product hypothesis
+## Product hypothesis
 
-Current data/workflow systems often provide one or more of the following:
+Mature systems already provide individual pieces:
 
-- content-addressed blobs;
-- action/result caches;
-- state-based selection;
-- incremental query execution;
-- immutable table snapshots;
+- Bazel action caches and content-addressed storage;
+- Nix content-addressed/reproducible outputs;
+- dbt state/defer and artifacts;
 - workflow memoization;
-- runtime-specific execution evidence.
+- immutable Iceberg snapshots/manifests;
+- Arrow/Parquet data-plane formats;
+- incremental runtimes such as Differential Dataflow.
 
 The candidate DVT contribution is narrower and harder:
 
-> Given a heterogeneous DVT graph, determine and explain when a prior materialization remains exactly reusable across supported runtimes, while failing closed whenever definition, input, environment, effect, scope or evidence is unknown.
+> Verify and explain whether a prior result remains exactly reusable across supported heterogeneous data/runtime boundaries, while failing closed whenever definition, input, environment, effect, scope or evidence is unknown.
 
-The term **proof-carrying** may be used informally in this study, but it does not claim a universal mathematical proof. It means that each reuse decision carries versioned, immutable evidence that a verifier independent from the executor can check.
+“Proof-carrying” is used informally: each reuse carries versioned immutable evidence independently checkable by DVT. It is not a claim of universal mathematical proof.
 
-## 3. Current repository baseline
+## Repository baseline and existing foundations
 
-Baseline inspected: [`main@c82cfeb733de1c0bed2f869904b8f9252c97db2e`](https://github.com/dunay2/dvt/tree/c82cfeb733de1c0bed2f869904b8f9252c97db2e).
+Source audit baseline: [`main@af2a7f85ea5a2cfb5a5e9a888f702c078814b426`](https://github.com/dunay2/dvt/tree/af2a7f85ea5a2cfb5a5e9a888f702c078814b426).
 
-The audit confirms that DVT already has important foundations:
-
-| Existing capability | Current authority | Relevance |
+| Existing capability | Current authority | Decision |
 |---|---|---|
-| Deterministic `ExecutionPlan` construction | `@dvt/planner` + `@dvt/contracts` | Reuse the pure planner and immutable `PlanRef`; do not introduce another plan format. |
-| JCS/SHA-based plan identities | planner-local hashing plus `@dvt/crypto` convergence work | Reuse one vetted canonical digest authority after [#2185](https://github.com/dunay2/dvt/issues/2185) resolves current duplication. |
-| Content-addressed artifact publication | `@dvt/artifacts` | Extend the existing CAS with bounded read/verify/pin capabilities; do not build another CAS. |
-| Tenant-scoped artifact locators and collision verification | S3 CAS adapter | Reuse the security and integrity posture for materialization outputs/manifests. |
-| Immutable stored plans and exact `StartRun(PlanRef)` | Plan Store / engine | Planned reuse must be frozen into the exact stored plan, not recomputed inside Temporal. |
-| Run/step event truth | engine/state store | Reuse canonical runtime evidence; do not make the cache a second run-state authority. |
-| Existing safe-partial-execution research gates | #2152–#2162 | Reuse its oracle, safety, evidence, UI and stop/go protocol. |
+| Deterministic `ExecutionPlan` / `PlanRef` | `@dvt/planner`, `@dvt/contracts`, Plan Store | Preserve planner purity and exact stored-plan execution. |
+| Plan/input/blob hashes | Planner, crypto, artifacts | Keep current meanings; none is an `InvocationDigest`. |
+| Canonical crypto convergence | #2185 / #2191 | Reuse one proven RFC 8785 + SHA-256 authority. |
+| Tenant-scoped CAS publication | `@dvt/artifacts`, S3 adapter | Extend with bounded read/verify/pin; do not build another CAS. |
+| HTTP JSON trusted descriptors | HTTP JSON plugin | First exact production reuse vertical. |
+| PostgreSQL state/concurrency patterns | State-store adapters, snapshot work queue | Reuse transactions/`SKIP LOCKED`; add real monotonic fencing. |
+| dbt native analyzer | #2171 / `DbtCliProjectAnalyzer` | Reuse complete analysis result; no second analyzer/cache. |
+| Canonical run events/read models | Engine/state/Web | Add explicit reused-success outcome; never reinterpret `StepSkipped`. |
+| Safe partial-execution research | #2152–#2162 | Reuse semantics, oracle, evidence, UI and stop/go rails. |
 
-The audit also confirms the central gaps:
+Central missing seams:
 
-- no `InvocationDigest` that identifies one exact executable invocation;
-- no immutable `ResultManifest` that binds an invocation to verified outputs;
-- no materialization index mapping invocation identity to a result manifest;
-- no read/verify/pin contract on the current artifact store;
-- no lease/fencing protocol for concurrent equivalent producers;
-- no governed cross-runtime semantic profile for reuse;
-- no first end-to-end vertical proving a cache hit is observationally equivalent to full execution.
+- versioned exact `InvocationDigest`;
+- immutable `ResultManifest` and independent verifier;
+- tenant-scoped CAS read/verify and retention pins;
+- materialization index and single-flight fencing;
+- explicit reused-success event/evidence;
+- first E2E vertical proving full-versus-reused equivalence.
 
-Current `planId`, planner input hash and blob SHA-256 values are valid identities for their current domains. None is a substitute for invocation identity.
-
-## 4. Target conceptual model
+## Target architecture
 
 ```text
-Recipe identity
-      +
-Exact input snapshot identities
-      +
-Execution-contract identity
-      +
-Output contract + semantic profile
-      ↓
-InvocationDigest
-      ↓
-Materialization Index
-   ├── verified hit ──> pinned ResultManifest ──> reuse
-   ├── producer active ──> wait/single-flight ──> verify/reuse
-   └── miss ──> lease/fencing ──> execute ──> publish/verify/index
+RecipeDigest
++ exact InputSnapshotDigest[]
++ ParametersDigest
++ ExecutionContractDigest
++ OutputContractDigest
++ governed SemanticProfile
+          |
+          v
+     InvocationDigest
+          |
+          v
+scope-safe Materialization Index
+   | verified hit        | active producer         | miss
+   v                     v                         v
+ResultManifest      wait/recheck              lease/fence
+   |                     |                         |
+verify outputs/pin       +-----------+-------------+
+   |                                 v
+reuse success                  execute/publish
+                                      |
+                               independent verify
+                                      |
+                               fenced index confirm
 ```
 
-The model separates concerns deliberately:
+Identity domains remain separate:
 
-| Identity / object | Question answered |
+```text
+InvocationDigest       -> exact requested computation
+ResultManifestDigest   -> immutable action-to-output/evidence binding
+BlobDigest             -> physical-byte integrity
+PlanId                  -> canonical plan identity
+Run/step IDs            -> execution-attempt identity
+```
+
+Authorization is separate from intrinsic identity. V1 lookup and reuse remain tenant/trust-domain scoped; cross-tenant reuse/discovery is excluded.
+
+## Planned and opportunistic reuse
+
+### Planned pinned reuse
+
+Mutable candidates are resolved, authorized, verified and pinned before the pure planner. The immutable stored plan references the exact result/evidence/pin. Runtime executes that exact `PlanRef`; it does not silently re-plan.
+
+### Opportunistic reuse
+
+A step still planned to run may find an exact verified result or wait for another identical producer. Index/lease failure falls back to ordinary execution when policy permits. This optimization never changes stored plan truth.
+
+## Non-negotiable invariants
+
+1. Unknown, opaque, unsupported or unverifiable is never reusable.
+2. CAS presence and successful prior execution are not reuse proof.
+3. Planner performs no PostgreSQL, S3, HTTP, dbt or warehouse reads.
+4. `StartRun(PlanRef)` remains authoritative.
+5. Effects are governed; plugins cannot self-declare `cacheable: true`.
+6. Raw secrets never enter digest preimages, events or metrics.
+7. Compression and Arrow/Parquet representation are orthogonal to semantic identity.
+8. A stale producer cannot confirm after losing its fencing epoch.
+9. A result is eligible only after complete independent verification.
+10. Reuse is successful result satisfaction, never `StepSkipped`.
+11. Existing persisted identities retain their documented meanings.
+12. False-safe decisions are release blockers regardless of performance.
+
+## Slice studies
+
+| Slice | Study | Gate | Tasks |
+|---|---|---|---|
+| S01 — Exact invocation identity | [study](./slice-01-exact-invocation-identity.md) · [implementation plan](./slice-01-exact-invocation-identity-implementation-plan.md) · [validation](./slice-01-exact-invocation-identity-validation.md) · [manifest](./slice-01-exact-invocation-identity.manifest.json) | Conditional GO; implementation blocked | #2487, #2489 |
+| S02 — Result manifest/evidence | [study](./slice-02-immutable-result-manifest-and-evidence.md) | Conditional GO | #2490–#2492 |
+| S03 — CAS read/verify/pin | [study](./slice-03-cas-read-verify-and-retention-pin.md) | Conditional GO | #2493–#2495 |
+| S04 — Index/lease/fencing | [study](./slice-04-materialization-index-lease-and-fencing.md) | Conditional GO | #2496–#2498 |
+| S05 — Exact HTTP JSON reuse | [study](./slice-05-http-json-exact-reuse.md) | GO after prerequisites; first vertical | #2499–#2501 |
+| S06 — dbt native-analysis reuse | [study](./slice-06-dbt-native-analysis-reuse.md) | Conditional GO; blocked by #2171 | #2502, #2504, #2505 |
+| S07 — Pure artifact transform | [study](./slice-07-pure-artifact-action-result-reuse.md) | Experiment GO; benchmark-gated | #2506–#2508 |
+| S08 — Planned safe partial dbt | [study](./slice-08-planned-safe-partial-dbt-execution.md) | Research-gated through #2156–#2159 | #2509 |
+| S09 — Dataset/partition manifests | [study](./slice-09-dataset-snapshot-and-partition-manifests.md) | Research GO; deferred | #2510–#2512 |
+| S10 — Multi-runtime data plane | [study](./slice-10-multi-runtime-data-plane.md) | Deferred conditional GO | #2513–#2515 |
+| S11 — Outcomes/lifecycle/explanation | [study](./slice-11-outcomes-lifecycle-and-explanation.md) | Conditional GO; outcome contract early | #2516–#2518 |
+
+Complete issue/dependency register: [DMF delivery register](./delivery-register.md).
+
+## Critical path to first production value
+
+```text
+#2185/#2191 crypto convergence
+  -> S01 exact identity
+  -> S02 manifest/verifier/publication
+  -> S03 CAS verification/pins
+  -> S04 index/fencing/crash proof
+  -> S11 explicit reused-success outcome
+  -> S05 HTTP JSON exact reuse
+  -> S05 E2E oracle and value gate
+```
+
+No dbt execution, Arrow, Iceberg, partition or Flight/ADBC implementation belongs on the first critical path.
+
+## Open-source convergence policy
+
+Prefer mature standards and bounded adapters:
+
+- [RFC 8785](https://www.rfc-editor.org/rfc/rfc8785.html) and SHA-256 for canonical identity;
+- [Bazel Remote Execution API](https://github.com/bazelbuild/remote-apis) for action/cache/CAS separation;
+- [OCI descriptors](https://github.com/opencontainers/image-spec/blob/main/descriptor.md) for immutable content/runtime descriptors;
+- [in-toto attestation statement](https://github.com/in-toto/attestation) concepts for digest subjects and typed evidence;
+- PostgreSQL transactions/constraints/locking and existing DVT tenant patterns;
+- S3 conditional writes/streaming verification;
+- official dbt artifacts/state/parsing contracts;
+- Apache Arrow, Parquet, Iceberg and ADBC/Flight only at the data-plane/provider seams justified by each study.
+
+Reuse may mean adopting a specification, test corpus, small library or adapter—not importing an entire subsystem.
+
+Explicitly rejected for V1:
+
+- custom DVT binary encoder or hash algorithm;
+- another CAS, planner, analyzer, event store or scheduler;
+- global/cross-tenant cache;
+- URL/table/timestamp/row-count reuse heuristics;
+- universal SQL equivalence;
+- record-level incremental runtime before partition evidence is proven;
+- Arrow as plans/events/control-plane identity;
+- Flight/ADBC without a named measured consumer.
+
+## Programme gates
+
+Correctness and security:
+
+```text
+false-safe reuse decisions = 0
+accepted full-vs-reused observable divergence = 0
+reuse without complete supported evidence = 0
+eligible index row with absent/corrupt output = 0
+stale producer confirmed after takeover = 0
+cross-scope hit/existence disclosure = 0
+active/shared referenced output collected = 0
+opaque/effectful case silently reused = 0
+```
+
+Determinism and evidence:
+
+```text
+canonical identity repeatability = 100/100
+structured evidence coverage for accepted reuse = 100%
+unknown versions fail closed
+```
+
+Value gates are frozen before experiments through #2152. A safe but low-value slice is disabled, narrowed or stopped.
+
+## Existing authority map
+
+| Concern | Existing owner |
 |---|---|
-| `RecipeDigest` | What exact computation is requested? |
-| `InputSnapshotDigest` | What exact state is each input in? |
-| `ExecutionContractDigest` | Which runtime/plugin/settings can affect the result? |
-| `InvocationDigest` | Is this the same exact executable invocation? |
-| `ResultManifestDigest` | Which immutable outputs/evidence satisfy that invocation? |
-| `BlobDigest` | Are these physical bytes intact? |
-| Optional `LogicalDataDigest` | Are two governed representations logically equivalent? This is later research, not V1. |
+| Research lifecycle/value/novelty | #2152, #2154 |
+| Effects and observable semantics | #2156 |
+| Independent oracle/adversarial corpus | #2157 |
+| Plan evidence | #2158 |
+| Bounded safe partial dbt | #2159 |
+| User explanation | #2161 |
+| dbt source/analyzer convergence | #2171 |
+| Canonical cryptographic primitives | #2185 |
+| Runtime diagnostic evidence | #2473 |
 
-The intrinsic invocation identity is separate from authorization. V1 lookups remain tenant/trust-domain scoped, and **cross-tenant reuse is excluded** even when intrinsic digests match.
+## Evidence posture
 
-## 5. Two reuse planes, one semantic authority
+This PR is documentation/research and issue decomposition. It records source inspection at the stated baseline and formal implementation gates. It does not claim that Materialization Fabric production code, service-backed tests or benchmarks have already been delivered.
 
-### 5.1 Planned reuse
-
-The application resolves current snapshots and candidate materializations, freezes them into immutable planner input, and the pure planner emits explicit run/reuse decisions in the stored plan.
-
-```text
-mutable external state
-  -> application evidence resolution + verification + retention pin
-  -> immutable candidate bundle
-  -> pure planner
-  -> exact stored PlanRef
-  -> runtime executes that exact plan
-```
-
-The runtime must not silently re-plan a stored `PlanRef`.
-
-### 5.2 Opportunistic action-result reuse
-
-A step that is still planned to run may race with another identical invocation. The runtime may consult the same materialization authority:
-
-```text
-planned RUN
-  -> exact InvocationDigest
-  -> verified hit: reuse
-  -> active producer: wait with fencing
-  -> miss: execute and publish
-```
-
-This is an optimization only. If the opportunistic index is unavailable, DVT executes normally. If a stored plan explicitly pins a reused result and that result is unavailable or invalid, execution fails the exact plan rather than silently substituting a different decision.
-
-## 6. Non-negotiable invariants
-
-1. **Unknown is never reusable.** Missing, stale, opaque, unsupported or unverifiable evidence resolves to run or typed refusal.
-2. **CAS presence is not reuse proof.** A blob digest proves byte identity, not that the bytes satisfy the current invocation.
-3. **Successful prior execution is not reuse proof.** Inputs, environment, outputs, effects and evidence must still verify.
-4. **Planner purity remains intact.** PostgreSQL, S3, warehouse and provider reads happen before the planner and are frozen as immutable input.
-5. **`StartRun(PlanRef)` remains authoritative.** Temporal orchestrates; it does not invent materialization semantics.
-6. **Tenant and trust isolation remain explicit.** V1 has no cross-tenant discovery or reuse side channel.
-7. **Secrets never enter digest preimages as raw values.** Only governed, non-reversible version/reference evidence may participate when a secret version changes semantics.
-8. **Effects are governed, not self-declared.** A plugin cannot opt into reuse with a boolean such as `cacheable: true`.
-9. **Compression is orthogonal.** Identity hashes canonical uncompressed semantic bytes; storage/transport may compress without changing identity.
-10. **Arrow is a data-plane format, not an identity authority.** Arrow/Parquet/Iceberg may carry or persist data, while DVT manifests and snapshots govern reuse.
-11. **No silent compatibility change.** Existing plan, artifact, receipt or persisted hashes keep their current semantics. New materialization identities start with an explicit V1 schema; migrations are deliberate.
-12. **Zero false-safe decisions is the primary gate.** Performance value cannot compensate for incorrect reuse.
-
-## 7. Existing ownership and convergence
-
-| Concern | Existing owner to extend | This programme must not duplicate |
-|---|---|---|
-| Safe partial execution and research gates | [#2152](https://github.com/dunay2/dvt/issues/2152) | Another differentiation epic or research lifecycle. |
-| Prior-art/novelty comparison | [#2154](https://github.com/dunay2/dvt/issues/2154) | A promotional tool checklist. |
-| Observable semantics/effects | [#2156](https://github.com/dunay2/dvt/issues/2156) | A universal effect framework. |
-| Independent oracle/adversarial corpus | [#2157](https://github.com/dunay2/dvt/issues/2157) | A production benchmark database or second engine. |
-| Machine-verifiable plan evidence | [#2158](https://github.com/dunay2/dvt/issues/2158) | A mutable proof database. |
-| Bounded dbt partial execution | [#2159](https://github.com/dunay2/dvt/issues/2159) | A generic optimizer before the first vertical succeeds. |
-| User explanation | [#2161](https://github.com/dunay2/dvt/issues/2161) | Another Plan Preview/Run UI authority. |
-| dbt analysis/source identity | [#2171](https://github.com/dunay2/dvt/issues/2171) | A second dbt analyzer or premature cache. |
-| Canonical cryptographic primitives | [#2185](https://github.com/dunay2/dvt/issues/2185) | Another hash/canonicalization package. |
-| Runtime diagnostic evidence | [#2473](https://github.com/dunay2/dvt/issues/2473) | Another event/log store. |
-
-## 8. Slice-study protocol
-
-Each slice is studied and reviewed independently before implementation. Every slice document must contain:
-
-1. **Need** — the concrete failure/cost that justifies the slice.
-2. **Fit** — the exact existing DVT authority and integration seam.
-3. **Source audit** — current production code, contracts, tests and gaps at a fixed commit.
-4. **Open-source convergence** — standards/libraries/systems to reuse, plus explicit rejection of unnecessary dependencies.
-5. **Complexity** — semantic, implementation, migration, operational and security complexity.
-6. **What exists / what is missing** — no roadmap item may be presented as delivered.
-7. **Implementation boundary** — smallest complete vertical and files/packages likely affected.
-8. **Verification** — positive, negative, adversarial, concurrency and performance evidence.
-9. **Stop/go decision** — explicit conditions to proceed, narrow, defer or reject.
-10. **Dependencies and ownership** — issues/ADRs that must close first or be updated instead of duplicated.
-
-A slice is not Ready because a design can be written. It is Ready only when its identity, evidence, failure semantics, authoritative owner and falsifiable acceptance gates are fixed.
-
-## 9. Slice map
-
-| Slice | Need and result | Main reuse candidates | Initial complexity | Current status |
-|---|---|---|---|---|
-| S01 — Exact invocation identity | Distinguish one exact executable invocation from plan, run and blob identities. | RFC 8785, SHA-256, `@dvt/crypto`, Bazel REAPI action model, OCI digests. | Semantic **High**; code **Medium**; migration **High**. | **Studied in this PR — conditional GO.** |
-| S02 — Immutable result manifest and evidence | Bind invocation, outputs, producer and validation evidence immutably. | Existing contracts/CAS; OCI descriptor ideas; in-toto/SLSA concepts only if needed. | **High**. | Next study. |
-| S03 — CAS read, verify and retention pin | Safely retrieve and preserve outputs referenced by plans/manifests. | Existing `@dvt/artifacts`, S3 conditional operations/checksums. | **Medium–High**. | Pending. |
-| S04 — Materialization index, lease and fencing | Map invocation to result and prevent duplicate concurrent producers. | PostgreSQL unique constraints/advisory locks/leases; proven fencing-token patterns. | **High**, especially crash consistency. | Pending. |
-| S05 — Exact HTTP JSON reuse | First bounded end-to-end hit based on a trusted expected digest. | Existing HTTP JSON downloader and CAS. | **Medium**. | Candidate first implementation vertical. |
-| S06 — dbt native-analysis reuse | Avoid repeated `dbt parse` for an identical governed source/runtime identity. | Existing dbt analyzer/snapshots; dbt artifacts; request-scoped then durable evidence if measured. | **High**. | Pending #2171 measurements/identity. |
-| S07 — Pure artifact-to-artifact action cache | Prove complete recipe/input/runtime/output reuse under DVT-owned bytes. | CAS, ResultManifest, Arrow IPC/Parquet where useful. | **High**. | Pending S01–S04. |
-| S08 — Planned safe partial dbt execution | Reuse exact materializations inside immutable partial plans. | #2156–#2159, dbt state/artifacts, full-execution oracle. | **Very high**. | Research-gated. |
-| S09 — Partition and snapshot manifests | Recalculate only affected partitions rather than whole datasets. | Merkle manifests, Iceberg snapshots/manifests, Delta transaction log concepts. | **Very high**. | Later research. |
-| S10 — Multi-runtime data plane | Move data efficiently without inventing formats. | Arrow C Data/IPC/Flight, ADBC, Parquet, Iceberg. | **High**. | Later; never an identity prerequisite. |
-| S11 — Explanation, retention and quarantine | Make hits/misses/invalidation auditable and handle corruption/GC safely. | Existing Plan Preview, Runs/Console, OBS1, CAS lifecycle. | **High**. | Pending contracts and first vertical. |
-
-Detailed slice documents live beside this index. The first is [S01 — Exact invocation identity](./slice-01-exact-invocation-identity.md).
-
-## 10. Proposed dependency sequence
-
-```text
-S01 identity
-  ↓
-S02 result manifest/evidence
-  ↓
-S03 CAS read/verify/pin
-  ↓
-S04 index + lease/fencing
-  ↓
-S05 exact HTTP JSON vertical
-  ├── proves infrastructure and failure semantics
-  └── supplies evidence before broader caching
-
-S06 dbt native-analysis reuse
-  ↓
-S07 pure artifact action cache
-  ↓
-S08 planned safe partial dbt
-  ↓
-S09 partition/snapshot reuse
-  ↓
-S10 broader multi-runtime data plane
-
-S11 explanation/retention/quarantine evolves only from delivered contracts.
-```
-
-The sequence is intentionally conservative. No generic materialization subsystem should be implemented before the exact HTTP or artifact vertical proves the contracts and operational protocol.
-
-## 11. Open-source reuse policy
-
-Prefer established specifications and narrow libraries over custom mechanisms:
-
-- [RFC 8785 / JCS](https://www.rfc-editor.org/rfc/rfc8785.html) for canonical JSON preimages;
-- [Bazel Remote Execution API](https://github.com/bazelbuild/remote-apis) as prior art for separating action identity, action cache and CAS;
-- [OCI Image Specification](https://github.com/opencontainers/image-spec) for content descriptors and immutable runtime image digests;
-- [Apache Arrow](https://arrow.apache.org/docs/format/Columnar.html), [Parquet](https://parquet.apache.org/) and [Iceberg](https://iceberg.apache.org/spec/) for data-plane and snapshot primitives;
-- PostgreSQL and S3 primitives already used by DVT for durable indexing, conditional publication and tenant-scoped storage.
-
-Reuse does not mean importing an entire subsystem. The study must first determine whether DVT needs:
-
-- a protocol concept;
-- a test-vector corpus;
-- a small library;
-- an adapter;
-- or no dependency at all.
-
-A dependency is accepted only when it removes more correctness/maintenance risk than it introduces.
-
-## 12. Global success and stop gates
-
-The initial gates inherited from #2152 remain authoritative:
-
-- false-safe reuse decisions: **0**;
-- observable divergence in accepted reuse cases: **0**;
-- deterministic canonical identity: **100/100** identical evaluations;
-- structured evidence coverage for every reuse: **100%**;
-- unknown/opaque cases silently reused: **0**;
-- median useful-work reduction in designated incremental scenarios: initially **at least 20%**;
-- planner overhead at the governed 1,000-node case: within the frozen protocol bound;
-- cross-scope materialization leaks or discovery side channels: **0**.
-
-Stop, narrow or defer when:
-
-- exact input/runtime identity cannot be established;
-- the oracle cannot detect deliberately unsafe reuse;
-- canonicalization is not interoperable across supported runtimes;
-- correctness holds but measured value is below the frozen threshold;
-- operational complexity exceeds the value of recomputation;
-- a mature external system already owns the exact required boundary more safely.
-
-## 13. Evidence posture of this PR
-
-This first PR is documentation-only and commit-bound. Source code and issue ownership were inspected at the baseline above. It does not claim that repository commands, service-backed tests or benchmarks have already been executed for the proposed mechanism.
-
-Each later implementation slice must add executable evidence through the existing DVT test and CI rails rather than treating this document or a merged PR as proof of delivery.
+Every implementation issue requires executable proof through existing DVT CI/service-backed rails. A merged research PR or completed checklist is not runtime evidence.

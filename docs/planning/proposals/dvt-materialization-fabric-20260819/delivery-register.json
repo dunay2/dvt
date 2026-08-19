@@ -1,0 +1,125 @@
+{
+  "schemaVersion": "1.0",
+  "programme": {
+    "code": "DMF",
+    "name": "DVT Materialization Fabric",
+    "epic": 2486,
+    "studyPullRequest": 2484,
+    "parentResearchEpic": 2152,
+    "baselineCommit": "af2a7f85ea5a2cfb5a5e9a888f702c078814b426",
+    "researchDecomposition": "complete",
+    "productionImplementation": "not-delivered"
+  },
+  "globalInvariants": [
+    "zero-false-safe-reuse",
+    "zero-accepted-observable-divergence",
+    "unknown-never-reusable",
+    "planner-remains-pure",
+    "start-run-plan-ref-remains-authoritative",
+    "scope-safe-v1-no-cross-tenant-reuse",
+    "independent-result-verification-before-eligibility",
+    "monotonic-fencing-on-final-confirmation",
+    "reused-output-is-success-not-skipped",
+    "compression-and-data-plane-encoding-orthogonal-to-identity"
+  ],
+  "slices": [
+    {
+      "id": "S01",
+      "name": "Exact invocation identity",
+      "study": "slice-01-exact-invocation-identity.md",
+      "gate": "conditional-go-implementation-blocked",
+      "tasks": [2487, 2489],
+      "dependsOnIssues": [2185, 2191, 2156]
+    },
+    {
+      "id": "S02",
+      "name": "Immutable result manifest and evidence",
+      "study": "slice-02-immutable-result-manifest-and-evidence.md",
+      "gate": "conditional-go",
+      "tasks": [2490, 2491, 2492],
+      "dependsOnSlices": ["S01"]
+    },
+    {
+      "id": "S03",
+      "name": "CAS read verify and retention pin",
+      "study": "slice-03-cas-read-verify-and-retention-pin.md",
+      "gate": "conditional-go",
+      "tasks": [2493, 2494, 2495],
+      "dependsOnSlices": ["S02"]
+    },
+    {
+      "id": "S04",
+      "name": "Materialization index lease and fencing",
+      "study": "slice-04-materialization-index-lease-and-fencing.md",
+      "gate": "conditional-go",
+      "tasks": [2496, 2497, 2498],
+      "dependsOnSlices": ["S01", "S02", "S03"]
+    },
+    {
+      "id": "S05",
+      "name": "Exact HTTP JSON reuse",
+      "study": "slice-05-http-json-exact-reuse.md",
+      "gate": "go-first-production-vertical-after-prerequisites",
+      "tasks": [2499, 2500, 2501],
+      "dependsOnSlices": ["S01", "S02", "S03", "S04", "S11"]
+    },
+    {
+      "id": "S06",
+      "name": "dbt native-analysis reuse",
+      "study": "slice-06-dbt-native-analysis-reuse.md",
+      "gate": "conditional-go",
+      "tasks": [2502, 2504, 2505],
+      "dependsOnIssues": [2171],
+      "dependsOnSlices": ["S01", "S02", "S03", "S04"]
+    },
+    {
+      "id": "S07",
+      "name": "Pure managed-artifact action-result reuse",
+      "study": "slice-07-pure-artifact-action-result-reuse.md",
+      "gate": "experiment-go-benchmark-blocked",
+      "tasks": [2506, 2507, 2508],
+      "dependsOnSlices": ["S01", "S02", "S03", "S04", "S05", "S11"]
+    },
+    {
+      "id": "S08",
+      "name": "Planned safe partial dbt execution",
+      "study": "slice-08-planned-safe-partial-dbt-execution.md",
+      "gate": "research-gated-go",
+      "tasks": [2509],
+      "dependsOnIssues": [2156, 2157, 2158, 2159, 2161],
+      "dependsOnSlices": ["S01", "S02", "S03", "S04"]
+    },
+    {
+      "id": "S09",
+      "name": "Dataset snapshot and partition manifests",
+      "study": "slice-09-dataset-snapshot-and-partition-manifests.md",
+      "gate": "research-go-implementation-deferred",
+      "tasks": [2510, 2511, 2512],
+      "dependsOnSlices": ["S08"]
+    },
+    {
+      "id": "S10",
+      "name": "Multi-runtime data plane",
+      "study": "slice-10-multi-runtime-data-plane.md",
+      "gate": "deferred-conditional-go",
+      "tasks": [2513, 2514, 2515],
+      "activationCondition": "named-consumer-and-measured-go"
+    },
+    {
+      "id": "S11",
+      "name": "Outcomes lifecycle and explanation",
+      "study": "slice-11-outcomes-lifecycle-and-explanation.md",
+      "gate": "conditional-go",
+      "tasks": [2516, 2517, 2518],
+      "dependsOnIssues": [2161, 2473],
+      "earlyCriticalTask": 2516
+    }
+  ],
+  "counts": {
+    "slices": 11,
+    "newTasks": 30,
+    "newEpicIssues": 1
+  },
+  "firstProductionVertical": "S05",
+  "criticalPath": [2185, 2191, 2487, 2489, 2490, 2491, 2493, 2494, 2496, 2497, 2492, 2498, 2516, 2499, 2500, 2501]
+}
