@@ -3,6 +3,7 @@
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { CanonicalNode } from '../../types/canonical';
 import { canvasViewCopy } from './copy';
 import { createCanvasColumnHandleId } from './canvasColumnLineageProjection';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
@@ -16,6 +17,67 @@ import {
   restoreGraphHandlersTestDoubles,
   toastState,
 } from './useCanvasGraphHandlers.test.support';
+
+const HTTP_JSON_ACQUISITION_NODE = {
+  id: 'acquire-orders',
+  name: 'Acquire orders',
+  pluginId: 'dvt.http-json',
+  kind: 'dvt:http_json_acquisition',
+  role: 'input',
+  status: 'idle',
+  tags: [],
+} satisfies CanonicalNode;
+
+const OBJECT_FILE_LOAD_NODE = {
+  id: 'load-orders',
+  name: 'Load orders',
+  pluginId: 'dvt.object-file-postgres',
+  kind: 'dvt:object_file_load',
+  role: 'transform',
+  status: 'idle',
+  tags: [],
+} satisfies CanonicalNode;
+
+const HETEROGENEOUS_BRIDGE_CAPABILITIES = {
+  plugins: {
+    'dvt.http-json': { available: true },
+    'dvt.object-file-postgres': { available: true },
+  },
+} as const;
+
+function buildHeterogeneousBridgeFlowNodes() {
+  return [
+    {
+      id: HTTP_JSON_ACQUISITION_NODE.id,
+      data: {
+        name: HTTP_JSON_ACQUISITION_NODE.name,
+        pluginKind: HTTP_JSON_ACQUISITION_NODE.kind,
+        role: HTTP_JSON_ACQUISITION_NODE.role,
+        status: HTTP_JSON_ACQUISITION_NODE.status,
+      },
+      position: { x: 0, y: 0 },
+    },
+    {
+      id: OBJECT_FILE_LOAD_NODE.id,
+      data: {
+        name: OBJECT_FILE_LOAD_NODE.name,
+        pluginKind: OBJECT_FILE_LOAD_NODE.kind,
+        role: OBJECT_FILE_LOAD_NODE.role,
+        status: OBJECT_FILE_LOAD_NODE.status,
+      },
+      position: { x: 220, y: 0 },
+    },
+  ];
+}
+
+async function useRealConnectionAdmissionRail() {
+  const { evaluateConnection } = await vi.importActual<
+    typeof import('../../plugins/contracts/ConnectionRules')
+  >('../../plugins/contracts/ConnectionRules');
+  evaluateGraphHandlerConnectionWith((source, target, pluginPortMap) =>
+    evaluateConnection(source, target, [], pluginPortMap)
+  );
+}
 
 describe('useCanvasGraphHandlers edge authoring', () => {
   beforeEach(() => {
@@ -510,6 +572,94 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     expect(nextDraftSession.workingSet.visibleEdges).toEqual([
       { sourceId: 'warehouse-source', targetId: 'dbt-model' },
     ]);
+
+    harness.cleanup();
+  });
+
+  it('confirms the registered HTTP JSON to object-file bridge through the real admission rail', async () => {
+    await useRealConnectionAdmissionRail();
+    const draftSession = {
+      ...buildDraftSession(),
+      workingSet: {
+        visibleNodeIds: [HTTP_JSON_ACQUISITION_NODE.id, OBJECT_FILE_LOAD_NODE.id],
+        visibleEdges: [],
+        pendingExplicitNodeIds: [],
+      },
+    };
+    const setEdges = vi.fn();
+    const setDraftSession = vi.fn();
+    const harness = renderGraphHandlersHook({
+      canEditEdges: true,
+      setEdges,
+      setDraftSession,
+      draftSession,
+      runtimeCapabilities: HETEROGENEOUS_BRIDGE_CAPABILITIES,
+      canonicalNodes: [HTTP_JSON_ACQUISITION_NODE, OBJECT_FILE_LOAD_NODE],
+      nodes: buildHeterogeneousBridgeFlowNodes(),
+    });
+    await harness.render();
+
+    act(() => {
+      harness.latest()?.onConnect({
+        source: HTTP_JSON_ACQUISITION_NODE.id,
+        sourceHandle: null,
+        target: OBJECT_FILE_LOAD_NODE.id,
+        targetHandle: null,
+      });
+    });
+
+    expect(toastState.error).not.toHaveBeenCalled();
+    expect(harness.latest()?.confirmEdgeModal).toEqual({
+      open: true,
+      edge: {
+        source: HTTP_JSON_ACQUISITION_NODE.name,
+        target: OBJECT_FILE_LOAD_NODE.name,
+        type: 'lineage',
+      },
+    });
+
+    act(() => {
+      harness.latest()?.confirmEdgeCreation();
+    });
+
+    expect(setEdges).toHaveBeenCalledTimes(1);
+    expect(setDraftSession).toHaveBeenCalledTimes(1);
+    const updateDraftSession = setDraftSession.mock.calls[0]?.[0];
+    expect(typeof updateDraftSession).toBe('function');
+    expect(updateDraftSession(draftSession).workingSet.visibleEdges).toEqual([
+      { sourceId: HTTP_JSON_ACQUISITION_NODE.id, targetId: OBJECT_FILE_LOAD_NODE.id },
+    ]);
+
+    harness.cleanup();
+  });
+
+  it('rejects the inverse object-file to HTTP JSON bridge without mutating graph truth', async () => {
+    await useRealConnectionAdmissionRail();
+    const setEdges = vi.fn();
+    const setDraftSession = vi.fn();
+    const harness = renderGraphHandlersHook({
+      canEditEdges: true,
+      setEdges,
+      setDraftSession,
+      runtimeCapabilities: HETEROGENEOUS_BRIDGE_CAPABILITIES,
+      canonicalNodes: [HTTP_JSON_ACQUISITION_NODE, OBJECT_FILE_LOAD_NODE],
+      nodes: buildHeterogeneousBridgeFlowNodes(),
+    });
+    await harness.render();
+
+    act(() => {
+      harness.latest()?.onConnect({
+        source: OBJECT_FILE_LOAD_NODE.id,
+        sourceHandle: null,
+        target: HTTP_JSON_ACQUISITION_NODE.id,
+        targetHandle: null,
+      });
+    });
+
+    expect(toastState.error).toHaveBeenCalledTimes(1);
+    expect(harness.latest()?.confirmEdgeModal).toEqual({ open: false, edge: null });
+    expect(setEdges).not.toHaveBeenCalled();
+    expect(setDraftSession).not.toHaveBeenCalled();
 
     harness.cleanup();
   });
