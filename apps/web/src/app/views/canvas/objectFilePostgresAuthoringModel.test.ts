@@ -1,7 +1,12 @@
-import { LOAD_OBJECT_FILE_TO_POSTGRES_MAX_BYTES } from '@dvt/contracts';
+import {
+  LOAD_OBJECT_FILE_TO_POSTGRES_MAX_BYTES,
+  OBJECT_FILE_POSTGRES_COLUMN_TYPE,
+} from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
+import { projectWorkspaceGraphAuthoringDraftSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
 import type { CanonicalNode } from '../../types/canonical';
+import { projectCanonicalNodeToAuthoringNode } from './canvasDraftAuthoring';
 import {
   applyObjectFilePostgresAuthoringDraft,
   createObjectFilePostgresAuthoringDraft,
@@ -138,6 +143,130 @@ describe('object-file PostgreSQL authoring model', () => {
           ?.objectFilePostgres as Record<string, unknown>
       ).scope
     ).toBeUndefined();
+  });
+
+  it.each([
+    ['csv', 'text/csv'],
+    ['jsonl', 'application/x-ndjson'],
+  ] as const)('keeps %s format aligned across Apply and Preview', (format, mediaType) => {
+    const draft = createObjectFilePostgresAuthoringDraft(objectFileNode)!;
+    const applied = applyObjectFilePostgresAuthoringDraft(
+      objectFileNode,
+      { ...draft, format },
+      scope
+    );
+
+    expect(applied.metadata?.objectFilePostgres).toMatchObject({
+      source: { format, mediaType },
+    });
+    expect(
+      projectObjectFilePostgresStepTypeConfig({ node: applied, executionScope: scope })
+    ).toMatchObject({
+      ok: true,
+      stepTypeConfig: { source: { format, mediaType }, scope },
+    });
+  });
+
+  it.each([
+    ['sha256', { sha256: 'not-a-sha' }, 'object_file_sha256_invalid'],
+    [
+      'sourceCredentialRef',
+      { sourceCredentialRef: 'postgres:wrong-namespace' },
+      'object_file_source_credential_ref_invalid',
+    ],
+    ['targetRelation', { targetRelation: 'Orders-Table' }, 'object_file_target_relation_invalid'],
+    [
+      'targetCredentialRef',
+      { targetCredentialRef: 'object-store:wrong-namespace' },
+      'object_file_target_credential_ref_invalid',
+    ],
+  ] as const)('maps invalid %s through its existing field error', (field, patch, error) => {
+    const draft = createObjectFilePostgresAuthoringDraft(objectFileNode)!;
+
+    expect(validateObjectFilePostgresAuthoringDraft({ ...draft, ...patch }, scope)).toMatchObject({
+      ok: false,
+      errors: { [field]: error },
+    });
+  });
+
+  it.each(OBJECT_FILE_POSTGRES_COLUMN_TYPE)(
+    'keeps the supported %s column type through Apply and Preview',
+    (dataType) => {
+      const draft = createObjectFilePostgresAuthoringDraft(objectFileNode)!;
+      const applied = applyObjectFilePostgresAuthoringDraft(
+        objectFileNode,
+        {
+          ...draft,
+          columns: [
+            { sourceField: 'order_id', targetColumn: 'order_id', dataType, nullable: true },
+          ],
+        },
+        scope
+      );
+
+      expect(applied.metadata?.objectFilePostgres).toMatchObject({
+        columns: [{ sourceField: 'order_id', targetColumn: 'order_id', dataType, nullable: true }],
+      });
+      expect(
+        projectObjectFilePostgresStepTypeConfig({ node: applied, executionScope: scope })
+      ).toMatchObject({ ok: true });
+    }
+  );
+
+  it.each([
+    ['sourceField', { sourceField: 'orders.id' }],
+    ['targetColumn', { targetColumn: 'Order-ID' }],
+  ] as const)('rejects an invalid column %s through the mapping section error', (_field, patch) => {
+    const draft = createObjectFilePostgresAuthoringDraft(objectFileNode)!;
+    const [column] = draft.columns;
+
+    expect(
+      validateObjectFilePostgresAuthoringDraft(
+        { ...draft, columns: [{ ...column!, ...patch }] },
+        scope
+      )
+    ).toMatchObject({
+      ok: false,
+      errors: { columns: 'object_file_column_mapping_invalid' },
+    });
+  });
+
+  it.each(['sourceField', 'targetColumn'] as const)(
+    'rejects duplicate mapping %s values through the existing section error',
+    (field) => {
+      const draft = createObjectFilePostgresAuthoringDraft(objectFileNode)!;
+      const [column] = draft.columns;
+      const duplicate = {
+        ...column!,
+        sourceField: field === 'sourceField' ? column!.sourceField : 'customer_id',
+        targetColumn: field === 'targetColumn' ? column!.targetColumn : 'customer_id',
+      };
+
+      expect(
+        validateObjectFilePostgresAuthoringDraft({ ...draft, columns: [column!, duplicate] }, scope)
+      ).toMatchObject({
+        ok: false,
+        errors: { columns: 'object_file_column_mapping_invalid' },
+      });
+    }
+  );
+
+  it('preserves object-file metadata through the protected Graph Draft projection', () => {
+    const authoringNode = projectCanonicalNodeToAuthoringNode(objectFileNode);
+    const reopened = projectWorkspaceGraphAuthoringDraftSemanticGraph({
+      canvas: { kind: 'transformation', title: 'Plugin authoring proof' },
+      nodeIds: [objectFileNode.id],
+      nodePositions: { [objectFileNode.id]: { x: 0, y: 0 } },
+      nodes: [authoringNode],
+      edges: [],
+    }).canonicalNodes[0];
+
+    expect(reopened?.metadata?.objectFilePostgres).toEqual(
+      objectFileNode.metadata?.objectFilePostgres
+    );
+    expect(
+      projectObjectFilePostgresStepTypeConfig({ node: reopened!, executionScope: scope })
+    ).toMatchObject({ ok: true, stepTypeConfig: { scope } });
   });
 
   it('rejects another tenant object before applying the draft', () => {
