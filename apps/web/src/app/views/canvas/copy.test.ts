@@ -5,6 +5,7 @@ import type { CanvasInspectorNodeDraftErrorCode } from './canvasInspectorAuthori
 import type { CanvasViewCopy } from './canvasCopy.types';
 import {
   canvasViewCopy,
+  formatCanvasConnectionRejection,
   formatCanvasInspectorNodeDraftError,
   formatTransformationGraphValidationSummary,
 } from './copy';
@@ -124,6 +125,17 @@ describe('canvas copy catalog', () => {
     );
     expect(formatTransformationGraphValidationSummary('ambiguous_executable_paths', 'es-ES')).toBe(
       'El Execution Preview requiere seleccionar una única ruta source -> sql_transform -> sink.'
+    );
+  });
+
+  it('formats a missing plugin connection policy from locale copy', () => {
+    const rejection = { code: 'plugin_policy_missing', pluginId: 'dbt' } as const;
+
+    expect(formatCanvasConnectionRejection(rejection, 'en-US')).toBe(
+      'Connection policy is unavailable for plugin dbt.'
+    );
+    expect(formatCanvasConnectionRejection(rejection, 'es-ES')).toBe(
+      'La política de conexiones no está disponible para el plugin dbt.'
     );
   });
 });

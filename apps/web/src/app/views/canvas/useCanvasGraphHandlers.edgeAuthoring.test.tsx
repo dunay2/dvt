@@ -296,6 +296,41 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     harness.cleanup();
   });
 
+  it.each([
+    ['self_connection', canvasViewCopy.connectionSelfNotAllowedMessage],
+    ['duplicate_edge', canvasViewCopy.connectionAlreadyExistsMessage],
+    ['cycle_detected', canvasViewCopy.connectionCycleDetectedMessage],
+  ] as const)(
+    'reports %s without mutating the graph draft',
+    async (reasonCode, expectedMessage) => {
+      rejectGraphHandlerConnectionWith({ allowed: false, reasonCode });
+      const setEdges = vi.fn();
+      const setDraftSession = vi.fn();
+      const harness = renderGraphHandlersHook({
+        canEditEdges: true,
+        setEdges,
+        setDraftSession,
+      });
+      await harness.render();
+
+      act(() => {
+        harness.latest()?.onConnect({
+          source: 'source-node',
+          sourceHandle: null,
+          target: 'sink-node',
+          targetHandle: null,
+        });
+      });
+
+      expect(toastState.error).toHaveBeenCalledWith(expectedMessage);
+      expect(setEdges).not.toHaveBeenCalled();
+      expect(setDraftSession).not.toHaveBeenCalled();
+      expect(harness.latest()?.confirmEdgeModal).toEqual({ open: false, edge: null });
+
+      harness.cleanup();
+    }
+  );
+
   it('uses visible draft node ports when runtime capabilities omit a node plugin', async () => {
     evaluateGraphHandlerConnectionWith((source, target, pluginPortMap) => {
       if (pluginPortMap.has(source.pluginId) && pluginPortMap.has(target.pluginId)) {

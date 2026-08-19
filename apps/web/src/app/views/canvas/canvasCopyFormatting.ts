@@ -183,7 +183,9 @@ export function formatCanvasConnectionRejection(
     case 'node_not_found_in_graph':
       return copy.nodeNotFoundInGraphMessage;
     case 'plugin_policy_missing':
-      return `Connection policy is unavailable for plugin ${rejection.pluginId}.`;
+      return formatCanvasCopyTemplate(copy.connectionPluginPolicyUnavailableTemplate, {
+        plugin: rejection.pluginId,
+      });
     case 'self_connection':
       return copy.connectionSelfNotAllowedMessage;
     case 'duplicate_edge':
