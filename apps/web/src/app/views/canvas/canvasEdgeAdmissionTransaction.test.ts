@@ -2,9 +2,13 @@ import type { Connection, Edge } from '@xyflow/react';
 import { DVT_TRANSFORM_AUTHORING_MODE } from '@dvt/contracts';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { buildNodePropertiesReadModel } from '../../components/inspector/nodePropertiesReadModel';
 import { getPluginPortMap } from '../../plugins/registry';
+import { projectWorkspaceGraphAuthoringDraftSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
 import type { CanonicalNode } from '../../types/canonical';
+import { buildCanvasAuthoringGraphProjection } from './canvasAuthoringGraphProjection';
 import type { CanvasDraftSession } from './canvasDraftSession';
+import { buildCurrentDraftPayload } from './canvasDraftLifecycleSnapshot';
 import {
   applyDvtVisualTransformRecipe,
   readDvtTransformAuthoringAuthority,
@@ -439,6 +443,81 @@ describe('canvasEdgeAdmissionTransaction', () => {
       outcome: 'noop',
       rejection: { code: 'plugin_rule_blocked', reason: 'Sinks are terminal nodes' },
     });
+  });
+
+  it('keeps a rejected stage edge out of persistence and Inputs/Outputs', () => {
+    const source = buildCanonicalNode('source-node', 'input', 'dvt:source');
+    const sink = buildCanonicalNode('sink-node', 'output', 'dvt:sink');
+    const canonicalNodes = [source, sink];
+    const canonicalNodesById = new Map(canonicalNodes.map((node) => [node.id, node]));
+    const draftSession: CanvasDraftSession = {
+      ...buildDraftSession(),
+      workingSet: {
+        visibleNodeIds: canonicalNodes.map((node) => node.id),
+        visibleEdges: [],
+        pendingExplicitNodeIds: [],
+      },
+    };
+    const viewportEdges: Edge[] = [];
+
+    const transaction = resolveCanvasEdgeConfirmationTransaction({
+      canonicalNodesById,
+      connection: {
+        source: source.id,
+        sourceHandle: null,
+        target: sink.id,
+        targetHandle: null,
+      },
+      draftSession,
+      edges: viewportEdges,
+      pluginPortMap,
+    });
+
+    expect(transaction).toEqual({
+      outcome: 'noop',
+      rejection: {
+        code: 'plugin_rule_blocked',
+        reason: 'Connection not permitted by DVT authoring rules',
+      },
+    });
+    expect(viewportEdges).toEqual([]);
+    expect(draftSession.workingSet.visibleEdges).toEqual([]);
+
+    const persistedDraft = buildCurrentDraftPayload(
+      canonicalNodes.map((node, index) => ({
+        id: node.id,
+        position: { x: index * 100, y: 0 },
+      })),
+      draftSession,
+      { kind: 'transformation', title: 'Main canvas' },
+      null,
+      canonicalNodes,
+      []
+    );
+    const semanticGraph = projectWorkspaceGraphAuthoringDraftSemanticGraph(persistedDraft);
+    const projection = buildCanvasAuthoringGraphProjection({
+      visibleNodeIds: persistedDraft.nodeIds,
+      visibleEdges: persistedDraft.edges,
+      draftSemanticGraph: semanticGraph,
+      localCanonicalNodes: [],
+    });
+    const readInputsOutputs = (
+      nodeId: string
+    ): ReturnType<typeof buildNodePropertiesReadModel>['sections'][number] | undefined => {
+      const node = projection.canonicalNodesById.get(nodeId);
+      expect(node).toBeDefined();
+      return buildNodePropertiesReadModel({
+        node: node!,
+        nodes: projection.canonicalNodes,
+        edges: projection.canonicalEdges,
+      }).sections.find((section) => section.id === 'inputs-outputs');
+    };
+
+    expect(persistedDraft.nodeIds).toEqual([source.id, sink.id]);
+    expect(persistedDraft.edges).toEqual([]);
+    expect(projection.canonicalEdges).toEqual([]);
+    expect(readInputsOutputs(source.id)?.tableRows ?? []).toEqual([]);
+    expect(readInputsOutputs(sink.id)?.tableRows ?? []).toEqual([]);
   });
 
   it('reconnects an edge with a stable edge identity and draft visible edges together', () => {
