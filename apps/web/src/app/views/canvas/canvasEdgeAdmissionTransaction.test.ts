@@ -13,6 +13,7 @@ import {
   resolveCanvasEdgeConfirmationTransaction,
   resolveCanvasEdgeReconnectTransaction,
 } from './canvasEdgeAdmissionTransaction';
+import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 
 function buildCanonicalNode(
   id: string,
@@ -482,6 +483,80 @@ describe('canvasEdgeAdmissionTransaction', () => {
     expect(transaction.draftSession.workingSet.visibleEdges).toEqual([
       { sourceId: 'source-node', targetId: 'transform-node' },
     ]);
+  });
+
+  it('reprojects available transform columns from the replacement upstream source', () => {
+    const firstSource = {
+      ...buildCanonicalNode('source-node', 'input', 'dvt:source'),
+      metadata: { columns: [{ name: 'legacy_id', type: 'integer' }] },
+    };
+    const replacementSource = {
+      ...buildCanonicalNode('replacement-source', 'input', 'dvt:source'),
+      metadata: { columns: [{ name: 'current_id', type: 'text' }] },
+    };
+    const transform = buildCanonicalNode('transform-node', 'transform', 'dvt:sql_transform');
+    const canonicalNodesById = new Map<string, CanonicalNode>([
+      [firstSource.id, firstSource],
+      [replacementSource.id, replacementSource],
+      [transform.id, transform],
+    ]);
+    const edge: Edge = {
+      id: 'edge-1',
+      source: firstSource.id,
+      target: transform.id,
+    };
+    const draftSession: CanvasDraftSession = {
+      ...buildDraftSession([{ sourceId: firstSource.id, targetId: transform.id }]),
+      workingSet: {
+        visibleNodeIds: [firstSource.id, replacementSource.id, transform.id],
+        visibleEdges: [{ sourceId: firstSource.id, targetId: transform.id }],
+        pendingExplicitNodeIds: [],
+      },
+    };
+
+    const transaction = resolveCanvasEdgeReconnectTransaction({
+      canonicalNodesById,
+      connection: {
+        source: replacementSource.id,
+        sourceHandle: null,
+        target: transform.id,
+        targetHandle: null,
+      },
+      draftSession,
+      edge,
+      edges: [edge],
+      pluginPortMap,
+    });
+
+    expect(transaction.outcome).toBe('reconnected');
+    if (transaction.outcome !== 'reconnected') {
+      throw new Error('Expected a reconnected edge transaction');
+    }
+    expect(transaction.draftSession.workingSet.visibleEdges).toEqual([
+      { sourceId: replacementSource.id, targetId: transform.id },
+    ]);
+
+    const presentation = projectCanvasNodePresentationTruth({
+      node: transform,
+      nodes: [firstSource, replacementSource, transform],
+      edges: transaction.draftSession.workingSet.visibleEdges,
+    });
+
+    expect(presentation.columns.inherited).toEqual([
+      expect.objectContaining({
+        name: 'current_id',
+        reference: `${replacementSource.id}.current_id`,
+        sourceNodeId: replacementSource.id,
+      }),
+    ]);
+    expect(presentation.columns.inherited).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: 'legacy_id',
+          sourceNodeId: firstSource.id,
+        }),
+      ])
+    );
   });
 
   it('keeps reconnecting to the same target idempotent instead of duplicating edges', () => {
