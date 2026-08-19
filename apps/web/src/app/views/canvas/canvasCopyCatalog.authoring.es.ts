@@ -327,9 +327,10 @@ export const canvasViewAuthoringCopyEs = {
     'Usa s3://<bucket>/tenants/<tenant>/<sha256> para el objeto inmutable.',
   inspectorErrorObjectFileSha256Invalid:
     'El SHA-256 debe contener exactamente 64 caracteres hexadecimales.',
-  inspectorErrorObjectFileSizeInvalid: 'El tamaño debe ser un número de bytes positivo y admitido.',
+  inspectorErrorObjectFileSizeInvalid:
+    'El tamaño del objeto debe ser positivo, no superar 50000000 bytes y no superar el tamaño máximo.',
   inspectorErrorObjectFileMaxBytesInvalid:
-    'El máximo debe ser positivo, acotado y no inferior al tamaño del objeto.',
+    'El tamaño máximo debe ser positivo, no superar 50000000 bytes y ser al menos el tamaño del objeto.',
   inspectorErrorObjectFileSourceCredentialInvalid:
     'Usa una referencia de credencial opaca object-store:<id>.',
   inspectorErrorObjectFileTargetRelationInvalid:
