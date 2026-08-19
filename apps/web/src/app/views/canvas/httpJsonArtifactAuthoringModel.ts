@@ -40,7 +40,10 @@ export const HTTP_JSON_AUTHORING_ERROR = {
 } as const;
 
 export type HttpJsonArtifactAuthoringErrors = Partial<
-  Record<keyof typeof HTTP_JSON_AUTHORING_ERROR, string>
+  Record<
+    keyof typeof HTTP_JSON_AUTHORING_ERROR,
+    (typeof HTTP_JSON_AUTHORING_ERROR)[keyof typeof HTTP_JSON_AUTHORING_ERROR]
+  >
 >;
 export type HttpJsonArtifactAuthoringValidation =
   | Readonly<{ ok: true; metadata: HttpJsonArtifactAuthoringMetadata }>

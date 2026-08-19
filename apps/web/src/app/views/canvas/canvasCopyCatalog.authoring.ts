@@ -929,6 +929,99 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.errorDvtWriteModeInvalid',
     fallback: 'Write mode must be replace or append.',
   },
+  inspectorHttpJsonTitle: {
+    key: 'canvas.inspector.httpJson.title',
+    fallback: 'HTTP JSON acquisition',
+  },
+  inspectorHttpJsonDescription: {
+    key: 'canvas.inspector.httpJson.description',
+    fallback:
+      'Fetch immutable JSON or JSON Lines through opaque endpoint and credential references.',
+  },
+  inspectorHttpJsonEndpointRefLabel: {
+    key: 'canvas.inspector.httpJson.endpointRefLabel',
+    fallback: 'Endpoint reference',
+  },
+  inspectorHttpJsonAuthCredentialRefLabel: {
+    key: 'canvas.inspector.httpJson.authCredentialRefLabel',
+    fallback: 'Authentication credential reference (optional)',
+  },
+  inspectorHttpJsonFormatLabel: {
+    key: 'canvas.inspector.httpJson.formatLabel',
+    fallback: 'Format',
+  },
+  inspectorHttpJsonExpectedSha256Label: {
+    key: 'canvas.inspector.httpJson.expectedSha256Label',
+    fallback: 'Expected SHA-256',
+  },
+  inspectorHttpJsonExpectedSizeBytesLabel: {
+    key: 'canvas.inspector.httpJson.expectedSizeBytesLabel',
+    fallback: 'Expected size (bytes)',
+  },
+  inspectorHttpJsonMaxBytesLabel: {
+    key: 'canvas.inspector.httpJson.maxBytesLabel',
+    fallback: 'Maximum admitted size (bytes)',
+  },
+  inspectorHttpJsonStorageUriLabel: {
+    key: 'canvas.inspector.httpJson.storageUriLabel',
+    fallback: 'Content-addressed S3 URI',
+  },
+  inspectorHttpJsonArtifactCredentialRefLabel: {
+    key: 'canvas.inspector.httpJson.artifactCredentialRefLabel',
+    fallback: 'Object-store credential reference',
+  },
+  inspectorHttpJsonConnectTimeoutLabel: {
+    key: 'canvas.inspector.httpJson.connectTimeoutLabel',
+    fallback: 'Connection timeout (ms)',
+  },
+  inspectorHttpJsonRequestTimeoutLabel: {
+    key: 'canvas.inspector.httpJson.requestTimeoutLabel',
+    fallback: 'Request timeout (ms)',
+  },
+  inspectorHttpJsonMaxRedirectsLabel: {
+    key: 'canvas.inspector.httpJson.maxRedirectsLabel',
+    fallback: 'Maximum redirects',
+  },
+  inspectorErrorHttpJsonEndpointRefInvalid: {
+    key: 'canvas.inspector.httpJson.errorEndpointRefInvalid',
+    fallback: 'Use an opaque http-endpoint:<id> reference.',
+  },
+  inspectorErrorHttpJsonAuthCredentialRefInvalid: {
+    key: 'canvas.inspector.httpJson.errorAuthCredentialRefInvalid',
+    fallback: 'Use an opaque http-auth:<id> reference or leave it empty.',
+  },
+  inspectorErrorHttpJsonSha256Invalid: {
+    key: 'canvas.inspector.httpJson.errorSha256Invalid',
+    fallback: 'SHA-256 must contain exactly 64 hexadecimal characters.',
+  },
+  inspectorErrorHttpJsonSizeInvalid: {
+    key: 'canvas.inspector.httpJson.errorSizeInvalid',
+    fallback: 'Expected size must be a positive admitted byte count.',
+  },
+  inspectorErrorHttpJsonMaxBytesInvalid: {
+    key: 'canvas.inspector.httpJson.errorMaxBytesInvalid',
+    fallback: 'Maximum size must be positive and not smaller than expected size.',
+  },
+  inspectorErrorHttpJsonStorageUriInvalid: {
+    key: 'canvas.inspector.httpJson.errorStorageUriInvalid',
+    fallback: 'Enter the content-addressed S3 URI for the immutable artifact.',
+  },
+  inspectorErrorHttpJsonArtifactCredentialRefInvalid: {
+    key: 'canvas.inspector.httpJson.errorArtifactCredentialRefInvalid',
+    fallback: 'Use an opaque object-store:<id> credential reference.',
+  },
+  inspectorErrorHttpJsonConnectTimeoutInvalid: {
+    key: 'canvas.inspector.httpJson.errorConnectTimeoutInvalid',
+    fallback: 'Connection timeout must be between 100 and 30000 ms and not exceed request timeout.',
+  },
+  inspectorErrorHttpJsonRequestTimeoutInvalid: {
+    key: 'canvas.inspector.httpJson.errorRequestTimeoutInvalid',
+    fallback: 'Request timeout must be between 100 and 60000 ms.',
+  },
+  inspectorErrorHttpJsonRedirectLimitInvalid: {
+    key: 'canvas.inspector.httpJson.errorRedirectLimitInvalid',
+    fallback: 'Maximum redirects must be an integer between 0 and 5.',
+  },
   inspectorObjectFileTitle: {
     key: 'canvas.inspector.objectFile.title',
     fallback: 'Object-file load',

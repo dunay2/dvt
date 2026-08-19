@@ -269,6 +269,38 @@ export const canvasViewAuthoringCopyEs = {
     'Completa todas las salidas visuales antes de aplicar la receta.',
   inspectorErrorDvtMaterializationInvalid: 'La materialización debe ser tabla o vista.',
   inspectorErrorDvtWriteModeInvalid: 'El modo de escritura debe ser reemplazar o añadir.',
+  inspectorHttpJsonTitle: 'Adquisición HTTP JSON',
+  inspectorHttpJsonDescription:
+    'Obtén JSON o JSON Lines inmutable mediante referencias opacas de endpoint y credenciales.',
+  inspectorHttpJsonEndpointRefLabel: 'Referencia de endpoint',
+  inspectorHttpJsonAuthCredentialRefLabel: 'Referencia de autenticación (opcional)',
+  inspectorHttpJsonFormatLabel: 'Formato',
+  inspectorHttpJsonExpectedSha256Label: 'SHA-256 esperado',
+  inspectorHttpJsonExpectedSizeBytesLabel: 'Tamaño esperado (bytes)',
+  inspectorHttpJsonMaxBytesLabel: 'Tamaño máximo admitido (bytes)',
+  inspectorHttpJsonStorageUriLabel: 'URI S3 direccionada por contenido',
+  inspectorHttpJsonArtifactCredentialRefLabel: 'Referencia de credencial del almacén de objetos',
+  inspectorHttpJsonConnectTimeoutLabel: 'Tiempo de conexión (ms)',
+  inspectorHttpJsonRequestTimeoutLabel: 'Tiempo total de solicitud (ms)',
+  inspectorHttpJsonMaxRedirectsLabel: 'Máximo de redirecciones',
+  inspectorErrorHttpJsonEndpointRefInvalid: 'Usa una referencia opaca http-endpoint:<id>.',
+  inspectorErrorHttpJsonAuthCredentialRefInvalid:
+    'Usa una referencia opaca http-auth:<id> o deja el campo vacío.',
+  inspectorErrorHttpJsonSha256Invalid:
+    'El SHA-256 debe contener exactamente 64 caracteres hexadecimales.',
+  inspectorErrorHttpJsonSizeInvalid:
+    'El tamaño esperado debe ser un número de bytes positivo y admitido.',
+  inspectorErrorHttpJsonMaxBytesInvalid:
+    'El tamaño máximo debe ser positivo y no inferior al tamaño esperado.',
+  inspectorErrorHttpJsonStorageUriInvalid:
+    'Introduce la URI S3 direccionada por contenido del artefacto inmutable.',
+  inspectorErrorHttpJsonArtifactCredentialRefInvalid:
+    'Usa una referencia de credencial opaca object-store:<id>.',
+  inspectorErrorHttpJsonConnectTimeoutInvalid:
+    'El tiempo de conexión debe estar entre 100 y 30000 ms y no superar el tiempo total.',
+  inspectorErrorHttpJsonRequestTimeoutInvalid: 'El tiempo total debe estar entre 100 y 60000 ms.',
+  inspectorErrorHttpJsonRedirectLimitInvalid:
+    'El máximo de redirecciones debe ser un entero entre 0 y 5.',
   inspectorObjectFileTitle: 'Carga de fichero de objetos',
   inspectorObjectFileDescription:
     'Carga un objeto CSV o JSON Lines inmutable en un staging PostgreSQL gobernado.',

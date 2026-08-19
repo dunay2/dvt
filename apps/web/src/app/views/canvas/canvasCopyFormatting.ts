@@ -130,6 +130,26 @@ export function formatCanvasInspectorNodeDraftError(
       return copy.inspectorErrorObjectFileTargetCredentialInvalid;
     case 'object_file_column_mapping_invalid':
       return copy.inspectorErrorObjectFileColumnMappingInvalid;
+    case 'http_json_endpoint_ref_invalid':
+      return copy.inspectorErrorHttpJsonEndpointRefInvalid;
+    case 'http_json_auth_credential_ref_invalid':
+      return copy.inspectorErrorHttpJsonAuthCredentialRefInvalid;
+    case 'http_json_sha256_invalid':
+      return copy.inspectorErrorHttpJsonSha256Invalid;
+    case 'http_json_size_invalid':
+      return copy.inspectorErrorHttpJsonSizeInvalid;
+    case 'http_json_max_bytes_invalid':
+      return copy.inspectorErrorHttpJsonMaxBytesInvalid;
+    case 'http_json_storage_uri_invalid':
+      return copy.inspectorErrorHttpJsonStorageUriInvalid;
+    case 'http_json_artifact_credential_ref_invalid':
+      return copy.inspectorErrorHttpJsonArtifactCredentialRefInvalid;
+    case 'http_json_connect_timeout_invalid':
+      return copy.inspectorErrorHttpJsonConnectTimeoutInvalid;
+    case 'http_json_request_timeout_invalid':
+      return copy.inspectorErrorHttpJsonRequestTimeoutInvalid;
+    case 'http_json_redirect_limit_invalid':
+      return copy.inspectorErrorHttpJsonRedirectLimitInvalid;
   }
 }
 

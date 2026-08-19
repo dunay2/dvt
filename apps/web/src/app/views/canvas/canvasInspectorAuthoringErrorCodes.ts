@@ -24,4 +24,14 @@ export type CanvasInspectorNodeDraftErrorCode =
   | 'object_file_source_credential_ref_invalid'
   | 'object_file_target_relation_invalid'
   | 'object_file_target_credential_ref_invalid'
-  | 'object_file_column_mapping_invalid';
+  | 'object_file_column_mapping_invalid'
+  | 'http_json_endpoint_ref_invalid'
+  | 'http_json_auth_credential_ref_invalid'
+  | 'http_json_sha256_invalid'
+  | 'http_json_size_invalid'
+  | 'http_json_max_bytes_invalid'
+  | 'http_json_storage_uri_invalid'
+  | 'http_json_artifact_credential_ref_invalid'
+  | 'http_json_connect_timeout_invalid'
+  | 'http_json_request_timeout_invalid'
+  | 'http_json_redirect_limit_invalid';
