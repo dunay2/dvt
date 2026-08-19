@@ -123,7 +123,12 @@ describe('canvas inspector authoring component architecture', () => {
       'Owned concern: render dbt-specific Canvas Inspector authoring fields.'
     );
     expect(DBT_FIELDS_SOURCE).toContain('DbtModelCodeAuthoringSection');
-    expect(DBT_MODEL_CODE_SECTION_SOURCE).toContain('name="dbt-model-sql"');
+    expect(DBT_MODEL_CODE_SECTION_SOURCE).toContain('MonacoCodeEditor');
+    expect(DBT_MODEL_CODE_SECTION_SOURCE).toContain(
+      "from '../../components/monaco/MonacoCodeEditor'"
+    );
+    expect(DBT_MODEL_CODE_SECTION_SOURCE).not.toContain("from '../../components/ui/textarea'");
+    expect(DBT_MODEL_CODE_SECTION_SOURCE).not.toContain('@monaco-editor/react');
     expect(DBT_FIELDS_SOURCE).not.toContain('workspaceService');
 
     expect(DVT_FIELDS_SOURCE).toContain(
@@ -229,7 +234,8 @@ describe('canvas inspector authoring component architecture', () => {
     expect(DBT_MODEL_CODE_SECTION_SOURCE).toContain(
       'Owned concern: render the editable DBT model code surface and artifact provenance.'
     );
-    expect(DBT_MODEL_CODE_SECTION_SOURCE).toContain('name="dbt-model-sql"');
+    expect(DBT_MODEL_CODE_SECTION_SOURCE).toContain('MonacoCodeEditor');
+    expect(DBT_MODEL_CODE_SECTION_SOURCE).not.toContain('Textarea');
     expect(DBT_MODEL_CODE_SECTION_SOURCE).toContain('formatCanvasCopyTemplate');
   });
 });
