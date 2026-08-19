@@ -30,7 +30,7 @@ vi.mock('../../components/monaco/MonacoCodeEditor', () => ({
     <textarea
       data-language={language}
       data-path={path}
-      data-testid="dvt-transform-sql-editor"
+      data-testid="monaco-code-editor"
       onChange={(event) => onChange(event.currentTarget.value)}
       value={value}
     />
@@ -378,7 +378,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
       fireEvent.click(codeTab!);
     });
 
-    expect(container.querySelector('textarea[name="dbt-model-sql"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="monaco-code-editor"]')).not.toBeNull();
   });
 
   it('does not synthesize a duplicate code action for a file-backed node', () => {
@@ -396,7 +396,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
       );
     });
 
-    expect(container.querySelector('textarea[name="dbt-model-sql"]')).toBeNull();
+    expect(container.querySelector('[data-testid="monaco-code-editor"]')).toBeNull();
   });
 
   it('keeps the accessible movement handle separate from the close command', () => {
@@ -549,7 +549,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(
       columnsSection?.querySelector('[data-slot="canvas-node-workbench-authoring"]')
     ).toBeNull();
-    expect(container.querySelector('[data-testid="dvt-transform-sql-editor"]')).toBeNull();
+    expect(container.querySelector('[data-testid="monaco-code-editor"]')).toBeNull();
   });
 
   it('renders DVT transform SQL editing inside the Code tab', () => {
@@ -557,7 +557,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
 
     const codeSection = container.querySelector('[data-slot="canvas-node-workbench-code-section"]');
     const sqlEditor = codeSection?.querySelector<HTMLTextAreaElement>(
-      '[data-testid="dvt-transform-sql-editor"]'
+      '[data-testid="monaco-code-editor"]'
     );
 
     expect(codeSection).not.toBeNull();
@@ -573,7 +573,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     renderNodePanel(root, DVT_VISUAL_TRANSFORM_NODE, 'code');
 
     const codeSection = container.querySelector('[data-slot="canvas-node-workbench-code-section"]');
-    expect(codeSection?.querySelector('[data-testid="dvt-transform-sql-editor"]')).toBeNull();
+    expect(codeSection?.querySelector('[data-testid="monaco-code-editor"]')).toBeNull();
     const codeViewer = codeSection?.querySelector<HTMLElement>(
       '[data-testid="monaco-code-viewer"]'
     );
@@ -648,14 +648,16 @@ describe('CanvasNodeWorkbenchPanel', () => {
 
     const codeSection = container.querySelector('[data-slot="canvas-node-workbench-code-section"]');
     const sqlEditor = codeSection?.querySelector<HTMLTextAreaElement>(
-      'textarea[name="dbt-model-sql"]'
+      '[data-testid="monaco-code-editor"]'
     );
 
     expect(codeSection).not.toBeNull();
     expect(sqlEditor?.value).toContain('select *');
     expect(sqlEditor?.value).toContain('{{ source(');
+    expect(sqlEditor?.dataset.language).toBe('sql');
+    expect(sqlEditor?.dataset.path).toBe('models/orders_model.sql');
     expect(codeSection?.querySelector('pre')).toBeNull();
-    expect(codeSection?.querySelectorAll('textarea[name="dbt-model-sql"]')).toHaveLength(1);
+    expect(codeSection?.querySelectorAll('[data-testid="monaco-code-editor"]')).toHaveLength(1);
     expect(codeSection?.textContent).not.toContain('No properties are recorded for this section.');
   });
 
@@ -663,7 +665,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     renderNodePanel(root, MODEL_NODE, 'code');
 
     const sqlEditor = container.querySelector<HTMLTextAreaElement>(
-      'textarea[name="dbt-model-sql"]'
+      '[data-testid="monaco-code-editor"]'
     );
     expect(sqlEditor?.value).toContain('select *');
 
@@ -688,7 +690,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     );
 
     expect(
-      container.querySelector<HTMLTextAreaElement>('textarea[name="dbt-model-sql"]')?.value
+      container.querySelector<HTMLTextAreaElement>('[data-testid="monaco-code-editor"]')?.value
     ).toBe('');
 
     renderNodePanel(
@@ -709,7 +711,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     );
 
     expect(
-      container.querySelector<HTMLTextAreaElement>('textarea[name="dbt-model-sql"]')?.value
+      container.querySelector<HTMLTextAreaElement>('[data-testid="monaco-code-editor"]')?.value
     ).toBe('');
   });
 
@@ -762,7 +764,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     });
 
     const sqlEditor = container.querySelector<HTMLTextAreaElement>(
-      '[data-testid="dvt-transform-sql-editor"]'
+      '[data-testid="monaco-code-editor"]'
     );
     expect(sqlEditor).not.toBeNull();
 
@@ -797,7 +799,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     );
 
     const restoredSqlEditor = container.querySelector<HTMLTextAreaElement>(
-      '[data-testid="dvt-transform-sql-editor"]'
+      '[data-testid="monaco-code-editor"]'
     );
     expect(restoredSqlEditor?.value).toBe('select customer from source.orders');
 
