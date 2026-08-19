@@ -7,15 +7,16 @@ import type { Edge, Node } from '@xyflow/react';
 
 import type { ConnectionRuleResult, PluginPortMap } from '../../plugins/contracts/ConnectionRules';
 import type { RuntimeCapabilities } from '../../plugins/registry';
-import type { CanonicalNode } from '../../types/canonical';
+import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import { useCanvasGraphHandlers } from './useCanvasGraphHandlers';
 
 const graphHandlersTestDoubles = vi.hoisted(() => ({
-  evaluateConnectionPolicy: vi.fn<
+  evaluateConnection: vi.fn<
     (
       source: CanonicalNode,
       target: CanonicalNode,
+      currentEdges: readonly CanonicalEdge[],
       pluginPorts: PluginPortMap
     ) => ConnectionRuleResult
   >(() => ({ allowed: true })),
@@ -25,7 +26,7 @@ vi.mock('../../plugins/contracts/ConnectionRules', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../../plugins/contracts/ConnectionRules')>();
   return {
     ...actual,
-    evaluateConnectionPolicy: graphHandlersTestDoubles.evaluateConnectionPolicy,
+    evaluateConnection: graphHandlersTestDoubles.evaluateConnection,
   };
 });
 
@@ -217,8 +218,8 @@ export function resetGraphHandlersTestDoubles() {
   (
     globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
   ).IS_REACT_ACT_ENVIRONMENT = true;
-  graphHandlersTestDoubles.evaluateConnectionPolicy.mockReset();
-  graphHandlersTestDoubles.evaluateConnectionPolicy.mockReturnValue({ allowed: true });
+  graphHandlersTestDoubles.evaluateConnection.mockReset();
+  graphHandlersTestDoubles.evaluateConnection.mockReturnValue({ allowed: true });
   toastState.error.mockReset();
   toastState.success.mockReset();
   toastState.info.mockReset();
@@ -232,7 +233,7 @@ export function restoreGraphHandlersTestDoubles() {
 export function rejectGraphHandlerConnectionWith(
   rejection: Exclude<ConnectionRuleResult, { allowed: true }>
 ) {
-  graphHandlersTestDoubles.evaluateConnectionPolicy.mockReturnValue(rejection);
+  graphHandlersTestDoubles.evaluateConnection.mockReturnValue(rejection);
 }
 
 export function evaluateGraphHandlerConnectionWith(
@@ -242,5 +243,7 @@ export function evaluateGraphHandlerConnectionWith(
     pluginPorts: PluginPortMap
   ) => ConnectionRuleResult
 ) {
-  graphHandlersTestDoubles.evaluateConnectionPolicy.mockImplementation(implementation);
+  graphHandlersTestDoubles.evaluateConnection.mockImplementation(
+    (source, target, _currentEdges, pluginPorts) => implementation(source, target, pluginPorts)
+  );
 }
