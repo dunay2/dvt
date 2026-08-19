@@ -10,6 +10,7 @@ import {
   buildSourceImportCatalogViewModel,
   type SourceImportCatalogViewModel,
 } from './sourceImportCatalogModel';
+import { SourceImportDatabaseHeader } from './SourceImportCatalogPrimitives';
 import { SourceImportCatalogView } from './SourceImportCatalogView';
 import {
   buildSourceImportTestEndpointObject,
@@ -47,6 +48,31 @@ describe('SourceImportCatalogView', () => {
       numberFormatter: sourceImportCatalogNumberFormatter,
     });
   }
+
+  it('lets database counts reflow inside the available catalog width', async () => {
+    await act(async () => {
+      root.render(
+        <SourceImportDatabaseHeader
+          database="dvt"
+          accessibilityLabel="Select database dvt"
+          schemaCountLabel="11 schemas"
+          objectCountLabel="234 objects"
+          selected={false}
+          selectedLabel={null}
+          onToggle={vi.fn()}
+        />
+      );
+    });
+
+    const headerContent = container.querySelector('[data-source-import-database="dvt"] > div');
+    const metrics = container.querySelector('[data-slot="source-import-database-metrics"]');
+
+    expect(headerContent?.className).toContain('min-w-0');
+    expect(metrics?.className).toContain('min-w-0');
+    expect(metrics?.className).toContain('flex-wrap');
+    expect(metrics?.textContent).toContain('11 schemas');
+    expect(metrics?.textContent).toContain('234 objects');
+  });
 
   it('keeps relational selection and inspection as separate accessible interactions', async () => {
     const onActivateSourceObject = vi.fn();

@@ -37,8 +37,6 @@ export const sourceImportSelectionStepClassNames = {
   root: 'space-y-4',
   title: 'mb-2 text-lg font-medium',
   description: 'mb-4 text-sm text-slate-300',
-  destination:
-    'rounded border border-amber-800/70 bg-amber-950/20 px-3 py-2 text-xs text-amber-100/80',
   error: 'border-red-700 bg-red-950/30 p-3 text-sm text-red-200',
   loading: 'flex items-center gap-3 border-slate-600 p-4 text-slate-300',
   content: 'grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]',
@@ -86,9 +84,6 @@ export function SelectionStep({
         <p className={sourceImportSelectionStepClassNames.description}>
           {copy.selection.descriptionPrefix} {selectedCount}
         </p>
-        <div className={sourceImportSelectionStepClassNames.destination}>
-          {copy.selection.destinationPosture}
-        </div>
       </div>
 
       {loadError ? (
@@ -121,7 +116,10 @@ export function SelectionStep({
                 {catalogViewModel.resultCountLabel}
               </div>
             </div>
-            <ScrollArea className="h-96">
+            <ScrollArea
+              data-source-import-catalog-scroll
+              className="h-96 min-w-0 [&_[data-slot=scroll-area-viewport]>div]:!block"
+            >
               <SourceImportCatalogView
                 catalog={catalogViewModel}
                 emptyLabel={copy.selection.empty}

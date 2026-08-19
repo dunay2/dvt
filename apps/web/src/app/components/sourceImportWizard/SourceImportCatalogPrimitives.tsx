@@ -17,10 +17,10 @@ export const sourceImportCatalogClassNames = {
   groups: 'space-y-4',
   group: 'space-y-3',
   groupHeader: 'rounded border border-slate-700 bg-slate-950/50 px-3 py-2 text-sm text-slate-100',
-  groupHeaderContent: 'flex items-center justify-between gap-3',
+  groupHeaderContent: 'flex min-w-0 items-center justify-between gap-3',
   groupIdentity: 'flex min-w-0 items-center gap-2',
   groupTitle: 'font-mono font-medium',
-  groupMetrics: 'flex flex-wrap justify-end gap-2 text-xs text-slate-400',
+  groupMetrics: 'flex max-w-full min-w-0 flex-wrap justify-end gap-2 text-xs text-slate-400',
   filterList: 'flex flex-wrap gap-2',
   filterButton:
     'rounded border border-slate-700 bg-slate-950/50 px-2.5 py-1 text-xs text-slate-300 transition hover:border-sky-500 hover:text-slate-100 disabled:cursor-not-allowed disabled:opacity-40',
@@ -153,7 +153,10 @@ export function SourceImportDatabaseHeader({
           <Database className={sourceImportCatalogClassNames.objectIcon} aria-hidden="true" />
           <span className={sourceImportCatalogClassNames.groupTitle}>{database}</span>
         </span>
-        <span className={sourceImportCatalogClassNames.groupMetrics}>
+        <span
+          data-slot="source-import-database-metrics"
+          className={sourceImportCatalogClassNames.groupMetrics}
+        >
           <Badge variant="secondary">{schemaCountLabel}</Badge>
           <Badge variant="secondary">{objectCountLabel}</Badge>
           {selectedLabel ? <Badge variant="outline">{selectedLabel}</Badge> : null}

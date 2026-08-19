@@ -82,8 +82,6 @@ const EN_COPY = {
   selection: {
     title: 'Browse source objects',
     descriptionPrefix: 'Choose supported objects to attach as source nodes. Selected:',
-    destinationPosture:
-      'Output target is selected on a DVT Sink node after sources are attached. Choose database, schema, table, and write mode there before preview or run.',
     loading: 'Loading source objects...',
     empty: 'No source objects are available for this connection.',
     searchLabel: 'Search source catalog',
@@ -291,8 +289,6 @@ const ES_COPY = {
   selection: {
     title: 'Explorar objetos de origen',
     descriptionPrefix: 'Elige los objetos compatibles que se adjuntarán como nodos. Seleccionados:',
-    destinationPosture:
-      'El destino se selecciona en un nodo DVT Sink después de adjuntar los orígenes. Elige allí la base de datos, el esquema, la tabla y el modo de escritura antes de previsualizar o ejecutar.',
     loading: 'Cargando objetos de origen...',
     empty: 'No hay objetos de origen disponibles para esta conexión.',
     searchLabel: 'Buscar en el catálogo de orígenes',
