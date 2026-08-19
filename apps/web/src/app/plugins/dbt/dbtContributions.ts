@@ -151,11 +151,10 @@ export const dbtContributions: PluginContributions = {
       reason: 'Connection not permitted by dbt rules',
     },
   ],
-  // Run adapter and port declarations keep the shell-facing runtime model
-  // canonical while advertising dbt's tabular data contracts to other plugins.
+  // The run adapter and incoming port keep the shell-facing runtime model
+  // canonical without advertising an unsupported outbound cross-plugin path.
   runAdapter: {
     mapToCanonical: mapRunToCanonical,
   },
-  produces: [{ portType: 'data.tabular', forRoles: ['input', 'transform'] }],
   consumes: [{ portType: 'data.tabular', forRoles: ['transform'] }],
 };
