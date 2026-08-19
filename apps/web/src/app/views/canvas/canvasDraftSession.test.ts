@@ -704,7 +704,9 @@ describe('canvasDraftSession', () => {
       localCanonicalNodes: [],
     });
     const presentationCopy = buildCanvasNodePresentationCopy(resolveCanvasViewCopy('en'), 'en');
-    const readInputsOutputs = (nodeId: string) => {
+    const readInputsOutputs = (
+      nodeId: string
+    ): ReturnType<typeof buildNodePropertiesReadModel>['sections'][number] | undefined => {
       const node = projection.canonicalNodesById.get(nodeId);
       expect(node).toBeDefined();
       return buildNodePropertiesReadModel({
