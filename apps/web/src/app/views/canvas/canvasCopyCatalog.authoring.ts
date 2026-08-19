@@ -1000,7 +1000,8 @@ export const canvasViewAuthoringCopyByKey = {
   },
   inspectorErrorHttpJsonMaxBytesInvalid: {
     key: 'canvas.inspector.httpJson.errorMaxBytesInvalid',
-    fallback: 'Maximum size must be positive and not smaller than expected size.',
+    fallback:
+      'Maximum size must be positive, no greater than 50000000 bytes, and not smaller than expected size.',
   },
   inspectorErrorHttpJsonStorageUriInvalid: {
     key: 'canvas.inspector.httpJson.errorStorageUriInvalid',

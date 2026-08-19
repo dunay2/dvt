@@ -291,7 +291,7 @@ export const canvasViewAuthoringCopyEs = {
   inspectorErrorHttpJsonSizeInvalid:
     'El tamaño esperado debe ser un número de bytes positivo y admitido.',
   inspectorErrorHttpJsonMaxBytesInvalid:
-    'El tamaño máximo debe ser positivo y no inferior al tamaño esperado.',
+    'El tamaño máximo debe ser positivo, no superar 50000000 bytes y no ser inferior al tamaño esperado.',
   inspectorErrorHttpJsonStorageUriInvalid:
     'Introduce la URI S3 direccionada por contenido del artefacto inmutable.',
   inspectorErrorHttpJsonArtifactCredentialRefInvalid:

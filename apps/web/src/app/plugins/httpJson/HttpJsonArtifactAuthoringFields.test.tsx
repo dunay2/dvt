@@ -103,7 +103,7 @@ describe('HttpJsonArtifactAuthoringFields', () => {
       'Expected size must be a positive admitted byte count.'
     );
     expect(container.textContent).toContain(
-      'Maximum size must be positive and not smaller than expected size.'
+      'Maximum size must be positive, no greater than 50000000 bytes, and not smaller than expected size.'
     );
     expect(container.textContent).toContain(
       'Enter the content-addressed S3 URI for the immutable artifact.'
