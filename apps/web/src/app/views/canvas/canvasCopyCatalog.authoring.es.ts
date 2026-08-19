@@ -297,8 +297,9 @@ export const canvasViewAuthoringCopyEs = {
   inspectorErrorHttpJsonArtifactCredentialRefInvalid:
     'Usa una referencia de credencial opaca object-store:<id>.',
   inspectorErrorHttpJsonConnectTimeoutInvalid:
-    'El tiempo de conexión debe estar entre 100 y 30000 ms y no superar el tiempo total.',
-  inspectorErrorHttpJsonRequestTimeoutInvalid: 'El tiempo total debe estar entre 100 y 60000 ms.',
+    'El tiempo de conexión debe ser un número entero entre 100 y 30000 ms y no superar el tiempo total.',
+  inspectorErrorHttpJsonRequestTimeoutInvalid:
+    'El tiempo total debe ser un número entero entre 100 y 60000 ms.',
   inspectorErrorHttpJsonRedirectLimitInvalid:
     'El máximo de redirecciones debe ser un entero entre 0 y 5.',
   inspectorObjectFileTitle: 'Carga de fichero de objetos',
