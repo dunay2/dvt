@@ -4,7 +4,7 @@ import {
   type TransformationSqlFirstCompilerGraphSourceV2,
 } from '@dvt/contracts';
 
-import type { CanonicalNode } from '../../types/canonical';
+import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 
 import {
   buildPreviewMetadata,
@@ -16,6 +16,7 @@ import {
 
 export type PreviewGraphSourceArgs = {
   nodes: readonly CanonicalNode[];
+  edges: readonly CanonicalEdge[];
   scopedNodeIds: readonly string[];
   sqlArtifact: GitArtifactRef;
   sqlText: string;
@@ -24,6 +25,10 @@ export type PreviewGraphSourceArgs = {
 export function buildPreviewGraphSource(
   args: PreviewGraphSourceArgs
 ): TransformationSqlFirstCompilerGraphSourceV2 {
+  const resolveDependencies = (targetNodeId: string): string[] =>
+    args.scopedNodeIds.filter((sourceNodeId) =>
+      args.edges.some((edge) => edge.sourceId === sourceNodeId && edge.targetId === targetNodeId)
+    );
   const scopedNodes = resolveScopedTransformationNodes(args.nodes, args.scopedNodeIds);
   const source = requireSourcePayload(scopedNodes.source);
   const transform = requireTransformPayload(scopedNodes.transform, args.sqlArtifact);
@@ -37,7 +42,7 @@ export function buildPreviewGraphSource(
       {
         nodeId: source.id,
         stepKind: TRANSFORMATION_STEP_KIND.preparePostgresTransform,
-        dependsOn: [],
+        dependsOn: resolveDependencies(source.id),
         stepTypeConfig: {
           connectionRef: source.payload.connectionRef,
           targetSchema: sink.payload.schema,
@@ -50,7 +55,7 @@ export function buildPreviewGraphSource(
       {
         nodeId: transform.id,
         stepKind: TRANSFORMATION_STEP_KIND.postgresSqlTransform,
-        dependsOn: [source.id],
+        dependsOn: resolveDependencies(transform.id),
         stepTypeConfig: {
           connectionRef: source.payload.connectionRef,
           dialect: 'postgres',
@@ -70,7 +75,7 @@ export function buildPreviewGraphSource(
       {
         nodeId: sink.id,
         stepKind: TRANSFORMATION_STEP_KIND.captureMaterializationEvidence,
-        dependsOn: [transform.id],
+        dependsOn: resolveDependencies(sink.id),
         stepTypeConfig: {
           connectionRef: source.payload.connectionRef,
           sinkSchema: sink.payload.schema,
