@@ -96,10 +96,26 @@ describe('SourceImportCatalogView', () => {
       );
     });
 
-    expect(container.textContent).toContain('RAW.ERP.ORDERS');
+    expect(
+      container.querySelector(`[data-source-import-object="${relation.objectId}"]`)
+    ).toBeNull();
     expect(container.textContent).not.toContain('order_id');
     expect(container.textContent).not.toContain('INTEGER');
     expect(container.querySelectorAll('[data-slot="metric-evidence-hotspot"]')).toHaveLength(0);
+
+    const schemaDisclosure = getByRole(container, 'button', {
+      name: 'Expand source schema ERP. In source database RAW. 1 object.',
+    });
+
+    await act(async () => {
+      fireEvent.click(schemaDisclosure);
+    });
+
+    expect(
+      container.querySelector(`[data-source-import-object="${relation.objectId}"]`)
+    ).not.toBeNull();
+    expect(container.textContent).toContain('ORDERS');
+    expect(container.textContent).not.toContain('RAW.ERP.ORDERS');
 
     const inspectAction = getByRole(container, 'button', {
       name: 'Inspect source object RAW.ERP.ORDERS metadata. 1,500 rows. 3.9 MB. 1 column.',
@@ -120,6 +136,40 @@ describe('SourceImportCatalogView', () => {
     expect(onActivateSourceObject).toHaveBeenCalledWith(0);
     expect(onToggleSourceObject).toHaveBeenCalledWith(0);
     expect(onToggleSchema).toHaveBeenCalledWith({ database: 'RAW', schema: 'ERP' });
+  });
+
+  it('reveals a collapsed schema when its selection is toggled', async () => {
+    const relation = buildSourceImportTestObject();
+
+    await act(async () => {
+      root.render(
+        <SourceImportCatalogView
+          catalog={buildCatalog([relation])}
+          emptyLabel="No source objects"
+          onActivateSourceObject={vi.fn()}
+          onSelectFilter={vi.fn()}
+          onToggleDatabase={vi.fn()}
+          onToggleSchema={vi.fn()}
+          onToggleSourceObject={vi.fn()}
+        />
+      );
+    });
+
+    expect(
+      container.querySelector(`[data-source-import-object="${relation.objectId}"]`)
+    ).toBeNull();
+
+    await act(async () => {
+      fireEvent.click(
+        getByRole(container, 'checkbox', {
+          name: 'Select source schema ERP. In source database RAW. 1 object.',
+        })
+      );
+    });
+
+    expect(
+      container.querySelector(`[data-source-import-object="${relation.objectId}"]`)
+    ).not.toBeNull();
   });
 
   it('renders every SourceObject kind and disables unsupported imports without hiding inspection', async () => {

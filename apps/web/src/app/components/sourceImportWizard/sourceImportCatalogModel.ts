@@ -58,7 +58,10 @@ export type SourceImportCatalogFilterViewModel = Readonly<{
 
 export type SourceImportSchemaGroupViewModel = Readonly<{
   schema: string;
+  canonicalName: string;
   accessibilityLabel: string;
+  expandAccessibilityLabel: string;
+  collapseAccessibilityLabel: string;
   objectCountLabel: string;
   selected: boolean;
   sourceObjects: readonly SourceImportObjectViewModel[];
@@ -101,6 +104,8 @@ export type SourceImportCatalogCopy = Readonly<{
   selectSourceObject: string;
   selectSourceDatabase: string;
   selectSourceSchema: string;
+  expandSourceSchema: string;
+  collapseSourceSchema: string;
   inSourceDatabase: string;
   inspectSourceObjectMetadata: string;
   metadata: string;
@@ -564,14 +569,20 @@ function buildSourceImportSchemaGroup(
   copy: SourceImportCatalogCopy,
   numberFormatter: Intl.NumberFormat
 ): SourceImportSchemaGroupViewModel {
+  const objectCountLabel = formatSourceImportObjectCount(
+    groupObjects.length,
+    copy,
+    numberFormatter
+  );
+  const schemaLocationLabel = `${schema}. ${copy.inSourceDatabase} ${database}. ${objectCountLabel}.`;
+
   return {
     schema,
-    accessibilityLabel: `${copy.selectSourceSchema} ${schema}. ${copy.inSourceDatabase} ${database}. ${formatSourceImportObjectCount(
-      groupObjects.length,
-      copy,
-      numberFormatter
-    )}.`,
-    objectCountLabel: formatSourceImportObjectCount(groupObjects.length, copy, numberFormatter),
+    canonicalName: `${database}.${schema}`,
+    accessibilityLabel: `${copy.selectSourceSchema} ${schemaLocationLabel}`,
+    expandAccessibilityLabel: `${copy.expandSourceSchema} ${schemaLocationLabel}`,
+    collapseAccessibilityLabel: `${copy.collapseSourceSchema} ${schemaLocationLabel}`,
+    objectCountLabel,
     selected:
       groupObjects.length > 0 && groupObjects.every((sourceObject) => sourceObject.selected),
     sourceObjects: groupObjects,
