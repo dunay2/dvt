@@ -15,11 +15,18 @@ import {
   formatSourceObjectMetricByteSize,
 } from '../../services/workspace/sourceObjectMetricEvidencePresentation';
 
+export type SourceImportColumnConstraintMarkerKind = 'primary-key' | 'unique' | 'not-null';
+
+export type SourceImportColumnConstraintMarker = Readonly<{
+  kind: SourceImportColumnConstraintMarkerKind;
+  shortLabel: 'PK' | 'UQ' | 'NN';
+  label: string;
+}>;
+
 export type SourceImportColumnViewModel = Readonly<{
   name: string;
   type: string;
-  nullabilityLabel: string;
-  constraintLabels: readonly string[];
+  constraintMarkers: readonly SourceImportColumnConstraintMarker[];
 }>;
 
 export type SourceImportObjectViewModel = Readonly<{
@@ -119,8 +126,7 @@ export type SourceImportCatalogCopy = Readonly<{
   schemaSingular: string;
   schemaPlural: string;
   allSelected: string;
-  nullable: string;
-  required: string;
+  notNull: string;
   primaryKey: string;
   unique: string;
   available: string;
@@ -313,13 +319,6 @@ function buildSourceImportCatalogFilters({
   });
 }
 
-export function formatSourceImportNullability(
-  nullable: boolean,
-  copy: SourceImportCatalogCopy
-): string {
-  return nullable ? copy.nullable : copy.required;
-}
-
 export function buildSourceImportObjectViewModel(
   sourceObject: SelectableSourceObject,
   index: number,
@@ -380,22 +379,25 @@ export function buildSourceImportObjectViewModel(
     importabilityLabel: selectable ? null : copy.unsupportedImport,
     columns:
       sourceObject.columns?.map((column) => {
-        const nullabilityLabel = formatSourceImportNullability(column.nullable, copy);
         const constraintSemantics = resolveSourceObjectColumnConstraintSemantics(
           sourceObject,
           column.name
         );
-        const constraintLabels = [
-          ...(constraintSemantics.primaryKey ? [copy.primaryKey] : []),
-          ...(constraintSemantics.independentlyUnique ? [copy.unique] : []),
-          nullabilityLabel,
+        const constraintMarkers: SourceImportColumnConstraintMarker[] = [
+          ...(constraintSemantics.primaryKey
+            ? [{ kind: 'primary-key' as const, shortLabel: 'PK' as const, label: copy.primaryKey }]
+            : constraintSemantics.independentlyUnique
+              ? [{ kind: 'unique' as const, shortLabel: 'UQ' as const, label: copy.unique }]
+              : []),
+          ...(!column.nullable && !constraintSemantics.primaryKey
+            ? [{ kind: 'not-null' as const, shortLabel: 'NN' as const, label: copy.notNull }]
+            : []),
         ];
 
         return {
           name: column.name,
           type: column.type,
-          nullabilityLabel,
-          constraintLabels,
+          constraintMarkers,
         };
       }) ?? [],
   };

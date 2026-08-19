@@ -45,14 +45,25 @@ describe('SourceImportActiveObjectMetadata', () => {
     expect(container.textContent).toContain('1,500 rows');
     expect(container.textContent).toContain('3.9 MB');
     expect(container.textContent).toContain('2 columns');
-    expect(container.textContent).toContain('Primary key');
-    expect(container.textContent).toContain('Nullable');
+    expect(container.textContent).toContain('PK');
+    expect(container.textContent).not.toContain('Primary key');
+    expect(container.textContent).not.toContain('Nullable');
+    expect(
+      container.querySelector(
+        '[data-source-import-constraint-marker="primary-key"][aria-label="Primary key"]'
+      )
+    ).not.toBeNull();
     expect(
       container.querySelector(`[data-source-import-active-object="${relation.objectId}"]`)
     ).not.toBeNull();
     expect(
       container.querySelector('[data-source-import-metadata-column="RAW.ERP.ORDERS.order_id"]')
     ).not.toBeNull();
+    expect(
+      container
+        .querySelector('[data-source-import-metadata-column="RAW.ERP.ORDERS.discount_code"]')
+        ?.querySelector('[data-source-import-constraint-marker]')
+    ).toBeNull();
   });
 
   it('inspects a non-relational object while explaining why it cannot be attached yet', async () => {

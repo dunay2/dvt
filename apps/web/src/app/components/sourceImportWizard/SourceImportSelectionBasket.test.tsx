@@ -87,11 +87,12 @@ describe('SourceImportSelectionBasket', () => {
     expect(container.textContent).toContain('2 columns');
     expect(container.textContent).toContain('order_id');
     expect(container.textContent).toContain('INTEGER');
-    expect(container.textContent).toContain('Primary key');
-    expect(container.textContent).toContain('Required');
+    expect(container.textContent).toContain('PK');
+    expect(container.textContent).not.toContain('Primary key');
+    expect(container.textContent).not.toContain('Required');
     expect(container.textContent).toContain('discount_code');
     expect(container.textContent).toContain('TEXT');
-    expect(container.textContent).toContain('Nullable');
+    expect(container.textContent).not.toContain('Nullable');
     expect(container.textContent).toContain('RAW.CRM.CUSTOMERS');
     expect(container.textContent).toContain(sourceImportWizardCopy.selectionBasket.noColumns);
 
@@ -101,5 +102,15 @@ describe('SourceImportSelectionBasket', () => {
     expect(
       container.querySelector('[data-source-import-selected-column="RAW.ERP.ORDERS.discount_code"]')
     ).not.toBeNull();
+    expect(
+      container.querySelector(
+        '[data-source-import-constraint-marker="primary-key"][aria-label="Primary key"]'
+      )
+    ).not.toBeNull();
+    expect(
+      container
+        .querySelector('[data-source-import-selected-column="RAW.ERP.ORDERS.discount_code"]')
+        ?.querySelector('[data-source-import-constraint-marker]')
+    ).toBeNull();
   });
 });

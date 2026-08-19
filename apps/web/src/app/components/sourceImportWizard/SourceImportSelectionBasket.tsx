@@ -4,6 +4,7 @@ import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { MetricEvidenceHotspot } from '../metrics/MetricEvidenceHotspot';
 import { useSourceImportLocalization } from './copy';
+import { SourceImportConstraintMarkers } from './SourceImportConstraintMarkers';
 import type { SourceImportObjectViewModel } from './sourceImportCatalogModel';
 
 const selectionBasketClassNames = {
@@ -115,9 +116,7 @@ function SourceImportSelectedColumnPreview({
         >
           <span className={selectionBasketClassNames.columnName}>{column.name}</span>
           <span className={selectionBasketClassNames.columnType}>{column.type}</span>
-          {column.constraintLabels.map((constraint) => (
-            <span key={constraint}>{constraint}</span>
-          ))}
+          <SourceImportConstraintMarkers markers={column.constraintMarkers} />
         </Badge>
       ))}
       {overflowColumnCount > 0 ? (

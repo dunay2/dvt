@@ -211,6 +211,22 @@ export function createSourceImportWizardHarness() {
       `[data-source-import-database="${database}"] [role="checkbox"]`
     ) ?? undefined;
 
+  async function expandCollapsedSourceSchemas(): Promise<void> {
+    const disclosures = Array.from(
+      document.querySelectorAll<HTMLButtonElement>(
+        '[data-source-import-schema] [data-slot="collapsible-trigger"][aria-expanded="false"]'
+      )
+    );
+    if (disclosures.length === 0) {
+      return;
+    }
+    await act(async () => {
+      disclosures.forEach((disclosure) => {
+        disclosure.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      });
+    });
+  }
+
   async function clickTab(name: string): Promise<void> {
     const tab = requireElement(findTab(name), `EXPECTED_TAB:${name}`);
     await act(async () => {
@@ -219,6 +235,9 @@ export function createSourceImportWizardHarness() {
   }
 
   async function clickSourceObjectInspectionButton(text: string): Promise<void> {
+    if (!findSourceObjectInspectionButton(text)) {
+      await expandCollapsedSourceSchemas();
+    }
     const node = requireElement(
       findSourceObjectInspectionButton(text),
       `EXPECTED_SOURCE_OBJECT_INSPECTION:${text}`
@@ -229,6 +248,9 @@ export function createSourceImportWizardHarness() {
   }
 
   async function clickSourceObjectSelectionCheckbox(objectId: string): Promise<void> {
+    if (!findSourceObjectSelectionCheckbox(objectId)) {
+      await expandCollapsedSourceSchemas();
+    }
     const checkbox = requireElement(
       findSourceObjectSelectionCheckbox(objectId),
       `EXPECTED_SOURCE_OBJECT_SELECTION:${objectId}`
