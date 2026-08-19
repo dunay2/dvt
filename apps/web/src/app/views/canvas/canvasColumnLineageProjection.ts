@@ -5,6 +5,7 @@ import type { Edge } from '@xyflow/react';
 import type { CoreNodeRole, CanonicalNode } from '../../types/canonical';
 import { areCanvasColumnTypesCompatible } from './canvasColumnMappingAuthoring';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
+import { readDvtTransformLineageProvenance } from './canvasTransformationSqlMirror';
 
 export type CanvasColumnPortDirection = 'source' | 'target';
 export type CanvasColumnHandleIdentity = Readonly<{
@@ -100,7 +101,9 @@ function readVisualRecipe(node: CanonicalNode): VisualTransformRecipeV1 | null {
   if (node.pluginId !== 'dvt' || node.kind !== 'dvt:sql_transform') return null;
   try {
     const authority = readDvtTransformAuthoringAuthority(node);
-    return authority.mode === DVT_TRANSFORM_AUTHORING_MODE.visual ? authority.recipe : null;
+    return authority.mode === DVT_TRANSFORM_AUTHORING_MODE.visual
+      ? authority.recipe
+      : readDvtTransformLineageProvenance(node);
   } catch {
     return null;
   }

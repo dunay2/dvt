@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
-import { applyDvtVisualTransformRecipe } from './canvasDvtTransformAuthoringAuthority';
+import {
+  applyDvtVisualTransformRecipe,
+  convertDvtVisualTransformToSql,
+} from './canvasDvtTransformAuthoringAuthority';
 import {
   createCanvasColumnHandleId,
   parseCanvasColumnHandleId,
@@ -151,6 +154,83 @@ describe('Canvas column lineage projection', () => {
       'first_name',
       'last_name',
     ]);
+  });
+
+  it('preserves exact column lineage after transferring visual authority to SQL', () => {
+    const source = buildNode('source', 'dvt:source', 'input', [
+      { name: 'order_id', type: 'integer' },
+    ]);
+    const visualModel = applyDvtVisualTransformRecipe(
+      buildNode('model', 'dvt:sql_transform', 'transform'),
+      {
+        version: 'v1',
+        outputs: [
+          {
+            id: 'output:order_id',
+            name: 'order_id',
+            dataType: 'integer',
+            expression: {
+              inputs: [{ nodeId: source.id, columnName: 'order_id' }],
+              operations: [{ kind: 'passthrough' }],
+            },
+          },
+        ],
+        filters: [],
+      }
+    );
+    const sqlModel = convertDvtVisualTransformToSql(
+      visualModel,
+      'select order_id from public.source_1'
+    );
+
+    expect(
+      projectCanvasColumnLineage({
+        nodes: [source, sqlModel],
+        edges: [{ sourceId: source.id, targetId: sqlModel.id }],
+        expandedNodeIds: new Set([source.id, sqlModel.id]),
+      })
+    ).toEqual([
+      expect.objectContaining({
+        source: source.id,
+        target: sqlModel.id,
+        data: expect.objectContaining({
+          sourceColumnName: 'order_id',
+          targetColumnName: 'order_id',
+        }),
+      }),
+    ]);
+  });
+
+  it('does not infer lineage for arbitrary SQL or malformed provenance', () => {
+    const source = buildNode('source', 'dvt:source', 'input', [
+      { name: 'order_id', type: 'integer' },
+    ]);
+    const arbitrarySql = {
+      ...buildNode('sql-model', 'dvt:sql_transform', 'transform'),
+      metadata: {
+        sql: 'select order_id from public.source_1',
+        config: { sql: 'select order_id from public.source_1' },
+        transformAuthoring: { version: 'v1', mode: 'sql' },
+      },
+    } satisfies CanonicalNode;
+    const malformedProvenance = {
+      ...arbitrarySql,
+      id: 'malformed-model',
+      metadata: {
+        ...arbitrarySql.metadata,
+        transformLineageProvenance: { version: 'v2', outputs: 'not-a-recipe' },
+      },
+    } satisfies CanonicalNode;
+
+    for (const model of [arbitrarySql, malformedProvenance]) {
+      expect(
+        projectCanvasColumnLineage({
+          nodes: [source, model],
+          edges: [{ sourceId: source.id, targetId: model.id }],
+          expandedNodeIds: new Set([source.id, model.id]),
+        })
+      ).toEqual([]);
+    }
   });
 
   it('derives terminal model-to-sink lineage only for a unique exact compatible column', () => {

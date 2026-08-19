@@ -1,5 +1,9 @@
 /** Owned concern: classify and materialize DVT transform SQL mirror state. */
+import { VisualTransformRecipeV1Schema, type VisualTransformRecipeV1 } from '@dvt/contracts';
+
 import type { CanonicalNode } from '../../types/canonical';
+
+export const DVT_TRANSFORM_LINEAGE_PROVENANCE_METADATA_KEY = 'transformLineageProvenance' as const;
 
 export type TransformationSqlMirrorStatus = 'clean' | 'draft_dirty' | 'invalid_ambiguous';
 
@@ -31,6 +35,17 @@ export function readDraftSqlText(node: CanonicalNode): string | null {
 
 export function readCompiledSqlText(node: CanonicalNode): string | null {
   return readString(node.metadata?.compiledSql);
+}
+
+export function readDvtTransformLineageProvenance(
+  node: CanonicalNode
+): VisualTransformRecipeV1 | null {
+  if (node.pluginId !== 'dvt' || node.kind !== 'dvt:sql_transform') return null;
+
+  const result = VisualTransformRecipeV1Schema.safeParse(
+    node.metadata?.[DVT_TRANSFORM_LINEAGE_PROVENANCE_METADATA_KEY]
+  );
+  return result.success ? result.data : null;
 }
 
 export function readTransformationSqlMirrorState(
@@ -91,6 +106,7 @@ export function buildDvtSqlTransformMetadata(
     sql: _existingSql,
     compiledSql: _existingCompiledSql,
     config: _existingConfig,
+    [DVT_TRANSFORM_LINEAGE_PROVENANCE_METADATA_KEY]: _existingLineageProvenance,
     ...metadataWithoutSql
   } = node.metadata ?? {};
 
