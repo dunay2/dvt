@@ -1,3 +1,5 @@
+import { useEffect, useMemo, useState } from 'react';
+
 import {
   SourceImportCatalogFilterList,
   SourceImportCatalogEmptyState,
@@ -7,7 +9,9 @@ import {
   SourceImportLocatorGroup,
   SourceImportObjectCard,
   SourceImportObjectList,
+  SourceImportSchemaDisclosure,
   SourceImportSchemaHeader,
+  SourceImportSchemaObjects,
 } from './SourceImportCatalogPrimitives';
 import {
   buildSourceImportSchemaKey,
@@ -126,10 +130,10 @@ export function SourceImportCatalogView({
                 const expanded = revealMatchingSchemas || expandedSchemaKeys.has(schemaKey);
 
                 return (
-                  <Collapsible
+                  <SourceImportSchemaDisclosure
                     key={schemaKey}
-                    open={expanded}
-                    onOpenChange={(nextExpanded) => setSchemaExpanded(schemaKey, nextExpanded)}
+                    expanded={expanded}
+                    onExpandedChange={(nextExpanded) => setSchemaExpanded(schemaKey, nextExpanded)}
                   >
                     <SourceImportSchemaHeader
                       schema={schemaGroup.schema}
@@ -146,19 +150,17 @@ export function SourceImportCatalogView({
                         onToggleSchema(schemaIdentity);
                       }}
                     />
-                    <CollapsibleContent>
-                      <SourceImportObjectList>
-                        {schemaGroup.sourceObjects.map((sourceObject) => (
-                          <SourceImportObjectCard
-                            key={sourceObject.identityKey}
-                            sourceObject={sourceObject}
-                            onActivate={() => onActivateSourceObject(sourceObject.index)}
-                            onToggle={() => onToggleSourceObject(sourceObject.index)}
-                          />
-                        ))}
-                      </SourceImportObjectList>
-                    </CollapsibleContent>
-                  </Collapsible>
+                    <SourceImportSchemaObjects>
+                      {schemaGroup.sourceObjects.map((sourceObject) => (
+                        <SourceImportObjectCard
+                          key={sourceObject.identityKey}
+                          sourceObject={sourceObject}
+                          onActivate={() => onActivateSourceObject(sourceObject.index)}
+                          onToggle={() => onToggleSourceObject(sourceObject.index)}
+                        />
+                      ))}
+                    </SourceImportSchemaObjects>
+                  </SourceImportSchemaDisclosure>
                 );
               })}
             </SourceImportCatalogGroup>
@@ -182,6 +184,3 @@ export function SourceImportCatalogView({
     </SourceImportCatalogGroups>
   );
 }
-import { useEffect, useMemo, useState } from 'react';
-
-import { Collapsible, CollapsibleContent } from '../ui/collapsible';

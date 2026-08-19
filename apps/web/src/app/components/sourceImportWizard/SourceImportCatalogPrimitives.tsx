@@ -14,7 +14,7 @@ import type { ReactNode } from 'react';
 import { Badge } from '../ui/badge';
 import { Card } from '../ui/card';
 import { Checkbox } from '../ui/checkbox';
-import { CollapsibleTrigger } from '../ui/collapsible';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../ui/collapsible';
 import type {
   SourceImportCatalogFilterId,
   SourceImportCatalogFilterViewModel,
@@ -75,6 +75,12 @@ type SourceImportSchemaHeaderProps = Readonly<{
   selected: boolean;
   objectCountLabel: string;
   onToggle: () => void;
+}>;
+
+type SourceImportSchemaDisclosureProps = Readonly<{
+  children: ReactNode;
+  expanded: boolean;
+  onExpandedChange: (expanded: boolean) => void;
 }>;
 
 type SourceImportDatabaseHeaderProps = Readonly<{
@@ -247,6 +253,28 @@ export function SourceImportSchemaHeader({
         {objectCountLabel}
       </Badge>
     </div>
+  );
+}
+
+export function SourceImportSchemaDisclosure({
+  children,
+  expanded,
+  onExpandedChange,
+}: SourceImportSchemaDisclosureProps): JSX.Element {
+  return (
+    <Collapsible open={expanded} onOpenChange={onExpandedChange}>
+      {children}
+    </Collapsible>
+  );
+}
+
+export function SourceImportSchemaObjects({
+  children,
+}: Readonly<{ children: ReactNode }>): JSX.Element {
+  return (
+    <CollapsibleContent>
+      <SourceImportObjectList>{children}</SourceImportObjectList>
+    </CollapsibleContent>
   );
 }
 
