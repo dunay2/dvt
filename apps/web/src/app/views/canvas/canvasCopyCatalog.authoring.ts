@@ -1002,7 +1002,7 @@ export const canvasViewAuthoringCopyByKey = {
   inspectorErrorHttpJsonMaxBytesInvalid: {
     key: 'canvas.inspector.httpJson.errorMaxBytesInvalid',
     fallback:
-      'Maximum size must be positive, no greater than 50000000 bytes, and not smaller than expected size.',
+      'Maximum size must be a positive integer, no greater than 50000000 bytes, and not smaller than expected size.',
   },
   inspectorErrorHttpJsonStorageUriInvalid: {
     key: 'canvas.inspector.httpJson.errorStorageUriInvalid',
@@ -1119,12 +1119,12 @@ export const canvasViewAuthoringCopyByKey = {
   inspectorErrorObjectFileSizeInvalid: {
     key: 'canvas.inspector.objectFile.errorSizeInvalid',
     fallback:
-      'Object size must be positive, no greater than 50000000 bytes, and no greater than maximum size.',
+      'Object size must be a positive integer, no greater than 50000000 bytes, and no greater than maximum size.',
   },
   inspectorErrorObjectFileMaxBytesInvalid: {
     key: 'canvas.inspector.objectFile.errorMaxBytesInvalid',
     fallback:
-      'Maximum size must be positive, no greater than 50000000 bytes, and at least object size.',
+      'Maximum size must be a positive integer, no greater than 50000000 bytes, and at least object size.',
   },
   inspectorErrorObjectFileSourceCredentialInvalid: {
     key: 'canvas.inspector.objectFile.errorSourceCredentialInvalid',

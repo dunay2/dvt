@@ -5,6 +5,7 @@ import React, { act, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import type { ObjectFilePostgresAuthoringDraft } from '../../views/canvas/objectFilePostgresAuthoringModel';
 import { ObjectFilePostgresAuthoringFields } from './ObjectFilePostgresAuthoringFields';
 
@@ -47,6 +48,7 @@ describe('ObjectFilePostgresAuthoringFields', () => {
   let root: Root;
 
   beforeEach(() => {
+    useApplicationLanguageStore.setState({ language: 'en' });
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
@@ -89,11 +91,23 @@ describe('ObjectFilePostgresAuthoringFields', () => {
 
     expect(container.textContent).toContain('Use s3://<bucket>/tenants/<tenant>/<sha256>');
     expect(container.textContent).toContain(
-      'Object size must be positive, no greater than 50000000 bytes, and no greater than maximum size.'
+      'Object size must be a positive integer, no greater than 50000000 bytes, and no greater than maximum size.'
     );
     expect(container.textContent).toContain(
-      'Maximum size must be positive, no greater than 50000000 bytes, and at least object size.'
+      'Maximum size must be a positive integer, no greater than 50000000 bytes, and at least object size.'
     );
     expect(container.textContent).toContain('Add at least one unique, valid source-to-target');
+  });
+
+  it('renders the same whole-byte constraints in Spanish', () => {
+    useApplicationLanguageStore.setState({ language: 'es' });
+    act(() => root.render(<Harness />));
+
+    expect(container.textContent).toContain(
+      'El tamaño del objeto debe ser un número entero positivo, no superar 50000000 bytes y no superar el tamaño máximo.'
+    );
+    expect(container.textContent).toContain(
+      'El tamaño máximo debe ser un número entero positivo, no superar 50000000 bytes y ser al menos el tamaño del objeto.'
+    );
   });
 });

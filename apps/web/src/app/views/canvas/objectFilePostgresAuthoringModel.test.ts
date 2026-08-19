@@ -186,5 +186,17 @@ describe('object-file PostgreSQL authoring model', () => {
         maxBytes: '1000',
       })
     ).toMatchObject({ ok: false, errors: { sizeBytes: 'object_file_size_invalid' } });
+    expect(
+      validateObjectFilePostgresAuthoringDraft({
+        ...draft,
+        sizeBytes: '1.5',
+      })
+    ).toMatchObject({ ok: false, errors: { sizeBytes: 'object_file_size_invalid' } });
+    expect(
+      validateObjectFilePostgresAuthoringDraft({
+        ...draft,
+        maxBytes: '1.5',
+      })
+    ).toMatchObject({ ok: false, errors: { maxBytes: 'object_file_max_bytes_invalid' } });
   });
 });

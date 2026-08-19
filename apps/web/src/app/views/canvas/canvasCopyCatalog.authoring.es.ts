@@ -291,7 +291,7 @@ export const canvasViewAuthoringCopyEs = {
   inspectorErrorHttpJsonSizeInvalid:
     'El tamaño esperado debe ser un número entero positivo, no superar 50000000 bytes y no superar el tamaño máximo.',
   inspectorErrorHttpJsonMaxBytesInvalid:
-    'El tamaño máximo debe ser positivo, no superar 50000000 bytes y no ser inferior al tamaño esperado.',
+    'El tamaño máximo debe ser un número entero positivo, no superar 50000000 bytes y no ser inferior al tamaño esperado.',
   inspectorErrorHttpJsonStorageUriInvalid:
     'Introduce la URI S3 direccionada por contenido del artefacto inmutable.',
   inspectorErrorHttpJsonArtifactCredentialRefInvalid:
@@ -328,9 +328,9 @@ export const canvasViewAuthoringCopyEs = {
   inspectorErrorObjectFileSha256Invalid:
     'El SHA-256 debe contener exactamente 64 caracteres hexadecimales.',
   inspectorErrorObjectFileSizeInvalid:
-    'El tamaño del objeto debe ser positivo, no superar 50000000 bytes y no superar el tamaño máximo.',
+    'El tamaño del objeto debe ser un número entero positivo, no superar 50000000 bytes y no superar el tamaño máximo.',
   inspectorErrorObjectFileMaxBytesInvalid:
-    'El tamaño máximo debe ser positivo, no superar 50000000 bytes y ser al menos el tamaño del objeto.',
+    'El tamaño máximo debe ser un número entero positivo, no superar 50000000 bytes y ser al menos el tamaño del objeto.',
   inspectorErrorObjectFileSourceCredentialInvalid:
     'Usa una referencia de credencial opaca object-store:<id>.',
   inspectorErrorObjectFileTargetRelationInvalid:
