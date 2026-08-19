@@ -1,7 +1,7 @@
 import { vi } from 'vitest';
 
+import { dbtContributions } from '../../plugins/dbt/dbtContributions';
 import { DVT_AUTHORING_NODE_KINDS } from '../../plugins/dvt/dvtNodeTypeCatalog';
-import { DBT_NODE_KINDS } from '../../plugins/nodeTypeCatalog.dbt';
 import type { CanvasHarnessMocks, CanvasHarnessState } from './useCanvasController.test.types';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 
@@ -81,7 +81,9 @@ export function configureCanvasHarnessHookAndProjectionMocks(
       return {
         kind: 'dbt',
         graphStrategy: dbtGraphStrategy,
-        nodeKinds: DBT_NODE_KINDS,
+        nodeKinds:
+          dbtContributions.canvasKinds?.find((registration) => registration.kind === 'dbt')
+            ?.nodeKinds ?? [],
         executionStrategy: {
           kind: 'not_executable',
         },
@@ -136,10 +138,11 @@ export function configureCanvasHarnessHookAndProjectionMocks(
       createTitle: 'dbt canvas',
       emptyState: {
         title: 'Start dbt canvas',
-        editableMessage:
-          'Start this dbt canvas by adding a governed source, model, snapshot, exposure, or metric.',
+        editableMessage: 'Start this dbt canvas by adding a governed source, model, or test.',
       },
-      nodeKinds: DBT_NODE_KINDS,
+      nodeKinds:
+        dbtContributions.canvasKinds?.find((registration) => registration.kind === 'dbt')
+          ?.nodeKinds ?? [],
     },
     {
       kind: 'transformation',

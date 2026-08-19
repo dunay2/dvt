@@ -25,8 +25,7 @@ describe('Canvas route first-canvas catalog', () => {
     absentKinds: readonly string[]
   ): void {
     const authoringNodeKinds = currentCanvasRouteState().viewportProps?.authoringNodeKinds as
-      | readonly ReturnType<typeof requireAuthoringNodeKind>[]
-      | undefined;
+      readonly ReturnType<typeof requireAuthoringNodeKind>[] | undefined;
 
     expect(authoringNodeKinds).toBeDefined();
     for (const kind of expectedKinds) {
@@ -71,6 +70,9 @@ describe('Canvas route first-canvas catalog', () => {
       title: 'dbt canvas',
       kindLabel: 'dbt',
     });
-    expectViewportAuthoringKinds(['dbt:exposure', 'dbt:metric'], ['dvt:sql_transform']);
+    expectViewportAuthoringKinds(
+      ['dbt:source', 'dbt:model', 'dbt:test'],
+      ['dbt:seed', 'dbt:snapshot', 'dbt:exposure', 'dbt:metric', 'dbt:macro', 'dvt:sql_transform']
+    );
   });
 });
