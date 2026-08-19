@@ -12,6 +12,7 @@ export const RUNTIME_ROUTE_PATH = {
   dbtSelectedModelAnalysis: '/workspace/dbt/analysis/selected-model',
   dbtDependencyEditApplications: '/workspace/dbt/dependency-edits/applications',
   graphDbtWorkspaceArtifactPublications: '/workspace/dbt/graph-artifacts/publications',
+  graphDbtModelCompilation: '/workspace/dbt/graph-artifacts/compiled-models',
   dbtYamlDescriptionEditProposals: '/workspace/dbt/description-edits/proposals',
   dbtYamlDescriptionEditApplications: '/workspace/dbt/description-edits/applications',
   dbtYamlDescriptionEditReverts: '/workspace/dbt/description-edits/reverts',

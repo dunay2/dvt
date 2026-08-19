@@ -15,6 +15,8 @@ export type DbtProjectSourceIdentityRef = Readonly<{
 export type AnalyzeDbtProjectInput = Readonly<{
   scope: WorkspaceStorageScope;
   projectRoot: string;
+  operation?:
+    Readonly<{ kind: 'parse' }> | Readonly<{ kind: 'compile'; selectors: readonly string[] }>;
 }>;
 
 export type DbtProjectAnalysisResource = Omit<
@@ -25,6 +27,7 @@ export type DbtProjectAnalysisResource = Omit<
     codeOnlyReasons: readonly string[];
     sourceIdentityRef?: DbtProjectSourceIdentityRef;
     sourceTableDeclaration?: DbtProjectSourceTableDeclaration;
+    compiledSql?: string;
   }>;
 
 export type DbtProjectAnalysisDependency = Omit<ProjectedEdge, 'id'>;

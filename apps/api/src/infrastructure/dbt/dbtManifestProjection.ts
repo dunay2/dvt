@@ -210,6 +210,7 @@ function projectResource(
     .filter((column): column is NonNullable<typeof column> => column !== null)
     .sort((left, right) => left.name.localeCompare(right.name));
   const testMetadata = projectedType === 'test' ? projectTestMetadata(resource) : undefined;
+  const compiledSql = projectedType === 'model' ? stringValue(resource.compiled_code) : undefined;
   const sourceIdentityRef = projectSourceIdentityRef(resource, projectedType);
   const identifier = projectedType === 'source' ? stringValue(resource.identifier) : undefined;
   const sourceTableDeclaration = projectSourceTableDeclaration({
@@ -243,6 +244,7 @@ function projectResource(
     columns,
     tags: [...new Set(stringArray(resource.tags))].sort(),
     ...(testMetadata === undefined ? {} : { testMetadata }),
+    ...(compiledSql === undefined ? {} : { compiledSql }),
     ...(sourceIdentityRef === undefined ? {} : { sourceIdentityRef }),
     ...(sourceTableDeclaration === undefined ? {} : { sourceTableDeclaration }),
     codeOnlyReasons: ['phase_two_read_only_projection'],
