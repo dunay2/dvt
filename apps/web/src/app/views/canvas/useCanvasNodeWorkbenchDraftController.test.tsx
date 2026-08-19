@@ -273,6 +273,7 @@ describe('useCanvasNodeWorkbenchDraftController', () => {
 
     expect(harness.getController().draft.dvt).toEqual({
       kind: 'sql_transform',
+      mode: 'sql',
       sql: 'select order_id from raw.orders',
     });
     expect(appliedNode.metadata?.config).toMatchObject({
