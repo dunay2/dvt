@@ -14,6 +14,7 @@ import { registerProtectedDbtProjectGraphRouteGroup } from './dbtProjectGraphRou
 import { registerProtectedDbtProjectImportRouteGroup } from './dbtProjectImportRouteGroup.js';
 import { registerProtectedDbtSelectedModelAnalysisRouteGroup } from './dbtSelectedModelAnalysisRouteGroup.js';
 import { registerProtectedDbtYamlDescriptionEditRouteGroup } from './dbtYamlDescriptionEditRouteGroup.js';
+import { registerProtectedGraphDbtModelCompilationRouteGroup } from './graphDbtModelCompilationRouteGroup.js';
 import { registerProtectedGraphDbtWorkspaceArtifactPublicationRouteGroup } from './graphDbtWorkspaceArtifactPublicationRouteGroup.js';
 import { registerProjectOnboardingRoutes } from './projectOnboardingRoutes.js';
 import { registerProtectedAdminRouteGroup } from './protectedRuntimeAdminRouteGroup.js';
@@ -101,6 +102,11 @@ export async function registerProtectedRuntimeRoutes(
     protectedModule,
   });
   registerProtectedGraphDbtWorkspaceArtifactPublicationRouteGroup(app, {
+    env,
+    runtimeAuth: dependencies.runtimeAuth,
+    protectedModule,
+  });
+  registerProtectedGraphDbtModelCompilationRouteGroup(app, {
     env,
     runtimeAuth: dependencies.runtimeAuth,
     protectedModule,

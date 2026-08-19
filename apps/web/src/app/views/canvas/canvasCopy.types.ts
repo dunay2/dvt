@@ -226,6 +226,7 @@ export type CanvasViewCopy = {
   readonly planUnableToCreateMessage: string;
   readonly planGraphModelSqlDivergenceMessageTemplate: string;
   readonly planGraphAuthorityRefusedMessage: string;
+  readonly planGraphDbtCompilationFailedMessage: string;
   readonly previewProvenanceTransformPathRequiredMessage: string;
   readonly previewProvenanceWorkspaceNotConfiguredMessage: string;
   readonly previewProvenanceExplicitGitRevisionRequiredMessage: string;

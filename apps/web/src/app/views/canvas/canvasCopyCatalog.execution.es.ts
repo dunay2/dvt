@@ -9,6 +9,8 @@ export const canvasViewExecutionCopyEs = {
     'Código de proyecto contiene una edición más reciente en {path}. El Preview se ha detenido sin sobrescribirla. Continúa desde un proyecto DBT con autoridad de archivos o restaura la revisión generada por el Canvas.',
   planGraphAuthorityRefusedMessage:
     'La previsualización se detuvo porque este Canvas no tiene autoridad graph-draft exclusiva. Abre el proyecto con autoridad de ficheros o resuelve el conflicto de autoridad del Canvas.',
+  planGraphDbtCompilationFailedMessage:
+    'La previsualización se detuvo porque la compilación nativa de DBT no validó los modelos generados. Revisa el SQL del modelo y la configuración del destino.',
   previewProvenanceTransformPathRequiredMessage:
     'Execution Preview necesita contenido SQL. Selecciona un fichero SQL del workspace para el SQL transform o usa un transform creado en el canvas para que DVT lo cree.',
   previewProvenanceWorkspaceNotConfiguredMessage:

@@ -32,6 +32,7 @@ type UseCanvasPlanActionHandlerArgs = Pick<
   | 'workspaceFilesQuery'
   | 'workspaceFileContentCommand'
   | 'graphDbtWorkspaceArtifactPublicationCommand'
+  | 'graphDbtModelCompilationQuery'
   | 'setCurrentPlan'
 > & {
   transformationValidation: CanvasExecutionState['transformationValidation'];
@@ -57,6 +58,7 @@ export function useCanvasPlanActionHandler({
   workspaceFilesQuery,
   workspaceFileContentCommand,
   graphDbtWorkspaceArtifactPublicationCommand,
+  graphDbtModelCompilationQuery,
   setCurrentPlan,
   setLastPlannedDraftSignature,
   setPlanModalOpen,
@@ -111,6 +113,7 @@ export function useCanvasPlanActionHandler({
       workspaceFilesQuery,
       workspaceFileContentCommand,
       graphDbtWorkspaceArtifactPublicationCommand,
+      graphDbtModelCompilationQuery,
     });
 
     if (!result.ok) {
@@ -167,6 +170,7 @@ export function useCanvasPlanActionHandler({
     workspaceFilesQuery,
     workspaceFileContentCommand,
     graphDbtWorkspaceArtifactPublicationCommand,
+    graphDbtModelCompilationQuery,
     queryClient,
     shellFeedback,
     flushDraftForExecution,

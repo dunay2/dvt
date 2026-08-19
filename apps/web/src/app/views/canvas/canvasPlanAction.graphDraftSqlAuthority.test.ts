@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { IPlansPort } from '../../ports/plans';
 import type { IGraphDbtWorkspaceArtifactPublicationCommandPort } from '../../ports/graphDbtWorkspaceArtifactPublication';
+import type { IGraphDbtModelCompilationQueryPort } from '../../ports/graphDbtModelCompilation';
 import type { SessionContextPort } from '../../ports/sessionContext';
 import type {
   IWorkspaceFileContentCommandPort,
@@ -133,6 +134,9 @@ describe('Canvas graph-draft DBT SQL authority', () => {
       workspaceFilesQuery,
       workspaceFileContentCommand: { saveFileContent },
       graphDbtWorkspaceArtifactPublicationCommand: { publish },
+      graphDbtModelCompilationQuery: {
+        compile: vi.fn<IGraphDbtModelCompilationQueryPort['compile']>(),
+      },
     });
 
     expect(result).toMatchObject({

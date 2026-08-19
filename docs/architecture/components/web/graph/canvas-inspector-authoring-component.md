@@ -80,7 +80,7 @@ write surface lives one level up in the route-owned wrapper.
 | `CanvasInspectorPanel`                           | route-owned composition of passive Inspector plus authoring section        |
 | `DbtAuthoringFields`                             | dbt plugin authoring controls and generated model SQL preview              |
 | `DvtAuthoringFields`                             | DVT plugin authoring controls for sources, transforms, and sinks           |
-| `MonacoCodeEditor`                               | shared lazy SQL editor used by the DVT transform presentation leaf         |
+| `MonacoCodeEditor`                               | shared lazy SQL editor used by the focused dbt and DVT authoring leaves    |
 | `serializeCanvasDraftAuthoringSignature`         | semantic dirty-check signature for persisted authoring payloads            |
 | `serializeCanvasDraftAuthoringBaselineSignature` | remote-draft baseline signature policy used by bootstrap and reload        |
 | `toCanvasAuthoringMetadata`                      | JSON-compatible metadata DTO boundary for signatures and persistence       |
@@ -128,9 +128,10 @@ write surface lives one level up in the route-owned wrapper.
 - Historical `config.selectedColumns` metadata is preserved as inert
   compatibility data; it is not editable and must not be interpreted as a
   visual recipe.
-- The DVT SQL transform presentation leaf reuses `MonacoCodeEditor`. Canvas
-  must not import Monaco directly, create a second SQL buffer, or move file
-  persistence authority into the Inspector.
+- The focused dbt model and DVT SQL transform presentation leaves reuse
+  `MonacoCodeEditor`. Canvas shells and routes must not import Monaco directly,
+  create a second SQL buffer, or move file persistence authority into the
+  Inspector.
 - DVT authoring exposes only fields consumed by current preview or persistence
   semantics. Historical unconsumed config is preserved when supported fields
   change, but it is not presented as editable product truth.

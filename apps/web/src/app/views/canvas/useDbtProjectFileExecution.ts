@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 
 import {
   useGraphDbtWorkspaceArtifactPublicationCommandPort,
+  useGraphDbtModelCompilationQueryPort,
   usePlansService,
   useRunsService,
   useSessionContext,
@@ -46,6 +47,7 @@ export function useDbtProjectFileExecution(args: {
   const workspaceFileContentCommand = useWorkspaceFileContentCommandPort();
   const graphDbtWorkspaceArtifactPublicationCommand =
     useGraphDbtWorkspaceArtifactPublicationCommandPort();
+  const graphDbtModelCompilationQuery = useGraphDbtModelCompilationQueryPort();
   const navigation = useCanvasNavigationActions();
   const previewProvenanceConfig = useMemo(() => resolveWorkspaceBootstrapConfig(), []);
   const executionStrategy = useMemo(
@@ -62,6 +64,7 @@ export function useDbtProjectFileExecution(args: {
     workspaceFilesQuery,
     workspaceFileContentCommand,
     graphDbtWorkspaceArtifactPublicationCommand,
+    graphDbtModelCompilationQuery,
     executionStrategy,
     canonicalNodes: args.canonicalNodes,
     canonicalEdges: args.canonicalEdges,

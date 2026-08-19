@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { IPlansPort } from '../../ports/plans';
 import type { IGraphDbtWorkspaceArtifactPublicationCommandPort } from '../../ports/graphDbtWorkspaceArtifactPublication';
+import type { IGraphDbtModelCompilationQueryPort } from '../../ports/graphDbtModelCompilation';
 import type { SessionContextPort } from '../../ports/sessionContext';
 import type {
   IWorkspaceFileContentCommandPort,
@@ -140,6 +141,7 @@ describe('executeCanvasPlanAction file-backed dbt branch', () => {
       workspaceFilesQuery: {} as IWorkspaceFilesQueryPort,
       graphDbtWorkspaceArtifactPublicationCommand:
         {} as IGraphDbtWorkspaceArtifactPublicationCommandPort,
+      graphDbtModelCompilationQuery: {} as IGraphDbtModelCompilationQueryPort,
       workspaceFileContentCommand: {
         saveFileContent,
       } as unknown as IWorkspaceFileContentCommandPort,
@@ -250,6 +252,7 @@ describe('executeCanvasPlanAction file-backed dbt branch', () => {
       workspaceFilesQuery: {} as IWorkspaceFilesQueryPort,
       graphDbtWorkspaceArtifactPublicationCommand:
         {} as IGraphDbtWorkspaceArtifactPublicationCommandPort,
+      graphDbtModelCompilationQuery: {} as IGraphDbtModelCompilationQueryPort,
       workspaceFileContentCommand: {} as IWorkspaceFileContentCommandPort,
     });
 
@@ -321,6 +324,7 @@ describe('executeCanvasPlanAction file-backed dbt branch', () => {
       workspaceFilesQuery: {} as IWorkspaceFilesQueryPort,
       graphDbtWorkspaceArtifactPublicationCommand:
         {} as IGraphDbtWorkspaceArtifactPublicationCommandPort,
+      graphDbtModelCompilationQuery: {} as IGraphDbtModelCompilationQueryPort,
       workspaceFileContentCommand: {} as IWorkspaceFileContentCommandPort,
     });
 

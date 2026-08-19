@@ -11,6 +11,7 @@ import type {
 import type { IWarehouseConnectionCatalog } from '../../application/ports/warehouseSourceImport.js';
 import { AnalyzeSelectedDbtModelQuery } from '../../application/services/analyzeSelectedDbtModelQuery.js';
 import type { CanvasAuthoringAuthorityPolicy } from '../../application/services/canvasAuthoringAuthorityPolicy.js';
+import { CompileGraphDbtModelsQuery } from '../../application/services/compileGraphDbtModelsQuery.js';
 import { ImportDbtProjectUseCase } from '../../application/services/importDbtProjectUseCase.js';
 import { ProjectDbtGraphFromFilesUseCase } from '../../application/services/projectDbtGraphFromFilesUseCase.js';
 import { SelectedDbtModelAnalysisResolver } from '../../application/services/selectedDbtModelAnalysisResolver.js';
@@ -44,6 +45,10 @@ export function buildDbtProjectImportRuntime(deps: BuildDbtProjectImportRuntimeD
   const selectedModelAnalysisQuery = new AnalyzeSelectedDbtModelQuery(
     selectedModelAnalysisResolver
   );
+  const graphModelCompilationQuery = new CompileGraphDbtModelsQuery({
+    analyzer: deps.analyzer,
+    authorityPolicy: deps.authorityPolicy,
+  });
   const validateUseCase = new ValidateDbtProjectImportUseCase({
     inspector: deps.inspector,
     analyzer: deps.analyzer,
@@ -62,6 +67,7 @@ export function buildDbtProjectImportRuntime(deps: BuildDbtProjectImportRuntimeD
     projectGraphUseCase,
     selectedModelAnalysisQuery,
     selectedModelAnalysisResolver,
+    graphModelCompilationQuery,
     validateUseCase,
     importUseCase,
   };

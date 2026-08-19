@@ -25,6 +25,7 @@ export type DbtWorkspaceArtifactsResult =
   | Readonly<{
       ok: true;
       artifacts: readonly DbtWorkspaceArtifact[];
+      modelSelectors: readonly string[];
     }>
   | Readonly<{
       ok: false;
@@ -245,5 +246,8 @@ export function buildDbtWorkspaceArtifacts(args: {
   return {
     ok: true,
     artifacts,
+    modelSelectors: models
+      .map((model) => model.artifact.name)
+      .sort((left, right) => left.localeCompare(right)),
   };
 }
