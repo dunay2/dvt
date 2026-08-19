@@ -100,7 +100,7 @@ describe('HttpJsonArtifactAuthoringFields', () => {
       'SHA-256 must contain exactly 64 hexadecimal characters.'
     );
     expect(container.textContent).toContain(
-      'Expected size must be a positive admitted byte count.'
+      'Expected size must be a positive integer, no greater than 50000000 bytes, and no greater than maximum size.'
     );
     expect(container.textContent).toContain(
       'Maximum size must be positive, no greater than 50000000 bytes, and not smaller than expected size.'
