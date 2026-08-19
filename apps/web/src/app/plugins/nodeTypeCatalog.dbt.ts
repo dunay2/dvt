@@ -114,12 +114,6 @@ export const DBT_NODE_KINDS: NodeKindRegistration[] = [
   },
 ];
 
-const DBT_GRAPH_DRAFT_AUTHORING_KINDS = new Set(['dbt:source', 'dbt:model', 'dbt:test']);
-
-export const DBT_GRAPH_DRAFT_AUTHORING_NODE_KINDS = DBT_NODE_KINDS.filter((registration) =>
-  DBT_GRAPH_DRAFT_AUTHORING_KINDS.has(registration.kind)
-);
-
 export const DBT_TYPE_TO_KIND: Record<DbtNodeType, PluginNodeKind> = {
   SOURCE: 'dbt:source',
   MODEL: 'dbt:model',

@@ -2,7 +2,7 @@ import { LayoutDashboard } from 'lucide-react';
 
 import { CANVAS_ROUTE_BOOTSTRAP_HANDLE } from '../../views/canvas/canvasDraftPresentationStore';
 import type { PluginContributions } from '../registry';
-import { DBT_GRAPH_DRAFT_AUTHORING_NODE_KINDS, DBT_NODE_KINDS } from '../nodeTypeCatalog.dbt';
+import { DBT_NODE_KINDS } from '../nodeTypeCatalog.dbt';
 import { DbtNodeRenderer, dbtInspectorPanels, mapRunToCanonical } from './DbtNodeRenderer';
 import { dbtCanvasSurfaceStrategy } from './dbtCanvasSurfaceStrategy';
 import { dbtCanvasGraphStrategy } from './dbtNodeAdapter';
@@ -107,7 +107,9 @@ export const dbtContributions: PluginContributions = {
         },
       },
       nodeKinds: [
-        ...DBT_GRAPH_DRAFT_AUTHORING_NODE_KINDS,
+        ...DBT_NODE_KINDS.filter(
+          ({ kind }) => kind === 'dbt:source' || kind === 'dbt:model' || kind === 'dbt:test'
+        ),
         ...HTTP_JSON_NODE_KINDS,
         ...OBJECT_FILE_POSTGRES_NODE_KINDS,
       ],
