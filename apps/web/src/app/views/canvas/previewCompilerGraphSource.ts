@@ -22,19 +22,13 @@ export type PreviewGraphSourceArgs = {
   sqlText: string;
 };
 
-function resolveScopedDependencies(
-  targetNodeId: string,
-  edges: readonly CanonicalEdge[],
-  scopedNodeIds: readonly string[]
-): string[] {
-  return scopedNodeIds.filter((sourceNodeId) =>
-    edges.some((edge) => edge.sourceId === sourceNodeId && edge.targetId === targetNodeId)
-  );
-}
-
 export function buildPreviewGraphSource(
   args: PreviewGraphSourceArgs
 ): TransformationSqlFirstCompilerGraphSourceV2 {
+  const resolveDependencies = (targetNodeId: string): string[] =>
+    args.scopedNodeIds.filter((sourceNodeId) =>
+      args.edges.some((edge) => edge.sourceId === sourceNodeId && edge.targetId === targetNodeId)
+    );
   const scopedNodes = resolveScopedTransformationNodes(args.nodes, args.scopedNodeIds);
   const source = requireSourcePayload(scopedNodes.source);
   const transform = requireTransformPayload(scopedNodes.transform, args.sqlArtifact);
@@ -48,7 +42,7 @@ export function buildPreviewGraphSource(
       {
         nodeId: source.id,
         stepKind: TRANSFORMATION_STEP_KIND.preparePostgresTransform,
-        dependsOn: resolveScopedDependencies(source.id, args.edges, args.scopedNodeIds),
+        dependsOn: resolveDependencies(source.id),
         stepTypeConfig: {
           connectionRef: source.payload.connectionRef,
           targetSchema: sink.payload.schema,
@@ -61,7 +55,7 @@ export function buildPreviewGraphSource(
       {
         nodeId: transform.id,
         stepKind: TRANSFORMATION_STEP_KIND.postgresSqlTransform,
-        dependsOn: resolveScopedDependencies(transform.id, args.edges, args.scopedNodeIds),
+        dependsOn: resolveDependencies(transform.id),
         stepTypeConfig: {
           connectionRef: source.payload.connectionRef,
           dialect: 'postgres',
@@ -81,7 +75,7 @@ export function buildPreviewGraphSource(
       {
         nodeId: sink.id,
         stepKind: TRANSFORMATION_STEP_KIND.captureMaterializationEvidence,
-        dependsOn: resolveScopedDependencies(sink.id, args.edges, args.scopedNodeIds),
+        dependsOn: resolveDependencies(sink.id),
         stepTypeConfig: {
           connectionRef: source.payload.connectionRef,
           sinkSchema: sink.payload.schema,
