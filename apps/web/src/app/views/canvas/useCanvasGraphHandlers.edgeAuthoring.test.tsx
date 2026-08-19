@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import type { Node } from '@xyflow/react';
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -45,7 +46,7 @@ const HETEROGENEOUS_BRIDGE_CAPABILITIES = {
   },
 } as const;
 
-function buildHeterogeneousBridgeFlowNodes() {
+function buildHeterogeneousBridgeFlowNodes(): Node[] {
   return [
     {
       id: HTTP_JSON_ACQUISITION_NODE.id,
@@ -70,7 +71,7 @@ function buildHeterogeneousBridgeFlowNodes() {
   ];
 }
 
-async function useRealConnectionAdmissionRail() {
+async function useRealConnectionAdmissionRail(): Promise<void> {
   const { evaluateConnection } = await vi.importActual<
     typeof import('../../plugins/contracts/ConnectionRules')
   >('../../plugins/contracts/ConnectionRules');
