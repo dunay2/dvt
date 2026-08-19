@@ -22,10 +22,12 @@ import { ResolveAuthorizedPreviewSelectionService } from '../../application/serv
 import { RunStartDispatchResolver } from '../../application/services/runStartDispatchResolver.js';
 import { SignalRunUseCase } from '../../application/services/signalRunUseCase.js';
 import { StoredPlanRunExecutionContextRequirementResolver } from '../../application/services/StoredPlanRunExecutionContextRequirementResolver.js';
+import { ValidatePostgresTransformSqlUseCase } from '../../application/services/validatePostgresTransformSqlUseCase.js';
 import { RunEventCancellationReceiptStore } from '../../infrastructure/runControl/RunEventCancellationReceiptStore.js';
 import { ObservabilityRunStatusStalenessTelemetry } from '../../infrastructure/telemetry/ObservabilityRunStatusStalenessTelemetry.js';
 import { ObservabilityWorkspaceGraphDraftTelemetry } from '../../infrastructure/telemetry/ObservabilityWorkspaceGraphDraftTelemetry.js';
 import { SafeRunSnapshotStalenessReader } from '../../infrastructure/telemetry/SafeRunSnapshotStalenessReader.js';
+import { WorkspacePostgresTransformSqlValidator } from '../../infrastructure/warehouseSourceImport/WorkspacePostgresTransformSqlValidator.js';
 import { WorkspaceWarehouseConnectionProbe } from '../../infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.js';
 import type { ProtectedRuntimeModule } from '../../modules/types.js';
 
@@ -89,6 +91,12 @@ export function buildProtectedRuntimeRouteDependencies(
     protectedModule.warehouseConnectionCatalog,
     warehouseConnectionProbe
   );
+  const validatePostgresTransformSqlUseCase = new ValidatePostgresTransformSqlUseCase({
+    catalog: protectedModule.warehouseConnectionCatalog,
+    semanticValidator: new WorkspacePostgresTransformSqlValidator({
+      credentialResolver: protectedModule.postgresCredentialResolver,
+    }),
+  });
   const previewPlanUseCase = new PreviewPlanUseCase({
     planner: {
       buildPlan: (plannerInput) =>
@@ -107,6 +115,7 @@ export function buildProtectedRuntimeRouteDependencies(
       }),
       projectGraph: protectedModule.dbtProjectImport.projectGraphUseCase,
     }),
+    validatePostgresTransformSql: validatePostgresTransformSqlUseCase,
   });
 
   return {
@@ -134,6 +143,7 @@ export function buildProtectedRuntimeRouteDependencies(
     }),
     previewWarehouseSourceObjectRowsUseCase,
     previewPlanUseCase,
+    validatePostgresTransformSqlUseCase,
     observability,
     recoverRunUseCase: new RecoverRunUseCase({
       engine: protectedModule.engine,

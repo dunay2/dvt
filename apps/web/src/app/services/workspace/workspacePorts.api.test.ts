@@ -558,6 +558,42 @@ describe('workspace ports api warehouse source import', () => {
       {}
     );
   });
+
+  it('validates PostgreSQL transform SQL through the scoped protected query endpoint', async () => {
+    const scope = buildWorkspaceScope();
+    setWorkspaceScope(scope);
+    const validation = {
+      status: 'invalid' as const,
+      diagnostics: [
+        {
+          code: 'undefined_column' as const,
+          source: 'postgres' as const,
+          message: 'column missing does not exist',
+          startOffset: 7,
+          endOffset: 14,
+        },
+      ],
+    };
+    const { postJson, warehouseSourceImport } = createApiWorkspacePortHarness({
+      postJson: async <_TRequest, TResponse>() => validation as TResponse,
+    });
+    const input = {
+      connectionRef: {
+        schemaVersion: 'connection-ref.v1' as const,
+        provider: 'postgres',
+        connectionId: 'warehouse-prod',
+      },
+      sql: 'select missing from public.orders',
+    };
+
+    await expect(warehouseSourceImport.validatePostgresTransformSql(input)).resolves.toEqual(
+      validation
+    );
+    expect(postJson).toHaveBeenCalledWith(
+      `/workspace/warehouse/sql-validation?tenantId=${scope.tenantId}&projectId=${scope.projectId}&environmentId=${scope.environmentId}`,
+      input
+    );
+  });
 });
 
 describe('workspace ports api route parity posture', () => {

@@ -43,6 +43,7 @@ export const HTTP_ERROR_REASON = Object.freeze({
   missingTenantId: 'missing_tenant_id',
   missingTenantScope: 'missing_tenant_scope',
   planRejected: 'plan_rejected',
+  postgresTransformSqlNotReady: 'postgres_transform_sql_not_ready',
   runAlreadyExists: 'run_already_exists',
   runControlUnavailable: 'run_control_unavailable',
   runMaterializationSampleUnavailable: 'run_materialization_sample_unavailable',

@@ -116,6 +116,7 @@ export function createPreviewDeps(overrides: PreviewRouteTestOverrides = {}): Pr
       planStore,
       planValidator,
       previewSelectionResolver: previewSelectionResolver as never,
+      validatePostgresTransformSql: { execute: vi.fn().mockResolvedValue({ status: 'valid' }) },
     }),
   };
 }

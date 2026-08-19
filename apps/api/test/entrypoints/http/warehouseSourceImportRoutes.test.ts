@@ -52,6 +52,7 @@ import { ListWarehouseConnectionsUseCase } from '../../../src/application/servic
 import { PreviewWarehouseSourceObjectRowsUseCase } from '../../../src/application/services/previewWarehouseSourceObjectRowsUseCase.js';
 import { RenameWarehouseConnectionUseCase } from '../../../src/application/services/renameWarehouseConnectionUseCase.js';
 import { TestWarehouseConnectionUseCase } from '../../../src/application/services/testWarehouseConnectionUseCase.js';
+import { ValidatePostgresTransformSqlUseCase } from '../../../src/application/services/validatePostgresTransformSqlUseCase.js';
 import { WarehouseConnectionSourceObjectReader } from '../../../src/application/services/WarehouseConnectionSourceObjectReader.js';
 import { registerWarehouseSourceImportRoutes } from '../../../src/entrypoints/http/warehouseSourceImportRoutes.js';
 import {
@@ -336,6 +337,16 @@ function buildApp(
     readonly existingSourceFileContent?: string;
     readonly connectionTestResult?: TestWarehouseConnectionProbeFailure;
     readonly renameError?: Error;
+    readonly sqlValidationResult?:
+      | { readonly status: 'valid' }
+      | {
+          readonly status: 'invalid' | 'unavailable';
+          readonly diagnostics: readonly {
+            readonly code: 'undefined_column' | 'connection_unavailable';
+            readonly source: 'postgres' | 'connection';
+            readonly message: string;
+          }[];
+        };
   } = {}
 ): {
   readonly app: FastifyInstance;
@@ -349,6 +360,7 @@ function buildApp(
     readonly saveFileContent: ReturnType<typeof vi.fn>;
     readonly deleteFileContent: ReturnType<typeof vi.fn>;
   };
+  readonly validateSql: ReturnType<typeof vi.fn>;
 } {
   const app = Fastify({ logger: false });
   const catalogEntries = (
@@ -505,6 +517,7 @@ function buildApp(
         ?.sourceObjects ?? [relationSourceObject({ catalog: input.database, schema: 'public' })]
   );
   const sourceObjectReader = new WarehouseConnectionSourceObjectReader(catalog, probe);
+  const validateSql = vi.fn().mockResolvedValue(options.sqlValidationResult ?? { status: 'valid' });
   const authorize = vi.fn().mockResolvedValue(
     options.authorized === false
       ? { ok: false, reason: 'ACTION_NOT_GRANTED' }
@@ -538,6 +551,10 @@ function buildApp(
     createConnectionUseCase: new CreateWarehouseConnectionUseCase(catalog, probe),
     renameConnectionUseCase: new RenameWarehouseConnectionUseCase(catalog),
     testConnectionUseCase: new TestWarehouseConnectionUseCase(catalog, probe),
+    validatePostgresTransformSqlUseCase: new ValidatePostgresTransformSqlUseCase({
+      catalog,
+      semanticValidator: { validate: validateSql },
+    }),
     importSourcesUseCase: new ImportWarehouseSourcesUseCase({
       sourceObjectReader,
       authorityPolicy: {
@@ -560,7 +577,7 @@ function buildApp(
     rateLimit: { max: 100, timeWindow: 60_000 },
   });
 
-  return { app, authorize, draftStore, workspaceFiles };
+  return { app, authorize, draftStore, workspaceFiles, validateSql };
 }
 
 function sha256(content: string): string {
@@ -568,6 +585,30 @@ function sha256(content: string): string {
 }
 
 describe('warehouseSourceImportRoutes', () => {
+  it('validates current SQL through the protected governed PostgreSQL rail', async () => {
+    const { app, validateSql } = buildApp();
+
+    const response = await app.inject({
+      method: 'POST',
+      url: `/workspace/warehouse/sql-validation?${SCOPE_QUERY}`,
+      payload: {
+        connectionRef: {
+          schemaVersion: 'connection-ref.v1',
+          provider: 'postgres',
+          connectionId: 'warehouse-prod',
+        },
+        sql: 'select * from public.orders',
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual({ status: 'valid' });
+    expect(validateSql).toHaveBeenCalledWith({
+      credentialRef: 'postgres:warehouse',
+      sql: ['SELECT *', 'FROM public.orders'].join('\n'),
+    });
+  });
+
   it('returns a bounded source data sample through the protected view query', async () => {
     const { app, authorize } = buildApp();
     const objectId = encodeURIComponent('relation/analytics/erp/orders');
