@@ -19,4 +19,8 @@ describe('useCanvasController architecture', () => {
     expect(CONTROLLER_SOURCE).not.toContain('createCanvasDraftRepository');
     expect(CONTROLLER_SOURCE).not.toContain('createCanvasDraftQueryCache');
   });
+
+  it('routes read-model edge changes through the semantic graph lifecycle', () => {
+    expect(CONTROLLER_SOURCE).toContain('onEdgesChange: mutationHandlers.handleEdgesChange');
+  });
 });
