@@ -1014,11 +1014,12 @@ export const canvasViewAuthoringCopyByKey = {
   },
   inspectorErrorHttpJsonConnectTimeoutInvalid: {
     key: 'canvas.inspector.httpJson.errorConnectTimeoutInvalid',
-    fallback: 'Connection timeout must be between 100 and 30000 ms and not exceed request timeout.',
+    fallback:
+      'Connection timeout must be an integer between 100 and 30000 ms and not exceed request timeout.',
   },
   inspectorErrorHttpJsonRequestTimeoutInvalid: {
     key: 'canvas.inspector.httpJson.errorRequestTimeoutInvalid',
-    fallback: 'Request timeout must be between 100 and 60000 ms.',
+    fallback: 'Request timeout must be an integer between 100 and 60000 ms.',
   },
   inspectorErrorHttpJsonRedirectLimitInvalid: {
     key: 'canvas.inspector.httpJson.errorRedirectLimitInvalid',
