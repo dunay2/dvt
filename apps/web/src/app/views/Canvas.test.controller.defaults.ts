@@ -3,7 +3,7 @@ import { vi } from 'vitest';
 
 import { DVT_AUTHORING_NODE_KINDS } from '../plugins/dvt/dvtNodeTypeCatalog';
 import { dvtCanvasSurfaceStrategy } from '../plugins/dvt/dvtCanvasSurfaceStrategy';
-import { DBT_NODE_KINDS } from '../plugins/nodeTypeCatalog.dbt';
+import { DBT_GRAPH_DRAFT_AUTHORING_NODE_KINDS } from '../plugins/nodeTypeCatalog.dbt';
 import type { WorkspaceScope } from '../ports/sessionContext';
 import { DEFAULT_CANVAS_GRID_COLOR, DEFAULT_CANVAS_PALETTE_ID } from './canvas/canvasPalette';
 import { deriveCanvasDraftAccessPosture } from './canvas/canvasDraftAccessPostureModel';
@@ -158,10 +158,9 @@ function buildDefaultCanvasWorkbenchState(): CanvasWorkbenchDefaultsDto {
         createTitle: 'dbt canvas',
         emptyState: {
           title: 'Start dbt canvas',
-          editableMessage:
-            'Start this dbt canvas by adding a governed source, model, snapshot, exposure, or metric.',
+          editableMessage: 'Start this dbt canvas by adding a governed source, model, or test.',
         },
-        nodeKinds: DBT_NODE_KINDS,
+        nodeKinds: DBT_GRAPH_DRAFT_AUTHORING_NODE_KINDS,
       },
       {
         kind: 'transformation',

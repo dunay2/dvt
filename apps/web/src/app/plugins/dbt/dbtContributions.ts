@@ -2,7 +2,7 @@ import { LayoutDashboard } from 'lucide-react';
 
 import { CANVAS_ROUTE_BOOTSTRAP_HANDLE } from '../../views/canvas/canvasDraftPresentationStore';
 import type { PluginContributions } from '../registry';
-import { DBT_NODE_KINDS } from '../nodeTypeCatalog.dbt';
+import { DBT_GRAPH_DRAFT_AUTHORING_NODE_KINDS, DBT_NODE_KINDS } from '../nodeTypeCatalog.dbt';
 import { DbtNodeRenderer, dbtInspectorPanels, mapRunToCanonical } from './DbtNodeRenderer';
 import { dbtCanvasSurfaceStrategy } from './dbtCanvasSurfaceStrategy';
 import { dbtCanvasGraphStrategy } from './dbtNodeAdapter';
@@ -93,8 +93,7 @@ export const dbtContributions: PluginContributions = {
       createTitle: 'dbt canvas',
       emptyState: {
         title: 'Start dbt canvas',
-        editableMessage:
-          'Start this dbt canvas by adding a governed source, model, snapshot, exposure, or metric.',
+        editableMessage: 'Start this dbt canvas by adding a governed source, model, or test.',
       },
       localizedCopy: {
         es: {
@@ -103,12 +102,15 @@ export const dbtContributions: PluginContributions = {
           createTitle: 'Canvas dbt',
           emptyState: {
             title: 'Inicia el canvas dbt',
-            editableMessage:
-              'Inicia este canvas añadiendo un origen, modelo, snapshot, exposición o métrica gobernados.',
+            editableMessage: 'Inicia este canvas añadiendo un origen, modelo o prueba gobernados.',
           },
         },
       },
-      nodeKinds: [...DBT_NODE_KINDS, ...HTTP_JSON_NODE_KINDS, ...OBJECT_FILE_POSTGRES_NODE_KINDS],
+      nodeKinds: [
+        ...DBT_GRAPH_DRAFT_AUTHORING_NODE_KINDS,
+        ...HTTP_JSON_NODE_KINDS,
+        ...OBJECT_FILE_POSTGRES_NODE_KINDS,
+      ],
     },
   ],
   // Connection rules express dbt-local authoring policy; shell-level graph
