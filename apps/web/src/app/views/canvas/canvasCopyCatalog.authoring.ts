@@ -116,6 +116,10 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.connection.cycleDetectedMessage',
     fallback: 'Would create a cycle in the DAG.',
   },
+  connectionPluginPolicyUnavailableTemplate: {
+    key: 'canvas.connection.pluginPolicyUnavailableTemplate',
+    fallback: 'Connection policy is unavailable for plugin {plugin}.',
+  },
   connectionPluginRuleBlockedFallbackMessage: {
     key: 'canvas.connection.pluginRuleBlockedFallbackMessage',
     fallback: 'Connection is not permitted by plugin rules.',

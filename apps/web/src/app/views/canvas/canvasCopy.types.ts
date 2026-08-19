@@ -404,6 +404,7 @@ export type CanvasViewCopy = {
   readonly connectionSelfNotAllowedMessage: string;
   readonly connectionAlreadyExistsMessage: string;
   readonly connectionCycleDetectedMessage: string;
+  readonly connectionPluginPolicyUnavailableTemplate: string;
   readonly connectionPluginRuleBlockedFallbackMessage: string;
   readonly connectionCrossPluginBridgeMissingPrefix: string;
   readonly limitedAccessMessagePrefix: string;

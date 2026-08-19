@@ -45,6 +45,8 @@ export const canvasViewAuthoringCopyEs = {
   connectionSelfNotAllowedMessage: 'No se permiten las autoconexiones.',
   connectionAlreadyExistsMessage: 'La conexión ya existe.',
   connectionCycleDetectedMessage: 'La conexión crearía un ciclo en el DAG.',
+  connectionPluginPolicyUnavailableTemplate:
+    'La política de conexiones no está disponible para el plugin {plugin}.',
   connectionPluginRuleBlockedFallbackMessage:
     'La conexión no está permitida por las reglas del plugin.',
   connectionCrossPluginBridgeMissingPrefix:
