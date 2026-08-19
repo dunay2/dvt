@@ -10,6 +10,11 @@ import {
 } from './httpJsonArtifactAuthoringModel';
 
 const SHA256 = 'a'.repeat(64);
+const WORKSPACE_SCOPE = {
+  tenantId: 'tenant',
+  projectId: 'project',
+  environmentId: 'dev',
+} as const;
 const NODE: CanonicalNode = {
   id: 'acquire-orders',
   name: 'Acquire orders',
@@ -86,6 +91,24 @@ describe('HTTP JSON artifact Canvas authoring', () => {
         request: { endpointRef: 'http-endpoint:orders' },
       },
     });
+  });
+
+  it('rejects another tenant artifact before applying the draft', () => {
+    const draft = createHttpJsonArtifactAuthoringDraft(NODE);
+    expect(draft).not.toBeNull();
+    if (draft == null) return;
+    const foreignTenantDraft = {
+      ...draft,
+      storageUri: `s3://het2-artifacts/tenants/other-tenant/${SHA256}`,
+    };
+
+    expect(validateHttpJsonArtifactAuthoringDraft(foreignTenantDraft, WORKSPACE_SCOPE)).toEqual({
+      ok: false,
+      errors: { storageUri: 'http_json_storage_uri_invalid' },
+    });
+    expect(applyHttpJsonArtifactAuthoringDraft(NODE, foreignTenantDraft, WORKSPACE_SCOPE)).toEqual(
+      NODE
+    );
   });
 
   it('reports only invalid field paths when persisted metadata is incomplete', () => {

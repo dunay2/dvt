@@ -140,6 +140,24 @@ describe('object-file PostgreSQL authoring model', () => {
     ).toBeUndefined();
   });
 
+  it('rejects another tenant object before applying the draft', () => {
+    const draft = createObjectFilePostgresAuthoringDraft(objectFileNode);
+    expect(draft).not.toBeNull();
+    if (draft == null) return;
+    const foreignTenantDraft = {
+      ...draft,
+      storageUri: `s3://dvt-fixtures/tenants/other-tenant/${'a'.repeat(64)}`,
+    };
+
+    expect(validateObjectFilePostgresAuthoringDraft(foreignTenantDraft, scope)).toEqual({
+      ok: false,
+      errors: { storageUri: 'object_file_storage_uri_invalid' },
+    });
+    expect(
+      applyObjectFilePostgresAuthoringDraft(objectFileNode, foreignTenantDraft, scope)
+    ).toEqual(objectFileNode);
+  });
+
   it('maps incomplete editable values to stable field errors', () => {
     const draft = createObjectFilePostgresAuthoringDraft({
       ...objectFileNode,
