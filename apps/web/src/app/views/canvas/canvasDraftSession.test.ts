@@ -9,6 +9,7 @@ import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { buildCanvasNodePresentationCopy } from './canvasNodePresentationCopy';
 import type { CanvasAuthoringDraftRecord } from './canvasDraftReadModel';
 import { canvasDraftSession } from './canvasDraftSession';
+import { buildCurrentDraftPayload } from './canvasDraftLifecycleSnapshot';
 import { buildCanvasAuthoringGraphProjection } from './canvasAuthoringGraphProjection';
 import { canvasGraphLifecycle } from './canvasGraphLifecycle';
 import { createCanvasDraftRepository } from './canvasDraftRepository';
@@ -676,14 +677,14 @@ describe('canvasDraftSession', () => {
       },
       [{ id: canonicalEdges[0]!.id, type: 'remove' }]
     );
-    const persistedAfterRemoval = buildCanvasAuthoringDraft({
-      canvas: persistedDraft.canvas,
-      nodeIds: removedState.draftSession.workingSet.visibleNodeIds,
-      nodePositions: persistedDraft.nodePositions,
-      visibleEdges: removedState.draftSession.workingSet.visibleEdges,
+    const persistedAfterRemoval = buildCurrentDraftPayload(
+      removedState.nodes,
+      removedState.draftSession,
+      persistedDraft.canvas,
+      persistedDraft,
       canonicalNodes,
-      canonicalEdges,
-    });
+      canonicalEdges
+    );
     const authoringPort = buildAuthoringPort();
     const draftRepository = createCanvasDraftRepository(authoringPort);
     const saveResult = await draftRepository.saveGraphDraft({
