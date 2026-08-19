@@ -106,7 +106,6 @@ export const dvtContributions: PluginContributions = {
       reason: 'Connection not permitted by DVT authoring rules',
     },
   ],
-  produces: [{ portType: 'data.tabular', forRoles: ['transform'] }],
   consumes: [{ portType: 'data.tabular', forRoles: ['transform'] }],
 };
 
