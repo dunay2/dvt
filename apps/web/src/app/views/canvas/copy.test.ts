@@ -117,6 +117,12 @@ describe('canvas copy catalog', () => {
     expect(spanishCopy.inspectorErrorObjectFileMaxBytesInvalid).toBe(
       'El tamaño máximo debe ser positivo, no superar 50000000 bytes y ser al menos el tamaño del objeto.'
     );
+    expect(canvasViewCopy.inspectorErrorHttpJsonSizeInvalid).toBe(
+      'Expected size must be positive, no greater than 50000000 bytes, and no greater than maximum size.'
+    );
+    expect(spanishCopy.inspectorErrorHttpJsonSizeInvalid).toBe(
+      'El tamaño esperado debe ser positivo, no superar 50000000 bytes y no superar el tamaño máximo.'
+    );
 
     expect(
       [
