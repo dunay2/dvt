@@ -129,6 +129,18 @@ describe('canvas copy catalog', () => {
     expect(spanishCopy.inspectorErrorHttpJsonMaxBytesInvalid).toBe(
       'El tamaño máximo debe ser un número entero positivo, no superar 50000000 bytes y no ser inferior al tamaño esperado.'
     );
+    expect(canvasViewCopy.inspectorErrorHttpJsonConnectTimeoutInvalid).toBe(
+      'Connection timeout must be an integer between 100 and 30000 ms and not exceed request timeout.'
+    );
+    expect(canvasViewCopy.inspectorErrorHttpJsonRequestTimeoutInvalid).toBe(
+      'Request timeout must be an integer between 100 and 60000 ms.'
+    );
+    expect(spanishCopy.inspectorErrorHttpJsonConnectTimeoutInvalid).toBe(
+      'El tiempo de conexión debe ser un número entero entre 100 y 30000 ms y no superar el tiempo total.'
+    );
+    expect(spanishCopy.inspectorErrorHttpJsonRequestTimeoutInvalid).toBe(
+      'El tiempo total debe ser un número entero entre 100 y 60000 ms.'
+    );
 
     expect(
       [

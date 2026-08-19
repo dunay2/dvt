@@ -112,9 +112,11 @@ describe('HttpJsonArtifactAuthoringFields', () => {
       'Use an opaque object-store:<id> credential reference.'
     );
     expect(container.textContent).toContain(
-      'Connection timeout must be between 100 and 30000 ms and not exceed request timeout.'
+      'Connection timeout must be an integer between 100 and 30000 ms and not exceed request timeout.'
     );
-    expect(container.textContent).toContain('Request timeout must be between 100 and 60000 ms.');
+    expect(container.textContent).toContain(
+      'Request timeout must be an integer between 100 and 60000 ms.'
+    );
     expect(container.textContent).toContain(
       'Maximum redirects must be an integer between 0 and 5.'
     );
@@ -140,6 +142,12 @@ describe('HttpJsonArtifactAuthoringFields', () => {
     );
     expect(container.textContent).toContain(
       'El tamaño máximo debe ser un número entero positivo, no superar 50000000 bytes y no ser inferior al tamaño esperado.'
+    );
+    expect(container.textContent).toContain(
+      'El tiempo de conexión debe ser un número entero entre 100 y 30000 ms y no superar el tiempo total.'
+    );
+    expect(container.textContent).toContain(
+      'El tiempo total debe ser un número entero entre 100 y 60000 ms.'
     );
     expect(container.textContent).not.toContain('Use an opaque http-endpoint:<id> reference.');
   });

@@ -136,4 +136,39 @@ describe('HTTP JSON artifact Canvas authoring', () => {
       })
     ).toMatchObject({ ok: false, errors: { maxBytes: 'http_json_max_bytes_invalid' } });
   });
+
+  it('keeps fractional and relational timeout failures on their existing fields', () => {
+    const draft = createHttpJsonArtifactAuthoringDraft(NODE);
+    expect(draft).not.toBeNull();
+    if (draft == null) return;
+
+    expect(
+      validateHttpJsonArtifactAuthoringDraft({
+        ...draft,
+        connectTimeoutMs: '100.5',
+      })
+    ).toMatchObject({
+      ok: false,
+      errors: { connectTimeoutMs: 'http_json_connect_timeout_invalid' },
+    });
+    expect(
+      validateHttpJsonArtifactAuthoringDraft({
+        ...draft,
+        requestTimeoutMs: '100.5',
+      })
+    ).toMatchObject({
+      ok: false,
+      errors: { requestTimeoutMs: 'http_json_request_timeout_invalid' },
+    });
+    expect(
+      validateHttpJsonArtifactAuthoringDraft({
+        ...draft,
+        connectTimeoutMs: '5001',
+        requestTimeoutMs: '5000',
+      })
+    ).toMatchObject({
+      ok: false,
+      errors: { connectTimeoutMs: 'http_json_connect_timeout_invalid' },
+    });
+  });
 });
