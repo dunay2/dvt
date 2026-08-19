@@ -66,6 +66,10 @@ const NODE_WORKBENCH_PANEL_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'CanvasNodeWorkbenchPanel.tsx'
 );
+const HTTP_JSON_FIELDS_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  '../../plugins/httpJson/HttpJsonArtifactAuthoringFields.tsx'
+);
 
 describe('canvas inspector authoring component architecture', () => {
   it('keeps DTO, model, command, hook, and route-owned view seams explicitly separated', () => {
@@ -149,6 +153,10 @@ describe('canvas inspector authoring component architecture', () => {
     expect(DVT_SOURCE_SECTION_SOURCE).toContain('formatCanvasInspectorNodeDraftError');
     expect(DVT_SQL_SECTION_SOURCE).toContain('formatCanvasInspectorNodeDraftError');
     expect(DVT_SINK_SECTION_SOURCE).toContain('formatCanvasInspectorNodeDraftError');
+    expect(HTTP_JSON_FIELDS_SOURCE).toContain('canvasViewCopy');
+    expect(HTTP_JSON_FIELDS_SOURCE).toContain('formatCanvasInspectorNodeDraftError');
+    expect(HTTP_JSON_FIELDS_SOURCE).not.toContain('Revisa este valor.');
+    expect(HTTP_JSON_FIELDS_SOURCE).not.toContain('Adquisición HTTP JSON');
 
     expect(DBT_SOURCE_SECTION_SOURCE).toContain('canvasViewCopy.inspectorDbtPackageLabel');
     expect(DBT_MODEL_CODE_SECTION_SOURCE).toContain('canvasViewCopy.inspectorDbtModelSqlLabel');
