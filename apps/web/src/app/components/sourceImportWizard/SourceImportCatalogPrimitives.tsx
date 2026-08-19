@@ -75,7 +75,6 @@ type SourceImportSchemaHeaderProps = Readonly<{
   selected: boolean;
   objectCountLabel: string;
   onToggle: () => void;
-  onExpandedChange: (expanded: boolean) => void;
 }>;
 
 type SourceImportDatabaseHeaderProps = Readonly<{
@@ -221,7 +220,6 @@ export function SourceImportSchemaHeader({
   selected,
   objectCountLabel,
   onToggle,
-  onExpandedChange,
 }: SourceImportSchemaHeaderProps): JSX.Element {
   return (
     <div
@@ -234,7 +232,6 @@ export function SourceImportSchemaHeader({
           type="button"
           aria-label={expanded ? collapseAccessibilityLabel : expandAccessibilityLabel}
           className={sourceImportCatalogClassNames.schemaDisclosure}
-          onClick={() => onExpandedChange(!expanded)}
         >
           {expanded ? (
             <ChevronDown className="size-4 shrink-0" aria-hidden="true" />

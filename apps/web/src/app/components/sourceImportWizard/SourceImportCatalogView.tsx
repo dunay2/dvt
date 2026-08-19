@@ -61,8 +61,14 @@ export function SourceImportCatalogView({
     }
     setExpandedSchemaKeys((currentKeys) => {
       const nextKeys = new Set(currentKeys);
-      selectedSchemaKeys.forEach((key) => nextKeys.add(key));
-      return nextKeys;
+      let changed = false;
+      selectedSchemaKeys.forEach((key) => {
+        if (!nextKeys.has(key)) {
+          nextKeys.add(key);
+          changed = true;
+        }
+      });
+      return changed ? nextKeys : currentKeys;
     });
   }, [selectedSchemaKeys]);
 
@@ -120,7 +126,11 @@ export function SourceImportCatalogView({
                 const expanded = revealMatchingSchemas || expandedSchemaKeys.has(schemaKey);
 
                 return (
-                  <Collapsible key={schemaKey} open={expanded}>
+                  <Collapsible
+                    key={schemaKey}
+                    open={expanded}
+                    onOpenChange={(nextExpanded) => setSchemaExpanded(schemaKey, nextExpanded)}
+                  >
                     <SourceImportSchemaHeader
                       schema={schemaGroup.schema}
                       canonicalName={schemaGroup.canonicalName}
@@ -135,9 +145,6 @@ export function SourceImportCatalogView({
                         setSchemaExpanded(schemaKey, true);
                         onToggleSchema(schemaIdentity);
                       }}
-                      onExpandedChange={(nextExpanded) =>
-                        setSchemaExpanded(schemaKey, nextExpanded)
-                      }
                     />
                     <CollapsibleContent>
                       <SourceImportObjectList>
