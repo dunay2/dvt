@@ -22,6 +22,14 @@ const INSPECTOR_DRAFT_ERROR_COPY_KEYS = [
   ['dvt_alias_required', 'inspectorErrorDvtAliasRequired'],
   ['dvt_materialization_invalid', 'inspectorErrorDvtMaterializationInvalid'],
   ['dvt_write_mode_invalid', 'inspectorErrorDvtWriteModeInvalid'],
+  ['object_file_storage_uri_invalid', 'inspectorErrorObjectFileStorageUriInvalid'],
+  ['object_file_sha256_invalid', 'inspectorErrorObjectFileSha256Invalid'],
+  ['object_file_size_invalid', 'inspectorErrorObjectFileSizeInvalid'],
+  ['object_file_max_bytes_invalid', 'inspectorErrorObjectFileMaxBytesInvalid'],
+  ['object_file_source_credential_ref_invalid', 'inspectorErrorObjectFileSourceCredentialInvalid'],
+  ['object_file_target_relation_invalid', 'inspectorErrorObjectFileTargetRelationInvalid'],
+  ['object_file_target_credential_ref_invalid', 'inspectorErrorObjectFileTargetCredentialInvalid'],
+  ['object_file_column_mapping_invalid', 'inspectorErrorObjectFileColumnMappingInvalid'],
   ['http_json_endpoint_ref_invalid', 'inspectorErrorHttpJsonEndpointRefInvalid'],
   ['http_json_auth_credential_ref_invalid', 'inspectorErrorHttpJsonAuthCredentialRefInvalid'],
   ['http_json_sha256_invalid', 'inspectorErrorHttpJsonSha256Invalid'],
@@ -97,6 +105,18 @@ describe('canvas copy catalog', () => {
     expect(spanishCopy.inspectorDvtConnectionLabel).toBe('Conexión');
     expect(spanishCopy.inspectorDvtInheritedConnectionLabel).toBe('Conexión heredada');
     expect(spanishCopy.inspectorDvtWriteModeLabel).toBe('Modo de escritura');
+    expect(canvasViewCopy.inspectorErrorObjectFileSizeInvalid).toBe(
+      'Object size must be positive, no greater than 50000000 bytes, and no greater than maximum size.'
+    );
+    expect(canvasViewCopy.inspectorErrorObjectFileMaxBytesInvalid).toBe(
+      'Maximum size must be positive, no greater than 50000000 bytes, and at least object size.'
+    );
+    expect(spanishCopy.inspectorErrorObjectFileSizeInvalid).toBe(
+      'El tamaño del objeto debe ser positivo, no superar 50000000 bytes y no superar el tamaño máximo.'
+    );
+    expect(spanishCopy.inspectorErrorObjectFileMaxBytesInvalid).toBe(
+      'El tamaño máximo debe ser positivo, no superar 50000000 bytes y ser al menos el tamaño del objeto.'
+    );
 
     expect(
       [

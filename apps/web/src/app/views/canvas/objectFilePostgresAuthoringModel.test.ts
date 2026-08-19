@@ -1,3 +1,4 @@
+import { LOAD_OBJECT_FILE_TO_POSTGRES_MAX_BYTES } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
@@ -159,5 +160,31 @@ describe('object-file PostgreSQL authoring model', () => {
         columns: 'object_file_column_mapping_invalid',
       }),
     });
+  });
+
+  it('keeps size ceiling and size-to-maximum failures on their owning fields', () => {
+    const draft = createObjectFilePostgresAuthoringDraft(objectFileNode);
+    expect(draft).not.toBeNull();
+    if (draft == null) return;
+
+    expect(
+      validateObjectFilePostgresAuthoringDraft({
+        ...draft,
+        sizeBytes: String(LOAD_OBJECT_FILE_TO_POSTGRES_MAX_BYTES + 1),
+      })
+    ).toMatchObject({ ok: false, errors: { sizeBytes: 'object_file_size_invalid' } });
+    expect(
+      validateObjectFilePostgresAuthoringDraft({
+        ...draft,
+        maxBytes: String(LOAD_OBJECT_FILE_TO_POSTGRES_MAX_BYTES + 1),
+      })
+    ).toMatchObject({ ok: false, errors: { maxBytes: 'object_file_max_bytes_invalid' } });
+    expect(
+      validateObjectFilePostgresAuthoringDraft({
+        ...draft,
+        sizeBytes: '1001',
+        maxBytes: '1000',
+      })
+    ).toMatchObject({ ok: false, errors: { sizeBytes: 'object_file_size_invalid' } });
   });
 });

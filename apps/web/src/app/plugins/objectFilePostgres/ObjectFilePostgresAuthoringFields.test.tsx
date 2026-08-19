@@ -30,6 +30,8 @@ function Harness(): JSX.Element {
         draft={draft}
         errors={{
           storageUri: 'object_file_storage_uri_invalid',
+          sizeBytes: 'object_file_size_invalid',
+          maxBytes: 'object_file_max_bytes_invalid',
           columns: 'object_file_column_mapping_invalid',
         }}
         onChange={setDraft}
@@ -86,6 +88,12 @@ describe('ObjectFilePostgresAuthoringFields', () => {
     act(() => root.render(<Harness />));
 
     expect(container.textContent).toContain('Use s3://<bucket>/tenants/<tenant>/<sha256>');
+    expect(container.textContent).toContain(
+      'Object size must be positive, no greater than 50000000 bytes, and no greater than maximum size.'
+    );
+    expect(container.textContent).toContain(
+      'Maximum size must be positive, no greater than 50000000 bytes, and at least object size.'
+    );
     expect(container.textContent).toContain('Add at least one unique, valid source-to-target');
   });
 });
