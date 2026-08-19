@@ -78,14 +78,15 @@ export function createHttpJsonArtifactAuthoringDraft(
 }
 
 export function validateHttpJsonArtifactAuthoringDraft(
-  draft: HttpJsonArtifactAuthoringDraft
+  draft: HttpJsonArtifactAuthoringDraft,
+  workspaceScope: HttpJsonArtifactExecutionScope
 ): HttpJsonArtifactAuthoringValidation {
   const mediaType = draft.format === 'json' ? 'application/json' : 'application/x-ndjson';
   const parsed = HttpJsonArtifactStepTypeConfigSchema.safeParse({
     scope: {
-      tenantId: resolveTenantId(draft.storageUri),
-      projectId: 'authoring',
-      environmentId: 'authoring',
+      tenantId: workspaceScope.tenantId,
+      projectId: workspaceScope.projectId,
+      environmentId: workspaceScope.environmentId,
     },
     request: {
       method: 'GET',
@@ -123,9 +124,10 @@ export function validateHttpJsonArtifactAuthoringDraft(
 
 export function applyHttpJsonArtifactAuthoringDraft(
   node: CanonicalNode,
-  draft: HttpJsonArtifactAuthoringDraft
+  draft: HttpJsonArtifactAuthoringDraft,
+  workspaceScope: HttpJsonArtifactExecutionScope
 ): CanonicalNode {
-  const validation = validateHttpJsonArtifactAuthoringDraft(draft);
+  const validation = validateHttpJsonArtifactAuthoringDraft(draft, workspaceScope);
   if (!validation.ok) return node;
   return {
     ...node,
@@ -212,8 +214,4 @@ function stringValue(value: unknown): string {
 
 function numberText(value: unknown): string {
   return typeof value === 'number' && Number.isFinite(value) ? String(value) : '';
-}
-
-function resolveTenantId(storageUri: string): string {
-  return /\/tenants\/([^/]+)\//u.exec(storageUri.trim())?.[1] ?? '';
 }

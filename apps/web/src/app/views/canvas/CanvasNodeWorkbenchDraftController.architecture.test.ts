@@ -29,7 +29,9 @@ describe('Canvas node workbench draft controller architecture', () => {
     expect(CONTROLLER_SOURCE).not.toContain('DbtAuthoringFields');
     expect(CONTROLLER_SOURCE).not.toContain('DvtAuthoringFields');
 
-    expect(PANEL_SOURCE).toContain('useCanvasNodeWorkbenchDraftController(node)');
+    expect(PANEL_SOURCE).toContain(
+      'useCanvasNodeWorkbenchDraftController(node, authoring.workspaceScope)'
+    );
     expect(PANEL_SOURCE).not.toContain('authoritativeNodeRef');
     expect(PANEL_SOURCE).not.toContain('authoritativeDraftRef');
     expect(PANEL_SOURCE).not.toContain('authoringSourceFingerprint');

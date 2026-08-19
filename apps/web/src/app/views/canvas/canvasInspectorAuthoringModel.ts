@@ -18,15 +18,18 @@ import type {
   CanvasInspectorNodeDraft,
   CanvasInspectorNodeDraftErrors,
 } from './canvasInspectorAuthoring.types';
+import type { WorkspaceScope } from '../../ports/sessionContext';
 import {
   applyObjectFilePostgresAuthoringDraft,
   createObjectFilePostgresAuthoringDraft,
+  OBJECT_FILE_POSTGRES_AUTHORING_ERROR,
   validateObjectFilePostgresAuthoringDraft,
 } from './objectFilePostgresAuthoringModel';
 import { resolveCompatibleDbtModelOrigins } from './canvasDbtModelArtifactProjection';
 import {
   applyHttpJsonArtifactAuthoringDraft,
   createHttpJsonArtifactAuthoringDraft,
+  HTTP_JSON_AUTHORING_ERROR,
   validateHttpJsonArtifactAuthoringDraft,
 } from './httpJsonArtifactAuthoringModel';
 
@@ -34,6 +37,7 @@ export type CanvasInspectorNodeDraftValidationContext = Readonly<{
   node: CanonicalNode;
   nodes: readonly CanonicalNode[];
   edges: readonly CanonicalEdge[];
+  workspaceScope?: WorkspaceScope;
 }>;
 
 function normalizeNodeName(value: string): string {
@@ -146,14 +150,32 @@ export function validateCanvasInspectorNodeDraft(
   }
 
   if (draft.objectFilePostgres) {
-    const validation = validateObjectFilePostgresAuthoringDraft(draft.objectFilePostgres);
+    if (context?.workspaceScope == null) {
+      return {
+        objectFilePostgres: {
+          storageUri: OBJECT_FILE_POSTGRES_AUTHORING_ERROR.storageUri,
+        },
+      };
+    }
+    const validation = validateObjectFilePostgresAuthoringDraft(
+      draft.objectFilePostgres,
+      context.workspaceScope
+    );
     if (!validation.ok) {
       return { objectFilePostgres: validation.errors };
     }
   }
 
   if (draft.httpJsonArtifact) {
-    const validation = validateHttpJsonArtifactAuthoringDraft(draft.httpJsonArtifact);
+    if (context?.workspaceScope == null) {
+      return {
+        httpJsonArtifact: { storageUri: HTTP_JSON_AUTHORING_ERROR.storageUri },
+      };
+    }
+    const validation = validateHttpJsonArtifactAuthoringDraft(
+      draft.httpJsonArtifact,
+      context.workspaceScope
+    );
     if (!validation.ok) return { httpJsonArtifact: validation.errors };
   }
 
@@ -185,7 +207,8 @@ export function hasCanvasInspectorNodeDraftChanges(
 
 export function applyCanvasInspectorNodeDraft(
   node: CanonicalNode,
-  draft: CanvasInspectorNodeDraft
+  draft: CanvasInspectorNodeDraft,
+  workspaceScope?: WorkspaceScope
 ): CanonicalNode {
   const tags = Array.from(
     new Set(draft.tags.map((tag) => tag.trim()).filter((tag) => tag.length > 0))
@@ -210,11 +233,15 @@ export function applyCanvasInspectorNodeDraft(
   }
 
   if (draft.objectFilePostgres) {
-    return applyObjectFilePostgresAuthoringDraft(baseNode, draft.objectFilePostgres);
+    return workspaceScope == null
+      ? node
+      : applyObjectFilePostgresAuthoringDraft(baseNode, draft.objectFilePostgres, workspaceScope);
   }
 
   if (draft.httpJsonArtifact) {
-    return applyHttpJsonArtifactAuthoringDraft(baseNode, draft.httpJsonArtifact);
+    return workspaceScope == null
+      ? node
+      : applyHttpJsonArtifactAuthoringDraft(baseNode, draft.httpJsonArtifact, workspaceScope);
   }
 
   return baseNode;
@@ -222,7 +249,8 @@ export function applyCanvasInspectorNodeDraft(
 
 export function canonicalizeCanvasInspectorNodeDraft(
   node: CanonicalNode,
-  draft: CanvasInspectorNodeDraft
+  draft: CanvasInspectorNodeDraft,
+  workspaceScope?: WorkspaceScope
 ): CanvasInspectorNodeDraft {
-  return createCanvasInspectorNodeDraft(applyCanvasInspectorNodeDraft(node, draft));
+  return createCanvasInspectorNodeDraft(applyCanvasInspectorNodeDraft(node, draft, workspaceScope));
 }

@@ -106,7 +106,7 @@ describe('HttpJsonArtifactAuthoringFields', () => {
       'Maximum size must be a positive integer, no greater than 50000000 bytes, and not smaller than expected size.'
     );
     expect(container.textContent).toContain(
-      'Enter the content-addressed S3 URI for the immutable artifact.'
+      'Use s3://<bucket>/tenants/<tenant>/<sha256> for the immutable artifact.'
     );
     expect(container.textContent).toContain(
       'Use an opaque object-store:<id> credential reference.'
@@ -148,6 +148,9 @@ describe('HttpJsonArtifactAuthoringFields', () => {
     );
     expect(container.textContent).toContain(
       'El tiempo total debe ser un número entero entre 100 y 60000 ms.'
+    );
+    expect(container.textContent).toContain(
+      'Usa s3://<bucket>/tenants/<tenant>/<sha256> para el artefacto inmutable.'
     );
     expect(container.textContent).not.toContain('Use an opaque http-endpoint:<id> reference.');
   });

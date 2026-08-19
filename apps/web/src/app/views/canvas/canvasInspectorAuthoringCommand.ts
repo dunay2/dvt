@@ -6,13 +6,15 @@ import {
 } from './canvasInspectorAuthoringModel';
 import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types';
 import type { CanonicalNode } from '../../types/canonical';
+import type { WorkspaceScope } from '../../ports/sessionContext';
 
 export function applyCanvasInspectorNodeDraftToSession(args: {
   draftSession: CanvasDraftSession;
   node: CanonicalNode;
   draft: CanvasInspectorNodeDraft;
+  workspaceScope: WorkspaceScope;
 }): CanvasDraftSession {
-  const { draftSession, node, draft } = args;
+  const { draftSession, node, draft, workspaceScope } = args;
 
   if (!hasCanvasInspectorNodeDraftChanges(node, draft)) {
     return draftSession;
@@ -20,6 +22,6 @@ export function applyCanvasInspectorNodeDraftToSession(args: {
 
   return canvasDraftSession.workingSet.upsertNode(
     draftSession,
-    applyCanvasInspectorNodeDraft(node, draft)
+    applyCanvasInspectorNodeDraft(node, draft, workspaceScope)
   );
 }

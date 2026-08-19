@@ -95,6 +95,7 @@ describe('canvas inspector authoring component architecture', () => {
       'Owned concern: apply validated route-owned Inspector drafts back into the Canvas draft aggregate.'
     );
     expect(COMMAND_SOURCE).toContain('canvasDraftSession.workingSet.upsertNode');
+    expect(COMMAND_SOURCE).toContain('workspaceScope');
     expect(COMMAND_SOURCE).not.toContain("from 'react'");
     expect(COMMAND_SOURCE).not.toContain('useState(');
 
@@ -102,6 +103,7 @@ describe('canvas inspector authoring component architecture', () => {
       'Owned concern: expose route-owned Inspector mutation commands over the Canvas draft aggregate.'
     );
     expect(HOOK_SOURCE).toContain('applyCanvasInspectorNodeDraftToSession');
+    expect(HOOK_SOURCE).toContain('workspaceScope');
     expect(HOOK_SOURCE).toContain('convertDvtVisualTransformToSql');
     expect(HOOK_SOURCE).toContain('canvasDraftSession.workingSet.upsertNode');
     expect(HOOK_SOURCE).not.toContain('workspaceService');
@@ -110,6 +112,7 @@ describe('canvas inspector authoring component architecture', () => {
       'Owned concern: orchestrate the route-owned Inspector authoring surface for governed node details.'
     );
     expect(SECTION_SOURCE).toContain('draftController');
+    expect(SECTION_SOURCE).toContain('workspaceScope: authoring.workspaceScope');
     expect(SECTION_SOURCE).not.toContain('createCanvasInspectorNodeDraft');
     expect(SECTION_SOURCE).toContain('DbtAuthoringFields');
     expect(SECTION_SOURCE).toContain('DvtAuthoringFields');

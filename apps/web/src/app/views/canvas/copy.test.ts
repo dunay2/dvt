@@ -141,6 +141,12 @@ describe('canvas copy catalog', () => {
     expect(spanishCopy.inspectorErrorHttpJsonRequestTimeoutInvalid).toBe(
       'El tiempo total debe ser un número entero entre 100 y 60000 ms.'
     );
+    expect(canvasViewCopy.inspectorErrorHttpJsonStorageUriInvalid).toBe(
+      'Use s3://<bucket>/tenants/<tenant>/<sha256> for the immutable artifact.'
+    );
+    expect(spanishCopy.inspectorErrorHttpJsonStorageUriInvalid).toBe(
+      'Usa s3://<bucket>/tenants/<tenant>/<sha256> para el artefacto inmutable.'
+    );
 
     expect(
       [

@@ -89,6 +89,7 @@ function buildCanvasShellPanelsArgs({
     },
     userPermissions: routeViewState.effectiveUserPermissions,
     routePresentation: {
+      workspaceScope: routeViewState.workspaceScope,
       canvasDocument: routeViewState.canvasDocument,
       canvasDocuments: routeViewState.canvasDocuments,
       activeCanvasId: routeViewState.activeCanvasId,

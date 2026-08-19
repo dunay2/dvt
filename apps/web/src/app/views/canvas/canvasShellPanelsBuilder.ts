@@ -58,6 +58,7 @@ export function buildCanvasShellPanels({
     inspectorGraphEdges: panelState.inspectorGraphEdges,
     inspectorAuthoring: {
       canEditNode: panelState.canEditInspectorNode,
+      workspaceScope: routePresentation.workspaceScope,
       onApplyNodeDraft: panelState.applyInspectorNodeDraft,
       onConvertVisualTransformToSql: panelState.convertInspectorVisualTransformToSql,
     },

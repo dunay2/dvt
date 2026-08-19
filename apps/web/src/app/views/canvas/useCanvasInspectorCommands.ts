@@ -7,15 +7,18 @@ import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types'
 import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
 import { convertDvtVisualTransformToSql } from './canvasDvtTransformAuthoringAuthority';
 import type { CanonicalNode } from '../../types/canonical';
+import type { WorkspaceScope } from '../../ports/sessionContext';
 
 type UseCanvasInspectorCommandsArgs = {
   inspectorNode: CanonicalNode | null;
   setDraftSession: Dispatch<SetStateAction<CanvasDraftSession>>;
+  workspaceScope: WorkspaceScope;
 };
 
 export function useCanvasInspectorCommands({
   inspectorNode,
   setDraftSession,
+  workspaceScope,
 }: UseCanvasInspectorCommandsArgs) {
   const applyInspectorNodeDraft = useCallback(
     (draft: CanvasInspectorNodeDraft) => {
@@ -28,10 +31,11 @@ export function useCanvasInspectorCommands({
           draftSession: currentSession,
           node: inspectorNode,
           draft,
+          workspaceScope,
         })
       );
     },
-    [inspectorNode, setDraftSession]
+    [inspectorNode, setDraftSession, workspaceScope]
   );
 
   const convertInspectorVisualTransformToSql = useCallback(
