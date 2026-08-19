@@ -376,7 +376,10 @@ export function useCanvasController() {
     handleEdgesChange,
     inspectorNode,
   } = useCanvasControllerReadModel({
-    graphModel,
+    graphModel: {
+      ...graphModel,
+      onEdgesChange: mutationHandlers.handleEdgesChange,
+    },
     visibleScope,
     executionScope,
     uiScope,
