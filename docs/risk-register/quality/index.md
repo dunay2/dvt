@@ -87,6 +87,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Future recover-run feature could leak back into the generic signal boundary](R-20260408-RECOVER-RUN-BOUNDARY-DRIFT.yaml)
 - [Future state-store adapters may miss snapshot rebuild mutual exclusion](R-20260513-AR-A6-SNAPSHOT-REBUILD-CONCURRENCY-CONTRACT.yaml)
 - [Governed warehouse source samples can expose sensitive row values](R-20260817-SOURCE-DATA-SAMPLE.yaml)
+- [Graph Draft Preview could bypass native DBT model compilation](R-20260819-GRAPH-DBT-MODEL-COMPILATION.yaml)
 - [Graph source cardinality drift between JSON schema and runtime parser](R-20260404-MWA2-GRAPH-SOURCE-CARDINALITY-DRIFT.yaml)
 - [Graph-authored dbt artifacts can diverge during publication](R-20260729-GRAPH-DBT-ATOMIC-PUBLICATION.yaml)
 - [Heterogeneous plan projection can drift across authoring and runtime plugins](R-20260805-HET1-PUBLIC-VERTICAL.yaml)
