@@ -4,6 +4,7 @@ import type { CanonicalNode } from '../../types/canonical';
 import { evaluatePluginConnectionRules } from '../contracts/ConnectionRules';
 import { getPluginPortMap } from '../registry';
 import { dvtContributions } from './dvtContributions';
+import { DVT_AUTHORING_NODE_KINDS } from './dvtNodeTypeCatalog';
 
 function buildNode(kind: `${string}:${string}`, role: CanonicalNode['role']): CanonicalNode {
   return {
@@ -18,44 +19,63 @@ function buildNode(kind: `${string}:${string}`, role: CanonicalNode['role']): Ca
 }
 
 describe('dvtContributions connection rules', () => {
-  it('allows source -> sql_transform inside the dvt plugin', () => {
+  const dvtMatrix = [
+    ['dvt:source', 'input', 'dvt:source', 'input', false],
+    ['dvt:source', 'input', 'dvt:sql_transform', 'transform', true],
+    ['dvt:source', 'input', 'dvt:sink', 'output', false],
+    ['dvt:sql_transform', 'transform', 'dvt:source', 'input', false],
+    ['dvt:sql_transform', 'transform', 'dvt:sql_transform', 'transform', false],
+    ['dvt:sql_transform', 'transform', 'dvt:sink', 'output', true],
+    ['dvt:sink', 'output', 'dvt:source', 'input', false],
+    ['dvt:sink', 'output', 'dvt:sql_transform', 'transform', false],
+    ['dvt:sink', 'output', 'dvt:sink', 'output', false],
+  ] as const satisfies readonly (readonly [
+    `${string}:${string}`,
+    CanonicalNode['role'],
+    `${string}:${string}`,
+    CanonicalNode['role'],
+    boolean,
+  ])[];
+
+  it.each(dvtMatrix)(
+    'admits %s (%s) -> %s (%s) exactly when declared',
+    (sourceKind, sourceRole, targetKind, targetRole, expectedAllowed) => {
+      const result = evaluatePluginConnectionRules(
+        buildNode(sourceKind, sourceRole),
+        buildNode(targetKind, targetRole),
+        dvtContributions.connectionRules ?? []
+      );
+
+      expect(result.allowed).toBe(expectedAllowed);
+      if (!expectedAllowed) {
+        expect(result).toEqual(
+          expect.objectContaining({ allowed: false, reasonCode: 'plugin_rule_blocked' })
+        );
+      }
+    }
+  );
+
+  it('renders an incoming or outgoing handle exactly when the matrix has a valid peer', () => {
     const rules = dvtContributions.connectionRules ?? [];
 
-    const sourceToTransform = evaluatePluginConnectionRules(
-      buildNode('dvt:source', 'input'),
-      buildNode('dvt:sql_transform', 'transform'),
-      rules
-    );
+    for (const registration of DVT_AUTHORING_NODE_KINDS) {
+      const node = buildNode(registration.kind, registration.role);
+      const hasIncomingPeer = DVT_AUTHORING_NODE_KINDS.some(
+        (source) =>
+          evaluatePluginConnectionRules(buildNode(source.kind, source.role), node, rules).allowed
+      );
+      const hasOutgoingPeer = DVT_AUTHORING_NODE_KINDS.some(
+        (target) =>
+          evaluatePluginConnectionRules(node, buildNode(target.kind, target.role), rules).allowed
+      );
 
-    expect(sourceToTransform).toEqual({ allowed: true });
-  });
-
-  it('allows sql_transform -> sink inside the dvt plugin', () => {
-    const rules = dvtContributions.connectionRules ?? [];
-
-    const transformToSink = evaluatePluginConnectionRules(
-      buildNode('dvt:sql_transform', 'transform'),
-      buildNode('dvt:sink', 'output'),
-      rules
-    );
-
-    expect(transformToSink).toEqual({ allowed: true });
-  });
-
-  it('fails closed for unsupported dvt intra-plugin edges', () => {
-    const rules = dvtContributions.connectionRules ?? [];
-
-    const transformToTransform = evaluatePluginConnectionRules(
-      buildNode('dvt:sql_transform', 'transform'),
-      buildNode('dvt:sql_transform', 'transform'),
-      rules
-    );
-
-    expect(transformToTransform).toEqual({
-      allowed: false,
-      reasonCode: 'plugin_rule_blocked',
-      reason: 'Connection not permitted by DVT authoring rules',
-    });
+      expect(registration.allowsIncoming, `${registration.kind} incoming handle`).toBe(
+        hasIncomingPeer
+      );
+      expect(registration.allowsOutgoing, `${registration.kind} outgoing handle`).toBe(
+        hasOutgoingPeer
+      );
+    }
   });
 
   it('registers imported warehouse source nodes as tabular input producers', () => {
