@@ -174,9 +174,6 @@ export function buildCanvasConnectionCompatibilityByNodeId({
       if (reachableFromTarget.has(sourceNode.id)) {
         continue;
       }
-      if (sourceNode.pluginId !== targetNode.pluginId && targetNode.role === 'input') {
-        continue;
-      }
       if (!evaluateConnectionPolicy(sourceNode, targetNode, pluginPortMap).allowed) {
         continue;
       }

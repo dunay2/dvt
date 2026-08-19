@@ -157,5 +157,5 @@ export const dbtContributions: PluginContributions = {
     mapToCanonical: mapRunToCanonical,
   },
   produces: [{ portType: 'data.tabular', forRoles: ['input', 'transform'] }],
-  consumes: [{ portType: 'data.tabular', forRoles: ['input', 'transform'] }],
+  consumes: [{ portType: 'data.tabular', forRoles: ['transform'] }],
 };

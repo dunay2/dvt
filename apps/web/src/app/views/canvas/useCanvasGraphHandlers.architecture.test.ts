@@ -6,6 +6,10 @@ const GRAPH_HANDLERS_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'useCanvasGraphHandlers.ts'
 );
+const CONNECTION_AGGREGATE_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'canvasConnectionAggregate.ts'
+);
 
 describe('useCanvasGraphHandlers architecture', () => {
   it('stays as a composition seam over the graph interaction capabilities', () => {
@@ -30,5 +34,13 @@ describe('useCanvasGraphHandlers architecture', () => {
     expect(GRAPH_HANDLERS_SOURCE).not.toContain('useRef(');
     expect(GRAPH_HANDLERS_SOURCE).not.toContain('useState(');
     expect(GRAPH_HANDLERS_SOURCE).not.toContain('toast.');
+  });
+
+  it('keeps Canvas edge admission on the shared connection evaluator', () => {
+    expect(CONNECTION_AGGREGATE_SOURCE).toContain('evaluateConnection(');
+    expect(CONNECTION_AGGREGATE_SOURCE).not.toContain('evaluateConnectionPolicy');
+    expect(CONNECTION_AGGREGATE_SOURCE).not.toContain('hasDuplicateEdge');
+    expect(CONNECTION_AGGREGATE_SOURCE).not.toContain('wouldCreateCycle');
+    expect(CONNECTION_AGGREGATE_SOURCE).not.toContain('rejectCrossPluginIncomingInputEdge');
   });
 });

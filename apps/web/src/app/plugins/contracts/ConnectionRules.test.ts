@@ -90,6 +90,25 @@ describe('evaluateConnection', () => {
     expect(sourceToSnapshot).toEqual({ allowed: true });
   });
 
+  it('rejects cross-plugin tabular bridges into dbt input resources', () => {
+    const pluginPortMap = getPluginPortMap();
+    const dvtTransform = buildNode('dvt', 'dvt:sql_transform', 'transform');
+
+    for (const target of [
+      buildNode('dbt', 'dbt:source', 'input'),
+      buildNode('dbt', 'dbt:seed', 'input'),
+    ]) {
+      expect(evaluateConnection(dvtTransform, target, [], pluginPortMap)).toEqual({
+        allowed: false,
+        reasonCode: 'cross_plugin_bridge_missing',
+        sourcePluginId: 'dvt',
+        sourceRole: 'transform',
+        targetPluginId: 'dbt',
+        targetRole: 'input',
+      });
+    }
+  });
+
   it('keeps direct source -> sink blocked when no compatible bridge exists', () => {
     const pluginPortMap = getPluginPortMap();
 
