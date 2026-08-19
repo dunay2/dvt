@@ -2,12 +2,195 @@
 title: Canvas Node Workbench Hardening Plan
 status: Active
 owner: Frontend / Product / Architecture
-last_reviewed: 2026-08-16
+last_reviewed: 2026-08-19
 planning_type: mandatory
 issue: 2277
 ---
 
 # Canvas Node Workbench Hardening Plan
+
+## W4 node-authoring authority narrowing — #2532
+
+### Think-first analysis
+
+#### Problem
+
+The current `CanvasInspectorAuthoringContract` represents Graph Draft mutation
+availability with `canEditNode: boolean`, while `onApplyNodeDraft` remains mandatory.
+That permits the invalid pair `canEditNode: false` plus a callable mutation seam.
+
+The file-backed dbt Canvas currently fills that impossible slot with
+`unsupportedFileProjectionCommand('Edit graph node properties')`. The callback must
+never run, yet it exists in production composition solely to satisfy the type. At the
+same time, SQL and supported YAML description remain legitimately editable through
+independent file-authoritative Workbench contributions. Therefore `canEditNode`
+cannot truthfully describe editability of the complete Workbench.
+
+#### Root cause
+
+The contract conflates two separate capabilities:
+
+1. mutation of the transient `CanvasInspectorNodeDraft` into
+   `CanvasDraftSession`;
+2. editable contextual contributions whose authority is a workspace SQL or dbt YAML
+   file.
+
+This is primitive obsession around a boolean and an invalid-state modeling problem,
+not a missing feature or missing persistence rail.
+
+#### Constraints and invariants
+
+- `CanvasDraftSession` remains the only Web aggregate for Graph Draft authoring.
+- `CanvasInspectorNodeDraft` remains transient and cannot become product truth.
+- Graph Draft Apply continues through `ConfigureCanvasDbtNode` /
+  `ConfigureCanvasDvtNode` and the existing
+  `applyCanvasInspectorNodeDraftToSession` command seam.
+- Workspace SQL and dbt YAML remain file-authoritative.
+- Artifact-derived facts remain passive and read-only.
+- The Workbench contribution mechanism remains presentation composition, not a
+  second mutation authority.
+- This slice adds no store, endpoint, command bus, generic form engine or
+  compatibility callback.
+
+### Proposed model
+
+Use one discriminated capability for **node-draft mutation**, rather than a global
+Workbench editability boolean:
+
+```ts
+export type CanvasInspectorNodeDraftAuthoring =
+  | Readonly<{
+      status: 'available';
+      apply: (draft: CanvasInspectorNodeDraft) => void;
+      convertVisualTransformToSql?: (generatedSql: string) => void;
+    }>
+  | Readonly<{
+      status: 'unavailable';
+    }>;
+
+export type CanvasInspectorAuthoringContract = Readonly<{
+  nodeDraft: CanvasInspectorNodeDraftAuthoring;
+}>;
+```
+
+The exact field names may be refined during implementation, but the discriminant and
+invariant are mandatory:
+
+```text
+status = available   => Apply command exists
+status = unavailable => Apply command cannot exist
+```
+
+File-backed contributions do not enter this union. They already carry their own
+content and mutation callbacks through the SQL working-tree and dbt YAML contribution
+rails. Consequently, `status: 'unavailable'` means only that the common Graph Draft
+node DTO cannot be applied; it does not claim that every Workbench section is passive.
+
+### Authority matrix
+
+| Surface | Authority | Proposed posture | Mutation rail |
+| --- | --- | --- | --- |
+| Graph Draft common/plugin fields | `CanvasDraftSession` | `nodeDraft.status = available` | existing Inspector Apply command |
+| Graph Draft visual-to-SQL conversion | `CanvasDraftSession` | optional command on available variant | existing conversion plus `workingSet.upsertNode` |
+| dbt project SQL | workspace file | independent editable contribution | existing file content command/CAS |
+| dbt YAML description | dbt YAML file | independent editable contribution | existing YAML mutation command |
+| dbt artifact/analysis facts | derived projection | passive | none |
+| unsupported Graph Draft mutation | no authority | `nodeDraft.status = unavailable` | none; no callback |
+
+### Current and target flow
+
+```mermaid
+flowchart TD
+    A["Canvas mode"] --> B{"canEditNode"}
+    B -->|true| C["Mandatory Apply callback"]
+    B -->|false| D["Mandatory throwing callback"]
+    D --> E["File-backed contributions edit elsewhere"]
+```
+
+```mermaid
+flowchart TD
+    A["Canvas authority"] --> B{"Node-draft capability"}
+    B -->|available| C["Existing Graph Draft Apply command"]
+    B -->|unavailable| D["No node-draft command"]
+    A --> E["File-backed contributions"]
+    E --> F["Existing SQL or YAML command"]
+```
+
+### Options considered
+
+1. **Discriminated node-draft capability — selected.**
+   It makes the invalid callback state unrepresentable and leaves independent
+   file-backed contributions intact.
+2. **Optional callback with the existing boolean — rejected.**
+   It permits contradictory states such as `true + undefined` and
+   `false + callback`.
+3. **Per-field generic capability schema — rejected.**
+   Current measured duplication does not justify a form engine or new schema
+   subsystem.
+4. **Move file-backed edits into Graph Draft — rejected.**
+   It creates a second source of truth and violates file authority.
+5. **Keep the throwing callback as a guard — rejected.**
+   An impossible production callback is hidden debt, not fail-closed modeling.
+
+### Fowler opportunity matrix
+
+| Signal | Current mechanism | Correction | Owner | Proof |
+| --- | --- | --- | --- | --- |
+| Primitive obsession | `canEditNode` controls heterogeneous authority | discriminated node-draft capability | Canvas authoring presentation | type/component tests |
+| Invalid state | unavailable mode still requires Apply callback | unavailable variant has no callback | `CanvasInspectorAuthoringContract` | architecture test |
+| Hidden authority | file-backed edits coexist with global read-only boolean | keep SQL/YAML contributions independently authoritative | workspace/dbt files | browser roundtrip |
+| Dead defensive path | throwing file-projection callback must never execute | delete callback and helper | file-backed Canvas composition | source guard |
+| Duplicate semantics | global editability attempts to describe section authority | capability describes only node-draft mutation | Node Properties | component tests |
+
+### Pre-implementation brief
+
+- **Mode:** Slim. This narrows an internal Web contract without adding public
+  behavior.
+- **Issue:** #2532; parent #2195.
+- **Scope:** authoring contract, Graph Draft shell composition, file-backed dbt
+  composition, Node Properties authoring section and focused tests.
+- **Expected outcome:** one fewer impossible callback and a type that states the
+  actual authority.
+- **Risk:** accidentally hiding valid SQL/YAML editors. Mitigation: retain contribution
+  rails unchanged and prove both file-backed sections.
+- **Out of scope:** #2533 handler-builder reduction, Workbench decomposition,
+  Preview/Run behavior and new editable fields.
+- **Libraries:** none evaluated; no custom subsystem is required.
+- **Command/query impact:** reuse existing Configure/Apply and workspace file/YAML
+  commands; add no rail.
+- **Validation:** focused authoring/unit/architecture tests, Graph Draft and file-backed
+  browser roundtrips, Web typecheck/lint and repository pre-push gate.
+
+### Red/green implementation sequence
+
+1. Add architecture/type evidence that an unavailable node-draft posture contains no
+   Apply callback.
+2. Add component evidence that Graph Draft still renders and invokes Apply.
+3. Add file-backed evidence that no Graph Draft Apply seam exists while SQL/YAML
+   contributions remain active.
+4. Replace the boolean-plus-callback contract with the discriminated capability.
+5. Delete `unsupportedFileProjectionCommand` when the consumer audit remains singular.
+6. Run focused and repository validation; record removed symbols and no-debt evidence.
+
+### Explicit implementation boundaries
+
+Allowed:
+
+- `apps/web/src/app/views/canvas/canvasInspectorAuthoring.types.ts`
+- `apps/web/src/app/views/canvas/CanvasInspectorAuthoringSection.tsx`
+- `apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx`
+- `apps/web/src/app/views/canvas/canvasShellPanelsBuilder.ts`
+- `apps/web/src/app/views/canvas/DbtProjectFileCanvasView.tsx`
+- directly affected Web tests and this canonical plan
+
+Forbidden:
+
+- `packages/@dvt/contracts/**`
+- `packages/@dvt/engine/**`
+- `packages/@dvt/planner/**`
+- `packages/@dvt/adapter-*/**`
+- API routes, persistence schemas and Planning DB schema
+- a second authoring store, generic form engine or compatibility facade
 
 ## Decision
 
