@@ -12,7 +12,6 @@ export const inspectorVisualClasses = {
   inspectorCodeBlock:
     'whitespace-pre-wrap rounded border border-slate-700 bg-slate-900 p-3 font-mono text-xs text-slate-50',
   inspectorCodeText: 'whitespace-pre-wrap font-mono text-xs text-slate-50',
-  inspectorCodeEditor: 'min-h-64 resize-y font-mono text-xs leading-5',
   inspectorArtifactDetail: 'text-xs leading-5 text-(--text-muted)',
   contextPanelLeftShell: 'flex h-full flex-col border-r border-slate-700 bg-slate-900',
   contextPanelRightShell:

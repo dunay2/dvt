@@ -2,10 +2,11 @@
 import type { Dispatch, SetStateAction } from 'react';
 
 import { inspectorVisualClasses } from '../../components/inspector/inspectorVisualTokens';
+import { MonacoCodeEditor } from '../../components/monaco/MonacoCodeEditor';
 import { Label } from '../../components/ui/label';
-import { Textarea } from '../../components/ui/textarea';
 import type { CanonicalNode } from '../../types/canonical';
 import type { DbtNodeAuthoringMetadata } from './canvasDbtAuthoringModel';
+import { normalizeDbtArtifactIdentifier } from './canvasDbtModelArtifactProjection';
 import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types';
 import { formatCanvasCopyTemplate } from './canvasCopyFormatting';
 import { canvasViewCopy } from './copy';
@@ -26,6 +27,8 @@ export function DbtModelCodeAuthoringSection({
 }>): JSX.Element {
   const artifact = projection.modelArtifact;
   const editorValue = draft.modelSql ?? artifact?.body ?? '';
+  const modelPath =
+    artifact?.path ?? `models/${normalizeDbtArtifactIdentifier(node.name, node.id)}.sql`;
   const provenanceDetail =
     artifact == null
       ? null
@@ -50,25 +53,14 @@ export function DbtModelCodeAuthoringSection({
             {provenanceDetail}
           </p>
         )}
-        <Textarea
-          id={`inspector-dbt-model-sql-${node.id}`}
-          name="dbt-model-sql"
+        <MonacoCodeEditor
+          ariaLabel={canvasViewCopy.inspectorDbtModelSqlLabel}
+          language="sql"
+          loadingLabel={canvasViewCopy.inspectorDbtModelSqlLabel}
           value={editorValue}
-          disabled={disabled}
-          className={`${inspectorVisualClasses.inspectorCodeEditor} nokey`}
-          spellCheck={false}
-          onKeyDown={(event) => {
-            if (event.key === 'Backspace' || event.key === 'Delete') {
-              event.stopPropagation();
-            }
-          }}
-          onKeyUp={(event) => {
-            if (event.key === 'Backspace' || event.key === 'Delete') {
-              event.stopPropagation();
-            }
-          }}
-          onChange={(event) => {
-            const modelSql = event.currentTarget.value;
+          path={modelPath}
+          readOnly={disabled}
+          onChange={(modelSql) => {
             onChange((currentDraft) =>
               currentDraft.dbt == null
                 ? currentDraft
