@@ -8,10 +8,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../components/ui/select';
+import { inspectorVisualClasses } from '../../components/inspector/inspectorVisualTokens';
 import type {
   HttpJsonArtifactAuthoringDraft,
   HttpJsonArtifactAuthoringErrors,
 } from '../../views/canvas/httpJsonArtifactAuthoringModel';
+import { canvasViewCopy, formatCanvasInspectorNodeDraftError } from '../../views/canvas/copy';
 
 type Props = Readonly<{
   nodeId: string;
@@ -33,16 +35,15 @@ export function HttpJsonArtifactAuthoringFields({
   return (
     <div data-slot="http-json-artifact-authoring" className="space-y-3">
       <div>
-        <h3 className="text-sm font-semibold">Adquisición HTTP JSON</h3>
+        <h3 className="text-sm font-semibold">{canvasViewCopy.inspectorHttpJsonTitle}</h3>
         <p className="text-xs text-muted-foreground">
-          Solo referencias opacas y una salida S3 inmutable; la URL y los secretos viven en el
-          worker.
+          {canvasViewCopy.inspectorHttpJsonDescription}
         </p>
       </div>
       <Field
         nodeId={nodeId}
         name="endpoint-ref"
-        label="Referencia de endpoint"
+        label={canvasViewCopy.inspectorHttpJsonEndpointRefLabel}
         value={draft.endpointRef}
         disabled={disabled}
         error={errors?.endpointRef}
@@ -51,14 +52,14 @@ export function HttpJsonArtifactAuthoringFields({
       <Field
         nodeId={nodeId}
         name="auth-ref"
-        label="Referencia de autenticación (opcional)"
+        label={canvasViewCopy.inspectorHttpJsonAuthCredentialRefLabel}
         value={draft.authCredentialRef}
         disabled={disabled}
         error={errors?.authCredentialRef}
         onChange={(authCredentialRef) => update({ authCredentialRef })}
       />
       <div className="space-y-1">
-        <Label>Formato</Label>
+        <Label>{canvasViewCopy.inspectorHttpJsonFormatLabel}</Label>
         <Select
           value={draft.format}
           disabled={disabled}
@@ -76,7 +77,7 @@ export function HttpJsonArtifactAuthoringFields({
       <Field
         nodeId={nodeId}
         name="sha256"
-        label="SHA-256 esperado"
+        label={canvasViewCopy.inspectorHttpJsonExpectedSha256Label}
         value={draft.expectedSha256}
         disabled={disabled}
         error={errors?.expectedSha256}
@@ -85,7 +86,7 @@ export function HttpJsonArtifactAuthoringFields({
       <Field
         nodeId={nodeId}
         name="size"
-        label="Tamaño esperado (bytes)"
+        label={canvasViewCopy.inspectorHttpJsonExpectedSizeBytesLabel}
         value={draft.expectedSizeBytes}
         disabled={disabled}
         error={errors?.expectedSizeBytes}
@@ -94,7 +95,7 @@ export function HttpJsonArtifactAuthoringFields({
       <Field
         nodeId={nodeId}
         name="max-size"
-        label="Máximo admitido (bytes)"
+        label={canvasViewCopy.inspectorHttpJsonMaxBytesLabel}
         value={draft.maxBytes}
         disabled={disabled}
         error={errors?.maxBytes}
@@ -103,7 +104,7 @@ export function HttpJsonArtifactAuthoringFields({
       <Field
         nodeId={nodeId}
         name="storage-uri"
-        label="URI S3 direccionada por contenido"
+        label={canvasViewCopy.inspectorHttpJsonStorageUriLabel}
         value={draft.storageUri}
         disabled={disabled}
         error={errors?.storageUri}
@@ -112,7 +113,7 @@ export function HttpJsonArtifactAuthoringFields({
       <Field
         nodeId={nodeId}
         name="artifact-credential"
-        label="Referencia del almacén de objetos"
+        label={canvasViewCopy.inspectorHttpJsonArtifactCredentialRefLabel}
         value={draft.artifactCredentialRef}
         disabled={disabled}
         error={errors?.artifactCredentialRef}
@@ -121,7 +122,7 @@ export function HttpJsonArtifactAuthoringFields({
       <Field
         nodeId={nodeId}
         name="connect-timeout"
-        label="Timeout de conexión (ms)"
+        label={canvasViewCopy.inspectorHttpJsonConnectTimeoutLabel}
         value={draft.connectTimeoutMs}
         disabled={disabled}
         error={errors?.connectTimeoutMs}
@@ -130,7 +131,7 @@ export function HttpJsonArtifactAuthoringFields({
       <Field
         nodeId={nodeId}
         name="request-timeout"
-        label="Timeout total (ms)"
+        label={canvasViewCopy.inspectorHttpJsonRequestTimeoutLabel}
         value={draft.requestTimeoutMs}
         disabled={disabled}
         error={errors?.requestTimeoutMs}
@@ -139,7 +140,7 @@ export function HttpJsonArtifactAuthoringFields({
       <Field
         nodeId={nodeId}
         name="redirects"
-        label="Máximo de redirecciones"
+        label={canvasViewCopy.inspectorHttpJsonMaxRedirectsLabel}
         value={draft.maxRedirects}
         disabled={disabled}
         error={errors?.maxRedirects}
@@ -156,11 +157,12 @@ function Field(
     label: string;
     value: string;
     disabled: boolean;
-    error?: string;
+    error?: NonNullable<HttpJsonArtifactAuthoringErrors[keyof HttpJsonArtifactAuthoringErrors]>;
     onChange: (value: string) => void;
   }>
 ): JSX.Element {
   const id = `${props.nodeId}-http-json-${props.name}`;
+  const errorId = `${id}-error`;
   return (
     <div className="space-y-1">
       <Label htmlFor={id}>{props.label}</Label>
@@ -169,9 +171,14 @@ function Field(
         value={props.value}
         disabled={props.disabled}
         aria-invalid={props.error ? 'true' : undefined}
+        aria-describedby={props.error ? errorId : undefined}
         onChange={(event) => props.onChange(event.target.value)}
       />
-      {props.error ? <p className="text-xs text-destructive">Revisa este valor.</p> : null}
+      {props.error ? (
+        <p id={errorId} className={inspectorVisualClasses.inspectorErrorText}>
+          {formatCanvasInspectorNodeDraftError(props.error, canvasViewCopy)}
+        </p>
+      ) : null}
     </div>
   );
 }
