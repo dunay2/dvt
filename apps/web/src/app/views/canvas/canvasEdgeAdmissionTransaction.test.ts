@@ -501,7 +501,9 @@ describe('canvasEdgeAdmissionTransaction', () => {
       draftSemanticGraph: semanticGraph,
       localCanonicalNodes: [],
     });
-    const readInputsOutputs = (nodeId: string) => {
+    const readInputsOutputs = (
+      nodeId: string
+    ): ReturnType<typeof buildNodePropertiesReadModel>['sections'][number] | undefined => {
       const node = projection.canonicalNodesById.get(nodeId);
       expect(node).toBeDefined();
       return buildNodePropertiesReadModel({
