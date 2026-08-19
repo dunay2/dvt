@@ -97,13 +97,20 @@ function readColumns(node: CanonicalNode): readonly Column[] {
   });
 }
 
-function readVisualRecipe(node: CanonicalNode): VisualTransformRecipeV1 | null {
+type LineageRecipe = Readonly<{
+  recipe: VisualTransformRecipeV1;
+  removable: boolean;
+}>;
+
+function readLineageRecipe(node: CanonicalNode): LineageRecipe | null {
   if (node.pluginId !== 'dvt' || node.kind !== 'dvt:sql_transform') return null;
   try {
     const authority = readDvtTransformAuthoringAuthority(node);
-    return authority.mode === DVT_TRANSFORM_AUTHORING_MODE.visual
-      ? authority.recipe
-      : readDvtTransformLineageProvenance(node);
+    if (authority.mode === DVT_TRANSFORM_AUTHORING_MODE.visual) {
+      return { recipe: authority.recipe, removable: true };
+    }
+    const provenance = readDvtTransformLineageProvenance(node);
+    return provenance == null ? null : { recipe: provenance, removable: false };
   } catch {
     return null;
   }
@@ -122,6 +129,7 @@ function buildLineageEdge(args: {
   targetColumnId: string;
   outputId: string;
   terminal: boolean;
+  removable: boolean;
 }): CanvasColumnLineageEdge {
   return {
     id: createLineageEdgeId([
@@ -155,7 +163,7 @@ function buildLineageEdge(args: {
       targetNodeId: args.targetNodeId,
       targetColumnName: args.targetColumnName,
       outputId: args.outputId,
-      removable: !args.terminal,
+      removable: args.removable && !args.terminal,
     },
   };
 }
@@ -177,10 +185,10 @@ export function projectCanvasColumnLineage(args: {
   const projected: CanvasColumnLineageEdge[] = [];
 
   for (const model of args.nodes) {
-    const recipe = readVisualRecipe(model);
-    if (recipe == null || !args.expandedNodeIds.has(model.id)) continue;
+    const lineageRecipe = readLineageRecipe(model);
+    if (lineageRecipe == null || !args.expandedNodeIds.has(model.id)) continue;
 
-    for (const output of recipe.outputs) {
+    for (const output of lineageRecipe.recipe.outputs) {
       for (const input of output.expression.inputs) {
         const sourceNode = nodeById.get(input.nodeId);
         if (
@@ -201,6 +209,7 @@ export function projectCanvasColumnLineage(args: {
             targetColumnId: output.id,
             outputId: output.id,
             terminal: false,
+            removable: lineageRecipe.removable,
           })
         );
       }
@@ -227,6 +236,7 @@ export function projectCanvasColumnLineage(args: {
             targetColumnId: sinkColumn.name,
             outputId: output.id,
             terminal: true,
+            removable: false,
           })
         );
       }

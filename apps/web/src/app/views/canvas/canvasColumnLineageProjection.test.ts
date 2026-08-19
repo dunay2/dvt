@@ -194,6 +194,7 @@ describe('Canvas column lineage projection', () => {
         source: source.id,
         target: sqlModel.id,
         data: expect.objectContaining({
+          removable: false,
           sourceColumnName: 'order_id',
           targetColumnName: 'order_id',
         }),

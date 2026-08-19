@@ -20,6 +20,7 @@ import type { InteractiveCanvasColumnLineageEdgeData } from './CanvasColumnLinea
 import type { CanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
 import type { GraphNodeColumn } from '../../plugins/graph/GraphNodeColumnSection';
 import { canAuthorCanvasColumnMappings } from './canvasColumnMappingAuthoring';
+import { readDvtTransformLineageProvenance } from './canvasTransformationSqlMirror';
 
 function projectInteractiveColumns(node: Node): GraphNodeColumn[] {
   const columns = Array.isArray(node.data.columns)
@@ -154,6 +155,10 @@ export function useCanvasControllerReadModel({
         const canonicalNode = graphModel.canonicalNodesById.get(node.id);
         const canAuthorColumnMappings =
           canonicalNode?.role !== 'transform' || canAuthorCanvasColumnMappings(canonicalNode);
+        const hasReadOnlyColumnLineage =
+          canonicalNode?.role === 'transform' &&
+          !canAuthorColumnMappings &&
+          readDvtTransformLineageProvenance(canonicalNode) != null;
         const selectedForExecution = uiScope.selectedNodeIds.includes(node.id);
         const canSelectNode =
           canSelectExecution &&
@@ -175,6 +180,9 @@ export function useCanvasControllerReadModel({
             overlayDecoration: overlayModel.overlayDecorations.get(node.id) ?? null,
             runtimeCapabilities,
             activeColumnHandleId: graphHandlers.activeColumnHandleId,
+            onColumnPortActivate: canAuthorColumnMappings
+              ? node.data.onColumnPortActivate
+              : undefined,
             onAutomapColumns: canAuthorColumnMappings ? node.data.onAutomapColumns : undefined,
             columns:
               activeCanvasKind === 'transformation'
@@ -182,7 +190,9 @@ export function useCanvasControllerReadModel({
                 : node.data.columns,
             columnPortDirections:
               activeCanvasKind === 'transformation' && canonicalNode != null
-                ? canonicalNode.role === 'transform' && !canAuthorColumnMappings
+                ? canonicalNode.role === 'transform' &&
+                  !canAuthorColumnMappings &&
+                  !hasReadOnlyColumnLineage
                   ? []
                   : resolveCanvasColumnPortDirections(canonicalNode.role)
                 : [],

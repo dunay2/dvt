@@ -7,6 +7,7 @@ import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthorin
 import { DVT_TRANSFORM_AUTHORING_MODE, type VisualTransformRecipeV1 } from '@dvt/contracts';
 import { resolveAuthoringSqlArtifactPath } from './previewGraphNodePayloads';
 import { compileDvtVisualTransformNodeToPostgresSql } from './canvasVisualTransformSql';
+import { readDvtTransformLineageProvenance } from './canvasTransformationSqlMirror';
 
 export function projectCanvasNodePresentationTruth(
   args: Readonly<{
@@ -38,13 +39,19 @@ function projectCanvasNodePresentationTruthInternal(
       ? artifactProjection.artifact
       : null;
   let visualRecipe: VisualTransformRecipeV1 | null = null;
+  let lineageRecipe: VisualTransformRecipeV1 | null = null;
   if (args.node.pluginId === 'dvt' && args.node.kind === 'dvt:sql_transform') {
     try {
       const authority = readDvtTransformAuthoringAuthority(args.node);
-      visualRecipe =
-        authority.mode === DVT_TRANSFORM_AUTHORING_MODE.visual ? authority.recipe : null;
+      if (authority.mode === DVT_TRANSFORM_AUTHORING_MODE.visual) {
+        visualRecipe = authority.recipe;
+        lineageRecipe = authority.recipe;
+      } else {
+        lineageRecipe = readDvtTransformLineageProvenance(args.node);
+      }
     } catch {
       visualRecipe = null;
+      lineageRecipe = null;
     }
   }
   let visualGeneratedCode: Readonly<{
@@ -127,10 +134,10 @@ function projectCanvasNodePresentationTruthInternal(
       },
     };
   }
-  if (visualRecipe == null) {
+  if (lineageRecipe == null) {
     return baseTruth;
   }
-  const declared = visualRecipe.outputs.map((output) => ({
+  const declared = lineageRecipe.outputs.map((output) => ({
     name: output.name,
     type: output.dataType ?? 'unknown',
     provenance: 'declared' as const,
