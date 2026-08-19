@@ -51,8 +51,10 @@ describe('object-file PostgreSQL plugin contributions', () => {
   });
 
   it('composes the node into the DBT canvas without transferring plugin ownership', () => {
-    const dbtCanvas = getAllCanvasRuntimeRegistrations(availableCapabilities).find(
-      (registration) => registration.kind === 'dbt'
+    const canvasRuntimes = getAllCanvasRuntimeRegistrations(availableCapabilities);
+    const dbtCanvas = canvasRuntimes.find((registration) => registration.kind === 'dbt');
+    const transformationCanvas = canvasRuntimes.find(
+      (registration) => registration.kind === 'transformation'
     );
 
     expect(dbtCanvas?.nodeKinds).toContainEqual(
@@ -62,6 +64,9 @@ describe('object-file PostgreSQL plugin contributions', () => {
       })
     );
     expect(dbtContributions.nodeKinds).not.toContainEqual(
+      expect.objectContaining({ kind: 'dvt:object_file_load' })
+    );
+    expect(transformationCanvas?.nodeKinds).not.toContainEqual(
       expect.objectContaining({ kind: 'dvt:object_file_load' })
     );
   });
@@ -93,5 +98,25 @@ describe('object-file PostgreSQL plugin contributions', () => {
         reasonCode: 'cross_plugin_bridge_missing',
       })
     );
+  });
+
+  it('rejects object-file to object-file edges through its registered plugin policy', () => {
+    const anotherObjectFileNode: CanonicalNode = {
+      ...objectFileNode,
+      id: 'load-customers',
+      name: 'Load customers',
+    };
+
+    expect(
+      evaluateConnectionPolicy(
+        objectFileNode,
+        anotherObjectFileNode,
+        getPluginPortMap(availableCapabilities)
+      )
+    ).toEqual({
+      allowed: false,
+      reasonCode: 'plugin_rule_blocked',
+      reason: 'Object-file loads do not accept incoming object-file load edges',
+    });
   });
 });

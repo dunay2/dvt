@@ -116,6 +116,26 @@ describe('evaluateConnection', () => {
     }
   });
 
+  it('rejects DVT transforms as dbt model origins without a runtime consumer', () => {
+    const pluginPortMap = getPluginPortMap();
+
+    const connection = evaluateConnection(
+      buildNode('dvt', 'dvt:sql_transform', 'transform'),
+      buildNode('dbt', 'dbt:model', 'transform'),
+      [],
+      pluginPortMap
+    );
+
+    expect(connection).toEqual({
+      allowed: false,
+      reasonCode: 'cross_plugin_bridge_missing',
+      sourcePluginId: 'dvt',
+      sourceRole: 'transform',
+      targetPluginId: 'dbt',
+      targetRole: 'transform',
+    });
+  });
+
   it('keeps direct source -> sink blocked when no compatible bridge exists', () => {
     const pluginPortMap = getPluginPortMap();
 
