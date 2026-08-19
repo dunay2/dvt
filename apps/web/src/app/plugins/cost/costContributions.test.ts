@@ -32,6 +32,12 @@ describe('costContributions', () => {
     expect(costContributions.overlays?.map((overlay) => overlay.id)).toContain('cost');
   });
 
+  it('does not advertise graph nodes or data ports without an execution consumer', () => {
+    expect(costContributions.nodeKinds ?? []).toEqual([]);
+    expect(costContributions.produces ?? []).toEqual([]);
+    expect(costContributions.consumes ?? []).toEqual([]);
+  });
+
   it('projects high cost nodes with the governed heatmap decoration', () => {
     const overlay = costContributions.overlays?.find((candidate) => candidate.id === 'cost');
 

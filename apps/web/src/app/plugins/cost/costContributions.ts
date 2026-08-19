@@ -67,5 +67,4 @@ export const costContributions: PluginContributions = {
       nodeDecorator: (node, ctx) => resolveCostDecoration(ctx.costByNodeId.get(node.id)),
     },
   ],
-  consumes: [{ portType: 'data.tabular', forRoles: ['transform', 'output'] }],
 };
