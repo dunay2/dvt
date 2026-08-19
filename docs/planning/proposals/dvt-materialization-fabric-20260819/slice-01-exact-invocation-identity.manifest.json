@@ -1,0 +1,233 @@
+{
+  "manifestVersion": "1.0",
+  "programme": "dvt-materialization-fabric",
+  "slice": {
+    "id": "S01",
+    "slug": "exact-invocation-identity",
+    "title": "Exact invocation identity",
+    "studyDate": "2026-08-19",
+    "baselineCommit": "c82cfeb733de1c0bed2f869904b8f9252c97db2e",
+    "classification": "research-and-architecture",
+    "implementationStatus": "not-started",
+    "gateDecision": "blocked",
+    "gateScope": "implementation",
+    "gateReasonCodes": [
+      "CANONICALIZATION_AUTHORITY_NOT_CONVERGED",
+      "RFC8785_CROSS_RUNTIME_CORPUS_NOT_GREEN",
+      "V1_PREIMAGE_SCHEMA_NOT_APPROVED",
+      "FIRST_VERTICAL_IDENTITY_PROVIDERS_NOT_FROZEN"
+    ]
+  },
+  "objective": "Define one versioned intrinsic identity for an exact executable invocation without reusing plan, run or blob identities and without creating another crypto authority.",
+  "inScope": [
+    "RecipeDigest semantics",
+    "InputSnapshotDigest semantics",
+    "ExecutionContractDigest semantics",
+    "ParametersDigest semantics",
+    "OutputContractDigest semantics",
+    "MaterializationInvocationIdentityV1 preimage",
+    "RFC 8785 canonical bytes",
+    "SHA-256 digest contract",
+    "tenant/trust-domain lookup isolation",
+    "secret-version privacy",
+    "golden, mutation and cross-runtime vectors"
+  ],
+  "outOfScope": [
+    "materialization index",
+    "result manifest implementation",
+    "CAS read or pin implementation",
+    "runtime cache hit",
+    "safe partial dbt execution",
+    "cross-tenant reuse",
+    "SQL semantic equivalence",
+    "custom binary encoder",
+    "new digest algorithm"
+  ],
+  "artifacts": {
+    "study": "docs/planning/proposals/dvt-materialization-fabric-20260819/slice-01-exact-invocation-identity.md",
+    "manifest": "docs/planning/proposals/dvt-materialization-fabric-20260819/slice-01-exact-invocation-identity.manifest.json",
+    "implementationPlan": "docs/planning/proposals/dvt-materialization-fabric-20260819/slice-01-exact-invocation-identity-implementation-plan.md",
+    "validationReport": "docs/planning/proposals/dvt-materialization-fabric-20260819/slice-01-exact-invocation-identity-validation.md",
+    "programmeIndex": "docs/planning/proposals/dvt-materialization-fabric-20260819/README.md"
+  },
+  "existingAuthorities": [
+    {
+      "concern": "canonical plan identity",
+      "owner": "@dvt/planner + @dvt/contracts",
+      "disposition": "retain unchanged"
+    },
+    {
+      "concern": "canonicalization and digest primitives",
+      "owner": "@dvt/crypto via issue 2185",
+      "disposition": "converge and reuse"
+    },
+    {
+      "concern": "content-addressed bytes",
+      "owner": "@dvt/artifacts",
+      "disposition": "retain; not an invocation identity"
+    },
+    {
+      "concern": "safe reuse semantics and evidence",
+      "owner": "issues 2152, 2156, 2157 and 2158",
+      "disposition": "consume; do not duplicate"
+    }
+  ],
+  "sourceEvidence": [
+    {
+      "path": "packages/@dvt/planner/src/domain/PlanAssembler.ts",
+      "finding": "planId, inputHashSha256 and pluginCompatibilityFingerprint are deterministic but answer plan/input/compatibility questions rather than exact invocation identity"
+    },
+    {
+      "path": "packages/@dvt/planner/src/domain/hashing.ts",
+      "finding": "planner directly uses json-canonicalize and WebCrypto SHA-256"
+    },
+    {
+      "path": "packages/@dvt/planner/package.json",
+      "finding": "planner owns a direct json-canonicalize dependency instead of consuming the shared crypto boundary"
+    },
+    {
+      "path": "packages/@dvt/canonical/src/jcs.ts",
+      "finding": "shared handwritten canonicalizer sorts keys with localeCompare; an explicit A/a vector diverges from RFC 8785 UTF-16 code-unit ordering"
+    },
+    {
+      "path": "packages/@dvt/canonical/src/sha256.ts",
+      "finding": "shared Node SHA-256 primitive already exists"
+    },
+    {
+      "path": "packages/@dvt/artifacts/src/contentAddressed/IContentAddressedArtifactStore.ts",
+      "finding": "current CAS contract publishes content but does not resolve an invocation or result"
+    },
+    {
+      "path": "packages/@dvt/artifacts/src/contentAddressed/S3ContentAddressedArtifactStore.ts",
+      "finding": "tenant-scoped conditional publication and collision verification are reusable physical-integrity foundations"
+    },
+    {
+      "path": "packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts",
+      "finding": "existing plan and ownership boundaries must remain semantically unchanged"
+    }
+  ],
+  "openSourceConvergence": [
+    {
+      "name": "RFC 8785 JSON Canonicalization Scheme",
+      "url": "https://www.rfc-editor.org/rfc/rfc8785.html",
+      "decision": "adopt canonical preimage semantics and normative vectors"
+    },
+    {
+      "name": "Bazel Remote Execution API",
+      "url": "https://github.com/bazelbuild/remote-apis",
+      "decision": "reuse action-identity/action-result/CAS separation as prior art; do not import the full protocol"
+    },
+    {
+      "name": "OCI Image Specification",
+      "url": "https://github.com/opencontainers/image-spec",
+      "decision": "reuse immutable image/config digests as execution-contract inputs where relevant"
+    },
+    {
+      "name": "fast-check",
+      "url": "https://github.com/dubzzz/fast-check",
+      "decision": "optional only if it materially improves mutation/property coverage"
+    }
+  ],
+  "complexity": {
+    "semanticCompleteness": "high",
+    "canonicalEncoding": "medium-currently-risky",
+    "contractVersioning": "high",
+    "domainImplementation": "medium",
+    "providerIntegration": "high-to-very-high",
+    "migration": "high",
+    "runtimeOperationsWithinSlice": "low",
+    "securityPrivacy": "high",
+    "verification": "high"
+  },
+  "have": [
+    "deterministic plan assembly",
+    "existing plan and planner-input hashes",
+    "Node and WebCrypto SHA-256 implementations",
+    "a shared @dvt/crypto package",
+    "a direct planner canonicalization dependency",
+    "tenant-scoped content-addressed artifact publication",
+    "versioned contracts and immutable PlanRef rails",
+    "safe-partial-execution research ownership"
+  ],
+  "missing": [
+    "one proven RFC 8785 canonicalization authority",
+    "cross-runtime canonical byte and digest corpus",
+    "MaterializationInvocationIdentityV1 contract",
+    "approved result-affecting versus incidental field matrix",
+    "governed semantic profile for the first reusable step family",
+    "authoritative recipe identity provider",
+    "authoritative input snapshot identity provider",
+    "authoritative execution-contract identity provider",
+    "secret-version identity posture accepted by security review"
+  ],
+  "dependencies": [
+    {
+      "order": 1,
+      "reference": "https://github.com/dunay2/dvt/issues/2185",
+      "relation": "blocking",
+      "requiredOutcome": "one surviving JCS/SHA-256 primitive authority and explicit compatibility posture"
+    },
+    {
+      "order": 2,
+      "reference": "https://github.com/dunay2/dvt/issues/2156",
+      "relation": "semantic-input",
+      "requiredOutcome": "bounded effect and semantic profile for the first vertical"
+    },
+    {
+      "order": 3,
+      "reference": "https://github.com/dunay2/dvt/issues/2157",
+      "relation": "verification-input",
+      "requiredOutcome": "independent oracle and adversarial corpus able to reject unsafe reuse"
+    },
+    {
+      "order": 4,
+      "reference": "https://github.com/dunay2/dvt/issues/2158",
+      "relation": "evidence-input",
+      "requiredOutcome": "machine-verifiable immutable evidence contract"
+    }
+  ],
+  "implementationOrder": [
+    "converge and prove RFC 8785 plus SHA-256 primitives",
+    "approve invocation-identity ADR",
+    "add strict versioned contracts and parsers",
+    "add pure domain identity builder",
+    "add one managed/trusted-digest vertical-specific provider",
+    "freeze golden and mutation vectors",
+    "unlock result-manifest and materialization-index slices"
+  ],
+  "validation": {
+    "status": "partial",
+    "completed": [
+      "commit-bound source audit",
+      "open-issue ownership audit",
+      "primary-source standards comparison",
+      "local Node counterexample proving localeCompare differs from raw UTF-16 ordering for A/a"
+    ],
+    "notYetCompleted": [
+      "repository RFC corpus",
+      "Node/browser cross-runtime parity",
+      "100-of-100 invocation determinism",
+      "semantic mutation matrix",
+      "tenant and secret adversarial suite",
+      "first vertical identity construction",
+      "repository implementation checks"
+    ]
+  },
+  "acceptanceGates": {
+    "falseSafeReuseDecisions": 0,
+    "unknownOrOpaqueReuseDecisions": 0,
+    "canonicalIdentityDeterminism": "100/100",
+    "crossRuntimeGoldenVectorDivergence": 0,
+    "rawSecretsInPreimagesOrEvidence": 0,
+    "crossScopeLookupOrDiscoveryLeaks": 0
+  },
+  "rollback": {
+    "currentImpact": "none; documentation-only",
+    "futureRule": "A V1 identity implementation must be removable without changing existing plan, artifact, receipt or run identities and without disabling normal execution."
+  },
+  "nextSlice": {
+    "id": "S02",
+    "title": "Immutable ResultManifest and verification evidence",
+    "entryCondition": "S01 preimage semantics are approved and canonical bytes are stable enough to bind durable evidence."
+  }
+}
