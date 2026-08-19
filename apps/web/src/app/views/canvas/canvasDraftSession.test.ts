@@ -3,12 +3,14 @@ import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 
 import { buildNodePropertiesReadModel } from '../../components/inspector/nodePropertiesReadModel';
 import { projectWorkspaceGraphAuthoringDraftSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
-import type { CanonicalNode } from '../../types/canonical';
+import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import { buildCanvasAuthoringDraft } from './canvasDraftAuthoring';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { buildCanvasNodePresentationCopy } from './canvasNodePresentationCopy';
 import type { CanvasAuthoringDraftRecord } from './canvasDraftReadModel';
 import { canvasDraftSession } from './canvasDraftSession';
 import { buildCanvasAuthoringGraphProjection } from './canvasAuthoringGraphProjection';
+import { canvasGraphLifecycle } from './canvasGraphLifecycle';
 
 function buildRemoteDraftRecord(
   overrides?: Partial<CanvasAuthoringDraftRecord>
@@ -601,6 +603,127 @@ describe('canvasDraftSession', () => {
         },
       },
     ]);
+  });
+
+  it('keeps a removed edge absent from persistence, reload, and Inputs/Outputs', () => {
+    const canonicalNodes = [
+      {
+        id: 'source_node',
+        name: 'Orders source',
+        pluginId: 'dvt',
+        kind: 'dvt:source',
+        role: 'input',
+        status: 'idle',
+        tags: [],
+      },
+      {
+        id: 'transform_node',
+        name: 'Orders transform',
+        pluginId: 'dvt',
+        kind: 'dvt:sql_transform',
+        role: 'transform',
+        status: 'idle',
+        tags: [],
+      },
+    ] satisfies CanonicalNode[];
+    const canonicalEdges = [
+      {
+        id: 'edge_source_node_transform_node',
+        sourceId: 'source_node',
+        targetId: 'transform_node',
+        relation: 'lineage',
+      },
+    ] satisfies CanonicalEdge[];
+    const persistedDraft = buildCanvasAuthoringDraft({
+      canvas: { kind: 'transformation', title: 'Main canvas' },
+      nodeIds: canonicalNodes.map((node) => node.id),
+      nodePositions: {
+        source_node: { x: 0, y: 0 },
+        transform_node: { x: 100, y: 0 },
+      },
+      visibleEdges: canonicalEdges,
+      canonicalNodes,
+      canonicalEdges,
+    });
+    const initialSession = canvasDraftSession.machine.bootstrap({
+      remoteDraft: buildRemoteDraftRecord({
+        revision: 'rev-before-removal',
+        draft: persistedDraft,
+      }),
+      canonicalNodeIds: canonicalNodes.map((node) => node.id),
+      canonicalEdges,
+    });
+
+    const removedState = canvasGraphLifecycle.edge.applyChanges(
+      {
+        draftSession: initialSession,
+        nodes: canonicalNodes.map((node) => ({
+          id: node.id,
+          data: { name: node.name },
+          position: persistedDraft.nodePositions[node.id]!,
+        })),
+        edges: [
+          {
+            id: canonicalEdges[0]!.id,
+            source: canonicalEdges[0]!.sourceId,
+            target: canonicalEdges[0]!.targetId,
+          },
+        ],
+        selectedNodeIds: [],
+        inspectorNodeId: null,
+      },
+      [{ id: canonicalEdges[0]!.id, type: 'remove' }]
+    );
+    const persistedAfterRemoval = buildCanvasAuthoringDraft({
+      canvas: persistedDraft.canvas,
+      nodeIds: removedState.draftSession.workingSet.visibleNodeIds,
+      nodePositions: persistedDraft.nodePositions,
+      visibleEdges: removedState.draftSession.workingSet.visibleEdges,
+      canonicalNodes,
+      canonicalEdges,
+    });
+    const savedRecord = buildRemoteDraftRecord({
+      revision: 'rev-after-removal',
+      draft: persistedAfterRemoval,
+    });
+    const savedSession = canvasDraftSession.machine.applySaveSuccess(
+      canvasDraftSession.machine.markSaving(removedState.draftSession),
+      savedRecord
+    );
+    const reloadedSession = canvasDraftSession.machine.reloadFromRemote(savedSession, {
+      ...savedRecord,
+      revision: 'rev-after-reload',
+    });
+    const reloadedDraft = reloadedSession.baseline.record?.draft;
+    expect(reloadedDraft).toBeDefined();
+    const semanticGraph = projectWorkspaceGraphAuthoringDraftSemanticGraph(reloadedDraft!);
+    const projection = buildCanvasAuthoringGraphProjection({
+      visibleNodeIds: reloadedSession.workingSet.visibleNodeIds,
+      visibleEdges: reloadedSession.workingSet.visibleEdges,
+      draftSemanticGraph: semanticGraph,
+      localCanonicalNodes: [],
+    });
+    const presentationCopy = buildCanvasNodePresentationCopy(resolveCanvasViewCopy('en'), 'en');
+    const readInputsOutputs = (nodeId: string) => {
+      const node = projection.canonicalNodesById.get(nodeId);
+      expect(node).toBeDefined();
+      return buildNodePropertiesReadModel({
+        node: node!,
+        nodes: projection.canonicalNodes,
+        edges: projection.canonicalEdges,
+        presentationCopy,
+      }).sections.find((section) => section.id === 'inputs-outputs');
+    };
+
+    expect(removedState.nodes).toHaveLength(2);
+    expect(removedState.edges).toEqual([]);
+    expect(removedState.draftSession.workingSet.visibleEdges).toEqual([]);
+    expect(persistedAfterRemoval.nodeIds).toEqual(['source_node', 'transform_node']);
+    expect(persistedAfterRemoval.edges).toEqual([]);
+    expect(reloadedSession.workingSet.visibleEdges).toEqual([]);
+    expect(projection.canonicalEdges).toEqual([]);
+    expect(readInputsOutputs('source_node')?.tableRows ?? []).toEqual([]);
+    expect(readInputsOutputs('transform_node')?.tableRows ?? []).toEqual([]);
   });
 
   it('preserves local removals while accepting remote additions during reload', () => {
