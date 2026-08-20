@@ -41,11 +41,11 @@ describe('CanvasDependencyEdge', () => {
   });
 
   it.each([
-    [Position.Left, '106,50 94,45 94,55'],
-    [Position.Right, '94,50 106,55 106,45'],
-    [Position.Top, '100,56 105,44 95,44'],
-    [Position.Bottom, '100,44 95,56 105,56'],
-  ])('aligns the direction cue with a %s target handle', (targetPosition, expected) => {
+    [Position.Left, '98,50 86,45 86,55'],
+    [Position.Right, '102,50 114,55 114,45'],
+    [Position.Top, '100,48 105,36 95,36'],
+    [Position.Bottom, '100,52 95,64 105,64'],
+  ])('keeps the direction cue clear of a %s target handle', (targetPosition, expected) => {
     expect(resolveCanvasDependencyArrowPoints(100, 50, targetPosition)).toBe(expected);
   });
 
@@ -74,7 +74,7 @@ describe('CanvasDependencyEdge', () => {
     });
 
     const cue = container.querySelector('[data-slot="canvas-dependency-direction-cue"]');
-    expect(cue?.getAttribute('points')).toBe('106,40 94,35 94,45');
+    expect(cue?.getAttribute('points')).toBe('98,40 86,35 86,45');
     expect(cue?.getAttribute('aria-hidden')).toBe('true');
     expect(cue?.getAttribute('pointer-events')).toBe('none');
     expect(mockedEdge.props).toMatchObject({

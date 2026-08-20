@@ -26,8 +26,8 @@ export function resolveCanvasDependencyArrowPoints(
   targetPosition: Position
 ): string {
   const direction = resolveIncomingDirection(targetPosition);
-  const tipX = targetX + direction.x * graphFlowPalette.directionCueTargetOverlap;
-  const tipY = targetY + direction.y * graphFlowPalette.directionCueTargetOverlap;
+  const tipX = targetX - direction.x * graphFlowPalette.directionCueTargetClearance;
+  const tipY = targetY - direction.y * graphFlowPalette.directionCueTargetClearance;
   const baseX = tipX - direction.x * graphFlowPalette.directionCueLength;
   const baseY = tipY - direction.y * graphFlowPalette.directionCueLength;
   const perpendicularX = direction.y;
