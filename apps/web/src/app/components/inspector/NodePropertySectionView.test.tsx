@@ -92,6 +92,34 @@ describe('NodePropertySectionView', () => {
     ).toBe('2 columns inherited from the connected source.');
   });
 
+  it('keeps long relationship values inside their assigned workbench columns', () => {
+    ({ container, root } = renderSection({
+      id: 'inputs-outputs',
+      label: 'Inputs / Outputs',
+      rows: [],
+      tableRows: [
+        {
+          id: 'source-to-transform',
+          cells: {
+            direction: 'Input',
+            node: 'source_1',
+            nodeId: 'src_postgresql_local_2333_dvt_public_source_1',
+            relation: 'Lineage',
+          },
+        },
+      ],
+    }));
+
+    const table = container.querySelector('table');
+    const longValueCell = Array.from(container.querySelectorAll('td')).find(
+      (cell) => cell.textContent === 'src_postgresql_local_2333_dvt_public_source_1'
+    );
+
+    expect(table?.className).toContain('table-fixed');
+    expect(longValueCell?.className).toContain('break-words');
+    expect(container.textContent).toContain('Lineage');
+  });
+
   it('renders scalar rows and code through shared Monaco without involving the tabs coordinator', () => {
     ({ container, root } = renderSection({
       id: 'general',
