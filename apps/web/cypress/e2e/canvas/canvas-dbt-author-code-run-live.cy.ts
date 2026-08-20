@@ -40,31 +40,6 @@ function openNodeCodeWorkbench(nodeId: string): void {
   cy.get('[data-testid="monaco-code-editor"]', { timeout: 30_000 }).should('be.visible');
 }
 
-function replaceOpenDbtModelSql(content: string): void {
-  cy.get('[data-testid="monaco-code-editor"]')
-    .find('.monaco-editor textarea')
-    .first()
-    .focus()
-    .type('{ctrl+a}', { force: true, delay: 0 })
-    .type(content, { force: true, parseSpecialCharSequences: false, delay: 0 });
-}
-
-function expectOpenDbtModelSql(content: string): void {
-  cy.get('[data-testid="monaco-code-editor"] .view-lines').should(($lines) => {
-    const renderedContent = Array.from(
-      $lines[0]?.querySelectorAll('.view-line') ?? [],
-      (line) => line.textContent ?? ''
-    ).join('\n');
-
-    expect(
-      renderedContent
-        .replace(/\u00a0/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim()
-    ).to.equal(content.replace(/\s+/g, ' ').trim());
-  });
-}
-
 function replaceInput(name: string, value: string): void {
   cy.get(`input[name="${name}"]`).should('be.enabled').clear().type(value);
 }
@@ -214,7 +189,16 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
       .and('contain.text', 'Generated');
 
     openNodeCodeWorkbench('orders_model');
-    replaceOpenDbtModelSql(AUTHORED_MODEL_SQL);
+    cy.get('[data-testid="monaco-code-editor"]')
+      .find('.monaco-editor textarea')
+      .first()
+      .focus()
+      .type('{ctrl+a}', { force: true, delay: 0 })
+      .type(AUTHORED_MODEL_SQL, {
+        force: true,
+        parseSpecialCharSequences: false,
+        delay: 0,
+      });
     clickButtonNatively('Apply');
     waitForPersistedDbtModelConfig();
     cy.get('.react-flow__node[data-id="orders_model"]')
@@ -271,7 +255,19 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
       'aria-selected',
       'true'
     );
-    expectOpenDbtModelSql(AUTHORED_MODEL_SQL);
+    cy.get('[data-testid="monaco-code-editor"] .view-lines').should(($lines) => {
+      const renderedContent = Array.from(
+        $lines[0]?.querySelectorAll('.view-line') ?? [],
+        (line) => line.textContent ?? ''
+      ).join('\n');
+
+      expect(
+        renderedContent
+          .replace(/\u00a0/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim()
+      ).to.equal(AUTHORED_MODEL_SQL.replace(/\s+/g, ' ').trim());
+    });
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     openLiveGraphProjectCodeFile(workingTreePath);
     cy.get('[data-slot="canvas-contextual-workbench"]').within(() => {
