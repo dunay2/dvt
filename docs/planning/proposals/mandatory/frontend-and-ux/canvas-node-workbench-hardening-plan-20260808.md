@@ -251,6 +251,54 @@ Rejected alternatives:
 - Add a new route, event bus, store or editor: all required navigation already exists.
 - Make every metric clickable: health and column evidence do not share Code semantics.
 
+## Bounded workbench property tables — #2552
+
+### Pre-implementation brief
+
+- **Mode:** Focused correction. The property query and table contents do not change.
+- **Outcome:** every property-table column remains readable inside the docked Workbench,
+  including rows with long node identifiers.
+- **Existing owner:** `NodePropertySectionView`; no section-specific table, read model,
+  store or query is introduced.
+- **Rail:** reuse `InspectCanvasNode`. The correction is presentation-only and does not
+  alter relationship semantics or authorization.
+- **Accessibility:** preserve native table semantics while allowing long values to wrap
+  within their assigned column.
+
+Current mechanism:
+
+```mermaid
+flowchart LR
+  A[InspectCanvasNode] --> B[Node property read model]
+  B --> C[Shared property table]
+  C --> D[Long node ID defines intrinsic table width]
+  D --> E[Right-hand columns leave the visible Workbench]
+```
+
+Target mechanism:
+
+```mermaid
+flowchart LR
+  A[InspectCanvasNode] --> B[Node property read model]
+  B --> C[Shared fixed-layout property table]
+  C --> D[Long values wrap inside their column]
+  D --> E[All declared columns remain visible]
+```
+
+| Fowler signal       | Current mechanism                                     | MVP correction                         | Proof                  |
+| ------------------- | ----------------------------------------------------- | -------------------------------------- | ---------------------- |
+| Primitive obsession | raw content determines table width                    | fixed table layout plus word breaking  | component test         |
+| Duplicate change    | a local inputs/outputs patch would fork rendering     | correct the existing shared table once | architecture ownership |
+| Feature envy        | the Workbench could special-case a read-model section | table renderer owns table layout       | unchanged read model   |
+| Test gap            | no long unbroken cell value                           | one four-column regression row         | red/green Vitest proof |
+
+Rejected alternatives:
+
+- Hide Node ID or Relation: both are part of the existing inspection contract.
+- Add a second compact inputs/outputs component: it duplicates the shared renderer.
+- Rely on undiscoverable horizontal scrolling: it does not keep the relationship readable
+  at the standard docked-panel width.
+
 ## Feature Mechanization
 
 ```feature-mechanization
@@ -272,12 +320,15 @@ userStories:
   - As a Canvas author, I see five card columns first and can explicitly reveal or hide the remaining columns.
   - As a file-backed Canvas author, I activate File on the card to open that exact file without a repeated path line.
   - As a file-backed dbt author, I open the authoritative editor from Properties Code and return to the same node context.
+  - As a Canvas author, I can read every input/output relationship column inside the docked node Workbench.
 governingSources:
   - AGENTS.md
   - docs/guides/ai-work-protocol.md
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
 allowedImplementationSurfaces:
+  - apps/web/src/app/components/inspector/NodePropertySectionView.test.tsx
+  - apps/web/src/app/components/inspector/NodePropertySectionView.tsx
   - apps/web/src/app/views/Canvas.test.controller.defaults.ts
   - apps/web/cypress/support/canvasExecutionSelection.ts
   - apps/web/cypress/support/test/canvasPreviewRunPersisted.ts
@@ -707,6 +758,13 @@ completionGate:
   - pnpm governance:refresh
   - pnpm verify:prepush
 redGreenCycles:
+  - id: bounded-workbench-property-table
+    redTest: apps/web/src/app/components/inspector/NodePropertySectionView.test.tsx
+    expectedFailure: A long node identifier expands the shared table and pushes later relationship columns outside the docked Workbench.
+    patchSurfaces:
+      - apps/web/src/app/components/inspector/NodePropertySectionView.test.tsx
+      - apps/web/src/app/components/inspector/NodePropertySectionView.tsx
+    greenTest: apps/web/src/app/components/inspector/NodePropertySectionView.test.tsx
   - id: file-backed-card-code-action
     redTest: apps/web/src/app/plugins/graph/GraphNodeCardView.test.tsx
     expectedFailure: The backing path is repeated under the metrics and the File metric cannot invoke the existing node-code callback.
