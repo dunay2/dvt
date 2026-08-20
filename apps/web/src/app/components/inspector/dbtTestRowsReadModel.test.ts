@@ -116,6 +116,84 @@ describe('dbtTestRowsReadModel', () => {
     });
   });
 
+  it.each([
+    ['not_null', 'error'],
+    ['unique', 'warn'],
+  ] as const)(
+    'projects canonical authored %s tests with %s severity for the connected model',
+    (testType, severity) => {
+      const modelNode = buildModelNode();
+      const testNode = buildModelNode({
+        id: `test-orders-${testType}`,
+        name: `${testType}_orders_order_id`,
+        kind: 'dbt:test',
+        role: 'check',
+        metadata: {
+          dbtTest: {
+            testType,
+            targetModelId: modelNode.id,
+            targetColumn: 'order_id',
+            severity,
+          },
+        },
+      });
+      const edge: CanonicalEdge = {
+        id: `edge-model-${testType}`,
+        sourceId: modelNode.id,
+        targetId: testNode.id,
+        relation: 'validation',
+      };
+
+      const rows = buildDbtTestRows({
+        node: modelNode,
+        metadata: modelNode.metadata as Record<string, unknown>,
+        nodes: [modelNode, testNode],
+        edges: [edge],
+      });
+
+      expectRowCells(rows, `test:${testNode.id}`, {
+        name: testNode.name,
+        type: testType,
+        target: `${modelNode.name}.order_id`,
+        column: 'order_id',
+        severity,
+      });
+    }
+  );
+
+  it('reopens a canonical authored test node with its visible target name', () => {
+    const modelNode = buildModelNode();
+    const testNode = buildModelNode({
+      id: 'test-orders-order-id-canonical',
+      name: 'unique_orders_order_id',
+      kind: 'dbt:test',
+      role: 'check',
+      metadata: {
+        dbtTest: {
+          testType: 'unique',
+          targetModelId: modelNode.id,
+          targetColumn: 'order_id',
+          severity: 'warn',
+        },
+      },
+    });
+
+    const rows = buildDbtTestRows({
+      node: testNode,
+      metadata: testNode.metadata as Record<string, unknown>,
+      nodes: [modelNode, testNode],
+      edges: [],
+    });
+
+    expectRowCells(rows, `test:${testNode.id}`, {
+      name: testNode.name,
+      type: 'unique',
+      target: `${modelNode.name}.order_id`,
+      column: 'order_id',
+      severity: 'warn',
+    });
+  });
+
   it('falls back to canonical dbt test node status when no related model rows exist', () => {
     const testNode = buildModelNode({
       id: 'test-orders-order-id',
