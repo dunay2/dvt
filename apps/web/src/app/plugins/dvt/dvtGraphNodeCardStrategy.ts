@@ -73,6 +73,31 @@ function pushCanonicalCostMetric(
   pushMetric(metrics, 'cost', 'Cost', cost == null ? null : `$${cost.toFixed(2)}`);
 }
 
+function buildSqlTransformOperationalMetrics(
+  metrics: readonly GraphNodeCardMetric[],
+  volumeMetrics: readonly GraphNodeCardMetric[],
+  rowsLabel: string,
+  sizeLabel: string
+): readonly GraphNodeCardMetric[] {
+  const nonVolumeMetrics = metrics.filter((metric) => metric.id !== 'rows' && metric.id !== 'size');
+  const projectedRows = volumeMetrics.find((metric) => metric.id === 'rows');
+  const projectedSize = volumeMetrics.find(
+    (metric) => metric.id === 'bytes' || metric.id === 'estimated-bytes'
+  );
+  const currentRows = metrics.find((metric) => metric.id === 'rows');
+  const currentSize = metrics.find((metric) => metric.id === 'size');
+
+  return [
+    ...nonVolumeMetrics,
+    projectedRows == null
+      ? (currentRows ?? { id: 'rows', label: rowsLabel, value: '—', icon: 'rows' })
+      : { ...projectedRows, id: 'rows', icon: 'rows' },
+    projectedSize == null
+      ? (currentSize ?? { id: 'size', label: sizeLabel, value: '—', icon: 'database' })
+      : { ...projectedSize, id: 'size', icon: 'database' },
+  ];
+}
+
 function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): GraphNodeCardReadModel {
   const metadata = metadataOf(node);
   const metrics: GraphNodeCardMetric[] = [];
@@ -126,21 +151,13 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
   });
   const operationalCopy = resolveGraphNodeCardCopy(presentationCopy?.locale);
   const operationalMetrics =
-    node.kind === 'dvt:sql_transform' && operationalSummary.metrics.length === 0
-      ? [
-          {
-            id: 'rows',
-            label: operationalCopy.rowsLabel,
-            value: '—',
-            icon: 'rows' as const,
-          },
-          {
-            id: 'size',
-            label: operationalCopy.sizeLabel,
-            value: '—',
-            icon: 'database' as const,
-          },
-        ]
+    node.kind === 'dvt:sql_transform'
+      ? buildSqlTransformOperationalMetrics(
+          operationalSummary.metrics,
+          volumeMetricProjection.metrics,
+          operationalCopy.rowsLabel,
+          operationalCopy.sizeLabel
+        )
       : operationalSummary.metrics;
 
   return {

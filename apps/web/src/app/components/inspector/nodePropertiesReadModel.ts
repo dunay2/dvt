@@ -1,5 +1,5 @@
 /** Owned concern: project canonical node metadata into a passive table-like Inspector read model. */
-import { ConnectedSourceRefSchema } from '@dvt/contracts';
+import { ConnectedSourceRefSchema, type ConnectionRef } from '@dvt/contracts';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasNodePresentationCopy } from '../canvas/canvasNodePresentationCopy.contract';
@@ -655,10 +655,21 @@ function buildInputsOutputsRows(
     inheritedConnectionRef == null
       ? undefined
       : `${inheritedConnectionRef.provider} · ${inheritedConnectionRef.connectionId}`;
+  let inheritedConnectionProjected = false;
 
   for (const edge of edges) {
     if (edge.targetId === node.id) {
       const upstreamNode = nodeById.get(edge.sourceId);
+      const upstreamConnectionRef =
+        upstreamNode == null || inheritedConnectionRef == null
+          ? undefined
+          : resolveInheritedDvtConnectionRef({ node: upstreamNode, nodes, edges });
+      const projectsInheritedConnection =
+        !inheritedConnectionProjected &&
+        inheritedConnectionRef != null &&
+        upstreamConnectionRef != null &&
+        sameConnectionRef(inheritedConnectionRef, upstreamConnectionRef);
+      inheritedConnectionProjected ||= projectsInheritedConnection;
       rows.push({
         id: `input:${edge.id}`,
         cells: {
@@ -666,7 +677,9 @@ function buildInputsOutputsRows(
           node: upstreamNode?.name ?? edge.sourceId,
           nodeId: edge.sourceId,
           relation: edge.relation,
-          ...(inheritedConnection == null ? {} : { connection: inheritedConnection }),
+          ...(projectsInheritedConnection && inheritedConnection != null
+            ? { connection: inheritedConnection }
+            : {}),
         },
       });
     }
@@ -686,6 +699,10 @@ function buildInputsOutputsRows(
   }
 
   return rows;
+}
+
+function sameConnectionRef(left: ConnectionRef, right: ConnectionRef): boolean {
+  return left.provider === right.provider && left.connectionId === right.connectionId;
 }
 
 function createSection({
