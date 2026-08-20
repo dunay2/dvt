@@ -158,7 +158,7 @@ function buildNodeWorkbenchReadModel({
             (canEditNode &&
               node.pluginId === 'dvt' &&
               node.kind === 'dvt:sql_transform' &&
-              !hasVisualDvtTransformAuthority(node)))
+              !hasVisualDvtTransformAuthoringAuthority(node)))
             ? (() => {
                 const {
                   code: _passiveCode,
