@@ -664,7 +664,7 @@ function buildInputsOutputsRows(
         upstreamNode == null || inheritedConnectionRef == null
           ? undefined
           : resolveInheritedDvtConnectionRef({ node: upstreamNode, nodes, edges });
-      const projectsInheritedConnection =
+      const projectsInheritedConnection: boolean =
         !inheritedConnectionProjected &&
         inheritedConnectionRef != null &&
         upstreamConnectionRef != null &&
