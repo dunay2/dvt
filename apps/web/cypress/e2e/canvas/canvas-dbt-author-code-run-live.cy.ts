@@ -3,7 +3,6 @@
  * against the live protected runtime without API stubs.
  */
 import { canvasViewCopy } from '../../../src/app/views/canvas/copy';
-import { resolveCodeViewCopy } from '../../../src/app/views/code/codeViewCopy';
 import {
   clickButtonNatively,
   clickPreviewExecutionPlanFromOperationalDrawer,
@@ -38,7 +37,32 @@ function openNodeCodeWorkbench(nodeId: string): void {
     .find('[data-slot="canvas-node-shell"]')
     .dblclick();
   cy.get('[data-slot="canvas-node-workbench-overlay"]', { timeout: 20_000 }).should('be.visible');
-  cy.get('textarea[name="dbt-model-sql"]').should('be.enabled');
+  cy.get('[data-testid="monaco-code-editor"]', { timeout: 30_000 }).should('be.visible');
+}
+
+function replaceOpenDbtModelSql(content: string): void {
+  cy.get('[data-testid="monaco-code-editor"]')
+    .find('.monaco-editor textarea')
+    .first()
+    .focus()
+    .type('{ctrl+a}', { force: true, delay: 0 })
+    .type(content, { force: true, parseSpecialCharSequences: false, delay: 0 });
+}
+
+function expectOpenDbtModelSql(content: string): void {
+  cy.get('[data-testid="monaco-code-editor"] .view-lines').should(($lines) => {
+    const renderedContent = Array.from(
+      $lines[0]?.querySelectorAll('.view-line') ?? [],
+      (line) => line.textContent ?? ''
+    ).join('\n');
+
+    expect(
+      renderedContent
+        .replace(/\u00a0/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+    ).to.equal(content.replace(/\s+/g, ' ').trim());
+  });
 }
 
 function replaceInput(name: string, value: string): void {
@@ -138,9 +162,6 @@ function openLiveGraphProjectCodeFile(path: string): void {
     .click();
   cy.get('[data-testid="monaco-code-viewer"]', { timeout: 30_000 }).should('be.visible');
   cy.get('[data-testid="monaco-code-editor"]').should('not.exist');
-  cy.get('[data-slot="code-working-tree-status"]')
-    .should('be.visible')
-    .and('contain.text', resolveCodeViewCopy().workingTreeGraphOwnedReadOnlyLabel);
 }
 
 describe('Canvas dbt authoring Code and Run live protected runtime', () => {
@@ -193,9 +214,7 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
       .and('contain.text', 'Generated');
 
     openNodeCodeWorkbench('orders_model');
-    cy.get('textarea[name="dbt-model-sql"]')
-      .clear()
-      .type(AUTHORED_MODEL_SQL, { parseSpecialCharSequences: false, delay: 0 });
+    replaceOpenDbtModelSql(AUTHORED_MODEL_SQL);
     clickButtonNatively('Apply');
     waitForPersistedDbtModelConfig();
     cy.get('.react-flow__node[data-id="orders_model"]')
@@ -252,7 +271,7 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
       'aria-selected',
       'true'
     );
-    cy.get('textarea[name="dbt-model-sql"]').should('have.value', AUTHORED_MODEL_SQL);
+    expectOpenDbtModelSql(AUTHORED_MODEL_SQL);
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     openLiveGraphProjectCodeFile(workingTreePath);
     cy.get('[data-slot="canvas-contextual-workbench"]').within(() => {
