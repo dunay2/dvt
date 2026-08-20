@@ -17,6 +17,7 @@ const INSPECTOR_DRAFT_ERROR_COPY_KEYS = [
   ['dbt_schema_required', 'inspectorErrorDbtSchemaRequired'],
   ['dbt_table_required', 'inspectorErrorDbtTableRequired'],
   ['dbt_materialization_invalid', 'inspectorErrorDbtMaterializationInvalid'],
+  ['dbt_test_column_not_declared', 'inspectorErrorDbtTestColumnNotDeclared'],
   ['dvt_schema_required', 'inspectorErrorDvtSchemaRequired'],
   ['dvt_table_required', 'inspectorErrorDvtTableRequired'],
   ['dvt_alias_required', 'inspectorErrorDvtAliasRequired'],

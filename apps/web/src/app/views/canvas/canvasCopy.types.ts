@@ -600,6 +600,7 @@ export type CanvasViewCopy = {
   readonly inspectorErrorDbtTestTypeInvalid: string;
   readonly inspectorErrorDbtTestTargetRequired: string;
   readonly inspectorErrorDbtTestColumnInvalid: string;
+  readonly inspectorErrorDbtTestColumnNotDeclared: string;
   readonly inspectorErrorDbtTestSeverityInvalid: string;
   readonly inspectorErrorDvtSchemaRequired: string;
   readonly inspectorErrorDvtTableRequired: string;

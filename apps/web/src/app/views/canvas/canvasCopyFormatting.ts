@@ -98,6 +98,8 @@ export function formatCanvasInspectorNodeDraftError(
       return copy.inspectorErrorDbtTestTargetRequired;
     case 'dbt_test_column_invalid':
       return copy.inspectorErrorDbtTestColumnInvalid;
+    case 'dbt_test_column_not_declared':
+      return copy.inspectorErrorDbtTestColumnNotDeclared;
     case 'dbt_test_severity_invalid':
       return copy.inspectorErrorDbtTestSeverityInvalid;
     case 'dvt_schema_required':

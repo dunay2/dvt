@@ -27,6 +27,10 @@ import {
 } from './objectFilePostgresAuthoringModel';
 import { resolveCompatibleDbtModelOrigins } from './canvasDbtModelArtifactProjection';
 import {
+  readDeclaredDbtModelColumnNames,
+  resolveConnectedDbtTestTargets,
+} from './canvasDbtTestTargetPolicy';
+import {
   applyHttpJsonArtifactAuthoringDraft,
   createHttpJsonArtifactAuthoringDraft,
   HTTP_JSON_AUTHORING_ERROR,
@@ -135,6 +139,26 @@ export function validateCanvasInspectorNodeDraft(
 
   if (draft.dbtTest) {
     const dbtTestErrors = validateDbtTestAuthoringMetadata(draft.dbtTest);
+    if (
+      context?.node.pluginId === 'dbt' &&
+      context.node.kind === 'dbt:test' &&
+      !dbtTestErrors.targetModelId
+    ) {
+      const selectedTarget = resolveConnectedDbtTestTargets({
+        testNodeId: context.node.id,
+        nodes: context.nodes,
+        edges: context.edges,
+      }).find((target) => target.id === draft.dbtTest?.targetModelId.trim());
+
+      if (!selectedTarget) {
+        dbtTestErrors.targetModelId = 'dbt_test_target_required';
+      } else if (
+        !dbtTestErrors.targetColumn &&
+        !readDeclaredDbtModelColumnNames(selectedTarget).includes(draft.dbtTest.targetColumn.trim())
+      ) {
+        dbtTestErrors.targetColumn = 'dbt_test_column_not_declared';
+      }
+    }
     if (Object.keys(dbtTestErrors).length > 0) {
       return { dbtTest: dbtTestErrors };
     }

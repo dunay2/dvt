@@ -9,6 +9,7 @@ export type CanvasInspectorNodeDraftErrorCode =
   | 'dbt_test_type_invalid'
   | 'dbt_test_target_required'
   | 'dbt_test_column_invalid'
+  | 'dbt_test_column_not_declared'
   | 'dbt_test_severity_invalid'
   | 'dvt_schema_required'
   | 'dvt_table_required'
