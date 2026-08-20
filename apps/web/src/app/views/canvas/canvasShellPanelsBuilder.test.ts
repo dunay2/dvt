@@ -1,3 +1,4 @@
+import { isValidElement } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { buildCanvasShellPanels } from './canvasShellPanelsBuilder';
@@ -18,6 +19,67 @@ function buildInspectorNode(overrides?: Partial<CanonicalNode>): CanonicalNode {
     tags: [],
     ...overrides,
   };
+}
+
+function buildVisualTransformFixture(): Readonly<{
+  source: CanonicalNode;
+  transform: CanonicalNode;
+}> {
+  const source: CanonicalNode = {
+    id: 'source.orders',
+    name: 'Orders Source',
+    pluginId: 'dvt.warehouse-source',
+    kind: 'dvt:source',
+    role: 'input',
+    status: 'idle',
+    tags: [],
+    metadata: {
+      connectedSourceRef: {
+        schemaVersion: 'connected-source-ref.v1',
+        connectionRef: {
+          schemaVersion: 'connection-ref.v1',
+          connectionId: 'warehouse-prod',
+          provider: 'postgres',
+        },
+        sourceObjectId: 'relation/analytics/raw/orders',
+      },
+      database: 'analytics',
+      schema: 'raw',
+      tableName: 'orders',
+    },
+  };
+  const transform: CanonicalNode = {
+    id: 'transform.orders',
+    name: 'Clean Orders',
+    pluginId: 'dvt',
+    kind: 'dvt:sql_transform',
+    role: 'transform',
+    status: 'idle',
+    tags: [],
+    metadata: {
+      transformAuthoring: {
+        version: 'v1',
+        mode: 'visual',
+        recipe: {
+          version: 'v1',
+          outputs: [
+            {
+              id: 'output:order_id',
+              name: 'order_id',
+              dataType: 'integer',
+              expression: {
+                inputs: [{ nodeId: source.id, columnName: 'order_id' }],
+                operations: [{ kind: 'passthrough' }],
+              },
+            },
+          ],
+          filters: [],
+        },
+      },
+    },
+  };
+
+  return { source, transform };
 }
 
 function buildArgs(
@@ -167,6 +229,50 @@ describe('buildCanvasShellPanels', () => {
     );
 
     expect(panels.inspectorAuthoring).toEqual({ nodeDraftAuthoring: null });
+  });
+
+  it('binds visual DVT conversion at the shell seam only while authoring is allowed', () => {
+    const { source, transform } = buildVisualTransformFixture();
+    const onConvertVisualTransformToSql = vi.fn();
+    const panelState = {
+      ...buildArgs().panelState,
+      inspectorNode: transform,
+      inspectorGraphNodes: [source, transform],
+      inspectorGraphEdges: [
+        {
+          id: 'edge-source-transform',
+          sourceId: source.id,
+          targetId: transform.id,
+          relation: 'lineage' as const,
+        },
+      ],
+      convertInspectorVisualTransformToSql: onConvertVisualTransformToSql,
+    };
+
+    const allowed = buildCanvasShellPanels(buildArgs({ panelState }));
+    expect(allowed.inspectorWorkbenchContributions).toHaveLength(1);
+    expect(allowed.inspectorWorkbenchContributions[0]).toMatchObject({
+      id: 'dvt-visual-transform-to-sql',
+      nodeId: transform.id,
+      sectionId: 'code',
+      placement: 'after-body',
+    });
+    const content = allowed.inspectorWorkbenchContributions[0]?.content;
+    expect(isValidElement<{ onConvert: (generatedSql: string) => void }>(content)).toBe(true);
+    if (!isValidElement<{ onConvert: (generatedSql: string) => void }>(content)) {
+      throw new Error('Expected the DVT conversion contribution to expose one React action.');
+    }
+    expect(content.props.onConvert).toBe(onConvertVisualTransformToSql);
+
+    const blocked = buildCanvasShellPanels(
+      buildArgs({
+        panelState: {
+          ...panelState,
+          canEditInspectorNode: false,
+        },
+      })
+    );
+    expect(blocked.inspectorWorkbenchContributions).toEqual([]);
   });
 
   it('keeps node workbench tab preference only while an inspector node is active', () => {
