@@ -248,6 +248,30 @@ describe('nodePropertiesReadModel', () => {
   });
 
   it.each([
+    { locale: 'en', connectionLabel: 'Connection' },
+    { locale: 'es', connectionLabel: 'Conexión' },
+  ])(
+    'projects inherited transform connection context in Inputs / Outputs for $locale',
+    ({ locale, connectionLabel }) => {
+      const source = buildSourceNode();
+      const model = buildNodePropertiesReadModel({
+        node: downstreamNode,
+        nodes: [source, downstreamNode],
+        edges: graphEdges,
+        presentationCopy: buildCanvasNodePresentationCopy(resolveCanvasViewCopy(locale), locale),
+      });
+      const inputsOutputs = sectionById(model, 'inputs-outputs');
+
+      expect(inputsOutputs.columnLabels).toMatchObject({ connection: connectionLabel });
+      expectTableCells(inputsOutputs, 'input:edge-source-transform', {
+        direction: locale === 'es' ? 'Entrada' : 'Input',
+        node: 'Orders Source',
+        connection: 'postgres · warehouse-prod',
+      });
+    }
+  );
+
+  it.each([
     { locale: 'en', label: 'Connection' },
     { locale: 'es', label: 'Conexión' },
   ])('exposes the complete read-only connection binding in $locale', ({ locale, label }) => {
