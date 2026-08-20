@@ -261,7 +261,7 @@ describe('DvtAuthoringFields', () => {
     expect(draftJson()).toContain('"table":"orders_daily"');
   });
 
-  it('renders SQL transform feedback and updates the SQL draft', () => {
+  it('renders one SQL transform editor without a duplicate summary and updates the draft', () => {
     renderFields(
       buildDvtNode('dvt:sql_transform', {
         config: {
@@ -275,7 +275,8 @@ describe('DvtAuthoringFields', () => {
     ) as HTMLTextAreaElement | null;
 
     expect(container.textContent).toContain('DVT SQL transform');
-    expect(container.textContent).toContain('1 line');
+    expect(container.textContent).not.toContain('1 line');
+    expect(container.textContent).not.toContain('SQL body');
     expect(sqlEditor).not.toBeNull();
     expect(sqlEditor?.value).toBe('select * from public.orders');
     expect(sqlEditor?.dataset.language).toBe('sql');

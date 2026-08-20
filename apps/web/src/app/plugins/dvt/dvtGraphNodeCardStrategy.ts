@@ -5,7 +5,10 @@ import type {
   GraphNodeCardReadModel,
   GraphNodeCardStrategy,
 } from '../graph/graphNodeCardStrategyContracts';
-import { graphNodeCardCopyTokens } from '../graph/graphNodeCardCopyTokens';
+import {
+  graphNodeCardCopyTokens,
+  resolveGraphNodeCardCopy,
+} from '../graph/graphNodeCardCopyTokens';
 import { buildGraphNodeOperationalSummary } from '../graph/graphNodeOperationalSummary';
 import { buildGraphNodeVolumeMetricProjection } from '../graph/graphNodeSourceMetricProjection';
 import { buildGraphNodeTitlePresentation } from '../graph/graphNodeTitlePresentation';
@@ -121,6 +124,37 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     columnCount,
     locale: presentationCopy?.locale,
   });
+  const operationalCopy = resolveGraphNodeCardCopy(presentationCopy?.locale);
+  const projectedRows = volumeMetricProjection.metrics.find((metric) => metric.id === 'rows');
+  const projectedSize = volumeMetricProjection.metrics.find(
+    (metric) => metric.id === 'bytes' || metric.id === 'estimated-bytes'
+  );
+  const currentRows = operationalSummary.metrics.find((metric) => metric.id === 'rows');
+  const currentSize = operationalSummary.metrics.find((metric) => metric.id === 'size');
+  const operationalMetrics =
+    node.kind === 'dvt:sql_transform'
+      ? [
+          ...operationalSummary.metrics.filter(
+            (metric) => metric.id !== 'rows' && metric.id !== 'size'
+          ),
+          projectedRows == null
+            ? (currentRows ?? {
+                id: 'rows',
+                label: operationalCopy.rowsLabel,
+                value: '—',
+                icon: 'rows' as const,
+              })
+            : { ...projectedRows, id: 'rows', icon: 'rows' as const },
+          projectedSize == null
+            ? (currentSize ?? {
+                id: 'size',
+                label: operationalCopy.sizeLabel,
+                value: '—',
+                icon: 'database' as const,
+              })
+            : { ...projectedSize, id: 'size', icon: 'database' as const },
+        ]
+      : operationalSummary.metrics;
 
   return {
     title,
@@ -138,7 +172,7 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
         : { label: presentationCopy?.draftStatusLabel ?? 'Draft', tone: 'warning' }
     ),
     metrics,
-    operationalMetrics: operationalSummary.metrics,
+    operationalMetrics,
     operationalDetail: operationalSummary.detail,
     sourceIdentity: buildGraphNodeSourceIdentity(node, metadata, title, presentationCopy?.locale),
     nodeActionsLabel:
