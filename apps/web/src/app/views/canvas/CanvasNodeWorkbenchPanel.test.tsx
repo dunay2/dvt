@@ -14,6 +14,8 @@ import {
   CanvasNodeWorkbenchPanel,
   type CanvasNodeWorkbenchPanelProps,
 } from './CanvasNodeWorkbenchPanel';
+import { buildDvtVisualTransformToSqlWorkbenchContributions } from './dvtVisualTransformToSqlWorkbenchContribution';
+import type { CanvasNodeWorkbenchContribution } from './canvasNodeWorkbenchContribution';
 
 vi.mock('../../components/monaco/MonacoCodeEditor', () => ({
   MonacoCodeEditor: ({
@@ -232,11 +234,11 @@ function renderNodePanel(
   node: CanonicalNode,
   preferredTabId: string | null = null,
   authoring: CanvasNodeWorkbenchPanelProps['authoring'] = {
-    canEditNode: true,
-    onApplyNodeDraft: vi.fn(),
+    nodeDraftAuthoring: { apply: vi.fn() },
   },
   preferredTabRequestId = 1,
-  primarySectionIds?: readonly CanvasNodeWorkbenchSectionPolicyId[]
+  primarySectionIds?: readonly CanvasNodeWorkbenchSectionPolicyId[],
+  contributions?: readonly CanvasNodeWorkbenchContribution[]
 ): void {
   act(() => {
     root.render(
@@ -264,6 +266,7 @@ function renderNodePanel(
         preferredTabRequestId={preferredTabRequestId}
         primarySectionIds={primarySectionIds}
         authoring={authoring}
+        contributions={contributions}
         onClose={vi.fn()}
       />
     );
@@ -278,7 +281,7 @@ function renderMovablePanel(root: Root): void {
         nodes={[SOURCE_NODE]}
         edges={[]}
         activeRunId={null}
-        authoring={{ canEditNode: true, onApplyNodeDraft: vi.fn() }}
+        authoring={{ nodeDraftAuthoring: { apply: vi.fn() } }}
         dragHandleProps={{
           'aria-label': 'Move node workbench',
           'data-slot': 'canvas-node-workbench-drag-handle',
@@ -344,8 +347,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
       },
       null,
       {
-        canEditNode: false,
-        onApplyNodeDraft: vi.fn(),
+        nodeDraftAuthoring: null,
       }
     );
 
@@ -363,7 +365,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
           edges={EDGES}
           activeRunId={null}
           preferredTabId="general"
-          authoring={{ canEditNode: true, onApplyNodeDraft: vi.fn() }}
+          authoring={{ nodeDraftAuthoring: { apply: vi.fn() } }}
           onClose={vi.fn()}
         />
       );
@@ -393,7 +395,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
           edges={EDGES}
           activeRunId={null}
           preferredTabId="code"
-          authoring={{ canEditNode: false, onApplyNodeDraft: vi.fn() }}
+          authoring={{ nodeDraftAuthoring: null }}
           onClose={vi.fn()}
         />
       );
@@ -489,8 +491,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
 
   it('keeps a read-only workbench factual without rendering disabled authoring controls', () => {
     renderNodePanel(root, SOURCE_NODE, 'general', {
-      canEditNode: false,
-      onApplyNodeDraft: vi.fn(),
+      nodeDraftAuthoring: null,
     });
 
     const generalSection = container.querySelector(
@@ -597,9 +598,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
   it('requires explicit confirmation before transferring visual authority to generated SQL', () => {
     const onConvertVisualTransformToSql = vi.fn();
     const authoring = {
-      canEditNode: true,
-      onApplyNodeDraft: vi.fn(),
-      onConvertVisualTransformToSql,
+      nodeDraftAuthoring: { apply: vi.fn() },
     };
     const generatedSql = [
       'select',
@@ -608,7 +607,29 @@ describe('CanvasNodeWorkbenchPanel', () => {
       '',
     ].join('\n');
 
-    renderNodePanel(root, DVT_VISUAL_TRANSFORM_NODE, 'code', authoring);
+    const contributions = buildDvtVisualTransformToSqlWorkbenchContributions({
+      node: DVT_VISUAL_TRANSFORM_NODE,
+      nodes: [SOURCE_NODE, DVT_VISUAL_TRANSFORM_NODE],
+      edges: [
+        {
+          id: 'edge-source-visual-transform',
+          sourceId: SOURCE_NODE.id,
+          targetId: DVT_VISUAL_TRANSFORM_NODE.id,
+          relation: 'lineage',
+        },
+      ],
+      onConvert: onConvertVisualTransformToSql,
+    });
+
+    renderNodePanel(
+      root,
+      DVT_VISUAL_TRANSFORM_NODE,
+      'code',
+      authoring,
+      1,
+      undefined,
+      contributions
+    );
 
     const convertButton = Array.from(container.querySelectorAll('button')).find(
       (button) => button.textContent?.trim() === 'Convert to SQL'
@@ -686,8 +707,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
       },
       'code',
       {
-        canEditNode: true,
-        onApplyNodeDraft: vi.fn(),
+        nodeDraftAuthoring: { apply: vi.fn() },
       },
       2
     );
@@ -707,8 +727,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
       },
       'code',
       {
-        canEditNode: true,
-        onApplyNodeDraft: vi.fn(),
+        nodeDraftAuthoring: { apply: vi.fn() },
       },
       3
     );
@@ -724,8 +743,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
       DVT_SINK_NODE,
       'general',
       {
-        canEditNode: true,
-        onApplyNodeDraft: vi.fn(),
+        nodeDraftAuthoring: { apply: vi.fn() },
       },
       1,
       dvtCanvasSurfaceStrategy.nodeWorkbench.sections
@@ -741,8 +759,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
       DVT_SINK_NODE,
       'sink',
       {
-        canEditNode: true,
-        onApplyNodeDraft: vi.fn(),
+        nodeDraftAuthoring: { apply: vi.fn() },
       },
       2,
       dvtCanvasSurfaceStrategy.nodeWorkbench.sections
@@ -762,8 +779,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     const onApplyNodeDraft = vi.fn();
 
     renderNodePanel(root, DVT_TRANSFORM_NODE, 'code', {
-      canEditNode: true,
-      onApplyNodeDraft,
+      nodeDraftAuthoring: { apply: onApplyNodeDraft },
     });
 
     const sqlEditor = container.querySelector<HTMLTextAreaElement>(
@@ -782,8 +798,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
       DVT_TRANSFORM_NODE,
       'columns',
       {
-        canEditNode: true,
-        onApplyNodeDraft,
+        nodeDraftAuthoring: { apply: onApplyNodeDraft },
       },
       2
     );
@@ -795,8 +810,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
       DVT_TRANSFORM_NODE,
       'code',
       {
-        canEditNode: true,
-        onApplyNodeDraft,
+        nodeDraftAuthoring: { apply: onApplyNodeDraft },
       },
       3
     );

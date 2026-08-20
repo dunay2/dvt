@@ -40,6 +40,7 @@ import type {
 } from './canvasLegacyRouteIntent';
 import type { OperationalDrawerRunControls } from '../../components/shell/operationalDrawerContributionStore';
 import type { IRunsPort, RunSnapshot } from '../../ports/runs';
+import type { WorkspaceScope } from '../../ports/sessionContext';
 
 export type UserPermissions = {
   canPlan: boolean;
@@ -90,6 +91,7 @@ export type CanvasShellPanels = {
   inspectorGraphNodes: readonly CanonicalNode[];
   inspectorGraphEdges: readonly CanonicalEdge[];
   inspectorAuthoring: CanvasInspectorAuthoringContract;
+  inspectorNodeDraftWorkspaceScope?: WorkspaceScope;
   inspectorWorkbenchContributions: readonly CanvasNodeWorkbenchContribution[];
   activeRunId: string | null;
   registeredPlugins: ReadonlySet<string>;

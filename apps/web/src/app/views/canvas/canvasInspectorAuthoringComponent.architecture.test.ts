@@ -116,7 +116,7 @@ describe('canvas inspector authoring component architecture', () => {
       'Owned concern: orchestrate the route-owned Inspector authoring surface for governed node details.'
     );
     expect(SECTION_SOURCE).toContain('draftController');
-    expect(SECTION_SOURCE).toContain('workspaceScope: authoring.workspaceScope');
+    expect(SECTION_SOURCE).toContain('workspaceScope,');
     expect(SECTION_SOURCE).not.toContain('createCanvasInspectorNodeDraft');
     expect(SECTION_SOURCE).toContain('DbtAuthoringFields');
     expect(SECTION_SOURCE).toContain('DvtAuthoringFields');
@@ -189,7 +189,7 @@ describe('canvas inspector authoring component architecture', () => {
     expect(TYPES_SOURCE).not.toContain('onConvertVisualTransformToSql');
     expect(TYPES_SOURCE).not.toContain('workspaceScope');
 
-    expect(SECTION_SOURCE).toContain('authoring.nodeDraftAuthoring.apply(draft)');
+    expect(SECTION_SOURCE).toContain('nodeDraftAuthoring.apply(draft)');
     expect(SECTION_SOURCE).not.toContain('authoring.canEditNode');
     expect(NODE_WORKBENCH_PANEL_SOURCE).not.toContain('authoring.onConvertVisualTransformToSql');
 

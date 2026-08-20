@@ -7,6 +7,7 @@ import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
 import { inspectorVisualClasses } from '../../components/inspector/inspectorVisualTokens';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import type { WorkspaceScope } from '../../ports/sessionContext';
 import { formatCanvasInspectorNodeDraftError } from './canvasCopyFormatting';
 import {
   hasCanvasInspectorNodeDraftChanges,
@@ -25,6 +26,7 @@ type CanvasInspectorAuthoringSectionProps = Readonly<{
   nodes: readonly CanonicalNode[];
   edges: readonly CanonicalEdge[];
   authoring: CanvasInspectorAuthoringContract;
+  workspaceScope?: WorkspaceScope;
   section?: 'all' | 'general' | 'columns' | 'code' | 'sink';
   draftController: CanvasNodeWorkbenchDraftController;
 }>;
@@ -34,9 +36,11 @@ export function CanvasInspectorAuthoringSection({
   nodes,
   edges,
   authoring,
+  workspaceScope,
   section = 'all',
   draftController,
 }: CanvasInspectorAuthoringSectionProps) {
+  const nodeDraftAuthoring = authoring.nodeDraftAuthoring;
   const draft = draftController.draft;
   const tagsText = draftController.tagsText;
   const setDraft = draftController.onDraftChange;
@@ -48,12 +52,12 @@ export function CanvasInspectorAuthoringSection({
         node,
         nodes,
         edges,
-        workspaceScope: authoring.workspaceScope,
+        workspaceScope,
       }),
-    [authoring.workspaceScope, draft, edges, node, nodes]
+    [draft, edges, node, nodes, workspaceScope]
   );
   const isDirty = useMemo(() => hasCanvasInspectorNodeDraftChanges(node, draft), [draft, node]);
-  const canApply = authoring.canEditNode && isDirty && Object.keys(errors).length === 0;
+  const canApply = isDirty && Object.keys(errors).length === 0;
   const showGeneral = section === 'all' || section === 'general';
   const showDvtAuthoring =
     draft.dvt != null &&
@@ -81,11 +85,12 @@ export function CanvasInspectorAuthoringSection({
           : 'general';
 
   if (
-    !showGeneral &&
-    !showDvtAuthoring &&
-    !showDbtAuthoring &&
-    !showObjectFilePostgresAuthoring &&
-    !showHttpJsonArtifactAuthoring
+    nodeDraftAuthoring == null ||
+    (!showGeneral &&
+      !showDvtAuthoring &&
+      !showDbtAuthoring &&
+      !showObjectFilePostgresAuthoring &&
+      !showHttpJsonArtifactAuthoring)
   ) {
     return null;
   }
@@ -106,7 +111,6 @@ export function CanvasInspectorAuthoringSection({
                 id={`inspector-node-name-${node.id}`}
                 name="node-name"
                 value={draft.name}
-                disabled={!authoring.canEditNode}
                 aria-invalid={errors.name ? 'true' : undefined}
                 onChange={(event) =>
                   setDraft((currentDraft) => ({
@@ -130,7 +134,6 @@ export function CanvasInspectorAuthoringSection({
                 id={`inspector-node-tags-${node.id}`}
                 name="node-tags"
                 value={tagsText}
-                disabled={!authoring.canEditNode}
                 placeholder={canvasViewCopy.inspectorNodeTagsPlaceholder}
                 onChange={(event) => setTagsText(event.target.value)}
               />
@@ -143,7 +146,7 @@ export function CanvasInspectorAuthoringSection({
             node={node}
             nodes={nodes}
             edges={edges}
-            disabled={!authoring.canEditNode}
+            disabled={false}
             draft={draft}
             errors={errors}
             section={section === 'code' ? 'code' : 'general'}
@@ -156,7 +159,7 @@ export function CanvasInspectorAuthoringSection({
             node={node}
             nodes={nodes}
             edges={edges}
-            disabled={!authoring.canEditNode}
+            disabled={false}
             draft={draft}
             errors={errors}
             section={dvtAuthoringSection}
@@ -167,7 +170,7 @@ export function CanvasInspectorAuthoringSection({
         {showObjectFilePostgresAuthoring && draft.objectFilePostgres ? (
           <ObjectFilePostgresAuthoringFields
             nodeId={node.id}
-            disabled={!authoring.canEditNode}
+            disabled={false}
             draft={draft.objectFilePostgres}
             errors={errors.objectFilePostgres}
             onChange={(objectFilePostgres) =>
@@ -179,7 +182,7 @@ export function CanvasInspectorAuthoringSection({
         {showHttpJsonArtifactAuthoring && draft.httpJsonArtifact ? (
           <HttpJsonArtifactAuthoringFields
             nodeId={node.id}
-            disabled={!authoring.canEditNode}
+            disabled={false}
             draft={draft.httpJsonArtifact}
             errors={errors.httpJsonArtifact}
             onChange={(httpJsonArtifact) =>
@@ -197,7 +200,6 @@ export function CanvasInspectorAuthoringSection({
               id={`inspector-node-description-${node.id}`}
               name="node-description"
               value={draft.description}
-              disabled={!authoring.canEditNode}
               onChange={(event) =>
                 setDraft((currentDraft) => ({
                   ...currentDraft,
@@ -208,13 +210,7 @@ export function CanvasInspectorAuthoringSection({
           </div>
         ) : null}
 
-        {!authoring.canEditNode && showGeneral ? (
-          <p className={inspectorVisualClasses.inspectorBody}>
-            {canvasViewCopy.inspectorNodeReadOnlyMessage}
-          </p>
-        ) : null}
-
-        {authoring.canEditNode && isDirty ? (
+        {isDirty ? (
           <div className="flex items-center justify-end gap-2">
             <Button type="button" variant="ghost" size="sm" onClick={draftController.onResetDraft}>
               {canvasViewCopy.inspectorCancelLabel}
@@ -228,7 +224,7 @@ export function CanvasInspectorAuthoringSection({
                 if (!canApply) {
                   return;
                 }
-                authoring.onApplyNodeDraft(draft);
+                nodeDraftAuthoring.apply(draft);
                 draftController.onDraftSubmitted();
               }}
             >

@@ -96,6 +96,18 @@ export function readDvtTransformAuthoringAuthority(
   };
 }
 
+export function hasVisualDvtTransformAuthoringAuthority(node: CanonicalNode): boolean {
+  if (node.pluginId !== 'dvt' || node.kind !== 'dvt:sql_transform') {
+    return false;
+  }
+
+  try {
+    return readDvtTransformAuthoringAuthority(node).mode === DVT_TRANSFORM_AUTHORING_MODE.visual;
+  } catch {
+    return false;
+  }
+}
+
 export function applyDvtVisualTransformRecipe(
   node: CanonicalNode,
   recipeInput: unknown

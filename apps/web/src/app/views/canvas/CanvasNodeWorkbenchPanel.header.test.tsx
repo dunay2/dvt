@@ -55,7 +55,7 @@ describe('CanvasNodeWorkbenchPanel header hardening', () => {
           nodes={[NODE]}
           edges={[]}
           activeRunId={null}
-          authoring={{ canEditNode: true, onApplyNodeDraft: vi.fn() }}
+          authoring={{ nodeDraftAuthoring: { apply: vi.fn() } }}
           dragHandleProps={{
             'aria-label': 'Move node workbench',
             'data-slot': 'canvas-node-workbench-drag-handle',

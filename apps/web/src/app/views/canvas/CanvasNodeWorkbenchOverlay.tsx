@@ -23,6 +23,7 @@ export type CanvasNodeWorkbenchOverlayProps = Readonly<{
     | 'inspectorGraphEdges'
     | 'inspectorGraphNodes'
     | 'inspectorNode'
+    | 'inspectorNodeDraftWorkspaceScope'
     | 'inspectorPreferredTabId'
     | 'inspectorPreferredTabRequestId'
     | 'inspectorWorkbenchContributions'
@@ -153,6 +154,7 @@ export function CanvasNodeWorkbenchOverlay({
         primarySectionIds={surfaceStrategy.nodeWorkbench.sections}
         onClose={hideAndRestoreNodeFocus}
         authoring={panels.inspectorAuthoring}
+        nodeDraftWorkspaceScope={panels.inspectorNodeDraftWorkspaceScope}
         contributions={panels.inspectorWorkbenchContributions}
         dragHandleProps={{
           'aria-label': copy.nodeWorkbenchMoveLabel,

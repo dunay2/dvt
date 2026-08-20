@@ -30,7 +30,7 @@ describe('Canvas node workbench draft controller architecture', () => {
     expect(CONTROLLER_SOURCE).not.toContain('DvtAuthoringFields');
 
     expect(PANEL_SOURCE).toContain(
-      'useCanvasNodeWorkbenchDraftController(node, authoring.workspaceScope)'
+      'useCanvasNodeWorkbenchDraftController(node, nodeDraftWorkspaceScope)'
     );
     expect(PANEL_SOURCE).not.toContain('authoritativeNodeRef');
     expect(PANEL_SOURCE).not.toContain('authoritativeDraftRef');
@@ -39,7 +39,7 @@ describe('Canvas node workbench draft controller architecture', () => {
     expect(AUTHORING_SECTION_SOURCE).toContain(
       'import type { CanvasNodeWorkbenchDraftController }'
     );
-    expect(AUTHORING_SECTION_SOURCE).toContain('authoring.nodeDraftAuthoring.apply(draft)');
+    expect(AUTHORING_SECTION_SOURCE).toContain('nodeDraftAuthoring.apply(draft)');
     expect(AUTHORING_SECTION_SOURCE).toContain('draftController.onDraftSubmitted()');
     expect(AUTHORING_SECTION_SOURCE).not.toContain('useState(');
     expect(AUTHORING_SECTION_SOURCE).not.toContain('createCanvasInspectorNodeDraft');

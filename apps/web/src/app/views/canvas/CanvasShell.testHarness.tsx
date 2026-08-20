@@ -150,8 +150,7 @@ export function buildCanvasShellProps(overrides?: CanvasShellPropsOverrides): Ca
       inspectorGraphNodes: [],
       inspectorGraphEdges: [],
       inspectorAuthoring: {
-        canEditNode: true,
-        onApplyNodeDraft: vi.fn(),
+        nodeDraftAuthoring: { apply: vi.fn() },
       },
       inspectorWorkbenchContributions: [],
       activeRunId: null,

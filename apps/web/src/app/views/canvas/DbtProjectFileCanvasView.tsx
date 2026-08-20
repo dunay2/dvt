@@ -21,10 +21,6 @@ const FILE_AUTHORITY_SOURCE_IMPORT_KINDS = DBT_NODE_KINDS.filter(
   (registration) => registration.kind === 'dbt:source'
 );
 
-function unsupportedFileProjectionCommand(commandName: string): never {
-  throw new Error(`${commandName} is unavailable in the read-only dbt project file projection.`);
-}
-
 function resolveProjectTitle(projectRoot: string): string {
   const pathSegments = projectRoot.split(/[\\/]/).filter((segment) => segment.length > 0);
   return pathSegments.at(-1) ?? projectRoot;
@@ -199,8 +195,7 @@ export function DbtProjectFileCanvasView({
       inspectorGraphNodes: controller.canonicalNodes,
       inspectorGraphEdges: controller.canonicalEdges,
       inspectorAuthoring: {
-        canEditNode: false,
-        onApplyNodeDraft: () => unsupportedFileProjectionCommand('Edit graph node properties'),
+        nodeDraftAuthoring: null,
       },
       inspectorWorkbenchContributions,
       activeRunId: controller.activeRunId,

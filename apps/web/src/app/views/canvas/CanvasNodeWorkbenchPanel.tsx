@@ -1,7 +1,6 @@
 /** Owned concern: render the Canvas-owned contextual node workbench panel. */
 import { CircleHelp, X } from 'lucide-react';
 import { useEffect, useMemo, useState, type HTMLAttributes, type ReactNode } from 'react';
-import { DVT_TRANSFORM_AUTHORING_MODE } from '@dvt/contracts';
 
 import { getInspectorPanels } from '../../plugins/registry';
 import { PluginContributionBoundary } from '../../plugins/PluginContributionBoundary';
@@ -10,17 +9,6 @@ import {
   inspectorVisualClasses,
 } from '../../components/inspector/inspectorVisualTokens';
 import { Button } from '../../components/ui/button';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '../../components/ui/alert-dialog';
 import { ScrollArea } from '../../components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip';
 import { cn } from '../../components/ui/utils';
@@ -36,6 +24,7 @@ import {
   NODE_PROPERTY_ROW_ID,
 } from '../../components/inspector/nodePropertiesReadModel';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import type { WorkspaceScope } from '../../ports/sessionContext';
 import { CanvasInspectorAuthoringSection } from './CanvasInspectorAuthoringSection';
 import type { CanvasInspectorAuthoringContract } from './canvasInspectorAuthoring.types';
 import {
@@ -49,7 +38,7 @@ import { buildCanvasNodePresentationCopy } from './canvasNodePresentationCopy';
 import { canvasNodeWorkbenchVisualTokens } from './canvasNodeWorkbenchVisualTokens';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 import { useCanvasNodeWorkbenchDraftController } from './useCanvasNodeWorkbenchDraftController';
-import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
+import { hasVisualDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 
 export type CanvasNodeWorkbenchPanelProps = Readonly<{
   node: CanonicalNode;
@@ -61,6 +50,7 @@ export type CanvasNodeWorkbenchPanelProps = Readonly<{
   preferredTabRequestId?: number;
   primarySectionIds?: readonly CanvasNodeWorkbenchSectionPolicyId[];
   authoring: CanvasInspectorAuthoringContract;
+  nodeDraftWorkspaceScope?: WorkspaceScope;
   contributions?: readonly CanvasNodeWorkbenchContribution[];
   dragHandleProps?: CanvasNodeWorkbenchDragHandleProps;
   onClose: () => void;
@@ -129,15 +119,6 @@ function resolveNodeWorkbenchHiddenGeneralRowIds(
   }
 
   return rowIds;
-}
-
-function hasVisualDvtTransformAuthority(node: CanonicalNode): boolean {
-  if (node.pluginId !== 'dvt' || node.kind !== 'dvt:sql_transform') return false;
-  try {
-    return readDvtTransformAuthoringAuthority(node).mode === DVT_TRANSFORM_AUTHORING_MODE.visual;
-  } catch {
-    return false;
-  }
 }
 
 function buildNodeWorkbenchReadModel({
@@ -243,6 +224,7 @@ export function CanvasNodeWorkbenchPanel({
   preferredTabRequestId = 0,
   primarySectionIds,
   authoring,
+  nodeDraftWorkspaceScope,
   contributions = [],
   dragHandleProps,
   onClose,
@@ -251,12 +233,13 @@ export function CanvasNodeWorkbenchPanel({
   const copy = resolveCanvasViewCopy(applicationLanguage);
   const [activeTab, setActiveTab] = useState<string | undefined>(() => preferredTabId ?? undefined);
   const [appliedPreferredTabKey, setAppliedPreferredTabKey] = useState<string | null>(null);
-  const draftController = useCanvasNodeWorkbenchDraftController(node, authoring.workspaceScope);
+  const draftController = useCanvasNodeWorkbenchDraftController(node, nodeDraftWorkspaceScope);
   const presentationTruth = useMemo(
     () => projectCanvasNodePresentationTruth({ node, nodes, edges }),
     [edges, node, nodes]
   );
-  const visualDvtTransformAuthority = hasVisualDvtTransformAuthority(node);
+  const visualDvtTransformAuthority = hasVisualDvtTransformAuthoringAuthority(node);
+  const canAuthorNodeDraft = authoring.nodeDraftAuthoring != null;
   const baseModel = buildNodePropertiesReadModel({
     node,
     nodes,
@@ -272,7 +255,7 @@ export function CanvasNodeWorkbenchPanel({
   const unfilteredModel = buildNodeWorkbenchReadModel({
     model: baseModel,
     node,
-    canEditNode: authoring.canEditNode,
+    canEditNode: canAuthorNodeDraft,
     supersededRowIdsBySection: contributionModel.supersededRowIdsBySection,
     supersededSectionIds: contributionModel.supersededSectionIds,
     contributedSectionIds,
@@ -280,7 +263,7 @@ export function CanvasNodeWorkbenchPanel({
   const panels = getInspectorPanels(node, { activeRunId, registeredPlugins });
   const sectionModel = resolveCanvasNodeWorkbenchSectionModel({
     nodeKind: node.kind,
-    canEditNode: authoring.canEditNode,
+    canEditNode: canAuthorNodeDraft,
     canOpenNodeCode: contributedSectionIds.has('code'),
     strategySectionIds: primarySectionIds ?? [
       'code',
@@ -308,6 +291,7 @@ export function CanvasNodeWorkbenchPanel({
         nodes={nodes}
         edges={edges}
         authoring={authoring}
+        workspaceScope={nodeDraftWorkspaceScope}
         section={section}
         draftController={draftController}
       />
@@ -325,7 +309,7 @@ export function CanvasNodeWorkbenchPanel({
     setActiveTab(nextTabId);
   };
 
-  if (authoring.canEditNode) {
+  if (canAuthorNodeDraft) {
     sectionBeforeChildren.general = (
       <>
         {renderAuthoringSection('general')}
@@ -348,48 +332,6 @@ export function CanvasNodeWorkbenchPanel({
           {renderAuthoringSection('columns')}
         </>
       );
-      if (
-        presentationTruth.code.kind === 'generated' &&
-        authoring.onConvertVisualTransformToSql != null
-      ) {
-        const generatedSql = presentationTruth.code.content;
-        sectionAfterChildren.code = (
-          <>
-            {sectionAfterChildren.code}
-            <div className="flex justify-end pt-1">
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    data-slot="canvas-node-workbench-convert-visual-to-sql"
-                  >
-                    {copy.inspectorVisualTransformConvertToSqlLabel}
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>
-                      {copy.inspectorVisualTransformConvertToSqlTitle}
-                    </AlertDialogTitle>
-                    <AlertDialogDescription>
-                      {copy.inspectorVisualTransformConvertToSqlDescription}
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>{copy.inspectorCancelLabel}</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={() => authoring.onConvertVisualTransformToSql?.(generatedSql)}
-                    >
-                      {copy.inspectorVisualTransformConvertToSqlLabel}
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
-          </>
-        );
-      }
     }
   }
 

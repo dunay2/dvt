@@ -55,8 +55,7 @@ function renderOverlay(
         panels={{
           activeRunId: 'run-42',
           inspectorAuthoring: {
-            canEditNode: true,
-            onApplyNodeDraft: vi.fn(),
+            nodeDraftAuthoring: { apply: vi.fn() },
           },
           inspectorGraphEdges: [],
           inspectorGraphNodes: [NODE],
@@ -276,8 +275,7 @@ describe('CanvasNodeWorkbenchOverlay', () => {
           panels: {
             activeRunId: 'run-42',
             inspectorAuthoring: {
-              canEditNode: true,
-              onApplyNodeDraft: vi.fn(),
+              nodeDraftAuthoring: { apply: vi.fn() },
             },
             inspectorGraphEdges: [],
             inspectorGraphNodes: [NODE],

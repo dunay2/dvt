@@ -61,7 +61,7 @@ describe('CanvasNodeWorkbenchPanel contextual contributions', () => {
           edges={[]}
           activeRunId={null}
           preferredTabId="general"
-          authoring={{ canEditNode: false, onApplyNodeDraft: vi.fn() }}
+          authoring={{ nodeDraftAuthoring: null }}
           contributions={[
             {
               id: 'dbt-description-editor',
@@ -100,7 +100,7 @@ describe('CanvasNodeWorkbenchPanel contextual contributions', () => {
           edges={[]}
           activeRunId={null}
           preferredTabId="code"
-          authoring={{ canEditNode: false, onApplyNodeDraft: vi.fn() }}
+          authoring={{ nodeDraftAuthoring: null }}
           contributions={[
             {
               id: 'workspace-file-editor',
@@ -133,7 +133,7 @@ describe('CanvasNodeWorkbenchPanel contextual contributions', () => {
           edges={[]}
           activeRunId={null}
           preferredTabId="general"
-          authoring={{ canEditNode: false, onApplyNodeDraft: vi.fn() }}
+          authoring={{ nodeDraftAuthoring: null }}
           onClose={vi.fn()}
         />
       );
@@ -158,7 +158,7 @@ describe('CanvasNodeWorkbenchPanel contextual contributions', () => {
           edges={[]}
           activeRunId={null}
           preferredTabId="code"
-          authoring={{ canEditNode: false, onApplyNodeDraft: vi.fn() }}
+          authoring={{ nodeDraftAuthoring: null }}
           contributions={[
             {
               id: 'dbt-description-editor',
@@ -194,7 +194,7 @@ describe('CanvasNodeWorkbenchPanel contextual contributions', () => {
           edges={[]}
           activeRunId={null}
           preferredTabId="general"
-          authoring={{ canEditNode: false, onApplyNodeDraft: vi.fn() }}
+          authoring={{ nodeDraftAuthoring: null }}
           contributions={[
             {
               id: 'failing-contribution',
@@ -233,7 +233,7 @@ describe('CanvasNodeWorkbenchPanel contextual contributions', () => {
           edges={[]}
           activeRunId={null}
           preferredTabId="general"
-          authoring={{ canEditNode: false, onApplyNodeDraft: vi.fn() }}
+          authoring={{ nodeDraftAuthoring: null }}
           contributions={[
             {
               id: 'shared-contribution',
@@ -256,7 +256,7 @@ describe('CanvasNodeWorkbenchPanel contextual contributions', () => {
           edges={[]}
           activeRunId={null}
           preferredTabId="general"
-          authoring={{ canEditNode: false, onApplyNodeDraft: vi.fn() }}
+          authoring={{ nodeDraftAuthoring: null }}
           contributions={[
             {
               id: 'shared-contribution',

@@ -3,6 +3,7 @@
  */
 import type { CanvasShellPanelsBuilderArgs } from './canvasShellBuilder.types';
 import type { CanvasShellPanels } from './canvasShell.types';
+import { buildDvtVisualTransformToSqlWorkbenchContributions } from './dvtVisualTransformToSqlWorkbenchContribution';
 
 function normalizeCanvasKind(kind: string): string {
   return kind.trim().toLowerCase();
@@ -57,12 +58,19 @@ export function buildCanvasShellPanels({
     inspectorGraphNodes: panelState.inspectorGraphNodes,
     inspectorGraphEdges: panelState.inspectorGraphEdges,
     inspectorAuthoring: {
-      canEditNode: panelState.canEditInspectorNode,
-      workspaceScope: routePresentation.workspaceScope,
-      onApplyNodeDraft: panelState.applyInspectorNodeDraft,
-      onConvertVisualTransformToSql: panelState.convertInspectorVisualTransformToSql,
+      nodeDraftAuthoring: panelState.canEditInspectorNode
+        ? { apply: panelState.applyInspectorNodeDraft }
+        : null,
     },
-    inspectorWorkbenchContributions: [],
+    inspectorNodeDraftWorkspaceScope: routePresentation.workspaceScope,
+    inspectorWorkbenchContributions: buildDvtVisualTransformToSqlWorkbenchContributions({
+      node: panelState.inspectorNode,
+      nodes: panelState.inspectorGraphNodes,
+      edges: panelState.inspectorGraphEdges,
+      onConvert: panelState.canEditInspectorNode
+        ? panelState.convertInspectorVisualTransformToSql
+        : null,
+    }),
     activeRunId: panelState.activeRunId,
     registeredPlugins: panelState.registeredPlugins,
     runtimeCapabilities: panelState.runtimeCapabilities,

@@ -17,7 +17,6 @@ import type {
   HttpJsonArtifactAuthoringDraft,
   HttpJsonArtifactAuthoringErrors,
 } from './httpJsonArtifactAuthoringModel';
-import type { WorkspaceScope } from '../../ports/sessionContext';
 
 export type CanvasInspectorNodeDraft = Readonly<{
   name: string;
@@ -39,9 +38,10 @@ export type CanvasInspectorNodeDraftErrors = Readonly<{
   httpJsonArtifact?: HttpJsonArtifactAuthoringErrors;
 }>;
 
+export type CanvasNodeDraftAuthoringPort = Readonly<{
+  apply: (draft: CanvasInspectorNodeDraft) => void;
+}>;
+
 export type CanvasInspectorAuthoringContract = Readonly<{
-  canEditNode: boolean;
-  workspaceScope?: WorkspaceScope;
-  onApplyNodeDraft: (draft: CanvasInspectorNodeDraft) => void;
-  onConvertVisualTransformToSql?: (generatedSql: string) => void;
+  nodeDraftAuthoring: CanvasNodeDraftAuthoringPort | null;
 }>;
