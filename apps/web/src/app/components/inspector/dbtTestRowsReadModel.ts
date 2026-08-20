@@ -146,76 +146,23 @@ function readDbtTest(candidate: unknown): DbtTestSemanticsInput | null {
   return null;
 }
 
-type DbtTestNodeMetadataProjection = Readonly<{
-  test: DbtTestSemanticsInput;
-  targetModelReference?: string;
-  targetColumn?: string;
-  target?: string;
-}>;
-
-function readDbtTestNodeMetadata(
-  testMetadata: Record<string, unknown>
-): DbtTestNodeMetadataProjection {
-  const canonicalMetadata = asRecord(testMetadata.dbtTest);
-  const semanticMetadata = { ...testMetadata, ...canonicalMetadata };
+function readConnectedDbtTest(testMetadata: Record<string, unknown>): DbtTestSemanticsInput {
   const explicitType = readFirstString(
-    canonicalMetadata.testType,
     testMetadata.type,
     testMetadata.testType,
     testMetadata.test_name
   );
-  let test: DbtTestSemanticsInput;
   if (explicitType != null) {
-    test = buildDbtTestSemanticsInput(explicitType, semanticMetadata);
-  } else {
-    const knownType = ['not_null', 'unique', 'accepted_values', 'relationships'].find((candidate) =>
-      Object.prototype.hasOwnProperty.call(testMetadata, candidate)
-    );
-    test =
-      knownType == null
-        ? buildDbtTestSemanticsInput('', semanticMetadata)
-        : buildDbtTestSemanticsInput(knownType, {
-            ...semanticMetadata,
-            ...asRecord(testMetadata[knownType]),
-          });
+    return buildDbtTestSemanticsInput(explicitType, testMetadata);
   }
 
-  return {
-    test,
-    targetModelReference: readFirstString(
-      canonicalMetadata.targetModelId,
-      testMetadata.testTargetModel,
-      testMetadata.targetModel,
-      testMetadata.model
-    ),
-    targetColumn: readFirstString(
-      canonicalMetadata.targetColumn,
-      testMetadata.testTargetColumn,
-      testMetadata.targetColumn,
-      testMetadata.column
-    ),
-    target:
-      Object.keys(canonicalMetadata).length === 0
-        ? readFirstString(testMetadata.testTarget, testMetadata.target)
-        : undefined,
-  };
-}
-
-function resolveTargetModelName(
-  targetModelReference: string | undefined,
-  nodes: readonly CanonicalNode[]
-): string | undefined {
-  if (targetModelReference == null) {
-    return undefined;
-  }
-
-  for (const candidate of nodes) {
-    if (candidate.id === targetModelReference) {
-      return candidate.name;
+  for (const knownType of ['not_null', 'unique', 'accepted_values', 'relationships']) {
+    if (Object.prototype.hasOwnProperty.call(testMetadata, knownType)) {
+      return buildDbtTestSemanticsInput(knownType, asRecord(testMetadata[knownType]));
     }
   }
 
-  return targetModelReference;
+  return buildDbtTestSemanticsInput('', testMetadata);
 }
 
 function testSemanticCells(test: DbtTestSemanticsInput): Record<string, string> {
@@ -324,11 +271,34 @@ function buildConnectedTestRows({
       }
 
       const testMetadata = asRecord(testNode.metadata);
-      const projection = readDbtTestNodeMetadata(testMetadata);
-      const { test, targetColumn } = projection;
+      const canonicalMetadata = asRecord(testMetadata.dbtTest);
+      const test =
+        Object.keys(canonicalMetadata).length === 0
+          ? readConnectedDbtTest(testMetadata)
+          : buildDbtTestSemanticsInput(readString(canonicalMetadata.testType) ?? '', {
+              ...testMetadata,
+              ...canonicalMetadata,
+            });
+      const targetColumn = readFirstString(
+        canonicalMetadata.targetColumn,
+        testMetadata.testTargetColumn,
+        testMetadata.targetColumn,
+        testMetadata.column
+      );
+      const targetModelReference = readFirstString(
+        canonicalMetadata.targetModelId,
+        testMetadata.testTargetModel,
+        testMetadata.targetModel,
+        testMetadata.model
+      );
       const targetModel =
-        resolveTargetModelName(projection.targetModelReference, nodes) ?? node.name;
-      const target = projection.target ?? [targetModel, targetColumn].filter(Boolean).join('.');
+        nodes.find((candidate) => candidate.id === targetModelReference)?.name ??
+        targetModelReference ??
+        node.name;
+      const target =
+        (Object.keys(canonicalMetadata).length === 0
+          ? readFirstString(testMetadata.testTarget, testMetadata.target)
+          : undefined) ?? [targetModel, targetColumn].filter(Boolean).join('.');
       const lastRunDurationMs =
         test.lastRunDurationMs ??
         (testNode.lastDuration == null ? undefined : testNode.lastDuration * 1000);
@@ -362,9 +332,28 @@ function buildFallbackTestNodeRows(
   const canonicalTestLastRunStatus = node.kind.endsWith(':test') ? node.status : undefined;
   const canonicalTestLastRunDurationMs =
     node.kind.endsWith(':test') && node.lastDuration != null ? node.lastDuration * 1000 : undefined;
-  const projection = readDbtTestNodeMetadata(metadata);
-  const { test, targetColumn, target } = projection;
-  const targetModel = resolveTargetModelName(projection.targetModelReference, nodes);
+  const canonicalMetadata = asRecord(metadata.dbtTest);
+  const test =
+    Object.keys(canonicalMetadata).length === 0
+      ? readConnectedDbtTest(metadata)
+      : buildDbtTestSemanticsInput(readString(canonicalMetadata.testType) ?? '', {
+          ...metadata,
+          ...canonicalMetadata,
+        });
+  const targetModelReference = readFirstString(
+    canonicalMetadata.targetModelId,
+    metadata.testTargetModel,
+    metadata.targetModel
+  );
+  const targetModel =
+    nodes.find((candidate) => candidate.id === targetModelReference)?.name ?? targetModelReference;
+  const targetColumn = readFirstString(
+    canonicalMetadata.targetColumn,
+    metadata.testTargetColumn,
+    metadata.targetColumn
+  );
+  const target =
+    Object.keys(canonicalMetadata).length === 0 ? readString(metadata.testTarget) : undefined;
 
   if (
     !node.kind.endsWith(':test') &&
