@@ -437,6 +437,35 @@ describe('buildGraphNodeCardReadModel', () => {
     ]);
   });
 
+  it.each([
+    { locale: 'en', presentationCopy: undefined, rowsLabel: 'Rows', sizeLabel: 'Size' },
+    {
+      locale: 'es',
+      presentationCopy: SPANISH_PRESENTATION_COPY,
+      rowsLabel: 'Filas',
+      sizeLabel: 'Tamaño',
+    },
+  ])(
+    'reserves truthful empty Rows and Size metrics for a DVT SQL transform in $locale',
+    ({ presentationCopy, rowsLabel, sizeLabel }) => {
+      const model = buildGraphNodeCardReadModel(
+        buildNode({
+          kind: 'dvt:sql_transform',
+          pluginId: 'dvt',
+          role: 'transform',
+          name: 'customer_rollup',
+        }),
+        presentationCopy == null ? {} : { presentationCopy },
+        [dvtGraphNodeCardStrategy]
+      );
+
+      expect(model.operationalMetrics).toEqual([
+        { id: 'rows', label: rowsLabel, value: '—', icon: 'rows' },
+        { id: 'size', label: sizeLabel, value: '—', icon: 'database' },
+      ]);
+    }
+  );
+
   it('keeps DVT canonical runtime metrics on strategy-owned cards', () => {
     const model = buildGraphNodeCardReadModel(
       buildNode({
