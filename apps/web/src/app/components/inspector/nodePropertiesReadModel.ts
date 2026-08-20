@@ -1,5 +1,5 @@
 /** Owned concern: project canonical node metadata into a passive table-like Inspector read model. */
-import { ConnectedSourceRefSchema, type ConnectionRef } from '@dvt/contracts';
+import { ConnectedSourceRefSchema } from '@dvt/contracts';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasNodePresentationCopy } from '../canvas/canvasNodePresentationCopy.contract';
@@ -668,7 +668,8 @@ function buildInputsOutputsRows(
         !inheritedConnectionProjected &&
         inheritedConnectionRef != null &&
         upstreamConnectionRef != null &&
-        sameConnectionRef(inheritedConnectionRef, upstreamConnectionRef);
+        inheritedConnectionRef.provider === upstreamConnectionRef.provider &&
+        inheritedConnectionRef.connectionId === upstreamConnectionRef.connectionId;
       inheritedConnectionProjected ||= projectsInheritedConnection;
       rows.push({
         id: `input:${edge.id}`,
@@ -699,10 +700,6 @@ function buildInputsOutputsRows(
   }
 
   return rows;
-}
-
-function sameConnectionRef(left: ConnectionRef, right: ConnectionRef): boolean {
-  return left.provider === right.provider && left.connectionId === right.connectionId;
 }
 
 function createSection({
