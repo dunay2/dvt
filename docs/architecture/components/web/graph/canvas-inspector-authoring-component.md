@@ -35,24 +35,25 @@ inspector contract.
 
 ## Fowler Reading
 
-| Fowler concept      | Owner in this slice                  | Why                                                                            |
-| ------------------- | ------------------------------------ | ------------------------------------------------------------------------------ |
-| DTO                 | `CanvasInspectorNodeDraft`           | one semantic editing contract for route-owned node details                     |
-| Value Object        | `DbtNodeAuthoringMetadata`           | normalized dbt package, source, table, materialization, and origin state       |
-| Value Object        | `DvtNodeAuthoringMetadata`           | normalized source, SQL transform, and sink config for DVT transformation nodes |
-| Value Object        | `VisualTransformRecipeV1`            | versioned visual output, input, operation, and filter intent                   |
-| Policy Object       | `DvtTransformAuthoringAuthority`     | admits exactly one SQL or visual recipe authority per transform                |
-| Projection          | `CanvasColumnLineage`                | derives visible column handles and edges from recipe and dependency truth      |
-| Application command | `CanvasColumnMapping`                | updates recipe inputs through the existing Graph Draft aggregate               |
-| Policy Object       | `DbtSourceRelationshipSelection`     | dbt model origins must come from the visible connected dbt graph               |
-| Policy Object       | `DbtTestTargetSelection`             | dbt test targets and columns must come from the visible connected model graph  |
-| Domain policy       | `canvasInspectorAuthoringModel.ts`   | validation and normalization are explicit and pure                             |
-| Presentation policy | Canvas i18n copy catalog             | visible labels and validation messages are resolved at render time             |
-| Application command | `canvasInspectorAuthoringCommand.ts` | maps validated Inspector edits into aggregate mutation                         |
-| Application seam    | `useCanvasInspectorCommands.ts`      | exposes one route-safe callback instead of leaking aggregate mutation up       |
-| Runtime policy      | `CanvasRuntimePolicy`                | decides whether Inspector authoring is available for the active canvas         |
-| Passive view        | `InspectorPanel.tsx`                 | still owns passive node details and plugin read-only panels                    |
-| Route-owned view    | `CanvasInspectorPanel.tsx`           | composes the passive view with governed authoring UI                           |
+| Fowler concept      | Owner in this slice                  | Why                                                                             |
+| ------------------- | ------------------------------------ | ------------------------------------------------------------------------------- |
+| DTO                 | `CanvasInspectorNodeDraft`           | one semantic editing contract for route-owned node details                      |
+| Value Object        | `DbtNodeAuthoringMetadata`           | normalized dbt package, source, table, materialization, and origin state        |
+| Value Object        | `DvtNodeAuthoringMetadata`           | normalized source, SQL transform, and sink config for DVT transformation nodes  |
+| Value Object        | `VisualTransformRecipeV1`            | versioned visual output, input, operation, and filter intent                    |
+| Policy Object       | `DvtTransformAuthoringAuthority`     | admits exactly one SQL or visual recipe authority per transform                 |
+| Projection          | `CanvasColumnLineage`                | derives visible column handles and edges from recipe and dependency truth       |
+| Application command | `CanvasColumnMapping`                | updates recipe inputs through the existing Graph Draft aggregate                |
+| Policy Object       | `DbtSourceRelationshipSelection`     | dbt model origins must come from the visible connected dbt graph                |
+| Policy Object       | `DbtTestTargetSelection`             | dbt test targets and columns must come from the visible connected model graph   |
+| Projection          | `dbtTestRowsReadModel`               | reads canonical authored test metadata and legacy imported metadata for display |
+| Domain policy       | `canvasInspectorAuthoringModel.ts`   | validation and normalization are explicit and pure                              |
+| Presentation policy | Canvas i18n copy catalog             | visible labels and validation messages are resolved at render time              |
+| Application command | `canvasInspectorAuthoringCommand.ts` | maps validated Inspector edits into aggregate mutation                          |
+| Application seam    | `useCanvasInspectorCommands.ts`      | exposes one route-safe callback instead of leaking aggregate mutation up        |
+| Runtime policy      | `CanvasRuntimePolicy`                | decides whether Inspector authoring is available for the active canvas          |
+| Passive view        | `InspectorPanel.tsx`                 | still owns passive node details and plugin read-only panels                     |
+| Route-owned view    | `CanvasInspectorPanel.tsx`           | composes the passive view with governed authoring UI                            |
 
 The critical rule is that the generic `InspectorPanel` remains passive. The
 write surface lives one level up in the route-owned wrapper.
@@ -105,6 +106,9 @@ write surface lives one level up in the route-owned wrapper.
 - A DBT test target must be a connected DBT model, and its optional column must
   be declared by that selected model. Syntax validation alone is insufficient;
   changing the target must re-evaluate the existing column without rewriting it.
+- The Node Workbench Tests projection must read authored DBT test truth from
+  `metadata.dbtTest`. Flat test fields remain a read-only compatibility input
+  for imported or historical nodes; they are not a second authoring contract.
 - The route-owned Inspector may compose plugin-specific authoring field
   components, but generic Canvas readiness and validation must not impose
   plugin-only model-definition policy.
@@ -183,40 +187,41 @@ write surface lives one level up in the route-owned wrapper.
 
 <!-- markdownlint-disable MD060 -->
 
-| File                                         | Owns                                                                | Must not own                                        |
-| -------------------------------------------- | ------------------------------------------------------------------- | --------------------------------------------------- |
-| `canvasInspectorAuthoring.types.ts`          | semantic DTO and route-owned authoring contract                     | React state or aggregate mutation                   |
-| `canvasInspectorAuthoringErrorCodes.ts`      | locale-neutral authoring validation error code vocabulary           | presentation copy or validation logic               |
-| `canvasInspectorAuthoringModel.ts`           | draft projection, validation, dirty-state comparison, normalization | React hooks, services, or persistence               |
-| `canvasCopyCatalog.authoring.ts`             | English fallback copy for Canvas authoring surfaces                 | node semantics or persisted names                   |
-| `canvasCopyCatalog.authoring.es.ts`          | Spanish copy for Canvas authoring surfaces                          | node semantics or persisted names                   |
-| `canvasCopyFormatting.ts`                    | copy-backed formatting for authoring errors and Canvas messages     | validation rules                                    |
-| `canvasDbtAuthoringModel.ts`                 | dbt card metadata value object and origin-selection policy          | React hooks, services, or persistence               |
-| `canvasDvtAuthoringModel.ts`                 | DVT source, SQL transform, and sink config value object             | React hooks, services, or persistence               |
-| `canvasDvtTransformAuthoringAuthority.ts`    | exclusive SQL/visual authority and Graph Draft metadata projection  | React Flow edges, UI state, or SQL generation       |
-| `canvasColumnMappingAuthoring.ts`            | mapping, remapping, removal, and deterministic automap commands     | React Flow geometry or a second mapping store       |
-| `canvasColumnLineageProjection.ts`           | stable column handles and recipe-derived lineage edges              | recipe mutation or edge persistence                 |
-| `CanvasColumnLineageEdge.tsx`                | accessible custom lineage-edge presentation and remove action       | semantic mapping ownership                          |
-| `GraphNodeColumnSection.tsx`                 | role-correct ports, disclosure, and automap affordance              | recipe persistence or stage-edge admission          |
-| `VisualTransformRecipe.v1.ts`                | strict recipe schema, value objects, and deterministic serializer   | UI state, graph geometry, or runtime execution      |
-| `canvasInspectorAuthoringCommand.ts`         | aggregate mutation from validated Inspector draft                   | UI state or passive panel composition               |
-| `useCanvasInspectorCommands.ts`              | route callback bridge into the aggregate                            | validation rules or persistence timing              |
-| `CanvasInspectorAuthoringSection.tsx`        | route-owned edit orchestration and base node fields                 | plugin semantics or transport ownership             |
-| `DbtAuthoringFields.tsx`                     | dbt plugin authoring fields and generated SQL preview               | generic Canvas readiness policy                     |
-| `DvtAuthoringFields.tsx`                     | DVT source, SQL transform, and sink field rendering                 | dbt adapter mapping or graph strategy               |
-| `DvtSqlTransformAuthoringSection.tsx`        | shared Monaco composition for DVT SQL authoring                     | column facts, direct Monaco imports, or persistence |
-| `nodePropertiesReadModel.ts`                 | single canonical projection of read-only upstream column facts      | DVT authoring or persistence                        |
-| `CanvasInspectorPanel.tsx`                   | route-owned composition wrapper                                     | validation rules or aggregate policy                |
-| `components/InspectorPanel.tsx`              | passive details and plugin read-only panels                         | route mutation semantics                            |
-| `canvasDraftAuthoring.ts`                    | authoring payload projection and semantic signature policy          | aggregate state machine ownership                   |
-| `canvasAuthoringMetadata.ts`                 | deterministic JSON-compatible metadata DTO projection               | plugin-specific metadata semantics                  |
-| `canvasDraftStructuralSignature.ts`          | fallback structural signature for draft baselines                   | semantic node or edge detail policy                 |
-| `useCanvasDraftInitialBootstrap.ts`          | initial saved-signature assignment from shared baseline policy      | hook-local signature rules                          |
-| `useCanvasDraftReloadHydration.ts`           | reload saved-signature assignment from shared baseline policy       | hook-local signature rules                          |
-| `types/canonicalGuards.ts`                   | runtime guards for canonical graph primitives                       | Canvas route state or plugin mapping                |
-| `plugins/graphStrategyContracts.ts`          | plugin-neutral graph strategy contract                              | DBT mapping implementation                          |
-| `plugins/dvt/transformationGraphStrategy.ts` | DVT-owned transformation graph strategy and canonical guards        | DBT adapter mapping or Canvas posture               |
-| `views/lineage/useLineageViewData.ts`        | DBT snapshot read model and explicit DBT strategy resolution        | Canvas authoring default ownership                  |
+| File                                         | Owns                                                                 | Must not own                                        |
+| -------------------------------------------- | -------------------------------------------------------------------- | --------------------------------------------------- |
+| `canvasInspectorAuthoring.types.ts`          | semantic DTO and route-owned authoring contract                      | React state or aggregate mutation                   |
+| `canvasInspectorAuthoringErrorCodes.ts`      | locale-neutral authoring validation error code vocabulary            | presentation copy or validation logic               |
+| `canvasInspectorAuthoringModel.ts`           | draft projection, validation, dirty-state comparison, normalization  | React hooks, services, or persistence               |
+| `canvasCopyCatalog.authoring.ts`             | English fallback copy for Canvas authoring surfaces                  | node semantics or persisted names                   |
+| `canvasCopyCatalog.authoring.es.ts`          | Spanish copy for Canvas authoring surfaces                           | node semantics or persisted names                   |
+| `canvasCopyFormatting.ts`                    | copy-backed formatting for authoring errors and Canvas messages      | validation rules                                    |
+| `canvasDbtAuthoringModel.ts`                 | dbt card metadata value object and origin-selection policy           | React hooks, services, or persistence               |
+| `canvasDvtAuthoringModel.ts`                 | DVT source, SQL transform, and sink config value object              | React hooks, services, or persistence               |
+| `canvasDvtTransformAuthoringAuthority.ts`    | exclusive SQL/visual authority and Graph Draft metadata projection   | React Flow edges, UI state, or SQL generation       |
+| `canvasColumnMappingAuthoring.ts`            | mapping, remapping, removal, and deterministic automap commands      | React Flow geometry or a second mapping store       |
+| `canvasColumnLineageProjection.ts`           | stable column handles and recipe-derived lineage edges               | recipe mutation or edge persistence                 |
+| `CanvasColumnLineageEdge.tsx`                | accessible custom lineage-edge presentation and remove action        | semantic mapping ownership                          |
+| `GraphNodeColumnSection.tsx`                 | role-correct ports, disclosure, and automap affordance               | recipe persistence or stage-edge admission          |
+| `VisualTransformRecipe.v1.ts`                | strict recipe schema, value objects, and deterministic serializer    | UI state, graph geometry, or runtime execution      |
+| `canvasInspectorAuthoringCommand.ts`         | aggregate mutation from validated Inspector draft                    | UI state or passive panel composition               |
+| `useCanvasInspectorCommands.ts`              | route callback bridge into the aggregate                             | validation rules or persistence timing              |
+| `CanvasInspectorAuthoringSection.tsx`        | route-owned edit orchestration and base node fields                  | plugin semantics or transport ownership             |
+| `DbtAuthoringFields.tsx`                     | dbt plugin authoring fields and generated SQL preview                | generic Canvas readiness policy                     |
+| `DvtAuthoringFields.tsx`                     | DVT source, SQL transform, and sink field rendering                  | dbt adapter mapping or graph strategy               |
+| `DvtSqlTransformAuthoringSection.tsx`        | shared Monaco composition for DVT SQL authoring                      | column facts, direct Monaco imports, or persistence |
+| `nodePropertiesReadModel.ts`                 | single canonical projection of read-only upstream column facts       | DVT authoring or persistence                        |
+| `dbtTestRowsReadModel.ts`                    | DBT test rows from canonical metadata with legacy read compatibility | DBT test mutation or a second metadata contract     |
+| `CanvasInspectorPanel.tsx`                   | route-owned composition wrapper                                      | validation rules or aggregate policy                |
+| `components/InspectorPanel.tsx`              | passive details and plugin read-only panels                          | route mutation semantics                            |
+| `canvasDraftAuthoring.ts`                    | authoring payload projection and semantic signature policy           | aggregate state machine ownership                   |
+| `canvasAuthoringMetadata.ts`                 | deterministic JSON-compatible metadata DTO projection                | plugin-specific metadata semantics                  |
+| `canvasDraftStructuralSignature.ts`          | fallback structural signature for draft baselines                    | semantic node or edge detail policy                 |
+| `useCanvasDraftInitialBootstrap.ts`          | initial saved-signature assignment from shared baseline policy       | hook-local signature rules                          |
+| `useCanvasDraftReloadHydration.ts`           | reload saved-signature assignment from shared baseline policy        | hook-local signature rules                          |
+| `types/canonicalGuards.ts`                   | runtime guards for canonical graph primitives                        | Canvas route state or plugin mapping                |
+| `plugins/graphStrategyContracts.ts`          | plugin-neutral graph strategy contract                               | DBT mapping implementation                          |
+| `plugins/dvt/transformationGraphStrategy.ts` | DVT-owned transformation graph strategy and canonical guards         | DBT adapter mapping or Canvas posture               |
+| `views/lineage/useLineageViewData.ts`        | DBT snapshot read model and explicit DBT strategy resolution         | Canvas authoring default ownership                  |
 
 <!-- markdownlint-enable MD060 -->
 
