@@ -146,23 +146,76 @@ function readDbtTest(candidate: unknown): DbtTestSemanticsInput | null {
   return null;
 }
 
-function readConnectedDbtTest(testMetadata: Record<string, unknown>): DbtTestSemanticsInput {
+type DbtTestNodeMetadataProjection = Readonly<{
+  test: DbtTestSemanticsInput;
+  targetModelReference?: string;
+  targetColumn?: string;
+  target?: string;
+}>;
+
+function readDbtTestNodeMetadata(
+  testMetadata: Record<string, unknown>
+): DbtTestNodeMetadataProjection {
+  const canonicalMetadata = asRecord(testMetadata.dbtTest);
+  const semanticMetadata = { ...testMetadata, ...canonicalMetadata };
   const explicitType = readFirstString(
+    canonicalMetadata.testType,
     testMetadata.type,
     testMetadata.testType,
     testMetadata.test_name
   );
+  let test: DbtTestSemanticsInput;
   if (explicitType != null) {
-    return buildDbtTestSemanticsInput(explicitType, testMetadata);
+    test = buildDbtTestSemanticsInput(explicitType, semanticMetadata);
+  } else {
+    const knownType = ['not_null', 'unique', 'accepted_values', 'relationships'].find((candidate) =>
+      Object.prototype.hasOwnProperty.call(testMetadata, candidate)
+    );
+    test =
+      knownType == null
+        ? buildDbtTestSemanticsInput('', semanticMetadata)
+        : buildDbtTestSemanticsInput(knownType, {
+            ...semanticMetadata,
+            ...asRecord(testMetadata[knownType]),
+          });
   }
 
-  for (const knownType of ['not_null', 'unique', 'accepted_values', 'relationships']) {
-    if (Object.prototype.hasOwnProperty.call(testMetadata, knownType)) {
-      return buildDbtTestSemanticsInput(knownType, asRecord(testMetadata[knownType]));
+  return {
+    test,
+    targetModelReference: readFirstString(
+      canonicalMetadata.targetModelId,
+      testMetadata.testTargetModel,
+      testMetadata.targetModel,
+      testMetadata.model
+    ),
+    targetColumn: readFirstString(
+      canonicalMetadata.targetColumn,
+      testMetadata.testTargetColumn,
+      testMetadata.targetColumn,
+      testMetadata.column
+    ),
+    target:
+      Object.keys(canonicalMetadata).length === 0
+        ? readFirstString(testMetadata.testTarget, testMetadata.target)
+        : undefined,
+  };
+}
+
+function resolveTargetModelName(
+  targetModelReference: string | undefined,
+  nodes: readonly CanonicalNode[]
+): string | undefined {
+  if (targetModelReference == null) {
+    return undefined;
+  }
+
+  for (const candidate of nodes) {
+    if (candidate.id === targetModelReference) {
+      return candidate.name;
     }
   }
 
-  return buildDbtTestSemanticsInput('', testMetadata);
+  return targetModelReference;
 }
 
 function testSemanticCells(test: DbtTestSemanticsInput): Record<string, string> {
@@ -271,21 +324,11 @@ function buildConnectedTestRows({
       }
 
       const testMetadata = asRecord(testNode.metadata);
-      const test = readConnectedDbtTest(testMetadata);
-      const targetColumn = readFirstString(
-        testMetadata.testTargetColumn,
-        testMetadata.targetColumn,
-        testMetadata.column
-      );
+      const projection = readDbtTestNodeMetadata(testMetadata);
+      const { test, targetColumn } = projection;
       const targetModel =
-        readFirstString(
-          testMetadata.testTargetModel,
-          testMetadata.targetModel,
-          testMetadata.model
-        ) ?? node.name;
-      const target =
-        readFirstString(testMetadata.testTarget, testMetadata.target) ??
-        [targetModel, targetColumn].filter(Boolean).join('.');
+        resolveTargetModelName(projection.targetModelReference, nodes) ?? node.name;
+      const target = projection.target ?? [targetModel, targetColumn].filter(Boolean).join('.');
       const lastRunDurationMs =
         test.lastRunDurationMs ??
         (testNode.lastDuration == null ? undefined : testNode.lastDuration * 1000);
@@ -313,24 +356,23 @@ function buildConnectedTestRows({
 
 function buildFallbackTestNodeRows(
   node: CanonicalNode,
-  metadata: Record<string, unknown>
+  metadata: Record<string, unknown>,
+  nodes: readonly CanonicalNode[]
 ): readonly DbtTestTableRow[] {
   const canonicalTestLastRunStatus = node.kind.endsWith(':test') ? node.status : undefined;
   const canonicalTestLastRunDurationMs =
     node.kind.endsWith(':test') && node.lastDuration != null ? node.lastDuration * 1000 : undefined;
-  const testTargetModel = readFirstString(metadata.testTargetModel, metadata.targetModel);
-  const testTargetColumn = readFirstString(metadata.testTargetColumn, metadata.targetColumn);
-  const testTarget = readFirstString(metadata.testTarget);
-  const severity = readString(metadata.severity);
-  const testType = readFirstString(metadata.testType, metadata.type);
+  const projection = readDbtTestNodeMetadata(metadata);
+  const { test, targetColumn, target } = projection;
+  const targetModel = resolveTargetModelName(projection.targetModelReference, nodes);
 
   if (
     !node.kind.endsWith(':test') &&
-    testTargetModel == null &&
-    testTargetColumn == null &&
-    testTarget == null &&
-    severity == null &&
-    testType == null
+    targetModel == null &&
+    targetColumn == null &&
+    target == null &&
+    test.severity == null &&
+    test.type.length === 0
   ) {
     return [];
   }
@@ -340,29 +382,23 @@ function buildFallbackTestNodeRows(
       id: `test:${node.id}`,
       cells: {
         name: node.name,
-        type: testType ?? '',
-        target: testTarget ?? [testTargetModel, testTargetColumn].filter(Boolean).join('.'),
-        column: testTargetColumn ?? '',
-        severity: severity ?? '',
+        type: test.type,
+        target: target ?? [targetModel, targetColumn].filter(Boolean).join('.'),
+        column: targetColumn ?? '',
+        severity: test.severity ?? '',
         ...testSemanticCells({
-          type: testType ?? '',
-          severity,
+          ...test,
           selectedForExecution:
+            test.selectedForExecution ??
             readBoolean(metadata.selectedForExecution) ??
             readBoolean(metadata.executionSelected) ??
             readBoolean(metadata.selected),
-          selectionState: readFirstString(metadata.selectionState, metadata.executionSelection),
-          readinessImpact: readString(metadata.readinessImpact),
-          lastRunStatus: readFirstString(
-            metadata.lastRunStatus,
-            metadata.runStatus,
-            canonicalTestLastRunStatus
-          ),
-          lastRunDurationMs:
-            readNumber(metadata.lastRunDurationMs) ??
-            readNumber(metadata.lastDurationMs) ??
-            readNumber(metadata.durationMs) ??
-            canonicalTestLastRunDurationMs,
+          selectionState:
+            test.selectionState ??
+            readFirstString(metadata.selectionState, metadata.executionSelection),
+          readinessImpact: test.readinessImpact ?? readString(metadata.readinessImpact),
+          lastRunStatus: readFirstString(test.lastRunStatus, canonicalTestLastRunStatus),
+          lastRunDurationMs: test.lastRunDurationMs ?? canonicalTestLastRunDurationMs,
         }),
       },
     },
@@ -386,5 +422,7 @@ export function buildDbtTestRows({
     ...buildConnectedTestRows({ node, nodes, edges }),
   ];
 
-  return projectedRows.length > 0 ? projectedRows : buildFallbackTestNodeRows(node, metadata);
+  return projectedRows.length > 0
+    ? projectedRows
+    : buildFallbackTestNodeRows(node, metadata, nodes);
 }
