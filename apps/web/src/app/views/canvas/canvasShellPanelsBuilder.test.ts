@@ -148,11 +148,25 @@ describe('buildCanvasShellPanels', () => {
     );
 
     expect(panels.inspectorAuthoring).toEqual({
-      canEditNode: true,
-      workspaceScope: buildArgs().routePresentation.workspaceScope,
-      onApplyNodeDraft,
-      onConvertVisualTransformToSql,
+      nodeDraftAuthoring: { apply: onApplyNodeDraft },
     });
+    expect(panels.inspectorNodeDraftWorkspaceScope).toEqual(
+      buildArgs().routePresentation.workspaceScope
+    );
+    expect(panels.inspectorWorkbenchContributions).toEqual([]);
+  });
+
+  it('removes the Graph Draft Apply command when node authoring is unavailable', () => {
+    const panels = buildCanvasShellPanels(
+      buildArgs({
+        panelState: {
+          ...buildArgs().panelState,
+          canEditInspectorNode: false,
+        },
+      })
+    );
+
+    expect(panels.inspectorAuthoring).toEqual({ nodeDraftAuthoring: null });
   });
 
   it('keeps node workbench tab preference only while an inspector node is active', () => {

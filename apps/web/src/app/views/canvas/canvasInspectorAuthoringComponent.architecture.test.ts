@@ -66,6 +66,10 @@ const NODE_WORKBENCH_PANEL_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'CanvasNodeWorkbenchPanel.tsx'
 );
+const DBT_PROJECT_FILE_CANVAS_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'DbtProjectFileCanvasView.tsx'
+);
 const HTTP_JSON_FIELDS_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   '../../plugins/httpJson/HttpJsonArtifactAuthoringFields.tsx'
@@ -174,6 +178,24 @@ describe('canvas inspector authoring component architecture', () => {
     expect(MODEL_SOURCE).not.toContain('inspectorError');
     expect(MODEL_SOURCE).toContain('node_name_required');
     expect(MODEL_SOURCE).toContain('dbt_package_required');
+  });
+
+  it('models Graph Draft Apply as one nullable port without unrelated authoring commands', () => {
+    expect(TYPES_SOURCE).toContain('export type CanvasNodeDraftAuthoringPort');
+    expect(TYPES_SOURCE).toContain('apply: (draft: CanvasInspectorNodeDraft) => void;');
+    expect(TYPES_SOURCE).toContain('nodeDraftAuthoring: CanvasNodeDraftAuthoringPort | null;');
+    expect(TYPES_SOURCE).not.toContain('canEditNode');
+    expect(TYPES_SOURCE).not.toContain('onApplyNodeDraft');
+    expect(TYPES_SOURCE).not.toContain('onConvertVisualTransformToSql');
+    expect(TYPES_SOURCE).not.toContain('workspaceScope');
+
+    expect(SECTION_SOURCE).toContain('authoring.nodeDraftAuthoring.apply(draft)');
+    expect(SECTION_SOURCE).not.toContain('authoring.canEditNode');
+    expect(NODE_WORKBENCH_PANEL_SOURCE).not.toContain('authoring.onConvertVisualTransformToSql');
+
+    expect(DBT_PROJECT_FILE_CANVAS_SOURCE).toContain('nodeDraftAuthoring: null');
+    expect(DBT_PROJECT_FILE_CANVAS_SOURCE).not.toContain('unsupportedFileProjectionCommand');
+    expect(DBT_PROJECT_FILE_CANVAS_SOURCE).not.toContain('Edit graph node properties');
   });
 
   it('keeps DVT source, SQL transform, and sink authoring in separate presentation leaves', () => {
