@@ -143,9 +143,12 @@ const CONNECTED_TEST_NODE: CanonicalNode = {
   lastDuration: 1.7,
   tags: [],
   metadata: {
-    testType: 'not_null',
-    testTargetColumn: 'order_id',
-    severity: 'error',
+    dbtTest: {
+      testType: 'not_null',
+      targetModelId: MODEL_NODE.id,
+      targetColumn: 'order_id',
+      severity: 'error',
+    },
     selectedForExecution: true,
   },
 };
