@@ -441,7 +441,7 @@ describe('buildGraphNodeCardReadModel', () => {
     { locale: 'en', presentationCopy: undefined, rowsLabel: 'Rows', sizeLabel: 'Size' },
     {
       locale: 'es',
-      presentationCopy: SPANISH_PRESENTATION_COPY,
+      presentationCopy: { ...SPANISH_PRESENTATION_COPY, locale: 'es' },
       rowsLabel: 'Filas',
       sizeLabel: 'Tamaño',
     },

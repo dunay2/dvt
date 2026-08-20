@@ -5,7 +5,10 @@ import type {
   GraphNodeCardReadModel,
   GraphNodeCardStrategy,
 } from '../graph/graphNodeCardStrategyContracts';
-import { graphNodeCardCopyTokens } from '../graph/graphNodeCardCopyTokens';
+import {
+  graphNodeCardCopyTokens,
+  resolveGraphNodeCardCopy,
+} from '../graph/graphNodeCardCopyTokens';
 import { buildGraphNodeOperationalSummary } from '../graph/graphNodeOperationalSummary';
 import { buildGraphNodeVolumeMetricProjection } from '../graph/graphNodeSourceMetricProjection';
 import { buildGraphNodeTitlePresentation } from '../graph/graphNodeTitlePresentation';
@@ -121,6 +124,24 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     columnCount,
     locale: presentationCopy?.locale,
   });
+  const operationalCopy = resolveGraphNodeCardCopy(presentationCopy?.locale);
+  const operationalMetrics =
+    node.kind === 'dvt:sql_transform' && operationalSummary.metrics.length === 0
+      ? [
+          {
+            id: 'rows',
+            label: operationalCopy.rowsLabel,
+            value: '—',
+            icon: 'rows' as const,
+          },
+          {
+            id: 'size',
+            label: operationalCopy.sizeLabel,
+            value: '—',
+            icon: 'database' as const,
+          },
+        ]
+      : operationalSummary.metrics;
 
   return {
     title,
@@ -138,7 +159,7 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
         : { label: presentationCopy?.draftStatusLabel ?? 'Draft', tone: 'warning' }
     ),
     metrics,
-    operationalMetrics: operationalSummary.metrics,
+    operationalMetrics,
     operationalDetail: operationalSummary.detail,
     sourceIdentity: buildGraphNodeSourceIdentity(node, metadata, title, presentationCopy?.locale),
     nodeActionsLabel:
