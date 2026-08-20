@@ -52,13 +52,15 @@ describe('useCanvasViewportGraphModel edges', () => {
           id: 'draft_edge_source-node_transform-node',
           source: 'source-node',
           target: 'transform-node',
-          markerEnd: { type: 'arrowclosed', width: 28, height: 28 },
+          type: 'dependency',
+          interactionWidth: 18,
         },
         {
           id: 'draft_edge_transform-node_sink-node',
           source: 'transform-node',
           target: 'sink-node',
-          markerEnd: { type: 'arrowclosed', width: 28, height: 28 },
+          type: 'dependency',
+          interactionWidth: 18,
         },
       ]);
     } finally {
@@ -98,13 +100,15 @@ describe('useCanvasViewportGraphModel edges', () => {
           id: 'draft_edge_source-node_transform-node',
           source: 'source-node',
           target: 'transform-node',
-          markerEnd: { type: 'arrowclosed', width: 28, height: 28 },
+          type: 'dependency',
+          interactionWidth: 18,
         },
         {
           id: 'draft_edge_transform-node_sink-node',
           source: 'transform-node',
           target: 'sink-node',
-          markerEnd: { type: 'arrowclosed', width: 28, height: 28 },
+          type: 'dependency',
+          interactionWidth: 18,
         },
       ]);
     } finally {
