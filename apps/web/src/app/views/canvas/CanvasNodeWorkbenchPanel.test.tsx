@@ -10,6 +10,8 @@ import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { dvtCanvasSurfaceStrategy } from '../../plugins/dvt/dvtCanvasSurfaceStrategy';
 import type { CanvasNodeWorkbenchSectionPolicyId } from '../../plugins/canvasSurfaceStrategyContracts';
 import CanvasNodeWorkbenchPanelSource from './CanvasNodeWorkbenchPanel.tsx?raw';
+import { applyCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
+import { mapCanonicalNodeToCanvasNode } from './canvasNodeMapper';
 import {
   CanvasNodeWorkbenchPanel,
   type CanvasNodeWorkbenchPanelProps,
@@ -485,6 +487,54 @@ describe('CanvasNodeWorkbenchPanel', () => {
       'Name, tags, and description saved with this canvas.'
     );
     expect(container.querySelector('[data-slot="canvas-node-workbench-authoring"]')).not.toBeNull();
+  });
+
+  it('projects saved business tags to the card only after Apply', () => {
+    const node = { ...DVT_TRANSFORM_NODE, tags: ['authoring'] };
+    const onApplyNodeDraft = vi.fn();
+    renderNodePanel(root, node, 'general', { canEditNode: true, onApplyNodeDraft });
+
+    const tagsInput = container.querySelector<HTMLInputElement>('input[name="node-tags"]');
+    expect(tagsInput).not.toBeNull();
+    expect(
+      mapCanonicalNodeToCanvasNode({
+        canonicalNode: node,
+        index: 0,
+        showColumns: false,
+        locale: 'es',
+      }).data.displayTags
+    ).toEqual([{ value: 'authoring', label: 'En edición' }]);
+
+    act(() => {
+      fireEvent.input(tagsInput!, { target: { value: 'finance, critical' } });
+    });
+
+    expect(onApplyNodeDraft).not.toHaveBeenCalled();
+
+    const applyButton = Array.from(container.querySelectorAll('button')).find(
+      (button) => button.textContent === 'Apply'
+    );
+    expect(applyButton).toBeDefined();
+
+    act(() => {
+      fireEvent.click(applyButton!);
+    });
+
+    const submittedDraft = onApplyNodeDraft.mock.calls[0]?.[0];
+    expect(submittedDraft).toBeDefined();
+    const appliedNode = applyCanvasInspectorNodeDraft(node, submittedDraft);
+    expect(
+      mapCanonicalNodeToCanvasNode({
+        canonicalNode: appliedNode,
+        index: 0,
+        showColumns: false,
+        locale: 'es',
+      }).data.displayTags
+    ).toEqual([
+      { value: 'authoring', label: 'En edición' },
+      { value: 'finance', label: 'finance' },
+      { value: 'critical', label: 'critical' },
+    ]);
   });
 
   it('keeps a read-only workbench factual without rendering disabled authoring controls', () => {
