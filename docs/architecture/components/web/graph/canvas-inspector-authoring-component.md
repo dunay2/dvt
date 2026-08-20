@@ -45,6 +45,7 @@ inspector contract.
 | Projection          | `CanvasColumnLineage`                | derives visible column handles and edges from recipe and dependency truth      |
 | Application command | `CanvasColumnMapping`                | updates recipe inputs through the existing Graph Draft aggregate               |
 | Policy Object       | `DbtSourceRelationshipSelection`     | dbt model origins must come from the visible connected dbt graph               |
+| Policy Object       | `DbtTestTargetSelection`             | dbt test targets and columns must come from the visible connected model graph  |
 | Domain policy       | `canvasInspectorAuthoringModel.ts`   | validation and normalization are explicit and pure                             |
 | Presentation policy | Canvas i18n copy catalog             | visible labels and validation messages are resolved at render time             |
 | Application command | `canvasInspectorAuthoringCommand.ts` | maps validated Inspector edits into aggregate mutation                         |
@@ -101,6 +102,9 @@ write surface lives one level up in the route-owned wrapper.
   copy as validation truth.
 - DBT card configuration that changes execution semantics belongs to the
   route-owned Inspector DTO, not to plugin-owned passive panels.
+- A DBT test target must be a connected DBT model, and its optional column must
+  be declared by that selected model. Syntax validation alone is insufficient;
+  changing the target must re-evaluate the existing column without rewriting it.
 - The route-owned Inspector may compose plugin-specific authoring field
   components, but generic Canvas readiness and validation must not impose
   plugin-only model-definition policy.

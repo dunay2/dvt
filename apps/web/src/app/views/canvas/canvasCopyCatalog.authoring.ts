@@ -897,6 +897,10 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.errorDbtTestColumnInvalid',
     fallback: 'Enter a valid target column identifier.',
   },
+  inspectorErrorDbtTestColumnNotDeclared: {
+    key: 'canvas.inspector.authoring.errorDbtTestColumnNotDeclared',
+    fallback: 'Select a column declared by the connected DBT model.',
+  },
   inspectorErrorDbtTestSeverityInvalid: {
     key: 'canvas.inspector.authoring.errorDbtTestSeverityInvalid',
     fallback: 'Severity must block execution or report a warning.',

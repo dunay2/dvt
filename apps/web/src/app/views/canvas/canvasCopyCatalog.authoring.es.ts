@@ -259,6 +259,8 @@ export const canvasViewAuthoringCopyEs = {
   inspectorErrorDbtTestTypeInvalid: 'Elige una regla de validación DBT admitida.',
   inspectorErrorDbtTestTargetRequired: 'Conecta y selecciona el modelo DBT que valida este test.',
   inspectorErrorDbtTestColumnInvalid: 'Introduce un identificador de columna válido.',
+  inspectorErrorDbtTestColumnNotDeclared:
+    'Selecciona una columna declarada por el modelo DBT conectado.',
   inspectorErrorDbtTestSeverityInvalid:
     'La severidad debe bloquear la ejecución o informar una advertencia.',
   inspectorErrorDvtSchemaRequired: 'El esquema es obligatorio.',

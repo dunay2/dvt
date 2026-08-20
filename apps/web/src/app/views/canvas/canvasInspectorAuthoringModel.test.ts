@@ -291,6 +291,64 @@ describe('canvasInspectorAuthoringModel', () => {
     expect(applyCanvasInspectorNodeDraft(node, draft)).toEqual(node);
   });
 
+  it('binds a DBT test target and column to the connected model graph', () => {
+    const firstModel: CanonicalNode = {
+      id: 'dbt-model-orders',
+      name: 'Orders',
+      pluginId: 'dbt',
+      kind: 'dbt:model',
+      role: 'transform',
+      status: 'idle',
+      tags: [],
+      metadata: { columns: [{ name: 'order_id', type: 'bigint' }] },
+    };
+    const secondModel: CanonicalNode = {
+      ...firstModel,
+      id: 'dbt-model-customers',
+      name: 'Customers',
+      metadata: { columns: [{ name: 'customer_id', type: 'bigint' }] },
+    };
+    const testNode: CanonicalNode = {
+      id: 'dbt-test-key',
+      name: 'Key required',
+      pluginId: 'dbt',
+      kind: 'dbt:test',
+      role: 'check',
+      status: 'idle',
+      tags: [],
+    };
+    const edges: readonly CanonicalEdge[] = [firstModel, secondModel].map((model) => ({
+      id: `${model.id}-${testNode.id}`,
+      sourceId: model.id,
+      targetId: testNode.id,
+      relation: 'validation',
+    }));
+    const context = { node: testNode, nodes: [firstModel, secondModel, testNode], edges };
+    const draft = {
+      ...createCanvasInspectorNodeDraft(testNode),
+      dbtTest: {
+        testType: 'not_null',
+        targetModelId: firstModel.id,
+        targetColumn: 'order_id',
+        severity: 'error',
+      },
+    };
+
+    expect(validateCanvasInspectorNodeDraft(draft, context)).toEqual({});
+    expect(
+      validateCanvasInspectorNodeDraft(
+        { ...draft, dbtTest: { ...draft.dbtTest, targetModelId: 'detached-model' } },
+        context
+      )
+    ).toEqual({ dbtTest: { targetModelId: 'dbt_test_target_required' } });
+    expect(
+      validateCanvasInspectorNodeDraft(
+        { ...draft, dbtTest: { ...draft.dbtTest, targetModelId: secondModel.id } },
+        context
+      )
+    ).toEqual({ dbtTest: { targetColumn: 'dbt_test_column_not_declared' } });
+  });
+
   it('projects a submitted draft through the same canonical rules as the authoring command', () => {
     const explicitEmptyDraft = {
       name: '  Orders Model  ',

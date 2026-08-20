@@ -76,7 +76,7 @@ function DbtAuthoringFieldsHarness({
   edges: readonly CanonicalEdge[];
 }>): JSX.Element {
   const [draft, setDraft] = useState(() => createCanvasInspectorNodeDraft(node));
-  const errors = validateCanvasInspectorNodeDraft(draft);
+  const errors = validateCanvasInspectorNodeDraft(draft, { node, nodes, edges });
 
   return (
     <>
@@ -205,6 +205,56 @@ describe('DbtAuthoringFields', () => {
 
     expect(draftJson()).toContain(
       '"dbtTest":{"testType":"unique","targetModelId":"model-orders","targetColumn":"order_id","severity":"warn"}'
+    );
+  });
+
+  it('revalidates an existing DBT test column when the connected target changes', () => {
+    const ordersModel = buildDbtModelNode();
+    const customersModel: CanonicalNode = {
+      ...ordersModel,
+      id: 'model-customers',
+      name: 'Customers Model',
+      metadata: {
+        ...ordersModel.metadata,
+        columns: [
+          { name: 'order_id', type: 'bigint' },
+          { name: 'customer_id', type: 'bigint' },
+        ],
+      },
+    };
+    const test = buildDbtTestNode();
+    const edges: readonly CanonicalEdge[] = [ordersModel, customersModel].map((model) => ({
+      id: `edge-${model.id}-${test.id}`,
+      sourceId: model.id,
+      targetId: test.id,
+      relation: 'validation',
+    }));
+
+    renderFields(test, [ordersModel, customersModel, test], edges);
+
+    const targetSelect = container.querySelector(
+      'select[name="dbt-test-target"]'
+    ) as HTMLSelectElement;
+    const columnInput = container.querySelector(
+      'input[name="dbt-test-column"]'
+    ) as HTMLInputElement;
+
+    act(() => {
+      fireEvent.input(columnInput, { target: { value: 'amount' } });
+      fireEvent.change(targetSelect, { target: { value: customersModel.id } });
+    });
+
+    expect(draftJson()).toContain('"targetColumn":"amount"');
+    expect(container.querySelector('option[value="customer_id"]')).not.toBeNull();
+    expect(container.querySelector('option[value="amount"]')).toBeNull();
+    expect(container.textContent).toContain('Select a column declared by the connected DBT model.');
+
+    act(() => {
+      fireEvent.input(columnInput, { target: { value: 'order_id' } });
+    });
+
+    expect(container.textContent).not.toContain(
+      'Select a column declared by the connected DBT model.'
     );
   });
 });

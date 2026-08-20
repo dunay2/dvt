@@ -1,6 +1,20 @@
 /** Owned concern: resolve the canonical DBT model targets connected to a DBT test. */
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 
+export function readDeclaredDbtModelColumnNames(
+  node: CanonicalNode | undefined
+): readonly string[] {
+  if (!node || !Array.isArray(node.metadata?.columns)) return [];
+
+  const names = node.metadata.columns.flatMap((column) => {
+    if (column === null || typeof column !== 'object' || Array.isArray(column)) return [];
+    const name = 'name' in column && typeof column.name === 'string' ? column.name.trim() : '';
+    return name.length > 0 ? [name] : [];
+  });
+
+  return [...new Set(names)];
+}
+
 export function resolveConnectedDbtTestTargets(args: {
   testNodeId: string;
   nodes: readonly CanonicalNode[];
