@@ -31,7 +31,9 @@ const NODE_PROPERTY_PRESENTATION_COPY = {
       fallback: 'No properties are recorded for this section.',
     },
     rowLabels: {},
-    columnLabels: {},
+    columnLabels: {
+      connection: 'Connection',
+    },
     valueLabels: {
       yes: 'Yes',
       no: 'No',
@@ -131,6 +133,7 @@ const NODE_PROPERTY_PRESENTATION_COPY = {
       status: 'Estado',
       nodeId: 'ID del nodo',
       relation: 'Relación',
+      connection: 'Conexión',
       target: 'Objetivo',
       test: 'Prueba',
       package: 'Paquete',
