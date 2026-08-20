@@ -248,6 +248,80 @@ describe('nodePropertiesReadModel', () => {
   });
 
   it.each([
+    { locale: 'en', connectionLabel: 'Connection' },
+    { locale: 'es', connectionLabel: 'Conexión' },
+  ])(
+    'projects inherited transform connection context in Inputs / Outputs for $locale',
+    ({ locale, connectionLabel }) => {
+      const source = buildSourceNode();
+      const model = buildNodePropertiesReadModel({
+        node: downstreamNode,
+        nodes: [source, downstreamNode],
+        edges: graphEdges,
+        presentationCopy: buildCanvasNodePresentationCopy(resolveCanvasViewCopy(locale), locale),
+      });
+      const inputsOutputs = sectionById(model, 'inputs-outputs');
+
+      expect(inputsOutputs.columnLabels).toMatchObject({ connection: connectionLabel });
+      expectTableCells(inputsOutputs, 'input:edge-source-transform', {
+        direction: locale === 'es' ? 'Entrada' : 'Input',
+        node: 'Orders Source',
+        connection: 'postgres · warehouse-prod',
+      });
+    }
+  );
+
+  it('projects a fan-in transform connection once on the input branch that supplies it', () => {
+    const primarySource = buildSourceNode();
+    const secondarySource = buildSourceNode({
+      id: 'src-returns',
+      name: 'Returns Source',
+      metadata: {
+        ...buildSourceNode().metadata,
+        connectedSourceRef: {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef: {
+            schemaVersion: 'connection-ref.v1',
+            connectionId: 'warehouse-secondary',
+            provider: 'postgres',
+          },
+          sourceObjectId: 'relation/analytics/raw/returns',
+        },
+      },
+    });
+    const fanInEdges: readonly CanonicalEdge[] = [
+      graphEdges[0]!,
+      {
+        id: 'edge-returns-transform',
+        sourceId: secondarySource.id,
+        targetId: downstreamNode.id,
+        relation: 'lineage',
+      },
+    ];
+    const model = buildNodePropertiesReadModel({
+      node: downstreamNode,
+      nodes: [primarySource, secondarySource, downstreamNode],
+      edges: fanInEdges,
+      presentationCopy,
+    });
+    const inputsOutputs = sectionById(model, 'inputs-outputs');
+
+    expectTableCells(inputsOutputs, 'input:edge-source-transform', {
+      node: 'Orders Source',
+    });
+    expect(
+      inputsOutputs.tableRows.find((row) => row.id === 'input:edge-source-transform')?.cells
+    ).not.toHaveProperty('connection');
+    expectTableCells(inputsOutputs, 'input:edge-returns-transform', {
+      node: 'Returns Source',
+      connection: 'postgres · warehouse-secondary',
+    });
+    expect(
+      inputsOutputs.tableRows.filter((row) => row.cells.connection !== undefined)
+    ).toHaveLength(1);
+  });
+
+  it.each([
     { locale: 'en', label: 'Connection' },
     { locale: 'es', label: 'Conexión' },
   ])('exposes the complete read-only connection binding in $locale', ({ locale, label }) => {

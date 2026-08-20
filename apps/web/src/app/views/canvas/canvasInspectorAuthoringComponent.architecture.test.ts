@@ -192,7 +192,10 @@ describe('canvas inspector authoring component architecture', () => {
       'Owned concern: render DVT SQL transform authoring fields.'
     );
     expect(DVT_SQL_SECTION_SOURCE).toContain('MonacoCodeEditor');
-    expect(DVT_SQL_SECTION_SOURCE).toContain('inspectorDvtSqlLinePluralLabel');
+    expect(DVT_SQL_SECTION_SOURCE).toContain('inspectorDvtSqlLabel');
+    expect(DVT_SQL_SECTION_SOURCE).not.toContain('inspectorDvtSqlLinePluralLabel');
+    expect(DVT_SQL_SECTION_SOURCE).not.toContain('inspectorDvtSqlBodyLabel');
+    expect(DVT_SQL_SECTION_SOURCE).not.toContain('inspectorDvtInheritedConnectionLabel');
     expect(DVT_SQL_SECTION_SOURCE).not.toContain('name="dvt-transform-column"');
 
     expect(DVT_SINK_SECTION_SOURCE).toContain('Owned concern: render DVT sink authoring fields.');
