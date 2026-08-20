@@ -365,10 +365,12 @@ describe('nodePropertiesReadModel', () => {
       status: 'idle',
       tags: [],
       metadata: {
-        testTargetModel: 'orders',
-        testTargetColumn: 'order_id',
-        severity: 'error',
-        testType: 'not_null',
+        dbtTest: {
+          targetModelId: 'orders',
+          targetColumn: 'order_id',
+          severity: 'error',
+          testType: 'not_null',
+        },
       },
     };
 
