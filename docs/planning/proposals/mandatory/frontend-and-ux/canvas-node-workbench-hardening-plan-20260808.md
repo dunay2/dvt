@@ -196,7 +196,19 @@ Allowed:
 - `apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx`
 - `apps/web/src/app/views/canvas/canvasShellPanelsBuilder.ts`
 - `apps/web/src/app/views/canvas/DbtProjectFileCanvasView.tsx`
+- `apps/web/src/app/views/canvas/CanvasNodeWorkbenchOverlay.tsx` and
+  `apps/web/src/app/views/canvas/canvasShell.types.ts`, solely to transport the
+  Graph Draft workspace scope outside the narrowed authoring contract
+- `apps/web/src/app/views/canvas/canvasDvtTransformAuthoringAuthority.ts` and
+  `apps/web/src/app/views/canvas/dvtVisualTransformToSqlWorkbenchContribution.tsx`,
+  solely to retain the existing visual-to-SQL action as a DVT-owned contextual
+  contribution after removing that command from the common authoring contract
 - directly affected Web tests and this canonical plan
+
+These transitive composition seams are part of the same reduction: they do not add a
+command, store or presentation capability. They make the two removed common-contract
+concerns explicit at their existing owners instead of relocating them into another
+generic abstraction.
 
 Forbidden:
 
