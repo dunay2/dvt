@@ -87,14 +87,14 @@ them.
 
 ### Authority and port matrix
 
-| Surface | Authority | Independent inbound port | Common contract dependency |
-| --- | --- | --- | --- |
-| Graph Draft common/plugin fields | `CanvasDraftSession` | `CanvasNodeDraftAuthoringPort.apply` | nullable port only |
-| DVT visual-to-SQL conversion | DVT transform authority + `CanvasDraftSession` | existing DVT conversion command contribution | none |
-| dbt project SQL | workspace file | existing file content command/CAS contribution | none |
-| dbt YAML description | dbt YAML file | existing YAML mutation contribution | none |
-| dbt artifact/analysis facts | derived projection | none; passive query/read model | none |
-| unsupported Graph Draft mutation | no authority | no port | `nodeDraftAuthoring: null` |
+| Surface                          | Authority                                      | Independent inbound port                       | Common contract dependency |
+| -------------------------------- | ---------------------------------------------- | ---------------------------------------------- | -------------------------- |
+| Graph Draft common/plugin fields | `CanvasDraftSession`                           | `CanvasNodeDraftAuthoringPort.apply`           | nullable port only         |
+| DVT visual-to-SQL conversion     | DVT transform authority + `CanvasDraftSession` | existing DVT conversion command contribution   | none                       |
+| dbt project SQL                  | workspace file                                 | existing file content command/CAS contribution | none                       |
+| dbt YAML description             | dbt YAML file                                  | existing YAML mutation contribution            | none                       |
+| dbt artifact/analysis facts      | derived projection                             | none; passive query/read model                 | none                       |
+| unsupported Graph Draft mutation | no authority                                   | no port                                        | `nodeDraftAuthoring: null` |
 
 ### Coupling rule
 
@@ -148,14 +148,14 @@ flowchart TD
 
 ### Fowler opportunity matrix
 
-| Signal | Current mechanism | Correction | Owner | Proof |
-| --- | --- | --- | --- | --- |
-| Primitive obsession | `canEditNode` controls heterogeneous authority | presence/absence of one minimal port | Canvas authoring presentation | type/component tests |
-| Invalid state | unavailable mode still requires Apply callback | absent port means no callback | `CanvasInspectorAuthoringContract` | architecture test |
-| Inappropriate intimacy | generic contract knows DVT conversion | DVT-owned contextual contribution | DVT authoring | architecture/component tests |
-| Hidden authority | file-backed edits coexist with global read-only boolean | independent SQL/YAML ports | workspace/dbt files | browser roundtrip |
-| Dead defensive path | throwing file-projection callback must never execute | delete callback and helper | file-backed Canvas composition | source guard |
-| Feature envy | Workbench contract aggregates unrelated commands | Workbench composes views; owners retain commands | Node Properties presentation | dependency guard |
+| Signal                 | Current mechanism                                       | Correction                                       | Owner                              | Proof                        |
+| ---------------------- | ------------------------------------------------------- | ------------------------------------------------ | ---------------------------------- | ---------------------------- |
+| Primitive obsession    | `canEditNode` controls heterogeneous authority          | presence/absence of one minimal port             | Canvas authoring presentation      | type/component tests         |
+| Invalid state          | unavailable mode still requires Apply callback          | absent port means no callback                    | `CanvasInspectorAuthoringContract` | architecture test            |
+| Inappropriate intimacy | generic contract knows DVT conversion                   | DVT-owned contextual contribution                | DVT authoring                      | architecture/component tests |
+| Hidden authority       | file-backed edits coexist with global read-only boolean | independent SQL/YAML ports                       | workspace/dbt files                | browser roundtrip            |
+| Dead defensive path    | throwing file-projection callback must never execute    | delete callback and helper                       | file-backed Canvas composition     | source guard                 |
+| Feature envy           | Workbench contract aggregates unrelated commands        | Workbench composes views; owners retain commands | Node Properties presentation       | dependency guard             |
 
 ### Pre-implementation brief
 
@@ -521,9 +521,17 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/CanvasNodeFloatingToolbarView.tsx
   - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx
   - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx
+  - apps/web/src/app/views/canvas/CanvasInspectorAuthoringSection.tsx
+  - apps/web/src/app/views/canvas/CanvasNodeWorkbenchDraftController.architecture.test.ts
+  - apps/web/src/app/views/canvas/CanvasNodeWorkbenchOverlay.test.tsx
+  - apps/web/src/app/views/canvas/CanvasNodeWorkbenchOverlay.tsx
+  - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.contributions.test.tsx
+  - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.header.test.tsx
   - apps/web/src/app/views/canvas/CanvasShell.graphSurface.test.tsx
+  - apps/web/src/app/views/canvas/CanvasShell.testHarness.tsx
   - apps/web/src/app/views/canvas/CanvasShellMainPanel.tsx
   - apps/web/src/app/views/canvas/CanvasShell.tsx
+  - apps/web/src/app/views/canvas/DbtProjectFileCanvasView.tsx
   - apps/web/src/app/views/canvas/useCanvasController.core.test.tsx
   - apps/web/src/app/views/canvas/useCanvasController.ts
   - apps/web/src/app/views/canvas/useCanvasOverlayModel.ts
@@ -550,10 +558,16 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/canvasNodeFloatingToolbarModel.ts
   - apps/web/src/app/views/canvas/canvasNodeFloatingToolbarTokens.ts
   - apps/web/src/app/views/canvas/canvasNodeWorkbenchHardening.architecture.test.ts
+  - apps/web/src/app/views/canvas/canvasDvtTransformAuthoringAuthority.ts
+  - apps/web/src/app/views/canvas/canvasInspectorAuthoring.types.ts
+  - apps/web/src/app/views/canvas/canvasInspectorAuthoringComponent.architecture.test.ts
+  - apps/web/src/app/views/canvas/canvasShellPanelsBuilder.test.ts
+  - apps/web/src/app/views/canvas/canvasShellPanelsBuilder.ts
   - apps/web/src/app/views/canvas/dbtYamlDescriptionWorkbenchContribution.test.tsx
   - apps/web/src/app/views/canvas/dbtYamlDescriptionWorkbenchContribution.tsx
   - apps/web/src/app/views/canvas/dbtProjectFileProjection.architecture.test.ts
   - apps/web/src/app/views/canvas/useDbtProjectFileCanvasController.ts
+  - apps/web/src/app/views/canvas/dvtVisualTransformToSqlWorkbenchContribution.tsx
   - docs/concepts/repository-map.md
   - docs/.manifest.json
   - docs/planning/proposals/mandatory/frontend-and-ux/canvas-node-workbench-hardening-plan-20260808.md
@@ -633,6 +647,56 @@ domainObjects:
     type: command state
     owner: Canvas execution-selection intent
 symbols:
+  - path: apps/web/src/app/views/canvas/canvasInspectorAuthoring.types.ts
+    name: CanvasNodeDraftAuthoringPort
+    kind: type
+    exported: true
+    dddOwner: Node Properties Graph Draft authoring
+    cqRails: [ConfigureCanvasDbtNode, ConfigureCanvasDvtNode]
+    fowlerSignals: [Primitive obsession, Invalid state]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas]
+  - path: apps/web/src/app/views/canvas/canvasDvtTransformAuthoringAuthority.ts
+    name: hasVisualDvtTransformAuthoringAuthority
+    kind: function
+    exported: true
+    dddOwner: DVT transform authoring authority
+    cqRails: [ConfigureCanvasDvtNode]
+    fowlerSignals: [Duplicate semantics]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas]
+  - path: apps/web/src/app/views/canvas/dvtVisualTransformToSqlWorkbenchContribution.tsx
+    name: BuildDvtVisualTransformToSqlWorkbenchContributionsOptions
+    kind: type
+    exported: false
+    dddOwner: DVT Node Properties contribution
+    cqRails: [ConfigureCanvasDvtNode]
+    fowlerSignals: [Inappropriate intimacy]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas]
+  - path: apps/web/src/app/views/canvas/dvtVisualTransformToSqlWorkbenchContribution.tsx
+    name: DvtVisualTransformToSqlWorkbenchAction
+    kind: function
+    exported: false
+    dddOwner: DVT Node Properties contribution
+    cqRails: [ConfigureCanvasDvtNode]
+    fowlerSignals: [Inappropriate intimacy]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas]
+  - path: apps/web/src/app/views/canvas/dvtVisualTransformToSqlWorkbenchContribution.tsx
+    name: buildDvtVisualTransformToSqlWorkbenchContributions
+    kind: function
+    exported: true
+    dddOwner: DVT Node Properties contribution
+    cqRails: [ConfigureCanvasDvtNode]
+    fowlerSignals: [Inappropriate intimacy]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas]
   - path: apps/web/src/app/components/metrics/MetricEvidenceHotspot.tsx
     name: MetricEvidenceTriggerProps
     kind: type
