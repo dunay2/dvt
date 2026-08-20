@@ -333,13 +333,6 @@ function buildFallbackTestNodeRows(
   const canonicalTestLastRunDurationMs =
     node.kind.endsWith(':test') && node.lastDuration != null ? node.lastDuration * 1000 : undefined;
   const canonicalMetadata = asRecord(metadata.dbtTest);
-  const test =
-    Object.keys(canonicalMetadata).length === 0
-      ? readConnectedDbtTest(metadata)
-      : buildDbtTestSemanticsInput(readString(canonicalMetadata.testType) ?? '', {
-          ...metadata,
-          ...canonicalMetadata,
-        });
   const targetModelReference = readFirstString(
     canonicalMetadata.targetModelId,
     metadata.testTargetModel,
@@ -354,14 +347,16 @@ function buildFallbackTestNodeRows(
   );
   const target =
     Object.keys(canonicalMetadata).length === 0 ? readString(metadata.testTarget) : undefined;
+  const severity = readFirstString(canonicalMetadata.severity, metadata.severity);
+  const testType = readFirstString(canonicalMetadata.testType, metadata.testType, metadata.type);
 
   if (
     !node.kind.endsWith(':test') &&
     targetModel == null &&
     targetColumn == null &&
     target == null &&
-    test.severity == null &&
-    test.type.length === 0
+    severity == null &&
+    testType == null
   ) {
     return [];
   }
@@ -371,23 +366,29 @@ function buildFallbackTestNodeRows(
       id: `test:${node.id}`,
       cells: {
         name: node.name,
-        type: test.type,
+        type: testType ?? '',
         target: target ?? [targetModel, targetColumn].filter(Boolean).join('.'),
         column: targetColumn ?? '',
-        severity: test.severity ?? '',
+        severity: severity ?? '',
         ...testSemanticCells({
-          ...test,
+          type: testType ?? '',
+          severity,
           selectedForExecution:
-            test.selectedForExecution ??
             readBoolean(metadata.selectedForExecution) ??
             readBoolean(metadata.executionSelected) ??
             readBoolean(metadata.selected),
-          selectionState:
-            test.selectionState ??
-            readFirstString(metadata.selectionState, metadata.executionSelection),
-          readinessImpact: test.readinessImpact ?? readString(metadata.readinessImpact),
-          lastRunStatus: readFirstString(test.lastRunStatus, canonicalTestLastRunStatus),
-          lastRunDurationMs: test.lastRunDurationMs ?? canonicalTestLastRunDurationMs,
+          selectionState: readFirstString(metadata.selectionState, metadata.executionSelection),
+          readinessImpact: readString(metadata.readinessImpact),
+          lastRunStatus: readFirstString(
+            metadata.lastRunStatus,
+            metadata.runStatus,
+            canonicalTestLastRunStatus
+          ),
+          lastRunDurationMs:
+            readNumber(metadata.lastRunDurationMs) ??
+            readNumber(metadata.lastDurationMs) ??
+            readNumber(metadata.durationMs) ??
+            canonicalTestLastRunDurationMs,
         }),
       },
     },
