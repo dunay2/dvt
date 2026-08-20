@@ -57,7 +57,12 @@ function renderSectionBody(
             : 'max-h-72 overflow-auto border-y border-slate-800'
         }
       >
-        <table className="w-full border-collapse text-left text-xs">
+        <table
+          className={cn(
+            'w-full border-collapse text-left text-xs',
+            surface === 'workbench' && 'table-fixed'
+          )}
+        >
           <thead
             className={
               surface === 'workbench'
@@ -74,7 +79,8 @@ function renderSectionBody(
                     surface === 'workbench'
                       ? 'border-b border-(--border-subtle) capitalize'
                       : 'border-b border-slate-800',
-                    'px-2 py-2 font-medium'
+                    'px-2 py-2 font-medium',
+                    surface === 'workbench' && 'break-words'
                   )}
                 >
                   {section.columnLabels?.[key] ??
@@ -97,7 +103,9 @@ function renderSectionBody(
                     key={`${row.id}:${key}`}
                     className={cn(
                       'px-2 py-2 align-top',
-                      surface === 'workbench' ? 'text-(--text-primary)' : 'text-slate-200'
+                      surface === 'workbench'
+                        ? 'break-words text-(--text-primary)'
+                        : 'text-slate-200'
                     )}
                   >
                     {row.cells[key] || (
