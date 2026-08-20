@@ -1,5 +1,5 @@
 /** Owned concern: project canonical graph primitives into React Flow nodes and edges. */
-import { MarkerType, type Edge, type Node } from '@xyflow/react';
+import { type Edge, type Node } from '@xyflow/react';
 
 import { resolveNodeKindRegistration } from '../../plugins/nodeTypeRegistry';
 import type { MergedNodeDecoration } from '../../plugins/contracts/NodeRendering';
@@ -172,15 +172,10 @@ export function createCanvasDirectionalEdge({
     sourceHandle: 'source' satisfies CanvasNodePortHandleKind,
     targetHandle: 'target' satisfies CanvasNodePortHandleKind,
     ariaLabel,
-    type: 'smoothstep',
+    type: 'dependency',
     animated: false,
+    interactionWidth: graphFlowPalette.edgeInteractionWidth,
     style: createGraphFlowEdgeStyle(),
-    markerEnd: {
-      type: MarkerType.ArrowClosed,
-      color: graphFlowPalette.edgeStroke,
-      width: graphFlowPalette.edgeMarkerWidth,
-      height: graphFlowPalette.edgeMarkerHeight,
-    },
   };
 }
 

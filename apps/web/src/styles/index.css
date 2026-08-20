@@ -65,8 +65,12 @@ body {
 }
 
 .react-flow__edge.canvas-graph-search-relevant-edge .react-flow__edge-path {
-  stroke: var(--canvas-search-relevant-edge);
+  stroke: var(--canvas-search-relevant-edge) !important;
   stroke-width: var(--canvas-search-relevant-edge-width);
+}
+
+.react-flow__edge.canvas-graph-search-relevant-edge [data-slot='canvas-dependency-direction-cue'] {
+  fill: var(--canvas-search-relevant-edge) !important;
 }
 
 .react-flow__edge.canvas-graph-search-dimmed-edge {
@@ -172,6 +176,11 @@ body {
   .react-flow marker path,
   .react-flow marker polyline,
   .react-flow marker polygon {
+    fill: CanvasText !important;
+    stroke: CanvasText !important;
+  }
+
+  [data-slot='canvas-dependency-direction-cue'] {
     fill: CanvasText !important;
     stroke: CanvasText !important;
   }

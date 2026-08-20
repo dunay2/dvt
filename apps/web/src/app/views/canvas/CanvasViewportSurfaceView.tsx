@@ -24,9 +24,13 @@ import type { CanvasContextMenuPresenter } from './useCanvasContextMenuPresenter
 import type { CanvasGraphSearchController } from './useCanvasGraphSearchController';
 import type { CanvasGraphFilterController } from './useCanvasGraphFilterController';
 import { CanvasColumnLineageEdge } from './CanvasColumnLineageEdge';
+import { CanvasDependencyEdge } from './CanvasDependencyEdge';
 
 const CANVAS_FIT_VIEW_OPTIONS = { padding: 0.32, maxZoom: 0.82 } as const;
-const CANVAS_EDGE_TYPES = { columnLineage: CanvasColumnLineageEdge } as const;
+const CANVAS_EDGE_TYPES = {
+  dependency: CanvasDependencyEdge,
+  columnLineage: CanvasColumnLineageEdge,
+} as const;
 
 type CanvasViewportSurfaceViewProps = Readonly<{
   viewportRef: RefObject<HTMLDivElement>;

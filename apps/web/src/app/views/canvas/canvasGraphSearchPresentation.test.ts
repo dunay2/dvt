@@ -95,6 +95,12 @@ describe('projectCanvasGraphSearchPresentation', () => {
     expect(globalStyles).toContain('outline: 2px dashed var(--canvas-search-match-ring)');
     expect(globalStyles).toContain('opacity: var(--canvas-search-dimmed-opacity)');
     expect(globalStyles).toContain('stroke-width: var(--canvas-search-relevant-edge-width)');
+    expect(globalStyles).toContain(
+      "[data-slot='canvas-dependency-direction-cue'] {\n  fill: var(--canvas-search-relevant-edge) !important;"
+    );
+    expect(globalStyles).toContain(
+      "[data-slot='canvas-dependency-direction-cue'] {\n    fill: CanvasText !important;"
+    );
     expect(themeStyles).toContain('--canvas-search-match-ring');
     expect(themeStyles).toContain('--canvas-search-dimmed-opacity');
     expect(themeStyles).toContain('--canvas-search-relevant-edge-width');

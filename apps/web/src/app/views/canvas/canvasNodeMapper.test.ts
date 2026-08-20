@@ -6,7 +6,6 @@ import {
   mapCanonicalNodeToCanvasNode,
   mapDroppedCanonicalNodeToCanvasNode,
 } from './canvasNodeMapper';
-import { MarkerType } from '@xyflow/react';
 
 function buildCanonicalNode(): CanonicalNode {
   return {
@@ -69,7 +68,7 @@ describe('canvasNodeMapper', () => {
     ]);
   });
 
-  it('projects a high-visibility closed arrow for dependency direction', () => {
+  it('projects one semantic dependency edge with an inset direction renderer', () => {
     const edge = mapCanonicalEdgeToCanvasEdge({
       id: 'source-to-model',
       sourceId: 'source-node',
@@ -77,11 +76,10 @@ describe('canvasNodeMapper', () => {
       relation: 'lineage',
     });
 
-    expect(edge.markerEnd).toMatchObject({
-      type: MarkerType.ArrowClosed,
-      width: 28,
-      height: 28,
-    });
+    expect(edge.type).toBe('dependency');
+    expect(edge.markerStart).toBeUndefined();
+    expect(edge.markerEnd).toBeUndefined();
+    expect(edge.interactionWidth).toBe(18);
     expect(edge.style).toMatchObject({ strokeWidth: 2.5 });
     expect(edge.sourceHandle).toBe('source');
     expect(edge.targetHandle).toBe('target');
