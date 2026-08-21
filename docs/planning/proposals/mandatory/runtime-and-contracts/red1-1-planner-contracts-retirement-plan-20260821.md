@@ -139,6 +139,7 @@ componentGuides:
   - docs/architecture/domain-shared.md
   - docs/architecture/typescript-package-classification.md
   - docs/architecture/diagrams/implementation-architecture-diagrams.md
+  - docs/architecture/atlas/engineering/engineering-playbook.md
 userStories:
   - docs/planning/proposals/mandatory/runtime-and-contracts/red1-1-planner-contracts-retirement-plan-20260821.md
 governingSources:
@@ -227,6 +228,14 @@ redGreenCycles:
       - tools/ci/policy/workflow-scope.json
       - tools/ci/validate-policy.js
       - pnpm-lock.yaml
+    greenTest: node --test tools/ci/planner-package-governance.test.mjs
+  - id: planner-contract-current-doc-reference-closure
+    redTest: node --test tools/ci/planner-package-governance.test.mjs
+    expectedFailure: Architecture guard finds planner-contracts references in current architecture surfaces.
+    patchSurfaces:
+      - tools/ci/planner-package-governance.test.mjs
+      - docs/architecture/diagrams/implementation-architecture-diagrams.md
+      - docs/architecture/atlas/engineering/engineering-playbook.md
     greenTest: node --test tools/ci/planner-package-governance.test.mjs
 symbols:
   - name: WORKSPACE_ENTRIES
