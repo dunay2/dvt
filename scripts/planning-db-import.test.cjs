@@ -1755,6 +1755,46 @@ test('governance import batches heavy file table inserts', async () => {
   );
 });
 
+test('governance import fails closed before pruning a DB-owned source overlay', async () => {
+  const queries = [];
+  const removedPath = 'docs/removed-governed-source.md';
+
+  await assert.rejects(
+    insertGovernanceSnapshot(
+      {
+        query: async (sql, params = []) => {
+          queries.push({ sql, params });
+          if (
+            sql.includes(`from ${schemaName}.governance_files governed`) &&
+            sql.includes(`join ${schemaName}.governed_source_content_overrides`)
+          ) {
+            return { rows: [{ path: removedPath }] };
+          }
+          return { rows: [] };
+        },
+      },
+      {
+        sources: [],
+        fileShards: [],
+        files: [],
+        components: [],
+        componentFileShards: [],
+        componentFiles: [],
+        fingerprints: [],
+        coverageRows: [],
+        remediationTasks: [],
+        riskDebtItems: [],
+      }
+    ),
+    new RegExp(`DB-owned governed-source overlay.*${removedPath}`, 'u')
+  );
+
+  assert.equal(
+    queries.some(({ sql }) => sql.includes(`delete from ${schemaName}.governance_files where not`)),
+    false
+  );
+});
+
 test('docs disposition import batches document inserts', async () => {
   const queries = [];
   const baseDocument = {

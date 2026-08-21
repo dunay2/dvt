@@ -6,8 +6,12 @@ const { defaultPgUrl } = require('./planning-db-run.cjs');
 const { buildGovernanceFileSnapshot, importContent } = require('./planning-db-import.cjs');
 const { readHashDriftSummary, readSummary } = require('./planning-db-query.cjs');
 
-function dbUrl() {
+function authoritativeDbUrl() {
   return process.env.DVT_PLANNING_DB_URL || process.env.DATABASE_URL || defaultPgUrl;
+}
+
+function dbUrl() {
+  return authoritativeDbUrl();
 }
 
 async function runCurrentSchemaCycle() {
@@ -62,6 +66,10 @@ test('two full current-schema imports are equivalent without exporting database 
   assert.deepEqual(second.summary, first.summary);
   assert.deepEqual(second.hashDriftSummary, first.hashDriftSummary);
   assert.deepEqual(second.projection, first.projection);
+});
+
+test('integration tests never run against the authoritative Planning DB', () => {
+  assert.notEqual(dbUrl(), authoritativeDbUrl());
 });
 
 test('successful import preserves DB-owned architecture, mechanization, overlays, and audit', async () => {
