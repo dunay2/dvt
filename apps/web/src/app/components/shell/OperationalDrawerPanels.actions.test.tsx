@@ -246,10 +246,10 @@ describe('OperationalDrawerPanels action surfaces', () => {
       );
     });
 
-    expect(container.textContent).toContain('Requested roots');
+    expect(container.textContent).toContain('Selected nodes');
     expect(container.textContent).toContain('model.removed');
     const workspaceButton = Array.from(container.querySelectorAll('button')).find(
-      (button) => button.textContent === 'Use workspace scope'
+      (button) => button.textContent === 'Run entire flow'
     );
     expect(workspaceButton).toBeDefined();
 

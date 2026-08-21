@@ -43,7 +43,7 @@ describe('buildCanvasOperationalDrawerContribution', () => {
       expect.objectContaining({
         id: 'plan_integrity',
         severity: 'warning',
-        detail: 'Execution Preview integrity',
+        detail: 'Preview',
         action: expect.objectContaining({ label: 'Create Execution Preview' }),
       }),
       expect.objectContaining({
@@ -61,7 +61,7 @@ describe('buildCanvasOperationalDrawerContribution', () => {
     });
     expect(contribution.preview).toMatchObject({
       status: 'blocked',
-      blockers: ['Execution Preview integrity', 'Backpressure'],
+      blockers: ['Preview', 'Backpressure'],
       canPreview: true,
     });
   });
@@ -185,12 +185,12 @@ describe('buildCanvasOperationalDrawerContribution', () => {
       expect.objectContaining({
         id: 'execution_selection',
         severity: 'warning',
-        message: 'Execution selection requires recovery.',
+        message: 'A preview cannot be created with the current selection.',
       })
     );
     expect(contribution.preview).toMatchObject({
       status: 'blocked',
-      blockers: expect.arrayContaining(['Execution selection']),
+      blockers: expect.arrayContaining(['Run selection']),
       canPreview: false,
       selectionRecovery: { model: selectionRecovery, commands: recoveryCommands },
     });
@@ -246,13 +246,10 @@ describe('buildCanvasOperationalDrawerContribution', () => {
       ],
     });
     expect(contribution.problems.items.map((problem) => problem.detail)).toEqual([
-      'Integridad del Execution Preview',
+      'Vista previa',
       'Autorización denegada',
     ]);
     expect(contribution.problems.items[0]?.action?.label).toBe('Crear Execution Preview');
-    expect(contribution.preview.blockers).toEqual([
-      'Integridad del Execution Preview',
-      'Autorización denegada',
-    ]);
+    expect(contribution.preview.blockers).toEqual(['Vista previa', 'Autorización denegada']);
   });
 });
