@@ -219,14 +219,19 @@ describe('HET2 public REST artifact DBT vertical', () => {
       connectCanvasNodes(OBJECT_NODE_NAME, MODEL_NODE_NAME);
       confirmCanvasDependency();
       openNodeWorkbench(MODEL_NODE_NAME);
+      openNodeWorkbenchSection('general');
       cy.get('select[name="dbt-materialized"]').select('table');
       cy.get('select[name="dbt-origin"]').select(OBJECT_NODE_ID);
       applyNodeWorkbench();
       openNodeWorkbenchSection('code');
-      cy.get('textarea[name="dbt-model-sql"]').should(
-        'contain.value',
-        `{{ source('staging', '${TARGET_RELATION}') }}`
-      );
+      cy.get('[data-testid="monaco-code-editor"]', { timeout: 20_000 })
+        .find('.view-lines')
+        .invoke('text')
+        .should((renderedCode) => {
+          expect(renderedCode.replaceAll('\u00a0', ' ')).to.contain(
+            `{{ source('staging', '${TARGET_RELATION}') }}`
+          );
+        });
       closeNodeWorkbench();
 
       addCatalogNode(1060, 240, 'dbt:test');

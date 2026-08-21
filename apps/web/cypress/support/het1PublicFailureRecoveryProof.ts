@@ -59,6 +59,7 @@ function openHet1PlanPreview(identity: Het1PublicGraphIdentity): void {
 }
 
 function assertRunTimeline(eventType: string): void {
+  cy.get('[data-slot="run-detail-diagnostics-tab"]', { timeout: 30_000 }).click();
   cy.get('[data-slot="run-event-timeline-table"]', { timeout: 30_000 })
     .scrollIntoView()
     .should('be.visible')
