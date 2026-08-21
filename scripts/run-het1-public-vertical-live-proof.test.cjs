@@ -18,6 +18,11 @@ const fixtureManifest = JSON.parse(
   readFileSync(path.join(fixtureRoot, 'het1-object-file-orders.manifest.json'), 'utf8')
 );
 
+test('pins HET1 CSV fixture bytes to LF in every checkout', () => {
+  const attributes = readFileSync(path.resolve(__dirname, '../.gitattributes'), 'utf8');
+  assert.match(attributes, /^apps\/web\/cypress\/fixtures\/\*\.csv text eol=lf$/mu);
+});
+
 test('validates the content-addressed HET1 fixture before infrastructure startup', () => {
   assert.deepEqual(validateObjectFileFixture(fixtureContent, fixtureManifest), fixtureManifest);
 

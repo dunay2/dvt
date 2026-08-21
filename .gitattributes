@@ -5,3 +5,4 @@
 *.cjs text eol=lf
 .husky/* text eol=lf
 apps/web/cypress/fixtures/*.jsonl text eol=lf
+apps/web/cypress/fixtures/*.csv text eol=lf
