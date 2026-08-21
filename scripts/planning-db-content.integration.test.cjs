@@ -252,7 +252,15 @@ test('failed live import preserves the previously committed Planning DB', async 
   const client = new Client({ connectionString: dbUrl() });
   await client.connect();
   try {
-    const before = await client.query(`select count(*)::int as count from architecture.component`);
+    const designId = 'test-failed-import-preserves-db-authority';
+    await client.query(
+      `insert into architecture.design
+        (design_id, work_item_id, title, owner, status, rationale, fowler_signal, rail_ref)
+       values ($1, 'GH-2553-TEST', 'Rollback preservation sentinel', 'Planning DB tests',
+         'proposed', 'Prove a failed import preserves committed DB-owned authority.',
+         'hidden_authority', 'ImportPlanningGovernanceQueryStore')`,
+      [designId]
+    );
     const faultingClient = {
       async query(sql, params) {
         const statement = String(sql);
@@ -268,9 +276,11 @@ test('failed live import preserves the previously committed Planning DB', async 
       /planned Git projection import failure/iu
     );
 
-    const after = await client.query(`select count(*)::int as count from architecture.component`);
-    assert.equal(after.rows[0].count, before.rows[0].count);
-    assert.ok(after.rows[0].count > 0);
+    const after = await client.query(
+      `select exists(select 1 from architecture.design where design_id = $1) as preserved`,
+      [designId]
+    );
+    assert.equal(after.rows[0].preserved, true);
   } finally {
     await client.end();
   }
