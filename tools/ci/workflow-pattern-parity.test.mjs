@@ -246,7 +246,8 @@ test('workflow scope policy stays wired into ci and pr quality workflows', () =>
     "steps.scope.outputs.planning_db_inventory_relevant == 'true'"
   );
   assertWorkflowContains(prQualityGate, 'run: pnpm planning:db:inventory:check');
-  assertWorkflowContains(prQualityGate, 'run: pnpm planning:db:integrity:check -- --bootstrap');
+  assertWorkflowContains(prQualityGate, 'run: pnpm planning:db:integrity:check --bootstrap');
+  assertWorkflowExcludes(prQualityGate, 'run: pnpm planning:db:integrity:check -- --bootstrap');
 
   const preparePlanningDb = prQualityGate.indexOf(
     '- name: Prepare planning DB for DB-backed validation'
