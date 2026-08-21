@@ -705,7 +705,9 @@ describe('CanvasNodeWorkbenchPanel', () => {
     );
 
     expect(codeSection).not.toBeNull();
-    expect(sqlEditor?.value).toContain('select *');
+    expect(sqlEditor?.value).toContain('origin."order_id" as "order_id"');
+    expect(sqlEditor?.value).toContain('origin."discount_code" as "discount_code"');
+    expect(sqlEditor?.value).not.toContain('select *');
     expect(sqlEditor?.value).toContain('{{ source(');
     expect(sqlEditor?.dataset.language).toBe('sql');
     expect(sqlEditor?.dataset.path).toBe('models/orders_model.sql');
@@ -720,7 +722,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     const sqlEditor = container.querySelector<HTMLTextAreaElement>(
       '[data-testid="monaco-code-editor"]'
     );
-    expect(sqlEditor?.value).toContain('select *');
+    expect(sqlEditor?.value).toContain('origin."order_id" as "order_id"');
 
     act(() => {
       fireEvent.change(sqlEditor!, { target: { value: '' } });

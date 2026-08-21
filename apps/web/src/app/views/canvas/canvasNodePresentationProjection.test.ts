@@ -54,7 +54,7 @@ describe('projectCanvasNodePresentationTruth', () => {
     expect(truth.code).toEqual({
       kind: 'generated',
       content:
-        "{{ config(materialized='view') }}\n\nselect *\nfrom {{ source('raw', 'orders') }}\n",
+        "{{ config(materialized='view') }}\n\nselect\n  origin.\"order_id\" as \"order_id\"\nfrom {{ source('raw', 'orders') }} as origin\n",
       path: 'models/orders_model.sql',
       language: 'sql',
     });

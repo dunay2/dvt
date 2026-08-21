@@ -20,6 +20,10 @@ function buildDbtSourceNode(id: string, name: string, sourceName: string): Canon
         schemaName: 'raw',
         tableName: 'orders',
       },
+      columns: [
+        { name: 'order_id', type: 'bigint' },
+        { name: 'customer', type: 'text' },
+      ],
     },
   };
 }
@@ -46,6 +50,10 @@ function buildWarehouseSourceNode(id: string, name: string): CanonicalNode {
       sourceName: 'warehouse_prod_analytics_erp',
       schema: 'erp',
       tableName: 'orders',
+      columns: [
+        { name: 'order_id', type: 'bigint' },
+        { name: 'customer', type: 'text' },
+      ],
     },
   };
 }
@@ -107,6 +115,10 @@ function buildDbtModelNode(id = 'model-orders', name = 'Orders Model'): Canonica
         packageName: 'analytics',
         materialized: 'view',
       },
+      columns: [
+        { name: 'order_id', type: 'bigint' },
+        { name: 'customer', type: 'text' },
+      ],
     },
   };
 }
@@ -172,7 +184,7 @@ describe('dbtAuthoringFieldsModel', () => {
       { value: 'warehouse-orders', label: 'Imported Orders (Source)' },
     ]);
     expect(projection.modelArtifact?.body).toBe(
-      "select *\nfrom {{ source('warehouse_prod_analytics_erp', 'orders') }}"
+      'select\n  origin."order_id" as "order_id",\n  origin."customer" as "customer"\nfrom {{ source(\'warehouse_prod_analytics_erp\', \'orders\') }} as origin'
     );
   });
 
@@ -205,7 +217,9 @@ describe('dbtAuthoringFieldsModel', () => {
       { value: 'object-orders', label: 'Orders file load (Source)' },
     ]);
     expect(projection.selectedOriginId).toBe('object-orders');
-    expect(projection.modelArtifact?.body).toBe("select *\nfrom {{ source('staging', 'orders') }}");
+    expect(projection.modelArtifact?.body).toBe(
+      'select\n  origin."order_id" as "order_id"\nfrom {{ source(\'staging\', \'orders\') }} as origin'
+    );
   });
 
   it('generates ref SQL from connected dbt model origins without React presentation state', () => {
@@ -233,7 +247,9 @@ describe('dbtAuthoringFieldsModel', () => {
       },
     });
 
-    expect(projection.modelArtifact?.body).toBe("select *\nfrom {{ ref('customer_orders') }}");
+    expect(projection.modelArtifact?.body).toBe(
+      'select\n  origin."order_id" as "order_id",\n  origin."customer" as "customer"\nfrom {{ ref(\'customer_orders\') }} as origin'
+    );
   });
 
   it('projects authored SQL through the same artifact used by execution', () => {

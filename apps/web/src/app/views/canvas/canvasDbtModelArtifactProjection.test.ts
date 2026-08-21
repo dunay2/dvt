@@ -25,6 +25,10 @@ const warehouseSource: CanonicalNode = {
     sourceName: 'warehouse_prod_analytics_erp',
     schema: 'erp',
     tableName: 'orders',
+    columns: [
+      { name: 'order_id', type: 'bigint' },
+      { name: 'customer"label', type: 'text' },
+    ],
   },
 };
 
@@ -77,7 +81,12 @@ const upstreamModel: CanonicalNode = {
   role: 'transform',
   status: 'idle',
   tags: [],
-  metadata: {},
+  metadata: {
+    columns: [
+      { name: 'order_id', type: 'bigint' },
+      { name: 'customer', type: 'text' },
+    ],
+  },
 };
 
 const model: CanonicalNode = {
@@ -128,7 +137,7 @@ describe('canvas DBT model artifact projection', () => {
     ).toMatchObject({
       ok: true,
       artifact: {
-        body: "select *\nfrom {{ source('staging', 'orders') }}",
+        body: 'select\n  origin."order_id" as "order_id"\nfrom {{ source(\'staging\', \'orders\') }} as origin',
         origin: {
           nodeId: objectFileLoad.id,
           sql: "{{ source('staging', 'orders') }}",
@@ -158,9 +167,9 @@ describe('canvas DBT model artifact projection', () => {
         language: 'sql',
         materialized: 'table',
         provenance: 'generated',
-        body: "select *\nfrom {{ source('warehouse_prod_analytics_erp', 'orders') }}",
+        body: 'select\n  origin."order_id" as "order_id",\n  origin."customer""label" as "customer""label"\nfrom {{ source(\'warehouse_prod_analytics_erp\', \'orders\') }} as origin',
         content:
-          "{{ config(materialized='table') }}\n\nselect *\nfrom {{ source('warehouse_prod_analytics_erp', 'orders') }}\n",
+          '{{ config(materialized=\'table\') }}\n\nselect\n  origin."order_id" as "order_id",\n  origin."customer""label" as "customer""label"\nfrom {{ source(\'warehouse_prod_analytics_erp\', \'orders\') }} as origin\n',
         origin: {
           nodeId: warehouseSource.id,
           sql: "{{ source('warehouse_prod_analytics_erp', 'orders') }}",
@@ -253,6 +262,13 @@ describe('canvas DBT model artifact projection', () => {
   });
 
   it('uses authored SQL unchanged as the body consumed by the executable artifact', () => {
+    const sourceWithoutColumns = {
+      ...warehouseSource,
+      metadata: {
+        ...warehouseSource.metadata,
+        columns: undefined,
+      },
+    };
     const metadata = {
       ...createDbtNodeAuthoringMetadata(model),
       modelSql:
@@ -261,7 +277,7 @@ describe('canvas DBT model artifact projection', () => {
 
     const result = projectDbtModelArtifact({
       modelNode: model,
-      nodes: [warehouseSource, model],
+      nodes: [sourceWithoutColumns, model],
       edges: [edge(warehouseSource.id)],
       authoringMetadata: metadata,
     });
@@ -296,7 +312,7 @@ describe('canvas DBT model artifact projection', () => {
       ok: true,
       artifact: {
         materialized: 'view',
-        body: "select *\nfrom {{ ref('staging_orders') }}",
+        body: 'select\n  origin."order_id" as "order_id",\n  origin."customer" as "customer"\nfrom {{ ref(\'staging_orders\') }} as origin',
         origin: {
           nodeId: upstreamModel.id,
           sql: "{{ ref('staging_orders') }}",
@@ -316,6 +332,28 @@ describe('canvas DBT model artifact projection', () => {
       ok: false,
       reason: 'origin_required',
       message: 'DBT model "Orders Model" must select a connected source or model origin.',
+    });
+  });
+
+  it('fails closed when generated SQL has no canonical origin columns', () => {
+    const sourceWithoutColumns = {
+      ...warehouseSource,
+      metadata: {
+        ...warehouseSource.metadata,
+        columns: undefined,
+      },
+    };
+
+    expect(
+      projectDbtModelArtifact({
+        modelNode: model,
+        nodes: [sourceWithoutColumns, model],
+        edges: [edge(sourceWithoutColumns.id)],
+      })
+    ).toEqual({
+      ok: false,
+      reason: 'origin_columns_unavailable',
+      message: 'DBT model origin "Warehouse Orders" does not expose canonical columns.',
     });
   });
 

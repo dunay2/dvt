@@ -47,7 +47,13 @@ const source: CanonicalNode = {
   role: 'input',
   status: 'idle',
   tags: [],
-  metadata: { dbt: { sourceName: 'raw', schemaName: 'raw', tableName: 'orders' } },
+  metadata: {
+    dbt: { sourceName: 'raw', schemaName: 'raw', tableName: 'orders' },
+    columns: [
+      { name: 'order_id', type: 'bigint' },
+      { name: 'customer', type: 'text' },
+    ],
+  },
 };
 
 const model: CanonicalNode = {
@@ -143,7 +149,9 @@ describe('DbtModelCodeAuthoringSection', () => {
     const editor = container.querySelector<HTMLTextAreaElement>(
       '[data-testid="dbt-model-sql-editor"]'
     );
-    expect(editor?.value).toBe("select *\nfrom {{ source('raw', 'orders') }}");
+    expect(editor?.value).toBe(
+      'select\n  origin."order_id" as "order_id",\n  origin."customer" as "customer"\nfrom {{ source(\'raw\', \'orders\') }} as origin'
+    );
     expect(
       container.querySelector('[data-slot="dbt-model-code-provenance"]')?.textContent
     ).toContain('models/orders_model.sql');

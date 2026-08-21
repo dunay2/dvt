@@ -33,6 +33,38 @@ export type GraphNodeColumnSectionProps = Readonly<{
   onAutomap?: () => void;
 }>;
 
+export function resolveGraphNodeColumnInteractionProps(args: {
+  nodeId: string;
+  nodeRole: string;
+  data: Record<string, unknown>;
+}) {
+  const { data } = args;
+  return {
+    nodeId: args.nodeId,
+    columnPortDirections: Array.isArray(data.columnPortDirections)
+      ? (data.columnPortDirections as readonly GraphNodeColumnPortDirection[])
+      : [],
+    activeColumnHandleId:
+      typeof data.activeColumnHandleId === 'string' ? data.activeColumnHandleId : null,
+    onColumnPortActivate:
+      typeof data.onColumnPortActivate === 'function'
+        ? (data.onColumnPortActivate as (identity: GraphNodeColumnPortIdentity) => void)
+        : undefined,
+    onColumnDisclosureChange:
+      typeof data.onColumnDisclosureChange === 'function'
+        ? (data.onColumnDisclosureChange as (nodeId: string, expanded: boolean) => void)
+        : undefined,
+    onColumnLayoutChange:
+      typeof data.onColumnLayoutChange === 'function'
+        ? (data.onColumnLayoutChange as () => void)
+        : undefined,
+    onAutomapColumns:
+      args.nodeRole === 'transform' && typeof data.onAutomapColumns === 'function'
+        ? (data.onAutomapColumns as (nodeId: string, columns: readonly GraphNodeColumn[]) => void)
+        : undefined,
+  };
+}
+
 const MAX_PREVIEW_COLUMNS = 5;
 
 export function GraphNodeColumnSection({
