@@ -19,6 +19,33 @@ export function projectCanvasNodePresentationTruth(
   return projectCanvasNodePresentationTruthInternal(args, new Set());
 }
 
+function projectUpstreamVisibleColumns(
+  args: Readonly<{
+    node: CanonicalNode;
+    nodes: readonly CanonicalNode[];
+    edges: readonly Pick<CanonicalEdge, 'sourceId' | 'targetId'>[];
+  }>,
+  ancestorNodeIds: ReadonlySet<string>
+): CanvasNodePresentationTruth['columns']['inherited'] {
+  const upstreamNodeIds = new Set(
+    args.edges.filter((edge) => edge.targetId === args.node.id).map((edge) => edge.sourceId)
+  );
+
+  return args.nodes
+    .filter((node) => upstreamNodeIds.has(node.id) && !ancestorNodeIds.has(node.id))
+    .flatMap((node) =>
+      projectCanvasNodePresentationTruthInternal(
+        { node, nodes: args.nodes, edges: args.edges },
+        ancestorNodeIds
+      ).columns.visible.map((column) => ({
+        ...column,
+        provenance: 'inherited' as const,
+        sourceNodeId: column.sourceNodeId ?? node.id,
+        sourceNodeName: column.sourceNodeName ?? node.name,
+      }))
+    );
+}
+
 function projectCanvasNodePresentationTruthInternal(
   args: Readonly<{
     node: CanonicalNode;
@@ -99,22 +126,7 @@ function projectCanvasNodePresentationTruthInternal(
         }),
   });
   if (args.node.role === 'output') {
-    const upstreamNodeIds = new Set(
-      args.edges.filter((edge) => edge.targetId === args.node.id).map((edge) => edge.sourceId)
-    );
-    const inherited = args.nodes
-      .filter((node) => upstreamNodeIds.has(node.id) && !nextAncestorNodeIds.has(node.id))
-      .flatMap((node) =>
-        projectCanvasNodePresentationTruthInternal(
-          { node, nodes: args.nodes, edges: args.edges },
-          nextAncestorNodeIds
-        ).columns.visible.map((column) => ({
-          ...column,
-          provenance: 'inherited' as const,
-          sourceNodeId: column.sourceNodeId ?? node.id,
-          sourceNodeName: column.sourceNodeName ?? node.name,
-        }))
-      );
+    const inherited = projectUpstreamVisibleColumns(args, nextAncestorNodeIds);
     const visible = baseTruth.columns.declared.length > 0 ? baseTruth.columns.declared : inherited;
     return {
       ...baseTruth,
@@ -134,8 +146,28 @@ function projectCanvasNodePresentationTruthInternal(
       },
     };
   }
+  const presentationTruth =
+    args.node.role === 'transform' &&
+    baseTruth.columns.declared.length === 0 &&
+    baseTruth.columns.inherited.length === 0
+      ? (() => {
+          const inherited = projectUpstreamVisibleColumns(args, nextAncestorNodeIds);
+          return {
+            ...baseTruth,
+            columns: {
+              declared: baseTruth.columns.declared,
+              inherited,
+              visible: inherited,
+              declaredCount: 0,
+              inheritedCount: inherited.length,
+              visibleCount: inherited.length,
+              visibleProvenance: inherited.length > 0 ? ('inherited' as const) : ('none' as const),
+            },
+          };
+        })()
+      : baseTruth;
   if (lineageRecipe == null) {
-    return baseTruth;
+    return presentationTruth;
   }
   const declared = lineageRecipe.outputs.map((output) => ({
     name: output.name,
@@ -144,18 +176,18 @@ function projectCanvasNodePresentationTruthInternal(
     reference: output.id,
   }));
   const declaredNames = new Set(declared.map((column) => column.name));
-  const prospective = baseTruth.columns.inherited.filter(
+  const prospective = presentationTruth.columns.inherited.filter(
     (column) => !declaredNames.has(column.name)
   );
   const visible = [...declared, ...prospective];
   return {
-    ...baseTruth,
+    ...presentationTruth,
     columns: {
       declared,
-      inherited: baseTruth.columns.inherited,
+      inherited: presentationTruth.columns.inherited,
       visible,
       declaredCount: declared.length,
-      inheritedCount: baseTruth.columns.inheritedCount,
+      inheritedCount: presentationTruth.columns.inheritedCount,
       visibleCount: visible.length,
       visibleProvenance:
         declared.length > 0 && prospective.length > 0
