@@ -11,6 +11,21 @@ const RETIRED_STUBBED_CYPRESS_SPEC_PATH =
   'apps/web/cypress/e2e/canvas/canvas-source-import-contextual.cy.ts';
 const LIVE_RUNNER_PATH = 'scripts/run-canvas-source-import-live-proof.cjs';
 const LIVE_SOURCE_IMPORT_SUPPORT_PATH = 'apps/web/cypress/support/liveWarehouseSourceImport.ts';
+const SOURCE_IMPORT_COMPONENT_PROFILE_FIXTURE = {
+  component: {
+    componentId: 'SYS-WEB-CANVAS-SOURCE-IMPORT-CATALOG-VIEW',
+    owner: 'SourceImportCatalogViewPresentation',
+    status: 'implemented',
+  },
+  requiredTest: {
+    componentId: 'SYS-WEB-CANVAS-SOURCE-IMPORT-CATALOG-VIEW',
+    required: true,
+    testId: 'TEST-SOURCE-IMPORT-CATALOG-LIVE-INTERACTION',
+    testPath: CYPRESS_SPEC_PATH,
+    validationCommand: 'pnpm test:web:e2e:source-import:live',
+  },
+} as const;
+
 function readPackageScripts(path: string): Record<string, string> {
   return (JSON.parse(readRepoFile(path)) as { scripts: Record<string, string> }).scripts;
 }
@@ -28,12 +43,26 @@ describe('Canvas source import live proof architecture', () => {
     const rootScripts = readPackageScripts('package.json');
     const webScripts = readPackageScripts('apps/web/package.json');
 
-    expect(rootScripts['test:web:e2e:source-import:live']).toBe(
+    const rootValidationScript =
+      SOURCE_IMPORT_COMPONENT_PROFILE_FIXTURE.requiredTest.validationCommand.replace(/^pnpm /u, '');
+    expect(rootScripts[rootValidationScript]).toBe(
       'pnpm --filter @dvt/web test:e2e:source-import:live'
     );
     expect(webScripts['test:e2e:source-import:live']).toBe(
       'node ../../scripts/run-canvas-source-import-live-proof.cjs'
     );
+    expect(SOURCE_IMPORT_COMPONENT_PROFILE_FIXTURE.component).toEqual({
+      componentId: 'SYS-WEB-CANVAS-SOURCE-IMPORT-CATALOG-VIEW',
+      owner: 'SourceImportCatalogViewPresentation',
+      status: 'implemented',
+    });
+    expect(SOURCE_IMPORT_COMPONENT_PROFILE_FIXTURE.requiredTest).toEqual({
+      componentId: SOURCE_IMPORT_COMPONENT_PROFILE_FIXTURE.component.componentId,
+      required: true,
+      testId: 'TEST-SOURCE-IMPORT-CATALOG-LIVE-INTERACTION',
+      testPath: CYPRESS_SPEC_PATH,
+      validationCommand: 'pnpm test:web:e2e:source-import:live',
+    });
     expect(liveRunnerSource).toContain('CYPRESS_requireLiveProtectedRuntime=1');
     expect(liveRunnerSource).toContain('canvas-source-import-live-clean.cy.ts');
     expect(liveRunnerSource).toContain("DVT_TEMPORAL_DBT_ENABLED: 'true'");
