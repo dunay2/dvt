@@ -77,7 +77,7 @@
       "writeRail": "pnpm planning:db:operate component create|revise|reparent",
       "writeRailKind": "db_command",
       "readQueryRail": "pnpm planning:db:query component-tree|component-metadata",
-      "projection": "Effective definitions, ownership and canonical recovery state generated only by explicit refresh or export",
+      "projection": "Effective definitions and ownership queried from Planning DB; derived human-review projections generated only by explicit export",
       "validation": "pnpm test:planning:db:current-schema; pnpm planning:db:current-schema:check",
       "authorityMode": "database"
     },

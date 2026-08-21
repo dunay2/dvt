@@ -606,7 +606,7 @@ test('parseArgs builds an audited feature rail retirement command', () => {
     '--expected-revision',
     '1',
     '--reason',
-    'ADR-0063 owns the same intent under RestorePlanningDbCanonicalArchitectureState.',
+    'ADR-0063 owns the same intent under ImportPlanningGovernanceQueryStore.',
     '--source-ref',
     'scripts/planning-db-import.cjs',
     '--source-content-sha256',

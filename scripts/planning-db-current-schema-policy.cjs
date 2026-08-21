@@ -184,8 +184,6 @@ function findPlanningDbSnapshotAuthorityReferences(options = {}) {
     'scripts/planning-db-current-schema-policy.test.cjs',
     'scripts/planning-db-export.test.cjs',
     'scripts/generate-code-status.test.cjs',
-    'scripts/planning-db-operate-tests/architecture-parse.test.cjs',
-    'scripts/planning-db-operate-tests/architecture-plan.test.cjs',
   ]);
   const filePaths = (options.filePaths || trackedFiles()).map(toPosix);
   const readFile =
@@ -216,6 +214,17 @@ function findPlanningDbSnapshotAuthorityReferences(options = {}) {
     }
     if (/pnpm (?:planning|governance):db:export:check/u.test(content)) {
       references.push({ path: filePath, reason: 'routine Planning DB export gate' });
+    }
+    const semanticContent = content.replace(/\]\([^)]+\)/gu, ']');
+    if (
+      /\bcloseout\b[^.\n]{0,120}\b(?:includes?|must|requires?|runs?)\b[^.\n]{0,80}\bexport\b/iu.test(
+        semanticContent
+      )
+    ) {
+      references.push({ path: filePath, reason: 'routine Planning DB export gate' });
+    }
+    if (/(?:tracked|canonical) recovery (?:projection|state)/iu.test(content)) {
+      references.push({ path: filePath, reason: 'Planning DB recovery projection semantics' });
     }
   }
 

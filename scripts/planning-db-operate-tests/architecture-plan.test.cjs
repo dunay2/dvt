@@ -1355,7 +1355,7 @@ test('feature mechanization retirement uses design scope, CAS, and audited delet
     '--expected-revision',
     '1',
     '--reason',
-    'Reuse RestorePlanningDbCanonicalArchitectureState.',
+    'Reuse ImportPlanningGovernanceQueryStore.',
     '--source-ref',
     'scripts/planning-db-import.cjs',
     '--source-content-sha256',
