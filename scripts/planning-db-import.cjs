@@ -2461,6 +2461,7 @@ async function restoreDbGovernanceSurfaceCatalog(client, catalog, options = {}) 
   const sourceRef = path.relative(repoRoot, catalogPath).replaceAll('\\', '/');
   const sourceContentSha256 = sha256(fs.readFileSync(catalogPath));
 
+  await client.query(`delete from ${schemaName}.db_governance_surfaces`);
   await insertRows(
     client,
     'db_governance_surfaces',
@@ -2551,6 +2552,8 @@ async function restoreDbtProjectRoundtripCapabilityCatalog(client, catalog, opti
   const catalogPath = options.catalogPath || dbtProjectRoundtripCapabilityCatalogPath;
   const sourcePath = path.relative(repoRoot, catalogPath).replaceAll('\\', '/');
 
+  await client.query(`delete from ${schemaName}.dbt_project_roundtrip_phase_rail_evidence`);
+  await client.query(`delete from ${schemaName}.dbt_project_roundtrip_phases`);
   await insertRows(
     client,
     'dbt_project_roundtrip_phases',

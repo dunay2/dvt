@@ -1459,11 +1459,12 @@ test('planning DB import restores the declarative current governance surface cat
       { catalogPath }
     );
 
-    assert.equal(queries.length, 1);
-    assert.match(queries[0].sql, /db_governance_surfaces/u);
-    assert.equal(queries[0].params[0], surface.surfaceName);
-    assert.equal(queries[0].params[7], 'database');
-    assert.match(queries[0].params[9], /^[a-f0-9]{64}$/u);
+    assert.equal(queries.length, 2);
+    assert.match(queries[0].sql, /delete from planning_query_store\.db_governance_surfaces/u);
+    assert.match(queries[1].sql, /insert into planning_query_store\.db_governance_surfaces/u);
+    assert.equal(queries[1].params[0], surface.surfaceName);
+    assert.equal(queries[1].params[7], 'database');
+    assert.match(queries[1].params[9], /^[a-f0-9]{64}$/u);
 
     fs.writeFileSync(
       catalogPath,
@@ -1517,11 +1518,19 @@ test('planning DB import restores the current DBT round-trip capability catalog'
       { catalogPath }
     );
 
-    assert.equal(queries.length, 2);
-    assert.match(queries[0].sql, /dbt_project_roundtrip_phases/u);
-    assert.match(queries[1].sql, /dbt_project_roundtrip_phase_rail_evidence/u);
-    assert.equal(queries[0].params[0], 'phase-2');
-    assert.equal(queries[1].params[2], 'ProjectDbtGraphFromFiles');
+    assert.equal(queries.length, 4);
+    assert.match(
+      queries[0].sql,
+      /delete from planning_query_store\.dbt_project_roundtrip_phase_rail_evidence/u
+    );
+    assert.match(queries[1].sql, /delete from planning_query_store\.dbt_project_roundtrip_phases/u);
+    assert.match(queries[2].sql, /insert into planning_query_store\.dbt_project_roundtrip_phases/u);
+    assert.match(
+      queries[3].sql,
+      /insert into planning_query_store\.dbt_project_roundtrip_phase_rail_evidence/u
+    );
+    assert.equal(queries[2].params[0], 'phase-2');
+    assert.equal(queries[3].params[2], 'ProjectDbtGraphFromFiles');
 
     fs.writeFileSync(catalogPath, JSON.stringify({ ...catalogValue, railEvidence: [] }), 'utf8');
     assert.throws(
