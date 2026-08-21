@@ -17,6 +17,11 @@
   cursor: grabbing !important;
 }
 
+:global(.react-flow:has(.react-flow__handle.connectingfrom) .react-flow__pane),
+:global(.react-flow:has(.react-flow__handle.connectingfrom) .react-flow__pane *) {
+  cursor: grabbing !important;
+}
+
 .portHandle::before {
   content: '';
   position: absolute;

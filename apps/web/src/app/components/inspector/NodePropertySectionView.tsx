@@ -51,16 +51,19 @@ function renderSectionBody(
 
     return (
       <div
+        role="region"
+        aria-label={section.label}
+        tabIndex={0}
         className={
           surface === 'workbench'
-            ? 'max-h-80 overflow-auto rounded border border-(--border-subtle)'
+            ? 'max-h-80 overflow-auto rounded border border-(--border-subtle) bg-(--surface-panel)'
             : 'max-h-72 overflow-auto border-y border-slate-800'
         }
       >
         <table
           className={cn(
             'w-full border-collapse text-left text-xs',
-            surface === 'workbench' && 'table-fixed'
+            surface === 'workbench' && 'min-w-max'
           )}
         >
           <thead
@@ -80,7 +83,7 @@ function renderSectionBody(
                       ? 'border-b border-(--border-subtle) capitalize'
                       : 'border-b border-slate-800',
                     'px-2 py-2 font-medium',
-                    surface === 'workbench' && 'break-words'
+                    surface === 'workbench' && 'whitespace-nowrap'
                   )}
                 >
                   {section.columnLabels?.[key] ??
@@ -104,7 +107,7 @@ function renderSectionBody(
                     className={cn(
                       'px-2 py-2 align-top',
                       surface === 'workbench'
-                        ? 'break-words text-(--text-primary)'
+                        ? 'whitespace-nowrap text-(--text-primary)'
                         : 'text-slate-200'
                     )}
                   >
