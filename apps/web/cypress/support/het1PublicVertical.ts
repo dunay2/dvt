@@ -138,9 +138,13 @@ export function updateDbtModelSql(args: { nodeName: string; sql: string }): void
     .should('be.visible')
     .and('be.enabled')
     .focus()
-    .type('{ctrl+a}', { force: true, delay: 0 })
-    .type(args.sql, { parseSpecialCharSequences: false, delay: 0 })
-    .should('have.value', args.sql);
+    .type('{ctrl+a}{backspace}', { force: true, delay: 0 });
+  cy.window().then((window) => {
+    const clipboardData = new window.DataTransfer();
+    clipboardData.setData('text/plain', args.sql);
+    cy.focused().trigger('paste', { clipboardData, force: true });
+  });
+  cy.focused().should('have.value', args.sql);
   applyNodeWorkbench();
   closeNodeWorkbench();
 }
