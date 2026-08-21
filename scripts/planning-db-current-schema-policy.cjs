@@ -18,8 +18,6 @@ const exemptPaths = new Set([
   'scripts/planning-db-current-schema-policy.test.cjs',
   'scripts/planning-db-schema.cjs',
   'scripts/planning-db-schema.test.cjs',
-  'scripts/planning-db-architecture-state.cjs',
-  'scripts/planning-db-architecture-state.test.cjs',
   'docs/adr/ADR-0063-planning-db-current-schema-rebuild.md',
   'docs/planning/proposals/mandatory/governance-and-docs/planning-db-current-schema-hard-cut-plan-20260808.md',
 ]);
@@ -97,6 +95,36 @@ function artifactForContent(filePath, content) {
   return null;
 }
 
+function assertCurrentStateValue(value, location = 'currentState') {
+  if (Array.isArray(value)) {
+    value.forEach((child, index) => assertCurrentStateValue(child, `${location}[${index}]`));
+    return value;
+  }
+  if (value instanceof Date) {
+    return value;
+  }
+  if (value && typeof value === 'object') {
+    for (const [key, child] of Object.entries(value)) {
+      if (key === 'migrationState' || key === 'migration_state') {
+        throw new Error(`Planning DB ${location} contains forbidden field ${key}.`);
+      }
+      assertCurrentStateValue(child, `${location}.${key}`);
+    }
+    return value;
+  }
+  if (typeof value !== 'string') {
+    return value;
+  }
+  if (
+    /tools\/planning-db\/migrations|scripts\/planning-db-migrate|pnpm planning:db:migrate|test:planning:db:migrations|schema_migrations|migration_state|PreserveLocalFeatureMechanizationRails|mergeCanonicalFeatureMechanizationRails|planning[- _]db[- _]migrations?|(?:Apply|Validate)PlanningDbMigrations|PreparePlanningDbForCiGate/iu.test(
+      value
+    )
+  ) {
+    throw new Error(`Planning DB ${location} contains forbidden history semantics.`);
+  }
+  return value;
+}
+
 function findPlanningDbMigrationArtifacts(options = {}) {
   const filePaths = (options.filePaths || trackedFiles()).map(toPosix);
   const readFile =
@@ -150,9 +178,77 @@ function assertNoPlanningDbMigrationArtifacts(options = {}) {
   return artifacts;
 }
 
+function findPlanningDbSnapshotAuthorityReferences(options = {}) {
+  const exemptSnapshotAuthorityPaths = new Set([
+    'scripts/planning-db-current-schema-policy.cjs',
+    'scripts/planning-db-current-schema-policy.test.cjs',
+    'scripts/planning-db-export.test.cjs',
+    'scripts/generate-code-status.test.cjs',
+  ]);
+  const filePaths = (options.filePaths || trackedFiles()).map(toPosix);
+  const readFile =
+    options.readFile || ((filePath) => fs.readFileSync(path.join(repoRoot, filePath), 'utf8'));
+  const references = [];
+
+  for (const filePath of filePaths) {
+    if (
+      exemptSnapshotAuthorityPaths.has(filePath) ||
+      isHistoricalDocumentation(filePath) ||
+      isUnrelatedRuntimeMigration(filePath)
+    ) {
+      continue;
+    }
+    if (!options.readFile && !fs.existsSync(path.join(repoRoot, filePath))) {
+      continue;
+    }
+    const content = String(readFile(filePath) || '');
+    if (/tools\/planning-db\/state\/canonical-state\.json/u.test(content)) {
+      references.push({ path: filePath, reason: 'tracked Planning DB snapshot authority' });
+    }
+    if (
+      /RestorePlanningDbCanonicalArchitectureState|ExportPlanningDbCanonicalArchitectureState/u.test(
+        content
+      )
+    ) {
+      references.push({ path: filePath, reason: 'retired Planning DB snapshot rail' });
+    }
+    if (/pnpm (?:planning|governance):db:export:check/u.test(content)) {
+      references.push({ path: filePath, reason: 'routine Planning DB export gate' });
+    }
+    const semanticContent = content.replace(/\]\([^)]+\)/gu, ']');
+    if (
+      /\bcloseout\b[^.\n]{0,120}\b(?:includes?|must|requires?|runs?)\b[^.\n]{0,80}\bexport\b/iu.test(
+        semanticContent
+      )
+    ) {
+      references.push({ path: filePath, reason: 'routine Planning DB export gate' });
+    }
+    if (/(?:tracked|canonical) recovery (?:projection|state)/iu.test(content)) {
+      references.push({ path: filePath, reason: 'Planning DB recovery projection semantics' });
+    }
+  }
+
+  return references.sort((left, right) =>
+    `${left.path}\0${left.reason}`.localeCompare(`${right.path}\0${right.reason}`)
+  );
+}
+
+function assertNoPlanningDbSnapshotAuthorityReferences(options = {}) {
+  const references = findPlanningDbSnapshotAuthorityReferences(options);
+  if (references.length > 0) {
+    throw new Error(
+      `Planning DB snapshot authority policy failed:\n${references
+        .map(({ path: filePath, reason }) => `- ${filePath}: ${reason}`)
+        .join('\n')}`
+    );
+  }
+  return references;
+}
+
 if (require.main === module) {
   try {
     assertNoPlanningDbMigrationArtifacts();
+    assertNoPlanningDbSnapshotAuthorityReferences();
     console.log('[planning:db:current-schema-policy] OK');
   } catch (error) {
     console.error(`[planning:db:current-schema-policy] ${error.message || error}`);
@@ -161,6 +257,9 @@ if (require.main === module) {
 }
 
 module.exports = {
+  assertCurrentStateValue,
   assertNoPlanningDbMigrationArtifacts,
+  assertNoPlanningDbSnapshotAuthorityReferences,
+  findPlanningDbSnapshotAuthorityReferences,
   findPlanningDbMigrationArtifacts,
 };

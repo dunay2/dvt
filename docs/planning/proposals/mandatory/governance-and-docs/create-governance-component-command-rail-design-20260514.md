@@ -15,8 +15,8 @@ as current state; reads reuse the current component query modules.
 
 DDL and validation functions live only in `tools/planning-db/schema.sql`.
 Components, relations, responsibilities, and rail evidence live only in
-`tools/planning-db/state/canonical-state.json`. Validation is
-`node --test scripts/planning-db-operate.test.cjs scripts/planning-db-query.test.cjs scripts/planning-db-architecture-state.test.cjs`
+Planning DB and are read through governed queries. Validation is
+`node --test scripts/planning-db-operate.test.cjs scripts/planning-db-query.test.cjs scripts/planning-db-current-schema-policy.test.cjs`
 and `pnpm verify:prepush`.
 
 The detailed delivery record is historical and remains at `archived_record`.

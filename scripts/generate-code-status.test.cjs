@@ -992,7 +992,7 @@ test('policy names actual inputs and the minimal generator command', () => {
   assert.ok(entry.sourcePaths.includes('pnpm-workspace.yaml'));
   assert.ok(entry.sourcePaths.includes('scripts/generated-doc-date.cjs'));
   assert.ok(entry.sourcePaths.includes('tools/planning-db/schema.sql'));
-  assert.ok(entry.sourcePaths.includes('tools/planning-db/state/canonical-state.json'));
+  assert.ok(!entry.sourcePaths.includes('tools/planning-db/state/canonical-state.json'));
   assert.ok(entry.sourcePaths.includes('scripts/planning-db-import.cjs'));
   assert.ok(
     entry.sourcePaths.includes('docs/planning/status/system-governance-unit-index.units.yaml')
@@ -1074,7 +1074,7 @@ test('System Delivery Status policy is DB-first, on-demand, and has no manual sn
   assert.ok(entry.sourcePaths.includes('package.json'));
   assert.ok(entry.sourcePaths.includes('.release-please-manifest.json'));
   assert.ok(entry.sourcePaths.includes('CHANGELOG.md'));
-  assert.ok(entry.sourcePaths.includes('tools/planning-db/state/canonical-state.json'));
+  assert.ok(!entry.sourcePaths.includes('tools/planning-db/state/canonical-state.json'));
   assert.deepEqual(
     entry.dbBackedArtifacts.map((group) => group.queryView),
     [
@@ -1111,7 +1111,9 @@ test('on-demand Planning DB publication provides explicit Git refs to the import
   assert.equal(publicationAuthorityStep.env.GIT_HEAD, '${{ github.sha }}');
   assert.ok(workflowScope.generated_status_relevant.includes('scripts/generated-doc-date.cjs'));
   assert.ok(
-    workflowScope.generated_status_relevant.includes('tools/planning-db/state/canonical-state.json')
+    !workflowScope.generated_status_relevant.includes(
+      'tools/planning-db/state/canonical-state.json'
+    )
   );
   assert.ok(workflowScope.generated_status_relevant.includes('scripts/planning-db-import.cjs'));
   assert.ok(

@@ -4,9 +4,65 @@ const assert = require('node:assert/strict');
 const {
   buildIntegrityCheckResult,
   formatIntegrityCheckSummary,
+  parseArgs,
   runIntegrityCheck,
   shouldFailIntegrityCheck,
 } = require('./planning-db-integrity-check.cjs');
+
+test('Planning DB integrity check parses an explicit empty-bootstrap scope', () => {
+  assert.deepEqual(parseArgs(['--bootstrap'], {}), {
+    strict: false,
+    limit: 5000,
+    scope: 'bootstrap',
+  });
+  assert.deepEqual(parseArgs([], { PLANNING_DB_INTEGRITY_SCOPE: 'bootstrap' }), {
+    strict: false,
+    limit: 5000,
+    scope: 'bootstrap',
+  });
+});
+
+test('Planning DB bootstrap integrity excludes authority-only gaps without hiding derived regressions', () => {
+  const result = buildIntegrityCheckResult({
+    componentRows: [
+      { finding_kind: 'component_evidence_gap', severity: 'warning' },
+      { finding_kind: 'component_missing_architecture_authority', severity: 'warning' },
+    ],
+    railRows: [
+      { finding_kind: 'gap_rail', severity: 'warning' },
+      { finding_kind: 'surface_named_rail', severity: 'warning' },
+    ],
+    sourceDriftRows: [],
+    scope: 'bootstrap',
+  });
+
+  assert.equal(result.exitCode, 1);
+  assert.deepEqual(result.skippedAuthorityFindings, {
+    componentIntegrity: 2,
+    railVocabulary: 1,
+  });
+  assert.deepEqual(result.baselineViolations, [
+    {
+      surface: 'rail_vocabulary',
+      kind: 'surface_named_rail',
+      metric: 'total',
+      actual: 1,
+      allowed: 0,
+    },
+    {
+      surface: 'rail_vocabulary',
+      kind: 'surface_named_rail',
+      metric: 'warning',
+      actual: 1,
+      allowed: 0,
+    },
+  ]);
+  assert.match(formatIntegrityCheckSummary(result), /scope=bootstrap/u);
+  assert.match(
+    formatIntegrityCheckSummary(result),
+    /authority_dependent_skipped component_integrity=2 rail_vocabulary=1/u
+  );
+});
 
 test('Planning DB integrity check reports historical component debt without failing report mode', () => {
   const result = buildIntegrityCheckResult({

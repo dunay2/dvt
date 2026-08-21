@@ -61,9 +61,6 @@ const PLANNING_WORKFLOW_SCRIPT_TESTS = Object.freeze({
   'scripts/planning-db-import.test.cjs': 'scripts/planning-db-import.test.cjs',
   'scripts/planning-db-schema.cjs': 'scripts/planning-db-schema.test.cjs',
   'scripts/planning-db-schema.test.cjs': 'scripts/planning-db-schema.test.cjs',
-  'scripts/planning-db-architecture-state.cjs': 'scripts/planning-db-architecture-state.test.cjs',
-  'scripts/planning-db-architecture-state.test.cjs':
-    'scripts/planning-db-architecture-state.test.cjs',
   'scripts/planning-db-current-schema-policy.cjs':
     'scripts/planning-db-current-schema-policy.test.cjs',
   'scripts/planning-db-current-schema-policy.test.cjs':
@@ -239,8 +236,6 @@ function hasPlanningDbCurrentSchemaChange(changedFiles) {
       'tools/planning-db/schema.sql',
       'scripts/planning-db-schema.cjs',
       'scripts/planning-db-schema.test.cjs',
-      'scripts/planning-db-architecture-state.cjs',
-      'scripts/planning-db-architecture-state.test.cjs',
       'scripts/planning-db-current-schema-policy.cjs',
       'scripts/planning-db-current-schema-policy.test.cjs',
     ].includes(filePath)

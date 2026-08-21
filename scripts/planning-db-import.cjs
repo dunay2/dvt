@@ -1,4 +1,4 @@
-/** Owned concern: materialize architecture and governance query-store snapshots. */
+/** Owned concern: project Git-owned governance into the Planning DB query store. */
 const crypto = require('node:crypto');
 const { execFileSync } = require('node:child_process');
 const fs = require('node:fs');
@@ -21,13 +21,8 @@ const {
 const { buildCoverageReport } = require('./generate-governance-coverage-report.cjs');
 const { buildRemediationQueue } = require('./generate-governance-remediation-queue.cjs');
 const { defaultPgUrl } = require('./planning-db-run.cjs');
-const { applyCurrentPlanningDbSchema, schemaName } = require('./planning-db-schema.cjs');
-const {
-  assertArchitectureState,
-  assertCurrentRailDecisionState,
-  assertCurrentStateValue,
-  restoreArchitectureState,
-} = require('./planning-db-architecture-state.cjs');
+const { assertPlanningDbCurrentSchemaReady, schemaName } = require('./planning-db-schema.cjs');
+const { assertCurrentStateValue } = require('./planning-db-current-schema-policy.cjs');
 const {
   buildKnowledgeSnapshotFromDocuments,
 } = require('../tools/planning-db/knowledge/documentSnapshot.cjs');
@@ -41,13 +36,6 @@ const {
 const { buildCodeSymbolSnapshot } = require('./planning-db/code-symbol-inventory.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
-const canonicalStatePath = path.join(
-  repoRoot,
-  'tools',
-  'planning-db',
-  'state',
-  'canonical-state.json'
-);
 const dbGovernanceSurfaceCatalogPath = path.join(
   repoRoot,
   'tools',
@@ -62,6 +50,7 @@ const dbtProjectRoundtripCapabilityCatalogPath = path.join(
   'state',
   'dbt-project-roundtrip-capabilities.json'
 );
+
 const governanceFileIndexPath = governanceGeneratedPath('system-governance-file-index.files.yaml');
 const governanceComponentIndexPath = governanceGeneratedPath(
   'system-governance-component-index.components.yaml'
@@ -98,12 +87,9 @@ const governanceImportDeleteTables = [
   'governance_component_files',
   'governance_component_file_shards',
   'governance_fingerprints',
-  'governance_files',
-  'governance_file_shards',
   'governance_components',
   'governance_coverage',
   'governance_remediation',
-  'governance_sources',
 ];
 
 function databaseUrl() {
@@ -1965,7 +1951,15 @@ async function insertGovernanceSnapshot(client, snapshot) {
     await client.query(
       `insert into ${schemaName}.governance_sources
         (source_path, source_type, content_sha256, source_bytes, metadata, raw_source, raw_source_text, source_authority)
-       values ($1, $2, $3, $4, $5::jsonb, $6::jsonb, $7, $8)`,
+       values ($1, $2, $3, $4, $5::jsonb, $6::jsonb, $7, $8)
+       on conflict (source_path) do update set
+         source_type = excluded.source_type,
+         content_sha256 = excluded.content_sha256,
+         source_bytes = excluded.source_bytes,
+         metadata = excluded.metadata,
+         raw_source = excluded.raw_source,
+         raw_source_text = excluded.raw_source_text,
+         source_authority = excluded.source_authority`,
       [
         source.sourcePath,
         source.sourceType,
@@ -1983,7 +1977,13 @@ async function insertGovernanceSnapshot(client, snapshot) {
     await client.query(
       `insert into ${schemaName}.governance_file_shards
         (shard_id, source_path, file_count, content_hash, source_content_sha256, raw_shard)
-       values ($1, $2, $3, $4, $5, $6::jsonb)`,
+       values ($1, $2, $3, $4, $5, $6::jsonb)
+       on conflict (shard_id) do update set
+         source_path = excluded.source_path,
+         file_count = excluded.file_count,
+         content_hash = excluded.content_hash,
+         source_content_sha256 = excluded.source_content_sha256,
+         raw_shard = excluded.raw_shard`,
       [
         shard.shardId,
         shard.sourcePath,
@@ -2050,7 +2050,65 @@ async function insertGovernanceSnapshot(client, snapshot) {
       toJson(file.governanceRefs),
       file.sourceContentSha256,
       toJson(file.rawFile),
-    ]
+    ],
+    {
+      suffix: `on conflict (path) do update set
+         file_id = excluded.file_id,
+         shard_id = excluded.shard_id,
+         source_path = excluded.source_path,
+         path_hash = excluded.path_hash,
+         content_hash = excluded.content_hash,
+         governance_hash = excluded.governance_hash,
+         state_fingerprint = excluded.state_fingerprint,
+         owning_unit = excluded.owning_unit,
+         root_unit = excluded.root_unit,
+         domain_unit = excluded.domain_unit,
+         component_unit = excluded.component_unit,
+         owner_level = excluded.owner_level,
+         unit_status = excluded.unit_status,
+         governance_state = excluded.governance_state,
+         canonical_role = excluded.canonical_role,
+         evidence_state = excluded.evidence_state,
+         is_drift = excluded.is_drift,
+         is_legacy = excluded.is_legacy,
+         ddd_owner = excluded.ddd_owner,
+         cq_rails = excluded.cq_rails,
+         governance_refs = excluded.governance_refs,
+         source_content_sha256 = excluded.source_content_sha256,
+         raw_file = excluded.raw_file`,
+    }
+  );
+
+  const incomingGovernancePaths = snapshot.files.map((file) => file.path);
+  const protectedPrune = await client.query(
+    `select governed.path
+       from ${schemaName}.governance_files governed
+       join ${schemaName}.governed_source_content_overrides db_owned
+         on db_owned.path = governed.path
+      where not (governed.path = any($1::text[]))
+      order by governed.path
+      limit 20`,
+    [incomingGovernancePaths]
+  );
+  if (protectedPrune.rows.length > 0) {
+    const paths = protectedPrune.rows.map(({ path: governedPath }) => governedPath).join(', ');
+    throw new Error(
+      `DB-owned governed-source overlay blocks Planning DB import for removed path(s): ${paths}. ` +
+        'Retire that authority explicitly before removing its Git projection.'
+    );
+  }
+
+  await client.query(
+    `delete from ${schemaName}.governance_files where not (path = any($1::text[]))`,
+    [incomingGovernancePaths]
+  );
+  await client.query(
+    `delete from ${schemaName}.governance_file_shards where not (shard_id = any($1::text[]))`,
+    [snapshot.fileShards.map((shard) => shard.shardId)]
+  );
+  await client.query(
+    `delete from ${schemaName}.governance_sources where not (source_path = any($1::text[]))`,
+    [snapshot.sources.map((source) => source.sourcePath)]
   );
 
   for (const component of snapshot.components) {
@@ -2430,47 +2488,6 @@ async function insertCommandQueryRailSnapshot(client, snapshot) {
   );
 }
 
-function readCanonicalStateSnapshot(snapshotPath = canonicalStatePath) {
-  if (!fs.existsSync(snapshotPath)) {
-    throw new Error(`Missing Planning DB canonical state snapshot: ${snapshotPath}`);
-  }
-
-  const snapshot = JSON.parse(fs.readFileSync(snapshotPath, 'utf8'));
-  if (snapshot?.schemaVersion !== 1) {
-    throw new Error(
-      `Unsupported Planning DB canonical state schema version "${snapshot?.schemaVersion}".`
-    );
-  }
-
-  if (
-    !snapshot.architectureState ||
-    !Array.isArray(snapshot.featureMechanizationRails) ||
-    !Array.isArray(snapshot.featureMechanizationRailOperations) ||
-    !Array.isArray(snapshot.governanceComponentDefinitions) ||
-    !Array.isArray(snapshot.governanceComponentOwnershipPatterns) ||
-    !Array.isArray(snapshot.governanceComponentSemanticItems) ||
-    !Array.isArray(snapshot.governanceComponentOperations) ||
-    !Array.isArray(snapshot.fowlerAnalysisDispositions) ||
-    !Array.isArray(snapshot.fowlerAnalysisCanonicalTargets) ||
-    !Array.isArray(snapshot.fowlerAnalysisReferenceResolutions) ||
-    !Array.isArray(snapshot.fowlerAnalysisRetirementDecisions) ||
-    !Array.isArray(snapshot.fowlerAnalysisOperations)
-  ) {
-    throw new Error(
-      'Planning DB canonical state must contain architecture, feature mechanization, governance component, and Fowler analysis recovery state.'
-    );
-  }
-
-  assertArchitectureState(snapshot.architectureState);
-  assertCurrentStateValue(snapshot, 'canonicalState');
-  assertCurrentRailDecisionState(
-    snapshot.featureMechanizationRails,
-    snapshot.featureMechanizationRailOperations
-  );
-
-  return snapshot;
-}
-
 function readDbGovernanceSurfaceCatalog(catalogPath = dbGovernanceSurfaceCatalogPath) {
   if (!fs.existsSync(catalogPath)) {
     throw new Error(`Missing Planning DB governance surface catalog: ${catalogPath}`);
@@ -2514,6 +2531,7 @@ async function restoreDbGovernanceSurfaceCatalog(client, catalog, options = {}) 
   const sourceRef = path.relative(repoRoot, catalogPath).replaceAll('\\', '/');
   const sourceContentSha256 = sha256(fs.readFileSync(catalogPath));
 
+  await client.query(`delete from ${schemaName}.db_governance_surfaces`);
   await insertRows(
     client,
     'db_governance_surfaces',
@@ -2604,6 +2622,8 @@ async function restoreDbtProjectRoundtripCapabilityCatalog(client, catalog, opti
   const catalogPath = options.catalogPath || dbtProjectRoundtripCapabilityCatalogPath;
   const sourcePath = path.relative(repoRoot, catalogPath).replaceAll('\\', '/');
 
+  await client.query(`delete from ${schemaName}.dbt_project_roundtrip_phase_rail_evidence`);
+  await client.query(`delete from ${schemaName}.dbt_project_roundtrip_phases`);
   await insertRows(
     client,
     'dbt_project_roundtrip_phases',
@@ -2648,392 +2668,6 @@ async function restoreDbtProjectRoundtripCapabilityCatalog(client, catalog, opti
       evidence.reviewedCommitSha,
       evidence.evidenceSummary,
       sourcePath,
-    ]
-  );
-}
-
-async function refreshLocalFeatureMechanizationRailSourceHashes(client) {
-  await client.query(`
-    update ${schemaName}.feature_mechanization_local_rails rail
-    set
-      source_content_sha256 = file_ref.content_hash,
-      updated_at = now()
-    from ${schemaName}.governance_files file_ref
-    where file_ref.path = rail.source_path
-      and rail.source_content_sha256 <> file_ref.content_hash
-  `);
-}
-
-async function restoreLocalFeatureMechanizationRails(client, rails) {
-  await insertRows(
-    client,
-    'feature_mechanization_local_rails',
-    [
-      'rail_id',
-      'feature_id',
-      'mechanization_status',
-      'rail_name',
-      'normalized_rail_name',
-      'rail_type',
-      'ddd_owner',
-      'rail_status',
-      { name: 'symbol_refs', cast: 'jsonb' },
-      { name: 'implementation_refs', cast: 'jsonb' },
-      { name: 'documentation_refs', cast: 'jsonb' },
-      { name: 'governing_sources', cast: 'jsonb' },
-      { name: 'allowed_implementation_surfaces', cast: 'jsonb' },
-      { name: 'architecture_guards', cast: 'jsonb' },
-      { name: 'completion_gate', cast: 'jsonb' },
-      'source_path',
-      'source_content_sha256',
-      { name: 'raw_rail', cast: 'jsonb' },
-      { name: 'raw_manifest', cast: 'jsonb' },
-      'revision',
-      'created_by',
-      { name: 'created_at', cast: 'timestamptz' },
-      { name: 'updated_at', cast: 'timestamptz' },
-    ],
-    rails,
-    (rail) => [
-      rail.railId,
-      rail.featureId,
-      rail.mechanizationStatus,
-      rail.railName,
-      rail.normalizedRailName,
-      rail.railType,
-      rail.dddOwner,
-      rail.railStatus,
-      toJson(rail.symbolRefs),
-      toJson(rail.implementationRefs),
-      toJson(rail.documentationRefs),
-      toJson(rail.governingSources),
-      toJson(rail.allowedImplementationSurfaces),
-      toJson(rail.architectureGuards),
-      toJson(rail.completionGate),
-      rail.sourcePath,
-      rail.sourceContentSha256,
-      toJson(rail.rawRail),
-      toJson(rail.rawManifest),
-      rail.revision,
-      rail.createdBy,
-      rail.createdAt,
-      rail.updatedAt || rail.createdAt,
-    ],
-    {
-      suffix: `on conflict (rail_id) do update set
-        feature_id = excluded.feature_id,
-        mechanization_status = excluded.mechanization_status,
-        rail_name = excluded.rail_name,
-        normalized_rail_name = excluded.normalized_rail_name,
-        rail_type = excluded.rail_type,
-        ddd_owner = excluded.ddd_owner,
-        rail_status = excluded.rail_status,
-        symbol_refs = excluded.symbol_refs,
-        implementation_refs = excluded.implementation_refs,
-        documentation_refs = excluded.documentation_refs,
-        governing_sources = excluded.governing_sources,
-        allowed_implementation_surfaces = excluded.allowed_implementation_surfaces,
-        architecture_guards = excluded.architecture_guards,
-        completion_gate = excluded.completion_gate,
-        source_path = excluded.source_path,
-        source_content_sha256 = excluded.source_content_sha256,
-        raw_rail = excluded.raw_rail,
-        raw_manifest = excluded.raw_manifest,
-        revision = greatest(${schemaName}.feature_mechanization_local_rails.revision, excluded.revision),
-        updated_at = now()`,
-    }
-  );
-
-  await refreshLocalFeatureMechanizationRailSourceHashes(client);
-}
-
-async function restoreLocalFeatureMechanizationOperations(client, operations) {
-  await insertRows(
-    client,
-    'feature_mechanization_local_operations',
-    [
-      'operation_id',
-      'idempotency_key',
-      'operation_type',
-      'actor',
-      'rail_id',
-      'source_path',
-      'source_content_sha256',
-      'expected_revision',
-      'previous_revision',
-      'resulting_revision',
-      { name: 'payload', cast: 'jsonb' },
-      { name: 'created_at', cast: 'timestamptz' },
-    ],
-    operations,
-    (operation) => [
-      operation.operationId,
-      operation.idempotencyKey,
-      operation.operationType,
-      operation.actor,
-      operation.railId,
-      operation.sourcePath,
-      operation.sourceContentSha256,
-      operation.expectedRevision,
-      operation.previousRevision,
-      operation.resultingRevision,
-      toJson(operation.payload),
-      operation.createdAt,
-    ],
-    {
-      suffix: 'on conflict (operation_id) do nothing',
-    }
-  );
-}
-
-async function restoreLocalGovernanceComponentState(client, snapshot) {
-  await insertRows(
-    client,
-    'governance_component_local_definitions',
-    [
-      'component_id',
-      'source_path',
-      'source_content_sha256',
-      'revision',
-      'name',
-      'level',
-      'parent_id',
-      'root_unit',
-      'domain_unit',
-      'status',
-      'children_required',
-      'owned_concern',
-      'ddd_owner',
-      'cq_rails',
-      'created_by',
-      { name: 'created_at', cast: 'timestamptz' },
-    ],
-    snapshot.governanceComponentDefinitions,
-    (definition) => [
-      definition.componentId,
-      definition.sourcePath,
-      definition.sourceContentSha256,
-      definition.revision,
-      definition.name,
-      definition.level,
-      definition.parentComponentId,
-      definition.rootUnit,
-      definition.domainUnit,
-      definition.status,
-      definition.childrenRequired,
-      definition.ownedConcern,
-      definition.dddOwner,
-      definition.cqRails,
-      definition.createdBy,
-      definition.createdAt,
-    ]
-  );
-
-  await insertRows(
-    client,
-    'governance_component_local_ownership_patterns',
-    [
-      'component_id',
-      'pattern_kind',
-      'pattern',
-      'pattern_order',
-      { name: 'created_at', cast: 'timestamptz' },
-    ],
-    snapshot.governanceComponentOwnershipPatterns,
-    (pattern) => [
-      pattern.componentId,
-      pattern.patternKind,
-      pattern.pattern,
-      pattern.patternOrder,
-      pattern.createdAt,
-    ]
-  );
-
-  await insertRows(
-    client,
-    'governance_component_local_semantic_items',
-    [
-      'component_id',
-      'item_kind',
-      'item_value',
-      'item_order',
-      { name: 'created_at', cast: 'timestamptz' },
-    ],
-    snapshot.governanceComponentSemanticItems,
-    (item) => [item.componentId, item.itemKind, item.itemValue, item.itemOrder, item.createdAt]
-  );
-
-  await insertRows(
-    client,
-    'governance_component_local_operations',
-    [
-      'operation_id',
-      'idempotency_key',
-      'operation_type',
-      'actor',
-      'component_id',
-      'source_path',
-      'source_content_sha256',
-      'expected_revision',
-      'previous_revision',
-      'resulting_revision',
-      { name: 'payload', cast: 'jsonb' },
-      { name: 'created_at', cast: 'timestamptz' },
-    ],
-    snapshot.governanceComponentOperations,
-    (operation) => [
-      operation.operationId,
-      operation.idempotencyKey,
-      operation.operationType,
-      operation.actor,
-      operation.componentId,
-      operation.sourcePath,
-      operation.sourceContentSha256,
-      operation.expectedRevision,
-      operation.previousRevision,
-      operation.resultingRevision,
-      toJson(operation.payload),
-      operation.createdAt,
-    ]
-  );
-}
-
-async function restoreFowlerAnalysisState(client, snapshot) {
-  await insertRows(
-    client,
-    'fowler_analysis_dispositions',
-    [
-      'document_path',
-      'disposition_status',
-      'disposition_kind',
-      'canonical_target_path',
-      'reason',
-      'source_content_sha256',
-      'recorded_by',
-      { name: 'recorded_at', cast: 'timestamptz' },
-      { name: 'raw_disposition', cast: 'jsonb' },
-    ],
-    snapshot.fowlerAnalysisDispositions,
-    (disposition) => [
-      disposition.documentPath,
-      disposition.dispositionStatus,
-      disposition.dispositionKind,
-      disposition.canonicalTargetPath,
-      disposition.reason,
-      disposition.sourceContentSha256,
-      disposition.recordedBy,
-      disposition.recordedAt,
-      toJson(disposition.rawDisposition),
-    ]
-  );
-  await insertRows(
-    client,
-    'fowler_analysis_canonical_targets',
-    [
-      'document_path',
-      'target_path',
-      'target_kind',
-      'target_status',
-      'reason',
-      'source_content_sha256',
-      'linked_by',
-      { name: 'linked_at', cast: 'timestamptz' },
-      { name: 'raw_target', cast: 'jsonb' },
-    ],
-    snapshot.fowlerAnalysisCanonicalTargets,
-    (target) => [
-      target.documentPath,
-      target.targetPath,
-      target.targetKind,
-      target.targetStatus,
-      target.reason,
-      target.sourceContentSha256,
-      target.linkedBy,
-      target.linkedAt,
-      toJson(target.rawTarget),
-    ]
-  );
-  await insertRows(
-    client,
-    'fowler_analysis_reference_resolutions',
-    [
-      'document_path',
-      'reference_path',
-      'relation_type',
-      'resolution_status',
-      'canonical_target_path',
-      'reason',
-      'source_content_sha256',
-      'resolved_by',
-      { name: 'resolved_at', cast: 'timestamptz' },
-      { name: 'raw_resolution', cast: 'jsonb' },
-    ],
-    snapshot.fowlerAnalysisReferenceResolutions,
-    (resolution) => [
-      resolution.documentPath,
-      resolution.referencePath,
-      resolution.relationType,
-      resolution.resolutionStatus,
-      resolution.canonicalTargetPath,
-      resolution.reason,
-      resolution.sourceContentSha256,
-      resolution.resolvedBy,
-      resolution.resolvedAt,
-      toJson(resolution.rawResolution),
-    ]
-  );
-  await insertRows(
-    client,
-    'fowler_analysis_retirement_decisions',
-    [
-      'document_path',
-      'decision_status',
-      'reason',
-      'source_content_sha256',
-      'decided_by',
-      { name: 'decided_at', cast: 'timestamptz' },
-      { name: 'raw_decision', cast: 'jsonb' },
-    ],
-    snapshot.fowlerAnalysisRetirementDecisions,
-    (decision) => [
-      decision.documentPath,
-      decision.decisionStatus,
-      decision.reason,
-      decision.sourceContentSha256,
-      decision.decidedBy,
-      decision.decidedAt,
-      toJson(decision.rawDecision),
-    ]
-  );
-  await insertRows(
-    client,
-    'fowler_analysis_operations',
-    [
-      'operation_id',
-      'idempotency_key',
-      'operation_type',
-      'actor',
-      'document_path',
-      'target_path',
-      'reference_path',
-      'relation_type',
-      'source_content_sha256',
-      { name: 'payload', cast: 'jsonb' },
-      { name: 'created_at', cast: 'timestamptz' },
-    ],
-    snapshot.fowlerAnalysisOperations,
-    (operation) => [
-      operation.operationId,
-      operation.idempotencyKey,
-      operation.operationType,
-      operation.actor,
-      operation.documentPath,
-      operation.targetPath,
-      operation.referencePath,
-      operation.relationType,
-      operation.sourceContentSha256,
-      toJson(operation.payload),
-      operation.createdAt,
     ]
   );
 }
@@ -3525,7 +3159,6 @@ async function importContent(options = {}) {
         .map((document) => document.sourcePath)
         .filter((sourcePath) => /^buzon\/.*\.md$/i.test(toPosix(sourcePath))),
     });
-  const canonicalStateSnapshot = readCanonicalStateSnapshot();
   const dbGovernanceSurfaceCatalog = readDbGovernanceSurfaceCatalog();
   const dbtProjectRoundtripCapabilityCatalog = readDbtProjectRoundtripCapabilityCatalog();
   let docsDispositionSnapshot;
@@ -3539,8 +3172,7 @@ async function importContent(options = {}) {
 
   try {
     await beginImportTransaction(client);
-    await applyCurrentPlanningDbSchema({ client, silent: true, manageTransaction: false });
-    await restoreArchitectureState(client, canonicalStateSnapshot.architectureState);
+    await assertPlanningDbCurrentSchemaReady(client);
     await restoreDbGovernanceSurfaceCatalog(client, dbGovernanceSurfaceCatalog);
     await restoreDbtProjectRoundtripCapabilityCatalog(client, dbtProjectRoundtripCapabilityCatalog);
     docsDispositionSnapshot = buildDocsDispositionSnapshot({
@@ -3550,8 +3182,6 @@ async function importContent(options = {}) {
       documents: knowledgeDocuments,
     });
     await insertGovernanceSnapshot(client, governanceSnapshot);
-    await restoreLocalGovernanceComponentState(client, canonicalStateSnapshot);
-    await restoreFowlerAnalysisState(client, canonicalStateSnapshot);
     await refreshComponentTreeMaterializedProjection(client);
     await refreshComponentFileOwnershipMaterializedProjection(client);
     await refreshComponentRuleEvaluationMaterializedProjection(client);
@@ -3567,14 +3197,6 @@ async function importContent(options = {}) {
     await insertKnowledgeIntakeRepositoryReferences(
       client,
       knowledgeIntakeRepositoryReferenceSnapshot
-    );
-    await restoreLocalFeatureMechanizationRails(
-      client,
-      canonicalStateSnapshot.featureMechanizationRails
-    );
-    await restoreLocalFeatureMechanizationOperations(
-      client,
-      canonicalStateSnapshot.featureMechanizationRailOperations
     );
     await refreshComponentTreeMaterializedProjection(client);
     await refreshComponentFileOwnershipMaterializedProjection(client);
@@ -4714,7 +4336,6 @@ module.exports = {
   normalizeText,
   parseArgs,
   readTrackedDocumentPaths,
-  readCanonicalStateSnapshot,
   readDbGovernanceSurfaceCatalog,
   readDbtProjectRoundtripCapabilityCatalog,
   readGovernanceSourceState,
@@ -4725,11 +4346,6 @@ module.exports = {
   refreshComponentTreeMaterializedProjection,
   refreshComponentFileOwnershipMaterializedProjection,
   refreshComponentRuleEvaluationMaterializedProjection,
-  refreshLocalFeatureMechanizationRailSourceHashes,
-  restoreLocalFeatureMechanizationOperations,
-  restoreLocalFeatureMechanizationRails,
-  restoreLocalGovernanceComponentState,
-  restoreFowlerAnalysisState,
   restoreDbGovernanceSurfaceCatalog,
   restoreDbtProjectRoundtripCapabilityCatalog,
   runPlanningImport,

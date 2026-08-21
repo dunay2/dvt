@@ -15,7 +15,8 @@ feature-mechanization list queries. Markdown manifests are imported evidence;
 DB-authored current decisions remain authoritative.
 
 DDL and read views live only in `tools/planning-db/schema.sql`. Current
-DB-authored decisions live only in `tools/planning-db/state/canonical-state.json`.
+DB-authored decisions live only in Planning DB and are read through governed
+queries.
 Validation is `pnpm docs:feature-mechanization:implementation`,
 `node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs scripts/planning-db-operate.test.cjs`,
 and `pnpm verify:prepush`.

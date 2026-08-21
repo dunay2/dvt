@@ -285,7 +285,6 @@ allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/frontend-and-ux/vtx1-visual-transform-recipe-authority-plan-20260816.md
   - docs/.manifest.json
   - docs/**/index.md
-  - tools/planning-db/state/canonical-state.json
   - tools/planning-db/state/db-governance-surfaces.json
   - docs/planning/status/system-governance-unit-index.units.yaml
   - docs/planning/status/system-governance-unit-index-20260501.md

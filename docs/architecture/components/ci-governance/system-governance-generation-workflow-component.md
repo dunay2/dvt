@@ -222,9 +222,9 @@ The command runs the docs and governance generation stages in this order:
    `governance:db:import`; their local artifacts are written only after the DB is
    fresh. Only after generated outputs are stable does it run
    `planning:db:inventory:check`, `docs:db-surface-inventory:generate`,
-   `planning:db:export:check`, `governance:db:import`,
-   `governance:db:check`, DB-sourced coverage/remediation generation, and
-   `governance:db:export:check`.
+   `governance:db:import`, `governance:db:check`, and DB-sourced
+   coverage/remediation generation. Export and publication commands are not
+   refresh stages and run only on explicit request.
 
 The fingerprint is a convergence guard, not a new source of truth. Git-tracked
 sources, generated-docs policy, unit ownership, and generator scripts remain

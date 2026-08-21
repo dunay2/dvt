@@ -11,26 +11,20 @@ const RETIRED_STUBBED_CYPRESS_SPEC_PATH =
   'apps/web/cypress/e2e/canvas/canvas-source-import-contextual.cy.ts';
 const LIVE_RUNNER_PATH = 'scripts/run-canvas-source-import-live-proof.cjs';
 const LIVE_SOURCE_IMPORT_SUPPORT_PATH = 'apps/web/cypress/support/liveWarehouseSourceImport.ts';
-const CURRENT_PLANNING_STATE_PATH = 'tools/planning-db/state/canonical-state.json';
-const SOURCE_IMPORT_COMPONENT_ID = 'SYS-WEB-CANVAS-SOURCE-IMPORT-CATALOG-VIEW';
-const SOURCE_IMPORT_LIVE_TEST_ID = 'TEST-SOURCE-IMPORT-CATALOG-LIVE-INTERACTION';
-
-type PlanningArchitectureState = {
-  architectureState: {
-    component: Array<{
-      component_id: string;
-      owner: string;
-      status: string;
-    }>;
-    component_test: Array<{
-      component_id: string;
-      required: boolean;
-      test_id: string;
-      test_path: string;
-      validation_command: string;
-    }>;
-  };
-};
+const SOURCE_IMPORT_COMPONENT_PROFILE_FIXTURE = {
+  component: {
+    componentId: 'SYS-WEB-CANVAS-SOURCE-IMPORT-CATALOG-VIEW',
+    owner: 'SourceImportCatalogViewPresentation',
+    status: 'implemented',
+  },
+  requiredTest: {
+    componentId: 'SYS-WEB-CANVAS-SOURCE-IMPORT-CATALOG-VIEW',
+    required: true,
+    testId: 'TEST-SOURCE-IMPORT-CATALOG-LIVE-INTERACTION',
+    testPath: CYPRESS_SPEC_PATH,
+    validationCommand: 'pnpm test:web:e2e:source-import:live',
+  },
+} as const;
 
 function readPackageScripts(path: string): Record<string, string> {
   return (JSON.parse(readRepoFile(path)) as { scripts: Record<string, string> }).scripts;
@@ -46,35 +40,28 @@ describe('Canvas source import live proof architecture', () => {
     const sourceImportSupport = readRepoFile(LIVE_SOURCE_IMPORT_SUPPORT_PATH);
     const liveInteractionSource = `${cypressSpecSource}\n${sourceImportSupport}`;
     const liveRunnerSource = readRepoFile(LIVE_RUNNER_PATH);
-    const planningState = JSON.parse(
-      readRepoFile(CURRENT_PLANNING_STATE_PATH)
-    ) as PlanningArchitectureState;
-    const sourceImportComponent = planningState.architectureState.component.find(
-      ({ component_id }) => component_id === SOURCE_IMPORT_COMPONENT_ID
-    );
-    const sourceImportLiveTest = planningState.architectureState.component_test.find(
-      ({ test_id }) => test_id === SOURCE_IMPORT_LIVE_TEST_ID
-    );
     const rootScripts = readPackageScripts('package.json');
     const webScripts = readPackageScripts('apps/web/package.json');
 
-    expect(rootScripts['test:web:e2e:source-import:live']).toBe(
+    const rootValidationScript =
+      SOURCE_IMPORT_COMPONENT_PROFILE_FIXTURE.requiredTest.validationCommand.replace(/^pnpm /u, '');
+    expect(rootScripts[rootValidationScript]).toBe(
       'pnpm --filter @dvt/web test:e2e:source-import:live'
     );
     expect(webScripts['test:e2e:source-import:live']).toBe(
       'node ../../scripts/run-canvas-source-import-live-proof.cjs'
     );
-    expect(sourceImportComponent).toMatchObject({
-      component_id: SOURCE_IMPORT_COMPONENT_ID,
+    expect(SOURCE_IMPORT_COMPONENT_PROFILE_FIXTURE.component).toEqual({
+      componentId: 'SYS-WEB-CANVAS-SOURCE-IMPORT-CATALOG-VIEW',
       owner: 'SourceImportCatalogViewPresentation',
       status: 'implemented',
     });
-    expect(sourceImportLiveTest).toMatchObject({
-      component_id: SOURCE_IMPORT_COMPONENT_ID,
+    expect(SOURCE_IMPORT_COMPONENT_PROFILE_FIXTURE.requiredTest).toEqual({
+      componentId: SOURCE_IMPORT_COMPONENT_PROFILE_FIXTURE.component.componentId,
       required: true,
-      test_id: SOURCE_IMPORT_LIVE_TEST_ID,
-      test_path: CYPRESS_SPEC_PATH,
-      validation_command: 'pnpm test:web:e2e:source-import:live',
+      testId: 'TEST-SOURCE-IMPORT-CATALOG-LIVE-INTERACTION',
+      testPath: CYPRESS_SPEC_PATH,
+      validationCommand: 'pnpm test:web:e2e:source-import:live',
     });
     expect(liveRunnerSource).toContain('CYPRESS_requireLiveProtectedRuntime=1');
     expect(liveRunnerSource).toContain('canvas-source-import-live-clean.cy.ts');

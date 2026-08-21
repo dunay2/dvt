@@ -91,7 +91,6 @@ completionGate:
   - pnpm docs:feature-mechanization -- --feature AR-C1-T4-API-SNAPSHOT-FIXTURE
   - pnpm --filter dvt-api test -- test/entrypoints/http/adminRoutes.test.ts test/contracts/adminRebuildSnapshotAccessContract.test.ts test/architecture/workflowSnapshotFixtureSemantics.architecture.test.ts
   - pnpm --filter dvt-api typecheck
-  - pnpm planning:db:export:check
   - pnpm verify:prepush
 redGreenCycles:
   - id: workflow-snapshot-fixture-semantic-owner

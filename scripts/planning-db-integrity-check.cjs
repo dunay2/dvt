@@ -14,6 +14,14 @@ const { readSourceDriftRows } = require('./planning-db/queries/code-symbol-query
 
 const databaseUrl = process.env.PLANNING_DATABASE_URL || process.env.DATABASE_URL || defaultPgUrl;
 const severityOrder = Object.freeze(['blocker', 'error', 'warning', 'info']);
+const integrityScopes = Object.freeze(['operational', 'bootstrap']);
+const bootstrapAuthorityDependentFindings = Object.freeze({
+  componentIntegrity: new Set([
+    'component_evidence_gap',
+    'component_missing_architecture_authority',
+  ]),
+  railVocabulary: new Set(['gap_rail']),
+});
 const progressiveBaseline = Object.freeze({
   componentIntegrity: Object.freeze({
     architecture_drift: Object.freeze({ total: 0 }),
@@ -37,10 +45,17 @@ const progressiveBaseline = Object.freeze({
   }),
 });
 
-function parseArgs(args = process.argv.slice(2)) {
+function parseArgs(args = process.argv.slice(2), env = process.env) {
+  const configuredScope = env.PLANNING_DB_INTEGRITY_SCOPE || 'operational';
+  if (!integrityScopes.includes(configuredScope)) {
+    throw new Error(
+      `Invalid PLANNING_DB_INTEGRITY_SCOPE "${configuredScope}". Expected operational or bootstrap.`
+    );
+  }
   const options = {
     strict: false,
     limit: 5000,
+    scope: configuredScope,
   };
 
   for (let index = 0; index < args.length; index += 1) {
@@ -51,6 +66,14 @@ function parseArgs(args = process.argv.slice(2)) {
     }
     if (arg === '--report') {
       options.strict = false;
+      continue;
+    }
+    if (arg === '--bootstrap') {
+      options.scope = 'bootstrap';
+      continue;
+    }
+    if (arg === '--operational') {
+      options.scope = 'operational';
       continue;
     }
     if (arg === '--limit') {
@@ -82,11 +105,12 @@ function helpText() {
     'Planning DB integrity check',
     '',
     'Usage:',
-    '  node scripts/planning-db-integrity-check.cjs [--report|--strict] [--limit <n>]',
+    '  node scripts/planning-db-integrity-check.cjs [--report|--strict] [--bootstrap|--operational] [--limit <n>]',
     '',
     'Report mode exits 0 while historical debt is being retired.',
     'Report mode still exits 1 when progressive regression budgets are exceeded.',
     'Strict mode exits 1 on blocker or error findings, or on progressive regressions.',
+    'Bootstrap scope excludes authority-only gaps that an empty CI database cannot assess.',
   ].join('\n');
 }
 
@@ -173,10 +197,30 @@ function buildIntegrityCheckResult({
   railRows = [],
   sourceDriftRows = [],
   strict = false,
+  scope = 'operational',
 } = {}) {
+  if (!integrityScopes.includes(scope)) {
+    throw new Error(`Unknown Planning DB integrity scope "${scope}".`);
+  }
+  const effectiveComponentRows =
+    scope === 'bootstrap'
+      ? componentRows.filter(
+          (row) => !bootstrapAuthorityDependentFindings.componentIntegrity.has(row.finding_kind)
+        )
+      : componentRows;
+  const effectiveRailRows =
+    scope === 'bootstrap'
+      ? railRows.filter(
+          (row) => !bootstrapAuthorityDependentFindings.railVocabulary.has(row.finding_kind)
+        )
+      : railRows;
+  const skippedAuthorityFindings = {
+    componentIntegrity: componentRows.length - effectiveComponentRows.length,
+    railVocabulary: railRows.length - effectiveRailRows.length,
+  };
   const kindCounts = {
-    componentIntegrity: countRowsByKindAndSeverity(componentRows),
-    railVocabulary: countRowsByKindAndSeverity(railRows),
+    componentIntegrity: countRowsByKindAndSeverity(effectiveComponentRows),
+    railVocabulary: countRowsByKindAndSeverity(effectiveRailRows),
     sourceDrift: countRowsByKindAndSeverity(sourceDriftRows),
   };
   const baselineViolations = [
@@ -194,8 +238,8 @@ function buildIntegrityCheckResult({
     ).map((violation) => ({ ...violation, surface: 'source_drift' })),
   ];
   const counts = {
-    componentIntegrity: countRowsBySeverity(componentRows),
-    railVocabulary: countRowsBySeverity(railRows),
+    componentIntegrity: countRowsBySeverity(effectiveComponentRows),
+    railVocabulary: countRowsBySeverity(effectiveRailRows),
     sourceDrift: countRowsBySeverity(sourceDriftRows),
   };
   const blocking =
@@ -205,9 +249,11 @@ function buildIntegrityCheckResult({
 
   return {
     mode: strict ? 'strict' : 'report',
+    scope,
     strict,
     counts,
     kindCounts,
+    skippedAuthorityFindings,
     baselineViolations,
     exitCode: (strict && blocking) || baselineViolations.length > 0 ? 1 : 0,
   };
@@ -223,10 +269,11 @@ function formatCountLine(label, counts) {
 
 function formatIntegrityCheckSummary(result) {
   const lines = [
-    `[planning:db:integrity] mode=${result.mode} exit=${result.exitCode}`,
+    `[planning:db:integrity] mode=${result.mode} scope=${result.scope} exit=${result.exitCode}`,
     formatCountLine('component_integrity', result.counts.componentIntegrity),
     formatCountLine('rail_vocabulary', result.counts.railVocabulary),
     formatCountLine('source_drift', result.counts.sourceDrift),
+    `authority_dependent_skipped component_integrity=${result.skippedAuthorityFindings.componentIntegrity} rail_vocabulary=${result.skippedAuthorityFindings.railVocabulary}`,
     `progressive_baseline ${result.baselineViolations.length === 0 ? 'pass' : `fail violations=${result.baselineViolations.length}`}`,
   ];
   for (const violation of result.baselineViolations) {
@@ -259,6 +306,7 @@ async function runIntegrityCheck(options = {}) {
       railRows,
       sourceDriftRows,
       strict: options.strict === true,
+      scope: options.scope || 'operational',
     });
   } finally {
     if (ownsClient) {

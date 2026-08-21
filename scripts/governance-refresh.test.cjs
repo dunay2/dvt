@@ -49,15 +49,18 @@ test('governance refresh keeps DB-backed publication generation out of routine r
     [
       'planning:db:inventory:check',
       'docs:db-surface-inventory:generate',
-      'planning:db:export:check',
       'governance:db:import',
       'docs:dbt-roundtrip-capabilities:generate',
       'docs:knowledge-intake:generate',
       'governance:db:check',
       'docs:governance:coverage-report',
       'docs:governance:remediation-queue',
-      'governance:db:export:check',
     ]
+  );
+  assert.equal(
+    stages.databaseStages.some((stage) => /export/u.test(stage.script)),
+    false,
+    'routine governance refresh must not export or check exported DB projections'
   );
   assert.deepEqual(
     stages.databaseStages.find((stage) => stage.id === 'governance-db-import-final').args,

@@ -189,7 +189,6 @@ completionGate:
   - pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/artifacts-workspace-project-files.cy.ts
   - pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
   - pnpm planning:db:check
-  - pnpm planning:db:export:check
   - pnpm verify:prepush
 redGreenCycles:
   - id: workspace-project-artifacts

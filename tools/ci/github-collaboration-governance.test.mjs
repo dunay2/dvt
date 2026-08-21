@@ -94,25 +94,11 @@ test('trusted PR metadata mutation is isolated from candidate-code validation', 
   assert.equal(checkout.with['fetch-depth'], 2);
   assert.equal(checkout.with['persist-credentials'], false);
 
-  const evidenceCheckout = prQuality.jobs['pr-checks'].steps.find(
-    (step) => step.name === 'Checkout reviewed-commit evidence history'
-  );
-  assert.equal(evidenceCheckout.uses, 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1');
-  assert.equal(evidenceCheckout.with['fetch-depth'], 0);
-  assert.equal(evidenceCheckout.with.filter, 'blob:none');
-  assert.equal(evidenceCheckout.with.path, '.git-evidence');
-  assert.equal(evidenceCheckout.with['persist-credentials'], false);
-
-  const capabilityCheck = prQuality.jobs['pr-checks'].steps.find(
-    (step) => step.name === 'Validate DBT round-trip capability truth'
-  );
-  assert.equal(capabilityCheck.env.DVT_GIT_EVIDENCE_REPO, '${{ github.workspace }}/.git-evidence');
-
-  const evidenceCleanup = prQuality.jobs['pr-checks'].steps.find(
-    (step) => step.name === 'Remove reviewed-commit evidence checkout'
-  );
-  assert.equal(evidenceCleanup.if, 'always()');
-  assert.match(evidenceCleanup.run, /rm -rf -- "\$\{\{ github\.workspace \}\}\/\.git-evidence"/u);
+  const stepNames = prQuality.jobs['pr-checks'].steps.map((step) => step.name);
+  assert.equal(stepNames.includes('Checkout reviewed-commit evidence history'), false);
+  assert.equal(stepNames.includes('Validate DBT round-trip capability truth'), false);
+  assert.equal(stepNames.includes('Remove reviewed-commit evidence checkout'), false);
+  assert.doesNotMatch(prQualitySource, /DVT_GIT_EVIDENCE_REPO/u);
 
   assert.doesNotMatch(prQualitySource, /uses: \.\/\.github\/actions\/fetch-scope-base/u);
   assert.match(prQualitySource, /GIT_BASE:\s*\$\{\{ github\.event\.pull_request\.base\.sha \}\}/u);
