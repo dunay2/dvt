@@ -51,9 +51,7 @@ function renderHookHost({
       },
       effects: {
         setDraftSession,
-        setSelectedNodes: vi.fn(),
         setInspectorNode: vi.fn(),
-        showInspectorPanel: vi.fn(),
         setCurrentPlan,
         onLayoutComplete: vi.fn(),
         invalidateInFlightSaveAttempt,

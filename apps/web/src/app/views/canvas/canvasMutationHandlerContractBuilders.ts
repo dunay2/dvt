@@ -23,7 +23,13 @@ function sourceImport(contracts: CanvasMutationContracts): CanvasSourceImportCon
     state: {
       graphModel: contracts.state.graphModel,
     },
-    effects: contracts.effects,
+    effects: {
+      setDraftSession: contracts.effects.setDraftSession,
+      setInspectorNode: contracts.effects.setInspectorNode,
+      setCurrentPlan: contracts.effects.setCurrentPlan,
+      onLayoutComplete: contracts.effects.onLayoutComplete,
+      invalidateInFlightSaveAttempt: contracts.effects.invalidateInFlightSaveAttempt,
+    },
     policy: contracts.policy,
   };
 }
