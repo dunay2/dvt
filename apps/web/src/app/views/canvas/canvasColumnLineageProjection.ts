@@ -6,6 +6,7 @@ import { buildCanvasNodePresentationTruth } from '../../components/canvas/canvas
 import type { CoreNodeRole, CanonicalNode } from '../../types/canonical';
 import { areCanvasColumnTypesCompatible } from './canvasColumnMappingAuthoring';
 import { projectDbtModelArtifact } from './canvasDbtModelArtifactProjection';
+import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import { readDvtTransformLineageProvenance } from './canvasTransformationSqlMirror';
 
@@ -216,6 +217,67 @@ export function projectCanvasColumnLineage(args: {
             sourceNodeId: sourceNode.id,
             sourceColumnName: sourceColumn.name,
             sourceColumnId: sourceColumn.name,
+            targetNodeId: model.id,
+            targetColumnName: targetColumn.name,
+            targetColumnId: targetColumn.name,
+            outputId: targetColumn.name,
+            terminal: false,
+            removable: false,
+          })
+        );
+      }
+      continue;
+    }
+
+    if (model.pluginId === 'dbt' && model.kind === 'dbt:snapshot') {
+      if (!args.expandedNodeIds.has(model.id)) continue;
+      const targetColumns = projectCanvasNodePresentationTruth({
+        node: model,
+        nodes: args.nodes,
+        edges: args.edges,
+      }).columns.visible;
+      const upstreamColumns = args.edges
+        .filter((edge) => edge.targetId === model.id)
+        .flatMap((edge) => {
+          const sourceNode = nodeById.get(edge.sourceId);
+          if (
+            sourceNode == null ||
+            sourceNode.pluginId !== 'dbt' ||
+            sourceNode.kind !== 'dbt:model' ||
+            !args.expandedNodeIds.has(sourceNode.id)
+          ) {
+            return [];
+          }
+          const artifact = projectDbtModelArtifact({
+            modelNode: sourceNode,
+            nodes: args.nodes,
+            edges: args.edges,
+          });
+          if (!artifact.ok || artifact.artifact.provenance !== 'generated') return [];
+          return projectCanvasNodePresentationTruth({
+            node: sourceNode,
+            nodes: args.nodes,
+            edges: args.edges,
+          }).columns.visible.map((column) => ({ node: sourceNode, column }));
+        });
+
+      for (const targetColumn of targetColumns) {
+        if (targetColumns.filter((column) => column.name === targetColumn.name).length !== 1) {
+          continue;
+        }
+        const compatibleSources = upstreamColumns.filter(
+          ({ column }) =>
+            column.name === targetColumn.name &&
+            areCanvasColumnTypesCompatible(column.type, targetColumn.type)
+        );
+        if (compatibleSources.length !== 1) continue;
+        const source = compatibleSources[0];
+        if (source == null) continue;
+        projected.push(
+          buildLineageEdge({
+            sourceNodeId: source.node.id,
+            sourceColumnName: source.column.name,
+            sourceColumnId: source.column.name,
             targetNodeId: model.id,
             targetColumnName: targetColumn.name,
             targetColumnId: targetColumn.name,

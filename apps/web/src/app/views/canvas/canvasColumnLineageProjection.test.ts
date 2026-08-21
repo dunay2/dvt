@@ -303,6 +303,125 @@ describe('Canvas column lineage projection', () => {
     );
   });
 
+  it('derives read-only identity lineage from a generated DBT model to its snapshot', () => {
+    const source = {
+      ...buildNode('warehouse-source', 'dvt:source', 'input', [
+        { name: 'event_id', type: 'text' },
+        { name: 'event_type', type: 'text' },
+      ]),
+      pluginId: 'dvt.warehouse-source',
+      metadata: {
+        connectedSourceRef: {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef: {
+            schemaVersion: 'connection-ref.v1',
+            connectionId: 'local-postgres-proof',
+            provider: 'postgres',
+          },
+          sourceObjectId: 'relation/dvt/dvt/auth_audit_events',
+        },
+        sourceName: 'local_postgres_proof_dvt_dvt',
+        schema: 'dvt',
+        tableName: 'auth_audit_events',
+        columns: [
+          { name: 'event_id', type: 'text' },
+          { name: 'event_type', type: 'text' },
+        ],
+      },
+    } satisfies CanonicalNode;
+    const model = {
+      ...buildNode('dbt-model', 'dbt:model', 'transform'),
+      pluginId: 'dbt',
+      metadata: { typeLabel: 'Model' },
+    } satisfies CanonicalNode;
+    const snapshot = {
+      ...buildNode('dbt-snapshot', 'dbt:snapshot', 'transform'),
+      pluginId: 'dbt',
+      metadata: {},
+    } satisfies CanonicalNode;
+    const edges = [
+      { sourceId: source.id, targetId: model.id },
+      { sourceId: model.id, targetId: snapshot.id },
+    ];
+
+    const projected = projectCanvasColumnLineage({
+      nodes: [source, model, snapshot],
+      edges,
+      expandedNodeIds: new Set([source.id, model.id, snapshot.id]),
+    }).filter((edge) => edge.target === snapshot.id);
+
+    expect(projected).toHaveLength(2);
+    expect(projected).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          source: model.id,
+          target: snapshot.id,
+          sourceHandle: createCanvasColumnHandleId({
+            direction: 'source',
+            nodeId: model.id,
+            columnId: 'event_id',
+          }),
+          targetHandle: createCanvasColumnHandleId({
+            direction: 'target',
+            nodeId: snapshot.id,
+            columnId: 'event_id',
+          }),
+          data: expect.objectContaining({
+            sourceColumnName: 'event_id',
+            targetColumnName: 'event_id',
+            removable: false,
+          }),
+        }),
+        expect.objectContaining({
+          data: expect.objectContaining({
+            sourceColumnName: 'event_type',
+            targetColumnName: 'event_type',
+            removable: false,
+          }),
+        }),
+      ])
+    );
+
+    expect(
+      projectCanvasColumnLineage({
+        nodes: [source, model, snapshot],
+        edges,
+        expandedNodeIds: new Set([source.id, model.id]),
+      }).filter((edge) => edge.target === snapshot.id)
+    ).toEqual([]);
+
+    const incompatibleSnapshot = {
+      ...snapshot,
+      metadata: { columns: [{ name: 'event_id', type: 'integer' }] },
+    } satisfies CanonicalNode;
+    expect(
+      projectCanvasColumnLineage({
+        nodes: [source, model, incompatibleSnapshot],
+        edges,
+        expandedNodeIds: new Set([source.id, model.id, snapshot.id]),
+      }).filter((edge) => edge.target === snapshot.id)
+    ).toEqual([]);
+
+    const authoredModel = {
+      ...model,
+      metadata: {
+        dbt: {
+          packageName: 'analytics',
+          materialized: 'view',
+          selectedSourceId: source.id,
+        },
+        config: { sql: 'select count(*) as event_count from dvt.auth_audit_events' },
+      },
+    } satisfies CanonicalNode;
+    expect(
+      projectCanvasColumnLineage({
+        nodes: [source, authoredModel, snapshot],
+        edges,
+        expandedNodeIds: new Set([source.id, model.id, snapshot.id]),
+      }).filter((edge) => edge.target === snapshot.id)
+    ).toEqual([]);
+  });
+
   it('does not invent DBT column lineage for authored model SQL', () => {
     const source = {
       ...buildNode('dbt-source', 'dbt:source', 'input', [{ name: 'order_id', type: 'integer' }]),
