@@ -310,8 +310,6 @@ jobs:
           PR_DELETIONS: ${{ github.event.pull_request.deletions }}
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
-          GIT_BASE: ${{ github.event.pull_request.base.sha }}
-          GIT_HEAD: ${{ github.event.pull_request.head.sha }}
 
       - name: Check if description is present
         if: github.event_name == 'pull_request'
