@@ -1372,7 +1372,9 @@ test('governance import clears every repopulated governance table before insert'
   assert.ok(governanceImportDeleteTables.includes('frontend_component_files'));
   assert.ok(governanceImportDeleteTables.includes('frontend_mechanical_truth_surfaces'));
   assert.ok(governanceImportDeleteTables.includes('risk_debt_items'));
-  assert.equal(governanceImportDeleteTables.at(-1), 'governance_sources');
+  assert.equal(governanceImportDeleteTables.includes('governance_sources'), false);
+  assert.equal(governanceImportDeleteTables.includes('governance_file_shards'), false);
+  assert.equal(governanceImportDeleteTables.includes('governance_files'), false);
 });
 
 test('frontend mechanical truth import reloads surface rows with JSONB metadata', async () => {
@@ -1727,6 +1729,7 @@ test('governance import batches heavy file table inserts', async () => {
 
   assert.equal(fileInsertQueries.length, 1);
   assert.match(fileInsertQueries[0].sql, /\),\s*\(/);
+  assert.match(fileInsertQueries[0].sql, /on conflict \(path\) do update set/u);
   assert.deepEqual(
     fileInsertQueries[0].params.filter((value) => value === 'F-A' || value === 'F-B'),
     ['F-A', 'F-B']
@@ -1736,6 +1739,19 @@ test('governance import batches heavy file table inserts', async () => {
       (value) => value === 'docs/example-a.md' || value === 'docs/example-b.md'
     ),
     ['docs/example-a.md', 'docs/example-b.md']
+  );
+  assert.ok(
+    queries.some(({ sql }) => sql.includes(`delete from ${schemaName}.governance_files where not`))
+  );
+  assert.ok(
+    queries.some(({ sql }) =>
+      sql.includes(`delete from ${schemaName}.governance_file_shards where not`)
+    )
+  );
+  assert.ok(
+    queries.some(({ sql }) =>
+      sql.includes(`delete from ${schemaName}.governance_sources where not`)
+    )
   );
 });
 

@@ -87,12 +87,9 @@ const governanceImportDeleteTables = [
   'governance_component_files',
   'governance_component_file_shards',
   'governance_fingerprints',
-  'governance_files',
-  'governance_file_shards',
   'governance_components',
   'governance_coverage',
   'governance_remediation',
-  'governance_sources',
 ];
 
 function databaseUrl() {
@@ -1954,7 +1951,15 @@ async function insertGovernanceSnapshot(client, snapshot) {
     await client.query(
       `insert into ${schemaName}.governance_sources
         (source_path, source_type, content_sha256, source_bytes, metadata, raw_source, raw_source_text, source_authority)
-       values ($1, $2, $3, $4, $5::jsonb, $6::jsonb, $7, $8)`,
+       values ($1, $2, $3, $4, $5::jsonb, $6::jsonb, $7, $8)
+       on conflict (source_path) do update set
+         source_type = excluded.source_type,
+         content_sha256 = excluded.content_sha256,
+         source_bytes = excluded.source_bytes,
+         metadata = excluded.metadata,
+         raw_source = excluded.raw_source,
+         raw_source_text = excluded.raw_source_text,
+         source_authority = excluded.source_authority`,
       [
         source.sourcePath,
         source.sourceType,
@@ -1972,7 +1977,13 @@ async function insertGovernanceSnapshot(client, snapshot) {
     await client.query(
       `insert into ${schemaName}.governance_file_shards
         (shard_id, source_path, file_count, content_hash, source_content_sha256, raw_shard)
-       values ($1, $2, $3, $4, $5, $6::jsonb)`,
+       values ($1, $2, $3, $4, $5, $6::jsonb)
+       on conflict (shard_id) do update set
+         source_path = excluded.source_path,
+         file_count = excluded.file_count,
+         content_hash = excluded.content_hash,
+         source_content_sha256 = excluded.source_content_sha256,
+         raw_shard = excluded.raw_shard`,
       [
         shard.shardId,
         shard.sourcePath,
@@ -2039,7 +2050,46 @@ async function insertGovernanceSnapshot(client, snapshot) {
       toJson(file.governanceRefs),
       file.sourceContentSha256,
       toJson(file.rawFile),
-    ]
+    ],
+    {
+      suffix: `on conflict (path) do update set
+         file_id = excluded.file_id,
+         shard_id = excluded.shard_id,
+         source_path = excluded.source_path,
+         path_hash = excluded.path_hash,
+         content_hash = excluded.content_hash,
+         governance_hash = excluded.governance_hash,
+         state_fingerprint = excluded.state_fingerprint,
+         owning_unit = excluded.owning_unit,
+         root_unit = excluded.root_unit,
+         domain_unit = excluded.domain_unit,
+         component_unit = excluded.component_unit,
+         owner_level = excluded.owner_level,
+         unit_status = excluded.unit_status,
+         governance_state = excluded.governance_state,
+         canonical_role = excluded.canonical_role,
+         evidence_state = excluded.evidence_state,
+         is_drift = excluded.is_drift,
+         is_legacy = excluded.is_legacy,
+         ddd_owner = excluded.ddd_owner,
+         cq_rails = excluded.cq_rails,
+         governance_refs = excluded.governance_refs,
+         source_content_sha256 = excluded.source_content_sha256,
+         raw_file = excluded.raw_file`,
+    }
+  );
+
+  await client.query(
+    `delete from ${schemaName}.governance_files where not (path = any($1::text[]))`,
+    [snapshot.files.map((file) => file.path)]
+  );
+  await client.query(
+    `delete from ${schemaName}.governance_file_shards where not (shard_id = any($1::text[]))`,
+    [snapshot.fileShards.map((shard) => shard.shardId)]
+  );
+  await client.query(
+    `delete from ${schemaName}.governance_sources where not (source_path = any($1::text[]))`,
+    [snapshot.sources.map((source) => source.sourcePath)]
   );
 
   for (const component of snapshot.components) {
