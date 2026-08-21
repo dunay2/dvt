@@ -2079,9 +2079,28 @@ async function insertGovernanceSnapshot(client, snapshot) {
     }
   );
 
+  const incomingGovernancePaths = snapshot.files.map((file) => file.path);
+  const protectedPrune = await client.query(
+    `select governed.path
+       from ${schemaName}.governance_files governed
+       join ${schemaName}.governed_source_content_overrides db_owned
+         on db_owned.path = governed.path
+      where not (governed.path = any($1::text[]))
+      order by governed.path
+      limit 20`,
+    [incomingGovernancePaths]
+  );
+  if (protectedPrune.rows.length > 0) {
+    const paths = protectedPrune.rows.map(({ path: governedPath }) => governedPath).join(', ');
+    throw new Error(
+      `DB-owned governed-source overlay blocks Planning DB import for removed path(s): ${paths}. ` +
+        'Retire that authority explicitly before removing its Git projection.'
+    );
+  }
+
   await client.query(
     `delete from ${schemaName}.governance_files where not (path = any($1::text[]))`,
-    [snapshot.files.map((file) => file.path)]
+    [incomingGovernancePaths]
   );
   await client.query(
     `delete from ${schemaName}.governance_file_shards where not (shard_id = any($1::text[]))`,
