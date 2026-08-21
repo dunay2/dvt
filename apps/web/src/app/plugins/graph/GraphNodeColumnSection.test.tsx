@@ -222,7 +222,7 @@ describe('GraphNodeColumnSection', () => {
         sourceHandleId: 'column:source:orders:order_id',
       },
     ] as const;
-    const render = (portDirections: readonly ('source' | 'target')[]) => (
+    const render = (portDirections: readonly ('source' | 'target')[]): React.ReactElement => (
       <ReactFlowProvider>
         <GraphNodeColumnSection
           nodeId="orders"
