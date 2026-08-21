@@ -21,13 +21,8 @@ const {
 const { buildCoverageReport } = require('./generate-governance-coverage-report.cjs');
 const { buildRemediationQueue } = require('./generate-governance-remediation-queue.cjs');
 const { defaultPgUrl } = require('./planning-db-run.cjs');
-const { applyCurrentPlanningDbSchema, schemaName } = require('./planning-db-schema.cjs');
-const {
-  assertArchitectureState,
-  assertCurrentRailDecisionState,
-  assertCurrentStateValue,
-  restoreArchitectureState,
-} = require('./planning-db-architecture-state.cjs');
+const { assertPlanningDbCurrentSchemaReady, schemaName } = require('./planning-db-schema.cjs');
+const { assertCurrentStateValue } = require('./planning-db-architecture-state.cjs');
 const {
   buildKnowledgeSnapshotFromDocuments,
 } = require('../tools/planning-db/knowledge/documentSnapshot.cjs');
@@ -41,13 +36,6 @@ const {
 const { buildCodeSymbolSnapshot } = require('./planning-db/code-symbol-inventory.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
-const canonicalStatePath = path.join(
-  repoRoot,
-  'tools',
-  'planning-db',
-  'state',
-  'canonical-state.json'
-);
 const dbGovernanceSurfaceCatalogPath = path.join(
   repoRoot,
   'tools',
@@ -2430,47 +2418,6 @@ async function insertCommandQueryRailSnapshot(client, snapshot) {
   );
 }
 
-function readCanonicalStateSnapshot(snapshotPath = canonicalStatePath) {
-  if (!fs.existsSync(snapshotPath)) {
-    throw new Error(`Missing Planning DB canonical state snapshot: ${snapshotPath}`);
-  }
-
-  const snapshot = JSON.parse(fs.readFileSync(snapshotPath, 'utf8'));
-  if (snapshot?.schemaVersion !== 1) {
-    throw new Error(
-      `Unsupported Planning DB canonical state schema version "${snapshot?.schemaVersion}".`
-    );
-  }
-
-  if (
-    !snapshot.architectureState ||
-    !Array.isArray(snapshot.featureMechanizationRails) ||
-    !Array.isArray(snapshot.featureMechanizationRailOperations) ||
-    !Array.isArray(snapshot.governanceComponentDefinitions) ||
-    !Array.isArray(snapshot.governanceComponentOwnershipPatterns) ||
-    !Array.isArray(snapshot.governanceComponentSemanticItems) ||
-    !Array.isArray(snapshot.governanceComponentOperations) ||
-    !Array.isArray(snapshot.fowlerAnalysisDispositions) ||
-    !Array.isArray(snapshot.fowlerAnalysisCanonicalTargets) ||
-    !Array.isArray(snapshot.fowlerAnalysisReferenceResolutions) ||
-    !Array.isArray(snapshot.fowlerAnalysisRetirementDecisions) ||
-    !Array.isArray(snapshot.fowlerAnalysisOperations)
-  ) {
-    throw new Error(
-      'Planning DB canonical state must contain architecture, feature mechanization, governance component, and Fowler analysis recovery state.'
-    );
-  }
-
-  assertArchitectureState(snapshot.architectureState);
-  assertCurrentStateValue(snapshot, 'canonicalState');
-  assertCurrentRailDecisionState(
-    snapshot.featureMechanizationRails,
-    snapshot.featureMechanizationRailOperations
-  );
-
-  return snapshot;
-}
-
 function readDbGovernanceSurfaceCatalog(catalogPath = dbGovernanceSurfaceCatalogPath) {
   if (!fs.existsSync(catalogPath)) {
     throw new Error(`Missing Planning DB governance surface catalog: ${catalogPath}`);
@@ -3525,7 +3472,6 @@ async function importContent(options = {}) {
         .map((document) => document.sourcePath)
         .filter((sourcePath) => /^buzon\/.*\.md$/i.test(toPosix(sourcePath))),
     });
-  const canonicalStateSnapshot = readCanonicalStateSnapshot();
   const dbGovernanceSurfaceCatalog = readDbGovernanceSurfaceCatalog();
   const dbtProjectRoundtripCapabilityCatalog = readDbtProjectRoundtripCapabilityCatalog();
   let docsDispositionSnapshot;
@@ -3539,8 +3485,7 @@ async function importContent(options = {}) {
 
   try {
     await beginImportTransaction(client);
-    await applyCurrentPlanningDbSchema({ client, silent: true, manageTransaction: false });
-    await restoreArchitectureState(client, canonicalStateSnapshot.architectureState);
+    await assertPlanningDbCurrentSchemaReady(client);
     await restoreDbGovernanceSurfaceCatalog(client, dbGovernanceSurfaceCatalog);
     await restoreDbtProjectRoundtripCapabilityCatalog(client, dbtProjectRoundtripCapabilityCatalog);
     docsDispositionSnapshot = buildDocsDispositionSnapshot({
@@ -3550,8 +3495,6 @@ async function importContent(options = {}) {
       documents: knowledgeDocuments,
     });
     await insertGovernanceSnapshot(client, governanceSnapshot);
-    await restoreLocalGovernanceComponentState(client, canonicalStateSnapshot);
-    await restoreFowlerAnalysisState(client, canonicalStateSnapshot);
     await refreshComponentTreeMaterializedProjection(client);
     await refreshComponentFileOwnershipMaterializedProjection(client);
     await refreshComponentRuleEvaluationMaterializedProjection(client);
@@ -3567,14 +3510,6 @@ async function importContent(options = {}) {
     await insertKnowledgeIntakeRepositoryReferences(
       client,
       knowledgeIntakeRepositoryReferenceSnapshot
-    );
-    await restoreLocalFeatureMechanizationRails(
-      client,
-      canonicalStateSnapshot.featureMechanizationRails
-    );
-    await restoreLocalFeatureMechanizationOperations(
-      client,
-      canonicalStateSnapshot.featureMechanizationRailOperations
     );
     await refreshComponentTreeMaterializedProjection(client);
     await refreshComponentFileOwnershipMaterializedProjection(client);
@@ -4714,7 +4649,6 @@ module.exports = {
   normalizeText,
   parseArgs,
   readTrackedDocumentPaths,
-  readCanonicalStateSnapshot,
   readDbGovernanceSurfaceCatalog,
   readDbtProjectRoundtripCapabilityCatalog,
   readGovernanceSourceState,

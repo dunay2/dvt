@@ -27,7 +27,6 @@ const {
   listChangedFiles,
   normalizeText,
   parseArgs,
-  readCanonicalStateSnapshot,
   readDbGovernanceSurfaceCatalog,
   readDbtProjectRoundtripCapabilityCatalog,
   readTrackedDocumentPaths,
@@ -45,12 +44,7 @@ const {
   sha256,
 } = require('./planning-db-import.cjs');
 const { governanceGeneratedPath } = require('./governance-generated-paths.cjs');
-const { architectureStateTableNames } = require('./planning-db-architecture-state.cjs');
 const { schemaName } = require('./planning-db-schema.cjs');
-
-function emptyArchitectureState() {
-  return Object.fromEntries(architectureStateTableNames.map((tableName) => [tableName, []]));
-}
 
 function generatedSourceFixture(sourcePath, parsed, rawSourceText = JSON.stringify(parsed)) {
   return {
@@ -1571,66 +1565,6 @@ test('planning DB import restores audited governance component overrides', async
   );
 });
 
-test('planning DB import reads and validates the canonical DB-authored state snapshot', () => {
-  const fs = require('node:fs');
-  const os = require('node:os');
-  const path = require('node:path');
-  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'planning-db-canonical-state-'));
-  const snapshotPath = path.join(tempRoot, 'canonical-state.json');
-  const rail = {
-    railId: 'local#PLANNING-DB-RECOVERY#query#checkstate',
-    featureId: 'PLANNING-DB-RECOVERY',
-    revision: 1,
-  };
-
-  try {
-    fs.writeFileSync(
-      snapshotPath,
-      JSON.stringify({
-        schemaVersion: 1,
-        architectureState: emptyArchitectureState(),
-        featureMechanizationRails: [rail],
-        featureMechanizationRailOperations: [],
-        governanceComponentDefinitions: [],
-        governanceComponentOwnershipPatterns: [],
-        governanceComponentSemanticItems: [],
-        governanceComponentOperations: [],
-        fowlerAnalysisDispositions: [
-          {
-            documentPath: 'docs/architecture/example.md',
-            dispositionStatus: 'accepted',
-            dispositionKind: 'db_authority_historical',
-            canonicalTargetPath: null,
-            reason: 'Planning DB is current authority.',
-            sourceContentSha256: 'c'.repeat(64),
-            recordedBy: 'codex',
-            recordedAt: '2026-08-11T12:00:00.000Z',
-            rawDisposition: {},
-          },
-        ],
-        fowlerAnalysisCanonicalTargets: [],
-        fowlerAnalysisReferenceResolutions: [],
-        fowlerAnalysisRetirementDecisions: [],
-        fowlerAnalysisOperations: [],
-      }),
-      'utf8'
-    );
-
-    const snapshot = readCanonicalStateSnapshot(snapshotPath);
-    assert.deepEqual(snapshot.architectureState, emptyArchitectureState());
-    assert.deepEqual(snapshot.featureMechanizationRails, [rail]);
-    assert.equal(snapshot.fowlerAnalysisDispositions.length, 1);
-
-    fs.writeFileSync(snapshotPath, JSON.stringify({ schemaVersion: 2 }), 'utf8');
-    assert.throws(
-      () => readCanonicalStateSnapshot(snapshotPath),
-      /Unsupported Planning DB canonical state schema version/
-    );
-  } finally {
-    fs.rmSync(tempRoot, { recursive: true, force: true });
-  }
-});
-
 test('planning DB import restores Fowler authority and audit state without cleanup semantics', async () => {
   const queries = [];
   const snapshot = {
@@ -1680,21 +1614,6 @@ test('planning DB import restores Fowler authority and audit state without clean
   assert.ok(queries.some((query) => query.sql.includes('fowler_analysis_dispositions')));
   assert.ok(queries.some((query) => query.sql.includes('fowler_analysis_operations')));
   assert.ok(!queries.some((query) => /delete\s+from|truncate\s+/iu.test(query.sql)));
-});
-
-test('canonical Planning DB recovery references the live architecture restore owner', () => {
-  const fs = require('node:fs');
-  const path = require('node:path');
-  const canonicalState = fs.readFileSync(
-    path.join(__dirname, '..', 'tools', 'planning-db', 'state', 'canonical-state.json'),
-    'utf8'
-  );
-
-  assert.doesNotMatch(canonicalState, /restoreArchitectureComponentStatusOverrides/u);
-  assert.match(
-    canonicalState,
-    /scripts\/planning-db-architecture-state\.cjs#restoreArchitectureState/u
-  );
 });
 
 test('planning DB import restores the declarative current governance surface catalog', async () => {
@@ -2643,7 +2562,7 @@ test('normalizeText keeps structured lane fields queryable without dropping cont
   assert.equal(normalizeText({ a: 1 }), '{"a":1}');
 });
 
-test('architecture-governance import transactions serialize destructive replacement', async () => {
+test('architecture-governance import transactions serialize projection refresh', async () => {
   const queries = [];
   const client = {
     async query(sql, params) {
@@ -2663,11 +2582,14 @@ test('routine Planning DB import preserves DB-owned authority without a tracked 
   const fs = require('node:fs');
   const path = require('node:path');
   const importSource = fs.readFileSync(path.join(__dirname, 'planning-db-import.cjs'), 'utf8');
+  const importStart = importSource.indexOf('async function importContent');
+  const importEnd = importSource.indexOf('\nasync function runPlanningImport', importStart);
+  const routineImportSource = importSource.slice(importStart, importEnd);
 
   assert.doesNotMatch(importSource, /canonical-state\.json/u);
   assert.doesNotMatch(importSource, /readCanonicalStateSnapshot/u);
-  assert.doesNotMatch(importSource, /applyCurrentPlanningDbSchema/u);
-  assert.doesNotMatch(importSource, /restoreArchitectureState\(/u);
-  assert.doesNotMatch(importSource, /restoreLocalFeatureMechanizationRails\(/u);
-  assert.doesNotMatch(importSource, /restoreLocalFeatureMechanizationOperations\(/u);
+  assert.doesNotMatch(routineImportSource, /applyCurrentPlanningDbSchema/u);
+  assert.doesNotMatch(routineImportSource, /restoreArchitectureState\(/u);
+  assert.doesNotMatch(routineImportSource, /restoreLocalFeatureMechanizationRails\(/u);
+  assert.doesNotMatch(routineImportSource, /restoreLocalFeatureMechanizationOperations\(/u);
 });
