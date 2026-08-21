@@ -463,36 +463,25 @@ test('PR quality gate prepares planning DB before DB-first feature implementatio
     prQualityGate,
     'Prepare planning DB for DB-backed validation'
   );
-  const capabilityTruthStep = namedWorkflowStep(
-    prQualityGate,
-    'Validate DBT round-trip capability truth'
-  );
   const prepareDbIndex = prQualityGate.indexOf('Prepare planning DB for DB-backed validation');
   const prepareDbActionIndex = prQualityGate.indexOf('uses: ./.github/actions/prepare-planning-db');
   const implementationGateIndex = prQualityGate.indexOf(
     'pnpm docs:feature-mechanization:implementation'
   );
-  const capabilityStatusGateIndex = prQualityGate.indexOf(
-    'pnpm docs:dbt-roundtrip-capabilities:check'
-  );
 
   assert.notEqual(prepareDbIndex, -1);
   assert.notEqual(prepareDbActionIndex, -1);
   assert.notEqual(implementationGateIndex, -1);
-  assert.notEqual(capabilityStatusGateIndex, -1);
   assert.ok(prepareDbIndex < prepareDbActionIndex);
   assert.ok(prepareDbActionIndex < implementationGateIndex);
-  assert.ok(prepareDbActionIndex < capabilityStatusGateIndex);
   assertWorkflowContains(prQualityGate, "github.event_name == 'push'");
   assertWorkflowContains(
     prQualityGate,
     "steps.scope.outputs.feature_mechanization_relevant == 'true'"
   );
   assertWorkflowContains(prepareDbStep, "steps.scope.outputs.governance_global_relevant == 'true'");
-  assertWorkflowContains(
-    capabilityTruthStep,
-    "steps.scope.outputs.governance_global_relevant == 'true'"
-  );
+  assertWorkflowExcludes(prQualityGate, 'pnpm docs:dbt-roundtrip-capabilities:check');
+  assertWorkflowExcludes(prQualityGate, 'DVT_GIT_EVIDENCE_REPO');
   assert.doesNotMatch(prQualityGate, /import-governance:/u);
   assertWorkflowContains(preparePlanningDbAction, 'pnpm planning:db:import');
   assert.doesNotMatch(preparePlanningDbAction, /planning:db:migrate/u);
