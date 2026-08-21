@@ -1,6 +1,7 @@
 /** Owned concern: project one provenance-preserving DBT model artifact from canonical graph state. */
 import { ConnectedSourceRefSchema, WAREHOUSE_CONNECTION_TYPE } from '@dvt/contracts';
 
+import { buildCanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {
   createDbtNodeAuthoringMetadata,
@@ -11,6 +12,7 @@ import {
   isObjectFilePostgresNode,
   resolveObjectFilePostgresAuthoringMetadata,
 } from './objectFilePostgresAuthoringModel';
+import { quoteSqlIdentifier } from './canvasVisualTransformSqlCompiler';
 
 export type DbtModelArtifactSource = Readonly<{
   sourceName: string;
@@ -42,7 +44,11 @@ export type DbtModelArtifactProjectionResult =
     }>
   | Readonly<{
       ok: false;
-      reason: 'not_dbt_model' | 'origin_required' | 'origin_metadata_unavailable';
+      reason:
+        | 'not_dbt_model'
+        | 'origin_required'
+        | 'origin_metadata_unavailable'
+        | 'origin_columns_unavailable';
       message: string;
     }>;
 
@@ -55,7 +61,9 @@ type ProjectDbtModelArtifactArgs = Readonly<{
 
 type DbtModelOriginProjection = Readonly<{
   nodeId: string;
+  nodeName: string;
   sql: string;
+  columnNames: readonly string[];
   source?: DbtModelArtifactSource;
 }>;
 
@@ -108,7 +116,9 @@ function projectSourceOrigin(
     const metadata = createDbtNodeAuthoringMetadata(origin);
     return {
       nodeId: origin.id,
+      nodeName: origin.name,
       sql: `{{ source('${metadata.sourceName}', '${metadata.tableName}') }}`,
+      columnNames: [],
       source: {
         sourceName: metadata.sourceName,
         schemaName: metadata.schemaName,
@@ -129,7 +139,9 @@ function projectSourceOrigin(
     const sourceName = metadata.target.schema;
     return {
       nodeId: origin.id,
+      nodeName: origin.name,
       sql: `{{ source('${sourceName}', '${metadata.target.relation}') }}`,
+      columnNames: metadata.columns.map((column) => column.targetColumn),
       source: {
         sourceName,
         schemaName: metadata.target.schema,
@@ -169,7 +181,9 @@ function projectSourceOrigin(
 
   return {
     nodeId: origin.id,
+    nodeName: origin.name,
     sql: `{{ source('${metadata.alias}', '${metadata.table}') }}`,
+    columnNames: [],
     source: {
       sourceName: metadata.alias,
       schemaName: metadata.schema,
@@ -200,17 +214,42 @@ function resolveOriginProjection(
   }
 
   if (isDbtSource(origin) || isWarehouseSource(origin) || isObjectFilePostgresNode(origin)) {
-    return projectSourceOrigin(origin);
+    const projection = projectSourceOrigin(origin);
+    if ('ok' in projection) {
+      return projection;
+    }
+    if (projection.columnNames.length > 0) {
+      return projection;
+    }
+    return {
+      ...projection,
+      columnNames: buildCanvasNodePresentationTruth({
+        node: origin,
+        nodes: args.nodes,
+        edges: args.edges,
+      }).columns.visible.map((column) => column.name),
+    };
   }
 
   return {
     nodeId: origin.id,
+    nodeName: origin.name,
     sql: `{{ ref('${normalizeDbtArtifactIdentifier(origin.name, origin.id)}') }}`,
+    columnNames: buildCanvasNodePresentationTruth({
+      node: origin,
+      nodes: args.nodes,
+      edges: args.edges,
+    }).columns.visible.map((column) => column.name),
   };
 }
 
-function buildGeneratedBody(originSql: string): string {
-  return ['select *', `from ${originSql}`].join('\n');
+function buildGeneratedBody(origin: DbtModelOriginProjection): string {
+  const selection = origin.columnNames.map((columnName, index) => {
+    const quotedColumn = quoteSqlIdentifier(columnName);
+    const separator = index === origin.columnNames.length - 1 ? '' : ',';
+    return `  origin.${quotedColumn} as ${quotedColumn}${separator}`;
+  });
+  return ['select', ...selection, `from ${origin.sql} as origin`].join('\n');
 }
 
 function buildArtifactContent(materialized: string, body: string): string {
@@ -236,7 +275,14 @@ export function projectDbtModelArtifact(
 
   const authoredBody = metadata.modelSql;
   const hasAuthoredBody = authoredBody != null && authoredBody.trim().length > 0;
-  const body = hasAuthoredBody ? authoredBody : buildGeneratedBody(origin.sql);
+  if (!hasAuthoredBody && origin.columnNames.length === 0) {
+    return {
+      ok: false,
+      reason: 'origin_columns_unavailable',
+      message: `DBT model origin "${origin.nodeName}" does not expose canonical columns.`,
+    };
+  }
+  const body = hasAuthoredBody ? authoredBody : buildGeneratedBody(origin);
   const name = normalizeDbtArtifactIdentifier(args.modelNode.name, args.modelNode.id);
 
   return {

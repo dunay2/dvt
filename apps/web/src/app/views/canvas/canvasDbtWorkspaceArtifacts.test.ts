@@ -19,6 +19,10 @@ const sourceNode: CanonicalNode = {
       schemaName: 'raw',
       tableName: 'orders',
     },
+    columns: [
+      { name: 'order_id', type: 'bigint' },
+      { name: 'customer', type: 'text' },
+    ],
   },
 };
 
@@ -162,6 +166,10 @@ describe('canvas dbt workspace artifacts', () => {
         sourceName: 'warehouse_prod_analytics_erp',
         schema: 'erp',
         tableName: 'orders',
+        columns: [
+          { name: 'order_id', type: 'bigint' },
+          { name: 'customer', type: 'text' },
+        ],
       },
     };
     const modelFromWarehouse: CanonicalNode = {
@@ -184,6 +192,7 @@ describe('canvas dbt workspace artifacts', () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
 
+    expect(result.artifacts[1]?.content).toContain('origin."order_id" as "order_id"');
     expect(result.artifacts[1]?.content).toContain(
       "from {{ source('warehouse_prod_analytics_erp', 'orders') }}"
     );
@@ -250,8 +259,10 @@ describe('canvas dbt workspace artifacts', () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
 
-    expect(result.artifacts[1]?.content).toContain('select *');
-    expect(result.artifacts[1]?.content).toContain("from {{ source('raw', 'orders') }}");
+    expect(result.artifacts[1]?.content).toContain('origin."order_id" as "order_id"');
+    expect(result.artifacts[1]?.content).toContain('origin."customer" as "customer"');
+    expect(result.artifacts[1]?.content).toContain("from {{ source('raw', 'orders') }} as origin");
+    expect(result.artifacts[1]?.content).not.toContain('select *');
   });
 
   it('uses authored model SQL as the executable workspace artifact body', () => {

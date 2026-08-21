@@ -24,6 +24,7 @@ function buildDbtNodes(): CanonicalNode[] {
       status: 'idle',
       tags: [],
       metadata: {
+        columns: [{ name: 'order_id', type: 'bigint' }],
         dbt: {
           packageName: 'analytics',
           sourceName: 'raw',
@@ -73,6 +74,7 @@ function buildConfiguredDbtNodes(): CanonicalNode[] {
       status: 'idle',
       tags: [],
       metadata: {
+        columns: [{ name: 'order_id', type: 'bigint' }],
         dbt: {
           packageName: 'analytics',
           sourceName: 'raw',
@@ -90,6 +92,7 @@ function buildConfiguredDbtNodes(): CanonicalNode[] {
       status: 'idle',
       tags: [],
       metadata: {
+        columns: [{ name: 'payment_id', type: 'bigint' }],
         dbt: {
           packageName: 'finance analytics',
           sourceName: 'finance_warehouse',
