@@ -38,6 +38,30 @@ test('planner package publishes one compiled planner entrypoint and explicit con
   assert.equal(packageJson.scripts['test:slow'], 'vitest run -c vitest.config.ts --dir test/slow');
 });
 
+test('planner contract authority has no obsolete satellite workspace', () => {
+  for (const obsoletePackageSurface of [
+    'packages/@dvt/planner-contracts/package.json',
+    'packages/@dvt/planner-contracts/index.ts',
+    'packages/@dvt/planner-contracts/tsconfig.json',
+  ]) {
+    assert.equal(existsSync(obsoletePackageSurface), false);
+  }
+
+  const canonicalContract = readFileSync(
+    'packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts',
+    'utf8'
+  );
+  assert.match(canonicalContract, /export interface PlannerInputEnvelopeV1/u);
+
+  for (const configPath of ['tools/ci/scope-config.mjs', 'tools/ci/validate-policy.js']) {
+    const configSource = readFileSync(configPath, 'utf8');
+    assert.doesNotMatch(configSource, /planner[_-]contracts|@dvt\/planner-contracts/u);
+  }
+
+  const workflowScopePolicy = readJson('tools/ci/policy/workflow-scope.json');
+  assert.equal(Object.hasOwn(workflowScopePolicy, 'workspace_planner_contracts'), false);
+});
+
 test('planner package build config keeps examples, docs and tests out of compiled source', () => {
   const tsconfig = readJson(tsconfigPath);
   const vitestConfig = readFileSync(vitestConfigPath, 'utf8');

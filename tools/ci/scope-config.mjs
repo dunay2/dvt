@@ -56,7 +56,6 @@ function readWorkflowScopePolicy() {
     'workspace_plan_interpreter',
     'workspace_plan_verifier',
     'workspace_planner',
-    'workspace_planner_contracts',
     'workspace_run_domain',
     'workspace_state_store',
     'workspace_traceability_service',
@@ -209,12 +208,6 @@ export const WORKSPACE_ENTRIES = [
     name: 'planner',
     pkg: '@dvt/planner',
     patterns: WORKFLOW_SCOPE_POLICY.workspace_planner,
-  },
-  {
-    key: 'planner_contracts',
-    name: 'planner-contracts',
-    pkg: '@dvt/planner-contracts',
-    patterns: WORKFLOW_SCOPE_POLICY.workspace_planner_contracts,
   },
   {
     key: 'run_domain',
@@ -468,7 +461,6 @@ export const SCOPE_MODES = {
 const EXCLUDED_TEST_PACKAGE_NAMES = new Set([
   '@dvt/adapter-postgres',
   '@dvt/adapter-temporal',
-  '@dvt/planner-contracts',
   '@dvt/web',
 ]);
 

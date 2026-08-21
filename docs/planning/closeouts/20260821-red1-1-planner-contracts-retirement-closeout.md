@@ -1,6 +1,6 @@
 ---
 title: RED1.1 Planner Contracts Retirement Closeout
-status: In progress
+status: Accepted
 owner: Architecture / Planner / Contracts / CI
 last_reviewed: 2026-08-21
 planning_type: closeout
@@ -79,9 +79,55 @@ found.
 
 ## Work And Validation Evidence
 
-Pending implementation and executed validation.
+### Real work performed
+
+- Deleted the unused `packages/@dvt/planner-contracts` workspace rather than
+  retaining a forwarding or compatibility package.
+- Removed its lockfile importer and its build/test workflow-scope entries.
+- Reconciled the current implementation diagrams, shared-domain description,
+  TypeScript package classification, and governed contract-root ownership.
+- Added an architecture guard that rejects reintroduction of the satellite
+  workspace or its CI scope key while proving that
+  `PlannerInputEnvelopeV1` remains canonical in `@dvt/contracts`.
+- No planner algorithm, public DTO, API route, runtime behavior, authorization
+  policy, command rail, or query rail changed.
+
+### Red/green evidence
+
+- Red: `node --test tools/ci/planner-package-governance.test.mjs` failed on
+  the newly added satellite-workspace guard while the three obsolete package
+  files still existed.
+- Green: the same command passed `5/5` after the hard deletion and CI scope
+  convergence.
+
+### Executed validation
+
+- `node tools/ci/validate-policy.js tools/ci/policy/workflow-scope.json` —
+  passed.
+- Focused CI scope suite covering planner governance, workspace/test matrices,
+  workflow scope, and package-json scope — passed `43/43`.
+- `pnpm --filter @dvt/contracts build` — passed.
+- `pnpm --filter @dvt/contracts test` — passed `475/475` across 49 files.
+- `pnpm --filter @dvt/planner build` — passed.
+- `pnpm --filter @dvt/planner typecheck` — passed.
+- `pnpm --filter @dvt/planner test` — passed `99/99` across 20 files.
+- `pnpm test:ci-tools` — passed `304/304` after installing the frozen lockfile
+  dependency set and staging the structural deletion for Git-index tests.
+- `pnpm docs:feature-mechanization:implementation` — passed with 243 Planning
+  DB manifests.
+- `pnpm governance:refresh` — converged after two generation passes; coverage
+  reported `6261/6261`, with zero ungoverned files and zero drift.
+
+The final `pnpm verify:prepush` gate is deliberately executed after the commit
+so the pre-commit hook can normalize staged files first, as required by the
+repository's Prettier rule. Its exact result belongs in the PR and task
+closeout report.
 
 ## Debt And Stub Evidence
 
-Pending final verification. The plan authorizes no alias, compatibility
-package, stub, placeholder, bypass, disabled rule, or deferred partial branch.
+No debt entry was created. No alias, compatibility package, stub, fake success
+path, placeholder, TODO/FIXME marker, bypass, disabled rule, relaxed gate, or
+unfinished branch was introduced. Hooks and checks remain enabled. The only
+warnings observed during the frozen install concern pre-existing missing built
+CLI bins and the repository's approved-build-script policy; neither was hidden
+or converted into product debt.
