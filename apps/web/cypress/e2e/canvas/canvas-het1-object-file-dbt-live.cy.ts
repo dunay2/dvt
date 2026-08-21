@@ -272,7 +272,7 @@ describe('HET1 public object-file DBT vertical', () => {
             'minioadmin',
             'order_id,amount',
             '1,10.25',
-            '2,20.50',
+            '1,20.50',
           ]);
         });
       });

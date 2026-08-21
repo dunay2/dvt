@@ -118,9 +118,12 @@ export function updateObjectFileSourceIdentity(args: {
   closeNodeWorkbench();
 }
 
-export function updateDbtTestColumn(args: { nodeName: string; targetColumn: string }): void {
+export function updateDbtTestType(args: {
+  nodeName: string;
+  testType: 'not_null' | 'unique';
+}): void {
   openNodeWorkbench(args.nodeName);
-  replaceInput('input[name="dbt-test-column"]', args.targetColumn);
+  cy.get('select[name="dbt-test-type"]').should('be.enabled').select(args.testType);
   applyNodeWorkbench();
   closeNodeWorkbench();
 }
@@ -130,18 +133,12 @@ export function updateDbtModelSql(args: { nodeName: string; sql: string }): void
 
   openNodeWorkbench(args.nodeName);
   openNodeWorkbenchSection('code');
-  cy.get('textarea[name="dbt-model-sql"]')
+  cy.get('[data-testid="monaco-code-editor"] .monaco-editor textarea')
+    .first()
     .should('be.visible')
     .and('be.enabled')
-    .then(($editor) => {
-      const editor = $editor.get(0);
-      if (editor?.tagName !== 'TEXTAREA') {
-        throw new Error('HET1 DBT model editor must be a textarea.');
-      }
-      const textarea = editor as HTMLTextAreaElement;
-      textarea.focus();
-      textarea.setSelectionRange(0, textarea.value.length);
-    })
+    .focus()
+    .type('{ctrl+a}', { force: true, delay: 0 })
     .type(args.sql, { parseSpecialCharSequences: false, delay: 0 })
     .should('have.value', args.sql);
   applyNodeWorkbench();
