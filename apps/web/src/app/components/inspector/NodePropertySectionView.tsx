@@ -51,9 +51,12 @@ function renderSectionBody(
 
     return (
       <div
+        role="region"
+        aria-label={section.label}
+        tabIndex={0}
         className={
           surface === 'workbench'
-            ? 'max-h-80 overflow-auto rounded border border-(--border-subtle)'
+            ? 'max-h-80 overflow-auto rounded border border-(--border-subtle) bg-(--surface-panel)'
             : 'max-h-72 overflow-auto border-y border-slate-800'
         }
       >

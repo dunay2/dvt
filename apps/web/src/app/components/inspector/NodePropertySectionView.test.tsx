@@ -111,10 +111,15 @@ describe('NodePropertySectionView', () => {
     }));
 
     const table = container.querySelector('table');
+    const scrollRegion = table?.parentElement;
     const longValueCell = Array.from(container.querySelectorAll('td')).find(
       (cell) => cell.textContent === 'src_postgresql_local_2333_dvt_public_source_1'
     );
 
+    expect(scrollRegion?.getAttribute('role')).toBe('region');
+    expect(scrollRegion?.getAttribute('aria-label')).toBe('Inputs / Outputs');
+    expect(scrollRegion?.tabIndex).toBe(0);
+    expect(scrollRegion?.className).toContain('bg-(--surface-panel)');
     expect(table?.className).toContain('min-w-max');
     expect(table?.className).not.toContain('table-fixed');
     expect(longValueCell?.className).toContain('whitespace-nowrap');
