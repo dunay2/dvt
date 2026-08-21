@@ -52,7 +52,6 @@ const requiredKeys = [
         'workspace_plan_interpreter',
         'workspace_plan_verifier',
         'workspace_planner',
-        'workspace_planner_contracts',
         'workspace_run_domain',
         'workspace_state_store',
         'workspace_traceability_service',
