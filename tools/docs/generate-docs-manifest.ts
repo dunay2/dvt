@@ -104,7 +104,17 @@ function str(val: string | string[] | undefined): string | null {
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 function main(): void {
-  const allFiles = walkMarkdown(DOCS_DIR).sort((left, right) => left.localeCompare(right));
+  const allFiles = walkMarkdown(DOCS_DIR)
+    .filter(
+      (filePath) =>
+        ![
+          'docs/planning/index.md',
+          'docs/planning/proposals/index.md',
+          'docs/planning/reviews/index.md',
+          'docs/planning/status/index.md',
+        ].includes(relPath(filePath))
+    )
+    .sort((left, right) => left.localeCompare(right));
 
   const adrs: AdrEntry[] = [];
   const evidenceDocs: EvidenceEntry[] = [];
