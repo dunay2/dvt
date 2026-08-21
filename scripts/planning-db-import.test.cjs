@@ -1,6 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
+const planningDbImport = require('./planning-db-import.cjs');
 const {
   beginImportTransaction,
   buildDocsDispositionSnapshot,
@@ -34,15 +35,11 @@ const {
   refreshComponentTreeMaterializedProjection,
   refreshComponentFileOwnershipMaterializedProjection,
   refreshComponentRuleEvaluationMaterializedProjection,
-  restoreLocalFeatureMechanizationOperations,
-  restoreLocalFeatureMechanizationRails,
-  restoreLocalGovernanceComponentState,
-  restoreFowlerAnalysisState,
   restoreDbGovernanceSurfaceCatalog,
   restoreDbtProjectRoundtripCapabilityCatalog,
   runPlanningImport,
   sha256,
-} = require('./planning-db-import.cjs');
+} = planningDbImport;
 const { governanceGeneratedPath } = require('./governance-generated-paths.cjs');
 const { schemaName } = require('./planning-db-schema.cjs');
 
@@ -1427,195 +1424,6 @@ test('frontend mechanical truth import reloads surface rows with JSONB metadata'
   assert.equal(insertQuery.params[5], JSON.stringify(['monitoring']));
 });
 
-test('planning DB import restores canonical feature mechanization rails', async () => {
-  const queries = [];
-  const canonicalRails = [
-    {
-      railId: 'local#WEB-CANVAS-NODE-WORKBENCH-PANEL-20260619#query#inspectcanvasnodeproperties',
-      featureId: 'WEB-CANVAS-NODE-WORKBENCH-PANEL-20260619',
-      mechanizationStatus: 'implemented',
-      railName: 'InspectCanvasNodeProperties',
-      normalizedRailName: 'inspectcanvasnodeproperties',
-      railType: 'query',
-      dddOwner: 'CanvasNodeWorkbenchPanel',
-      railStatus: 'implemented',
-      symbolRefs: [
-        'apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx#CanvasNodeWorkbenchPanel',
-      ],
-      implementationRefs: ['apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx'],
-      documentationRefs: ['buzon/TAREA.TXT'],
-      governingSources: ['docs/architecture/command-query-rail-governance.md'],
-      allowedImplementationSurfaces: ['apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx'],
-      architectureGuards: [
-        'apps/web/src/app/views/canvas/CanvasShellMainPanel.architecture.test.ts',
-      ],
-      completionGate: ['pnpm verify:prepush'],
-      sourcePath: 'apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx',
-      sourceContentSha256: 'a'.repeat(64),
-      rawRail: { name: 'InspectCanvasNodeProperties' },
-      rawManifest: { featureId: 'WEB-CANVAS-NODE-WORKBENCH-PANEL-20260619' },
-      revision: 3,
-      createdBy: 'codex',
-      createdAt: '2026-06-19T00:00:00.000Z',
-      updatedAt: '2026-06-19T00:00:00.000Z',
-    },
-  ];
-
-  await restoreLocalFeatureMechanizationRails(
-    {
-      query: async (sql, params = []) => {
-        queries.push({ sql: String(sql), params });
-      },
-    },
-    canonicalRails
-  );
-
-  const insertQuery = queries.find((query) =>
-    query.sql.includes(`insert into ${schemaName}.feature_mechanization_local_rails`)
-  );
-  assert.ok(insertQuery);
-  assert.match(insertQuery.sql, /on conflict \(rail_id\) do update set/);
-  assert.match(insertQuery.sql, /raw_manifest/);
-  assert.match(insertQuery.sql, /revision = greatest/);
-  assert.match(insertQuery.sql, /feature_mechanization_local_rails\.revision/);
-  assert.equal(insertQuery.params[0], canonicalRails[0].railId);
-  assert.equal(insertQuery.params[1], canonicalRails[0].featureId);
-
-  const hashRefreshQuery = queries.find((query) =>
-    query.sql.includes('update planning_query_store.feature_mechanization_local_rails rail')
-  );
-  assert.ok(hashRefreshQuery);
-  assert.match(hashRefreshQuery.sql, /governance_files file_ref/);
-  assert.doesNotMatch(insertQuery.sql, /delete\s+from/i);
-  assert.doesNotMatch(insertQuery.sql, /truncate\s+/i);
-});
-
-test('planning DB import restores audited governance component overrides', async () => {
-  const queries = [];
-  const componentId = 'SYS-API-DOCS';
-  const snapshot = {
-    governanceComponentDefinitions: [
-      {
-        componentId,
-        sourcePath: 'docs/architecture/components/api/index.md',
-        sourceContentSha256: 'a'.repeat(64),
-        revision: 1,
-        name: 'API local documentation',
-        level: 'component',
-        parentComponentId: 'SYS-API-ROOT',
-        rootUnit: 'SYS-DVT',
-        domainUnit: 'SYS-API',
-        status: 'superseded',
-        childrenRequired: false,
-        ownedConcern: 'Retired API-local documentation ownership.',
-        dddOwner: 'INFRA',
-        cqRails: 'none - API local documentation',
-        createdBy: 'codex',
-        createdAt: '2026-08-10T20:00:00.000Z',
-      },
-    ],
-    governanceComponentOwnershipPatterns: [],
-    governanceComponentSemanticItems: [
-      {
-        componentId,
-        itemKind: 'governance_ref',
-        itemValue: 'docs/DOCS_README.md',
-        itemOrder: 0,
-        createdAt: '2026-08-10T20:00:00.000Z',
-      },
-    ],
-    governanceComponentOperations: [
-      {
-        operationId: 'component-revise:test-operation',
-        idempotencyKey: 'component-revise-test-operation',
-        operationType: 'component_revise',
-        actor: 'codex',
-        componentId,
-        sourcePath: 'docs/architecture/components/api/index.md',
-        sourceContentSha256: 'a'.repeat(64),
-        expectedRevision: 0,
-        previousRevision: 0,
-        resultingRevision: 1,
-        payload: { status: 'superseded' },
-        createdAt: '2026-08-10T20:00:00.000Z',
-      },
-    ],
-  };
-
-  await restoreLocalGovernanceComponentState(
-    {
-      query: async (sql, params = []) => {
-        queries.push({ sql: String(sql), params });
-        return { rows: [] };
-      },
-    },
-    snapshot
-  );
-
-  for (const table of [
-    'governance_component_local_definitions',
-    'governance_component_local_semantic_items',
-    'governance_component_local_operations',
-  ]) {
-    assert.ok(queries.some((query) => query.sql.includes(`insert into ${schemaName}.${table}`)));
-  }
-  assert.ok(
-    !queries.some((query) => /delete\s+from|truncate\s+/iu.test(query.sql)),
-    'current-schema restore must insert the canonical snapshot without compatibility cleanup'
-  );
-});
-
-test('planning DB import restores Fowler authority and audit state without cleanup semantics', async () => {
-  const queries = [];
-  const snapshot = {
-    fowlerAnalysisDispositions: [
-      {
-        documentPath: 'docs/architecture/example.md',
-        dispositionStatus: 'accepted',
-        dispositionKind: 'db_authority_historical',
-        canonicalTargetPath: null,
-        reason: 'Planning DB is current authority.',
-        sourceContentSha256: 'c'.repeat(64),
-        recordedBy: 'codex',
-        recordedAt: '2026-08-11T12:00:00.000Z',
-        rawDisposition: {},
-      },
-    ],
-    fowlerAnalysisCanonicalTargets: [],
-    fowlerAnalysisReferenceResolutions: [],
-    fowlerAnalysisRetirementDecisions: [],
-    fowlerAnalysisOperations: [
-      {
-        operationId: 'fowler-analysis:test-operation',
-        idempotencyKey: 'fowler-analysis-test-operation',
-        operationType: 'fowler_analysis_disposition_record',
-        actor: 'codex',
-        documentPath: 'docs/architecture/example.md',
-        targetPath: null,
-        referencePath: null,
-        relationType: null,
-        sourceContentSha256: 'c'.repeat(64),
-        payload: {},
-        createdAt: '2026-08-11T12:00:00.000Z',
-      },
-    ],
-  };
-
-  await restoreFowlerAnalysisState(
-    {
-      query: async (sql, params = []) => {
-        queries.push({ sql: String(sql), params });
-        return { rows: [] };
-      },
-    },
-    snapshot
-  );
-
-  assert.ok(queries.some((query) => query.sql.includes('fowler_analysis_dispositions')));
-  assert.ok(queries.some((query) => query.sql.includes('fowler_analysis_operations')));
-  assert.ok(!queries.some((query) => /delete\s+from|truncate\s+/iu.test(query.sql)));
-});
-
 test('planning DB import restores the declarative current governance surface catalog', async () => {
   const fs = require('node:fs');
   const os = require('node:os');
@@ -1723,39 +1531,6 @@ test('planning DB import restores the current DBT round-trip capability catalog'
   } finally {
     fs.rmSync(tempRoot, { recursive: true, force: true });
   }
-});
-
-test('planning DB import restores canonical feature rail operations idempotently', async () => {
-  const queries = [];
-  const operation = {
-    operationId: 'feature-mechanization:test-operation',
-    idempotencyKey: 'feature-mechanization-test-operation',
-    operationType: 'feature_mechanization_rail_record',
-    actor: 'codex',
-    railId: 'local#PLANNING-DB-RECOVERY#query#checkstate',
-    sourcePath: 'scripts/planning-db-export.cjs',
-    sourceContentSha256: 'a'.repeat(64),
-    expectedRevision: 0,
-    previousRevision: 0,
-    resultingRevision: 1,
-    payload: { railName: 'CheckState' },
-    createdAt: '2026-07-30T11:00:00.000Z',
-  };
-
-  await restoreLocalFeatureMechanizationOperations(
-    {
-      query: async (sql, params = []) => {
-        queries.push({ sql: String(sql), params });
-      },
-    },
-    [operation]
-  );
-
-  assert.equal(queries.length, 1);
-  assert.match(queries[0].sql, /feature_mechanization_local_operations/u);
-  assert.match(queries[0].sql, /on conflict \(operation_id\) do nothing/u);
-  assert.equal(queries[0].params[0], operation.operationId);
-  assert.equal(queries[0].params[1], operation.idempotencyKey);
 });
 
 test('frontend component reflection import reloads normalized component rows', async () => {
@@ -2592,4 +2367,16 @@ test('routine Planning DB import preserves DB-owned authority without a tracked 
   assert.doesNotMatch(routineImportSource, /restoreArchitectureState\(/u);
   assert.doesNotMatch(routineImportSource, /restoreLocalFeatureMechanizationRails\(/u);
   assert.doesNotMatch(routineImportSource, /restoreLocalFeatureMechanizationOperations\(/u);
+  for (const obsoleteRestore of [
+    'refreshLocalFeatureMechanizationRailSourceHashes',
+    'restoreLocalFeatureMechanizationOperations',
+    'restoreLocalFeatureMechanizationRails',
+    'restoreLocalGovernanceComponentState',
+    'restoreFowlerAnalysisState',
+  ]) {
+    assert.equal(Object.hasOwn(planningDbImport, obsoleteRestore), false, obsoleteRestore);
+  }
+  assert.doesNotMatch(importSource, /function restoreLocalFeatureMechanization/u);
+  assert.doesNotMatch(importSource, /function restoreLocalGovernanceComponentState/u);
+  assert.doesNotMatch(importSource, /function restoreFowlerAnalysisState/u);
 });
