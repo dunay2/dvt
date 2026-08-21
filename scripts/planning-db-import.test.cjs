@@ -2658,3 +2658,16 @@ test('architecture-governance import transactions serialize destructive replacem
   assert.match(queries[1].sql, /pg_advisory_xact_lock/);
   assert.deepEqual(queries[1].params, ['dvt:planning-query-store', 'import-content-v1']);
 });
+
+test('routine Planning DB import preserves DB-owned authority without a tracked snapshot', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const importSource = fs.readFileSync(path.join(__dirname, 'planning-db-import.cjs'), 'utf8');
+
+  assert.doesNotMatch(importSource, /canonical-state\.json/u);
+  assert.doesNotMatch(importSource, /readCanonicalStateSnapshot/u);
+  assert.doesNotMatch(importSource, /applyCurrentPlanningDbSchema/u);
+  assert.doesNotMatch(importSource, /restoreArchitectureState\(/u);
+  assert.doesNotMatch(importSource, /restoreLocalFeatureMechanizationRails\(/u);
+  assert.doesNotMatch(importSource, /restoreLocalFeatureMechanizationOperations\(/u);
+});

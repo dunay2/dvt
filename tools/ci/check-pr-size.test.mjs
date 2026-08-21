@@ -131,6 +131,14 @@ test('the PR workflow supplies exact base and head refs to the size policy', () 
   assert.match(sizeStep, /GIT_HEAD: \$\{\{ github\.event\.pull_request\.head\.sha \}\}/u);
 });
 
+test('the PR size gate has no tracked Planning DB snapshot semantics', () => {
+  const source = readFileSync(new URL('./check-pr-size.mjs', import.meta.url), 'utf8');
+
+  assert.doesNotMatch(source, /canonical-state\.json/u);
+  assert.doesNotMatch(source, /CANONICAL_STATE_PATH/u);
+  assert.doesNotMatch(source, /collectCanonicalRecords/u);
+});
+
 test('falls back to exact tree comparison when a shallow checkout has no merge base', () => {
   const calls = [];
   const baseSnapshot = canonicalState();
