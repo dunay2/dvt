@@ -58,10 +58,6 @@ function buildRefreshStages() {
         script: 'docs:db-surface-inventory:generate',
       },
       {
-        id: 'planning-db-export-check',
-        script: 'planning:db:export:check',
-      },
-      {
         id: 'governance-db-import-final',
         script: 'governance:db:import',
         args: ['--if-stale'],
@@ -87,10 +83,6 @@ function buildRefreshStages() {
         id: 'remediation-queue-final',
         script: 'docs:governance:remediation-queue',
         env: { DVT_GOVERNANCE_REPORT_SOURCE: 'db' },
-      },
-      {
-        id: 'governance-db-export-check',
-        script: 'governance:db:export:check',
       },
     ],
   };
