@@ -11,7 +11,7 @@ test('current-schema policy rejects Planning DB migration paths and executable s
     ['package.json', '{"scripts":{"planning:db:migrate":"node old.cjs"}}'],
     ['scripts/example.cjs', "const { runMigrations } = require('./planning-db-migrate.cjs');"],
     [
-      'tools/planning-db/state/canonical-state.json',
+      'tools/planning-db/state/legacy-migration-state.json',
       '{"policy":"Planning DB applied_migration_identity compatibility"}',
     ],
     ['docs/archive/old.md', 'schema_migrations and planning:db:migrate are historical here'],
@@ -49,7 +49,10 @@ test('current-schema policy rejects Planning DB migration paths and executable s
       ['scripts/planning-db-migrate.cjs', 'Planning DB migration runner'],
       ['tools/planning-db/legacy-bootstrap.sql', 'Parallel Planning DB SQL owner'],
       ['tools/planning-db/migrations/001_old.sql', 'Planning DB migration directory'],
-      ['tools/planning-db/state/canonical-state.json', 'Planning DB migration-state semantics'],
+      [
+        'tools/planning-db/state/legacy-migration-state.json',
+        'Planning DB migration-state semantics',
+      ],
     ]
   );
 });

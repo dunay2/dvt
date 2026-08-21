@@ -58,7 +58,6 @@
     "scripts/governance-refresh.cjs",
     "scripts/planning-db-import.cjs",
     "tools/planning-db/schema.sql",
-    "tools/planning-db/state/canonical-state.json",
     "tools/ci/policy/workflow-scope.json",
     ".github/requirements/zensical.in",
     ".github/requirements/zensical.lock",
