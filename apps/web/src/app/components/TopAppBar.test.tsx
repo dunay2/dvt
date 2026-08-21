@@ -212,6 +212,19 @@ describe('ShellTopBar workspace context', () => {
     }
   );
 
+  it('keeps the REST API health signal at the far right of the command cluster', async () => {
+    await act(async () => {
+      root.render(renderShellTopBar('/canvas'));
+    });
+
+    const commandCluster = container.querySelector('[data-slot="shell-top-bar-command-cluster"]');
+    const connectionStatus = commandCluster?.querySelector('[data-slot="shell-connection-status"]');
+    const viewMenuTrigger = commandCluster?.querySelector('[data-slot="shell-menu-trigger"]');
+
+    expect(commandCluster?.lastElementChild).toBe(connectionStatus);
+    expect(connectionStatus?.previousElementSibling).toBe(viewMenuTrigger);
+  });
+
   it('keeps Canvas properties out of the global View menu', async () => {
     await act(async () => {
       root.render(renderShellTopBar('/canvas'));
