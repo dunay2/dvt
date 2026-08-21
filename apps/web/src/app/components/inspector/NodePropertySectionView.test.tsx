@@ -92,7 +92,7 @@ describe('NodePropertySectionView', () => {
     ).toBe('2 columns inherited from the connected source.');
   });
 
-  it('keeps long relationship values inside their assigned workbench columns', () => {
+  it('keeps long relationship values legible through horizontal table overflow', () => {
     ({ container, root } = renderSection({
       id: 'inputs-outputs',
       label: 'Inputs / Outputs',
@@ -115,8 +115,10 @@ describe('NodePropertySectionView', () => {
       (cell) => cell.textContent === 'src_postgresql_local_2333_dvt_public_source_1'
     );
 
-    expect(table?.className).toContain('table-fixed');
-    expect(longValueCell?.className).toContain('break-words');
+    expect(table?.className).toContain('min-w-max');
+    expect(table?.className).not.toContain('table-fixed');
+    expect(longValueCell?.className).toContain('whitespace-nowrap');
+    expect(longValueCell?.className).not.toContain('break-words');
     expect(container.textContent).toContain('Lineage');
   });
 
