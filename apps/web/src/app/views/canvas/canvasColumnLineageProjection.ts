@@ -2,8 +2,10 @@
 import { DVT_TRANSFORM_AUTHORING_MODE, type VisualTransformRecipeV1 } from '@dvt/contracts';
 import type { Edge } from '@xyflow/react';
 
+import { buildCanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth';
 import type { CoreNodeRole, CanonicalNode } from '../../types/canonical';
 import { areCanvasColumnTypesCompatible } from './canvasColumnMappingAuthoring';
+import { projectDbtModelArtifact } from './canvasDbtModelArtifactProjection';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import { readDvtTransformLineageProvenance } from './canvasTransformationSqlMirror';
 
@@ -185,6 +187,47 @@ export function projectCanvasColumnLineage(args: {
   const projected: CanvasColumnLineageEdge[] = [];
 
   for (const model of args.nodes) {
+    if (model.pluginId === 'dbt' && model.kind === 'dbt:model') {
+      if (!args.expandedNodeIds.has(model.id)) continue;
+      const artifact = projectDbtModelArtifact({
+        modelNode: model,
+        nodes: args.nodes,
+        edges: args.edges,
+      });
+      if (!artifact.ok || artifact.artifact.provenance !== 'generated') continue;
+      const sourceNode = nodeById.get(artifact.artifact.origin.nodeId);
+      if (
+        sourceNode == null ||
+        !args.expandedNodeIds.has(sourceNode.id) ||
+        !hasDependency(args.edges, sourceNode.id, model.id)
+      ) {
+        continue;
+      }
+      const targetColumns = buildCanvasNodePresentationTruth({
+        node: model,
+        nodes: args.nodes,
+        edges: args.edges,
+      }).columns.visible.filter((column) => column.sourceNodeId === sourceNode.id);
+      for (const sourceColumn of readColumns(sourceNode)) {
+        const targetColumn = targetColumns.find((column) => column.name === sourceColumn.name);
+        if (targetColumn == null) continue;
+        projected.push(
+          buildLineageEdge({
+            sourceNodeId: sourceNode.id,
+            sourceColumnName: sourceColumn.name,
+            sourceColumnId: sourceColumn.name,
+            targetNodeId: model.id,
+            targetColumnName: targetColumn.name,
+            targetColumnId: targetColumn.name,
+            outputId: targetColumn.name,
+            terminal: false,
+            removable: false,
+          })
+        );
+      }
+      continue;
+    }
+
     const lineageRecipe = readLineageRecipe(model);
     if (lineageRecipe == null || !args.expandedNodeIds.has(model.id)) continue;
 

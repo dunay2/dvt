@@ -133,6 +133,33 @@ export function useCanvasControllerReadModel({
       visibleScope.canonicalNodes,
     ]
   );
+  const projectedColumnLineage = useMemo(() => {
+    if (activeCanvasKind !== 'transformation') return [];
+    const expandedNodeIds = new Set(
+      graphModel.nodes
+        .filter((node) => node.data.columnDisclosureExpanded === true)
+        .map((node) => node.id)
+    );
+    return projectCanvasColumnLineage({
+      nodes: visibleScope.canonicalNodes,
+      edges: visibleScope.canonicalEdges,
+      expandedNodeIds,
+    });
+  }, [
+    activeCanvasKind,
+    graphModel.nodes,
+    visibleScope.canonicalEdges,
+    visibleScope.canonicalNodes,
+  ]);
+  const readOnlyColumnLineageNodeIds = useMemo(
+    () =>
+      new Set(
+        projectedColumnLineage
+          .filter((edge) => edge.data?.removable !== true)
+          .flatMap((edge) => [edge.source, edge.target])
+      ),
+    [projectedColumnLineage]
+  );
 
   const nodesWithImpact = useMemo(
     () =>
@@ -158,7 +185,8 @@ export function useCanvasControllerReadModel({
         const hasReadOnlyColumnLineage =
           canonicalNode?.role === 'transform' &&
           !canAuthorColumnMappings &&
-          readDvtTransformLineageProvenance(canonicalNode) != null;
+          (readDvtTransformLineageProvenance(canonicalNode) != null ||
+            readOnlyColumnLineageNodeIds.has(canonicalNode.id));
         const selectedForExecution = uiScope.selectedNodeIds.includes(node.id);
         const canSelectNode =
           canSelectExecution &&
@@ -220,21 +248,13 @@ export function useCanvasControllerReadModel({
       overlayModel.runStatusByNodeId,
       runtimeCapabilities,
       uiScope.selectedNodeIds,
+      readOnlyColumnLineageNodeIds,
     ]
   );
 
   const edgesWithImpact = useMemo(() => {
     if (activeCanvasKind !== 'transformation') return graphModel.edges;
-    const expandedNodeIds = new Set(
-      graphModel.nodes
-        .filter((node) => node.data.columnDisclosureExpanded === true)
-        .map((node) => node.id)
-    );
-    const lineageEdges = projectCanvasColumnLineage({
-      nodes: visibleScope.canonicalNodes,
-      edges: visibleScope.canonicalEdges,
-      expandedNodeIds,
-    }).map((edge) => ({
+    const lineageEdges = projectedColumnLineage.map((edge) => ({
       ...edge,
       selected: edge.id === selectedColumnLineageEdgeId,
       ariaLabel: `${edge.data?.sourceColumnName ?? ''} → ${edge.data?.targetColumnName ?? ''}`,
@@ -252,10 +272,8 @@ export function useCanvasControllerReadModel({
     activeCanvasKind,
     graphHandlers.handleRemoveColumnMapping,
     graphModel.edges,
-    graphModel.nodes,
+    projectedColumnLineage,
     selectedColumnLineageEdgeId,
-    visibleScope.canonicalEdges,
-    visibleScope.canonicalNodes,
   ]);
 
   const columnLineageEdgesById = useMemo(

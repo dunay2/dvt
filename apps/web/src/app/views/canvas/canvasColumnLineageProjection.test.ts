@@ -234,6 +234,112 @@ describe('Canvas column lineage projection', () => {
     }
   });
 
+  it('derives read-only identity lineage for a generated DBT model from its selected origin', () => {
+    const source = {
+      ...buildNode('warehouse-source', 'dvt:source', 'input', [
+        { name: 'event_id', type: 'text' },
+        { name: 'event_type', type: 'text' },
+      ]),
+      pluginId: 'dvt.warehouse-source',
+      metadata: {
+        connectedSourceRef: {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef: {
+            schemaVersion: 'connection-ref.v1',
+            connectionId: 'local-postgres-proof',
+            provider: 'postgres',
+          },
+          sourceObjectId: 'relation/dvt/dvt/auth_audit_events',
+        },
+        sourceName: 'local_postgres_proof_dvt_dvt',
+        schema: 'dvt',
+        tableName: 'auth_audit_events',
+        columns: [
+          { name: 'event_id', type: 'text' },
+          { name: 'event_type', type: 'text' },
+        ],
+      },
+    } satisfies CanonicalNode;
+    const model = {
+      ...buildNode('dbt-model', 'dbt:model', 'transform'),
+      pluginId: 'dbt',
+      metadata: {
+        dbt: {
+          packageName: 'analytics',
+          materialized: 'view',
+          selectedSourceId: source.id,
+        },
+      },
+    } satisfies CanonicalNode;
+
+    const projected = projectCanvasColumnLineage({
+      nodes: [source, model],
+      edges: [{ sourceId: source.id, targetId: model.id }],
+      expandedNodeIds: new Set([source.id, model.id]),
+    });
+
+    expect(projected).toHaveLength(2);
+    expect(projected).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceHandle: createCanvasColumnHandleId({
+            direction: 'source',
+            nodeId: source.id,
+            columnId: 'event_id',
+          }),
+          targetHandle: createCanvasColumnHandleId({
+            direction: 'target',
+            nodeId: model.id,
+            columnId: 'event_id',
+          }),
+          data: expect.objectContaining({
+            sourceColumnName: 'event_id',
+            targetColumnName: 'event_id',
+            removable: false,
+          }),
+        }),
+        expect.objectContaining({
+          data: expect.objectContaining({
+            sourceColumnName: 'event_type',
+            targetColumnName: 'event_type',
+            removable: false,
+          }),
+        }),
+      ])
+    );
+  });
+
+  it('does not invent DBT column lineage for authored model SQL', () => {
+    const source = {
+      ...buildNode('dbt-source', 'dbt:source', 'input', [{ name: 'order_id', type: 'integer' }]),
+      pluginId: 'dbt',
+      metadata: {
+        dbt: { sourceName: 'raw', schemaName: 'public', tableName: 'orders' },
+        columns: [{ name: 'order_id', type: 'integer' }],
+      },
+    } satisfies CanonicalNode;
+    const model = {
+      ...buildNode('dbt-model', 'dbt:model', 'transform'),
+      pluginId: 'dbt',
+      metadata: {
+        dbt: {
+          packageName: 'analytics',
+          materialized: 'view',
+          selectedSourceId: source.id,
+        },
+        config: { sql: 'select count(*) as order_count from public.orders' },
+      },
+    } satisfies CanonicalNode;
+
+    expect(
+      projectCanvasColumnLineage({
+        nodes: [source, model],
+        edges: [{ sourceId: source.id, targetId: model.id }],
+        expandedNodeIds: new Set([source.id, model.id]),
+      })
+    ).toEqual([]);
+  });
+
   it('derives terminal model-to-sink lineage only for a unique exact compatible column', () => {
     const model = applyDvtVisualTransformRecipe(
       buildNode('model', 'dvt:sql_transform', 'transform'),
