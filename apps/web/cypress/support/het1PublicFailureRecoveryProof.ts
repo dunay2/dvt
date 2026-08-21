@@ -230,9 +230,9 @@ cross join delayed`;
       assertStepEventSet(events, 'StepCompleted', [
         ...(args.upstreamCompletedStepIds ?? []),
         identity.objectNodeId,
-        identity.modelNodeId,
       ]);
       assertStepEventSet(events, 'StepStarted', [identity.modelNodeId]);
+      assertStepEventAbsent(events, 'StepCompleted', [identity.modelNodeId]);
       assertStepEventAbsent(events, 'StepCompleted', [identity.testNodeId]);
       assertStepEventAbsent(events, 'StepStarted', [identity.testNodeId]);
       assertObjectLoadEvidence({
@@ -247,17 +247,10 @@ cross join delayed`;
         'RunCancelRequested',
         'RunCancelled',
       ]);
-      const modelCompletedIndex = events.findIndex(
-        (event) => event.eventType === 'StepCompleted' && event.stepId === identity.modelNodeId
-      );
       const cancelRequestedIndex = events.findIndex(
         (event) => event.eventType === 'RunCancelRequested'
       );
       const cancelledIndex = events.findIndex((event) => event.eventType === 'RunCancelled');
-      expect(
-        cancelRequestedIndex,
-        'runtime cancellation begins after the active layer settles'
-      ).to.be.greaterThan(modelCompletedIndex);
       expect(cancelledIndex, 'runtime cancellation reaches its terminal fact').to.be.greaterThan(
         cancelRequestedIndex
       );
