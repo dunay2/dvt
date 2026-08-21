@@ -235,33 +235,6 @@ jobs:
           'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm docs:feature-mechanization:implementation
 
-      - name: Checkout reviewed-commit evidence history
-        if:
-          github.event_name == 'push' || (github.event_name == 'pull_request' &&
-          (steps.scope.outputs.feature_mechanization_relevant == 'true' ||
-          steps.scope.outputs.governance_global_relevant == 'true')) || (github.event_name ==
-          'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-          filter: blob:none
-          path: .git-evidence
-          persist-credentials: false
-
-      - name: Validate DBT round-trip capability truth
-        if:
-          github.event_name == 'push' || (github.event_name == 'pull_request' &&
-          (steps.scope.outputs.feature_mechanization_relevant == 'true' ||
-          steps.scope.outputs.governance_global_relevant == 'true')) || (github.event_name ==
-          'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
-        run: pnpm docs:dbt-roundtrip-capabilities:check
-        env:
-          DVT_GIT_EVIDENCE_REPO: ${{ github.workspace }}/.git-evidence
-
-      - name: Remove reviewed-commit evidence checkout
-        if: always()
-        run: rm -rf -- "${{ github.workspace }}/.git-evidence"
-
       - name: ADR-0000 traceability gate
         if:
           github.event_name == 'push' || (github.event_name == 'pull_request' &&

@@ -563,9 +563,9 @@ test('scope diff consumers use shallow checkout instead of full PR history', () 
   assert.doesNotMatch(prQualityGate, /uses: \.\/\.github\/actions\/fetch-scope-base/u);
   assertWorkflowContains(prQualityGate, 'fetch-depth: 2');
   assertWorkflowContains(prQualityGate, 'github.event.pull_request.base.sha');
-  assertWorkflowContains(prQualityGate, 'name: Checkout reviewed-commit evidence history');
-  assertWorkflowContains(prQualityGate, 'path: .git-evidence');
-  assert.equal((prQualityGate.match(/fetch-depth:\s*0/gu) ?? []).length, 1);
+  assertWorkflowExcludes(prQualityGate, 'name: Checkout reviewed-commit evidence history');
+  assertWorkflowExcludes(prQualityGate, 'path: .git-evidence');
+  assert.equal((prQualityGate.match(/fetch-depth:\s*0/gu) ?? []).length, 0);
 
   assertWorkflowContains(workflowBundle, 'fetch-depth: 1');
   assert.doesNotMatch(
