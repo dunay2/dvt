@@ -637,7 +637,6 @@ allowedImplementationSurfaces:
   - docs/.manifest.json
   - docs/concepts/repository-map.md
   - docs/planning/status/**
-  - tools/planning-db/state/canonical-state.json
 forbiddenImplementationSurfaces:
   - database migrations or migration-state compatibility
   - packages/@dvt/engine/**
@@ -691,7 +690,6 @@ completionGate:
   - pnpm --filter @dvt/web typecheck
   - node --test scripts/run-canvas-source-import-live-proof.test.cjs
   - pnpm --filter @dvt/web test:e2e:source-import:live
-  - pnpm planning:db:export:check
   - pnpm verify:prepush
 redGreenCycles:
   - id: connection-reference-contract

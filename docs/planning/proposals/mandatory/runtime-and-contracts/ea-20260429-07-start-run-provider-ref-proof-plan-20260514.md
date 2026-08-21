@@ -114,7 +114,6 @@ completionGate:
   - pnpm docs:feature-mechanization -- --feature EA-20260429-07-START-RUN-PROVIDER-REF-PROOF
   - pnpm --filter @dvt/engine test -- test/core/WorkflowEngine.intentLog.test.ts
   - pnpm --filter @dvt/engine typecheck
-  - pnpm planning:db:export:check
   - pnpm verify:prepush
 redGreenCycles:
   - id: no-estimate-provider-ref-bootstrap-proof

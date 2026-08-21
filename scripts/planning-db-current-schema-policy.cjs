@@ -178,9 +178,68 @@ function assertNoPlanningDbMigrationArtifacts(options = {}) {
   return artifacts;
 }
 
+function findPlanningDbSnapshotAuthorityReferences(options = {}) {
+  const exemptSnapshotAuthorityPaths = new Set([
+    'scripts/planning-db-current-schema-policy.cjs',
+    'scripts/planning-db-current-schema-policy.test.cjs',
+    'scripts/planning-db-export.test.cjs',
+    'scripts/generate-code-status.test.cjs',
+    'scripts/planning-db-operate-tests/architecture-parse.test.cjs',
+    'scripts/planning-db-operate-tests/architecture-plan.test.cjs',
+  ]);
+  const filePaths = (options.filePaths || trackedFiles()).map(toPosix);
+  const readFile =
+    options.readFile || ((filePath) => fs.readFileSync(path.join(repoRoot, filePath), 'utf8'));
+  const references = [];
+
+  for (const filePath of filePaths) {
+    if (
+      exemptSnapshotAuthorityPaths.has(filePath) ||
+      isHistoricalDocumentation(filePath) ||
+      isUnrelatedRuntimeMigration(filePath)
+    ) {
+      continue;
+    }
+    if (!options.readFile && !fs.existsSync(path.join(repoRoot, filePath))) {
+      continue;
+    }
+    const content = String(readFile(filePath) || '');
+    if (/tools\/planning-db\/state\/canonical-state\.json/u.test(content)) {
+      references.push({ path: filePath, reason: 'tracked Planning DB snapshot authority' });
+    }
+    if (
+      /RestorePlanningDbCanonicalArchitectureState|ExportPlanningDbCanonicalArchitectureState/u.test(
+        content
+      )
+    ) {
+      references.push({ path: filePath, reason: 'retired Planning DB snapshot rail' });
+    }
+    if (/pnpm (?:planning|governance):db:export:check/u.test(content)) {
+      references.push({ path: filePath, reason: 'routine Planning DB export gate' });
+    }
+  }
+
+  return references.sort((left, right) =>
+    `${left.path}\0${left.reason}`.localeCompare(`${right.path}\0${right.reason}`)
+  );
+}
+
+function assertNoPlanningDbSnapshotAuthorityReferences(options = {}) {
+  const references = findPlanningDbSnapshotAuthorityReferences(options);
+  if (references.length > 0) {
+    throw new Error(
+      `Planning DB snapshot authority policy failed:\n${references
+        .map(({ path: filePath, reason }) => `- ${filePath}: ${reason}`)
+        .join('\n')}`
+    );
+  }
+  return references;
+}
+
 if (require.main === module) {
   try {
     assertNoPlanningDbMigrationArtifacts();
+    assertNoPlanningDbSnapshotAuthorityReferences();
     console.log('[planning:db:current-schema-policy] OK');
   } catch (error) {
     console.error(`[planning:db:current-schema-policy] ${error.message || error}`);
@@ -191,5 +250,7 @@ if (require.main === module) {
 module.exports = {
   assertCurrentStateValue,
   assertNoPlanningDbMigrationArtifacts,
+  assertNoPlanningDbSnapshotAuthorityReferences,
+  findPlanningDbSnapshotAuthorityReferences,
   findPlanningDbMigrationArtifacts,
 };

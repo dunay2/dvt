@@ -17,10 +17,11 @@ Accepted.
 
 ## Context
 
-Planning DB is a repository-governance query store. Git, repository-derived
-inputs, and the bounded canonical architecture-state export contain the facts
-needed to reconstruct it. Planning DB does not serve product runtime data and
-has no supported rolling-upgrade or historical-database compatibility contract.
+Planning DB is a repository-governance query store. Git and repository-derived
+inputs reconstruct imported projections; DB-authored architecture and
+mechanization rows remain authoritative in Planning DB. Planning DB does not
+serve product runtime data and has no supported rolling-upgrade or
+historical-database compatibility contract.
 
 The existing implementation nevertheless applies hundreds of ordered SQL
 files, records their versions and checksums in `schema_migrations`, and rejects
@@ -38,8 +39,8 @@ The rebuild path MUST:
 
 1. replace the complete `planning_query_store` schema;
 2. apply the one current schema definition;
-3. import repository-derived projections and the bounded canonical
-   architecture state;
+3. import repository-derived projections without replacing DB-authored
+   architecture or mechanization authority;
 4. fail closed without publishing a partial schema or partial import; and
 5. produce equivalent query and export results for identical repository inputs.
 
@@ -51,11 +52,13 @@ Planning DB MUST NOT contain or expose:
 - compatibility logic for an older Planning DB instance; or
 - preservation of local database rows across a rebuild.
 
-Git remains the history, review, and recovery boundary. The existing
-`RestorePlanningDbCanonicalArchitectureState` and
-`ExportPlanningDbCanonicalArchitectureState` rails remain the recovery rails.
-The migration-policy rail is retired and replaced by a current-schema fitness
-rule that rejects migration artifacts.
+Git remains the history and review boundary for repository-owned inputs.
+`ImportPlanningGovernanceQueryStore` owns their projection into Planning DB.
+DB-authored architecture and mechanization are read through governed queries;
+derived publication is available only through the explicitly requested
+`PublishPlanningDbDerivedProjections` rail. The migration-policy rail is
+retired and replaced by a current-schema fitness rule that rejects migration
+artifacts.
 
 Archived and superseded documents remain historical evidence only. Current
 command/query rail discovery and implementation evidence MUST exclude them so
@@ -101,11 +104,11 @@ preserves the same incorrect lifecycle model under a smaller file count.
 Rejected because it introduces compatibility semantics and lets unexported
 database state compete with canonical current-state inputs.
 
-### Use a second schema snapshot format
+### Use a second state snapshot format
 
 Rejected because it creates another owner. The declarative current SQL schema
-is the only schema definition; canonical JSON remains limited to bounded
-architecture and mechanization state.
+is the only schema definition, and Planning DB remains the sole authority for
+DB-authored architecture and mechanization state.
 
 ## Validation
 

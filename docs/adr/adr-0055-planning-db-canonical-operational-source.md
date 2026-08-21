@@ -47,10 +47,9 @@ operations must use the DB command/query rails:
 - `planning:db:query` for task, dependency, evidence, status, artifact,
   repository command, PR readiness, and governance inspection;
 - `planning:db:operate` for task lifecycle operations;
-- `planning:db:export` and `governance:db:export` for deterministic,
-  reviewable exported surfaces;
-- `planning:db:check`, `planning:db:export:check`, `governance:db:check`, and
-  `governance:db:export:check` as closeout gates.
+- `planning:db:export` and `governance:db:export` only when a deterministic,
+  reviewable derived publication is explicitly requested;
+- `planning:db:check` and `governance:db:check` as routine closeout gates.
 
 Implicit YAML fallback is no longer the default for generated workboards.
 YAML can still be requested explicitly for bootstrap/export compatibility, but

@@ -59,7 +59,7 @@ domainObjects:
 fowlerSignals: [Implicit source authority removed, Hidden closure risk made fail-closed, Duplicate threshold aliases replaced with canonical keys]
 architectureGuards: [node --test tools/ops/ar-c2-evidence-collector.architecture.test.mjs, pnpm docs:feature-mechanization:implementation]
 cypressFlows: [N/A - operational command only]
-completionGate: [pnpm docs:feature-mechanization -- --feature AR-C2-INV-3-THRESHOLD-SOURCE-TRACE, node --test tools/ops/ar-c2-evidence-collector.architecture.test.mjs, pnpm ops:ar-c2:evidence, pnpm lint:md:changed, pnpm docs:sync:check, pnpm planning:db:export:check, pnpm verify:prepush]
+completionGate: [pnpm docs:feature-mechanization -- --feature AR-C2-INV-3-THRESHOLD-SOURCE-TRACE, node --test tools/ops/ar-c2-evidence-collector.architecture.test.mjs, pnpm ops:ar-c2:evidence, pnpm lint:md:changed, pnpm docs:sync:check, pnpm verify:prepush]
 redGreenCycles:
   - {id: threshold-source-renders-in-generated-evidence, redTest: node --test tools/ops/ar-c2-evidence-collector.architecture.test.mjs, expectedFailure: generated AR-C2 evidence omits source reference beside threshold keys, patchSurfaces: [docs/runbooks/ar-c2-sla-signal-threshold-mapping-20260404.md, tools/ops/ar-c2-evidence-collector.mjs], greenTest: node --test tools/ops/ar-c2-evidence-collector.architecture.test.mjs}
   - {id: missing-threshold-source-fails-closed, redTest: node --test tools/ops/ar-c2-evidence-collector.architecture.test.mjs, expectedFailure: collector accepts threshold-backed mapping rows with no SLA source reference, patchSurfaces: [tools/ops/ar-c2-evidence-collector.mjs, tools/ops/ar-c2-evidence-collector.architecture.test.mjs], greenTest: node --test tools/ops/ar-c2-evidence-collector.architecture.test.mjs}

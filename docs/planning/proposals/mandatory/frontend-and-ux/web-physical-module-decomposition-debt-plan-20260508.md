@@ -14,8 +14,8 @@ evidence through the existing `DetectCodeSymbolDuplicates`,
 `ReadComponentProfile`, and `CheckPlanningDbComponentIntegrity` rails.
 Remediation delivery state belongs in GitHub Issues.
 
-Current component evidence is in `tools/planning-db/state/canonical-state.json`;
-the query structures are declared in `tools/planning-db/schema.sql`.
+Current component evidence lives in Planning DB and is read through governed
+queries; the query structures are declared in `tools/planning-db/schema.sql`.
 Validation is the affected web tests,
 `node --test scripts/planning-db-integrity-check.test.cjs scripts/planning-db-query.test.cjs`,
 and `pnpm verify:prepush`.

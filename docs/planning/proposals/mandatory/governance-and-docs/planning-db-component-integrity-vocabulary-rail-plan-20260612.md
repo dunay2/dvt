@@ -24,9 +24,9 @@ Current query names include `ValidateComponentIntegrity`,
 
 All DDL, functions, and views are declared only in
 `tools/planning-db/schema.sql`. Current components, relations, responsibilities,
-and rail evidence are exported only through
-`tools/planning-db/state/canonical-state.json`. Validation is
-`node --test scripts/planning-db-integrity-check.test.cjs scripts/planning-db-query.test.cjs scripts/planning-db-operate.test.cjs scripts/planning-db-architecture-state.test.cjs`
+and rail evidence live only in Planning DB and are read through governed
+queries. Validation is
+`node --test scripts/planning-db-integrity-check.test.cjs scripts/planning-db-query.test.cjs scripts/planning-db-operate.test.cjs scripts/planning-db-current-schema-policy.test.cjs`
 and `pnpm verify:prepush`.
 
 The detailed delivery record is historical and remains at `archived_record`.

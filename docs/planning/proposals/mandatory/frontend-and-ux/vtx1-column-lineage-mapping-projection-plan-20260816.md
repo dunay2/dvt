@@ -277,7 +277,6 @@ allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/frontend-and-ux/vtx1-column-lineage-mapping-projection-plan-20260816.md
   - docs/.manifest.json
   - docs/**/index.md
-  - tools/planning-db/state/canonical-state.json
   - tools/planning-db/state/db-governance-surfaces.json
 forbiddenImplementationSurfaces:
   - apps/api/**

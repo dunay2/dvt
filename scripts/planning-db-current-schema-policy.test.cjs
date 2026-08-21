@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const {
   assertCurrentStateValue,
   assertNoPlanningDbMigrationArtifacts,
+  findPlanningDbSnapshotAuthorityReferences,
   findPlanningDbMigrationArtifacts,
 } = require('./planning-db-current-schema-policy.cjs');
 
@@ -85,4 +86,29 @@ test('current-schema policy fails closed with actionable diagnostics', () => {
 
 test('repository contains no Planning DB migration or migration-state artifact', () => {
   assert.deepEqual(findPlanningDbMigrationArtifacts(), []);
+});
+
+test('snapshot authority policy rejects active snapshot paths and retired rails', () => {
+  const contents = new Map([
+    ['docs/current.md', 'Read tools/planning-db/state/canonical-state.json.'],
+    ['scripts/current.cjs', 'RestorePlanningDbCanonicalArchitectureState'],
+    ['docs/gate.md', 'Run pnpm planning:db:export:check before closeout.'],
+    ['docs/planning/archive/old.md', 'ExportPlanningDbCanonicalArchitectureState'],
+  ]);
+
+  assert.deepEqual(
+    findPlanningDbSnapshotAuthorityReferences({
+      filePaths: [...contents.keys()],
+      readFile: (filePath) => contents.get(filePath),
+    }).map(({ path, reason }) => [path, reason]),
+    [
+      ['docs/current.md', 'tracked Planning DB snapshot authority'],
+      ['docs/gate.md', 'routine Planning DB export gate'],
+      ['scripts/current.cjs', 'retired Planning DB snapshot rail'],
+    ]
+  );
+});
+
+test('repository contains no active tracked-snapshot authority reference', () => {
+  assert.deepEqual(findPlanningDbSnapshotAuthorityReferences(), []);
 });

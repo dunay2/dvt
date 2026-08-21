@@ -263,7 +263,7 @@ Command semantics:
   suite unless the current schema, DB rails, or shared query-store surfaces changed.
 - Planning DB schema edits under `tools/planning-db/schema.sql` route through
   `pnpm test:planning:db:current-schema`, which exercises the declarative schema,
-  canonical architecture state, and no-history policy without running the full
+  DB-authority boundary, and no-history policy without running the full
   `pnpm test:planning:db` package. When the same slice already changes an adjacent
   current-schema test, the changed-file verifier runs that direct suite once and
   does not add the wrapper command again.
@@ -749,8 +749,8 @@ Frontend Tests` lane and the main/manual `Full CI` baseline both set the same we
   reports before the DB import. It builds those report projections in-memory
   for the import, performs the heavy governance DB import once in the final
   database-validation phase, then runs `governance:db:check` and DB-sourced
-  final coverage/remediation report checks before
-  `governance:db:export:check`.
+  final coverage/remediation report checks. Export checks remain explicit,
+  operator-requested publication operations.
 - Default `pnpm verify:prepush` delegates changed-slice planning DB inventory
   validation to `pnpm verify:changed` instead of running
   `planning:db:inventory:check` a second time. Full pre-push mode still keeps
