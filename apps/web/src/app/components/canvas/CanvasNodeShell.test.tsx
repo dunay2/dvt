@@ -330,6 +330,9 @@ describe('CanvasNodeShell', () => {
     expect(componentCss).toMatch(
       /react-flow:has\(\.react-flow__handle\.connectingfrom\)\s+\.react-flow__pane[^}]*cursor:\s*grabbing\s*!important;/su
     );
+    expect(componentCss).toMatch(
+      /react-flow:has\(\.react-flow__handle\.connectingfrom\)\s+\.react-flow__pane\s+\*[^}]*cursor:\s*grabbing\s*!important;/su
+    );
     expect(componentCss).not.toContain('cursor: crosshair;');
   });
 });
