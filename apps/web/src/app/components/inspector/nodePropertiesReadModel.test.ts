@@ -11,10 +11,10 @@ import {
 
 const presentationCopy = {
   columnsLabel: 'Columns',
-  declaredColumnsDetailTemplate: '{count} declared columns.',
-  inheritedColumnsDetailTemplate: '{count} inherited columns.',
-  mixedColumnsDetailTemplate: '{declared} mapped and {available} available columns.',
-  noColumnsDetail: 'No columns.',
+  declaredColumnsDetailTemplate: 'Inherited: 0 · Declared: {count}',
+  inheritedColumnsDetailTemplate: 'Inherited: {count} · Declared: 0',
+  mixedColumnsDetailTemplate: 'Inherited: {available} · Declared: {declared}',
+  noColumnsDetail: 'Inherited: 0 · Declared: 0',
   codeLabel: 'Code',
   workspaceCodeDetailTemplate: 'Code lives at {path}.',
   generatedCodeDetailTemplate: 'Generated code at {path}.',
@@ -873,7 +873,7 @@ describe('nodePropertiesReadModel', () => {
       reference: 'source-orders.customer',
       selection: 'selected',
     });
-    expect(sectionById(model, 'columns').description).toBe('2 inherited columns.');
+    expect(sectionById(model, 'columns').description).toBe('Inherited: 2 · Declared: 0');
     const codeSection = sectionById(model, 'code');
     expect(codeSection).toMatchObject({
       label: 'Code',

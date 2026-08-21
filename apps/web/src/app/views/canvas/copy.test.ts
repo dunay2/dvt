@@ -50,6 +50,32 @@ const INSPECTOR_DRAFT_ERROR_COPY_KEYS = [
 ])[];
 
 describe('canvas copy catalog', () => {
+  it('summarizes inherited and declared columns without explanatory prose', () => {
+    const englishCopy = resolveCanvasViewCopy('en-US');
+    const spanishCopy = resolveCanvasViewCopy('es-ES');
+
+    expect(englishCopy.nodePresentationInheritedColumnsDetailTemplate).toBe(
+      'Inherited: {count} · Declared: 0'
+    );
+    expect(englishCopy.nodePresentationDeclaredColumnsDetailTemplate).toBe(
+      'Inherited: 0 · Declared: {count}'
+    );
+    expect(englishCopy.nodePresentationMixedColumnsDetailTemplate).toBe(
+      'Inherited: {available} · Declared: {declared}'
+    );
+    expect(englishCopy.nodePresentationNoColumnsDetail).toBe('Inherited: 0 · Declared: 0');
+    expect(spanishCopy.nodePresentationInheritedColumnsDetailTemplate).toBe(
+      'Heredadas: {count} · Declaradas: 0'
+    );
+    expect(spanishCopy.nodePresentationDeclaredColumnsDetailTemplate).toBe(
+      'Heredadas: 0 · Declaradas: {count}'
+    );
+    expect(spanishCopy.nodePresentationMixedColumnsDetailTemplate).toBe(
+      'Heredadas: {available} · Declaradas: {declared}'
+    );
+    expect(spanishCopy.nodePresentationNoColumnsDetail).toBe('Heredadas: 0 · Declaradas: 0');
+  });
+
   it('exposes draft access posture copy in English and Spanish', () => {
     expect(canvasViewCopy.sessionRequiredDraftLabel).toBe('Session required');
     expect(canvasViewCopy.readOnlyDraftLabel).toBe('Read-only draft');
