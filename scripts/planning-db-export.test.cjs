@@ -139,6 +139,20 @@ test('planning DB export exposes only explicit derived publication artifacts', (
   ]);
 });
 
+test('governance surface validations never make DB export a routine gate', () => {
+  const catalog = JSON.parse(
+    fs.readFileSync(
+      path.resolve(__dirname, '..', 'tools', 'planning-db', 'state', 'db-governance-surfaces.json'),
+      'utf8'
+    )
+  );
+
+  for (const surface of catalog.surfaces) {
+    assert.doesNotMatch(surface.validation, /(?:planning|governance):db:export(?::check)?/u);
+    assert.doesNotMatch(surface.writeRail, /then export/iu);
+  }
+});
+
 test('planning DB export compares governance YAML by structured meaning', () => {
   const runner = new PlanningDbExportRunner();
   const compact = `---\nversion: 1\nrootUnit: SYS-DVT\nunits:\n  - id: SYS-DVT\n    name: DVT system\n    level: system\n    status: review\n`;
