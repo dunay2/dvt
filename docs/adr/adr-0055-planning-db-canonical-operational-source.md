@@ -40,9 +40,9 @@ hashes, expose read models, and export reviewable generated artifacts.
 The local planning Postgres database is the canonical operational source for
 planning and governance coordination.
 
-Git remains the review, bootstrap, and recovery boundary. The repository keeps
-the YAML/docs sources needed to rebuild the database, but daily planning
-operations must use the DB command/query rails:
+Git remains the review and bootstrap boundary for repository-owned inputs. It
+does not recover DB-authored architecture, mechanization, overlays, or audit
+rows. Daily planning operations must use the DB command/query rails:
 
 - `planning:db:query` for task, dependency, evidence, status, artifact,
   repository command, PR readiness, and governance inspection;
@@ -52,8 +52,8 @@ operations must use the DB command/query rails:
 - `planning:db:check` and `governance:db:check` as routine closeout gates.
 
 Implicit YAML fallback is no longer the default for generated workboards.
-YAML can still be requested explicitly for bootstrap/export compatibility, but
-normal generation must fail closed if the canonical DB is unavailable or stale.
+Derived YAML can be requested explicitly for human review, but normal
+generation must fail closed if the canonical DB is unavailable or stale.
 
 ## Consequences
 
@@ -66,10 +66,10 @@ normal generation must fail closed if the canonical DB is unavailable or stale.
 - Repository command and PR readiness inspection can use imported DB rows
   instead of re-walking command catalogs or ARC policy state for operator
   output.
-- Closeout must run DB import/check/export gates before a branch is called ready.
-- A database reset is acceptable only because Git remains the bootstrap and
-  review boundary; it is not a license to bypass DB command rails during normal
-  work.
+- Routine closeout runs only DB import and check gates.
+- Derived publication occurs only in response to an explicit operator request.
+- A database reset is an explicit destructive operator action. Git can
+  reconstruct repository projections, but not DB-authored authority.
 
 ## Non-Goals
 

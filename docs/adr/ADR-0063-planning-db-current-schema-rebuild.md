@@ -32,17 +32,20 @@ second history authority beside Git.
 
 ## Decision
 
-Planning DB uses one declarative current schema and a destructive,
-deterministic rebuild/import path.
+Planning DB uses one declarative current schema for empty-database bootstrap
+and a separate deterministic import path for repository-owned projections.
 
-The rebuild path MUST:
+The bootstrap path MUST:
 
-1. replace the complete `planning_query_store` schema;
-2. apply the one current schema definition;
-3. import repository-derived projections without replacing DB-authored
-   architecture or mechanization authority;
-4. fail closed without publishing a partial schema or partial import; and
-5. produce equivalent query and export results for identical repository inputs.
+1. apply the one current schema definition only to an empty or explicitly reset
+   Planning DB;
+2. fail closed rather than upgrade or reconcile an older schema; and
+3. leave routine imports unable to replace the schema.
+
+The import path MUST refresh repository-derived projections in place, preserve
+DB-authored architecture, mechanization, overlays, and audit rows, fail closed
+without publishing a partial import, and produce equivalent query results for
+identical repository inputs.
 
 Planning DB MUST NOT contain or expose:
 
@@ -50,7 +53,7 @@ Planning DB MUST NOT contain or expose:
 - a migration runner or migration command;
 - an applied-migration table, version, checksum, or ordinal;
 - compatibility logic for an older Planning DB instance; or
-- preservation of local database rows across a rebuild.
+- an implicit destructive rebuild during import, query, refresh, or closeout.
 
 Git remains the history and review boundary for repository-owned inputs.
 `ImportPlanningGovernanceQueryStore` owns their projection into Planning DB.
@@ -73,15 +76,17 @@ outside its boundary.
 Positive:
 
 - current governance truth no longer depends on intermediate delivery states;
-- there is one schema owner and one recovery path;
+- there is one schema owner and one empty-database bootstrap path;
 - obsolete schema and state disappear when the current definition changes;
 - bootstrap cost and review surface no longer grow with repository history;
-- Git provides the only historical record.
+- Git records repository-owned history while Planning DB audit rows record
+  operated architecture and mechanization history.
 
 Costs:
 
 - every Planning DB schema change edits the current schema in place;
-- existing local Planning DB contents are intentionally discarded on rebuild;
+- an operator-confirmed reset intentionally discards DB-authored state and is
+  not a routine recovery mechanism;
 - schema and import must be validated together against a real PostgreSQL
   instance;
 - active documents, policies, tests, and generated state must not refer to
@@ -99,10 +104,11 @@ historical transitions part of the current contract.
 Rejected because a baseline migration, migration command, or one-row ledger
 preserves the same incorrect lifecycle model under a smaller file count.
 
-### Preserve local rows during rebuild
+### Preserve local rows through a compatibility rebuild
 
-Rejected because it introduces compatibility semantics and lets unexported
-database state compete with canonical current-state inputs.
+Rejected because copying rows across incompatible schemas would introduce
+compatibility semantics. Routine imports preserve DB-authored rows by not
+rebuilding the schema; an explicit reset starts an empty database.
 
 ### Use a second state snapshot format
 
@@ -113,9 +119,11 @@ DB-authored architecture and mechanization state.
 ## Validation
 
 - repository fitness test rejects Planning DB migration artifacts;
-- schema bootstrap tests prove fail-closed replacement behavior;
-- real PostgreSQL integration proves empty and populated rebuilds;
-- rebuild/import/query/export runs twice with equivalent results and zero
+- schema bootstrap tests prove empty-database initialization and fail-closed
+  handling of incompatible schemas;
+- real PostgreSQL integration proves repeated imports preserve DB-authored
+  architecture, mechanization, overlays, and audit rows;
+- import and query run twice with equivalent repository projections and zero
   second-run repository diff;
 - Planning DB, documentation, governance refresh, and pre-push gates pass.
 
