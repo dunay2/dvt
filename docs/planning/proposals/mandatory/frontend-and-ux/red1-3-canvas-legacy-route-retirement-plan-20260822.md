@@ -48,6 +48,12 @@ introduced.
   `DbtProjectFileCanvasView.tsx` for node-authoring authority. Its semantic
   changes are independent; this cut removes only legacy route-intent fields.
   Final integration must recheck those two files if #2537 lands first.
+- The first full Canvas validation exposed a pre-existing Windows-only test
+  blocker: `canvasGraphSearchPresentation.test.ts` compares a multiline CSS
+  literal using LF while the governed checkout supplies CRLF. The stylesheet
+  and visual contract are unchanged. The test must normalize line endings
+  before its exact semantic assertion so the same contract runs on Windows and
+  Linux without relaxing the expected selector or token.
 
 ## Governing Rail And Surviving Authorities
 
@@ -236,6 +242,7 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/useCanvasRouteIntentHandler.ts
   - apps/web/src/app/views/canvas/useCanvasRouteIntentHandler.test.tsx
   - apps/web/src/app/views/canvas/canvasCanonicalRouteAuthority.architecture.test.ts
+  - apps/web/src/app/views/canvas/canvasGraphSearchPresentation.test.ts
   - apps/web/src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
   - apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
   - tools/planning-db/state/**
@@ -330,6 +337,12 @@ redGreenCycles:
       - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
       - docs/architecture/components/web/screen-manuals-and-user-stories.md
     greenTest: rg -n '/canvas/(code|lineage|diff|artifacts)|retired-workbench-redirect|canvasIntent' docs/architecture/components/web/graph/graph-route-bootstrap-architecture.md docs/architecture/components/web/screen-manuals-and-user-stories.md
+  - id: canvas-css-contract-cross-platform-line-endings
+    redTest: pnpm --filter @dvt/web exec vitest run --config vitest.canvas-unit.config.ts src/app/views/canvas/canvasGraphSearchPresentation.test.ts
+    expectedFailure: Windows CRLF prevents the unchanged multiline CSS selector assertion from matching the canonical stylesheet.
+    patchSurfaces:
+      - apps/web/src/app/views/canvas/canvasGraphSearchPresentation.test.ts
+    greenTest: pnpm --filter @dvt/web exec vitest run --config vitest.canvas-unit.config.ts src/app/views/canvas/canvasGraphSearchPresentation.test.ts
 symbols:
   - name: createAppRoutes
     path: apps/web/src/app/routes.ts
