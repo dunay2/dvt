@@ -60,6 +60,45 @@ describe('projectCanvasNodePresentationTruth', () => {
     });
   });
 
+  it('projects source columns through a model onto a downstream snapshot', () => {
+    const snapshot: CanonicalNode = {
+      id: 'snapshot.orders',
+      name: 'Orders snapshot',
+      pluginId: 'dbt',
+      kind: 'dbt:snapshot',
+      role: 'transform',
+      status: 'idle',
+      tags: [],
+      metadata: {},
+    };
+    const modelToSnapshot: CanonicalEdge = {
+      id: 'model.orders->snapshot.orders',
+      sourceId: model.id,
+      targetId: snapshot.id,
+      relation: 'lineage',
+    };
+
+    const truth = projectCanvasNodePresentationTruth({
+      node: snapshot,
+      nodes: [source, model, snapshot],
+      edges: [edge, modelToSnapshot],
+    });
+
+    expect(truth.columns).toMatchObject({
+      declaredCount: 0,
+      inheritedCount: 1,
+      visibleCount: 1,
+      visibleProvenance: 'inherited',
+    });
+    expect(truth.columns.visible).toEqual([
+      expect.objectContaining({
+        name: 'order_id',
+        type: 'integer',
+        provenance: 'inherited',
+      }),
+    ]);
+  });
+
   it('preserves authored SQL as inline authority', () => {
     const authoredModel: CanonicalNode = {
       ...model,
