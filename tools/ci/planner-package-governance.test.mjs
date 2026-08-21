@@ -60,6 +60,16 @@ test('planner contract authority has no obsolete satellite workspace', () => {
 
   const workflowScopePolicy = readJson('tools/ci/policy/workflow-scope.json');
   assert.equal(Object.hasOwn(workflowScopePolicy, 'workspace_planner_contracts'), false);
+
+  for (const currentArchitecturePath of [
+    'docs/architecture/diagrams/implementation-architecture-diagrams.md',
+    'docs/architecture/domain-shared.md',
+    'docs/architecture/typescript-package-classification.md',
+    'docs/architecture/atlas/engineering/engineering-playbook.md',
+  ]) {
+    const architectureSource = readFileSync(currentArchitecturePath, 'utf8');
+    assert.doesNotMatch(architectureSource, /planner-contracts|plancontracts/u);
+  }
 });
 
 test('planner package build config keeps examples, docs and tests out of compiled source', () => {

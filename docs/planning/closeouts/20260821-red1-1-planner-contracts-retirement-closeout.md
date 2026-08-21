@@ -2,7 +2,7 @@
 title: RED1.1 Planner Contracts Retirement Closeout
 status: Accepted
 owner: Architecture / Planner / Contracts / CI
-last_reviewed: 2026-08-21
+last_reviewed: 2026-08-22
 planning_type: closeout
 task_ids:
   - GH-2590
@@ -122,6 +122,22 @@ The final `pnpm verify:prepush` gate is deliberately executed after the commit
 so the pre-commit hook can normalize staged files first, as required by the
 repository's Prettier rule. Its exact result belongs in the PR and task
 closeout report.
+
+### Review remediation
+
+- P1 documentation-index feedback: `pnpm docs:sync` completed successfully on
+  2026-08-22 and reported every governed index canonical, with no generated
+  diff. `docs/.manifest.json` intentionally catalogs ADRs, `ED-*` evidence,
+  planning status/gaps, and architecture/concepts/contracts documents; the
+  manifest generator does not classify planning proposals or closeouts. Both
+  RED1.1 documents are present in the generated governance document/file maps.
+- P2 active-reference feedback: removed the residual
+  `planner --> plancontracts` Mermaid edge and `planner-contracts/` engineering
+  playbook entry. The architecture guard now scans all four current
+  architecture surfaces and fails on either `planner-contracts` or the phantom
+  `plancontracts` node identifier.
+- Review red/green: the expanded guard failed on the Mermaid edge before the
+  remediation and passed `5/5` after both current references were removed.
 
 ## Debt And Stub Evidence
 

@@ -323,7 +323,6 @@ flowchart LR
   delivery --> contracts
   delivery --> obs
   planner --> contracts
-  planner --> plancontracts
   interpreter --> contracts
   verifier --> contracts
   canonical --> contracts
