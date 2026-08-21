@@ -7,25 +7,16 @@ const dependencies = (() => {
 
   return {
     fs: require('node:fs'),
-    crypto: require('node:crypto'),
     os: require('node:os'),
     path,
     yaml: require('js-yaml'),
     Client: require('pg').Client,
     defaultPgUrl: require('./planning-db-run.cjs').defaultPgUrl,
     schemaName: require('./planning-db-schema.cjs').schemaName,
-    readArchitectureState: require('./planning-db-architecture-state.cjs').readArchitectureState,
-    assertCurrentRailDecisionState: require('./planning-db-architecture-state.cjs')
-      .assertCurrentRailDecisionState,
-    assertCurrentStateValue: require('./planning-db-architecture-state.cjs')
-      .assertCurrentStateValue,
-    normalizeTextBytesForHash: require('./generate-governance-file-component-index.cjs')
-      .normalizeTextBytesForHash,
     repoRoot: path.resolve(__dirname, '..'),
   };
 })();
 
-const canonicalStateArtifactPath = 'tools/planning-db/state/canonical-state.json';
 const dbGovernanceSurfaceCatalogPath = 'tools/planning-db/state/db-governance-surfaces.json';
 const governanceUnitManifestPath = 'docs/planning/status/system-governance-unit-index.units.yaml';
 const governanceUnitNavigationPath =
@@ -33,7 +24,6 @@ const governanceUnitNavigationPath =
 const planStoreNavigationPath =
   'docs/planning/status/system-governance-planstore-file-ownership-20260501.md';
 const canonicalArtifactPaths = [
-  canonicalStateArtifactPath,
   dbGovernanceSurfaceCatalogPath,
   governanceUnitManifestPath,
   governanceUnitNavigationPath,
@@ -104,287 +94,64 @@ class PlanningDbExportRunner {
     console.log('Usage: pnpm planning:db:export [--check] [--output-root <path>]');
   }
 
-  async readCanonicalStateRows(client) {
-    const [
-      featureMechanizationRails,
-      featureMechanizationRailOperations,
-      governanceComponentEffectiveDefinitions,
-      governanceComponentDefinitions,
-      governanceComponentOwnershipPatterns,
-      governanceComponentSemanticItems,
-      governanceComponentOperations,
-      dbGovernanceSurfaces,
-      fowlerAnalysisDispositions,
-      fowlerAnalysisCanonicalTargets,
-      fowlerAnalysisReferenceResolutions,
-      fowlerAnalysisRetirementDecisions,
-      fowlerAnalysisOperations,
-      architectureState,
-    ] = await Promise.all([
-      client.query(`
-        select
-          rail.rail_id as "railId",
-          rail.feature_id as "featureId",
-          rail.mechanization_status as "mechanizationStatus",
-          rail.rail_name as "railName",
-          rail.normalized_rail_name as "normalizedRailName",
-          rail.rail_type as "railType",
-          rail.ddd_owner as "dddOwner",
-          rail.rail_status as "railStatus",
-          rail.symbol_refs as "symbolRefs",
-          rail.implementation_refs as "implementationRefs",
-          rail.documentation_refs as "documentationRefs",
-          rail.governing_sources as "governingSources",
-          rail.allowed_implementation_surfaces as "allowedImplementationSurfaces",
-          rail.architecture_guards as "architectureGuards",
-          rail.completion_gate as "completionGate",
-          rail.source_path as "sourcePath",
-          rail.source_content_sha256 as "sourceContentSha256",
-          rail.raw_rail as "rawRail",
-          rail.raw_manifest as "rawManifest",
-          rail.revision,
-          rail.created_by as "createdBy",
-          rail.created_at as "createdAt"
-        from ${this.deps.schemaName}.feature_mechanization_local_rails rail
-        order by rail.rail_id
-      `),
-      client.query(`
-        select
-          operation.operation_id as "operationId",
-          operation.idempotency_key as "idempotencyKey",
-          operation.operation_type as "operationType",
-          operation.actor,
-          operation.rail_id as "railId",
-          operation.source_path as "sourcePath",
-          operation.source_content_sha256 as "sourceContentSha256",
-          operation.expected_revision as "expectedRevision",
-          operation.previous_revision as "previousRevision",
-          operation.resulting_revision as "resultingRevision",
-          operation.payload,
-          operation.created_at as "createdAt"
-        from ${this.deps.schemaName}.feature_mechanization_local_operations operation
-        order by operation.created_at, operation.operation_id
-      `),
-      client.query(`
-        select
-          definition.unit_id as "componentId",
-          definition.name,
-          definition.parent_id as "parentComponentId",
-          definition.level,
-          coalesce(component.status, definition.status) as status,
-          coalesce(component.children_required, definition.children_required) as "childrenRequired",
-          component.owns,
-          component.excludes,
-          component.owned_concern as "ownedConcern",
-          component.responsibilities,
-          component.non_goals as "nonGoals",
-          component.reasons_to_change as "reasonsToChange",
-          coalesce(component.ddd_owner, definition.ddd_owner) as "dddOwner",
-          coalesce(component.cq_rails, definition.cq_rails) as "cqRails",
-          component.public_api as "publicApi",
-          component.invariants,
-          component.transitions,
-          component.consumers,
-          component.governance_refs as "governanceRefs",
-          component.fowler_signals as "fowlerSignals",
-          definition.raw_units -> 0 as "rawUnit"
-        from ${this.deps.schemaName}.governance_unit_query definition
-        left join ${this.deps.schemaName}.governance_component_definition_query component
-          on component.component_id = definition.unit_id
-        order by definition.unit_id
-      `),
-      client.query(`
-        select
-          definition.component_id as "componentId",
-          definition.source_path as "sourcePath",
-          definition.source_content_sha256 as "sourceContentSha256",
-          definition.revision,
-          definition.name,
-          definition.level,
-          definition.parent_id as "parentComponentId",
-          definition.root_unit as "rootUnit",
-          definition.domain_unit as "domainUnit",
-          definition.status,
-          definition.children_required as "childrenRequired",
-          definition.owned_concern as "ownedConcern",
-          definition.ddd_owner as "dddOwner",
-          definition.cq_rails as "cqRails",
-          definition.created_by as "createdBy",
-          definition.created_at as "createdAt"
-        from ${this.deps.schemaName}.governance_component_local_definitions definition
-        order by definition.component_id
-      `),
-      client.query(`
-        select
-          pattern.component_id as "componentId",
-          pattern.pattern_kind as "patternKind",
-          pattern.pattern,
-          pattern.pattern_order as "patternOrder",
-          pattern.created_at as "createdAt"
-        from ${this.deps.schemaName}.governance_component_local_ownership_patterns pattern
-        order by pattern.component_id, pattern.pattern_kind, pattern.pattern_order, pattern.pattern
-      `),
-      client.query(`
-        select
-          item.component_id as "componentId",
-          item.item_kind as "itemKind",
-          item.item_value as "itemValue",
-          item.item_order as "itemOrder",
-          item.created_at as "createdAt"
-        from ${this.deps.schemaName}.governance_component_local_semantic_items item
-        order by item.component_id, item.item_kind, item.item_order, item.item_value
-      `),
-      client.query(`
-        select
-          operation.operation_id as "operationId",
-          operation.idempotency_key as "idempotencyKey",
-          operation.operation_type as "operationType",
-          operation.actor,
-          operation.component_id as "componentId",
-          operation.source_path as "sourcePath",
-          operation.source_content_sha256 as "sourceContentSha256",
-          operation.expected_revision as "expectedRevision",
-          operation.previous_revision as "previousRevision",
-          operation.resulting_revision as "resultingRevision",
-          operation.payload,
-          operation.created_at as "createdAt"
-        from ${this.deps.schemaName}.governance_component_local_operations operation
-        order by operation.created_at, operation.operation_id
-      `),
-      client.query(`
-        select
-          surface.surface_name as "surfaceName",
-          surface.canonical_source as "canonicalSource",
-          surface.write_rail as "writeRail",
-          surface.write_rail_kind as "writeRailKind",
-          surface.read_query_rail as "readQueryRail",
-          surface.projection,
-          surface.validation,
-          surface.authority_mode as "authorityMode"
-        from ${this.deps.schemaName}.db_governance_surfaces surface
-        order by surface.surface_name
-      `),
-      client.query(`
-        select
-          disposition.document_path as "documentPath",
-          disposition.disposition_status as "dispositionStatus",
-          disposition.disposition_kind as "dispositionKind",
-          disposition.canonical_target_path as "canonicalTargetPath",
-          disposition.reason,
-          disposition.source_content_sha256 as "sourceContentSha256",
-          disposition.recorded_by as "recordedBy",
-          disposition.recorded_at as "recordedAt",
-          disposition.raw_disposition as "rawDisposition"
-        from ${this.deps.schemaName}.fowler_analysis_dispositions disposition
-        order by disposition.document_path
-      `),
-      client.query(`
-        select
-          target.document_path as "documentPath",
-          target.target_path as "targetPath",
-          target.target_kind as "targetKind",
-          target.target_status as "targetStatus",
-          target.reason,
-          target.source_content_sha256 as "sourceContentSha256",
-          target.linked_by as "linkedBy",
-          target.linked_at as "linkedAt",
-          target.raw_target as "rawTarget"
-        from ${this.deps.schemaName}.fowler_analysis_canonical_targets target
-        order by target.document_path, target.target_path
-      `),
-      client.query(`
-        select
-          resolution.document_path as "documentPath",
-          resolution.reference_path as "referencePath",
-          resolution.relation_type as "relationType",
-          resolution.resolution_status as "resolutionStatus",
-          resolution.canonical_target_path as "canonicalTargetPath",
-          resolution.reason,
-          resolution.source_content_sha256 as "sourceContentSha256",
-          resolution.resolved_by as "resolvedBy",
-          resolution.resolved_at as "resolvedAt",
-          resolution.raw_resolution as "rawResolution"
-        from ${this.deps.schemaName}.fowler_analysis_reference_resolutions resolution
-        order by resolution.document_path, resolution.reference_path, resolution.relation_type
-      `),
-      client.query(`
-        select
-          decision.document_path as "documentPath",
-          decision.decision_status as "decisionStatus",
-          decision.reason,
-          decision.source_content_sha256 as "sourceContentSha256",
-          decision.decided_by as "decidedBy",
-          decision.decided_at as "decidedAt",
-          decision.raw_decision as "rawDecision"
-        from ${this.deps.schemaName}.fowler_analysis_retirement_decisions decision
-        order by decision.document_path
-      `),
-      client.query(`
-        select
-          operation.operation_id as "operationId",
-          operation.idempotency_key as "idempotencyKey",
-          operation.operation_type as "operationType",
-          operation.actor,
-          operation.document_path as "documentPath",
-          operation.target_path as "targetPath",
-          operation.reference_path as "referencePath",
-          operation.relation_type as "relationType",
-          operation.source_content_sha256 as "sourceContentSha256",
-          operation.payload,
-          operation.created_at as "createdAt"
-        from ${this.deps.schemaName}.fowler_analysis_operations operation
-        order by operation.created_at, operation.operation_id
-      `),
-      this.deps.readArchitectureState(client),
-    ]);
-
-    this.deps.assertCurrentStateValue(featureMechanizationRails.rows, 'featureMechanizationRails');
-    this.deps.assertCurrentStateValue(
-      featureMechanizationRailOperations.rows,
-      'featureMechanizationRailOperations'
-    );
-    this.deps.assertCurrentRailDecisionState(
-      featureMechanizationRails.rows,
-      featureMechanizationRailOperations.rows
-    );
-    for (const [stateName, rows] of [
-      ['fowlerAnalysisDispositions', fowlerAnalysisDispositions.rows],
-      ['fowlerAnalysisCanonicalTargets', fowlerAnalysisCanonicalTargets.rows],
-      ['fowlerAnalysisReferenceResolutions', fowlerAnalysisReferenceResolutions.rows],
-      ['fowlerAnalysisRetirementDecisions', fowlerAnalysisRetirementDecisions.rows],
-      ['fowlerAnalysisOperations', fowlerAnalysisOperations.rows],
-    ]) {
-      this.deps.assertCurrentStateValue(rows, stateName);
+  async readPublicationRows(client) {
+    const [governanceComponentEffectiveDefinitions, dbGovernanceSurfaces, architectureReview] =
+      await Promise.all([
+        client.query(`
+          select
+            definition.unit_id as "componentId",
+            definition.name,
+            definition.parent_id as "parentComponentId",
+            definition.level,
+            coalesce(component.status, definition.status) as status,
+            coalesce(component.children_required, definition.children_required) as "childrenRequired",
+            component.owns,
+            component.excludes,
+            component.owned_concern as "ownedConcern",
+            component.responsibilities,
+            component.non_goals as "nonGoals",
+            component.reasons_to_change as "reasonsToChange",
+            coalesce(component.ddd_owner, definition.ddd_owner) as "dddOwner",
+            coalesce(component.cq_rails, definition.cq_rails) as "cqRails",
+            component.public_api as "publicApi",
+            component.invariants,
+            component.transitions,
+            component.consumers,
+            component.governance_refs as "governanceRefs",
+            component.fowler_signals as "fowlerSignals",
+            definition.raw_units -> 0 as "rawUnit"
+          from ${this.deps.schemaName}.governance_unit_query definition
+          left join ${this.deps.schemaName}.governance_component_definition_query component
+            on component.component_id = definition.unit_id
+          order by definition.unit_id
+        `),
+        client.query(`
+          select
+            surface.surface_name as "surfaceName",
+            surface.canonical_source as "canonicalSource",
+            surface.write_rail as "writeRail",
+            surface.write_rail_kind as "writeRailKind",
+            surface.read_query_rail as "readQueryRail",
+            surface.projection,
+            surface.validation,
+            surface.authority_mode as "authorityMode"
+          from ${this.deps.schemaName}.db_governance_surfaces surface
+          order by surface.surface_name
+        `),
+        client.query(`
+          select max(coalesce(design.updated_at, design.created_at)) as "lastReviewedAt"
+          from architecture.design design
+        `),
+      ]);
+    const lastReviewed = String(architectureReview.rows[0]?.lastReviewedAt || '').slice(0, 10);
+    if (!/^\d{4}-\d{2}-\d{2}$/u.test(lastReviewed)) {
+      throw new Error('Cannot publish governance navigation without architecture review state.');
     }
-    const currentRails = featureMechanizationRails.rows.map((rail) => {
-      const sourcePath = this.deps.path.resolve(this.deps.repoRoot, rail.sourcePath);
-      if (!this.deps.fs.existsSync(sourcePath)) {
-        return rail;
-      }
-      return {
-        ...rail,
-        sourceContentSha256: this.deps.crypto
-          .createHash('sha256')
-          .update(this.deps.normalizeTextBytesForHash(this.deps.fs.readFileSync(sourcePath)))
-          .digest('hex'),
-      };
-    });
 
     return {
-      architectureState,
-      featureMechanizationRails: currentRails,
-      featureMechanizationRailOperations: featureMechanizationRailOperations.rows,
-      governanceComponentDefinitions: governanceComponentDefinitions.rows,
-      governanceComponentOwnershipPatterns: governanceComponentOwnershipPatterns.rows,
-      governanceComponentSemanticItems: governanceComponentSemanticItems.rows,
-      governanceComponentOperations: governanceComponentOperations.rows,
       governanceComponentEffectiveDefinitions: governanceComponentEffectiveDefinitions.rows,
       dbGovernanceSurfaces: dbGovernanceSurfaces.rows,
-      fowlerAnalysisDispositions: fowlerAnalysisDispositions.rows,
-      fowlerAnalysisCanonicalTargets: fowlerAnalysisCanonicalTargets.rows,
-      fowlerAnalysisReferenceResolutions: fowlerAnalysisReferenceResolutions.rows,
-      fowlerAnalysisRetirementDecisions: fowlerAnalysisRetirementDecisions.rows,
-      fowlerAnalysisOperations: fowlerAnalysisOperations.rows,
+      lastReviewed,
     };
   }
 
@@ -450,18 +217,6 @@ class PlanningDbExportRunner {
       },
       { lineWidth: 100, noRefs: true, sortKeys: false }
     )}`;
-  }
-
-  latestArchitectureReviewDate(architectureState) {
-    const reviewDates = (architectureState.design || [])
-      .map((design) => String(design.updated_at || design.created_at || '').slice(0, 10))
-      .filter((date) => /^\d{4}-\d{2}-\d{2}$/u.test(date))
-      .sort();
-    const latest = reviewDates.at(-1);
-    if (!latest) {
-      throw new Error('Cannot publish governance navigation without architecture review state.');
-    }
-    return latest;
   }
 
   renderGovernanceUnitNavigation(definitions, lastReviewed) {
@@ -568,9 +323,9 @@ ${componentLines.join('\n')}
     this.deps.fs.writeFileSync(outputPath, content, 'utf8');
   }
 
-  writeGovernanceProjections(snapshotRows, outputRoot) {
-    const definitions = snapshotRows.governanceComponentEffectiveDefinitions;
-    const lastReviewed = this.latestArchitectureReviewDate(snapshotRows.architectureState);
+  writeGovernanceProjections(publicationRows, outputRoot) {
+    const definitions = publicationRows.governanceComponentEffectiveDefinitions;
+    const lastReviewed = publicationRows.lastReviewed;
     this.writeTextArtifact(
       outputRoot,
       governanceUnitManifestPath,
@@ -588,35 +343,7 @@ ${componentLines.join('\n')}
     );
   }
 
-  writeCanonicalState(snapshotRows, outputRoot) {
-    const artifactPath = this.deps.path.join(outputRoot, canonicalStateArtifactPath);
-    this.deps.fs.mkdirSync(this.deps.path.dirname(artifactPath), { recursive: true });
-    this.deps.fs.writeFileSync(
-      artifactPath,
-      `${JSON.stringify(
-        {
-          schemaVersion: 1,
-          architectureState: snapshotRows.architectureState,
-          featureMechanizationRails: snapshotRows.featureMechanizationRails,
-          featureMechanizationRailOperations: snapshotRows.featureMechanizationRailOperations,
-          governanceComponentDefinitions: snapshotRows.governanceComponentDefinitions,
-          governanceComponentOwnershipPatterns: snapshotRows.governanceComponentOwnershipPatterns,
-          governanceComponentSemanticItems: snapshotRows.governanceComponentSemanticItems,
-          governanceComponentOperations: snapshotRows.governanceComponentOperations,
-          fowlerAnalysisDispositions: snapshotRows.fowlerAnalysisDispositions,
-          fowlerAnalysisCanonicalTargets: snapshotRows.fowlerAnalysisCanonicalTargets,
-          fowlerAnalysisReferenceResolutions: snapshotRows.fowlerAnalysisReferenceResolutions,
-          fowlerAnalysisRetirementDecisions: snapshotRows.fowlerAnalysisRetirementDecisions,
-          fowlerAnalysisOperations: snapshotRows.fowlerAnalysisOperations,
-        },
-        null,
-        2
-      )}\n`,
-      'utf8'
-    );
-  }
-
-  writeDbGovernanceSurfaceCatalog(snapshotRows, outputRoot) {
+  writeDbGovernanceSurfaceCatalog(publicationRows, outputRoot) {
     const artifactPath = this.deps.path.join(outputRoot, dbGovernanceSurfaceCatalogPath);
     this.deps.fs.mkdirSync(this.deps.path.dirname(artifactPath), { recursive: true });
     this.deps.fs.writeFileSync(
@@ -624,7 +351,7 @@ ${componentLines.join('\n')}
       `${JSON.stringify(
         {
           schemaVersion: 1,
-          surfaces: snapshotRows.dbGovernanceSurfaces,
+          surfaces: publicationRows.dbGovernanceSurfaces,
         },
         null,
         2
@@ -659,10 +386,7 @@ ${componentLines.join('\n')}
   }
 
   normalizeArtifactForComparison(artifactPath, content) {
-    if (
-      artifactPath === canonicalStateArtifactPath ||
-      artifactPath === dbGovernanceSurfaceCatalogPath
-    ) {
+    if (artifactPath === dbGovernanceSurfaceCatalogPath) {
       return JSON.stringify(this.canonicalizeStructuredValue(JSON.parse(content)));
     }
 
@@ -733,7 +457,7 @@ ${componentLines.join('\n')}
     }
 
     try {
-      const canonicalStateRows = await this.readCanonicalStateRows(client);
+      const publicationRows = await this.readPublicationRows(client);
 
       const outputRoot = options.check
         ? this.deps.fs.mkdtempSync(
@@ -747,9 +471,8 @@ ${componentLines.join('\n')}
         this.deps.fs.mkdirSync(outputRoot, { recursive: true });
       }
 
-      this.writeCanonicalState(canonicalStateRows, outputRoot);
-      this.writeDbGovernanceSurfaceCatalog(canonicalStateRows, outputRoot);
-      this.writeGovernanceProjections(canonicalStateRows, outputRoot);
+      this.writeDbGovernanceSurfaceCatalog(publicationRows, outputRoot);
+      this.writeGovernanceProjections(publicationRows, outputRoot);
       const report = options.check
         ? this.compareGeneratedArtifacts({
             expectedRoot: this.deps.repoRoot,
@@ -763,8 +486,6 @@ ${componentLines.join('\n')}
       }
 
       return {
-        canonicalArchitectureComponents: canonicalStateRows.architectureState.component.length,
-        canonicalFeatureMechanizationRails: canonicalStateRows.featureMechanizationRails.length,
         outputRoot,
         canonicalArtifactPaths,
         report,
@@ -792,7 +513,7 @@ async function main() {
 
   const result = await runner.exportPlanningDerivedSurfaces(options);
   console.log(
-    `[planning:db:export] canonicalState=${canonicalStateArtifactPath} outputRoot=${dependencies.path.relative(
+    `[planning:db:export] outputRoot=${dependencies.path.relative(
       dependencies.repoRoot,
       result.outputRoot
     )}`
@@ -810,7 +531,6 @@ if (require.main === module) {
 module.exports = {
   PlanningDbExportRunner,
   canonicalArtifactPaths,
-  canonicalStateArtifactPath,
   governanceUnitManifestPath,
   governanceUnitNavigationPath,
   planStoreNavigationPath,
