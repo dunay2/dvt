@@ -125,6 +125,29 @@ test('docs manifest full audit output stays deterministic and sorted', () => {
   assert.deepEqual(adrOrder, sortedAdrOrder);
 });
 
+test('docs manifest excludes generated planning landing pages', () => {
+  const manifest = JSON.parse(
+    runPnpm(['exec', 'tsx', 'tools/docs/generate-docs-manifest.ts', '--stdout', '--full'])
+  );
+  const manifestPaths = new Set(
+    [
+      ...manifest.adrs,
+      ...manifest.evidenceDocs,
+      ...manifest.normativeDocs,
+      ...manifest.statusDocs,
+    ].map((entry) => entry.path)
+  );
+
+  for (const generatedLandingPage of [
+    'docs/planning/index.md',
+    'docs/planning/proposals/index.md',
+    'docs/planning/reviews/index.md',
+    'docs/planning/status/index.md',
+  ]) {
+    assert.equal(manifestPaths.has(generatedLandingPage), false);
+  }
+});
+
 test('docs manifest command wiring keeps local and strict docs paths explicit', () => {
   assert.equal(
     rootPackage.scripts['docs:gov:manifest'],
