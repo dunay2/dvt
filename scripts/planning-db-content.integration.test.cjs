@@ -1,18 +1,64 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const crypto = require('node:crypto');
 const { Client } = require('pg');
 
 const { defaultPgUrl } = require('./planning-db-run.cjs');
 const { buildGovernanceFileSnapshot, importContent } = require('./planning-db-import.cjs');
 const { readHashDriftSummary, readSummary } = require('./planning-db-query.cjs');
+const { applyCurrentPlanningDbSchema } = require('./planning-db-schema.cjs');
+
+let adminClient;
+let isolatedDatabaseName;
+let isolatedDatabaseUrl;
 
 function authoritativeDbUrl() {
   return process.env.DVT_PLANNING_DB_URL || process.env.DATABASE_URL || defaultPgUrl;
 }
 
 function dbUrl() {
-  return authoritativeDbUrl();
+  if (!isolatedDatabaseUrl) {
+    throw new Error('Planning DB integration database has not been initialized.');
+  }
+  return isolatedDatabaseUrl;
 }
+
+function quoteDatabase(databaseName) {
+  if (!/^dvt_planning_test_[a-z0-9_]+$/u.test(databaseName)) {
+    throw new Error(`Refusing unsafe Planning DB integration database name: ${databaseName}`);
+  }
+  return `"${databaseName}"`;
+}
+
+function withDatabase(connectionString, databaseName) {
+  const url = new URL(connectionString);
+  url.pathname = `/${databaseName}`;
+  return url.toString();
+}
+
+test.before(async () => {
+  isolatedDatabaseName = `dvt_planning_test_${process.pid}_${crypto
+    .randomUUID()
+    .replaceAll('-', '')}`;
+  adminClient = new Client({ connectionString: authoritativeDbUrl() });
+  await adminClient.connect();
+  await adminClient.query(`create database ${quoteDatabase(isolatedDatabaseName)}`);
+  isolatedDatabaseUrl = withDatabase(authoritativeDbUrl(), isolatedDatabaseName);
+  await applyCurrentPlanningDbSchema({ databaseUrl: isolatedDatabaseUrl, silent: true });
+});
+
+test.after(async () => {
+  if (!adminClient || !isolatedDatabaseName) return;
+  try {
+    await adminClient.query(
+      'select pg_terminate_backend(pid) from pg_stat_activity where datname = $1 and pid <> pg_backend_pid()',
+      [isolatedDatabaseName]
+    );
+    await adminClient.query(`drop database if exists ${quoteDatabase(isolatedDatabaseName)}`);
+  } finally {
+    await adminClient.end();
+  }
+});
 
 async function runCurrentSchemaCycle() {
   await importContent({ databaseUrl: dbUrl(), silent: true });
