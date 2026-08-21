@@ -19,33 +19,6 @@ export function projectCanvasNodePresentationTruth(
   return projectCanvasNodePresentationTruthInternal(args, new Set());
 }
 
-function projectUpstreamVisibleColumns(
-  args: Readonly<{
-    node: CanonicalNode;
-    nodes: readonly CanonicalNode[];
-    edges: readonly Pick<CanonicalEdge, 'sourceId' | 'targetId'>[];
-  }>,
-  ancestorNodeIds: ReadonlySet<string>
-): CanvasNodePresentationTruth['columns']['inherited'] {
-  const upstreamNodeIds = new Set(
-    args.edges.filter((edge) => edge.targetId === args.node.id).map((edge) => edge.sourceId)
-  );
-
-  return args.nodes
-    .filter((node) => upstreamNodeIds.has(node.id) && !ancestorNodeIds.has(node.id))
-    .flatMap((node) =>
-      projectCanvasNodePresentationTruthInternal(
-        { node, nodes: args.nodes, edges: args.edges },
-        ancestorNodeIds
-      ).columns.visible.map((column) => ({
-        ...column,
-        provenance: 'inherited' as const,
-        sourceNodeId: column.sourceNodeId ?? node.id,
-        sourceNodeName: column.sourceNodeName ?? node.name,
-      }))
-    );
-}
-
 function projectCanvasNodePresentationTruthInternal(
   args: Readonly<{
     node: CanonicalNode;
@@ -125,8 +98,31 @@ function projectCanvasNodePresentationTruthInternal(
             } as const),
         }),
   });
+  const shouldProjectUpstreamColumns =
+    args.node.role === 'output' ||
+    (args.node.role === 'transform' &&
+      baseTruth.columns.declared.length === 0 &&
+      baseTruth.columns.inherited.length === 0);
+  const upstreamNodeIds = shouldProjectUpstreamColumns
+    ? new Set(
+        args.edges.filter((edge) => edge.targetId === args.node.id).map((edge) => edge.sourceId)
+      )
+    : new Set<string>();
+  const upstreamVisibleColumns = args.nodes
+    .filter((node) => upstreamNodeIds.has(node.id) && !nextAncestorNodeIds.has(node.id))
+    .flatMap((node) =>
+      projectCanvasNodePresentationTruthInternal(
+        { node, nodes: args.nodes, edges: args.edges },
+        nextAncestorNodeIds
+      ).columns.visible.map((column) => ({
+        ...column,
+        provenance: 'inherited' as const,
+        sourceNodeId: column.sourceNodeId ?? node.id,
+        sourceNodeName: column.sourceNodeName ?? node.name,
+      }))
+    );
   if (args.node.role === 'output') {
-    const inherited = projectUpstreamVisibleColumns(args, nextAncestorNodeIds);
+    const inherited = upstreamVisibleColumns;
     const visible = baseTruth.columns.declared.length > 0 ? baseTruth.columns.declared : inherited;
     return {
       ...baseTruth,
@@ -147,11 +143,9 @@ function projectCanvasNodePresentationTruthInternal(
     };
   }
   const presentationTruth =
-    args.node.role === 'transform' &&
-    baseTruth.columns.declared.length === 0 &&
-    baseTruth.columns.inherited.length === 0
+    shouldProjectUpstreamColumns && args.node.role === 'transform'
       ? (() => {
-          const inherited = projectUpstreamVisibleColumns(args, nextAncestorNodeIds);
+          const inherited = upstreamVisibleColumns;
           return {
             ...baseTruth,
             columns: {
