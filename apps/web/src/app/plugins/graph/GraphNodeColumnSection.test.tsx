@@ -212,6 +212,41 @@ describe('GraphNodeColumnSection', () => {
     });
   });
 
+  it('reports a layout change when column port directions become available', () => {
+    const onColumnLayoutChange = vi.fn();
+    const columns = [
+      {
+        id: 'order_id',
+        name: 'order_id',
+        type: 'integer',
+        sourceHandleId: 'column:source:orders:order_id',
+      },
+    ] as const;
+    const render = (portDirections: readonly ('source' | 'target')[]) => (
+      <ReactFlowProvider>
+        <GraphNodeColumnSection
+          nodeId="orders"
+          columns={columns}
+          portDirections={portDirections}
+          onColumnLayoutChange={onColumnLayoutChange}
+        />
+      </ReactFlowProvider>
+    );
+
+    act(() => root.render(render([])));
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>('[data-slot="graph-node-column-toggle"]')!
+      );
+    });
+    onColumnLayoutChange.mockClear();
+
+    act(() => root.render(render(['source'])));
+
+    expect(container.querySelectorAll('[data-slot="canvas-node-port-handle"]')).toHaveLength(1);
+    expect(onColumnLayoutChange).toHaveBeenCalledOnce();
+  });
+
   it('renders both model directions and offers explicit deterministic automap', () => {
     const onAutomap = vi.fn();
     act(() => {

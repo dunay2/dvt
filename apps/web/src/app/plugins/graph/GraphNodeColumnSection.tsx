@@ -82,6 +82,7 @@ export function GraphNodeColumnSection({
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const copy = resolveGraphNodeCardCopy(applicationLanguage);
   const columnListId = useId();
+  const portDirectionKey = portDirections.join(':');
   const visibleColumns = showAllColumns ? columns : columns.slice(0, MAX_PREVIEW_COLUMNS);
   const remainingColumnCount = Math.max(columns.length - MAX_PREVIEW_COLUMNS, 0);
   const remainderActionLabel = copy.remainingColumnsLabelTemplate.replace(
@@ -99,7 +100,13 @@ export function GraphNodeColumnSection({
 
   useEffect(() => {
     onColumnLayoutChange?.();
-  }, [columnsExpanded, onColumnLayoutChange, showAllColumns, visibleColumns.length]);
+  }, [
+    columnsExpanded,
+    onColumnLayoutChange,
+    portDirectionKey,
+    showAllColumns,
+    visibleColumns.length,
+  ]);
 
   return (
     <div data-slot="graph-node-column-section" className={graphNodeColumnClasses.shell}>
