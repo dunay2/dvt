@@ -37,12 +37,6 @@ const DOCS_DIR = join(REPO_ROOT, 'docs');
 
 const STDOUT_ONLY = process.argv.includes('--stdout');
 const FULL_OUTPUT = process.argv.includes('--full');
-const GENERATED_PLANNING_LANDING_PAGES = new Set([
-  'docs/planning/index.md',
-  'docs/planning/proposals/index.md',
-  'docs/planning/reviews/index.md',
-  'docs/planning/status/index.md',
-]);
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -111,7 +105,15 @@ function str(val: string | string[] | undefined): string | null {
 
 function main(): void {
   const allFiles = walkMarkdown(DOCS_DIR)
-    .filter((filePath) => !GENERATED_PLANNING_LANDING_PAGES.has(relPath(filePath)))
+    .filter(
+      (filePath) =>
+        ![
+          'docs/planning/index.md',
+          'docs/planning/proposals/index.md',
+          'docs/planning/reviews/index.md',
+          'docs/planning/status/index.md',
+        ].includes(relPath(filePath))
+    )
     .sort((left, right) => left.localeCompare(right));
 
   const adrs: AdrEntry[] = [];
