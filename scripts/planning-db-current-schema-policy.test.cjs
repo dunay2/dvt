@@ -2,9 +2,24 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 const {
+  assertCurrentStateValue,
   assertNoPlanningDbMigrationArtifacts,
   findPlanningDbMigrationArtifacts,
 } = require('./planning-db-current-schema-policy.cjs');
+
+test('current-schema policy rejects migration history inside current-state catalogs', () => {
+  assert.throws(
+    () => assertCurrentStateValue({ migrationState: 'legacy' }),
+    /forbidden field migrationState/iu
+  );
+  assert.throws(
+    () => assertCurrentStateValue({ railName: 'ApplyPlanningDbMigrations' }),
+    /forbidden history semantics/iu
+  );
+  assert.doesNotThrow(() =>
+    assertCurrentStateValue({ railId: 'current#rail-decision#query#current-schema' })
+  );
+});
 
 test('current-schema policy rejects Planning DB migration paths and executable semantics', () => {
   const contents = new Map([

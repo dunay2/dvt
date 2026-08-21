@@ -1,4 +1,4 @@
-/** Owned concern: materialize architecture and governance query-store snapshots. */
+/** Owned concern: project Git-owned governance into the Planning DB query store. */
 const crypto = require('node:crypto');
 const { execFileSync } = require('node:child_process');
 const fs = require('node:fs');
@@ -22,7 +22,7 @@ const { buildCoverageReport } = require('./generate-governance-coverage-report.c
 const { buildRemediationQueue } = require('./generate-governance-remediation-queue.cjs');
 const { defaultPgUrl } = require('./planning-db-run.cjs');
 const { assertPlanningDbCurrentSchemaReady, schemaName } = require('./planning-db-schema.cjs');
-const { assertCurrentStateValue } = require('./planning-db-architecture-state.cjs');
+const { assertCurrentStateValue } = require('./planning-db-current-schema-policy.cjs');
 const {
   buildKnowledgeSnapshotFromDocuments,
 } = require('../tools/planning-db/knowledge/documentSnapshot.cjs');
@@ -50,6 +50,7 @@ const dbtProjectRoundtripCapabilityCatalogPath = path.join(
   'state',
   'dbt-project-roundtrip-capabilities.json'
 );
+
 const governanceFileIndexPath = governanceGeneratedPath('system-governance-file-index.files.yaml');
 const governanceComponentIndexPath = governanceGeneratedPath(
   'system-governance-component-index.components.yaml'

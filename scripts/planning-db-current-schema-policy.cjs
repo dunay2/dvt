@@ -18,8 +18,6 @@ const exemptPaths = new Set([
   'scripts/planning-db-current-schema-policy.test.cjs',
   'scripts/planning-db-schema.cjs',
   'scripts/planning-db-schema.test.cjs',
-  'scripts/planning-db-architecture-state.cjs',
-  'scripts/planning-db-architecture-state.test.cjs',
   'docs/adr/ADR-0063-planning-db-current-schema-rebuild.md',
   'docs/planning/proposals/mandatory/governance-and-docs/planning-db-current-schema-hard-cut-plan-20260808.md',
 ]);
@@ -97,6 +95,36 @@ function artifactForContent(filePath, content) {
   return null;
 }
 
+function assertCurrentStateValue(value, location = 'currentState') {
+  if (Array.isArray(value)) {
+    value.forEach((child, index) => assertCurrentStateValue(child, `${location}[${index}]`));
+    return value;
+  }
+  if (value instanceof Date) {
+    return value;
+  }
+  if (value && typeof value === 'object') {
+    for (const [key, child] of Object.entries(value)) {
+      if (key === 'migrationState' || key === 'migration_state') {
+        throw new Error(`Planning DB ${location} contains forbidden field ${key}.`);
+      }
+      assertCurrentStateValue(child, `${location}.${key}`);
+    }
+    return value;
+  }
+  if (typeof value !== 'string') {
+    return value;
+  }
+  if (
+    /tools\/planning-db\/migrations|scripts\/planning-db-migrate|pnpm planning:db:migrate|test:planning:db:migrations|schema_migrations|migration_state|PreserveLocalFeatureMechanizationRails|mergeCanonicalFeatureMechanizationRails|planning[- _]db[- _]migrations?|(?:Apply|Validate)PlanningDbMigrations|PreparePlanningDbForCiGate/iu.test(
+      value
+    )
+  ) {
+    throw new Error(`Planning DB ${location} contains forbidden history semantics.`);
+  }
+  return value;
+}
+
 function findPlanningDbMigrationArtifacts(options = {}) {
   const filePaths = (options.filePaths || trackedFiles()).map(toPosix);
   const readFile =
@@ -161,6 +189,7 @@ if (require.main === module) {
 }
 
 module.exports = {
+  assertCurrentStateValue,
   assertNoPlanningDbMigrationArtifacts,
   findPlanningDbMigrationArtifacts,
 };
