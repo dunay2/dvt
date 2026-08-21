@@ -1694,6 +1694,7 @@ test('governance import batches heavy file table inserts', async () => {
     {
       query: async (sql, params = []) => {
         queries.push({ sql, params });
+        return { rows: [] };
       },
     },
     {
