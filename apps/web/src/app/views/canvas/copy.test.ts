@@ -89,9 +89,20 @@ describe('canvas copy catalog', () => {
     expect(spanishCopy.draftSavedLabel).toBe('Borrador guardado');
     expect(spanishCopy.draftSaveFailedLabel).toBe('Guardado del borrador fallido');
     expect(spanishCopy.newCanvasLabel).toBe('Nuevo canvas');
-    expect(canvasViewCopy.selectionRecoveryRequestedRootsLabel).toBe('Requested roots');
-    expect(spanishCopy.selectionRecoveryRequestedRootsLabel).toBe('Raíces solicitadas');
-    expect(spanishCopy.selectionRecoveryUseWorkspaceScopeAction).toBe('Usar alcance del workspace');
+    expect(canvasViewCopy.selectionRecoveryRequestedRootsLabel).toBe('Selected nodes');
+    expect(spanishCopy.selectionRecoveryRequestedRootsLabel).toBe('Nodos seleccionados');
+    expect(canvasViewCopy.selectionRecoveryNonExecutableRootsLabel).toBe('Nodes that cannot run');
+    expect(spanishCopy.selectionRecoveryNonExecutableRootsLabel).toBe(
+      'Nodos que no se pueden ejecutar'
+    );
+    expect(canvasViewCopy.selectionRecoveryUseWorkspaceScopeAction).toBe('Run entire flow');
+    expect(spanishCopy.selectionRecoveryUseWorkspaceScopeAction).toBe('Ejecutar todo el flujo');
+    expect(spanishCopy.selectionRecoveryProblemSummary).toBe(
+      'No se puede crear la vista previa con la selección actual.'
+    );
+    expect(spanishCopy.selectionRecoveryProblemDetail).toBe(
+      'Selecciona un modelo, una prueba o una instantánea, o ejecuta todo el flujo. Los orígenes aportan datos, pero no se ejecutan por sí solos.'
+    );
   });
 
   it('resolves Canvas Inspector authoring copy in English and Spanish', () => {
