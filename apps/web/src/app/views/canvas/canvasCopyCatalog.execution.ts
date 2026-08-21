@@ -600,7 +600,7 @@ export const canvasViewExecutionCopyByKey = {
   },
   operationalDrawerPlanIntegrityBlocker: {
     key: 'canvas.operationalDrawer.planIntegrityBlocker',
-    fallback: 'Execution Preview integrity',
+    fallback: 'Preview',
   },
   operationalDrawerBackpressureBlocker: {
     key: 'canvas.operationalDrawer.backpressureBlocker',
@@ -629,7 +629,7 @@ export const canvasViewExecutionCopyByKey = {
   },
   selectionRecoveryTitle: {
     key: 'canvas.selectionRecovery.title',
-    fallback: 'Execution selection',
+    fallback: 'What will run',
   },
   selectionRecoveryReadyStatus: {
     key: 'canvas.selectionRecovery.readyStatus',
@@ -641,27 +641,27 @@ export const canvasViewExecutionCopyByKey = {
   },
   selectionRecoveryRequestedRootsLabel: {
     key: 'canvas.selectionRecovery.requestedRootsLabel',
-    fallback: 'Requested roots',
+    fallback: 'Selected nodes',
   },
   selectionRecoveryUnavailableRootsLabel: {
     key: 'canvas.selectionRecovery.unavailableRootsLabel',
-    fallback: 'Unavailable roots',
+    fallback: 'Nodes no longer available',
   },
   selectionRecoveryNonExecutableRootsLabel: {
     key: 'canvas.selectionRecovery.nonExecutableRootsLabel',
-    fallback: 'Non-executable roots',
+    fallback: 'Nodes that cannot run',
   },
   selectionRecoveryDerivedDependenciesLabel: {
     key: 'canvas.selectionRecovery.derivedDependenciesLabel',
-    fallback: 'Derived dependencies',
+    fallback: 'Included dependencies',
   },
   selectionRecoveryAdmittedScopeLabel: {
     key: 'canvas.selectionRecovery.admittedScopeLabel',
-    fallback: 'Admitted scope',
+    fallback: 'Nodes to run',
   },
   selectionRecoveryLastPreviewRevisionLabel: {
     key: 'canvas.selectionRecovery.lastPreviewRevisionLabel',
-    fallback: 'Last preview revision',
+    fallback: 'Latest preview',
   },
   selectionRecoveryEmptyValue: {
     key: 'canvas.selectionRecovery.emptyValue',
@@ -669,46 +669,47 @@ export const canvasViewExecutionCopyByKey = {
   },
   selectionRecoveryDiscardUnavailableAction: {
     key: 'canvas.selectionRecovery.discardUnavailableAction',
-    fallback: 'Discard unavailable selection',
+    fallback: 'Remove unavailable nodes',
   },
   selectionRecoveryUseWorkspaceScopeAction: {
     key: 'canvas.selectionRecovery.useWorkspaceScopeAction',
-    fallback: 'Use workspace scope',
+    fallback: 'Run entire flow',
   },
   selectionRecoveryRefreshAnalysisAction: {
     key: 'canvas.selectionRecovery.refreshAnalysisAction',
-    fallback: 'Keep blocked and refresh analysis',
+    fallback: 'Check again',
   },
   selectionRecoveryRefreshingAnalysisAction: {
     key: 'canvas.selectionRecovery.refreshingAnalysisAction',
-    fallback: 'Refreshing authoritative analysis...',
+    fallback: 'Checking selection...',
   },
   selectionRecoveryRefreshFailureMessage: {
     key: 'canvas.selectionRecovery.refreshFailureMessage',
-    fallback: 'Authoritative analysis could not be refreshed.',
+    fallback: 'The selection could not be checked again.',
   },
   selectionRecoveryProblemSummary: {
     key: 'canvas.selectionRecovery.problemSummary',
-    fallback: 'Execution selection requires recovery.',
+    fallback: 'A preview cannot be created with the current selection.',
   },
   selectionRecoveryProblemDetail: {
     key: 'canvas.selectionRecovery.problemDetail',
-    fallback: 'Unavailable or non-executable requested roots must be resolved before Preview.',
+    fallback:
+      'Select a model, test, or snapshot, or run the entire flow. Sources provide data but do not run by themselves.',
   },
   selectionRecoveryBlockerLabel: {
     key: 'canvas.selectionRecovery.blockerLabel',
-    fallback: 'Execution selection',
+    fallback: 'Run selection',
   },
   selectionRecoveryDiscardReceiptTemplate: {
     key: 'canvas.selectionRecovery.discardReceiptTemplate',
-    fallback: 'Discarded unavailable roots: {affected}. Retained explicit roots: {retained}.',
+    fallback: 'Removed unavailable nodes: {affected}. Kept selected nodes: {retained}.',
   },
   selectionRecoveryWorkspaceReceiptTemplate: {
     key: 'canvas.selectionRecovery.workspaceReceiptTemplate',
-    fallback: 'Replaced explicit roots: {affected} with workspace scope.',
+    fallback: 'Replaced selected nodes: {affected} with the entire flow.',
   },
   selectionRecoveryRefreshReceiptTemplate: {
     key: 'canvas.selectionRecovery.refreshReceiptTemplate',
-    fallback: 'Kept requested roots: {retained}. Authoritative analysis refreshed.',
+    fallback: 'Kept selected nodes: {retained}. Selection checked again.',
   },
 } satisfies CanvasCopySection;
