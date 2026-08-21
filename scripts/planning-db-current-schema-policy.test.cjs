@@ -106,8 +106,8 @@ test('snapshot authority policy rejects active snapshot paths and retired rails'
     }).map(({ path, reason }) => [path, reason]),
     [
       ['docs/current.md', 'tracked Planning DB snapshot authority'],
-      ['docs/gate.md', 'routine Planning DB export gate'],
       ['docs/gate-wording.md', 'routine Planning DB export gate'],
+      ['docs/gate.md', 'routine Planning DB export gate'],
       ['docs/recovery.md', 'Planning DB recovery projection semantics'],
       ['scripts/current.cjs', 'retired Planning DB snapshot rail'],
       ['tools/current.json', 'Planning DB recovery projection semantics'],
