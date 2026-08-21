@@ -52,6 +52,35 @@ describe('DBT test authoring fields model', () => {
     });
   });
 
+  it('offers the effective columns projected by a connected generated model', () => {
+    const sourceNode: CanonicalNode = {
+      id: 'dbt-source-orders',
+      name: 'Raw orders',
+      pluginId: 'dbt',
+      kind: 'dbt:source',
+      role: 'input',
+      status: 'idle',
+      tags: [],
+      metadata: { columns: [{ name: 'order_id', type: 'bigint' }] },
+    };
+    const generatedModel = { ...modelNode, metadata: {} };
+    const sourceEdge: CanonicalEdge = {
+      id: 'edge-source-model',
+      sourceId: sourceNode.id,
+      targetId: generatedModel.id,
+      relation: 'lineage',
+    };
+
+    expect(
+      buildDbtTestAuthoringFieldsModel({
+        node: testNode,
+        nodes: [sourceNode, generatedModel, testNode],
+        edges: [sourceEdge, edge],
+        targetModelId: generatedModel.id,
+      }).columnOptions
+    ).toEqual(['order_id']);
+  });
+
   it('does not present unrelated or non-model nodes as test targets', () => {
     expect(
       buildDbtTestAuthoringFieldsModel({
